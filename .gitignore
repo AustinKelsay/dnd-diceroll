@@ -1,0 +1,30 @@
+# Unreal generated data
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Builds/
+# Unreal's generated Mac packaging templates and version counters
+/Build/Mac/
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+.vs/
+.idea/
+*.sln
+*.xcodeproj/
+*.xcworkspace/
+*.VC.db
+*.VC.opendb
+
+# Host settings, credentials, and local evidence
+.env
+.env.*
+!.env.example
+.local/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local research input; not part of the reusable starter
+/transcript.txt

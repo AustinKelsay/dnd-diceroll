@@ -1,0 +1,7 @@
+{
+  "module": "DnDDiceRoll",
+  "editor_target": "DnDDiceRollEditor",
+  "game_target": "DnDDiceRoll",
+  "content_root": "/Game/DnDDiceRoll",
+  "automation_filter": "Project.Starter."
+}

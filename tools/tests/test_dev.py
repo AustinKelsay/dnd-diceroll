@@ -1,0 +1,214 @@
+import io
+import json
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from contextlib import contextmanager
+from unittest.mock import Mock, patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from workspace import Workspace, automation_result, entered_world, log_events, project_argument, require_clean, source_digest, validate_bootstrap, validate_runtime
+from mcp_client import MCP, decode_response
+from scaffold import new_class
+from dev import Dev
+
+
+class Response(io.BytesIO):
+    def __init__(self, content, kind="application/json"):
+        super().__init__(content.encode())
+        self.headers = {"Content-Type": kind}
+
+
+class WorkspaceTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="unreal workspace ")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        for name in ("Config", "tools", "Source/Game"):
+            (self.root / name).mkdir(parents=True)
+        (self.root / "Game.uproject").write_text(json.dumps({"Modules": [{"Name": "Game"}]}))
+        (self.root / "tools/project.json").write_text(json.dumps({"module":"Game", "editor_target":"CustomEditor", "game_target":"CustomGame", "content_root":"/Game/Starter"}))
+        (self.root / "tools/versions.json").write_text(json.dumps({"unreal_engine":"5.8.4", "unreal_changelist":58902052, "mcp_url":"http://127.0.0.1:18765/mcp"}))
+        (self.root / "Config/DefaultEngine.ini").write_text("[/Script/EngineSettings.GameMapsSettings]\nEditorStartupMap=/Game/Starter/Sandbox\n")
+        for target in ("CustomEditor", "CustomGame"):
+            (self.root / f"Source/{target}.Target.cs").touch()
+        self.w = Workspace.discover(self.root)
+
+    def test_discovery_uses_explicit_targets(self):
+        self.assertEqual(self.w.settings["editor_target"], "CustomEditor")
+        self.assertEqual(self.w.project.name, "Game.uproject")
+
+    def test_ambiguous_project_requires_selection(self):
+        (self.root / "Copy.uproject").write_text((self.root / "Game.uproject").read_text())
+        with self.assertRaises(ValueError): Workspace.discover(self.root)
+        self.assertEqual(Workspace.discover(self.root, "Game.uproject").project, self.w.project)
+
+    def test_missing_project(self):
+        self.w.project.unlink()
+        with self.assertRaises(ValueError): Workspace.discover(self.root)
+
+    def test_wrong_module(self):
+        self.w.project.write_text('{"Modules":[]}')
+        with self.assertRaises(ValueError): Workspace.discover(self.root)
+
+    def test_exact_argument_with_spaces(self):
+        self.assertTrue(project_argument(f'/Applications/UnrealEditor {self.w.project} -nosplash', self.w.project))
+        self.assertTrue(project_argument(f'UnrealEditor "{self.w.project}"', self.w.project))
+        for command in ("UnrealEditor", f'UnrealEditor {self.w.project}.backup', f'UnrealEditor /other/{self.w.project.name}', f'UnrealEditor -abslog={self.w.project}'):
+            self.assertFalse(project_argument(command, self.w.project), command)
+
+    def test_runtime_identity_rejects_copies_and_stale_pid(self):
+        status = {"project_file": str(self.w.project), "pid": 123, "engine_version": "5.8.4-58902052+++UE5+Release-5.8"}
+        validate_runtime(status, self.w, 123)
+        for field, value in (("project_file", str(self.root / "copy/Game.uproject")), ("pid", 456), ("engine_version", "5.8.3-123+++UE5")):
+            with self.assertRaises(RuntimeError): validate_runtime({**status, field:value}, self.w, 123)
+
+    def test_scaffold_refuses_overwrite_and_invalid_input(self):
+        header, source = new_class(self.w, "component", "StarterProbe")
+        before = header.read_bytes()
+        self.assertIn(b"UStarterProbe : public UActorComponent", before)
+        with self.assertRaises(ValueError): new_class(self.w, "component", "StarterProbe")
+        self.assertEqual(header.read_bytes(), before)
+        for name in ("../Escape", "bad_name", "X", "Name;Quit"):
+            with self.assertRaises(ValueError): new_class(self.w, "actor", name)
+        self.assertTrue(source.exists())
+
+    def test_build_refuses_any_associated_editor_without_using_mcp(self):
+        dev = Dev(self.w)
+        with patch.object(dev, "require_engine"), patch.object(dev, "processes", return_value=[{"pid":123}]), patch.object(dev, "execute") as execute:
+            with self.assertRaises(RuntimeError): dev.build()
+            execute.assert_not_called()
+
+    def test_build_receipt_tracks_source_deletions_and_binary_changes(self):
+        binary_folder = self.root / "Binaries/Mac"
+        binary_folder.mkdir(parents=True)
+        (binary_folder / "UnrealEditor.modules").write_text('{"Modules":{"Game":"libGame.dylib"}}')
+        binary = binary_folder / "libGame.dylib"
+        binary.write_bytes(b"compiled")
+        self.w.local.mkdir()
+        source = self.root / "Source/Game/Example.cpp"
+        source.write_text("// source")
+        dev = Dev(self.w)
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute"):
+            dev.build()  # A successful no-action build is valid too.
+        receipt = json.loads((self.w.local / "build.json").read_text())
+        self.assertEqual(receipt, dev.build_identity())
+        previous = source_digest(self.w)
+        source.unlink()
+        self.assertNotEqual(previous, source_digest(self.w))
+        self.assertNotEqual(receipt, dev.build_identity())
+        source.write_text("// source")
+        binary.write_bytes(b"changed")
+        self.assertNotEqual(receipt, dev.build_identity())
+
+    def test_close_refuses_dirty_and_pie_without_quit(self):
+        dev = Dev(self.w)
+        for state in ({"dirty_packages":["/Temp/Unsaved"], "pie_active":False}, {"dirty_packages":[], "pie_active":True}):
+            @contextmanager
+            def connected(): yield Mock(), state
+            with patch.object(dev, "require_engine"), patch.object(dev, "os_identity", return_value=123), patch.object(dev, "connected", connected), patch.object(dev, "execute") as execute:
+                with self.assertRaises(RuntimeError): dev.close()
+                execute.assert_not_called()
+
+    def test_operation_lock_is_bounded(self):
+        first, second = Dev(self.w), Dev(self.w)
+        with first.operation():
+            with self.assertRaises(RuntimeError):
+                with second.operation(): pass
+
+    def test_automation_command_reads_unreal_bom_report(self):
+        dev = Dev(self.w)
+        self.w.local.mkdir()
+        def execute(args, **kwargs):
+            output = Path(next(str(a).split("=", 1)[1] for a in args if str(a).startswith("-ReportExportPath=")))
+            (output / "index.json").write_text(json.dumps({"tests":[{"state":"Success"}]}), encoding="utf-8-sig")
+            (output / "automation.log").write_text("LogAutomation: Display: completed\n")
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute", side_effect=execute):
+            dev.test("Project.Starter.")
+        self.assertEqual(len(list(self.w.local.glob("automation/*/verified.json"))), 1)
+
+    def test_smoke_preserves_start_failure_when_cleanup_fails(self):
+        self.w.local.mkdir()
+        self.w.log.parent.mkdir(parents=True)
+        self.w.log.touch()
+        dev = Dev(self.w)
+        client = Mock()
+        def call(toolset, tool, arguments=None):
+            if tool == "get_current_level": return self.w.startup_map
+            if tool == "find_actors": return ["floor"]
+            if tool == "get_label": return "SandboxFloor"
+            if tool == "StartPIE": raise RuntimeError("start timed out")
+            if tool == "IsPIERunning": raise RuntimeError("connection lost")
+            raise AssertionError(tool)
+        client.call.side_effect = call
+        @contextmanager
+        def connected(): yield client, {"dirty_packages":[], "pie_active":False}
+        with patch.object(dev, "connected", connected):
+            with self.assertRaisesRegex(RuntimeError, "start timed out.*connection lost.*PIE state unknown"):
+                dev.smoke()
+        report = json.loads((self.w.local / "smoke-failure.json").read_text())
+        self.assertEqual(report["failure"], "start timed out")
+        self.assertEqual(report["pie_state"], "unknown")
+        self.assertFalse((self.w.local / "smoke-result.json").exists())
+
+
+class EvidenceTests(unittest.TestCase):
+    def test_packaged_world_requires_exact_map(self):
+        self.assertTrue(entered_world("LogWorld: Bringing World /Game/Starter/Sandbox.Sandbox up for play", "/Game/Starter/Sandbox"))
+        self.assertFalse(entered_world("Loading /Game/Starter/Sandbox\nLogWorld: Bringing World /Game/Other up for play", "/Game/Starter/Sandbox"))
+        self.assertFalse(entered_world("LogWorld: Bringing World /Game/Starter/SandboxCopy.SandboxCopy up for play", "/Game/Starter/Sandbox"))
+
+    def test_dirty_includes_unsaved_packages(self):
+        require_clean({"dirty_packages":[], "pie_active":False})
+        with self.assertRaisesRegex(RuntimeError, "Unsaved"):
+            require_clean({"dirty_packages":["/Temp/Untitled"], "pie_active":False})
+
+    def test_severity_not_message_words(self):
+        result = log_events("LogAudio: Warning: Error initializing device\nLogPython: Display: Success - 0 error(s), 0 warning(s)\nLogTemp: Error: failed\nLogBlueprint: Display: Blueprint Runtime Error: None\n")
+        self.assertEqual(len(result["errors"]), 2)
+        self.assertEqual(len(result["warnings"]), 1)
+
+    def test_fresh_log_offset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "editor.log"
+            log.write_text("LogTemp: Error: historical\n")
+            offset = log.stat().st_size
+            with log.open("a") as stream: stream.write("LogTemp: Warning: current\n")
+            dev = object.__new__(Dev)
+            dev.w = Mock(log=log)
+            self.assertEqual(dev.new_log_events(offset)["errors"], [])
+            log.write_text("")
+            with self.assertRaises(RuntimeError): dev.new_log_events(offset)
+
+    def test_bootstrap_requires_marker_and_clean_summary(self):
+        valid = "STARTER_BOOTSTRAP_VALIDATED /Game/Starter\nSuccess - 0 error(s), 0 warning(s)"
+        validate_bootstrap(valid)
+        for invalid in ("Success - 0 error(s), 0 warning(s)", valid.replace("0 warning", "1 warning"), "STARTER_BOOTSTRAP_VALIDATED"):
+            with self.assertRaises(RuntimeError): validate_bootstrap(invalid)
+
+    def test_automation_requires_executed_passing_tests(self):
+        self.assertEqual(automation_result({"tests":[{"state":"Success"}]})["passed"], 1)
+        for report in ({"tests":[]}, {"tests":[{"state":"Fail"}]}, {"tests":[{"state":"NotRun"}]}, {"tests":[{"state":"Success"}], "failed":1}):
+            with self.assertRaises(RuntimeError): automation_result(report)
+
+
+class ProtocolTests(unittest.TestCase):
+    def test_json_response_id(self):
+        self.assertEqual(decode_response(Response('{"id":1,"result":{}}'),1)["result"], {})
+        with self.assertRaises(RuntimeError): decode_response(Response('{"id":2}'),1)
+
+    def test_sse_skips_notifications_and_other_ids(self):
+        data = 'event: message\ndata: {"method":"progress"}\n\ndata: {"id":9}\n\ndata: {"id":1,\ndata: "result":{"ok":true}}\n\n'
+        self.assertTrue(decode_response(Response(data,"text/event-stream"),1)["result"]["ok"])
+        with self.assertRaises(RuntimeError): decode_response(Response('data: {"id":2}\n\n',"text/event-stream"),1)
+
+    def test_tool_discovery_and_required_fields_precede_dispatch(self):
+        client = MCP("http://127.0.0.1:18765/mcp")
+        client.request = Mock(return_value={"content":[{"type":"text","text":json.dumps({"tools":[{"name":"Example.run","inputSchema":{"required":["path"]}}]})}]})
+        with self.assertRaises(ValueError): client.call("Example", "run", {})
+        self.assertEqual(client.request.call_args.args[1]["name"], "describe_toolset")
+        self.assertEqual(client.request.call_count, 1)
+
+
+if __name__ == "__main__": unittest.main()

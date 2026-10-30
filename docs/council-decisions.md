@@ -1,0 +1,13 @@
+# Council decisions — 2026-10-30
+
+Five independent design reviews (A, S, F, O, G) inspected the repository and installed UE 5.8.4 source. They agreed to prioritize exact editor identity, complete unsaved-package checks, safe lifecycle operations, bootstrap completeness, bounded discovery, fresh log evidence, and real automation. The reviews were read-only; the before/after repository snapshot was unchanged. This was a design review, so no code-review scores were requested.
+
+The implementation chooses normal macOS quit targeted to the verified PID. Reviewers differed over SIGTERM versus app quit; installed Mac platform source shows SIGTERM requests engine exit without the normal save prompt. The helper therefore refuses dirty state and sends a normal application quit, never escalating to a signal. An explicit migration option permits normal quit of an older editor without the new status toolset, retaining Unreal's save prompts.
+
+A tiny project Python toolset supplies canonical project path, process ID, engine version, PIE state, and both dirty content and dirty map packages. Enumerating registered assets with per-asset `is_dirty` misses unsaved packages. `save_assets([])` is not evidence that everything saved successfully: the bundled implementation discards the underlying result.
+
+Authoring recipes point to Epic's existing material, Blueprint, primitive, asset, and agent-skill tools. Duplicating those systems, adding a gameplay framework, or imposing a game genre would enlarge scope without validating the agent workflow. A narrow optional C++ class template is included; generated gameplay examples are excluded. Mac packaging is the final acceptance step after the lifecycle gate works. Its first launch exposed a GameFeatureData scan leaking from editor tooling into the game; marking that scan editor-only fixed the missing-class ensure without adding a gameplay dependency.
+
+The linked video's attribution remains unverified because the available transcript is empty. These decisions are engineering guidance checked against Epic documentation and installed engine source, with fresh execution evidence recorded separately. No claim is made that the guidance was extracted from that video.
+
+Useful source anchors in the installed engine include `TargetRules.cs` (Live Coding platform condition), `MacPlatformMisc.cpp` and `LaunchMac.cpp` (termination paths), `LevelEditorSubsystem.cpp` (new-level early save), `PythonScriptCommandlet.cpp` (script failures), `AutomationCommandline.cpp` (test completion/exit), and the bundled EditorToolset Python sources. Public source links are in the development and architecture documents.
