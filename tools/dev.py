@@ -142,6 +142,8 @@ class Dev:
         for label, command in (("Xcode", ["xcodebuild", "-version"]), ("Metal", ["xcrun", "--find", "metal"]), ("Git LFS", ["git", "lfs", "version"])):
             check(label, lambda command=command: self.execute(command, capture_output=True, text=True).stdout.strip().replace("\n", "; "))
         check("MCP configurations", self.check_configs)
+        proxy = self.engine / "Plugins/Experimental/ModelContextProtocol/Extras/Proxy/Bin/Mac/unreal_mcp_proxy"
+        print("INFO Optional recovery proxy: " + (f"present, not validated: {proxy}" if proxy.is_file() else "not bundled; use direct HTTP recovery in docs/agents/unreal-tools.md"))
         print(f"INFO Project {self.w.project}; free space {shutil.disk_usage(self.w.root).free // 1024**3} GiB")
         if failures:
             raise RuntimeError("Doctor failed: " + ", ".join(failures))
@@ -214,6 +216,30 @@ class Dev:
         self.execute([self.cmd, self.w.project, "-run=pythonscript", f"-script={self.w.root / 'Content/Python/bootstrap_sandbox.py'}", f"-abslog={log}", "-unattended", "-nullrhi", "-nosplash"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         validate_bootstrap(log.read_text(errors="replace"))
         print(f"Sandbox validated; commandlet has zero errors/warnings. Log: {log}")
+
+    def verify_skills(self):
+        self.require_engine()
+        self.require_closed()
+        output = self.w.local / "skills" / stamp()
+        output.mkdir(parents=True)
+        log = output / "commandlet.log"
+        script = self.w.root / "Content/Python/verify_project_skill.py"
+        self.execute([self.cmd, self.w.project, "-run=pythonscript", f"-script={script}",
+                      f"-abslog={log}", "-unattended", "-nullrhi", "-nosplash"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        content = log.read_text(errors="replace")
+        matches = re.findall(r"PROJECT_SKILL_VERIFIED (\{[^\r\n]+\})", content)
+        if len(matches) != 1 or log_events(content)["errors"]:
+            raise RuntimeError(f"Project skill readback failed; inspect {log}")
+        report = json.loads(matches[0])
+        expected_engine = f"{self.w.versions['unreal_engine']}-{self.w.versions['unreal_changelist']}+"
+        source = self.w.root / "docs/agents/editor-authoring.md"
+        if (Path(report["project_file"]).resolve() != self.w.project
+                or not report["engine_version"].startswith(expected_engine)
+                or report["instructions_sha256"] != hashlib.sha256(source.read_text(encoding="utf-8").encode("utf-8")).hexdigest()):
+            raise RuntimeError(f"Project skill readback differs from this checkout/source/engine; inspect {log}")
+        write_json(output / "verified.json", report)
+        print(f"Project skill discovery/readback verified; live MCP not exercised. Evidence: {output}")
 
     def launch(self, wait=True):
         self.require_engine()
@@ -417,7 +443,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", help="Select a root .uproject if the workspace has more than one")
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "status", "build", "bootstrap", "smoke", "capture", "package", "relaunch"):
+    for name in ("doctor", "status", "build", "bootstrap", "smoke", "capture", "package", "relaunch", "verify-skills"):
         commands.add_parser(name)
     launch = commands.add_parser("editor")
     launch.add_argument("--no-wait", action="store_true", help="Skip readiness checks")
@@ -453,6 +479,8 @@ def main():
                 dev.close()
             dev.build()
             dev.launch()
+        elif args.command == "verify-skills":
+            dev.verify_skills()
         elif args.command == "mcp":
             with dev.connected() as (client, state):
                 print(json.dumps({"identity": state, "result": client.request(args.method, json.loads(args.params))}, indent=2))

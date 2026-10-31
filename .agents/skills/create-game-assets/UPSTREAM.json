@@ -1,0 +1,35 @@
+{
+  "repository": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+  "revision": "19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9",
+  "source_directory": "skills/disciplines/create-game-assets",
+  "license": "Apache-2.0",
+  "license_files": {
+    "LICENSE": {
+      "source_path": "LICENSE",
+      "sha256": "6f82dcfeb95a1c0a0452180a3b16f21bf82111780018fed59d95a052b5b75f6c"
+    },
+    "NOTICE": {
+      "source_path": "NOTICE",
+      "sha256": "2dcb65b1c5be24e5ba11e937f3996100f4e980d8cf8ac5b30ba1d70dae6c40f8"
+    }
+  },
+  "upstream_files_sha256": {
+    "SKILL.md": "36cd246a434fefe1e36feff066597a6268d9f63364bee387ee65a22f03838b5d",
+    "agents/openai.yaml": "b5ff9e75ab8a845324d28745aa97af0a3cd4fccc56067a6494947e12e40f1990",
+    "assets/art-direction-brief.md": "6d5dc4f9f5fcb24300bab9ce7dbd56d5c948ba41da3cca2d3b3d235fee5fb72c",
+    "assets/asset-manifest.json": "6cce05638c11b80eb5c8f776cf187f479a2579f1a1729b0970b1cc8e5fab4c8e",
+    "references/art-direction.md": "19b2ccb827eae0c6c4cd3648ab7febb82e44706bef8515f2e8912de23dec0a5c",
+    "references/provenance.md": "098d3cf915cd66e8ff0ad3a639964167edf2280f9e23efbae3ea6242d5bea3db",
+    "references/raster-pipeline.md": "d7a5714628fd8f4b66d03e060488e353b163b811112b164af218beb2b6450a02",
+    "references/three-d-pipeline.md": "ee6ed7c373e15ffeb8e6b275618482f028279a8146f01b6cfe6a8411cb8a3db4",
+    "scripts/asset_report.py": "99f4b38f9c4fe036f97ab1d4effd7f6931b62d24a90330a5a2f5ae71e7d1a77c",
+    "scripts/build_preview_sheet.py": "002a550a7b5fac6d8815078a72afc249dd828c40d975b2323223fc770118c64b",
+    "scripts/requirements.txt": "bbced595a25debee9232fbb784d35ee4f04967d3dbc528e8c3073d3e9adbe2ca"
+  },
+  "modified_files": [
+    "SKILL.md",
+    "agents/openai.yaml"
+  ],
+  "adaptation_summary": "Replaced the entrypoint with the project contribution/editor/import contract and linked existing provenance and the project's asset intake, production and record docs; retained art references, templates and raster scripts. Updated the UI prompt for Unreal asset families.",
+  "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
+}

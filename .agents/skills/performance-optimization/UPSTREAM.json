@@ -1,0 +1,26 @@
+{
+  "repository": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+  "revision": "19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9",
+  "source_directory": "skills/disciplines/performance-optimization",
+  "license": "Apache-2.0",
+  "license_files": {
+    "LICENSE": {
+      "source_path": "LICENSE",
+      "sha256": "6f82dcfeb95a1c0a0452180a3b16f21bf82111780018fed59d95a052b5b75f6c"
+    },
+    "NOTICE": {
+      "source_path": "NOTICE",
+      "sha256": "2dcb65b1c5be24e5ba11e937f3996100f4e980d8cf8ac5b30ba1d70dae6c40f8"
+    }
+  },
+  "upstream_files_sha256": {
+    "SKILL.md": "287161d2ed49670a051271c8fade5a7265fda5109d39c218c02598dca7983e2a",
+    "references/profiling-and-budgets.md": "e68c43d5e66ec0f2fe60e0c0121c85360144ab7da5876ce6e2e3f26a2244e284"
+  },
+  "modified_files": [
+    "SKILL.md",
+    "references/profiling-and-budgets.md"
+  ],
+  "adaptation_summary": "Replaced the entrypoint and supporting reference with reproducible Unreal profiling on the validated Mac target, CPU/GPU interaction, Metal tool selection, and measured before/after evidence. Null-renderer startup is not rendering performance evidence.",
+  "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
+}

@@ -1,0 +1,26 @@
+{
+  "repository": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+  "revision": "19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9",
+  "source_directory": "skills/disciplines/level-design",
+  "license": "Apache-2.0",
+  "license_files": {
+    "LICENSE": {
+      "source_path": "LICENSE",
+      "sha256": "6f82dcfeb95a1c0a0452180a3b16f21bf82111780018fed59d95a052b5b75f6c"
+    },
+    "NOTICE": {
+      "source_path": "NOTICE",
+      "sha256": "2dcb65b1c5be24e5ba11e937f3996100f4e980d8cf8ac5b30ba1d70dae6c40f8"
+    }
+  },
+  "upstream_files_sha256": {
+    "SKILL.md": "9dd60fec5dc09957f7836739da96b5a2bcff2b46ecaab020f0a9ccff7463ba3a",
+    "references/pacing-and-flow.md": "e8e3940f585e376f353aefea009befe8199a1871f99d34d7b2340cb35cb61872"
+  },
+  "modified_files": [
+    "SKILL.md",
+    "references/pacing-and-flow.md"
+  ],
+  "adaptation_summary": "Replaced the entrypoint and supporting reference with Unreal blockouts and rules-based encounter metrics. Expedition guidance is conditional on available approved domain/spec docs; generic pacing does not expand run/recovery mechanics.",
+  "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
+}
