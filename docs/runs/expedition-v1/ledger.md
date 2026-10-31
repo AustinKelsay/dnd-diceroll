@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: ready for tactical-battle implementation
+- Status: tactical-battle implementation delegated; SRD fact check in parallel
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -49,7 +49,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 
 | Slice | Blocked by | Owner/status | Evidence |
 | --- | --- | --- | --- |
-| Play a tactical battle | none | pending | pending |
+| Play a tactical battle | none | sole implementation worker; starting from 31a48fb0342013de151461113fc88be727c5d686 | setup doctor and 22 helper tests pass |
 | Survive losses and use party roles | battle | pending | pending |
 | Complete a seeded expedition | losses/roles | pending | pending |
 | Resume a run and record its ending | expedition | pending | pending |
@@ -61,6 +61,10 @@ Original editor PID 80712 was verified clean and exited normally through the hel
 ## Escalations and parked work
 
 None. Agent-performable local/visual/package checks are AFK. Other platforms and production distribution are out of scope. Aesthetic tuning can follow the verified simple presentation without blocking the first playable.
+
+## Setup evidence
+
+2026-10-30: created the private game repository; baseline main/staging pushed, original remote retained as boilerplate. Published spec #1 and tickets #2–#5 with native parent/dependency relationships. Doctor passed and all 22 helper tests passed. Setup commit: 31a48fb0342013de151461113fc88be727c5d686. No PR yet.
 
 ## Tracker
 
