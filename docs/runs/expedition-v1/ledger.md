@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: tactical battle accepted locally; party roles and consequences starting
+- Status: battle and party consequences accepted locally; seeded expedition starting
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -51,7 +51,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | --- | --- | --- | --- |
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
 | Survive losses and use party roles | battle | implementation complete; `56a4766`, `6cc0eb2`; root owns source/editor and external delivery | [session](02-party-consequences.md); 18/18 Project tests, 22/22 helpers; native four-role use, rescue/death, victory and smaller-party continuation; separate [Standards](02-party-consequences-standards.md) and [Spec](02-party-consequences-spec.md) reviews resolved |
-| Complete a seeded expedition | losses/roles | pending | pending |
+| Complete a seeded expedition | losses/roles | next sole implementation worker, based on party handoff `ce58edc` | pending |
 | Resume a run and record its ending | expedition | pending | pending |
 
 ## Editor ownership
@@ -97,3 +97,7 @@ Public seams: `FCombatBattle` retains command/snapshot ownership, now with typed
 Editor ownership returned: final exact-project PID 35478 had PIE stopped and no dirty packages at **2026-10-31 03:04:15 UTC**, then exited normally through the helper. Final status **2026-10-31 03:05:41 UTC** (`.local/party-final-status.json`) showed **no associated project processes or MCP listener**. Other project browser untouched. Final fresh smoke: zero errors, one known host AudioUnit sample-rate warning (`2003332927`). Root owns subsequent source/editor operations, independent full-feature review and tracker/PR delivery. No remote writes were performed.
 
 Limits: native victory is now observed; wipe remains automation-verified. No intermediate package repeat was required; root's final package acceptance and prior packaged mouse coordinate-delivery gap remain. Native interaction here used the reliable established keyboard session; a final post-relaunch single F probe was a no-op, so the last render is not claimed as a second role replay. The full earlier role/rescue/loss/continuation playthrough remains the native evidence.
+
+## Root party acceptance and expedition handoff
+
+Root inspected the survivor-continuation image, public composition seam and separate review evidence. Ticket #3 accepted and closed after validation; parent spec remains open. Root live status at 2026-10-31 03:09:52 UTC confirms no associated project process or MCP listener. Next worker owns source/editor operations for ticket #4; later save/record work remains pending. The old repeated-crossing fixture should now be replaced by the authoritative three-encounter run flow. Final package/mouse and native defeat acceptance gaps remain explicit.
