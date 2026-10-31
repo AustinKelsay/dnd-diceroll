@@ -8,3 +8,9 @@ Read `docs/development.md` before building, launching, editing assets, or using 
 - On this Mac use `status` → `close` → `build` → `editor` for structural C++ changes, or `relaunch`. Live Coding is unsupported here. Refuse close when PIE or unsaved packages exist; save intentionally through Unreal and verify dirty state. Never force-quit an editor.
 - Create binary assets through Unreal APIs/MCP and save explicitly. Work under `/Game/DnDDiceRoll`; record imports/licenses in `docs/assets.md`. Existing assets and class files must be preserved on rerun.
 - Complete each slice with relevant build, automation, or editor evidence. Report exact checks and limitations. Generated evidence belongs in ignored `Saved/`, `.local/`, or `Builds/`.
+
+## Agent skills
+
+GitHub issues and PRs belong to `AustinKelsay/expedition-rpg`; read `docs/agents/issue-tracker.md` before tracker operations and `docs/agents/triage-labels.md` for state labels.
+
+Read `CONTEXT.md`, `GLOSSARY.md`, and relevant `docs/adr/` before gameplay design, implementation, or review; `docs/agents/domain.md` defines the document layout. V1 behavior and testing seams are in `docs/specs/expedition-v1.md`; the active worker, commits, reviews, and editor owner are in `docs/runs/expedition-v1/ledger.md`.
