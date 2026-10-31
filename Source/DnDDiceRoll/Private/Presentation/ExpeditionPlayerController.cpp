@@ -233,6 +233,7 @@ int32 AExpeditionPlayerController::Actor() const
 
 void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
 {
+    if (!AllowsGameplayInput()) { return; }
     const int32 ActorId = Actor();
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
@@ -260,22 +261,26 @@ void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
     SelectedAction = Action;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
 }
+bool AExpeditionPlayerController::AllowsGameplayInput() const
+{
+    return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords();
+}
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
 void AExpeditionPlayerController::RoleMode() { SetMode(RoleAction()); }
-void AExpeditionPlayerController::Loot() { if (IsValid(BattleView)) { BattleView->ClaimReward(SelectedId); } }
-void AExpeditionPlayerController::FirstRoute() { if (IsValid(BattleView)) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
-void AExpeditionPlayerController::SecondRoute() { if (IsValid(BattleView)) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
-void AExpeditionPlayerController::Camp() { if (IsValid(BattleView)) { BattleView->Recover(true); } }
-void AExpeditionPlayerController::SkipCamp() { if (IsValid(BattleView)) { BattleView->Recover(false); } }
-void AExpeditionPlayerController::NewRun() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->NewRun(); } }
+void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
+void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
+void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
+void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
+void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
+void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(); } }
 void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
-void AExpeditionPlayerController::Resume() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->Resume(); } }
+void AExpeditionPlayerController::Resume() { if (AllowsGameplayInput()) { BattleView->Resume(); } }
 void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->ToggleRecords(); } }
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
-void AExpeditionPlayerController::EndTurn() { if (IsValid(BattleView)) { BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
+void AExpeditionPlayerController::EndTurn() { if (AllowsGameplayInput()) { BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
 void AExpeditionPlayerController::RotateLeft() { if (IsValid(BattleView)) { BattleView->Orbit(-45); } }
 void AExpeditionPlayerController::RotateRight() { if (IsValid(BattleView)) { BattleView->Orbit(45); } }
 void AExpeditionPlayerController::ZoomIn() { if (IsValid(BattleView)) { BattleView->Zoom(-120); } }

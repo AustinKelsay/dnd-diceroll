@@ -4,6 +4,61 @@
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionPlayerController.h"
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverlayInputTest, "Project.Expedition.Presentation.OverlaysBlockGameplayShortcuts",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FOverlayInputTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient input world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/OverlayInput"), FGuid::NewGuid().ToString());
+    AExpeditionPlayerController* Player = World->SpawnActor<AExpeditionPlayerController>();
+    if (TestNotNull(TEXT("Player input adapter"), Player))
+    {
+        Player->DispatchBeginPlay();
+        AExpeditionBattleView* View = Player->GetBattleView();
+        if (TestNotNull(TEXT("Player owns a battle view"), View))
+        {
+            View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+            View->DispatchBeginPlay();
+            Player->HandleButton(TEXT("New"));
+            TestEqual(TEXT("New run offers routes"), View->Progress().Phase, EExpeditionPhase::Route);
+            Player->HandleButton(TEXT("Help"));
+            Player->HandleButton(TEXT("Route0"));
+            TestEqual(TEXT("Help blocks the route shortcut"), View->Progress().Phase, EExpeditionPhase::Route);
+            Player->HandleButton(TEXT("Close"));
+            Player->HandleButton(TEXT("Route0"));
+            TestTrue(TEXT("Closing help restores route input"), View->InCombat());
+            for (int32 Turn = 0; Turn < 20; ++Turn)
+            {
+                const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+                if (!Active || Active->Side == ECombatSide::Party) { break; }
+                View->Tick(1.0f);
+                View->SkipPresentation();
+            }
+            const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+            TestTrue(TEXT("A party turn is ready"), Active && Active->Side == ECombatSide::Party);
+            const FCombatSnapshot Before = View->Rules().Snapshot();
+            auto Unchanged = [&]() { return FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before, &View->Rules().Snapshot(), 0); };
+            Player->HandleButton(TEXT("Help"));
+            Player->HandleButton(TEXT("EndTurn"));
+            TestTrue(TEXT("Help blocks the end-turn shortcut"), Unchanged());
+            Player->HandleButton(TEXT("Close"));
+            Player->HandleButton(TEXT("Records"));
+            Player->HandleButton(TEXT("EndTurn"));
+            TestTrue(TEXT("Records blocks the end-turn shortcut"), Unchanged());
+            Player->HandleButton(TEXT("Close"));
+            Player->HandleButton(TEXT("EndTurn"));
+            TestFalse(TEXT("Closing records restores end-turn input"), Unchanged());
+        }
+    }
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEnemyInputStarvationTest, "Project.Expedition.Presentation.RejectedInputCannotStallEnemy",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

@@ -2,6 +2,10 @@
 
 Branch `feature/expedition-polish`, based on `feature/expedition-v1` (PR #6). The user asked to make the V1 bones feel better without new game design decisions and to defer committing to external assets. Rules, balance, content and the save format are unchanged; everything is built from engine primitives and synthesized audio.
 
+## Current delivery
+
+Issue [#26](https://github.com/AustinKelsay/expedition-rpg/issues/26) tracks final verification, independent review and staging integration. The user explicitly granted full-send merge authority for this cleanup. The factory baseline from `origin/main` was integrated at `a6a9b71`, preserving the polish and the new contribution workflow. The final evidence and review ledger are in [02-delivery.md](02-delivery.md).
+
 ## What changed
 
 - Combat results now carry presentation facts (actor, target, path, dice in roll order, downed/died). `PathTo` and `Forecast` are read-only queries. Random-number order is unchanged.
@@ -29,9 +33,9 @@ A fresh read-only review of the full change found no change to random-number ord
 - Mouse clicks could not be delivered reliably by the automation tool, so mouse play was only partly observed; the keyboard path was exercised fully.
 - Screenshot capture was too slow to catch frames mid-animation; playback timing and convergence are covered by automation.
 
-## Continuation handoff — 2026-10-31
+## Historical continuation handoff — 2026-10-31
 
-- Branch: `feature/expedition-polish`, based on V1 delivery commit `ac2c615acf8a62e7a01f171e8351736c6e75f1db`. The presentation changes and this handoff remain uncommitted at this check; no polish PR has been opened. Preserve the working tree before starting another feature.
+- Branch: `feature/expedition-polish`, based on V1 delivery commit `ac2c615acf8a62e7a01f171e8351736c6e75f1db`. At that check, the presentation changes and this handoff were uncommitted and no polish PR had been opened. They were subsequently preserved in commit `4c99d43`; see the delivery record for current state.
 - Latest validated Mac app: `Builds/20261031T162117660113Z/Mac/DnDDiceRoll.app`; startup evidence is in the same build's `verified.json`. The 36-test Expedition automation report is `.local/automation/20261031T162040213376Z/index.json`. These are recorded execution evidence; engine automation and packaging were not repeated during the factory reconciliation.
 - Root owns editor coordination. Fresh helper status at 19:30 UTC reported no associated editor process or MCP listener. Recheck before taking ownership; process state is not a durable guarantee.
 - Factory reconciliation: the Plebdev launchers are retired, and new work uses Matt Pocock skills directly under the repository instructions. README and AGENTS now route continuation here rather than into the completed V1 ledger. The generated Android file-server config block was removed without changing authored settings.

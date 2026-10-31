@@ -92,4 +92,5 @@ private:
     void BeginDrag();
     void EndDrag();
     void SetMode(ECombatCommandType Action);
+    bool AllowsGameplayInput() const;
 };
