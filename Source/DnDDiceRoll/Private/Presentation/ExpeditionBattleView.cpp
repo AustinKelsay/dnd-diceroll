@@ -176,9 +176,15 @@ void AExpeditionBattleView::NewRun()
 {
     if (HasRun() && Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
     { Record({false, TEXT("Finish this expedition before starting a new run.")}); return; }
-    FString Error;
+    FString Error, PreservedCheckpoint;
     const int32 NextSeed = HasRun() ? static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u) : 20261030;
-    if (Session.NewRun(NextSeed, Error)) { Feedback.Reset(); Record({true, TEXT("Fresh expedition: party power/resources reset. Choose Z / X.")}); EnemyDelay = 0; CameraYaw = -90; bCheckpointBlocked = false; bShowRecords = false; RebuildBoard(); }
+    if (Session.NewRun(NextSeed, Error, FString(), &PreservedCheckpoint))
+    {
+        Feedback.Reset();
+        if (!PreservedCheckpoint.IsEmpty()) { Record({true, TEXT("The unreadable previous save was preserved. Its run and records could not be loaded.")}); }
+        Record({true, TEXT("Fresh expedition: party power/resources reset. Choose Z / X.")});
+        EnemyDelay = 0; CameraYaw = -90; bCheckpointBlocked = false; bShowRecords = false; RebuildBoard();
+    }
     else { Record({false, Error}); }
 }
 

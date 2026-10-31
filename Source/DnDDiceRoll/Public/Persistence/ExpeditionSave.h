@@ -51,7 +51,9 @@ public:
     explicit FExpeditionSession(FString Path = FExpeditionSave::DefaultPath()) : SavePath(MoveTemp(Path)) {}
     bool HasRun() const { return bHasRun; }
     const FExpeditionRun& Run() const { return Current; }
-    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString());
+    /** Never replaces an unfinished expedition. At startup only, an unreadable checkpoint
+     * is preserved beside the save before an explicit new run. Optional output identifies it. */
+    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr);
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);
     bool Recover(bool bTake, FString& Error);

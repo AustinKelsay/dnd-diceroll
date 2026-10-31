@@ -70,6 +70,9 @@ bool FRecordPagingTest::RunTest(const FString& Parameters)
     {
         View->ConfigureStorage(Path);View->DispatchBeginPlay();
         TestFalse(TEXT("Startup waits for a player choice"),View->HasRun());
+        View->NewRun();
+        TestFalse(TEXT("Startup new-run input cannot replace saved progress"),View->HasRun());
+        TestTrue(TEXT("Player is directed to resume"),!View->Messages().IsEmpty() && View->Messages().Last().Contains(TEXT("Press O")));
         View->ToggleRecords();TestTrue(TEXT("Records accessible before choosing a run"),View->ShowingRecords());
         TestEqual(TEXT("All records available"),View->Records().Num(),10);TestEqual(TEXT("Newest page first"),View->RecordOffset(),0);
         View->PageRecords(1);TestEqual(TEXT("Older page"),View->RecordOffset(),4);

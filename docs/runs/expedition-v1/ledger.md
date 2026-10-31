@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: all four gameplay slices complete locally; source/editor returned to root for separate full-feature integrity review, CodeRabbit and PR delivery
+- Status: all gameplay and local review gates complete; root opening staging PR
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -128,3 +128,7 @@ Public contracts: validated candidate `FCombatBattle::Restore` / `FExpeditionRun
 Final fresh build succeeded. `.local/automation/20261031T042811060418Z`: **34/34 full Project tests, zero warnings** (original 26 retained). Helpers **22/22**. Preserved sandbox bootstrap zero errors/warnings. `Builds/20261031T042837285648Z`: Mac Development cook/archive/exact-map startup passed. Real packaged PID 29575 saved Ivo's spent Action, Move 1, one remaining slot, injured enemy and RNG; normal quit and fresh PID 33328/O retained the entire checkpoint exactly. Default storage was separately verified. Real packaged PID 34348 then reached permanent deaths and **PARTY WIPE**, reloaded the ending, inspected its single history record, and started a full fresh party while retaining the record. Final PIE PID 42011 loaded that actual packaged ending and displayed history; native and MCP captures were inspected. The previous native-wipe gap is closed. See the session for exact evidence and owned-fixture cleanup.
 
 Editor handback: PID 42011 was verified PIE stopped and dirty packages empty at **04:54:15 UTC**, then closed normally through the exact-identity helper. **04:54:55 UTC** final status shows no associated project process/listener, and no owned game app remains. CUA session ended; unrelated project/browser untouched. No binary asset changes or remote mutations. Root owns source/editor operations, its separate fresh full-feature integrity review, final CodeRabbit, tracker acceptance and non-draft PR. Mac-only durability bounds and CUA mouse limitations remain explicit; all requested local gameplay/persistence work is complete.
+
+## Root final local gates
+
+Independent full-feature integrity review completed with no actionable findings at 83cfb63. Local CodeRabbit completed with two valid startup issues; root fixed them with compiled failing/passing public regressions, final 36/36 full Project tests and 22/22 helpers. Final Mac Development package is Builds/20261031T050537650861Z; native startup protection and unreadable-save preservation verified. See 05-integrity-review.md, 06-coderabbit-local.md and 07-root-delivery.md. Root status at 05:09:08 UTC: no editor/listener or owned packaged game. PR round remains pending.

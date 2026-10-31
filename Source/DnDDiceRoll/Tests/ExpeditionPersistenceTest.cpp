@@ -281,6 +281,78 @@ bool FCheckpointDiskTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStartupRunProtectionTest, "Project.Expedition.Persistence.StartupProtectsUnfinishedCheckpoint",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FStartupRunProtectionTest::RunTest(const FString& Parameters)
+{
+    FSaveFixture Fixture; FString Error, Before, After;
+    FExpeditionSession Original(Fixture.Path);
+    if (!TestTrue(TEXT("Create unfinished expedition"), Original.NewRun(42, Error))) { return false; }
+    const auto Snapshot = Original.Run().Snapshot();
+    FFileHelper::LoadFileToString(Before, *Fixture.Path);
+    FExpeditionSession Restarted(Fixture.Path);
+    TestFalse(TEXT("Restart cannot replace an unfinished checkpoint"), Restarted.NewRun(43, Error));
+    TestFalse(TEXT("Rejected startup leaves no live run installed"), Restarted.HasRun());
+    TestFalse(TEXT("Live session cannot abandon an unfinished run either"), Original.NewRun(43, Error));
+    FFileHelper::LoadFileToString(After, *Fixture.Path);
+    TestEqual(TEXT("Checkpoint bytes retained"), After, Before);
+    TestTrue(TEXT("Existing run still resumes"), Restarted.Resume(Error));
+    TestTrue(TEXT("Identity and all progress retained"), SameSnapshot(Snapshot, Restarted.Run().Snapshot()));
+    FFileHelper::SaveStringToFile(TEXT("{"), *Fixture.Path);
+    TestFalse(TEXT("Live run cannot quarantine a damaged checkpoint"), Original.NewRun(43, Error));
+    FFileHelper::LoadFileToString(After, *Fixture.Path);
+    TestEqual(TEXT("Live recovery preserves damaged file in place"), After, FString(TEXT("{")));
+    TestTrue(TEXT("Live recovery preserves current run"), SameSnapshot(Snapshot, Original.Run().Snapshot()));
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnreadableStartupRecoveryTest, "Project.Expedition.Persistence.NewRunPreservesUnreadableCheckpoint",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
+{
+    FExpeditionRun Run; FString Error, Json;
+    Run.NewRun(42, Error, TEXT("future-version"));
+    FExpeditionSaveData Data; Data.Current = Run.Snapshot();
+    FExpeditionSave::Encode(Data, Json, Error);
+    TSharedPtr<FJsonObject> Object;
+    FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
+    Object->SetNumberField(TEXT("Version"), 2);
+    FString Future;
+    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Future));
+    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Future})
+    {
+        FSaveFixture Fixture;
+        IFileManager::Get().MakeDirectory(*Fixture.Directory, true);
+        FFileHelper::SaveStringToFile(Unreadable, *Fixture.Path);
+        FExpeditionSession Session(Fixture.Path);
+        TestFalse(TEXT("Resume rejects unreadable save"), Session.Resume(Error));
+        if (!TestTrue(TEXT("Explicit fresh start can recover"), Session.NewRun(43, Error))) { continue; }
+        TArray<FString> Preserved;
+        IFileManager::Get().FindFiles(Preserved, *(Fixture.Path + TEXT(".unreadable-*")), true, false);
+        if (TestEqual(TEXT("Exactly one original preserved"), Preserved.Num(), 1))
+        {
+            FString Original;
+            FFileHelper::LoadFileToString(Original, *FPaths::Combine(Fixture.Directory, Preserved[0]));
+            TestEqual(TEXT("Preserved original bytes"), Original, Unreadable);
+        }
+        FExpeditionSession Restarted(Fixture.Path);
+        TestTrue(TEXT("Replacement run is resumable"), Restarted.Resume(Error));
+        TestEqual(TEXT("Requested fresh seed"), Restarted.Run().Progress().Seed, 43);
+    }
+    FSaveFixture Failed;
+    IFileManager::Get().MakeDirectory(*Failed.Directory, true);
+    FFileHelper::SaveStringToFile(Future, *Failed.Path);
+    IFileManager::Get().MakeDirectory(*(Failed.Path + TEXT(".pending")), true);
+    FExpeditionSession FailedSession(Failed.Path);
+    FString PreservedPath, PreservedBytes;
+    TestFalse(TEXT("Failed replacement does not install a recovered run"), FailedSession.NewRun(43, Error, FString(), &PreservedPath));
+    TestFalse(TEXT("Failed recovery leaves startup state"), FailedSession.HasRun());
+    TestTrue(TEXT("Failure reports that original was preserved"), Error.Contains(TEXT("preserved")));
+    TestTrue(TEXT("Original still readable at reported path"), FFileHelper::LoadFileToString(PreservedBytes, *PreservedPath));
+    TestEqual(TEXT("Failed replacement cannot destroy original"), PreservedBytes, Future);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPersistLostSurvivorTest, "Project.Expedition.Persistence.PermanentLossContinuesThroughCampAndNextEncounter",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPersistLostSurvivorTest::RunTest(const FString& Parameters)

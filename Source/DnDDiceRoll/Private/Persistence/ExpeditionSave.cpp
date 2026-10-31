@@ -204,11 +204,36 @@ bool FExpeditionSession::Commit(FExpeditionRun&& Candidate, FString& Error)
     Current = MoveTemp(Candidate); bHasRun = true; return true;
 }
 
-bool FExpeditionSession::NewRun(int32 Seed, FString& Error, const FString& Identity)
+bool FExpeditionSession::NewRun(int32 Seed, FString& Error, const FString& Identity, FString* PreservedCheckpoint)
 {
+    if (PreservedCheckpoint) { PreservedCheckpoint->Reset(); }
+    auto IsEnding = [](EExpeditionPhase Phase)
+    { return Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat; };
+    if (bHasRun && !IsEnding(Current.Progress().Phase))
+    { Error = TEXT("Finish this expedition before starting a new run."); return false; }
     FExpeditionRun Candidate;
     if (!Candidate.NewRun(Seed, Error, Identity)) { return false; }
-    return Commit(MoveTemp(Candidate), Error);
+    FString Preserved;
+    auto& Files = FPlatformFileManager::Get().GetPlatformFile();
+    if (!bHasRun && Files.FileExists(*SavePath))
+    {
+        FExpeditionSaveData Existing;
+        if (FExpeditionSave::Read(SavePath, Existing, Error))
+        {
+            if (!IsEnding(Existing.Current.Progress.Phase))
+            { Error = TEXT("A saved expedition is unfinished. Press O to resume it."); return false; }
+        }
+        else
+        {
+            Preserved = SavePath + TEXT(".unreadable-") + FGuid::NewGuid().ToString(EGuidFormats::Digits);
+            if (Files.FileExists(*Preserved) || !Files.MoveFile(*Preserved, *SavePath))
+            { Error = TEXT("The saved expedition is unreadable and could not be preserved. No new run was started."); return false; }
+            if (PreservedCheckpoint) { *PreservedCheckpoint = Preserved; }
+        }
+    }
+    if (Commit(MoveTemp(Candidate), Error)) { return true; }
+    if (!Preserved.IsEmpty()) { Error += TEXT(" The unreadable original remains preserved beside the checkpoint."); }
+    return false;
 }
 bool FExpeditionSession::ChooseRoute(int32 Id, FString& Error)
 {
