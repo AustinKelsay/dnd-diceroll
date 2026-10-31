@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: tactical battle implemented and validated locally; later V1 slices remain pending
+- Status: tactical battle accepted locally; party roles and consequences starting
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -50,7 +50,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | Slice | Blocked by | Owner/status | Evidence |
 | --- | --- | --- | --- |
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
-| Survive losses and use party roles | battle | pending | pending |
+| Survive losses and use party roles | battle | next sole implementation worker, baseline `2ef68bce87b3f78457859be462701fae4e0b4330` | pending |
 | Complete a seeded expedition | losses/roles | pending | pending |
 | Resume a run and record its ending | expedition | pending | pending |
 
@@ -80,3 +80,7 @@ Implementation commits: `e8b21f5` (initial battle slice), `92b6a83` (review fixe
 Evidence: `.local/automation/20261031T020825536544Z` has 9 passing Project tests and no warnings. All 22 helper tests pass. `Builds/20261031T020904710358Z` has successful Mac Development cook/archive and exact-map headless startup; the same app was visibly played through round 2 with real keyboard movement, blocked-target rejection, legal AC preview, attack roll/HP/action changes, turn progression, AI, camera rotation and wheel zoom. Earlier native PIE mouse hit is captured in `.local/captures/after-desktop-q-before.png`; final editor image is `.local/captures/final-battle-pie.png`. Packaged mouse coordinate delivery via CUA remained unreliable; the complete arrows/Enter input path is verified. See session for exact limits and public interface. No binary asset edits, helper rewrites, pushes, PRs or tracker state changes.
 
 Editor ownership handback complete: exact-project PID 83142 was verified clean with PIE stopped, then exited normally through the helper. Final status at 2026-10-31 02:16:55 UTC showed no associated project processes and no MCP listener; no packaged game remained. Other project browser untouched. Final smoke had zero errors and one host AudioUnit sample-rate warning (`2003332927`). Root now owns editor coordination, the next slice and all external delivery operations.
+
+## Root acceptance and next handoff
+
+Root inspected the final PIE image and the separate review/session evidence. Ticket #2's battle scope is accepted locally; packaged mouse targeting and native terminal play remain explicit final acceptance gaps. Victory/defeat are presently automation-verified. Primary-source SRD findings are retained in `docs/srd-source-notes.md` for ticket #3; actual supported rules stay in `docs/rules-reference.md`. The next worker owns source/editor operations and must return verified ownership when done. No remote feature push or PR yet.
