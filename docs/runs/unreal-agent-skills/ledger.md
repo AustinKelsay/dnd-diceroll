@@ -3,11 +3,13 @@
 - Issue/spec and approved acceptance: [#10](https://github.com/AustinKelsay/expedition-rpg/issues/10).
 - Owner: this full Codex implementation session; human owner Austin. Branch `feature/unreal-agent-skills`, fixed baseline `a6aeeb47ffa50e97dfce969fd34c911d2f30739a` (`origin/staging`).
 - Authorization: owner approved the preceding three-part recommendation and asked to investigate adding the optional recovery proxy. This covers scoped implementation, verification, review, commits, and a staging PR. It does not transfer the active game editor or authorize an engine upgrade, new transport, or main promotion.
-- Skill setup: repo contribution workflow already exists; no global skill changes. Applying Feature Dev and writing-for-agents with the approved scope above. One bounded ticket; tests exercise the new verifier's refusal/readback boundary and the actual engine skill registry.
+- Skill setup: repo contribution workflow already exists; no global skill changes. Initial implementation used Feature Dev and writing-for-agents with the approved scope above. One bounded ticket; tests exercise the new verifier's refusal/readback boundary and the actual engine skill registry.
 - Workspace: isolated existing contribution checkout, clean before branch creation. Root checkout and its gameplay worker remain untouched. No asset reservations or binary changes.
 - Editor ownership: the game worker retains its interactive editor. This run may build/run a closed-project headless commandlet in its own checkout, with MCP auto-start disabled; no interactive launch or interruption test.
 
 ## Findings and decisions
+
+- Owner update on 2026-10-31: use Matt Pocock's skills directly and remove the personal Feature Dev launcher from this repository's workflow. `AGENTS.md`, onboarding, and the workflow now state that policy. Earlier launcher references record historical execution only; new and resumed work follows the current repo contract. The owner is deprecating the global skill separately; this patch changes no global skill files.
 
 - Epic plugin inspected at `0e27bde2b55c5d3f6948532f4296aaa3654d8f4b`, version 3.1.2, MIT. Existing MCP server/toolsets already supply its engine-side capabilities.
 - Pilot uses the installed `toolset_registry.agent_skill` decorator and a text-backed Python class. This keeps one reviewable Markdown instruction body and avoids a binary skill asset. Startup imports it alongside the existing status toolset.

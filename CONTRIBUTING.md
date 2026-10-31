@@ -1,6 +1,6 @@
 # Build Expedition together
 
-Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent follows [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
+Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent uses Matt Pocock's skills directly, following [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
 
 Useful prompts:
 

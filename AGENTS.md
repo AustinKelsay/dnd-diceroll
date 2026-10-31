@@ -2,6 +2,8 @@
 
 For onboarding, Git updates, ticket work, PRs, or resuming a session, read `CONTRIBUTING.md`, then `docs/agents/workflow.md`. Keep the current checkout and editor owner intact; use an isolated workspace for simultaneous writing.
 
+Use Matt Pocock's skills directly, with this repo's workflow supplying Unreal and contribution rules. Do not invoke `plebdev-feature-dev` for this repository.
+
 Read `docs/development.md` before building, launching, editing assets, or using MCP. Read `docs/game-brief.md` before gameplay; undecided requirements need design input. Read `docs/architecture.md` for C++/Blueprint, pointer, property, and delegate conventions.
 
 For Epic skill installation, live editor tools, or connection recovery, read `docs/agents/unreal-tools.md` before following upstream defaults.
