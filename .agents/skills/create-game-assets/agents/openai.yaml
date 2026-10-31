@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Game Assets"
+  short_description: "Build and validate cohesive Unreal asset families"
+  default_prompt: "Use $create-game-assets to build a consistent asset family for the approved Unreal feature."
