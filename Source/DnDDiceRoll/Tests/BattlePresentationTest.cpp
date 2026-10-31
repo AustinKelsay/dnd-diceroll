@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Presentation/ExpeditionBattleView.h"
@@ -191,6 +192,14 @@ bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
                 if (View->IsPresenting())
                 {
                     bEnemyShown = true;
+                    const float PendingAge = View->Playback().Banner().Age;
+                    View->ToggleRecords();
+                    View->Tick(0.2f);
+                    TestEqual(TEXT("Records pauses the pending enemy presentation"), View->Playback().Banner().Age, PendingAge);
+                    TestTrue(TEXT("Records retains pending enemy steps"), View->IsPresenting());
+                    View->ToggleRecords();
+                    View->Tick(0.05f);
+                    TestTrue(TEXT("Closing records continues the same playback"), View->Playback().Banner().Age > PendingAge);
                     View->SkipPresentation();
                     TestFalse(TEXT("Skip finishes the enemy's steps"), View->IsPresenting());
                     TestTrue(TEXT("Skipping converges on the committed state"), DisplayMatchesRules(*View));
@@ -210,6 +219,10 @@ bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("Rejected input during playback leaves rules unchanged"),
                     FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Committed, &View->Rules().Snapshot(), 0));
                 TestTrue(TEXT("Rejected input does not skip the animation"), View->IsPresenting());
+                View->ClaimReward(Id);
+                TestTrue(TEXT("Rejected reward does not skip the animation"), View->IsPresenting());
+                TestTrue(TEXT("Rejected reward preserves the committed state"),
+                    FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Committed, &View->Rules().Snapshot(), 0));
                 View->Tick(0.05f);
                 TestFalse(TEXT("The display is still on its way"), DisplayMatchesRules(*View));
                 Settle(*View);
@@ -232,6 +245,64 @@ bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
         View->Resume();
         TestFalse(TEXT("Resume clears pending playback"), View->IsPresenting());
         TestTrue(TEXT("Resume shows the checkpoint"), DisplayMatchesRules(*View));
+    }
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+#endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCorpseVisibilityTest, "Project.Expedition.Presentation.OccupiedCorpseCellsStayVisible",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FExpeditionRun Run;
+    Run.NewRun(1, Error, TEXT("corpse-visibility"));
+    Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+    TestTrue(TEXT("Real commands finish the encounter"), ExpeditionTestSupport::FinishCombat(Run));
+    TestEqual(TEXT("Winning fixture"), Run.Progress().Phase, EExpeditionPhase::Reward);
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CorpseVisibility"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Run.Snapshot();
+    TestTrue(TEXT("Checkpoint writes"), FExpeditionSave::Write(Path, Data, Error));
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient corpse world"), World)) { return false; }
+    AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
+    if (TestNotNull(TEXT("Corpse view"), View))
+    {
+        View->ConfigureStorage(Path);
+        View->DispatchBeginPlay();
+        View->Resume();
+        View->Tick(0.1f);
+        TArray<USceneComponent*> Components;
+        View->GetComponents(Components);
+        int32 Corpses = 0;
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Enemy || Unit.Life != ECombatLife::Dead) { continue; }
+            ++Corpses;
+            const FVector Cell = View->CellPosition(Unit.Cell);
+            bool bVisibleBody = false;
+            for (USceneComponent* Component : Components)
+            {
+                if (Component->GetAttachParent() != View->GetRootComponent() || Component->GetNumChildrenComponents() < 4 ||
+                    !FVector2D(Component->GetRelativeLocation()).Equals(FVector2D(Cell), 0.1f)) { continue; }
+                TArray<USceneComponent*> Children;
+                Component->GetChildrenComponents(true, Children);
+                for (USceneComponent* Child : Children)
+                {
+                    const UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child);
+                    if (Primitive && Primitive->IsVisible() && Primitive->Bounds.GetBox().Max.Z > Cell.Z + 5.0f) { bVisibleBody = true; }
+                }
+            }
+            TestTrue(FString::Printf(TEXT("Occupied corpse cell for %s has a visible body above the board"), *Unit.Name), bVisibleBody);
+        }
+        TestTrue(TEXT("Fixture contains slain enemies"), Corpses > 0);
     }
     World->DestroyWorld(false);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);

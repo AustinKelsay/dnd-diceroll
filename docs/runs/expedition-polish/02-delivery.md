@@ -33,9 +33,23 @@ The final executable and packaged data were hash-matched against the final archi
 
 A fresh process with forced log flushing resumed the same checkpoint, completed three full Help → Space → Escape cycles with unchanged checkpoint bytes, remained rendered beyond the first process's lifetime, and then accepted Space with Help closed: the inspected HUD and committed checkpoint advanced from Nix to Ivo. Resume rebuilt the view again. This narrower reproduction did not reproduce the exit. The second process (PID 2426) then quit normally through Cmd-Q after about six minutes; its flushed log ends in normal shutdown with zero Error/Fatal lines (`.local/polish-render-repro2.log`). Fresh contribution preflight passes with zero commits behind staging and no project editor/listener. Runtime-crash adjudication remains open for independent review and owner investigation; a successful automation run is not a dismissal.
 
+The reviewer independently verified UUID `1DCD926B-D350-3A01-9C01-829DD1B317B7` and mapped the original return address to `check(UploadDataProxy == nullptr)` in `TBufferScatterUploader::Reserve` (`RendererPrivateUtils.h:317`). This identifies the failed engine invariant, not its cause.
+
+The requested next diagnostic was executed on the matching executable/checkpoint, PID 16957: LLDB attached successfully, resolved both `FDebug::CheckVerifyFailedImpl2` entry/island breakpoints, and installed an assertion callback to collect arguments/registers and all thread stacks. Five rendered Resume/rebuild cycles plus idle animation completed; breakpoints had **zero hits**. The process then exited normally with status **0**, with no Error/Fatal lines. Receipt: `.local/polish-debug-receipt.json`; flushed log: `.local/polish-debug-runtime.log`; command/capture harnesses remain ignored under `.local/`. No uploader address/task-order evidence could be captured without a recurrence. No baseline differential is claimed, because the symptom did not recur to compare. The runtime acceptance gap is still open.
+
 ## Independent review ledger
 
-Pending one fresh GPT-6.1 Sol review on xhigh, separately reporting Standards and Spec. Sol-loop budget: three rounds; later rounds only changed behavior/open findings. Snapshot the working tree before and after review, and leave scoped files unchanged while it runs.
+Round 1: fresh GPT-6.1 Sol on xhigh, fixed base `4634325` → `5efc2fc`, verdict **CHANGES**. Standards: no material source violations. Working-tree snapshots before/after both `39018be8f01455021b815e6ea6b1e2603bf34d72`; reviewer made no edits.
+
+| ID | Severity | Outcome |
+| --- | --- | --- |
+| S1 | should | Rejected reward requests no longer finish playback. Extended the actual view regression; failed before fix. |
+| S2 | should | Records pauses playback advancement and resumes the pending presentation on close. Enemy playback regression failed before fix. |
+| S3 | should | Fallen enemies remain visible above their occupied cells; removed sinking/hiding while retaining fall, death tint and rules occupancy. A real-command victory/checkpoint/view regression failed for both enemy corpses before fix. |
+| S4 | should | Restored the current seed in the existing status heading, without changing panel layout. Rendered recheck passed at 1280×760: the current seed is legible in the status heading. |
+| A1 | blocker: acceptance | Runtime assertion remains open; binary UUID and assertion independently identified. Matching-executable debugger reproduction did not recur; no engine or speculative project workaround applied. |
+
+Red evidence: `.local/automation/20261031T200942320818Z` (3 passed, 2 failed tests; loot/playback and both corpse assertions failed). Green: pinned editor build and full **41/41 Project automation, zero warnings** (`.local/automation/20261031T201248654038Z`), **50/50 helper/contribution tests** (`.local/polish-review-helpers.log`). Final corrected Mac Development package also passed build/cook/archive and exact-map startup (`Builds/20261031T201626746185Z/verified.json`). The launched executable and five packaged data files match that archive by SHA-256 (`.local/polish-final-package-hashes.json`). Inspected native final-package capture `.local/captures/polish/corrected-reward.png` at 1280×760 shows the restored seed and a fallen enemy body above the board outside the reward panel; automated geometry checks cover both slain enemies. The reward fixture resumed through native O input in a separate owned save directory. The exact final UI process (PID 28782) quit normally with zero Error/Fatal log lines (`.local/polish-final-runtime.log`); no owned editor or packaged app is retained. Source review round 2 will cover changed behavior and open findings. Sol-loop budget remains three rounds.
 
 ## Limits
 

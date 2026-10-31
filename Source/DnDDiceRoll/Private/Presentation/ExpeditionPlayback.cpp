@@ -101,7 +101,6 @@ void FExpeditionPlayback::Sync(const FCombatSnapshot& Snapshot)
         Display.MaxHP = FMath::Max(1, Unit.MaxHP);
         Display.Life = Unit.Life;
         Display.Tilt = Unit.Life == ECombatLife::Conscious ? 0.0f : 1.0f;
-        Display.Sink = Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead ? 1.0f : 0.0f;
     }
     for (auto It = Displays.CreateIterator(); It; ++It) { if (!Present.Contains(It.Key())) { It.RemoveCurrent(); } }
 }
@@ -378,7 +377,6 @@ void FExpeditionPlayback::AddFalls(const FCombatResult& Result, const FCombatSna
             if (FUnitDisplay* Display = Displays.Find(Id))
             {
                 Display->Tilt = FMath::Lerp(*StartTilt, 1.0f, EaseInOut(Alpha));
-                if (bEnemy && bDead) { Display->Sink = EaseInOut(Alpha); }
             }
         });
     }

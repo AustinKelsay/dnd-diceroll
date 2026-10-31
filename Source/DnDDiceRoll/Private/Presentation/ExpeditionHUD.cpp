@@ -337,7 +337,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
     {
         const FUnitDisplay* Display = Show.Unit(Unit.Id);
-        if (!Display || Display->Sink > 0.5f) { continue; }
+        if (!Display || Display->Life == ECombatLife::Dead) { continue; }
         FVector2D Point;
         if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? 70.0f : 122.0f), Point)) { continue; }
         const bool bFocus = Unit.Id == Active || Unit.Id == Player->HoveredUnit() || Unit.Id == Player->HoveredTarget() || Unit.Id == Player->Selection();
@@ -389,7 +389,7 @@ void AExpeditionHUD::DrawTopBar()
     {
         const FExpeditionProgress& Run = View->Progress();
         Panel(12, 12, 250, 74);
-        Text(TEXT("EXPEDITION"), 24, 20, Gold, 0.72f);
+        Text(FString::Printf(TEXT("EXPEDITION  ·  SEED %d"), Run.Seed), 24, 20, Gold, 0.72f);
         Text(View->LocationName(), 24, 36, Parchment, 1.08f, EAlign::Left, 226);
         const FString Status = View->InCombat() ? FString::Printf(TEXT("Encounter %d of %d  ·  Round %d"), Run.History.Num(), FExpeditionRun::EncounterCount, View->Rules().Snapshot().Round) : PhaseLine(Run);
         Text(Status, 24, 62, Muted, 0.72f);

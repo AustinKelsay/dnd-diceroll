@@ -597,7 +597,7 @@ FVector AExpeditionBattleView::UnitPosition(int32 Id, float Height) const
 {
     const FUnitDisplay* Unit = Show.Unit(Id);
     if (!Unit) { return BoardPosition(FVector2D::ZeroVector, Height); }
-    return BoardPosition(Unit->Position + Unit->Lean, Unit->Hop + Height - Unit->Sink * 70.0f - Unit->Tilt * 45.0f);
+    return BoardPosition(Unit->Position + Unit->Lean, Unit->Hop + Height - Unit->Tilt * 45.0f);
 }
 
 void AExpeditionBattleView::UpdateRigs()
@@ -607,14 +607,13 @@ void AExpeditionBattleView::UpdateRigs()
         const FUnitDisplay* Unit = Show.Unit(Rig.Id);
         if (!Unit || !Rig.Root) { continue; }
         const float Breath = Unit->Life == ECombatLife::Conscious ? FMath::Sin(Clock * 2.2f + Rig.Phase) : 0.0f;
-        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, Unit->Hop - Unit->Sink * 70.0f);
+        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, Unit->Hop);
         const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Unit->Facing.Y, Unit->Facing.X));
         const FQuat Turn(FVector::UpVector, FMath::DegreesToRadians(Facing));
         const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
         Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
-        const float Shrink = 1.0f - Unit->Sink * 0.5f;
-        Rig.Root->SetRelativeScale3D(FVector(Shrink, Shrink, Shrink * (1.0f + Breath * 0.02f)));
-        Rig.Root->SetVisibility(Unit->Sink < 0.99f, true);
+        // Bodies still occupy their cells, so keep fallen rigs visible on the board.
+        Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f));
         const bool bDead = Unit->Life == ECombatLife::Dead;
         for (FExpeditionPart& Part : Rig.Parts)
         {
@@ -838,12 +837,12 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
 void AExpeditionBattleView::ClaimReward(int32 RecipientId)
 {
     if (bShowRecords) { return; }
-    Show.Finish();
     FString Error;
     const FCombatantState* Before = Rules().Find(RecipientId);
     const FCombatantState Previous = Before ? *Before : FCombatantState();
     if (Session.ClaimReward(RecipientId, Error))
     {
+        Show.Finish();
         Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")});
         Show.Sync(Rules().Snapshot());
         if (const FCombatantState* After = Rules().Find(RecipientId))
@@ -980,7 +979,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
-    Show.Tick(DeltaSeconds);
+    if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(DeltaSeconds);
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked) { return; }

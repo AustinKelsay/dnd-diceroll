@@ -21,7 +21,6 @@ struct DNDDICEROLL_API FUnitDisplay
     float Flash = 0.0f;
     float Glow = 0.0f;
     float Tilt = 0.0f;                          // 0 upright, 1 lying down.
-    float Sink = 0.0f;                          // Fallen enemies sink away.
     int32 HP = 0;
     int32 MaxHP = 1;
     float ShownHP = 0.0f;
