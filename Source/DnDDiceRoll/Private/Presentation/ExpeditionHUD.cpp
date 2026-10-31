@@ -337,7 +337,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
     {
         const FUnitDisplay* Display = Show.Unit(Unit.Id);
-        if (!Display || Display->Life == ECombatLife::Dead) { continue; }
+        if (!Display) { continue; }
         FVector2D Point;
         if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? 70.0f : 122.0f), Point)) { continue; }
         const bool bFocus = Unit.Id == Active || Unit.Id == Player->HoveredUnit() || Unit.Id == Player->HoveredTarget() || Unit.Id == Player->Selection();
