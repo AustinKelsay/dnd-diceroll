@@ -25,6 +25,7 @@ public:
     const FCombatBattle& Rules() const { return Battle; }
     const TArray<FString>& Messages() const { return Feedback; }
     void Execute(const FCombatCommand& Command);
+    void NextEncounter(int32 RecipientId);
     void Orbit(float Degrees);
     void Zoom(float Amount);
     FVector CellPosition(FIntPoint Cell) const;
@@ -58,14 +59,22 @@ public:
     int32 Selection() const { return SelectedId; }
     bool HoverCell(FIntPoint& Cell) const;
     bool KeyboardCell(FIntPoint& Cell) const;
+    ECombatCommandType Action() const { return SelectedAction; }
+    FString ActionHelp() const;
     void SelectPartyIndex(int32 Index);
 private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
+    ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     void Click();
+    void AttackMode();
+    void RoleMode();
+    void RescueMode();
+    void PotionMode();
+    void Continue();
     void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint Offset);
     void CursorUp();

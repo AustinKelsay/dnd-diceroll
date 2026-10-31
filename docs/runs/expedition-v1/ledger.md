@@ -50,7 +50,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | Slice | Blocked by | Owner/status | Evidence |
 | --- | --- | --- | --- |
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
-| Survive losses and use party roles | battle | next sole implementation worker, baseline `2ef68bce87b3f78457859be462701fae4e0b4330` | pending |
+| Survive losses and use party roles | battle | sole implementation worker/editor owner active; fixed baseline `7c119bace4821ac04c7cf27a80e5ea9175aa8aaf` | [session](02-party-consequences.md); 17/17 Project tests, 22/22 helpers; native PIE and two-axis review in progress |
 | Complete a seeded expedition | losses/roles | pending | pending |
 | Resume a run and record its ending | expedition | pending | pending |
 

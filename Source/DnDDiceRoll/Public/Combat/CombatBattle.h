@@ -8,9 +8,13 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion };
+UENUM()
+enum class EAdventurerRole : uint8 { None, Fighter, Rogue, Cleric, Wizard };
+UENUM()
+enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 
-/** Slice-one combatant data. IDs are stable across presentation rebuilds. Zero HP is inactive. */
+/** Serializable combat and persistent adventurer values; IDs never change between encounters. */
 USTRUCT()
 struct DNDDICEROLL_API FCombatantState
 {
@@ -18,6 +22,14 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Id = INDEX_NONE;
     UPROPERTY() FString Name;
     UPROPERTY() FString Role;
+    UPROPERTY() EAdventurerRole AdventurerRole = EAdventurerRole::None;
+    UPROPERTY() ECombatLife Life = ECombatLife::Conscious;
+    UPROPERTY() int32 RescueTurnsLeft = 0;
+    UPROPERTY() int32 SecondWindUses = 0;
+    UPROPERTY() int32 SpellSlots = 0;
+    UPROPERTY() int32 Potions = 0;
+    UPROPERTY() int32 WeaponRank = 0;
+    UPROPERTY() bool bSneakWeapon = false;
     UPROPERTY() ECombatSide Side = ECombatSide::Party;
     UPROPERTY() FIntPoint Cell = FIntPoint::ZeroValue;
     UPROPERTY() int32 MaxHP = 20;
@@ -54,6 +66,7 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() int32 Round = 1;
     UPROPERTY() int32 MovementLeft = 0;
     UPROPERTY() bool bActionAvailable = true;
+    UPROPERTY() bool bBonusActionAvailable = true;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
 
@@ -74,6 +87,8 @@ struct DNDDICEROLL_API FCombatResult
     int32 Damage = 0;
     bool bHit = false;
     bool bCritical = false;
+    int32 Healing = 0;
+    bool bSneakAttack = false;
 };
 
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
@@ -89,7 +104,7 @@ public:
     const FCombatantState* Find(int32 Id) const;
     int32 ActiveId() const;
     TArray<FIntPoint> LegalMoves(int32 Id) const;
-    TArray<int32> LegalTargets(int32 Id) const;
+    TArray<int32> LegalTargets(int32 Id, ECombatCommandType Action = ECombatCommandType::Attack) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
@@ -105,4 +120,6 @@ private:
     int32 Roll(int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();
+    void ApplyDamage(FCombatantState& Target, int32 Damage);
+    FCombatantState* MutableFind(int32 Id);
 };

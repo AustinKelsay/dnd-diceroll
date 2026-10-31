@@ -1,4 +1,5 @@
 #include "Presentation/ExpeditionBattleView.h"
+#include "Party/PartyContinuity.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/InputComponent.h"
@@ -19,7 +20,7 @@ constexpr float CellSize = 110.0f;
 constexpr float HUDDesignWidth = 1280.0f;
 constexpr float PartyPanelWidth = 245.0f;
 constexpr float PartyCardsTop = 100.0f;
-constexpr float PartyCardHeight = 60.0f;
+constexpr float PartyCardHeight = 67.0f;
 constexpr int32 PartyCardCount = 4;
 FLinearColor PartyColor(int32 Id)
 {
@@ -95,7 +96,7 @@ void AExpeditionBattleView::BeginPlay()
         UnitMeshes.Add(MakeMesh(Cylinder, CellPosition(Unit.Cell), FVector(0.55f, 0.55f, 0.75f),
             Unit.Side == ECombatSide::Party ? PartyColor(Unit.Id) : FLinearColor(0.8f, 0.17f, 0.12f)));
     }
-    Feedback.Add(TEXT("Briar crossing | Defeat the raiders. Select the active adventurer to act."));
+    Feedback.Add(TEXT("Briar crossing | Rescue before 3 downed turn slots pass. Unrescued allies die at battle end."));
     RefreshUnits(); UpdateCamera();
 }
 
@@ -129,6 +130,17 @@ void AExpeditionBattleView::Execute(const FCombatCommand& Command)
     if (!Unit || Unit->Side != ECombatSide::Party) { return; }
     Record(Battle.Submit(Command));
     RefreshUnits();
+}
+
+void AExpeditionBattleView::NextEncounter(int32 RecipientId)
+{
+    FString Error;
+    if (FPartyContinuity::Advance(Battle, FCombatBattle::TutorialEncounter(), 20261031, RecipientId, Error))
+    {
+        Record({true, TEXT("Next crossing: survivors retain HP, uses and deaths. Selected survivor receives +1 gear rank and +1 potion.")});
+        RefreshUnits();
+    }
+    else { Record({false, Error}); }
 }
 
 void AExpeditionBattleView::Tick(float DeltaSeconds)
@@ -200,6 +212,11 @@ void AExpeditionPlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::Down, IE_Pressed, this, &AExpeditionPlayerController::CursorDown);
     InputComponent->BindKey(EKeys::Left, IE_Pressed, this, &AExpeditionPlayerController::CursorLeft);
     InputComponent->BindKey(EKeys::Right, IE_Pressed, this, &AExpeditionPlayerController::CursorRight);
+    InputComponent->BindKey(EKeys::A, IE_Pressed, this, &AExpeditionPlayerController::AttackMode);
+    InputComponent->BindKey(EKeys::F, IE_Pressed, this, &AExpeditionPlayerController::RoleMode);
+    InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AExpeditionPlayerController::RescueMode);
+    InputComponent->BindKey(EKeys::P, IE_Pressed, this, &AExpeditionPlayerController::PotionMode);
+    InputComponent->BindKey(EKeys::N, IE_Pressed, this, &AExpeditionPlayerController::Continue);
     InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AExpeditionPlayerController::ConfirmCell);
 }
 
@@ -213,6 +230,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         const FCombatantState* Active = BattleView->Rules().Find(ActiveId);
         if (Active && Active->Side == ECombatSide::Party) { SelectedId = ActiveId; GridCursor = Active->Cell; }
         LastActiveId = ActiveId;
+        SelectedAction = ECombatCommandType::Attack;
     }
 }
 bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
@@ -271,11 +289,37 @@ void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Cell != Cell) { continue; }
-        if (Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; }
-        else { BattleView->Execute({ECombatCommandType::Attack, SelectedId, {}, Unit.Id}); }
+        if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; }
+        else { BattleView->Execute({SelectedAction, SelectedId, {}, Unit.Id}); }
         return;
     }
-    BattleView->Execute({ECombatCommandType::Move, SelectedId, Cell});
+    if (SelectedAction == ECombatCommandType::Attack) { BattleView->Execute({ECombatCommandType::Move, SelectedId, Cell}); }
+    else { BattleView->Execute({SelectedAction, SelectedId, {}, INDEX_NONE}); }
+}
+void AExpeditionPlayerController::AttackMode() { SelectedAction = ECombatCommandType::Attack; }
+void AExpeditionPlayerController::RescueMode() { SelectedAction = ECombatCommandType::Rescue; }
+void AExpeditionPlayerController::PotionMode() { SelectedAction = ECombatCommandType::Potion; }
+void AExpeditionPlayerController::RoleMode()
+{
+    if (!IsValid(BattleView)) { return; }
+    const FCombatantState* Unit = BattleView->Rules().Find(SelectedId);
+    if (!Unit) { return; }
+    SelectedAction = Unit->AdventurerRole == EAdventurerRole::Fighter ? ECombatCommandType::SecondWind :
+        Unit->AdventurerRole == EAdventurerRole::Cleric ? ECombatCommandType::CureWounds :
+        Unit->AdventurerRole == EAdventurerRole::Wizard ? ECombatCommandType::MagicMissile : ECombatCommandType::Attack;
+}
+void AExpeditionPlayerController::Continue() { if (IsValid(BattleView)) { BattleView->NextEncounter(SelectedId); LastActiveId = INDEX_NONE; } }
+FString AExpeditionPlayerController::ActionHelp() const
+{
+    switch (SelectedAction)
+    {
+    case ECombatCommandType::SecondWind: return TEXT("SECOND WIND | Bonus + 1 use | self | d10+1 healing | target self");
+    case ECombatCommandType::CureWounds: return TEXT("CURE WOUNDS | Action + 1 slot | ally/self, 1 cell | 2d8+3 healing");
+    case ECombatCommandType::MagicMissile: return TEXT("MAGIC MISSILE | Action + 1 slot | enemy, 6 cells + sight | 3d4+3 auto-hit");
+    case ECombatCommandType::Rescue: return TEXT("RESCUE | Action, no item | downed ally, 1 cell | restore 1 HP");
+    case ECombatCommandType::Potion: return TEXT("POTION | Action + 1 bottle | ally/self, 1 cell | 2d4+2 healing");
+    default: return TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d6 with conscious ally by target; Wizard: Fire Bolt d10");
+    }
 }
 void AExpeditionPlayerController::EndTurn() { if (IsValid(BattleView)) { BattleView->Execute({ECombatCommandType::EndTurn, SelectedId}); } }
 void AExpeditionPlayerController::RotateLeft() { if (IsValid(BattleView)) { BattleView->Orbit(-30); } }
@@ -326,7 +370,7 @@ void AExpeditionHUD::DrawHUD()
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
     const FCombatantState* Selected = Rules.Find(Controller->Selection());
-    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, PartyPanelWidth - 8, 470);
+    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, PartyPanelWidth - 8, 495);
     Label(TEXT("EXPEDITION"), 20, 18, FLinearColor(1, 0.8f, 0.4f), 1.15f);
     Label(FString::Printf(TEXT("ROUND %d"), Snapshot.Round), 20, 44);
     Label(Active ? TEXT("TURN: ") + Active->Name : TEXT("No active turn"), 20, 65, FLinearColor::Yellow);
@@ -338,7 +382,9 @@ void AExpeditionHUD::DrawHUD()
             const float Y = PartyCardsTop + PartyIndex * PartyCardHeight;
             if (Selected && Selected->Id == Unit.Id) { Panel(FLinearColor(0.15f, 0.24f, 0.3f, 1), 14, Y, PartyPanelWidth - 20, PartyCardHeight - 5); }
             Label(FString::Printf(TEXT("[%d] %s / %s"), ++PartyIndex, *Unit.Name, *Unit.Role), 20, Y + 4, PartyColor(Unit.Id));
-            Label(FString::Printf(TEXT("HP %d/%d  AC %d%s"), Unit.HP, Unit.MaxHP, Unit.ArmorClass, Unit.HP == 0 ? TEXT("  INACTIVE") : TEXT("")), 20, Y + 25);
+            const FString Fate = Unit.Life == ECombatLife::Dead ? TEXT("DEAD - permanent") : Unit.Life == ECombatLife::Downed ? FString::Printf(TEXT("DOWNED: %d turns"), Unit.RescueTurnsLeft) : FString::Printf(TEXT("HP %d/%d  AC %d"), Unit.HP, Unit.MaxHP, Unit.ArmorClass);
+            Label(Fate, 20, Y + 24, Unit.Life == ECombatLife::Conscious ? FLinearColor::White : FLinearColor(1,0.5f,0.3f));
+            Label(FString::Printf(TEXT("Wind %d | Slots %d | Pot %d | Gear +%d"), Unit.SecondWindUses, Unit.SpellSlots, Unit.Potions, Unit.WeaponRank),20,Y+44,FLinearColor(0.7f,0.85f,0.9f),0.85f);
         }
         FVector2D Screen;
         if (Controller->ProjectWorldLocationToScreen(View->CellPosition(Unit.Cell) + FVector(0, 0, 90), Screen))
@@ -348,13 +394,15 @@ void AExpeditionHUD::DrawHUD()
         }
         if (Active && Unit.Id == Active->Id) { OutlineCell(Controller, View, Unit.Cell, FLinearColor::Yellow, 4); }
     }
-    Label(TEXT("Click / arrows+Enter: move / attack"), 20, 350);
-    Label(TEXT("1-4: select | SPACE: end turn"), 20, 372);
-    Label(TEXT("Q / E: rotate | Wheel: zoom"), 20, 394);
-    Label(TEXT("Cyan: reachable | Red: legal target"), 20, 416, FLinearColor(0.25f,0.9f,1));
-    Label(TEXT("Yellow: turn | White: selection"), 20, 438);
+    Label(TEXT("Arrows+Enter / Click: target"), 20, 372);
+    Label(TEXT("1-4: select | SPACE: end turn"), 20, 390);
+    Label(TEXT("A: attack/move | F: role action"), 20, 408);
+    Label(TEXT("R: rescue | P: potion"), 20, 426);
+    Label(TEXT("Q/E: rotate | Wheel: zoom"), 20, 444);
+    Label(TEXT("Red: legal target | Cyan: move"), 20, 462, FLinearColor(0.25f,0.9f,1));
+    Label(TEXT("N after victory: loot + next fight"), 20, 480);
     const TArray<FIntPoint> Moves = Rules.LegalMoves(Controller->Selection());
-    const TArray<int32> Targets = Rules.LegalTargets(Controller->Selection());
+    const TArray<int32> Targets = Rules.LegalTargets(Controller->Selection(), Controller->Action());
     for (FIntPoint Cell : Moves) { OutlineCell(Controller, View, Cell, FLinearColor(0.15f,0.8f,0.9f), 1.5f); }
     for (int32 Id : Targets) { OutlineCell(Controller, View, Rules.Find(Id)->Cell, FLinearColor(1,0.18f,0.12f), 3); }
     if (Selected) { OutlineCell(Controller, View, Selected->Cell, FLinearColor::White, 2); }
@@ -362,17 +410,18 @@ void AExpeditionHUD::DrawHUD()
     if (Controller->KeyboardCell(KeyboardCursor)) { OutlineCell(Controller, View, KeyboardCursor, FLinearColor(1, 0.6f, 0), 5); }
     float Width = Canvas->SizeX / HUDScale;
     float Height = Canvas->SizeY / HUDScale;
-    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, Height - 185, Width - 16, 177);
+    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, Height - 215, Width - 16, 207);
     FString Preview;
     if (Snapshot.Phase != EBattlePhase::Fighting)
     {
-        Preview = Snapshot.Phase == EBattlePhase::Victory ? TEXT("VICTORY - The crossing is clear.") : TEXT("DEFEAT - The party can no longer fight.");
+        Preview = Snapshot.Phase == EBattlePhase::Victory ? TEXT("VICTORY | Unrescued allies are DEAD. Select survivor (1-4), N: +1 gear / potion and next fight.") : TEXT("PARTY WIPE | No conscious rescuer remains. Deaths are permanent. Restart PIE for a fresh party.");
     }
     else if (Selected && Active && Selected->Id == Active->Id)
     {
-        Preview = FString::Printf(TEXT("%s | Move %d | Attack %s | Range %d cells | d20 %+d, damage d%d +%d"),
+        Preview = FString::Printf(TEXT("%s | Move %d | Action %s | Range %d cells | d20 %+d, damage d%d +%d"),
             *Selected->Name, Snapshot.MovementLeft, Snapshot.bActionAvailable ? TEXT("READY") : TEXT("SPENT"), Selected->Range,
-            Selected->AttackBonus, Selected->DamageDie, Selected->DamageBonus);
+            Selected->AttackBonus, Selected->DamageDie, Selected->DamageBonus + Selected->WeaponRank);
+        Preview += Snapshot.bBonusActionAvailable ? TEXT(" | Bonus READY") : TEXT(" | Bonus SPENT");
         FIntPoint Hover;
         if (Controller->HoverCell(Hover))
         {
@@ -380,12 +429,13 @@ void AExpeditionHUD::DrawHUD()
             for (int32 Id : Targets)
             {
                 const FCombatantState* Target = Rules.Find(Id);
-                if (Target->Cell == Hover) { Preview += FString::Printf(TEXT(" | ATTACK %s vs AC %d"), *Target->Name, Target->ArmorClass); }
+                if (Target->Cell == Hover) { Preview += FString::Printf(TEXT(" | TARGET %s (AC %d)"), *Target->Name, Target->ArmorClass); }
             }
         }
     }
     else { Preview = TEXT("Inspecting party. Select the yellow active adventurer to act; enemies play automatically."); }
-    Label(Preview, 20, Height - 176, FLinearColor::Yellow, 1.05f);
+    Label(Controller->ActionHelp(), 20, Height - 206, FLinearColor(0.3f,0.9f,1), 1.0f);
+    Label(Preview, 20, Height - 182, FLinearColor::Yellow, 1.05f);
     float Y = Height - 145;
     for (const FString& Message : View->Messages()) { Label(Message, 20, Y); Y += 22; }
     FString Initiative = TEXT("Initiative: ");

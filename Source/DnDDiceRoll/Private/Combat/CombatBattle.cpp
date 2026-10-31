@@ -39,6 +39,13 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
             Unit.DamageDie < 1 || Unit.DamageDie > 100 || Unit.DamageBonus < 0 || Unit.DamageBonus > 100 ||
             Unit.Range < 1 || Unit.Range > 32 || Unit.Speed < 0 || Unit.Speed > 32 ||
             Unit.InitiativeBonus < -10 || Unit.InitiativeBonus > 30 ||
+            static_cast<uint8>(Unit.AdventurerRole) > static_cast<uint8>(EAdventurerRole::Wizard) ||
+            static_cast<uint8>(Unit.Life) > static_cast<uint8>(ECombatLife::Dead) ||
+            (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
+            (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party || Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)) ||
+            (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
+            Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
+            Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
             (Unit.Side != ECombatSide::Party && Unit.Side != ECombatSide::Enemy))
         {
             return Reject(TEXT("Invalid combatant stats, ID, or occupied spawn."));
@@ -56,7 +63,7 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
     for (FCombatantState& Unit : State.Encounter.Combatants)
     {
         Unit.Initiative = Roll(20) + Unit.InitiativeBonus;
-        if (Unit.HP > 0) { State.TurnOrder.Add(Unit.Id); }
+        if (Unit.Life != ECombatLife::Dead) { State.TurnOrder.Add(Unit.Id); }
     }
     State.TurnOrder.Sort([this](int32 A, int32 B)
     {
@@ -64,6 +71,11 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
         const int32 IB = Find(B)->Initiative;
         return IA == IB ? A < B : IA > IB;
     });
+    if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
+    {
+        if (--First->RescueTurnsLeft == 0) { First->Life = ECombatLife::Dead; }
+        AdvanceTurn();
+    }
     State.MovementLeft = Find(ActiveId())->Speed;
     return true;
 }
@@ -96,7 +108,7 @@ bool FCombatBattle::IsOpen(FIntPoint Cell, int32 MovingId) const
     return IsInside(Cell) && !State.Encounter.BlockedCells.Contains(Cell) &&
         !State.Encounter.Combatants.ContainsByPredicate([Cell, MovingId](const FCombatantState& Unit)
         {
-            // Inactive bodies still occupy their cell in this slice.
+            // Downed and dead bodies occupy their cells until the encounter transition.
             return Unit.Id != MovingId && Unit.Cell == Cell;
         });
 }
@@ -170,14 +182,35 @@ bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Ori
         HasLineOfSight(Origin, Target.Cell);
 }
 
-TArray<int32> FCombatBattle::LegalTargets(int32 Id) const
+TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) const
 {
     TArray<int32> Result;
     const FCombatantState* Unit = Find(Id);
-    if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !State.bActionAvailable || !Unit) { return Result; }
+    if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious) { return Result; }
+    if (Action == ECombatCommandType::SecondWind)
+    {
+        if (Unit->AdventurerRole == EAdventurerRole::Fighter && Unit->SecondWindUses > 0 && State.bBonusActionAvailable && Unit->HP < Unit->MaxHP) { Result.Add(Id); }
+        return Result;
+    }
+    if (!State.bActionAvailable) { return Result; }
+    if (Action == ECombatCommandType::CureWounds && (Unit->AdventurerRole != EAdventurerRole::Cleric || Unit->SpellSlots <= 0)) { return Result; }
+    if (Action == ECombatCommandType::MagicMissile && (Unit->AdventurerRole != EAdventurerRole::Wizard || Unit->SpellSlots <= 0)) { return Result; }
+    if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return Result; }
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
-        if (CanTargetFrom(*Unit, Unit->Cell, Target)) { Result.Add(Target.Id); }
+        bool bLegal = false;
+        if (Action == ECombatCommandType::Attack) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target); }
+        else if (Action == ECombatCommandType::MagicMissile)
+        {
+            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= 6 && HasLineOfSight(Unit->Cell, Target.Cell);
+        }
+        else if (Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion)
+        {
+            bLegal = Unit->Side == ECombatSide::Party && Target.Side == Unit->Side && Target.Life != ECombatLife::Dead && Target.HP < Target.MaxHP &&
+                GridDistance(Unit->Cell, Target.Cell) <= 1 && HasLineOfSight(Unit->Cell, Target.Cell) &&
+                (Action != ECombatCommandType::Rescue || Target.Life == ECombatLife::Downed);
+        }
+        if (bLegal) { Result.Add(Target.Id); }
     }
     return Result;
 }
@@ -188,7 +221,7 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     auto Reject = [&Result](const TCHAR* Reason) { Result.Feedback = Reason; return Result; };
     const FCombatantState* Actor = Find(Command.ActorId);
     if (!bStarted || State.Phase != EBattlePhase::Fighting) { return Reject(TEXT("Battle is not active.")); }
-    if (!Actor || Actor->HP <= 0 || ActiveId() != Command.ActorId) { return Reject(TEXT("Only the active combatant can act.")); }
+    if (!Actor || Actor->Life != ECombatLife::Conscious || ActiveId() != Command.ActorId) { return Reject(TEXT("Only the active combatant can act.")); }
     if (Command.Type == ECombatCommandType::Move)
     {
         if (!LegalMoves(Command.ActorId).Contains(Command.Destination)) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
@@ -208,14 +241,51 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
         Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Target->ArmorClass);
         if (Result.bHit)
         {
-            Result.Damage = Roll(Actor->DamageDie) + (Result.bCritical ? Roll(Actor->DamageDie) : 0) + Actor->DamageBonus;
-            Target->HP = FMath::Max(0, Target->HP - Result.Damage);
+            Result.Damage = Roll(Actor->DamageDie) + (Result.bCritical ? Roll(Actor->DamageDie) : 0) + Actor->DamageBonus + Actor->WeaponRank;
+            Result.bSneakAttack = Actor->AdventurerRole == EAdventurerRole::Rogue && Actor->bSneakWeapon &&
+                State.Encounter.Combatants.ContainsByPredicate([Actor, Target](const FCombatantState& Ally)
+                {
+                    return Ally.Id != Actor->Id && Ally.Side == Actor->Side && Ally.Life == ECombatLife::Conscious && GridDistance(Ally.Cell, Target->Cell) <= 1;
+                });
+            if (Result.bSneakAttack) { Result.Damage += Roll(6) + (Result.bCritical ? Roll(6) : 0); }
+            ApplyDamage(*Target, Result.Damage);
         }
         State.bActionAvailable = false;
         Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d + %d = %d vs AC %d | %s | %d damage. HP %d/%d%s"),
             *Actor->Name, *Target->Name, Result.NaturalRoll, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage,
-            Target->HP, Target->MaxHP, Target->HP == 0 ? TEXT(" INACTIVE") : TEXT(""));
+            Target->HP, Target->MaxHP, Target->Life == ECombatLife::Downed ? TEXT(" DOWNED (3 rescue turns)") : Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : Result.bSneakAttack ? TEXT(" SNEAK +d6") : TEXT(""));
+        CheckOutcome();
+    }
+    else if (Command.Type == ECombatCommandType::SecondWind || Command.Type == ECombatCommandType::CureWounds ||
+        Command.Type == ECombatCommandType::MagicMissile || Command.Type == ECombatCommandType::Rescue || Command.Type == ECombatCommandType::Potion)
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Ability unavailable: check role, budget, uses, living target, range and sight.")); }
+        FCombatantState* User = MutableFind(Command.ActorId);
+        FCombatantState* Target = MutableFind(Command.TargetId);
+        const TCHAR* Ability = TEXT("Rescue");
+        if (Command.Type == ECombatCommandType::MagicMissile)
+        {
+            --User->SpellSlots;
+            Result.Damage = Roll(4) + Roll(4) + Roll(4) + 3;
+            Result.bHit = true;
+            ApplyDamage(*Target, Result.Damage);
+            Ability = TEXT("Magic Missile (3 darts, 1 slot)");
+        }
+        else
+        {
+            int32 Amount = 1;
+            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Amount = Roll(10) + 1; Ability = TEXT("Second Wind (bonus, 1 use)"); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Amount = Roll(8) + Roll(8) + 3; Ability = TEXT("Cure Wounds (2d8+3, 1 slot)"); }
+            else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Amount = Roll(4) + Roll(4) + 2; Ability = TEXT("Potion (2d4+2, 1 bottle)"); }
+            Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
+            Target->HP += Result.Healing;
+            Target->Life = ECombatLife::Conscious;
+            Target->RescueTurnsLeft = 0;
+        }
+        if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
+        else { State.bActionAvailable = false; }
+        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d | HP %d/%d"), *User->Name, Ability, *Target->Name, Result.Healing, Result.Damage, Target->HP, Target->MaxHP);
         CheckOutcome();
     }
     else if (Command.Type == ECombatCommandType::EndTurn)
@@ -228,16 +298,39 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     return Result;
 }
 
+FCombatantState* FCombatBattle::MutableFind(int32 Id)
+{
+    return State.Encounter.Combatants.FindByPredicate([Id](const FCombatantState& Unit) { return Unit.Id == Id; });
+}
+
+void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
+{
+    Target.HP = FMath::Max(0, Target.HP - Damage);
+    if (Target.HP == 0)
+    {
+        Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
+        Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
+    }
+}
+
 void FCombatBattle::CheckOutcome()
 {
     bool bParty = false;
     bool bEnemy = false;
     for (const FCombatantState& Unit : State.Encounter.Combatants)
     {
-        bParty |= Unit.Side == ECombatSide::Party && Unit.HP > 0;
-        bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.HP > 0;
+        bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
+        bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
     }
     State.Phase = !bParty ? EBattlePhase::Defeat : !bEnemy ? EBattlePhase::Victory : EBattlePhase::Fighting;
+    // Rescue must happen during combat. A wipe or an unresolved victory deadline is permanent.
+    if (State.Phase != EBattlePhase::Fighting)
+    {
+        for (FCombatantState& Unit : State.Encounter.Combatants)
+        {
+            if (Unit.Life == ECombatLife::Downed) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; }
+        }
+    }
 }
 
 void FCombatBattle::AdvanceTurn()
@@ -246,11 +339,16 @@ void FCombatBattle::AdvanceTurn()
     {
         State.TurnIndex = (State.TurnIndex + 1) % State.TurnOrder.Num();
         if (State.TurnIndex == 0) { ++State.Round; }
-        const FCombatantState* Next = Find(ActiveId());
-        if (Next->HP > 0)
+        FCombatantState* Next = MutableFind(ActiveId());
+        if (Next->Life == ECombatLife::Downed)
+        {
+            if (--Next->RescueTurnsLeft == 0) { Next->Life = ECombatLife::Dead; }
+        }
+        else if (Next->Life == ECombatLife::Conscious)
         {
             State.MovementLeft = Next->Speed;
             State.bActionAvailable = true;
+            State.bBonusActionAvailable = true;
             return;
         }
     }
@@ -312,11 +410,20 @@ FCombatEncounter FCombatBattle::TutorialEncounter()
         Unit.Name = Names[Index]; Unit.Role = Roles[Index]; Unit.Cell = Cells[Index];
         Unit.Side = Index < 4 ? ECombatSide::Party : ECombatSide::Enemy;
         Unit.MaxHP = Unit.HP = Index == 0 ? 30 : Index < 4 ? 22 : 16;
+        if (Index < 4)
+        {
+            Unit.AdventurerRole = static_cast<EAdventurerRole>(Index + 1);
+            Unit.SecondWindUses = Index == 0 ? 2 : 0;
+            Unit.SpellSlots = Index >= 2 ? 2 : 0;
+            Unit.Potions = 1;
+            Unit.bSneakWeapon = Index == 1;
+        }
+        Unit.DamageDie = Index == 3 ? 10 : 6;
         Unit.ArmorClass = Index == 0 ? 16 : Index < 4 ? 13 : 12;
         Unit.Range = Index == 3 || Index == 6 ? 4 : Index == 1 || Index == 2 ? 3 : 1;
         Unit.InitiativeBonus = Index == 1 ? 4 : 1;
         Unit.AttackBonus = Index < 4 ? 5 : 3;
-        Unit.DamageBonus = Index < 4 ? 3 : 1;
+        Unit.DamageBonus = Index == 3 ? 0 : Index < 4 ? 3 : 1;
         Encounter.Combatants.Add(Unit);
     }
     return Encounter;
