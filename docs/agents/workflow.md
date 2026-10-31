@@ -51,6 +51,8 @@ Dependent work normally waits for its base feature to integrate. An exception re
 
 ## 4. Implement and verify a bounded slice
 
+For editor, presentation or asset tasks, follow [editor contributions](editor-contributions.md) for the brief, preservation constraints, tool outcomes, recovery and completion report. Refine the existing approved issue; retain its authority and avoid a duplicate work record.
+
 Record a pre-ticket commit as the fixed review baseline. Use the approved public testing seam for TDD where behavior can be specified; then implement the smallest complete slice. Reuse the safe Unreal lifecycle from development. Keep assets under `/Game/DnDDiceRoll` and provenance in `docs/assets.md`; declare existing binary paths in the issue claim before editing. Preserve the starter sandbox fixture. New feature assets should avoid shared binary edits where practical. LFS locking is an optional experiment until the team validates enforcement.
 
 Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-scope files, then `python3 tools/contribute.py check` to inspect the actual Git index. This catches raw binaries that should be LFS pointers, generated output, machine-generated config tokens, inconsistent MCP settings, and broken local Markdown links. It does not prove an asset is downloadable from the remote.
