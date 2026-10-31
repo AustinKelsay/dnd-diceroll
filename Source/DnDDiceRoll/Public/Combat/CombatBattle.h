@@ -100,6 +100,7 @@ class DNDDICEROLL_API FCombatBattle
 {
 public:
     bool Start(const FCombatEncounter& Encounter, int32 Seed, FString& Error);
+    bool Restore(const FCombatSnapshot& Snapshot, FString& Error);
     const FCombatSnapshot& Snapshot() const { return State; }
     const FCombatantState* Find(int32 Id) const;
     int32 ActiveId() const;
@@ -115,6 +116,7 @@ private:
     friend class FPartyContinuity;
     FCombatSnapshot State;
     bool bStarted = false;
+    static bool ValidateEncounter(const FCombatEncounter& Encounter, FString& Error);
     bool IsInside(FIntPoint Cell) const;
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;

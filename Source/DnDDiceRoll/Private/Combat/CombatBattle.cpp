@@ -23,7 +23,7 @@ constexpr int32 SneakDie = 6;
 const FIntPoint Neighbors[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 }
 
-bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString& Error)
+bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString& Error)
 {
     Error.Reset();
     auto Reject = [&Error](const TCHAR* Reason) { Error = Reason; return false; };
@@ -43,8 +43,6 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
         Occupied.Add(Cell);
     }
     TSet<int32> Ids;
-    bool bParty = false;
-    bool bEnemy = false;
     for (const FCombatantState& Unit : Encounter.Combatants)
     {
         if (Unit.Id < 0 || Ids.Contains(Unit.Id) || !Inside(Unit.Cell) || Occupied.Contains(Unit.Cell) ||
@@ -66,10 +64,16 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
         }
         Ids.Add(Unit.Id);
         Occupied.Add(Unit.Cell);
-        bParty |= Unit.Side == ECombatSide::Party && Unit.HP > 0;
-        bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.HP > 0;
     }
-    if (!bParty || !bEnemy) { return Reject(TEXT("Both sides need an active combatant.")); }
+    return true;
+}
+
+bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString& Error)
+{
+    if (!ValidateEncounter(Encounter, Error)) { return false; }
+    const bool bParty = Encounter.Combatants.ContainsByPredicate([](const auto& U) { return U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious; });
+    const bool bEnemy = Encounter.Combatants.ContainsByPredicate([](const auto& U) { return U.Side == ECombatSide::Enemy && U.Life == ECombatLife::Conscious; });
+    if (!bParty || !bEnemy) { Error = TEXT("Both sides need an active combatant."); return false; }
     State = FCombatSnapshot();
     State.Encounter = Encounter;
     State.RandomState = Seed;
@@ -470,4 +474,43 @@ FCombatEncounter FCombatBattle::TutorialEncounter()
         Encounter.Combatants.Add(Unit);
     }
     return Encounter;
+}
+
+bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
+{
+    if (!ValidateEncounter(Snapshot.Encounter, Error)) { return false; }
+    auto Reject = [&Error]() { Error = TEXT("Invalid saved combat phase, initiative, turn or budget."); return false; };
+    if (static_cast<uint8>(Snapshot.Phase) > static_cast<uint8>(EBattlePhase::Defeat) ||
+        Snapshot.Round < 1 || Snapshot.Round > 1000000 || Snapshot.TurnOrder.IsEmpty() ||
+        Snapshot.TurnOrder.Num() > Snapshot.Encounter.Combatants.Num() || !Snapshot.TurnOrder.IsValidIndex(Snapshot.TurnIndex)) { return Reject(); }
+    FCombatBattle Candidate;
+    Candidate.State = Snapshot;
+    Candidate.bStarted = true;
+    TSet<int32> Ordered;
+    const FCombatantState* Previous = nullptr;
+    for (int32 Id : Snapshot.TurnOrder)
+    {
+        const auto* Unit = Candidate.Find(Id);
+        if (!Unit || Ordered.Contains(Id) || (Previous && (Previous->Initiative < Unit->Initiative ||
+            (Previous->Initiative == Unit->Initiative && Previous->Id > Unit->Id)))) { return Reject(); }
+        Ordered.Add(Id); Previous = Unit;
+    }
+    bool bParty = false, bEnemy = false;
+    for (const auto& Unit : Snapshot.Encounter.Combatants)
+    {
+        if (Unit.Name.IsEmpty() || Unit.Name.Len() > 80 || Unit.Role.IsEmpty() || Unit.Role.Len() > 80 ||
+            Unit.Initiative < 1 + Unit.InitiativeBonus || Unit.Initiative > 20 + Unit.InitiativeBonus ||
+            (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
+            (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
+            (Snapshot.Phase != EBattlePhase::Fighting && Unit.Life == ECombatLife::Downed)) { return Reject(); }
+        bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
+        bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
+    }
+    const auto Expected = !bParty ? EBattlePhase::Defeat : !bEnemy ? EBattlePhase::Victory : EBattlePhase::Fighting;
+    const auto* Active = Candidate.Find(Candidate.ActiveId());
+    if (Snapshot.Phase != Expected || !Active || Active->Life != ECombatLife::Conscious ||
+        Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed ||
+        (!Snapshot.bBonusActionAvailable && (Active->AdventurerRole != EAdventurerRole::Fighter || (Snapshot.Phase == EBattlePhase::Fighting && Active->SecondWindUses > 1)))) { return Reject(); }
+    *this = MoveTemp(Candidate);
+    Error.Reset(); return true;
 }

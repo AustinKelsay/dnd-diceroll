@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: three-encounter expedition accepted locally; save/resume and records starting
+- Status: persistence candidate passes full model suite; native/package and review validation underway
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -52,7 +52,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
 | Survive losses and use party roles | battle | implementation complete; `56a4766`, `6cc0eb2`; root owns source/editor and external delivery | [session](02-party-consequences.md); 18/18 Project tests, 22/22 helpers; native four-role use, rescue/death, victory and smaller-party continuation; separate [Standards](02-party-consequences-standards.md) and [Spec](02-party-consequences-spec.md) reviews resolved |
 | Complete a seeded expedition | losses/roles | implementation complete; `645cdd4`, `a13fafa`; source/editor returned to root | [session](03-seeded-expedition.md), separate [Standards](03-seeded-expedition-standards.md) and [Spec](03-seeded-expedition-spec.md); final fresh build, 26/26 Project, 22/22 helpers; native three-combat artifact ending and fresh reset |
-| Resume a run and record its ending | expedition | next sole implementation worker, based on run handoff `58f522c` | pending |
+| Resume a run and record its ending | expedition | sole implementation writer/editor owner; baseline `bf804da` | [session](04-persistence-records.md); 33/33 Project and 22/22 helpers; native/package/reviews underway |
 
 ## Editor ownership
 

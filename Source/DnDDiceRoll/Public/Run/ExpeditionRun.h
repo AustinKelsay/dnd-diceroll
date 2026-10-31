@@ -66,7 +66,9 @@ struct DNDDICEROLL_API FExpeditionSnapshot
 class DNDDICEROLL_API FExpeditionRun
 {
 public:
-    bool NewRun(int32 Seed, FString& Error);
+    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString());
+    /** Validates a detached candidate in full, then installs without rolling. */
+    bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);
     bool ClaimReward(int32 RecipientId, FString& Error);
     bool Recover(bool bTakeRecovery, FString& Error);

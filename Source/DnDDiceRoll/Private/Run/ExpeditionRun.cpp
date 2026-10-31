@@ -27,11 +27,11 @@ int32 CountSurvivors(const FCombatBattle& Battle)
 }
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, FString& Error)
+bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity)
 {
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
-    Candidate.State.RunId = FString::Printf(TEXT("EXP-%08X"), static_cast<uint32>(Seed));
+    Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
     if (!Candidate.Combat.Start(FCombatBattle::TutorialEncounter(), Seed, Error)) { return false; }
     Candidate.bStarted = true;
@@ -185,5 +185,97 @@ bool FExpeditionRun::Recover(bool bTakeRecovery, FString& Error)
     State.bCampResolved = true;
     State.bCampUsed = bTakeRecovery;
     OfferRoutes();
+    return true;
+}
+
+bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error)
+{
+    Error.Reset();
+    auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
+    const auto& P = Snapshot.Progress;
+    if (P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
+        P.EncountersCompleted < 0 || P.EncountersCompleted > 3 || P.History.Num() > 3 ||
+        (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
+    FExpeditionRun Candidate;
+    if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
+    Candidate.State = P;
+    Candidate.bStarted = true;
+    const bool bRoute = P.Phase == EExpeditionPhase::Route;
+    const bool bCombat = P.Phase == EExpeditionPhase::Combat;
+    const bool bDefeat = P.Phase == EExpeditionPhase::Defeat;
+    const bool bReward = P.Phase == EExpeditionPhase::Reward;
+    const bool bRecovery = P.Phase == EExpeditionPhase::Recovery;
+    const bool bVictory = P.Phase == EExpeditionPhase::Victory;
+    if ((bVictory ? P.EncountersCompleted != 3 : P.EncountersCompleted > 2) ||
+        (bRecovery && P.EncountersCompleted != 1) || (bReward && P.EncountersCompleted < 1) ||
+        P.History.Num() != P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0) ||
+        P.Offers.Num() != (bRoute ? 2 : 0) ||
+        P.bCampResolved != (P.EncountersCompleted >= 1 && !bRecovery && !(bReward && P.EncountersCompleted == 1))) { return Reject(); }
+    // Every retained route uses the same bounded recipe/preview facts as generation.
+    auto ValidRoute = [&P](const FExpeditionRoute& R, int32 Stage, int32 Choice)
+    {
+        const bool bSupplies = Stage > 0 && P.History[Stage - 1].Route.bDangerous;
+        return R.Id == Stage * 2 + Choice + 1 && R.EncounterSeed >= 0 && R.EncounterSeed < MAX_int32 &&
+            R.Recipe >= 0 && R.Recipe < UE_ARRAY_COUNT(Recipes) && R.Width >= 8 && R.Width <= 9 && R.Height >= 7 && R.Height <= 8 &&
+            R.bDangerous == (Choice == 1) && R.EnemyCount == (Choice == 1 ? 3 : 2) &&
+            R.RewardPotions == (Stage == 2 ? 0 : (Choice == 1 || bSupplies ? 2 : 1)) &&
+            !R.Name.IsEmpty() && R.Name.Len() <= 80 && !R.Preview.IsEmpty() && R.Preview.Len() <= 256;
+    };
+    for (int32 I = 0; I < P.Offers.Num(); ++I) { if (!ValidRoute(P.Offers[I], P.EncountersCompleted, I)) { return Reject(); } }
+    int32 PreviousSurvivors = 4;
+    for (int32 I = 0; I < P.History.Num(); ++I)
+    {
+        const auto& H = P.History[I];
+        const bool bUnfinished = I == P.History.Num() - 1 && bCombat;
+        const bool bLost = I == P.History.Num() - 1 && bDefeat;
+        const bool bLootPending = I == P.History.Num() - 1 && bReward;
+        const bool bHasReward = I < 2 && !bUnfinished && !bLost && !bLootPending;
+        if (!ValidRoute(H.Route, I, H.Route.bDangerous ? 1 : 0) ||
+            H.Outcome != (bUnfinished ? EBattlePhase::Fighting : bLost ? EBattlePhase::Defeat : EBattlePhase::Victory) ||
+            H.Survivors < (bLost ? 0 : 1) || H.Survivors > PreviousSurvivors || (bLost && H.Survivors != 0) ||
+            (bHasReward ? H.RewardRecipient < 1 || H.RewardRecipient > 4 : H.RewardRecipient != INDEX_NONE)) { return Reject(); }
+        PreviousSurvivors = H.Survivors;
+    }
+    const auto ExpectedPhase = bCombat || P.History.IsEmpty() ? EBattlePhase::Fighting : bDefeat ? EBattlePhase::Defeat : EBattlePhase::Victory;
+    if (Snapshot.Battle.Phase != ExpectedPhase || (!P.History.IsEmpty() && !bCombat && CountSurvivors(Candidate.Combat) != P.History.Last().Survivors)) { return Reject(); }
+    // Match immutable roster/recipe facts, while retaining exact live placement, fate,
+    // resources, initiative and random state. No Start/NewRun is used to hydrate.
+    FCombatEncounter Layout;
+    if (P.History.IsEmpty()) { Layout = FCombatBattle::TutorialEncounter(); }
+    else
+    {
+        Candidate.State.EncountersCompleted = P.History.Num() - 1;
+        Layout = Candidate.Generate(P.History.Last().Route);
+        Candidate.State.EncountersCompleted = P.EncountersCompleted;
+    }
+    const auto& Saved = Snapshot.Battle.Encounter;
+    if (Saved.Width != Layout.Width || Saved.Height != Layout.Height || Saved.BlockedCells != Layout.BlockedCells || Saved.Combatants.Num() != Layout.Combatants.Num()) { return Reject(); }
+    if (bCombat)
+    {
+        int32 Remaining = 0;
+        for (const auto& U : Saved.Combatants) { if (U.Side == ECombatSide::Party && U.Life != ECombatLife::Dead) { ++Remaining; } }
+        if (Remaining > P.History.Last().Survivors) { return Reject(); }
+    }
+    for (int32 I = 0; I < Layout.Combatants.Num(); ++I)
+    {
+        const auto& U = Saved.Combatants[I]; const auto& Base = Layout.Combatants[I];
+        if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
+            U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
+            U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
+            (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
+            (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
+            (U.Side == ECombatSide::Enemy && (U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
+        if (U.Side == ECombatSide::Party)
+        {
+            int32 Gear = 0, SuppliedPotions = 1;
+            for (const auto& H : P.History) { if (H.RewardRecipient == U.Id) { ++Gear; SuppliedPotions += H.Route.RewardPotions; } }
+            if (U.WeaponRank != Gear || U.Potions > SuppliedPotions) { return Reject(); }
+        }
+        if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
+            U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
+    }
+    if (P.History.IsEmpty() && (Snapshot.Battle.Round != 1 || !Snapshot.Battle.bActionAvailable || !Snapshot.Battle.bBonusActionAvailable ||
+        Snapshot.Battle.TurnIndex != 0 || Snapshot.Battle.MovementLeft != Candidate.Combat.Find(Candidate.Combat.ActiveId())->Speed)) { return Reject(); }
+    *this = MoveTemp(Candidate);
     return true;
 }

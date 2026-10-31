@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Run/ExpeditionRun.h"
+#include "Persistence/ExpeditionSave.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
@@ -22,20 +22,33 @@ public:
     AExpeditionBattleView();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
-    const FCombatBattle& Rules() const { return Run.Battle(); }
-    const FExpeditionProgress& Progress() const { return Run.Progress(); }
+    const FCombatBattle& Rules() const { return Session.Run().Battle(); }
+    const FExpeditionProgress& Progress() const { return Session.Run().Progress(); }
     const TArray<FString>& Messages() const { return Feedback; }
     void Execute(const FCombatCommand& Command);
     void ChooseRoute(int32 Index);
     void ClaimReward(int32 RecipientId);
     void Recover(bool bTake);
     void NewRun();
+    void Save();
+    void Resume();
+    void ToggleRecords();
+    bool HasRun() const { return Session.HasRun(); }
+    bool ShowingRecords() const { return bShowRecords; }
+    const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
+    int32 PresentationRevision() const { return Revision; }
+    /** Explicit local storage selection before play; automation uses isolated fixtures. */
+    void ConfigureStorage(const FString& Path);
     void Orbit(float Degrees);
     void Zoom(float Amount);
     FVector CellPosition(FIntPoint Cell) const;
     bool CursorCell(APlayerController* Controller, FIntPoint& Cell) const;
 private:
-    FExpeditionRun Run;
+    FExpeditionSession Session;
+    TArray<FExpeditionEnding> EndingRecords;
+    bool bShowRecords = false;
+    bool bCheckpointBlocked = false;
+    int32 Revision = 0;
     TArray<FString> Feedback;
     float EnemyDelay = 0.0f;
     float CameraYaw = -90.0f;
@@ -73,6 +86,7 @@ private:
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
+    int32 LastRevision = INDEX_NONE;
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     void Click();
@@ -86,6 +100,9 @@ private:
     void Camp();
     void SkipCamp();
     void NewRun();
+    void Save();
+    void Resume();
+    void History();
     void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint Offset);
     void CursorUp();

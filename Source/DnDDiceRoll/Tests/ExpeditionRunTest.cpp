@@ -2,61 +2,8 @@
 #include "Misc/AutomationTest.h"
 #include "Run/ExpeditionRun.h"
 
-namespace
-{
-bool SameRun(const FExpeditionSnapshot& A, const FExpeditionSnapshot& B)
-{
-    return FExpeditionSnapshot::StaticStruct()->CompareScriptStruct(&A, &B, 0);
-}
-int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
-
-// A bounded player policy using only commands, previews and snapshots. No stat overrides.
-bool FinishCombat(FExpeditionRun& Run, bool bFight = true)
-{
-    for (int32 Turn = 0; Turn < 400 && Run.Progress().Phase == EExpeditionPhase::Combat; ++Turn)
-    {
-        const auto& Battle = Run.Battle();
-        const int32 Id = Battle.ActiveId();
-        const auto* Active = Battle.Find(Id);
-        if (!Active) { return false; }
-        if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
-        if (bFight)
-        {
-            for (auto Action : {ECombatCommandType::SecondWind, ECombatCommandType::Potion, ECombatCommandType::CureWounds})
-            {
-                if (Active->HP <= Active->MaxHP / 2 && Battle.LegalTargets(Id, Action).Contains(Id)) { Run.Submit({Action, Id, {}, Id}); }
-            }
-            auto Targets = Battle.LegalTargets(Id);
-            if (Targets.IsEmpty())
-            {
-                auto Moves = Battle.LegalMoves(Id);
-                Moves.Sort([&Battle](FIntPoint A, FIntPoint B)
-                {
-                    auto Nearest = [&Battle](FIntPoint Cell)
-                    {
-                        int32 Best = 1000;
-                        for (const auto& Enemy : Battle.Snapshot().Encounter.Combatants)
-                        { if (Enemy.Side == ECombatSide::Enemy && Enemy.HP > 0) { Best = FMath::Min(Best, Distance(Cell, Enemy.Cell)); } }
-                        return Best;
-                    };
-                    const int32 DA = Nearest(A), DB = Nearest(B);
-                    return DA == DB ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : DA < DB;
-                });
-                if (!Moves.IsEmpty()) { Run.Submit({ECombatCommandType::Move, Id, Moves[0]}); }
-            }
-            Targets = Battle.LegalTargets(Id, ECombatCommandType::MagicMissile);
-            if (!Targets.IsEmpty()) { Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Targets[0]}); }
-            else
-            {
-                Targets = Battle.LegalTargets(Id);
-                if (!Targets.IsEmpty()) { Run.Submit({ECombatCommandType::Attack, Id, {}, Targets[0]}); }
-            }
-        }
-        if (Run.Progress().Phase == EExpeditionPhase::Combat) { Run.Submit({ECombatCommandType::EndTurn, Id}); }
-    }
-    return Run.Progress().Phase != EExpeditionPhase::Combat;
-}
-}
+#include "ExpeditionTestSupport.h"
+using namespace ExpeditionTestSupport;
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunStartTest, "Project.Expedition.Run.FreshSeededRun",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -64,7 +11,7 @@ bool FRunStartTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
-    TestTrue(TEXT("A seed starts a fresh expedition"), Run.NewRun(42, Error));
+    TestTrue(TEXT("A seed starts a fresh expedition"), Run.NewRun(42, Error, TEXT("seeded-fixture")));
     TestEqual(TEXT("Seed visible"), Run.Progress().Seed, 42);
     TestEqual(TEXT("Two retained opportunities"), Run.Progress().Offers.Num(), 2);
     TestTrue(TEXT("Fresh run waits for a route"), Run.Progress().Phase == EExpeditionPhase::Route);
@@ -76,7 +23,7 @@ bool FRunRouteTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
-    Run.NewRun(42, Error);
+    Run.NewRun(42, Error, TEXT("seeded-fixture"));
     const auto Route = Run.Progress().Offers[1];
     TestTrue(TEXT("Offered route starts combat"), Run.ChooseRoute(Route.Id, Error));
     TestTrue(TEXT("Combat phase"), Run.Progress().Phase == EExpeditionPhase::Combat);
@@ -91,7 +38,7 @@ bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
-    Run.NewRun(42, Error);
+    Run.NewRun(42, Error, TEXT("seeded-fixture"));
     for (int32 Encounter = 0; Encounter < 3; ++Encounter)
     {
         if (Encounter == 2)
@@ -117,7 +64,7 @@ bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("No terminal recovery"), Run.Recover(true, Error));
     Run.Submit({ECombatCommandType::EndTurn,1}); Run.PlayEnemyTurn();
     TestTrue(TEXT("Victory terminal is atomic"), SameRun(Won, Run.Snapshot()));
-    FExpeditionRun Fresh; Fresh.NewRun(42, Error); Run.NewRun(42, Error);
+    FExpeditionRun Fresh; Fresh.NewRun(42, Error, TEXT("seeded-fixture")); Run.NewRun(42, Error, TEXT("seeded-fixture"));
     TestTrue(TEXT("New run resets earned power, resources, history and RNG to fresh seed"), SameRun(Fresh.Snapshot(), Run.Snapshot()));
     return !HasAnyErrors();
 }
@@ -133,7 +80,7 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
         {
             FExpeditionRun Run, Replay;
             FString Error;
-            Run.NewRun(Seed, Error); Replay.NewRun(Seed, Error);
+            Run.NewRun(Seed, Error, TEXT("seeded-fixture")); Replay.NewRun(Seed, Error, TEXT("seeded-fixture"));
             const auto BeforeQuery = Run.Snapshot();
             const auto Offer = Run.Progress().Offers[Choice];
             Run.Snapshot(); Run.Progress(); Run.Battle().LegalMoves(Run.Battle().ActiveId());
@@ -212,7 +159,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunCommandAtomicityTest, "Project.Expedition.R
 bool FRunCommandAtomicityTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run; FString Error;
-    Run.NewRun(42, Error);
+    Run.NewRun(42, Error, TEXT("seeded-fixture"));
     auto Before = Run.Snapshot();
     TestFalse(TEXT("Unknown route rejected"), Run.ChooseRoute(999, Error));
     TestFalse(TEXT("No loot before victory"), Run.ClaimReward(1, Error));
@@ -274,7 +221,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunLossAndResetTest, "Project.Expedition.Run.W
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunLossAndResetTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(7,Error);
+    FExpeditionRun Run; FString Error; Run.NewRun(7, Error, TEXT("seeded-fixture"));
     Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
     TestTrue(TEXT("Skipping attacks reaches finite wipe"),FinishCombat(Run,false));
     TestTrue(TEXT("Wipe is terminal run defeat"),Run.Progress().Phase==EExpeditionPhase::Defeat && !Run.Progress().bArtifactRecovered);
@@ -283,7 +230,7 @@ bool FRunLossAndResetTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("No continuing loss"),Run.ChooseRoute(1,Error)); TestFalse(TEXT("No loss loot"),Run.ClaimReward(1,Error)); TestFalse(TEXT("No loss resurrection"),Run.Recover(true,Error));
     Run.Submit({ECombatCommandType::EndTurn,1}); Run.PlayEnemyTurn();
     TestTrue(TEXT("Terminal commands atomic"),SameRun(Lost,Run.Snapshot()));
-    TestTrue(TEXT("New seed starts fresh"),Run.NewRun(8,Error));
+    TestTrue(TEXT("New seed starts fresh"),Run.NewRun(8, Error, TEXT("reset-fixture")));
     TestTrue(TEXT("New identity, empty history, no camp or artifact"),Run.Progress().Seed==8 && Run.Progress().RunId!=Lost.Progress.RunId && Run.Progress().History.IsEmpty() && !Run.Progress().bCampUsed && !Run.Progress().bArtifactRecovered);
     for(const auto& Unit:Run.Battle().Snapshot().Encounter.Combatants)
     {
@@ -299,7 +246,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunSurvivorTest, "Project.Expedition.Run.DeadR
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(42,Error); Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
+    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
     for(int32 Turn=0;Turn<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Turn)
     {
         const auto* Active=Run.Battle().Find(Run.Battle().ActiveId());
@@ -324,7 +271,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkipRecoveryTest, "Project.Expedition.Run.Skip
 bool FSkipRecoveryTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run; FString Error;
-    Run.NewRun(42, Error); Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+    Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
     FinishCombat(Run); Run.ClaimReward(1, Error);
     const auto Before = Run.Battle().Snapshot();
     TestTrue(TEXT("Recovery can be explicitly skipped"), Run.Recover(false, Error));

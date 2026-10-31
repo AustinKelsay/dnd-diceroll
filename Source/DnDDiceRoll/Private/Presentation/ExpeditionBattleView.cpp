@@ -12,6 +12,9 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "InputCoreTypes.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "Misc/Paths.h"
 
 namespace
 {
@@ -64,23 +67,22 @@ UStaticMeshComponent* AExpeditionBattleView::MakeMesh(UStaticMesh* Mesh, FVector
 void AExpeditionBattleView::BeginPlay()
 {
     Super::BeginPlay();
-    FString Error;
-    if (!Run.NewRun(20261030, Error))
-    {
-        UE_LOG(LogTemp, Error, TEXT("Run startup failed: %s"), *Error);
-        Feedback.Add(Error); return;
-    }
+    FString SaveRoot;
+    if (!FParse::Value(FCommandLine::Get(), TEXT("ExpeditionSaveRoot="), SaveRoot))
+    { SaveRoot = FPlatformMisc::GetEnvironmentVariable(TEXT("EXPEDITION_SAVE_ROOT")); }
+    if (!SaveRoot.IsEmpty()) { ConfigureStorage(FPaths::Combine(SaveRoot, TEXT("current-v1.json"))); }
     // The starter fixture has no baked lighting. Runtime presentation uses dynamic lights.
     for (TActorIterator<ALight> Light(GetWorld()); Light; ++Light)
     {
         if (ULightComponent* Component = Light->GetLightComponent()) { Component->SetMobility(EComponentMobility::Movable); }
     }
-    Feedback.Add(TEXT("Recover the Waystone from the third encounter. Choose a route with Z / X."));
-    RebuildBoard();
+    Feedback.Add(TEXT("Welcome. N: new expedition | F9: resume last checkpoint | H: ending records."));
+    UpdateCamera();
 }
 
 void AExpeditionBattleView::RebuildBoard()
 {
+    ++Revision;
     for (auto& Mesh : BoardMeshes) { if (IsValid(Mesh)) { RemoveInstanceComponent(Mesh); Mesh->DestroyComponent(); } }
     for (auto& Mesh : UnitMeshes) { if (IsValid(Mesh)) { RemoveInstanceComponent(Mesh); Mesh->DestroyComponent(); } }
     BoardMeshes.Reset(); UnitMeshes.Reset();
@@ -133,18 +135,20 @@ void AExpeditionBattleView::Record(const FCombatResult& Result)
 
 void AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
+    if (bShowRecords) { return; }
     const FCombatantState* Unit = Rules().Find(Command.ActorId);
     if (!Unit || Unit->Side != ECombatSide::Party) { return; }
-    Record(Run.Submit(Command));
+    Record(Session.Submit(Command));
     RefreshUnits();
 }
 
 void AExpeditionBattleView::ChooseRoute(int32 Index)
 {
+    if (bShowRecords) { return; }
     FString Error;
-    const auto& Offers = Run.Progress().Offers;
+    const auto& Offers = Session.Run().Progress().Offers;
     const int32 Id = Offers.IsValidIndex(Index) ? Offers[Index].Id : INDEX_NONE;
-    if (Run.ChooseRoute(Id, Error))
+    if (Session.ChooseRoute(Id, Error))
     {
         Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
         EnemyDelay = 0; RebuildBoard();
@@ -154,37 +158,68 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
 
 void AExpeditionBattleView::ClaimReward(int32 RecipientId)
 {
+    if (bShowRecords) { return; }
     FString Error;
-    if (Run.ClaimReward(RecipientId, Error)) { Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")}); }
+    if (Session.ClaimReward(RecipientId, Error)) { Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")}); }
     else { Record({false, Error}); }
 }
 
 void AExpeditionBattleView::Recover(bool bTake)
 {
+    if (bShowRecords) { return; }
     FString Error;
-    if (Run.Recover(bTake, Error)) { Record({true, bTake ? TEXT("Camp used: ") + FExpeditionRun::RecoveryDescription() : TEXT("Recovery skipped for this run. Choose the next route.")}); RefreshUnits(); }
+    if (Session.Recover(bTake, Error)) { Record({true, bTake ? TEXT("Camp used: ") + FExpeditionRun::RecoveryDescription() : TEXT("Recovery skipped for this run. Choose the next route.")}); RefreshUnits(); }
     else { Record({false, Error}); }
 }
 
 void AExpeditionBattleView::NewRun()
 {
-    if (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
+    if (HasRun() && Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
     { Record({false, TEXT("Finish this expedition before starting a new run.")}); return; }
     FString Error;
-    const int32 NextSeed = static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u);
-    if (Run.NewRun(NextSeed, Error)) { Feedback.Reset(); Record({true, TEXT("Fresh expedition: party power/resources reset. Choose Z / X.")}); EnemyDelay = 0; RebuildBoard(); }
+    const int32 NextSeed = HasRun() ? static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u) : 20261030;
+    if (Session.NewRun(NextSeed, Error)) { Feedback.Reset(); Record({true, TEXT("Fresh expedition: party power/resources reset. Choose Z / X.")}); EnemyDelay = 0; CameraYaw = -90; bCheckpointBlocked = false; bShowRecords = false; RebuildBoard(); }
+    else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::ConfigureStorage(const FString& Path)
+{
+    if (!HasRun()) { Session = FExpeditionSession(Path); }
+}
+void AExpeditionBattleView::Save()
+{
+    FString Error;
+    if (Session.Save(Error)) { bCheckpointBlocked = false; Record({true, TEXT("Expedition saved. Every accepted action is also checkpointed.")}); }
+    else { Record({false, Error}); }
+}
+void AExpeditionBattleView::Resume()
+{
+    FString Error;
+    if (Session.Resume(Error))
+    {
+        EnemyDelay = 0; bCheckpointBlocked = false; bShowRecords = false; CameraYaw = -90;
+        Feedback.Reset(); Record({true, TEXT("Expedition resumed: latest turns, resources and permanent losses retained.")}); RebuildBoard();
+    }
+    else { Record({false, Error}); }
+}
+void AExpeditionBattleView::ToggleRecords()
+{
+    if (bShowRecords) { bShowRecords = false; return; }
+    FString Error;
+    if (Session.ReadRecords(EndingRecords, Error)) { bShowRecords = true; }
     else { Record({false, Error}); }
 }
 
 void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    if (!HasRun() || bShowRecords || bCheckpointBlocked) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy) { EnemyDelay = 0; return; }
     EnemyDelay += DeltaSeconds;
     if (EnemyDelay >= 1.0f)
     {
-        for (const FCombatResult& Result : Run.PlayEnemyTurn()) { Record(Result); }
+        for (const FCombatResult& Result : Session.PlayEnemyTurn()) { Record(Result); if (!Result.bAccepted) { bCheckpointBlocked = true; } }
         RefreshUnits(); EnemyDelay = 0;
     }
 }
@@ -255,6 +290,9 @@ void AExpeditionPlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::C, IE_Pressed, this, &AExpeditionPlayerController::Camp);
     InputComponent->BindKey(EKeys::V, IE_Pressed, this, &AExpeditionPlayerController::SkipCamp);
     InputComponent->BindKey(EKeys::N, IE_Pressed, this, &AExpeditionPlayerController::NewRun);
+    InputComponent->BindKey(EKeys::F5, IE_Pressed, this, &AExpeditionPlayerController::Save);
+    InputComponent->BindKey(EKeys::F9, IE_Pressed, this, &AExpeditionPlayerController::Resume);
+    InputComponent->BindKey(EKeys::H, IE_Pressed, this, &AExpeditionPlayerController::History);
     InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AExpeditionPlayerController::ConfirmCell);
 }
 
@@ -262,6 +300,12 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
+    if (LastRevision != BattleView->PresentationRevision())
+    {
+        LastRevision = BattleView->PresentationRevision(); LastActiveId = INDEX_NONE;
+        SelectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack;
+        SelectPartyIndex(0); GridCursor = {1,1};
+    }
     const int32 ActiveId = BattleView->Rules().ActiveId();
     if (ActiveId != LastActiveId)
     {
@@ -318,6 +362,11 @@ void AExpeditionPlayerController::Click()
     {
         SelectPartyIndex(FMath::FloorToInt((MouseY - PartyCardsTop) / PartyCardHeight)); return;
     }
+    if (bHasMouse && MouseX >= 260 && MouseY >= 90 && MouseY < 116)
+    {
+        if (MouseX < 410) { Save(); } else if (MouseX < 560) { Resume(); } else if (MouseX < 710) { NewRun(); } else { History(); }
+        return;
+    }
     FIntPoint Cell;
     if (!HoverCell(Cell)) { return; }
     ActAtCell(Cell);
@@ -351,7 +400,10 @@ void AExpeditionPlayerController::FirstRoute() { if (IsValid(BattleView)) { Batt
 void AExpeditionPlayerController::SecondRoute() { if (IsValid(BattleView)) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (IsValid(BattleView)) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (IsValid(BattleView)) { BattleView->Recover(false); } }
-void AExpeditionPlayerController::NewRun() { if (IsValid(BattleView)) { BattleView->NewRun(); LastActiveId = INDEX_NONE; SelectedId = INDEX_NONE; bKeyboardCursor = false; } }
+void AExpeditionPlayerController::NewRun() { if (IsValid(BattleView)) { BattleView->NewRun(); } }
+void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
+void AExpeditionPlayerController::Resume() { if (IsValid(BattleView)) { BattleView->Resume(); } }
+void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { BattleView->ToggleRecords(); } }
 FString AExpeditionPlayerController::ActionHelp() const
 {
     return FCombatBattle::DescribeAction(SelectedAction);
@@ -408,7 +460,7 @@ void AExpeditionHUD::DrawHUD()
     const FCombatBattle& Rules = View->Rules();
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const FExpeditionProgress& Run = View->Progress();
-    const bool bCombat = Run.Phase == EExpeditionPhase::Combat;
+    const bool bCombat = View->HasRun() && Run.Phase == EExpeditionPhase::Combat && !View->ShowingRecords();
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
     const FCombatantState* Selected = Rules.Find(Controller->Selection());
     Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, PartyPanelWidth - 8, 495);
@@ -455,7 +507,8 @@ void AExpeditionHUD::DrawHUD()
     FString Preview;
     if (!bCombat)
     {
-        switch (Run.Phase)
+        if (!View->HasRun()) { Preview = TEXT("N: begin a fresh expedition | F9: resume the latest checkpoint | H: inspect records"); }
+        else switch (Run.Phase)
         {
         case EExpeditionPhase::Route: Preview = TEXT("Choose Z: guarded route or X: dangerous route. Offers stay fixed until chosen."); break;
         case EExpeditionPhase::Reward: Preview = TEXT("ENCOUNTER WON | Unrescued allies are DEAD. Select survivor (1-4), L: claim displayed loot."); break;
@@ -496,28 +549,50 @@ void AExpeditionHUD::DrawHUD()
         Initiative += FString::Printf(TEXT("%s%s(%d)  "), Id == Rules.ActiveId() ? TEXT(">") : TEXT(""), *Unit->Name, Unit->Initiative);
     }
     if (bCombat) { Label(Initiative, 260, 18, FLinearColor::White, 0.85f); }
-    Label(FString::Printf(TEXT("%s | Seed %d | Victories %d/3 | Camp %s"), *Run.RunId, Run.Seed, Run.EncountersCompleted,
+    Label(FString::Printf(TEXT("%s | Seed %d | Victories %d/3 | Camp %s"), *Run.RunId.Left(8), Run.Seed, Run.EncountersCompleted,
         Run.bCampUsed ? TEXT("USED") : Run.bCampResolved ? TEXT("SKIPPED") : TEXT("AVAILABLE after fight 1")), 260, 42, FLinearColor(1,0.8f,0.4f));
-    Label(FString::Printf(TEXT("Recover the Waystone | Encounter %d/3%s"), FMath::Min(3, Run.History.Num()), Run.History.Num() == 3 ? TEXT(" - FINALE") : TEXT("")), 260, 64);
     if (!Run.History.IsEmpty())
     {
         const auto& Record = Run.History.Last();
         Label(FString::Printf(TEXT("Chosen: %s | %s | %d survivors"), *Record.Route.Name,
-            Record.Outcome == EBattlePhase::Victory ? TEXT("WON") : Record.Outcome == EBattlePhase::Defeat ? TEXT("LOST") : TEXT("IN PROGRESS"), Record.Survivors), 260, 86, FLinearColor(0.7f,0.85f,0.9f), 0.9f);
+            Record.Outcome == EBattlePhase::Victory ? TEXT("WON") : Record.Outcome == EBattlePhase::Defeat ? TEXT("LOST") : TEXT("IN PROGRESS"), Record.Survivors), 260, 72, FLinearColor(0.7f,0.85f,0.9f), 0.9f);
     }
-    if (Run.Phase == EExpeditionPhase::Route)
+    Panel(FLinearColor(0.08f,0.16f,0.2f,0.98f), 255, 90, Width - 265, 26);
+    Label(TEXT("[F5] Save           [F9] Resume         [N] New run          [H] Records"), 265, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
+    if (!View->HasRun())
     {
-        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 112, Width - 265, 152);
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 120, Width - 265, 110);
+        Label(TEXT("RECOVER THE WAYSTONE"), 275, 136, FLinearColor(1,0.8f,0.4f), 1.2f);
+        Label(TEXT("N: Start fresh with four adventurers. F9: Continue your saved expedition."), 275, 172);
+        Label(TEXT("Progress saves after every accepted action. Deaths and resolved outcomes persist."), 275, 198, FLinearColor(0.7f,0.85f,0.9f),0.9f);
+    }
+    else if (Run.Phase == EExpeditionPhase::Route)
+    {
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 120, Width - 265, 152);
         for (int32 Index = 0; Index < Run.Offers.Num(); ++Index)
         {
             const auto& Offer = Run.Offers[Index];
-            Label((Index == 0 ? TEXT("[Z] ") : TEXT("[X] ")) + Offer.Name, 270, 120 + Index * 68, FLinearColor(1,0.8f,0.4f));
-            Label(Offer.Preview, 270, 144 + Index * 68, FLinearColor::White, 0.9f);
+            Label((Index == 0 ? TEXT("[Z] ") : TEXT("[X] ")) + Offer.Name, 270, 128 + Index * 68, FLinearColor(1,0.8f,0.4f));
+            Label(Offer.Preview, 270, 152 + Index * 68, FLinearColor::White, 0.9f);
         }
     }
     else if (Run.Phase == EExpeditionPhase::Reward)
     {
-        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 112, Width - 265, 44);
-        Label(FString::Printf(TEXT("LOOT: +1 gear rank / +%d potions | Select survivor + L"), Run.History.Last().Route.RewardPotions), 270, 120, FLinearColor(1,0.8f,0.4f));
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 120, Width - 265, 44);
+        Label(FString::Printf(TEXT("LOOT: +1 gear rank / +%d potions | Select survivor + L"), Run.History.Last().Route.RewardPotions), 270, 128, FLinearColor(1,0.8f,0.4f));
     }
+    if (View->ShowingRecords())
+    {
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.99f), 255, 120, Width - 265, FMath::Max(160.0f, Height - 350));
+        Label(TEXT("ENDING RECORDS | H: return | Records grant no combat power"), 275, 134, FLinearColor(1,0.8f,0.4f));
+        const auto& Records = View->Records();
+        Label(Records.IsEmpty() ? TEXT("No completed expeditions yet.") : FString::Printf(TEXT("%d completed expeditions (most recent below)"), Records.Num()), 275, 164);
+        float Row = 196;
+        for (int32 I=Records.Num()-1; I>=0 && Row<Height-230; --I)
+        {
+            const auto& R=Records[I];
+            Label(FString::Printf(TEXT("%s | Seed %d | %s"), *R.RunId.Left(8), R.Seed, *R.Summary), 275, Row, FLinearColor(0.8f,0.9f,1),0.9f); Row += 28;
+        }
+    }
+
 }
