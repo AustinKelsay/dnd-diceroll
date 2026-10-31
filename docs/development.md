@@ -72,7 +72,7 @@ C++ lives in `Source/DnDDiceRoll`; project assets live in `Content/DnDDiceRoll`.
 
 The endpoint is `http://127.0.0.1:18765/mcp`; port 8000 belongs to another service on this host. Start the editor before connecting a client. Restart existing agent sessions to load configuration. Codex project settings require trust; inspect `codex mcp list` from this directory. To change the endpoint, update `tools/versions.json`, `.codex/config.toml`, `.mcp.json`, and `DefaultEditorPerProjectUserSettings.ini` together. Keep it local: Epic's endpoint is intended for same-machine clients and has no authentication.
 
-AllToolsets enables Game Features tooling transitively; the `GameFeatureData` scan satisfies its editor startup requirement and is marked editor-only so packaged games do not try to load the absent editor-tool dependency. ProjectID and template-specific settings are retained; copying this workspace into a separate product should include a deliberate identity/identifier migration.
+AllToolsets enables Game Features tooling transitively; the `GameFeatureData` scan satisfies its editor startup requirement and is marked editor-only so packaged games do not try to load the absent editor-tool dependency. Expedition has a fresh ProjectID and visible project name. Internal module/package identifiers remain compatible with the starter; renaming them requires a separate migration.
 
 ## Sources and validation records
 
