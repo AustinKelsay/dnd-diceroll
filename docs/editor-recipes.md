@@ -1,5 +1,7 @@
 # Editor authoring recipes
 
+Before project asset or presentation work, load the project authoring pilot through AgentSkillToolset; [Unreal agent setup](agents/unreal-tools.md) describes discovery and compatibility. Its source is [editor authoring](agents/editor-authoring.md), also readable without an editor connection. The task brief, recovery bound and completion report live in [editor contributions](agents/editor-contributions.md).
+
 Start with `python3 tools/dev.py status`. One owner makes sequential calls, discovers `list_toolsets`, describes each toolset, and dispatches using the returned schema. Names below are authoring capabilities in the pinned Epic installation; retrieve their complete registered toolset names from discovery rather than guessing. Browse Epic's `AgentSkillToolset` for bundled instructions such as `material_basics`, `blueprint_basics`, `default_outdoor_lighting`, and `unreal_skill_best_practices`. [Epic: Unreal MCP](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor)
 
 | Task | Bundled capability | Completion check |
@@ -15,4 +17,4 @@ Start with `python3 tools/dev.py status`. One owner makes sequential calls, disc
 
 For repeatable recipes, preflight paths and types, create missing assets, validate existing output, and preserve user edits. Record imports and licenses in `docs/assets.md`. If output exists but is incompatible or incomplete, report it for explicit repair. Never silently recreate or overwrite it.
 
-The programmatic tool sandbox is intentionally restricted and cannot import `unreal`. Use registered capabilities or a narrowly scoped project editor script when necessary. `Content/Python/init_unreal.py` only registers the workspace status toolset; it creates no assets on editor startup.
+The programmatic tool sandbox is intentionally restricted and cannot import `unreal`. Use registered capabilities or a narrowly scoped project editor script when necessary. `Content/Python/init_unreal.py` registers workspace status tools and loads the project authoring skill; it creates no assets on editor startup.
