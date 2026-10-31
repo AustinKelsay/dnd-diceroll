@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: persistence candidate passes full model suite; native/package and review validation underway
+- Status: all four gameplay slices complete locally; source/editor returned to root for separate full-feature integrity review, CodeRabbit and PR delivery
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -52,7 +52,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
 | Survive losses and use party roles | battle | implementation complete; `56a4766`, `6cc0eb2`; root owns source/editor and external delivery | [session](02-party-consequences.md); 18/18 Project tests, 22/22 helpers; native four-role use, rescue/death, victory and smaller-party continuation; separate [Standards](02-party-consequences-standards.md) and [Spec](02-party-consequences-spec.md) reviews resolved |
 | Complete a seeded expedition | losses/roles | implementation complete; `645cdd4`, `a13fafa`; source/editor returned to root | [session](03-seeded-expedition.md), separate [Standards](03-seeded-expedition-standards.md) and [Spec](03-seeded-expedition-spec.md); final fresh build, 26/26 Project, 22/22 helpers; native three-combat artifact ending and fresh reset |
-| Resume a run and record its ending | expedition | sole implementation writer/editor owner; baseline `bf804da` | [session](04-persistence-records.md); 33/33 Project and 22/22 helpers; native/package/reviews underway |
+| Resume a run and record its ending | expedition | implementation complete; `accd4c0`, `812366a`; source/editor returned to root | [session](04-persistence-records.md), separate [Standards](04-persistence-records-standards.md) and [Spec](04-persistence-records-spec.md) resolved; 34/34 Project, 22/22 helpers, preserved bootstrap, Mac package, exact rendered fresh-process resume, native wipe/history/reset and final PIE ending record |
 
 ## Editor ownership
 
@@ -118,3 +118,13 @@ Editor ownership returned: exact project PID **89957** was verified PIE stopped/
 ## Root expedition acceptance and persistence handoff
 
 Root inspected the artifact-ending capture, public snapshot/run composition contract and independent reviews. Ticket #4 accepted and closed after validation. Root live status at 2026-10-31 04:01:29 UTC confirms no associated project process or MCP listener. Next worker owns source/editor operations for ticket #5. Final save/record integrity, packaged rendered save/resume and full-feature review remain required; the mouse automation and native wipe limitations stay explicit. Parent spec and final PR delivery remain root-owned.
+
+## Persistence handoff — 2026-10-31
+
+Ticket #5 is implementation-complete locally. Fixed review baseline `bf804da5ed4d8d5e892525d0d42a5a390a701c86`; implementation `accd4c070199abbc667cb50d4960cbf6a8fc80e4`, owner review/control fixes `812366a3b8ff1c53f1c83162948a9830aa2a3f65`. Exactly two independent read-only gpt-6.1-sol reviews: Standards zero hard violations/one optional duplication smell; Spec two P2 findings (contradictory retained route descriptions and inaccessible older records). All resolved by the owner, with public rejection/paging tests and full regression checks. No extra reviewers.
+
+Public contracts: validated candidate `FCombatBattle::Restore` / `FExpeditionRun::Restore`, strict version-1 `FExpeditionSave`, and command/checkpoint-owning `FExpeditionSession`. Accepted gameplay writes before installation, so checkpoint failure rejects the entire candidate including RNG/deaths. Exact active/between-encounter state resumes without rolls. Current checkpoint and deduplicated ending records share one atomic Mac replacement; fresh same-seed runs get distinct identities. Records grant no power. Startup is read-only; N/O choose fresh/resume, K saves, H inspects records and PgUp/PgDn pages them. Architecture/rules/session record storage paths and guarantees.
+
+Final fresh build succeeded. `.local/automation/20261031T042811060418Z`: **34/34 full Project tests, zero warnings** (original 26 retained). Helpers **22/22**. Preserved sandbox bootstrap zero errors/warnings. `Builds/20261031T042837285648Z`: Mac Development cook/archive/exact-map startup passed. Real packaged PID 29575 saved Ivo's spent Action, Move 1, one remaining slot, injured enemy and RNG; normal quit and fresh PID 33328/O retained the entire checkpoint exactly. Default storage was separately verified. Real packaged PID 34348 then reached permanent deaths and **PARTY WIPE**, reloaded the ending, inspected its single history record, and started a full fresh party while retaining the record. Final PIE PID 42011 loaded that actual packaged ending and displayed history; native and MCP captures were inspected. The previous native-wipe gap is closed. See the session for exact evidence and owned-fixture cleanup.
+
+Editor handback: PID 42011 was verified PIE stopped and dirty packages empty at **04:54:15 UTC**, then closed normally through the exact-identity helper. **04:54:55 UTC** final status shows no associated project process/listener, and no owned game app remains. CUA session ended; unrelated project/browser untouched. No binary asset changes or remote mutations. Root owns source/editor operations, its separate fresh full-feature integrity review, final CodeRabbit, tracker acceptance and non-draft PR. Mac-only durability bounds and CUA mouse limitations remain explicit; all requested local gameplay/persistence work is complete.
