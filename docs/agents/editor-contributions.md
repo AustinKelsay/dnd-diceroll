@@ -25,9 +25,9 @@ a condensed checklist for the same work; this recipe owns the brief, recovery an
 
 Work in batches small enough to inspect and recover individually. For new playable
 content, validate the blockout and behavior before dressing it; for an art-only task,
-use the accepted behavior as the starting point. Import candidates through
-[asset intake](asset-intake.md); generate or revise sources through
-[asset production](asset-production.md). Apply the lifecycle and discovery sequence from
+use the accepted behavior as the starting point. Generate or revise sources through
+[asset production](asset-production.md), then import candidates through
+[asset intake](asset-intake.md). Apply the lifecycle and discovery sequence from
 development before editor mutations.
 
 Read every mutation's returned result, including compile/import/save status, before

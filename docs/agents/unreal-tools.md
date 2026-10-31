@@ -33,7 +33,7 @@ The editor imports `unreal_starter.skills.ProjectAuthoringSkill` at startup. Its
 
 On unfamiliar editor work, discover the registered AgentSkillToolset using the normal list/describe/call sequence. Read its schema, call `ListSkills`, then `GetSkills` with the returned pilot path. Read the instructions before writing. Do not assume a Python or toolset name is the wire identifier. The pilot is defined in source; edit its Markdown and restart through the safe lifecycle to refresh it, rather than updating the transient class through asset tools.
 
-With this checkout's editor closed, `python3 tools/dev.py verify-skills` runs a headless pinned-engine discovery/readback check. Build the editor target first on a fresh clone. Evidence appears under `.local/skills/`. This proves engine registration and content readback; live MCP/client loading requires a separate owner-controlled check. Headless commandlets can write unrelated platform settings into `Config/DefaultEngine.ini`; inspect and restore that diff before staging.
+With this checkout's editor closed, `python3 tools/dev.py verify-skills` runs a headless pinned-engine discovery/readback check. Build the editor target first on a fresh clone. Evidence appears under `.local/skills/`. This proves engine registration and content readback; live MCP/client loading requires a separate owner-controlled check. Headless commandlets can add an unrelated `[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]` section, including a `SecurityToken`, to `Config/DefaultEngine.ini`; remove that section before staging and keep intentional edits.
 
 ## Recover after an editor restart
 

@@ -47,9 +47,10 @@ export. Check the record and plan against the prior record before import. A
 not prove the live Unreal asset is current. If the prior import is unverified,
 inspect it before deciding whether to import.
 
-Through the verified editor owner, import or reimport at the recorded destination
-under `/Game/DnDDiceRoll`. Preserve the prior accepted content until the candidate
-passes. Use the [asset intake](asset-intake.md) table for the applicable checks.
+Through the verified editor owner, import or reimport under `/Game/DnDDiceRoll`.
+A new asset goes to the issue's agreed candidate folder first, as in [asset intake](asset-intake.md).
+A revision of a recorded accepted asset reimports at its recorded package; the
+earlier record and source bytes are its recovery point. Use the intake table for the applicable checks.
 Inspect returned import/compile/save results, full dirty-package state,
 saved/reloaded references, and the asset in the actual game view. Exercise relevant
 interaction and camera/collision clearance. Image scoring cannot verify meshes,
@@ -87,9 +88,8 @@ npx skills@1.7.4 add scenario-labs/skills#7f4b801c7248d51b093ec365aceb114bd06139
 ```
 
 An agent-run installer may select non-interactively; do not rely on a confirmation
-prompt to protect existing files. Inspect the resulting diff and keep any lock
-metadata it writes locally. Do not commit installed upstream skills or lock files
-with asset work; vendoring them needs its own approved issue and provenance record. Record the selected paths/revision in the issue. Additional
+prompt to protect existing files. Inspect the resulting diff and retain any lock
+metadata it writes. Record the selected paths/revision in the issue. Additional
 model/image skills are loaded only when the chosen job needs them. Connect Scenario
 MCP through the chosen client's setup using the upstream `scenario` instructions;
 use its supported authentication flow and local secret storage. Keep credentials
