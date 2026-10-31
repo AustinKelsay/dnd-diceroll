@@ -6,6 +6,20 @@ int32 GridDistance(FIntPoint A, FIntPoint B)
 {
     return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
 }
+constexpr int32 TouchRange = 1;
+constexpr int32 MissileRange = 6;
+constexpr int32 MissileDarts = 3;
+constexpr int32 MissileDie = 4;
+constexpr int32 DartBonus = 1;
+constexpr int32 CureDice = 2;
+constexpr int32 CureDie = 8;
+constexpr int32 HealingModifier = 3;
+constexpr int32 WindDie = 10;
+constexpr int32 FighterLevel = 1;
+constexpr int32 PotionDice = 2;
+constexpr int32 PotionDie = 4;
+constexpr int32 PotionBonus = 2;
+constexpr int32 SneakDie = 6;
 const FIntPoint Neighbors[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 }
 
@@ -96,6 +110,32 @@ int32 FCombatBattle::Roll(int32 Sides)
     const int32 Value = Random.RandRange(1, Sides);
     State.RandomState = Random.GetCurrentSeed();
     return Value;
+}
+
+int32 FCombatBattle::RollDice(int32 Count, int32 Sides)
+{
+    int32 Total = 0;
+    for (int32 Index = 0; Index < Count; ++Index) { Total += Roll(Sides); }
+    return Total;
+}
+
+FString FCombatBattle::DescribeAction(ECombatCommandType Action)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::SecondWind:
+        return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+%d healing | target self"), WindDie, FighterLevel);
+    case ECombatCommandType::CureWounds:
+        return FString::Printf(TEXT("CURE WOUNDS | Action + 1 slot | ally/self, %d cell | %dd%d+%d healing"), TouchRange, CureDice, CureDie, HealingModifier);
+    case ECombatCommandType::MagicMissile:
+        return FString::Printf(TEXT("MAGIC MISSILE | Action + 1 slot | enemy, %d cells + sight | %dd%d+%d auto-hit"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
+    case ECombatCommandType::Rescue:
+        return FString::Printf(TEXT("RESCUE | Action, no item | downed ally, %d cell | restore 1 HP"), TouchRange);
+    case ECombatCommandType::Potion:
+        return FString::Printf(TEXT("POTION | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
+    default:
+        return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
+    }
 }
 
 bool FCombatBattle::IsInside(FIntPoint Cell) const
@@ -202,12 +242,12 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         if (Action == ECombatCommandType::Attack) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target); }
         else if (Action == ECombatCommandType::MagicMissile)
         {
-            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= 6 && HasLineOfSight(Unit->Cell, Target.Cell);
+            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= MissileRange && HasLineOfSight(Unit->Cell, Target.Cell);
         }
         else if (Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion)
         {
             bLegal = Unit->Side == ECombatSide::Party && Target.Side == Unit->Side && Target.Life != ECombatLife::Dead && Target.HP < Target.MaxHP &&
-                GridDistance(Unit->Cell, Target.Cell) <= 1 && HasLineOfSight(Unit->Cell, Target.Cell) &&
+                GridDistance(Unit->Cell, Target.Cell) <= TouchRange && HasLineOfSight(Unit->Cell, Target.Cell) &&
                 (Action != ECombatCommandType::Rescue || Target.Life == ECombatLife::Downed);
         }
         if (bLegal) { Result.Add(Target.Id); }
@@ -247,15 +287,18 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
                 {
                     return Ally.Id != Actor->Id && Ally.Side == Actor->Side && Ally.Life == ECombatLife::Conscious && GridDistance(Ally.Cell, Target->Cell) <= 1;
                 });
-            if (Result.bSneakAttack) { Result.Damage += Roll(6) + (Result.bCritical ? Roll(6) : 0); }
+            if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); }
             ApplyDamage(*Target, Result.Damage);
         }
         State.bActionAvailable = false;
+        CheckOutcome();
+        FString TargetStatus = Target->Life == ECombatLife::Downed ? FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft) :
+            Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : TEXT("");
+        if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
         Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d + %d = %d vs AC %d | %s | %d damage. HP %d/%d%s"),
             *Actor->Name, *Target->Name, Result.NaturalRoll, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage,
-            Target->HP, Target->MaxHP, Target->Life == ECombatLife::Downed ? TEXT(" DOWNED (3 rescue turns)") : Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : Result.bSneakAttack ? TEXT(" SNEAK +d6") : TEXT(""));
-        CheckOutcome();
+            Target->HP, Target->MaxHP, *TargetStatus);
     }
     else if (Command.Type == ECombatCommandType::SecondWind || Command.Type == ECombatCommandType::CureWounds ||
         Command.Type == ECombatCommandType::MagicMissile || Command.Type == ECombatCommandType::Rescue || Command.Type == ECombatCommandType::Potion)
@@ -263,21 +306,21 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Ability unavailable: check role, budget, uses, living target, range and sight.")); }
         FCombatantState* User = MutableFind(Command.ActorId);
         FCombatantState* Target = MutableFind(Command.TargetId);
-        const TCHAR* Ability = TEXT("Rescue");
+        FString Ability = TEXT("Rescue");
         if (Command.Type == ECombatCommandType::MagicMissile)
         {
             --User->SpellSlots;
-            Result.Damage = Roll(4) + Roll(4) + Roll(4) + 3;
+            Result.Damage = RollDice(MissileDarts, MissileDie) + MissileDarts * DartBonus;
             Result.bHit = true;
             ApplyDamage(*Target, Result.Damage);
-            Ability = TEXT("Magic Missile (3 darts, 1 slot)");
+            Ability = FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), MissileDarts);
         }
         else
         {
             int32 Amount = 1;
-            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Amount = Roll(10) + 1; Ability = TEXT("Second Wind (bonus, 1 use)"); }
-            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Amount = Roll(8) + Roll(8) + 3; Ability = TEXT("Cure Wounds (2d8+3, 1 slot)"); }
-            else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Amount = Roll(4) + Roll(4) + 2; Ability = TEXT("Potion (2d4+2, 1 bottle)"); }
+            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
+            else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
             Target->HP += Result.Healing;
             Target->Life = ECombatLife::Conscious;
@@ -285,7 +328,7 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
         }
         if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
         else { State.bActionAvailable = false; }
-        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d | HP %d/%d"), *User->Name, Ability, *Target->Name, Result.Healing, Result.Damage, Target->HP, Target->MaxHP);
+        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d | HP %d/%d"), *User->Name, *Ability, *Target->Name, Result.Healing, Result.Damage, Target->HP, Target->MaxHP);
         CheckOutcome();
     }
     else if (Command.Type == ECombatCommandType::EndTurn)

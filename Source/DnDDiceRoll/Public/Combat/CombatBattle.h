@@ -108,6 +108,8 @@ public:
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
+    /** Player-facing action facts share the tuning used by validation and resolution. */
+    static FString DescribeAction(ECombatCommandType Action);
     static FCombatEncounter TutorialEncounter();
 private:
     FCombatSnapshot State;
@@ -118,6 +120,7 @@ private:
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);
+    int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();
     void ApplyDamage(FCombatantState& Target, int32 Damage);

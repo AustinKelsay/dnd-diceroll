@@ -311,15 +311,7 @@ void AExpeditionPlayerController::RoleMode()
 void AExpeditionPlayerController::Continue() { if (IsValid(BattleView)) { BattleView->NextEncounter(SelectedId); LastActiveId = INDEX_NONE; } }
 FString AExpeditionPlayerController::ActionHelp() const
 {
-    switch (SelectedAction)
-    {
-    case ECombatCommandType::SecondWind: return TEXT("SECOND WIND | Bonus + 1 use | self | d10+1 healing | target self");
-    case ECombatCommandType::CureWounds: return TEXT("CURE WOUNDS | Action + 1 slot | ally/self, 1 cell | 2d8+3 healing");
-    case ECombatCommandType::MagicMissile: return TEXT("MAGIC MISSILE | Action + 1 slot | enemy, 6 cells + sight | 3d4+3 auto-hit");
-    case ECombatCommandType::Rescue: return TEXT("RESCUE | Action, no item | downed ally, 1 cell | restore 1 HP");
-    case ECombatCommandType::Potion: return TEXT("POTION | Action + 1 bottle | ally/self, 1 cell | 2d4+2 healing");
-    default: return TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d6 with conscious ally by target; Wizard: Fire Bolt d10");
-    }
+    return FCombatBattle::DescribeAction(SelectedAction);
 }
 void AExpeditionPlayerController::EndTurn() { if (IsValid(BattleView)) { BattleView->Execute({ECombatCommandType::EndTurn, SelectedId}); } }
 void AExpeditionPlayerController::RotateLeft() { if (IsValid(BattleView)) { BattleView->Orbit(-30); } }
