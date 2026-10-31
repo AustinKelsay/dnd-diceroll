@@ -15,11 +15,18 @@ bool FEnemyInputStarvationTest::RunTest(const FString& Parameters)
     if (TestNotNull(TEXT("Runtime board adapter"), View))
     {
         View->DispatchBeginPlay();
+        View->ChooseRoute(0);
+        for (int32 Turn = 0; Turn < 4; ++Turn)
+        {
+            const auto* Unit = View->Rules().Find(View->Rules().ActiveId());
+            if (!Unit || Unit->Side == ECombatSide::Enemy) { break; }
+            View->Execute({ECombatCommandType::EndTurn, Unit->Id});
+        }
         const int32 FirstEnemy = View->Rules().ActiveId();
         const FCombatantState* Active = View->Rules().Find(FirstEnemy);
         if (TestNotNull(TEXT("Battle initialized"), Active))
         {
-            TestTrue(TEXT("Tutorial begins with enemy initiative"), Active->Side == ECombatSide::Enemy);
+            TestTrue(TEXT("Generated battle reaches enemy initiative"), Active->Side == ECombatSide::Enemy);
             // Simulate repeated rejected player input between presentation frames.
             for (int32 Frame = 0; Frame < 3; ++Frame)
             {

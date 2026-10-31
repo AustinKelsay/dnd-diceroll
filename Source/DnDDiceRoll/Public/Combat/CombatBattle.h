@@ -112,6 +112,7 @@ public:
     static FString DescribeAction(ECombatCommandType Action);
     static FCombatEncounter TutorialEncounter();
 private:
+    friend class FPartyContinuity;
     FCombatSnapshot State;
     bool bStarted = false;
     bool IsInside(FIntPoint Cell) const;

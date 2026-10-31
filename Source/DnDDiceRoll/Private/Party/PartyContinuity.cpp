@@ -1,12 +1,11 @@
 #include "Party/PartyContinuity.h"
 
-bool FPartyContinuity::Advance(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, int32 RecipientId, FString& Error)
+bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, FString& Error)
 {
     Error.Reset();
-    const FCombatantState* Recipient = Battle.Find(RecipientId);
-    if (Battle.Snapshot().Phase != EBattlePhase::Victory || !Recipient || Recipient->Side != ECombatSide::Party || Recipient->Life != ECombatLife::Conscious)
+    if (Battle.Snapshot().Phase != EBattlePhase::Victory)
     {
-        Error = TEXT("Win the battle and select a conscious survivor for the reward."); return false;
+        Error = TEXT("Win the encounter before continuing."); return false;
     }
     FCombatEncounter Next = Layout;
     TSet<int32> CarriedIds;
@@ -22,11 +21,7 @@ bool FPartyContinuity::Advance(FCombatBattle& Battle, const FCombatEncounter& La
         const FIntPoint Cell = Spawn.Cell;
         Spawn = *Previous;
         Spawn.Cell = Cell;
-        if (Spawn.Id == RecipientId)
-        {
-            Spawn.WeaponRank = FMath::Min(3, Spawn.WeaponRank + 1);
-            Spawn.Potions = FMath::Min(9, Spawn.Potions + 1);
-        }
+
     }
     for (const FCombatantState& Previous : Battle.Snapshot().Encounter.Combatants)
     {
@@ -37,6 +32,57 @@ bool FPartyContinuity::Advance(FCombatBattle& Battle, const FCombatEncounter& La
     }
     FCombatBattle Candidate;
     if (!Candidate.Start(Next, Seed, Error)) { return false; }
+    Battle = MoveTemp(Candidate);
+    return true;
+}
+
+
+bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Potions, FString& Error)
+{
+    Error.Reset();
+    const FCombatantState* Recipient = Battle.Find(RecipientId);
+    if (Battle.Snapshot().Phase != EBattlePhase::Victory || !Recipient || Recipient->Side != ECombatSide::Party ||
+        Recipient->Life != ECombatLife::Conscious || Potions < 1 || Potions > 2)
+    {
+        Error = TEXT("Select a conscious survivor for the victory reward."); return false;
+    }
+    FCombatantState* Survivor = Battle.MutableFind(RecipientId);
+    Survivor->WeaponRank = FMath::Min(3, Survivor->WeaponRank + 1);
+    Survivor->Potions = FMath::Min(9, Survivor->Potions + Potions);
+    return true;
+}
+
+namespace
+{
+constexpr int32 CampHealing = 10;
+constexpr int32 CampResource = 1;
+constexpr int32 ResourceCap = 2;
+}
+
+FString FPartyContinuity::RecoveryDescription()
+{
+    return FString::Printf(TEXT("Survivors: +%d HP, +%d Wind/slot (caps: max HP/%d). No revival or potions."), CampHealing, CampResource, ResourceCap);
+}
+
+bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
+{
+    Error.Reset();
+    if (Battle.Snapshot().Phase != EBattlePhase::Victory) { Error = TEXT("Recovery requires a completed victory."); return false; }
+    for (FCombatantState& Survivor : Battle.State.Encounter.Combatants)
+    {
+        if (Survivor.Side != ECombatSide::Party || Survivor.Life != ECombatLife::Conscious) { continue; }
+        Survivor.HP = FMath::Min(Survivor.MaxHP, Survivor.HP + CampHealing);
+        if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
+        if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
+        { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+    }
+    return true;
+}
+
+bool FPartyContinuity::Advance(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, int32 RecipientId, FString& Error)
+{
+    FCombatBattle Candidate = Battle;
+    if (!Reward(Candidate, RecipientId, 1, Error) || !Carry(Candidate, Layout, Seed, Error)) { return false; }
     Battle = MoveTemp(Candidate);
     return true;
 }

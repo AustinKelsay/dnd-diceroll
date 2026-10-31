@@ -1,5 +1,4 @@
 #include "Presentation/ExpeditionBattleView.h"
-#include "Party/PartyContinuity.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/InputComponent.h"
@@ -66,28 +65,36 @@ void AExpeditionBattleView::BeginPlay()
 {
     Super::BeginPlay();
     FString Error;
-    if (!Battle.Start(FCombatBattle::TutorialEncounter(), 20261030, Error))
+    if (!Run.NewRun(20261030, Error))
     {
-        UE_LOG(LogTemp, Error, TEXT("Battle startup failed: %s"), *Error);
-        Feedback.Add(Error);
-        return;
+        UE_LOG(LogTemp, Error, TEXT("Run startup failed: %s"), *Error);
+        Feedback.Add(Error); return;
     }
     // The starter fixture has no baked lighting. Runtime presentation uses dynamic lights.
     for (TActorIterator<ALight> Light(GetWorld()); Light; ++Light)
     {
         if (ULightComponent* Component = Light->GetLightComponent()) { Component->SetMobility(EComponentMobility::Movable); }
     }
-    const FCombatEncounter& Encounter = Battle.Snapshot().Encounter;
+    Feedback.Add(TEXT("Recover the Waystone from the third encounter. Choose a route with Z / X."));
+    RebuildBoard();
+}
+
+void AExpeditionBattleView::RebuildBoard()
+{
+    for (auto& Mesh : BoardMeshes) { if (IsValid(Mesh)) { RemoveInstanceComponent(Mesh); Mesh->DestroyComponent(); } }
+    for (auto& Mesh : UnitMeshes) { if (IsValid(Mesh)) { RemoveInstanceComponent(Mesh); Mesh->DestroyComponent(); } }
+    BoardMeshes.Reset(); UnitMeshes.Reset();
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     for (int32 Y = 0; Y < Encounter.Height; ++Y)
     {
         for (int32 X = 0; X < Encounter.Width; ++X)
         {
             const FIntPoint Cell(X, Y);
-            MakeMesh(Cube, CellPosition(Cell) - FVector(0, 0, 14), FVector(1.04f, 1.04f, 0.2f),
-                (X + Y) % 2 == 0 ? FLinearColor(0.17f, 0.24f, 0.28f) : FLinearColor(0.23f, 0.31f, 0.34f));
+            BoardMeshes.Add(MakeMesh(Cube, CellPosition(Cell) - FVector(0, 0, 14), FVector(1.04f, 1.04f, 0.2f),
+                (X + Y) % 2 == 0 ? FLinearColor(0.17f, 0.24f, 0.28f) : FLinearColor(0.23f, 0.31f, 0.34f)));
             if (Encounter.BlockedCells.Contains(Cell))
             {
-                MakeMesh(Cube, CellPosition(Cell) + FVector(0, 0, 35), FVector(0.9f, 0.9f, 0.8f), FLinearColor(0.32f, 0.27f, 0.22f));
+                BoardMeshes.Add(MakeMesh(Cube, CellPosition(Cell) + FVector(0, 0, 35), FVector(0.9f, 0.9f, 0.8f), FLinearColor(0.32f, 0.27f, 0.22f)));
             }
         }
     }
@@ -96,7 +103,7 @@ void AExpeditionBattleView::BeginPlay()
         UnitMeshes.Add(MakeMesh(Cylinder, CellPosition(Unit.Cell), FVector(0.55f, 0.55f, 0.75f),
             Unit.Side == ECombatSide::Party ? PartyColor(Unit.Id) : FLinearColor(0.8f, 0.17f, 0.12f)));
     }
-    Feedback.Add(TEXT("Briar crossing | Rescue before 3 downed turn slots pass. Unrescued allies die at battle end."));
+    CameraDistance = 1700.0f + 100.0f * FMath::Max(0, Encounter.Width - 8);
     RefreshUnits(); UpdateCamera();
 }
 
@@ -107,7 +114,7 @@ FVector AExpeditionBattleView::CellPosition(FIntPoint Cell) const
 
 void AExpeditionBattleView::RefreshUnits()
 {
-    const TArray<FCombatantState>& Units = Battle.Snapshot().Encounter.Combatants;
+    const TArray<FCombatantState>& Units = Rules().Snapshot().Encounter.Combatants;
     for (int32 Index = 0; Index < Units.Num(); ++Index)
     {
         if (!UnitMeshes.IsValidIndex(Index) || !IsValid(UnitMeshes[Index])) { continue; }
@@ -126,40 +133,66 @@ void AExpeditionBattleView::Record(const FCombatResult& Result)
 
 void AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
-    const FCombatantState* Unit = Battle.Find(Command.ActorId);
+    const FCombatantState* Unit = Rules().Find(Command.ActorId);
     if (!Unit || Unit->Side != ECombatSide::Party) { return; }
-    Record(Battle.Submit(Command));
+    Record(Run.Submit(Command));
     RefreshUnits();
 }
 
-void AExpeditionBattleView::NextEncounter(int32 RecipientId)
+void AExpeditionBattleView::ChooseRoute(int32 Index)
 {
     FString Error;
-    if (FPartyContinuity::Advance(Battle, FCombatBattle::TutorialEncounter(), 20261031, RecipientId, Error))
+    const auto& Offers = Run.Progress().Offers;
+    const int32 Id = Offers.IsValidIndex(Index) ? Offers[Index].Id : INDEX_NONE;
+    if (Run.ChooseRoute(Id, Error))
     {
-        Record({true, TEXT("Next crossing: survivors retain HP, uses and deaths. Selected survivor receives +1 gear rank and +1 potion.")});
-        RefreshUnits();
+        Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
+        EnemyDelay = 0; RebuildBoard();
     }
+    else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::ClaimReward(int32 RecipientId)
+{
+    FString Error;
+    if (Run.ClaimReward(RecipientId, Error)) { Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")}); }
+    else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::Recover(bool bTake)
+{
+    FString Error;
+    if (Run.Recover(bTake, Error)) { Record({true, bTake ? TEXT("Camp used: ") + FExpeditionRun::RecoveryDescription() : TEXT("Recovery skipped for this run. Choose the next route.")}); RefreshUnits(); }
+    else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::NewRun()
+{
+    if (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
+    { Record({false, TEXT("Finish this expedition before starting a new run.")}); return; }
+    FString Error;
+    const int32 NextSeed = static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u);
+    if (Run.NewRun(NextSeed, Error)) { Feedback.Reset(); Record({true, TEXT("Fresh expedition: party power/resources reset. Choose Z / X.")}); EnemyDelay = 0; RebuildBoard(); }
     else { Record({false, Error}); }
 }
 
 void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    const FCombatantState* Active = Battle.Find(Battle.ActiveId());
-    if (Battle.Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy) { EnemyDelay = 0; return; }
+    const FCombatantState* Active = Rules().Find(Rules().ActiveId());
+    if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy) { EnemyDelay = 0; return; }
     EnemyDelay += DeltaSeconds;
     if (EnemyDelay >= 1.0f)
     {
-        for (const FCombatResult& Result : Battle.PlayEnemyTurn()) { Record(Result); }
+        for (const FCombatResult& Result : Run.PlayEnemyTurn()) { Record(Result); }
         RefreshUnits(); EnemyDelay = 0;
     }
 }
 
 void AExpeditionBattleView::UpdateCamera()
 {
-    const FVector Focus((Battle.Snapshot().Encounter.Width - 1) * CellSize / 2,
-        (Battle.Snapshot().Encounter.Height - 1) * CellSize / 2 - 100, 0);
+    const FVector Focus((Rules().Snapshot().Encounter.Width - 1) * CellSize / 2,
+        (Rules().Snapshot().Encounter.Height - 1) * CellSize / 2 - 100, 0);
     const float Radians = FMath::DegreesToRadians(CameraYaw);
     const FVector Offset(FMath::Cos(Radians) * CameraDistance * 0.65f,
         FMath::Sin(Radians) * CameraDistance * 0.65f, CameraDistance);
@@ -175,7 +208,7 @@ bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint&
     if (!Controller || !Controller->DeprojectMousePositionToWorld(Origin, Direction) || Direction.Z >= -KINDA_SMALL_NUMBER) { return false; }
     const FVector Intersection = Origin + Direction * ((35.0f - Origin.Z) / Direction.Z);
     Cell = FIntPoint(FMath::RoundToInt(Intersection.X / CellSize), FMath::RoundToInt(Intersection.Y / CellSize));
-    return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Battle.Snapshot().Encounter.Width && Cell.Y < Battle.Snapshot().Encounter.Height;
+    return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Rules().Snapshot().Encounter.Width && Cell.Y < Rules().Snapshot().Encounter.Height;
 }
 
 void AExpeditionPlayerController::BeginPlay()
@@ -216,7 +249,12 @@ void AExpeditionPlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::F, IE_Pressed, this, &AExpeditionPlayerController::RoleMode);
     InputComponent->BindKey(EKeys::R, IE_Pressed, this, &AExpeditionPlayerController::RescueMode);
     InputComponent->BindKey(EKeys::P, IE_Pressed, this, &AExpeditionPlayerController::PotionMode);
-    InputComponent->BindKey(EKeys::N, IE_Pressed, this, &AExpeditionPlayerController::Continue);
+    InputComponent->BindKey(EKeys::L, IE_Pressed, this, &AExpeditionPlayerController::Loot);
+    InputComponent->BindKey(EKeys::Z, IE_Pressed, this, &AExpeditionPlayerController::FirstRoute);
+    InputComponent->BindKey(EKeys::X, IE_Pressed, this, &AExpeditionPlayerController::SecondRoute);
+    InputComponent->BindKey(EKeys::C, IE_Pressed, this, &AExpeditionPlayerController::Camp);
+    InputComponent->BindKey(EKeys::V, IE_Pressed, this, &AExpeditionPlayerController::SkipCamp);
+    InputComponent->BindKey(EKeys::N, IE_Pressed, this, &AExpeditionPlayerController::NewRun);
     InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AExpeditionPlayerController::ConfirmCell);
 }
 
@@ -308,7 +346,12 @@ void AExpeditionPlayerController::RoleMode()
         Unit->AdventurerRole == EAdventurerRole::Cleric ? ECombatCommandType::CureWounds :
         Unit->AdventurerRole == EAdventurerRole::Wizard ? ECombatCommandType::MagicMissile : ECombatCommandType::Attack;
 }
-void AExpeditionPlayerController::Continue() { if (IsValid(BattleView)) { BattleView->NextEncounter(SelectedId); LastActiveId = INDEX_NONE; } }
+void AExpeditionPlayerController::Loot() { if (IsValid(BattleView)) { BattleView->ClaimReward(SelectedId); } }
+void AExpeditionPlayerController::FirstRoute() { if (IsValid(BattleView)) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
+void AExpeditionPlayerController::SecondRoute() { if (IsValid(BattleView)) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
+void AExpeditionPlayerController::Camp() { if (IsValid(BattleView)) { BattleView->Recover(true); } }
+void AExpeditionPlayerController::SkipCamp() { if (IsValid(BattleView)) { BattleView->Recover(false); } }
+void AExpeditionPlayerController::NewRun() { if (IsValid(BattleView)) { BattleView->NewRun(); LastActiveId = INDEX_NONE; SelectedId = INDEX_NONE; bKeyboardCursor = false; } }
 FString AExpeditionPlayerController::ActionHelp() const
 {
     return FCombatBattle::DescribeAction(SelectedAction);
@@ -332,7 +375,11 @@ AExpeditionGameMode::AExpeditionGameMode()
 
 void AExpeditionHUD::Label(const FString& Text, float X, float Y, FLinearColor Color, float Scale)
 {
-    DrawText(Text, Color, X * HUDScale, Y * HUDScale, GEngine->GetMediumFont(), Scale * HUDScale);
+    float TextWidth = 0, TextHeight = 0;
+    GetTextSize(Text, TextWidth, TextHeight, GEngine->GetMediumFont(), Scale);
+    const float Available = Canvas ? Canvas->SizeX / HUDScale - X - 14 : TextWidth;
+    const float Fit = TextWidth > Available && TextWidth > 0 ? Available / TextWidth : 1.0f;
+    DrawText(Text, Color, X * HUDScale, Y * HUDScale, GEngine->GetMediumFont(), Scale * Fit * HUDScale);
 }
 void AExpeditionHUD::Panel(FLinearColor Color, float X, float Y, float Width, float Height)
 {
@@ -360,12 +407,14 @@ void AExpeditionHUD::DrawHUD()
     const AExpeditionBattleView* View = Controller->GetBattleView();
     const FCombatBattle& Rules = View->Rules();
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
+    const FExpeditionProgress& Run = View->Progress();
+    const bool bCombat = Run.Phase == EExpeditionPhase::Combat;
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
     const FCombatantState* Selected = Rules.Find(Controller->Selection());
     Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, PartyPanelWidth - 8, 495);
     Label(TEXT("EXPEDITION"), 20, 18, FLinearColor(1, 0.8f, 0.4f), 1.15f);
-    Label(FString::Printf(TEXT("ROUND %d"), Snapshot.Round), 20, 44);
-    Label(Active ? TEXT("TURN: ") + Active->Name : TEXT("No active turn"), 20, 65, FLinearColor::Yellow);
+    Label(bCombat ? FString::Printf(TEXT("ROUND %d"), Snapshot.Round) : TEXT("EXPEDITION STATUS"), 20, 44);
+    Label(bCombat && Active ? TEXT("TURN: ") + Active->Name : TEXT("Choose the next step"), 20, 65, FLinearColor::Yellow);
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : Snapshot.Encounter.Combatants)
     {
@@ -392,9 +441,9 @@ void AExpeditionHUD::DrawHUD()
     Label(TEXT("R: rescue | P: potion"), 20, 426);
     Label(TEXT("Q/E: rotate | Wheel: zoom"), 20, 444);
     Label(TEXT("Red: legal target | Cyan: move"), 20, 462, FLinearColor(0.25f,0.9f,1));
-    Label(TEXT("N after victory: loot + next fight"), 20, 480);
-    const TArray<FIntPoint> Moves = Rules.LegalMoves(Controller->Selection());
-    const TArray<int32> Targets = Rules.LegalTargets(Controller->Selection(), Controller->Action());
+    Label(TEXT("Z/X: route | L: loot | C/V: camp"), 20, 480);
+    const TArray<FIntPoint> Moves = bCombat ? Rules.LegalMoves(Controller->Selection()) : TArray<FIntPoint>();
+    const TArray<int32> Targets = bCombat ? Rules.LegalTargets(Controller->Selection(), Controller->Action()) : TArray<int32>();
     for (FIntPoint Cell : Moves) { OutlineCell(Controller, View, Cell, FLinearColor(0.15f,0.8f,0.9f), 1.5f); }
     for (int32 Id : Targets) { OutlineCell(Controller, View, Rules.Find(Id)->Cell, FLinearColor(1,0.18f,0.12f), 3); }
     if (Selected) { OutlineCell(Controller, View, Selected->Cell, FLinearColor::White, 2); }
@@ -404,9 +453,17 @@ void AExpeditionHUD::DrawHUD()
     float Height = Canvas->SizeY / HUDScale;
     Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, Height - 215, Width - 16, 207);
     FString Preview;
-    if (Snapshot.Phase != EBattlePhase::Fighting)
+    if (!bCombat)
     {
-        Preview = Snapshot.Phase == EBattlePhase::Victory ? TEXT("VICTORY | Unrescued allies are DEAD. Select survivor (1-4), N: +1 gear / potion and next fight.") : TEXT("PARTY WIPE | No conscious rescuer remains. Deaths are permanent. Restart PIE for a fresh party.");
+        switch (Run.Phase)
+        {
+        case EExpeditionPhase::Route: Preview = TEXT("Choose Z: guarded route or X: dangerous route. Offers stay fixed until chosen."); break;
+        case EExpeditionPhase::Reward: Preview = TEXT("ENCOUNTER WON | Unrescued allies are DEAD. Select survivor (1-4), L: claim displayed loot."); break;
+        case EExpeditionPhase::Recovery: Preview = TEXT("ONE RECOVERY | C: recover survivors | V: skip permanently. Then choose a route."); break;
+        case EExpeditionPhase::Victory: Preview = TEXT("ARTIFACT RECOVERED | Expedition complete: three victories. N: fresh run, no permanent power."); break;
+        case EExpeditionPhase::Defeat: Preview = TEXT("PARTY WIPE | Expedition lost. Deaths are permanent. N: fresh party and a new seed."); break;
+        default: break;
+        }
     }
     else if (Selected && Active && Selected->Id == Active->Id)
     {
@@ -426,7 +483,9 @@ void AExpeditionHUD::DrawHUD()
         }
     }
     else { Preview = TEXT("Inspecting party. Select the yellow active adventurer to act; enemies play automatically."); }
-    Label(Controller->ActionHelp(), 20, Height - 206, FLinearColor(0.3f,0.9f,1), 1.0f);
+    FIntPoint Cursor;
+    if (bCombat && Controller->KeyboardCell(Cursor)) { Preview += FString::Printf(TEXT(" | Cursor %d,%d"), Cursor.X, Cursor.Y); }
+    Label(bCombat ? Controller->ActionHelp() : Run.Phase == EExpeditionPhase::Recovery ? FExpeditionRun::RecoveryDescription() : TEXT("Objective: recover the Waystone in combat 3 | Z/X route, L loot, C/V camp, N new run at ending"), 20, Height - 206, FLinearColor(0.3f,0.9f,1), 1.0f);
     Label(Preview, 20, Height - 182, FLinearColor::Yellow, 1.05f);
     float Y = Height - 145;
     for (const FString& Message : View->Messages()) { Label(Message, 20, Y); Y += 22; }
@@ -436,5 +495,28 @@ void AExpeditionHUD::DrawHUD()
         const FCombatantState* Unit = Rules.Find(Id);
         Initiative += FString::Printf(TEXT("%s%s(%d)  "), Id == Rules.ActiveId() ? TEXT(">") : TEXT(""), *Unit->Name, Unit->Initiative);
     }
-    Label(Initiative, 260, 18, FLinearColor::White);
+    if (bCombat) { Label(Initiative, 260, 18, FLinearColor::White, 0.85f); }
+    Label(FString::Printf(TEXT("%s | Seed %d | Victories %d/3 | Camp %s"), *Run.RunId, Run.Seed, Run.EncountersCompleted,
+        Run.bCampUsed ? TEXT("USED") : Run.bCampResolved ? TEXT("SKIPPED") : TEXT("AVAILABLE after fight 1")), 260, 42, FLinearColor(1,0.8f,0.4f));
+    Label(FString::Printf(TEXT("Recover the Waystone | Encounter %d/3%s"), FMath::Min(3, Run.History.Num()), Run.History.Num() == 3 ? TEXT(" - FINALE") : TEXT("")), 260, 64);
+    if (!Run.History.IsEmpty())
+    {
+        const auto& Record = Run.History.Last();
+        Label(FString::Printf(TEXT("Chosen: %s | %s | %d survivors"), *Record.Route.Name,
+            Record.Outcome == EBattlePhase::Victory ? TEXT("WON") : Record.Outcome == EBattlePhase::Defeat ? TEXT("LOST") : TEXT("IN PROGRESS"), Record.Survivors), 260, 86, FLinearColor(0.7f,0.85f,0.9f), 0.9f);
+    }
+    if (Run.Phase == EExpeditionPhase::Route)
+    {
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 112, Width - 265, 152);
+        for (int32 Index = 0; Index < Run.Offers.Num(); ++Index)
+        {
+            const auto& Offer = Run.Offers[Index];
+            Label((Index == 0 ? TEXT("[Z] ") : TEXT("[X] ")) + Offer.Name, 270, 120 + Index * 68, FLinearColor(1,0.8f,0.4f));
+            Label(Offer.Preview, 270, 144 + Index * 68, FLinearColor::White, 0.9f);
+        }
+    }
+    else if (Run.Phase == EExpeditionPhase::Reward)
+    {
+        Label(FString::Printf(TEXT("LOOT: +1 gear rank / +%d potions | Select survivor + L"), Run.History.Last().Route.RewardPotions), 270, 120, FLinearColor(1,0.8f,0.4f));
+    }
 }

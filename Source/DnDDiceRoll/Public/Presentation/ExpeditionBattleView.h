@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Combat/CombatBattle.h"
+#include "Run/ExpeditionRun.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
@@ -13,7 +13,7 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class UMaterialInterface;
 
-/** Runtime board adapter. Rules remain in FCombatBattle; meshes only mirror snapshots. */
+/** Runtime board adapter. Rules remain in FExpeditionRun; meshes only mirror snapshots. */
 UCLASS()
 class DNDDICEROLL_API AExpeditionBattleView : public AActor
 {
@@ -22,16 +22,20 @@ public:
     AExpeditionBattleView();
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
-    const FCombatBattle& Rules() const { return Battle; }
+    const FCombatBattle& Rules() const { return Run.Battle(); }
+    const FExpeditionProgress& Progress() const { return Run.Progress(); }
     const TArray<FString>& Messages() const { return Feedback; }
     void Execute(const FCombatCommand& Command);
-    void NextEncounter(int32 RecipientId);
+    void ChooseRoute(int32 Index);
+    void ClaimReward(int32 RecipientId);
+    void Recover(bool bTake);
+    void NewRun();
     void Orbit(float Degrees);
     void Zoom(float Amount);
     FVector CellPosition(FIntPoint Cell) const;
     bool CursorCell(APlayerController* Controller, FIntPoint& Cell) const;
 private:
-    FCombatBattle Battle;
+    FExpeditionRun Run;
     TArray<FString> Feedback;
     float EnemyDelay = 0.0f;
     float CameraYaw = -90.0f;
@@ -41,6 +45,8 @@ private:
     UPROPERTY() TObjectPtr<UStaticMesh> Cylinder;
     UPROPERTY() TObjectPtr<UMaterialInterface> BaseMaterial;
     UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> UnitMeshes;
+    UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> BoardMeshes;
+    void RebuildBoard();
     UStaticMeshComponent* MakeMesh(UStaticMesh* Mesh, FVector Position, FVector Scale, FLinearColor Color);
     void RefreshUnits();
     void Record(const FCombatResult& Result);
@@ -74,7 +80,12 @@ private:
     void RoleMode();
     void RescueMode();
     void PotionMode();
-    void Continue();
+    void Loot();
+    void FirstRoute();
+    void SecondRoute();
+    void Camp();
+    void SkipCamp();
+    void NewRun();
     void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint Offset);
     void CursorUp();

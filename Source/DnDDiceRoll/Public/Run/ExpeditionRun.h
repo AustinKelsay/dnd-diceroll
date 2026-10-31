@@ -1,0 +1,86 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Combat/CombatBattle.h"
+#include "ExpeditionRun.generated.h"
+
+UENUM()
+enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
+
+/** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
+USTRUCT()
+struct DNDDICEROLL_API FExpeditionRoute
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Id = 0;
+    UPROPERTY() FString Name;
+    UPROPERTY() FString Preview;
+    UPROPERTY() int32 EncounterSeed = 0;
+    UPROPERTY() int32 Recipe = 0;
+    UPROPERTY() int32 Width = 8;
+    UPROPERTY() int32 Height = 8;
+    UPROPERTY() int32 EnemyCount = 2;
+    UPROPERTY() bool bDangerous = false;
+    UPROPERTY() int32 RewardPotions = 1;
+};
+
+USTRUCT()
+struct DNDDICEROLL_API FExpeditionEncounterRecord
+{
+    GENERATED_BODY()
+    UPROPERTY() FExpeditionRoute Route;
+    UPROPERTY() EBattlePhase Outcome = EBattlePhase::Fighting;
+    UPROPERTY() int32 RewardRecipient = INDEX_NONE;
+    UPROPERTY() int32 Survivors = 4;
+};
+
+/** All run metadata is reflected, bounded, and independent of presentation lifetime. */
+USTRUCT()
+struct DNDDICEROLL_API FExpeditionProgress
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Seed = 0;
+    UPROPERTY() FString RunId;
+    UPROPERTY() int32 GenerationRandomState = 0;
+    UPROPERTY() EExpeditionPhase Phase = EExpeditionPhase::Route;
+    UPROPERTY() int32 EncountersCompleted = 0;
+    UPROPERTY() TArray<FExpeditionRoute> Offers;
+    UPROPERTY() TArray<FExpeditionEncounterRecord> History;
+    UPROPERTY() bool bCampResolved = false;
+    UPROPERTY() bool bCampUsed = false;
+    UPROPERTY() bool bArtifactRecovered = false;
+};
+
+/** Serialization contract for the next slice: export both values together. Battle is a
+ * query copy, never a second authority; its RNG, turn and party values are exact. */
+USTRUCT()
+struct DNDDICEROLL_API FExpeditionSnapshot
+{
+    GENERATED_BODY()
+    UPROPERTY() FExpeditionProgress Progress;
+    UPROPERTY() FCombatSnapshot Battle;
+};
+
+/** Authoritative three-combat expedition. Queries never roll; rejected commands preserve
+ * the complete snapshot. There is no mutable battle access or caller-selected layout. */
+class DNDDICEROLL_API FExpeditionRun
+{
+public:
+    bool NewRun(int32 Seed, FString& Error);
+    bool ChooseRoute(int32 RouteId, FString& Error);
+    bool ClaimReward(int32 RecipientId, FString& Error);
+    bool Recover(bool bTakeRecovery, FString& Error);
+    FCombatResult Submit(const FCombatCommand& Command);
+    TArray<FCombatResult> PlayEnemyTurn();
+    const FCombatBattle& Battle() const { return Combat; }
+    const FExpeditionProgress& Progress() const { return State; }
+    FExpeditionSnapshot Snapshot() const { return {State, Combat.Snapshot()}; }
+    static FString RecoveryDescription();
+private:
+    FCombatBattle Combat;
+    FExpeditionProgress State;
+    bool bStarted = false;
+    void OfferRoutes();
+    void ResolveCombat();
+    FCombatEncounter Generate(const FExpeditionRoute& Route) const;
+};
