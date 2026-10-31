@@ -76,7 +76,7 @@ void AExpeditionBattleView::BeginPlay()
     {
         if (ULightComponent* Component = Light->GetLightComponent()) { Component->SetMobility(EComponentMobility::Movable); }
     }
-    Feedback.Add(TEXT("Welcome. N: new expedition | F9: resume last checkpoint | H: ending records."));
+    Feedback.Add(TEXT("Welcome. N: new expedition | O: resume last checkpoint | H: ending records."));
     UpdateCamera();
 }
 
@@ -206,8 +206,15 @@ void AExpeditionBattleView::ToggleRecords()
 {
     if (bShowRecords) { bShowRecords = false; return; }
     FString Error;
-    if (Session.ReadRecords(EndingRecords, Error)) { bShowRecords = true; }
+    if (Session.ReadRecords(EndingRecords, Error)) { bShowRecords = true; RecordsOffset = 0; }
     else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::PageRecords(int32 Direction)
+{
+    if (!bShowRecords) { return; }
+    const int32 LastPage = EndingRecords.IsEmpty() ? 0 : ((EndingRecords.Num() - 1) / RecordsPerPage) * RecordsPerPage;
+    RecordsOffset = FMath::Clamp(RecordsOffset + FMath::Clamp(Direction, -1, 1) * RecordsPerPage, 0, LastPage);
 }
 
 void AExpeditionBattleView::Tick(float DeltaSeconds)
@@ -290,9 +297,11 @@ void AExpeditionPlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::C, IE_Pressed, this, &AExpeditionPlayerController::Camp);
     InputComponent->BindKey(EKeys::V, IE_Pressed, this, &AExpeditionPlayerController::SkipCamp);
     InputComponent->BindKey(EKeys::N, IE_Pressed, this, &AExpeditionPlayerController::NewRun);
-    InputComponent->BindKey(EKeys::F5, IE_Pressed, this, &AExpeditionPlayerController::Save);
-    InputComponent->BindKey(EKeys::F9, IE_Pressed, this, &AExpeditionPlayerController::Resume);
+    InputComponent->BindKey(EKeys::K, IE_Pressed, this, &AExpeditionPlayerController::Save);
+    InputComponent->BindKey(EKeys::O, IE_Pressed, this, &AExpeditionPlayerController::Resume);
     InputComponent->BindKey(EKeys::H, IE_Pressed, this, &AExpeditionPlayerController::History);
+    InputComponent->BindKey(EKeys::PageUp, IE_Pressed, this, &AExpeditionPlayerController::OlderRecords);
+    InputComponent->BindKey(EKeys::PageDown, IE_Pressed, this, &AExpeditionPlayerController::NewerRecords);
     InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AExpeditionPlayerController::ConfirmCell);
 }
 
@@ -362,7 +371,7 @@ void AExpeditionPlayerController::Click()
     {
         SelectPartyIndex(FMath::FloorToInt((MouseY - PartyCardsTop) / PartyCardHeight)); return;
     }
-    if (bHasMouse && MouseX >= 260 && MouseY >= 90 && MouseY < 116)
+    if (bHasMouse && MouseX >= 260 && MouseX < 860 && MouseY >= 90 && MouseY < 116)
     {
         if (MouseX < 410) { Save(); } else if (MouseX < 560) { Resume(); } else if (MouseX < 710) { NewRun(); } else { History(); }
         return;
@@ -404,6 +413,8 @@ void AExpeditionPlayerController::NewRun() { if (IsValid(BattleView)) { BattleVi
 void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume() { if (IsValid(BattleView)) { BattleView->Resume(); } }
 void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { BattleView->ToggleRecords(); } }
+void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
+void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
 FString AExpeditionPlayerController::ActionHelp() const
 {
     return FCombatBattle::DescribeAction(SelectedAction);
@@ -507,7 +518,7 @@ void AExpeditionHUD::DrawHUD()
     FString Preview;
     if (!bCombat)
     {
-        if (!View->HasRun()) { Preview = TEXT("N: begin a fresh expedition | F9: resume the latest checkpoint | H: inspect records"); }
+        if (!View->HasRun()) { Preview = TEXT("N: begin a fresh expedition | O: resume the latest checkpoint | H: inspect records"); }
         else switch (Run.Phase)
         {
         case EExpeditionPhase::Route: Preview = TEXT("Choose Z: guarded route or X: dangerous route. Offers stay fixed until chosen."); break;
@@ -558,12 +569,15 @@ void AExpeditionHUD::DrawHUD()
             Record.Outcome == EBattlePhase::Victory ? TEXT("WON") : Record.Outcome == EBattlePhase::Defeat ? TEXT("LOST") : TEXT("IN PROGRESS"), Record.Survivors), 260, 72, FLinearColor(0.7f,0.85f,0.9f), 0.9f);
     }
     Panel(FLinearColor(0.08f,0.16f,0.2f,0.98f), 255, 90, Width - 265, 26);
-    Label(TEXT("[F5] Save           [F9] Resume         [N] New run          [H] Records"), 265, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
+    Label(TEXT("[K] Save"), 265, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
+    Label(TEXT("[O] Resume"), 415, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
+    Label(TEXT("[N] New run"), 565, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
+    Label(TEXT("[H] Records"), 715, 94, FLinearColor(0.3f,0.9f,1), 0.9f);
     if (!View->HasRun())
     {
         Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 120, Width - 265, 110);
         Label(TEXT("RECOVER THE WAYSTONE"), 275, 136, FLinearColor(1,0.8f,0.4f), 1.2f);
-        Label(TEXT("N: Start fresh with four adventurers. F9: Continue your saved expedition."), 275, 172);
+        Label(TEXT("N: Start fresh with four adventurers. O: Continue your saved expedition."), 275, 172);
         Label(TEXT("Progress saves after every accepted action. Deaths and resolved outcomes persist."), 275, 198, FLinearColor(0.7f,0.85f,0.9f),0.9f);
     }
     else if (Run.Phase == EExpeditionPhase::Route)
@@ -584,11 +598,11 @@ void AExpeditionHUD::DrawHUD()
     if (View->ShowingRecords())
     {
         Panel(FLinearColor(0.025f,0.04f,0.055f,0.99f), 255, 120, Width - 265, FMath::Max(160.0f, Height - 350));
-        Label(TEXT("ENDING RECORDS | H: return | Records grant no combat power"), 275, 134, FLinearColor(1,0.8f,0.4f));
+        Label(TEXT("ENDING RECORDS | H: return | PgUp/PgDn: older/newer | No combat power"), 275, 134, FLinearColor(1,0.8f,0.4f));
         const auto& Records = View->Records();
-        Label(Records.IsEmpty() ? TEXT("No completed expeditions yet.") : FString::Printf(TEXT("%d completed expeditions (most recent below)"), Records.Num()), 275, 164);
+        Label(Records.IsEmpty() ? TEXT("No completed expeditions yet.") : FString::Printf(TEXT("%d completed expeditions | Showing %d-%d (newest first)"), Records.Num(), View->RecordOffset()+1, FMath::Min(Records.Num(), View->RecordOffset()+View->RecordsPerPage)), 275, 164);
         float Row = 196;
-        for (int32 I=Records.Num()-1; I>=0 && Row<Height-230; --I)
+        for (int32 I=Records.Num()-1-View->RecordOffset(); I>=FMath::Max(0, Records.Num()-View->RecordOffset()-View->RecordsPerPage); --I)
         {
             const auto& R=Records[I];
             Label(FString::Printf(TEXT("%s | Seed %d | %s"), *R.RunId.Left(8), R.Seed, *R.Summary), 275, Row, FLinearColor(0.8f,0.9f,1),0.9f); Row += 28;

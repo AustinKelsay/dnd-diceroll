@@ -18,6 +18,28 @@ const FEncounterRecipe Recipes[] = {
     {TEXT("broken wall"), {{3, 3}, {4, 3}}, 2, 1}
 };
 
+// One profile supplies generated facts, truthful text and restore validation.
+void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSecuredSupplies)
+{
+    Route.Id = Stage * 2 + Choice + 1;
+    Route.bDangerous = Choice == 1;
+    Route.EnemyCount = Choice == 1 ? 3 : 2;
+    Route.RewardPotions = Choice == 1 || bSecuredSupplies ? 2 : 1;
+    Route.Name = Choice == 0 ? TEXT("Stream trail") : TEXT("Watchtower road");
+    const auto& Recipe = Recipes[Route.Recipe];
+    Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear, +%d potions%s"),
+        Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount,
+        Choice == 0 ? TEXT("scouts") : TEXT("raiders incl. archer"), Recipe.Terrain, Route.RewardPotions,
+        Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
+    if (Stage == 2)
+    {
+        Route.RewardPotions = 0;
+        Route.Name = TEXT("Artifact vault: ") + Route.Name;
+        Route.Preview = FString::Printf(TEXT("%s | %d guards incl. archer | %s | recover artifact; no loot"),
+            Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount, Recipe.Terrain);
+    }
+}
+
 int32 CountSurvivors(const FCombatBattle& Battle)
 {
     int32 Count = 0;
@@ -48,27 +70,11 @@ void FExpeditionRun::OfferRoutes()
     for (int32 Index = 0; Index < 2; ++Index)
     {
         FExpeditionRoute Route;
-        Route.Id = State.EncountersCompleted * 2 + Index + 1;
         Route.EncounterSeed = Random.RandRange(0, MAX_int32 - 1);
         Route.Recipe = Random.RandRange(0, UE_ARRAY_COUNT(Recipes) - 1);
         Route.Width = Random.RandRange(8, 9);
         Route.Height = Random.RandRange(7, 8);
-        Route.bDangerous = Index == 1;
-        Route.EnemyCount = Index == 1 ? 3 : 2;
-        Route.RewardPotions = Index == 1 || bSecuredSupplies ? 2 : 1;
-        Route.Name = Index == 0 ? TEXT("Stream trail") : TEXT("Watchtower road");
-        const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
-        Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear, +%d potions%s"),
-            Index == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount,
-            Index == 0 ? TEXT("scouts") : TEXT("raiders incl. archer"), Recipe.Terrain, Route.RewardPotions,
-            Index == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
-        if (State.EncountersCompleted == 2)
-        {
-            Route.RewardPotions = 0;
-            Route.Name = TEXT("Artifact vault: ") + Route.Name;
-            Route.Preview = FString::Printf(TEXT("%s | %d guards incl. archer | %s | recover artifact; no loot"),
-                Index == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount, Recipe.Terrain);
-        }
+        DescribeRoute(Route, State.EncountersCompleted, Index, bSecuredSupplies);
         State.Offers.Add(Route);
     }
     State.GenerationRandomState = Random.GetCurrentSeed();
@@ -215,11 +221,11 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     auto ValidRoute = [&P](const FExpeditionRoute& R, int32 Stage, int32 Choice)
     {
         const bool bSupplies = Stage > 0 && P.History[Stage - 1].Route.bDangerous;
-        return R.Id == Stage * 2 + Choice + 1 && R.EncounterSeed >= 0 && R.EncounterSeed < MAX_int32 &&
-            R.Recipe >= 0 && R.Recipe < UE_ARRAY_COUNT(Recipes) && R.Width >= 8 && R.Width <= 9 && R.Height >= 7 && R.Height <= 8 &&
-            R.bDangerous == (Choice == 1) && R.EnemyCount == (Choice == 1 ? 3 : 2) &&
-            R.RewardPotions == (Stage == 2 ? 0 : (Choice == 1 || bSupplies ? 2 : 1)) &&
-            !R.Name.IsEmpty() && R.Name.Len() <= 80 && !R.Preview.IsEmpty() && R.Preview.Len() <= 256;
+        if (R.EncounterSeed < 0 || R.EncounterSeed >= MAX_int32 || R.Recipe < 0 || R.Recipe >= UE_ARRAY_COUNT(Recipes) ||
+            R.Width < 8 || R.Width > 9 || R.Height < 7 || R.Height > 8) { return false; }
+        auto Expected = R;
+        DescribeRoute(Expected, Stage, Choice, bSupplies);
+        return FExpeditionRoute::StaticStruct()->CompareScriptStruct(&R, &Expected, 0);
     };
     for (int32 I = 0; I < P.Offers.Num(); ++I) { if (!ValidRoute(P.Offers[I], P.EncountersCompleted, I)) { return Reject(); } }
     int32 PreviousSurvivors = 4;

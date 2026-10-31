@@ -36,6 +36,9 @@ public:
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
+    static constexpr int32 RecordsPerPage = 4;
+    int32 RecordOffset() const { return RecordsOffset; }
+    void PageRecords(int32 Direction);
     int32 PresentationRevision() const { return Revision; }
     /** Explicit local storage selection before play; automation uses isolated fixtures. */
     void ConfigureStorage(const FString& Path);
@@ -49,6 +52,7 @@ private:
     bool bShowRecords = false;
     bool bCheckpointBlocked = false;
     int32 Revision = 0;
+    int32 RecordsOffset = 0;
     TArray<FString> Feedback;
     float EnemyDelay = 0.0f;
     float CameraYaw = -90.0f;
@@ -103,6 +107,8 @@ private:
     void Save();
     void Resume();
     void History();
+    void OlderRecords();
+    void NewerRecords();
     void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint Offset);
     void CursorUp();

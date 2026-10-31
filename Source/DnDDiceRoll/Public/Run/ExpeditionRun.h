@@ -51,7 +51,7 @@ struct DNDDICEROLL_API FExpeditionProgress
     UPROPERTY() bool bArtifactRecovered = false;
 };
 
-/** Serialization contract for the next slice: export both values together. Battle is a
+/** Detached serialization contract: export both values together. Battle is a
  * query copy, never a second authority; its RNG, turn and party values are exact. */
 USTRUCT()
 struct DNDDICEROLL_API FExpeditionSnapshot

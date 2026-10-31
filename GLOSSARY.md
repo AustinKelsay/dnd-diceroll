@@ -25,3 +25,7 @@ _Avoid_: pawn when discussing game rules
 **Party wipe**: The end of an expedition when no party member can continue or rescue another.
 
 **Run record**: A historical summary of a completed expedition that grants no permanent combat advantage.
+
+**Seed**: The reproducible input for an expedition's generated opportunities and random outcomes; separate expeditions may share a seed.
+
+**Checkpoint**: The latest committed state of the current expedition, including resolved actions and permanent losses, from which play resumes.

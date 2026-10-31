@@ -151,7 +151,7 @@ bool FInvalidNestedRestoreTest::RunTest(const FString& Parameters)
         [](auto& S){S.Battle.Encounter.Combatants[0].SpellSlots=1;}, [](auto& S){S.Battle.Encounter.Combatants[0].WeaponRank=4;}, [](auto& S){S.Battle.Encounter.Combatants[0].WeaponRank=1;},
         [](auto& S){S.Progress.EncountersCompleted=2;}, [](auto& S){S.Progress.History.Reset();},
         [](auto& S){S.Progress.History[0].Outcome=EBattlePhase::Victory;}, [](auto& S){S.Progress.History[0].RewardRecipient=1;},
-        [](auto& S){S.Progress.History[0].Route.Recipe=99;}, [](auto& S){S.Progress.History[0].Route.EnemyCount=3;},
+        [](auto& S){S.Progress.History[0].Route.Recipe=99;}, [](auto& S){S.Progress.History[0].Route.Preview=TEXT("no enemies and free loot");}, [](auto& S){S.Progress.History[0].Route.Name=TEXT("Wrong route");}, [](auto& S){S.Progress.History[0].Route.EnemyCount=3;},
         [](auto& S){S.Progress.History[0].Route.RewardPotions=0;}, [](auto& S){S.Progress.bCampUsed=true;},
         [](auto& S){S.Progress.bCampResolved=true;}, [](auto& S){S.Progress.bArtifactRecovered=true;},
         [](auto& S){S.Battle.Encounter.Combatants[0].MaxHP=31;}, [](auto& S){S.Battle.Encounter.Combatants.RemoveAt(0);}
@@ -181,6 +181,7 @@ bool FStrictMalformedSaveTest::RunTest(const FString& Parameters)
         FString Text; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Text)); Malformed.Add(Text);
     };
     AddMutation([](auto O){O->SetNumberField(TEXT("Version"),2);});
+    AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("Offers"))[0]->AsObject()->SetStringField(TEXT("Preview"),TEXT("No enemies, no cost"));});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetNumberField(TEXT("MovementLeft"),99);});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->SetObjectField(TEXT("Battle"),MakeShared<FJsonObject>());});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->RemoveField(TEXT("GenerationRandomState"));});
