@@ -1,6 +1,6 @@
 # Agent task index
 
-Find the document that owns your task, then follow its links. Each row names one owner; the linked rules stay authoritative, and this index restates none of them. Agents that discover `.agents/skills/` load those skills automatically. Other agents, including Claude Code, open the listed `SKILL.md` directly. Repository docs win when a skill and a doc disagree.
+Find the document that owns your task, then follow its links. Each row names one owner; the linked rules stay authoritative, and this index restates none of them. Codex-style agents discover `.agents/skills/`, and Claude Code discovers the same skills through the `.claude/skills` link. Other agents open the listed `SKILL.md` directly. Repository docs win when a skill and a doc disagree.
 
 | Task | Read first | Then use |
 | --- | --- | --- |

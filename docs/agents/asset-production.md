@@ -88,8 +88,10 @@ npx skills@1.7.4 add scenario-labs/skills#7f4b801c7248d51b093ec365aceb114bd06139
 ```
 
 An agent-run installer may select non-interactively; do not rely on a confirmation
-prompt to protect existing files. Inspect the resulting diff and retain any lock
-metadata it writes. Record the selected paths/revision in the issue. Additional
+prompt to protect existing files. Inspect the resulting diff. Commit the adopted
+skills and any lock metadata in their own reviewed change, with the pinned revision
+and license recorded as the existing `.agents/skills/` adaptations do; keep them out
+of asset slices. Record the selected paths/revision in the issue. Additional
 model/image skills are loaded only when the chosen job needs them. Connect Scenario
 MCP through the chosen client's setup using the upstream `scenario` instructions;
 use its supported authentication flow and local secret storage. Keep credentials

@@ -16,7 +16,7 @@ import tomllib
 from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "AustinKelsay/expedition-rpg"
+REPOSITORY = json.loads((ROOT / "tools/project.json").read_text())["repository"]
 POINTER = re.compile(rb"version https://git-lfs.github.com/spec/v1\noid sha256:[0-9a-f]{64}\nsize (?:0|[1-9][0-9]*)\n")
 GENERATED = {"Binaries", "Intermediate", "Saved", "DerivedDataCache", "Builds", ".local", ".venv", "__pycache__"}
 

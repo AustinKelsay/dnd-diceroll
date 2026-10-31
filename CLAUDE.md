@@ -1,3 +1,3 @@
 @AGENTS.md
 
-Claude Code does not discover `.agents/skills/`. Pick project skills from [the agent task index](docs/agents/README.md) and read their `SKILL.md` directly.
+Project skills live in `.agents/skills/`; `.claude/skills` links there so Claude Code discovers them. [The agent task index](docs/agents/README.md) maps tasks to skills and docs.
