@@ -16,7 +16,10 @@ import tomllib
 from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = json.loads((ROOT / "tools/project.json").read_text())["repository"]
+try:
+    REPOSITORY = json.loads((ROOT / "tools/project.json").read_text())["repository"]
+except (OSError, ValueError, KeyError):
+    sys.exit("tools/project.json needs a repository value such as owner/name.")
 POINTER = re.compile(rb"version https://git-lfs.github.com/spec/v1\noid sha256:[0-9a-f]{64}\nsize (?:0|[1-9][0-9]*)\n")
 GENERATED = {"Binaries", "Intermediate", "Saved", "DerivedDataCache", "Builds", ".local", ".venv", "__pycache__"}
 
@@ -147,7 +150,7 @@ def preflight(root, inspect_editor=editor_problems):
     for direction, args in (("fetch", []), ("push", ["--push"])):
         urls = text(root, "remote", "get-url", *args, "--all", "origin", required=False).splitlines()
         if not urls or not all(correct_remote(url) for url in urls):
-            problems.append(f"origin {direction} must target {REPOSITORY}; review remotes (URLs omitted).")
+            problems.append(f"origin {direction} must target {REPOSITORY} (tools/project.json); review remotes (URLs omitted).")
     # LFS clean filters can install hooks during status. Suppress installation
     # for this subprocess only; inspect the real configured hook below.
     dirty = text(root, "-c", f"core.hooksPath={os.devnull}", "status", "--porcelain=v1", "--untracked-files=all")
