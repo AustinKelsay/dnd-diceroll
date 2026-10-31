@@ -47,9 +47,11 @@ export. Check the record and plan against the prior record before import. A
 not prove the live Unreal asset is current. If the prior import is unverified,
 inspect it before deciding whether to import.
 
-Through the verified editor owner, import or reimport at the recorded destination
-under `/Game/DnDDiceRoll`. Preserve the prior accepted content until the candidate
-passes. Inspect returned import/compile/save results, full dirty-package state,
+Through the verified editor owner, import or reimport under `/Game/DnDDiceRoll`.
+A new asset goes to the issue's agreed candidate folder first, as in [asset intake](asset-intake.md).
+A revision of a recorded accepted asset reimports at its recorded package; the
+earlier record and source bytes are its recovery point. Use the intake table for the applicable checks.
+Inspect returned import/compile/save results, full dirty-package state,
 saved/reloaded references, and the asset in the actual game view. Exercise relevant
 interaction and camera/collision clearance. Image scoring cannot verify meshes,
 rigs, collisions or game feel. Record provenance in [assets](../assets.md), plus
@@ -67,7 +69,7 @@ Its skill library is [MIT licensed](https://github.com/scenario-labs/skills/blob
 Generated assets retain their own applicable service/model/input terms; the skill
 license does not establish their provenance.
 
-The project skill above is available without installing upstream. For optional
+The project [asset-production skill](../../.agents/skills/asset-production/SKILL.md) is available without installing upstream. For optional
 Scenario setup, follow its [pinned installation guide](https://github.com/scenario-labs/skills/blob/7f4b801c7248d51b093ec365aceb114bd06139e6/README.md#install)
 and inspect the selected files before use. From your owned checkout, this exact
 installer/source pin can first list the available skills without installing them:
@@ -122,7 +124,7 @@ the change is visible, collision/interaction still work, and there are no duplic
 packages from the rerun. Compare the source/export and in-game views, record actual
 spend, and attach evidence for both versions.
 
-This PR's offline fixtures prove record validation and revision planning only.
+The offline tests in `tools/tests/test_asset_manifest.py` prove record validation and revision planning only.
 They do not complete the paid generation, Blender, Unreal or visual pilot. Mark
 each of those stages pending until observed; lack of a service connection leaves
 local preparation and validation available.

@@ -1,3 +1,3 @@
 @AGENTS.md
 
-Before installing Epic's Unreal plugin, using live editor tools, or recovering a lost connection, read [Unreal agent setup](docs/agents/unreal-tools.md). Its compatibility rules apply to upstream skill instructions.
+Claude Code does not discover `.agents/skills/`. Pick project skills from [the agent task index](docs/agents/README.md) and read their `SKILL.md` directly.

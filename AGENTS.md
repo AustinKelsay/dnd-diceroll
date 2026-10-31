@@ -1,6 +1,6 @@
 # Working in this project
 
-For onboarding, Git updates, ticket work, PRs, or resuming a session, read `CONTRIBUTING.md`, then `docs/agents/workflow.md`. Keep the current checkout and editor owner intact; use an isolated workspace for simultaneous writing.
+For onboarding, Git updates, ticket work, PRs, or resuming a session, read `CONTRIBUTING.md`, then `docs/agents/workflow.md`. Keep the current checkout and editor owner intact; use an isolated workspace for simultaneous writing. For any other task, find its owning doc, template, or skill in `docs/agents/README.md`.
 
 Use Matt Pocock's skills directly, with this repo's workflow supplying Unreal and contribution rules. Do not invoke `plebdev-feature-dev` for this repository.
 
