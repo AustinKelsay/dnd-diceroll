@@ -6,7 +6,7 @@ GitHub's template-repository feature does not support files stored in Git LFS. T
 
 ## Create a new game repository
 
-Install Git LFS and the pinned Unreal Engine first. These commands require the authenticated GitHub CLI; substitute your new game repository name for `my-new-game`.
+Install Git LFS and the pinned Unreal Engine first. These commands require the authenticated GitHub CLI; substitute your new game repository name for `my-new-game` and the GitHub account or organization that will own it for `<owner>`.
 
 ```sh
 git clone --branch v0.2.0 --single-branch https://github.com/AustinKelsay/unreal-ai-boilerplate.git my-new-game
@@ -17,11 +17,12 @@ git lfs pull
 git remote rename origin boilerplate
 ```
 
-Before the first push, set `repository` in `tools/project.json` to the new `<owner>/my-new-game`; the contribution checks refuse any other origin. Replace the `<owner>/<game>` placeholders and the game name in `CONTRIBUTING.md`, and name the game in `README.md`. Then commit, publish both branches, and create the issue labels the [contribution workflow](agents/workflow.md) uses:
+Before the first push, set `repository` in `tools/project.json` to `<owner>/my-new-game`; the contribution checks refuse any other origin. In `CONTRIBUTING.md`, replace `<owner>` and `<game>` in the clone commands with the same values. Name the game in the `CONTRIBUTING.md` title and in `README.md`. Then commit, publish both branches, and create the issue labels the [contribution workflow](agents/workflow.md) uses:
 
 ```sh
 git commit -am "Configure the new game repository"
-gh repo create my-new-game --private --source=. --remote=origin --push
+gh repo create <owner>/my-new-game --private --source=. --remote=origin --push
+gh repo set-default <owner>/my-new-game
 git push origin main:staging
 for label in ready-for-agent needs-triage needs-info ready-for-human; do gh label create "$label"; done
 ```
