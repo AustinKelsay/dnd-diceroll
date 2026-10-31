@@ -2,6 +2,8 @@
 
 Sole implementation writer and editor owner on `feature/expedition-v1`. Fixed review baseline: `7c119bace4821ac04c7cf27a80e5ea9175aa8aaf`. No external writes, new checkout/branch, push, PR or tracker mutation authorized.
 
+Implementation commits: `56a4766d79d63206e2788957270ee5b8b2337ac5` and `6cc0eb2d331e6361ae9b33c226a69fd7285a7501`. This handoff is a documentation-only follow-up.
+
 ## Seams and decisions
 
 Approved test seam: `FCombatBattle` Start / Submit / Snapshot / LegalTargets. Reflected values now contain typed role, life state and rescue countdown, resource counts, gear rank and potion ownership; snapshot includes the separate Bonus Action budget. `FPartyContinuity::Advance` is the atomic victory-to-next-encounter seam. It accepts a layout, seed and conscious loot recipient, carries all existing party values by stable ID, then validates a candidate battle before replacing the completed battle. Layout data can place adventurers but cannot replace their state. Dead IDs must remain in the roster. No arbitrary writable snapshot was exposed.
