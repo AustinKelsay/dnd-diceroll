@@ -1,21 +1,30 @@
 # Reusing the starter
 
-The canonical repository is `AustinKelsay/unreal-ai-boilerplate`. `v0.1.0` identifies the initial validated baseline. This starter targets an Apple Silicon Mac with the engine version in `tools/versions.json`; other hosts require their own validation.
+The canonical repository is `AustinKelsay/unreal-ai-boilerplate`. `v0.2.0` adds the agent contribution factory (contribution workflow, read-only checks, task index, editor and asset recipes, project skills) to the `v0.1.0` validated baseline. This starter targets an Apple Silicon Mac with the engine version in `tools/versions.json`; other hosts require their own validation.
 
 GitHub's template-repository feature does not support files stored in Git LFS. This project uses LFS for Unreal binary assets, so reuse it by cloning into a new directory and attaching a new repository instead. [GitHub: template restrictions](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)
 
 ## Create a new game repository
 
-Install Git LFS and the pinned Unreal Engine first. These commands require the authenticated GitHub CLI; substitute your new game repository name for `my-new-game`.
+Install Git LFS and the pinned Unreal Engine first. These commands require the authenticated GitHub CLI; substitute your new game repository name for `my-new-game` and the GitHub account or organization that will own it for `<owner>`.
 
 ```sh
-git clone --branch v0.1.0 --single-branch https://github.com/AustinKelsay/unreal-ai-boilerplate.git my-new-game
+git clone --branch v0.2.0 --single-branch https://github.com/AustinKelsay/unreal-ai-boilerplate.git my-new-game
 cd my-new-game
 git switch -c main
 git lfs install --local
 git lfs pull
 git remote rename origin boilerplate
-gh repo create my-new-game --private --source=. --remote=origin --push
+```
+
+Before the first push, set `repository` in `tools/project.json` to `<owner>/my-new-game`; the contribution checks refuse any other origin. In `CONTRIBUTING.md`, replace `<owner>` and `<game>` in the clone commands with the same values. Name the game in the `CONTRIBUTING.md` title and in `README.md`. Then commit, publish both branches, and create the issue labels the [contribution workflow](agents/workflow.md) uses:
+
+```sh
+git commit -am "Configure the new game repository"
+gh repo create <owner>/my-new-game --private --source=. --remote=origin --push
+gh repo set-default <owner>/my-new-game
+git push origin main:staging
+for label in ready-for-agent needs-triage needs-info ready-for-human; do gh label create "$label"; done
 ```
 
 The normal LFS pre-push hook uploads the binary objects to the new origin. Keep that hook installed. For migration of every branch/tag and every historical LFS object, follow GitHub's separate [LFS repository duplication procedure](https://docs.github.com/en/repositories/creating-and-managing-repositories/duplicating-a-repository#mirroring-a-repository-that-contains-git-large-file-storage-objects).
@@ -37,6 +46,8 @@ python3 tools/dev.py capture
 ```
 
 Close other starter editors that use port 18765, or select another free port consistently in `tools/versions.json`, `.codex/config.toml`, `.mcp.json`, and `Config/DefaultEditorPerProjectUserSettings.ini`. Each workspace has its own lock; the port is shared across the machine. A copied map or ProjectID does not establish editor identity.
+
+Contributors integrate through `staging`.
 
 Set the visible project name and description in `Config/DefaultGame.ini`, create a distinct ProjectID for the new product, and fill in `docs/game-brief.md` before gameplay implementation. Keep the existing C++ module and content IDs initially; a full Unreal identifier rename needs a separate migration with corresponding config/tooling/test updates. Do not add machine-generated file-server tokens or user settings to the new repository.
 
