@@ -2,6 +2,8 @@
 
 A single-player 3D tactical roguelike: four adventurers, generated encounters, route choices, and permanent death. Built from the reusable [Unreal AI Boilerplate](https://github.com/AustinKelsay/unreal-ai-boilerplate).
 
+Joining the game with your agent? Start with [the contributor guide](CONTRIBUTING.md). It covers local setup, safe updates, and reviewed PRs into `staging`.
+
 Read [the approved game brief](docs/game-brief.md), [V1 spec](docs/specs/expedition-v1.md), and [current presentation-polish handoff](docs/runs/expedition-polish/01-presentation-polish.md). The [V1 delivery ledger](docs/runs/expedition-v1/ledger.md) preserves the earlier implementation and review history. [Development commands and editor safety](docs/development.md) remain authoritative. This project targets the pinned UE 5.8.4 build on Apple Silicon Mac. Internal Unreal identifiers remain DnDDiceRoll for compatibility.
 
 Development targets `staging` through reviewed feature PRs. The original starter and its v0.1.0 tag remain unchanged.
