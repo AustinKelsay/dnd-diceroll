@@ -1,0 +1,29 @@
+name: Repository checks
+
+on:
+  pull_request:
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    name: Repository hygiene and helper tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify Git LFS availability
+        run: git lfs version
+      - name: Helper and contribution tests (no engine)
+        run: python3 -m unittest discover -s tools/tests -v
+      - name: Git index hygiene (LFS pointers expected)
+        run: python3 tools/contribute.py check

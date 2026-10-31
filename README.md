@@ -1,5 +1,7 @@
 # Unreal AI Boilerplate
 
+Joining the Expedition game with your agent? Start with [the contributor guide](CONTRIBUTING.md). It covers local setup, safe updates, and reviewed PRs into `staging`. The [V1 game PR](https://github.com/AustinKelsay/expedition-rpg/pull/6) carries the game implementation; this branch may still contain only the starter until that PR is integrated.
+
 A reusable, game-neutral Unreal Engine game-development boilerplate for AI agents, with a safe editor lifecycle, native Epic MCP access, reproducible assets, automation, and a Mac packaging path. Gameplay decisions remain open in [the game brief](docs/game-brief.md).
 
 The validated baseline is **Unreal Engine 5.8.4, CL 58902052**, with Epic's bundled **Unreal MCP**, on an Apple Silicon Mac. MCP is experimental and editor-only. Versions stay pinned until an upgrade passes the same checks.
