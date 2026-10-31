@@ -16,6 +16,11 @@
 namespace
 {
 constexpr float CellSize = 110.0f;
+constexpr float HUDDesignWidth = 1280.0f;
+constexpr float PartyPanelWidth = 245.0f;
+constexpr float PartyCardsTop = 100.0f;
+constexpr float PartyCardHeight = 60.0f;
+constexpr int32 PartyCardCount = 4;
 FLinearColor PartyColor(int32 Id)
 {
     const FLinearColor Colors[] = {{0.15f, 0.55f, 1.0f}, {0.3f, 0.85f, 0.5f}, {1.0f, 0.8f, 0.25f}, {0.7f, 0.4f, 1.0f}};
@@ -124,7 +129,6 @@ void AExpeditionBattleView::Execute(const FCombatCommand& Command)
     if (!Unit || Unit->Side != ECombatSide::Party) { return; }
     Record(Battle.Submit(Command));
     RefreshUnits();
-    EnemyDelay = 0;
 }
 
 void AExpeditionBattleView::Tick(float DeltaSeconds)
@@ -174,7 +178,7 @@ void AExpeditionPlayerController::BeginPlay()
     SetInputMode(Mode);
     if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport())
     {
-        Viewport->SetMouseCaptureMode(EMouseCaptureMode::NoCapture);
+        Viewport->SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
         Viewport->SetMouseLockMode(EMouseLockMode::DoNotLock);
     }
 }
@@ -192,6 +196,11 @@ void AExpeditionPlayerController::SetupInputComponent()
     InputComponent->BindKey(EKeys::Two, IE_Pressed, this, &AExpeditionPlayerController::SelectTwo);
     InputComponent->BindKey(EKeys::Three, IE_Pressed, this, &AExpeditionPlayerController::SelectThree);
     InputComponent->BindKey(EKeys::Four, IE_Pressed, this, &AExpeditionPlayerController::SelectFour);
+    InputComponent->BindKey(EKeys::Up, IE_Pressed, this, &AExpeditionPlayerController::CursorUp);
+    InputComponent->BindKey(EKeys::Down, IE_Pressed, this, &AExpeditionPlayerController::CursorDown);
+    InputComponent->BindKey(EKeys::Left, IE_Pressed, this, &AExpeditionPlayerController::CursorLeft);
+    InputComponent->BindKey(EKeys::Right, IE_Pressed, this, &AExpeditionPlayerController::CursorRight);
+    InputComponent->BindKey(EKeys::Enter, IE_Pressed, this, &AExpeditionPlayerController::ConfirmCell);
 }
 
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
@@ -202,11 +211,34 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (ActiveId != LastActiveId)
     {
         const FCombatantState* Active = BattleView->Rules().Find(ActiveId);
-        if (Active && Active->Side == ECombatSide::Party) { SelectedId = ActiveId; }
+        if (Active && Active->Side == ECombatSide::Party) { SelectedId = ActiveId; GridCursor = Active->Cell; }
         LastActiveId = ActiveId;
     }
 }
-bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const { return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell); }
+bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
+{
+    if (KeyboardCell(Cell)) { return true; }
+    return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
+}
+bool AExpeditionPlayerController::KeyboardCell(FIntPoint& Cell) const
+{
+    if (!bKeyboardCursor) { return false; }
+    Cell = GridCursor; return true;
+}
+void AExpeditionPlayerController::MoveCursor(FIntPoint Offset)
+{
+    if (!IsValid(BattleView)) { return; }
+    const FCombatEncounter& Encounter = BattleView->Rules().Snapshot().Encounter;
+    GridCursor.X = FMath::Clamp(GridCursor.X + Offset.X, 0, Encounter.Width - 1);
+    GridCursor.Y = FMath::Clamp(GridCursor.Y + Offset.Y, 0, Encounter.Height - 1);
+    bKeyboardCursor = true;
+}
+// Arrow directions follow the board as seen from the initial camera orientation.
+void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
+void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
+void AExpeditionPlayerController::CursorLeft() { MoveCursor({1, 0}); }
+void AExpeditionPlayerController::CursorRight() { MoveCursor({-1, 0}); }
+void AExpeditionPlayerController::ConfirmCell() { if (IsValid(BattleView)) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
 void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
 {
     if (!IsValid(BattleView)) { return; }
@@ -219,18 +251,23 @@ void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
 void AExpeditionPlayerController::Click()
 {
     if (!IsValid(BattleView)) { return; }
+    bKeyboardCursor = false;
     float MouseX = 0, MouseY = 0;
     int32 ViewWidth = 0, ViewHeight = 0;
     GetViewportSize(ViewWidth, ViewHeight);
-    const float Scale = FMath::Max(0.5f, ViewWidth / 1280.0f);
+    const float Scale = FMath::Max(0.5f, ViewWidth / HUDDesignWidth);
     const bool bHasMouse = GetMousePosition(MouseX, MouseY);
     MouseX /= Scale; MouseY /= Scale;
-    if (bHasMouse && MouseX < 245 && MouseY >= 100 && MouseY < 340)
+    if (bHasMouse && MouseX < PartyPanelWidth && MouseY >= PartyCardsTop && MouseY < PartyCardsTop + PartyCardCount * PartyCardHeight)
     {
-        SelectPartyIndex(FMath::FloorToInt((MouseY - 100) / 60)); return;
+        SelectPartyIndex(FMath::FloorToInt((MouseY - PartyCardsTop) / PartyCardHeight)); return;
     }
     FIntPoint Cell;
     if (!HoverCell(Cell)) { return; }
+    ActAtCell(Cell);
+}
+void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
+{
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Cell != Cell) { continue; }
@@ -283,13 +320,13 @@ void AExpeditionHUD::DrawHUD()
     Super::DrawHUD();
     AExpeditionPlayerController* Controller = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     if (!Controller || !IsValid(Controller->GetBattleView())) { return; }
-    HUDScale = FMath::Max(0.5f, Canvas->SizeX / 1280.0f);
+    HUDScale = FMath::Max(0.5f, Canvas->SizeX / HUDDesignWidth);
     const AExpeditionBattleView* View = Controller->GetBattleView();
     const FCombatBattle& Rules = View->Rules();
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
     const FCombatantState* Selected = Rules.Find(Controller->Selection());
-    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, 237, 470);
+    Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, 8, PartyPanelWidth - 8, 470);
     Label(TEXT("EXPEDITION"), 20, 18, FLinearColor(1, 0.8f, 0.4f), 1.15f);
     Label(FString::Printf(TEXT("ROUND %d"), Snapshot.Round), 20, 44);
     Label(Active ? TEXT("TURN: ") + Active->Name : TEXT("No active turn"), 20, 65, FLinearColor::Yellow);
@@ -298,8 +335,8 @@ void AExpeditionHUD::DrawHUD()
     {
         if (Unit.Side == ECombatSide::Party)
         {
-            const float Y = 100 + PartyIndex * 60;
-            if (Selected && Selected->Id == Unit.Id) { Panel(FLinearColor(0.15f, 0.24f, 0.3f, 1), 14, Y, 225, 55); }
+            const float Y = PartyCardsTop + PartyIndex * PartyCardHeight;
+            if (Selected && Selected->Id == Unit.Id) { Panel(FLinearColor(0.15f, 0.24f, 0.3f, 1), 14, Y, PartyPanelWidth - 20, PartyCardHeight - 5); }
             Label(FString::Printf(TEXT("[%d] %s / %s"), ++PartyIndex, *Unit.Name, *Unit.Role), 20, Y + 4, PartyColor(Unit.Id));
             Label(FString::Printf(TEXT("HP %d/%d  AC %d%s"), Unit.HP, Unit.MaxHP, Unit.ArmorClass, Unit.HP == 0 ? TEXT("  INACTIVE") : TEXT("")), 20, Y + 25);
         }
@@ -311,7 +348,7 @@ void AExpeditionHUD::DrawHUD()
         }
         if (Active && Unit.Id == Active->Id) { OutlineCell(Controller, View, Unit.Cell, FLinearColor::Yellow, 4); }
     }
-    Label(TEXT("Left click: select / move / attack"), 20, 350);
+    Label(TEXT("Click / arrows+Enter: move / attack"), 20, 350);
     Label(TEXT("1-4: select | SPACE: end turn"), 20, 372);
     Label(TEXT("Q / E: rotate | Wheel: zoom"), 20, 394);
     Label(TEXT("Cyan: reachable | Red: legal target"), 20, 416, FLinearColor(0.25f,0.9f,1));
@@ -321,6 +358,8 @@ void AExpeditionHUD::DrawHUD()
     for (FIntPoint Cell : Moves) { OutlineCell(Controller, View, Cell, FLinearColor(0.15f,0.8f,0.9f), 1.5f); }
     for (int32 Id : Targets) { OutlineCell(Controller, View, Rules.Find(Id)->Cell, FLinearColor(1,0.18f,0.12f), 3); }
     if (Selected) { OutlineCell(Controller, View, Selected->Cell, FLinearColor::White, 2); }
+    FIntPoint KeyboardCursor;
+    if (Controller->KeyboardCell(KeyboardCursor)) { OutlineCell(Controller, View, KeyboardCursor, FLinearColor(1, 0.6f, 0), 5); }
     float Width = Canvas->SizeX / HUDScale;
     float Height = Canvas->SizeY / HUDScale;
     Panel(FLinearColor(0.025f, 0.04f, 0.055f, 0.94f), 8, Height - 185, Width - 16, 177);

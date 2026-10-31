@@ -101,6 +101,7 @@ private:
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
+    bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();

@@ -164,6 +164,12 @@ bool FCombatBattle::HasLineOfSight(FIntPoint From, FIntPoint To) const
     return true;
 }
 
+bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const
+{
+    return Target.Side != Attacker.Side && Target.HP > 0 && GridDistance(Origin, Target.Cell) <= Attacker.Range &&
+        HasLineOfSight(Origin, Target.Cell);
+}
+
 TArray<int32> FCombatBattle::LegalTargets(int32 Id) const
 {
     TArray<int32> Result;
@@ -171,8 +177,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id) const
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !State.bActionAvailable || !Unit) { return Result; }
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
-        if (Target.Side != Unit->Side && Target.HP > 0 && GridDistance(Unit->Cell, Target.Cell) <= Unit->Range &&
-            HasLineOfSight(Unit->Cell, Target.Cell)) { Result.Add(Target.Id); }
+        if (CanTargetFrom(*Unit, Unit->Cell, Target)) { Result.Add(Target.Id); }
     }
     return Result;
 }
@@ -273,7 +278,7 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
                 if (!Cost || *Cost >= BestCost) { continue; }
                 for (const FCombatantState& Target : State.Encounter.Combatants)
                 {
-                    if (Target.Side != Enemy->Side && Target.HP > 0 && GridDistance(Cell, Target.Cell) <= Enemy->Range && HasLineOfSight(Cell, Target.Cell))
+                    if (CanTargetFrom(*Enemy, Cell, Target))
                     {
                         Best = Cell; BestCost = *Cost; break;
                     }

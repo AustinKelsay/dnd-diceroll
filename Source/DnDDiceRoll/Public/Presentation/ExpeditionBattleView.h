@@ -57,12 +57,22 @@ public:
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
     bool HoverCell(FIntPoint& Cell) const;
+    bool KeyboardCell(FIntPoint& Cell) const;
     void SelectPartyIndex(int32 Index);
 private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     int32 SelectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
+    FIntPoint GridCursor = FIntPoint::ZeroValue;
+    bool bKeyboardCursor = false;
     void Click();
+    void ActAtCell(FIntPoint Cell);
+    void MoveCursor(FIntPoint Offset);
+    void CursorUp();
+    void CursorDown();
+    void CursorLeft();
+    void CursorRight();
+    void ConfirmCell();
     void EndTurn();
     void RotateLeft();
     void RotateRight();
