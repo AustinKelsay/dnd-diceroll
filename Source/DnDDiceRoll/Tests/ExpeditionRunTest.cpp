@@ -11,7 +11,7 @@ bool SameRun(const FExpeditionSnapshot& A, const FExpeditionSnapshot& B)
 int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
 
 // A bounded player policy using only commands, previews and snapshots. No stat overrides.
-bool FinishCombat(FExpeditionRun& Run, bool bFight = true, int32 SacrificeId = INDEX_NONE)
+bool FinishCombat(FExpeditionRun& Run, bool bFight = true)
 {
     for (int32 Turn = 0; Turn < 400 && Run.Progress().Phase == EExpeditionPhase::Combat; ++Turn)
     {
@@ -20,7 +20,7 @@ bool FinishCombat(FExpeditionRun& Run, bool bFight = true, int32 SacrificeId = I
         const auto* Active = Battle.Find(Id);
         if (!Active) { return false; }
         if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
-        if (bFight && Id != SacrificeId)
+        if (bFight)
         {
             for (auto Action : {ECombatCommandType::SecondWind, ECombatCommandType::Potion, ECombatCommandType::CureWounds})
             {
@@ -94,6 +94,11 @@ bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
     Run.NewRun(42, Error);
     for (int32 Encounter = 0; Encounter < 3; ++Encounter)
     {
+        if (Encounter == 2)
+        {
+            TestEqual(TEXT("Finale metadata offers no consumable loot"), Run.Progress().Offers[0].RewardPotions, 0);
+            TestTrue(TEXT("Finale preview discloses artifact instead of loot"), Run.Progress().Offers[0].Preview.Contains(TEXT("no loot")));
+        }
         TestTrue(TEXT("Choose guarded opportunity"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
         if (!TestTrue(TEXT("Public play completes within finite turn budget"), FinishCombat(Run))) { return false; }
         TestEqual(TEXT("Exactly one completion per victory"), Run.Progress().EncountersCompleted, Encounter + 1);
@@ -180,6 +185,21 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("AI/player play finite on generated terrain"), FinishCombat(Run));
                 TestTrue(TEXT("Replay finite"), FinishCombat(Replay));
                 TestTrue(TEXT("Same seed and commands reproduce full combat RNG/results"), SameRun(Run.Snapshot(), Replay.Snapshot()));
+                for (int32 Next = 1; Next < 3 && Run.Progress().Phase == EExpeditionPhase::Reward; ++Next)
+                {
+                    int32 Recipient = INDEX_NONE;
+                    for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+                    { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Recipient = Unit.Id; break; } }
+                    Run.ClaimReward(Recipient, Error); Replay.ClaimReward(Recipient, Error);
+                    if (Next == 1) { Run.Recover(Seed % 2 == 0, Error); Replay.Recover(Seed % 2 == 0, Error); }
+                    const int32 RouteId = Run.Progress().Offers[Seed % 2].Id;
+                    TestTrue(TEXT("Next retained route valid"), Run.ChooseRoute(RouteId, Error));
+                    TestTrue(TEXT("Replay next retained route valid"), Replay.ChooseRoute(RouteId, Error));
+                    TestTrue(TEXT("Whole-run generated play finite"), FinishCombat(Run));
+                    TestTrue(TEXT("Whole-run replay finite"), FinishCombat(Replay));
+                    TestTrue(TEXT("Full seeded command sequence preserves every value and both streams"), SameRun(Run.Snapshot(), Replay.Snapshot()));
+                }
+                TestTrue(TEXT("Whole expedition terminates within three combats"), Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat);
             }
         }
     }

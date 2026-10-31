@@ -103,7 +103,7 @@ void AExpeditionBattleView::RebuildBoard()
         UnitMeshes.Add(MakeMesh(Cylinder, CellPosition(Unit.Cell), FVector(0.55f, 0.55f, 0.75f),
             Unit.Side == ECombatSide::Party ? PartyColor(Unit.Id) : FLinearColor(0.8f, 0.17f, 0.12f)));
     }
-    CameraDistance = 1700.0f + 100.0f * FMath::Max(0, Encounter.Width - 8);
+    CameraDistance = 1700.0f + ((Encounter.Width > 8 || Encounter.Height > 7) ? 100.0f : 0.0f);
     RefreshUnits(); UpdateCamera();
 }
 
@@ -192,7 +192,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 void AExpeditionBattleView::UpdateCamera()
 {
     const FVector Focus((Rules().Snapshot().Encounter.Width - 1) * CellSize / 2,
-        (Rules().Snapshot().Encounter.Height - 1) * CellSize / 2 - 100, 0);
+        (Rules().Snapshot().Encounter.Height - 1) * CellSize / 2 - 150, 0);
     const float Radians = FMath::DegreesToRadians(CameraYaw);
     const FVector Offset(FMath::Cos(Radians) * CameraDistance * 0.65f,
         FMath::Sin(Radians) * CameraDistance * 0.65f, CameraDistance);
@@ -517,6 +517,7 @@ void AExpeditionHUD::DrawHUD()
     }
     else if (Run.Phase == EExpeditionPhase::Reward)
     {
+        Panel(FLinearColor(0.025f,0.04f,0.055f,0.97f), 255, 112, Width - 265, 44);
         Label(FString::Printf(TEXT("LOOT: +1 gear rank / +%d potions | Select survivor + L"), Run.History.Last().Route.RewardPotions), 270, 120, FLinearColor(1,0.8f,0.4f));
     }
 }

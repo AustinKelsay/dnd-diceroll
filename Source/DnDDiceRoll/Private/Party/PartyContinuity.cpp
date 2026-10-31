@@ -21,7 +21,6 @@ bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layo
         const FIntPoint Cell = Spawn.Cell;
         Spawn = *Previous;
         Spawn.Cell = Cell;
-
     }
     for (const FCombatantState& Previous : Battle.Snapshot().Encounter.Combatants)
     {
@@ -35,7 +34,6 @@ bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layo
     Battle = MoveTemp(Candidate);
     return true;
 }
-
 
 bool FPartyContinuity::Reward(FCombatBattle& Battle, int32 RecipientId, int32 Potions, FString& Error)
 {

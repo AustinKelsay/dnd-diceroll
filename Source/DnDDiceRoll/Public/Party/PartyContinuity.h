@@ -2,12 +2,12 @@
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
 
-/** Between-encounter seam for the next run module. A successful victory transition gives
- * one conscious recipient +1 weapon damage rank (cap 3) and one potion (cap 9).
- * Layout owns cells/enemies; the previous battle owns every party value and identity.
- * Atomic rejection, including invalid layouts, preserves the completed battle and RNG.
- * Run owns reward/camp phase allowances; these operations validate a completed victory.
- * Carry never heals, replenishes, or awards loot.
+/** Persistent party operations composed by the run. Layout owns cells/enemies; the
+ * completed battle owns every party value and stable ID, including dead members.
+ * Reward grants +1 gear (cap 3) and 1..2 potions (cap 9) to a conscious survivor.
+ * Recovery is explicit, capped and survivor-only; Carry never rests or awards loot.
+ * The run owns exactly-once reward/camp phase gates. Advance retains the earlier
+ * atomic reward-plus-carry interface for existing callers and public party tests.
  */
 class DNDDICEROLL_API FPartyContinuity
 {
