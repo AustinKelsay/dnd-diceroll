@@ -164,7 +164,7 @@ void FExpeditionRun::ResolveCombat()
     Record.Survivors = CountSurvivors(Combat);
     if (Outcome == EBattlePhase::Defeat) { State.Phase = EExpeditionPhase::Defeat; return; }
     ++State.EncountersCompleted;
-    State.bArtifactRecovered = State.EncountersCompleted == 3;
+    State.bArtifactRecovered = State.EncountersCompleted == EncounterCount;
     State.Phase = State.bArtifactRecovered ? EExpeditionPhase::Victory : EExpeditionPhase::Reward;
 }
 

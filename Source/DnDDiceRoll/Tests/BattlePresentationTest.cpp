@@ -87,3 +87,99 @@ bool FRecordPagingTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 #endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+namespace
+{
+bool DisplayMatchesRules(const AExpeditionBattleView& View)
+{
+    for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants)
+    {
+        const FUnitDisplay* Display = View.Playback().Unit(Unit.Id);
+        if (!Display || Display->Position != FVector2D(Unit.Cell.X, Unit.Cell.Y) || Display->HP != Unit.HP || Display->Life != Unit.Life) { return false; }
+    }
+    return true;
+}
+void Settle(AExpeditionBattleView& View)
+{
+    for (int32 Frame = 0; Frame < 400 && View.IsPresenting(); ++Frame) { View.Tick(0.05f); }
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlaybackConvergenceTest, "Project.Expedition.Presentation.PlaybackConvergesOnCommittedState",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient game world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/Playback"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
+    if (TestNotNull(TEXT("Runtime board adapter"), View))
+    {
+        View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+        View->DispatchBeginPlay();
+        View->NewRun();
+        View->ChooseRoute(0);
+        TestTrue(TEXT("A fresh board shows the committed state"), DisplayMatchesRules(*View));
+        bool bMoved = false, bEnemyShown = false;
+        for (int32 Turn = 0; Turn < 40 && View->InCombat() && !(bMoved && bEnemyShown); ++Turn)
+        {
+            const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+            if (!Active) { break; }
+            if (Active->Side == ECombatSide::Enemy)
+            {
+                const int32 Enemy = Active->Id;
+                for (int32 Frame = 0; Frame < 40 && View->Rules().ActiveId() == Enemy; ++Frame) { View->Tick(0.1f); }
+                TestNotEqual(TEXT("Enemy turn completes"), View->Rules().ActiveId(), Enemy);
+                if (View->IsPresenting())
+                {
+                    bEnemyShown = true;
+                    View->SkipPresentation();
+                    TestFalse(TEXT("Skip finishes the enemy's steps"), View->IsPresenting());
+                    TestTrue(TEXT("Skipping converges on the committed state"), DisplayMatchesRules(*View));
+                }
+                continue;
+            }
+            const TArray<FIntPoint> Moves = View->Rules().LegalMoves(Active->Id);
+            if (!bMoved && !Moves.IsEmpty())
+            {
+                const FVector2D Start(Active->Cell.X, Active->Cell.Y);
+                const int32 Id = Active->Id;
+                View->Execute({ECombatCommandType::Move, Id, Moves.Last()});
+                TestTrue(TEXT("Accepted move is presented over time"), View->IsPresenting());
+                TestEqual(TEXT("Display starts where the unit was"), View->Playback().Unit(Id)->Position, Start);
+                const FCombatSnapshot Committed = View->Rules().Snapshot();
+                View->Execute({ECombatCommandType::Move, Id, FIntPoint(-5, -5)});
+                TestTrue(TEXT("Rejected input during playback leaves rules unchanged"),
+                    FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Committed, &View->Rules().Snapshot(), 0));
+                TestTrue(TEXT("Rejected input does not skip the animation"), View->IsPresenting());
+                View->Tick(0.05f);
+                TestFalse(TEXT("The display is still on its way"), DisplayMatchesRules(*View));
+                Settle(*View);
+                TestFalse(TEXT("Ticking finishes playback"), View->IsPresenting());
+                TestTrue(TEXT("Playback ends on the committed state"), DisplayMatchesRules(*View));
+                bMoved = true;
+            }
+            View->Execute({ECombatCommandType::EndTurn, Active->Id});
+            Settle(*View);
+        }
+        TestTrue(TEXT("A party move was presented"), bMoved);
+        TestTrue(TEXT("An enemy turn was presented"), bEnemyShown);
+        // Resume mid-presentation replaces the show with the saved checkpoint.
+        View->Save();
+        const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+        if (Active && Active->Side == ECombatSide::Party && !View->Rules().LegalMoves(Active->Id).IsEmpty())
+        {
+            View->Execute({ECombatCommandType::Move, Active->Id, View->Rules().LegalMoves(Active->Id)[0]});
+        }
+        View->Resume();
+        TestFalse(TEXT("Resume clears pending playback"), View->IsPresenting());
+        TestTrue(TEXT("Resume shows the checkpoint"), DisplayMatchesRules(*View));
+    }
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+#endif

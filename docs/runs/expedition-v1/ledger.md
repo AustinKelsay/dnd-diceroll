@@ -1,5 +1,7 @@
 # Expedition V1 — Feature Dev Ledger
 
+This is the completed V1 delivery record. Continue from the [presentation-polish handoff](../expedition-polish/01-presentation-polish.md) and the current workflow in [development.md](../../development.md). The launcher named below was retired after this run; historical validation and review records remain unchanged.
+
 ## Run
 
 - Run ID: expedition-v1-20261030
