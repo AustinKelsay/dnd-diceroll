@@ -10,6 +10,8 @@ Useful prompts:
 - “Find an unclaimed, unblocked ticket I can work on.”
 - “Verify my change, arrange independent review, and prepare its PR.”
 
+Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/unreal-tools.md). That guide also covers the shared project-skill pilot and connection recovery for any agent.
+
 ## Join this game
 
 Accept access to the private `AustinKelsay/expedition-rpg` repository. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
