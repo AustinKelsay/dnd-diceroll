@@ -5,7 +5,8 @@ Find the document that owns your task, then follow its links. Each row names one
 | Task | Read first | Then use |
 | --- | --- | --- |
 | Onboard, sync, claim a ticket, open a PR, or resume | [CONTRIBUTING](../../CONTRIBUTING.md), [workflow](workflow.md) | Matt Pocock skills named in the workflow; [feature run](../templates/feature-run.md) for multi-ticket features |
-| Gameplay rules or C++/Blueprint code | [workflow](workflow.md) step 1, [game brief](../game-brief.md), [architecture](../architecture.md) | |
+| Gameplay rules or C++/Blueprint code | [workflow](workflow.md) step 1, [game brief](../game-brief.md), [V1 spec](../specs/expedition-v1.md), [architecture](../architecture.md) | [domain docs](domain.md): [CONTEXT](../../CONTEXT.md), [GLOSSARY](../../GLOSSARY.md), [ADRs](../adr/) |
+| File, triage, or label issues | [issue tracker](issue-tracker.md) | [triage labels](triage-labels.md) |
 | Build, launch, close, test, or call MCP | [development](../development.md) | [Unreal agent setup](unreal-tools.md) for Epic's plugin, the project skill, and connection recovery |
 | Editor, presentation, or input task | [editor contributions](editor-contributions.md) | [task brief](../templates/editor-task.md), [completion report](../templates/editor-report.md), [editor recipes](../editor-recipes.md) |
 | Import a new or replacement asset | [asset intake](asset-intake.md) | [asset provenance](../assets.md) |

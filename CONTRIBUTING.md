@@ -39,8 +39,6 @@ Inspect existing hooks before LFS installation; preserve custom hooks and the LF
 
 On a supported Mac, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. These operations belong to one editor owner; coordinate before using the machine-wide MCP endpoint.
 
-The game is being integrated through [V1 PR #6](https://github.com/AustinKelsay/expedition-rpg/pull/6). Read its current state before expecting gameplay in `staging`. While it is pending, independent starter/docs work can proceed; work depending on V1 waits for integration or an explicitly approved dependent branch. Opening that PR in a browser does not update your clone.
-
 ## The contribution agreement
 
 1. Work starts with an issue in this repository. New ideas go through scope/spec/ticket approval; an already approved ticket uses its existing decisions.
