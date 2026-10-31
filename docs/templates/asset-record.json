@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "asset_id": "camp-chest",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Props/SM_CampChest",
+  "issue": "replace with owning issue URL",
+  "provenance": {
+    "author": "replace with author/provider",
+    "license": "replace with applicable terms",
+    "origin": "replace with source URL or authored origin"
+  },
+  "recipe": {
+    "method": "replace with generation or authored method",
+    "approved_reference": "replace with brief/reference decision",
+    "parameters": {},
+    "model_revision": "unknown until recorded"
+  },
+  "tools": {
+    "source_tool": "replace with observed version"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/camp-chest/r001/source.blend",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "role": "export",
+      "path": "Art/camp-chest/r001/chest.fbx",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "import_policy": {
+    "name": "replace-with-approved-policy",
+    "version": 1,
+    "settings": {}
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}
