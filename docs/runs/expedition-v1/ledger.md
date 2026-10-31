@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: all gameplay and local review gates complete; staging PR #6 open, PR review round pending
+- Status: delivery complete; staging PR #6 open and non-draft; local gates and independent PR fallback review complete
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -131,4 +131,10 @@ Editor handback: PID 42011 was verified PIE stopped and dirty packages empty at 
 
 ## Root final local gates
 
-Independent full-feature integrity review completed with no actionable findings at 83cfb63. Local CodeRabbit completed with two valid startup issues; root fixed them with compiled failing/passing public regressions, final 36/36 full Project tests and 22/22 helpers. Final Mac Development package is Builds/20261031T050537650861Z; native startup protection and unreadable-save preservation verified. See 05-integrity-review.md, 06-coderabbit-local.md and 07-root-delivery.md. Root status at 05:09:08 UTC: no editor/listener or owned packaged game. PR round remains pending.
+Independent full-feature integrity review completed with no actionable findings at 83cfb63. Local CodeRabbit completed with two valid startup issues; root fixed them with compiled failing/passing public regressions, final 36/36 full Project tests and 22/22 helpers. Final Mac Development package is Builds/20261031T050537650861Z; native startup protection and unreadable-save preservation verified. See 05-integrity-review.md, 06-coderabbit-local.md and 07-root-delivery.md. Root status at 05:09:08 UTC: no editor/listener or owned packaged game.
+
+## Final PR acceptance — 2026-10-31
+
+PR #6 is open and non-draft against staging. The CodeRabbit request at 05:11:25 UTC remained silent at 05:42:44 UTC, beyond the pipeline's 20-minute cap. A fresh independent read-only gpt-6.1-sol fallback reviewed the complete diff from ea2a3c0 to 95adf5f and found **no actionable correctness, spec or maintainability issues**. It confirmed a clean working tree and passing diff whitespace check; it read rather than reran the recorded execution evidence. See [08-pr-review.md](08-pr-review.md).
+
+No hosted checks or GitHub approvals were reported. Local test/package/native evidence and the completed fallback satisfy this delivery pipeline; a future merge remains a separate decision. Parent spec #1 stays open; children #2–#5 are closed. No product/access questions or unresolved review findings remain. Root returns the open PR and recorded limitations to the user without merging or deploying.

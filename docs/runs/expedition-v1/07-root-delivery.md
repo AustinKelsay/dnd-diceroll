@@ -26,4 +26,4 @@ Mac Development and the native keyboard path are verified. CUA mouse coordinate 
 
 ## PR gate
 
-Local CodeRabbit findings resolved; affected full checks pass. PR creation and the bounded PR CodeRabbit round are root-owned and recorded in the ledger. No merge into staging/main or production distribution is part of this delivery.
+Local CodeRabbit findings resolved; affected full checks pass. [PR #6](https://github.com/AustinKelsay/expedition-rpg/pull/6) is open and non-draft against staging. CodeRabbit was silent beyond the bounded wait; a fresh independent gpt-6.1-sol fallback reviewed the complete PR at `95adf5f` and found no actionable issues. No hosted checks or GitHub review approvals are claimed. See the [PR review record](08-pr-review.md). All delivery gates are complete; merge is a separate decision. No merge into staging/main or production distribution is part of this delivery.
