@@ -62,10 +62,13 @@ class ContributionTests(unittest.TestCase):
     @contextmanager
     def unchanged(self):
         before_index = (self.root / ".git/index").read_bytes()
+        hooks = self.root / ".git/hooks"
+        before_hooks = {p.name: p.read_bytes() for p in hooks.iterdir() if p.is_file()}
         before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*")
                   if p.is_file() and ".git" not in p.relative_to(self.root).parts}
         yield
         self.assertEqual(before_index, (self.root / ".git/index").read_bytes())
+        self.assertEqual(before_hooks, {p.name: p.read_bytes() for p in hooks.iterdir() if p.is_file()})
         self.assertEqual(before, {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*")
                                  if p.is_file() and ".git" not in p.relative_to(self.root).parts})
 
@@ -127,6 +130,38 @@ class ContributionTests(unittest.TestCase):
         self.assertIn("origin push", problems)
         self.assertIn("pre-push", problems)
         self.assertIn("Editor is open", problems)
+
+    def test_status_does_not_recreate_missing_hook_for_hydrated_lfs_asset(self):
+        self.install_lfs()
+        self.write("Content/map.umap", b"real hydrated asset\n")
+        self.git("add", "Content/map.umap")
+        self.git("commit", "-m", "real LFS asset")
+        hook = self.root / ".git/hooks/pre-push"
+        hook.unlink()
+        with self.unchanged():
+            report = preflight(self.root, inspect_editor=lambda root: [])
+        self.assertFalse(hook.exists())
+        self.assertIn("pre-push", "\n".join(report["problems"]))
+
+    def test_preflight_inspects_active_relative_and_absolute_custom_hooks(self):
+        self.install_lfs()
+        content = (self.root / ".git/hooks/pre-push").read_bytes()
+        custom = self.root / ".local/team-hooks"
+        custom.mkdir(parents=True)
+        hook = custom / "pre-push"
+        hook.write_bytes(content)
+        hook.chmod(0o755)
+        for setting in (".local/team-hooks", str(custom)):
+            with self.subTest(setting=setting):
+                self.git("config", "core.hooksPath", setting)
+                with self.unchanged():
+                    self.assertEqual(preflight(self.root, inspect_editor=lambda root: []) ["problems"], [])
+                hook.unlink()
+                with self.unchanged():
+                    problems = preflight(self.root, inspect_editor=lambda root: []) ["problems"]
+                self.assertIn("pre-push", "\n".join(problems))
+                hook.write_bytes(content)
+                hook.chmod(0o755)
 
     def test_preflight_hydration_is_distinct_from_pointer_integrity(self):
         self.install_lfs()

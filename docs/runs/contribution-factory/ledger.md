@@ -16,4 +16,8 @@
 
 ## Review and delivery
 
-Pending final local checks, fresh-clone exercise, independent Standards/Spec and Sol review, CodeRabbit, CI, PR, and authorized integration.
+- Candidate `214801a`: 33/33 tests; index hygiene and real preflight passed. Fresh disposable clone proved missing-LFS refusal, download recovery, doctor and 33 tests, plus preservation of untracked work/index. Reports are ignored under `.local/contribution-proof/`.
+- Independent Standards review: PASS, no findings.
+- Sol round 1 (Spec/correctness): S1 fixed. A real hydrated-LFS regression reproduced `git status` installing a missing hook; status now uses a command-local null hooks path, while later inspection retains the real configured path. The test verifies hooks/index/worktree preservation. S2 fixed. Noninteractive `gh issue view --comments` omitted the issue body; the workflow now requests body and comments explicitly with JSON fields. Root reproduced both findings before fixing.
+- Local CodeRabbit: completed, one hook-path finding declined. `git rev-parse --git-path hooks/pre-push` already respects relative and absolute `core.hooksPath`; direct Git experiments and a regression covering both active custom paths establish this. No production change was needed for that finding.
+- Pending Sol recheck, hosted CI, PR feedback, and authorized integration. The real friend/second-machine pilot remains a follow-up; no Unreal build, rendering, or package behavior is changed or newly claimed.

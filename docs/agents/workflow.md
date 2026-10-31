@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](../../CONTRIBUTING.md) first. This is the repo-owned exec
 
 ## 1. Establish the session
 
-Confirm the repository is `AustinKelsay/expedition-rpg`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion with `gh issue view <number> --repo AustinKelsay/expedition-rpg --comments`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
+Confirm the repository is `AustinKelsay/expedition-rpg`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion with `gh issue view <number> --repo AustinKelsay/expedition-rpg --json title,body,comments,assignees,labels,state`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
 
 For gameplay, read the brief, architecture, asset provenance, and any available `CONTEXT.md`, `GLOSSARY.md`, and relevant ADRs before proposing changes. Until V1 is integrated, its [spec issue](https://github.com/AustinKelsay/expedition-rpg/issues/1) and [PR](https://github.com/AustinKelsay/expedition-rpg/pull/6) supply the approved game context. New work does not inherit V1's session-specific delegation.
 

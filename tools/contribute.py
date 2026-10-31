@@ -148,7 +148,9 @@ def preflight(root, inspect_editor=editor_problems):
         urls = text(root, "remote", "get-url", *args, "--all", "origin", required=False).splitlines()
         if not urls or not all(correct_remote(url) for url in urls):
             problems.append(f"origin {direction} must target {REPOSITORY}; review remotes (URLs omitted).")
-    dirty = text(root, "status", "--porcelain=v1", "--untracked-files=all")
+    # LFS clean filters can install hooks during status. Suppress installation
+    # for this subprocess only; inspect the real configured hook below.
+    dirty = text(root, "-c", f"core.hooksPath={os.devnull}", "status", "--porcelain=v1", "--untracked-files=all")
     if dirty:
         problems.append("Uncommitted work; preserve and inspect it before workspace updates:\n" + dirty)
     for marker in ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply", "sequencer"):
