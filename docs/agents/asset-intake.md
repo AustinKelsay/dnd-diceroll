@@ -4,6 +4,8 @@ Use this recipe when introducing or replacing art, audio or animation. Start fro
 the approved [editor task brief](../templates/editor-task.md), then follow
 [development](../development.md) and [editor recipes](../editor-recipes.md) for actual
 Unreal operations. [Asset provenance](../assets.md) is the durable import record.
+Prepare generated or revised sources through [asset production](asset-production.md)
+first; this recipe covers their Unreal inspection and integration.
 
 ## Prepare the candidate
 
@@ -26,7 +28,9 @@ provenance are known. The issue claim covers any existing binary paths to edit.
 
 Use Unreal APIs/MCP to create the binary assets. Import into the issue's agreed
 candidate folder under `/Game/DnDDiceRoll`, leaving accepted assets available until
-the candidate passes. Use a dedicated validation map/scene when useful and include
+the candidate passes. A revision of an accepted asset that has a versioned record
+instead reimports at its recorded package through asset production; its earlier
+record and source bytes are the recovery point. Use a dedicated validation map/scene when useful and include
 its path in the claim. Preserve existing recipe output on reruns.
 
 Check the applicable properties below against the brief and accepted reference.

@@ -20,3 +20,7 @@ require a connection and cost budget, while the Blender expert family operates
 on installed local software. Inspect any optional skill before executing its
 scripts. Keep this project's engine pin, lifecycle, content root and connection
 settings authoritative when upstream defaults differ.
+
+For family art direction, visual targets and raster image checks, use the
+[create-game-assets skill](../create-game-assets/SKILL.md). For Unreal candidate
+inspection and integration, follow [asset intake](../../../docs/agents/asset-intake.md).

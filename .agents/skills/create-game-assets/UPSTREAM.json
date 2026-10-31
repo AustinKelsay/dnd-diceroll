@@ -30,6 +30,6 @@
     "SKILL.md",
     "agents/openai.yaml"
   ],
-  "adaptation_summary": "Replaced the entrypoint with the project contribution/editor/import contract and linked existing provenance; retained art references, templates and raster scripts. Updated the UI prompt for Unreal asset families.",
+  "adaptation_summary": "Replaced the entrypoint with the project contribution/editor/import contract and linked existing provenance and the project's asset intake, production and record docs; retained art references, templates and raster scripts. Updated the UI prompt for Unreal asset families.",
   "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
 }

@@ -5,6 +5,8 @@ Use this recipe for editor, presentation or asset work within the
 the issue still owns acceptance and approval, and [development](../development.md)
 still owns lifecycle, identity, discovery, saving and evidence rules. It applies to
 any agent without requiring a particular model, plugin or generation service.
+Inside the editor, `ProjectAuthoringSkill` serves [editor authoring](editor-authoring.md),
+a condensed checklist for the same work; this recipe owns the brief, recovery and report.
 
 ## Brief and checkpoint
 
@@ -24,7 +26,8 @@ any agent without requiring a particular model, plugin or generation service.
 Work in batches small enough to inspect and recover individually. For new playable
 content, validate the blockout and behavior before dressing it; for an art-only task,
 use the accepted behavior as the starting point. Import candidates through
-[asset intake](asset-intake.md). Apply the lifecycle and discovery sequence from
+[asset intake](asset-intake.md); generate or revise sources through
+[asset production](asset-production.md). Apply the lifecycle and discovery sequence from
 development before editor mutations.
 
 Read every mutation's returned result, including compile/import/save status, before

@@ -1,6 +1,6 @@
 # Editor authoring recipes
 
-Before project asset or presentation work, load the project authoring pilot through AgentSkillToolset; [Unreal agent setup](agents/unreal-tools.md) describes discovery and compatibility. Its source is [editor authoring](agents/editor-authoring.md), also readable without an editor connection.
+Before project asset or presentation work, load the project authoring pilot through AgentSkillToolset; [Unreal agent setup](agents/unreal-tools.md) describes discovery and compatibility. Its source is [editor authoring](agents/editor-authoring.md), also readable without an editor connection. The task brief, recovery bound and completion report live in [editor contributions](agents/editor-contributions.md).
 
 Start with `python3 tools/dev.py status`. One owner makes sequential calls, discovers `list_toolsets`, describes each toolset, and dispatches using the returned schema. Names below are authoring capabilities in the pinned Epic installation; retrieve their complete registered toolset names from discovery rather than guessing. Browse Epic's `AgentSkillToolset` for bundled instructions such as `material_basics`, `blueprint_basics`, `default_outdoor_lighting`, and `unreal_skill_best_practices`. [Epic: Unreal MCP](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor)
 

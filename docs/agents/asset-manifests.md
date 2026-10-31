@@ -11,7 +11,7 @@ brief/visual-acceptance record. Reuse its asset `id` as this record's `asset_id`
 point its `source.prompt_or_source_record` at the current revision JSON. This
 record owns source/export hashes and import policy; the roster owns family status
 and approval. Link the records rather than duplicating technical metadata. The
-optional family skill in [PR #15](https://github.com/AustinKelsay/expedition-rpg/pull/15)
+optional [create-game-assets skill](../../.agents/skills/create-game-assets/SKILL.md)
 is not required for this helper, and the two JSON formats are not interchangeable.
 
 Copy the [record template](../templates/asset-record.json), replace its example

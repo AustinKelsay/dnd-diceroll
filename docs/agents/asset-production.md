@@ -49,7 +49,8 @@ inspect it before deciding whether to import.
 
 Through the verified editor owner, import or reimport at the recorded destination
 under `/Game/DnDDiceRoll`. Preserve the prior accepted content until the candidate
-passes. Inspect returned import/compile/save results, full dirty-package state,
+passes. Use the [asset intake](asset-intake.md) table for the applicable checks.
+Inspect returned import/compile/save results, full dirty-package state,
 saved/reloaded references, and the asset in the actual game view. Exercise relevant
 interaction and camera/collision clearance. Image scoring cannot verify meshes,
 rigs, collisions or game feel. Record provenance in [assets](../assets.md), plus
@@ -67,7 +68,7 @@ Its skill library is [MIT licensed](https://github.com/scenario-labs/skills/blob
 Generated assets retain their own applicable service/model/input terms; the skill
 license does not establish their provenance.
 
-The project skill above is available without installing upstream. For optional
+The project [asset-production skill](../../.agents/skills/asset-production/SKILL.md) is available without installing upstream. For optional
 Scenario setup, follow its [pinned installation guide](https://github.com/scenario-labs/skills/blob/7f4b801c7248d51b093ec365aceb114bd06139e6/README.md#install)
 and inspect the selected files before use. From your owned checkout, this exact
 installer/source pin can first list the available skills without installing them:
@@ -86,8 +87,9 @@ npx skills@1.7.4 add scenario-labs/skills#7f4b801c7248d51b093ec365aceb114bd06139
 ```
 
 An agent-run installer may select non-interactively; do not rely on a confirmation
-prompt to protect existing files. Inspect the resulting diff and retain any lock
-metadata it writes. Record the selected paths/revision in the issue. Additional
+prompt to protect existing files. Inspect the resulting diff and keep any lock
+metadata it writes locally. Do not commit installed upstream skills or lock files
+with asset work; vendoring them needs its own approved issue and provenance record. Record the selected paths/revision in the issue. Additional
 model/image skills are loaded only when the chosen job needs them. Connect Scenario
 MCP through the chosen client's setup using the upstream `scenario` instructions;
 use its supported authentication flow and local secret storage. Keep credentials
@@ -122,7 +124,7 @@ the change is visible, collision/interaction still work, and there are no duplic
 packages from the rerun. Compare the source/export and in-game views, record actual
 spend, and attach evidence for both versions.
 
-This PR's offline fixtures prove record validation and revision planning only.
+The offline tests in `tools/tests/test_asset_manifest.py` prove record validation and revision planning only.
 They do not complete the paid generation, Blender, Unreal or visual pilot. Mark
 each of those stages pending until observed; lack of a service connection leaves
 local preparation and validation available.
