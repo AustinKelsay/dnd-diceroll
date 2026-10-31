@@ -1,3 +1,4 @@
+# Project adaptation: Unreal asset-family UI metadata; source revision in ../UPSTREAM.json.
 interface:
   display_name: "Create Game Assets"
   short_description: "Build and validate cohesive Unreal asset families"
