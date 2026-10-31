@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: tactical-battle implementation delegated; SRD fact check in parallel
+- Status: tactical battle implemented and validated locally; later V1 slices remain pending
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -49,7 +49,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 
 | Slice | Blocked by | Owner/status | Evidence |
 | --- | --- | --- | --- |
-| Play a tactical battle | none | sole implementation worker; starting from 31a48fb0342013de151461113fc88be727c5d686 | setup doctor and 22 helper tests pass |
+| Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
 | Survive losses and use party roles | battle | pending | pending |
 | Complete a seeded expedition | losses/roles | pending | pending |
 | Resume a run and record its ending | expedition | pending | pending |
@@ -72,3 +72,11 @@ None. Agent-performable local/visual/package checks are AFK. Other platforms and
 - Survive losses and use party roles: https://github.com/AustinKelsay/expedition-rpg/issues/3
 - Complete a seeded expedition: https://github.com/AustinKelsay/expedition-rpg/issues/4
 - Resume a run and record its ending: https://github.com/AustinKelsay/expedition-rpg/issues/5
+
+## Tactical battle handoff — 2026-10-31
+
+Implementation commits: `e8b21f5` (initial battle slice), `92b6a83` (review fixes, regression, final native input paths). Fixed review baseline `bca18be64b76ab7c0cac1cae71915ddccad489b2`; exactly two independent read-only gpt-6.1-sol axes. Standards: no hard violations, two optional duplication findings resolved. Spec: one P2 rejected-input starvation issue resolved with red/green adapter regression. Owner inspected the later small keyboard-grid addition and ran final validation.
+
+Evidence: `.local/automation/20261031T020825536544Z` has 9 passing Project tests and no warnings. All 22 helper tests pass. `Builds/20261031T020904710358Z` has successful Mac Development cook/archive and exact-map headless startup; the same app was visibly played through round 2 with real keyboard movement, blocked-target rejection, legal AC preview, attack roll/HP/action changes, turn progression, AI, camera rotation and wheel zoom. Earlier native PIE mouse hit is captured in `.local/captures/after-desktop-q-before.png`; final editor image is `.local/captures/final-battle-pie.png`. Packaged mouse coordinate delivery via CUA remained unreliable; the complete arrows/Enter input path is verified. See session for exact limits and public interface. No binary asset edits, helper rewrites, pushes, PRs or tracker state changes.
+
+Editor ownership handback complete: exact-project PID 83142 was verified clean with PIE stopped, then exited normally through the helper. Final status at 2026-10-31 02:16:55 UTC showed no associated project processes and no MCP listener; no packaged game remained. Other project browser untouched. Final smoke had zero errors and one host AudioUnit sample-rate warning (`2003332927`). Root now owns editor coordination, the next slice and all external delivery operations.
