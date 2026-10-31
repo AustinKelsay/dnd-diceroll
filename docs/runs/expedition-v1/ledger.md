@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: battle and party consequences accepted locally; seeded expedition starting
+- Status: battle and party consequences accepted locally; seeded expedition implementation/review/native composition complete locally; root owns next delivery
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -51,7 +51,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 | --- | --- | --- | --- |
 | Play a tactical battle | none | implementation complete; commits `e8b21f5`, `92b6a83`; root resumes orchestration | final build; 9/9 Project tests; 22/22 helper tests; Mac package + native keyboard play; separate Standards/Spec reviews resolved; [session](01-tactical-battle.md) and [review](01-tactical-battle-review.md) |
 | Survive losses and use party roles | battle | implementation complete; `56a4766`, `6cc0eb2`; root owns source/editor and external delivery | [session](02-party-consequences.md); 18/18 Project tests, 22/22 helpers; native four-role use, rescue/death, victory and smaller-party continuation; separate [Standards](02-party-consequences-standards.md) and [Spec](02-party-consequences-spec.md) reviews resolved |
-| Complete a seeded expedition | losses/roles | next sole implementation worker, based on party handoff `ce58edc` | pending |
+| Complete a seeded expedition | losses/roles | implementation complete; `645cdd4`, `a13fafa`; source/editor returned to root | [session](03-seeded-expedition.md), separate [Standards](03-seeded-expedition-standards.md) and [Spec](03-seeded-expedition-spec.md); final fresh build, 26/26 Project, 22/22 helpers; native three-combat artifact ending and fresh reset |
 | Resume a run and record its ending | expedition | pending | pending |
 
 ## Editor ownership
@@ -101,3 +101,16 @@ Limits: native victory is now observed; wipe remains automation-verified. No int
 ## Root party acceptance and expedition handoff
 
 Root inspected the survivor-continuation image, public composition seam and separate review evidence. Ticket #3 accepted and closed after validation; parent spec remains open. Root live status at 2026-10-31 03:09:52 UTC confirms no associated project process or MCP listener. Next worker owns source/editor operations for ticket #4; later save/record work remains pending. The old repeated-crossing fixture should now be replaced by the authoritative three-encounter run flow. Final package/mouse and native defeat acceptance gaps remain explicit.
+
+
+## Seeded expedition handoff — 2026-10-31
+
+Ticket #4 implementation complete locally. Fixed review baseline `c1be5672308d0d604bb08c2a1f44c688ffa2fc5f`; implementation `645cdd49697d782c9c08f626a29c78a46398fe25`, owner follow-up `a13fafaa8a11d804a0e2915ccabfde9df0b000ea`. Exactly two independent read-only gpt-6.1-sol axes: Standards zero hard violations/two optional smells (both owner-resolved); Spec zero code findings/native composition pending at candidate (now completed). Owner also caught finale potion metadata with a red public assertion and fixed it. Separate reports and exact evidence are linked in the ticket table.
+
+Final fresh editor build succeeded; `.local/automation/20261031T035207894828Z`: **26/26 full Project tests, zero warnings**. Helpers: **22/22**. Preserved sandbox bootstrap: zero errors/warnings. Public tests cover 128 generation seeds, occupied-spawn access/connectivity, whole-run replay across 16 seeds, atomic rejection/RNG, history effects, exact rewards/camp/no resurrection, smaller-party continuation, three-combat artifact victory, wipe and fresh reset. Fresh editor smoke had zero errors and one known host AudioUnit sample-rate warning (`2003332927`).
+
+Real keyboard native play completed route → first victory → reward → explicit camp → changed layout → second victory/reward → finale → **ARTIFACT RECOVERED (3/3)** → **N fresh seed/reset**. Primary inspected captures: `.local/captures/run-final-sera-6-return.png` and `.local/captures/run-fresh-0-n.png`. Final code framing capture `.local/captures/run-final-framing.png` verifies all eight rows above the bottom HUD. Final post-relaunch input probes were no-ops and are not claimed as a second replay; the earlier complete native session is the composition evidence. Mouse delivery remains unreliable, native wipe/smaller-party run continuation are automation-only this slice, and root retains final package/packaged-play acceptance.
+
+`FExpeditionRun` now owns the sole battle and run phase/metadata. Public validated commands are NewRun, ChooseRoute, ClaimReward, Recover, Submit and PlayEnemyTurn; Battle/Progress are const and Snapshot assembles reflected run+battle values with retained generation/combat RNG, offers/history/camp/party/phase. Ticket #5 must add versioned validated atomic restore, preserving private initialization and cross-field invariants rather than restarting/rolling state. No disk adapter is present. See the session serialization contract before implementing it.
+
+Editor ownership returned: exact project PID **89957** was verified PIE stopped/dirty packages empty at **2026-10-31 03:57:40 UTC**, then exited normally through the safe helper. Final status **03:57:45 UTC** (`.local/run-final-status.json`) showed **no associated project processes or MCP listener**. CUA session ended; other project browser untouched. Root now owns source/editor coordination, final integrity review, ticket #5 and all external delivery. No remote writes or binary asset changes were performed.
