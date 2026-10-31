@@ -20,7 +20,7 @@ Separate decorative art from labels, hit targets and focus styles. Test long act
 
 UI handlers submit validated game commands and observe accepted results/const state. Bind updates at meaningful transitions where the public seam exists; remove subscriptions with the owner's lifetime. Animated health bars and selected widgets are presentation values. Widget recreation, repeated clicks and menu closure must not duplicate actions, change RNG or restore spent resources.
 
-For Expedition, inspect startup NewRun/Resume decisions, action rejection, downed versus dead, smaller surviving parties, route/reward/recovery screens, and run records only as relevant to the changed screen. Preserve save/resume and permanent-loss semantics from the accepted spec.
+Inspect the screens and states the accepted spec defines, such as new game/resume decisions, action rejection, loss and recovery states, and progress records, only as relevant to the changed screen. Preserve the spec's save/resume and loss semantics.
 
 ## Review evidence
 

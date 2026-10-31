@@ -1,10 +1,10 @@
-# Build Expedition together
+# Build this game together
 
 Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent uses Matt Pocock's skills directly, following [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
 
 Useful prompts:
 
-- “Set up Expedition on this machine and explain anything missing.”
+- “Set up this game on this machine and explain anything missing.”
 - “Check for updates and help me resume my work without losing changes.”
 - “Help me turn this encounter idea into a small, approved feature.”
 - “Find an unclaimed, unblocked ticket I can work on.”
@@ -14,7 +14,7 @@ Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/un
 
 ## Join this game
 
-Accept access to the private `AustinKelsay/expedition-rpg` repository. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
+Accept access to the game's repository, the `repository` value in [tools/project.json](tools/project.json). Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
 
 For local Unreal development, the validated target is **Apple Silicon macOS**, the exact engine build in [tools/versions.json](tools/versions.json), Xcode/Metal, Git LFS, and Python 3.11+. Install the engine through Epic and use `UE_ROOT` for a different installation location. Other hosts can contribute suitable docs, planning, source, and review work, but need supported-machine verification for Unreal claims.
 
@@ -24,8 +24,8 @@ With Git LFS installed, the agent can run:
 
 ```sh
 gh auth status
-git clone --branch staging https://github.com/AustinKelsay/expedition-rpg.git
-cd expedition-rpg
+git clone --branch staging https://github.com/<owner>/<game>.git
+cd <game>
 git remote -v
 git lfs install --local
 git lfs pull
@@ -38,8 +38,6 @@ python3 tools/contribute.py preflight
 Inspect existing hooks before LFS installation; preserve custom hooks and the LFS pre-push invocation. Resolve a hook conflict deliberately. The checks never install or replace hooks. On an unsupported host, `check` remains available; `preflight` reports that editor state cannot be verified.
 
 On a supported Mac, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. These operations belong to one editor owner; coordinate before using the machine-wide MCP endpoint.
-
-The game is being integrated through [V1 PR #6](https://github.com/AustinKelsay/expedition-rpg/pull/6). Read its current state before expecting gameplay in `staging`. While it is pending, independent starter/docs work can proceed; work depending on V1 waits for integration or an explicitly approved dependent branch. Opening that PR in a browser does not update your clone.
 
 ## The contribution agreement
 

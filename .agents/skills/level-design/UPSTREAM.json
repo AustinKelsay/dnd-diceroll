@@ -21,6 +21,6 @@
     "SKILL.md",
     "references/pacing-and-flow.md"
   ],
-  "adaptation_summary": "Replaced the entrypoint and supporting reference with Unreal blockouts and rules-based encounter metrics. Expedition guidance is conditional on available approved domain/spec docs; generic pacing does not expand run/recovery mechanics.",
+  "adaptation_summary": "Replaced the entrypoint and supporting reference with Unreal blockouts and rules-based encounter metrics. Game-specific guidance is conditional on available approved domain/spec docs; generic pacing does not expand run/recovery mechanics.",
   "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
 }

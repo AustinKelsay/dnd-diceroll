@@ -1,6 +1,6 @@
 # Unreal AI Boilerplate
 
-Joining the Expedition game with your agent? Start with [the contributor guide](CONTRIBUTING.md). It covers local setup, safe updates, and reviewed PRs into `staging`. The [V1 game PR](https://github.com/AustinKelsay/expedition-rpg/pull/6) carries the game implementation; this branch may still contain only the starter until that PR is integrated.
+Building a game with friends and their agents? Start each agent on [the contributor guide](CONTRIBUTING.md). It covers local setup, safe updates, and reviewed PRs into `staging`. To start a new game from this starter, follow [reusing the starter](docs/reusing-the-starter.md).
 
 A reusable, game-neutral Unreal Engine game-development boilerplate for AI agents, with a safe editor lifecycle, native Epic MCP access, reproducible assets, automation, and a Mac packaging path. Gameplay decisions remain open in [the game brief](docs/game-brief.md).
 

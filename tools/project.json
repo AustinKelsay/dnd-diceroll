@@ -1,5 +1,5 @@
 {
-  "repository": "AustinKelsay/expedition-rpg",
+  "repository": "AustinKelsay/unreal-ai-boilerplate",
   "module": "DnDDiceRoll",
   "editor_target": "DnDDiceRollEditor",
   "game_target": "DnDDiceRoll",
