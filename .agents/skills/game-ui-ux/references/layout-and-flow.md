@@ -6,7 +6,7 @@ Project adaptation of the upstream reference. Read this for UMG implementation o
 
 Inspect the existing HUD technology before choosing widgets. In UMG, author Widget Blueprints at a consistent reference resolution. Use Canvas Panel anchors for edge-relative placement and Horizontal/Vertical Boxes or grids for groups. Let text size to content; reserve fixed bounds for elements with a real size contract. Use the project DPI curve and Size/Scale Boxes deliberately instead of permanent render-transform scaling.
 
-Separate decorative art from labels, hit targets and focus styles. Test long action names, empty/full resource values, multiline messages and enlarged text. Keep selected, hovered, disabled, downed and dead states distinguishable without color alone. Preserve a clear view of legal cells and targets beneath the HUD.
+Separate decorative art from labels, hit targets and focus styles. Test long action names, empty/full resource values, multiline messages and enlarged text. Keep selected, hovered and disabled states, plus any spec-defined states such as downed or defeated, distinguishable without color alone. Preserve a clear view of the playfield and legal targets beneath the HUD.
 
 ## Input and flow
 
@@ -24,7 +24,7 @@ Inspect the screens and states the accepted spec defines, such as new game/resum
 
 ## Review evidence
 
-Record the tested resolution, window/aspect policy, text scale and input device. Exercise supported narrow/wide layouts, long labels and focus through modals. Check that HUD hit regions do not hide or activate the board underneath. Save and reload changed Widget Blueprints, then capture and inspect actual rendered interaction. Designer previews and automation supplement that observation.
+Record the tested resolution, window/aspect policy, text scale and input device. Exercise supported narrow/wide layouts, long labels and focus through modals. Check that HUD hit regions do not hide or activate the playfield underneath. Save and reload changed Widget Blueprints, then capture and inspect actual rendered interaction. Designer previews and automation supplement that observation.
 
 ## Primary documentation
 

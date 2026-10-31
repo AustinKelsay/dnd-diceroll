@@ -10,18 +10,18 @@ The accepted encounter structure, route choices, recovery opportunities and loss
 
 ## Traversal and tactics
 
-Use grid coordinates and implemented movement/targeting rules to define the required path. Distinguish visual sightlines from mechanical line-of-sight; claim a cover or height advantage only when rules implement it. Validate legal unoccupied spawns and reachable actionable targets, including narrow passages and blocked approaches. A smaller surviving party must meet the accepted continuation contract.
+Use the implemented movement/targeting rules, with grid coordinates in a grid game, to define the required path. Distinguish visual sightlines from mechanical line-of-sight; claim a cover or height advantage only when rules implement it. Validate legal unoccupied spawns and reachable actionable targets, including narrow passages and blocked approaches. Any spec-defined loss of characters or resources must still meet the accepted continuation contract.
 
 For a generated layout, trace the visible geometry to the authoritative recipe and validation output. Sweep reproducible seeds and inspect representative extremes. A hand-authored showcase map can demonstrate appearance, but does not validate generation or its distribution.
 
 ## Guidance
 
-Use landmarks, light, contrast and consistent material/shape roles to reveal the objective and threats. Inspect the overhead camera at supported rotations and zoom limits. Decorative geometry must preserve the rules' walkable footprint and leave adventurers, targeting highlights and action feedback legible. HUD overlap can make a mechanically reachable cell unusable.
+Use landmarks, light, contrast and consistent material/shape roles to reveal the objective and threats. Inspect the supported camera views at their rotation and zoom limits. Decorative geometry must preserve the rules' walkable footprint and leave player characters, targeting highlights and action feedback legible. HUD overlap can make a mechanically reachable space unusable.
 
 ## Blockout acceptance
 
 - Legal spawns and rules-consistent paths to the objective/actionable targets.
-- No soft-lock caused by occupancy, unavailable abilities or permanently lost party members, within the approved continuation rules.
+- No soft-lock caused by occupancy, unavailable abilities or permanently lost characters, within the approved continuation rules.
 - Important decisions readable before commitment; irreversible choices signposted.
 - Layout remains understandable at supported camera orientations and UI sizes.
 - Actual playtest observations distinguish mechanical invalidity, camera/input problems and confusing guidance.

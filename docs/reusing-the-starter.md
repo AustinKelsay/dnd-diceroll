@@ -15,8 +15,15 @@ git switch -c main
 git lfs install --local
 git lfs pull
 git remote rename origin boilerplate
+```
+
+Before the first push, set `repository` in `tools/project.json` to the new `<owner>/my-new-game`; the contribution checks refuse any other origin. Replace the `<owner>/<game>` placeholders and the game name in `CONTRIBUTING.md`, and name the game in `README.md`. Then commit, publish both branches, and create the issue labels the [contribution workflow](agents/workflow.md) uses:
+
+```sh
+git commit -am "Configure the new game repository"
 gh repo create my-new-game --private --source=. --remote=origin --push
 git push origin main:staging
+for label in ready-for-agent needs-triage needs-info ready-for-human; do gh label create "$label"; done
 ```
 
 The normal LFS pre-push hook uploads the binary objects to the new origin. Keep that hook installed. For migration of every branch/tag and every historical LFS object, follow GitHub's separate [LFS repository duplication procedure](https://docs.github.com/en/repositories/creating-and-managing-repositories/duplicating-a-repository#mirroring-a-repository-that-contains-git-large-file-storage-objects).
@@ -39,7 +46,7 @@ python3 tools/dev.py capture
 
 Close other starter editors that use port 18765, or select another free port consistently in `tools/versions.json`, `.codex/config.toml`, `.mcp.json`, and `Config/DefaultEditorPerProjectUserSettings.ini`. Each workspace has its own lock; the port is shared across the machine. A copied map or ProjectID does not establish editor identity.
 
-Set `repository` in `tools/project.json` to the new `<owner>/<game>`; the contribution checks refuse other origins. Name the game in `CONTRIBUTING.md` and `README.md`, and create the issue labels the [contribution workflow](agents/workflow.md) uses (`ready-for-agent`, `needs-triage`, `needs-info`, `ready-for-human`). Contributors integrate through `staging`.
+Contributors integrate through `staging`.
 
 Set the visible project name and description in `Config/DefaultGame.ini`, create a distinct ProjectID for the new product, and fill in `docs/game-brief.md` before gameplay implementation. Keep the existing C++ module and content IDs initially; a full Unreal identifier rename needs a separate migration with corresponding config/tooling/test updates. Do not add machine-generated file-server tokens or user settings to the new repository.
 

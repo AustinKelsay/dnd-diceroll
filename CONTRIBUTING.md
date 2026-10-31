@@ -14,7 +14,7 @@ Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/un
 
 ## Join this game
 
-Accept access to the game's repository, the `repository` value in [tools/project.json](tools/project.json). Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
+Accept the maintainer's invitation to the game's repository; [tools/project.json](tools/project.json) records its name. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
 
 For local Unreal development, the validated target is **Apple Silicon macOS**, the exact engine build in [tools/versions.json](tools/versions.json), Xcode/Metal, Git LFS, and Python 3.11+. Install the engine through Epic and use `UE_ROOT` for a different installation location. Other hosts can contribute suitable docs, planning, source, and review work, but need supported-machine verification for Unreal claims.
 

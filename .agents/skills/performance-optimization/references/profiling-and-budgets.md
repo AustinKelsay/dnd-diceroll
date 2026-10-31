@@ -19,7 +19,7 @@ Frame time is constrained by interacting CPU/GPU work, waits and display limits.
 
 Prefer a rendered Mac Development package for target observations, with an explicit warmup, capture duration and repeated trials. Record editor-only measurements as editor-only. Use identical seed/action sequence, camera, resolution, scalability, frame cap/vsync and tracing settings before and after. Separate loading/shader warmup from steady-state behavior. The package helper's null-renderer startup check is not a graphics benchmark.
 
-Inspect the dominant interval in Unreal Insights, then make the smallest relevant change. For repeated board pieces, shared materials or instanced meshes may reduce submission cost; measure them before adding complexity. A pool requires demonstrated lifetime/spawn cost and a bounded ownership policy. Cached rules queries need correct invalidation and must preserve authoritative command behavior.
+Inspect the dominant interval in Unreal Insights, then make the smallest relevant change. For repeated pieces or props, shared materials or instanced meshes may reduce submission cost; measure them before adding complexity. A pool requires demonstrated lifetime/spawn cost and a bounded ownership policy. Cached rules queries need correct invalidation and must preserve authoritative command behavior.
 
 ## Measurement record
 

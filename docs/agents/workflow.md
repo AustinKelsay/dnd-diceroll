@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](../../CONTRIBUTING.md) first. This is the repo-owned exec
 
 ## 1. Establish the session
 
-Confirm the repository is the `repository` value in `tools/project.json`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion with `gh issue view <number> --repo <owner>/<game> --json title,body,comments,assignees,labels,state`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
+Confirm the repository is the `repository` value in `tools/project.json`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion, using that value as `<repository>`, with `gh issue view <number> --repo <repository> --json title,body,comments,assignees,labels,state`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
 
 For gameplay, read the brief, architecture, asset provenance, and any available `CONTEXT.md`, `GLOSSARY.md`, and relevant ADRs before proposing changes.
 
@@ -43,7 +43,7 @@ Completion: the intended baseline is available, current work is preserved, the b
 | Approved ticket | Read its parent, all comments, dependencies, and acceptance. Confirm dependencies are integrated into the agreed base, not merely marked closed. Check assignee, claim comments, and existing PRs. | An unambiguous claim names owner, branch, scope, and binary paths. |
 | Small fix | Diagnose the bounded problem and record a short issue with expected behavior and relevant checks. | The issue has approval or fits recorded delegated authority; no unrelated feature planning. |
 
-`ready-for-agent` means specified, not unclaimed or unblocked. Use `needs-triage` for incoming ideas, `needs-info` for missing information, and `ready-for-human` for a precise human-only decision/access block. Keep productive independent work moving around parked blockers. Follow `docs/agents/triage-labels.md` and `issue-tracker.md` when present; the existing repository setup does not need rerunning.
+`ready-for-agent` means specified, not unclaimed or unblocked. Use `needs-triage` for incoming ideas, `needs-info` for missing information, and `ready-for-human` for a precise human-only decision/access block. Keep productive independent work moving around parked blockers. Follow `docs/agents/triage-labels.md` and `issue-tracker.md` when present.
 
 GitHub issues own approved specs, acceptance, dependencies, assignment, and live progress. Git owns versioned domain vocabulary, architecture, asset provenance, and engineering rules. Existing `docs/specs/` and `docs/tickets/` copies are captured issue snapshots: reconcile material disagreement before implementation and identify source issue/revision when refreshing them. New work need not mirror full issue bodies into Git. An unapproved comment does not change accepted scope.
 
@@ -85,6 +85,6 @@ This contract applies the Matt Pocock sequence: `grill-with-docs` → optional `
 
 The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c](https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c), [MIT licensed](https://github.com/mattpocock/skills/blob/2ab958093e83e0ec752e6c1c5932da465bf23e0c/LICENSE), inspected for this workflow on 2026-10-31. No upstream skill files are copied here. Optional installation must follow the upstream documentation for the chosen agent and preserve its custom skills; it must not rewrite this repo's already configured tracker or global skill stores. Record installed revision separately, since a latest-version installer is not a pin.
 
-Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
+Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly.
 
 No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Workflow portability does not add Windows/Linux Unreal support.
