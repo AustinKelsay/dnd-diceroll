@@ -22,10 +22,14 @@
 - Real engine readback: startup imported the pilot; reflected `ListSkills` found `/Game/Python/unreal_starter/skills_PY.ProjectAuthoringSkill`; `GetSkills` returned the Markdown verbatim. Engine `5.8.4-58902052+++UE5+Release-5.8`; instruction SHA-256 `11a7c9f4eac15226ffbcf9e087bdad4eed23a1e9a1c4f4a36f86575289b26a16`.
 - The first engine probe exposed absent ordinary Python glue for the AICallable functions. The verifier now invokes the actual reflected functions through `call_method`; it does not bypass discovery/readback.
 - Real negative control: temporarily removing the startup import made verification fail with `Project skill was not imported by editor startup` and produced no verified report. Restoring it passed again. Final positive evidence is `.local/skills/20261031T153559741787Z/`; negative evidence is `.local/skills/20261031T153527991898Z/`. Local paths are reproduction aids; selected results are repeated above for reviewers.
-- Commandlets generated an unrelated Android settings block in this previously clean isolated checkout's `Config/DefaultEngine.ini`. Restore only that commandlet-generated change before delivery; include no generated settings/tokens in the patch.
-- Independent Standards/Spec review and delivery: in progress.
+- Commandlets generated an unrelated Android settings block in this previously clean isolated checkout's `Config/DefaultEngine.ini`. That commandlet-generated change was restored; no generated settings/tokens are in the patch.
+- Candidate implementation commit: `ad5230d8bca820d16069fc5fc83d2da2064d2956`.
+- Independent Standards review: PASS, with one factual wording nit corrected in the startup docstring and editor recipes. No code changes requested.
+- Independent Spec review: APPROVE, no findings. Reviewer independently passed all 24 tests in `test_dev.py` and inspected the actual positive/negative engine logs. Neither reviewer operated Unreal/MCP.
+- Local CodeRabbit 0.9.2 review completed across all 13 changed files with 0 issues (`.local/coderabbit-unreal-agent-skills.txt`). Independent review plus this additional check satisfy this run's review gate; CodeRabbit is optional under the repo workflow.
+- Final follow-up only corrects startup wording and records evidence/reviews; it changes no tested behavior. Repository hygiene and whitespace checks pass on the final staged patch.
 
 ## Handoff
 
-- Next: arrange independent review, address findings, and open a non-draft staging PR.
+- Delivery: commit/push the reviewed branch and open a non-draft staging PR referencing #10. The issue/PR carry the live integration state; a maintainer closes #10 after staging integration. Main promotion remains separate.
 - Known limits: no official proxy installed, no Claude installation/client UI trial, and no live interactive MCP restart test while the game editor remains owned by another thread.
