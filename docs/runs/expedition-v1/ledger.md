@@ -8,7 +8,7 @@
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
-- Status: all gameplay and local review gates complete; root opening staging PR
+- Status: all gameplay and local review gates complete; staging PR #6 open, PR review round pending
 - Skill setup: GitHub issues, canonical labels, single-context domain docs
 - Models: implementation/support/review workers use gpt-6.1-sol as explicitly requested; inherited high reasoning
 
@@ -31,7 +31,7 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 - Tickets: docs/tickets/ — published with native parent/dependency links
 - Session/review evidence: docs/runs/expedition-v1/
 - Local machine evidence: ignored .local/ and Builds/
-- PR: pending
+- PR: https://github.com/AustinKelsay/expedition-rpg/pull/6 (open, non-draft, base staging)
 
 ## Commands
 
