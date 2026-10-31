@@ -1,4 +1,5 @@
 {
+  "repository": "AustinKelsay/expedition-rpg",
   "module": "DnDDiceRoll",
   "editor_target": "DnDDiceRollEditor",
   "game_target": "DnDDiceRoll",
