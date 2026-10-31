@@ -1,0 +1,26 @@
+{
+  "repository": "https://github.com/gamedev-skills/awesome-gamedev-agent-skills",
+  "revision": "19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9",
+  "source_directory": "skills/disciplines/game-ui-ux",
+  "license": "Apache-2.0",
+  "license_files": {
+    "LICENSE": {
+      "source_path": "LICENSE",
+      "sha256": "6f82dcfeb95a1c0a0452180a3b16f21bf82111780018fed59d95a052b5b75f6c"
+    },
+    "NOTICE": {
+      "source_path": "NOTICE",
+      "sha256": "2dcb65b1c5be24e5ba11e937f3996100f4e980d8cf8ac5b30ba1d70dae6c40f8"
+    }
+  },
+  "upstream_files_sha256": {
+    "SKILL.md": "54816447c4d07f9ab65782ebb7138dd0927c9cd84a3647e8806f2a86a3a094ff",
+    "references/layout-and-flow.md": "961fc8c8e45a1ee5120e1deef9f6aef932ae3949e6f1ce26548b9d7616775d73"
+  },
+  "modified_files": [
+    "SKILL.md",
+    "references/layout-and-flow.md"
+  ],
+  "adaptation_summary": "Replaced the entrypoint and supporting reference with Unreal HUD/UMG layout, scoped device acceptance, owned input/focus, and authoritative command/state guidance. Existing HUD technology is preserved unless the accepted slice requires migration.",
+  "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
+}

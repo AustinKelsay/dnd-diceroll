@@ -1,6 +1,6 @@
 # Build Expedition together
 
-Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent follows [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
+Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent uses Matt Pocock's skills directly, following [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
 
 Useful prompts:
 
@@ -9,6 +9,8 @@ Useful prompts:
 - “Help me turn this encounter idea into a small, approved feature.”
 - “Find an unclaimed, unblocked ticket I can work on.”
 - “Verify my change, arrange independent review, and prepare its PR.”
+
+Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/unreal-tools.md). That guide also covers the shared project-skill pilot and connection recovery for any agent.
 
 ## Join this game
 

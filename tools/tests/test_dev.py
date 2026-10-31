@@ -117,6 +117,36 @@ class WorkspaceTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 with second.operation(): pass
 
+    def test_skill_verification_refuses_open_editor(self):
+        dev = Dev(self.w)
+        with patch.object(dev, "require_engine"), patch.object(dev, "processes", return_value=[{"pid":123}]), patch.object(dev, "execute") as execute:
+            with self.assertRaises(RuntimeError): dev.verify_skills()
+            execute.assert_not_called()
+
+    def test_skill_verification_requires_current_source_and_engine_readback(self):
+        import hashlib
+        source = self.root / "docs/agents/editor-authoring.md"
+        source.parent.mkdir(parents=True)
+        source.write_text("Project instructions\n")
+        self.w.local.mkdir()
+        dev = Dev(self.w)
+        report = {"project_file": str(self.w.project), "engine_version": "5.8.4-58902052+++UE5",
+                  "instructions_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+        invalid = [None, {**report, "project_file": "/other/Game.uproject"},
+                   {**report, "engine_version": "5.8.3-123+++UE5"},
+                   {**report, "instructions_sha256": "stale"}]
+        for value in [*invalid, report]:
+            def execute(args, **kwargs):
+                log = Path(next(str(a).split("=", 1)[1] for a in args if str(a).startswith("-abslog=")))
+                log.write_text("LogPython: " + ("no readback" if value is None else "PROJECT_SKILL_VERIFIED " + json.dumps(value)))
+            with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute", side_effect=execute):
+                if value in invalid:
+                    with self.assertRaises(RuntimeError): dev.verify_skills()
+                    self.assertFalse(list(self.w.local.glob("skills/*/verified.json")))
+                else:
+                    dev.verify_skills()
+        self.assertEqual(len(list(self.w.local.glob("skills/*/verified.json"))), 1)
+
     def test_automation_command_reads_unreal_bom_report(self):
         dev = Dev(self.w)
         self.w.local.mkdir()

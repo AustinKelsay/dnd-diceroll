@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from contribute import check_repository, editor_problems, preflight
+from contribute import REPOSITORY, check_repository, editor_problems, preflight
 
 
 class ContributionTests(unittest.TestCase):
@@ -26,7 +26,7 @@ class ContributionTests(unittest.TestCase):
         self.environment.start()
         self.addCleanup(self.environment.stop)
         self.git("init", "-b", "feature/test")
-        self.git("remote", "add", "origin", "https://github.com/AustinKelsay/expedition-rpg.git")
+        self.git("remote", "add", "origin", f"https://github.com/{REPOSITORY}.git")
         for name in ("tools/versions.json", ".mcp.json", ".codex/config.toml", "Config/DefaultEditorPerProjectUserSettings.ini"):
             self.write(name, (Path(__file__).resolve().parents[2] / name).read_bytes())
         self.write("README.md", b"[Guide](docs/guide.md)\n")

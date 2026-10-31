@@ -4,7 +4,7 @@
 
 `tools/versions.json` pins UE 5.8.4 (CL 58902052), validated on Apple Silicon macOS 26.5.2, Xcode 26.6, and Metal. The engine is installed at `/Users/Shared/Epic Games/UE_5.8`; `UE_ROOT` selects another installation. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
 
-Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Internal `DnDDiceRoll` IDs are retained for compatibility.
+Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the GitHub repository the contribution checks expect, the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Internal `DnDDiceRoll` IDs are retained for compatibility.
 
 ## Commands
 
@@ -13,6 +13,7 @@ Use Python **3.11+**, with no third-party dependencies. On this Mac `/opt/homebr
 | Command (`python3 tools/dev.py …`) | Purpose |
 | --- | --- |
 | `doctor` | Check interpreter, host tools, pinned engine, and endpoint configurations |
+| `verify-skills` | With this checkout closed, verify project-skill discovery and Markdown readback in a headless editor |
 | `status` | Report associated processes, verified listener/project/build, map, PIE, and unsaved packages |
 | `close` | Refuse PIE/dirty state; request normal quit of the verified editor PID and wait |
 | `build` | Compile the Development editor target; refuse an open project |
@@ -37,6 +38,8 @@ The launcher refuses missing/stale build evidence and an occupied MCP port. A su
 One agent owns the running editor. The helper serializes all its operations with a nonblocking local lock; other clients and a human editor user must still coordinate. Calls execute sequentially. Verify identity before mutation: the endpoint listener PID must be this project's process under the pinned editor executable, and the project toolset must independently report that PID, the canonical `.uproject` path, and the exact engine build. Matching map names or copied ProjectIDs is insufficient. Finder launches can be associated using the exact open project log, but still require runtime confirmation. Saved launch metadata is advisory and never substitutes for live evidence.
 
 `Content/Python/init_unreal.py` registers the small `unreal_starter.status.StarterWorkspaceTools` toolset. It reports both dirty content and dirty map packages, including unsaved packages. It creates no assets. It is pinned to the experimental UE registry API and registration safely does nothing when the registry is unavailable in a commandlet.
+
+The same startup script imports the project authoring skill. [Unreal agent setup](agents/unreal-tools.md) covers optional Epic skills, compatibility rules, skill verification, and direct-connection recovery after editor restarts.
 
 `close` refuses when PIE is active, packages are dirty, or identity cannot be proved. Save intentionally in Unreal, check individual save outcomes, and re-run status. The helper neither silently saves everything nor discards changes. It sends a normal macOS application quit to the exact PID and waits; if a save dialog appears or shutdown stalls, it fails without escalation. Never quit by app name when multiple editors exist. SIGTERM and `QUIT_EDITOR` bypass Unreal's normal save prompt and are unsuitable here.
 

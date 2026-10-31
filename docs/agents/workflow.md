@@ -51,6 +51,8 @@ Dependent work normally waits for its base feature to integrate. An exception re
 
 ## 4. Implement and verify a bounded slice
 
+For editor, presentation or asset tasks, follow [editor contributions](editor-contributions.md) for the brief, preservation constraints, tool outcomes, recovery and completion report. Refine the existing approved issue; retain its authority and avoid a duplicate work record.
+
 Record a pre-ticket commit as the fixed review baseline. Use the approved public testing seam for TDD where behavior can be specified; then implement the smallest complete slice. Reuse the safe Unreal lifecycle from development. Keep assets under `/Game/DnDDiceRoll` and provenance in `docs/assets.md`; declare existing binary paths in the issue claim before editing. Preserve the starter sandbox fixture. New feature assets should avoid shared binary edits where practical. LFS locking is an optional experiment until the team validates enforcement.
 
 Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-scope files, then `python3 tools/contribute.py check` to inspect the actual Git index. This catches raw binaries that should be LFS pointers, generated output, machine-generated config tokens, inconsistent MCP settings, and broken local Markdown links. It does not prove an asset is downloadable from the remote.
@@ -83,4 +85,6 @@ This contract applies the Matt Pocock sequence: `grill-with-docs` → optional `
 
 The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c](https://github.com/mattpocock/skills/tree/2ab958093e83e0ec752e6c1c5932da465bf23e0c), [MIT licensed](https://github.com/mattpocock/skills/blob/2ab958093e83e0ec752e6c1c5932da465bf23e0c/LICENSE), inspected for this workflow on 2026-10-31. No upstream skill files are copied here. Optional installation must follow the upstream documentation for the chosen agent and preserve its custom skills; it must not rewrite this repo's already configured tracker or global skill stores. Record installed revision separately, since a latest-version installer is not a pin.
 
-The owner's Plebdev Feature Dev v0.4.0 supplied the staging-PR and run-ledger conventions used during V1. That personal launcher is optional. No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Workflow portability does not add Windows/Linux Unreal support.
+Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
+
+No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Workflow portability does not add Windows/Linux Unreal support.
