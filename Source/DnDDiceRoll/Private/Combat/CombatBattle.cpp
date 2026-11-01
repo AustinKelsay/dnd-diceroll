@@ -392,9 +392,11 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     case ECombatCommandType::Attack:
     {
         Forecast.bAttackRoll = true;
+        Forecast.CoverBonus = CoverBonus(ActorId, TargetId);
+        Forecast.TargetArmorClass = Target->ArmorClass + Forecast.CoverBonus;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
-        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
+        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Forecast.TargetArmorClass) ? 1 : 0; }
         const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
         Forecast.RollMode = Mode.Mode;
         Forecast.AdvantageSources = Mode.Advantage;
@@ -506,6 +508,52 @@ bool FCombatBattle::SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode 
     Out = FCheckRules::Resolve(Character(Id).SaveBonus(Ability), Dc, Mode, State.RandomState);
     Error.Reset();
     return true;
+}
+
+const TCHAR* FCombatBattle::CoverName(int32 Bonus)
+{
+    return Bonus >= 5 ? TEXT("three-quarters cover") : Bonus > 0 ? TEXT("half cover") : TEXT("no cover");
+}
+
+int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
+{
+    const FCombatantState* Actor = Find(ActorId);
+    const FCombatantState* Target = Find(TargetId);
+    if (!Actor || !Target || State.Encounter.BlockedCells.IsEmpty()) { return 0; }
+    // SRD/DMG grid cover: from the attacker's best cell corner, trace a line to each corner of the target's cell.
+    // A line is blocked when it passes through the interior of a blocked cell (edges and corners do not block).
+    auto Crosses = [](FVector2D A, FVector2D B, FIntPoint Cell)
+    {
+        double Enter = 0.0, Exit = 1.0;
+        const double Start[2] = {A.X, A.Y}, Delta[2] = {B.X - A.X, B.Y - A.Y}, Low[2] = {(double)Cell.X, (double)Cell.Y};
+        for (int32 Axis = 0; Axis < 2; ++Axis)
+        {
+            if (Delta[Axis] == 0.0)
+            {
+                if (Start[Axis] <= Low[Axis] || Start[Axis] >= Low[Axis] + 1.0) { return false; }
+                continue;
+            }
+            double T0 = (Low[Axis] - Start[Axis]) / Delta[Axis], T1 = (Low[Axis] + 1.0 - Start[Axis]) / Delta[Axis];
+            if (T0 > T1) { Swap(T0, T1); }
+            Enter = FMath::Max(Enter, T0); Exit = FMath::Min(Exit, T1);
+        }
+        return Enter < Exit;
+    };
+    auto Corner = [](FIntPoint Cell, int32 Index) { return FVector2D(Cell.X + (Index & 1), Cell.Y + (Index >> 1)); };
+    int32 Best = 4;
+    for (int32 From = 0; From < 4 && Best > 0; ++From)
+    {
+        int32 Lines = 0;
+        for (int32 To = 0; To < 4; ++To)
+        {
+            for (FIntPoint Cell : State.Encounter.BlockedCells)
+            {
+                if (Crosses(Corner(Actor->Cell, From), Corner(Target->Cell, To), Cell)) { ++Lines; break; }
+            }
+        }
+        Best = FMath::Min(Best, Lines);
+    }
+    return Best >= 3 ? 5 : Best > 0 ? 2 : 0;
 }
 
 FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) const
@@ -639,9 +687,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             FMath::Min(Result.AttackRolls[0], Result.AttackRolls.Last());
         Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
         Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
-        Result.TargetArmorClass = Target->ArmorClass;
+        Result.CoverBonus = CoverBonus(Command.ActorId, Command.TargetId);
+        Result.TargetArmorClass = Target->ArmorClass + Result.CoverBonus;
         Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
-        Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Target->ArmorClass);
+        Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
         if (Result.bHit)
         {
             DiceLog = &Result.EffectDice;
@@ -666,8 +715,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
         const FString ModeText = Result.AttackRolls.Num() > 1 ?
             FString::Printf(TEXT(" (%s %d/%d)"), FCheckRules::ModeName(Result.RollMode), Result.AttackRolls[0], Result.AttackRolls[1]) : FString();
-        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d | %s | %d damage%s. HP %d/%d%s"),
-            *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
+        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d%s | %s | %d damage%s. HP %d/%d%s"),
+            *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, Actor->AttackBonus, Result.AttackTotal, Result.TargetArmorClass,
+            Result.CoverBonus ? *FString::Printf(TEXT(" (%s)"), CoverName(Result.CoverBonus)) : TEXT(""),
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result),
             Target->HP, Target->MaxHP, *TargetStatus);
     }

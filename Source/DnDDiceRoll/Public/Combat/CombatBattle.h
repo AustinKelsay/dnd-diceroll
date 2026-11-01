@@ -161,6 +161,8 @@ struct DNDDICEROLL_API FCombatResult
     TArray<FIntPoint> Path;
     int32 AttackBonus = 0;
     int32 TargetArmorClass = 0;
+    /** Cover bonus included in TargetArmorClass. */
+    int32 CoverBonus = 0;
     /** Damage or healing dice in roll order; the effect is their sum plus EffectModifier. */
     TArray<FDieRoll> EffectDice;
     int32 EffectModifier = 0;
@@ -190,6 +192,9 @@ struct DNDDICEROLL_API FActionForecast
     int32 MinAmount = 0;
     int32 MaxAmount = 0;
     bool bSneakAttack = false;
+    /** Attack rolls only: cover bonus already added to TargetArmorClass. */
+    int32 CoverBonus = 0;
+    int32 TargetArmorClass = 0;
     /** Damage only: Min/MaxAmount already include the target's response to this type. */
     EDamageType DamageType = EDamageType::Slashing;
     EDamageResponse DamageResponse = EDamageResponse::Normal;
@@ -231,6 +236,9 @@ public:
     FDamageDefenses DamageDefenses(int32 Id) const;
     /** Advantage/disadvantage sources for an attack. Read-only, no RNG. */
     FAttackRollMode AttackRollMode(int32 ActorId, int32 TargetId) const;
+    /** SRD cover from blocked cells against an attack: 0, 2 (half) or 5 (three-quarters). Creatures give no cover. Read-only. */
+    int32 CoverBonus(int32 ActorId, int32 TargetId) const;
+    static const TCHAR* CoverName(int32 Bonus);
     /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
     int32 SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const;
     int32 SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const;
