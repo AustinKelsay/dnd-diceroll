@@ -18,6 +18,7 @@ class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
+class UDiceRollTheme;
 
 UENUM()
 enum class EBoardTheme : uint8 { Meadow, Ruins, Vault };
@@ -55,6 +56,19 @@ struct FExpeditionTile
     UPROPERTY() FExpeditionPart Part;
 };
 
+/** A themed prop that sways (banners, cages) or flickers (flames) in place. */
+USTRUCT()
+struct FExpeditionSway
+{
+    GENERATED_BODY()
+    UPROPERTY() TObjectPtr<USceneComponent> Component;
+    FRotator Base = FRotator::ZeroRotator;
+    FVector Scale = FVector::OneVector;
+    float Phase = 0.0f;
+    float Degrees = 0.0f;
+    float Flicker = 0.0f;
+};
+
 /** What the controller wants emphasised on the board this frame. */
 struct FBoardHighlights
 {
@@ -70,8 +84,10 @@ struct FBoardHighlights
 
 /**
  * Runtime board adapter. FExpeditionSession owns the rules and checkpoints; this actor
- * submits commands, then replays committed results through FExpeditionPlayback. Every
- * mesh, light and sound is built at runtime from engine primitives and synthesis.
+ * submits commands, then replays committed results through FExpeditionPlayback. Meshes come
+ * from the dark-fantasy theme set when it is available and engine primitives otherwise;
+ * lights and sounds are built at runtime. With the theme, the mission overview (title and
+ * route choice) is a candlelit tabletop and each encounter is a full surrounding world.
  */
 UCLASS()
 class DNDDICEROLL_API AExpeditionBattleView : public AActor
@@ -95,6 +111,8 @@ public:
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }
     bool InCombat() const;
+    /** True while the tabletop mission overview is shown instead of a battle board. */
+    bool ShowingOverview() const { return bOverview; }
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -137,6 +155,13 @@ private:
     float Clock = 0.0f;
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
+    bool bOverview = false;
+
+    /** Art set; unset or incomplete sets fall back to the primitive presentation. */
+    UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
+    UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
+    UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    UPROPERTY() TArray<FExpeditionSway> Swaying;
 
     float Yaw = -90.0f;
     float TargetYaw = -90.0f;
@@ -161,6 +186,8 @@ private:
     UPROPERTY() TArray<FExpeditionUnitRig> Rigs;
     UPROPERTY() TArray<FExpeditionPart> Scenery;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> Flames;
+    /** Per-flame base candela for themed lights; zero keeps the primitive torch strength. */
+    TArray<float> FlameStrength;
     UPROPERTY() TArray<FExpeditionPart> Markers;     // 0 active, 1 selected, rest targets.
     UPROPERTY() TArray<FExpeditionPart> ShotMeshes;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
@@ -182,6 +209,13 @@ private:
     void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
     void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);
     void BuildRig(const FCombatantState& Unit);
+    UStaticMesh* ThemeMesh(const TSoftObjectPtr<UStaticMesh>& Entry) const;
+    UStaticMesh* UnitMesh(const FCombatantState& Unit) const;
+    bool WantsOverview() const;
+    bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    void BuildOverview();
+    void AddSway(USceneComponent* Component, float Degrees, float Flicker);
+    void UpdateSway();
     void BuildEffects(const FCombatEncounter& Encounter);
     void ApplyTheme();
     void UpdateRigs();
