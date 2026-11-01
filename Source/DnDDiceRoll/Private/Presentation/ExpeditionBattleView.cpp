@@ -200,7 +200,8 @@ void AExpeditionBattleView::RebuildBoard()
     for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     BuildEffects(Encounter);
     Show.Reset(Rules().Snapshot());
-    // Frame the whole board at the start; large boards pull back less per cell so units stay readable.
+    // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
+    // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
     TargetDistance = 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);

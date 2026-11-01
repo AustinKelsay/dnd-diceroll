@@ -13,17 +13,18 @@ struct FEncounterRecipe
 
 // Generated grids are about three times the original 8-9 x 7-8 area.
 constexpr int32 MinWidth = 16, MaxWidth = 18, MinHeight = 11, MaxHeight = 12;
-// The party forms a column here, centred vertically; enemies form one EnemyEdgeOffset
-// cells from the far edge. That leaves an 8..11 cell opening gap and room behind both lines.
+// The party forms a column here, centred vertically. Enemies stand at column
+// Width - EnemyEdgeOffset, which leaves an 8..11 cell opening gap and room behind both lines.
 constexpr int32 PartyColumn = 3;
 
 // The preview and generated geometry read the same bounded recipe definition.
 // Obstacles fit the smallest 16 x 11 grid. Between the lines they stay in columns 5..10;
-// outside rows 3..8 they may reach any column, so no spawn cell is ever blocked.
+// outside rows 3..8 they may reach any column, and column 15 is always behind the enemy
+// line, so no spawn cell is ever blocked.
 const FEncounterRecipe Recipes[] = {
-    {TEXT("split stones"), {{6, 2}, {7, 2}, {6, 3}, {9, 6}, {9, 7}, {8, 7}, {12, 1}, {13, 1}, {2, 9}, {3, 9}}, 4, 3},
+    {TEXT("split stones"), {{6, 2}, {7, 2}, {6, 3}, {9, 6}, {9, 7}, {8, 7}, {12, 1}, {13, 1}, {2, 9}, {3, 9}, {15, 5}}, 4, 3},
     {TEXT("ruined pillars"), {{5, 2}, {5, 8}, {8, 4}, {8, 6}, {10, 2}, {10, 8}, {1, 1}, {1, 9}, {13, 0}, {14, 10}}, 5, 4},
-    {TEXT("broken wall"), {{7, 1}, {7, 2}, {7, 3}, {7, 5}, {7, 6}, {7, 8}, {7, 9}, {11, 1}, {12, 1}, {13, 1}}, 4, 3}
+    {TEXT("broken wall"), {{7, 1}, {7, 2}, {7, 3}, {7, 5}, {7, 6}, {7, 8}, {7, 9}, {11, 1}, {12, 1}, {13, 1}, {15, 3}, {15, 8}}, 4, 3}
 };
 
 // One profile supplies generated facts, truthful text and restore validation.

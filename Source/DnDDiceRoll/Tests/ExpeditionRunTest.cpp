@@ -62,7 +62,7 @@ bool FRunLargeGridTest::RunTest(const FString& Parameters)
                 }
             }
             // Speed 4 closes this in two or three turns; there is room behind both lines.
-            TestTrue(TEXT("Opening gap 8..12 cells"), Closest >= 8 && Closest <= 12);
+            TestTrue(TEXT("Opening gap 8..11 cells"), Closest >= 8 && Closest <= 11);
             TestTrue(TEXT("Obstacles scale with the board"), Layout.BlockedCells.Num() >= 8);
         }
     }
