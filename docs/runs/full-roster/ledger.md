@@ -24,3 +24,7 @@ Red/green evidence: `.local/full-roster/identity-red-build.txt` compiled the new
 Next: root inspects this commit, arranges fresh independent Standards/Spec review, then continues #40 in this worktree. #40 owns full selected-party construction/startup editing and Barbarian kits, including rendered native UI verification. No push, PR, issue closure, editor launch or package was performed here. Headless native evidence does not prove rendered interaction. The shared original editor was not used or closed.
 
 Staged `/opt/homebrew/bin/python3 tools/contribute.py check` passed (`.local/full-roster/staged-check.txt`); staged and working-tree `git diff --check` passed. Commit scope is #39 only; the final commit SHA is available from this branch head and the implementation handoff.
+
+## Root acceptance of slice 1
+
+Two fresh independent Standards and Spec reviews passed at source `43052bd81c57b88768e2f2c5675337dcc9872a34`, with no actionable findings. Root inspected the full source diff and accepted #39 locally. The nonblocking catalog ordinal-construction heuristic is recorded for the upcoming definition expansion. See [review evidence](01-catalog-review.md). No source changed during root acceptance; no repeated build is needed for these documentation records. Issue #39 stays open until staging integration. Next writer owns #40 on this same feature worktree/branch; the original editor remains outside this feature's ownership.
