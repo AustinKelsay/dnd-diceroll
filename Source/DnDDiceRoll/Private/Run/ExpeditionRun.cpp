@@ -366,7 +366,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             if (U.WeaponRank != FMath::Min(3, Gear) || U.Potions > SuppliedPotions) { return Reject(); }
         }
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
-            U.RageUses != Base.RageUses || U.RageTurns != 0 || U.GuardTargetId != INDEX_NONE || U.LastSurge != 0 ||
+            U.KitUses != Base.KitUses || U.GuardTurns != 0 || U.GuardAmount != 0 || U.RageUses != Base.RageUses || U.RageTurns != 0 || U.GuardTargetId != INDEX_NONE || U.LastSurge != 0 ||
             U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
     }
     for (int32 Deaths : DeathsByLevel) { if (Deaths != 0) { return Reject(); } }

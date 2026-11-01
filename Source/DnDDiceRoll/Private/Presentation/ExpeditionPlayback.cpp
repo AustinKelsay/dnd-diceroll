@@ -216,6 +216,12 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
                     ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Shelter: -%d incoming"), Effect.Amount), Gold);
                     Cue(EExpeditionCue::Spell);
                 }
+                else if (Effect.Effect == EAbilityEffect::Mitigation)
+                { ShowText(CellOf(Effect.Cell),FString::Printf(TEXT("Prevented %d"),Effect.Amount),Gold); }
+                else if (Effect.Effect == EAbilityEffect::Swap || Effect.Effect == EAbilityEffect::Push)
+                { Unit->Position = CellOf(Effect.Cell); ShowText(CellOf(Effect.Cell), TEXT("Repositioned"), Gold); Cue(EExpeditionCue::Step); }
+                else if (Effect.Effect == EAbilityEffect::Healing)
+                { Unit->HP += Effect.Amount; ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("+%d"), Effect.Amount), Mint); Cue(EExpeditionCue::Spell); }
                 else
                 {
                     Unit->HP = FMath::Max(0, Unit->HP - Effect.Amount); Unit->Flash = 1.0f;

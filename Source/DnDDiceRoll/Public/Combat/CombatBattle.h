@@ -10,7 +10,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
 UENUM()
-enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5 };
+enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8 };
 UENUM()
 enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
@@ -37,6 +37,9 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Level = 1;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
     UPROPERTY() int32 ManeuverUses = 0;
+    UPROPERTY() int32 KitUses = 0;
+    UPROPERTY() int32 GuardTurns = 0;
+    UPROPERTY() int32 GuardAmount = 0;
     UPROPERTY() int32 RageUses = 0;
     UPROPERTY() int32 RageTurns = 0;
     UPROPERTY() int32 GuardTargetId = INDEX_NONE;
@@ -97,7 +100,7 @@ struct DNDDICEROLL_API FDieRoll
     int32 Value = 0;
 };
 
-enum class EAbilityEffect : uint8 { Rage, Strike, Protect, Surge, Healing, WeaponAttack, Missile };
+enum class EAbilityEffect : uint8 { Rage, Strike, Protect, Surge, Healing, WeaponAttack, Missile, Swap, Push, Area, Mitigation };
 enum class EAbilityTarget : uint8 { Self, Enemy, Ally };
 struct DNDDICEROLL_API FAbilityFacts
 {
@@ -106,6 +109,7 @@ struct DNDDICEROLL_API FAbilityFacts
     ECombatCommandType Command = ECombatCommandType::Special1;
     EAbilityEffect Effect = EAbilityEffect::Rage;
     EAbilityTarget Target = EAbilityTarget::Self;
+    bool bKitResource = false;
     bool bBonus = true;
     bool bResourceAvailable = false;
     int32 Range = 0, Amount = 0;
@@ -209,6 +213,7 @@ private:
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();
+    int32 ProtectionFor(const FCombatantState& Target) const;
     void ApplyDamage(FCombatantState& Target, int32 Damage);
     FCombatantState* MutableFind(int32 Id);
     FCombatResult Resolve(const FCombatCommand& Command);

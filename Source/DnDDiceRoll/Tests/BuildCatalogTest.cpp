@@ -43,7 +43,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     FExpeditionSaveData Decoded;
     TestTrue(TEXT("Decode catalog state"), FExpeditionSave::Decode(Json, Decoded, Error));
     TestTrue(TEXT("Exact JSON roundtrip"), ExpeditionTestSupport::SameRun(Data.Current, Decoded.Current));
-    for (const auto* Id : {TEXT("rogue.base"), TEXT("cleric.base"), TEXT("wizard.base")})
+    for (const auto* Id : {TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.base")})
     {
         TestTrue(TEXT("Construct current kit"), FBuildCatalog::Create(Id, 1, TEXT("Hero"), Hero));
         TestEqual(TEXT("Current non-Fighter health"), Hero.MaxHP, 22);
@@ -187,7 +187,7 @@ bool FBarbarianTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Continued snapshot matches"), Same(Battle.Snapshot(), Resume.Snapshot()));
         if (Totem) { TestEqual(TEXT("Ally protected"), Battle.Find(1)->GuardTargetId, 2); TestTrue(TEXT("Protection description"), Preview.Formula.Contains(TEXT("reduce damage by 3"))); }
         else { TestTrue(TEXT("Damage matches forecast"), Result.Damage >= Preview.MinAmount && Result.Damage <= Preview.MaxAmount); }
-        if (FString(Path) == TEXT("wild-magic")) { TestEqual(TEXT("Seed 42 worked surge outcome"), Result.SurgeOutcome, 2); TestEqual(TEXT("Saved surge"), Battle.Find(1)->LastSurge, Result.SurgeOutcome); TestTrue(TEXT("Seed advanced only on commit"), RandomBefore != Battle.Snapshot().RandomState); }
+        if (FString(Path) == TEXT("wild-magic")) { TestTrue(TEXT("Committed surge retains outcome playback category"), Result.Effects.ContainsByPredicate([](const auto& E) { return E.Effect == EAbilityEffect::Surge; })); TestEqual(TEXT("Seed 42 worked surge outcome"), Result.SurgeOutcome, 2); TestEqual(TEXT("Saved surge"), Battle.Find(1)->LastSurge, Result.SurgeOutcome); TestTrue(TEXT("Seed advanced only on commit"), RandomBefore != Battle.Snapshot().RandomState); }
         if (Totem)
         {
             auto Fragile = Battle.Snapshot(); Fragile.Encounter.Combatants[0].HP = 1;

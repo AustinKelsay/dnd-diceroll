@@ -430,6 +430,18 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/PartyBuilder"), FGuid::NewGuid().ToString());
     auto* Player = World->SpawnActor<AExpeditionPlayerController>(); Player->DispatchBeginPlay();
     auto* View = Player->GetBattleView(); View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json"))); View->DispatchBeginPlay();
+    TSet<FString> ReachableBuilds;
+    Player->HandleButton(TEXT("Party0"));
+    for (int32 Class = 0; Class < 8; ++Class)
+    {
+        for (int32 Kit = 0; Kit < 5; ++Kit)
+        { ReachableBuilds.Add(Player->NextParty()[0].BuildId); Player->HandleButton(TEXT("BuildNext")); }
+        Player->HandleButton(TEXT("ClassNext"));
+    }
+    TestEqual(TEXT("Builder exposes all thirty authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 30);
+    TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
+    TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
+    Player->HandleButton(TEXT("Preset"));
     for (int32 Slot = 0; Slot < 4; ++Slot)
     {
         Player->HandleButton(FName(*FString::Printf(TEXT("Party%d"), Slot)));
