@@ -2,9 +2,38 @@
 
 Before importing or replacing assets, follow [asset intake](agents/asset-intake.md) for candidate validation and handoff. For generation, editable source preparation or revisions, follow [asset production](agents/asset-production.md) and keep a [versioned asset record](agents/asset-manifests.md) with the retained source. Record each asset's provenance here.
 
-The sandbox uses Unreal Engine's bundled basic cube. No external content has been imported.
+The sandbox uses Unreal Engine's bundled basic cube. The dark-fantasy theme below is the only imported content; it is original, agent-authored work, and nothing was downloaded.
 
 For each imported asset or generated source, record its destination, author/provider, source URL or generation recipe, license, and modifications here. Keep editable source assets in `Art/` when introduced and import the runtime form into `Content/`.
+
+## Dark-fantasy theme (issue #38)
+
+The game's art set lives under `/Game/DnDDiceRoll/Theme`.
+
+**Authorship and license:** all of it is original work by this project's agents, made with a local Blender pipeline from the owner-approved look tests (2026-11-01). No third-party art, files, names or downloads are included; in particular, nothing from the inspiration game or its reference videos. It is project-owned, with the same terms as the repository.
+
+**Sources:** the editable sources are `Art/dark-fantasy-sources/r001/`:
+- the packed Blender scenes `vigil.blend`, `root.blend` and `mission.blend`;
+- `scripts/`, the Blender recipes that export each asset (`build_*.py`) plus the rogue rescale and root-tile repaint.
+
+Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, with its glTF export beside it.
+
+**Import:** `Content/Python/import_dark_fantasy_theme.py` imports the exports. It:
+- creates `M_DiceRollTheme` (texture × vertex colour × `Color` tint, plus a `Glow` emissive share);
+- gives each mesh its own `MI_*` instance;
+- sets textures to nearest filtering, uncompressed and sRGB;
+- fills `DA_DiceRollTheme`, a `UDiceRollTheme` data asset.
+
+**Contents:**
+
+| Group | Assets |
+| --- | --- |
+| Characters | Seven: four heroes, raider, scout and archer |
+| Worlds | Root of the World and Drowned Vigil, each with baked vertex lighting, plus their board tiles |
+| Props | Stones, pillar, wall, brazier, flame, banner and cage |
+| Overview | The candlelit tabletop and two route dioramas |
+
+**Fallbacks:** `AExpeditionBattleView` falls back to the engine primitives below when an entry is missing. The `-ExpeditionPrimitives` command-line flag forces that fallback.
 
 ## Tactical battle runtime presentation
 
