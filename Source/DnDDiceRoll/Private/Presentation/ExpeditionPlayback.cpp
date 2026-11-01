@@ -144,6 +144,7 @@ void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32
 
 void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After)
 {
+    if (!Results.ContainsByPredicate([](const auto& R) { return R.bAccepted; })) { return; }
     bool bTurnEnded = false;
     for (const FCombatResult& Result : Results)
     {
@@ -179,6 +180,39 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)
 {
+    if (Result.Type == ECombatCommandType::Special1 || Result.Type == ECombatCommandType::Special2)
+    {
+        for (const auto& Effect : Result.Effects)
+        {
+            Add(0.45f, [this, Effect, Result]()
+            {
+                auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }
+                Focus = Result.ActorId;
+                Dice = FDiceTray();
+                if (Effect.Effect == EAbilityEffect::Rage)
+                {
+                    Unit->Glow = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Rage: %d own turn ends"), Effect.Amount), Gold);
+                    Cue(EExpeditionCue::PartyTurn);
+                }
+                else if (Effect.Effect == EAbilityEffect::Protect)
+                {
+                    Unit->Glow = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Shelter: -%d incoming"), Effect.Amount), Gold);
+                    Cue(EExpeditionCue::Spell);
+                }
+                else
+                {
+                    Unit->HP = FMath::Max(0, Unit->HP - Effect.Amount); Unit->Flash = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("-%d"), Effect.Amount), Blood);
+                    if (Effect.Effect == EAbilityEffect::Surge) { ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Wild Bolt outcome %d"), Result.SurgeOutcome), Gold, 0.75f); }
+                    Cue(EExpeditionCue::Hit);
+                }
+            });
+        }
+        AddFalls(Result, After);
+        return;
+    }
     switch (Result.Type)
     {
     case ECombatCommandType::Move: AddMove(Result); break;

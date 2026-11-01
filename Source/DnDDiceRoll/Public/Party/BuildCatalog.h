@@ -31,6 +31,9 @@ public:
     static bool Create(const FString& BuildId, int32 Id, const FString& Name, FCombatantState& Out);
     static TArray<FAbilityFacts> Abilities(const FCombatantState& Hero);
     static bool HasSpecial(const FCombatantState& Hero, ECombatCommandType Action);
+    static FString DisplayName(const FCombatantState& Hero);
+    static FString Status(const FCombatantState& Hero);
+    static int32 AttackModifier(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
     static bool ValidResources(const FCombatantState& Hero);
 };

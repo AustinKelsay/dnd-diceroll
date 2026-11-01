@@ -6,7 +6,7 @@ Source: [SRD 5.2.1 PDF](https://media.dndbeyond.com/compendium-images/srd/5.2/SR
 
 ## Turns and attacks
 
-Initiative is d20 plus the prebuilt initiative modifier, highest first, with ascending stable-ID ties. A turn grants movement, one Action and one Bonus Action. Only Second Wind spends the Bonus Action in this subset. Movement can be split around actions. Attacks roll d20 plus the prebuilt combined ability/proficiency bonus against Armor Class; equality hits, natural 1 misses and natural 20 hits critically. A critical doubles all attack damage dice, including eligible Sneak Attack dice, and adds fixed modifiers once. HP is clamped at zero.
+Initiative is d20 plus the prebuilt initiative modifier, highest first, with ascending stable-ID ties. A turn grants movement, one Action and one Bonus Action. Second Wind, Rage and Frenzy spend the Bonus Action in the implemented subset. Movement can be split around actions. Attacks roll d20 plus the prebuilt combined ability/proficiency bonus against Armor Class; equality hits, natural 1 misses and natural 20 hits critically. A critical doubles all attack damage dice, including eligible Sneak Attack dice, and adds fixed modifiers once. HP is clamped at zero.
 
 The fighter has a melee d6+3 attack; rogue and cleric have ranged d6+3 attacks, and wizard has Fire Bolt, a ranged spell attack for d10 with no damage modifier. These are fixed profiles, not full character sheets. Gear rank adds +1 damage per rank to basic attacks, including the wizard's casting focus, to a cap of +3. Magic Missile does not receive gear damage or critical hits.
 
@@ -71,3 +71,9 @@ The Canvas party cards show level and Fighter specialization; reward status repo
 ## Issue #39: catalog conversion
 
 Current immutable numeric profiles and abilities are catalog-backed. Stable build IDs are `fighter.champion`, `fighter.battle-master`, `rogue.base`, `cleric.base`, and `wizard.base`; the last three retain existing base gameplay without new subclass features. Instance names/IDs are separate from class/build. Schema 4 stores the catalog revision and selected identities and rejects earlier schemas; explicit startup NewRun preserves incompatible bytes using the existing recovery flow. The issue #28 schema discussion above is historical. Second Wind remains **1d10+1 per use**, Cure Wounds 2d8+3, Magic Missile 3d4+3, and leveling adds only basic damage with no refill.
+
+## Issue #40: selected parties and Barbarian controls
+
+The next-party builder selects four independent slots, including duplicate builds. 1–4 focuses a slot; Up/Down cycles the five implemented classes, Left/Right cycles compatible kits, G restores the familiar preset. N starts the selected party; O always resumes the saved party. Editing is available at startup and endings, never during an active run. J/B retain slot-one Fighter shortcuts. Historical fixed-party and #28 controls above describe their delivery stage.
+
+F selects the acting hero's first catalog special and M its second, falling back to basic Attack if absent. Rogue Sneak Attack stays passive. Rage and Frenzy spend Bonus Action; Shelter, Long Claw and Wild Bolt spend Action. The [Barbarian contract](runs/full-roster/02-barbarian-kits.md) defines exact costs, effects, durations and recovery. Buff previews make no damage/healing claim; Wild Bolt has two discrete seeded outcomes. Help and Records gate builder navigation and combat shortcuts. [Control contract](runs/full-roster/03-ui-controls.md) records button IDs and keyboard recipe.

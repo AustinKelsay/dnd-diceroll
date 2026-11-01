@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Run/ExpeditionRun.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
 
@@ -27,7 +28,10 @@ public:
     ECombatCommandType RoleAction() const;
     void SelectPartyIndex(int32 Index);
     void HandleButton(FName Id);
-    EFighterSubclass StartupSubclass() const { return SelectedSubclass; }
+    EFighterSubclass StartupSubclass() const;
+    const TArray<FPartyBuildSelection>& NextParty() const { return Party; }
+    int32 BuilderSlot() const { return Slot; }
+    ECombatCommandType SpecialAction(int32 Index) const;
     bool ShowingHelp() const { return bShowHelp; }
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
@@ -54,7 +58,11 @@ private:
     bool bShowHelp = false;
     bool bDragging = false;
     float DragX = 0.0f;
-    EFighterSubclass SelectedSubclass = EFighterSubclass::Champion;
+    TArray<FPartyBuildSelection> Party;
+    int32 Slot = 0;
+    void Preset();
+    void CycleClass();
+    void CycleBuild();
     void Champion();
     void BattleMaster();
     void ManeuverMode();

@@ -42,3 +42,7 @@ _Avoid_: pawn when discussing game rules
 **Build**: A stable catalog identity selecting a class, compatible subclass (or an explicitly interim base kit), immutable profile and compact ability kit. It is independent of an adventurer instance ID/name.
 
 **Catalog revision**: The persisted rules/profile interpretation revision; unsupported revisions fail restore rather than silently reinterpret a build.
+
+**Next party**: Four ordered build selections edited at startup or after an ending, used only by explicit New Run. Resume retains the saved party.
+
+**Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.

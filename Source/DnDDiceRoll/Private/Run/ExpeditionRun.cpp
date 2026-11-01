@@ -77,6 +77,7 @@ bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity,
 bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity)
 {
     Error.Reset();
+    if (!State.Party.IsEmpty() && State.Phase != EExpeditionPhase::Victory && State.Phase != EExpeditionPhase::Defeat) { Error = TEXT("Finish this expedition before changing its party."); return false; }
     if (Selection.Num() != 4) { Error = TEXT("Choose exactly four adventurers."); return false; }
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;

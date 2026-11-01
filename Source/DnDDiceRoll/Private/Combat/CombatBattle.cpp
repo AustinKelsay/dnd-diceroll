@@ -359,7 +359,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         for (int32 Natural = 1; Natural <= 20; ++Natural)
         { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
         Forecast.HitChancePercent = Hits * 5;
-        Effect(1, Actor->DamageDie, Actor->DamageBonus + Actor->WeaponRank + (Actor->RageTurns > 0 ? 2 : 0) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        Effect(1, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
@@ -474,7 +474,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             // Weapon die, then the critical die; both have the same sides, so totals match earlier builds.
             Result.Damage = Roll(Actor->DamageDie);
             if (Result.bCritical) { Result.Damage += Roll(Actor->DamageDie); }
-            Result.EffectModifier = Actor->DamageBonus + Actor->WeaponRank + ManeuverBonus + (Actor->RageTurns > 0 ? 2 : 0);
+            Result.EffectModifier = FBuildCatalog::AttackModifier(*Actor) + ManeuverBonus;
             Result.Damage += Result.EffectModifier;
             Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
             if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); }

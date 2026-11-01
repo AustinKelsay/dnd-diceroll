@@ -98,3 +98,28 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
     for (auto& A : Result) { A.bResourceAvailable = A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
     return Result;
 }
+
+FString FBuildCatalog::DisplayName(const FCombatantState& Hero)
+{
+    FString Kit = Hero.SubclassId;
+    Kit.ReplaceInline(TEXT("-"), TEXT(" "));
+    TArray<FString> Words; Kit.ParseIntoArray(Words, TEXT(" "));
+    Kit.Reset(); for (auto& Word : Words) { Word[0] = FChar::ToUpper(Word[0]); Kit += (Kit.IsEmpty() ? TEXT("") : TEXT(" ")) + Word; }
+    return Hero.Role + TEXT(" / ") + (Kit.IsEmpty() ? TEXT("Interim base kit") : Kit);
+}
+FString FBuildCatalog::Status(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId); if (!B) { return FString(); }
+    FString Text;
+    if (B->WindCap) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
+    if (B->SlotCap) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
+    if (B->ManeuverCap) { Text += FString::Printf(TEXT("Maneuvers %d / "), Hero.ManeuverUses); }
+    if (B->RageCap) { Text += FString::Printf(TEXT("Rage %d; %d own turn ends / "), Hero.RageUses, Hero.RageTurns); }
+    if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Shelter -> %d / "), Hero.GuardTargetId); }
+    if (Hero.LastSurge) { Text += FString::Printf(TEXT("Last surge %d / "), Hero.LastSurge); }
+    return Text;
+}
+int32 FBuildCatalog::AttackModifier(const FCombatantState& Hero)
+{
+    return Hero.DamageBonus + Hero.WeaponRank + (Hero.RageTurns > 0 ? 2 : 0);
+}

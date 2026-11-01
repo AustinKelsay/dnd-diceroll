@@ -26,3 +26,5 @@ Original fantasy setting; SRD 5.2.1 supplies the chosen open rules/content basel
 Broad character creation and leveling, multiplayer, official D&D setting IP, runtime AI narration, large narrative/faction simulations, open-world traversal, recruitment, resurrection, and persistent stat grinding are outside V1.
 
 Issue #28 extends the historical V1 contract: each of the first four victories advances conscious survivors once, reaching level 5 for the finale. The fixed Fighter offers Champion or Battle Master before startup New Run. No new roles, respec, refill, revival or automatic rest. See [rules](rules-reference.md) for the Expedition adaptations.
+
+Issue #40 adds a four-slot next-party builder for the nine currently implemented kits (five classes). Duplicate builds retain independent adventurer identities. Barbarian's four paths are playable from encounter one; Rogue/Cleric/Wizard base kits remain explicitly interim. This does not complete the approved eventual 13-class/70-subclass roster. See [current controls](runs/full-roster/03-ui-controls.md).

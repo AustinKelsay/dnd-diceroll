@@ -6,6 +6,7 @@
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
+#include "Party/BuildCatalog.h"
 
 namespace
 {
@@ -459,7 +460,7 @@ void AExpeditionHUD::DrawParty()
     for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
-        DrawPartyCard(Unit, Index, 96 + Index * 82.0f);
+        DrawPartyCard(Unit, Index, 96 + Index * 104.0f);
         ++Index;
     }
 }
@@ -471,7 +472,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     const bool bActive = View->InCombat() && View->Rules().ActiveId() == Unit.Id;
     const bool bSelected = Player->Selection() == Unit.Id;
     const FLinearColor Color = ExpeditionStyle::UnitColor(Unit);
-    const float X = 12, Width = 250, Height = 76;
+    const float X = 12, Width = 250, Height = 100;
     const bool bHover = Hovered(X, Y, Width, Height);
     Panel(X, Y, Width, Height, bActive ? Gold : Color, bSelected || bHover ? 0.97f : 0.86f);
     if (bActive) { Frame(WithAlpha(Gold, 0.6f + 0.3f * FMath::Sin(Clock * 4.0f)), X, Y, Width, Height, 2.0f); }
@@ -482,9 +483,9 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Circle(Portrait, 22, Life == ECombatLife::Dead ? FLinearColor(0.2f, 0.2f, 0.22f) : Color * 0.45f);
     Circle(Portrait, 19, Life == ECombatLife::Dead ? FLinearColor(0.32f, 0.32f, 0.34f) : Color * 0.9f);
     Text(Unit.Role.Left(1), Portrait.X, Portrait.Y - 13, Ink, 1.1f, EAlign::Center);
-    Text(FString::FromInt(Index + 1), X + 12, Y + 54, Muted, 0.6f);
+    Text(FString::FromInt(Index + 1), X + 12, Y + 8, Muted, 0.6f);
     Text(Unit.Name, X + 64, Y + 8, Life == ECombatLife::Dead ? Muted : Color, 0.98f);
-    Text(FString::Printf(TEXT("Lv%d %s%s"), Unit.Level, *Unit.Role, Unit.FighterSubclass == EFighterSubclass::Champion ? TEXT(" / Champion") : Unit.FighterSubclass == EFighterSubclass::BattleMaster ? TEXT(" / Battle Master") : TEXT("")), X + 64, Y + 22, Muted, 0.52f, EAlign::Left, 128);
+    Text(FString::Printf(TEXT("Lv%d %s"), Unit.Level, *FBuildCatalog::DisplayName(Unit)), X + 64, Y + 22, Muted, 0.52f, EAlign::Left, 176);
     if (Life == ECombatLife::Dead)
     {
         Text(TEXT("Fallen  ·  lost for this expedition"), X + 64, Y + 34, FLinearColor(0.75f, 0.45f, 0.4f), 0.72f);
@@ -502,22 +503,10 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
         Text(FString::Printf(TEXT("%d/%d"), HP, Unit.MaxHP), X + Width - 12, Y + 30, Parchment, 0.72f, EAlign::Right);
     }
     // Resources as pips: the things that actually run out.
-    float Cursor = X + 64;
     const float Row = Y + 56;
-    auto Pips = [&](const FString& Label, int32 Count, int32 Max, FLinearColor PipColor)
-    {
-        Text(Label, Cursor, Row - 6, Muted, 0.6f);
-        Cursor += Measure(Label, 0.6f).X + 6;
-        for (int32 Pip = 0; Pip < Max; ++Pip) { Polygon(FVector2D(Cursor + 5, Row + 2), 5, 4, 0, Pip < Count ? PipColor : FLinearColor(0.2f, 0.22f, 0.25f)); Cursor += 12; }
-        Cursor += 8;
-    };
-    if (Unit.AdventurerRole == EAdventurerRole::Fighter) { Pips(TEXT("Wind"), Unit.SecondWindUses, 2, Gold); }
-    if (Unit.AdventurerRole == EAdventurerRole::Cleric || Unit.AdventurerRole == EAdventurerRole::Wizard) { Pips(TEXT("Slots"), Unit.SpellSlots, 2, FLinearColor(0.55f, 0.6f, 1.0f)); }
-    Circle(FVector2D(Cursor + 5, Row + 3), 5, FLinearColor(0.9f, 0.25f, 0.35f));
-    Rect(FLinearColor(0.75f, 0.7f, 0.6f), Cursor + 3, Row - 5, 4, 4);
-    Text(FString::Printf(TEXT("x%d"), Unit.Potions), Cursor + 13, Row - 6, Parchment, 0.62f);
-    Cursor += 40;
-    if (Unit.WeaponRank > 0) { Text(FString::Printf(TEXT("Gear +%d"), Unit.WeaponRank), Cursor, Row - 6, Gold, 0.62f); }
+    TArray<FString> StatusLines;
+    (FBuildCatalog::Status(Unit) + FString::Printf(TEXT("Potion %d / Gear +%d"), Unit.Potions, Unit.WeaponRank)).ParseIntoArray(StatusLines, TEXT(" / "));
+    for (int32 Line = 0; Line < StatusLines.Num(); ++Line) { Text(StatusLines[Line], X + 12, Row - 6 + Line * 10, Parchment, 0.55f, EAlign::Left, Width - 24); }
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
 }
 
@@ -572,41 +561,32 @@ void AExpeditionHUD::DrawActionBar()
     const float ChipLeft = W * 0.5f - 160;
     Chip(FString::Printf(TEXT("Move %d"), Snapshot.MovementLeft), Snapshot.MovementLeft > 0, ChipLeft);
     Chip(TEXT("Action"), Snapshot.bActionAvailable, ChipLeft + 110);
-    Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable && Active->AdventurerRole == EAdventurerRole::Fighter, ChipLeft + 200);
+    Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable, ChipLeft + 200);
 
-    if (Active->FighterSubclass == EFighterSubclass::BattleMaster)
-    {
-        Button(TEXT("Maneuver"), TEXT("Precision Strike"), FString::Printf(TEXT("M  +2 hit/damage, %d left"), Active->ManeuverUses), W * 0.5f - 125, Y - 82, 250, 44, !Rules.LegalTargets(Id, ECombatCommandType::PrecisionStrike).IsEmpty(), Player->Action() == ECombatCommandType::PrecisionStrike, Gold);
-    }
-    const ECombatCommandType Role = Player->RoleAction();
-    const bool bRogue = Active->AdventurerRole == EAdventurerRole::Rogue;
+    const auto Abilities = FBuildCatalog::Abilities(*Active);
     const float Width = 128, Gap = 6, Height = 54;
-    const float Left = W * 0.5f - (5 * Width + 4 * Gap) * 0.5f;
+    const float Left = W * 0.5f - ((4 + Abilities.Num()) * (Width + Gap) - Gap) * 0.5f;
     const ECombatCommandType Mode = Player->Action();
     auto Ready = [&](ECombatCommandType Action) { return !Rules.LegalTargets(Id, Action).IsEmpty(); };
-    const bool bAttack = Ready(ECombatCommandType::Attack) || !Rules.LegalMoves(Id).IsEmpty();
     TArray<TPair<ECombatCommandType, bool>> Hover;
-    Hover.Add({ECombatCommandType::Attack, Button(TEXT("ModeAttack"), TEXT("Attack / Move"), FString::Printf(TEXT("A  ·  d20%+d, 1d%d%+d"), Active->AttackBonus, Active->DamageDie, Active->DamageBonus + Active->WeaponRank),
-        Left, Y, Width, Height, bAttack, Mode == ECombatCommandType::Attack)});
-    if (bRogue)
+    Hover.Add({ECombatCommandType::Attack, Button(TEXT("ModeAttack"), TEXT("Attack / Move"), FString::Printf(TEXT("A / d%d%+d"), Active->DamageDie, FBuildCatalog::AttackModifier(*Active)), Left, Y, Width, Height,
+        Ready(ECombatCommandType::Attack) || !Rules.LegalMoves(Id).IsEmpty(), Mode == ECombatCommandType::Attack)});
+    int32 Column = 1;
+    for (const auto& Ability : Abilities)
     {
-        Button(TEXT("SneakInfo"), TEXT("Sneak Attack"), TEXT("Automatic: ally beside target"), Left + (Width + Gap), Y, Width, Height, false);
+        const FString Cost = FString::Printf(TEXT("%s %s / %d %s%s"), Column == 1 ? TEXT("F") : TEXT("M"), Ability.bBonus ? TEXT("Bonus") : TEXT("Action"), Ability.ResourceCost, *Ability.ResourceName, Ability.bResourceAvailable ? TEXT("") : TEXT(" unavailable"));
+        Hover.Add({Ability.Command, Button(Column == 1 ? TEXT("ModeRole") : TEXT("Maneuver"), Ability.Name, Cost, Left + Column * (Width + Gap), Y, Width, Height, Ready(Ability.Command), Mode == Ability.Command, Sky)});
+        ++Column;
     }
-    else
-    {
-        const FString Uses = Role == ECombatCommandType::SecondWind ? FString::Printf(TEXT("F  ·  bonus, %d left"), Active->SecondWindUses)
-            : FString::Printf(TEXT("F  ·  %d slot%s left"), Active->SpellSlots, Active->SpellSlots == 1 ? TEXT("") : TEXT("s"));
-        Hover.Add({Role, Button(TEXT("ModeRole"), ExpeditionStyle::ActionName(Role), Uses, Left + (Width + Gap), Y, Width, Height, Ready(Role), Mode == Role, FLinearColor(0.7f, 0.6f, 1.0f))});
-    }
-    Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R  ·  downed ally beside you"), Left + 2 * (Width + Gap), Y, Width, Height,
-        Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
-    Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString::Printf(TEXT("P  ·  %d left"), Active->Potions), Left + 3 * (Width + Gap), Y, Width, Height,
-        Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
-    Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + 4 * (Width + Gap), Y, Width, Height, true, false, Gold);
+    Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R / adjacent downed ally"), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
+    Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString::Printf(TEXT("P / %d left"), Active->Potions), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
+    Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + Column * (Width + Gap), Y, Width, Height, true, false, Gold);
+    if (const auto* Build = FBuildCatalog::Find(Active->BuildId); Build && Build->SneakDie) { Text(TEXT("Sneak Attack: automatic with adjacent ally"), W * 0.5f, Y - 52, Safe, 0.7f, EAlign::Center); }
     for (const auto& Pair : Hover)
     {
         if (!Pair.Value) { continue; }
-        const FString Help = FCombatBattle::DescribeAction(Pair.Key);
+        FString Help = FCombatBattle::DescribeAction(Pair.Key);
+        for (const auto& A : Abilities) { if (A.Command == Pair.Key) { Help = A.Name + TEXT(": ") + A.Description; } }
         const float TipWidth = FMath::Min(640.0f, Measure(Help, 0.72f).X + 24);
         Panel(W * 0.5f - TipWidth * 0.5f, Y - 66, TipWidth, 30, Sky, 0.95f, false);
         Text(Help, W * 0.5f, Y - 60, Parchment, 0.72f, EAlign::Center, TipWidth - 16);
@@ -638,12 +618,13 @@ void AExpeditionHUD::DrawForecast()
             const FLinearColor Chance = Forecast.HitChancePercent >= 65 ? Safe : Forecast.HitChancePercent >= 40 ? Gold : Danger;
             Lines.Add({FString::Printf(TEXT("%d%% to hit"), Forecast.HitChancePercent), Chance});
         }
-        else if (!Forecast.bHealing) { Lines.Add({TEXT("Never misses"), Safe}); }
-        Lines.Add({Forecast.MinAmount == Forecast.MaxAmount ? FString::Printf(TEXT("%s %d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, *Forecast.Formula)
-            : FString::Printf(TEXT("%s %d-%d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula), Parchment});
+        else if (!Forecast.bHealing && Forecast.MaxAmount > 0) { Lines.Add({TEXT("Never misses"), Safe}); }
+        if (Forecast.MaxAmount == 0) { Lines.Add({Forecast.Formula, Parchment}); }
+        else Lines.Add({Forecast.MinAmount == Forecast.MaxAmount ? FString::Printf(TEXT("%s %d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, *Forecast.Formula)
+            : FString::Printf(TEXT("%s %d or %d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula), Parchment});
         if (Forecast.bSneakAttack) { Lines.Add({TEXT("Sneak Attack: an ally is beside them"), Safe}); }
         if (Forecast.bCanDrop) { Lines.Add({Forecast.MaxAmount >= Target->HP ? TEXT("A strong hit can drop them") : TEXT("A critical hit can drop them"), Danger}); }
-        if (Forecast.bAttackRoll) { Lines.Add({TEXT("A natural 20 doubles the damage dice"), Muted}); }
+        if (Forecast.bAttackRoll) { const auto* Actor = Rules.Find(Player->Actor()); const auto* Build = Actor ? FBuildCatalog::Find(Actor->BuildId) : nullptr; Lines.Add({FString::Printf(TEXT("Critical %d-20 doubles damage dice"), Build ? Build->CriticalThreshold : 20), Muted}); }
     }
     else if (!Player->PreviewPath().IsEmpty())
     {
@@ -736,19 +717,33 @@ void AExpeditionHUD::DrawBanner()
 
 void AExpeditionHUD::DrawTitle()
 {
-    const float Width = 560, Height = 450;
-    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
-    Panel(X, Y, Width, Height, Gold, 0.94f);
-    Text(TEXT("dnd-diceroll"), W * 0.5f, Y + 26, Gold, 2.6f, EAlign::Center, Width - 40);
-    Text(TEXT("Recover the Waystone"), W * 0.5f, Y + 96, Parchment, 1.15f, EAlign::Center);
-    Text(TEXT("Four adventurers. Five battles. Every death is permanent."), W * 0.5f, Y + 130, Muted, 0.78f, EAlign::Center);
-    Button(TEXT("Champion"), TEXT("Champion: crit 19-20"), TEXT("J"), W * 0.5f - 250, Y + 176, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::Champion, Gold);
-    Button(TEXT("BattleMaster"), TEXT("Battle Master: 2 strikes"), TEXT("B  +2 hit / damage"), W * 0.5f + 10, Y + 176, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::BattleMaster, Sky);
-    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), W * 0.5f - 230, Y + 240, 220, 58, true, false, Gold);
-    Button(TEXT("Resume"), TEXT("Continue"), TEXT("O  ·  resume your saved run"), W * 0.5f + 10, Y + 240, 220, 58, true, false, Sky);
-    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), W * 0.5f - 110, Y + 312, 220, 46, true, false, Muted);
-    const TArray<FString>& Messages = View->Messages();
-    if (!Messages.IsEmpty()) { Text(Messages.Last(), W * 0.5f, Y + Height + 14, Messages.Last().StartsWith(TEXT("Cannot")) ? Danger : Muted, 0.72f, EAlign::Center, W - 60); }
+    const float Width = 700, Height = 570;
+    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
+    Panel(X, Y, Width, Height, Gold, 0.98f);
+    Text(View->HasRun() ? (View->Progress().Phase == EExpeditionPhase::Victory ? TEXT("VICTORY / NEXT PARTY") : TEXT("DEFEAT / NEXT PARTY")) : TEXT("NEXT EXPEDITION / PARTY BUILDER"), W * 0.5f, Y + 18, Gold, 1.2f, EAlign::Center);
+    Text(TEXT("1-4 select slot / Up-Down class / Left-Right kit / G familiar preset"), W * 0.5f, Y + 52, Muted, 0.7f, EAlign::Center);
+    for (int32 I = 0; I < Player->NextParty().Num(); ++I)
+    {
+        const auto& P = Player->NextParty()[I];
+        Button(FName(*FString::Printf(TEXT("Party%d"), I)), P.Name, P.BuildId, X + 18 + I * 166, Y + 84, 160, 64, true, Player->BuilderSlot() == I, Sky);
+    }
+    const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
+    FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
+    Text(FBuildCatalog::DisplayName(Hero), X + 24, Y + 170, Parchment, 0.95f);
+    float Row = Y + 208;
+    for (const auto& A : FBuildCatalog::Abilities(Hero)) { Text(A.Name + TEXT(": ") + A.Description, X + 24, Row, Parchment, 0.72f, EAlign::Left, Width - 48); Row += 58; }
+    const auto* Build = FBuildCatalog::Find(Hero.BuildId);
+    if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X + 24, Row, Safe, 0.75f); }
+    if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), X + 24, Row, Safe, 0.75f); }
+    Button(TEXT("ClassNext"), TEXT("Next class"), TEXT("Up / Down"), X + 24, Y + 370, 200, 44, true);
+    Button(TEXT("BuildNext"), TEXT("Next compatible kit"), TEXT("Left / Right"), X + 240, Y + 370, 220, 44, true);
+    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), X + 476, Y + 370, 200, 44, true);
+    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), X + 24, Y + 434, 200, 54, true, false, Gold);
+    Button(TEXT("Resume"), TEXT("Continue saved party"), TEXT("O"), X + 240, Y + 434, 220, 54, true, false, Sky);
+    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), X + 476, Y + 434, 200, 54, true);
+    const auto& Messages = View->Messages();
+    if (!Messages.IsEmpty()) { Text(Messages.Last(), X + 24, Y + 510, Muted, 0.7f, EAlign::Left, Width - 48); }
+
 }
 
 void AExpeditionHUD::DrawRoutes()
@@ -835,37 +830,8 @@ void AExpeditionHUD::DrawCamp()
 
 void AExpeditionHUD::DrawEnding()
 {
-    const FExpeditionProgress& Run = View->Progress();
-    const bool bWon = Run.Phase == EExpeditionPhase::Victory;
-    const FLinearColor Accent = bWon ? Gold : Danger;
-    const float Width = 620, Height = 530;
-    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
-    Panel(X, Y, Width, Height, Accent, 0.95f);
-    Text(bWon ? TEXT("THE WAYSTONE IS RECOVERED") : TEXT("THE EXPEDITION IS LOST"), W * 0.5f, Y + 18, Accent, 1.5f, EAlign::Center, Width - 40);
-    Text(bWon ? TEXT("Five battles won. The survivors carry it home.") : TEXT("No one is left to carry on."), W * 0.5f, Y + 62, Muted, 0.8f, EAlign::Center);
-    float Row = Y + 96;
-    for (int32 Index = 0; Index < Run.History.Num(); ++Index)
-    {
-        const FExpeditionEncounterRecord& Record = Run.History[Index];
-        const bool bVictory = Record.Outcome == EBattlePhase::Victory;
-        Text(FString::Printf(TEXT("%d.  %s"), Index + 1, *Record.Route.Name), X + 40, Row, Parchment, 0.8f, EAlign::Left, 330);
-        Text(FString::Printf(TEXT("%s  ·  %d standing"), bVictory ? TEXT("Won") : TEXT("Lost"), Record.Survivors), X + Width - 40, Row, bVictory ? Safe : Danger, 0.8f, EAlign::Right);
-        Row += 24;
-    }
-    Row += 8;
-    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
-    {
-        if (Unit.Side != ECombatSide::Party) { continue; }
-        const bool bAlive = Unit.Life == ECombatLife::Conscious;
-        Text(FString::Printf(TEXT("%s the %s"), *Unit.Name, *Unit.Role), X + 40, Row, ExpeditionStyle::UnitColor(Unit), 0.78f);
-        Text(bAlive ? FString::Printf(TEXT("survived  ·  %d/%d HP"), Unit.HP, Unit.MaxHP) : TEXT("fallen"), X + Width - 40, Row, bAlive ? Parchment : Muted, 0.78f, EAlign::Right);
-        Row += 22;
-    }
-    Text(TEXT("Choose your next Fighter"), W * 0.5f, Y + Height - 154, Muted, 0.75f, EAlign::Center);
-    Button(TEXT("Champion"), TEXT("Champion: crit 19-20"), TEXT("J"), W * 0.5f - 250, Y + Height - 126, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::Champion, Gold);
-    Button(TEXT("BattleMaster"), TEXT("Battle Master: 2 strikes"), TEXT("B  +2 hit / damage"), W * 0.5f + 10, Y + Height - 126, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::BattleMaster, Sky);
-    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N  ·  fresh party"), W * 0.5f - 230, Y + Height - 70, 220, 54, true, false, Gold);
-    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), W * 0.5f + 10, Y + Height - 70, 220, 54, true, false, Muted);
+    DrawTitle();
+
 }
 
 void AExpeditionHUD::DrawRecords()
@@ -907,7 +873,7 @@ void AExpeditionHUD::DrawHelp()
     Panel(X, Y, Width, Height, Sky, 0.98f);
     Text(TEXT("HOW TO PLAY"), X + 24, Y + 18, Sky, 1.2f);
     const TCHAR* Left[] = {
-        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F  Role ability / M Precision Strike"),
+        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
         TEXT("Arrows + Enter  Keyboard cursor")};
     const TCHAR* Right[] = {

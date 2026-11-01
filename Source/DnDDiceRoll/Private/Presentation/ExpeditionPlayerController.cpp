@@ -5,10 +5,12 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
+#include "Party/BuildCatalog.h"
 
 void AExpeditionPlayerController::BeginPlay()
 {
     Super::BeginPlay();
+    Preset();
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
@@ -44,6 +46,7 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Down, &AExpeditionPlayerController::CursorDown);
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
+    Bind(EKeys::G, &AExpeditionPlayerController::Preset);
     Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
@@ -128,6 +131,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction);
+        if (const auto* U = Rules.Find(ActorId)) { for (const auto& A : FBuildCatalog::Abilities(*U)) { if (A.Command == SelectedAction) { Highlights.bFriendlyTargets = A.Target != EAbilityTarget::Enemy; } } }
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }
@@ -152,7 +156,8 @@ bool AExpeditionPlayerController::KeyboardCell(FIntPoint& Cell) const
 
 void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
 {
-    if (!IsValid(BattleView)) { return; }
+    if (!AllowsGameplayInput()) { return; }
+    if (CanSelectSubclass()) { if (ScreenOffset.Y) { CycleClass(); } else { CycleBuild(); } return; }
     // Arrows follow the screen: map "up" to whichever board axis faces away from the camera.
     const float Radians = FMath::DegreesToRadians(BattleView->CameraYaw());
     const FVector2D Forward(-FMath::Cos(Radians), -FMath::Sin(Radians));
@@ -171,11 +176,12 @@ void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
 void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
 void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
 void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
-void AExpeditionPlayerController::ConfirmCell() { if (IsValid(BattleView)) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
+void AExpeditionPlayerController::ConfirmCell() { if (AllowsGameplayInput() && BattleView->InCombat()) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
 
 void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
 {
-    if (!IsValid(BattleView)) { return; }
+    if (!AllowsGameplayInput()) { return; }
+    if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return; }
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
@@ -204,6 +210,10 @@ void AExpeditionPlayerController::HandleButton(FName Id)
 {
     if (!IsValid(BattleView)) { return; }
     const FString Name = Id.ToString();
+    if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
+    if (Name == TEXT("ClassNext")) { CycleClass(); return; }
+    if (Name == TEXT("BuildNext")) { CycleBuild(); return; }
+    if (Name == TEXT("Preset")) { Preset(); return; }
     if (Name.StartsWith(TEXT("Party"))) { SelectPartyIndex(FCString::Atoi(*Name.RightChop(5))); BattleView->PlayCue(EExpeditionCue::Click); return; }
     if (Name == TEXT("Champion")) { Champion(); }
     else if (Name == TEXT("BattleMaster")) { BattleMaster(); }
@@ -255,11 +265,42 @@ void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
 
 ECombatCommandType AExpeditionPlayerController::RoleAction() const
 {
-    const FCombatantState* Unit = IsValid(BattleView) ? BattleView->Rules().Find(Actor()) : nullptr;
-    if (!Unit) { return ECombatCommandType::Attack; }
-    return Unit->AdventurerRole == EAdventurerRole::Fighter ? ECombatCommandType::SecondWind :
-        Unit->AdventurerRole == EAdventurerRole::Cleric ? ECombatCommandType::CureWounds :
-        Unit->AdventurerRole == EAdventurerRole::Wizard ? ECombatCommandType::MagicMissile : ECombatCommandType::Attack;
+    return SpecialAction(0);
+}
+ECombatCommandType AExpeditionPlayerController::SpecialAction(int32 Index) const
+{
+    const auto* Unit = IsValid(BattleView) ? BattleView->Rules().Find(Actor()) : nullptr;
+    const auto Abilities = Unit ? FBuildCatalog::Abilities(*Unit) : TArray<FAbilityFacts>();
+    return Abilities.IsValidIndex(Index) ? Abilities[Index].Command : ECombatCommandType::Attack;
+}
+EFighterSubclass AExpeditionPlayerController::StartupSubclass() const
+{
+    return Party.Num() == 4 && Party[0].BuildId == TEXT("fighter.battle-master") ? EFighterSubclass::BattleMaster : EFighterSubclass::Champion;
+}
+void AExpeditionPlayerController::Preset()
+{
+    if (IsValid(BattleView) && !CanSelectSubclass()) { return; }
+    Party.Reset();
+    const TCHAR* Names[] = {TEXT("Arden"), TEXT("Nix"), TEXT("Sera"), TEXT("Ivo")};
+    const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.base"), TEXT("cleric.base"), TEXT("wizard.base")};
+    for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection P; P.Id = I + 1; P.Name = Names[I]; P.BuildId = Builds[I]; Party.Add(P); }
+}
+void AExpeditionPlayerController::CycleClass()
+{
+    if (!CanSelectSubclass() || Party.Num() != 4) { return; }
+    TArray<FString> Classes;
+    for (const auto& B : FBuildCatalog::All()) { Classes.AddUnique(B.Profile.ClassId); }
+    const auto* Current = FBuildCatalog::Find(Party[Slot].BuildId);
+    const FString Next = Classes[(Classes.IndexOfByKey(Current->Profile.ClassId) + 1) % Classes.Num()];
+    for (const auto& B : FBuildCatalog::All()) { if (B.Profile.ClassId == Next) { Party[Slot].BuildId = B.Id; break; } }
+}
+void AExpeditionPlayerController::CycleBuild()
+{
+    if (!CanSelectSubclass() || Party.Num() != 4) { return; }
+    TArray<FString> Builds;
+    const auto* Current = FBuildCatalog::Find(Party[Slot].BuildId);
+    for (const auto& B : FBuildCatalog::All()) { if (B.Profile.ClassId == Current->Profile.ClassId) { Builds.Add(B.Id); } }
+    Party[Slot].BuildId = Builds[(Builds.IndexOfByKey(Current->Id) + 1) % Builds.Num()];
 }
 
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
@@ -277,9 +318,9 @@ bool AExpeditionPlayerController::CanSelectSubclass() const
     if (!AllowsGameplayInput()) { return false; }
     return !BattleView->HasRun() || BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat;
 }
-void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { SelectedSubclass = EFighterSubclass::Champion; } }
-void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { SelectedSubclass = EFighterSubclass::BattleMaster; } }
-void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(ECombatCommandType::PrecisionStrike); } }
+void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
+void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
+void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(SpecialAction(1)); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
@@ -289,7 +330,7 @@ void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { Ba
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
-void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(SelectedSubclass); } }
+void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(Party); } }
 void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume() { if (AllowsGameplayInput()) { BattleView->Resume(); } }
 void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->ToggleRecords(); } }

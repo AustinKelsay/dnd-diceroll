@@ -473,6 +473,13 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     {
         switch (Unit.AdventurerRole)
         {
+        case EAdventurerRole::Barbarian:
+            Part(Cylinder, FVector(0, 0, 30), FVector(0.56f, 0.56f, 0.56f), Skin);
+            Part(Cylinder, FVector(0, 0, 52), FVector(0.58f, 0.58f, 0.12f), Team);
+            Part(Sphere, FVector(0, 0, 72), FVector(0.34f), Skin);
+            Part(Cube, FVector(12, 28, 46), FVector(0.08f, 0.08f, 0.7f), FLinearColor(0.4f, 0.25f, 0.12f));
+            Part(Cube, FVector(12, 28, 80), FVector(0.12f, 0.45f, 0.22f), FLinearColor(0.7f, 0.72f, 0.75f));
+            break;
         case EAdventurerRole::Fighter:
             Part(Cylinder, FVector(0, 0, 28), FVector(0.46f, 0.46f, 0.5f), FLinearColor(0.45f, 0.5f, 0.6f));
             Part(Cylinder, FVector(0, 0, 50), FVector(0.5f, 0.5f, 0.08f), Team);
@@ -894,6 +901,24 @@ void AExpeditionBattleView::NewRun(EFighterSubclass Subclass)
     FString Error, PreservedCheckpoint;
     const int32 NextSeed = HasRun() ? static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u) : 20261030;
     if (Session.NewRun(NextSeed, Error, FString(), &PreservedCheckpoint, Subclass))
+    {
+        Feedback.Reset();
+        if (!PreservedCheckpoint.IsEmpty()) { Record({true, TEXT("The unreadable previous save was preserved. Its run and records could not be loaded.")}); }
+        Record({true, TEXT("Fresh expedition: party power/resources reset. Choose a route.")});
+        EnemyDelay = 0; TargetYaw = -90; bCheckpointBlocked = false; bShowRecords = false; RebuildBoard();
+        Show.ShowBanner(TEXT("A NEW EXPEDITION"), TEXT("Recover the Waystone"), FLinearColor(1.0f, 0.82f, 0.45f), 2.2f);
+        PlayCue(EExpeditionCue::Route);
+    }
+    else { Record({false, Error}); }
+}
+
+void AExpeditionBattleView::NewRun(const TArray<FPartyBuildSelection>& Party)
+{
+    if (HasRun() && Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
+    { Record({false, TEXT("Finish this expedition before starting a new run.")}); return; }
+    FString Error, PreservedCheckpoint;
+    const int32 NextSeed = HasRun() ? static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u) : 20261030;
+    if (Session.NewRun(NextSeed, Party, Error, FString(), &PreservedCheckpoint))
     {
         Feedback.Reset();
         if (!PreservedCheckpoint.IsEmpty()) { Record({true, TEXT("The unreadable previous save was preserved. Its run and records could not be loaded.")}); }
