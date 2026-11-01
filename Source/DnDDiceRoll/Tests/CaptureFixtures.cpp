@@ -50,6 +50,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         while (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted < 4)
         {
             if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !ExpeditionTestSupport::FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { break; }
+            if (Run.Progress().EncountersCompleted == 4) { Write(TEXT("fourth-reward"), Run); }
             if (!Run.ClaimReward(Survivor(Run), Error)) { break; }
         }
         if (Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != 4) { continue; }

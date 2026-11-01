@@ -27,7 +27,7 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
     Route.RewardPotions = Choice == 1 || bSecuredSupplies ? 2 : 1;
     Route.Name = Choice == 0 ? TEXT("Stream trail") : TEXT("Watchtower road");
     const auto& Recipe = Recipes[Route.Recipe];
-    Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear, +%d potions%s"),
+    Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear (rank 3 cap) | +%d potions%s"),
         Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount,
         Choice == 0 ? TEXT("scouts") : TEXT("raiders incl. archer"), Recipe.Terrain, Route.RewardPotions,
         Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));

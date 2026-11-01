@@ -800,13 +800,15 @@ void AExpeditionHUD::DrawReward()
     Panel(X, Y, Width, Height, Gold, 0.95f);
     Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
     const int32 Potions = Run.History.IsEmpty() ? 0 : Run.History.Last().Route.RewardPotions;
-    Text(FString::Printf(TEXT("+1 gear rank (+1 damage)   ·   +%d healing potion%s"), Potions, Potions == 1 ? TEXT("") : TEXT("s")), W * 0.5f, Y + 58, Parchment, 0.86f, EAlign::Center);
+    const FCombatantState* Selected = Rules.Find(Player->Selection());
+    const bool bReady = Selected && Selected->Life == ECombatLife::Conscious;
+    const bool bGearCapped = bReady && Selected->WeaponRank >= 3;
+    const FString Gear = bGearCapped ? TEXT("Gear rank 3 cap: no extra damage") : TEXT("+1 gear rank (+1 damage; max rank 3)");
+    Text(FString::Printf(TEXT("%s   ·   +%d healing potion%s"), *Gear, Potions, Potions == 1 ? TEXT("") : TEXT("s")), W * 0.5f, Y + 58, Parchment, 0.86f, EAlign::Center, Width - 32);
     TArray<FString> Lost;
     for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Dead) { Lost.Add(Unit.Name); } }
     if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 84, FLinearColor(0.85f, 0.5f, 0.45f), 0.76f, EAlign::Center); }
     Text(TEXT("Choose who carries it  —  click a survivor's card or press 1-4"), W * 0.5f, Y + 110, Muted, 0.74f, EAlign::Center);
-    const FCombatantState* Selected = Rules.Find(Player->Selection());
-    const bool bReady = Selected && Selected->Life == ECombatLife::Conscious;
     Button(TEXT("Claim"), bReady ? FString::Printf(TEXT("Give to %s"), *Selected->Name) : TEXT("Select a survivor"), TEXT("L"), W * 0.5f - 130, Y + 140, 260, 52, bReady, false, Gold);
 }
 
