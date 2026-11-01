@@ -296,6 +296,14 @@ bool FRunSurvivorTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Camp cannot revive permanent death"),Run.Battle().Find(1)->Life==ECombatLife::Dead && Run.Battle().Find(1)->HP==0 && Run.Battle().Find(1)->WeaponRank==0 && Run.Battle().Find(1)->Potions==1);
     TestTrue(TEXT("Continue with full stable roster"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error));
     TestTrue(TEXT("Dead remains present and excluded from turns"),Run.Battle().Find(1)->Life==ECombatLife::Dead && !Run.Battle().Snapshot().TurnOrder.Contains(1));
+    const auto DeathLevel = Run.Snapshot();
+    FExpeditionRun Restored;
+    if (!TestTrue(TEXT("Actual first-encounter death restores during encounter two"), Restored.Restore(DeathLevel, Error))) { return false; }
+    auto AdvancedDead = DeathLevel;
+    AdvancedDead.Battle.Encounter.Combatants[0].Level = 2;
+    ++AdvancedDead.Battle.Encounter.Combatants[0].DamageBonus;
+    TestFalse(TEXT("Retained survivor losses forbid advancing an earlier dead adventurer"), Restored.Restore(AdvancedDead, Error));
+    TestTrue(TEXT("Contradictory death distribution leaves the installed run unchanged"), SameRun(DeathLevel, Restored.Snapshot()));
     return !HasAnyErrors();
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkipRecoveryTest, "Project.Expedition.Run.SkippedRecoveryHasNoRestAndCannotReturn",

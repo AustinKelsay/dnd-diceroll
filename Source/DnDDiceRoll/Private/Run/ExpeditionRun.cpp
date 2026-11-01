@@ -245,6 +245,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     };
     for (int32 I = 0; I < P.Offers.Num(); ++I) { if (!ValidRoute(P.Offers[I], P.EncountersCompleted, I)) { return Reject(); } }
     int32 PreviousSurvivors = 4;
+    TArray<int32> DeathsByLevel;
+    DeathsByLevel.Init(0, EncounterCount + 1);
     for (int32 I = 0; I < P.History.Num(); ++I)
     {
         const auto& H = P.History[I];
@@ -255,7 +257,9 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         if (!ValidRoute(H.Route, I, H.Route.bDangerous ? 1 : 0) ||
             H.Outcome != (bUnfinished ? EBattlePhase::Fighting : bLost ? EBattlePhase::Defeat : EBattlePhase::Victory) ||
             H.Survivors < (bLost ? 0 : 1) || H.Survivors > PreviousSurvivors || (bLost && H.Survivors != 0) ||
+            (bUnfinished && H.Survivors != PreviousSurvivors) ||
             (bHasReward ? H.RewardRecipient < 1 || H.RewardRecipient > 4 : H.RewardRecipient != INDEX_NONE)) { return Reject(); }
+        if (!bUnfinished) { DeathsByLevel[I + 1] = PreviousSurvivors - H.Survivors; }
         PreviousSurvivors = H.Survivors;
     }
     const auto ExpectedPhase = bCombat || P.History.IsEmpty() ? EBattlePhase::Fighting : bDefeat ? EBattlePhase::Defeat : EBattlePhase::Victory;
@@ -277,6 +281,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         int32 Remaining = 0;
         for (const auto& U : Saved.Combatants) { if (U.Side == ECombatSide::Party && U.Life != ECombatLife::Dead) { ++Remaining; } }
         if (Remaining > P.History.Last().Survivors) { return Reject(); }
+        DeathsByLevel[P.History.Num()] = P.History.Last().Survivors - Remaining;
     }
     for (int32 I = 0; I < Layout.Combatants.Num(); ++I)
     {
@@ -298,6 +303,9 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             }
             if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel) ||
                 (I == 0 ? U.FighterSubclass != EFighterSubclass::Champion && U.FighterSubclass != EFighterSubclass::BattleMaster : U.FighterSubclass != EFighterSubclass::None)) { return Reject(); }
+            // Each permanent loss belongs to the level of the encounter where it
+            // occurred; matching the distribution also bounds unidentified deaths.
+            if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
             Base.DamageBonus += U.Level - 1;
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
@@ -315,6 +323,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
             U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
     }
+    for (int32 Deaths : DeathsByLevel) { if (Deaths != 0) { return Reject(); } }
     if (P.History.IsEmpty() && (Snapshot.Battle.Round != 1 || !Snapshot.Battle.bActionAvailable || !Snapshot.Battle.bBonusActionAvailable ||
         Snapshot.Battle.TurnIndex != 0 || Snapshot.Battle.MovementLeft != Candidate.Combat.Find(Candidate.Combat.ActiveId())->Speed)) { return Reject(); }
     *this = MoveTemp(Candidate);
