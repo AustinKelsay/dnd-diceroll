@@ -10,10 +10,11 @@
 namespace
 {
 constexpr float DesignWidth = 1280.0f;
-const FLinearColor Ink(0.006f, 0.009f, 0.014f);
-const FLinearColor Parchment(0.96f, 0.92f, 0.84f);
-const FLinearColor Muted(0.62f, 0.68f, 0.74f);
-const FLinearColor Gold(1.0f, 0.8f, 0.4f);
+// Dark-fantasy palette: warm near-black panels, parchment text and darkened gilt.
+const FLinearColor Ink(0.009f, 0.007f, 0.006f);
+const FLinearColor Parchment(0.93f, 0.86f, 0.72f);
+const FLinearColor Muted(0.66f, 0.6f, 0.52f);
+const FLinearColor Gold(0.95f, 0.72f, 0.32f);
 const FLinearColor Danger(1.0f, 0.4f, 0.3f);
 const FLinearColor Safe(0.45f, 0.95f, 0.55f);
 const FLinearColor Sky(0.4f, 0.85f, 1.0f);
@@ -72,8 +73,14 @@ void AExpeditionHUD::Panel(float X, float Y, float Width, float Height, FLinearC
     Rect(FLinearColor(0, 0, 0, 0.35f * Opacity), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, Opacity), X, Y, Width, Height);
     Rect(FLinearColor(1, 1, 1, 0.035f * Opacity), X, Y, Width, Height * 0.45f);
-    Frame(WithAlpha(Accent, 0.35f * Opacity), X, Y, Width, Height);
+    // Gilded double frame with corner studs.
+    Frame(WithAlpha(Accent, 0.45f * Opacity), X, Y, Width, Height);
+    Frame(WithAlpha(Accent, 0.14f * Opacity), X + 4, Y + 4, Width - 8, Height - 8);
     Rect(WithAlpha(Accent, 0.8f * Opacity), X, Y, Width, 2);
+    for (const FVector2D Corner : {FVector2D(X, Y), FVector2D(X + Width, Y), FVector2D(X, Y + Height), FVector2D(X + Width, Y + Height)})
+    {
+        Polygon(Corner, 5.0f, 4, 0.0f, WithAlpha(Accent, 0.9f * Opacity));
+    }
     if (bBlock) { Blockers.Add(FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S)); }
 }
 
@@ -148,7 +155,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     const float Lift = bHover ? -1.5f : 0.0f;
     Rect(FLinearColor(0, 0, 0, 0.4f), X + 2, Y + 3, Width, Height);
     const FLinearColor Base = bSelected ? FLinearColor(Accent.R * 0.12f, Accent.G * 0.12f, Accent.B * 0.12f, 0.97f)
-        : bHover ? FLinearColor(0.03f, 0.04f, 0.055f, 0.97f) : FLinearColor(0.01f, 0.014f, 0.02f, 0.94f);
+        : bHover ? FLinearColor(0.05f, 0.035f, 0.025f, 0.97f) : FLinearColor(0.016f, 0.012f, 0.01f, 0.94f);
     Rect(Base, X, Y + Lift, Width, Height);
     Rect(FLinearColor(1, 1, 1, bHover ? 0.07f : 0.035f), X, Y + Lift, Width, Height * 0.45f);
     Frame(WithAlpha(Accent, bSelected ? 0.95f : bHover ? 0.7f : bEnabled ? 0.35f : 0.12f), X, Y + Lift, Width, Height, bSelected ? 2.0f : 1.0f);
@@ -236,7 +243,8 @@ void AExpeditionHUD::DrawHUD()
     float MouseX = -1, MouseY = -1;
     Mouse = Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
 
-    if (View->HasRun()) { DrawWorldOverlays(); }
+    // The tabletop overview has no board: unit bars and labels belong to battles only.
+    if (View->HasRun() && !View->ShowingOverview()) { DrawWorldOverlays(); }
     DrawTopBar();
     if (!View->HasRun()) { DrawTitle(); }
     else
