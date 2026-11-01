@@ -27,6 +27,7 @@ public:
     ECombatCommandType RoleAction() const;
     void SelectPartyIndex(int32 Index);
     void HandleButton(FName Id);
+    EFighterSubclass StartupSubclass() const { return SelectedSubclass; }
     bool ShowingHelp() const { return bShowHelp; }
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
@@ -53,6 +54,10 @@ private:
     bool bShowHelp = false;
     bool bDragging = false;
     float DragX = 0.0f;
+    EFighterSubclass SelectedSubclass = EFighterSubclass::Champion;
+    void Champion();
+    void BattleMaster();
+    void ManeuverMode();
     void Click();
     void AttackMode();
     void RoleMode();

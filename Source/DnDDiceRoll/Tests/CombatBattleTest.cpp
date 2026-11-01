@@ -286,4 +286,33 @@ bool FCombatPresentationFactsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Fixture seeds include hits"), Hits > 0);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubclassForecastTest, "Project.Expedition.Combat.SubclassForecastAndBudget",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSubclassForecastTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Layout = FCombatBattle::TutorialEncounter();
+    Layout.BlockedCells.Reset(); Layout.Combatants.SetNum(2);
+    auto& Fighter = Layout.Combatants[0]; auto& Enemy = Layout.Combatants[1];
+    Fighter.FighterSubclass = EFighterSubclass::Champion; Fighter.InitiativeBonus = 30;
+    Enemy.Side = ECombatSide::Enemy; Enemy.AdventurerRole = EAdventurerRole::None;
+    Enemy.Cell = {2,1}; Enemy.ArmorClass = 40;
+    FCombatBattle Battle;
+    TestTrue(TEXT("Start Champion"), Battle.Start(Layout, 42, Error));
+    TestEqual(TEXT("Champion 19 and 20 hit even AC40"), Battle.Forecast(1,ECombatCommandType::Attack,2).HitChancePercent,10);
+    Fighter.FighterSubclass = EFighterSubclass::BattleMaster; Fighter.ManeuverUses = 2;
+    Enemy.ArmorClass = 12;
+    TestTrue(TEXT("Start Battle Master"), Battle.Start(Layout,42,Error));
+    const auto Forecast = Battle.Forecast(1,ECombatCommandType::PrecisionStrike,2);
+    TestTrue(TEXT("Maneuver is targetable"), Forecast.bValid);
+    TestEqual(TEXT("Precision damage minimum"), Forecast.MinAmount,6);
+    const auto Result = Battle.Submit({ECombatCommandType::PrecisionStrike,1,{},2});
+    TestTrue(TEXT("Maneuver accepted"),Result.bAccepted);
+    TestEqual(TEXT("Precision reports combined attack modifier"),Result.AttackBonus,7);
+    TestEqual(TEXT("One use spent even on miss"),Battle.Find(1)->ManeuverUses,1);
+    const auto Before = Battle.Snapshot();
+    TestFalse(TEXT("Spent Action rejects repeated maneuver"),Battle.Submit({ECombatCommandType::PrecisionStrike,1,{},2}).bAccepted);
+    TestEqual(TEXT("Rejected maneuver preserves RNG"),Battle.Snapshot().RandomState,Before.RandomState);
+    return !HasAnyErrors();
+}
 #endif

@@ -61,6 +61,7 @@ FString ActionName(ECombatCommandType Action)
     case ECombatCommandType::Potion: return TEXT("Healing Potion");
     case ECombatCommandType::Move: return TEXT("Move");
     case ECombatCommandType::EndTurn: return TEXT("End Turn");
+    case ECombatCommandType::PrecisionStrike: return TEXT("Precision Strike");
     default: return TEXT("Attack");
     }
 }
@@ -181,6 +182,7 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
     switch (Result.Type)
     {
     case ECombatCommandType::Move: AddMove(Result); break;
+    case ECombatCommandType::PrecisionStrike:
     case ECombatCommandType::Attack:
     case ECombatCommandType::MagicMissile: AddAttack(Result, After); break;
     case ECombatCommandType::SecondWind:

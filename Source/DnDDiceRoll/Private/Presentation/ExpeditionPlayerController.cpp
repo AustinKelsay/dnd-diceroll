@@ -45,6 +45,9 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
     Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
+    Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
+    Bind(EKeys::J, &AExpeditionPlayerController::Champion);
+    Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
     Bind(EKeys::F, &AExpeditionPlayerController::RoleMode);
     Bind(EKeys::R, &AExpeditionPlayerController::RescueMode);
     Bind(EKeys::P, &AExpeditionPlayerController::PotionMode);
@@ -202,7 +205,10 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     if (!IsValid(BattleView)) { return; }
     const FString Name = Id.ToString();
     if (Name.StartsWith(TEXT("Party"))) { SelectPartyIndex(FCString::Atoi(*Name.RightChop(5))); BattleView->PlayCue(EExpeditionCue::Click); return; }
-    if (Name == TEXT("Save")) { Save(); }
+    if (Name == TEXT("Champion")) { Champion(); }
+    else if (Name == TEXT("BattleMaster")) { BattleMaster(); }
+    else if (Name == TEXT("Maneuver")) { ManeuverMode(); }
+    else if (Name == TEXT("Save")) { Save(); }
     else if (Name == TEXT("Resume")) { Resume(); }
     else if (Name == TEXT("Records")) { History(); }
     else if (Name == TEXT("Speed")) { Speed(); }
@@ -258,6 +264,7 @@ ECombatCommandType AExpeditionPlayerController::RoleAction() const
 
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 {
+    if (!AllowsGameplayInput()) { return; }
     SelectedAction = Action;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
 }
@@ -265,6 +272,9 @@ bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
     return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords();
 }
+void AExpeditionPlayerController::Champion() { if (AllowsGameplayInput() && !BattleView->HasRun()) { SelectedSubclass = EFighterSubclass::Champion; } }
+void AExpeditionPlayerController::BattleMaster() { if (AllowsGameplayInput() && !BattleView->HasRun()) { SelectedSubclass = EFighterSubclass::BattleMaster; } }
+void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(ECombatCommandType::PrecisionStrike); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
@@ -274,7 +284,7 @@ void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { Ba
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
-void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(); } }
+void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(SelectedSubclass); } }
 void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume() { if (AllowsGameplayInput()) { BattleView->Resume(); } }
 void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->ToggleRecords(); } }

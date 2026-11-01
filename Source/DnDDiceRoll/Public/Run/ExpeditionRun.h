@@ -61,14 +61,14 @@ struct DNDDICEROLL_API FExpeditionSnapshot
     UPROPERTY() FCombatSnapshot Battle;
 };
 
-/** Authoritative three-combat expedition. Queries never roll; rejected commands preserve
+/** Authoritative five-combat expedition. Queries never roll; rejected commands preserve
  * the complete snapshot. There is no mutable battle access or caller-selected layout. */
 class DNDDICEROLL_API FExpeditionRun
 {
 public:
     /** Combats in one expedition; winning the last recovers the artifact. */
-    static constexpr int32 EncounterCount = 3;
-    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString());
+    static constexpr int32 EncounterCount = 5;
+    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), EFighterSubclass Subclass = EFighterSubclass::Champion);
     /** Validates a detached candidate in full, then installs without rolling. */
     bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);

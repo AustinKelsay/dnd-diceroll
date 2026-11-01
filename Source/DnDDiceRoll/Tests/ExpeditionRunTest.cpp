@@ -32,16 +32,16 @@ bool FRunRouteTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Actual enemy count matches preview"), Run.Battle().Snapshot().Encounter.Combatants.Num(), 4 + Route.EnemyCount);
     return !HasAnyErrors();
 }
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FThreeEncounterRunTest, "Project.Expedition.Run.ThreeVictoriesRecoverArtifact",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFiveEncounterRunTest, "Project.Expedition.Run.FiveVictoriesRecoverArtifact",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
+bool FFiveEncounterRunTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
     Run.NewRun(42, Error, TEXT("seeded-fixture"));
-    for (int32 Encounter = 0; Encounter < 3; ++Encounter)
+    for (int32 Encounter = 0; Encounter < 5; ++Encounter)
     {
-        if (Encounter == 2)
+        if (Encounter == 4)
         {
             TestEqual(TEXT("Finale metadata offers no consumable loot"), Run.Progress().Offers[0].RewardPotions, 0);
             TestTrue(TEXT("Finale preview discloses artifact instead of loot"), Run.Progress().Offers[0].Preview.Contains(TEXT("no loot")));
@@ -49,17 +49,24 @@ bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Choose guarded opportunity"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
         if (!TestTrue(TEXT("Public play completes within finite turn budget"), FinishCombat(Run))) { return false; }
         TestEqual(TEXT("Exactly one completion per victory"), Run.Progress().EncountersCompleted, Encounter + 1);
-        if (Encounter < 2)
+        for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { TestEqual(TEXT("Survivor milestone level"), Unit.Level, FMath::Min(5, Encounter + 2)); }
+        }
+        if (Encounter < 4)
         {
             if (!TestTrue(TEXT("Victory requires explicit reward"), Run.Progress().Phase == EExpeditionPhase::Reward)) { return false; }
             TestTrue(TEXT("Reward conscious fighter"), Run.ClaimReward(1, Error));
+            FExpeditionRun Restored;
+            TestTrue(TEXT("All four awards round-trip including capped gear"), Restored.Restore(Run.Snapshot(), Error));
+            TestEqual(TEXT("Gear stays capped"), Run.Battle().Find(1)->WeaponRank, FMath::Min(3, Encounter + 1));
             if (Encounter == 0) { TestTrue(TEXT("One camp opportunity"), Run.Progress().Phase == EExpeditionPhase::Recovery); TestTrue(TEXT("Take explicit recovery"), Run.Recover(true, Error)); }
         }
     }
-    TestTrue(TEXT("Artifact and terminal victory after exactly three encounters"), Run.Progress().Phase == EExpeditionPhase::Victory && Run.Progress().bArtifactRecovered);
-    TestEqual(TEXT("Three selected encounters retained"), Run.Progress().History.Num(), 3);
+    TestTrue(TEXT("Artifact and terminal victory after exactly five encounters"), Run.Progress().Phase == EExpeditionPhase::Victory && Run.Progress().bArtifactRecovered);
+    TestEqual(TEXT("Five selected encounters retained"), Run.Progress().History.Num(), 5);
     const auto Won = Run.Snapshot();
-    TestFalse(TEXT("No fourth encounter"), Run.ChooseRoute(7, Error));
+    TestFalse(TEXT("No sixth encounter"), Run.ChooseRoute(11, Error));
     TestFalse(TEXT("No terminal loot"), Run.ClaimReward(1, Error));
     TestFalse(TEXT("No terminal recovery"), Run.Recover(true, Error));
     Run.Submit({ECombatCommandType::EndTurn,1}); Run.PlayEnemyTurn();
@@ -132,7 +139,7 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("AI/player play finite on generated terrain"), FinishCombat(Run));
                 TestTrue(TEXT("Replay finite"), FinishCombat(Replay));
                 TestTrue(TEXT("Same seed and commands reproduce full combat RNG/results"), SameRun(Run.Snapshot(), Replay.Snapshot()));
-                for (int32 Next = 1; Next < 3 && Run.Progress().Phase == EExpeditionPhase::Reward; ++Next)
+                for (int32 Next = 1; Next < 5 && Run.Progress().Phase == EExpeditionPhase::Reward; ++Next)
                 {
                     int32 Recipient = INDEX_NONE;
                     for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
@@ -146,7 +153,7 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
                     TestTrue(TEXT("Whole-run replay finite"), FinishCombat(Replay));
                     TestTrue(TEXT("Full seeded command sequence preserves every value and both streams"), SameRun(Run.Snapshot(), Replay.Snapshot()));
                 }
-                TestTrue(TEXT("Whole expedition terminates within three combats"), Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat);
+                TestTrue(TEXT("Whole expedition terminates within five combats"), Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat);
             }
         }
     }

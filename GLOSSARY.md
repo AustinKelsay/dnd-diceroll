@@ -29,3 +29,9 @@ _Avoid_: pawn when discussing game rules
 **Seed**: The reproducible input for an expedition's generated opportunities and random outcomes; separate expeditions may share a seed.
 
 **Checkpoint**: The latest committed state of the current expedition, including resolved actions and permanent losses, from which play resumes.
+
+**Milestone level**: An adventurer's earned tier within the current expedition, retained until that expedition ends.
+
+**Fighter subclass**: The Fighter's chosen combat specialization, fixed for an expedition.
+
+**Precision Strike**: A Battle Master attack that spends a limited maneuver use for improved accuracy and damage.

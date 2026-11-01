@@ -21,17 +21,17 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 1;
+    UPROPERTY() int32 Version = 2;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
 
-/** Local v1 file adapter. Strict decoding + domain validation; failed reads/writes never
+/** Local v2 schema file adapter. Strict decoding + domain validation; failed reads/writes never
  * change output/live state or replace the prior file. Single desktop player only. */
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    static constexpr int32 Version = 1;
+    static constexpr int32 Version = 2;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);
@@ -53,7 +53,7 @@ public:
     const FExpeditionRun& Run() const { return Current; }
     /** Never replaces an unfinished expedition. At startup only, an unreadable checkpoint
      * is preserved beside the save before an explicit new run. Optional output identifies it. */
-    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr);
+    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr, EFighterSubclass Subclass = EFighterSubclass::Champion);
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);
     bool Recover(bool bTake, FString& Error);

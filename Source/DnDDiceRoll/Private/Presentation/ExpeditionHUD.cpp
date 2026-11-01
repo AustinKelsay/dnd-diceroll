@@ -484,7 +484,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Text(Unit.Role.Left(1), Portrait.X, Portrait.Y - 13, Ink, 1.1f, EAlign::Center);
     Text(FString::FromInt(Index + 1), X + 12, Y + 54, Muted, 0.6f);
     Text(Unit.Name, X + 64, Y + 8, Life == ECombatLife::Dead ? Muted : Color, 0.98f);
-    Text(Unit.Role, X + Width - 12, Y + 11, Muted, 0.68f, EAlign::Right);
+    Text(FString::Printf(TEXT("Lv%d %s%s"), Unit.Level, *Unit.Role, Unit.FighterSubclass == EFighterSubclass::Champion ? TEXT(" / Champion") : Unit.FighterSubclass == EFighterSubclass::BattleMaster ? TEXT(" / Battle Master") : TEXT("")), X + 64, Y + 22, Muted, 0.52f, EAlign::Left, 128);
     if (Life == ECombatLife::Dead)
     {
         Text(TEXT("Fallen  ·  lost for this expedition"), X + 64, Y + 34, FLinearColor(0.75f, 0.45f, 0.4f), 0.72f);
@@ -574,6 +574,10 @@ void AExpeditionHUD::DrawActionBar()
     Chip(TEXT("Action"), Snapshot.bActionAvailable, ChipLeft + 110);
     Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable && Active->AdventurerRole == EAdventurerRole::Fighter, ChipLeft + 200);
 
+    if (Active->FighterSubclass == EFighterSubclass::BattleMaster)
+    {
+        Button(TEXT("Maneuver"), TEXT("Precision Strike"), FString::Printf(TEXT("M  +2 hit/damage, %d left"), Active->ManeuverUses), W * 0.5f - 125, Y - 82, 250, 44, !Rules.LegalTargets(Id, ECombatCommandType::PrecisionStrike).IsEmpty(), Player->Action() == ECombatCommandType::PrecisionStrike, Gold);
+    }
     const ECombatCommandType Role = Player->RoleAction();
     const bool bRogue = Active->AdventurerRole == EAdventurerRole::Rogue;
     const float Width = 128, Gap = 6, Height = 54;
@@ -732,15 +736,17 @@ void AExpeditionHUD::DrawBanner()
 
 void AExpeditionHUD::DrawTitle()
 {
-    const float Width = 560, Height = 330;
+    const float Width = 560, Height = 450;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
     Panel(X, Y, Width, Height, Gold, 0.94f);
     Text(TEXT("EXPEDITION"), W * 0.5f, Y + 26, Gold, 2.6f, EAlign::Center);
     Text(TEXT("Recover the Waystone"), W * 0.5f, Y + 96, Parchment, 1.15f, EAlign::Center);
-    Text(TEXT("Four adventurers. Three battles. Every death is permanent."), W * 0.5f, Y + 130, Muted, 0.78f, EAlign::Center);
-    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), W * 0.5f - 230, Y + 176, 220, 58, true, false, Gold);
-    Button(TEXT("Resume"), TEXT("Continue"), TEXT("O  ·  resume your saved run"), W * 0.5f + 10, Y + 176, 220, 58, true, false, Sky);
-    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), W * 0.5f - 110, Y + 248, 220, 46, true, false, Muted);
+    Text(TEXT("Four adventurers. Five battles. Every death is permanent."), W * 0.5f, Y + 130, Muted, 0.78f, EAlign::Center);
+    Button(TEXT("Champion"), TEXT("Champion: crit 19-20"), TEXT("J"), W * 0.5f - 250, Y + 176, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::Champion, Gold);
+    Button(TEXT("BattleMaster"), TEXT("Battle Master: 2 strikes"), TEXT("B  +2 hit / damage"), W * 0.5f + 10, Y + 176, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::BattleMaster, Sky);
+    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), W * 0.5f - 230, Y + 240, 220, 58, true, false, Gold);
+    Button(TEXT("Resume"), TEXT("Continue"), TEXT("O  ·  resume your saved run"), W * 0.5f + 10, Y + 240, 220, 58, true, false, Sky);
+    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), W * 0.5f - 110, Y + 312, 220, 46, true, false, Muted);
     const TArray<FString>& Messages = View->Messages();
     if (!Messages.IsEmpty()) { Text(Messages.Last(), W * 0.5f, Y + Height + 14, Messages.Last().StartsWith(TEXT("Cannot")) ? Danger : Muted, 0.72f, EAlign::Center, W - 60); }
 }
@@ -792,7 +798,7 @@ void AExpeditionHUD::DrawReward()
     const float Width = 520, Height = 210;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
     Panel(X, Y, Width, Height, Gold, 0.95f);
-    Text(TEXT("SPOILS OF VICTORY"), W * 0.5f, Y + 16, Gold, 1.35f, EAlign::Center);
+    Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
     const int32 Potions = Run.History.IsEmpty() ? 0 : Run.History.Last().Route.RewardPotions;
     Text(FString::Printf(TEXT("+1 gear rank (+1 damage)   ·   +%d healing potion%s"), Potions, Potions == 1 ? TEXT("") : TEXT("s")), W * 0.5f, Y + 58, Parchment, 0.86f, EAlign::Center);
     TArray<FString> Lost;
@@ -830,11 +836,11 @@ void AExpeditionHUD::DrawEnding()
     const FExpeditionProgress& Run = View->Progress();
     const bool bWon = Run.Phase == EExpeditionPhase::Victory;
     const FLinearColor Accent = bWon ? Gold : Danger;
-    const float Width = 620, Height = 330;
+    const float Width = 620, Height = 450;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
     Panel(X, Y, Width, Height, Accent, 0.95f);
     Text(bWon ? TEXT("THE WAYSTONE IS RECOVERED") : TEXT("THE EXPEDITION IS LOST"), W * 0.5f, Y + 18, Accent, 1.5f, EAlign::Center, Width - 40);
-    Text(bWon ? TEXT("Three battles won. The survivors carry it home.") : TEXT("No one is left to carry on."), W * 0.5f, Y + 62, Muted, 0.8f, EAlign::Center);
+    Text(bWon ? TEXT("Five battles won. The survivors carry it home.") : TEXT("No one is left to carry on."), W * 0.5f, Y + 62, Muted, 0.8f, EAlign::Center);
     float Row = Y + 96;
     for (int32 Index = 0; Index < Run.History.Num(); ++Index)
     {
@@ -896,7 +902,7 @@ void AExpeditionHUD::DrawHelp()
     Panel(X, Y, Width, Height, Sky, 0.98f);
     Text(TEXT("HOW TO PLAY"), X + 24, Y + 18, Sky, 1.2f);
     const TCHAR* Left[] = {
-        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F  Role ability"),
+        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F  Role ability / M Precision Strike"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
         TEXT("Arrows + Enter  Keyboard cursor")};
     const TCHAR* Right[] = {
