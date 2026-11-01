@@ -160,7 +160,22 @@ bool FExpeditionSave::Write(const FString& Path, const FExpeditionSaveData& Data
     { Error = TEXT("Could not save expedition. Your last checkpoint is retained; this action was not applied."); return false; }
     // Apple platform MoveFile is a same-directory POSIX rename, replacing atomically.
     // Do not use IFileManager::Move, whose replacement can delete the destination first.
-    if (!Files.MoveFile(*Path, *Temporary))
+    bool bCommitted = Files.MoveFile(*Path, *Temporary);
+#if !PLATFORM_APPLE
+    // Windows MoveFile does not replace an existing file: keep the old checkpoint aside, install the new one, restore on failure.
+    if (!bCommitted && Files.FileExists(*Path))
+    {
+        const FString Previous = Path + TEXT(".previous");
+        Files.DeleteFile(*Previous);
+        if (Files.MoveFile(*Previous, *Path))
+        {
+            bCommitted = Files.MoveFile(*Path, *Temporary);
+            if (bCommitted) { Files.DeleteFile(*Previous); }
+            else { Files.MoveFile(*Path, *Previous); }
+        }
+    }
+#endif
+    if (!bCommitted)
     {
         Files.DeleteFile(*Temporary);
         Error = TEXT("Could not commit expedition. Your last checkpoint is retained; this action was not applied."); return false;
