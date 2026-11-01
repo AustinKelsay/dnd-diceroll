@@ -887,13 +887,13 @@ void AExpeditionBattleView::Recover(bool bTake)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
-void AExpeditionBattleView::NewRun()
+void AExpeditionBattleView::NewRun(EFighterSubclass Subclass)
 {
     if (HasRun() && Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat)
     { Record({false, TEXT("Finish this expedition before starting a new run.")}); return; }
     FString Error, PreservedCheckpoint;
     const int32 NextSeed = HasRun() ? static_cast<int32>(static_cast<uint32>(Progress().Seed) + 1u) : 20261030;
-    if (Session.NewRun(NextSeed, Error, FString(), &PreservedCheckpoint))
+    if (Session.NewRun(NextSeed, Error, FString(), &PreservedCheckpoint, Subclass))
     {
         Feedback.Reset();
         if (!PreservedCheckpoint.IsEmpty()) { Record({true, TEXT("The unreadable previous save was preserved. Its run and records could not be loaded.")}); }

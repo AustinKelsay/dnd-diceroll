@@ -181,7 +181,7 @@ bool FStrictMalformedSaveTest::RunTest(const FString& Parameters)
         FString Text; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Text)); Malformed.Add(Text);
     };
     AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version+1);});
-    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // small-grid saves predate version 2
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // version 2 large-grid saves predate levels/subclasses
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("Offers"))[0]->AsObject()->SetStringField(TEXT("Preview"),TEXT("No enemies, no cost"));});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetNumberField(TEXT("MovementLeft"),99);});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->SetObjectField(TEXT("Battle"),MakeShared<FJsonObject>());});
@@ -312,15 +312,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnreadableStartupRecoveryTest, "Project.Expedi
 bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run; FString Error, Json;
-    Run.NewRun(42, Error, TEXT("future-version"));
+    Run.NewRun(42, Error, TEXT("prior-version"));
     FExpeditionSaveData Data; Data.Current = Run.Snapshot();
     FExpeditionSave::Encode(Data, Json, Error);
     TSharedPtr<FJsonObject> Object;
     FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
-    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version + 1);
-    FString Future;
-    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Future));
-    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Future})
+    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version - 1);
+    FString Incompatible;
+    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Incompatible));
+    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible})
     {
         FSaveFixture Fixture;
         IFileManager::Get().MakeDirectory(*Fixture.Directory, true);
@@ -342,7 +342,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     }
     FSaveFixture Failed;
     IFileManager::Get().MakeDirectory(*Failed.Directory, true);
-    FFileHelper::SaveStringToFile(Future, *Failed.Path);
+    FFileHelper::SaveStringToFile(Incompatible, *Failed.Path);
     IFileManager::Get().MakeDirectory(*(Failed.Path + TEXT(".pending")), true);
     FExpeditionSession FailedSession(Failed.Path);
     FString PreservedPath, PreservedBytes;
@@ -350,7 +350,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Failed recovery leaves startup state"), FailedSession.HasRun());
     TestTrue(TEXT("Failure reports that original was preserved"), Error.Contains(TEXT("preserved")));
     TestTrue(TEXT("Original still readable at reported path"), FFileHelper::LoadFileToString(PreservedBytes, *PreservedPath));
-    TestEqual(TEXT("Failed replacement cannot destroy original"), PreservedBytes, Future);
+    TestEqual(TEXT("Failed replacement cannot destroy original"), PreservedBytes, Incompatible);
     return !HasAnyErrors();
 }
 
@@ -369,11 +369,61 @@ bool FPersistLostSurvivorTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Resumed survivors finish the same encounter"),ExpeditionTestSupport::FinishCombat(Run) && ExpeditionTestSupport::FinishCombat(Restored));
     TestTrue(TEXT("Full survivor continuation preserves outcomes/RNG"),SameSnapshot(Run.Snapshot(),Restored.Snapshot()));
     if(!TestTrue(TEXT("Survivor victory after permanent loss"),Run.Progress().Phase==EExpeditionPhase::Reward && Run.Battle().Find(1)->Life==ECombatLife::Dead)){return false;}
+    TestEqual(TEXT("Dead fighter retains death-level"),Run.Battle().Find(1)->Level,1);
     int32 Recipient=INDEX_NONE;for(const auto& U:Run.Battle().Snapshot().Encounter.Combatants){if(U.Side==ECombatSide::Party && U.Life==ECombatLife::Conscious){Recipient=U.Id;break;}}
     Run.ClaimReward(Recipient,Error);TestTrue(TEXT("Reward exact"),Roundtrip(Run,Restored,Error));
     Run.Recover(true,Error);TestTrue(TEXT("Camp exact"),Roundtrip(Run,Restored,Error));
     Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);TestTrue(TEXT("Next encounter exact"),Roundtrip(Run,Restored,Error));
     TestTrue(TEXT("Dead stable identity remains lost after serialized camp and route"),Restored.Battle().Find(1)->HP==0 && Restored.Battle().Find(1)->Life==ECombatLife::Dead && !Restored.Battle().Snapshot().TurnOrder.Contains(1));
     return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressionSessionTest, "Project.Expedition.Persistence.SubclassAndMilestoneCheckpoint",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FProgressionSessionTest::RunTest(const FString& Parameters)
+{
+    const FString Path = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), FGuid::NewGuid().ToString(), TEXT("current-v1.json"));
+    FExpeditionSession Session(Path), Resumed(Path); FString Error;
+    TestTrue(TEXT("Atomic new run selects Battle Master"), Session.NewRun(42,Error,TEXT("bm-checkpoint"),nullptr,EFighterSubclass::BattleMaster));
+    TestTrue(TEXT("Resume selected subclass"),Resumed.Resume(Error));
+    TestTrue(TEXT("Subclass retained"),Resumed.Run().Battle().Find(1)->FighterSubclass==EFighterSubclass::BattleMaster);
+    TestEqual(TEXT("Initial maneuver budget"),Resumed.Run().Battle().Find(1)->ManeuverUses,2);
+    TestFalse(TEXT("Active run cannot respec through NewRun"),Resumed.NewRun(43,Error,TEXT("respec"),nullptr,EFighterSubclass::Champion));
+    auto Invalid = Resumed.Run().Snapshot(); Invalid.Battle.Encounter.Combatants[0].Level=2;
+    FExpeditionRun Candidate;
+    TestFalse(TEXT("Unearned level rejected"),Candidate.Restore(Invalid,Error));
+    Invalid=Resumed.Run().Snapshot(); Invalid.Battle.Encounter.Combatants[1].FighterSubclass=EFighterSubclass::Champion;
+    TestFalse(TEXT("Subclass on another role rejected"),Candidate.Restore(Invalid,Error));
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMilestoneFailureTest, "Project.Expedition.Persistence.FailedMilestoneIsAtomic",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FMilestoneFailureTest::RunTest(const FString& Parameters)
+{
+    FSaveFixture Fixture; FExpeditionSession Session(Fixture.Path), Disk(Fixture.Path); FString Error;
+    Session.NewRun(42,Error); Session.ChooseRoute(Session.Run().Progress().Offers[0].Id,Error);
+    for (int32 Step=0; Step<1000 && Session.Run().Progress().Phase==EExpeditionPhase::Combat; ++Step)
+    {
+        const bool bEnemy=Session.Run().Battle().Find(Session.Run().Battle().ActiveId())->Side==ECombatSide::Enemy;
+        const auto Command=NextPartyCommand(Session.Run(),true);
+        auto Predicted=Session.Run();
+        if(bEnemy){Predicted.PlayEnemyTurn();}else{Predicted.Submit(Command);}
+        if(Predicted.Progress().Phase==EExpeditionPhase::Reward)
+        {
+            const auto Before=Session.Run().Snapshot();
+            auto& Files=FPlatformFileManager::Get().GetPlatformFile();
+            Files.CreateDirectory(*(Fixture.Path+TEXT(".pending")));
+            if(bEnemy){Session.PlayEnemyTurn();}else{TestFalse(TEXT("Failed milestone rejects finishing action"),Session.Submit(Command).bAccepted);}
+            TestTrue(TEXT("Failed milestone preserves levels deaths and RNG"),SameSnapshot(Before,Session.Run().Snapshot()));
+            TestTrue(TEXT("Prior checkpoint readable"),Disk.Resume(Error));
+            TestTrue(TEXT("Disk preserves pre-milestone state"),SameSnapshot(Before,Disk.Run().Snapshot()));
+            Files.DeleteDirectory(*(Fixture.Path+TEXT(".pending")));
+            if(bEnemy){Session.PlayEnemyTurn();}else{TestTrue(TEXT("Finishing action commits after recovery"),Session.Submit(Command).bAccepted);}
+            TestEqual(TEXT("One milestone committed"),Session.Run().Battle().Find(1)->Level,2);
+            TestTrue(TEXT("Committed milestone matches prediction"),SameSnapshot(Predicted.Snapshot(),Session.Run().Snapshot()));
+            return !HasAnyErrors();
+        }
+        if(bEnemy){Session.PlayEnemyTurn();}else{Session.Submit(Command);}
+    }
+    AddError(TEXT("Policy did not reach first milestone")); return false;
 }
 #endif

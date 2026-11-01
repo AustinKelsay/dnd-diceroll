@@ -88,7 +88,7 @@ public:
     void ChooseRoute(int32 Index);
     void ClaimReward(int32 RecipientId);
     void Recover(bool bTake);
-    void NewRun();
+    void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
     void Save();
     void Resume();
     void ToggleRecords();

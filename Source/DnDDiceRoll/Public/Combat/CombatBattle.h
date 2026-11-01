@@ -8,9 +8,11 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike };
 UENUM()
 enum class EAdventurerRole : uint8 { None, Fighter, Rogue, Cleric, Wizard };
+UENUM()
+enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 
@@ -29,6 +31,9 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 SpellSlots = 0;
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;
+    UPROPERTY() int32 Level = 1;
+    UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
+    UPROPERTY() int32 ManeuverUses = 0;
     UPROPERTY() bool bSneakWeapon = false;
     UPROPERTY() ECombatSide Side = ECombatSide::Party;
     UPROPERTY() FIntPoint Cell = FIntPoint::ZeroValue;
@@ -154,6 +159,7 @@ public:
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;
+    friend class FExpeditionRun;
     FCombatSnapshot State;
     bool bStarted = false;
     /** Set only while resolving an effect so its dice can be reported. */

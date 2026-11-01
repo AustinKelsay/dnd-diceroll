@@ -4,13 +4,13 @@ The approved game is a single-player 3D tactical roguelike. One player controls 
 
 ## Approved product decisions
 
-- A campaign is one expedition/run: one straightforward objective, three combat encounters including a finale, route choices, and one recovery opportunity.
+- A campaign is one expedition/run: one straightforward objective, five combat encounters including a finale, route choices, and one recovery opportunity.
 - The starting party contains a fighter, rogue, cleric, and wizard. Identities, health, resources, equipment, and deaths persist within the run.
 - Zero health means downed with a limited rescue opportunity. Actual death is permanent; survivors continue. A full party wipe ends the run. No replacement recruitment in V1.
 - A new run starts fresh. Records and player knowledge persist, but combat power does not.
 - Rotatable overhead camera, direct party selection, tactical grid, readable movement/target/action feedback.
 - Generation uses world/run state and previous choices. V1 continuity is concrete encounter outcomes, routes, resources, and survivors, rather than a large narrative simulation.
-- Initial progression is equipment and consumables. Character leveling, character creation, multiplayer, broad lore systems, and full tabletop coverage are outside V1.
+- Progression includes equipment, consumables and survivor milestone levels 1–5 (issue #28). Broad character leveling, character creation, multiplayer, broad lore systems, and full tabletop coverage are outside V1.
 - Save/resume must preserve the current expedition, including during combat, without restoring dead characters or rerolling previously resolved actions.
 
 ## Engineering direction
