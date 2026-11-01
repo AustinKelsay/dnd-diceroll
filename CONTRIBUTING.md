@@ -1,6 +1,8 @@
 # Build dnd-diceroll together
 
-Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent uses Matt Pocock's skills directly, following [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
+Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent follows [the contribution workflow](docs/agents/workflow.md), using Matt Pocock's skills when installed; you decide what you want to build, and a maintainer approves changes to the shared game.
+
+To install those skills, use `/plugin install mattpocock-skills` in Claude Code or `npx skills@latest add mattpocock/skills` for other agents, and record the installed revision in your run notes. Do not run `/setup-matt-pocock-skills` in this repository: the tracker, labels, and skill locations are already configured, and the workflow works without the skills installed.
 
 Useful prompts:
 
@@ -14,7 +16,7 @@ Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/un
 
 ## Join this game
 
-Accept access to the private `AustinKelsay/dnd-diceroll` repository. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
+Accept the collaborator invitation to the public `AustinKelsay/dnd-diceroll` repository; pushing a feature branch needs write access, and the checks expect `origin` to be this repository rather than a fork. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
 
 For local Unreal development, the validated target is **Apple Silicon macOS**, the exact engine build in [tools/versions.json](tools/versions.json), Xcode/Metal, Git LFS, and Python 3.11+. Install the engine through Epic and use `UE_ROOT` for a different installation location. Other hosts can contribute suitable docs, planning, source, and review work, but need supported-machine verification for Unreal claims.
 
@@ -50,3 +52,9 @@ On a supported Mac, finish the first Unreal baseline using `build`, `bootstrap`,
 7. A maintainer integrates the PR. Opening a PR alone does not authorize merging or promotion to `main`; any delegated merge authority must be recorded explicitly.
 
 Keep questions about product intent and access understandable. Let the agent handle routine engineering within approved scope. A larger feature uses [the run template](docs/templates/feature-run.md); a small ticket can resume from its issue and PR.
+
+## Your first contribution
+
+`staging` and `main` are protected: changes arrive through a PR whose repository checks pass and which carries one approving review, and the maintainer merges. For your first PRs, the maintainer acts as the Spec reviewer; your agent still arranges an independent Standards review in a fresh session. Ask for a ticket labeled `good first issue` or `ready-for-agent` with no assignee, or file an idea with the issue template and let the maintainer scope it.
+
+If your machine is not a supported Mac with the pinned engine, choose documentation, planning, source, or review work, and ask the maintainer to run Unreal verification for claims your PR makes. Claude Code users get a repository hook that blocks destructive Git commands; other agents rely on the workflow's rules, so inspect any `reset`, `clean`, or force-push your agent proposes before approving it.
