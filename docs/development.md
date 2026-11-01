@@ -8,7 +8,7 @@ Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, 
 
 ## Commands
 
-Use Python **3.11+**, with no third-party dependencies. On this Mac `/opt/homebrew/bin/python3` selects the validated Homebrew interpreter; some shells resolve `python3` to Apple's 3.9. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
+Use Python **3.11+**, with no third-party dependencies. On the supported Mac host `/opt/homebrew/bin/python3` selects the validated Homebrew interpreter; some shells resolve `python3` to Apple's 3.9. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
 
 | Command (`python3 tools/dev.py …`) | Purpose |
 | --- | --- |
@@ -30,7 +30,7 @@ Use Python **3.11+**, with no third-party dependencies. On this Mac `/opt/homebr
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Mac Development app, then verify headless startup to the default sandbox |
 
-Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor` on this Mac. Live Coding is Win64 x64 in the installed engine; do not use it here.
+Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor` on the supported Mac host. Live Coding is Win64 x64 in the installed engine; do not use it on the Mac.
 
 The launcher refuses missing/stale build evidence and an occupied MCP port. A successful build records fingerprints of source, the project descriptor, module manifest, compiled binary, target, and pinned engine. Launch verifies that receipt rather than relying on timestamps; source deletions and no-action builds are handled correctly. It waits for readiness by default; `editor --no-wait` explicitly skips readiness. MCP auto-start is disabled so headless automation cannot claim the editor endpoint. Only the controlled launcher passes `-ModelContextProtocolStartServer`.
 
