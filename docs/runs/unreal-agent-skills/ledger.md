@@ -1,6 +1,6 @@
 # Unreal agent skills and recovery
 
-- Issue/spec and approved acceptance: [#10](https://github.com/AustinKelsay/expedition-rpg/issues/10).
+- Issue/spec and approved acceptance: [#10](https://github.com/AustinKelsay/dnd-diceroll/issues/10).
 - Owner: this full Codex implementation session; human owner Austin. Branch `feature/unreal-agent-skills`, fixed baseline `a6aeeb47ffa50e97dfce969fd34c911d2f30739a` (`origin/staging`).
 - Authorization: owner approved the preceding three-part recommendation and asked to investigate adding the optional recovery proxy. This covers scoped implementation, verification, review, commits, and a staging PR. It does not transfer the active game editor or authorize an engine upgrade, new transport, or main promotion.
 - Skill setup: repo contribution workflow already exists; no global skill changes. Initial implementation used Feature Dev and writing-for-agents with the approved scope above. One bounded ticket; tests exercise the new verifier's refusal/readback boundary and the actual engine skill registry.

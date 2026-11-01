@@ -6,7 +6,7 @@ Branch `feature/expedition-polish`, based on `feature/expedition-v1` (PR #6). Th
 
 For the current checkpoint, pause decision and resumption instructions, read [03-checkpoint.md](03-checkpoint.md).
 
-Issue [#26](https://github.com/AustinKelsay/expedition-rpg/issues/26) tracks final verification, independent review and staging integration. The user explicitly granted full-send merge authority for this cleanup. The factory baseline from `origin/main` was integrated at `a6a9b71`, preserving the polish and the new contribution workflow. The final evidence and review ledger are in [02-delivery.md](02-delivery.md).
+Issue [#26](https://github.com/AustinKelsay/dnd-diceroll/issues/26) tracks final verification, independent review and staging integration. The user explicitly granted full-send merge authority for this cleanup. The factory baseline from `origin/main` was integrated at `a6a9b71`, preserving the polish and the new contribution workflow. The final evidence and review ledger are in [02-delivery.md](02-delivery.md).
 
 ## What changed
 

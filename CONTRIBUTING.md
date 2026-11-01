@@ -1,10 +1,10 @@
-# Build Expedition together
+# Build dnd-diceroll together
 
 Bring an idea and an agent that can read files and run commands. Ask it to **read AGENTS.md and onboard you**. The agent uses Matt Pocock's skills directly, following [the contribution workflow](docs/agents/workflow.md); you decide what you want to build, and a maintainer approves changes to the shared game.
 
 Useful prompts:
 
-- “Set up Expedition on this machine and explain anything missing.”
+- “Set up dnd-diceroll on this machine and explain anything missing.”
 - “Check for updates and help me resume my work without losing changes.”
 - “Help me turn this encounter idea into a small, approved feature.”
 - “Find an unclaimed, unblocked ticket I can work on.”
@@ -14,7 +14,7 @@ Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/un
 
 ## Join this game
 
-Accept access to the private `AustinKelsay/expedition-rpg` repository. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
+Accept access to the private `AustinKelsay/dnd-diceroll` repository. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
 
 For local Unreal development, the validated target is **Apple Silicon macOS**, the exact engine build in [tools/versions.json](tools/versions.json), Xcode/Metal, Git LFS, and Python 3.11+. Install the engine through Epic and use `UE_ROOT` for a different installation location. Other hosts can contribute suitable docs, planning, source, and review work, but need supported-machine verification for Unreal claims.
 
@@ -24,8 +24,8 @@ With Git LFS installed, the agent can run:
 
 ```sh
 gh auth status
-git clone --branch staging https://github.com/AustinKelsay/expedition-rpg.git
-cd expedition-rpg
+git clone --branch staging https://github.com/AustinKelsay/dnd-diceroll.git
+cd dnd-diceroll
 git remote -v
 git lfs install --local
 git lfs pull

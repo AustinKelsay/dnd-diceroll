@@ -1,8 +1,11 @@
-# Expedition
+# dnd-diceroll
 
 A party survives a generated expedition by resolving encounters, choosing routes, and managing limited resources.
 
 ## Language
+
+**dnd-diceroll**: The game and its product name. An expedition is one run within the game.
+_Avoid_: Expedition as the game title
 
 **Expedition**: One complete run toward a simple objective, ending in victory or a party wipe.
 _Avoid_: campaign when it implies a larger story system

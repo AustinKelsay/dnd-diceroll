@@ -6,7 +6,7 @@ Project adaptation of the upstream pacing reference. These are design techniques
 
 Mark the intended decision sequence: orient, identify the objective/threat, choose a route or target, commit, observe the consequence. Vary pressure with distance, visibility, enemy placement and bounded resources that already exist in the rules. Alternate learning and tests where scope permits; introducing a mechanic safely can be more readable than adding a tooltip during a lethal surprise.
 
-Expedition's three encounters, route choices, one recovery opportunity and permanent losses are constraints. A generic tension curve does not add another camp, resurrection, resource cache or mid-battle save point. Tune the accepted encounter/route data before proposing new progression mechanics.
+dnd-diceroll's three encounters, route choices, one recovery opportunity and permanent losses are constraints. A generic tension curve does not add another camp, resurrection, resource cache or mid-battle save point. Tune the accepted encounter/route data before proposing new progression mechanics.
 
 ## Traversal and tactics
 
