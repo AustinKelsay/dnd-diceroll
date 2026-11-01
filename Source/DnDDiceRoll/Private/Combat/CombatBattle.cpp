@@ -326,6 +326,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         {
             if (A.Command != Action) { continue; }
             Forecast.Formula = A.Description;
+            Forecast.bDiscreteAmounts = A.Effect == EAbilityEffect::Surge;
             if (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Surge)
             {
                 Forecast.HitChancePercent = 100;
@@ -481,8 +482,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             DiceLog = nullptr;
             int32 Protection = Target->RageTurns > 0 ? 1 : 0;
             for (const auto& U : State.Encounter.Combatants) { if (U.GuardTargetId == Target->Id) { Protection = FMath::Max(Protection, 3); } }
+            Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
             ApplyDamage(*Target, Result.Damage);
-            Result.Damage = FMath::Max(0, Result.Damage - Protection);
+            Result.Damage -= Result.DamagePrevented;
         }
         State.bActionAvailable = false;
         CheckOutcome();
@@ -511,8 +513,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.bHit = true;
             int32 Protection = Target->RageTurns > 0 ? 1 : 0;
             for (const auto& U : State.Encounter.Combatants) { if (U.GuardTargetId == Target->Id) { Protection = FMath::Max(Protection, 3); } }
+            Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
             ApplyDamage(*Target, Result.Damage);
-            Result.Damage = FMath::Max(0, Result.Damage - Protection);
+            Result.Damage -= Result.DamagePrevented;
             Ability = FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), MissileDarts);
         }
         else

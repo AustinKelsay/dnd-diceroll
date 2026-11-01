@@ -140,6 +140,8 @@ struct DNDDICEROLL_API FCombatResult
     /** Damage or healing dice in roll order; the effect is their sum plus EffectModifier. */
     TArray<FDieRoll> EffectDice;
     int32 EffectModifier = 0;
+    /** Committed damage reduction, after dice/modifiers and before the zero floor. */
+    int32 DamagePrevented = 0;
     /** Combatants newly downed or killed by this command, including turn countdowns and battle end. */
     TArray<int32> Downed;
     TArray<int32> Died;
@@ -154,6 +156,8 @@ struct DNDDICEROLL_API FActionForecast
     bool bAttackRoll = false;
     int32 HitChancePercent = 0;
     bool bHealing = false;
+    /** Only the two endpoints can occur (for example Wild Bolt), rather than a dice range. */
+    bool bDiscreteAmounts = false;
     int32 MinAmount = 0;
     int32 MaxAmount = 0;
     bool bSneakAttack = false;

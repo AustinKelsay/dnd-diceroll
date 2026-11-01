@@ -130,8 +130,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
-        Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction);
-        if (const auto* U = Rules.Find(ActorId)) { for (const auto& A : FBuildCatalog::Abilities(*U)) { if (A.Command == SelectedAction) { Highlights.bFriendlyTargets = A.Target != EAbilityTarget::Enemy; } } }
+        Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }

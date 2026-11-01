@@ -1,4 +1,5 @@
 #include "Presentation/ExpeditionPlayback.h"
+#include "Party/BuildCatalog.h"
 
 namespace
 {
@@ -45,10 +46,24 @@ FLinearColor UnitColor(const FCombatantState& Unit)
 {
     return Unit.Side == ECombatSide::Party ? PartyColor(Unit.Id) : FLinearColor(1.0f, 0.42f, 0.32f);
 }
-bool IsFriendlyAction(ECombatCommandType Action)
+bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor)
 {
+    if (Actor)
+    {
+        for (const auto& Ability : FBuildCatalog::Abilities(*Actor))
+        { if (Ability.Command == Action) { return Ability.Target != EAbilityTarget::Enemy; } }
+    }
     return Action == ECombatCommandType::SecondWind || Action == ECombatCommandType::CureWounds ||
         Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion;
+}
+FString ForecastAmount(const FActionForecast& Forecast)
+{
+    if (Forecast.MaxAmount == 0) { return Forecast.Formula; }
+    const TCHAR* Verb = Forecast.bHealing ? TEXT("Heals") : TEXT("Deals");
+    if (Forecast.MinAmount == Forecast.MaxAmount) { return FString::Printf(TEXT("%s %d  (%s)"), Verb, Forecast.MinAmount, *Forecast.Formula); }
+    return Forecast.bDiscreteAmounts
+        ? FString::Printf(TEXT("%s %d or %d  (%s)"), Verb, Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula)
+        : FString::Printf(TEXT("%s %d-%d  (%s)"), Verb, Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula);
 }
 FString ActionName(ECombatCommandType Action)
 {
@@ -372,7 +387,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
             {
                 Dice.Dice.Add({Result.EffectDice[Index].Sides, Result.EffectDice[Index].Value, Dice.Age + 0.05f * Index, FLinearColor(1.0f, 0.55f, 0.45f)});
             }
-            Dice.Detail += FString::Printf(TEXT("   ·   damage %s = %d"), *DiceText(Result.EffectDice, Result.EffectModifier), Result.Damage);
+            const FString Protection = Result.DamagePrevented > 0 ? FString::Printf(TEXT(" - %d protection"), Result.DamagePrevented) : FString();
+            Dice.Detail += FString::Printf(TEXT("   ·   damage %s%s = %d"), *DiceText(Result.EffectDice, Result.EffectModifier), *Protection, Result.Damage);
         }
     }, [=, this](float Alpha)
     {

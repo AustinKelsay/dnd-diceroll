@@ -361,6 +361,33 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAbilityFeedbackTest, "Project.Expedition.Presentation.AbilityFeedback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FAbilityFeedbackTest::RunTest(const FString& Parameters)
+{
+    FActionForecast Heal; Heal.bHealing = true; Heal.MinAmount = 2; Heal.MaxAmount = 11; Heal.Formula = TEXT("d10+1");
+    TestEqual(TEXT("Ordinary healing includes intermediate dice results"), ExpeditionStyle::ForecastAmount(Heal), FString(TEXT("Heals 2-11  (d10+1)")));
+    FActionForecast Attack; Attack.MinAmount = 4; Attack.MaxAmount = 9; Attack.Formula = TEXT("d6+3");
+    TestEqual(TEXT("Ordinary weapon damage is a range"), ExpeditionStyle::ForecastAmount(Attack), FString(TEXT("Deals 4-9  (d6+3)")));
+    FActionForecast Surge; Surge.MinAmount = 4; Surge.MaxAmount = 8; Surge.bDiscreteAmounts = true; Surge.Formula = TEXT("Wild Bolt");
+    TestEqual(TEXT("Wild Bolt has exactly two outcomes"), ExpeditionStyle::ForecastAmount(Surge), FString(TEXT("Deals 4 or 8  (Wild Bolt)")));
+    FCombatantState Totem; FBuildCatalog::Create(TEXT("barbarian.totem-warrior"), 1, TEXT("Protector"), Totem);
+    TestTrue(TEXT("Rage overhead marker is friendly"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special1, &Totem));
+    TestTrue(TEXT("Shelter overhead marker is friendly"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special2, &Totem));
+    FCombatantState Beast; FBuildCatalog::Create(TEXT("barbarian.beast"), 1, TEXT("Claw"), Beast);
+    TestFalse(TEXT("Long Claw overhead marker is hostile"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special2, &Beast));
+    FCombatBattle Battle; FString Error; Battle.Start(FCombatBattle::TutorialEncounter(), 42, Error);
+    const auto Before = Battle.Snapshot(); auto After = Before; After.Encounter.Combatants[0].HP -= 2;
+    FCombatResult Hit; Hit.bAccepted = true; Hit.bHit = true; Hit.Type = ECombatCommandType::Attack;
+    Hit.ActorId = 5; Hit.TargetId = 1; Hit.NaturalRoll = 12; Hit.AttackTotal = 17; Hit.Damage = 2;
+    Hit.EffectDice = {{6, 5}}; Hit.DamagePrevented = 3;
+    FExpeditionPlayback Playback; Playback.Reset(Before); Playback.Enqueue({Hit}, After);
+    for (int32 Frame = 0; Frame < 200 && Playback.IsBusy(); ++Frame) { Playback.Tick(0.01f); }
+    TestTrue(TEXT("Damage equation includes committed protection"), Playback.Tray().Detail.Contains(TEXT("5 - 3 protection = 2")));
+    TestEqual(TEXT("Protected hit playback converges"), Playback.Unit(1)->HP, After.Encounter.Combatants[0].HP);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOrderedSpecialPlaybackTest, "Project.Expedition.Presentation.OrderedSpecialEffects",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FOrderedSpecialPlaybackTest::RunTest(const FString& Parameters)

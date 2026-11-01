@@ -87,13 +87,17 @@ bool FSelectedPartyTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Chosen build"), Run.Battle().Find(I)->BuildId, FString(TEXT("fighter.battle-master")));
     }
     const auto Before = Run.Snapshot();
-    auto Invalid = Party; Invalid.Pop();
-    TestFalse(TEXT("Three slots rejected"), Run.NewRun(42, Invalid, Error));
-    TestTrue(TEXT("Failed construction atomic"), ExpeditionTestSupport::SameRun(Before, Run.Snapshot()));
-    Invalid = Party; Invalid[3].Id = 1;
-    TestFalse(TEXT("Repeated instance identity rejected"), Run.NewRun(42, Invalid, Error));
-    Invalid = Party; Invalid[2].BuildId = TEXT("wizard.champion");
-    TestFalse(TEXT("Invalid build rejected"), Run.NewRun(42, Invalid, Error));
+    TestFalse(TEXT("Active run rejects a valid replacement party"), Run.NewRun(42, Party, Error));
+    TestTrue(TEXT("Active protection is atomic"), ExpeditionTestSupport::SameRun(Before, Run.Snapshot()));
+    auto RejectFresh = [&](const TArray<FPartyBuildSelection>& Invalid, const TCHAR* Label)
+    {
+        FExpeditionRun Fresh; const auto Empty = Fresh.Snapshot();
+        TestFalse(Label, Fresh.NewRun(42, Invalid, Error));
+        TestTrue(TEXT("Invalid party leaves a fresh run unstarted and unchanged"), ExpeditionTestSupport::SameRun(Empty, Fresh.Snapshot()));
+    };
+    auto Invalid = Party; Invalid.Pop(); RejectFresh(Invalid, TEXT("Three slots rejected"));
+    Invalid = Party; Invalid[3].Id = 1; RejectFresh(Invalid, TEXT("Repeated instance identity rejected"));
+    Invalid = Party; Invalid[2].BuildId = TEXT("wizard.champion"); RejectFresh(Invalid, TEXT("Invalid build rejected"));
     FExpeditionRun Restored;
     TestTrue(TEXT("Selected startup restores"), Restored.Restore(Before, Error));
     TestTrue(TEXT("Selected first route"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
@@ -163,6 +167,7 @@ bool FBarbarianTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Path special legal"), Preview.bValid);
         TestEqual(TEXT("Preview never rolls"), Battle.Snapshot().RandomState, RandomBefore);
         TestFalse(TEXT("Special is not healing"), Preview.bHealing);
+        TestEqual(TEXT("Only Wild Bolt has discrete endpoints"), Preview.bDiscreteAmounts, FString(Path) == TEXT("wild-magic"));
         TestEqual(TEXT("Worked minimum"), Preview.MinAmount, Totem ? 0 : Berserker ? 4 : FString(Path) == TEXT("beast") ? 6 : 4);
         TestEqual(TEXT("Worked maximum"), Preview.MaxAmount, Totem ? 0 : Berserker ? 4 : FString(Path) == TEXT("beast") ? 6 : 8);
         if (!Totem)
@@ -213,6 +218,7 @@ bool FBarbarianTest::RunTest(const FString& Parameters)
                 TestEqual(TEXT("Five incoming minus three protection"), P.MinAmount, 2);
                 const auto Hit = Battle.Submit({ECombatCommandType::Attack, 20, {}, 2});
                 TestTrue(TEXT("Worked protected hit"), Hit.bHit);
+                TestEqual(TEXT("Result retains committed protection for playback"), Hit.DamagePrevented, 3);
                 TestEqual(TEXT("Protection changes committed damage"), Hit.Damage, Hit.bCritical ? 3 : 2);
             }
             Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId()});

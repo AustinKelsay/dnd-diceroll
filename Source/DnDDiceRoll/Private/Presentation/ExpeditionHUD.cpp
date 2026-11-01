@@ -322,7 +322,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     // Legal targets get a pulsing marker above their heads.
     if (bCombat && !View->IsPresenting())
     {
-        const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action());
+        const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
         for (int32 Id : Player->Targets())
         {
             FVector2D Point;
@@ -619,9 +619,7 @@ void AExpeditionHUD::DrawForecast()
             Lines.Add({FString::Printf(TEXT("%d%% to hit"), Forecast.HitChancePercent), Chance});
         }
         else if (!Forecast.bHealing && Forecast.MaxAmount > 0) { Lines.Add({TEXT("Never misses"), Safe}); }
-        if (Forecast.MaxAmount == 0) { Lines.Add({Forecast.Formula, Parchment}); }
-        else Lines.Add({Forecast.MinAmount == Forecast.MaxAmount ? FString::Printf(TEXT("%s %d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, *Forecast.Formula)
-            : FString::Printf(TEXT("%s %d or %d  (%s)"), Forecast.bHealing ? TEXT("Heals") : TEXT("Deals"), Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula), Parchment});
+        Lines.Add({ExpeditionStyle::ForecastAmount(Forecast), Parchment});
         if (Forecast.bSneakAttack) { Lines.Add({TEXT("Sneak Attack: an ally is beside them"), Safe}); }
         if (Forecast.bCanDrop) { Lines.Add({Forecast.MaxAmount >= Target->HP ? TEXT("A strong hit can drop them") : TEXT("A critical hit can drop them"), Danger}); }
         if (Forecast.bAttackRoll) { const auto* Actor = Rules.Find(Player->Actor()); const auto* Build = Actor ? FBuildCatalog::Find(Actor->BuildId) : nullptr; Lines.Add({FString::Printf(TEXT("Critical %d-20 doubles damage dice"), Build ? Build->CriticalThreshold : 20), Muted}); }
