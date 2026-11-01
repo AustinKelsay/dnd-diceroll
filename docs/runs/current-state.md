@@ -10,12 +10,13 @@ Updated 2026-11-01 with [issue #46](https://github.com/AustinKelsay/dnd-diceroll
 - Five encounters and survivor levels 1–5 (PR #31, issue #28, [ledger](level-five/ledger.md)). This is the latest delivery record.
 - dnd-diceroll naming across game and workflow (PR #34, issue #33).
 - `main` promoted from `staging` in PR #36.
+- Dark-fantasy theme (PR #97, issue #38): our own Blender worlds, cast and candlelit tabletop under `/Game/DnDDiceRoll/Theme`, with sources and records under `Art/`. Provenance and the import recipe are in [assets](../assets.md); `-ExpeditionPrimitives` restores the primitive look.
 
 ## Open
 
 - Issue #32: one-time rendering assertion in scene culling, accepted risk.
 - Issue #35: intermittent packaged startup crash during macOS launch.
-- Issues #37–#45: full roster with selectable parties, and issue #38: dark-fantasy theme. Both are claimed by the repository owner on their own feature branches; coordinate before touching party, roster, or theme assets.
+- Issues #37–#45: full roster with selectable parties, claimed by the repository owner on its own feature branch; coordinate before touching party or roster work. New characters need themed meshes through the same `Art/` record and import recipe as #38.
 - Issue #48 and PR #49: Windows MSVC build error and a save-commit failure after the first checkpoint, from CouchCoopGaming on a Windows host with the pinned engine. Windows is not a validated host; the maintainer verifies Unreal claims on the supported Mac before integration.
 - Issue #46 and PR #47: this onboarding pass.
 
