@@ -451,6 +451,44 @@ FCharacterRules FCombatBattle::Character(int32 Id) const
         FProficiencyRules::PrebuiltCharacter(Unit->AdventurerRole, Unit->Level) : FProficiencyRules::EnemyCharacter(Unit->Role);
 }
 
+int32 FCombatBattle::SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const
+{
+    return Find(Id) ? FCheckRules::SuccessOutOf400(Character(Id).SkillBonus(Skill), Dc, Mode) : 0;
+}
+
+int32 FCombatBattle::SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const
+{
+    return Find(Id) ? FCheckRules::SuccessOutOf400(Character(Id).SaveBonus(Ability), Dc, Mode) : 0;
+}
+
+namespace
+{
+bool ValidateD20Test(bool bStarted, const FCombatantState* Unit, int32 Dc, FString& Error)
+{
+    if (!bStarted) { Error = TEXT("No battle in progress."); return false; }
+    if (!Unit) { Error = TEXT("Unknown combatant."); return false; }
+    if (Unit->Life != ECombatLife::Conscious) { Error = TEXT("Only conscious combatants roll checks and saves."); return false; }
+    if (Dc < FCheckRules::MinDc || Dc > FCheckRules::MaxDc) { Error = TEXT("DC must be 1..30."); return false; }
+    return true;
+}
+}
+
+bool FCombatBattle::SkillCheck(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error)
+{
+    if (!ValidateD20Test(bStarted, Find(Id), Dc, Error)) { return false; }
+    Out = FCheckRules::Resolve(Character(Id).SkillBonus(Skill), Dc, Mode, State.RandomState);
+    Error.Reset();
+    return true;
+}
+
+bool FCombatBattle::SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error)
+{
+    if (!ValidateD20Test(bStarted, Find(Id), Dc, Error)) { return false; }
+    Out = FCheckRules::Resolve(Character(Id).SaveBonus(Ability), Dc, Mode, State.RandomState);
+    Error.Reset();
+    return true;
+}
+
 FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
 {
     TArray<ECombatLife> LifeBefore;

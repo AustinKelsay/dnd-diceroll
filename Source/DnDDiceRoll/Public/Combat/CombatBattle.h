@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Rules/ProficiencyRules.h"
+#include "Rules/CheckRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -199,6 +200,12 @@ public:
     int32 AbilityModifier(int32 Id, EAbility Ability) const;
     /** Proficiency, skill, save and tool facts for a combatant at its current level. Read-only, no RNG. */
     FCharacterRules Character(int32 Id) const;
+    /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
+    int32 SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const;
+    int32 SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const;
+    /** Rolls a check or save from the battle's seeded stream. Rejected atomically (no RNG spent) for unknown or downed units or DC outside 1..30. */
+    bool SkillCheck(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error);
+    bool SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
