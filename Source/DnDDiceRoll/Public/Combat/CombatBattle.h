@@ -205,6 +205,15 @@ struct DNDDICEROLL_API FActionForecast
     TArray<FTargetEffect> Effects;
 };
 
+/** Board cells an action reaches from its user, by the same range and sight rules as LegalTargets. */
+struct DNDDICEROLL_API FActionReach
+{
+    /** In range and in sight: a combatant here can be a legal target. */
+    TArray<FIntPoint> InSight;
+    /** In range but blocked terrain or out of line of sight. */
+    TArray<FIntPoint> Obscured;
+};
+
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
  * including enemy decisions, use the same validation. Queries consume no random numbers.
  * Grid: cardinal movement, occupied cells block travel, attacks use Manhattan range and
@@ -245,6 +254,8 @@ public:
     /** Rolls a check or save from the battle's seeded stream. Rejected atomically (no RNG spent) for unknown or downed units or DC outside 1..30. */
     bool SkillCheck(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error);
     bool SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error);
+    /** Cells the action could reach now. Empty when LegalTargets would refuse the action outright. Consumes no random numbers. */
+    FActionReach Reach(int32 Id, ECombatCommandType Action) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
@@ -269,6 +280,9 @@ private:
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
+    /** The unit when it may use a targeted action now (turn, life, action budget, role, uses); otherwise null. */
+    const FCombatantState* ActionUser(int32 Id, ECombatCommandType Action) const;
+    static int32 ActionRange(const FCombatantState& Unit, ECombatCommandType Action);
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
     bool SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);

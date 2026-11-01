@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
+#include "Party/BuildCatalog.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatStartTest, "Project.Expedition.Combat.ValidEncounter",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -301,6 +302,100 @@ bool FCombatPresentationFactsTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Death is reported"), Attack.Died.Contains(20), Fight.Find(20)->Life == ECombatLife::Dead);
     }
     TestTrue(TEXT("Fixture seeds include hits"), Hits > 0);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatReachTest, "Project.Expedition.Combat.ReachMatchesLegalTargets",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCombatReachTest::RunTest(const FString& Parameters)
+{
+    const ECombatCommandType Actions[] = {ECombatCommandType::Attack, ECombatCommandType::PrecisionStrike, ECombatCommandType::MagicMissile,
+        ECombatCommandType::CureWounds, ECombatCommandType::Potion, ECombatCommandType::Rescue};
+    for (const EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Cleric, EAdventurerRole::Wizard})
+    {
+        FCombatEncounter Encounter = Duel();
+        Encounter.Width = Encounter.Height = 8;
+        FCombatantState& Hero = Encounter.Combatants[0];
+        Hero.Cell = {1, 1}; Hero.Range = 3; Hero.AdventurerRole = Role; Hero.SpellSlots = 2; Hero.Potions = 1; Hero.HP = 12;
+        if (Role == EAdventurerRole::Fighter) { Hero.FighterSubclass = EFighterSubclass::BattleMaster; Hero.ManeuverUses = 1; }
+        Encounter.Combatants[1].Cell = {3, 2};                  // in sight at distance 3
+        FCombatantState Hidden = Encounter.Combatants[1];
+        Hidden.Id = 21; Hidden.Cell = {1, 4};                   // distance 3 behind the wall at (1, 3)
+        FCombatantState Far = Encounter.Combatants[1];
+        Far.Id = 22; Far.Cell = {6, 3};                         // distance 7: missile only
+        FCombatantState Friend = Hero;
+        Friend.Id = 11; Friend.Cell = {2, 1}; Friend.InitiativeBonus = -5; Friend.HP = 5;
+        Encounter.Combatants.Append({Hidden, Far, Friend});
+        Encounter.BlockedCells = {{1, 3}};
+        FCombatBattle Battle;
+        FString Error;
+        if (!TestTrue(TEXT("Starts"), Battle.Start(Encounter, 42, Error))) { return false; }
+        const FCombatSnapshot Before = Battle.Snapshot();
+        for (const ECombatCommandType Action : Actions)
+        {
+            const FActionReach Reach = Battle.Reach(10, Action);
+            const TArray<int32> Targets = Battle.LegalTargets(10, Action);
+            for (const FCombatantState& Unit : Battle.Snapshot().Encounter.Combatants)
+            {
+                if (Targets.Contains(Unit.Id)) { TestTrue(TEXT("Every legal target stands on an in-sight cell"), Reach.InSight.Contains(Unit.Cell)); }
+                TestFalse(TEXT("No cell is both in sight and obscured"), Reach.InSight.Contains(Unit.Cell) && Reach.Obscured.Contains(Unit.Cell));
+            }
+            for (const FIntPoint Cell : Reach.Obscured) { TestFalse(TEXT("Obscured cells hold no legal target"), Battle.Snapshot().Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& Unit) { return Unit.Cell == Cell && Targets.Contains(Unit.Id); })); }
+        }
+        const FActionReach Attack = Battle.Reach(10, ECombatCommandType::Attack);
+        TestTrue(TEXT("Visible enemy in weapon range"), Attack.InSight.Contains(FIntPoint(3, 2)) && Battle.LegalTargets(10).Contains(20));
+        TestTrue(TEXT("Wall and the enemy behind it are obscured"), Attack.Obscured.Contains(FIntPoint(1, 3)) && Attack.Obscured.Contains(FIntPoint(1, 4)) && !Battle.LegalTargets(10).Contains(21));
+        TestFalse(TEXT("Weapon reach stops at its range"), Attack.InSight.Contains(FIntPoint(5, 1)) || Attack.Obscured.Contains(FIntPoint(5, 1)));
+        TestFalse(TEXT("Attacks never reach the user's own cell"), Attack.InSight.Contains(FIntPoint(1, 1)));
+        if (Role == EAdventurerRole::Wizard)
+        {
+            const FActionReach Missile = Battle.Reach(10, ECombatCommandType::MagicMissile);
+            TestTrue(TEXT("Missile reaches six cells"), Missile.InSight.Contains(FIntPoint(6, 2)) && !Missile.InSight.Contains(FIntPoint(6, 3)) && !Missile.Obscured.Contains(FIntPoint(6, 3)));
+        }
+        else { TestTrue(TEXT("Only wizards reach with Magic Missile"), Battle.Reach(10, ECombatCommandType::MagicMissile).InSight.IsEmpty()); }
+        const FActionReach Potion = Battle.Reach(10, ECombatCommandType::Potion);
+        TestTrue(TEXT("Touch reach includes self and adjacent ally"), Potion.InSight.Contains(FIntPoint(1, 1)) && Potion.InSight.Contains(FIntPoint(2, 1)) && Potion.InSight.Num() + Potion.Obscured.Num() == 5);
+        TestEqual(TEXT("Cure reach only for clerics"), Battle.Reach(10, ECombatCommandType::CureWounds).InSight.IsEmpty(), Role != EAdventurerRole::Cleric);
+        TestTrue(TEXT("Precision Strike only for Battle Masters"), Battle.Reach(10, ECombatCommandType::PrecisionStrike).InSight.IsEmpty() == (Role != EAdventurerRole::Fighter));
+        TestTrue(TEXT("Not the active unit: no reach"), Battle.Reach(11, ECombatCommandType::Attack).InSight.IsEmpty());
+        TestTrue(TEXT("Reach consumes no random numbers"), SameState(Before, Battle.Snapshot()));
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatCatalogReachTest, "Project.Expedition.Combat.ReachMatchesCatalogAbilities",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCombatCatalogReachTest::RunTest(const FString& Parameters)
+{
+    int32 Checked = 0;
+    for (const FBuildDefinition& Build : FBuildCatalog::All())
+    {
+        FCombatEncounter Encounter = Duel();
+        Encounter.Width = Encounter.Height = 8;
+        FCombatantState Hero;
+        if (!TestTrue(TEXT("Build creates"), FBuildCatalog::Create(Build.Id, 10, TEXT("Hero"), Hero))) { continue; }
+        Hero.Cell = {1, 1}; Hero.Side = ECombatSide::Party; Hero.InitiativeBonus = 20; Hero.HP = FMath::Max(1, Hero.MaxHP - 1);
+        Encounter.Combatants[0] = Hero;
+        Encounter.Combatants[1].Cell = {2, 1};
+        FCombatantState Friend = Hero;
+        Friend.Id = 11; Friend.Cell = {1, 2}; Friend.InitiativeBonus = -5; Friend.HP = 1;
+        Encounter.Combatants.Add(Friend);
+        FCombatBattle Battle;
+        FString Error;
+        if (!TestTrue(TEXT("Starts"), Battle.Start(Encounter, 42, Error)) || Battle.ActiveId() != 10) { continue; }
+        for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*Battle.Find(10)))
+        {
+            const FActionReach Reach = Battle.Reach(10, Ability.Command);
+            const TArray<int32> Targets = Battle.LegalTargets(10, Ability.Command);
+            for (const int32 Id : Targets) { TestTrue(FString::Printf(TEXT("%s: legal target cell is in reach"), *Build.Id), Reach.InSight.Contains(Battle.Find(Id)->Cell)); }
+            if (Ability.Target == EAbilityTarget::Self && Targets.Num() > 0)
+            {
+                TestTrue(FString::Printf(TEXT("%s: self ability reaches only its user"), *Build.Id), Reach.InSight.Num() == 1 && Reach.InSight.Contains(FIntPoint(1, 1)) && Reach.Obscured.IsEmpty());
+            }
+            if (Targets.IsEmpty()) { TestTrue(FString::Printf(TEXT("%s: unusable ability has no reach"), *Build.Id), Reach.InSight.IsEmpty() && Reach.Obscured.IsEmpty()); }
+            ++Checked;
+        }
+    }
+    TestTrue(TEXT("Catalog abilities were checked"), Checked > 0);
     return !HasAnyErrors();
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSubclassForecastTest, "Project.Expedition.Combat.SubclassForecastAndBudget",

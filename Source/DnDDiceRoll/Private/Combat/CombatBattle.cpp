@@ -297,6 +297,74 @@ bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Ori
         HasLineOfSight(Origin, Target.Cell);
 }
 
+const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Action) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious || !State.bActionAvailable) { return nullptr; }
+    if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return nullptr; }
+    if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
+    if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
+    if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return nullptr; } }
+    if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return nullptr; }
+    return Unit;
+}
+
+int32 FCombatBattle::ActionRange(const FCombatantState& Unit, ECombatCommandType Action)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::Attack: case ECombatCommandType::PrecisionStrike: return Unit.Range;
+    case ECombatCommandType::MagicMissile: return MissileRange;
+    case ECombatCommandType::CureWounds: case ECombatCommandType::Rescue: case ECombatCommandType::Potion: return Unit.Side == ECombatSide::Party ? TouchRange : 0;
+    default: return 0;
+    }
+}
+
+FActionReach FCombatBattle::Reach(int32 Id, ECombatCommandType Action) const
+{
+    FActionReach Result;
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return Result; }
+    int32 Range = 0;
+    bool bSelf = false;
+    const auto Abilities = FBuildCatalog::Abilities(*Unit);
+    const bool bCatalog = Action == ECombatCommandType::Special1 || Action == ECombatCommandType::Special2
+        || (!Unit->BuildId.IsEmpty() && Abilities.ContainsByPredicate([Action](const FAbilityFacts& A) { return A.Command == Action; }));
+    if (bCatalog)
+    {
+        // Catalog abilities carry their own budget, range and target kind (same gates as LegalTargets).
+        if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || Unit->Life != ECombatLife::Conscious) { return Result; }
+        const FAbilityFacts* Ability = nullptr;
+        for (const auto& A : Abilities)
+        {
+            if (A.Command == Action && A.bResourceAvailable && (A.bBonus ? State.bBonusActionAvailable : State.bActionAvailable)) { Ability = &A; break; }
+        }
+        if (!Ability) { return Result; }
+        if (Ability->Target == EAbilityTarget::Self) { Result.InSight.Add(Unit->Cell); return Result; }
+        Range = Ability->Range;
+        bSelf = Ability->Target == EAbilityTarget::Friendly;
+    }
+    else
+    {
+        if (!ActionUser(Id, Action)) { return Result; }
+        Range = ActionRange(*Unit, Action);
+        // Friendly touch actions may target the user's own cell; hostile ones never can.
+        bSelf = Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion;
+    }
+    if (Range <= 0) { return Result; }
+    for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
+    {
+        for (int32 X = 0; X < State.Encounter.Width; ++X)
+        {
+            const FIntPoint Cell(X, Y);
+            const int32 Steps = GridDistance(Unit->Cell, Cell);
+            if (Steps > Range || (Steps == 0 && !bSelf)) { continue; }
+            (!State.Encounter.BlockedCells.Contains(Cell) && HasLineOfSight(Unit->Cell, Cell) ? Result.InSight : Result.Obscured).Add(Cell);
+        }
+    }
+    return Result;
+}
+
 TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) const
 {
     TArray<int32> Result;
@@ -320,12 +388,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         if (FBuildCatalog::HasSpecial(*Unit, Action) && Unit->SecondWindUses > 0 && State.bBonusActionAvailable && Unit->HP < Unit->MaxHP) { Result.Add(Id); }
         return Result;
     }
-    if (!State.bActionAvailable) { return Result; }
-    if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return Result; }
-    if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
-    if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
-    if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return Result; } }
-    if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return Result; }
+    if (!ActionUser(Id, Action)) { return Result; }
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
         bool bLegal = false;
