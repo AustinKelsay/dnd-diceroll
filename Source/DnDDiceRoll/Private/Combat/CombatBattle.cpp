@@ -430,6 +430,19 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     return Forecast;
 }
 
+FAbilityScores FCombatBattle::AbilityScores(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return FAbilityScores(); }
+    return Unit->Side == ECombatSide::Party && Unit->AdventurerRole != EAdventurerRole::None ?
+        FAbilityRules::PrebuiltScores(Unit->AdventurerRole) : FAbilityRules::EnemyScores(Unit->Role);
+}
+
+int32 FCombatBattle::AbilityModifier(int32 Id, EAbility Ability) const
+{
+    return Find(Id) ? FAbilityRules::Modifier(AbilityScores(Id).Get(Ability)) : 0;
+}
+
 FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
 {
     TArray<ECombatLife> LifeBefore;

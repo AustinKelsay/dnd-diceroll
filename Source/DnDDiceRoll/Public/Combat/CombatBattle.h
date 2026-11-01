@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Rules/AbilityRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -192,6 +193,10 @@ public:
     TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
     FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
+    /** Ability scores: prebuilt by role for adventurers, generic for enemies. Read-only, no RNG. */
+    FAbilityScores AbilityScores(int32 Id) const;
+    /** SRD ability modifier for a combatant; 0 for unknown IDs. */
+    int32 AbilityModifier(int32 Id, EAbility Ability) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
