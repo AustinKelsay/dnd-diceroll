@@ -14,7 +14,7 @@ The game's art set lives under `/Game/DnDDiceRoll/Theme`.
 
 **Sources:** the editable sources are `Art/dark-fantasy-sources/r001/`:
 - the packed Blender scenes `vigil.blend`, `root.blend` and `mission.blend`;
-- `export_theme.py`, the Blender export script.
+- `scripts/`, the Blender recipes that export each asset (`build_*.py`) plus the rogue rescale and root-tile repaint.
 
 Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, with its glTF export beside it.
 

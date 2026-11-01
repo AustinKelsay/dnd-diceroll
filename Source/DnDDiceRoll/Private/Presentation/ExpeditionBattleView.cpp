@@ -32,6 +32,8 @@ constexpr float EnemyThinkSeconds = 0.55f;
 constexpr int32 TargetMarkers = 8;
 constexpr int32 ShotPool = 4;
 constexpr int32 SparkPool = 16;
+// Table-top height of the mission overview; its legs stand on a floor laid over the sandbox's.
+constexpr float OverviewHeight = 80.0f;
 
 struct FPalette
 {
@@ -196,6 +198,7 @@ void AExpeditionBattleView::BeginPlay()
         Theme = ThemeAsset.LoadSynchronous();
         ThemeMaterial = Theme && !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
         if (!ThemeMaterial) { Theme = nullptr; }
+        OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
     }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
@@ -253,6 +256,7 @@ void AExpeditionBattleView::RebuildBoard()
     Show.Reset(Rules().Snapshot());
     // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
     // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
+    if (bOverview) { TargetYaw = -90.0f; }
     TargetDistance = bOverview ? 300.0f : 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
@@ -817,7 +821,7 @@ void AExpeditionBattleView::UpdateEffects()
 void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    FVector Desired = bOverview ? FVector(0.0f, 30.0f, 22.0f) : BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardTop);
+    FVector Desired = bOverview ? FVector(0.0f, 30.0f, OverviewHeight + 22.0f) : BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardTop);
     // Lean the view toward whoever is acting so long boards keep the action framed.
     const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
     if (!bOverview && FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardTop), 0.4f); }
@@ -845,8 +849,9 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Distance * 0.32f : 0.0f)).Rotation());
 }
 
-void AExpeditionBattleView::Orbit(float Degrees) { TargetYaw += Degrees; }
-void AExpeditionBattleView::Zoom(float Amount) { TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 3200.0f); }
+// The tabletop is a fixed, composed view; orbit and zoom belong to battles.
+void AExpeditionBattleView::Orbit(float Degrees) { if (!bOverview) { TargetYaw += Degrees; } }
+void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 3200.0f); }
 
 bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint& Cell) const
 {
@@ -1060,7 +1065,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     Clock += DeltaSeconds;
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
-    if (Theme && WantsOverview() != bOverview && !IsPresenting()) { RebuildBoard(); }
+    if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked) { return; }
@@ -1115,7 +1120,7 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
 
 bool AExpeditionBattleView::WantsOverview() const
 {
-    return Theme && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
+    return OverviewTable && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
 }
 
 bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
@@ -1175,6 +1180,15 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         FlameStrength.SetNum(Flames.Num());
         FlameStrength.Last() = 40.0f;
     }
+    // Iron cages hang on chains from the cathedral's unseen vault and swing slowly.
+    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest)
+    {
+        for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
+        {
+            Scenery.Add(MakePart(Cage, nullptr, BoardPosition(Spot, -TileHeight + 430.0f), FVector::OneVector, FLinearColor::White));
+            AddSway(Scenery.Last().Mesh, 6.0f, 0.0f);
+        }
+    }
     if (Banner)
     {
         for (const float X : {W * 0.22f, W * 0.78f - 1.0f})
@@ -1188,11 +1202,13 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
 
 void AExpeditionBattleView::BuildOverview()
 {
-    // A dark room: everything past the candlelight falls away.
-    Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, -95.0f), FVector(300.0f, 300.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
+    // The table stands on a dark floor raised over the sandbox floor (top at Z=0); everything
+    // past the candlelight falls away.
+    const FVector Lift(0.0f, 0.0f, OverviewHeight);
+    Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, 5.0f), FVector(300.0f, 300.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
     // Assets face +X; the camera looks from -Y, so turn everything to face it.
     const FRotator Toward(0.0f, -90.0f, 0.0f);
-    if (UStaticMesh* Table = ThemeMesh(Theme->Tabletop)) { Scenery.Add(MakePart(Table, nullptr, FVector::ZeroVector, FVector::OneVector, FLinearColor::White, Toward)); }
+    Scenery.Add(MakePart(OverviewTable, nullptr, Lift, FVector::OneVector, FLinearColor::White, Toward));
     // One low-detail diorama per offered road: the forest for guarded roads, the drowned
     // cathedral for dangerous roads and the finale. The title shows both.
     TArray<bool> Cathedral;
@@ -1208,7 +1224,7 @@ void AExpeditionBattleView::BuildOverview()
         if (!Diorama) { continue; }
         // The camera looks along +Y, so world +X is screen-left: offer 0 sits left, under its card.
         const float X = Cathedral.Num() == 1 ? 0.0f : Index == 0 ? 52.0f : -52.0f;
-        Scenery.Add(MakePart(Diorama, nullptr, FVector(X, 22.0f, 0.0f), FVector::OneVector, FLinearColor::White,
+        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(X, 22.0f, 0.0f), FVector::OneVector, FLinearColor::White,
             Toward + FRotator(0.0f, Index == 0 ? -10.0f : 10.0f, 0.0f)));
     }
     // The surviving party stands on the map as painted miniatures.
@@ -1218,13 +1234,13 @@ void AExpeditionBattleView::BuildOverview()
         if (Unit.Side != ECombatSide::Party || Unit.Life == ECombatLife::Dead) { continue; }
         if (UStaticMesh* Figure = UnitMesh(Unit))
         {
-            Scenery.Add(MakePart(Figure, nullptr, FVector(27.0f - Slot * 18.0f, -30.0f, 0.0f), FVector(0.14f), FLinearColor::White, Toward));
+            Scenery.Add(MakePart(Figure, nullptr, Lift + FVector(27.0f - Slot * 18.0f, -30.0f, 0.0f), FVector(0.14f), FLinearColor::White, Toward));
         }
         ++Slot;
     }
     for (const FVector& Candle : {FVector(-100, 30, 40), FVector(100, 34, 40), FVector(0, -70, 70)})
     {
-        Flames.Add(MakeLight(nullptr, Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 380.0f));
+        Flames.Add(MakeLight(nullptr, Lift + Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 380.0f));
         FlameStrength.SetNum(Flames.Num());
         FlameStrength.Last() = 16.0f;
     }

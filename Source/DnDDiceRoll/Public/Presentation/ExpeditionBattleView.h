@@ -161,6 +161,8 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
     UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
     UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
     UPROPERTY() TArray<FExpeditionSway> Swaying;
 
     float Yaw = -90.0f;
