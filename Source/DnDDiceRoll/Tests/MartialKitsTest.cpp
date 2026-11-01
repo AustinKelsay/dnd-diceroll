@@ -6,6 +6,10 @@
 #include "ExpeditionTestSupport.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMartialRosterTest, "Project.Expedition.Catalog.MartialRoster", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FMartialRosterTest::RunTest(const FString& Parameters)
@@ -69,6 +73,30 @@ bool FMartialWorkedTest::RunTest(const FString& Parameters)
         {TEXT("ranger.fey-wanderer"),2,0,0,0,true,false,false,true},
         {TEXT("ranger.swarmkeeper"),20,3,0,0,false,false,true,true},
     };
+    const FCase SecondCases[] = {
+        {TEXT("rogue.thief"),2,0,6,0,false,false,false,true},
+        {TEXT("rogue.assassin"),2,0,0,0,true,false,false,true},
+        {TEXT("rogue.arcane-trickster"),20,3,0,0,false,true,false,false},
+        {TEXT("rogue.phantom"),2,0,0,2,false,false,false,true},
+        {TEXT("rogue.soulknife"),2,0,0,0,true,false,false,false},
+        {TEXT("fighter.eldritch-knight"),20,4,0,0,false,false,true,false},
+        {TEXT("fighter.psi-warrior"),20,5,0,0,false,true,false,false},
+        {TEXT("fighter.rune-knight"),20,5,0,0,false,false,true,false},
+        {TEXT("monk.open-hand"),1,0,0,3,false,false,false,false},
+        {TEXT("monk.shadow"),2,0,0,3,false,false,false,false},
+        {TEXT("monk.four-elements"),20,4,0,0,false,false,true,false},
+        {TEXT("monk.mercy"),20,6,0,0,false,false,false,false},
+        {TEXT("monk.astral-self"),1,0,0,3,false,false,false,true},
+        {TEXT("paladin.devotion"),2,0,8,0,false,false,false,true},
+        {TEXT("paladin.ancients"),2,0,0,3,false,false,false,true},
+        {TEXT("paladin.vengeance"),2,0,0,0,true,false,false,false},
+        {TEXT("paladin.glory"),2,0,8,0,false,false,false,false},
+        {TEXT("paladin.watchers"),1,0,0,3,false,false,false,true},
+        {TEXT("ranger.hunter"),20,4,0,0,false,false,false,true},
+        {TEXT("ranger.beast-master"),2,0,0,3,false,false,false,true},
+        {TEXT("ranger.fey-wanderer"),20,6,0,0,false,false,false,false},
+        {TEXT("ranger.swarmkeeper"),20,5,0,0,false,true,false,false},
+    };
     auto Same = [](const FCombatSnapshot& A,const FCombatSnapshot& B) { return FCombatSnapshot::StaticStruct()->CompareScriptStruct(&A,&B,0); };
     for (const auto& C : Cases)
     {
@@ -79,6 +107,57 @@ bool FMartialWorkedTest::RunTest(const FString& Parameters)
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         auto Secondary=Enemy; Secondary.Id=21; Secondary.Name=TEXT("Secondary"); Secondary.Cell={2,2};
         FCombatEncounter Encounter; Encounter.Combatants={Hero,Ally,Enemy,Secondary};
+        const FCase* Second = nullptr;
+        for (const auto& Candidate : SecondCases) { if (FString(Candidate.Id) == C.Id) { Second = &Candidate; break; } }
+        if (!TestNotNull(TEXT("Independent second-slot expectation"),Second)) { continue; }
+        const auto& D = *Second;
+        FCombatBattle Combo;
+        if (TestTrue(TEXT("Start two-slot sibling combination"),Combo.Start(Encounter,42,Error)))
+        {
+            TestTrue(TEXT("First slot of combination"),Combo.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
+            TestEqual(TEXT("First slot spends one shared use"),Combo.Find(1)->KitUses,1);
+            if (C.Bonus == D.Bonus)
+            {
+                const auto Spent = Combo.Snapshot();
+                TestFalse(TEXT("Same-budget second slot waits for next turn"),Combo.Submit({ECombatCommandType::Special2,1,{},D.Target}).bAccepted);
+                TestTrue(TEXT("Spent-budget rejection preserves state and RNG"),Same(Spent,Combo.Snapshot()));
+                Combo.Submit({ECombatCommandType::EndTurn,1});
+                for (int32 Turn=0;Turn<8 && Combo.ActiveId()!=1;++Turn) { Combo.Submit({ECombatCommandType::EndTurn,Combo.ActiveId()}); }
+            }
+            const auto BeforeSecond = Combo.Snapshot();
+            const int32 PrimaryBefore = Combo.Find(20)->HP, SecondaryBefore = Combo.Find(21)->HP, AllyBefore = Combo.Find(2)->HP;
+            const auto PreviewSecond = Combo.Forecast(1,ECombatCommandType::Special2,D.Target);
+            TestTrue(TEXT("Second slot forecast after first effect"),PreviewSecond.bValid);
+            TestTrue(TEXT("Combination preview preserves snapshot and RNG"),Same(BeforeSecond,Combo.Snapshot()));
+            const auto SecondResult = Combo.Submit({ECombatCommandType::Special2,1,{},D.Target});
+            TestTrue(TEXT("Second slot commits using remaining shared use"),SecondResult.bAccepted);
+            TestEqual(TEXT("Both slots deplete one common pool"),Combo.Find(1)->KitUses,0);
+            TestEqual(TEXT("Second-slot primary HP loss"),PrimaryBefore-Combo.Find(20)->HP,D.Loss);
+            TestEqual(TEXT("Second-slot ally healing"),Combo.Find(2)->HP-AllyBefore,D.Heal);
+            // Water Whip moves the selected enemy away from its former neighbour.
+            const int32 SecondaryLoss = D.Area && !C.Push ? D.Loss : 0;
+            TestEqual(TEXT("Area membership follows the displaced primary"),SecondaryBefore-Combo.Find(21)->HP,SecondaryLoss);
+            TestEqual(TEXT("Second-slot protection amount"),Combo.Find(1)->GuardAmount,D.Guard ? D.Guard : C.Bonus != D.Bonus ? C.Guard : 0);
+            TestEqual(TEXT("Combination action budget"),Combo.Snapshot().bActionAvailable,C.Bonus == D.Bonus && D.Bonus);
+            TestEqual(TEXT("Combination bonus budget"),Combo.Snapshot().bBonusActionAvailable,C.Bonus == D.Bonus && !D.Bonus);
+            if (D.Loss) { TestEqual(TEXT("Second-slot forecast damage"),PreviewSecond.MinAmount,D.Loss); }
+            if (D.Heal) { TestEqual(TEXT("Second-slot forecast healing"),PreviewSecond.MinAmount,D.Heal); }
+            const FIntPoint UserCell = C.Swap != D.Swap ? FIntPoint(1,2) : FIntPoint(1,1);
+            const FIntPoint AllyCell = C.Swap != D.Swap ? FIntPoint(1,1) : FIntPoint(1,2);
+            const FIntPoint EnemyCell = C.Push || D.Push ? FIntPoint(3,1) : FIntPoint(2,1);
+            TestEqual(TEXT("Combined hero position"),Combo.Find(1)->Cell,UserCell);
+            TestEqual(TEXT("Combined ally position"),Combo.Find(2)->Cell,AllyCell);
+            TestEqual(TEXT("Combined enemy position"),Combo.Find(20)->Cell,EnemyCell);
+            FExpeditionPlayback NormalCombo,FastCombo,SkippedCombo;
+            for (auto* Show : {&NormalCombo,&FastCombo,&SkippedCombo}) { Show->Reset(BeforeSecond); Show->Enqueue({SecondResult},Combo.Snapshot()); }
+            for (int32 Tick=0;Tick<100;++Tick) { NormalCombo.Tick(0.05f); FastCombo.Tick(0.5f); } SkippedCombo.Finish();
+            for (auto* Show : {&NormalCombo,&FastCombo,&SkippedCombo})
+            {
+                TestEqual(TEXT("Combination playback hero cell"),Show->Unit(1)->Position,FVector2D(UserCell));
+                TestEqual(TEXT("Combination playback ally cell"),Show->Unit(2)->Position,FVector2D(AllyCell));
+                TestEqual(TEXT("Combination playback enemy cell"),Show->Unit(20)->Position,FVector2D(EnemyCell));
+            }
+        }
         FCombatBattle Battle; if (!TestTrue(TEXT("Start worked scenario"),Battle.Start(Encounter,42,Error))) { continue; }
         const auto Before=Battle.Snapshot();
         const auto Preview=Battle.Forecast(1,ECombatCommandType::Special1,C.Target);
@@ -175,6 +254,26 @@ bool FMartialJsonTest::RunTest(const FString& Parameters)
         FExpeditionSaveData Decoded;
         if(!TestTrue(TEXT("Actual JSON decode"),FExpeditionSave::Decode(Json,Decoded,Error))) { continue; }
         TestTrue(TEXT("Every reflected value and RNG preserved"),ExpeditionTestSupport::SameRun(Data.Current,Decoded.Current));
+        // Malformed wire data must fail before installation, not only struct restore.
+        for (int32 Mutation=0;Mutation<9;++Mutation)
+        {
+            TSharedPtr<FJsonObject> Object;
+            if (!TestTrue(TEXT("Read generated JSON object"),FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Object))) { continue; }
+            auto Unit = Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->GetObjectField(TEXT("Encounter"))->GetArrayField(TEXT("Combatants"))[0]->AsObject();
+            if (Mutation==0) { Unit->RemoveField(TEXT("KitUses")); }
+            else if (Mutation==1) { Unit->SetNumberField(TEXT("KitUses"),0.5); }
+            else if (Mutation==2) { Unit->SetStringField(TEXT("KitUses"),TEXT("1")); }
+            else if (Mutation==3) { Unit->SetNumberField(TEXT("KitUses"),3); }
+            else if (Mutation==4) { Unit->SetNumberField(TEXT("GuardTurns"),2); }
+            else if (Mutation==5) { Unit->SetNumberField(TEXT("GuardAmount"),99); }
+            else if (Mutation==6) { Unit->SetNumberField(TEXT("GuardTargetId"),999); }
+            else if (Mutation==7) { Unit->SetNumberField(TEXT("SpellSlots"),1); }
+            else { Unit->RemoveField(TEXT("GuardAmount")); }
+            FString Malformed; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Malformed));
+            auto Output=Decoded;
+            TestFalse(TEXT("Malformed martial wire state rejected"),FExpeditionSave::Decode(Malformed,Output,Error));
+            TestTrue(TEXT("Malformed JSON decode is atomic"),FExpeditionSaveData::StaticStruct()->CompareScriptStruct(&Decoded,&Output,0));
+        }
         FExpeditionRun Resumed; TestTrue(TEXT("Install decoded checkpoint"),Resumed.Restore(Decoded.Current,Error));
         Run.Submit({ECombatCommandType::EndTurn,Id}); Resumed.Submit({ECombatCommandType::EndTurn,Id});
         TestTrue(TEXT("Identical continued command and RNG"),ExpeditionTestSupport::SameRun(Run.Snapshot(),Resumed.Snapshot()));
@@ -300,6 +399,67 @@ bool FMartialRunTest::RunTest(const FString& Parameters)
             if(Stage==0) { TestTrue(TEXT("One camp"),Run.Recover(true,Error)); }
         }
         TestEqual(TEXT("Five encounters completed by worked martial party"),Run.Progress().EncountersCompleted,5);
+    }
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMartialCombatPoolsTest, "Project.Expedition.Catalog.MartialCombatPoolValidation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FMartialCombatPoolsTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatantState Hero;
+    FBuildCatalog::Create(TEXT("rogue.thief"),1,TEXT("Thief"),Hero); Hero.Cell={1,1}; Hero.InitiativeBonus=30;
+    FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={3,1};
+    FCombatEncounter Encounter; Encounter.Combatants={Hero,Enemy}; FCombatBattle Battle;
+    if (!TestTrue(TEXT("Start catalog pool validation"),Battle.Start(Encounter,42,Error))) { return false; }
+    const auto Before=Battle.Snapshot();
+    for (int32 Pool=0;Pool<2;++Pool)
+    {
+        auto Bad=Before;
+        if (Pool==0) { Bad.Encounter.Combatants[0].SpellSlots=1; }
+        else { Bad.Encounter.Combatants[0].SecondWindUses=1; }
+        TestFalse(TEXT("Public combat Restore rejects a pool absent from selected build"),Battle.Restore(Bad,Error));
+        TestTrue(TEXT("Wrong-pool combat Restore preserves state/RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&Battle.Snapshot(),0));
+    }
+    // Public combat fixtures without a catalog identity retain their bounded stats.
+    auto Custom=Encounter; auto& Fixture=Custom.Combatants[0];
+    Fixture.BuildId.Reset(); Fixture.ClassId.Reset(); Fixture.SubclassId.Reset(); Fixture.AdventurerRole=EAdventurerRole::None; Fixture.KitUses=0;
+    Fixture.SecondWindUses=1; Fixture.SpellSlots=1;
+    TestTrue(TEXT("Bounded uncatalogued fixture still starts"),Battle.Start(Custom,42,Error));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMartialBlockedPushTest, "Project.Expedition.Catalog.MartialBlockedPush", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FMartialBlockedPushTest::RunTest(const FString& Parameters)
+{
+    for (int32 Obstacle=0;Obstacle<3;++Obstacle)
+    {
+        FString Error; FCombatantState Hero;
+        FBuildCatalog::Create(TEXT("monk.open-hand"),1,TEXT("Monk"),Hero); Hero.Cell={1,1}; Hero.InitiativeBonus=30;
+        FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=20;
+        FCombatEncounter Encounter; Encounter.Combatants={Hero,Enemy};
+        if (Obstacle==0) { Encounter.BlockedCells={{3,1}}; }
+        else if (Obstacle==1) { auto Occupant=Enemy; Occupant.Id=21; Occupant.Cell={3,1}; Encounter.Combatants.Add(Occupant); }
+        else { Encounter.Width=3; }
+        FCombatBattle Battle;
+        if (!TestTrue(TEXT("Start blocked/occupied/edge push"),Battle.Start(Encounter,42,Error))) { continue; }
+        const auto Before=Battle.Snapshot(); const auto Preview=Battle.Forecast(1,ECombatCommandType::Special1,20);
+        TestEqual(TEXT("Blocked push still forecasts five damage"),Preview.MinAmount,5);
+        const auto Result=Battle.Submit({ECombatCommandType::Special1,1,{},20});
+        TestTrue(TEXT("Blocked push still commits"),Result.bAccepted);
+        TestEqual(TEXT("Blocked victim loses five HP"),Battle.Find(20)->HP,15);
+        TestEqual(TEXT("Blocked victim stays in original cell"),Battle.Find(20)->Cell,FIntPoint(2,1));
+        TestEqual(TEXT("Only committed damage fact, no displacement"),Result.Effects.Num(),1);
+        if (Result.Effects.Num()==1)
+        {
+            TestEqual(TEXT("Damage fact category"),Result.Effects[0].Effect,EAbilityEffect::Strike);
+            TestEqual(TEXT("Damage fact amount"),Result.Effects[0].Amount,5);
+        }
+        if (Obstacle==1) { TestEqual(TEXT("Occupied destination is not damaged"),Battle.Find(21)->HP,20); }
+        TestEqual(TEXT("Blocked push still spends one use"),Battle.Find(1)->KitUses,1);
+        TestTrue(TEXT("Blocked push retains action"),Battle.Snapshot().bActionAvailable);
+        TestFalse(TEXT("Blocked push spends bonus"),Battle.Snapshot().bBonusActionAvailable);
+        FExpeditionPlayback Show; Show.Reset(Before); Show.Enqueue({Result},Battle.Snapshot()); Show.Finish();
+        TestEqual(TEXT("Playback keeps blocked victim in place"),Show.Unit(20)->Position,FVector2D(2,1));
+        TestEqual(TEXT("Playback records actual loss"),Show.Unit(20)->HP,15);
     }
     return true;
 }

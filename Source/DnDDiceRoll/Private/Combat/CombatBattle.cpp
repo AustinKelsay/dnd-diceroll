@@ -63,6 +63,8 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             return Reject(TEXT("Invalid combatant stats, ID, or occupied spawn."));
         }
         const auto* Build = FBuildCatalog::Find(Unit.BuildId);
+        if (Build && !FBuildCatalog::ValidResources(Unit))
+        { return Reject(TEXT("Resources do not belong to the selected build.")); }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
