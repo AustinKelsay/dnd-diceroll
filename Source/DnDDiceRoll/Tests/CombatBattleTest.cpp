@@ -231,3 +231,59 @@ bool FCombatEnemyTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 #endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatPresentationFactsTest, "Project.Expedition.Combat.PresentationFactsAndForecast",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCombatPresentationFactsTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Duel();
+    Encounter.BlockedCells.Add({1, 0});
+    FCombatBattle Battle;
+    FString Error;
+    if (!TestTrue(TEXT("Starts"), Battle.Start(Encounter, 42, Error))) { return false; }
+    TestTrue(TEXT("Illegal destination has no path"), Battle.PathTo(10, {1, 0}).IsEmpty());
+    const TArray<FIntPoint> Expected = Battle.PathTo(10, {1, 1});
+    TestEqual(TEXT("Path length equals movement cost"), Expected.Num(), 2);
+    FIntPoint Previous = Battle.Find(10)->Cell;
+    for (FIntPoint Cell : Expected)
+    {
+        TestEqual(TEXT("Path steps are cardinal and contiguous"), FMath::Abs(Cell.X - Previous.X) + FMath::Abs(Cell.Y - Previous.Y), 1);
+        TestFalse(TEXT("Path avoids terrain"), Encounter.BlockedCells.Contains(Cell));
+        Previous = Cell;
+    }
+    const FCombatResult Move = Battle.Submit({ECombatCommandType::Move, 10, {1, 1}});
+    TestTrue(TEXT("Move reports its path"), Move.Path == Expected);
+    TestTrue(TEXT("Move reports actor and type"), Move.ActorId == 10 && Move.Type == ECombatCommandType::Move);
+
+    int32 Hits = 0;
+    for (int32 Seed = 1; Seed <= 40; ++Seed)
+    {
+        FCombatEncounter Close = Duel();
+        Close.Combatants[1].Cell = {1, 0};
+        Close.Combatants[1].ArmorClass = 12;
+        Close.Combatants[1].MaxHP = Close.Combatants[1].HP = 9;
+        FCombatBattle Fight;
+        if (!Fight.Start(Close, Seed, Error)) { return false; }
+        const FCombatSnapshot Before = Fight.Snapshot();
+        const FActionForecast Forecast = Fight.Forecast(10, ECombatCommandType::Attack, 20);
+        TestTrue(TEXT("Forecast consumes no random numbers"), SameState(Before, Fight.Snapshot()));
+        TestTrue(TEXT("Legal attack has a forecast"), Forecast.bValid && Forecast.bAttackRoll);
+        TestEqual(TEXT("Hit chance counts natural 20 and excludes natural 1"), Forecast.HitChancePercent, 70);
+        TestTrue(TEXT("Damage range from die and modifier"), Forecast.MinAmount == 4 && Forecast.MaxAmount == 9);
+        TestTrue(TEXT("Maximum damage reaches remaining health"), Forecast.bCanDrop);
+        TestFalse(TEXT("Illegal target has no forecast"), Fight.Forecast(10, ECombatCommandType::Attack, 10).bValid);
+        const FCombatResult Attack = Fight.Submit({ECombatCommandType::Attack, 10, {}, 20});
+        TestTrue(TEXT("Attack reports target and defenses"), Attack.TargetId == 20 && Attack.TargetArmorClass == 12 && Attack.AttackBonus == 5);
+        if (!Attack.bHit) { TestTrue(TEXT("A miss rolls no effect dice"), Attack.EffectDice.IsEmpty()); continue; }
+        ++Hits;
+        int32 Sum = Attack.EffectModifier;
+        for (const FDieRoll& Die : Attack.EffectDice) { Sum += Die.Value; TestTrue(TEXT("Die value within its sides"), Die.Value >= 1 && Die.Value <= Die.Sides); }
+        TestEqual(TEXT("Reported dice and modifier sum to damage"), Sum, Attack.Damage);
+        TestEqual(TEXT("Critical doubles the weapon die"), Attack.EffectDice.Num(), Attack.bCritical ? 2 : 1);
+        TestEqual(TEXT("Death is reported"), Attack.Died.Contains(20), Fight.Find(20)->Life == ECombatLife::Dead);
+    }
+    TestTrue(TEXT("Fixture seeds include hits"), Hits > 0);
+    return !HasAnyErrors();
+}
+#endif

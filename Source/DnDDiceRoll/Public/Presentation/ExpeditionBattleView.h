@@ -2,18 +2,77 @@
 
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
+#include "Presentation/ExpeditionPlayback.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/HUD.h"
 #include "ExpeditionBattleView.generated.h"
 
+class UAudioComponent;
 class UCameraComponent;
+class UExponentialHeightFogComponent;
+class UMaterialInstanceDynamic;
+class UMaterialInterface;
+class UPointLightComponent;
+class UPostProcessComponent;
+class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
-class UMaterialInterface;
+class APlayerController;
 
-/** Runtime board adapter. Rules remain in FExpeditionRun; meshes only mirror snapshots. */
+UENUM()
+enum class EBoardTheme : uint8 { Meadow, Ruins, Vault };
+
+UENUM()
+enum class EPlaybackSpeed : uint8 { Normal, Fast, Instant };
+
+/** One colored primitive in a presentation group. */
+USTRUCT()
+struct FExpeditionPart
+{
+    GENERATED_BODY()
+    UPROPERTY() TObjectPtr<UStaticMeshComponent> Mesh;
+    UPROPERTY() TObjectPtr<UMaterialInstanceDynamic> Material;
+    UPROPERTY() FLinearColor Base = FLinearColor::White;
+    FLinearColor Shown = FLinearColor::Transparent;
+    void SetColor(const FLinearColor& Color);
+};
+
+USTRUCT()
+struct FExpeditionUnitRig
+{
+    GENERATED_BODY()
+    int32 Id = INDEX_NONE;
+    float Phase = 0.0f;
+    UPROPERTY() TObjectPtr<USceneComponent> Root;
+    UPROPERTY() TArray<FExpeditionPart> Parts;
+};
+
+USTRUCT()
+struct FExpeditionTile
+{
+    GENERATED_BODY()
+    FIntPoint Cell = FIntPoint::ZeroValue;
+    UPROPERTY() FExpeditionPart Part;
+};
+
+/** What the controller wants emphasised on the board this frame. */
+struct FBoardHighlights
+{
+    TArray<FIntPoint> Moves;
+    TArray<FIntPoint> Path;
+    TArray<int32> Targets;
+    int32 SelectedId = INDEX_NONE;
+    int32 HoverTargetId = INDEX_NONE;
+    bool bHasHover = false;
+    FIntPoint Hover = FIntPoint::ZeroValue;
+    bool bFriendlyTargets = false;
+};
+
+/**
+ * Runtime board adapter. FExpeditionSession owns the rules and checkpoints; this actor
+ * submits commands, then replays committed results through FExpeditionPlayback. Every
+ * mesh, light and sound is built at runtime from engine primitives and synthesis.
+ */
 UCLASS()
 class DNDDICEROLL_API AExpeditionBattleView : public AActor
 {
@@ -35,6 +94,7 @@ public:
     void ToggleRecords();
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }
+    bool InCombat() const;
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -42,102 +102,96 @@ public:
     int32 PresentationRevision() const { return Revision; }
     /** Explicit local storage selection before play; automation uses isolated fixtures. */
     void ConfigureStorage(const FString& Path);
+
+    // Presentation.
+    const FExpeditionPlayback& Playback() const { return Show; }
+    bool IsPresenting() const { return Show.IsBusy(); }
+    void SkipPresentation();
+    void CycleSpeed();
+    EPlaybackSpeed Speed() const { return PlaybackSpeed; }
+    FString LocationName() const;
+    void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
+    void PlayCue(EExpeditionCue Cue);
+
+    // Camera and board geometry.
     void Orbit(float Degrees);
     void Zoom(float Amount);
+    float CameraYaw() const { return TargetYaw; }
     FVector CellPosition(FIntPoint Cell) const;
+    FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
+    /** Where a combatant currently appears, including playback motion. */
+    FVector UnitPosition(int32 Id, float Height = 0.0f) const;
     bool CursorCell(APlayerController* Controller, FIntPoint& Cell) const;
+
 private:
     FExpeditionSession Session;
+    FExpeditionPlayback Show;
     TArray<FExpeditionEnding> EndingRecords;
+    TArray<FString> Feedback;
+    FBoardHighlights Highlights;
     bool bShowRecords = false;
     bool bCheckpointBlocked = false;
     int32 Revision = 0;
     int32 RecordsOffset = 0;
-    TArray<FString> Feedback;
     float EnemyDelay = 0.0f;
-    float CameraYaw = -90.0f;
-    float CameraDistance = 1700.0f;
+    float Clock = 0.0f;
+    EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
+    EBoardTheme BoardTheme = EBoardTheme::Meadow;
+
+    float Yaw = -90.0f;
+    float TargetYaw = -90.0f;
+    float Distance = 1600.0f;
+    float TargetDistance = 1600.0f;
+    FVector Focus = FVector::ZeroVector;
+    float ShakeAmount = 0.0f;
+    bool bCameraPlaced = false;
+
     UPROPERTY() TObjectPtr<UCameraComponent> Camera;
+    UPROPERTY() TObjectPtr<UExponentialHeightFogComponent> Fog;
+    UPROPERTY() TObjectPtr<UPostProcessComponent> Grade;
     UPROPERTY() TObjectPtr<UStaticMesh> Cube;
     UPROPERTY() TObjectPtr<UStaticMesh> Cylinder;
+    UPROPERTY() TObjectPtr<UStaticMesh> Sphere;
+    UPROPERTY() TObjectPtr<UStaticMesh> Cone;
     UPROPERTY() TObjectPtr<UMaterialInterface> BaseMaterial;
-    UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> UnitMeshes;
-    UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> BoardMeshes;
+    UPROPERTY() TObjectPtr<USceneComponent> SceneryRoot;
+    /** Every runtime component this view created; destroyed together on rebuild. */
+    UPROPERTY() TArray<TObjectPtr<UActorComponent>> Spawned;
+    UPROPERTY() TArray<FExpeditionTile> Tiles;
+    UPROPERTY() TArray<FExpeditionUnitRig> Rigs;
+    UPROPERTY() TArray<FExpeditionPart> Scenery;
+    UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> Flames;
+    UPROPERTY() TArray<FExpeditionPart> Markers;     // 0 active, 1 selected, rest targets.
+    UPROPERTY() TArray<FExpeditionPart> ShotMeshes;
+    UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
+    UPROPERTY() TArray<FExpeditionPart> SparkMeshes;
+    UPROPERTY() TArray<FExpeditionPart> CampParts;
+    UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
+    UPROPERTY() TArray<FExpeditionPart> WaystoneParts;
+    UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
+    UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
+    TArray<float> VoiceEnds;
+    TMap<int32, TArray<int16>> SoundCache;
+    int32 SoundVariation = 0;
+
+    FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
+    UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);
+    void ClearPresentation();
     void RebuildBoard();
-    UStaticMeshComponent* MakeMesh(UStaticMesh* Mesh, FVector Position, FVector Scale, FLinearColor Color);
-    void RefreshUnits();
+    void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
+    void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);
+    void BuildRig(const FCombatantState& Unit);
+    void BuildEffects(const FCombatEncounter& Encounter);
+    void ApplyTheme();
+    void UpdateRigs();
+    void UpdateTiles();
+    void UpdateMarkers();
+    void UpdateEffects();
+    void UpdateCamera(float DeltaSeconds);
     void Record(const FCombatResult& Result);
-    void UpdateCamera();
-};
-
-UCLASS()
-class DNDDICEROLL_API AExpeditionPlayerController : public APlayerController
-{
-    GENERATED_BODY()
-public:
-    virtual void BeginPlay() override;
-    virtual void SetupInputComponent() override;
-    virtual void PlayerTick(float DeltaTime) override;
-    AExpeditionBattleView* GetBattleView() const { return BattleView; }
-    int32 Selection() const { return SelectedId; }
-    bool HoverCell(FIntPoint& Cell) const;
-    bool KeyboardCell(FIntPoint& Cell) const;
-    ECombatCommandType Action() const { return SelectedAction; }
-    FString ActionHelp() const;
-    void SelectPartyIndex(int32 Index);
-private:
-    UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
-    ECombatCommandType SelectedAction = ECombatCommandType::Attack;
-    int32 SelectedId = INDEX_NONE;
-    int32 LastActiveId = INDEX_NONE;
-    int32 LastRevision = INDEX_NONE;
-    FIntPoint GridCursor = FIntPoint::ZeroValue;
-    bool bKeyboardCursor = false;
-    void Click();
-    void AttackMode();
-    void RoleMode();
-    void RescueMode();
-    void PotionMode();
-    void Loot();
-    void FirstRoute();
-    void SecondRoute();
-    void Camp();
-    void SkipCamp();
-    void NewRun();
-    void Save();
-    void Resume();
-    void History();
-    void OlderRecords();
-    void NewerRecords();
-    void ActAtCell(FIntPoint Cell);
-    void MoveCursor(FIntPoint Offset);
-    void CursorUp();
-    void CursorDown();
-    void CursorLeft();
-    void CursorRight();
-    void ConfirmCell();
-    void EndTurn();
-    void RotateLeft();
-    void RotateRight();
-    void ZoomIn();
-    void ZoomOut();
-    void SelectOne();
-    void SelectTwo();
-    void SelectThree();
-    void SelectFour();
-};
-
-UCLASS()
-class DNDDICEROLL_API AExpeditionHUD : public AHUD
-{
-    GENERATED_BODY()
-public:
-    virtual void DrawHUD() override;
-private:
-    float HUDScale = 1.0f;
-    void Panel(FLinearColor Color, float X, float Y, float Width, float Height);
-    void Label(const FString& Text, float X, float Y, FLinearColor Color = FLinearColor::White, float Scale = 1.0f);
-    void OutlineCell(APlayerController* Controller, const AExpeditionBattleView* View, FIntPoint Cell, FLinearColor Color, float Thickness);
+    void Present(const TArray<FCombatResult>& Results);
+    void ExpireVoices();
 };
 
 UCLASS()

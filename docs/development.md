@@ -26,6 +26,7 @@ Use Python **3.11+**, with no third-party dependencies. On this Mac `/opt/homebr
 | `capture` | Save a validated viewport PNG under `.local/captures/` |
 | `test` | Run the configured project test prefix headlessly and validate its JSON report |
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
+| `test --filter Project.Tools.CaptureFixtures` | Write real Expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Mac Development app, then verify headless startup to the default sandbox |
 
@@ -46,6 +47,10 @@ The same startup script imports the project authoring skill. [Unreal agent setup
 For the one-time migration from an editor launched before the status tool existed, `close --request-quit` sends only the normal PID-targeted quit after OS identity checks. This explicit escape hatch skips the toolset dirty gate while retaining Unreal's save dialogs. Routine operations use `close`.
 
 ## Agent workflow and evidence
+
+Use Matt Pocock skills directly under the [contribution workflow](agents/workflow.md), which owns planning, claims, review and staging delivery. Historical run reports retain their original launcher references.
+
+Before extending the game, read the [current polish handoff](runs/expedition-polish/01-presentation-polish.md), inspect the branch and working tree, and establish editor ownership with fresh `status`. The [V1 ledger](runs/expedition-v1/ledger.md) is delivery history. Record the feature baseline, scope, owner, validation and unresolved limits in the current run record. Keep reviewed feature PRs targeting `staging`; merging remains a separate user decision.
 
 Establish a slice and observable acceptance criteria in the game brief or a focused design note. Inspect the tree, run doctor, and use the safe compile loop for source changes. Discover `list_toolsets`, inspect `describe_toolset`, then dispatch `call_tool` using its schema. [Editor recipes](editor-recipes.md) maps common tasks to Epic's existing tools and skills. [Architecture](architecture.md) covers C++/Blueprint and ownership conventions.
 
