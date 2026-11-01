@@ -43,9 +43,9 @@ Every adventurer's identity, role, HP, life state, resources, gear and potions c
 
 ## Tactical adaptations and omissions
 
-- Cardinal movement and Manhattan ranges; one cell represents five feet. No diagonals, difficult terrain, Dash, Disengage, reactions, opportunity attacks, advantage or cover modifiers. Blocked terrain obscures sight, including rays touching blocked corners; combatants do not obscure sight.
+- Cardinal movement and Manhattan ranges; one cell represents five feet. No diagonals, difficult terrain, Dash, Disengage, reactions, opportunity attacks or cover modifiers. Blocked terrain obscures sight, including rays touching blocked corners; combatants do not obscure sight.
 - Spell and weapon ranges are shortened for the arena: use the displayed cell ranges. Cure Wounds uses adjacent/self touch; Magic Missile uses six cells and one target for all darts. Wizard Fire Bolt uses four cells. Spell components, damage types/resistances and multi-target dart assignment are omitted.
-- Rogue eligibility implements only the conscious-adjacent-ally condition, with the prebuilt ranged weapon qualifying. Advantage/disadvantage and other Sneak Attack eligibility paths are absent. The single attack Action enforces once per turn. Cleric's ranged attack is a fixed profile adaptation rather than an additional named SRD feature.
+- Rogue eligibility implements only the conscious-adjacent-ally condition, with the prebuilt ranged weapon qualifying. Advantage also qualifies Sneak Attack; disadvantage always denies it, even with an adjacent ally. The single attack Action enforces once per turn. Cleric's ranged attack is a fixed profile adaptation rather than an additional named SRD feature.
 - Deterministic rescue countdown, guaranteed Rescue and potion use with an Action cost, loss of unresolved downed allies at victory, immediate wipe when no rescuer remains, potion ownership and gear progression are game adaptations. SRD death saves, stabilization, massive damage, zero-HP damage and rest rules are not implemented.
 - Enemies perform finite path search, move toward a firing cell, attack a legal conscious opponent if possible, and end their turn. Rejected player input cannot delay enemy progression.
 
@@ -98,3 +98,7 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 ## Issue #55: ability checks, skill checks and saving throws
 
 `FCheckRules` resolves a d20 + modifier against a DC (1..30). Ability checks and saves have no automatic success on a natural 20 or failure on a natural 1. Advantage and disadvantage combine SRD-style: any advantage plus any disadvantage is a normal roll, however many sources. A normal roll spends one die; advantage or disadvantage spends two from the same seeded stream as combat dice. Forecasts are exact over all 400 pairs of d20 faces (shown rounded to a whole percent) and spend no random numbers. Contested checks: the actor must beat the defender; a tie keeps the status quo. `FCombatBattle::SkillCheck`/`SavingThrow` roll from the battle's random state and reject unknown or non-conscious units and out-of-range DCs without spending RNG; `SkillCheckChance`/`SavingThrowChance` are const forecasts.
+
+## Issue #56: attack advantage and disadvantage
+
+Attack rolls resolve advantage and disadvantage per SRD 5.1: any number of sources of each cancel to a normal roll; otherwise two d20s are rolled and the higher (advantage) or lower (disadvantage) is kept, spending exactly one extra RNG draw. The source implemented now is a ranged attack (weapon range above one cell) made while a conscious hostile is adjacent, which imposes disadvantage. Forecasts report the mode, its named sources and the exact chance out of 400 (normal 20x, advantage 400-(20-x)^2, disadvantage x^2 for x winning faces) without spending RNG. Feedback and playback show both d20s and the mode. Conditions (#57) will add further sources.

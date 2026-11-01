@@ -650,7 +650,8 @@ void AExpeditionHUD::DrawForecast()
         if (Forecast.bAttackRoll)
         {
             const FLinearColor Chance = Forecast.HitChancePercent >= 65 ? Safe : Forecast.HitChancePercent >= 40 ? Gold : Danger;
-            Lines.Add({FString::Printf(TEXT("%d%% to hit"), Forecast.HitChancePercent), Chance});
+            Lines.Add({FString::Printf(TEXT("%d%% to hit%s"), Forecast.HitChancePercent, Forecast.RollMode == ERollMode::Normal ? TEXT("") :
+                Forecast.RollMode == ERollMode::Advantage ? TEXT("  (advantage)") : TEXT("  (disadvantage)")), Chance});
         }
         else if (!Forecast.bHealing && Forecast.MaxAmount > 0) { Lines.Add({TEXT("Never misses"), Safe}); }
         Lines.Add({ExpeditionStyle::ForecastAmount(Forecast), Parchment});

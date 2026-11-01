@@ -125,6 +125,14 @@ struct DNDDICEROLL_API FTargetEffect
     FIntPoint Cell = FIntPoint::ZeroValue;
 };
 
+/** Named reasons an attack roll has advantage or disadvantage, and the combined SRD mode. */
+struct DNDDICEROLL_API FAttackRollMode
+{
+    ERollMode Mode = ERollMode::Normal;
+    TArray<FString> Advantage;
+    TArray<FString> Disadvantage;
+};
+
 struct DNDDICEROLL_API FCombatResult
 {
     bool bAccepted = false;
@@ -136,6 +144,10 @@ struct DNDDICEROLL_API FCombatResult
     bool bCritical = false;
     int32 Healing = 0;
     bool bSneakAttack = false;
+    /** Attack rolls only: every d20 rolled (two with advantage or disadvantage); NaturalRoll is the kept die. */
+    TArray<int32> AttackRolls;
+    ERollMode RollMode = ERollMode::Normal;
+    TArray<FString> RollModeSources;
     // Facts about the resolved command for presentation. Rules never read them back.
     ECombatCommandType Type = ECombatCommandType::EndTurn;
     int32 ActorId = INDEX_NONE;
@@ -162,6 +174,11 @@ struct DNDDICEROLL_API FActionForecast
     bool bValid = false;
     bool bAttackRoll = false;
     int32 HitChancePercent = 0;
+    /** Exact hit chance over all 400 pairs of d20 faces; HitChancePercent is this rounded. */
+    int32 HitChanceOutOf400 = 0;
+    ERollMode RollMode = ERollMode::Normal;
+    TArray<FString> AdvantageSources;
+    TArray<FString> DisadvantageSources;
     bool bHealing = false;
     /** Only the two endpoints can occur (for example Wild Bolt), rather than a dice range. */
     bool bDiscreteAmounts = false;
@@ -200,6 +217,8 @@ public:
     int32 AbilityModifier(int32 Id, EAbility Ability) const;
     /** Proficiency, skill, save and tool facts for a combatant at its current level. Read-only, no RNG. */
     FCharacterRules Character(int32 Id) const;
+    /** Advantage/disadvantage sources for an attack. Read-only, no RNG. */
+    FAttackRollMode AttackRollMode(int32 ActorId, int32 TargetId) const;
     /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
     int32 SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const;
     int32 SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const;

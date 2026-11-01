@@ -326,11 +326,14 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 
 bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const
 {
-    return (FBuildCatalog::Find(Actor.BuildId) ? FBuildCatalog::Find(Actor.BuildId)->SneakDie > 0 : Actor.AdventurerRole == EAdventurerRole::Rogue) && Actor.bSneakWeapon &&
+    const bool bSneakBuild = FBuildCatalog::Find(Actor.BuildId) ? FBuildCatalog::Find(Actor.BuildId)->SneakDie > 0 : Actor.AdventurerRole == EAdventurerRole::Rogue;
+    if (!bSneakBuild || !Actor.bSneakWeapon) { return false; }
+    const ERollMode Mode = AttackRollMode(Actor.Id, Target.Id).Mode;
+    return Mode != ERollMode::Disadvantage && (Mode == ERollMode::Advantage ||
         State.Encounter.Combatants.ContainsByPredicate([&Actor, &Target](const FCombatantState& Ally)
         {
             return Ally.Id != Actor.Id && Ally.Side == Actor.Side && Ally.Life == ECombatLife::Conscious && GridDistance(Ally.Cell, Target.Cell) <= 1;
-        });
+        }));
 }
 
 FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const
@@ -392,13 +395,20 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
         { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
-        Forecast.HitChancePercent = Hits * 5;
+        const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
+        Forecast.RollMode = Mode.Mode;
+        Forecast.AdvantageSources = Mode.Advantage;
+        Forecast.DisadvantageSources = Mode.Disadvantage;
+        // Hitting faces are a top run of the d20, so two-die chances are exact squares.
+        Forecast.HitChanceOutOf400 = Mode.Mode == ERollMode::Advantage ? 400 - (20 - Hits) * (20 - Hits) :
+            Mode.Mode == ERollMode::Disadvantage ? Hits * Hits : Hits * 20;
+        Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
         Effect(1, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
     }
-    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
+    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Forecast.HitChanceOutOf400 = 400; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
     case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel); break;
     case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
@@ -487,6 +497,26 @@ bool FCombatBattle::SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode 
     Out = FCheckRules::Resolve(Character(Id).SaveBonus(Ability), Dc, Mode, State.RandomState);
     Error.Reset();
     return true;
+}
+
+FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) const
+{
+    FAttackRollMode Mode;
+    const FCombatantState* Actor = Find(ActorId);
+    if (!Actor || !Find(TargetId)) { return Mode; }
+    // SRD: a ranged attack has disadvantage while a hostile, non-incapacitated creature is within five feet.
+    if (Actor->Range > 1)
+    {
+        for (const FCombatantState& Other : State.Encounter.Combatants)
+        {
+            if (Other.Side != Actor->Side && Other.Life == ECombatLife::Conscious && GridDistance(Other.Cell, Actor->Cell) <= 1)
+            {
+                Mode.Disadvantage.Add(FString::Printf(TEXT("ranged attack with %s adjacent"), *Other.Name));
+            }
+        }
+    }
+    Mode.Mode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num());
+    return Mode;
 }
 
 FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
@@ -590,7 +620,14 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
         const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
-        Result.NaturalRoll = Roll(20);
+        const FAttackRollMode Mode = AttackRollMode(Command.ActorId, Command.TargetId);
+        Result.RollMode = Mode.Mode;
+        Result.RollModeSources = Mode.Advantage;
+        Result.RollModeSources.Append(Mode.Disadvantage);
+        Result.AttackRolls.Add(Roll(20));
+        if (Mode.Mode != ERollMode::Normal) { Result.AttackRolls.Add(Roll(20)); }
+        Result.NaturalRoll = Mode.Mode == ERollMode::Advantage ? FMath::Max(Result.AttackRolls[0], Result.AttackRolls.Last()) :
+            FMath::Min(Result.AttackRolls[0], Result.AttackRolls.Last());
         Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
         Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
         Result.TargetArmorClass = Target->ArmorClass;
@@ -617,8 +654,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FString TargetStatus = Target->Life == ECombatLife::Downed ? FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft) :
             Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : TEXT("");
         if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
-        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d + %d = %d vs AC %d | %s | %d damage. HP %d/%d%s"),
-            *Actor->Name, *Target->Name, Result.NaturalRoll, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
+        const FString ModeText = Result.AttackRolls.Num() > 1 ?
+            FString::Printf(TEXT(" (%s %d/%d)"), FCheckRules::ModeName(Result.RollMode), Result.AttackRolls[0], Result.AttackRolls[1]) : FString();
+        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d | %s | %d damage. HP %d/%d%s"),
+            *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage,
             Target->HP, Target->MaxHP, *TargetStatus);
     }

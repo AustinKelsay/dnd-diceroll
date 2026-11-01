@@ -125,6 +125,7 @@ bool FSneakAttackTest::RunTest(const FString& Parameters)
     {
         auto Encounter=RoleDuel(EAdventurerRole::Rogue);
         Encounter.Combatants[0].bSneakWeapon=Case!=1; Encounter.Combatants[0].AttackBonus=30;
+        Encounter.Combatants[0].Cell=FIntPoint(0,2); // shoot from range: an adjacent hostile would impose disadvantage
         FCombatantState Ally=Encounter.Combatants[0]; Ally.Id=2; Ally.Cell=Case==2?FIntPoint(6,6):FIntPoint(1,1); Ally.InitiativeBonus=-10;
         if(Case==3) { Ally.Life=ECombatLife::Downed; Ally.HP=0; Ally.RescueTurnsLeft=3; }
         Encounter.Combatants.Add(Ally);
@@ -140,6 +141,7 @@ bool FSneakAttackTest::RunTest(const FString& Parameters)
     }
     auto CriticalEncounter = RoleDuel(EAdventurerRole::Rogue);
     CriticalEncounter.Combatants[0].bSneakWeapon = true;
+    CriticalEncounter.Combatants[0].Cell = FIntPoint(0,2);
     CriticalEncounter.Combatants[1].HP = 1;
     FCombatantState Ally = CriticalEncounter.Combatants[0];
     Ally.Id = 2; Ally.Cell = {1,1}; Ally.InitiativeBonus = -10;
@@ -281,7 +283,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEquipmentDamageTest, "Project.Expedition.Party
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FEquipmentDamageTest::RunTest(const FString& Parameters)
 {
-    auto Encounter=RoleDuel(EAdventurerRole::Fighter); Encounter.Combatants[0].WeaponRank=2;
+    auto Encounter=RoleDuel(EAdventurerRole::Fighter); Encounter.Combatants[0].WeaponRank=2; Encounter.Combatants[0].Range=1;
     FCombatBattle Battle; FString Error; Battle.Start(Encounter,42,Error);
     const auto Result=Battle.Submit({ECombatCommandType::Attack,1,{},20});
     TestEqual(TEXT("Worked seed: d6=4, modifier=3, owned gear=2"),Result.Damage,9);

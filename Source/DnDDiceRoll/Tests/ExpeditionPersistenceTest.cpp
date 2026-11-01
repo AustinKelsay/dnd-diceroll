@@ -91,9 +91,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResumeEveryPhaseTest, "Project.Expedition.Pers
 bool FResumeEveryPhaseTest::RunTest(const FString& Parameters)
 {
     TSet<EExpeditionPhase> Phases; bool bSpentAction=false, bPartialMove=false, bBonus=false, bDowned=false, bDead=false;
+    // Coverage is the union over a few fixture seeds, so a rules change that shifts dice need not hide a phase.
+    for (int32 Seed : {42, 43, 44})
     for (bool bFight : {true, false})
     {
-        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(42, Error, TEXT("phase-fixture"));
+        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(Seed, Error, TEXT("phase-fixture"));
         for (int32 Step=0; Step<1600; ++Step)
         {
             if (!TestTrue(*Error, Roundtrip(Run, Resumed, Error))) { return false; }

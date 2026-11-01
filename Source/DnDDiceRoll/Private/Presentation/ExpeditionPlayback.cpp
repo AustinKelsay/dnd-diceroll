@@ -306,7 +306,8 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
         }
         else
         {
-            Dice.Dice.Add({20, Result.NaturalRoll, 0.0f, FLinearColor(0.95f, 0.92f, 0.84f)});
+            if (Result.AttackRolls.IsEmpty()) { Dice.Dice.Add({20, Result.NaturalRoll, 0.0f, FLinearColor(0.95f, 0.92f, 0.84f)}); }
+            for (int32 Index = 0; Index < Result.AttackRolls.Num(); ++Index) { Dice.Dice.Add({20, Result.AttackRolls[Index], 0.06f * Index, FLinearColor(0.95f, 0.92f, 0.84f)}); }
             Dice.Detail = FString::Printf(TEXT("Rolling d20 %+d against AC %d"), Result.AttackBonus, Result.TargetArmorClass);
         }
         Cue(EExpeditionCue::DiceRoll);
@@ -322,6 +323,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
             Cue(EExpeditionCue::DiceLand);
             Dice.Detail = FString::Printf(TEXT("d20 %d %s %d = %d  vs  AC %d"), Result.NaturalRoll, Result.AttackBonus >= 0 ? TEXT("+") : TEXT("-"),
                 FMath::Abs(Result.AttackBonus), Result.AttackTotal, Result.TargetArmorClass);
+            if (Result.RollMode != ERollMode::Normal) { Dice.Detail += FString::Printf(TEXT("  ·  %s"), FCheckRules::ModeName(Result.RollMode)); }
             if (Result.bCritical) { Dice.Verdict = TEXT("CRITICAL HIT!"); Dice.VerdictColor = PlaybackGold; Cue(EExpeditionCue::Critical); Shake(0.5f); }
             else if (Result.NaturalRoll == 1) { Dice.Verdict = TEXT("NATURAL 1 — MISS"); Dice.VerdictColor = Blood; }
             else if (Result.bHit) { Dice.Verdict = TEXT("HIT"); Dice.VerdictColor = FLinearColor(1.0f, 0.55f, 0.35f); }
