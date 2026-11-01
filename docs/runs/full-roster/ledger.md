@@ -152,3 +152,41 @@ Two fresh independent reviews of `45b4d515...e140aaf0` produced one Standards P2
 Controlled behavioral red: `.local/martial-review-red-build.log` compiled the new direct combat regression, and `.local/automation/20261101T232106541590Z/index.json` failed all four expected rejection/atomicity assertions for the two invalid Thief pools. Root then added catalog `ValidResources` to encounter validation. The corrected pinned build passed (`.local/martial-review-green-build.log`); full `Project.` automation passed **63/63, zero warnings**, including all original61 and expanded two-slot/JSON coverage (`.local/automation/20261101T232254048525Z/index.json`, `.local/martial-review-green-tests.log`).
 
 The first root package on initial source `e140aaf0` built/cooked/staged/archived successfully but its headless startup exited -11 (`Builds/20261101T231619989334Z`, `.local/martial-root-package.log`). macOS report `DnDDiceRoll-2026-11-01-171908.ips`, preserved as `.local/martial-package-startup-crash.ips`, identifies PID42419 and the `FLLMTracker::PopTag`/`FMallocBinned3` path tracked by accepted startup risk #35. This attempt is a failed package verification, not a pass and not evidence of a fix. Fresh corrected-source package/native checks and independent rechecks follow; no GUI acceptance is claimed by this entry.
+
+## Slice 3 corrected-source verification (#41)
+
+Corrected source `a1dfeb977cae1274ae36da24897555db0fc34112` received fresh independent Standards and Spec rechecks of the complete slice, both **no actionable source findings**. Reviewers confirmed the prior validation and coverage findings closed by inspection, and accepted the adjacent-area geometry explanation. Possible duplicated area membership remains nonblocking.
+
+- Full pinned build and **63/63 Project tests, zero warnings** are recorded above; source unchanged after that verification.
+- Root offline helpers passed **50/50** (`.local/martial-review-helpers.log`).
+- Staged contribution and whitespace checks passed before the correction commit.
+- A corrected-source package attempt refused at the global UnrealBuildTool mutex (`Builds/20261101T232335087389Z`, `.local/martial-review-package.log`); it is not an SDK failure despite the generic UAT exit-code label. No editor was closed to bypass the refusal. Read-only inspection then found no active UBT, and the next attempt proceeded.
+- Fresh corrected-source Mac Development build/cook/stage/archive and headless startup passed: `Builds/20261101T232448147033Z/verified.json`, `.local/martial-review-package-retry.log`. The receipt reports no startup errors/warnings. This does not establish a fix for #35.
+- Doctor passed after packaging (`.local/martial-review-doctor-final.log`). An earlier doctor call during the package lock was refused without running concurrently.
+- Only the generated AndroidFileServer suffix was removed after proving the authored HEAD prefix unchanged; no authored config changed and no token values were printed.
+
+For rendered work, root cloned that final archive into an ignored, ad-hoc signed `Roster41QA` app with unique bundle `com.YourCompany.DnDDiceRoll.Roster41QA` and a fresh save directory in its own sandbox. Original editor PID50002 and separate game PID54584 were observed read-only and remain with their owner; neither was operated. Native QA observations follow when demonstrated.
+
+
+## Slice 3 native acceptance (#41)
+
+Root operated only the unique packaged Roster41QA app through cua-driver, exact PID/window and strict window-scoped background keyboard delivery. The original checkout/editor and separate game were untouched. Seed20261030, Stream trail, generated **18×11** geometry was reached through explicit builder/New/route controls with Arden/Psi Warrior, Nix/Thief, Sera/Four Elements and Ivo/Swarmkeeper. Human-readable kit previews and both special costs were inspected. No authoritative checkpoint edits or debug gameplay commands were used.
+
+Observed worked outcomes:
+
+- Four Elements Water Whip previewed five damage; commit spent one use, reduced Scout1 from10 to5 HP and pushed it from(9,4) to(10,4). Subsequent enemy movement was ordinary AI, independently read from the checkpoint.
+- Psi Warrior Protective Field spent one use and protected Nix by three until Arden's next turn. Thief Quick Exchange then spent one use/Bonus Action, swapped Nix from(4,4) to(4,3) and Arden the reverse, preserved movement/Action, and left protection attached to adventurer2 through the swap.
+- Swarmkeeper Gathered Swarm previewed and committed three HP loss to Vault bow,10→7, spending Bonus Action/one use. This generated arrangement contained one affected enemy; native multi-target acceptance is not claimed. Literal multi-target public tests cover the area rule.
+- Driving Swarm then previewed/committed five HP loss,7→2, and pushed Vault bow from(9,6) to(10,6), spending Action/the last use. Both action budgets were spent and both specials displayed unavailable with Kit0. Scout1 remained5HP.
+- At actual **1024×608** window bounds, four party cards, grid, six combat buttons, unavailable labels and top controls fit without overlap. Smaller descriptive text remains a polish follow-up.
+- Normal Cmd+Q exited owned PID63832. Fresh launch PID82338/window2481 with the same unique save root left checkpoint bytes unchanged at startup. Public O/Resume restored the four builds, HP/cells, Kit counts1/1/1/0, owner1 protection of2 (amount3/duration1), Round2/Ivo active, Move4 and both spent budgets; checkpoint bytes remained identical after Resume. Rendered pawns/status/action availability agreed. No scene-culling crash occurred in this run; this does not fix risk32.
+
+Selected inspected captures: `.local/m41-psi-2.png`, `m41-monk-5.png`, `m41-swarm-7.png`, `m41-whip-target.png`, `m41-whip-hit.png`, `m41-exchange-preview-1.png`, `m41-exchange-0.png`, `m41-swarm-preview-2.png`, `m41-swarm-hit-1.png`, `m41-narrow.png`, `m41-resume.png`. Per-action JSON and own save comparison `.local/m41-before-restart.json` retain supporting evidence. One capture returned `px_frame_mismatch`; the next snapshot was valid and a fresh exact-window listing confirmed identity before the narrow-window check. No pixel coordinates were used for gameplay. The native log has an AudioUnit sample-rate warning; sound acceptance is not claimed. Short-lived playback timing, every native kit, successful pointer automation and human balance are not established by this bounded keyboard run.
+
+Final cleanup and staged checks follow below. Outcome: **#41 accepted locally**, corrected source `a1dfeb977cae1274ae36da24897555db0fc34112`, pinned build, **63/63 Project tests (zero warnings)**, **50/50 helpers**, fresh independent Standards/Spec rechecks, successful Mac Development package/startup and native observations above. Full catalog is30 kits/eight classes,28 approved subclasses plus interim Cleric/Wizard. Known engine risks32/35 remain unresolved. No push, PR, merge, release or issue closure. Slice42 is next on the same coherent branch.
+
+Final roster-polish follow-ups: use human build labels instead of raw builder-card IDs, display protection target names rather than numeric IDs, and shorten resolved-effect log/forecast prose so it does not shrink into tiny text. Current action names, costs, target preview and availability are usable; these are recorded presentation improvements for slice45.
+
+Owned fresh QA process exited normally; exact-window listing confirmed no remaining windows and both driver sessions were ended. Preflight during documentation acceptance refused only the known owner-held MCP port and uncommitted acceptance docs (`.local/martial-root-committed-preflight.log`); no workspace update or editor action was attempted. Remote ahead/behind numbers are cached observations, not integration evidence.
+
+Final staged contribution check and staged/working-tree whitespace checks passed (`.local/martial-root-acceptance-check.log`). Acceptance commit changes documentation only; verified source/package remain unchanged.

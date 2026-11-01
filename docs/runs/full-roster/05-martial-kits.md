@@ -53,4 +53,4 @@ Omissions: no spellbooks, tabletop ambush surprise subsystem, ki progression, pe
 
 Controlled behavioral red: `.local/automation/20261101T230254389403Z/index.json` reports Thief command acceptance with both cell-exchange assertions failing before exchange resolution. The earlier catalog-only red is `.local/automation/20261101T230123484688Z/index.json`; it is not offered as behavioral evidence.
 
-Final checks and remaining limitations are recorded in the ledger. Native rendering/input, packaging and independent review are root-owned gates. Accepted engine scene-culling risk #32 remains unresolved. Automated pointer coverage, sound and human balance remain limitations.
+Root accepted this slice locally after correction, independent Standards/Spec rechecks, pinned build, 63/63 Project tests (zero warnings), 50/50 helpers, Mac Development package and inspected native mixed-party keyboard/combat/Resume checks. Exact evidence and limitations are in the ledger. Engine risks #32/#35 remain unresolved; automated pointer coverage, sound and human balance remain limitations. No integration or full70 delivery is claimed.
