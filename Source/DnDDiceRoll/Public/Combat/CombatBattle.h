@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Rules/AbilityRules.h"
+#include "Rules/ProficiencyRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -197,6 +197,8 @@ public:
     FAbilityScores AbilityScores(int32 Id) const;
     /** SRD ability modifier for a combatant; 0 for unknown IDs. */
     int32 AbilityModifier(int32 Id, EAbility Ability) const;
+    /** Proficiency, skill, save and tool facts for a combatant at its current level. Read-only, no RNG. */
+    FCharacterRules Character(int32 Id) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();

@@ -443,6 +443,14 @@ int32 FCombatBattle::AbilityModifier(int32 Id, EAbility Ability) const
     return Find(Id) ? FAbilityRules::Modifier(AbilityScores(Id).Get(Ability)) : 0;
 }
 
+FCharacterRules FCombatBattle::Character(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return FCharacterRules(); }
+    return Unit->Side == ECombatSide::Party && Unit->AdventurerRole != EAdventurerRole::None ?
+        FProficiencyRules::PrebuiltCharacter(Unit->AdventurerRole, Unit->Level) : FProficiencyRules::EnemyCharacter(Unit->Role);
+}
+
 FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
 {
     TArray<ECombatLife> LifeBefore;
