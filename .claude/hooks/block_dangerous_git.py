@@ -18,7 +18,7 @@ PATTERNS = [
     r"git(\s+\S+)*\s+(checkout|restore)(\s+\S+)*\s+(\.|:/)(\s|;|\||&|\)|$)",
     r"git(\s+\S+)*\s+push(\s+\S+)*\s+(--force|-[A-Za-z]*f[A-Za-z]*)(\s|=|$)",
     r"git(\s+\S+)*\s+push(\s+\S+)*\s+\+\S",
-    r"git(\s+\S+)*\s+branch(\s+\S+)*\s+(-D|--delete\s+--force|--force\s+--delete)(\s|$)",
+    r"git(\s+\S+)*\s+branch(\s+\S+)*\s+(-[A-Za-z]*[Df][A-Za-z]*|--force|--delete\s+--force)(\s|$)",
     r"git(\s+\S+)*\s+stash\s+(drop|clear)(\s|$)",
     r"git(\s+\S+)*\s+worktree\s+remove(\s+\S+)*\s+(--force|-f)(\s|$)",
 ]

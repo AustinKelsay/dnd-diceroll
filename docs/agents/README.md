@@ -18,6 +18,6 @@ Find the document that owns your task, then follow its links. Each row names one
 
 ## Agent wiring
 
-Claude Code reads `CLAUDE.md`, which imports `AGENTS.md`, discovers the project skills through `.claude/skills`, connects to Unreal through `.mcp.json`, and runs the shared `.claude/settings.json` hook that blocks destructive Git commands. Codex reads `AGENTS.md` and `.agents/skills` natively and uses `.codex/config.toml` for Unreal. Cursor reads `AGENTS.md` natively. Any other agent works from this repository by reading `AGENTS.md` first and opening the listed `SKILL.md` files directly; for Gemini CLI, set `context.fileName` to `AGENTS.md` in a local `.gemini/settings.json`. Agents without the hook rely on the workflow's Git rules.
+`AGENTS.md` holds the shared instructions. Claude Code loads it through the `CLAUDE.md` import, connects to Unreal through `.mcp.json`, and runs the shared `.claude/settings.json` hook that blocks destructive Git commands. Codex and Cursor read `AGENTS.md` natively; Codex uses `.codex/config.toml` for Unreal. For Gemini CLI, set `context.fileName` to `AGENTS.md` in a local `.gemini/settings.json`. Agents without the hook rely on the workflow's Git rules.
 
 Inside the editor, `ProjectAuthoringSkill` serves [editor authoring](editor-authoring.md), a condensed checklist for the same editor and asset work. Editor startup reads that file by path, so moving or renaming it breaks the skill.
