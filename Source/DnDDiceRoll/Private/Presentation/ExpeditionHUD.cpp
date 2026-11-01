@@ -341,10 +341,44 @@ void AExpeditionHUD::DrawWorldOverlays()
         }
     }
 
-    // Legal targets get a pulsing marker above their heads.
+    // Action reach: a dot on every cell the action can strike, a cross where range is blocked or out of sight.
+    if (bCombat && !View->IsPresenting())
+    {
+        const FActionReach Span = Rules.Reach(Player->Actor(), Player->Action());
+        const FLinearColor Strike = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor())) ? Safe : Danger;
+        for (const FIntPoint Cell : Span.InSight)
+        {
+            FVector2D Point;
+            if (Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 3.0f), Point)) { Polygon(Point, 3.5f, 4, 0.0f, Strike * FLinearColor(1, 1, 1, 0.7f)); }
+        }
+        for (const FIntPoint Cell : Span.Obscured)
+        {
+            FVector2D Point;
+            if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 3.0f), Point)) { continue; }
+            const FLinearColor Veil(0.75f, 0.75f, 0.8f, 0.55f);
+            Line(Point + FVector2D(-5, -5), Point + FVector2D(5, 5), Veil, 2.0f);
+            Line(Point + FVector2D(-5, 5), Point + FVector2D(5, -5), Veil, 2.0f);
+        }
+    }
+
+    // Legal targets get a pulsing marker above their heads and a forecast chip.
     if (bCombat && !View->IsPresenting())
     {
         const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
+        for (int32 Id : Player->Targets())
+        {
+            const FActionForecast Odds = Rules.Forecast(Player->Actor(), Player->Action(), Id);
+            FVector2D Point;
+            if (!Odds.bValid || !Project(View->UnitPosition(Id, 215.0f), Point)) { continue; }
+            const FString Amount = Odds.MinAmount == Odds.MaxAmount ? FString::FromInt(Odds.MinAmount) : FString::Printf(TEXT("%d-%d"), Odds.MinAmount, Odds.MaxAmount);
+            const FString Label = Odds.bHealing ? FString::Printf(TEXT("Heals %s"), *Amount)
+                : FString::Printf(TEXT("%s \u00B7 %s%s"), Odds.bAttackRoll ? *FString::Printf(TEXT("%d%%"), Odds.HitChancePercent) : TEXT("Never misses"), *Amount, Odds.bCanDrop ? TEXT(" \u00B7 can drop") : TEXT(""));
+            const FLinearColor Edge = Odds.bCanDrop ? Danger : Odds.bHealing ? Safe : !Odds.bAttackRoll || Odds.HitChancePercent >= 65 ? Safe : Odds.HitChancePercent >= 40 ? Gold : Danger;
+            const float Width = Measure(Label, 0.62f).X + 14.0f;
+            Rect(FLinearColor(0.03f, 0.03f, 0.04f, 0.82f), Point.X - Width * 0.5f, Point.Y - 22, Width, 18);
+            Frame(Edge, Point.X - Width * 0.5f, Point.Y - 22, Width, 18, Odds.bCanDrop ? 2.0f : 1.0f);
+            Text(Label, Point.X, Point.Y - 20, Odds.bCanDrop ? Danger : Parchment, 0.62f, EAlign::Center);
+        }
         for (int32 Id : Player->Targets())
         {
             FVector2D Point;

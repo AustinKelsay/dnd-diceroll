@@ -131,6 +131,9 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
+        const FActionReach Span = Rules.Reach(ActorId, SelectedAction);
+        Highlights.InRange = Span.InSight;
+        Highlights.Obscured = Span.Obscured;
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }

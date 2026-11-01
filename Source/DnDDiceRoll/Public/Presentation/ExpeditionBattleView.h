@@ -75,6 +75,9 @@ struct FBoardHighlights
     TArray<FIntPoint> Moves;
     TArray<FIntPoint> Path;
     TArray<int32> Targets;
+    /** Selected action's reach: cells it can strike, and cells in range but blocked or out of sight. */
+    TArray<FIntPoint> InRange;
+    TArray<FIntPoint> Obscured;
     int32 SelectedId = INDEX_NONE;
     int32 HoverTargetId = INDEX_NONE;
     bool bHasHover = false;

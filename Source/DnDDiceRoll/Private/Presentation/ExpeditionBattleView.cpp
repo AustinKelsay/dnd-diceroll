@@ -720,6 +720,9 @@ void AExpeditionBattleView::UpdateTiles()
         if (bShowChoices)
         {
             const float Pulse = 0.5f + 0.5f * FMath::Sin(Clock * 3.0f);
+            // Action reach underlays movement so both read in attack mode.
+            if (Highlights.InRange.Contains(Tile.Cell)) { Color = FMath::Lerp(Color, Highlights.bFriendlyTargets ? FLinearColor(0.2f, 0.85f, 0.4f) : FLinearColor(0.95f, 0.3f, 0.15f), 0.24f); }
+            else if (Highlights.Obscured.Contains(Tile.Cell)) { Color = FMath::Lerp(Color, FLinearColor(0.08f, 0.08f, 0.1f), 0.45f); }
             if (Highlights.Path.Contains(Tile.Cell)) { Color = FMath::Lerp(Color, Trail, 0.7f); }
             else if (Highlights.Moves.Contains(Tile.Cell)) { Color = FMath::Lerp(Color, Reach, 0.32f + Pulse * 0.06f); }
             if (Highlights.bHasHover && Highlights.Hover == Tile.Cell) { Color = Color * 1.35f; }
