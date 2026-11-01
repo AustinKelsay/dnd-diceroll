@@ -2,7 +2,7 @@
 """Dependency-free Mac Unreal workspace commands (Python 3.11+)."""
 import sys
 if sys.version_info < (3, 11):
-    sys.exit(f"Python 3.11+ required; current interpreter: {sys.executable} ({sys.version.split()[0]}). On this Mac use /opt/homebrew/bin/python3.")
+    sys.exit(f"Python 3.11+ required; current interpreter: {sys.executable} ({sys.version.split()[0]}). On the supported Mac host use /opt/homebrew/bin/python3.")
 
 import argparse
 import base64
