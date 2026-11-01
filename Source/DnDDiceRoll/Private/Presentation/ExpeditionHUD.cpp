@@ -578,7 +578,7 @@ void AExpeditionHUD::DrawActionBar()
     {
         Button(TEXT("Maneuver"), TEXT("Precision Strike"), FString::Printf(TEXT("M  +2 hit/damage, %d left"), Active->ManeuverUses), W * 0.5f - 125, Y - 82, 250, 44, !Rules.LegalTargets(Id, ECombatCommandType::PrecisionStrike).IsEmpty(), Player->Action() == ECombatCommandType::PrecisionStrike, Gold);
     }
-    const ECombatCommandType Role = Player->RoleAction();
+    const ECombatCommandType RoleAbility = Player->RoleAction();
     const bool bRogue = Active->AdventurerRole == EAdventurerRole::Rogue;
     const float Width = 128, Gap = 6, Height = 54;
     const float Left = W * 0.5f - (5 * Width + 4 * Gap) * 0.5f;
@@ -594,9 +594,9 @@ void AExpeditionHUD::DrawActionBar()
     }
     else
     {
-        const FString Uses = Role == ECombatCommandType::SecondWind ? FString::Printf(TEXT("F  ·  bonus, %d left"), Active->SecondWindUses)
+        const FString Uses = RoleAbility == ECombatCommandType::SecondWind ? FString::Printf(TEXT("F  ·  bonus, %d left"), Active->SecondWindUses)
             : FString::Printf(TEXT("F  ·  %d slot%s left"), Active->SpellSlots, Active->SpellSlots == 1 ? TEXT("") : TEXT("s"));
-        Hover.Add({Role, Button(TEXT("ModeRole"), ExpeditionStyle::ActionName(Role), Uses, Left + (Width + Gap), Y, Width, Height, Ready(Role), Mode == Role, FLinearColor(0.7f, 0.6f, 1.0f))});
+        Hover.Add({RoleAbility, Button(TEXT("ModeRole"), ExpeditionStyle::ActionName(RoleAbility), Uses, Left + (Width + Gap), Y, Width, Height, Ready(RoleAbility), Mode == RoleAbility, FLinearColor(0.7f, 0.6f, 1.0f))});
     }
     Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R  ·  downed ally beside you"), Left + 2 * (Width + Gap), Y, Width, Height,
         Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
