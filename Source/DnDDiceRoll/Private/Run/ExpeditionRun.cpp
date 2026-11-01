@@ -11,11 +11,19 @@ struct FEncounterRecipe
     int32 FirstEnemyRow;
 };
 
+// Generated grids are about three times the original 8-9 x 7-8 area.
+constexpr int32 MinWidth = 16, MaxWidth = 18, MinHeight = 11, MaxHeight = 12;
+// The party forms a column here, centred vertically; enemies form one EnemyEdgeOffset
+// cells from the far edge. That leaves an 8..11 cell opening gap and room behind both lines.
+constexpr int32 PartyColumn = 3;
+
 // The preview and generated geometry read the same bounded recipe definition.
+// Obstacles fit the smallest 16 x 11 grid. Between the lines they stay in columns 5..10;
+// outside rows 3..8 they may reach any column, so no spawn cell is ever blocked.
 const FEncounterRecipe Recipes[] = {
-    {TEXT("split stones"), {{3, 2}, {3, 4}}, 2, 2},
-    {TEXT("ruined pillars"), {{4, 3}, {3, 4}}, 3, 2},
-    {TEXT("broken wall"), {{3, 3}, {4, 3}}, 2, 1}
+    {TEXT("split stones"), {{6, 2}, {7, 2}, {6, 3}, {9, 6}, {9, 7}, {8, 7}, {12, 1}, {13, 1}, {2, 9}, {3, 9}}, 4, 3},
+    {TEXT("ruined pillars"), {{5, 2}, {5, 8}, {8, 4}, {8, 6}, {10, 2}, {10, 8}, {1, 1}, {1, 9}, {13, 0}, {14, 10}}, 5, 4},
+    {TEXT("broken wall"), {{7, 1}, {7, 2}, {7, 3}, {7, 5}, {7, 6}, {7, 8}, {7, 9}, {11, 1}, {12, 1}, {13, 1}}, 4, 3}
 };
 
 // One profile supplies generated facts, truthful text and restore validation.
@@ -72,8 +80,8 @@ void FExpeditionRun::OfferRoutes()
         FExpeditionRoute Route;
         Route.EncounterSeed = Random.RandRange(0, MAX_int32 - 1);
         Route.Recipe = Random.RandRange(0, UE_ARRAY_COUNT(Recipes) - 1);
-        Route.Width = Random.RandRange(8, 9);
-        Route.Height = Random.RandRange(7, 8);
+        Route.Width = Random.RandRange(MinWidth, MaxWidth);
+        Route.Height = Random.RandRange(MinHeight, MaxHeight);
         DescribeRoute(Route, State.EncountersCompleted, Index, bSecuredSupplies);
         State.Offers.Add(Route);
     }
@@ -114,7 +122,8 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
     const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
     Layout.BlockedCells = Recipe.BlockedCells;
     Layout.Combatants.SetNum(4);
-    for (int32 Index = 0; Index < 4; ++Index) { Layout.Combatants[Index].Cell = {1, Index + 1}; }
+    const int32 FirstPartyRow = (Route.Height - 4) / 2;
+    for (int32 Index = 0; Index < 4; ++Index) { Layout.Combatants[Index].Cell = {PartyColumn, FirstPartyRow + Index}; }
     for (int32 Index = 0; Index < Route.EnemyCount; ++Index)
     {
         FCombatantState Enemy;
@@ -124,7 +133,7 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         Enemy.Name = bArcher ? TEXT("Vault bow") : FString::Printf(TEXT("%s %d"), Route.bDangerous ? TEXT("Raider") : TEXT("Scout"), Index + 1);
         Enemy.Role = bArcher ? TEXT("Archer") : TEXT("Raider");
         Enemy.Cell = {Route.Width - Recipe.EnemyEdgeOffset, Recipe.FirstEnemyRow + Index * 2};
-        // Three enemies use rows 1/3/5 or 2/4/6; every grid is at least seven rows tall.
+        // Three enemies use rows 3/5/7 or 4/6/8; every grid is at least eleven rows tall.
         Enemy.Range = bArcher ? 4 : 1;
         Enemy.HP = Enemy.MaxHP = (Route.bDangerous ? 12 : 10) + State.EncountersCompleted * 2;
         Enemy.ArmorClass = Route.bDangerous ? 12 : 11;
@@ -222,7 +231,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     {
         const bool bSupplies = Stage > 0 && P.History[Stage - 1].Route.bDangerous;
         if (R.EncounterSeed < 0 || R.EncounterSeed >= MAX_int32 || R.Recipe < 0 || R.Recipe >= UE_ARRAY_COUNT(Recipes) ||
-            R.Width < 8 || R.Width > 9 || R.Height < 7 || R.Height > 8) { return false; }
+            R.Width < MinWidth || R.Width > MaxWidth || R.Height < MinHeight || R.Height > MaxHeight) { return false; }
         auto Expected = R;
         DescribeRoute(Expected, Stage, Choice, bSupplies);
         return FExpeditionRoute::StaticStruct()->CompareScriptStruct(&R, &Expected, 0);

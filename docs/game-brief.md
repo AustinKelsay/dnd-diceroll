@@ -6,7 +6,7 @@ A single-player 3D tactical roguelike where the player leads four prebuilt adven
 
 - One simple objective: recover an artifact, completed by winning the finale.
 - Three combat encounters including that finale; choices between route opportunities, with partial risk/reward information.
-- Small modular 3D tactical locations. Generated configurations vary enemies, terrain, placement, objectives, and rewards while remaining valid.
+- Modular 3D tactical locations with room to maneuver (generated grids 16–18 × 11–12 cells). Generated configurations vary enemies, terrain, placement, objectives, and rewards while remaining valid.
 - Fighter, rogue, cleric, wizard with a small, explicitly documented ability set.
 - Overhead rotatable camera, grid movement, direct selection, reachable-cell/valid-target feedback, and readable action/roll results.
 - Initiative, movement, attacks, defenses, damage, limited class abilities, downing, rescue, and permanent death from a defined SRD 5.2.1 subset.
