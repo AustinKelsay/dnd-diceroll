@@ -16,4 +16,8 @@ Find the document that owns your task, then follow its links. Each row names one
 | Encounter blockouts and pacing | [level-design skill](../../.agents/skills/level-design/SKILL.md) | [editor contributions](editor-contributions.md) for the brief and report |
 | Measured performance work | [performance-optimization skill](../../.agents/skills/performance-optimization/SKILL.md) | |
 
+## Agent wiring
+
+`AGENTS.md` holds the shared instructions. Claude Code loads it through the `CLAUDE.md` import, connects to Unreal through `.mcp.json`, and runs the shared `.claude/settings.json` hook that blocks destructive Git commands. Codex and Cursor read `AGENTS.md` natively; Codex uses `.codex/config.toml` for Unreal. For Gemini CLI, set `context.fileName` to `AGENTS.md` in a local `.gemini/settings.json`. Agents without the hook rely on the workflow's Git rules.
+
 Inside the editor, `ProjectAuthoringSkill` serves [editor authoring](editor-authoring.md), a condensed checklist for the same editor and asset work. Editor startup reads that file by path, so moving or renaming it breaks the skill.

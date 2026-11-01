@@ -50,7 +50,7 @@ For the one-time migration from an editor launched before the status tool existe
 
 Use Matt Pocock skills directly under the [contribution workflow](agents/workflow.md), which owns planning, claims, review and staging delivery. Historical run reports retain their original launcher references.
 
-Before extending the game, read the [current polish handoff](runs/expedition-polish/01-presentation-polish.md), inspect the branch and working tree, and establish editor ownership with fresh `status`. The [V1 ledger](runs/expedition-v1/ledger.md) is delivery history. Record the feature baseline, scope, owner, validation and unresolved limits in the current run record. Keep reviewed feature PRs targeting `staging`; merging remains a separate user decision.
+Before extending the game, read the [current state note](runs/current-state.md), inspect the branch and working tree, and establish editor ownership with fresh `status`. The [V1 ledger](runs/expedition-v1/ledger.md) and later run records are delivery history. Record the feature baseline, scope, owner, validation and unresolved limits in the current run record. Keep reviewed feature PRs targeting `staging`; merging remains a separate user decision.
 
 Establish a slice and observable acceptance criteria in the game brief or a focused design note. Inspect the tree, run doctor, and use the safe compile loop for source changes. Discover `list_toolsets`, inspect `describe_toolset`, then dispatch `call_tool` using its schema. [Editor recipes](editor-recipes.md) maps common tasks to Epic's existing tools and skills. [Architecture](architecture.md) covers C++/Blueprint and ownership conventions.
 
