@@ -2,7 +2,7 @@
 
 ## Parent spec
 
-[Expedition V1](https://github.com/AustinKelsay/expedition-rpg/issues/1). Slice 1; no blockers.
+[Expedition V1](https://github.com/AustinKelsay/dnd-diceroll/issues/1). Slice 1; no blockers.
 
 ## Outcome
 
@@ -22,4 +22,4 @@ A player can enter a rendered 3D tactical battle, control four prebuilt adventur
 
 Use the approved spec and architecture decisions, behavior-first tests where practical, and two-axis Standards/Spec review against the slice's fixed baseline. Commit the reviewed slice on the shared feature branch; no PR or remote pushes from the worker. Keep later roles, run routing, and persistence out of this slice.
 
-Tracker: https://github.com/AustinKelsay/expedition-rpg/issues/2
+Tracker: https://github.com/AustinKelsay/dnd-diceroll/issues/2

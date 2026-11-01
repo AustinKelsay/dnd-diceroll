@@ -2,7 +2,7 @@
 
 ## Parent and dependency
 
-[Expedition V1](https://github.com/AustinKelsay/expedition-rpg/issues/1). Blocked by: Complete a seeded expedition.
+[Expedition V1](https://github.com/AustinKelsay/dnd-diceroll/issues/1). Blocked by: Complete a seeded expedition.
 
 ## Outcome
 
@@ -22,4 +22,4 @@ A player can save and resume the current expedition, including active combat, wi
 
 Local single-player saves only. No accounts/cloud sync, production distribution, multiplayer, automatic main merge or guarantees beyond the documented file adapter contract.
 
-Tracker: https://github.com/AustinKelsay/expedition-rpg/issues/5
+Tracker: https://github.com/AustinKelsay/dnd-diceroll/issues/5

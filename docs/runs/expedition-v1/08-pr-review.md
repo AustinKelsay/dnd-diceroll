@@ -1,6 +1,6 @@
 # PR review and delivery
 
-PR: https://github.com/AustinKelsay/expedition-rpg/pull/6 — open, non-draft, targeting `staging`.
+PR: https://github.com/AustinKelsay/dnd-diceroll/pull/6 — open, non-draft, targeting `staging`.
 
 ## Bounded CodeRabbit round
 

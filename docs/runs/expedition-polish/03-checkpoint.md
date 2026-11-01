@@ -4,9 +4,9 @@ The user requested this checkpoint after explicitly putting the rendering invest
 
 ## Repository and delivery
 
-- Repository: `AustinKelsay/expedition-rpg`; branch: `feature/expedition-polish`.
+- Repository: `AustinKelsay/dnd-diceroll`; branch: `feature/expedition-polish`.
 - Starting head: `aba3d6b3d0ad639ee2b5fbc977cfa75e5490de72`. This checkpoint changes documentation only.
-- [PR #27](https://github.com/AustinKelsay/expedition-rpg/pull/27) targets `staging` and remains open and unmerged. [Issue #26](https://github.com/AustinKelsay/expedition-rpg/issues/26) remains open.
+- [PR #27](https://github.com/AustinKelsay/dnd-diceroll/pull/27) targets `staging` and remains open and unmerged. [Issue #26](https://github.com/AustinKelsay/dnd-diceroll/issues/26) remains open.
 - V1 and the presentation polish are implemented. Shared-skills reconciliation is complete, with the original customizations preserved locally. [The delivery report](02-delivery.md) owns the detailed changes, review findings, validation and backup references.
 
 ## Paused blocker

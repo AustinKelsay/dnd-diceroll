@@ -4,9 +4,9 @@ Read [CONTRIBUTING.md](../../CONTRIBUTING.md) first. This is the repo-owned exec
 
 ## 1. Establish the session
 
-Confirm the repository is `AustinKelsay/expedition-rpg`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion with `gh issue view <number> --repo AustinKelsay/expedition-rpg --json title,body,comments,assignees,labels,state`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
+Confirm the repository is `AustinKelsay/dnd-diceroll`, the chosen checkout and branch, the requested outcome, and who owns the editor. Read the full issue and discussion with `gh issue view <number> --repo AustinKelsay/dnd-diceroll --json title,body,comments,assignees,labels,state`. Record authority already granted; ask only for unresolved product intent, unavailable access, or actions outside that grant.
 
-For gameplay, read the brief, architecture, asset provenance, and any available `CONTEXT.md`, `GLOSSARY.md`, and relevant ADRs before proposing changes. The approved V1 contract is `docs/specs/expedition-v1.md`, captured from its [spec issue](https://github.com/AustinKelsay/expedition-rpg/issues/1). New work does not inherit V1's session-specific delegation.
+For gameplay, read the brief, architecture, asset provenance, and any available `CONTEXT.md`, `GLOSSARY.md`, and relevant ADRs before proposing changes. The approved V1 contract is `docs/specs/expedition-v1.md`, captured from its [spec issue](https://github.com/AustinKelsay/dnd-diceroll/issues/1). New work does not inherit V1's session-specific delegation.
 
 Completion: scope, workspace, issue, dependencies, and authority are known. Leave another writer's checkout untouched. An issue in this repo is the work record; PRs deliver implementation rather than act as raw feature requests.
 
