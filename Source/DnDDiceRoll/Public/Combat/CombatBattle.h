@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/CheckRules.h"
+#include "Rules/DamageRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -148,6 +149,10 @@ struct DNDDICEROLL_API FCombatResult
     TArray<int32> AttackRolls;
     ERollMode RollMode = ERollMode::Normal;
     TArray<FString> RollModeSources;
+    /** Damage only: type, the target's response, and the amount before resistance/vulnerability/immunity. */
+    EDamageType DamageType = EDamageType::Slashing;
+    EDamageResponse DamageResponse = EDamageResponse::Normal;
+    int32 DamageBeforeDefenses = 0;
     // Facts about the resolved command for presentation. Rules never read them back.
     ECombatCommandType Type = ECombatCommandType::EndTurn;
     int32 ActorId = INDEX_NONE;
@@ -185,6 +190,9 @@ struct DNDDICEROLL_API FActionForecast
     int32 MinAmount = 0;
     int32 MaxAmount = 0;
     bool bSneakAttack = false;
+    /** Damage only: Min/MaxAmount already include the target's response to this type. */
+    EDamageType DamageType = EDamageType::Slashing;
+    EDamageResponse DamageResponse = EDamageResponse::Normal;
     /** Damage only: the best possible roll, counting a critical hit, reaches remaining health. */
     bool bCanDrop = false;
     FString Formula;
@@ -217,6 +225,10 @@ public:
     int32 AbilityModifier(int32 Id, EAbility Ability) const;
     /** Proficiency, skill, save and tool facts for a combatant at its current level. Read-only, no RNG. */
     FCharacterRules Character(int32 Id) const;
+    /** Damage type of an action: role weapon or cantrip for attacks, force for Magic Missile. Read-only. */
+    EDamageType DamageTypeOf(int32 ActorId, ECombatCommandType Action) const;
+    /** Resistances, vulnerabilities and immunities derived from the unit's profile (Role). Read-only. */
+    FDamageDefenses DamageDefenses(int32 Id) const;
     /** Advantage/disadvantage sources for an attack. Read-only, no RNG. */
     FAttackRollMode AttackRollMode(int32 ActorId, int32 TargetId) const;
     /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
@@ -253,5 +265,7 @@ private:
     int32 ProtectionFor(const FCombatantState& Target) const;
     void ApplyDamage(FCombatantState& Target, int32 Damage);
     FCombatantState* MutableFind(int32 Id);
+    void ApplyDefenses(FCombatResult& Result, int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
+    static FString DefenseText(const FCombatResult& Result);
     FCombatResult Resolve(const FCombatCommand& Command);
 };

@@ -426,7 +426,16 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     {
         // A critical doubles the weapon and Sneak Attack dice, so warn on that best case too.
         const int32 CriticalExtra = Forecast.bAttackRoll ? Actor->DamageDie + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
-        Forecast.bCanDrop = Forecast.MaxAmount + CriticalExtra >= Target->HP;
+        // Defenses apply after every other modifier, so the shown range is the adjusted one.
+        Forecast.DamageType = DamageTypeOf(ActorId, Action);
+        const FDamageDefenses Defenses = DamageDefenses(TargetId);
+        Forecast.DamageResponse = FDamageRules::Response(Forecast.DamageType, Defenses);
+        const int32 BestCase = FDamageRules::Adjust(Forecast.MaxAmount + CriticalExtra, Forecast.DamageType, Defenses);
+        Forecast.MinAmount = FDamageRules::Adjust(Forecast.MinAmount, Forecast.DamageType, Defenses);
+        Forecast.MaxAmount = FDamageRules::Adjust(Forecast.MaxAmount, Forecast.DamageType, Defenses);
+        if (Forecast.DamageResponse != EDamageResponse::Normal)
+        { Forecast.Formula += FString::Printf(TEXT(" %s, %s"), FDamageRules::TypeName(Forecast.DamageType), FDamageRules::ResponseName(Forecast.DamageResponse)); }
+        Forecast.bCanDrop = BestCase >= Target->HP;
     }
     if (!Forecast.bHealing)
     {
@@ -644,6 +653,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
             if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); }
             DiceLog = nullptr;
+            ApplyDefenses(Result, Command.ActorId, Command.Type, Command.TargetId);
             const int32 Protection = ProtectionFor(*Target);
             Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
             ApplyDamage(*Target, Result.Damage);
@@ -656,9 +666,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
         const FString ModeText = Result.AttackRolls.Num() > 1 ?
             FString::Printf(TEXT(" (%s %d/%d)"), FCheckRules::ModeName(Result.RollMode), Result.AttackRolls[0], Result.AttackRolls[1]) : FString();
-        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d | %s | %d damage. HP %d/%d%s"),
+        Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d | %s | %d damage%s. HP %d/%d%s"),
             *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, Actor->AttackBonus, Result.AttackTotal, Target->ArmorClass,
-            Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage,
+            Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result),
             Target->HP, Target->MaxHP, *TargetStatus);
     }
     else if (Command.Type == ECombatCommandType::SecondWind || Command.Type == ECombatCommandType::CureWounds ||
@@ -677,6 +687,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.Damage = RollDice(MissileDarts, MissileDie) + Result.EffectModifier;
             DiceLog = nullptr;
             Result.bHit = true;
+            ApplyDefenses(Result, Command.ActorId, Command.Type, Command.TargetId);
             const int32 Protection = ProtectionFor(*Target);
             Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
             ApplyDamage(*Target, Result.Damage);
@@ -699,7 +710,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         }
         if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
         else { State.bActionAvailable = false; }
-        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d | HP %d/%d"), *User->Name, *Ability, *Target->Name, Result.Healing, Result.Damage, Target->HP, Target->MaxHP);
+        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d%s | HP %d/%d"), *User->Name, *Ability, *Target->Name, Result.Healing, Result.Damage, *DefenseText(Result), Target->HP, Target->MaxHP);
         CheckOutcome();
     }
     else if (Command.Type == ECombatCommandType::EndTurn)
@@ -712,6 +723,43 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     else { return Reject(TEXT("Unknown command.")); }
     Result.bAccepted = true;
     return Result;
+}
+
+EDamageType FCombatBattle::DamageTypeOf(int32 ActorId, ECombatCommandType Action) const
+{
+    if (Action == ECombatCommandType::MagicMissile) { return EDamageType::Force; }
+    const FCombatantState* Actor = Find(ActorId);
+    if (!Actor) { return EDamageType::Slashing; }
+    // Prebuilt profiles: longsword, shortbow, the cleric's radiant ranged profile, Fire Bolt; enemies by role.
+    switch (Actor->AdventurerRole)
+    {
+    case EAdventurerRole::Fighter: return EDamageType::Slashing;
+    case EAdventurerRole::Rogue: return EDamageType::Piercing;
+    case EAdventurerRole::Cleric: return EDamageType::Radiant;
+    case EAdventurerRole::Wizard: return EDamageType::Fire;
+    default: return Actor->Role == TEXT("Archer") ? EDamageType::Piercing : EDamageType::Slashing;
+    }
+}
+
+FDamageDefenses FCombatBattle::DamageDefenses(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    return Unit ? FDamageRules::ProfileDefenses(Unit->Role) : FDamageDefenses();
+}
+
+void FCombatBattle::ApplyDefenses(FCombatResult& Result, int32 ActorId, ECombatCommandType Action, int32 TargetId) const
+{
+    Result.DamageType = DamageTypeOf(ActorId, Action);
+    const FDamageDefenses Defenses = DamageDefenses(TargetId);
+    Result.DamageBeforeDefenses = Result.Damage;
+    Result.DamageResponse = FDamageRules::Response(Result.DamageType, Defenses);
+    Result.Damage = FDamageRules::Adjust(Result.Damage, Result.DamageType, Defenses);
+}
+
+FString FCombatBattle::DefenseText(const FCombatResult& Result)
+{
+    return Result.DamageResponse == EDamageResponse::Normal ? FString() :
+        FString::Printf(TEXT(" %s (%s from %d)"), FDamageRules::TypeName(Result.DamageType), FDamageRules::ResponseName(Result.DamageResponse), Result.DamageBeforeDefenses);
 }
 
 FCombatantState* FCombatBattle::MutableFind(int32 Id)
