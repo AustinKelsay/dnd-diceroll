@@ -61,22 +61,37 @@ int32 CountSurvivors(const FCombatBattle& Battle)
 
 bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass)
 {
+    if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
+    TArray<FPartyBuildSelection> Selection;
+    const auto Tutorial = FCombatBattle::TutorialEncounter();
+    for (int32 I = 0; I < 4; ++I)
+    {
+        FPartyBuildSelection Slot;
+        Slot.Id = I + 1; Slot.Name = Tutorial.Combatants[I].Name; Slot.BuildId = Tutorial.Combatants[I].BuildId;
+        if (I == 0) { Slot.BuildId = Subclass == EFighterSubclass::BattleMaster ? TEXT("fighter.battle-master") : TEXT("fighter.champion"); }
+        Selection.Add(Slot);
+    }
+    return NewRun(Seed, Selection, Error, Identity);
+}
+
+bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity)
+{
+    Error.Reset();
+    if (Selection.Num() != 4) { Error = TEXT("Choose exactly four adventurers."); return false; }
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
     Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
-    if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
     auto Party = FCombatBattle::TutorialEncounter();
-    const auto Cell = Party.Combatants[0].Cell;
-    FBuildCatalog::Create(Subclass == EFighterSubclass::BattleMaster ? TEXT("fighter.battle-master") : TEXT("fighter.champion"), 1, TEXT("Arden"), Party.Combatants[0]);
-    Party.Combatants[0].Cell = Cell;
     for (int32 I = 0; I < 4; ++I)
     {
-        const auto& Hero = Party.Combatants[I];
-        FPartyBuildSelection Selection;
-        Selection.Id = Hero.Id; Selection.Name = Hero.Name; Selection.BuildId = Hero.BuildId;
-        Candidate.State.Party.Add(Selection);
+        const auto Cell = Party.Combatants[I].Cell;
+        const auto& Slot = Selection[I];
+        if (Slot.Id != I + 1 || !FBuildCatalog::Create(Slot.BuildId, Slot.Id, Slot.Name, Party.Combatants[I]))
+        { Error = TEXT("Choose a valid build and name for each independent slot 1–4."); return false; }
+        Party.Combatants[I].Cell = Cell;
     }
+    Candidate.State.Party = Selection;
     if (!Candidate.Combat.Start(Party, Seed, Error)) { return false; }
     Candidate.bStarted = true;
     Candidate.OfferRoutes();

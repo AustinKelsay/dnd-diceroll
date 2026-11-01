@@ -7,34 +7,38 @@ const TArray<FBuildDefinition>& Definitions()
     static const TArray<FBuildDefinition> Values = []
     {
         TArray<FBuildDefinition> Result;
-        const TCHAR* Ids[] = {TEXT("fighter.champion"), TEXT("fighter.battle-master"), TEXT("rogue.base"), TEXT("cleric.base"), TEXT("wizard.base")};
-        const TCHAR* Classes[] = {TEXT("fighter"), TEXT("fighter"), TEXT("rogue"), TEXT("cleric"), TEXT("wizard")};
-        const TCHAR* Subclasses[] = {TEXT("champion"), TEXT("battle-master"), TEXT(""), TEXT(""), TEXT("")};
-        const TCHAR* Roles[] = {TEXT("Fighter"), TEXT("Fighter"), TEXT("Rogue"), TEXT("Cleric"), TEXT("Wizard")};
-        for (int32 I = 0; I < 5; ++I)
+        auto Add = [&](const TCHAR* Id, const TCHAR* Class, const TCHAR* Subclass, const TCHAR* Role,
+            EAdventurerRole AdventurerRole, int32 HP, int32 Armor, int32 Die, int32 Bonus, int32 Range, int32 Initiative)
         {
-            FBuildDefinition B;
-            B.Id = Ids[I];
+            FBuildDefinition B; B.Id = Id;
             auto& P = B.Profile;
-            P.BuildId = B.Id; P.ClassId = Classes[I]; P.SubclassId = Subclasses[I];
-            P.Role = Roles[I]; P.AdventurerRole = I < 2 ? EAdventurerRole::Fighter : static_cast<EAdventurerRole>(I);
-            P.MaxHP = P.HP = I < 2 ? 30 : 22;
-            P.ArmorClass = I < 2 ? 16 : 13;
-            P.DamageDie = I == 4 ? 10 : 6; P.DamageBonus = I == 4 ? 0 : 3;
-            P.Range = I < 2 ? 1 : I == 4 ? 4 : 3; P.InitiativeBonus = I == 2 ? 4 : 1;
-            P.Potions = 1; P.bSneakWeapon = I == 2;
-            P.FighterSubclass = I == 0 ? EFighterSubclass::Champion : I == 1 ? EFighterSubclass::BattleMaster : EFighterSubclass::None;
-            if (I < 2) { B.WindCap = P.SecondWindUses = 2; B.WindRecovery = 1; B.Specials.Add(ECombatCommandType::SecondWind); }
-            if (I == 1) { B.ManeuverCap = P.ManeuverUses = 2; B.Specials.Add(ECombatCommandType::PrecisionStrike); }
-            if (I >= 3) { B.SlotCap = P.SpellSlots = 2; B.SlotRecovery = 1; B.Specials.Add(I == 3 ? ECombatCommandType::CureWounds : ECombatCommandType::MagicMissile); }
-            B.CriticalThreshold = I == 0 ? 19 : 20; B.SneakDie = I == 2 ? 6 : 0;
-            Result.Add(B);
-        }
+            P.BuildId = Id; P.ClassId = Class; P.SubclassId = Subclass; P.Role = Role;
+            P.AdventurerRole = AdventurerRole; P.MaxHP = P.HP = HP; P.ArmorClass = Armor;
+            P.DamageDie = Die; P.DamageBonus = Bonus; P.Range = Range; P.InitiativeBonus = Initiative; P.Potions = 1;
+            return B;
+        };
+        auto Champion = Add(TEXT("fighter.champion"), TEXT("fighter"), TEXT("champion"), TEXT("Fighter"), EAdventurerRole::Fighter, 30, 16, 6, 3, 1, 1);
+        Champion.Profile.FighterSubclass = EFighterSubclass::Champion;
+        Champion.WindCap = Champion.Profile.SecondWindUses = 2; Champion.WindRecovery = 1;
+        Champion.Specials = {ECombatCommandType::SecondWind}; Champion.CriticalThreshold = 19;
+        Result.Add(Champion);
+        auto Master = Champion;
+        Master.Id = Master.Profile.BuildId = TEXT("fighter.battle-master"); Master.Profile.SubclassId = TEXT("battle-master");
+        Master.Profile.FighterSubclass = EFighterSubclass::BattleMaster; Master.CriticalThreshold = 20;
+        Master.ManeuverCap = Master.Profile.ManeuverUses = 2; Master.Specials.Add(ECombatCommandType::PrecisionStrike);
+        Result.Add(Master);
+        auto Rogue = Add(TEXT("rogue.base"), TEXT("rogue"), TEXT(""), TEXT("Rogue"), EAdventurerRole::Rogue, 22, 13, 6, 3, 3, 4);
+        Rogue.Profile.bSneakWeapon = true; Rogue.SneakDie = 6; Result.Add(Rogue);
+        auto Cleric = Add(TEXT("cleric.base"), TEXT("cleric"), TEXT(""), TEXT("Cleric"), EAdventurerRole::Cleric, 22, 13, 6, 3, 3, 1);
+        Cleric.SlotCap = Cleric.Profile.SpellSlots = 2; Cleric.SlotRecovery = 1; Cleric.Specials = {ECombatCommandType::CureWounds}; Result.Add(Cleric);
+        auto Wizard = Add(TEXT("wizard.base"), TEXT("wizard"), TEXT(""), TEXT("Wizard"), EAdventurerRole::Wizard, 22, 13, 10, 0, 4, 1);
+        Wizard.SlotCap = Wizard.Profile.SpellSlots = 2; Wizard.SlotRecovery = 1; Wizard.Specials = {ECombatCommandType::MagicMissile}; Result.Add(Wizard);
         return Result;
     }();
     return Values;
 }
 }
+const TArray<FBuildDefinition>& FBuildCatalog::All() { return Definitions(); }
 const FBuildDefinition* FBuildCatalog::Find(const FString& Id)
 { return Definitions().FindByPredicate([&](const auto& B) { return B.Id == Id; }); }
 bool FBuildCatalog::Create(const FString& BuildId, int32 Id, const FString& Name, FCombatantState& Out)

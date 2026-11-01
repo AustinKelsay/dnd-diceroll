@@ -23,6 +23,7 @@ class DNDDICEROLL_API FBuildCatalog
 {
 public:
     static constexpr int32 Revision = 1;
+    static const TArray<FBuildDefinition>& All();
     static const FBuildDefinition* Find(const FString& BuildId);
     /** Invalid IDs leave output untouched. Instance identity is independent of build. */
     static bool Create(const FString& BuildId, int32 Id, const FString& Name, FCombatantState& Out);

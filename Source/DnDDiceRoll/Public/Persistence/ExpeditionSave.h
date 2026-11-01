@@ -56,6 +56,7 @@ public:
     const FExpeditionRun& Run() const { return Current; }
     /** Never replaces an unfinished expedition. At startup only, an unreadable checkpoint
      * is preserved beside the save before an explicit new run. Optional output identifies it. */
+    bool NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr);
     bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr, EFighterSubclass Subclass = EFighterSubclass::Champion);
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);

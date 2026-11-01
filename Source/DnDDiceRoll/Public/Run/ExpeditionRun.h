@@ -81,6 +81,7 @@ public:
     /** Combats in one expedition; winning the last recovers the artifact. */
     static constexpr int32 EncounterCount = 5;
     bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), EFighterSubclass Subclass = EFighterSubclass::Champion);
+    bool NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity = FString());
     /** Validates a detached candidate in full, then installs without rolling. */
     bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);

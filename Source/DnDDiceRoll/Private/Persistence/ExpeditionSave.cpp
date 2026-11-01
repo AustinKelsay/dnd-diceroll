@@ -209,13 +209,20 @@ bool FExpeditionSession::Commit(FExpeditionRun&& Candidate, FString& Error)
 
 bool FExpeditionSession::NewRun(int32 Seed, FString& Error, const FString& Identity, FString* PreservedCheckpoint, EFighterSubclass Subclass)
 {
+    FExpeditionRun Selected;
+    if (!Selected.NewRun(Seed, Error, Identity, Subclass)) { return false; }
+    return NewRun(Seed, Selected.Progress().Party, Error, Selected.Progress().RunId, PreservedCheckpoint);
+}
+
+bool FExpeditionSession::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity, FString* PreservedCheckpoint)
+{
     if (PreservedCheckpoint) { PreservedCheckpoint->Reset(); }
     auto IsEnding = [](EExpeditionPhase Phase)
     { return Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat; };
     if (bHasRun && !IsEnding(Current.Progress().Phase))
     { Error = TEXT("Finish this expedition before starting a new run."); return false; }
     FExpeditionRun Candidate;
-    if (!Candidate.NewRun(Seed, Error, Identity, Subclass)) { return false; }
+    if (!Candidate.NewRun(Seed, Party, Error, Identity)) { return false; }
     FString Preserved;
     auto& Files = FPlatformFileManager::Get().GetPlatformFile();
     if (!bHasRun && Files.FileExists(*SavePath))

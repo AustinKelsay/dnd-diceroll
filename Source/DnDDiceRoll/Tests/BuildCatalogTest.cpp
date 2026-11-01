@@ -3,6 +3,8 @@
 #include "Party/BuildCatalog.h"
 #include "Persistence/ExpeditionSave.h"
 #include "ExpeditionTestSupport.h"
+#include "Misc/Paths.h"
+#include "HAL/FileManager.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBuildCatalogTest, "Project.Expedition.Catalog.CurrentProfiles", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FBuildCatalogTest::RunTest(const FString& Parameters)
@@ -64,6 +66,52 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Worked maximum"), Forecast.MaxAmount, Action == ECombatCommandType::SecondWind ? 11 : Action == ECombatCommandType::CureWounds ? 19 : 15);
         TestTrue(TEXT("Catalog special executes"), Battle.Submit({Action, 1, {}, Target}).bAccepted);
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSelectedPartyTest, "Project.Expedition.Catalog.SelectedParty", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FSelectedPartyTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    TArray<FPartyBuildSelection> Party;
+    for (int32 I = 1; I <= 4; ++I)
+    {
+        FPartyBuildSelection S; S.Id = I; S.Name = FString::Printf(TEXT("Slot %d"), I);
+        S.BuildId = TEXT("fighter.battle-master"); Party.Add(S);
+    }
+    FExpeditionRun Run;
+    TestTrue(TEXT("Four duplicate builds start"), Run.NewRun(42, Party, Error, TEXT("duplicates")));
+    for (int32 I = 1; I <= 4; ++I)
+    {
+        TestEqual(TEXT("Independent slot name"), Run.Battle().Find(I)->Name, Party[I-1].Name);
+        TestEqual(TEXT("Chosen build"), Run.Battle().Find(I)->BuildId, FString(TEXT("fighter.battle-master")));
+    }
+    const auto Before = Run.Snapshot();
+    auto Invalid = Party; Invalid.Pop();
+    TestFalse(TEXT("Three slots rejected"), Run.NewRun(42, Invalid, Error));
+    TestTrue(TEXT("Failed construction atomic"), ExpeditionTestSupport::SameRun(Before, Run.Snapshot()));
+    Invalid = Party; Invalid[3].Id = 1;
+    TestFalse(TEXT("Repeated instance identity rejected"), Run.NewRun(42, Invalid, Error));
+    Invalid = Party; Invalid[2].BuildId = TEXT("wizard.champion");
+    TestFalse(TEXT("Invalid build rejected"), Run.NewRun(42, Invalid, Error));
+    FExpeditionRun Restored;
+    TestTrue(TEXT("Selected startup restores"), Restored.Restore(Before, Error));
+    TestTrue(TEXT("Selected first route"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
+    for (int32 I = 1; I <= 4; ++I)
+    { TestEqual(TEXT("Route keeps duplicate build"), Run.Battle().Find(I)->BuildId, FString(TEXT("fighter.battle-master"))); }
+    TestTrue(TEXT("Selected combat restores"), Restored.Restore(Run.Snapshot(), Error));
+    TestTrue(TEXT("Exact selected combat"), ExpeditionTestSupport::SameRun(Run.Snapshot(), Restored.Snapshot()));
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/SelectedParty"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current-v1.json"));
+    FExpeditionSession Session(Path);
+    TestTrue(TEXT("Session accepts duplicate selection"), Session.NewRun(42, Party, Error, TEXT("selected-session")));
+    const auto Saved = Session.Run().Snapshot();
+    FExpeditionSession Resumed(Path);
+    TestTrue(TEXT("Session resume"), Resumed.Resume(Error));
+    TestTrue(TEXT("Resume exact selection and RNG"), ExpeditionTestSupport::SameRun(Saved, Resumed.Run().Snapshot()));
+    TestFalse(TEXT("Startup selection cannot overwrite unfinished save"), Resumed.NewRun(7, Error));
+    TestTrue(TEXT("Rejected respec unchanged"), ExpeditionTestSupport::SameRun(Saved, Resumed.Run().Snapshot()));
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return true;
 }
 
