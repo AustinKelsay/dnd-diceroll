@@ -8,9 +8,11 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike };
 UENUM()
 enum class EAdventurerRole : uint8 { None, Fighter, Rogue, Cleric, Wizard };
+UENUM()
+enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 
@@ -29,6 +31,9 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 SpellSlots = 0;
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;
+    UPROPERTY() int32 Level = 1;
+    UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
+    UPROPERTY() int32 ManeuverUses = 0;
     UPROPERTY() bool bSneakWeapon = false;
     UPROPERTY() ECombatSide Side = ECombatSide::Party;
     UPROPERTY() FIntPoint Cell = FIntPoint::ZeroValue;
@@ -78,6 +83,13 @@ struct DNDDICEROLL_API FCombatCommand
     int32 TargetId = INDEX_NONE;
 };
 
+/** One die in an effect roll, in the order it was rolled. */
+struct DNDDICEROLL_API FDieRoll
+{
+    int32 Sides = 0;
+    int32 Value = 0;
+};
+
 struct DNDDICEROLL_API FCombatResult
 {
     bool bAccepted = false;
@@ -89,6 +101,35 @@ struct DNDDICEROLL_API FCombatResult
     bool bCritical = false;
     int32 Healing = 0;
     bool bSneakAttack = false;
+    // Facts about the resolved command for presentation. Rules never read them back.
+    ECombatCommandType Type = ECombatCommandType::EndTurn;
+    int32 ActorId = INDEX_NONE;
+    int32 TargetId = INDEX_NONE;
+    /** Move: each cell entered, in order, ending at the destination. */
+    TArray<FIntPoint> Path;
+    int32 AttackBonus = 0;
+    int32 TargetArmorClass = 0;
+    /** Damage or healing dice in roll order; the effect is their sum plus EffectModifier. */
+    TArray<FDieRoll> EffectDice;
+    int32 EffectModifier = 0;
+    /** Combatants newly downed or killed by this command, including turn countdowns and battle end. */
+    TArray<int32> Downed;
+    TArray<int32> Died;
+};
+
+/** Player-facing expectation for one legal action. Uses the same tuning as resolution. */
+struct DNDDICEROLL_API FActionForecast
+{
+    bool bValid = false;
+    bool bAttackRoll = false;
+    int32 HitChancePercent = 0;
+    bool bHealing = false;
+    int32 MinAmount = 0;
+    int32 MaxAmount = 0;
+    bool bSneakAttack = false;
+    /** Damage only: the best possible roll, counting a critical hit, reaches remaining health. */
+    bool bCanDrop = false;
+    FString Formula;
 };
 
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
@@ -106,6 +147,10 @@ public:
     int32 ActiveId() const;
     TArray<FIntPoint> LegalMoves(int32 Id) const;
     TArray<int32> LegalTargets(int32 Id, ECombatCommandType Action = ECombatCommandType::Attack) const;
+    /** Cells a legal move would enter, in order. Empty when the move is not legal. */
+    TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
+    /** Hit chance and effect range for a legal target. Consumes no random numbers. */
+    FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
@@ -114,18 +159,23 @@ public:
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;
+    friend class FExpeditionRun;
     FCombatSnapshot State;
     bool bStarted = false;
+    /** Set only while resolving an effect so its dice can be reported. */
+    TArray<FDieRoll>* DiceLog = nullptr;
     static bool ValidateEncounter(const FCombatEncounter& Encounter, FString& Error);
     bool IsInside(FIntPoint Cell) const;
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
+    bool SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();
     void ApplyDamage(FCombatantState& Target, int32 Damage);
     FCombatantState* MutableFind(int32 Id);
+    FCombatResult Resolve(const FCombatCommand& Command);
 };

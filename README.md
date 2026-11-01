@@ -1,16 +1,16 @@
-# Expedition
+# dnd-diceroll
 
 A single-player 3D tactical roguelike: four adventurers, generated encounters, route choices, and permanent death. Built from the reusable [Unreal AI Boilerplate](https://github.com/AustinKelsay/unreal-ai-boilerplate).
 
 Joining the game with your agent? Start with [the contributor guide](CONTRIBUTING.md). It covers local setup, safe updates, and reviewed PRs into `staging`.
 
-Read [the approved game brief](docs/game-brief.md), [V1 spec](docs/specs/expedition-v1.md), and [active run ledger](docs/runs/expedition-v1/ledger.md). [Development commands and editor safety](docs/development.md) remain authoritative. This project targets the pinned UE 5.8.4 build on Apple Silicon Mac. Internal Unreal identifiers remain DnDDiceRoll for compatibility.
+Read [the approved game brief](docs/game-brief.md), [V1 spec](docs/specs/expedition-v1.md), and [current presentation-polish handoff](docs/runs/expedition-polish/01-presentation-polish.md). The [V1 delivery ledger](docs/runs/expedition-v1/ledger.md) preserves the earlier implementation and review history. [Development commands and editor safety](docs/development.md) remain authoritative. This project targets the pinned UE 5.8.4 build on Apple Silicon Mac. The game name is **dnd-diceroll**; an **expedition** is one gameplay run (see [glossary](GLOSSARY.md)). Unreal identifiers use `DnDDiceRoll`.
 
 Development targets `staging` through reviewed feature PRs. The original starter and its v0.1.0 tag remain unchanged.
 
 Play the sandbox `/Game/DnDDiceRoll/Maps/L_AgentSandbox` in PIE or launch the Mac Development app. Press N to start a seeded three-combat expedition, or O to resume the latest checkpoint. Launching alone preserves any existing save. N cannot replace an unfinished saved expedition; use O to resume. If a save is unreadable, explicit N preserves its original file before starting fresh. Choose Z/X for the displayed guarded/dangerous route. After each of the first two wins, select a conscious survivor with 1–4 and press L for the displayed gear/potion reward. After the first reward, C takes the single camp (+10 capped HP and one capped role resource per survivor); V skips it. The third win recovers the artifact. N at either ending starts fresh with a new seed and no inherited power. K confirms a save; every accepted action also checkpoints automatically. O resumes exact turns, resources, RNG and permanent deaths. H opens ending records, which grant no combat power. Saves are local and versioned; failures are visible and leave the previous checkpoint and live state unchanged.
 
-Combat: 1–4 inspect/select, A attack/move, F role ability, R rescue, P potion, arrows+Enter target, Space end turn. Q/E orbit and mouse wheel zoom. Mouse targeting is supported; the keyboard path is the established native acceptance path. Rescue downed allies before their three-turn deadline or the finishing blow; actual deaths are permanent. See [supported rules and adaptations](docs/rules-reference.md).
+Combat: 1–4 inspect/select, A attack/move, F role ability, R rescue, P potion, arrows+Enter target, Space end turn. Commands act for the active adventurer; selecting another party card inspects that character. Q/E or right-drag orbit and mouse wheel zoom. Tab skips playback, T cycles playback speed, and ? or the Help button opens controls. Mouse targeting is supported; the keyboard path is the established native acceptance path. Rescue downed allies before their three-turn deadline or the finishing blow; actual deaths are permanent. See [supported rules and adaptations](docs/rules-reference.md).
 
 H opens/closes records; Page Up / Page Down inspect older/newer pages. The Mac app stores its checkpoint and records in its user container under `Library/Application Support/Epic/DnDDiceRoll/Saved/SaveGames/Expedition/current-v1.json`. The editor uses the project's `Saved/SaveGames/Expedition/` directory.
 

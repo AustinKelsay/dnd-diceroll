@@ -7,15 +7,24 @@ struct FEncounterRecipe
 {
     const TCHAR* Terrain;
     TArray<FIntPoint> BlockedCells;
-    int32 EnemyEdgeOffset;
+    int32 EnemyColumn;
     int32 FirstEnemyRow;
 };
 
+// Generated grids are about three times the original 8-9 x 7-8 area.
+constexpr int32 MinWidth = 16, MaxWidth = 18, MinHeight = 11, MaxHeight = 12;
+// The party forms a column here, centred vertically. Each recipe puts the enemy line at a
+// fixed column 5..7 cells away, so fights open within about a turn at speed 4 and the rest
+// of the board stays free for flanking and retreat on both sides.
+constexpr int32 PartyColumn = 4;
+
 // The preview and generated geometry read the same bounded recipe definition.
+// Obstacles fit the smallest 16 x 11 grid and never touch a spawn: the party uses column 4,
+// rows 3..7, and each enemy line uses its own column on rows 3/5/7 or 4/6/8.
 const FEncounterRecipe Recipes[] = {
-    {TEXT("split stones"), {{3, 2}, {3, 4}}, 2, 2},
-    {TEXT("ruined pillars"), {{4, 3}, {3, 4}}, 3, 2},
-    {TEXT("broken wall"), {{3, 3}, {4, 3}}, 2, 1}
+    {TEXT("split stones"), {{6, 2}, {7, 2}, {6, 3}, {8, 6}, {8, 7}, {7, 7}, {12, 1}, {13, 1}, {2, 9}, {3, 9}, {13, 5}, {15, 8}}, 10, 3},
+    {TEXT("ruined pillars"), {{6, 2}, {6, 8}, {7, 5}, {11, 3}, {11, 7}, {13, 1}, {14, 9}, {1, 1}, {1, 9}, {2, 5}}, 9, 4},
+    {TEXT("broken wall"), {{7, 1}, {7, 2}, {7, 3}, {7, 5}, {7, 6}, {7, 8}, {7, 9}, {13, 1}, {14, 1}, {15, 1}, {13, 9}, {14, 9}}, 11, 3}
 };
 
 // One profile supplies generated facts, truthful text and restore validation.
@@ -27,11 +36,11 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
     Route.RewardPotions = Choice == 1 || bSecuredSupplies ? 2 : 1;
     Route.Name = Choice == 0 ? TEXT("Stream trail") : TEXT("Watchtower road");
     const auto& Recipe = Recipes[Route.Recipe];
-    Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear, +%d potions%s"),
+    Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear (rank 3 cap) | +%d potions%s"),
         Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"), Route.EnemyCount,
         Choice == 0 ? TEXT("scouts") : TEXT("raiders incl. archer"), Recipe.Terrain, Route.RewardPotions,
         Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
-    if (Stage == 2)
+    if (Stage == FExpeditionRun::EncounterCount - 1)
     {
         Route.RewardPotions = 0;
         Route.Name = TEXT("Artifact vault: ") + Route.Name;
@@ -49,13 +58,17 @@ int32 CountSurvivors(const FCombatBattle& Battle)
 }
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity)
+bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass)
 {
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
     Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
-    if (!Candidate.Combat.Start(FCombatBattle::TutorialEncounter(), Seed, Error)) { return false; }
+    if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
+    auto Party = FCombatBattle::TutorialEncounter();
+    Party.Combatants[0].FighterSubclass = Subclass;
+    Party.Combatants[0].ManeuverUses = Subclass == EFighterSubclass::BattleMaster ? 2 : 0;
+    if (!Candidate.Combat.Start(Party, Seed, Error)) { return false; }
     Candidate.bStarted = true;
     Candidate.OfferRoutes();
     *this = MoveTemp(Candidate);
@@ -72,8 +85,8 @@ void FExpeditionRun::OfferRoutes()
         FExpeditionRoute Route;
         Route.EncounterSeed = Random.RandRange(0, MAX_int32 - 1);
         Route.Recipe = Random.RandRange(0, UE_ARRAY_COUNT(Recipes) - 1);
-        Route.Width = Random.RandRange(8, 9);
-        Route.Height = Random.RandRange(7, 8);
+        Route.Width = Random.RandRange(MinWidth, MaxWidth);
+        Route.Height = Random.RandRange(MinHeight, MaxHeight);
         DescribeRoute(Route, State.EncountersCompleted, Index, bSecuredSupplies);
         State.Offers.Add(Route);
     }
@@ -114,7 +127,13 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
     const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
     Layout.BlockedCells = Recipe.BlockedCells;
     Layout.Combatants.SetNum(4);
-    for (int32 Index = 0; Index < 4; ++Index) { Layout.Combatants[Index].Cell = {1, Index + 1}; }
+    if (const auto* Fighter = Combat.Find(1))
+    {
+        Layout.Combatants[0].FighterSubclass = Fighter->FighterSubclass;
+        Layout.Combatants[0].ManeuverUses = Fighter->ManeuverUses;
+    }
+    const int32 FirstPartyRow = (Route.Height - 4) / 2;
+    for (int32 Index = 0; Index < 4; ++Index) { Layout.Combatants[Index].Cell = {PartyColumn, FirstPartyRow + Index}; }
     for (int32 Index = 0; Index < Route.EnemyCount; ++Index)
     {
         FCombatantState Enemy;
@@ -123,8 +142,8 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         const bool bArcher = Index == Route.EnemyCount - 1;
         Enemy.Name = bArcher ? TEXT("Vault bow") : FString::Printf(TEXT("%s %d"), Route.bDangerous ? TEXT("Raider") : TEXT("Scout"), Index + 1);
         Enemy.Role = bArcher ? TEXT("Archer") : TEXT("Raider");
-        Enemy.Cell = {Route.Width - Recipe.EnemyEdgeOffset, Recipe.FirstEnemyRow + Index * 2};
-        // Three enemies use rows 1/3/5 or 2/4/6; every grid is at least seven rows tall.
+        Enemy.Cell = {Recipe.EnemyColumn, Recipe.FirstEnemyRow + Index * 2};
+        // Three enemies use rows 3/5/7 or 4/6/8; every grid is at least eleven rows tall.
         Enemy.Range = bArcher ? 4 : 1;
         Enemy.HP = Enemy.MaxHP = (Route.bDangerous ? 12 : 10) + State.EncountersCompleted * 2;
         Enemy.ArmorClass = Route.bDangerous ? 12 : 11;
@@ -164,7 +183,14 @@ void FExpeditionRun::ResolveCombat()
     Record.Survivors = CountSurvivors(Combat);
     if (Outcome == EBattlePhase::Defeat) { State.Phase = EExpeditionPhase::Defeat; return; }
     ++State.EncountersCompleted;
-    State.bArtifactRecovered = State.EncountersCompleted == 3;
+    if (State.EncountersCompleted < EncounterCount)
+    {
+        for (auto& Unit : Combat.State.Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { ++Unit.Level; ++Unit.DamageBonus; }
+        }
+    }
+    State.bArtifactRecovered = State.EncountersCompleted == EncounterCount;
     State.Phase = State.bArtifactRecovered ? EExpeditionPhase::Victory : EExpeditionPhase::Reward;
 }
 
@@ -172,7 +198,7 @@ bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error)
 {
     Error.Reset();
     if (!bStarted || State.Phase != EExpeditionPhase::Reward)
-    { Error = TEXT("Loot can be claimed once after each of the first two victories."); return false; }
+    { Error = TEXT("Loot can be claimed once after each of the first four victories."); return false; }
     if (!FPartyContinuity::Reward(Combat, RecipientId, State.History.Last().Route.RewardPotions, Error)) { return false; }
     State.History.Last().RewardRecipient = RecipientId;
     if (State.EncountersCompleted == 1) { State.Phase = EExpeditionPhase::Recovery; }
@@ -200,7 +226,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
     const auto& P = Snapshot.Progress;
     if (P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
-        P.EncountersCompleted < 0 || P.EncountersCompleted > 3 || P.History.Num() > 3 ||
+        P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     FExpeditionRun Candidate;
     if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
@@ -212,7 +238,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     const bool bReward = P.Phase == EExpeditionPhase::Reward;
     const bool bRecovery = P.Phase == EExpeditionPhase::Recovery;
     const bool bVictory = P.Phase == EExpeditionPhase::Victory;
-    if ((bVictory ? P.EncountersCompleted != 3 : P.EncountersCompleted > 2) ||
+    if ((bVictory ? P.EncountersCompleted != EncounterCount : P.EncountersCompleted >= EncounterCount) ||
         (bRecovery && P.EncountersCompleted != 1) || (bReward && P.EncountersCompleted < 1) ||
         P.History.Num() != P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0) ||
         P.Offers.Num() != (bRoute ? 2 : 0) ||
@@ -222,24 +248,28 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     {
         const bool bSupplies = Stage > 0 && P.History[Stage - 1].Route.bDangerous;
         if (R.EncounterSeed < 0 || R.EncounterSeed >= MAX_int32 || R.Recipe < 0 || R.Recipe >= UE_ARRAY_COUNT(Recipes) ||
-            R.Width < 8 || R.Width > 9 || R.Height < 7 || R.Height > 8) { return false; }
+            R.Width < MinWidth || R.Width > MaxWidth || R.Height < MinHeight || R.Height > MaxHeight) { return false; }
         auto Expected = R;
         DescribeRoute(Expected, Stage, Choice, bSupplies);
         return FExpeditionRoute::StaticStruct()->CompareScriptStruct(&R, &Expected, 0);
     };
     for (int32 I = 0; I < P.Offers.Num(); ++I) { if (!ValidRoute(P.Offers[I], P.EncountersCompleted, I)) { return Reject(); } }
     int32 PreviousSurvivors = 4;
+    TArray<int32> DeathsByLevel;
+    DeathsByLevel.Init(0, EncounterCount + 1);
     for (int32 I = 0; I < P.History.Num(); ++I)
     {
         const auto& H = P.History[I];
         const bool bUnfinished = I == P.History.Num() - 1 && bCombat;
         const bool bLost = I == P.History.Num() - 1 && bDefeat;
         const bool bLootPending = I == P.History.Num() - 1 && bReward;
-        const bool bHasReward = I < 2 && !bUnfinished && !bLost && !bLootPending;
+        const bool bHasReward = I < EncounterCount - 1 && !bUnfinished && !bLost && !bLootPending;
         if (!ValidRoute(H.Route, I, H.Route.bDangerous ? 1 : 0) ||
             H.Outcome != (bUnfinished ? EBattlePhase::Fighting : bLost ? EBattlePhase::Defeat : EBattlePhase::Victory) ||
             H.Survivors < (bLost ? 0 : 1) || H.Survivors > PreviousSurvivors || (bLost && H.Survivors != 0) ||
+            (bUnfinished && H.Survivors != PreviousSurvivors) ||
             (bHasReward ? H.RewardRecipient < 1 || H.RewardRecipient > 4 : H.RewardRecipient != INDEX_NONE)) { return Reject(); }
+        if (!bUnfinished) { DeathsByLevel[I + 1] = PreviousSurvivors - H.Survivors; }
         PreviousSurvivors = H.Survivors;
     }
     const auto ExpectedPhase = bCombat || P.History.IsEmpty() ? EBattlePhase::Fighting : bDefeat ? EBattlePhase::Defeat : EBattlePhase::Victory;
@@ -261,25 +291,49 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         int32 Remaining = 0;
         for (const auto& U : Saved.Combatants) { if (U.Side == ECombatSide::Party && U.Life != ECombatLife::Dead) { ++Remaining; } }
         if (Remaining > P.History.Last().Survivors) { return Reject(); }
+        DeathsByLevel[P.History.Num()] = P.History.Last().Survivors - Remaining;
     }
     for (int32 I = 0; I < Layout.Combatants.Num(); ++I)
     {
-        const auto& U = Saved.Combatants[I]; const auto& Base = Layout.Combatants[I];
+        const auto& U = Saved.Combatants[I]; auto Base = Layout.Combatants[I];
+        if (U.Side == ECombatSide::Party)
+        {
+            const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
+            int32 MinimumLevel = 1;
+            for (int32 Stage = 0; Stage < P.History.Num(); ++Stage)
+            {
+                const auto& Record = P.History[Stage];
+                // Four survivors prove everyone reached this stage. A named loot
+                // recipient also proves that adventurer earned its victory level.
+                if (Record.Survivors == 4 || Record.RewardRecipient == U.Id)
+                {
+                    const int32 EarnedLevel = Stage + 1 + (Record.Outcome == EBattlePhase::Victory ? 1 : 0);
+                    MinimumLevel = FMath::Max(MinimumLevel, FMath::Min(5, EarnedLevel));
+                }
+            }
+            if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel) ||
+                (I == 0 ? U.FighterSubclass != EFighterSubclass::Champion && U.FighterSubclass != EFighterSubclass::BattleMaster : U.FighterSubclass != EFighterSubclass::None)) { return Reject(); }
+            // Each permanent loss belongs to the level of the encounter where it
+            // occurred; matching the distribution also bounds unidentified deaths.
+            if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
+            Base.DamageBonus += U.Level - 1;
+        }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
             (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
-            (U.Side == ECombatSide::Enemy && (U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
+            (U.Side == ECombatSide::Enemy && (U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
             int32 Gear = 0, SuppliedPotions = 1;
             for (const auto& H : P.History) { if (H.RewardRecipient == U.Id) { ++Gear; SuppliedPotions += H.Route.RewardPotions; } }
-            if (U.WeaponRank != Gear || U.Potions > SuppliedPotions) { return Reject(); }
+            if (U.WeaponRank != FMath::Min(3, Gear) || U.Potions > SuppliedPotions) { return Reject(); }
         }
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
-            U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
+            U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
     }
+    for (int32 Deaths : DeathsByLevel) { if (Deaths != 0) { return Reject(); } }
     if (P.History.IsEmpty() && (Snapshot.Battle.Round != 1 || !Snapshot.Battle.bActionAvailable || !Snapshot.Battle.bBonusActionAvailable ||
         Snapshot.Battle.TurnIndex != 0 || Snapshot.Battle.MovementLeft != Candidate.Combat.Find(Candidate.Combat.ActiveId())->Speed)) { return Reject(); }
     *this = MoveTemp(Candidate);

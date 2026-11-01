@@ -1,10 +1,12 @@
 # Expedition V1 — Feature Dev Ledger
 
+This is the completed V1 delivery record. Continue from the [presentation-polish handoff](../expedition-polish/01-presentation-polish.md) and the current workflow in [development.md](../../development.md). The launcher named below was retired after this run; historical validation and review records remain unchanged.
+
 ## Run
 
 - Run ID: expedition-v1-20261030
 - Loop: plebdev-feature-dev (validated v0.4.0)
-- Target repo: AustinKelsay/expedition-rpg (private; derived from the unchanged unreal-ai-boilerplate baseline)
+- Target repo: AustinKelsay/dnd-diceroll (private; derived from the unchanged unreal-ai-boilerplate baseline)
 - Base: staging, created at ea2a3c0047064668a018e5479546d7884dc12b83
 - Feature branch: feature/expedition-v1
 - Owner: AustinKelsay; orchestrator owns the branch and editor ownership transfers
@@ -27,11 +29,11 @@ Use GitHub, staging, one feature branch, per-ticket commits, public-interface te
 - Approved brief: docs/game-brief.md
 - Context/glossary: CONTEXT.md and GLOSSARY.md
 - Architecture: docs/architecture.md and ADR-0001
-- Spec: docs/specs/expedition-v1.md — https://github.com/AustinKelsay/expedition-rpg/issues/1
+- Spec: docs/specs/expedition-v1.md — https://github.com/AustinKelsay/dnd-diceroll/issues/1
 - Tickets: docs/tickets/ — published with native parent/dependency links
 - Session/review evidence: docs/runs/expedition-v1/
 - Local machine evidence: ignored .local/ and Builds/
-- PR: https://github.com/AustinKelsay/expedition-rpg/pull/6 (open, non-draft, base staging)
+- PR: https://github.com/AustinKelsay/dnd-diceroll/pull/6 (open, non-draft, base staging)
 
 ## Commands
 
@@ -68,10 +70,10 @@ None. Agent-performable local/visual/package checks are AFK. Other platforms and
 
 ## Tracker
 
-- Play a tactical battle: https://github.com/AustinKelsay/expedition-rpg/issues/2
-- Survive losses and use party roles: https://github.com/AustinKelsay/expedition-rpg/issues/3
-- Complete a seeded expedition: https://github.com/AustinKelsay/expedition-rpg/issues/4
-- Resume a run and record its ending: https://github.com/AustinKelsay/expedition-rpg/issues/5
+- Play a tactical battle: https://github.com/AustinKelsay/dnd-diceroll/issues/2
+- Survive losses and use party roles: https://github.com/AustinKelsay/dnd-diceroll/issues/3
+- Complete a seeded expedition: https://github.com/AustinKelsay/dnd-diceroll/issues/4
+- Resume a run and record its ending: https://github.com/AustinKelsay/dnd-diceroll/issues/5
 
 ## Tactical battle handoff — 2026-10-31
 

@@ -4,7 +4,7 @@
 
 `tools/versions.json` pins UE 5.8.4 (CL 58902052), validated on Apple Silicon macOS 26.5.2, Xcode 26.6, and Metal. The engine is installed at `/Users/Shared/Epic Games/UE_5.8`; `UE_ROOT` selects another installation. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
 
-Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the GitHub repository the contribution checks expect, the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Internal `DnDDiceRoll` IDs are retained for compatibility.
+Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the GitHub repository the contribution checks expect, the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Unreal module/package identifiers use `DnDDiceRoll`.
 
 ## Commands
 
@@ -26,6 +26,7 @@ Use Python **3.11+**, with no third-party dependencies. On this Mac `/opt/homebr
 | `capture` | Save a validated viewport PNG under `.local/captures/` |
 | `test` | Run the configured project test prefix headlessly and validate its JSON report |
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
+| `test --filter Project.Tools.CaptureFixtures` | Write real expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Mac Development app, then verify headless startup to the default sandbox |
 
@@ -46,6 +47,10 @@ The same startup script imports the project authoring skill. [Unreal agent setup
 For the one-time migration from an editor launched before the status tool existed, `close --request-quit` sends only the normal PID-targeted quit after OS identity checks. This explicit escape hatch skips the toolset dirty gate while retaining Unreal's save dialogs. Routine operations use `close`.
 
 ## Agent workflow and evidence
+
+Use Matt Pocock skills directly under the [contribution workflow](agents/workflow.md), which owns planning, claims, review and staging delivery. Historical run reports retain their original launcher references.
+
+Before extending the game, read the [current polish handoff](runs/expedition-polish/01-presentation-polish.md), inspect the branch and working tree, and establish editor ownership with fresh `status`. The [V1 ledger](runs/expedition-v1/ledger.md) is delivery history. Record the feature baseline, scope, owner, validation and unresolved limits in the current run record. Keep reviewed feature PRs targeting `staging`; merging remains a separate user decision.
 
 Establish a slice and observable acceptance criteria in the game brief or a focused design note. Inspect the tree, run doctor, and use the safe compile loop for source changes. Discover `list_toolsets`, inspect `describe_toolset`, then dispatch `call_tool` using its schema. [Editor recipes](editor-recipes.md) maps common tasks to Epic's existing tools and skills. [Architecture](architecture.md) covers C++/Blueprint and ownership conventions.
 
@@ -72,7 +77,7 @@ C++ lives in `Source/DnDDiceRoll`; project assets live in `Content/DnDDiceRoll`.
 
 The endpoint is `http://127.0.0.1:18765/mcp`; port 8000 belongs to another service on this host. Start the editor before connecting a client. Restart existing agent sessions to load configuration. Codex project settings require trust; inspect `codex mcp list` from this directory. To change the endpoint, update `tools/versions.json`, `.codex/config.toml`, `.mcp.json`, and `DefaultEditorPerProjectUserSettings.ini` together. Keep it local: Epic's endpoint is intended for same-machine clients and has no authentication.
 
-AllToolsets enables Game Features tooling transitively; the `GameFeatureData` scan satisfies its editor startup requirement and is marked editor-only so packaged games do not try to load the absent editor-tool dependency. Expedition has a fresh ProjectID and visible project name. Internal module/package identifiers remain compatible with the starter; renaming them requires a separate migration.
+AllToolsets enables Game Features tooling transitively; the `GameFeatureData` scan satisfies its editor startup requirement and is marked editor-only so packaged games do not try to load the absent editor-tool dependency. `dnd-diceroll` has its own ProjectID and visible project name. Internal module/package identifiers remain compatible with the starter; renaming them requires a separate migration.
 
 ## Sources and validation records
 

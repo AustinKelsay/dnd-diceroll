@@ -2,7 +2,7 @@
 
 ## Parent and dependency
 
-[Expedition V1](https://github.com/AustinKelsay/expedition-rpg/issues/1). Blocked by: Survive losses and use party roles.
+[Expedition V1](https://github.com/AustinKelsay/dnd-diceroll/issues/1). Blocked by: Survive losses and use party roles.
 
 ## Outcome
 
@@ -22,4 +22,4 @@ A fresh party plays a complete three-encounter artifact expedition with route de
 
 Keep the story to a simple artifact objective and concrete recorded outcomes. No open world, procedural prose service, complex factions, leveling or custom party creation.
 
-Tracker: https://github.com/AustinKelsay/expedition-rpg/issues/4
+Tracker: https://github.com/AustinKelsay/dnd-diceroll/issues/4

@@ -1,4 +1,6 @@
-# Expedition V1
+# dnd-diceroll V1
+
+Product naming corrected under [#33](https://github.com/AustinKelsay/dnd-diceroll/issues/33). The gameplay contract and historical document path are retained.
 
 ## Problem Statement
 
@@ -45,7 +47,7 @@ One player controls four prebuilt adventurers through three generated encounters
 - Deterministic random state belongs to the rules/run state and is persisted. Same seed and command sequence produce the same results; separate generation and combat streams if useful.
 - Stable combatant/party identities survive presentation rebuilds and encounters. Downed and dead are distinct states. Dead members cannot act, recover, or receive resurrection.
 - Three encounters, route selection between them, one recovery allowance, and victory/defeat terminals. Initial goal is artifact recovery at the finale. No leveling in V1.
-- Small modular layouts must have valid cells, nonoverlapping walkable spawns, and routes to actionable targets. Difficulty/reward variation uses bounded recipes and persists the chosen opportunity.
+- Modular layouts (16–18 × 11–12 cells since [#29](https://github.com/AustinKelsay/dnd-diceroll/issues/29); originally 8–9 × 7–8) must have valid cells, nonoverlapping walkable spawns, and routes to actionable targets. Difficulty/reward variation uses bounded recipes and persists the chosen opportunity.
 - Save/resume uses a versioned validated snapshot, including phase, party, encounters, RNG, turn, resources, deaths, and run identity. Fail clearly on invalid/incompatible saves; avoid corrupting the last valid save on write failure. Completed run records grant no power.
 - Use a controllable 3D overhead camera and readable simple visuals with visible selection, turn, health, status, range, action feedback, and controls.
 - Actor spawning, UI refreshes, and repeated input cannot bypass validation, spend a resource twice, or apply duplicate outcomes.
@@ -68,4 +70,4 @@ Character creation, leveling, multiplayer, official D&D lore/setting IP, full SR
 
 ## Further Notes
 
-Working title: Expedition. The reusable boilerplate repository stays unchanged. Implementation uses one feature branch and reviewed per-ticket commits, with a non-draft PR targeting staging. Product/design contradictions and unavailable privileged access are the remaining human escalation triggers.
+Product name: dnd-diceroll. “Expedition” names one gameplay run (see [glossary](../../GLOSSARY.md)). The reusable boilerplate repository stays unchanged. Implementation uses one feature branch and reviewed per-ticket commits, with a non-draft PR targeting staging. Product/design contradictions and unavailable privileged access are the remaining human escalation triggers.

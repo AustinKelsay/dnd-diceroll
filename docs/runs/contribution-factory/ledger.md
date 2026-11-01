@@ -1,6 +1,6 @@
 # Contribution factory — delivery ledger
 
-- Spec/implementation issue: https://github.com/AustinKelsay/expedition-rpg/issues/7
+- Spec/implementation issue: https://github.com/AustinKelsay/dnd-diceroll/issues/7
 - Owner: AustinKelsay; implementation session gpt-6.1-sol.
 - Branch: feature/contribution-factory; base staging at ea2a3c0047064668a018e5479546d7884dc12b83.
 - Authority: owner approved the council plan and requested end-to-end full send, including routine test/implementation decisions and reversible merge of this feature into staging when review/check gates pass. V1 PR #6 and main promotion remain outside scope.

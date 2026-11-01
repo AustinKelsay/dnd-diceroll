@@ -2,7 +2,7 @@
 
 ## Parent and dependency
 
-[Expedition V1](https://github.com/AustinKelsay/expedition-rpg/issues/1). Blocked by: Play a tactical battle.
+[Expedition V1](https://github.com/AustinKelsay/dnd-diceroll/issues/1). Blocked by: Play a tactical battle.
 
 ## Outcome
 
@@ -21,4 +21,4 @@ The same party becomes tactically distinct and carries the consequences of a fig
 
 Use a simple explicit transition fixture if route composition is not yet present. Generated expeditions, save/resume, recruitment, resurrection, leveling and permanent power progression remain outside this ticket.
 
-Tracker: https://github.com/AustinKelsay/expedition-rpg/issues/3
+Tracker: https://github.com/AustinKelsay/dnd-diceroll/issues/3

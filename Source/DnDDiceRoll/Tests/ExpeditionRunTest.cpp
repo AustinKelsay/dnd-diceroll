@@ -32,16 +32,54 @@ bool FRunRouteTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Actual enemy count matches preview"), Run.Battle().Snapshot().Encounter.Combatants.Num(), 4 + Route.EnemyCount);
     return !HasAnyErrors();
 }
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FThreeEncounterRunTest, "Project.Expedition.Run.ThreeVictoriesRecoverArtifact",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunLargeGridTest, "Project.Expedition.Run.LargeGridsKeepPlayableOpeningGap",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
+bool FRunLargeGridTest::RunTest(const FString& Parameters)
+{
+    TSet<int32> Widths, Heights;
+    for (int32 Seed = 0; Seed < 64; ++Seed)
+    {
+        for (int32 Choice = 0; Choice < 2; ++Choice)
+        {
+            FExpeditionRun Run; FString Error;
+            Run.NewRun(Seed, Error, TEXT("large-grid-fixture"));
+            const auto Offer = Run.Progress().Offers[Choice];
+            // About three times the former 8-9 x 7-8 area.
+            TestTrue(TEXT("Route width 16..18"), Offer.Width >= 16 && Offer.Width <= 18);
+            TestTrue(TEXT("Route height 11..12"), Offer.Height >= 11 && Offer.Height <= 12);
+            Widths.Add(Offer.Width); Heights.Add(Offer.Height);
+            if (!TestTrue(TEXT("Large route starts combat"), Run.ChooseRoute(Offer.Id, Error))) { return false; }
+            const auto& Layout = Run.Battle().Snapshot().Encounter;
+            TestEqual(TEXT("Layout width matches route"), Layout.Width, Offer.Width);
+            TestEqual(TEXT("Layout height matches route"), Layout.Height, Offer.Height);
+            int32 Closest = MAX_int32;
+            for (const auto& Hero : Layout.Combatants)
+            {
+                if (Hero.Side != ECombatSide::Party) { continue; }
+                for (const auto& Foe : Layout.Combatants)
+                {
+                    if (Foe.Side == ECombatSide::Enemy) { Closest = FMath::Min(Closest, Distance(Hero.Cell, Foe.Cell)); }
+                }
+            }
+            // Speed 4 closes this within about a turn; the lines sit mid-board with room behind both.
+            TestTrue(TEXT("Opening gap 5..7 cells"), Closest >= 5 && Closest <= 7);
+            TestTrue(TEXT("Obstacles scale with the board"), Layout.BlockedCells.Num() >= 8);
+        }
+    }
+    TestEqual(TEXT("Every width occurs"), Widths.Num(), 3);
+    TestEqual(TEXT("Every height occurs"), Heights.Num(), 2);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFiveEncounterRunTest, "Project.Expedition.Run.FiveVictoriesRecoverArtifact",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFiveEncounterRunTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
     Run.NewRun(42, Error, TEXT("seeded-fixture"));
-    for (int32 Encounter = 0; Encounter < 3; ++Encounter)
+    for (int32 Encounter = 0; Encounter < 5; ++Encounter)
     {
-        if (Encounter == 2)
+        if (Encounter == 4)
         {
             TestEqual(TEXT("Finale metadata offers no consumable loot"), Run.Progress().Offers[0].RewardPotions, 0);
             TestTrue(TEXT("Finale preview discloses artifact instead of loot"), Run.Progress().Offers[0].Preview.Contains(TEXT("no loot")));
@@ -49,23 +87,55 @@ bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Choose guarded opportunity"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
         if (!TestTrue(TEXT("Public play completes within finite turn budget"), FinishCombat(Run))) { return false; }
         TestEqual(TEXT("Exactly one completion per victory"), Run.Progress().EncountersCompleted, Encounter + 1);
-        if (Encounter < 2)
+        for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { TestEqual(TEXT("Survivor milestone level"), Unit.Level, FMath::Min(5, Encounter + 2)); }
+        }
+        if (Encounter < 4)
         {
             if (!TestTrue(TEXT("Victory requires explicit reward"), Run.Progress().Phase == EExpeditionPhase::Reward)) { return false; }
             TestTrue(TEXT("Reward conscious fighter"), Run.ClaimReward(1, Error));
+            FExpeditionRun Restored;
+            TestTrue(TEXT("All four awards round-trip including capped gear"), Restored.Restore(Run.Snapshot(), Error));
+            TestEqual(TEXT("Gear stays capped"), Run.Battle().Find(1)->WeaponRank, FMath::Min(3, Encounter + 1));
             if (Encounter == 0) { TestTrue(TEXT("One camp opportunity"), Run.Progress().Phase == EExpeditionPhase::Recovery); TestTrue(TEXT("Take explicit recovery"), Run.Recover(true, Error)); }
         }
     }
-    TestTrue(TEXT("Artifact and terminal victory after exactly three encounters"), Run.Progress().Phase == EExpeditionPhase::Victory && Run.Progress().bArtifactRecovered);
-    TestEqual(TEXT("Three selected encounters retained"), Run.Progress().History.Num(), 3);
+    TestTrue(TEXT("Artifact and terminal victory after exactly five encounters"), Run.Progress().Phase == EExpeditionPhase::Victory && Run.Progress().bArtifactRecovered);
+    TestEqual(TEXT("Five selected encounters retained"), Run.Progress().History.Num(), 5);
     const auto Won = Run.Snapshot();
-    TestFalse(TEXT("No fourth encounter"), Run.ChooseRoute(7, Error));
+    TestFalse(TEXT("No sixth encounter"), Run.ChooseRoute(11, Error));
     TestFalse(TEXT("No terminal loot"), Run.ClaimReward(1, Error));
     TestFalse(TEXT("No terminal recovery"), Run.Recover(true, Error));
     Run.Submit({ECombatCommandType::EndTurn,1}); Run.PlayEnemyTurn();
     TestTrue(TEXT("Victory terminal is atomic"), SameRun(Won, Run.Snapshot()));
     FExpeditionRun Fresh; Fresh.NewRun(42, Error, TEXT("seeded-fixture")); Run.NewRun(42, Error, TEXT("seeded-fixture"));
     TestTrue(TEXT("New run resets earned power, resources, history and RNG to fresh seed"), SameRun(Fresh.Snapshot(), Run.Snapshot()));
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDeathLevelHistoryTest, "Project.Expedition.Run.DeathLevelRespectsEarnedHistory",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FDeathLevelHistoryTest::RunTest(const FString& Parameters)
+{
+    FExpeditionRun Run;
+    FString Error;
+    if (!Run.NewRun(1, Error, TEXT("death-level-history")) ||
+        !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run)) { return false; }
+    if (!TestTrue(TEXT("First victory retains all four adventurers"),
+        Run.Progress().Phase == EExpeditionPhase::Reward && Run.Progress().History[0].Survivors == 4)) { return false; }
+    if (!Run.ClaimReward(1, Error) || !Run.Recover(false, Error) ||
+        !Run.ChooseRoute(Run.Progress().Offers[1].Id, Error) || !FinishCombat(Run, false)) { return false; }
+    if (!TestTrue(TEXT("Second encounter ends in a permanent wipe"), Run.Progress().Phase == EExpeditionPhase::Defeat)) { return false; }
+    const auto Earned = Run.Snapshot();
+    FExpeditionRun Restored;
+    if (!TestTrue(TEXT("Actual death-level snapshot restores"), Restored.Restore(Earned, Error))) { return false; }
+    TestEqual(TEXT("Fighter died after earning level two"), Restored.Battle().Find(1)->Level, 2);
+    auto Contradictory = Earned;
+    Contradictory.Battle.Encounter.Combatants[0].Level = 1;
+    --Contradictory.Battle.Encounter.Combatants[0].DamageBonus;
+    TestFalse(TEXT("Retained all-survivor victory forbids lowering a death-level"), Restored.Restore(Contradictory, Error));
+    TestTrue(TEXT("Rejected restore leaves the installed expedition unchanged"), SameRun(Earned, Restored.Snapshot()));
     return !HasAnyErrors();
 }
 
@@ -132,7 +202,7 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("AI/player play finite on generated terrain"), FinishCombat(Run));
                 TestTrue(TEXT("Replay finite"), FinishCombat(Replay));
                 TestTrue(TEXT("Same seed and commands reproduce full combat RNG/results"), SameRun(Run.Snapshot(), Replay.Snapshot()));
-                for (int32 Next = 1; Next < 3 && Run.Progress().Phase == EExpeditionPhase::Reward; ++Next)
+                for (int32 Next = 1; Next < 5 && Run.Progress().Phase == EExpeditionPhase::Reward; ++Next)
                 {
                     int32 Recipient = INDEX_NONE;
                     for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
@@ -146,7 +216,7 @@ bool FRunGenerationTest::RunTest(const FString& Parameters)
                     TestTrue(TEXT("Whole-run replay finite"), FinishCombat(Replay));
                     TestTrue(TEXT("Full seeded command sequence preserves every value and both streams"), SameRun(Run.Snapshot(), Replay.Snapshot()));
                 }
-                TestTrue(TEXT("Whole expedition terminates within three combats"), Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat);
+                TestTrue(TEXT("Whole expedition terminates within five combats"), Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat);
             }
         }
     }
@@ -246,7 +316,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunSurvivorTest, "Project.Expedition.Run.DeadR
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
+    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Turn=0;Turn<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Turn)
     {
         const auto* Active=Run.Battle().Find(Run.Battle().ActiveId());
@@ -264,6 +334,14 @@ bool FRunSurvivorTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Camp cannot revive permanent death"),Run.Battle().Find(1)->Life==ECombatLife::Dead && Run.Battle().Find(1)->HP==0 && Run.Battle().Find(1)->WeaponRank==0 && Run.Battle().Find(1)->Potions==1);
     TestTrue(TEXT("Continue with full stable roster"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error));
     TestTrue(TEXT("Dead remains present and excluded from turns"),Run.Battle().Find(1)->Life==ECombatLife::Dead && !Run.Battle().Snapshot().TurnOrder.Contains(1));
+    const auto DeathLevel = Run.Snapshot();
+    FExpeditionRun Restored;
+    if (!TestTrue(TEXT("Actual first-encounter death restores during encounter two"), Restored.Restore(DeathLevel, Error))) { return false; }
+    auto AdvancedDead = DeathLevel;
+    AdvancedDead.Battle.Encounter.Combatants[0].Level = 2;
+    ++AdvancedDead.Battle.Encounter.Combatants[0].DamageBonus;
+    TestFalse(TEXT("Retained survivor losses forbid advancing an earlier dead adventurer"), Restored.Restore(AdvancedDead, Error));
+    TestTrue(TEXT("Contradictory death distribution leaves the installed run unchanged"), SameRun(DeathLevel, Restored.Snapshot()));
     return !HasAnyErrors();
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkipRecoveryTest, "Project.Expedition.Run.SkippedRecoveryHasNoRestAndCannotReturn",
