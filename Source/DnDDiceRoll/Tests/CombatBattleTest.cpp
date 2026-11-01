@@ -49,6 +49,23 @@ bool SameState(const FCombatSnapshot& A, const FCombatSnapshot& B)
 }
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatGridBoundsTest, "Project.Expedition.Combat.GridBoundsAllowLargeEncounters",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCombatGridBoundsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FCombatEncounter Large = Duel();
+    Large.Width = 18; Large.Height = 12;
+    Large.Combatants[1].Cell = {17, 11};
+    TestTrue(TEXT("18 x 12 encounter is legal"), FCombatBattle().Start(Large, 42, Error));
+    Large.Width = 24; Large.Height = 24;
+    TestTrue(TEXT("24 x 24 is the largest legal grid"), FCombatBattle().Start(Large, 42, Error));
+    Large.Width = 25;
+    TestFalse(TEXT("Wider than 24 is rejected"), FCombatBattle().Start(Large, 42, Error));
+    TestFalse(TEXT("Clear reason"), Error.IsEmpty());
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatMovementTest, "Project.Expedition.Combat.MovementAndAtomicRejection",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCombatMovementTest::RunTest(const FString& Parameters)

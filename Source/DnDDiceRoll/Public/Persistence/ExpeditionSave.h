@@ -21,17 +21,18 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 1;
+    UPROPERTY() int32 Version = 2;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
 
-/** Local v1 file adapter. Strict decoding + domain validation; failed reads/writes never
+/** Local file adapter. Strict decoding + domain validation; failed reads/writes never
  * change output/live state or replace the prior file. Single desktop player only. */
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    static constexpr int32 Version = 1;
+    // Version 2 enlarged generated encounter grids; version 1 saves are unsupported.
+    static constexpr int32 Version = 2;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);

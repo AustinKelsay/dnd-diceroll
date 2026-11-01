@@ -32,6 +32,44 @@ bool FRunRouteTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Actual enemy count matches preview"), Run.Battle().Snapshot().Encounter.Combatants.Num(), 4 + Route.EnemyCount);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunLargeGridTest, "Project.Expedition.Run.LargeGridsKeepPlayableOpeningGap",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRunLargeGridTest::RunTest(const FString& Parameters)
+{
+    TSet<int32> Widths, Heights;
+    for (int32 Seed = 0; Seed < 64; ++Seed)
+    {
+        for (int32 Choice = 0; Choice < 2; ++Choice)
+        {
+            FExpeditionRun Run; FString Error;
+            Run.NewRun(Seed, Error, TEXT("large-grid-fixture"));
+            const auto Offer = Run.Progress().Offers[Choice];
+            // About three times the former 8-9 x 7-8 area.
+            TestTrue(TEXT("Route width 16..18"), Offer.Width >= 16 && Offer.Width <= 18);
+            TestTrue(TEXT("Route height 11..12"), Offer.Height >= 11 && Offer.Height <= 12);
+            Widths.Add(Offer.Width); Heights.Add(Offer.Height);
+            if (!TestTrue(TEXT("Large route starts combat"), Run.ChooseRoute(Offer.Id, Error))) { return false; }
+            const auto& Layout = Run.Battle().Snapshot().Encounter;
+            TestEqual(TEXT("Layout width matches route"), Layout.Width, Offer.Width);
+            TestEqual(TEXT("Layout height matches route"), Layout.Height, Offer.Height);
+            int32 Closest = MAX_int32;
+            for (const auto& Hero : Layout.Combatants)
+            {
+                if (Hero.Side != ECombatSide::Party) { continue; }
+                for (const auto& Foe : Layout.Combatants)
+                {
+                    if (Foe.Side == ECombatSide::Enemy) { Closest = FMath::Min(Closest, Distance(Hero.Cell, Foe.Cell)); }
+                }
+            }
+            // Speed 4 closes this within about a turn; the lines sit mid-board with room behind both.
+            TestTrue(TEXT("Opening gap 5..7 cells"), Closest >= 5 && Closest <= 7);
+            TestTrue(TEXT("Obstacles scale with the board"), Layout.BlockedCells.Num() >= 8);
+        }
+    }
+    TestEqual(TEXT("Every width occurs"), Widths.Num(), 3);
+    TestEqual(TEXT("Every height occurs"), Heights.Num(), 2);
+    return !HasAnyErrors();
+}
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FThreeEncounterRunTest, "Project.Expedition.Run.ThreeVictoriesRecoverArtifact",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FThreeEncounterRunTest::RunTest(const FString& Parameters)
@@ -246,7 +284,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunSurvivorTest, "Project.Expedition.Run.DeadR
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
+    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Turn=0;Turn<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Turn)
     {
         const auto* Active=Run.Battle().Find(Run.Battle().ActiveId());

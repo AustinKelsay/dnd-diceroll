@@ -200,7 +200,9 @@ void AExpeditionBattleView::RebuildBoard()
     for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     BuildEffects(Encounter);
     Show.Reset(Rules().Snapshot());
-    TargetDistance = 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 90.0f;
+    // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
+    // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
+    TargetDistance = 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
 }
@@ -747,7 +749,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     FVector Desired = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardTop);
     // Lean the view toward whoever is acting so long boards keep the action framed.
     const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
-    if (FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardTop), 0.28f); }
+    if (FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardTop), 0.4f); }
     if (!bCameraPlaced || DeltaSeconds <= 0.0f)
     {
         Focus = Desired; Yaw = TargetYaw; Distance = TargetDistance; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
@@ -762,12 +764,14 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f : FVector::ZeroVector;
     const float Radians = FMath::DegreesToRadians(Yaw);
     const FVector Offset(FMath::Cos(Radians) * Distance * 0.62f, FMath::Sin(Radians) * Distance * 0.62f, Distance);
-    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + Shake);
+    // Pan the view left of the focus so the board sits clear of the party cards on the left.
+    const FVector ScreenLeft(-FMath::Sin(Radians), FMath::Cos(Radians), 0.0f);
+    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + ScreenLeft * Distance * 0.09f + Shake);
     Camera->SetWorldRotation((-Offset).Rotation());
 }
 
 void AExpeditionBattleView::Orbit(float Degrees) { TargetYaw += Degrees; }
-void AExpeditionBattleView::Zoom(float Amount) { TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 2200.0f); }
+void AExpeditionBattleView::Zoom(float Amount) { TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 3200.0f); }
 
 bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint& Cell) const
 {
