@@ -21,17 +21,18 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 2;
+    UPROPERTY() int32 Version = 3;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
 
-/** Local v2 schema file adapter. Strict decoding + domain validation; failed reads/writes never
+/** Local file adapter. Strict decoding + domain validation; failed reads/writes never
  * change output/live state or replace the prior file. Single desktop player only. */
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    static constexpr int32 Version = 2;
+    // Version 3 adds levels and subclasses to version 2 large grids; older saves are unsupported.
+    static constexpr int32 Version = 3;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);

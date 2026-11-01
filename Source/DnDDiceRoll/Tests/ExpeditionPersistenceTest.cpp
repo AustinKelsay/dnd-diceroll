@@ -143,7 +143,7 @@ bool FInvalidNestedRestoreTest::RunTest(const FString& Parameters)
         [](auto& S){auto& U=S.Battle.Encounter.Combatants[0]; U.HP=0; U.Life=ECombatLife::Downed; U.RescueTurnsLeft=0;},
         [](auto& S){auto& U=S.Battle.Encounter.Combatants[0]; U.HP=1; U.Life=ECombatLife::Dead;},
         [](auto& S){S.Battle.Encounter.Combatants[0].Cell={99,99};}, [](auto& S){S.Battle.Encounter.Combatants[0].Cell=S.Battle.Encounter.Combatants[1].Cell;},
-        [](auto& S){const auto Cell=S.Battle.Encounter.BlockedCells[0];S.Battle.Encounter.BlockedCells.Add(Cell);}, [](auto& S){S.Battle.Encounter.Width=17;},
+        [](auto& S){const auto Cell=S.Battle.Encounter.BlockedCells[0];S.Battle.Encounter.BlockedCells.Add(Cell);}, [](auto& S){S.Battle.Encounter.Width+=1;}, [](auto& S){S.Progress.History[0].Route.Width=9; S.Battle.Encounter.Width=9;},
         [](auto& S){S.Battle.TurnOrder[0]=999;}, [](auto& S){const int32 Id=S.Battle.TurnOrder[0];S.Battle.TurnOrder.Add(Id);},
         [](auto& S){S.Battle.TurnOrder.RemoveAt(0);}, [](auto& S){Swap(S.Battle.TurnOrder[0],S.Battle.TurnOrder[1]);},
         [](auto& S){S.Battle.TurnIndex=999;}, [](auto& S){S.Battle.Round=0;}, [](auto& S){S.Battle.MovementLeft=99;},
@@ -180,7 +180,8 @@ bool FStrictMalformedSaveTest::RunTest(const FString& Parameters)
         TSharedPtr<FJsonObject> Object; FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Object); Mutate(Object);
         FString Text; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Text)); Malformed.Add(Text);
     };
-    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),99);});
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version+1);});
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // version 2 large-grid saves predate levels/subclasses
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("Offers"))[0]->AsObject()->SetStringField(TEXT("Preview"),TEXT("No enemies, no cost"));});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetNumberField(TEXT("MovementLeft"),99);});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->SetObjectField(TEXT("Battle"),MakeShared<FJsonObject>());});
@@ -311,15 +312,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnreadableStartupRecoveryTest, "Project.Expedi
 bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run; FString Error, Json;
-    Run.NewRun(42, Error, TEXT("future-version"));
+    Run.NewRun(42, Error, TEXT("prior-version"));
     FExpeditionSaveData Data; Data.Current = Run.Snapshot();
     FExpeditionSave::Encode(Data, Json, Error);
     TSharedPtr<FJsonObject> Object;
     FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
-    Object->SetNumberField(TEXT("Version"), 1);
-    FString Future;
-    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Future));
-    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Future})
+    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version - 1);
+    FString Incompatible;
+    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Incompatible));
+    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible})
     {
         FSaveFixture Fixture;
         IFileManager::Get().MakeDirectory(*Fixture.Directory, true);
@@ -341,7 +342,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     }
     FSaveFixture Failed;
     IFileManager::Get().MakeDirectory(*Failed.Directory, true);
-    FFileHelper::SaveStringToFile(Future, *Failed.Path);
+    FFileHelper::SaveStringToFile(Incompatible, *Failed.Path);
     IFileManager::Get().MakeDirectory(*(Failed.Path + TEXT(".pending")), true);
     FExpeditionSession FailedSession(Failed.Path);
     FString PreservedPath, PreservedBytes;
@@ -349,7 +350,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Failed recovery leaves startup state"), FailedSession.HasRun());
     TestTrue(TEXT("Failure reports that original was preserved"), Error.Contains(TEXT("preserved")));
     TestTrue(TEXT("Original still readable at reported path"), FFileHelper::LoadFileToString(PreservedBytes, *PreservedPath));
-    TestEqual(TEXT("Failed replacement cannot destroy original"), PreservedBytes, Future);
+    TestEqual(TEXT("Failed replacement cannot destroy original"), PreservedBytes, Incompatible);
     return !HasAnyErrors();
 }
 
@@ -357,7 +358,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPersistLostSurvivorTest, "Project.Expedition.P
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPersistLostSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run, Restored; FString Error; Run.NewRun(42,Error,TEXT("lost-member-fixture"));Run.ChooseRoute(Run.Progress().Offers[1].Id,Error);
+    FExpeditionRun Run, Restored; FString Error; Run.NewRun(42,Error,TEXT("lost-member-fixture"));Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Step=0;Step<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Step)
     {
         const auto& B=Run.Battle();const auto* A=B.Find(B.ActiveId());

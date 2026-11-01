@@ -81,3 +81,12 @@ Root refreshed the uniquely identified QA copy from the final `a61b96c` package,
 The remaining acceptance work is a real pointer check on the title/ending subclass controls and combat maneuver button, a full human balance playthrough, and the inherited A1 resolution. The PR must retain these limits, stay unmerged, and leave #28 open until staging integration. This bounded input investigation does not resume or waive A1.
 
 Final QA shutdown is confirmed: PID23046 exited, runtime ends `LogExit: Exiting.`, and its log has zero Error/Fatal lines. Staged contribution/whitespace checks pass. Final preflight now refuses the shared endpoint because the original checkout has independently launched editor PID31485 on port18765; the exact command was inspected read-only and the editor remains untouched. This prevents local editor/MCP operations or workspace integration, and does not prevent publishing the already-verified owned commits. No further engine operations were attempted.
+
+
+## Staging integration refresh
+
+The integrator subsequently confirmed maintainer acceptance of A1 risk (tracked in #32), so A1 no longer blocks merge. Pointer automation and human balance playtesting are recorded limitations, not merge gates. Root is authorized to retarget #31, merge published staging without rebasing, verify, push and hand back; the integrator retains merge/release ownership. Original-checkout editor PID42458 and its endpoint remain untouched.
+
+PR #31 now targets staging. Merged `origin/staging` at `882cdd8` (includes polish #27 and larger-grid #30). Conflict resolution retains five fights/levels 1–5 plus 16–18 by 11–12 routes, party column4/centered rows, recipe-specific enemy columns and 5–7 cell opening gap. Both the five-victory and large-grid tests remain. Save schema is now version3 in both reflected default and adapter constant: version2 belongs to the published larger-grid schema and is unsupported, like version1. Version mutations use the constant plus/minus1; explicit incompatible-save preservation now exercises prior version2 bytes. Current rules/architecture/brief combine both changes; historical delivery records remain historical.
+
+The two dead-roster fixtures retain staging's seed42 guarded route (`Offers[0]`), because the three-raider layout wipes that fixture before survivor continuation. Their intent remains actual permanent loss followed by survivor victory, camp and next encounter; no stats or outcome assertions were weakened. Additional seed-sensitive checks are pending the combined engine run.

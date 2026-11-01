@@ -27,10 +27,10 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
 {
     Error.Reset();
     auto Reject = [&Error](const TCHAR* Reason) { Error = Reason; return false; };
-    if (Encounter.Width < 2 || Encounter.Height < 2 || Encounter.Width > 16 || Encounter.Height > 16 ||
+    if (Encounter.Width < 2 || Encounter.Height < 2 || Encounter.Width > 24 || Encounter.Height > 24 ||
         Encounter.Combatants.Num() < 2 || Encounter.Combatants.Num() > 32)
     {
-        return Reject(TEXT("Encounter must have a 2..16 grid and 2..32 combatants."));
+        return Reject(TEXT("Encounter must have a 2..24 grid and 2..32 combatants."));
     }
     auto Inside = [&Encounter](FIntPoint Cell)
     {
