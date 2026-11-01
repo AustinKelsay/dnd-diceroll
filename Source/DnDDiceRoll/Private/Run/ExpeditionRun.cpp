@@ -284,7 +284,19 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         if (U.Side == ECombatSide::Party)
         {
             const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
-            if (U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel) ||
+            int32 MinimumLevel = 1;
+            for (int32 Stage = 0; Stage < P.History.Num(); ++Stage)
+            {
+                const auto& Record = P.History[Stage];
+                // Four survivors prove everyone reached this stage. A named loot
+                // recipient also proves that adventurer earned its victory level.
+                if (Record.Survivors == 4 || Record.RewardRecipient == U.Id)
+                {
+                    const int32 EarnedLevel = Stage + 1 + (Record.Outcome == EBattlePhase::Victory ? 1 : 0);
+                    MinimumLevel = FMath::Max(MinimumLevel, FMath::Min(5, EarnedLevel));
+                }
+            }
+            if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel) ||
                 (I == 0 ? U.FighterSubclass != EFighterSubclass::Champion && U.FighterSubclass != EFighterSubclass::BattleMaster : U.FighterSubclass != EFighterSubclass::None)) { return Reject(); }
             Base.DamageBonus += U.Level - 1;
         }

@@ -836,7 +836,7 @@ void AExpeditionHUD::DrawEnding()
     const FExpeditionProgress& Run = View->Progress();
     const bool bWon = Run.Phase == EExpeditionPhase::Victory;
     const FLinearColor Accent = bWon ? Gold : Danger;
-    const float Width = 620, Height = 450;
+    const float Width = 620, Height = 530;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
     Panel(X, Y, Width, Height, Accent, 0.95f);
     Text(bWon ? TEXT("THE WAYSTONE IS RECOVERED") : TEXT("THE EXPEDITION IS LOST"), W * 0.5f, Y + 18, Accent, 1.5f, EAlign::Center, Width - 40);
@@ -859,6 +859,9 @@ void AExpeditionHUD::DrawEnding()
         Text(bAlive ? FString::Printf(TEXT("survived  ·  %d/%d HP"), Unit.HP, Unit.MaxHP) : TEXT("fallen"), X + Width - 40, Row, bAlive ? Parchment : Muted, 0.78f, EAlign::Right);
         Row += 22;
     }
+    Text(TEXT("Choose your next Fighter"), W * 0.5f, Y + Height - 154, Muted, 0.75f, EAlign::Center);
+    Button(TEXT("Champion"), TEXT("Champion: crit 19-20"), TEXT("J"), W * 0.5f - 250, Y + Height - 126, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::Champion, Gold);
+    Button(TEXT("BattleMaster"), TEXT("Battle Master: 2 strikes"), TEXT("B  +2 hit / damage"), W * 0.5f + 10, Y + Height - 126, 240, 44, true, Player->StartupSubclass() == EFighterSubclass::BattleMaster, Sky);
     Button(TEXT("New"), TEXT("New Expedition"), TEXT("N  ·  fresh party"), W * 0.5f - 230, Y + Height - 70, 220, 54, true, false, Gold);
     Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), W * 0.5f + 10, Y + Height - 70, 220, 54, true, false, Muted);
 }

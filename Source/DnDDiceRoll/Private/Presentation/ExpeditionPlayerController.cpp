@@ -272,8 +272,13 @@ bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
     return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords();
 }
-void AExpeditionPlayerController::Champion() { if (AllowsGameplayInput() && !BattleView->HasRun()) { SelectedSubclass = EFighterSubclass::Champion; } }
-void AExpeditionPlayerController::BattleMaster() { if (AllowsGameplayInput() && !BattleView->HasRun()) { SelectedSubclass = EFighterSubclass::BattleMaster; } }
+bool AExpeditionPlayerController::CanSelectSubclass() const
+{
+    if (!AllowsGameplayInput()) { return false; }
+    return !BattleView->HasRun() || BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat;
+}
+void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { SelectedSubclass = EFighterSubclass::Champion; } }
+void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { SelectedSubclass = EFighterSubclass::BattleMaster; } }
 void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(ECombatCommandType::PrecisionStrike); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }

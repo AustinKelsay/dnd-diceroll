@@ -6,6 +6,7 @@
 #include "HAL/FileManager.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "ExpeditionTestSupport.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverlayInputTest, "Project.Expedition.Presentation.OverlaysBlockGameplayShortcuts",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -61,6 +62,57 @@ bool FOverlayInputTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNextRunSubclassTest, "Project.Expedition.Presentation.NextRunSubclassSelection",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FNextRunSubclassTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FExpeditionRun Ended;
+    Ended.NewRun(1, Error, TEXT("subclass-choice-ending"));
+    Ended.ChooseRoute(Ended.Progress().Offers[0].Id, Error);
+    if (!TestTrue(TEXT("Fixture reaches an ending"), ExpeditionTestSupport::FinishCombat(Ended, false))) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/SubclassChoice"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Ended.Snapshot();
+    Data.Records.Add(FExpeditionSave::Ending(Ended));
+    if (!TestTrue(TEXT("Ending checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { return false; }
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient subclass input world"), World)) { return false; }
+    auto* Player = World->SpawnActor<AExpeditionPlayerController>();
+    if (TestNotNull(TEXT("Subclass input adapter"), Player))
+    {
+        Player->DispatchBeginPlay();
+        auto* View = Player->GetBattleView();
+        if (TestNotNull(TEXT("Subclass battle view"), View))
+        {
+            View->ConfigureStorage(Path);
+            View->DispatchBeginPlay();
+            Player->HandleButton(TEXT("Resume"));
+            TestEqual(TEXT("Resumed Fighter is Champion"), View->Rules().Find(1)->FighterSubclass, EFighterSubclass::Champion);
+            Player->HandleButton(TEXT("Help"));
+            Player->HandleButton(TEXT("BattleMaster"));
+            TestEqual(TEXT("Help blocks subclass choice"), Player->StartupSubclass(), EFighterSubclass::Champion);
+            Player->HandleButton(TEXT("Close"));
+            Player->HandleButton(TEXT("BattleMaster"));
+            TestEqual(TEXT("An ending allows choosing the next Fighter"), Player->StartupSubclass(), EFighterSubclass::BattleMaster);
+            TestEqual(TEXT("Choice leaves the completed expedition unchanged"), View->Rules().Find(1)->FighterSubclass, EFighterSubclass::Champion);
+            Player->HandleButton(TEXT("New"));
+            TestEqual(TEXT("Explicit new expedition uses the chosen subclass"), View->Rules().Find(1)->FighterSubclass, EFighterSubclass::BattleMaster);
+            Player->HandleButton(TEXT("Champion"));
+            TestEqual(TEXT("Unfinished expedition prevents respec"), Player->StartupSubclass(), EFighterSubclass::BattleMaster);
+            Player->HandleButton(TEXT("Records"));
+            Player->HandleButton(TEXT("Maneuver"));
+            TestEqual(TEXT("Records blocks the maneuver shortcut"), Player->Action(), ECombatCommandType::Attack);
+        }
+    }
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEnemyInputStarvationTest, "Project.Expedition.Presentation.RejectedInputCannotStallEnemy",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FEnemyInputStarvationTest::RunTest(const FString& Parameters)
@@ -104,7 +156,6 @@ bool FEnemyInputStarvationTest::RunTest(const FString& Parameters)
 #endif
 
 #if WITH_DEV_AUTOMATION_TESTS
-#include "ExpeditionTestSupport.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecordPagingTest, "Project.Expedition.Presentation.StartupResumeAndAllHistoryPages",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

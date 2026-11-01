@@ -98,4 +98,5 @@ private:
     void EndDrag();
     void SetMode(ECombatCommandType Action);
     bool AllowsGameplayInput() const;
+    bool CanSelectSubclass() const;
 };

@@ -76,6 +76,31 @@ bool FFiveEncounterRunTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDeathLevelHistoryTest, "Project.Expedition.Run.DeathLevelRespectsEarnedHistory",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FDeathLevelHistoryTest::RunTest(const FString& Parameters)
+{
+    FExpeditionRun Run;
+    FString Error;
+    if (!Run.NewRun(1, Error, TEXT("death-level-history")) ||
+        !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run)) { return false; }
+    if (!TestTrue(TEXT("First victory retains all four adventurers"),
+        Run.Progress().Phase == EExpeditionPhase::Reward && Run.Progress().History[0].Survivors == 4)) { return false; }
+    if (!Run.ClaimReward(1, Error) || !Run.Recover(false, Error) ||
+        !Run.ChooseRoute(Run.Progress().Offers[1].Id, Error) || !FinishCombat(Run, false)) { return false; }
+    if (!TestTrue(TEXT("Second encounter ends in a permanent wipe"), Run.Progress().Phase == EExpeditionPhase::Defeat)) { return false; }
+    const auto Earned = Run.Snapshot();
+    FExpeditionRun Restored;
+    if (!TestTrue(TEXT("Actual death-level snapshot restores"), Restored.Restore(Earned, Error))) { return false; }
+    TestEqual(TEXT("Fighter died after earning level two"), Restored.Battle().Find(1)->Level, 2);
+    auto Contradictory = Earned;
+    Contradictory.Battle.Encounter.Combatants[0].Level = 1;
+    --Contradictory.Battle.Encounter.Combatants[0].DamageBonus;
+    TestFalse(TEXT("Retained all-survivor victory forbids lowering a death-level"), Restored.Restore(Contradictory, Error));
+    TestTrue(TEXT("Rejected restore leaves the installed expedition unchanged"), SameRun(Earned, Restored.Snapshot()));
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunGenerationTest, "Project.Expedition.Run.ManySeedsConnectedActionableAndVaried",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunGenerationTest::RunTest(const FString& Parameters)

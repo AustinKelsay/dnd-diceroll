@@ -25,3 +25,23 @@ Independent Standards/Spec review and actual rendered keyboard/pointer verificat
 Final source verification: pinned build succeeded (`.local/delivery-build.log`); `python3 tools/dev.py test --filter Project.` passed **44/44**, zero warnings, `.local/automation/20261101T202548640002Z/index.json`. This includes FailedMilestoneIsAtomic and all capture fixtures.
 
 Contribution validation: staged `python3 tools/contribute.py check` PASS; `git diff --cached --check` PASS. Final preflight resolves the canonical repository and fails only with “Configured MCP port is occupied; coordinate its owner before changing this workspace.” PID 113 is the intentionally retained parent editor. An earlier preflight during headless automation also refused its own temporary test process; final observation is after that process exited. No port/editor workaround was attempted. Root must repeat preflight when editor ownership permits.
+
+
+## Root review fixes
+
+Independent Standards review of `4ed655d6e8acf006ea723b7c61638b1121c4fbde` requested a bounded-state restore fix: a dead adventurer could claim a lower level than retained all-four-survivor history proved earned. Root reproduced it through public `Restore` in `.local/automation/20261101T202855327594Z/index.json`, then derived a minimum level from all-four-survivor and named reward-recipient records. The regression passed in `.local/automation/20261101T202953773560Z/index.json`.
+
+Root also reproduced the inability to choose a different Fighter after a completed run in `.local/automation/20261101T203211472662Z/index.json`. Ending screens now expose the same J/B pointer/keyboard choices before explicit New Expedition; the existing run is unchanged, unfinished runs refuse selection, and Help/Records continue to gate input. The regression exercises the real controller and persisted ending through public handlers.
+
+Pinned editor build passed (`.local/root-final-build.log`). Full `Project.` automation passed **46/46, zero warnings**, `.local/automation/20261101T203256325710Z/index.json`; helper suite passed **50/50** (`.local/root-helper.log`). These checks cover both root fixes. Rendered acceptance and refreshed independent review remain pending at this checkpoint.
+
+
+## Packaged native check
+
+`/opt/homebrew/bin/python3 tools/dev.py package` passed Development build/cook/archive and zero-error headless startup. Pristine archive: `Builds/20261101T203327150072Z/Mac/DnDDiceRoll.app`; receipt: `Builds/20261101T203327150072Z/verified.json`.
+
+Root used the cua-driver skill for actual Mac keyboard/pointer attempts and inspected native captures under `.local/captures/level-five/`. LaunchServices repeatedly resolved older apps sharing the identifier; their executable paths were caught before gameplay input. Two owned launches stalled before AppKit in dyld and received TERM, never force kill; a third older packaged launch quit normally. A QA-only copy at `Builds/LevelFiveQA/DnDDiceRollLevelFiveQA.app` received a unique bundle identifier and ad-hoc signature; game source/content are unchanged, and the pristine archive is retained. Its exact executable was checked before input. Original app registration was restored afterward.
+
+Owned QA PID 76484 used its own sandbox save root, never default saves. Actual keyboard B selected Battle Master, N created the run and persisted level 1/subclass BattleMaster/two uses, Z entered combat, Space advanced turns, and M visibly selected Precision Strike with two uses shown. Real public-command capture fixtures were copied only into this QA root for O/Resume: victory displayed all five history rows plus four party results and J changed the next-run selection; reward displayed level 2 and earned-level feedback. Inspected outer frames were 1280x792 (760 content height) and 960x602 (570 content height; resize settled to the app's aspect constraint). Ending and reward controls fit these observed frames. This is limited Mac keyboard/layout evidence, not exhaustive gameplay or balance acceptance.
+
+Pointer clicks at the visible Champion button produced no visible change in either background or foreground fallback. Pointer acceptance is **unverified**; successful dispatch is not claimed. The capture metadata also reports a scale inconsistent with PNG/window dimensions, so no guessed pixel transform or driver workaround was used. Normal Cmd-Q shut the QA app down; its runtime log ends with `LogExit: Exiting.` and contains no Error/Fatal entries. Parent editor PID 113 remains owned by the original checkout. A1 remains unresolved and merge-blocking; this short successful rendering pass is not a waiver.
