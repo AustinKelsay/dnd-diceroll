@@ -10,7 +10,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
 UENUM()
-enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8 };
+enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10 };
 UENUM()
 enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
@@ -168,6 +168,8 @@ struct DNDDICEROLL_API FActionForecast
     /** Damage only: the best possible roll, counting a critical hit, reaches remaining health. */
     bool bCanDrop = false;
     FString Formula;
+    /** Ordered deterministic area damage and mitigation facts, matching committed effects. */
+    TArray<FTargetEffect> Effects;
 };
 
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
@@ -213,6 +215,7 @@ private:
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
     void CheckOutcome();
+    TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 ProtectionFor(const FCombatantState& Target) const;
     void ApplyDamage(FCombatantState& Target, int32 Damage);
     FCombatantState* MutableFind(int32 Id);

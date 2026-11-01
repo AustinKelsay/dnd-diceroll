@@ -432,13 +432,13 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
     auto* View = Player->GetBattleView(); View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json"))); View->DispatchBeginPlay();
     TSet<FString> ReachableBuilds;
     Player->HandleButton(TEXT("Party0"));
-    for (int32 Class = 0; Class < 8; ++Class)
+    for (int32 Class = 0; Class < 10; ++Class)
     {
-        for (int32 Kit = 0; Kit < 5; ++Kit)
+        for (int32 Kit = 0; Kit < 10; ++Kit)
         { ReachableBuilds.Add(Player->NextParty()[0].BuildId); Player->HandleButton(TEXT("BuildNext")); }
         Player->HandleButton(TEXT("ClassNext"));
     }
-    TestEqual(TEXT("Builder exposes all thirty authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 30);
+    TestEqual(TEXT("Builder exposes all forty-eight authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 48);
     TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
     TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
     Player->HandleButton(TEXT("Preset"));

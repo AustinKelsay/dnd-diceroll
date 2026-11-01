@@ -43,7 +43,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     FExpeditionSaveData Decoded;
     TestTrue(TEXT("Decode catalog state"), FExpeditionSave::Decode(Json, Decoded, Error));
     TestTrue(TEXT("Exact JSON roundtrip"), ExpeditionTestSupport::SameRun(Data.Current, Decoded.Current));
-    for (const auto* Id : {TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.base")})
+    for (const auto* Id : {TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.evocation")})
     {
         TestTrue(TEXT("Construct current kit"), FBuildCatalog::Create(Id, 1, TEXT("Hero"), Hero));
         TestEqual(TEXT("Current non-Fighter health"), Hero.MaxHP, 22);
@@ -53,7 +53,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     // permits initiative/HP setup without changing catalog tuning.
     for (auto Action : {ECombatCommandType::SecondWind, ECombatCommandType::CureWounds, ECombatCommandType::MagicMissile})
     {
-        const auto* Id = Action == ECombatCommandType::SecondWind ? TEXT("fighter.champion") : Action == ECombatCommandType::CureWounds ? TEXT("cleric.base") : TEXT("wizard.base");
+        const auto* Id = Action == ECombatCommandType::SecondWind ? TEXT("fighter.champion") : Action == ECombatCommandType::CureWounds ? TEXT("cleric.base") : TEXT("wizard.evocation");
         FBuildCatalog::Create(Id, 1, TEXT("Hero"), Hero);
         Hero.Cell = {0,0}; Hero.HP = 1; Hero.InitiativeBonus = 30;
         FCombatantState Enemy; Enemy.Id = 20; Enemy.Side = ECombatSide::Enemy; Enemy.Name = TEXT("Enemy"); Enemy.Cell = {1,0}; Enemy.InitiativeBonus = -10;
@@ -206,7 +206,7 @@ bool FBarbarianTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Restore rejection atomic"), Same(BeforeReject, Resume.Snapshot()));
         Invalid = Battle.Snapshot(); Invalid.Encounter.Combatants[0].RageUses = 3;
         TestFalse(TEXT("Cap corruption rejected"), Resume.Restore(Invalid, Error));
-        Invalid = Battle.Snapshot(); Invalid.Encounter.Combatants[0].BuildId = TEXT("wizard.base"); Invalid.Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Wizard;
+        Invalid = Battle.Snapshot(); Invalid.Encounter.Combatants[0].BuildId = TEXT("wizard.evocation"); Invalid.Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Wizard;
         TestFalse(TEXT("Wrong build state rejected"), Resume.Restore(Invalid, Error));
         Battle.Submit({ECombatCommandType::EndTurn, 1});
         while (Battle.ActiveId() != 1)

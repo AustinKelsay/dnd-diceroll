@@ -12,6 +12,7 @@ struct DNDDICEROLL_API FBuildDefinition
     TArray<FAbilityFacts> Abilities;
     int32 KitCap = 0, KitRecovery = 0;
     int32 RageCap = 0, RageRecovery = 0;
+    int32 MissileKitCost = 0;
     int32 CriticalThreshold = 20;
     int32 SneakDie = 0;
 };
@@ -25,7 +26,7 @@ inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
 class DNDDICEROLL_API FBuildCatalog
 {
 public:
-    static constexpr int32 Revision = 3;
+    static constexpr int32 Revision = 4;
     static const TArray<FBuildDefinition>& All();
     static const FBuildDefinition* Find(const FString& BuildId);
     /** Invalid IDs leave output untouched. Instance identity is independent of build. */
@@ -36,5 +37,6 @@ public:
     static FString Status(const FCombatantState& Hero);
     static int32 AttackModifier(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
+    static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);
 };

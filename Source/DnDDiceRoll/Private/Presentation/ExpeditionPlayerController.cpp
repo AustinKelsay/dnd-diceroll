@@ -281,7 +281,7 @@ void AExpeditionPlayerController::Preset()
     if (IsValid(BattleView) && !CanSelectSubclass()) { return; }
     Party.Reset();
     const TCHAR* Names[] = {TEXT("Arden"), TEXT("Nix"), TEXT("Sera"), TEXT("Ivo")};
-    const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.base")};
+    const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.evocation")};
     for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection P; P.Id = I + 1; P.Name = Names[I]; P.BuildId = Builds[I]; Party.Add(P); }
 }
 void AExpeditionPlayerController::CycleClass()

@@ -51,7 +51,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             Unit.DamageDie < 1 || Unit.DamageDie > 100 || Unit.DamageBonus < 0 || Unit.DamageBonus > 100 ||
             Unit.Range < 1 || Unit.Range > 32 || Unit.Speed < 0 || Unit.Speed > 32 ||
             Unit.InitiativeBonus < -10 || Unit.InitiativeBonus > 30 ||
-            static_cast<uint8>(Unit.AdventurerRole) > static_cast<uint8>(EAdventurerRole::Ranger) ||
+            static_cast<uint8>(Unit.AdventurerRole) > static_cast<uint8>(EAdventurerRole::Warlock) ||
             static_cast<uint8>(Unit.Life) > static_cast<uint8>(ECombatLife::Dead) ||
             (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
             (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party || Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)) ||
@@ -84,7 +84,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         }
         if (Unit.AdventurerRole == EAdventurerRole::Barbarian && !bBarbarian) { return Reject(TEXT("Barbarian requires a compatible build.")); }
         if (Unit.RageUses < 0 || Unit.RageUses > (bBarbarian ? Build->RageCap : 0) || Unit.RageTurns < 0 || Unit.RageTurns > (bBarbarian ? 2 : 0) ||
-            Unit.LastSurge < 0 || Unit.LastSurge > (bBarbarian && Unit.RageUses < 2 && Unit.BuildId == TEXT("barbarian.wild-magic") ? 2 : 0) ||
+            Unit.LastSurge < 0 || Unit.LastSurge > FBuildCatalog::SurgeCap(Unit) ||
             (Unit.RageTurns > 0 && (Unit.RageUses == Build->RageCap || Unit.Life != ECombatLife::Conscious)) ||
             (Unit.LastSurge > 0 && Unit.Life != ECombatLife::Conscious) ||
             (Unit.GuardTargetId != INDEX_NONE && Unit.GuardTurns == 0 && (Unit.BuildId != TEXT("barbarian.totem-warrior") || Unit.RageTurns == 0)))
@@ -288,6 +288,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return Result; }
     if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
     if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
+    if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return Result; } }
     if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return Result; }
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
@@ -346,8 +347,15 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
             Forecast.Formula = A.Description;
             if (A.Effect == EAbilityEffect::Area)
             {
-                for (const auto& Other : State.Encounter.Combatants)
-                { if (Other.Side != Actor->Side && Other.Life == ECombatLife::Conscious && GridDistance(Target->Cell,Other.Cell) <= 1 && HasLineOfSight(Target->Cell,Other.Cell)) { Forecast.Formula += TEXT(" | ") + Other.Name + FString::Printf(TEXT(" loses %d HP"), FMath::Min(Other.HP,FMath::Max(0,A.Amount-ProtectionFor(Other)))); } }
+                for (int32 Id : OrderedAreaTargets(*Actor,*Target))
+                {
+                    const auto& Other = *Find(Id);
+                    const int32 Prevented=FMath::Min(A.Amount,ProtectionFor(Other));
+                    const int32 Lost=FMath::Min(Other.HP,FMath::Max(0,A.Amount-Prevented));
+                    Forecast.Formula += TEXT(" | ") + Other.Name + FString::Printf(TEXT(" loses %d HP"),Lost);
+                    if(Prevented) { Forecast.Effects.Add({Id,EAbilityEffect::Mitigation,Prevented,Other.Cell}); }
+                    Forecast.Effects.Add({Id,EAbilityEffect::Strike,Lost,Other.Cell});
+                }
             }
             if (A.Effect == EAbilityEffect::Healing)
             { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); }
@@ -490,11 +498,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 int32 Amount = A.Amount;
                 if (A.Effect == EAbilityEffect::Surge) { User->LastSurge = Result.SurgeOutcome = Roll(2); Amount = Result.SurgeOutcome * A.Amount; }
                 TArray<int32> Targets = {Target->Id};
-                if (A.Effect == EAbilityEffect::Area)
-                {
-                    for (const auto& Other : State.Encounter.Combatants)
-                    { if (Other.Id != Target->Id && Other.Side != User->Side && Other.Life == ECombatLife::Conscious && GridDistance(Target->Cell, Other.Cell) <= 1 && HasLineOfSight(Target->Cell, Other.Cell)) { Targets.Add(Other.Id); } }
-                }
+                if (A.Effect == EAbilityEffect::Area) { Targets = OrderedAreaTargets(*User,*Target); }
                 for (int32 Id : Targets)
                 {
                     auto* Victim = MutableFind(Id); const int32 Before = Victim->HP; const int32 Prevented = FMath::Min(Amount, ProtectionFor(*Victim));
@@ -566,6 +570,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (Command.Type == ECombatCommandType::MagicMissile)
         {
             --User->SpellSlots;
+            if (const auto* B = FBuildCatalog::Find(User->BuildId)) { User->KitUses -= B->MissileKitCost; }
             DiceLog = &Result.EffectDice;
             Result.EffectModifier = MissileDarts * DartBonus;
             Result.Damage = RollDice(MissileDarts, MissileDie) + Result.EffectModifier;
@@ -735,7 +740,7 @@ FCombatEncounter FCombatBattle::TutorialEncounter()
         Unit.MaxHP = Unit.HP = Index == 0 ? 30 : Index < 4 ? 22 : 16;
         if (Index < 4)
         {
-            const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.base")};
+            const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.thief"), TEXT("cleric.base"), TEXT("wizard.evocation")};
             FBuildCatalog::Create(Builds[Index], Index + 1, Names[Index], Unit);
             Unit.Cell = Cells[Index];
             // Historical standalone fixture is a base Fighter; expedition chooses a subclass.
@@ -796,4 +801,14 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         })())) { return Reject(); }
     *this = MoveTemp(Candidate);
     Error.Reset(); return true;
+}
+
+TArray<int32> FCombatBattle::OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const
+{
+    TArray<int32> Targets={Target.Id};
+    for(const auto& Other:State.Encounter.Combatants)
+    {
+        if(Other.Id!=Target.Id && Other.Side!=Actor.Side && Other.Life==ECombatLife::Conscious && GridDistance(Target.Cell,Other.Cell)<=1 && HasLineOfSight(Target.Cell,Other.Cell)) { Targets.Add(Other.Id); }
+    }
+    return Targets;
 }

@@ -216,7 +216,7 @@ bool FMartialWorkedTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("Depleted pool cannot use special"),Battle.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Depleted command preserves snapshot and RNG"),Same(Empty,Battle.Snapshot()));
     }
-    TestEqual(TEXT("Complete implemented catalog"),FBuildCatalog::All().Num(),30);
+    TestEqual(TEXT("Complete implemented catalog"),FBuildCatalog::All().Num(),48);
     TestNull(TEXT("Interim Rogue removed"),FBuildCatalog::Find(TEXT("rogue.base")));
     return true;
 }

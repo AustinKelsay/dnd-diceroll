@@ -31,8 +31,8 @@ const TArray<FBuildDefinition>& Definitions()
         Rogue.Profile.bSneakWeapon = true; Rogue.SneakDie = 6; Result.Add(Rogue);
         auto Cleric = Add(TEXT("cleric.base"), TEXT("cleric"), TEXT(""), TEXT("Cleric"), EAdventurerRole::Cleric, 22, 13, 6, 3, 3, 1);
         Cleric.SlotCap = Cleric.Profile.SpellSlots = 2; Cleric.SlotRecovery = 1; Cleric.Specials = {ECombatCommandType::CureWounds}; Result.Add(Cleric);
-        auto Wizard = Add(TEXT("wizard.base"), TEXT("wizard"), TEXT(""), TEXT("Wizard"), EAdventurerRole::Wizard, 22, 13, 10, 0, 4, 1);
-        Wizard.SlotCap = Wizard.Profile.SpellSlots = 2; Wizard.SlotRecovery = 1; Wizard.Specials = {ECombatCommandType::MagicMissile}; Result.Add(Wizard);
+        auto Wizard = Add(TEXT("wizard.evocation"), TEXT("wizard"), TEXT(""), TEXT("Wizard"), EAdventurerRole::Wizard, 22, 13, 10, 0, 4, 1);
+        Wizard.MissileKitCost = 1; Wizard.SlotCap = Wizard.Profile.SpellSlots = 2; Wizard.SlotRecovery = 1; Wizard.Specials = {ECombatCommandType::MagicMissile};
         for (const auto* Path : {TEXT("berserker"), TEXT("totem-warrior"), TEXT("beast"), TEXT("wild-magic")})
         {
             auto B = Add(TEXT(""), TEXT("barbarian"), Path, TEXT("Barbarian"), EAdventurerRole::Barbarian, 34, 14, 8, 3, 1, 1);
@@ -55,10 +55,11 @@ const TArray<FBuildDefinition>& Definitions()
             A.bKitResource = true; A.bBonus = Bonus; A.ResourceCost = 1; A.ResourceName = TEXT("Kit");
             const TCHAR* EffectText = Effect == EAbilityEffect::Swap ? TEXT("exchange cells with ally") :
                 Effect == EAbilityEffect::Protect ? TEXT("protect target until next own turn; strongest reduction wins") :
-                Effect == EAbilityEffect::Healing ? TEXT("restore HP to conscious ally") :
+                Effect == EAbilityEffect::Healing ? TEXT("restore HP to conscious target") :
                 Effect == EAbilityEffect::Push ? TEXT("damage, then push one open cell away; blocked push stays put") :
+                Effect == EAbilityEffect::Surge ? TEXT("seeded damage: amount or twice amount") :
                 Effect == EAbilityEffect::Area ? TEXT("damage target and conscious enemies within 1 cell of target with sight") : TEXT("guaranteed damage");
-            A.Description = FString::Printf(TEXT("%s + 1 Kit; range %d + sight; %s (%d)"), Bonus ? TEXT("Bonus") : TEXT("Action"), Range, EffectText, Amount);
+            A.Description = FString::Printf(TEXT("%s + 1 Kit; %s range %d + sight; %s (%d)"), Bonus ? TEXT("Bonus") : TEXT("Action"), Target == EAbilityTarget::Self ? TEXT("self") : Target == EAbilityTarget::Ally ? TEXT("other ally") : TEXT("enemy"), Range, EffectText, Amount);
             return A;
         };
         auto Kit = [&](FBuildDefinition B, const TCHAR* Id, const TCHAR* Subclass, FAbilityFacts First, FAbilityFacts Second)
@@ -96,6 +97,28 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Ranger,TEXT("ranger.beast-master"),TEXT("beast-master"),Ability(TEXT("Companion Pounce"),E::Push,T::Enemy,3,4,false),Ability(TEXT("Companion Guard"),E::Protect,T::Ally,3,3,true));
         Kit(Ranger,TEXT("ranger.fey-wanderer"),TEXT("fey-wanderer"),Ability(TEXT("Fey Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Dreadful Strike"),E::Strike,T::Enemy,4,6,false));
         Kit(Ranger,TEXT("ranger.swarmkeeper"),TEXT("swarmkeeper"),Ability(TEXT("Gathered Swarm"),E::Area,T::Enemy,3,3,true),Ability(TEXT("Driving Swarm"),E::Push,T::Enemy,4,5,false));
+        auto Sorcerer = Add(TEXT(""),TEXT("sorcerer"),TEXT(""),TEXT("Sorcerer"),EAdventurerRole::Sorcerer,22,13,10,0,4,1);
+        auto Warlock = Add(TEXT(""),TEXT("warlock"),TEXT(""),TEXT("Warlock"),EAdventurerRole::Warlock,22,13,10,0,4,1);
+        Kit(Sorcerer,TEXT("sorcerer.draconic-bloodline"),TEXT("draconic-bloodline"),Ability(TEXT("Dragon Breath"),E::Area,T::Enemy,3,5,false),Ability(TEXT("Dragon Scales"),E::Protect,T::Self,0,3,true));
+        Kit(Sorcerer,TEXT("sorcerer.wild-magic"),TEXT("wild-magic"),Ability(TEXT("Chaos Bolt"),E::Surge,T::Enemy,4,4,false),Ability(TEXT("Chaotic Exchange"),E::Swap,T::Ally,3,0,true));
+        Kit(Sorcerer,TEXT("sorcerer.aberrant-mind"),TEXT("aberrant-mind"),Ability(TEXT("Mind Thrust"),E::Push,T::Enemy,4,5,false),Ability(TEXT("Telepathic Shelter"),E::Protect,T::Ally,4,2,true));
+        Kit(Sorcerer,TEXT("sorcerer.clockwork-soul"),TEXT("clockwork-soul"),Ability(TEXT("Bastion"),E::Protect,T::Ally,4,4,true),Ability(TEXT("Restore Balance"),E::Healing,T::Ally,3,6,false));
+        Kit(Warlock,TEXT("warlock.archfey"),TEXT("archfey"),Ability(TEXT("Fey Repulse"),E::Push,T::Enemy,3,4,true),Ability(TEXT("Misty Exchange"),E::Swap,T::Ally,4,0,false));
+        Kit(Warlock,TEXT("warlock.fiend"),TEXT("fiend"),Ability(TEXT("Dark Blast"),E::Strike,T::Enemy,4,8,false),Ability(TEXT("Dark Renewal"),E::Healing,T::Self,0,5,true));
+        Kit(Warlock,TEXT("warlock.great-old-one"),TEXT("great-old-one"),Ability(TEXT("Thought Shield"),E::Protect,T::Ally,3,3,false),Ability(TEXT("Repelling Thought"),E::Push,T::Enemy,4,4,true));
+        Kit(Warlock,TEXT("warlock.fathomless"),TEXT("fathomless"),Ability(TEXT("Tentacle Lash"),E::Push,T::Enemy,3,5,false),Ability(TEXT("Ocean Shelter"),E::Protect,T::Self,0,3,true));
+        Kit(Warlock,TEXT("warlock.genie"),TEXT("genie"),Ability(TEXT("Vessel Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Vessel Shelter"),E::Protect,T::Self,0,4,false));
+        Kit(Wizard,TEXT("wizard.abjuration"),TEXT("abjuration"),Ability(TEXT("Projected Ward"),E::Protect,T::Ally,4,4,true),Ability(TEXT("Warding Burst"),E::Area,T::Enemy,2,3,false));
+        Kit(Wizard,TEXT("wizard.conjuration"),TEXT("conjuration"),Ability(TEXT("Benign Exchange"),E::Swap,T::Ally,5,0,true),Ability(TEXT("Conjured Ram"),E::Push,T::Enemy,3,5,false));
+        Kit(Wizard,TEXT("wizard.divination"),TEXT("divination"),Ability(TEXT("Foreseen Opening"),E::Strike,T::Enemy,5,6,false),Ability(TEXT("Foreseen Shelter"),E::Protect,T::Ally,5,2,true));
+        Kit(Wizard,TEXT("wizard.enchantment"),TEXT("enchantment"),Ability(TEXT("Compelling Repulse"),E::Push,T::Enemy,2,3,true),Ability(TEXT("Beguiling Exchange"),E::Swap,T::Ally,3,0,false));
+        Kit(Wizard,TEXT("wizard.evocation"),TEXT("evocation"),Ability(TEXT("Sculpted Burst"),E::Area,T::Enemy,4,5,false),Ability(TEXT("Focused Spark"),E::Strike,T::Enemy,5,3,true));
+        Kit(Wizard,TEXT("wizard.illusion"),TEXT("illusion"),Ability(TEXT("Mirror Ward"),E::Protect,T::Self,0,4,true),Ability(TEXT("Illusory Exchange"),E::Swap,T::Ally,3,0,false));
+        Kit(Wizard,TEXT("wizard.necromancy"),TEXT("necromancy"),Ability(TEXT("Grave Bolt"),E::Strike,T::Enemy,4,7,false),Ability(TEXT("Life Transfer"),E::Healing,T::Ally,2,5,true));
+        Kit(Wizard,TEXT("wizard.transmutation"),TEXT("transmutation"),Ability(TEXT("Transposing Exchange"),E::Swap,T::Ally,3,0,false),Ability(TEXT("Restoring Stone"),E::Healing,T::Ally,1,7,true));
+        Kit(Wizard,TEXT("wizard.bladesinging"),TEXT("bladesinging"),Ability(TEXT("Singing Blade"),E::Strike,T::Enemy,1,7,true),Ability(TEXT("Bladesong Ward"),E::Protect,T::Self,0,3,false));
+        Kit(Wizard,TEXT("wizard.order-of-scribes"),TEXT("order-of-scribes"),Ability(TEXT("Written Burst"),E::Area,T::Enemy,5,3,true),Ability(TEXT("Manifest Exchange"),E::Swap,T::Ally,2,0,false));
+        for (auto& B : Result) { if (B.Profile.ClassId == TEXT("wizard") && B.Id != TEXT("wizard.evocation")) { B.MissileKitCost = B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
         return Result;
     }();
     return Values;
@@ -112,7 +135,7 @@ bool FBuildCatalog::Create(const FString& BuildId, int32 Id, const FString& Name
 }
 bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType Action)
 {
-    if (const auto* B = Find(Hero.BuildId)) { return B->Specials.Contains(Action); }
+    if (const auto* B = Find(Hero.BuildId)) { return B->Specials.Contains(Action) || (B->MissileKitCost > 0 && Action == ECombatCommandType::MagicMissile); }
     // Standalone combat fixtures may intentionally use custom profiles without catalog identity.
     return Hero.BuildId.IsEmpty() && ((Action == ECombatCommandType::SecondWind && Hero.AdventurerRole == EAdventurerRole::Fighter) ||
         (Action == ECombatCommandType::PrecisionStrike && Hero.FighterSubclass == EFighterSubclass::BattleMaster) ||
@@ -123,7 +146,7 @@ int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { r
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);
-    return B && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= B->WindCap && Hero.SpellSlots >= 0 && Hero.SpellSlots <= B->SlotCap && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
+    return B && (B->MissileKitCost == 0 || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= B->WindCap && Hero.SpellSlots >= 0 && Hero.SpellSlots <= B->SlotCap && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
 }
 
 TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
@@ -171,4 +194,15 @@ FString FBuildCatalog::Status(const FCombatantState& Hero)
 int32 FBuildCatalog::AttackModifier(const FCombatantState& Hero)
 {
     return Hero.DamageBonus + Hero.WeaponRank + (Hero.RageTurns > 0 ? 2 : 0);
+}
+
+int32 FBuildCatalog::SurgeCap(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId);
+    if (!B || Hero.Side != ECombatSide::Party || Hero.AdventurerRole != B->Profile.AdventurerRole) { return 0; }
+    for (const auto& A : B->Abilities)
+    {
+        if (A.Effect == EAbilityEffect::Surge && (A.bKitResource ? Hero.KitUses < B->KitCap : Hero.RageUses < B->RageCap)) { return 2; }
+    }
+    return 0;
 }
