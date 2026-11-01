@@ -2,7 +2,7 @@
 
 This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.
 
-Source: [SRD 5.2.1 PDF](https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf), legal notice p.1; combat pp.6–18; Cleric pp.36–37, Fighter pp.47–48, Rogue pp.61–62, Wizard pp.77–78 and named spell entries. Expedition changes and simplifies the source below. Characters, names, encounter and setting are original. [Source notes](srd-source-notes.md) retain the primary-source verification.
+Source: [SRD 5.2.1 PDF](https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf), legal notice p.1; combat pp.6–18; Cleric pp.36–37, Fighter pp.47–48, Rogue pp.61–62, Wizard pp.77–78 and named spell entries. dnd-diceroll changes and simplifies the source below. Characters, names, encounter and setting are original. [Source notes](srd-source-notes.md) retain the primary-source verification.
 
 ## Turns and attacks
 
@@ -37,7 +37,7 @@ Choose one of two retained opportunities with Z/X. Guarded Stream trails have tw
 
 After either of the first two victories, select a conscious survivor with 1–4 and press L. That survivor receives one gear rank (cap 3) and one potion on a guarded route or two on a dangerous route (cap 9). A previously cleared dangerous road secures supplies: the next guarded route offers two potions, disclosed in its preview. Selected opportunity, outcome, survivor count and loot recipient remain in run history. Loot cannot be claimed twice, awarded to the dead, or skipped to start another fight. The finale grants the artifact and ends the run instead of offering unusable loot.
 
-After the first loot claim there is exactly one explicit recovery decision: C takes camp, V skips it permanently. Taking camp restores **10 HP**, capped at maximum health, to each conscious survivor; the fighter regains **one Second Wind use**, and the cleric/wizard regain **one slot**, capped at two. It grants no potions or gear and never resurrects a dead adventurer. This is an Expedition recovery adaptation, not the SRD rest procedure. Camp cannot be deferred past this decision or repeated. The second reward leads directly to the finale route choice.
+After the first loot claim there is exactly one explicit recovery decision: C takes camp, V skips it permanently. Taking camp restores **10 HP**, capped at maximum health, to each conscious survivor; the fighter regains **one Second Wind use**, and the cleric/wizard regain **one slot**, capped at two. It grants no potions or gear and never resurrects a dead adventurer. This is a dnd-diceroll recovery adaptation, not the SRD rest procedure. Camp cannot be deferred past this decision or repeated. The second reward leads directly to the finale route choice.
 
 Every adventurer's identity, role, HP, life state, resources, gear and potions carry into the next generated encounter. Only placement and initiative change; dead bodies remain roster markers and receive no turns. There is no automatic healing on a route/encounter transition, leveling, recruitment or resurrection. Rejected route/reward/recovery commands preserve the whole run and both random streams. A full wipe ends the run immediately; N at either ending starts a fresh party with the next seed.
 

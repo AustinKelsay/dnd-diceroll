@@ -1,4 +1,4 @@
-# Expedition
+# dnd-diceroll
 
 The approved game is a single-player 3D tactical roguelike. One player controls four prebuilt adventurers through a short generated expedition. The world is original fantasy, with a deliberately supported subset of SRD 5.2.1 rules.
 

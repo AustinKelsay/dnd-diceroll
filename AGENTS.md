@@ -17,6 +17,6 @@ For Epic skill installation, live editor tools, or connection recovery, read `do
 
 ## Agent skills
 
-GitHub issues and PRs belong to `AustinKelsay/expedition-rpg`; read `docs/agents/issue-tracker.md` before tracker operations and `docs/agents/triage-labels.md` for state labels.
+GitHub issues and PRs belong to `AustinKelsay/dnd-diceroll`; read `docs/agents/issue-tracker.md` before tracker operations and `docs/agents/triage-labels.md` for state labels.
 
 Read `CONTEXT.md`, `GLOSSARY.md`, and relevant `docs/adr/` before gameplay design, implementation, or review; `docs/agents/domain.md` defines the document layout. V1 behavior and testing seams are in `docs/specs/expedition-v1.md`. Before continuing feature work, read the agent workflow in `docs/development.md` and the current polish handoff in `docs/runs/expedition-polish/01-presentation-polish.md`; `docs/runs/expedition-v1/ledger.md` records the completed V1 delivery.

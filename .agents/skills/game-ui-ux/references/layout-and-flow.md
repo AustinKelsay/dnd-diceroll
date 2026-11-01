@@ -20,7 +20,7 @@ Separate decorative art from labels, hit targets and focus styles. Test long act
 
 UI handlers submit validated game commands and observe accepted results/const state. Bind updates at meaningful transitions where the public seam exists; remove subscriptions with the owner's lifetime. Animated health bars and selected widgets are presentation values. Widget recreation, repeated clicks and menu closure must not duplicate actions, change RNG or restore spent resources.
 
-For Expedition, inspect startup NewRun/Resume decisions, action rejection, downed versus dead, smaller surviving parties, route/reward/recovery screens, and run records only as relevant to the changed screen. Preserve save/resume and permanent-loss semantics from the accepted spec.
+For dnd-diceroll, inspect startup NewRun/Resume decisions, action rejection, downed versus dead, smaller surviving parties, route/reward/recovery screens, and run records only as relevant to the changed screen. Preserve save/resume and permanent-loss semantics from the accepted spec.
 
 ## Review evidence
 

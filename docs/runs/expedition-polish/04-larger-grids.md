@@ -1,6 +1,6 @@
 # Larger encounter grids — 2026-11-01
 
-Issue [#29](https://github.com/AustinKelsay/expedition-rpg/issues/29). The owner asked for encounter grids about three times larger, using the existing systems. Branch `feature/29-larger-encounter-grids`, stacked on the unmerged presentation polish ([PR #27](https://github.com/AustinKelsay/expedition-rpg/pull/27)) at review baseline `f7e80bd`. Retarget to `staging` after #27 integrates. Owner: Claude Code session for the repository owner, who directed this work and the stacked base while #27 remains open. The A1 rendering blocker recorded in [03-checkpoint.md](03-checkpoint.md) still applies to #27.
+Issue [#29](https://github.com/AustinKelsay/dnd-diceroll/issues/29). The owner asked for encounter grids about three times larger, using the existing systems. Branch `feature/29-larger-encounter-grids`, stacked on the unmerged presentation polish ([PR #27](https://github.com/AustinKelsay/dnd-diceroll/pull/27)) at review baseline `f7e80bd`. Retarget to `staging` after #27 integrates. Owner: Claude Code session for the repository owner, who directed this work and the stacked base while #27 remains open. The A1 rendering blocker recorded in [03-checkpoint.md](03-checkpoint.md) still applies to #27.
 
 ## What changed
 

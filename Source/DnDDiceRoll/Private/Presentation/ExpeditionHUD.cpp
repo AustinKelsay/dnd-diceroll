@@ -389,7 +389,7 @@ void AExpeditionHUD::DrawTopBar()
     {
         const FExpeditionProgress& Run = View->Progress();
         Panel(12, 12, 250, 74);
-        Text(FString::Printf(TEXT("EXPEDITION  ·  SEED %d"), Run.Seed), 24, 20, Gold, 0.72f);
+        Text(FString::Printf(TEXT("dnd-diceroll  ·  SEED %d"), Run.Seed), 24, 20, Gold, 0.72f, EAlign::Left, 226);
         Text(View->LocationName(), 24, 36, Parchment, 1.08f, EAlign::Left, 226);
         const FString Status = View->InCombat() ? FString::Printf(TEXT("Encounter %d of %d  ·  Round %d"), Run.History.Num(), FExpeditionRun::EncounterCount, View->Rules().Snapshot().Round) : PhaseLine(Run);
         Text(Status, 24, 62, Muted, 0.72f);
@@ -735,7 +735,7 @@ void AExpeditionHUD::DrawTitle()
     const float Width = 560, Height = 330;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 20;
     Panel(X, Y, Width, Height, Gold, 0.94f);
-    Text(TEXT("EXPEDITION"), W * 0.5f, Y + 26, Gold, 2.6f, EAlign::Center);
+    Text(TEXT("dnd-diceroll"), W * 0.5f, Y + 26, Gold, 2.6f, EAlign::Center, Width - 40);
     Text(TEXT("Recover the Waystone"), W * 0.5f, Y + 96, Parchment, 1.15f, EAlign::Center);
     Text(TEXT("Four adventurers. Three battles. Every death is permanent."), W * 0.5f, Y + 130, Muted, 0.78f, EAlign::Center);
     Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), W * 0.5f - 230, Y + 176, 220, 58, true, false, Gold);

@@ -1,4 +1,4 @@
-# Expedition — approved V1 brief
+# dnd-diceroll — approved V1 brief
 
 A single-player 3D tactical roguelike where the player leads four prebuilt adventurers through a short procedurally generated expedition. Party members persist within the run, actual deaths are permanent, and route choices shape the risks ahead.
 

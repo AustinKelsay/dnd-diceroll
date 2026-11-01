@@ -2,7 +2,7 @@
 
 Current pause and resumption status: [checkpoint](03-checkpoint.md). The investigation below is historical execution evidence.
 
-Issue: [#26](https://github.com/AustinKelsay/expedition-rpg/issues/26). Scope: finish the existing presentation polish and shared-skills cleanup; preserve game rules, balance, save format, existing assets and RNG order. The user granted full-send authority, including reviewed staging integration. Main promotion and production deployment are outside this slice.
+Issue: [#26](https://github.com/AustinKelsay/dnd-diceroll/issues/26). Scope: finish the existing presentation polish and shared-skills cleanup; preserve game rules, balance, save format, existing assets and RNG order. The user granted full-send authority, including reviewed staging integration. Main promotion and production deployment are outside this slice.
 
 ## Preservation and baseline
 
