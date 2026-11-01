@@ -50,7 +50,7 @@ struct DNDDICEROLL_API FExpeditionProgress
 {
     GENERATED_BODY()
     UPROPERTY() TArray<FPartyBuildSelection> Party;
-    UPROPERTY() int32 CatalogRevision = 1;
+    UPROPERTY() int32 CatalogRevision = 2;
     UPROPERTY() int32 Seed = 0;
     UPROPERTY() FString RunId;
     UPROPERTY() int32 GenerationRandomState = 0;

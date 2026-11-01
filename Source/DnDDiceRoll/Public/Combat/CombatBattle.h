@@ -8,9 +8,9 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
 UENUM()
-enum class EAdventurerRole : uint8 { None, Fighter, Rogue, Cleric, Wizard };
+enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5 };
 UENUM()
 enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
@@ -37,6 +37,10 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Level = 1;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
     UPROPERTY() int32 ManeuverUses = 0;
+    UPROPERTY() int32 RageUses = 0;
+    UPROPERTY() int32 RageTurns = 0;
+    UPROPERTY() int32 GuardTargetId = INDEX_NONE;
+    UPROPERTY() int32 LastSurge = 0;
     UPROPERTY() bool bSneakWeapon = false;
     UPROPERTY() ECombatSide Side = ECombatSide::Party;
     UPROPERTY() FIntPoint Cell = FIntPoint::ZeroValue;
@@ -93,6 +97,27 @@ struct DNDDICEROLL_API FDieRoll
     int32 Value = 0;
 };
 
+enum class EAbilityEffect : uint8 { Rage, Strike, Protect, Surge, Healing, WeaponAttack, Missile };
+enum class EAbilityTarget : uint8 { Self, Enemy, Ally };
+struct DNDDICEROLL_API FAbilityFacts
+{
+    FString Name, Description, ResourceName;
+    int32 ResourceCost = 0;
+    ECombatCommandType Command = ECombatCommandType::Special1;
+    EAbilityEffect Effect = EAbilityEffect::Rage;
+    EAbilityTarget Target = EAbilityTarget::Self;
+    bool bBonus = true;
+    bool bResourceAvailable = false;
+    int32 Range = 0, Amount = 0;
+};
+struct DNDDICEROLL_API FTargetEffect
+{
+    int32 TargetId = INDEX_NONE;
+    EAbilityEffect Effect = EAbilityEffect::Strike;
+    int32 Amount = 0;
+    FIntPoint Cell = FIntPoint::ZeroValue;
+};
+
 struct DNDDICEROLL_API FCombatResult
 {
     bool bAccepted = false;
@@ -118,6 +143,8 @@ struct DNDDICEROLL_API FCombatResult
     /** Combatants newly downed or killed by this command, including turn countdowns and battle end. */
     TArray<int32> Downed;
     TArray<int32> Died;
+    TArray<FTargetEffect> Effects;
+    int32 SurgeOutcome = 0;
 };
 
 /** Player-facing expectation for one legal action. Uses the same tuning as resolution. */

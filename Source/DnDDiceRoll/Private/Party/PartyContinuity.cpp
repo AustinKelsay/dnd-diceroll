@@ -60,7 +60,7 @@ constexpr int32 ResourceCap = 2;
 
 FString FPartyContinuity::RecoveryDescription()
 {
-    return FString::Printf(TEXT("Survivors: +%d HP, +%d Wind/slot (caps: max HP/%d). No revival or potions."), CampHealing, CampResource, ResourceCap);
+    return FString::Printf(TEXT("Survivors: +%d HP, +%d Wind/slot/Rage (caps: max HP/%d). No revival or potions."), CampHealing, CampResource, ResourceCap);
 }
 
 bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
@@ -73,6 +73,7 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
         Survivor.HP = FMath::Min(Survivor.MaxHP, Survivor.HP + CampHealing);
         if (const auto* B = FBuildCatalog::Find(Survivor.BuildId))
         {
+            Survivor.RageUses = FMath::Min(B->RageCap, Survivor.RageUses + B->RageRecovery);
             Survivor.SecondWindUses = FMath::Min(B->WindCap, Survivor.SecondWindUses + B->WindRecovery);
             Survivor.SpellSlots = FMath::Min(B->SlotCap, Survivor.SpellSlots + B->SlotRecovery);
             Survivor.ManeuverUses = FMath::Min(B->ManeuverCap, Survivor.ManeuverUses + B->ManeuverRecovery);

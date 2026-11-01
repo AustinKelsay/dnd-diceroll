@@ -9,6 +9,8 @@ struct DNDDICEROLL_API FBuildDefinition
     TArray<ECombatCommandType> Specials;
     int32 WindCap = 0, SlotCap = 0, ManeuverCap = 0;
     int32 WindRecovery = 0, SlotRecovery = 0, ManeuverRecovery = 0;
+    TArray<FAbilityFacts> Abilities;
+    int32 RageCap = 0, RageRecovery = 0;
     int32 CriticalThreshold = 20;
     int32 SneakDie = 0;
 };
@@ -22,11 +24,12 @@ inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
 class DNDDICEROLL_API FBuildCatalog
 {
 public:
-    static constexpr int32 Revision = 1;
+    static constexpr int32 Revision = 2;
     static const TArray<FBuildDefinition>& All();
     static const FBuildDefinition* Find(const FString& BuildId);
     /** Invalid IDs leave output untouched. Instance identity is independent of build. */
     static bool Create(const FString& BuildId, int32 Id, const FString& Name, FCombatantState& Out);
+    static TArray<FAbilityFacts> Abilities(const FCombatantState& Hero);
     static bool HasSpecial(const FCombatantState& Hero, ECombatCommandType Action);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
     static bool ValidResources(const FCombatantState& Hero);
