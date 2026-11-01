@@ -61,8 +61,8 @@ bool FRunLargeGridTest::RunTest(const FString& Parameters)
                     if (Foe.Side == ECombatSide::Enemy) { Closest = FMath::Min(Closest, Distance(Hero.Cell, Foe.Cell)); }
                 }
             }
-            // Speed 4 closes this in two or three turns; there is room behind both lines.
-            TestTrue(TEXT("Opening gap 8..11 cells"), Closest >= 8 && Closest <= 11);
+            // Speed 4 closes this within about a turn; the lines sit mid-board with room behind both.
+            TestTrue(TEXT("Opening gap 5..7 cells"), Closest >= 5 && Closest <= 7);
             TestTrue(TEXT("Obstacles scale with the board"), Layout.BlockedCells.Num() >= 8);
         }
     }
