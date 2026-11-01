@@ -181,7 +181,7 @@ bool FStrictMalformedSaveTest::RunTest(const FString& Parameters)
         FString Text; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Text)); Malformed.Add(Text);
     };
     AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version+1);});
-    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // version 2 large-grid saves predate levels/subclasses
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // previous schema is unsupported
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("Offers"))[0]->AsObject()->SetStringField(TEXT("Preview"),TEXT("No enemies, no cost"));});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetNumberField(TEXT("MovementLeft"),99);});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->SetObjectField(TEXT("Battle"),MakeShared<FJsonObject>());});

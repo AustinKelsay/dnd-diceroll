@@ -1,4 +1,5 @@
 #include "Party/PartyContinuity.h"
+#include "Party/BuildCatalog.h"
 
 bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, FString& Error)
 {
@@ -70,9 +71,18 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
     {
         if (Survivor.Side != ECombatSide::Party || Survivor.Life != ECombatLife::Conscious) { continue; }
         Survivor.HP = FMath::Min(Survivor.MaxHP, Survivor.HP + CampHealing);
-        if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
-        if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
-        { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+        if (const auto* B = FBuildCatalog::Find(Survivor.BuildId))
+        {
+            Survivor.SecondWindUses = FMath::Min(B->WindCap, Survivor.SecondWindUses + B->WindRecovery);
+            Survivor.SpellSlots = FMath::Min(B->SlotCap, Survivor.SpellSlots + B->SlotRecovery);
+            Survivor.ManeuverUses = FMath::Min(B->ManeuverCap, Survivor.ManeuverUses + B->ManeuverRecovery);
+        }
+        else
+        {
+            if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
+            if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
+            { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+        }
     }
     return true;
 }

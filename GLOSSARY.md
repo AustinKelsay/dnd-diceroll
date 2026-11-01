@@ -38,3 +38,7 @@ _Avoid_: pawn when discussing game rules
 **Fighter subclass**: The Fighter's chosen combat specialization, fixed for an expedition.
 
 **Precision Strike**: A Battle Master attack that spends a limited maneuver use for improved accuracy and damage.
+
+**Build**: A stable catalog identity selecting a class, compatible subclass (or an explicitly interim base kit), immutable profile and compact ability kit. It is independent of an adventurer instance ID/name.
+
+**Catalog revision**: The persisted rules/profile interpretation revision; unsupported revisions fail restore rather than silently reinterpret a build.

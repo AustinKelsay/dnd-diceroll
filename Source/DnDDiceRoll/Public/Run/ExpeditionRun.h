@@ -34,11 +34,23 @@ struct DNDDICEROLL_API FExpeditionEncounterRecord
     UPROPERTY() int32 Survivors = 4;
 };
 
+/** Selection is fixed for a run; instance identity does not imply a class. */
+USTRUCT()
+struct DNDDICEROLL_API FPartyBuildSelection
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Id = INDEX_NONE;
+    UPROPERTY() FString Name;
+    UPROPERTY() FString BuildId;
+};
+
 /** All run metadata is reflected, bounded, and independent of presentation lifetime. */
 USTRUCT()
 struct DNDDICEROLL_API FExpeditionProgress
 {
     GENERATED_BODY()
+    UPROPERTY() TArray<FPartyBuildSelection> Party;
+    UPROPERTY() int32 CatalogRevision = 1;
     UPROPERTY() int32 Seed = 0;
     UPROPERTY() FString RunId;
     UPROPERTY() int32 GenerationRandomState = 0;

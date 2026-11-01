@@ -1,5 +1,6 @@
 #include "Run/ExpeditionRun.h"
 #include "Party/PartyContinuity.h"
+#include "Party/BuildCatalog.h"
 
 namespace
 {
@@ -66,8 +67,16 @@ bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity,
     Candidate.State.GenerationRandomState = Seed;
     if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
     auto Party = FCombatBattle::TutorialEncounter();
-    Party.Combatants[0].FighterSubclass = Subclass;
-    Party.Combatants[0].ManeuverUses = Subclass == EFighterSubclass::BattleMaster ? 2 : 0;
+    const auto Cell = Party.Combatants[0].Cell;
+    FBuildCatalog::Create(Subclass == EFighterSubclass::BattleMaster ? TEXT("fighter.battle-master") : TEXT("fighter.champion"), 1, TEXT("Arden"), Party.Combatants[0]);
+    Party.Combatants[0].Cell = Cell;
+    for (int32 I = 0; I < 4; ++I)
+    {
+        const auto& Hero = Party.Combatants[I];
+        FPartyBuildSelection Selection;
+        Selection.Id = Hero.Id; Selection.Name = Hero.Name; Selection.BuildId = Hero.BuildId;
+        Candidate.State.Party.Add(Selection);
+    }
     if (!Candidate.Combat.Start(Party, Seed, Error)) { return false; }
     Candidate.bStarted = true;
     Candidate.OfferRoutes();
@@ -127,10 +136,9 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
     const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
     Layout.BlockedCells = Recipe.BlockedCells;
     Layout.Combatants.SetNum(4);
-    if (const auto* Fighter = Combat.Find(1))
+    for (int32 I = 0; I < 4; ++I)
     {
-        Layout.Combatants[0].FighterSubclass = Fighter->FighterSubclass;
-        Layout.Combatants[0].ManeuverUses = Fighter->ManeuverUses;
+        if (const auto* Hero = Combat.Find(I + 1)) { Layout.Combatants[I] = *Hero; }
     }
     const int32 FirstPartyRow = (Route.Height - 4) / 2;
     for (int32 Index = 0; Index < 4; ++Index) { Layout.Combatants[Index].Cell = {PartyColumn, FirstPartyRow + Index}; }
@@ -187,7 +195,7 @@ void FExpeditionRun::ResolveCombat()
     {
         for (auto& Unit : Combat.State.Encounter.Combatants)
         {
-            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { ++Unit.Level; ++Unit.DamageBonus; }
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { ++Unit.Level; Unit.DamageBonus = FBuildCatalog::BasicDamage(*FBuildCatalog::Find(Unit.BuildId), Unit.Level); }
         }
     }
     State.bArtifactRecovered = State.EncountersCompleted == EncounterCount;
@@ -225,9 +233,14 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     Error.Reset();
     auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
     const auto& P = Snapshot.Progress;
-    if (P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
+    if (P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
         P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
+    for (int32 I = 0; I < 4; ++I)
+    {
+        const auto& Selection = P.Party[I];
+        if (Selection.Id != I + 1 || Selection.Name.IsEmpty() || Selection.Name.Len() > 80 || !FBuildCatalog::Find(Selection.BuildId)) { return Reject(); }
+    }
     FExpeditionRun Candidate;
     if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
     Candidate.State = P;
@@ -296,8 +309,15 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     for (int32 I = 0; I < Layout.Combatants.Num(); ++I)
     {
         const auto& U = Saved.Combatants[I]; auto Base = Layout.Combatants[I];
+        if (U.Side != (I < 4 ? ECombatSide::Party : ECombatSide::Enemy)) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
+            const auto* Build = FBuildCatalog::Find(U.BuildId);
+            if (!Build || !P.Party.IsValidIndex(I) || U.Id != P.Party[I].Id || U.Name != P.Party[I].Name || U.BuildId != P.Party[I].BuildId || U.ClassId != Build->Profile.ClassId || U.SubclassId != Build->Profile.SubclassId ||
+                U.FighterSubclass != Build->Profile.FighterSubclass || !FBuildCatalog::ValidResources(U)) { return Reject(); }
+            const auto Spawn = Base.Cell;
+            Base = Build->Profile; Base.Id = U.Id; Base.Name = U.Name; Base.Cell = Spawn;
+            // Names are instance values; detached combat validation bounds them.
             const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
             int32 MinimumLevel = 1;
             for (int32 Stage = 0; Stage < P.History.Num(); ++Stage)
@@ -311,19 +331,18 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
                     MinimumLevel = FMath::Max(MinimumLevel, FMath::Min(5, EarnedLevel));
                 }
             }
-            if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel) ||
-                (I == 0 ? U.FighterSubclass != EFighterSubclass::Champion && U.FighterSubclass != EFighterSubclass::BattleMaster : U.FighterSubclass != EFighterSubclass::None)) { return Reject(); }
+            if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel)) { return Reject(); }
             // Each permanent loss belongs to the level of the encounter where it
             // occurred; matching the distribution also bounds unidentified deaths.
             if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
-            Base.DamageBonus += U.Level - 1;
+            Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
             (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
-            (U.Side == ECombatSide::Enemy && (U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
+            (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
             int32 Gear = 0, SuppliedPotions = 1;

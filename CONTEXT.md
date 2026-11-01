@@ -18,3 +18,5 @@ The approved game is a single-player 3D tactical roguelike. One player controls 
 Prefer cohesive, deep native modules behind small public interfaces. The existing Unreal runtime module remains the build module. Authoritative combat/run state is separate from actors and UI; engine adapters present and submit commands. See ADR-0001, the V1 spec, and the run ledger.
 
 The user approved the V1 brief and delegated routine architecture, testing, ticket planning, verification, and orchestration. Ask only when a discovered decision changes product intent or requires unavailable access. The technical choices and testing seams are recorded before implementation.
+
+Issue #37 approves a later full 13-class/70-subclass compact roster and arbitrary four-slot parties. Slice #39 converts only the existing kits to native catalog definitions with independent build and instance identities; party editing/new kits follow in later slices. Current saves use schema 4 and catalog revision 1. Historical V1 scope above remains historical.

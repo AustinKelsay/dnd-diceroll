@@ -1,4 +1,5 @@
 #include "Combat/CombatBattle.h"
+#include "Party/BuildCatalog.h"
 
 namespace
 {
@@ -6,20 +7,15 @@ int32 GridDistance(FIntPoint A, FIntPoint B)
 {
     return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
 }
-constexpr int32 TouchRange = 1;
-constexpr int32 MissileRange = 6;
-constexpr int32 MissileDarts = 3;
-constexpr int32 MissileDie = 4;
-constexpr int32 DartBonus = 1;
-constexpr int32 CureDice = 2;
-constexpr int32 CureDie = 8;
-constexpr int32 HealingModifier = 3;
-constexpr int32 WindDie = 10;
-constexpr int32 FighterLevel = 1;
+using namespace BuildRules;
 constexpr int32 PotionDice = 2;
 constexpr int32 PotionDie = 4;
 constexpr int32 PotionBonus = 2;
-constexpr int32 SneakDie = 6;
+int32 CriticalThreshold(const FCombatantState& Hero)
+{
+    if (const auto* B = FBuildCatalog::Find(Hero.BuildId)) { return B->CriticalThreshold; }
+    return Hero.FighterSubclass == EFighterSubclass::Champion ? 19 : 20;
+}
 const FIntPoint Neighbors[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 }
 
@@ -240,13 +236,13 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious) { return Result; }
     if (Action == ECombatCommandType::SecondWind)
     {
-        if (Unit->AdventurerRole == EAdventurerRole::Fighter && Unit->SecondWindUses > 0 && State.bBonusActionAvailable && Unit->HP < Unit->MaxHP) { Result.Add(Id); }
+        if (FBuildCatalog::HasSpecial(*Unit, Action) && Unit->SecondWindUses > 0 && State.bBonusActionAvailable && Unit->HP < Unit->MaxHP) { Result.Add(Id); }
         return Result;
     }
     if (!State.bActionAvailable) { return Result; }
-    if (Action == ECombatCommandType::PrecisionStrike && (Unit->FighterSubclass != EFighterSubclass::BattleMaster || Unit->ManeuverUses <= 0)) { return Result; }
-    if (Action == ECombatCommandType::CureWounds && (Unit->AdventurerRole != EAdventurerRole::Cleric || Unit->SpellSlots <= 0)) { return Result; }
-    if (Action == ECombatCommandType::MagicMissile && (Unit->AdventurerRole != EAdventurerRole::Wizard || Unit->SpellSlots <= 0)) { return Result; }
+    if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return Result; }
+    if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
+    if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return Result; }
     if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return Result; }
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
@@ -283,7 +279,7 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 
 bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const
 {
-    return Actor.AdventurerRole == EAdventurerRole::Rogue && Actor.bSneakWeapon &&
+    return (FBuildCatalog::Find(Actor.BuildId) ? FBuildCatalog::Find(Actor.BuildId)->SneakDie > 0 : Actor.AdventurerRole == EAdventurerRole::Rogue) && Actor.bSneakWeapon &&
         State.Encounter.Combatants.ContainsByPredicate([&Actor, &Target](const FCombatantState& Ally)
         {
             return Ally.Id != Actor.Id && Ally.Side == Actor.Side && Ally.Life == ECombatLife::Conscious && GridDistance(Ally.Cell, Target.Cell) <= 1;
@@ -311,9 +307,9 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         Forecast.bAttackRoll = true;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
-        { Hits += Natural >= (Actor->FighterSubclass == EFighterSubclass::Champion ? 19 : 20) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? 2 : 0) >= Target->ArmorClass) ? 1 : 0; }
+        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
         Forecast.HitChancePercent = Hits * 5;
-        Effect(1, Actor->DamageDie, Actor->DamageBonus + Actor->WeaponRank + (Action == ECombatCommandType::PrecisionStrike ? 2 : 0));
+        Effect(1, Actor->DamageDie, Actor->DamageBonus + Actor->WeaponRank + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
@@ -383,13 +379,13 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
-        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? 2 : 0;
+        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
         Result.NaturalRoll = Roll(20);
         Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
         Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
         Result.TargetArmorClass = Target->ArmorClass;
-        Result.bCritical = Result.NaturalRoll >= (Actor->FighterSubclass == EFighterSubclass::Champion ? 19 : 20);
+        Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
         Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Target->ArmorClass);
         if (Result.bHit)
         {
@@ -575,18 +571,17 @@ FCombatEncounter FCombatBattle::TutorialEncounter()
         Unit.MaxHP = Unit.HP = Index == 0 ? 30 : Index < 4 ? 22 : 16;
         if (Index < 4)
         {
-            Unit.AdventurerRole = static_cast<EAdventurerRole>(Index + 1);
-            Unit.SecondWindUses = Index == 0 ? 2 : 0;
-            Unit.SpellSlots = Index >= 2 ? 2 : 0;
-            Unit.Potions = 1;
-            Unit.bSneakWeapon = Index == 1;
+            const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.base"), TEXT("cleric.base"), TEXT("wizard.base")};
+            FBuildCatalog::Create(Builds[Index], Index + 1, Names[Index], Unit);
+            Unit.Cell = Cells[Index];
+            // Historical standalone fixture is a base Fighter; expedition chooses a subclass.
+            if (Index == 0) { Unit.BuildId.Reset(); Unit.ClassId.Reset(); Unit.SubclassId.Reset(); Unit.FighterSubclass = EFighterSubclass::None; }
         }
-        Unit.DamageDie = Index == 3 ? 10 : 6;
-        Unit.ArmorClass = Index == 0 ? 16 : Index < 4 ? 13 : 12;
-        Unit.Range = Index == 3 || Index == 6 ? 4 : Index == 1 || Index == 2 ? 3 : 1;
-        Unit.InitiativeBonus = Index == 1 ? 4 : 1;
-        Unit.AttackBonus = Index < 4 ? 5 : 3;
-        Unit.DamageBonus = Index == 3 ? 0 : Index < 4 ? 3 : 1;
+        else
+        {
+            Unit.ArmorClass = 12; Unit.Range = Index == 6 ? 4 : 1;
+            Unit.InitiativeBonus = 1; Unit.AttackBonus = 3; Unit.DamageBonus = 1;
+        }
         Encounter.Combatants.Add(Unit);
     }
     return Encounter;

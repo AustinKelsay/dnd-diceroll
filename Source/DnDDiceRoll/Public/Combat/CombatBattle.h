@@ -24,6 +24,9 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Id = INDEX_NONE;
     UPROPERTY() FString Name;
     UPROPERTY() FString Role;
+    UPROPERTY() FString BuildId;
+    UPROPERTY() FString ClassId;
+    UPROPERTY() FString SubclassId;
     UPROPERTY() EAdventurerRole AdventurerRole = EAdventurerRole::None;
     UPROPERTY() ECombatLife Life = ECombatLife::Conscious;
     UPROPERTY() int32 RescueTurnsLeft = 0;
