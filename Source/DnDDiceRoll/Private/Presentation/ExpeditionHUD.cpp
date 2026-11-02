@@ -555,7 +555,7 @@ void AExpeditionHUD::DrawLog()
     for (int32 Index = FMath::Max(0, Messages.Num() - 2); Index < Messages.Num(); ++Index)
     { Lines.Append(Wrap(Messages[Index], 416, 0.7f)); }
     const float Height = 16 + Lines.Num() * 18.0f;
-    const float Top = H - 96 - Height;
+    const float Top = H - 128 - Height;
     Panel(274, Top, 436, Height, Muted, 0.86f, false);
     for (int32 Index = 0; Index < Lines.Num(); ++Index)
     { Text(Lines[Index], 284, Top + 8 + Index * 18.0f, Parchment, 0.7f); }
