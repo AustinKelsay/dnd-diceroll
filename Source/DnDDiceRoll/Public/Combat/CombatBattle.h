@@ -14,7 +14,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack,
     /** Level 1-5 SRD class features (Party/FeatureKit). Append only. */
-    ActionSurge, TurnUndead, BardicInspiration, WildShape, FlurryOfBlows, PatientDefense, StepOfTheWind, FontOfMagic, UncannyDodge, RecklessAttack, MartialArts, DeflectMissiles, SacredWeapon, QuickenedSpell, FlexibleCasting, Counterspell };
+    ActionSurge, TurnUndead, BardicInspiration, WildShape, FlurryOfBlows, PatientDefense, StepOfTheWind, FontOfMagic, UncannyDodge, RecklessAttack, MartialArts, DeflectMissiles, SacredWeapon, QuickenedSpell, FlexibleCasting, Counterspell, CastSpell };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -212,6 +212,8 @@ struct DNDDICEROLL_API FCombatCommand
     int32 TargetId = INDEX_NONE;
     /** Spells only: slot level to cast with; 0 picks the lowest open slot. Not persisted. */
     int32 SlotLevel = 0;
+    /** CastSpell only: SRD catalog slug or name (FSpellCatalogRules::Find). Not persisted. */
+    FString SpellId;
 };
 
 /** One die in an effect roll, in the order it was rolled. */
@@ -384,6 +386,10 @@ public:
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
     /** SlotLevel (spells only): 0 = lowest open slot, as in FCombatCommand. */
     FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId, int32 SlotLevel = 0) const;
+    /** CastSpell: catalog spells the active hero can cast now (class list at that class's level, combat-resolvable, action budget, an open slot, armor). */
+    TArray<FString> CastableSpells(int32 Id) const;
+    /** CastSpell targets: foes for damage/condition spells, allies (downed too) for healing; range in 5-ft cells and sight; Self areas need the foe inside the template. */
+    TArray<int32> SpellTargets(int32 Id, const FString& SpellId, int32 SlotLevel = 0) const;
     /** Upcast picker: the next slot level above Current with a slot left, wrapping to 0 (lowest open). */
     int32 NextSlotLevel(int32 Id, int32 Current) const;
     /** Ability scores: prebuilt by role for adventurers, generic for enemies. Read-only, no RNG. */
@@ -447,6 +453,10 @@ public:
     /** "AC 18 (Chain Mail, shield)" from worn armor, else "AC 13". */
     FString ArmorClassText(int32 Id) const;
 private:
+    const struct FSrdSpell* UsableSpell(const FCombatantState& Unit, const FString& SpellId, int32 RequestedSlot, int32& OutSlot, EAdventurerRole& OutClass) const;
+    bool ResolveCatalogSpell(const FCombatCommand& Command, FCombatResult& Result);
+    /** Ends the caster's concentration and the conditions its spell holds (RoundsLeft -1, caster as source). */
+    void EndConcentration(FCombatantState& Caster);
     friend class FPartyContinuity;
     friend class FExpeditionRun;
     FCombatSnapshot State;

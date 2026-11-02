@@ -10,6 +10,7 @@
 #include "Rules/ProficiencyRules.h"
 #include "Rules/SpellcastingRules.h"
 #include "Rules/AreaRules.h"
+#include "Rules/SpellCatalogRules.h"
 #include "Rules/CheckRules.h"
 #include "Rules/StandardActionRules.h"
 #include "Rules/DeathSaveRules.h"
@@ -1600,6 +1601,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         CheckOutcome();
         Result.Feedback = FString::Printf(TEXT("%s off-hand > %s | %s | damage %d%s"), *Actor->Name, *Find(Command.TargetId)->Name, Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result));
     }
+    else if (Command.Type == ECombatCommandType::CastSpell)
+    {
+        if (!ResolveCatalogSpell(Command, Result)) { return Result; }
+    }
     else if (Command.Type == ECombatCommandType::Attack || Command.Type == ECombatCommandType::PrecisionStrike)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
@@ -1896,8 +1901,8 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     if (Target.bConcentrating && Target.HP > 0 && Real > 0)
     {
         // Rolls only while concentrating, so battles without concentration keep their seeded streams.
-        Target.bConcentrating = FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
-            SaveMode(Target, EAbility::Constitution, ERollMode::Normal), State.RandomState).bSuccess;
+        if (!FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
+            SaveMode(Target, EAbility::Constitution, ERollMode::Normal), State.RandomState).bSuccess) { EndConcentration(Target); }
     }
     if (Target.HP == 0)
     {
@@ -1908,7 +1913,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
         if (bMassive) { Target.Life = ECombatLife::Dead; }
         Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
-        Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0; Target.bConcentrating = false;
+        Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0; EndConcentration(Target);
     }
 }
 
@@ -2319,4 +2324,277 @@ TArray<int32> FCombatBattle::OrderedAreaTargets(const FCombatantState& Actor, co
         if(Other.Id!=Target.Id && Other.Side!=Actor.Side && Other.Life==ECombatLife::Conscious && GridDistance(Target.Cell,Other.Cell)<=1 && HasLineOfSight(Target.Cell,Other.Cell)) { Targets.Add(Other.Id); }
     }
     return Targets;
+}
+
+namespace CombatSpellSlots
+{
+/** Catalog spell area on the grid: cones, lines and self cubes start at the caster and point at the aim; spheres and cylinders centre on the aim (or the caster for Self); a cube cast at range is treated as a sphere of half its side around the aim. */
+bool CatalogArea(const FSrdSpell& Spell, FIntPoint Caster, FIntPoint Aim, FAreaTemplate& Out)
+{
+    if (Spell.Area == ESpellArea::None || Spell.AreaFeet <= 0) { return false; }
+    const bool bSelf = Spell.RangeFeet == 0;
+    Out.SizeFeet = Spell.AreaFeet;
+    switch (Spell.Area)
+    {
+    case ESpellArea::Cone: Out.Shape = EAreaShape::Cone; break;
+    case ESpellArea::Line: Out.Shape = EAreaShape::Line; break;
+    case ESpellArea::Cube: Out.Shape = bSelf ? EAreaShape::Cube : EAreaShape::Sphere; if (!bSelf) { Out.SizeFeet = FMath::Max(FAreaRules::FeetPerCell, Spell.AreaFeet / 2); } break;
+    case ESpellArea::Cylinder: Out.Shape = EAreaShape::Cylinder; break;
+    default: Out.Shape = EAreaShape::Sphere; break;
+    }
+    if (Out.Shape == EAreaShape::Cone || Out.Shape == EAreaShape::Line || Out.Shape == EAreaShape::Cube)
+    {
+        Out.Origin = Caster;
+        Out.Direction = Aim == Caster ? FIntPoint(1, 0) : Aim - Caster;
+    }
+    else { Out.Origin = bSelf ? Caster : Aim; }
+    return true;
+}
+bool ToCombatCondition(ESpellCondition In, ECombatCondition& Out)
+{
+    switch (In)
+    {
+    case ESpellCondition::Blinded: Out = ECombatCondition::Blinded; return true;
+    case ESpellCondition::Frightened: Out = ECombatCondition::Frightened; return true;
+    case ESpellCondition::Grappled: Out = ECombatCondition::Grappled; return true;
+    case ESpellCondition::Incapacitated: Out = ECombatCondition::Incapacitated; return true;
+    case ESpellCondition::Paralyzed: Out = ECombatCondition::Paralyzed; return true;
+    case ESpellCondition::Poisoned: Out = ECombatCondition::Poisoned; return true;
+    case ESpellCondition::Prone: Out = ECombatCondition::Prone; return true;
+    case ESpellCondition::Restrained: Out = ECombatCondition::Restrained; return true;
+    case ESpellCondition::Stunned: Out = ECombatCondition::Stunned; return true;
+    case ESpellCondition::Unconscious: Out = ECombatCondition::Unconscious; return true;
+    default: return false; // Charmed, Deafened, Invisible, Petrified: no combat condition yet
+    }
+}
+}
+
+const FSrdSpell* FCombatBattle::UsableSpell(const FCombatantState& Unit, const FString& SpellId, int32 Requested, int32& OutSlot, EAdventurerRole& OutClass) const
+{
+    OutSlot = 0;
+    const FSrdSpell* Spell = FSpellCatalogRules::Find(SpellId);
+    if (!Spell || !bStarted || State.Phase != EBattlePhase::Fighting || Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious ||
+        IsIncapacitated(Unit) || ActiveId() != Unit.Id || !FSpellCatalogRules::CombatResolvable(*Spell)) { return nullptr; }
+    // SRD: each spell is cast through a class whose list has it and whose level grants that spell level.
+    const int32 PrimaryLevels = Unit.Level - Unit.SecondaryLevel;
+    if (FSpellCatalogRules::CanLearn(Unit.AdventurerRole, PrimaryLevels, *Spell)) { OutClass = Unit.AdventurerRole; }
+    else if (Unit.SecondaryLevel > 0 && FSpellCatalogRules::CanLearn(Unit.SecondaryRole, Unit.SecondaryLevel, *Spell)) { OutClass = Unit.SecondaryRole; }
+    else { return nullptr; }
+    if (ArmorPenaltiesOf(*this, Unit).bCannotCastSpells) { return nullptr; }
+    if (Spell->CastTime == ESpellCastTime::BonusAction ? !State.bBonusActionAvailable : !State.bActionAvailable) { return nullptr; }
+    if (Spell->Level == 0) { return Spell; }
+    if (Requested > 0 && Requested < Spell->Level) { return nullptr; }
+    for (int32 Level = FMath::Max(Spell->Level, Requested); Level <= FSpellRules::MaxSpellLevel; ++Level)
+    {
+        const int32 Left = Level == 1 ? Unit.SpellSlots : Unit.SlotsByLevel.IsValidIndex(Level - 1) ? Unit.SlotsByLevel[Level - 1] : 0;
+        bool bOpen = Left > 0;
+        if (bOpen && Level == 1 && FBuildCatalog::Find(Unit.BuildId))
+        {
+            FCombatantState After = Unit; SpendSpellSlot(After);
+            bOpen = FBuildCatalog::ValidResources(After); // never spend a slot a kit has reserved
+        }
+        if (bOpen) { OutSlot = Level; return Spell; }
+        if (Requested > 0) { return nullptr; }
+    }
+    return nullptr;
+}
+
+TArray<FString> FCombatBattle::CastableSpells(int32 Id) const
+{
+    TArray<FString> Out;
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return Out; }
+    for (int32 Index = 0; Index < FSpellCatalogRules::Num(); ++Index)
+    {
+        int32 Slot = 0; EAdventurerRole Class = EAdventurerRole::None;
+        const FSrdSpell& Spell = FSpellCatalogRules::At(Index);
+        if (UsableSpell(*Unit, Spell.Id, 0, Slot, Class)) { Out.Add(Spell.Id); }
+    }
+    return Out;
+}
+
+TArray<int32> FCombatBattle::SpellTargets(int32 Id, const FString& SpellId, int32 SlotLevel) const
+{
+    TArray<int32> Out;
+    const FCombatantState* Unit = Find(Id);
+    int32 Slot = 0; EAdventurerRole Class = EAdventurerRole::None;
+    const FSrdSpell* Spell = Unit ? UsableSpell(*Unit, SpellId, SlotLevel, Slot, Class) : nullptr;
+    if (!Spell) { return Out; }
+    const bool bHeal = Spell->Effect == ESpellEffect::Healing;
+    // Range in cells: Touch is 5 ft (1 cell); Self is 0 and aims the area instead.
+    // Self-range spells with no area (Vampiric Touch) reach like a touch.
+    const int32 Range = Spell->RangeFeet == 0 ? (Spell->Area == ESpellArea::None && !bHeal ? 1 : 0) : FMath::Max(1, Spell->RangeFeet / FAreaRules::FeetPerCell);
+    for (const FCombatantState& Target : State.Encounter.Combatants)
+    {
+        const bool bSide = bHeal ? Target.Side == Unit->Side && Target.Life != ECombatLife::Dead : Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious;
+        if (!bSide) { continue; }
+        if (Range > 0)
+        {
+            if (GridDistance(Unit->Cell, Target.Cell) > Range || (Target.Id != Id && !HasLineOfSight(Unit->Cell, Target.Cell))) { continue; }
+        }
+        else if (bHeal) { if (Target.Id != Id) { continue; } }
+        else
+        {
+            FAreaTemplate Area;
+            if (!CombatSpellSlots::CatalogArea(*Spell, Unit->Cell, Target.Cell, Area) || !FAreaRules::Covers(Area, Target.Cell) || !HasLineOfSight(Unit->Cell, Target.Cell)) { continue; }
+        }
+        Out.Add(Target.Id);
+    }
+    return Out;
+}
+
+void FCombatBattle::EndConcentration(FCombatantState& Caster)
+{
+    if (!Caster.bConcentrating) { return; }
+    Caster.bConcentrating = false;
+    // Conditions a concentration spell imposed are tagged RoundsLeft -1 with the caster as source; they end with it. Grapples are not spells.
+    const int32 Id = Caster.Id;
+    for (FCombatantState& Unit : State.Encounter.Combatants)
+    {
+        Unit.Conditions.RemoveAll([Id](const FCombatCondition& C) { return C.SourceId == Id && C.RoundsLeft == -1 && C.Condition != ECombatCondition::Grappled; });
+    }
+}
+
+bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatResult& Result)
+{
+    FCombatantState* User = MutableFind(Command.ActorId);
+    int32 Slot = 0; EAdventurerRole Class = EAdventurerRole::None;
+    const FSrdSpell* Spell = User ? UsableSpell(*User, Command.SpellId, Command.SlotLevel, Slot, Class) : nullptr;
+    if (!Spell) { Result.Feedback = TEXT("Spell unavailable: check class list and level, combat support, action budget, slot level and armor."); return false; }
+    if (!SpellTargets(Command.ActorId, Command.SpellId, Command.SlotLevel).Contains(Command.TargetId)) { Result.Feedback = TEXT("Spell target is out of range, out of sight, outside the area, or on the wrong side."); return false; }
+    const FSrdSpell& S = *Spell;
+    const int32 Prof = FProficiencyRules::ProficiencyBonus(User->Level);
+    const int32 Mod = AbilityModifier(User->Id, FSpellcastingRules::SpellcastingAbility(Class));
+    const int32 Dc = FSpellcastingRules::SaveDc(Prof, Mod);
+    const int32 AttackBonus = FSpellcastingRules::AttackBonus(Prof, Mod);
+
+    // Pay: one slot of the cast level (cantrips are free) and the action or bonus action.
+    if (Slot == 1) { SpendSpellSlot(*User); } else if (Slot > 1) { --User->SlotsByLevel[Slot - 1]; }
+    if (S.CastTime == ESpellCastTime::BonusAction) { State.bBonusActionAvailable = false; } else { State.bActionAvailable = false; }
+    User->bHidden = false;
+    if (S.bConcentration) { EndConcentration(*User); User->bConcentrating = true; }
+
+    const int32 Count = FSpellCatalogRules::DiceCount(S, User->Level, Slot);
+    const bool bMissile = FCString::Stricmp(S.Id, TEXT("magic-missile")) == 0;
+    const int32 Flat = S.bAddModifier ? Mod : bMissile ? Count : S.FlatBonus; // Magic Missile: +1 per dart
+    const int32 Count2 = S.Level > 0 && Slot >= 1 && Slot <= 9 ? S.Dice2[Slot] : 0;
+    Result.EffectModifier = Flat;
+    Result.DamageType = S.DamageType;
+    Result.bSaveSpell = S.Resolution == ESpellResolution::Save;
+    const FString SlotText = Slot == 0 ? FString(TEXT("cantrip")) : FString::Printf(TEXT("level %d slot"), Slot);
+
+    if (S.Effect == ESpellEffect::Healing)
+    {
+        FCombatantState* Target = MutableFind(Command.TargetId);
+        DiceLog = &Result.EffectDice;
+        const int32 Amount = FMath::Max(1, (S.DieSides == 0 ? Count : RollDice(Count, S.DieSides)) + Flat);
+        DiceLog = nullptr;
+        Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
+        Target->HP += Result.Healing;
+        if (Target->HP > 0) { Target->Life = ECombatLife::Conscious; Target->RescueTurnsLeft = 0; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0; }
+        Result.Effects.Add({Target->Id, EAbilityEffect::Healing, Result.Healing, Target->Cell});
+        Result.bHit = true;
+        Result.Feedback = FString::Printf(TEXT("%s: %s (%s) > %s | heal %d | HP %d/%d"), *User->Name, S.Name, *SlotText, *Target->Name, Result.Healing, Target->HP, Target->MaxHP);
+        CheckOutcome();
+        return true;
+    }
+
+    // Victims: every creature in the area but the caster (allies too, per SRD), or the one target.
+    FAreaTemplate Area;
+    const bool bArea = CombatSpellSlots::CatalogArea(S, User->Cell, Find(Command.TargetId)->Cell, Area);
+    TArray<int32> Victims;
+    if (bArea)
+    {
+        for (const FCombatantState& Unit : State.Encounter.Combatants)
+        {
+            if (Unit.Id != User->Id && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell) && HasLineOfSight(Area.Origin, Unit.Cell)) { Victims.Add(Unit.Id); }
+        }
+        Victims.AddUnique(Command.TargetId);
+    }
+    else { Victims.Add(Command.TargetId); }
+
+    // Attack-roll spells: one d20 against the target's AC; a natural 20 doubles the dice.
+    bool bAttackHit = true, bCritical = false;
+    if (S.Resolution == ESpellResolution::MeleeAttack || S.Resolution == ESpellResolution::RangedAttack)
+    {
+        const FAttackRollMode Mode = AttackRollMode(User->Id, Command.TargetId);
+        bool bCrowded = false;
+        if (S.Resolution == ESpellResolution::RangedAttack && !RangedAttacker(*User))
+        {
+            for (const FCombatantState& Other : State.Encounter.Combatants) { bCrowded |= Other.Side != User->Side && Other.Life == ECombatLife::Conscious && !IsIncapacitated(Other) && GridDistance(Other.Cell, User->Cell) <= 1; }
+        }
+        Result.RollMode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num() + (bCrowded ? 1 : 0));
+        Result.AttackRolls.Add(Roll(20));
+        if (Result.RollMode != ERollMode::Normal) { Result.AttackRolls.Add(Roll(20)); }
+        Result.NaturalRoll = Result.AttackRolls.Num() == 1 ? Result.AttackRolls[0] :
+            Result.RollMode == ERollMode::Advantage ? FMath::Max(Result.AttackRolls[0], Result.AttackRolls[1]) : FMath::Min(Result.AttackRolls[0], Result.AttackRolls[1]);
+        Result.AttackBonus = AttackBonus;
+        Result.AttackTotal = Result.NaturalRoll + AttackBonus;
+        Result.TargetArmorClass = EffectiveArmorClass(Command.TargetId);
+        bCritical = Result.NaturalRoll == 20;
+        bAttackHit = bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+        Result.bCritical = bCritical;
+    }
+    else if (Result.bSaveSpell) { Result.TargetArmorClass = Dc; }
+
+    // One damage roll for the whole spell (both types when it deals two), then each victim's save.
+    int32 Rolled = 0, Rolled2 = 0;
+    if (S.Effect == ESpellEffect::Damage && bAttackHit)
+    {
+        DiceLog = &Result.EffectDice;
+        const int32 Dice = Count * (bCritical ? 2 : 1);
+        Rolled = (S.DieSides == 0 ? Count : RollDice(Dice, S.DieSides)) + Flat;
+        if (Count2 > 0 && S.Dice2Sides > 0) { Rolled2 = RollDice(Count2 * (bCritical ? 2 : 1), S.Dice2Sides); }
+        DiceLog = nullptr;
+    }
+    FString Lines;
+    bool bAnyFailed = false;
+    for (const int32 VictimId : Victims)
+    {
+        FCombatantState* Victim = MutableFind(VictimId);
+        bool bSaved = false;
+        if (Result.bSaveSpell)
+        {
+            const bool bRolled = FCheckRules::Resolve(Character(VictimId).SaveBonus(S.SaveAbility), Dc, SaveMode(*Victim, S.SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
+            bSaved = bRolled && !(IsHelpless(*Victim) && (S.SaveAbility == EAbility::Strength || S.SaveAbility == EAbility::Dexterity));
+        }
+        const bool bAffected = Result.bSaveSpell ? !bSaved : bAttackHit;
+        bAnyFailed |= bAffected;
+        int32 Dealt = 0;
+        if (S.Effect == ESpellEffect::Damage && (bAffected || (bSaved && S.bHalfOnSave)))
+        {
+            const FDamageDefenses Defenses = DamageDefenses(VictimId);
+            const int32 First = FDamageRules::Adjust(FSpellcastingRules::DamageAfterSave(Rolled, bSaved, S.bHalfOnSave), S.DamageType, Defenses);
+            const int32 Second = Rolled2 > 0 ? FDamageRules::Adjust(FSpellcastingRules::DamageAfterSave(Rolled2, bSaved, S.bHalfOnSave), S.Damage2Type, Defenses) : 0;
+            const int32 Total = First + Second;
+            const int32 Prevented = FMath::Min(Total, ProtectionFor(*Victim));
+            ApplyDamage(*Victim, Total);
+            Dealt = Total - Prevented;
+            Result.Damage += Dealt; Result.DamagePrevented += Prevented;
+        }
+        // Failed save (or hit): the spell's conditions. Concentration spells hold them until concentration ends (RoundsLeft -1); others last one round.
+        FString CondText;
+        if (bAffected && S.Conditions != 0 && Victim->Life == ECombatLife::Conscious)
+        {
+            for (int32 Bit = 0; Bit < static_cast<int32>(ESpellCondition::Count); ++Bit)
+            {
+                ECombatCondition Kind;
+                if (!(S.Conditions & (1u << Bit)) || !CombatSpellSlots::ToCombatCondition(static_cast<ESpellCondition>(Bit), Kind)) { continue; }
+                if (Victim->Conditions.ContainsByPredicate([&](const FCombatCondition& C) { return C.Condition == Kind && C.SourceId == User->Id; })) { continue; }
+                FCombatCondition Applied; Applied.Condition = Kind; Applied.SourceId = User->Id; Applied.RoundsLeft = S.bConcentration ? -1 : 1;
+                Victim->Conditions.Add(Applied);
+                CondText += FString::Printf(TEXT(" %s"), ConditionName(Kind));
+            }
+        }
+        Result.Effects.Add({VictimId, bArea ? EAbilityEffect::Area : EAbilityEffect::Strike, Dealt, Victim->Cell});
+        Lines += FString::Printf(TEXT(" | %s %s %d%s"), *Victim->Name, Result.bSaveSpell ? (bSaved ? TEXT("saves,") : TEXT("fails,")) : (bCritical ? TEXT("CRITICAL") : bAttackHit ? TEXT("hit,") : TEXT("miss,")), Dealt, *CondText);
+    }
+    // A concentration spell that took hold of nobody ends at once.
+    if (S.bConcentration && S.Effect == ESpellEffect::Condition && !bAnyFailed) { User->bConcentrating = false; }
+    Result.bHit = bAnyFailed;
+    const FString Check = Result.bSaveSpell ? FString::Printf(TEXT("%s save DC %d"), *FString(FAbilityRules::AbilityName(S.SaveAbility)).Left(3).ToUpper(), Dc) :
+        Result.AttackRolls.IsEmpty() ? FString(TEXT("auto-hit")) : FString::Printf(TEXT("d20 %d + %d = %d vs AC %d"), Result.NaturalRoll, AttackBonus, Result.AttackTotal, Result.TargetArmorClass);
+    Result.Feedback = FString::Printf(TEXT("%s: %s (%s, %s)%s"), *User->Name, S.Name, *SlotText, *Check, *Lines);
+    CheckOutcome();
+    return true;
 }
