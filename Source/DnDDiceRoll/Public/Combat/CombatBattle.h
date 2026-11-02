@@ -604,6 +604,12 @@ private:
     bool MirrorImageTakes(int32 TargetId, FCombatResult& Result);
     /** Fire Shield: a melee hit from within 5 ft burns (or chills) the attacker. */
     void SpellRetaliation(int32 AttackerId, int32 TargetId, FCombatResult& Result);
+    // Phase 5 utility spells (CombatSpellUtility.cpp).
+    /** Hellish Rebuke: a damaged hero with the spell, a reaction and a slot answers a creature within 60 ft it can see. */
+    void SpellReactionsOnDamaged(int32 AttackerId, int32 TargetId, FCombatResult& Result);
+    /** Lowest open slot (>= the spell's level) a unit can spend outside its own turn on a spell it knows, and the class it casts through; 0 = none. */
+    int32 ReactionSlot(const FCombatantState& Unit, const struct FSrdSpell& Spell, EAdventurerRole& OutClass) const;
+    void SpendSlotLevel(FCombatantState& Unit, int32 Slot);
     /** Invisibility and Sanctuary end when the creature attacks, casts or deals damage. */
     void EndOnHostileAct(int32 ActorId);
     /** Heroism temp HP and Searing Smite damage/save at the start of the creature's turn. */

@@ -1,6 +1,7 @@
-﻿#include "Rules/SpellEffectRules.h"
+#include "Rules/SpellEffectRules.h"
 
-namespace
+// Named (not anonymous) so unity builds never merge its short helpers (C, T, D, Foe) with other files.
+namespace SpellEffectTable
 {
 using namespace SpellEffectFlag;
 constexpr uint32 C(ESpellCondition Condition) { return 1u << static_cast<uint8>(Condition); }
@@ -96,9 +97,9 @@ const FCreatureRow* Row(const FString& Role)
 }
 }
 
-ECreatureType FCreatureRules::TypeOf(const FString& Role) { const FCreatureRow* R = Row(Role); return R ? R->Type : ECreatureType::Humanoid; }
-uint32 FCreatureRules::ConditionImmunities(const FString& Role) { const FCreatureRow* R = Row(Role); return R ? R->Immune : 0; }
-bool FCreatureRules::ImmuneToExhaustion(const FString& Role) { const FCreatureRow* R = Row(Role); return R && R->bNoExhaustion; }
+ECreatureType FCreatureRules::TypeOf(const FString& Role) { const SpellEffectTable::FCreatureRow* R = SpellEffectTable::Row(Role); return R ? R->Type : ECreatureType::Humanoid; }
+uint32 FCreatureRules::ConditionImmunities(const FString& Role) { const SpellEffectTable::FCreatureRow* R = SpellEffectTable::Row(Role); return R ? R->Immune : 0; }
+bool FCreatureRules::ImmuneToExhaustion(const FString& Role) { const SpellEffectTable::FCreatureRow* R = SpellEffectTable::Row(Role); return R && R->bNoExhaustion; }
 const TCHAR* FCreatureRules::TypeName(ECreatureType Type)
 {
     static const TCHAR* Names[] = { TEXT("Aberration"), TEXT("Beast"), TEXT("Celestial"), TEXT("Construct"), TEXT("Dragon"), TEXT("Elemental"), TEXT("Fey"),
@@ -106,11 +107,11 @@ const TCHAR* FCreatureRules::TypeName(ECreatureType Type)
     return Type < ECreatureType::Count ? Names[static_cast<uint8>(Type)] : TEXT("?");
 }
 
-int32 FSpellEffectRules::Num() { return UE_ARRAY_COUNT(Specs); }
-const FSpellEffectSpec& FSpellEffectRules::At(int32 Index) { return Specs[Index]; }
+int32 FSpellEffectRules::Num() { return UE_ARRAY_COUNT(SpellEffectTable::Specs); }
+const FSpellEffectSpec& FSpellEffectRules::At(int32 Index) { return SpellEffectTable::Specs[Index]; }
 const FSpellEffectSpec* FSpellEffectRules::Find(const FString& Id)
 {
-    for (const FSpellEffectSpec& S : Specs) { if (Id.Equals(S.Id, ESearchCase::IgnoreCase)) { return &S; } }
+    for (const FSpellEffectSpec& S : SpellEffectTable::Specs) { if (Id.Equals(S.Id, ESearchCase::IgnoreCase)) { return &S; } }
     return nullptr;
 }
 bool FSpellEffectRules::IsBuff(const FSpellEffectSpec& Spec) { return (Spec.Flags & SpellEffectFlag::Buff) != 0; }

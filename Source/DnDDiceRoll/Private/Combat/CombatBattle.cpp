@@ -1543,6 +1543,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
             State.MeleeHitThisTurn.AddUnique(TargetId);
             SpellRetaliation(ActorId, TargetId, Result);
         }
+        if (Result.Damage > 0) { SpellReactionsOnDamaged(ActorId, TargetId, Result); }
     }
 }
 
@@ -1941,7 +1942,9 @@ void FCombatBattle::ApplyDefenses(FCombatResult& Result, int32 ActorId, ECombatC
 
 bool FCombatBattle::ShieldWouldBlock(const FCombatantState& Target, int32 AttackTotal, int32 ArmorClass, bool bCritical)
 {
-    const bool bWizard = Target.AdventurerRole == EAdventurerRole::Wizard || (Target.SecondaryLevel > 0 && Target.SecondaryRole == EAdventurerRole::Wizard);
+    // Shield is on the Sorcerer and Wizard lists; a prepared list (if any) must hold it for a sorcerer.
+    auto Has = [&](EAdventurerRole R) { return Target.AdventurerRole == R || (Target.SecondaryLevel > 0 && Target.SecondaryRole == R); };
+    const bool bWizard = Has(EAdventurerRole::Wizard) || (Has(EAdventurerRole::Sorcerer) && (Target.PreparedSpells.IsEmpty() || Target.PreparedSpells.Contains(TEXT("shield"))));
     return !bCritical && bWizard && Target.Side == ECombatSide::Party && Target.Life == ECombatLife::Conscious && Target.bReactionAvailable &&
         !Target.bShielded && Target.SpellSlots > 0 && AttackTotal < ArmorClass + 5 &&
         FBuildCatalog::ValidResources([&] { FCombatantState After = Target; --After.SpellSlots; return After; }()); // never spend a slot a kit has reserved
@@ -2497,6 +2500,7 @@ const FSrdSpell* FCombatBattle::UsableSpell(const FCombatantState& Unit, const F
     else if (Unit.SecondaryLevel > 0 && FSpellCatalogRules::CanLearn(Unit.SecondaryRole, Unit.SecondaryLevel, *Spell)) { OutClass = Unit.SecondaryRole; }
     else { return nullptr; }
     if (ArmorPenaltiesOf(*this, Unit).bCannotCastSpells) { return nullptr; }
+    if (Spell->CastTime == ESpellCastTime::Reaction) { return nullptr; } // reactions fire automatically (Shield, Hellish Rebuke, Counterspell)
     if (Spell->CastTime == ESpellCastTime::BonusAction ? !State.bBonusActionAvailable : !State.bActionAvailable) { return nullptr; }
     if (!Unit.PreparedSpells.IsEmpty() && !Unit.PreparedSpells.Contains(FString(Spell->Id))) { return nullptr; }
     if (Spell->Level == 0) { return Spell; }

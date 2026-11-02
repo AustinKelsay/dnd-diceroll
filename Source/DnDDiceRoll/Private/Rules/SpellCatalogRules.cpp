@@ -1,5 +1,6 @@
 #include "Rules/SpellCatalogRules.h"
 #include "Rules/SpellEffectRules.h"
+#include "Rules/SpellUtilityRules.h"
 #include "Rules/BardRules.h"
 #include "Combat/CombatBattle.h"
 
@@ -56,6 +57,8 @@ bool FSpellCatalogRules::CombatResolvable(const FSrdSpell& Spell)
     static const TCHAR* NotOneCast[] = { TEXT("haste"), TEXT("conjure-animals"), TEXT("conjure-woodland-beings"), TEXT("conjure-elemental"), TEXT("conjure-fey"),
         TEXT("conjure-celestial"), TEXT("faithful-hound"), TEXT("control-water"), TEXT("wind-wall"), TEXT("modify-memory"), TEXT("telekinesis"),
         TEXT("arcane-hand"), TEXT("arcane-sword"), TEXT("holy-aura"), TEXT("searing-smite"), TEXT("ensnaring-strike") };
+    // Phase 5: reactions, beams, summons, terrain and utility spells (FSpellUtilityRules); exceptions are documented there.
+    if (const FSpellUtility* Utility = FSpellUtilityRules::Find(Spell.Id)) { return Utility->Kind != ESpellUtility::Exception; }
     // Spells with an effect spec (conditions, buffs, riders) resolve through it (CombatSpellEffects.cpp).
     if (FSpellEffectRules::Find(Spell.Id)) { return Spell.CastTime == ESpellCastTime::Action || Spell.CastTime == ESpellCastTime::BonusAction; }
     if (Spell.Implementation != ESpellImplementation::Mechanics || (Spell.CastTime != ESpellCastTime::Action && Spell.CastTime != ESpellCastTime::BonusAction)) { return false; }

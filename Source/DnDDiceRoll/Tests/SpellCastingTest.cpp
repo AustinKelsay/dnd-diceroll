@@ -55,6 +55,7 @@ bool FSpellCastingTableTest::RunTest(const FString& Parameters)
         const FSpellEffectSpec* Spec = FSpellEffectRules::Find(Spell.Id);
         bool bCastBySomeone = false;
         if (Spec && (Spec->Flags & SpellEffectFlag::Smite)) { bCastBySomeone = true; ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // smites: SpellEffectsTest
+        if (Spell.CastTime == ESpellCastTime::Reaction) { ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // reactions fire automatically: SpellReactionTest
         bCastBySomeone = false;
         for (const EAdventurerRole Role : Roles)
         {
