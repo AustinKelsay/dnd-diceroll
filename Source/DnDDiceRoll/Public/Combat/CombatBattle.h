@@ -14,7 +14,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack,
     /** Level 1-5 SRD class features (Party/FeatureKit). Append only. */
-    ActionSurge, TurnUndead, BardicInspiration, WildShape };
+    ActionSurge, TurnUndead, BardicInspiration, WildShape, FlurryOfBlows, PatientDefense, StepOfTheWind };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -140,6 +140,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 WildShapeUses = 0;
     /** Hit points of the current beast form (wolf); 0 = own form. Damage drains it first, the excess carries over. */
     UPROPERTY() int32 WildShapeHP = 0;
+    /** Monk 2: ki points left (Monk level per short or long rest). */
+    UPROPERTY() int32 KiPoints = 0;
 };
 
 USTRUCT()

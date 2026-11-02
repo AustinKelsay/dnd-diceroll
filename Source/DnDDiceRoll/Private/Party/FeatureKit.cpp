@@ -63,6 +63,19 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.BardicUses = BardicCap(Hero);
     Hero.WildShapeUses = WildShapeCap(Hero);
     Hero.WildShapeHP = 0;
+    Hero.KiPoints = KiCap(Hero);
+}
+void FFeatureKit::ShortRest(FCombatantState& Hero)
+{
+    Hero.ActionSurgeUses = ActionSurgeCap(Hero);
+    Hero.ChannelUses = ChannelCap(Hero);
+    Hero.WildShapeUses = WildShapeCap(Hero);
+    Hero.KiPoints = KiCap(Hero);
+}
+int32 FFeatureKit::KiCap(const FCombatantState& Hero)
+{
+    const int32 Monk = FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk);
+    return Hero.Side == ECombatSide::Party && Monk >= 2 ? Monk : 0;
 }
 void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
 {
@@ -72,6 +85,7 @@ void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
     Raise(Hero.ChannelUses, ChannelCap(Hero), ChannelCap(Before));
     Raise(Hero.BardicUses, BardicCap(Hero), BardicCap(Before));
     Raise(Hero.WildShapeUses, WildShapeCap(Hero), WildShapeCap(Before));
+    Raise(Hero.KiPoints, KiCap(Hero), KiCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 {
@@ -111,6 +125,9 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::TurnUndead: return TEXT("Turn Undead");
     case ECombatCommandType::BardicInspiration: return TEXT("Bardic Inspiration");
     case ECombatCommandType::WildShape: return TEXT("Wild Shape");
+    case ECombatCommandType::FlurryOfBlows: return TEXT("Flurry of Blows");
+    case ECombatCommandType::PatientDefense: return TEXT("Patient Defense");
+    case ECombatCommandType::StepOfTheWind: return TEXT("Step of the Wind");
     default: return TEXT("Feature");
     }
 }
@@ -119,7 +136,8 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return EActionCost::Free;
-    case ECombatCommandType::BardicInspiration: return EActionCost::BonusAction;
+    case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
+        return EActionCost::BonusAction;
     default: return EActionCost::Action;
     }
 }
@@ -131,6 +149,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::TurnUndead: return FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
     case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
+    case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
     default: return FString();
     }
 }
@@ -141,16 +160,18 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
+    if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
     return Out;
 }
 bool FFeatureKit::PicksTarget(ECombatCommandType Action)
 {
-    return Action == ECombatCommandType::BardicInspiration;
+    return Action == ECombatCommandType::BardicInspiration || Action == ECombatCommandType::FlurryOfBlows;
 }
 bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
     return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
         Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
-        Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0);
+        Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
+        Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero);
 }

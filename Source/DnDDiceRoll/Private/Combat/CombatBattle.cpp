@@ -390,6 +390,9 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::ActionSurge: return TEXT("ACTION SURGE | Free + 1 use | self | after spending your action, take one more action this turn; 1 use per rest");
     case ECombatCommandType::BardicInspiration: return TEXT("BARDIC INSPIRATION | Bonus + 1 use | ally within 60 ft | the ally holds a d6 (d8 at Bard 5), added to its next attack roll that would miss");
     case ECombatCommandType::WildShape: return TEXT("WILD SHAPE | Action + 1 use | self | become a wolf: 11 form HP take damage first, AC 13, bite +4 for 2d4+2, no spells; 2 uses per rest");
+    case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
+    case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
+    case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
@@ -2020,6 +2023,8 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::TurnUndead: return Unit.ChannelUses > 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::BardicInspiration: return Unit.BardicUses > 0 && State.bBonusActionAvailable;
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
+    case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
+    case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
     default: return false;
     }
 }
@@ -2035,6 +2040,15 @@ TArray<int32> FCombatBattle::FeatureTargets(const FCombatantState& Unit, ECombat
             if (Other.Id != Unit.Id && Other.Side == Unit.Side && Other.Life == ECombatLife::Conscious && Other.BardicDie == 0 && GridDistance(Unit.Cell, Other.Cell) <= FFeatureKit::BardicCells) { Allies.Add(Other.Id); }
         }
         return Allies;
+    }
+    if (Action == ECombatCommandType::FlurryOfBlows)
+    {
+        TArray<int32> Foes;
+        for (const FCombatantState& Other : State.Encounter.Combatants)
+        {
+            if (Other.Side != Unit.Side && Other.Life == ECombatLife::Conscious && GridDistance(Unit.Cell, Other.Cell) <= 1 && HasLineOfSight(Unit.Cell, Other.Cell)) { Foes.Add(Other.Id); }
+        }
+        return Foes;
     }
     return {Unit.Id};
 }
@@ -2054,6 +2068,30 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = false;
         User->WildShapeHP = FFeatureKit::WolfHP;
         return FString::Printf(TEXT("%s takes the shape of a wolf (%d form HP, AC %d; %d uses left)."), *User->Name, User->WildShapeHP, FFeatureKit::WolfAC, User->WildShapeUses);
+    case ECombatCommandType::PatientDefense:
+    case ECombatCommandType::StepOfTheWind:
+        --User->KiPoints;
+        State.bBonusActionAvailable = false;
+        (Command.Type == ECombatCommandType::PatientDefense ? User->bDodging : User->bDisengaged) = true;
+        return FString::Printf(TEXT("%s spends 1 ki and %s (%d ki left) (bonus action)."), *User->Name, Command.Type == ECombatCommandType::PatientDefense ? TEXT("dodges") : TEXT("disengages"), User->KiPoints);
+    case ECombatCommandType::FlurryOfBlows:
+    {
+        --User->KiPoints;
+        State.bBonusActionAvailable = false;
+        FString Text = FString::Printf(TEXT("%s spends 1 ki on a Flurry of Blows (%d ki left) (bonus action):"), *User->Name, User->KiPoints);
+        int32 Total = 0, Hits = 0;
+        for (int32 Blow = 0; Blow < 2; ++Blow)
+        {
+            const FCombatantState* Target = Find(Command.TargetId);
+            if (!Target || Target->Life != ECombatLife::Conscious) { break; }
+            FCombatResult Swing; Swing.bAccepted = true;
+            Strike(Command.ActorId, Command.TargetId, 0, Swing);
+            Text += FString::Printf(TEXT(" %s %d"), Swing.bHit ? TEXT("hit") : TEXT("miss"), Swing.Damage);
+            if (Swing.bHit) { ++Hits; Total += Swing.Damage; }
+        }
+        Result.bHit = Hits > 0; Result.Damage = Total;
+        return Text + TEXT(".");
+    }
     case ECombatCommandType::BardicInspiration:
     {
         --User->BardicUses;

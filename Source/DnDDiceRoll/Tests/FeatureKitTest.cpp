@@ -271,4 +271,49 @@ bool FWildShapeTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Form HP drained"), After->WildShapeHP, FMath::Max(0, 11 - Dealt));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKiTest, "Project.Expedition.Features.Ki",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FKiTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    TestEqual(TEXT("No ki at Monk 1"), FFeatureKit::KiCap(Hero(TEXT("monk.shadow"), 1)), 0);
+    FCombatantState Monk = Hero(TEXT("monk.shadow"), 3);
+    FFeatureKit::Refill(Monk);
+    TestEqual(TEXT("Ki = Monk level"), Monk.KiPoints, 3);
+    TestTrue(TEXT("Bonus tags"), FCombatBattle::ActionCost(ECombatCommandType::FlurryOfBlows, Monk) == EActionCost::BonusAction && FCombatBattle::ActionCost(ECombatCommandType::PatientDefense, Monk) == EActionCost::BonusAction && FCombatBattle::ActionCost(ECombatCommandType::StepOfTheWind, Monk) == EActionCost::BonusAction);
+    FCombatantState Bad = Monk; Bad.KiPoints = 4;
+    TestFalse(TEXT("Ki above cap invalid"), FFeatureKit::Valid(Bad));
+
+    FString Error;
+    {
+        FCombatBattle Battle;
+        if (!TestTrue(TEXT("Start"), Battle.Start(Duel(Monk, {1, 0}), 3, Error))) { AddError(Error); return true; }
+        TestTrue(TEXT("No flurry before the Attack action"), Battle.LegalTargets(10, ECombatCommandType::FlurryOfBlows).IsEmpty());
+        TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestTrue(TEXT("Flurry targets the adjacent foe"), Battle.LegalTargets(10, ECombatCommandType::FlurryOfBlows).Contains(20));
+        const int32 FoeHp = Battle.Find(20)->HP;
+        const FCombatResult Flurry = Battle.Submit({ECombatCommandType::FlurryOfBlows, 10, {}, 20});
+        TestTrue(TEXT("Flurry"), Flurry.bAccepted);
+        TestEqual(TEXT("Damage matches"), FoeHp - Battle.Find(20)->HP, Flurry.Damage);
+        TestEqual(TEXT("Ki spent"), Battle.Find(10)->KiPoints, 2);
+        TestFalse(TEXT("Bonus spent"), Battle.Snapshot().bBonusActionAvailable);
+        TestTrue(TEXT("Only one bonus"), Battle.LegalTargets(10, ECombatCommandType::PatientDefense).IsEmpty());
+        FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error));
+    }
+    {
+        FCombatBattle Battle; Battle.Start(Duel(Monk, {1, 0}), 3, Error);
+        TestTrue(TEXT("Patient Defense"), Battle.Submit({ECombatCommandType::PatientDefense, 10, {}, 10}).bAccepted);
+        TestTrue(TEXT("Dodging"), Battle.Find(10)->bDodging);
+        TestTrue(TEXT("Action still free"), Battle.Snapshot().bActionAvailable);
+    }
+    {
+        FCombatBattle Battle; Battle.Start(Duel(Monk, {1, 0}), 3, Error);
+        TestTrue(TEXT("Step of the Wind"), Battle.Submit({ECombatCommandType::StepOfTheWind, 10, {}, 10}).bAccepted);
+        TestTrue(TEXT("Disengaged"), Battle.Find(10)->bDisengaged);
+    }
+    Monk.KiPoints = 0; FFeatureKit::ShortRest(Monk);
+    TestEqual(TEXT("Short rest refills ki"), Monk.KiPoints, 3);
+    return true;
+}
 #endif

@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::WildShape;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::StepOfTheWind;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -43,6 +43,11 @@ public:
     static int32 BardicSides(const FCombatantState& Bard);
     static constexpr int32 BardicCells = 12;
     static int32 WildShapeCap(const FCombatantState& Hero);
+    /** Monk level from Monk 2. */
+    static int32 KiCap(const FCombatantState& Hero);
+    static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }
+    /** Short rest: refills the short-rest pools (Action Surge, Channel Divinity, Wild Shape, ki). */
+    static void ShortRest(FCombatantState& Hero);
     // SRD wolf (CR 1/4), the basic form: AC 13, 11 HP, bite +4 for 2d4+2.
     static constexpr int32 WolfHP = 11;
     static constexpr int32 WolfAC = 13;

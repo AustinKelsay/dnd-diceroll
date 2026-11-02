@@ -333,6 +333,7 @@ bool FExpeditionRun::ShortRest(int32 UnitId, int32& Healed, FString& Error)
     Healed = FMath::Min(Hero->MaxHP - Hero->HP, FRestRules::HitDieHealing(Roll, Combat.AbilityModifier(UnitId, EAbility::Constitution)));
     Hero->HP += Healed;
     ++Hero->HitDiceSpent;
+    FFeatureKit::ShortRest(*Hero); // SRD: short-rest features come back with the rest
     return true;
 }
 
