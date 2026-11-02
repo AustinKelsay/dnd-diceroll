@@ -14,7 +14,7 @@ const TCHAR* const IcoPath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_Ic
 const TCHAR* const ShardPath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_Shard.SM_SpellFX_Shard");
 const TCHAR* const FramePath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_CellFrame.SM_SpellFX_CellFrame");
 // Fire: ember orange with a yellow core (kept off party gold, enemy red-orange, Danger and the cyan path).
-const FLinearColor FireCore(1.0f, 0.74f, 0.14f);   // saturated yellow core (was pale cream 1/0.88/0.42)
+const FLinearColor FireCore(1.0f, 0.62f, 0.05f);   // saturated yellow core (was pale cream 1/0.88/0.42)
 const FLinearColor FireHue(1.0f, 0.5f, 0.06f);
 const FLinearColor EmberDeep(0.7f, 0.16f, 0.02f);
 const FLinearColor WhiteHot(1.0f, 0.97f, 0.86f);
@@ -33,7 +33,7 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
     if (Event.SpellId == TEXT("fire-bolt"))
     {
         // Cantrip (size class 0): one small mote, about 0.4 s end to end, burst under half a cell.
-        Out.Glow = 1.0f; Out.Travel = 0.2f; Out.BoltScale = 1.0f;
+        Out.Hue = FLinearColor(1.0f, 0.3f, 0.02f); Out.Glow = 0.85f; Out.Travel = 0.2f;   // deeper orange: the tonemapper lifts bright orange toward yellow Out.BoltScale = 1.0f;
         Out.ImpactGrow = 0.12f; Out.ImpactHold = 0.05f; Out.ImpactLinger = 0.05f; Out.LingerOpacity = 0.3f; Out.ImpactScale = 0.95f;
         return true;
     }
@@ -174,6 +174,8 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         P.From = Caster + Dir * 40.0f; P.To = Impact - Dir * (Style.bArea ? 0.0f : 20.0f);
         P.ScaleFrom = P.ScaleTo = FVector(Style.BoltScale, Style.BoltScale * 0.8f, Style.BoltScale * 0.8f);
         P.Mesh->SetWorldRotation(Dir.Rotation()); P.Ink->SetWorldRotation(Dir.Rotation());
+        // Top-down camera sees the face-on band, so the bolt body is the element hue, not the pale core.
+        P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
     }
     // Area blasts draw well inside the true area (the telegraphed cells stay exact) so the board stays readable.
     const float Diameter = Style.bArea ? Radius * 2.0f * CellCm / 100.0f * Style.AreaVisualScale : Style.ImpactScale;
@@ -197,7 +199,7 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         FExpeditionSpellFXPiece& P = Add(Ico, Style, false, FVector::UpVector, true);
         P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Fade + 0.03f; P.PeakOpacity = 1.0f;
         P.From = P.To = Impact + FVector(0, 0, 8);
-        P.ScaleFrom = FVector(Diameter * 0.1f); P.ScaleTo = FVector(Diameter * 0.38f);
+        P.ScaleFrom = FVector(Diameter * 0.08f); P.ScaleTo = FVector(Diameter * 0.3f);
         P.Material->SetVectorParameterValue(TEXT("Core"), FireCore);
         P.Material->SetVectorParameterValue(TEXT("Hue"), Style.Hue);
         P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
