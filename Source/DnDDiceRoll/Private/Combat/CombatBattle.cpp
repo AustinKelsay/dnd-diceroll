@@ -770,6 +770,11 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
     return Path;
 }
 
+static int32 SneakDiceCount(const FCombatEncounter& Encounter, const FCombatantState& Actor)
+{
+    return Encounter.bScaledSneakAttack ? FMath::Max(1, FClassFeatureRules::SneakAttackDice(Actor.Level)) : 1;
+}
+
 bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const
 {
     const bool bSneakBuild = FBuildCatalog::Find(Actor.BuildId) ? FBuildCatalog::Find(Actor.BuildId)->SneakDie > 0 : Actor.AdventurerRole == EAdventurerRole::Rogue;
@@ -866,7 +871,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         WeaponDice(*Actor, WeaponCount, WeaponSides);
         Effect(WeaponCount, WeaponSides, WeaponDamageModifier(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
-        if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
+        if (Forecast.bSneakAttack) { const int32 N = SneakDiceCount(State.Encounter, *Actor); Forecast.MinAmount += N; Forecast.MaxAmount += N * SneakDie; Forecast.Formula += FString::Printf(TEXT(" +%dd%d sneak"), N, SneakDie); }
         break;
     }
     case ECombatCommandType::MagicMissile:
@@ -929,7 +934,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     else
     {
         // A critical doubles the weapon and Sneak Attack dice, so warn on that best case too.
-        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
+        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie * SneakDiceCount(State.Encounter, *Actor) : 0) : 0;
         // Defenses apply after every other modifier, so the shown range is the adjusted one.
         Forecast.DamageType = DamageTypeOf(ActorId, Action);
         const FDamageDefenses Defenses = DamageDefenses(TargetId);
@@ -944,7 +949,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     if (!Forecast.bHealing)
     {
         const int32 Protection = ProtectionFor(*Target);
-        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
+        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie * SneakDiceCount(State.Encounter, *Actor) : 0) : 0;
         Forecast.bCanDrop = FMath::Max(0, Forecast.MaxAmount + CriticalExtra - Protection) >= Target->HP;
         Forecast.MinAmount = FMath::Max(0, Forecast.MinAmount - Protection);
         Forecast.MaxAmount = FMath::Max(0, Forecast.MaxAmount - Protection);
@@ -1283,7 +1288,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), false) : WeaponDamageModifier(*this, *Actor)) + ManeuverBonus;
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
-        if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
+        if (Result.bSneakAttack) { Result.Damage += RollDice((Result.bCritical ? 2 : 1) * SneakDiceCount(State.Encounter, *Actor), SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
         DiceLog = nullptr;
         ApplyDefenses(Result, ActorId, ECombatCommandType::Attack, TargetId);
         const int32 Protection = ProtectionFor(*Target);

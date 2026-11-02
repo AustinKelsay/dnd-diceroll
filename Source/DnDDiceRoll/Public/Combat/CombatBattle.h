@@ -134,6 +134,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bPartyAmbush = false;
     /** Off by default: a natural 20 grants inspiration, spent for advantage on the holder's next attack. */
     UPROPERTY() bool bInspiration = false;
+    /** #77: Sneak Attack scales with level (ceil(level/2) d6) instead of a flat single die. Off by default (balance). */
+    UPROPERTY() bool bScaledSneakAttack = false;
     /** Off by default: the whole field is dark; only darkvision (by role) sees, which sets attack advantage/disadvantage. */
     UPROPERTY() bool bDarkness = false;
     /** Off by default: variant encumbrance slows units by carried weight (pack + potions + shield) against Strength. */

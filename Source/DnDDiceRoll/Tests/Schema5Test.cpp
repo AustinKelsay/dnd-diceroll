@@ -1676,4 +1676,43 @@ bool FSchema5CampBrewTest::RunTest(const FString& Parameters)
     }
     return true;
 }
+namespace SneakScaleTest
+{
+FCombatEncounter Layout(bool bScaled, int32 Level)
+{
+    const FCombatEncounter Tutorial = FCombatBattle::TutorialEncounter();
+    FCombatEncounter L = Tutorial;
+    L.BlockedCells.Reset();
+    L.bScaledSneakAttack = bScaled;
+    L.Combatants = {Tutorial.Combatants[1], Tutorial.Combatants[0], Tutorial.Combatants[4], Tutorial.Combatants[5]};
+    FCombatantState& Rogue = L.Combatants[0];
+    Rogue.Id = 1; Rogue.Cell = {0, 0}; Rogue.Range = 6; Rogue.AttackBonus = 5; Rogue.InitiativeBonus = 30; Rogue.bSneakWeapon = true; Rogue.Level = Level;
+    L.Combatants[1].Id = 2; L.Combatants[1].Cell = {5, 0};
+    L.Combatants[2].Id = 3; L.Combatants[2].Cell = {0, 5};
+    FCombatantState& Target = L.Combatants[3];
+    Target.Id = 4; Target.Cell = {4, 0}; Target.ArmorClass = 12; Target.MaxHP = Target.HP = 200;
+    return L;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ScaledSneakTest, "Project.Expedition.Schema5.ScaledSneakAttack",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ScaledSneakTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FCombatBattle Flat, Scaled;
+    TestTrue(TEXT("Flat starts"), Flat.Start(SneakScaleTest::Layout(false, 5), 5, Error));
+    TestTrue(TEXT("Scaled starts"), Scaled.Start(SneakScaleTest::Layout(true, 5), 5, Error));
+    const FActionForecast A = Flat.Forecast(1, ECombatCommandType::Attack, 4);
+    const FActionForecast B = Scaled.Forecast(1, ECombatCommandType::Attack, 4);
+    TestTrue(TEXT("Both sneak"), A.bSneakAttack && B.bSneakAttack);
+    TestTrue(TEXT("Default stays one die"), A.Formula.Contains(TEXT("+1d6 sneak")));
+    TestTrue(TEXT("Level 5 rogue gets 3d6"), B.Formula.Contains(TEXT("+3d6 sneak")));
+    TestEqual(TEXT("Two more dice of range"), B.MaxAmount - A.MaxAmount, 12);
+    TestEqual(TEXT("Two more minimum"), B.MinAmount - A.MinAmount, 2);
+    FCombatBattle Low;
+    TestTrue(TEXT("Level 1 starts"), Low.Start(SneakScaleTest::Layout(true, 1), 5, Error));
+    TestTrue(TEXT("Level 1 is 1d6"), Low.Forecast(1, ECombatCommandType::Attack, 4).Formula.Contains(TEXT("+1d6 sneak")));
+    return true;
+}
 #endif
