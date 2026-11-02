@@ -5,6 +5,7 @@
 #include "Persistence/ExpeditionSave.h"
 #include "ExpeditionTestSupport.h"
 #include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
@@ -28,16 +29,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArtificerWorkedTest, "Project.Expedition.Catal
 bool FArtificerWorkedTest::RunTest(const FString& Parameters)
 {
     // Literal worked outcomes: primary at (2,1), secondary at (2,2), ally at (1,2).
-    struct FCase { const TCHAR* Build; int32 Slot, Target, Loss, Heal, Guard; bool Swap, Push, Area, Bonus, Cure; };
+    struct FCase { const TCHAR* Build; int32 Slot, Target, Loss, Heal, Guard; bool Push, Area, Bonus; };
     const FCase Cases[] = {
-        {TEXT("artificer.alchemist"),1,2,0,8,0,false,false,false,false,false},
-        {TEXT("artificer.alchemist"),2,20,3,0,0,false,false,true,true,false},
-        {TEXT("artificer.armorer"),1,1,0,0,4,false,false,false,true,false},
-        {TEXT("artificer.armorer"),2,20,6,0,0,false,true,false,false,false},
-        {TEXT("artificer.artillerist"),1,20,5,0,0,false,true,false,false,false},
-        {TEXT("artificer.artillerist"),2,2,0,0,2,false,false,false,true,false},
-        {TEXT("artificer.battle-smith"),1,2,0,0,4,false,false,false,false,false},
-        {TEXT("artificer.battle-smith"),2,20,5,0,0,false,false,false,true,false},
+        {TEXT("artificer.alchemist"),1,2,0,8,0,false,false,false},
+        {TEXT("artificer.alchemist"),2,20,3,0,0,false,true,true},
+        {TEXT("artificer.armorer"),1,1,0,0,4,false,false,true},
+        {TEXT("artificer.armorer"),2,20,6,0,0,true,false,false},
+        {TEXT("artificer.artillerist"),1,20,5,0,0,true,false,false},
+        {TEXT("artificer.artillerist"),2,2,0,0,2,false,false,true},
+        {TEXT("artificer.battle-smith"),1,2,0,0,4,false,false,false},
+        {TEXT("artificer.battle-smith"),2,20,5,0,0,false,false,true},
     };
     FString Error;
     for (const auto& C : Cases)
@@ -52,12 +53,18 @@ bool FArtificerWorkedTest::RunTest(const FString& Parameters)
         FCombatEncounter Encounter; Encounter.Combatants={Hero,Ally,Enemy,Secondary};
         FCombatBattle Battle;
         if (!TestTrue(TEXT("Start worked scenario"),Battle.Start(Encounter,42,Error))) { continue; }
-        const auto Action=C.Cure?ECombatCommandType::CureWounds:C.Slot==1?ECombatCommandType::Special1:ECombatCommandType::Special2;
+        const auto Action=C.Slot==1?ECombatCommandType::Special1:ECombatCommandType::Special2;
         const auto Before=Battle.Snapshot();
         for (int32 Repeat=0;Repeat<3;++Repeat) { TestTrue(TEXT("Repeated preview legal"),Battle.Forecast(1,Action,C.Target).bValid); }
         TestTrue(TEXT("Repeated previews preserve every value including RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&Battle.Snapshot(),0));
         FCombatBattle Continued; TestTrue(TEXT("Direct restore"),Continued.Restore(Before,Error));
         const auto Preview=Battle.Forecast(1,Action,C.Target);
+        if(C.Loss>0 || C.Heal>0)
+        {
+            TestEqual(TEXT("Literal minimum forecast"),Preview.MinAmount,C.Loss>0?C.Loss:C.Heal);
+            TestEqual(TEXT("Literal maximum forecast"),Preview.MaxAmount,C.Loss>0?C.Loss:C.Heal);
+            TestEqual(TEXT("Healing forecast classification"),Preview.bHealing,C.Heal>0);
+        }
         const auto Result=Battle.Submit({Action,1,{},C.Target});
         TestTrue(TEXT("Special commits"),Result.bAccepted);
         TestEqual(TEXT("Exactly one shared Kit use spent"),Battle.Find(1)->KitUses,1);
@@ -69,20 +76,12 @@ bool FArtificerWorkedTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("Committed area fact count"),Result.Effects.Num(),2);
             for(int32 I=0;I<2;++I) { TestEqual(TEXT("Forecast agrees with ordered commit target"),Preview.Effects[I].TargetId,Result.Effects[I].TargetId); TestEqual(TEXT("Forecast agrees with actual per-target loss"),Preview.Effects[I].Amount,Result.Effects[I].Amount); }
         }
-        if (C.Cure)
-        {
-            TestEqual(TEXT("Seed42 after four initiatives: Cure 6+4+3 clips to twelve missing HP"),Battle.Find(1)->HP,22);
-            TestEqual(TEXT("Cure uses two d8"),Result.EffectDice.Num(),2);
-            if(Result.EffectDice.Num()==2) { TestEqual(TEXT("First literal d8"),Result.EffectDice[0].Value,6); TestEqual(TEXT("Second literal d8"),Result.EffectDice[1].Value,4); }
-            FRandomStream Expected; Expected.Initialize(Before.RandomState); Expected.RandRange(1,8); Expected.RandRange(1,8);
-            TestEqual(TEXT("Exactly two committed RNG draws"),Battle.Snapshot().RandomState,Expected.GetCurrentSeed());
-        }
-        else { TestEqual(TEXT("Primary literal loss"),40-Battle.Find(20)->HP,C.Loss); }
+        TestEqual(TEXT("Primary literal loss"),40-Battle.Find(20)->HP,C.Loss);
         TestEqual(TEXT("Secondary literal loss"),40-Battle.Find(21)->HP,C.Area?C.Loss:0);
-        TestEqual(TEXT("Literal healing"),Battle.Find(C.Target)->HP-(C.Target==1?10:C.Target==2?5:40),C.Target==20?-C.Loss:C.Cure?Result.Healing:C.Heal);
+        TestEqual(TEXT("Literal healing"),Battle.Find(C.Target)->HP-(C.Target==1?10:C.Target==2?5:40),C.Target==20?-C.Loss:C.Heal);
         TestEqual(TEXT("Owned ward amount"),Battle.Find(1)->GuardAmount,C.Guard);
         TestEqual(TEXT("Safe area excludes adjacent ally"),Battle.Find(2)->HP,C.Target==2?5+C.Heal:5);
-        TestEqual(TEXT("Exchange moves owner"),Battle.Find(1)->Cell,C.Swap?FIntPoint(1,2):FIntPoint(1,1));
+        TestEqual(TEXT("Owner stays in place"),Battle.Find(1)->Cell,FIntPoint(1,1));
         TestEqual(TEXT("Push moves surviving primary"),Battle.Find(20)->Cell,C.Push?FIntPoint(3,1):FIntPoint(2,1));
         TestEqual(TEXT("Action budget"),Battle.Snapshot().bActionAvailable,C.Bonus);
         TestEqual(TEXT("Bonus budget"),Battle.Snapshot().bBonusActionAvailable,!C.Bonus);
@@ -94,18 +93,20 @@ bool FArtificerWorkedTest::RunTest(const FString& Parameters)
             if(Mode==2) { Playback.Finish(); } else { for(int32 Tick=0;Tick<1000 && Playback.IsBusy();++Tick) { Playback.Tick(Mode?0.5f:0.02f); } }
             for(const auto& U:Battle.Snapshot().Encounter.Combatants) { TestEqual(TEXT("Playback HP converges"),Playback.Unit(U.Id)->HP,U.HP); TestEqual(TEXT("Playback position converges"),Playback.Unit(U.Id)->Position,FVector2D(U.Cell)); }
         }
-        for(int32 Constraint=0;Constraint<2;++Constraint)
+        for(int32 Constraint=0;Constraint<(C.Heal>0?4:2);++Constraint)
         {
             auto Restricted=Encounter;
             auto* T=Restricted.Combatants.FindByPredicate([&](const auto& U){return U.Id==C.Target;});
             if(Constraint==0) { T->HP=0; T->Life=ECombatLife::Dead; }
-            else { if(C.Target==1) { continue; } T->Cell={7,7}; }
-            FCombatBattle R; if(!TestTrue(TEXT("Start dead or out-of-range scenario"),R.Start(Restricted,42,Error))) { continue; }
+            else if(Constraint==1) { if(C.Target==1) { continue; } T->Cell={7,7}; }
+            else if(Constraint==2) { T->HP=0; T->Life=ECombatLife::Downed; T->RescueTurnsLeft=3; }
+            else { T->HP=T->MaxHP; }
+            FCombatBattle R; if(!TestTrue(TEXT("Start invalid target scenario"),R.Start(Restricted,42,Error))) { continue; }
             // A dead owner cannot act. Other targets are rejected while the owner retains the turn.
             if(C.Target==1) { continue; }
             const auto Saved=R.Snapshot();
-            TestFalse(TEXT("Dead/distant target has no forecast"),R.Forecast(1,Action,C.Target).bValid);
-            TestFalse(TEXT("Dead/distant command rejected"),R.Submit({Action,1,{},C.Target}).bAccepted);
+            TestFalse(TEXT("Invalid target has no forecast"),R.Forecast(1,Action,C.Target).bValid);
+            TestFalse(TEXT("Invalid target command rejected"),R.Submit({Action,1,{},C.Target}).bAccepted);
             TestTrue(TEXT("Rejected target preserves full state and RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Saved,&R.Snapshot(),0));
         }
         for(int32 Restriction=0;Restriction<2;++Restriction)
@@ -154,12 +155,11 @@ bool FArtificerWorkedTest::RunTest(const FString& Parameters)
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         FCombatEncounter E; E.Combatants={Hero,Ally,Enemy}; FCombatBattle B;
         if(!TestTrue(TEXT("Start sibling combination"),B.Start(E,42,Error))) { continue; }
-        TestTrue(TEXT("First sibling special"),B.Submit({C.Cure?ECombatCommandType::CureWounds:ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
+        TestTrue(TEXT("First sibling special"),B.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Second sibling special"),B.Submit({ECombatCommandType::Special2,1,{},D.Target}).bAccepted);
         TestEqual(TEXT("One common pool depleted"),B.Find(1)->KitUses,0);
-        if(C.Cure) { TestEqual(TEXT("Only Cure spends a Slot"),B.Find(1)->SpellSlots,1); const auto Saved=B.Snapshot(); TestFalse(TEXT("No hidden generic first-slot healing"),B.Submit({ECombatCommandType::Special1,1,{},1}).bAccepted); TestTrue(TEXT("Hidden-slot rejection is atomic"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Saved,&B.Snapshot(),0)); }
         const auto Spent=B.Snapshot();
-        TestFalse(TEXT("No third special from shared pool"),B.Submit({C.Cure?ECombatCommandType::CureWounds:ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
+        TestFalse(TEXT("No third special from shared pool"),B.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Spent rejection includes RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Spent,&B.Snapshot(),0));
     }
     TSet<FString> Classes; int32 Artificers=0;
@@ -181,13 +181,12 @@ bool FArtificerJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("First route retains party"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error));
         while(Run.Battle().Find(Run.Battle().ActiveId())->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); }
         const int32 Id=Run.Battle().ActiveId();
-        const bool Life=FString(Build)==TEXT("cleric.life");
         const auto Action=FString(Build)==TEXT("artificer.artillerist")?ECombatCommandType::Special2:ECombatCommandType::Special1;
         if(FString(Build)==TEXT("artificer.alchemist"))
         {
             auto Fixture=Run.Snapshot();
             Fixture.Battle.Encounter.Combatants.FindByPredicate([&](const auto& U){return U.Id!=Id && U.Side==ECombatSide::Party;})->HP=10;
-            TestTrue(TEXT("Valid injured Life checkpoint fixture"),Run.Restore(Fixture,Error));
+            TestTrue(TEXT("Valid injured Elixir ally checkpoint fixture"),Run.Restore(Fixture,Error));
         }
         const auto Targets=Run.Battle().LegalTargets(Id,Action);
         if(!TestFalse(TEXT("Generated party has valid ally/self target"),Targets.IsEmpty())) { continue; }
@@ -221,13 +220,13 @@ bool FArtificerJsonTest::RunTest(const FString& Parameters)
             else if (Mutation==4) { Unit->SetNumberField(TEXT("GuardTurns"),2); }
             else if (Mutation==5) { Unit->SetNumberField(TEXT("GuardAmount"),99); }
             else if (Mutation==6) { Unit->SetNumberField(TEXT("GuardTargetId"),999); }
-            else if (Mutation==7) { Unit->SetNumberField(TEXT("SpellSlots"),Life?3:1); }
+            else if (Mutation==7) { Unit->SetNumberField(TEXT("SpellSlots"),1); }
             else if (Mutation==8) { Unit->RemoveField(TEXT("GuardAmount")); }
             else if (Mutation==9) { Unit->RemoveField(TEXT("LastSurge")); }
             else if (Mutation==10) { Unit->SetNumberField(TEXT("LastSurge"),0.5); }
             else if (Mutation==11) { Unit->SetStringField(TEXT("LastSurge"),TEXT("1")); }
             else if (Mutation==12) { Unit->SetNumberField(TEXT("LastSurge"),3); }
-            else if(Mutation==13) { Unit->SetNumberField(TEXT("LastSurge"),FString(Build)==TEXT("sorcerer.wild-magic")?3:1); }
+            else if(Mutation==13) { Unit->SetNumberField(TEXT("LastSurge"),1); }
             else if(Mutation==14) { Unit->SetNumberField(TEXT("KitUses"),2); Unit->SetNumberField(TEXT("LastSurge"),1); }
             else { Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetStringField(TEXT("bActionAvailable"),TEXT("true")); }
             FString Malformed; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Malformed));
@@ -242,7 +241,7 @@ bool FArtificerJsonTest::RunTest(const FString& Parameters)
         const auto Before=Resumed.Snapshot();
         TestFalse(TEXT("Malformed pool rejected"),Resumed.Restore(Bad,Error));
         TestTrue(TEXT("Failed restore atomic"),ExpeditionTestSupport::SameRun(Before,Resumed.Snapshot()));
-        Bad=Decoded.Current; Bad.Battle.Encounter.Combatants[0].SpellSlots=Life?3:1;
+        Bad=Decoded.Current; Bad.Battle.Encounter.Combatants[0].SpellSlots=1;
         TestFalse(TEXT("Wrong class pool rejected"),Resumed.Restore(Bad,Error));
         Bad=Decoded.Current;
         for(auto& Unit:Bad.Battle.Encounter.Combatants) { if(Unit.Side==ECombatSide::Enemy) { Unit.SpellSlots=1; break; } }
@@ -252,7 +251,68 @@ bool FArtificerJsonTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("Enemy cannot acquire Wind pool"),Resumed.Restore(Bad,Error));
         Bad=Decoded.Current; auto& Wrong=Bad.Battle.Encounter.Combatants[0]; Wrong.GuardTurns=1; Wrong.GuardAmount=4; Wrong.GuardTargetId=999;
         TestFalse(TEXT("Invalid protection owner/target rejected"),Resumed.Restore(Bad,Error));
+        Bad=Decoded.Current; Bad.Battle.Encounter.Combatants[0].AdventurerRole=EAdventurerRole::Bard;
+        TestFalse(TEXT("Artificer build cannot acquire another role"),Resumed.Restore(Bad,Error));
+        Bad=Decoded.Current; Bad.Battle.Encounter.Combatants[0].AdventurerRole=static_cast<EAdventurerRole>(14);
+        TestFalse(TEXT("Role beyond appended Artificer rejected"),Resumed.Restore(Bad,Error));
+        TestTrue(TEXT("Role rejections retain complete state/RNG"),ExpeditionTestSupport::SameRun(Before,Resumed.Snapshot()));
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArtificerRandomContinuityTest,"Project.Expedition.Catalog.ArtificerRandomCheckpointContinuity",EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FArtificerRandomContinuityTest::RunTest(const FString& Parameters)
+{
+    FString Error; TArray<FPartyBuildSelection> Party;
+    for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Hero %d"),Id); P.BuildId=TEXT("artificer.armorer"); Party.Add(P); }
+    FExpeditionRun Run;
+    if(!TestTrue(TEXT("Construct Armorer RNG run"),Run.NewRun(42,Party,Error,TEXT("artificer-rng"))) ||
+       !TestTrue(TEXT("Enter actual route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    while(Run.Battle().Find(Run.Battle().ActiveId())->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); }
+    const int32 Id=Run.Battle().ActiveId();
+    if(!TestTrue(TEXT("Commit owned armor before checkpoint"),Run.Submit({ECombatCommandType::Special1,Id,{},Id}).bAccepted)) { return false; }
+    // Find a basic-attack opening using only legal moves and public command copies.
+    if(Run.Battle().LegalTargets(Id).IsEmpty())
+    {
+        for(const auto& Cell:Run.Battle().LegalMoves(Id))
+        {
+            auto Candidate=Run;
+            if(Candidate.Submit({ECombatCommandType::Move,Id,Cell}).bAccepted && !Candidate.Battle().LegalTargets(Id).IsEmpty()) { Run=MoveTemp(Candidate); break; }
+        }
+    }
+    const auto Targets=Run.Battle().LegalTargets(Id);
+    if(!TestFalse(TEXT("Generated geometry permits actual basic attack"),Targets.IsEmpty())) { return false; }
+    const FCombatCommand Attack{ECombatCommandType::Attack,Id,{},Targets[0]};
+    const auto Before=Run.Snapshot();
+    const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Artificer"),FGuid::NewGuid().ToString());
+    const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    FExpeditionSaveData Data; Data.Current=Before;
+    if(!TestTrue(TEXT("Write owned-effect checkpoint"),FExpeditionSave::Write(Path,Data,Error))) { return false; }
+    FExpeditionSession Session(Path);
+    TestTrue(TEXT("Fresh file Resume before random command"),Session.Resume(Error));
+    TestTrue(TEXT("Resume retains every value including RNG/armor"),ExpeditionTestSupport::SameRun(Before,Session.Run().Snapshot()));
+    TArray<uint8> BytesBefore,BytesAfter;
+    TestTrue(TEXT("Read original disk bytes"),FFileHelper::LoadFileToArray(BytesBefore,*Path));
+    const auto Expected=Run.Submit(Attack);
+    TestTrue(TEXT("Reference attack accepted"),Expected.bAccepted);
+    TestNotEqual(TEXT("Actual basic attack consumes RNG"),Run.Snapshot().Battle.RandomState,Before.Battle.RandomState);
+    IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+    TestFalse(TEXT("Failed checkpoint rejects RNG-consuming attack"),Session.Submit(Attack).bAccepted);
+    TestTrue(TEXT("Failed attack retains all live state/RNG/owned armor"),ExpeditionTestSupport::SameRun(Before,Session.Run().Snapshot()));
+    TestTrue(TEXT("Read disk after refusal"),FFileHelper::LoadFileToArray(BytesAfter,*Path));
+    TestTrue(TEXT("Failed attack preserves exact checkpoint bytes"),BytesBefore==BytesAfter);
+    IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+    const auto Actual=Session.Submit(Attack);
+    TestTrue(TEXT("Retry attack commits"),Actual.bAccepted);
+    TestEqual(TEXT("Continued natural roll matches uninterrupted run"),Actual.NaturalRoll,Expected.NaturalRoll);
+    TestEqual(TEXT("Continued attack total"),Actual.AttackTotal,Expected.AttackTotal);
+    TestEqual(TEXT("Continued damage"),Actual.Damage,Expected.Damage);
+    TestEqual(TEXT("Continued hit"),Actual.bHit,Expected.bHit);
+    TestEqual(TEXT("Continued critical"),Actual.bCritical,Expected.bCritical);
+    TestTrue(TEXT("Post-attack complete state and RNG agree"),ExpeditionTestSupport::SameRun(Run.Snapshot(),Session.Run().Snapshot()));
+    FExpeditionSession Disk(Path); TestTrue(TEXT("Resume committed retry from actual disk"),Disk.Resume(Error));
+    TestTrue(TEXT("Committed file matches uninterrupted run"),ExpeditionTestSupport::SameRun(Run.Snapshot(),Disk.Run().Snapshot()));
+    IFileManager::Get().DeleteDirectory(*Directory,false,true);
     return true;
 }
 
