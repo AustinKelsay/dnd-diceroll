@@ -226,3 +226,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #77: class feature scaling tables (rules only)
 
 `FClassFeatureRules`: Second Wind heals 1d10 + fighter level; Action Surge from level 2 (twice from 17); Fighters get Extra Attack at 5 (3 attacks at 11, 4 at 20). Sneak Attack is 1d6 per two rogue levels rounded up, needs a finesse or ranged weapon, works once per turn, and needs advantage or an ally next to the target (never with disadvantage). Cunning Action from level 2. Channel Divinity is 1 use at 2, 2 at 6, 3 at 18. Arcane Recovery restores slot levels equal to half the wizard level rounded up. Existing battle code is unchanged; per-level uses and once-per-turn flags need saved state (#39).
+
+## Issue #78: superiority dice (rules only)
+
+`FSuperiorityRules`: the Battle Master's die is a d8 (d10 from 10, d12 from 18) with 4 dice from level 3 (5 from 7, 6 from 15), refreshed on a short rest (see `FRestRules`). Maneuver riders come with an attack and never cost the Action. `PrecisionHitOutOf` gives the exact hit chance with the die added, out of 400 x die sides. Maneuver save DC is 8 + proficiency bonus + Strength or Dexterity modifier. The existing Precision Strike is unchanged; spent dice per rest need saved state (#39).
