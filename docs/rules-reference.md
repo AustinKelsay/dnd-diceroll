@@ -210,3 +210,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #62: two-weapon fighting (rules only)
 
 `FTwoWeaponRules`: after taking the Attack action with a light melee weapon, a creature holding a second light melee weapon can spend its bonus action on an off-hand attack. Off-hand damage adds no positive ability modifier unless it has the Two-Weapon Fighting style (negative modifiers still apply). Adding the off-hand command, bonus-action tracking and fighting styles to battles waits for battle wiring and #39.
+
+## Issue #59: opportunity attack triggers (rules only)
+
+`FOpportunityRules` measures reach in grid cells with diagonals counting as 1. A step provokes when it leaves a reactor's reach voluntarily, the mover hasn't disengaged, and the reactor still has its reaction. `FirstProvokingCell` flags the path cell being left (one provocation per reactor). Spending and restoring reactions, resolving the attack mid-move and the AI's use of it need saved reaction state in battles (#39) and are not wired.
