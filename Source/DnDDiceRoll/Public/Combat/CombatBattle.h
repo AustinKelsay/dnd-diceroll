@@ -10,7 +10,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
 UENUM()
-enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10 };
+enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12 };
 UENUM()
 enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
@@ -101,7 +101,7 @@ struct DNDDICEROLL_API FDieRoll
 };
 
 enum class EAbilityEffect : uint8 { Rage, Strike, Protect, Surge, Healing, WeaponAttack, Missile, Swap, Push, Area, Mitigation };
-enum class EAbilityTarget : uint8 { Self, Enemy, Ally };
+enum class EAbilityTarget : uint8 { Self, Enemy, Ally, Friendly };
 struct DNDDICEROLL_API FAbilityFacts
 {
     FString Name, Description, ResourceName;
@@ -110,6 +110,7 @@ struct DNDDICEROLL_API FAbilityFacts
     EAbilityEffect Effect = EAbilityEffect::Rage;
     EAbilityTarget Target = EAbilityTarget::Self;
     bool bKitResource = false;
+    bool bCureDice = false;
     bool bBonus = true;
     bool bResourceAvailable = false;
     int32 Range = 0, Amount = 0;

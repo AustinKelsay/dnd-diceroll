@@ -432,20 +432,20 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
     auto* View = Player->GetBattleView(); View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json"))); View->DispatchBeginPlay();
     TSet<FString> ReachableBuilds;
     Player->HandleButton(TEXT("Party0"));
-    for (int32 Class = 0; Class < 10; ++Class)
+    for (int32 Class = 0; Class < 12; ++Class)
     {
         for (int32 Kit = 0; Kit < 10; ++Kit)
         { ReachableBuilds.Add(Player->NextParty()[0].BuildId); Player->HandleButton(TEXT("BuildNext")); }
         Player->HandleButton(TEXT("ClassNext"));
     }
-    TestEqual(TEXT("Builder exposes all forty-eight authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 48);
+    TestEqual(TEXT("Builder exposes all sixty-six authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 66);
     TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
     TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
     Player->HandleButton(TEXT("Preset"));
     for (int32 Slot = 0; Slot < 4; ++Slot)
     {
         Player->HandleButton(FName(*FString::Printf(TEXT("Party%d"), Slot)));
-        for (int32 N = 0; N < 5 && FBuildCatalog::Find(Player->NextParty()[Slot].BuildId)->Profile.ClassId != TEXT("barbarian"); ++N) { Player->HandleButton(TEXT("ClassNext")); }
+        for (int32 N = 0; N < 12 && FBuildCatalog::Find(Player->NextParty()[Slot].BuildId)->Profile.ClassId != TEXT("barbarian"); ++N) { Player->HandleButton(TEXT("ClassNext")); }
         TestEqual(TEXT("Every slot independently selects Barbarian"), Player->NextParty()[Slot].BuildId, FString(TEXT("barbarian.berserker")));
     }
     Player->HandleButton(TEXT("Help")); Player->HandleButton(TEXT("BuildNext")); Player->HandleButton(TEXT("Preset")); Player->HandleButton(TEXT("New"));

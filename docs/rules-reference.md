@@ -16,12 +16,12 @@ The fighter has a melee d6+3 attack; rogue and cleric have ranged d6+3 attacks, 
 | --- | --- | --- | --- |
 | Second Wind | Fighter, self while injured | Bonus Action; one of two starting uses | d10+1 healing |
 | Sneak Attack | Rogue's qualifying ranged/finesse basic attack | Included in the attack Action, at most once per turn | Extra d6 on hit when another conscious ally is within one cell of the enemy |
-| Cure Wounds | Cleric, injured living ally/self within one cell and sight | Action; one of two starting level-one slots | 2d8+3 healing |
+| Cure Wounds | Life Cleric, injured conscious ally/self within one cell and sight | Action; one Slot and one shared Kit use | 2d8+3 healing |
 | Magic Missile | Wizard, conscious enemy within six cells and sight | Action; one of two starting level-one slots | Three darts, each d4+1, all assigned to one target; automatic hit |
 | Rescue | Any conscious adventurer, downed ally within one cell and sight | Action; no resource | Restore 1 HP |
 | Healing potion | Any conscious adventurer, injured living ally/self within one cell and sight | Action; one owned bottle | 2d4+2 healing |
 
-Healing caps at maximum HP. All positive healing rescues a downed ally and clears the deadline. Healing, potions and Rescue never restore a dead adventurer. Each starting adventurer owns one potion. Slots and Second Wind uses are limited across encounters; only the explicit one-use camp replenishes them. Wrong roles, unavailable budgets/resources, invalid targets/range/sight and repeated spent actions are rejected without state or RNG changes.
+Healing caps at maximum HP. Cure Wounds and authored kit healing require a conscious target; they never heal a downed or dead adventurer. Shared potion and Rescue can restore a downed ally and clear the deadline. Neither restores a dead adventurer. Each starting adventurer owns one potion. Slots and Second Wind uses are limited across encounters; only the explicit one-use camp replenishes them. Wrong roles, unavailable budgets/resources, invalid targets/range/sight and repeated spent actions are rejected without state or RNG changes.
 
 ## Downed, rescue and permanent loss
 
@@ -77,3 +77,7 @@ Current immutable numeric profiles and abilities are catalog-backed. Stable buil
 The next-party builder selects four independent slots, including duplicate builds. 1–4 focuses a slot; Up/Down cycles the five implemented classes, Left/Right cycles compatible kits, G restores the familiar preset. N starts the selected party; O always resumes the saved party. Editing is available at startup and endings, never during an active run. J/B retain slot-one Fighter shortcuts. Historical fixed-party and #28 controls above describe their delivery stage.
 
 F selects the acting hero's first catalog special and M its second, falling back to basic Attack if absent. Rogue Sneak Attack stays passive. Rage and Frenzy spend Bonus Action; Shelter, Long Claw and Wild Bolt spend Action. The [Barbarian contract](runs/full-roster/02-barbarian-kits.md) defines exact costs, effects, durations and recovery. Buff previews make no damage/healing claim; Wild Bolt has two discrete seeded outcomes. Help and Records gate builder navigation and combat shortcuts. [Control contract](runs/full-roster/03-ui-controls.md) records button IDs and keyboard recipe.
+
+## Issue #43: divine, nature and support kits
+
+The current catalog has66 approved subclasses across12 classes, with no interim bases. Life replaces the familiar Cleric base and exposes Cure Wounds and Sanctuary as its two authored actions. Cure Wounds retains2d8+3 but shares the two-use Kit budget with Sanctuary and also spends one Slot. Camp restores one capped Kit use and one capped Life Slot; other new kits have only Kit uses. The [support kit contract](runs/full-roster/09-support-kits.md) defines all19 additions, conscious-target healing, exact owner-bound effects and omissions. Catalog revision5 retains unpublished schema4 and incompatible-checkpoint preservation. Earlier delivery sections above are historical.

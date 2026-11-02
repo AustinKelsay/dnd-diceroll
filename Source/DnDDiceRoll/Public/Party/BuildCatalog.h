@@ -26,7 +26,7 @@ inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
 class DNDDICEROLL_API FBuildCatalog
 {
 public:
-    static constexpr int32 Revision = 4;
+    static constexpr int32 Revision = 5;
     static const TArray<FBuildDefinition>& All();
     static const FBuildDefinition* Find(const FString& BuildId);
     /** Invalid IDs leave output untouched. Instance identity is independent of build. */

@@ -182,7 +182,7 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         E.Combatants[1].Cell={5,0}; B.Start(E,42,Error);
         TestFalse(TEXT("One cell beyond range is illegal"),B.Forecast(1,ECombatCommandType::Special1,20).bValid);
     }
-    TestEqual(TEXT("Exactly 48 implemented kits"),FBuildCatalog::All().Num(),48);
+    TestEqual(TEXT("Exactly 66 implemented kits"),FBuildCatalog::All().Num(),66);
     TestNull(TEXT("Interim Wizard removed"),FBuildCatalog::Find(TEXT("wizard.base")));
     return true;
 }
