@@ -1,0 +1,68 @@
+{
+    "schema_version":  1,
+    "asset_id":  "spellfx-evocation",
+    "revision":  1,
+    "unreal_package":  "/Game/DnDDiceRoll/Theme/SpellFX/MI_SpellFX_Evocation",
+    "issue":  "none (VFX trial: Fire Bolt vs Fireball, pending owner approval)",
+    "provenance":  {
+                       "author":  "dnd-diceroll project agents for the repository owner",
+                       "license":  "Project-owned original work; same terms as this repository",
+                       "origin":  "Procedurally generated low-poly meshes (Python script, no Blender) and an HLSL material built by Content/Python/build_spell_fx.py; no third-party or downloaded content"
+                   },
+    "recipe":  {
+                   "method":  "build_spellfx_meshes.py writes OBJs; build_spell_fx.py (UnrealEditor-Cmd -run=pythonscript) imports them and rebuilds M_SpellFX + MI_SpellFX_Evocation",
+                   "approved_reference":  "Candlelit arcane direction: flat stepped emissive colour, dark ink rim, loose watercolor leading edge, no paper grain",
+                   "parameters":  {
+                                      "units":  "centimetres, Ico ~85 cm across (scaled at runtime), 1 cell = 1.10 m",
+                                      "material":  "M_SpellFX translucent unlit two-sided, one Custom HLSL node, emissive x EyeAdaptationInverse; params Core, Hue, Ink, Lead, Opacity, Glow, InkShell, Radial, Edge",
+                                      "runtime":  "AExpeditionSpellFX (mesh+MID actor, no Niagara), tuning in FExpeditionSpellFXStyle::For"
+                                  },
+                   "model_revision":  "not applicable (procedural scripts)"
+               },
+    "tools":  {
+                  "unreal":  "5.8.4"
+              },
+    "files":  [
+                  {
+                      "role":  "source",
+                      "path":  "Art/spellfx-evocation/r001/scripts/build_spellfx_meshes.py",
+                      "sha256":  "58a3d00b872477e1b80f2bf73ea95cbf9063e4ddd61778d773c30970afe9d795"
+                  },
+                  {
+                      "role":  "source",
+                      "path":  "Content/Python/build_spell_fx.py",
+                      "sha256":  "60b7cca679bdcf00e9001703ff3e0f0a77cbc3d1dcf57ff210cd95bae00fe4bf"
+                  },
+                  {
+                      "role":  "export",
+                      "path":  "Art/spellfx-evocation/r001/SM_SpellFX_Ico.obj",
+                      "sha256":  "cb2cef8901641ba2f8e1a63e6f191663ac075a2728178a930dc0656acc5371f3"
+                  },
+                  {
+                      "role":  "export",
+                      "path":  "Art/spellfx-evocation/r001/SM_SpellFX_Shard.obj",
+                      "sha256":  "1f08cb9b17c22b85cc1eb6db2bf6831bc148b246a406d02a7ec52d81aebbdadf"
+                  },
+                  {
+                      "role":  "export",
+                      "path":  "Art/spellfx-evocation/r001/SM_SpellFX_CellFrame.obj",
+                      "sha256":  "fbbd719468c1e4eef17e755c5867fe8af69bc9ee96497972b892ab0e1fbd58fe"
+                  }
+              ],
+    "import_policy":  {
+                          "name":  "dnd-diceroll-spellfx",
+                          "version":  1,
+                          "settings":  {
+                                           "importer":  "Interchange OBJ via Content/Python/build_spell_fx.py",
+                                           "material":  "dynamic instances of MI_SpellFX_Evocation",
+                                           "nanite":  "off",
+                                           "collision":  "none (presentation only)"
+                                       }
+                      },
+    "validation":  {
+                       "state":  "pending",
+                       "evidence":  [
+                                        "_ororo_scratch/rules/vfx_trial/final (real in-game captures, Vault board)"
+                                    ]
+                   }
+}

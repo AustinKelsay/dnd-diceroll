@@ -35,6 +35,11 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Fallbacks:** `AExpeditionBattleView` falls back to the engine primitives below when an entry is missing. The `-ExpeditionPrimitives` command-line flag forces that fallback.
 
+## Spell effects trial (evocation)
+
+`/Game/DnDDiceRoll/Theme/SpellFX` holds `M_SpellFX` (the single translucent, unlit, two-sided parent material: flat stepped colour, ink rim, ragged leading edge, auto-exposure cancelled), `MI_SpellFX_Evocation` and three low-poly meshes (`SM_SpellFX_Ico`, `SM_SpellFX_Shard`, `SM_SpellFX_CellFrame`, Nanite off, no collision).
+
+**Authorship and license:** original, agent-authored, project-owned; nothing downloaded. **Sources:** `Art/spellfx-evocation/r001/` (OBJ meshes, `scripts/build_spellfx_meshes.py`, `asset.json`). **Import:** `Content/Python/build_spell_fx.py` (rerun headless to rebuild the material and meshes). **Runtime:** `AExpeditionSpellFX` plays Fire Bolt and Fireball from each rules `SpellEvents` cast in `AExpeditionBattleView::Present`; look and timing live in `FExpeditionSpellFXStyle::For`. Trial status: pending owner approval.
 ## Tactical battle runtime presentation
 
 `AExpeditionBattleView` builds every board tile, obstacle, themed decoration, character figure, marker and effect at runtime from `/Engine/BasicShapes/Cube`, `Cylinder`, `Sphere`, `Cone` and `/Engine/BasicShapes/BasicShapeMaterial`, plus runtime point lights, height fog and a post-process grade. Provider: Epic Games, bundled Unreal Engine content under the applicable Unreal Engine license. Runtime material instances apply original colors; no imported files or binary asset edits. The existing `/Game/DnDDiceRoll/Maps/L_AgentSandbox` remains the saved fixture. Original character/encounter names are authored in C++; supported SRD math and attribution are documented in [rules reference](rules-reference.md).
