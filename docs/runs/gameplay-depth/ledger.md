@@ -21,7 +21,7 @@ The parent issue owns the approved program boundaries. Concrete child contracts 
 
 | Slice | Fixed review baseline | Implementation | Verification | Independent review | Remaining |
 | --- | --- | --- | --- | --- | --- |
-| #50 targeting | `df25f32` | Pending | Root doctor passes on Python 3.15 / UE 5.8.4; helpers 50/50; staged contribution and whitespace checks pass for this initial record; no source build yet | Pending | Implementation, tests, native acceptance, PR/integration |
+| #50 targeting | `df25f32` | Source unit cherry-picked as `f1697f3`; root fixture correction follows | Doctor passes on Python 3.15 / UE 5.8.4; helpers 50/50; contribution/whitespace checks pass; native build/automation not run | Round 1 being prepared | Build, automation, native acceptance, review resolution, PR/integration |
 
 ## Coordination and evidence
 
@@ -30,6 +30,14 @@ The separate stability session owns #32/#35 and `feature/32-renderer-stability` 
 The new root worktree's preflight refuses solely because the shared MCP port is occupied. Doctor passes with `/opt/homebrew/bin/python3`; the initial system `python3` attempts correctly refused Python 3.9.6. Record the interpreter explicitly in subsequent commands. Headless build/test/package scheduling still needs coordination with the host owner.
 
 Current rendering/startup risks #32/#35, material warnings #105, pointer delivery, sound and human balance are not cleared by source automation. No merged improvement or new stable release is claimed in this initial record.
+
+## Targeting source handoff
+
+The child delivered `4d645b1` from isolated `t3-3aadf8f2`; its local merge baseline `4ad2f3c` has exactly the same tree as staging `df25f32`. Only the scoped implementation commit was cherry-picked into this root branch. The child's [source record](01-targeting.md) retains its original evidence and limitations.
+
+Root static inspection found that the new test's fabricated spent Bonus Action conflicts with strict restore validation for heroes whose corresponding resource is untouched. The fixture now spends only the Action budget in that restore case. Each authored ability starts with an independent battle, and Barbarian signatures reach the following own turn through real EndTurn commands so Frenzy is actually exercised. A second adjacent enemy exercises nontrivial area victim ordering. These are source-level corrections, with no executable red/green claim yet.
+
+The stability owner explicitly retained the host reservation on 2026-11-02. Root requested the next build/test and package/native slots after this handoff; no engine job will run before that coordination is resolved. Fresh root status reports no editor associated with this checkout and rejects the other project's listener PID 50002. Independent source review may proceed while native acceptance is pending; it cannot authorize integration by itself.
 
 ## Handoff
 

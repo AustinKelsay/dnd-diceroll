@@ -23,22 +23,30 @@ bool FTargetingFeedbackTest::RunTest(const FString& Parameters)
         FCombatantState Enemy;
         Enemy.Id = 20; Enemy.Side = ECombatSide::Enemy; Enemy.Cell = {2,1}; Enemy.InitiativeBonus = -10;
         E.Combatants.Add(Enemy);
+        auto NearbyEnemy = Enemy; NearbyEnemy.Id = 21; NearbyEnemy.Cell = {3,1};
+        E.Combatants.Add(NearbyEnemy);
         FCombatBattle B;
         if (!TestTrue(Build.Id + TEXT(" starts"), B.Start(E, 42, Error))) { continue; }
-        // Raging signatures require their existing stance; cover them as well as Rage itself.
-        if (Hero.RageUses > 0)
-        {
-            const auto RageResult = B.Submit({ECombatCommandType::Special1,10,FIntPoint::ZeroValue,10});
-            TestTrue(TEXT("Rage stance commits"),RageResult.bAccepted);
-        }
-        const auto Before = B.Snapshot();
         auto Actions = Build.Specials;
         Actions.Append({ECombatCommandType::Attack, ECombatCommandType::Potion, ECombatCommandType::Rescue});
         for (const auto Action : Actions)
         {
+            if (!TestTrue(TEXT("Each action starts with an independent budget"), B.Start(E,42,Error))) { continue; }
+            if (Hero.RageUses > 0 && Action == ECombatCommandType::Special2)
+            {
+                TestTrue(TEXT("Signature enters Rage"), B.Submit({ECombatCommandType::Special1,10,FIntPoint::ZeroValue,10}).bAccepted);
+                // Frenzy needs the next own turn's Bonus Action; use real turn transitions.
+                TestTrue(TEXT("Raging turn ends"), B.Submit({ECombatCommandType::EndTurn,10}).bAccepted);
+                for (int32 Turn=0; Turn<8 && B.ActiveId()!=10; ++Turn)
+                { TestTrue(TEXT("Other turn ends"), B.Submit({ECombatCommandType::EndTurn,B.ActiveId()}).bAccepted); }
+                TestEqual(TEXT("Raging hero acts again"),B.ActiveId(),10);
+            }
+            const auto Before = B.Snapshot();
             const auto Reach = B.ActionReach(10, Action);
             TestFalse(TEXT("Supported action has geometry even without a legal target"), Reach.Visible.IsEmpty());
             TestTrue(TEXT("Wrong actor has no reach"), B.ActionReach(11, Action).Visible.IsEmpty());
+            if (Build.Specials.Contains(Action))
+            { TestFalse(Build.Id + TEXT(" authored action is actually exercised"),B.LegalTargets(10,Action).IsEmpty()); }
             for (int32 Id : B.LegalTargets(10, Action))
             {
                 const auto F = B.Forecast(10, Action, Id);
@@ -60,9 +68,9 @@ bool FTargetingFeedbackTest::RunTest(const FString& Parameters)
                 }
             }
             B.ActionReach(10,Action); B.Forecast(10,Action,20);
+            TestTrue(TEXT("All queries preserve full reflected state and RNG"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&B.Snapshot(),0));
         }
-        TestTrue(TEXT("All queries preserve full reflected state and RNG"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&B.Snapshot(),0));
-        auto Spent = Before; Spent.bActionAvailable = Spent.bBonusActionAvailable = false;
+        auto Spent = B.Snapshot(); Spent.bActionAvailable = false;
         TestTrue(TEXT("Spent state restores"),B.Restore(Spent,Error));
         TestFalse(TEXT("Geometry survives spent budgets"),B.ActionReach(10,ECombatCommandType::Attack).Visible.IsEmpty());
         TestTrue(TEXT("Spent attack has no selectable targets"),B.LegalTargets(10).IsEmpty());
