@@ -286,7 +286,7 @@ Class features unlock on **class level**, never character level. Proficiency bon
 
 \* Deviation by directive: Superiority Dice (Battle Master) replace Precision Strike and are listed beside the Champion row.
 
-Multiclassing: Extra Attack does not stack (max of the classes); Sneak Attack dice and Cunning Action use Rogue class level; spell slots use the class's own table when only one class has Spellcasting, otherwise the SRD multiclass spellcaster table (full = levels, Paladin/Ranger = half rounded down, Warlock Pact Magic separate). Half casters single-class: no slots at 1, then the full-caster row at ceil(level / 2).
+Multiclassing: Extra Attack does not stack (max of the classes); Sneak Attack dice and Cunning Action use Rogue class level; spell slots use the class's own table when only one class has Spellcasting, otherwise the SRD multiclass spellcaster table (full = levels, Paladin/Ranger = half rounded up per SRD 5.2.1, Warlock Pact Magic separate). Half casters single-class (SRD 5.2.1): Spellcasting at level 1, slots = the full-caster row at ceil(level / 2) (Paladin/Ranger 1: two 1st-level slots). Changed deliberately from the 5.1 rule (no slots at 1, round down); tests updated: LevelGating (Paladin 1 slots, Paladin 1/Wizard 1 = caster 2), LevelRules (Paladin 5 = caster 3), SpellCatalog.LevelGating (Paladin 1 prepares Bless).
 
 ## Spells (SRD 5.2.1 catalog)
 

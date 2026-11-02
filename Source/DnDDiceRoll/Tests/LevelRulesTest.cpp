@@ -37,7 +37,7 @@ bool FLevelRulesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Fighter -> Wizard"), FLevelRules::CanMulticlass(EAdventurerRole::Fighter, EAdventurerRole::Wizard, F, Error));
     FAbilityScores W; W.Intelligence = 16;
     TestFalse(TEXT("Wizard -> Fighter needs STR or DEX 13"), FLevelRules::CanMulticlass(EAdventurerRole::Wizard, EAdventurerRole::Fighter, W, Error));
-    TestEqual(TEXT("Paladin 5 is caster 2"), FLevelRules::CasterLevel(EAdventurerRole::Paladin, 5), 2);
+    TestEqual(TEXT("Paladin 5 is caster 3 (5.2.1 rounds up)"), FLevelRules::CasterLevel(EAdventurerRole::Paladin, 5), 3);
     TestEqual(TEXT("Artificer 3 is caster 2"), FLevelRules::CasterLevel(EAdventurerRole::Artificer, 3), 2);
     TestEqual(TEXT("Fighter is no caster"), FLevelRules::CasterLevel(EAdventurerRole::Fighter, 5), 0);
     TestEqual(TEXT("Caster 5: three 3rd-level? two"), FLevelRules::MulticlassSlots(5, 3), 2);

@@ -26,9 +26,9 @@ static const FGate Gates[] = {
     {R::Barbarian, TEXT("Berserker: Frenzy"), 3}, {R::Barbarian, TEXT("Extra Attack"), 5}, {R::Barbarian, TEXT("Fast Movement"), 5},
     {R::Monk, TEXT("Martial Arts"), 1}, {R::Monk, TEXT("Unarmored Defense"), 1}, {R::Monk, TEXT("Ki"), 2}, {R::Monk, TEXT("Unarmored Movement"), 2},
     {R::Monk, TEXT("Deflect Missiles"), 3}, {R::Monk, TEXT("Open Hand Technique"), 3}, {R::Monk, TEXT("Slow Fall"), 4}, {R::Monk, TEXT("Extra Attack"), 5}, {R::Monk, TEXT("Stunning Strike"), 5},
-    {R::Paladin, TEXT("Divine Sense"), 1}, {R::Paladin, TEXT("Lay on Hands"), 1}, {R::Paladin, TEXT("Fighting Style"), 2}, {R::Paladin, TEXT("Spellcasting"), 2},
+    {R::Paladin, TEXT("Divine Sense"), 1}, {R::Paladin, TEXT("Lay on Hands"), 1}, {R::Paladin, TEXT("Fighting Style"), 2}, {R::Paladin, TEXT("Spellcasting"), 1},
     {R::Paladin, TEXT("Divine Smite"), 2}, {R::Paladin, TEXT("Divine Health"), 3}, {R::Paladin, TEXT("Channel Divinity"), 3}, {R::Paladin, TEXT("Extra Attack"), 5},
-    {R::Ranger, TEXT("Favored Enemy"), 1}, {R::Ranger, TEXT("Natural Explorer"), 1}, {R::Ranger, TEXT("Fighting Style"), 2}, {R::Ranger, TEXT("Spellcasting"), 2},
+    {R::Ranger, TEXT("Favored Enemy"), 1}, {R::Ranger, TEXT("Natural Explorer"), 1}, {R::Ranger, TEXT("Fighting Style"), 2}, {R::Ranger, TEXT("Spellcasting"), 1},
     {R::Ranger, TEXT("Hunter: Colossus Slayer"), 3}, {R::Ranger, TEXT("Primeval Awareness"), 3}, {R::Ranger, TEXT("Extra Attack"), 5},
     {R::Sorcerer, TEXT("Spellcasting"), 1}, {R::Sorcerer, TEXT("Draconic: Dragon Resilience"), 1}, {R::Sorcerer, TEXT("Sorcery Points"), 2},
     {R::Sorcerer, TEXT("Metamagic: Quickened Spell"), 3}, {R::Sorcerer, TEXT("Counterspell"), 5},
@@ -118,7 +118,7 @@ bool FLevelGatingTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Sorcerer 5: two 3rd"), FSpellRules::SlotsFor(R::Sorcerer, 5, 3), 2);
     TestEqual(TEXT("Bard 3: two 2nd"), FSpellRules::SlotsFor(R::Bard, 3, 2), 2);
     TestEqual(TEXT("Druid 1: two 1st"), FSpellRules::SlotsFor(R::Druid, 1, 1), 2);
-    TestEqual(TEXT("Paladin 1: no slots"), FSpellRules::SlotsFor(R::Paladin, 1, 1), 0);
+    TestEqual(TEXT("Paladin 1: two 1st (SRD 5.2.1)"), FSpellRules::SlotsFor(R::Paladin, 1, 1), 2);
     TestEqual(TEXT("Paladin 2: two 1st"), FSpellRules::SlotsFor(R::Paladin, 2, 1), 2);
     TestEqual(TEXT("Ranger 4: three 1st"), FSpellRules::SlotsFor(R::Ranger, 4, 1), 3);
     TestEqual(TEXT("Ranger 4: no 2nd"), FSpellRules::SlotsFor(R::Ranger, 4, 2), 0);
@@ -133,7 +133,7 @@ bool FLevelGatingTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Fighter 4 / Cleric 1: two 1st only"), FBuildCatalog::SlotMax(Hero(R::Fighter, 4, R::Cleric, 1), 1) * 10 + FBuildCatalog::SlotMax(Hero(R::Fighter, 4, R::Cleric, 1), 2), 20);
     TestEqual(TEXT("Wizard 3 / Cleric 2: caster 5, two 3rd"), FBuildCatalog::SlotMax(Hero(R::Wizard, 3, R::Cleric, 2), 3), 2);
     TestEqual(TEXT("Paladin 2 / Wizard 3: caster 4, no 3rd"), FBuildCatalog::SlotMax(Hero(R::Paladin, 2, R::Wizard, 3), 3), 0);
-    TestEqual(TEXT("Paladin 1 / Wizard 1: single-class wizard"), FBuildCatalog::SlotMax(Hero(R::Paladin, 1, R::Wizard, 1), 1), 2);
+    TestEqual(TEXT("Paladin 1 / Wizard 1: caster 2 (5.2.1 rounds half casters up)"), FBuildCatalog::SlotMax(Hero(R::Paladin, 1, R::Wizard, 1), 1), 3);
     // Class level, not character level, gates class features.
     const FCombatantState FR = Hero(R::Fighter, 3, R::Rogue, 2);
     TestEqual(TEXT("Fighter 3 / Rogue 2: Fighter 3"), FBuildCatalog::ClassLevel(FR, R::Fighter), 3);

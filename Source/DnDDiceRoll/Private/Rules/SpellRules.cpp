@@ -39,8 +39,8 @@ int32 FSpellRules::SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 Sp
         // The SRD full-caster table is the multiclass spellcaster table (one 20x9 data table in FLevelRules).
         return FLevelRules::MulticlassSlots(CharacterLevel, SpellLevel);
     case EAdventurerRole::Paladin: case EAdventurerRole::Ranger:
-        // SRD half casters: no Spellcasting before class level 2; their table equals the full-caster row at ceil(level / 2).
-        return CharacterLevel < 2 ? 0 : FLevelRules::MulticlassSlots((CharacterLevel + 1) / 2, SpellLevel);
+        // SRD 5.2.1 half casters: Spellcasting from class level 1; their table equals the full-caster row at ceil(level / 2).
+        return FLevelRules::MulticlassSlots((CharacterLevel + 1) / 2, SpellLevel);
     case EAdventurerRole::Warlock:
     {
         // SRD Pact Magic table (levels 1-20): slot level min(ceil(L/2), 5); 1 slot at 1, 2 at 2-10, 3 at 11-16, 4 at 17-20.

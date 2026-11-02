@@ -124,7 +124,7 @@ int32 FLevelRules::CasterLevel(EAdventurerRole Role, int32 ClassLevels)
     switch (Role)
     {
     case EAdventurerRole::Bard: case EAdventurerRole::Cleric: case EAdventurerRole::Druid: case EAdventurerRole::Sorcerer: case EAdventurerRole::Wizard: return ClassLevels;
-    case EAdventurerRole::Paladin: case EAdventurerRole::Ranger: return ClassLevels / 2;
+    case EAdventurerRole::Paladin: case EAdventurerRole::Ranger: return (ClassLevels + 1) / 2; // SRD 5.2.1: half, rounded up
     case EAdventurerRole::Artificer: return (ClassLevels + 1) / 2;
     default: return 0;
     }

@@ -119,7 +119,7 @@ bool FSpellCatalogGatingTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Wizard 4 cannot learn Fireball"), FSpellCatalogRules::CanLearn(EAdventurerRole::Wizard, 4, Fireball));
     TestTrue(TEXT("Wizard 5 learns Fireball"), FSpellCatalogRules::CanLearn(EAdventurerRole::Wizard, 5, Fireball));
     TestFalse(TEXT("Cleric never learns Fireball"), FSpellCatalogRules::CanLearn(EAdventurerRole::Cleric, 20, Fireball));
-    TestFalse(TEXT("Paladin 1 has no Spellcasting"), FSpellCatalogRules::CanLearn(EAdventurerRole::Paladin, 1, Bless));
+    TestTrue(TEXT("Paladin 1 has Spellcasting (SRD 5.2.1)"), FSpellCatalogRules::CanLearn(EAdventurerRole::Paladin, 1, Bless));
     TestTrue(TEXT("Paladin 2 prepares Bless"), FSpellCatalogRules::CanLearn(EAdventurerRole::Paladin, 2, Bless));
     TestTrue(TEXT("Paladin 5 prepares Aid"), FSpellCatalogRules::CanLearn(EAdventurerRole::Paladin, 5, Aid));
     TestFalse(TEXT("Paladin 5 cannot prepare Revivify"), FSpellCatalogRules::CanLearn(EAdventurerRole::Paladin, 5, Revivify));

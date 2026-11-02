@@ -134,7 +134,7 @@ int32 FSpellCatalogRules::MaxLearnableLevel(EAdventurerRole Role, int32 ClassLev
     case EAdventurerRole::Bard: case EAdventurerRole::Cleric: case EAdventurerRole::Druid: case EAdventurerRole::Sorcerer: case EAdventurerRole::Wizard:
         return FMath::Min(9, (L + 1) / 2);
     case EAdventurerRole::Paladin: case EAdventurerRole::Ranger:
-        return L < 2 ? 0 : FMath::Min(5, (L + 3) / 4);
+        return FMath::Min(5, (L + 3) / 4); // SRD 5.2.1: Spellcasting from level 1
     case EAdventurerRole::Warlock:
         // Pact Magic slot level; Mystic Arcanum (6th-9th from Warlock 11) is not modelled.
         return FMath::Min(5, (L + 1) / 2);
