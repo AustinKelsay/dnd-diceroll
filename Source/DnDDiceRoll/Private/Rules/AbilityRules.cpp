@@ -75,7 +75,7 @@ FAbilityScores FAbilityRules::PrebuiltScores(EAdventurerRole Role)
 
 FAbilityScores FAbilityRules::EnemyScores(const FString& Role)
 {
-    if (const FMonsterStatBlock* Block = FMonsterRules::Find(Role)) { return Block->Scores; } // SRD 5.1 stat block foes
+    if (const FMonsterStatBlock* Block = FMonsterRules::Find(Role)) { return Block->Scores; } // SRD stat block foes (MonsterRules; numbers still from 5.1, 5.2.1 pass pending per #53)
     // Legacy generic bandit-style foes; archers and scouts lean on Dexterity. Original values, not a stat block copy.
     FAbilityScores Scores;
     Scores.Strength = 12; Scores.Dexterity = 12; Scores.Constitution = 12;

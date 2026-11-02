@@ -26,7 +26,7 @@ struct DNDDICEROLL_API FProficiencyChoice
     bool bThievesToolsExpertise = false;
 };
 
-/** Class proficiency facts (SRD 5.1 class tables). Small value data that can move into the #39 catalog. */
+/** Class proficiency facts (SRD 5.2.1 class tables; Rogue thieves-tools Expertise is a 5.1 holdover, see #54). Small value data that can move into the #39 catalog. */
 struct DNDDICEROLL_API FClassProficiencies
 {
     uint8 SaveMask = 0;
