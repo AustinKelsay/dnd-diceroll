@@ -10,6 +10,7 @@
 #include "Rules/CoinRules.h"
 #include "Rules/HazardRules.h"
 #include "Rules/GroupCheckRules.h"
+#include "Rules/SleightRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -331,6 +332,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::Parley: return TEXT("Parley with traders");
     case ECampActivity::BuyPotion: return TEXT("Buy a potion");
     case ECampActivity::Forage: return TEXT("Forage together");
+    case ECampActivity::Pickpocket: return TEXT("Lift a purse");
     default: return TEXT("Unknown");
     }
 }
@@ -400,6 +402,18 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         const FGroupCheckOutcome Result = FGroupCheckRules::Resolve(Group, 12, Dice);
         if (Result.bSuccess) { ++Record.BonusPotions; }
         Outcome = FString::Printf(TEXT("The party forages (%d of %d pass DC 12): %s"), Result.Successes, Group.Num(), Result.bSuccess ? TEXT("healing herbs, +1 potion in the loot.") : TEXT("nothing useful."));
+        break;
+    }
+    case ECampActivity::Pickpocket:
+    {
+        // #90: Sleight of Hand against a passing trader's passive Perception 12; caught means paying a fine.
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(3000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
+        const FSleightOutcome Lift = FSleightRules::Resolve(Sheet.SkillBonus(ESkill::SleightOfHand), ERollMode::Normal, 12, Dice);
+        const int32 Gain = Lift.Result == ESleightResult::Unnoticed ? PickpocketCopper : Lift.Result == ESleightResult::Caught ? -FMath::Min(State.Coins, PickpocketCopper / 2) : 0;
+        State.Coins += Gain;
+        Outcome = FString::Printf(TEXT("%s tries to lift a purse (%d vs passive 12): %s"), *Hero->Name, Lift.Check.Total,
+            Lift.Result == ESleightResult::Unnoticed ? *FString::Printf(TEXT("unnoticed, +%s."), *FCoinRules::Format(Gain)) :
+            Lift.Result == ESleightResult::Caught ? *FString::Printf(TEXT("caught, fined %s."), *FCoinRules::Format(-Gain)) : TEXT("fumbles but slips away."));
         break;
     }
     default: break;

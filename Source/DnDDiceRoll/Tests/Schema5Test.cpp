@@ -1545,4 +1545,28 @@ bool FSchema5EncumbranceTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Encumbered: -2 cells"), Light.Snapshot().MovementLeft, 4);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampPickpocketTest, "Project.Expedition.Schema5.CampPickpocket",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampPickpocketTest::RunTest(const FString& Parameters)
+{
+    bool bGain = false, bNoGain = false;
+    for (int32 Seed = 1; Seed < 150 && !(bGain && bNoGain); ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        const int32 Before = Run.Progress().Coins;
+        TestTrue(TEXT("Lift"), Run.CampActivity(Hero, ECampActivity::Pickpocket, Outcome, Error));
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::Pickpocket, Outcome, Error));
+        const int32 Delta = Run.Progress().Coins - Before;
+        TestTrue(TEXT("Gain, nothing, or a fine"), Delta == FExpeditionRun::PickpocketCopper || Delta == 0 || Delta == -FExpeditionRun::PickpocketCopper / 2);
+        (Delta > 0 ? bGain : bNoGain) = true;
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Some lift succeeds"), bGain);
+    TestTrue(TEXT("Some lift fails"), bNoGain);
+    return true;
+}
 #endif
