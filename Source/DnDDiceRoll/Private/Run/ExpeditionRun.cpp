@@ -715,7 +715,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondaryRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
-            (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SecondaryRole != EAdventurerRole::Cleric && U.SecondaryRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
+            U.SpellSlots > FBuildCatalog::SlotCap(U) || // SRD slot tables for every caster, not only Cleric/Wizard
             (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.Xp != 0 || U.SecondaryLevel != 0 || U.SecondaryRole != EAdventurerRole::None || !U.AsiChoices.IsEmpty() || U.ChoiceLevel != 0 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
