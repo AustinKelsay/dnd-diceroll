@@ -1,4 +1,5 @@
 #include "Rules/SpellCatalogRules.h"
+#include "Rules/BardRules.h"
 #include "Combat/CombatBattle.h"
 
 namespace SpellCatalog
@@ -108,14 +109,13 @@ bool FSpellCatalogRules::PreparesSpells(EAdventurerRole Role)
 
 int32 FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole Role, int32 ClassLevel, int32 AbilityModifier)
 {
-    static const int32 Bard[20] = { 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22 };
     static const int32 Sorcerer[20] = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15 };
     static const int32 Warlock[20] = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15 };
     static const int32 Ranger[20] = { 0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11 };
     if (ClassLevel < 1) { return 0; }
     switch (Role)
     {
-    case EAdventurerRole::Bard: return SpellCatalog::ByLevel(Role, ClassLevel, Bard);
+    case EAdventurerRole::Bard: return FBardRules::PreparedSpells(ClassLevel); // SRD 5.2.1 Bard table (prepared spells)
     case EAdventurerRole::Sorcerer: return SpellCatalog::ByLevel(Role, ClassLevel, Sorcerer);
     case EAdventurerRole::Warlock: return SpellCatalog::ByLevel(Role, ClassLevel, Warlock);
     case EAdventurerRole::Ranger: return SpellCatalog::ByLevel(Role, ClassLevel, Ranger);

@@ -138,7 +138,8 @@ bool FSpellCatalogGatingTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Full caster 17 reaches 9th"), FSpellCatalogRules::MaxLearnableLevel(EAdventurerRole::Wizard, 17), 9);
     TestEqual(TEXT("Half caster 17 reaches 5th"), FSpellCatalogRules::MaxLearnableLevel(EAdventurerRole::Ranger, 17), 5);
     // Known / prepared / cantrips (SRD class tables).
-    TestEqual(TEXT("Bard 5 knows 8"), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Bard, 5, 3), 8);
+    TestEqual(TEXT("Bard 5 prepares 9 (SRD 5.2.1)"), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Bard, 5, 3), 9);
+    { const int32 BardPrepared[] = {4, 5, 6, 7, 9}; for (int32 L = 1; L <= 5; ++L) { TestEqual(FString::Printf(TEXT("Bard %d prepared"), L), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Bard, L, 3), BardPrepared[L - 1]); } }
     TestEqual(TEXT("Sorcerer 3 knows 4"), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Sorcerer, 3, 3), 4);
     TestEqual(TEXT("Warlock 5 knows 6"), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Warlock, 5, 3), 6);
     TestEqual(TEXT("Ranger 1 knows 0"), FSpellCatalogRules::SpellsKnownOrPrepared(EAdventurerRole::Ranger, 1, 3), 0);
