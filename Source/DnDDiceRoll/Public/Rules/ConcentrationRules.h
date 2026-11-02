@@ -13,6 +13,7 @@ struct DNDDICEROLL_API FConcentrationRules
     /** Casting another concentration spell ends the first. */
     static bool NewSpellEndsCurrent(bool bConcentrating, bool bNewSpellNeedsConcentration);
     static bool EndsOnIncapacitated(bool bIncapacitated);
-    /** None of the current eight spells needs concentration. */
+    /** From the SRD catalog; none of the eight combat-wired spells needs concentration. */
     static bool RequiresConcentration(ESpell Spell);
+    static bool RequiresConcentration(const struct FSrdSpell& Spell);
 };

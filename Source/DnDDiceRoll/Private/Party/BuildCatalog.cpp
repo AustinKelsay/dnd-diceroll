@@ -6,6 +6,8 @@
 #include "Rules/AbilityRules.h"
 #include "Rules/ArmorRules.h"
 #include "Rules/LevelRules.h"
+#include "Rules/SpellCatalogRules.h"
+#include "Rules/SpellcastingRules.h"
 
 namespace
 {
@@ -219,7 +221,10 @@ int32 FBuildCatalog::SlotCap(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId); const int32 Own = B ? B->SlotCap : 0;
     const auto F = SecondaryFeature(Hero.SecondaryRole);
-    return Own == 0 && Hero.SecondaryLevel > 0 && (F == ECombatCommandType::CureWounds || F == ECombatCommandType::MagicMissile) ? 2 : Own;
+    if (Own > 0) { return Own; }
+    if (Hero.SecondaryLevel > 0 && (F == ECombatCommandType::CureWounds || F == ECombatCommandType::MagicMissile)) { return 2; }
+    // Builds with no slot pool (Sorcerer/Warlock/Bard kits, non-evocation Wizards, non-Life Clerics) spend kit uses instead; per-level SRD slots live in SlotsByLevel.
+    return 0;
 }
 bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType Action)
 {
@@ -353,6 +358,20 @@ TArray<FString> FBuildCatalog::ProgressSheet(const FCombatantState& Hero)
     Lines.Add(TEXT("Features: ") + Features);
     if (FFeatureKit::Style(Hero) != EFightingStyle::None)
     { Lines.Add(FString::Printf(TEXT("Fighting Style: %s (%s)"), FFeatureKit::StyleName(FFeatureKit::Style(Hero)), FFeatureKit::StyleEffect(FFeatureKit::Style(Hero)))); }
+    // SRD Spellcasting per class: cantrips, known/prepared count and the highest spell level it can learn (tags: level, school, class).
+    FAbilityScores Scores; const bool bScores = HeroScores(Hero, Scores);
+    for (const auto& [CastRole, CastLevel] : TArray<TPair<EAdventurerRole, int32>>{ {Hero.AdventurerRole, Primary}, {Hero.SecondaryRole, Hero.SecondaryLevel} })
+    {
+        if (CastLevel < 1 || FSpellCatalogRules::ClassBit(CastRole) == 0) { continue; }
+        const int32 Mod = bScores ? FAbilityRules::Modifier(Scores.Get(FSpellcastingRules::SpellcastingAbility(CastRole))) : 0;
+        const int32 Count = FSpellCatalogRules::SpellsKnownOrPrepared(CastRole, CastLevel, Mod);
+        const int32 MaxLevel = FSpellCatalogRules::MaxLearnableLevel(CastRole, CastLevel);
+        int32 OnList = 0;
+        for (int32 I = 0; I < FSpellCatalogRules::Num(); ++I) { OnList += FSpellCatalogRules::CanLearn(CastRole, CastLevel, FSpellCatalogRules::At(I)) ? 1 : 0; }
+        Lines.Add(Count == 0 && MaxLevel == 0 ? FString::Printf(TEXT("Spellcasting (%s %d): none until level 2"), *Role(CastRole), CastLevel)
+            : FString::Printf(TEXT("Spellcasting (%s %d): %d cantrips, %d %s, spell levels 1-%d, %d SRD spells available"), *Role(CastRole), CastLevel,
+                FSpellCatalogRules::CantripsKnown(CastRole, CastLevel), Count, FSpellCatalogRules::PreparesSpells(CastRole) ? TEXT("prepared") : TEXT("known"), MaxLevel, OnList));
+    }
     const int32 Asi = PendingAsi(Hero);
     if (Asi > 0) { Lines.Add(FString::Printf(TEXT("Ability Score Improvement available (%d)"), Asi)); }
     if (Next && Hero.Xp >= Next) { Lines.Add(TEXT("Level up available")); }

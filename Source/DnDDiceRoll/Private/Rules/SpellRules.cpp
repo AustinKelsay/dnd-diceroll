@@ -1,6 +1,7 @@
 #include "Rules/SpellRules.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/LevelRules.h"
+#include "Rules/SpellCatalogRules.h"
 
 namespace SpellTable
 {
@@ -9,10 +10,10 @@ namespace SpellTable
         { TEXT("Fire Bolt"), 0, ESpellSchool::Evocation, TEXT("1 action"), 120, TEXT("120 ft"), true, true, false, TEXT("Instantaneous"), false, true, 1, 10, false, EDamageType::Fire, 0 },
         { TEXT("Sacred Flame"), 0, ESpellSchool::Evocation, TEXT("1 action"), 60, TEXT("60 ft"), true, true, false, TEXT("Instantaneous"), true, false, 1, 8, false, EDamageType::Radiant, 0 },
         { TEXT("Magic Missile"), 1, ESpellSchool::Evocation, TEXT("1 action"), 120, TEXT("120 ft"), true, true, false, TEXT("Instantaneous"), false, true, 3, 4, false, EDamageType::Force, 1 },
-        { TEXT("Cure Wounds"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Touch"), true, true, false, TEXT("Instantaneous"), true, false, 1, 8, true, EDamageType::Force, 1 },
+        { TEXT("Cure Wounds"), 1, ESpellSchool::Abjuration, TEXT("1 action"), 0, TEXT("Touch"), true, true, false, TEXT("Instantaneous"), true, false, 2, 8, true, EDamageType::Force, 2 }, // SRD 5.2.1: 2d8 + mod, +2d8 per slot level
         { TEXT("Guiding Bolt"), 1, ESpellSchool::Evocation, TEXT("1 action"), 120, TEXT("120 ft"), true, true, false, TEXT("1 round"), true, false, 4, 6, false, EDamageType::Radiant, 1 },
         { TEXT("Burning Hands"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Self (15-ft cone)"), true, true, false, TEXT("Instantaneous"), false, true, 3, 6, false, EDamageType::Fire, 1 },
-        { TEXT("Healing Word"), 1, ESpellSchool::Evocation, TEXT("1 bonus action"), 60, TEXT("60 ft"), true, false, false, TEXT("Instantaneous"), true, false, 1, 4, true, EDamageType::Force, 1 },
+        { TEXT("Healing Word"), 1, ESpellSchool::Abjuration, TEXT("1 bonus action"), 60, TEXT("60 ft"), true, false, false, TEXT("Instantaneous"), true, false, 2, 4, true, EDamageType::Force, 2 }, // SRD 5.2.1: 2d4 + mod, +2d4 per slot level
         { TEXT("Thunderwave"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Self (15-ft cube)"), true, true, false, TEXT("Instantaneous"), false, true, 2, 8, false, EDamageType::Thunder, 1 },
     };
     // Rows: character level 1-5; columns: spell level 1-3.
@@ -73,8 +74,9 @@ int32 FSpellRules::HeroSlotsFor(EAdventurerRole Primary, int32 PrimaryLevels, EA
 
 bool FSpellRules::OnClassList(EAdventurerRole Role, ESpell Spell)
 {
-    const FSpellFacts& F = Facts(Spell);
-    return (Role == EAdventurerRole::Cleric && F.bCleric) || (Role == EAdventurerRole::Wizard && F.bWizard);
+    // SRD 5.2.1 class spell lists from the full catalog (Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, Wizard).
+    const FSrdSpell* Srd = FSpellCatalogRules::Find(Facts(Spell).Name);
+    return Srd && FSpellCatalogRules::OnClassList(Role, *Srd);
 }
 
 int32 FSpellRules::UpcastDiceCount(ESpell Spell, int32 SlotLevel)
@@ -95,5 +97,7 @@ FString FSpellRules::Summary(ESpell Spell)
     if (F.bVerbal) { Parts.Add(TEXT("V")); }
     if (F.bSomatic) { Parts.Add(TEXT("S")); }
     if (F.bMaterial) { Parts.Add(TEXT("M")); }
-    return FString::Printf(TEXT("%s | %s | %s | %s | %s"), *LevelText, F.CastingTime, F.RangeText, *FString::Join(Parts, TEXT(", ")), F.Duration);
+    const FSrdSpell* Srd = FSpellCatalogRules::Find(F.Name);
+    const FString Classes = Srd ? FSpellCatalogRules::ClassListText(Srd->Classes) : FString();
+    return FString::Printf(TEXT("%s | %s | %s | %s | %s | %s"), *LevelText, *Classes, F.CastingTime, F.RangeText, *FString::Join(Parts, TEXT(", ")), F.Duration);
 }
