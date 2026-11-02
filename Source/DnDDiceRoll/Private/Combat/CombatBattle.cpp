@@ -3,6 +3,7 @@
 #include "Rules/SpellRules.h"
 #include "Rules/MovementRules.h"
 #include "Rules/OpportunityRules.h"
+#include "Rules/ClassFeatureRules.h"
 
 namespace
 {
@@ -320,7 +321,10 @@ bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Ori
 const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Action) const
 {
     const FCombatantState* Unit = Find(Id);
-    if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious || !State.bActionAvailable) { return nullptr; }
+    if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious) { return nullptr; }
+    // Extra Attack (#61): after the Attack action, banked attacks still allow Attack and Precision Strike.
+    const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
+    if (!State.bActionAvailable && !(bWeaponAttack && State.AttacksRemaining > 0)) { return nullptr; }
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return nullptr; }
     if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
     if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
@@ -916,7 +920,12 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
         Strike(Command.ActorId, Command.TargetId, ManeuverBonus, Result);
-        State.bActionAvailable = false;
+        if (State.bActionAvailable)
+        {
+            State.bActionAvailable = false;
+            State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(Actor->AdventurerRole, Actor->Level) - 1;
+        }
+        else { --State.AttacksRemaining; }
         CheckOutcome();
         FString TargetStatus = Target->Life == ECombatLife::Downed ? FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft) :
             Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : TEXT("");
@@ -1061,6 +1070,7 @@ void FCombatBattle::CheckOutcome()
     // Rescue must happen during combat. A wipe or an unresolved victory deadline is permanent.
     if (State.Phase != EBattlePhase::Fighting)
     {
+        State.AttacksRemaining = 0;
         for (FCombatantState& Unit : State.Encounter.Combatants)
         {
             Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
@@ -1086,6 +1096,7 @@ void FCombatBattle::AdvanceTurn()
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
             BeginTurn();
             State.bActionAvailable = true;
+            State.AttacksRemaining = 0;
             State.bBonusActionAvailable = true;
             return;
         }
@@ -1201,6 +1212,8 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
     const auto* Active = Candidate.Find(Candidate.ActiveId());
     if (Snapshot.Phase != Expected || !Active || Active->Life != ECombatLife::Conscious ||
         Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed ||
+        Snapshot.AttacksRemaining < 0 || Snapshot.AttacksRemaining >= FClassFeatureRules::AttacksPerAction(Active->AdventurerRole, Active->Level) ||
+        (Snapshot.AttacksRemaining > 0 && (Snapshot.bActionAvailable || Snapshot.Phase != EBattlePhase::Fighting)) ||
         (!Snapshot.bBonusActionAvailable && ([&]()
         {
             const auto* Build = FBuildCatalog::Find(Active->BuildId);

@@ -101,6 +101,8 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() int32 MovementLeft = 0;
     UPROPERTY() bool bActionAvailable = true;
     UPROPERTY() bool bBonusActionAvailable = true;
+    /** Extra Attack: weapon attacks left after the Attack action was taken this turn (#61). */
+    UPROPERTY() int32 AttacksRemaining = 0;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
 

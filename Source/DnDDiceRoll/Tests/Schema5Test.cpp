@@ -233,4 +233,48 @@ bool FSchema5OpportunityAttackTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ExtraAttackTest, "Project.Expedition.Schema5.ExtraAttackSpendsPersistedAttacks",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ExtraAttackTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto FighterAt = [](int32 Level)
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Fighter;
+        Encounter.Combatants[0].Level = Level;
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        return Encounter;
+    };
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Level 5 fighter starts"), Battle.Start(FighterAt(5), 7, Error));
+        TestEqual(TEXT("No attacks banked before the Attack action"), Battle.Snapshot().AttacksRemaining, 0);
+        TestTrue(TEXT("First attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestFalse(TEXT("The Attack action is spent"), Battle.Snapshot().bActionAvailable);
+        TestEqual(TEXT("One extra attack remains"), Battle.Snapshot().AttacksRemaining, 1);
+        TestTrue(TEXT("Still has a legal target"), Battle.LegalTargets(10).Contains(20));
+        const FCombatSnapshot Mid = Battle.Snapshot();
+        FCombatBattle Copy;
+        TestTrue(TEXT("Mid-action state restores"), Copy.Restore(Mid, Error));
+        FCombatSnapshot Bad = Mid; Bad.AttacksRemaining = 2;
+        TestFalse(TEXT("More attacks than Extra Attack grants rejected"), Copy.Restore(Bad, Error));
+        Bad = Mid; Bad.bActionAvailable = true;
+        TestFalse(TEXT("Banked attacks with an unspent action rejected"), Copy.Restore(Bad, Error));
+        TestTrue(TEXT("Second attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("All attacks used"), Battle.Snapshot().AttacksRemaining, 0);
+        TestFalse(TEXT("No third attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestTrue(TEXT("Ends turn"), Battle.Submit({ECombatCommandType::EndTurn, 10}).bAccepted);
+        TestEqual(TEXT("Reset at the turn boundary"), Battle.Snapshot().AttacksRemaining, 0);
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Level 4 fighter starts"), Battle.Start(FighterAt(4), 7, Error));
+        TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("No extra attack before level 5"), Battle.Snapshot().AttacksRemaining, 0);
+        TestFalse(TEXT("Second attack refused"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    }
+    return !HasAnyErrors();
+}
 #endif
