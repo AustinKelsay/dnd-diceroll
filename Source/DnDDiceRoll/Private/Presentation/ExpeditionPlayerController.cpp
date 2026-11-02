@@ -235,6 +235,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Route0")) { FirstRoute(); }
     else if (Name == TEXT("Route1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
+    else if (Name == TEXT("ShortRest")) { if (AllowsGameplayInput()) { BattleView->ShortRest(SelectedId); } }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
     else if (Name == TEXT("ModeAttack")) { AttackMode(); }

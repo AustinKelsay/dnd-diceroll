@@ -971,6 +971,23 @@ void AExpeditionBattleView::ClaimReward(int32 RecipientId)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
+void AExpeditionBattleView::ShortRest(int32 UnitId)
+{
+    if (bShowRecords) { return; }
+    FString Error;
+    int32 Healed = 0;
+    if (Session.ShortRest(UnitId, Healed, Error))
+    {
+        Show.Finish();
+        Record({true, FString::Printf(TEXT("Short rest: one hit die heals %d."), Healed)});
+        Show.Sync(Rules().Snapshot());
+        if (const FCombatantState* After = Rules().Find(UnitId))
+        { Show.ShowText(FVector2D(After->Cell.X, After->Cell.Y), FString::Printf(TEXT("+%d HP"), Healed), FLinearColor(0.5f, 1.0f, 0.6f), 1.1f, 2.0f); }
+        PlayCue(EExpeditionCue::Camp);
+    }
+    else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
 void AExpeditionBattleView::Recover(bool bTake)
 {
     if (bShowRecords) { return; }

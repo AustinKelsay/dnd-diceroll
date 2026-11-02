@@ -118,7 +118,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
             Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 2 ||
             (Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
-            Unit.TemporaryHP < 0 || Unit.TemporaryHP > 999 ||
+            Unit.TemporaryHP < 0 || Unit.TemporaryHP > 999 || Unit.HitDiceSpent < 0 || Unit.HitDiceSpent > Unit.Level ||
             Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
             (Unit.Side != ECombatSide::Party && Unit.Side != ECombatSide::Enemy))

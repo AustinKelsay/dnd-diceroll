@@ -1,4 +1,7 @@
 #include "Run/ExpeditionRun.h"
+#include "Rules/RestRules.h"
+#include "Rules/MovementRules.h"
+#include "Rules/AbilityRules.h"
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/ArmorRules.h"
@@ -259,6 +262,24 @@ bool FExpeditionRun::Recover(bool bTakeRecovery, FString& Error)
     State.bCampResolved = true;
     State.bCampUsed = bTakeRecovery;
     OfferRoutes();
+    return true;
+}
+
+bool FExpeditionRun::ShortRest(int32 UnitId, int32& Healed, FString& Error)
+{
+    Error.Reset();
+    Healed = 0;
+    if (!bStarted || State.Phase != EExpeditionPhase::Reward) { Error = TEXT("Short rests happen at the rest point after a victory."); return false; }
+    FCombatantState* Hero = Combat.MutableFind(UnitId);
+    if (!Hero || Hero->Side != ECombatSide::Party || Hero->Life != ECombatLife::Conscious) { Error = TEXT("Only a living survivor can take a short rest."); return false; }
+    if (Hero->HitDiceSpent >= Hero->Level) { Error = FString::Printf(TEXT("%s has no hit dice left until camp."), *Hero->Name); return false; }
+    if (Hero->HP >= Hero->MaxHP) { Error = FString::Printf(TEXT("%s is already at full health."), *Hero->Name); return false; }
+    // A keyed roll: resting never shifts the run's generation stream.
+    int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(Hero->HitDiceSpent))) & 0x7fffffff) | 1;
+    const int32 Roll = FDiceRules::Roll(1, FRestRules::HitDieSides(Hero->AdventurerRole), Dice);
+    Healed = FMath::Min(Hero->MaxHP - Hero->HP, FRestRules::HitDieHealing(Roll, Combat.AbilityModifier(UnitId, EAbility::Constitution)));
+    Hero->HP += Healed;
+    ++Hero->HitDiceSpent;
     return true;
 }
 

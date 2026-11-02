@@ -270,6 +270,11 @@ bool FExpeditionSession::ClaimReward(int32 Id, FString& Error)
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
     auto Candidate = Current; return Candidate.ClaimReward(Id, Error) && Commit(MoveTemp(Candidate), Error);
 }
+bool FExpeditionSession::ShortRest(int32 Id, int32& Healed, FString& Error)
+{
+    if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
+    auto Candidate = Current; return Candidate.ShortRest(Id, Healed, Error) && Commit(MoveTemp(Candidate), Error);
+}
 bool FExpeditionSession::Recover(bool bTake, FString& Error)
 {
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }

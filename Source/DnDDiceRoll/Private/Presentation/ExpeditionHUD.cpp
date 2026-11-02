@@ -929,7 +929,10 @@ void AExpeditionHUD::DrawReward()
     for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Dead) { Lost.Add(Unit.Name); } }
     if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 84, FLinearColor(0.85f, 0.5f, 0.45f), 0.76f, EAlign::Center); }
     Text(TEXT("Choose who carries it  —  click a survivor's card or press 1-4"), W * 0.5f, Y + 110, Muted, 0.74f, EAlign::Center);
-    Button(TEXT("Claim"), bReady ? FString::Printf(TEXT("Give to %s"), *Selected->Name) : TEXT("Select a survivor"), TEXT("L"), W * 0.5f - 130, Y + 140, 260, 52, bReady, false, Gold);
+    Button(TEXT("Claim"), bReady ? FString::Printf(TEXT("Give to %s"), *Selected->Name) : TEXT("Select a survivor"), TEXT("L"), W * 0.5f - 250, Y + 140, 240, 52, bReady, false, Gold);
+    const bool bCanRest = bReady && Selected->HitDiceSpent < Selected->Level && Selected->HP < Selected->MaxHP;
+    Button(TEXT("ShortRest"), TEXT("Short rest"), bReady ? FString::Printf(TEXT("spend a hit die (%d left)"), Selected->Level - Selected->HitDiceSpent) : TEXT("hit dice"),
+        W * 0.5f + 10, Y + 140, 240, 52, bCanRest, false, Sky);
 }
 
 void AExpeditionHUD::DrawCamp()

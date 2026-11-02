@@ -7,6 +7,7 @@
 #include "Rules/ArmorRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Party/BuildCatalog.h"
+#include "ExpeditionTestSupport.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -1078,6 +1079,41 @@ bool FSchema5DeathSavesInBattleTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some hero stabilizes"), bSawStable);
     TestTrue(TEXT("Some hero dies of failed saves"), bSawDead);
     TestTrue(TEXT("Temporary HP absorbed a hit"), bSawSoak);
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ShortRestTest, "Project.Expedition.Schema5.ShortRestHitDice",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ShortRestTest::RunTest(const FString& Parameters)
+{
+    bool bChecked = false;
+    for (int32 Seed = 1; Seed < 60 && !bChecked; ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Run;
+        Run.NewRun(Seed, Error, FString::Printf(TEXT("rest-%d"), Seed));
+        int32 Healed = 0;
+        TestFalse(TEXT("No short rest on the road"), Run.ShortRest(1, Healed, Error));
+        Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+        if (!ExpeditionTestSupport::FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { continue; }
+        int32 HeroId = INDEX_NONE;
+        for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious && Unit.HP < Unit.MaxHP) { HeroId = Unit.Id; break; } }
+        if (HeroId == INDEX_NONE) { continue; }
+        bChecked = true;
+        const int32 Level = Run.Battle().Find(HeroId)->Level;
+        int32 Rests = 0;
+        while (Run.ShortRest(HeroId, Healed, Error)) { ++Rests; TestTrue(TEXT("Hit die never hurts"), Healed >= 0); }
+        const FCombatantState* Hero = Run.Battle().Find(HeroId);
+        TestTrue(TEXT("Rests until dice or wounds run out"), Rests >= 1 && (Hero->HitDiceSpent == Level || Hero->HP == Hero->MaxHP));
+        TestEqual(TEXT("One die per rest"), Hero->HitDiceSpent, Rests);
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Spent hit dice restore"), Copy.Restore(Run.Snapshot(), Error));
+        const int32 Spent = Hero->HitDiceSpent;
+        Run.ClaimReward(HeroId, Error);
+        if (Run.Progress().Phase == EExpeditionPhase::Recovery && TestTrue(TEXT("Camp"), Run.Recover(true, Error)))
+        { TestTrue(TEXT("Camp regains hit dice"), Run.Battle().Find(HeroId)->HitDiceSpent < Spent || Spent == 0); }
+    }
+    TestTrue(TEXT("A wounded survivor rested"), bChecked);
     return true;
 }
 #endif

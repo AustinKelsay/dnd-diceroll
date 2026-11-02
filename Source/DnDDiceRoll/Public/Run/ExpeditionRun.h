@@ -87,6 +87,8 @@ public:
     bool ChooseRoute(int32 RouteId, FString& Error);
     bool ClaimReward(int32 RecipientId, FString& Error);
     bool Recover(bool bTakeRecovery, FString& Error);
+    /** #76: at the rest point after a victory, a survivor spends one hit die (roll + CON) to heal. */
+    bool ShortRest(int32 UnitId, int32& Healed, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     const FCombatBattle& Battle() const { return Combat; }

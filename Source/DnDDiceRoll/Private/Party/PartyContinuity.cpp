@@ -1,4 +1,5 @@
 #include "Party/PartyContinuity.h"
+#include "Rules/RestRules.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellRules.h"
 
@@ -72,6 +73,8 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
     {
         if (Survivor.Side != ECombatSide::Party || Survivor.Life != ECombatLife::Conscious) { continue; }
         Survivor.HP = FMath::Min(Survivor.MaxHP, Survivor.HP + CampHealing);
+        // Camp is a long rest: regain half the hit dice (minimum one).
+        Survivor.HitDiceSpent = Survivor.Level - FRestRules::HitDiceAfterLongRest(Survivor.Level - Survivor.HitDiceSpent, Survivor.Level);
         if (const auto* B = FBuildCatalog::Find(Survivor.BuildId))
         {
             Survivor.KitUses = FMath::Min(B->KitCap, Survivor.KitUses + B->KitRecovery);
