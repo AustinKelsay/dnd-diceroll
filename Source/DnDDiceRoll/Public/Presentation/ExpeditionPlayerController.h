@@ -24,6 +24,8 @@ public:
     bool HoverCell(FIntPoint& Cell) const;
     bool KeyboardCell(FIntPoint& Cell) const;
     ECombatCommandType Action() const { return SelectedAction; }
+    /** Upcast choice for spells: 0 casts with the lowest open slot. */
+    int32 SlotChoice() const { return SlotLevel; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
     void SelectPartyIndex(int32 Index);
@@ -47,6 +49,7 @@ private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
+    int32 SlotLevel = 0;
     int32 LastActiveId = INDEX_NONE;
     int32 LastRevision = INDEX_NONE;
     int32 HoverUnitId = INDEX_NONE;
@@ -71,6 +74,11 @@ private:
     void RoleMode();
     void RescueMode();
     void PotionMode();
+    void BurningHandsMode();
+    void ThunderwaveMode();
+    void ShoveMode();
+    void GrappleMode();
+    void CycleSlot();
     void Loot();
     void FirstRoute();
     void SecondRoute();

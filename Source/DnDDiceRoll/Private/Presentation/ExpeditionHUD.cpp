@@ -367,7 +367,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
         for (int32 Id : Player->Targets())
         {
-            const FActionForecast Odds = Rules.Forecast(Player->Actor(), Player->Action(), Id);
+            const FActionForecast Odds = Rules.Forecast(Player->Actor(), Player->Action(), Id, Player->SlotChoice());
             FVector2D Point;
             if (!Odds.bValid || !Project(View->UnitPosition(Id, 215.0f), Point)) { continue; }
             const FString Amount = Odds.MinAmount == Odds.MaxAmount ? FString::FromInt(Odds.MinAmount) : FString::Printf(TEXT("%d-%d"), Odds.MinAmount, Odds.MaxAmount);
@@ -633,9 +633,15 @@ void AExpeditionHUD::DrawActionBar()
 
     const auto Abilities = FBuildCatalog::Abilities(*Active);
     const float Width = 128, Gap = 6, Height = 54;
-    const float Left = W * 0.5f - ((4 + Abilities.Num()) * (Width + Gap) - Gap) * 0.5f;
     const ECombatCommandType Mode = Player->Action();
     auto Ready = [&](ECombatCommandType Action) { return !Rules.LegalTargets(Id, Action).IsEmpty(); };
+    // SRD actions beyond the build kit get a button only while usable (or selected), so the bar stays short.
+    struct FExtra { ECombatCommandType Action; const TCHAR* Id; const TCHAR* Label; const TCHAR* Key; };
+    TArray<FExtra> Extras;
+    for (const FExtra& E : {FExtra{ECombatCommandType::BurningHands, TEXT("ModeBurningHands"), TEXT("Burning Hands"), TEXT("Y")}, FExtra{ECombatCommandType::Thunderwave, TEXT("ModeThunderwave"), TEXT("Thunderwave"), TEXT("U")},
+        FExtra{ECombatCommandType::Shove, TEXT("ModeShove"), TEXT("Shove"), TEXT("I")}, FExtra{ECombatCommandType::Grapple, TEXT("ModeGrapple"), TEXT("Grapple"), TEXT("W")}})
+    { if (Ready(E.Action) || Mode == E.Action) { Extras.Add(E); } }
+    const float Left = W * 0.5f - ((4 + Abilities.Num() + Extras.Num()) * (Width + Gap) - Gap) * 0.5f;
     TArray<TPair<ECombatCommandType, bool>> Hover;
     Hover.Add({ECombatCommandType::Attack, Button(TEXT("ModeAttack"), TEXT("Attack / Move"), FString::Printf(TEXT("A / d%d%+d"), Active->DamageDie, FBuildCatalog::AttackModifier(*Active)), Left, Y, Width, Height,
         Ready(ECombatCommandType::Attack) || !Rules.LegalMoves(Id).IsEmpty(), Mode == ECombatCommandType::Attack)});
@@ -648,7 +654,17 @@ void AExpeditionHUD::DrawActionBar()
     }
     Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R / adjacent downed ally"), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
     Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString(TEXT("P / ")) + FCombatBattle::UsageTag(ECombatCommandType::Potion, *Active), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
+    for (const FExtra& E : Extras)
+    {
+        const FString Usage = FCombatBattle::UsageTag(E.Action, *Active);
+        Hover.Add({E.Action, Button(E.Id, E.Label, FString(E.Key) + (Usage.IsEmpty() ? TEXT(" / Action") : TEXT(" / ") + Usage), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(E.Action), Mode == E.Action, Sky)});
+    }
     Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + Column * (Width + Gap), Y, Width, Height, true, false, Gold);
+    if (Active->SpellSlots > 0 || Active->SlotsByLevel.ContainsByPredicate([](int32 N) { return N > 0; }))
+    {
+        const FString Slot = Player->SlotChoice() ? FString::Printf(TEXT("Spell slot: level %d  (= to change)"), Player->SlotChoice()) : FString(TEXT("Spell slot: lowest open  (= to upcast)"));
+        Button(TEXT("Upcast"), TEXT("Upcast"), Slot, ChipLeft + 330, Chips - 6, 230, 30, true, Player->SlotChoice() > 0, Sky);
+    }
     if (const auto* Build = FBuildCatalog::Find(Active->BuildId); Build && Build->SneakDie) { Text(TEXT("Sneak Attack: automatic with adjacent ally"), W * 0.5f, Y - 52, Safe, 0.7f, EAlign::Center); }
     for (const auto& Pair : Hover)
     {
@@ -685,7 +701,7 @@ void AExpeditionHUD::DrawForecast()
     if (TargetId != INDEX_NONE)
     {
         const FCombatantState* Target = Rules.Find(TargetId);
-        const FActionForecast Forecast = Rules.Forecast(Player->Actor(), Player->Action(), TargetId);
+        const FActionForecast Forecast = Rules.Forecast(Player->Actor(), Player->Action(), TargetId, Player->SlotChoice());
         if (!Target || !Forecast.bValid) { return; }
         Lines.Add({FString::Printf(TEXT("%s  ·  %s  ·  HP %d/%d"), *Target->Name, *Rules.ArmorClassText(TargetId), Target->HP, Target->MaxHP), ExpeditionStyle::UnitColor(*Target)});
         if (const FString Status = Rules.StatusText(TargetId); !Status.IsEmpty()) { Lines.Add({Status, Gold}); }
@@ -963,23 +979,23 @@ void AExpeditionHUD::DrawRecords()
 
 void AExpeditionHUD::DrawHelp()
 {
-    const float Width = 700, Height = 400;
+    const float Width = 700, Height = 480;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Sky, 0.98f);
     Text(TEXT("HOW TO PLAY"), X + 24, Y + 18, Sky, 1.2f);
     const TCHAR* Left[] = {
         TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
-        TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
+        TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Y / U  Burning Hands / Thunderwave"), TEXT("I / W  Shove / Grapple"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
         TEXT("Arrows + Enter  Keyboard cursor")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
-        TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
+        TEXT("=  Spell slot level (upcast)"), TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
         TEXT("H  Past expeditions  ·  ?  This help")};
-    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
+    for (int32 Index = 0; Index < FMath::Max<int32>(UE_ARRAY_COUNT(Left), UE_ARRAY_COUNT(Right)); ++Index)
     {
-        Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
-        Text(Right[Index], X + Width * 0.5f + 12, Y + 66 + Index * 28.0f, Parchment, 0.8f);
+        if (Index < UE_ARRAY_COUNT(Left)) { Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f); }
+        if (Index < UE_ARRAY_COUNT(Right)) { Text(Right[Index], X + Width * 0.5f + 12, Y + 66 + Index * 28.0f, Parchment, 0.8f); }
     }
     Text(TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);

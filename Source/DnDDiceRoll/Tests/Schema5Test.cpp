@@ -886,4 +886,35 @@ bool FSchema5SrdConditionEffectsTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5NewActionForecastTest, "Project.Expedition.Schema5.ForecastsForAreaSpellsContestsAndUpcast",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5NewActionForecastTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FCombatEncounter E = Pair({1, 0});
+    FCombatantState& W = E.Combatants[0];
+    W.Name = TEXT("Wizard"); W.AdventurerRole = EAdventurerRole::Wizard; W.Level = 3; W.SpellSlots = 2; W.SlotsByLevel = {2, 2, 0};
+    E.Combatants[1].MaxHP = E.Combatants[1].HP = 500;
+    FCombatBattle B;
+    if (!TestTrue(TEXT("Wizard starts"), B.Start(E, 7, Error))) { AddError(Error); return false; }
+    const FActionForecast Burn = B.Forecast(10, ECombatCommandType::BurningHands, 20);
+    TestTrue(TEXT("Burning Hands forecast"), Burn.bValid && Burn.Formula.Contains(TEXT("3d6")) && Burn.Formula.Contains(TEXT("DEX")));
+    TestTrue(TEXT("Chance the foe fails its save"), Burn.HitChanceOutOf400 > 0 && Burn.HitChanceOutOf400 < 400);
+    TestTrue(TEXT("Lists creatures in the area"), Burn.Effects.ContainsByPredicate([](const FTargetEffect& X) { return X.TargetId == 20; }));
+    TestTrue(TEXT("Upcast forecast adds a die"), B.Forecast(10, ECombatCommandType::BurningHands, 20, 2).Formula.Contains(TEXT("4d6")));
+    TestTrue(TEXT("Thunderwave forecast"), B.Forecast(10, ECombatCommandType::Thunderwave, 20).Formula.Contains(TEXT("2d8")));
+    TestTrue(TEXT("Upcast Magic Missile forecast"), B.Forecast(10, ECombatCommandType::MagicMissile, 20, 2).MaxAmount > B.Forecast(10, ECombatCommandType::MagicMissile, 20).MaxAmount);
+    TestEqual(TEXT("Slot cycle: auto -> 1"), B.NextSlotLevel(10, 0), 1);
+    TestEqual(TEXT("Slot cycle: 1 -> 2"), B.NextSlotLevel(10, 1), 2);
+    TestEqual(TEXT("Slot cycle: 2 -> auto (no level 3 slots)"), B.NextSlotLevel(10, 2), 0);
+    const FActionForecast Shove = B.Forecast(10, ECombatCommandType::Shove, 20);
+    TestTrue(TEXT("Shove forecast is a contest"), Shove.bValid && !Shove.bAttackRoll && Shove.HitChanceOutOf400 > 0 && Shove.HitChanceOutOf400 < 400 && Shove.Formula.Contains(TEXT("Prone")));
+    TestTrue(TEXT("Grapple forecast"), B.Forecast(10, ECombatCommandType::Grapple, 20).Formula.Contains(TEXT("Grappled")));
+    for (const ECombatCommandType Kind : {ECombatCommandType::BurningHands, ECombatCommandType::Thunderwave, ECombatCommandType::Shove, ECombatCommandType::Grapple})
+    {
+        TestFalse(TEXT("Described action"), FCombatBattle::DescribeAction(Kind).StartsWith(TEXT("ATTACK / MOVE")));
+    }
+    TestTrue(TEXT("Area spell usage tag counts slots"), FCombatBattle::UsageTag(ECombatCommandType::BurningHands, *B.Find(10)).Contains(TEXT("slot")));
+    return !HasAnyErrors();
+}
 #endif

@@ -54,6 +54,11 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::F, &AExpeditionPlayerController::RoleMode);
     Bind(EKeys::R, &AExpeditionPlayerController::RescueMode);
     Bind(EKeys::P, &AExpeditionPlayerController::PotionMode);
+    Bind(EKeys::Y, &AExpeditionPlayerController::BurningHandsMode);
+    Bind(EKeys::U, &AExpeditionPlayerController::ThunderwaveMode);
+    Bind(EKeys::I, &AExpeditionPlayerController::ShoveMode);
+    Bind(EKeys::W, &AExpeditionPlayerController::GrappleMode);
+    Bind(EKeys::Equals, &AExpeditionPlayerController::CycleSlot);
     Bind(EKeys::L, &AExpeditionPlayerController::Loot);
     Bind(EKeys::Z, &AExpeditionPlayerController::FirstRoute);
     Bind(EKeys::X, &AExpeditionPlayerController::SecondRoute);
@@ -236,6 +241,11 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("ModeRole")) { RoleMode(); }
     else if (Name == TEXT("ModeRescue")) { RescueMode(); }
     else if (Name == TEXT("ModePotion")) { PotionMode(); }
+    else if (Name == TEXT("ModeBurningHands")) { BurningHandsMode(); }
+    else if (Name == TEXT("ModeThunderwave")) { ThunderwaveMode(); }
+    else if (Name == TEXT("ModeShove")) { ShoveMode(); }
+    else if (Name == TEXT("ModeGrapple")) { GrappleMode(); }
+    else if (Name == TEXT("Upcast")) { CycleSlot(); }
     else if (Name == TEXT("EndTurn")) { EndTurn(); }
     else if (Name == TEXT("Older")) { OlderRecords(); }
     else if (Name == TEXT("Newer")) { NewerRecords(); }
@@ -258,7 +268,7 @@ void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
         if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
-        else { BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); }
+        else { BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id, SlotLevel}); }
         return;
     }
     if (SelectedAction == ECombatCommandType::Attack) { BattleView->Execute({ECombatCommandType::Move, ActorId, Cell}); }
@@ -326,6 +336,16 @@ void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { 
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
+void AExpeditionPlayerController::BurningHandsMode() { SetMode(ECombatCommandType::BurningHands); }
+void AExpeditionPlayerController::ThunderwaveMode() { SetMode(ECombatCommandType::Thunderwave); }
+void AExpeditionPlayerController::ShoveMode() { SetMode(ECombatCommandType::Shove); }
+void AExpeditionPlayerController::GrappleMode() { SetMode(ECombatCommandType::Grapple); }
+void AExpeditionPlayerController::CycleSlot()
+{
+    if (!AllowsGameplayInput()) { return; }
+    SlotLevel = BattleView->Rules().NextSlotLevel(Actor(), SlotLevel);
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
 void AExpeditionPlayerController::RoleMode() { SetMode(RoleAction()); }
 void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
 void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }

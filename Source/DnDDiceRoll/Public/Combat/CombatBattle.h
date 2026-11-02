@@ -282,7 +282,10 @@ public:
     /** Cells a legal move would enter, in order. Empty when the move is not legal. */
     TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
-    FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
+    /** SlotLevel (spells only): 0 = lowest open slot, as in FCombatCommand. */
+    FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId, int32 SlotLevel = 0) const;
+    /** Upcast picker: the next slot level above Current with a slot left, wrapping to 0 (lowest open). */
+    int32 NextSlotLevel(int32 Id, int32 Current) const;
     /** Ability scores: prebuilt by role for adventurers, generic for enemies. Read-only, no RNG. */
     FAbilityScores AbilityScores(int32 Id) const;
     /** SRD ability modifier for a combatant; 0 for unknown IDs. */

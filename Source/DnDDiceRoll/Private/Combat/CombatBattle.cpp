@@ -310,6 +310,14 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
         return FString::Printf(TEXT("RESCUE | Action, no item | downed ally, %d cell | restore 1 HP"), TouchRange);
     case ECombatCommandType::Potion:
         return FString::Printf(TEXT("POTION | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
+    case ECombatCommandType::BurningHands:
+        return TEXT("BURNING HANDS | Action + 1 slot | 15-ft cone from you | 3d6 fire, DEX save halves; +1d6 per slot above 1st");
+    case ECombatCommandType::Thunderwave:
+        return TEXT("THUNDERWAVE | Action + 1 slot | 15-ft cube from you | 2d8 thunder, CON save halves; fail pushes 10 ft; +1d8 per slot above 1st");
+    case ECombatCommandType::Shove:
+        return TEXT("SHOVE | Action | adjacent foe | Athletics vs Athletics/Acrobatics; win knocks prone");
+    case ECombatCommandType::Grapple:
+        return TEXT("GRAPPLE | Action | adjacent foe | Athletics vs Athletics/Acrobatics; win sets speed 0");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
     }
@@ -330,6 +338,8 @@ FString FCombatBattle::UsageTag(ECombatCommandType Action, const FCombatantState
         return FString::Printf(TEXT("bonus, %d left"), Unit.SecondWindUses);
     case ECombatCommandType::CureWounds:
     case ECombatCommandType::MagicMissile:
+    case ECombatCommandType::BurningHands:
+    case ECombatCommandType::Thunderwave:
         return FString::Printf(TEXT("%d slot%s left"), Unit.SpellSlots, Unit.SpellSlots == 1 ? TEXT("") : TEXT("s"));
     case ECombatCommandType::Potion:
         return FString::Printf(TEXT("%d left"), Unit.Potions);
@@ -346,6 +356,8 @@ FString FCombatBattle::SpellTag(ECombatCommandType Action)
     {
     case ECombatCommandType::CureWounds: return FSpellRules::Summary(ESpell::CureWounds);
     case ECombatCommandType::MagicMissile: return FSpellRules::Summary(ESpell::MagicMissile);
+    case ECombatCommandType::BurningHands: return FSpellRules::Summary(ESpell::BurningHands);
+    case ECombatCommandType::Thunderwave: return FSpellRules::Summary(ESpell::Thunderwave);
     default: return FString();
     }
 }
@@ -675,7 +687,18 @@ bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FComb
         }));
 }
 
-FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const
+int32 FCombatBattle::NextSlotLevel(int32 Id, int32 Current) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return 0; }
+    for (int32 Level = FMath::Max(0, Current) + 1; Level <= FSpellRules::MaxSpellLevel; ++Level)
+    {
+        if (CombatSpellSlots::CastSlotLevel(*Unit, Level) == Level) { return Level; }
+    }
+    return 0;
+}
+
+FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId, int32 SlotLevel) const
 {
     FActionForecast Forecast;
     const FCombatantState* Actor = Find(ActorId);
@@ -751,14 +774,57 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
     }
-    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Forecast.HitChanceOutOf400 = 400; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
+    case ECombatCommandType::MagicMissile:
+    {
+        const int32 Darts = MissileDarts + CombatSpellSlots::UpcastExtra(ESpell::MagicMissile, FMath::Max(1, CombatSpellSlots::CastSlotLevel(*Actor, SlotLevel)));
+        Forecast.HitChancePercent = 100; Forecast.HitChanceOutOf400 = 400; Effect(Darts, MissileDie, Darts * DartBonus); break;
+    }
+    case ECombatCommandType::BurningHands:
+    case ECombatCommandType::Thunderwave:
+    {
+        // Chance shown is the target failing its save (full damage); a save halves it. Effects list everyone the area covers.
+        const int32 Slot = CombatSpellSlots::CastSlotLevel(*Actor, SlotLevel);
+        if (Slot == 0) { Forecast.bValid = false; return Forecast; }
+        const ESpell Spell = CombatSpellSlots::AreaSpell(Action);
+        const FSpellDelivery Delivery = FSpellcastingRules::Delivery(Spell);
+        const int32 Dc = FSpellcastingRules::SaveDc(FProficiencyRules::ProficiencyBonus(Actor->Level), AbilityModifier(ActorId, FSpellcastingRules::SpellcastingAbility(Actor->AdventurerRole)));
+        Forecast.HitChanceOutOf400 = 400 - SavingThrowChance(TargetId, Delivery.SaveAbility, Dc, ERollMode::Normal);
+        Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
+        Effect(FSpellRules::UpcastDiceCount(Spell, Slot), FSpellRules::Facts(Spell).DieSides, 0);
+        Forecast.Formula += FString::Printf(TEXT(" %s, level %d slot | %s save DC %d halves%s"), Action == ECombatCommandType::BurningHands ? TEXT("fire") : TEXT("thunder"), Slot,
+            Delivery.SaveAbility == EAbility::Dexterity ? TEXT("DEX") : TEXT("CON"), Dc, Action == ECombatCommandType::Thunderwave ? TEXT("; fail pushes 2 cells") : TEXT(""));
+        const FAreaTemplate Area = CombatSpellSlots::SpellArea(Action, Actor->Cell, Target->Cell);
+        for (const FCombatantState& Unit : State.Encounter.Combatants)
+        {
+            if (Unit.Id != ActorId && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell)) { Forecast.Effects.Add({Unit.Id, EAbilityEffect::Area, Forecast.MaxAmount, Unit.Cell}); }
+        }
+        break;
+    }
+    case ECombatCommandType::Shove:
+    case ECombatCommandType::Grapple:
+    {
+        // Exact contest odds, with disadvantage for poisoned or frightened sides, matching Submit.
+        const FCharacterRules Defender = Character(TargetId);
+        const int32 ActorModifier = Character(ActorId).SkillBonus(ESkill::Athletics);
+        const int32 DefenderModifier = FMath::Max(Defender.SkillBonus(ESkill::Athletics), Defender.SkillBonus(ESkill::Acrobatics));
+        const bool bActorWorse = CheckMode(*Actor, ERollMode::Normal) == ERollMode::Disadvantage;
+        const bool bDefenderWorse = CheckMode(*Target, ERollMode::Normal) == ERollMode::Disadvantage;
+        auto Weight = [](int32 Face, bool bWorse) { return bWorse ? 2 * (20 - Face) + 1 : 20; };
+        int64 Wins = 0;
+        for (int32 A = 1; A <= 20; ++A) { for (int32 D = 1; D <= 20; ++D) { if (FCheckRules::ActorWinsContest(A + ActorModifier, D + DefenderModifier)) { Wins += int64(Weight(A, bActorWorse)) * Weight(D, bDefenderWorse); } } }
+        Forecast.HitChanceOutOf400 = int32((Wins + 200) / 400);
+        Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
+        Forecast.Formula = FString::Printf(TEXT("Athletics %+d vs %+d%s | win: %s"), ActorModifier, DefenderModifier, bActorWorse ? TEXT(" (disadvantage)") : TEXT(""),
+            Action == ECombatCommandType::Shove ? TEXT("Prone") : TEXT("Grappled (speed 0)"));
+        return Forecast;
+    }
     case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel); break;
     case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
     case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = 1; Forecast.Formula = TEXT("1"); break;
     default: Forecast.bValid = false; return Forecast;
     }
-    Forecast.bHealing = Action != ECombatCommandType::Attack && Action != ECombatCommandType::PrecisionStrike && Action != ECombatCommandType::MagicMissile;
+    Forecast.bHealing = Action != ECombatCommandType::Attack && Action != ECombatCommandType::PrecisionStrike && Action != ECombatCommandType::MagicMissile && !CombatSpellSlots::IsAreaSpell(Action);
     if (Forecast.bHealing)
     {
         const int32 Missing = Target->MaxHP - Target->HP;
