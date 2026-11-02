@@ -74,6 +74,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
     UPROPERTY() TArray<FCombatCondition> Conditions;
+    /** Reaction budget; spent by an opportunity attack and restored at the owner's turn start. */
+    UPROPERTY() bool bReactionAvailable = true;
 };
 
 USTRUCT()
@@ -148,6 +150,20 @@ struct DNDDICEROLL_API FAttackRollMode
     TArray<FString> Disadvantage;
 };
 
+/** An opportunity attack made during a move, reported for presentation. */
+struct DNDDICEROLL_API FReactionStrike
+{
+    int32 ReactorId = INDEX_NONE;
+    /** The cell the mover was leaving when struck. */
+    FIntPoint Cell = FIntPoint::ZeroValue;
+    int32 NaturalRoll = 0;
+    int32 AttackTotal = 0;
+    int32 TargetArmorClass = 0;
+    bool bHit = false;
+    bool bCritical = false;
+    int32 Damage = 0;
+};
+
 struct DNDDICEROLL_API FCombatResult
 {
     bool bAccepted = false;
@@ -187,6 +203,8 @@ struct DNDDICEROLL_API FCombatResult
     TArray<int32> Died;
     TArray<FTargetEffect> Effects;
     int32 SurgeOutcome = 0;
+    /** Move only: opportunity attacks in the order they happened. */
+    TArray<FReactionStrike> Reactions;
 };
 
 /** Player-facing expectation for one legal action. Uses the same tuning as resolution. */
@@ -304,6 +322,8 @@ private:
     void AdvanceTurn();
     /** Starts the active unit's turn: movement from speed, grapple/restraint, and standing up from prone. */
     void BeginTurn();
+    /** One weapon attack roll and its damage, without spending any budget. Shared by Attack and reactions. */
+    void Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, FCombatResult& Result);
     /** Drops conditions whose source or situation no longer supports them. */
     void PruneConditions();
     static bool HasCondition(const FCombatantState& Unit, ECombatCondition Condition);

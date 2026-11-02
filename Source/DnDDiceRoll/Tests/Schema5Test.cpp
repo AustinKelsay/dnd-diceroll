@@ -173,4 +173,64 @@ bool FSchema5ConditionEffectsTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5OpportunityAttackTest, "Project.Expedition.Schema5.LeavingReachProvokesOpportunityAttack",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5OpportunityAttackTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts adjacent"), Battle.Start(Pair({1, 0}), 7, Error));
+        TestTrue(TEXT("Everyone starts with a reaction"), Battle.Find(20)->bReactionAvailable);
+        const FCombatResult Away = Battle.Submit({ECombatCommandType::Move, 10, {0, 3}});
+        TestTrue(TEXT("Move accepted"), Away.bAccepted);
+        if (TestEqual(TEXT("Leaving reach provokes once"), Away.Reactions.Num(), 1))
+        {
+            TestEqual(TEXT("The adjacent melee enemy reacts"), Away.Reactions[0].ReactorId, 20);
+            TestEqual(TEXT("Struck while leaving its last reach cell"), Away.Reactions[0].Cell, FIntPoint(0, 1));
+        }
+        TestFalse(TEXT("The reaction is spent"), Battle.Find(20)->bReactionAvailable);
+        if (Battle.Find(10)->Life == ECombatLife::Conscious)
+        {
+            TestTrue(TEXT("Ends turn"), Battle.Submit({ECombatCommandType::EndTurn, 10}).bAccepted);
+            TestTrue(TEXT("Reaction returns at the reactor's turn start"), Battle.Find(20)->bReactionAvailable);
+        }
+    }
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[1].Range = 4;
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult Away = Battle.Submit({ECombatCommandType::Move, 10, {0, 3}});
+        TestTrue(TEXT("Ranged enemies make no opportunity attack"), Away.bAccepted && Away.Reactions.IsEmpty());
+        TestTrue(TEXT("Its reaction is kept"), Battle.Find(20)->bReactionAvailable);
+    }
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[0].HP = 1;
+        Encounter.Combatants[0].ArmorClass = 1;
+        Encounter.Combatants[1].AttackBonus = 30;
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult Away = Battle.Submit({ECombatCommandType::Move, 10, {0, 3}});
+        TestTrue(TEXT("Move accepted"), Away.bAccepted);
+        if (Away.Reactions.Num() == 1 && Away.Reactions[0].bHit)
+        {
+            TestEqual(TEXT("A dropped mover stops where it was struck"), Battle.Find(10)->Cell, FIntPoint(0, 1));
+            TestEqual(TEXT("Path ends there"), Away.Path.Last(), FIntPoint(0, 1));
+            TestTrue(TEXT("Reported as dropped (a lone party member's defeat is final)"), Away.Downed.Contains(10) || Away.Died.Contains(10));
+            TestEqual(TEXT("Dropping the last hero ends the battle"), Battle.Snapshot().Phase, EBattlePhase::Defeat);
+        }
+        else { AddError(TEXT("Fixture seed must produce a hit")); }
+    }
+    {
+        FExpeditionRun Run, Restored;
+        FExpeditionSnapshot Snapshot = ActiveRun(Run);
+        FirstParty(Snapshot).bReactionAvailable = false;
+        TestTrue(TEXT("A spent reaction restores mid-battle"), Restored.Restore(Snapshot, Error));
+        TestTrue(TEXT("And is retained"), Same(Snapshot, Restored.Snapshot()));
+    }
+    return !HasAnyErrors();
+}
 #endif
