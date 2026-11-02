@@ -222,3 +222,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #76: rests and hit dice (rules only)
 
 `FRestRules`: hit dice are d10 for Fighters, d8 for Rogues and Clerics, d6 for Wizards. A spent hit die heals its roll plus the Constitution modifier (never below 0). A long rest returns half the character's level in hit dice (minimum 1). Second Wind, Action Surge, Channel Divinity and superiority dice refresh on a short rest; hit points, hit dice, spell slots and Arcane Recovery on a long rest. Decision for Austin: a camp counts as a long rest. Spent hit dice and per-pool usage need saved state (#39).
+
+## Issue #77: class feature scaling tables (rules only)
+
+`FClassFeatureRules`: Second Wind heals 1d10 + fighter level; Action Surge from level 2 (twice from 17); Fighters get Extra Attack at 5 (3 attacks at 11, 4 at 20). Sneak Attack is 1d6 per two rogue levels rounded up, needs a finesse or ranged weapon, works once per turn, and needs advantage or an ally next to the target (never with disadvantage). Cunning Action from level 2. Channel Divinity is 1 use at 2, 2 at 6, 3 at 18. Arcane Recovery restores slot levels equal to half the wizard level rounded up. Existing battle code is unchanged; per-level uses and once-per-turn flags need saved state (#39).
