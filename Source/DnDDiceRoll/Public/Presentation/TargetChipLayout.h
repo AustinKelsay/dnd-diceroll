@@ -11,11 +11,50 @@ namespace ExpeditionLayout
 struct Point { double X, Y; };
 struct Rect { double Left, Top, Right, Bottom; };
 struct Chip { Point Anchor; Rect Panel; };
+struct Segment { Point From, To; };
 
 inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
 {
     return A.Left < B.Right + Gap && A.Right + Gap > B.Left &&
         A.Top < B.Bottom + Gap && A.Bottom + Gap > B.Top;
+}
+
+// Keep the original target-to-panel line, but omit portions hidden by HUD or
+// chip rectangles (including their decorative frame/shadow). Exclusions are
+// supplied after ALL chips have been placed, regardless of their draw order.
+inline std::vector<Segment> VisibleLeader(Point From, Point To, const std::vector<Rect>& Exclusions)
+{
+    constexpr double Padding = 6;
+    const double DX = To.X - From.X, DY = To.Y - From.Y;
+    if (DX == 0 && DY == 0) { return {}; }
+    struct Interval { double Begin, End; };
+    std::vector<Interval> Hidden;
+    for (const auto& Box : Exclusions)
+    {
+        double Begin = 0, End = 1;
+        auto IntersectAxis = [&](double Origin, double Delta, double Low, double High)
+        {
+            if (Delta == 0) { return Origin >= Low && Origin <= High; }
+            double A = (Low - Origin) / Delta, B = (High - Origin) / Delta;
+            if (A > B) { std::swap(A, B); }
+            Begin = std::max(Begin, A); End = std::min(End, B);
+            return Begin <= End;
+        };
+        if (IntersectAxis(From.X, DX, Box.Left - Padding, Box.Right + Padding) &&
+            IntersectAxis(From.Y, DY, Box.Top - Padding, Box.Bottom + Padding))
+        { Hidden.push_back({Begin, End}); }
+    }
+    std::sort(Hidden.begin(), Hidden.end(), [](const Interval& A, const Interval& B) { return A.Begin < B.Begin; });
+    auto At = [&](double T) -> Point { return {From.X + DX * T, From.Y + DY * T}; };
+    std::vector<Segment> Visible;
+    double Cursor = 0;
+    for (const auto& Span : Hidden)
+    {
+        if (Span.Begin > Cursor) { Visible.push_back({At(Cursor), At(Span.Begin)}); }
+        Cursor = std::max(Cursor, Span.End);
+    }
+    if (Cursor < 1) { Visible.push_back({At(Cursor), To}); }
+    return Visible;
 }
 
 // Try the desired location and each obstacle edge. Every candidate is checked

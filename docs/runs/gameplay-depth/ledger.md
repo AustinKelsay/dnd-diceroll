@@ -2,9 +2,9 @@
 
 - Parent: [#112](https://github.com/AustinKelsay/dnd-diceroll/issues/112).
 - Authority: Austin's 2026-11-02 request to deepen the discussed gaps systematically, end to end, full send; bounded design/tuning and slice decisions delegated to the program owner.
-- Root owner/workspace: primary agent, `dnd-diceroll-depth`, branch `feature/gameplay-depth`.
+- Root owner/workspace: primary agent on PlebDev Ultra, T3-bound `feature/50-targeting-ultra`. Historical Mac source `dnd-diceroll-depth` / `feature/gameplay-depth` is preserved at the migration handoff.
 - Starting baseline: staging `df25f32ae47dded0d1832cb9ef2eddaa251a52d9` (menu #110). Original checkout and other feature worktrees are preserved.
-- Current slice: [#50](https://github.com/AustinKelsay/dnd-diceroll/issues/50), targeting information and simultaneous outcome previews. Source is implemented; integration and acceptance remain incomplete. Mac work is quiesced by the owner's desktop migration direction; continue from the [migration handoff](03-desktop-handoff.md).
+- Current slice: [#50](https://github.com/AustinKelsay/dnd-diceroll/issues/50), targeting information and simultaneous outcome previews. Source and desktop review corrections are implemented; integration and acceptance remain incomplete. Mac work is quiesced. The [migration handoff](03-desktop-handoff.md) preserves the source; [desktop corrections](04-ultra-review.md) and [review ledger](02-targeting-review.md) record ongoing Ultra work.
 
 ## Ordered delivery
 
@@ -21,7 +21,7 @@ The parent issue owns the approved program boundaries. Concrete child contracts 
 
 | Slice | Fixed review baseline | Implementation | Verification | Independent review | Remaining |
 | --- | --- | --- | --- | --- | --- |
-| #50 targeting | `df25f32` | Source unit `f1697f3`, fixture coverage `200ac9a`, compiler/identity corrections in migration commit | Final UE 5.8.4 Development build passes without compiler warnings. Latest executed full suite: 84/85, only new targeting fixture failed; identity correction compiled but not retested. Helpers 50/50. | Not started | Desktop focused/full tests, independent review, package/native acceptance, PR/integration |
+| #50 targeting | `df25f32` | Mac source preserved at `661e216`; desktop placement/semantics corrections `6988b7e`, followed by connector clipping | Historical Mac build passed; latest native suite remains 84/85. Newer Ultra source has no Unreal build/test evidence. Helpers 50/50 and portable production geometry/connector sanitizer checks pass. | Rounds 1/2 requested changes; root corrections awaiting fresh review | Allocated native build, targeting/full tests, fresh review, package/render/input acceptance, PR/integration |
 
 ## Coordination and evidence
 

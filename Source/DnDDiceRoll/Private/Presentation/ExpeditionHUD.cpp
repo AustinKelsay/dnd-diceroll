@@ -183,6 +183,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
     if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f, EAlign::Center, Width - 10); }
     Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled});
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
 
@@ -436,6 +437,8 @@ void AExpeditionHUD::DrawTargetChips()
     std::vector<ExpeditionLayout::Rect> Occupied;
     for (const auto& Box : ChipExclusions)
     { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
+    struct FDrawChip { ExpeditionLayout::Chip Geometry; FString Label; float Width; };
+    TArray<FDrawChip> Chips;
     const ExpeditionLayout::Rect Bounds = {8, 150, W - 8, H - 160};
     int32 Overflow = 0;
     for (const int32 Id : Rules.LegalTargets(Player->Actor(), Player->Action()))
@@ -447,11 +450,23 @@ void AExpeditionHUD::DrawTargetChips()
         ExpeditionLayout::Chip Chip;
         if (!ExpeditionLayout::PlaceChip({Anchor.X, Anchor.Y}, Width, 24, Bounds, Occupied, Chip)) { ++Overflow; continue; }
         Occupied.push_back(Chip.Panel);
-        const FVector2D Edge(std::clamp(Chip.Anchor.X, Chip.Panel.Left, Chip.Panel.Right),
-            std::clamp(Chip.Anchor.Y, Chip.Panel.Top, Chip.Panel.Bottom));
-        Line(FVector2D(Chip.Anchor.X, Chip.Anchor.Y), Edge, Gold, 1);
-        Panel(Chip.Panel.Left, Chip.Panel.Top, Width, 24, Gold, 0.96f, false);
-        Text(Label, Chip.Panel.Left + Width / 2, Chip.Panel.Top + 3, Parchment, 0.72f, EAlign::Center, Width - 12);
+        Chips.Add({Chip, Label, Width});
+    }
+    // Every leader sees every chip, including ones drawn later. Draw all clipped
+    // segments before chip text so connector order cannot obscure a label.
+    for (const auto& Draw : Chips)
+    {
+        const auto& Chip = Draw.Geometry;
+        const ExpeditionLayout::Point Edge = {std::clamp(Chip.Anchor.X, Chip.Panel.Left, Chip.Panel.Right),
+            std::clamp(Chip.Anchor.Y, Chip.Panel.Top, Chip.Panel.Bottom)};
+        for (const auto& Segment : ExpeditionLayout::VisibleLeader(Chip.Anchor, Edge, Occupied))
+        { Line(FVector2D(Segment.From.X, Segment.From.Y), FVector2D(Segment.To.X, Segment.To.Y), Gold, 1); }
+    }
+    for (const auto& Draw : Chips)
+    {
+        const auto& PanelBounds = Draw.Geometry.Panel;
+        Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, 24, Gold, 0.96f, false);
+        Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, 0.72f, EAlign::Center, Draw.Width - 12);
     }
     if (Overflow > 0)
     { Text(FString::Printf(TEXT("%d more targets: use arrows to inspect"), Overflow), W * 0.5f, H - 116, Gold, 0.7f, EAlign::Center); }

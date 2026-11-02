@@ -8,6 +8,7 @@ Fresh GPT-6.1 Sol xhigh Standards/Spec review requested changes on four P2 findi
 
 - Chip placement tests every candidate against all occupied rectangles, including earlier chips and actual foreground panel bounds. The HUD collects panel exclusions separately from click blocking; chips remain noninteractive. Bounds protect the legend and bottom controls. Exhausted display space produces an explicit additional-target count rather than overlapping panels.
 - Chip anchors retain their original projected target position. The leader connects that position to the final panel edge after all displacement.
+- Round 2 cleared the initial findings but found that leaders could cross foreground text. Leaders now omit segments inside HUD panels, buttons and every placed chip, with six design units of frame/shadow padding. All chip positions are collected first; clipped leaders draw before all chip text, preserving correspondence without overpainting foreground information.
 - Guaranteed lethal Push forecasts omit displacement text because resolution only pushes conscious survivors.
 - Added `Project.Expedition.Presentation.TargetChipSemantics` and `TargetChipAvailability`: literal utility/amount/drop labels, committed Rage/protection/swap/push/surge/healing/missile/Rescue consequences, exhausted Kit/Slot/Rage/Wind/Maneuver/Potion states, actual spent Action/Bonus budgets, rejection and full reflected-state/RNG preservation. Existing all-70 coverage and restore fixtures are retained.
 
@@ -18,6 +19,7 @@ No combat resolution, target legality, costs, save fields/schema, catalog revisi
 - All 90 LFS files hash/size verified: 30,936,023 bytes. Adoption source fingerprint matched the committed handoff.
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/tests -v`: 50/50, no skips after source corrections.
 - Production layout compiled with Clang 23.1.3 using `-std=c++17 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined`; executable passed reported overlapping-stack reproductions, edge anchors, HUD exclusions, deterministic repeated placement, four viewport-size calculations and 3,200 randomized placements, plus no-space refusal.
+- After round 2, the setup owner explicitly allocated one tiny portable-only compile/run. The updated production geometry and connector test passed with the same warnings/sanitizers, including the party-card crossing, merged overlapping exclusions, reversed/diagonal/parallel segments, fully hidden and zero-length segments, and connector exclusion/collinearity checks for the randomized placements. Compile and run exited 0; the portable slot was released. No Unreal or shared engine/cache/config job ran.
 
 Reproduce the portable geometry check from repository root:
 

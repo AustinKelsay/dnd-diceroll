@@ -1,10 +1,33 @@
 // Tests the production geometry without Unreal. Does not establish rendered UI acceptance.
 #include "Presentation/TargetChipLayout.h"
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <random>
 
 using namespace ExpeditionLayout;
+
+static bool Near(double A, double B) { return std::abs(A-B) < 0.00001; }
+
+static void CheckLeader(Point From, Point To, const std::vector<Rect>& Exclusions)
+{
+    for (const auto& Segment : VisibleLeader(From, To, Exclusions))
+    {
+        for (int I=0; I<=100; ++I)
+        {
+            const double T = I/100.0;
+            const Point P{Segment.From.X + (Segment.To.X-Segment.From.X)*T,
+                Segment.From.Y + (Segment.To.Y-Segment.From.Y)*T};
+            for (const auto& Box : Exclusions)
+            {
+                assert(!(P.X > Box.Left-6+0.00001 && P.X < Box.Right+6-0.00001 &&
+                    P.Y > Box.Top-6+0.00001 && P.Y < Box.Bottom+6-0.00001));
+            }
+            // Clipping must not reroute a leader to a different target.
+            assert(Near((P.X-From.X)*(To.Y-From.Y), (P.Y-From.Y)*(To.X-From.X)));
+        }
+    }
+}
 
 static void CheckPlacement(Point Anchor, double Width, const Rect& Bounds, std::vector<Rect>& Occupied)
 {
@@ -18,10 +41,32 @@ static void CheckPlacement(Point Anchor, double Width, const Rect& Bounds, std::
     assert(PlaceChip(Anchor, Width, 24, Bounds, Occupied, Again));
     assert(Result.Panel.Left == Again.Panel.Left && Result.Panel.Top == Again.Panel.Top);
     Occupied.push_back(Result.Panel);
+    CheckLeader(Anchor, {std::clamp(Anchor.X, Result.Panel.Left, Result.Panel.Right),
+        std::clamp(Anchor.Y, Result.Panel.Top, Result.Panel.Bottom)}, Occupied);
 }
 
 int main()
 {
+    // Reviewer reproduction: target behind a party card, chip outside it.
+    const std::vector<Rect> Foreground = {{12,212,262,324}, {350,238,450,262}};
+    auto Segments = VisibleLeader({100,250}, {350,250}, Foreground);
+    assert(Segments.size() == 1);
+    assert(Near(Segments[0].From.X,268) && Near(Segments[0].To.X,344));
+    CheckLeader({100,250}, {350,250}, Foreground);
+    CheckLeader({350,250}, {100,250}, Foreground);
+    CheckLeader({100,100}, {500,500}, Foreground);
+    assert(VisibleLeader({100,250},{200,250},Foreground).empty());
+    assert(VisibleLeader({100,250},{100,250},Foreground).empty());
+    // Crossing an earlier/later chip and overlapping exclusions must leave gaps.
+    const std::vector<Rect> Crossings = {{20,-10,40,10}, {30,-10,60,10}};
+    Segments = VisibleLeader({0,0},{100,0},Crossings);
+    assert(Segments.size() == 2);
+    assert(Near(Segments[0].From.X,0) && Near(Segments[0].To.X,14));
+    assert(Near(Segments[1].From.X,66) && Near(Segments[1].To.X,100));
+    CheckLeader({0,0},{100,0},Crossings);
+    Segments = VisibleLeader({0,-20},{0,20},Crossings);
+    assert(Segments.size() == 1 && Near(Segments[0].From.Y,-20) && Near(Segments[0].To.Y,20));
+
     const Rect Bounds = {8, 150, 1272, 560};
     std::vector<Rect> Occupied;
     for (double Y : {200, 245, 245}) { CheckPlacement({640, Y}, 290, Bounds, Occupied); }
@@ -56,5 +101,5 @@ int main()
     Chip Result;
     assert(!PlaceChip({0, 0}, 290, 24, {0, 0, 200, 20}, {}, Result));
     assert(!PlaceChip({640, 300}, 290, 24, Bounds, {Bounds}, Result));
-    std::cout << "PASS: collision regressions, edge anchors, HUD exclusions, four viewport sizes, 3200 randomized placements, no-space refusal\n";
+    std::cout << "PASS: collision regressions, edge anchors, HUD and chip leader clipping, four viewport sizes, 3200 randomized placements, no-space refusal\n";
 }
