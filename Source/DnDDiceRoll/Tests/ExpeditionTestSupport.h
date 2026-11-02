@@ -22,6 +22,15 @@ inline bool FinishCombat(FExpeditionRun& Run, bool bFight = true)
         if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
         if (bFight)
         {
+            // Pick up a Downed ally first: under the 2-round house rule a Downed hero dies if hit.
+            for (const auto& Ally : Battle.Snapshot().Encounter.Combatants)
+            {
+                if (Ally.Side != ECombatSide::Party || Ally.Life != ECombatLife::Downed || !Battle.Snapshot().bActionAvailable) { continue; }
+                for (auto Action : {ECombatCommandType::Rescue, ECombatCommandType::Potion, ECombatCommandType::CureWounds})
+                {
+                    if (Battle.Snapshot().bActionAvailable && Battle.Find(Ally.Id)->Life == ECombatLife::Downed && Battle.LegalTargets(Id, Action).Contains(Ally.Id)) { Run.Submit({Action, Id, {}, Ally.Id}); }
+                }
+            }
             for (auto Action : {ECombatCommandType::SecondWind, ECombatCommandType::Potion, ECombatCommandType::CureWounds})
             {
                 if (Active->HP <= Active->MaxHP / 2 && Battle.LegalTargets(Id, Action).Contains(Id)) { Run.Submit({Action, Id, {}, Id}); }

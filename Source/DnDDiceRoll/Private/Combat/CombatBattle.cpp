@@ -158,7 +158,8 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             static_cast<uint8>(Unit.AdventurerRole) > static_cast<uint8>(EAdventurerRole::Artificer) ||
             static_cast<uint8>(Unit.Life) > static_cast<uint8>(ECombatLife::Dead) ||
             (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
-            (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party || Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)) ||
+            (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party || Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > (Encounter.bTwoRoundDowned && !Encounter.bDeathSaves ? DownedRounds : 3))) ||
+            (Unit.DownedAtSlot != INDEX_NONE && (Unit.Life != ECombatLife::Downed || !Encounter.bTwoRoundDowned || Encounter.bDeathSaves)) ||
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
             Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 2 ||
             (Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
@@ -614,6 +615,7 @@ FString FCombatBattle::StatusText(int32 Id) const
     TArray<FString> Parts;
     if (const FCombatantState* Unit = Find(Id))
     {
+        if (Unit->Life == ECombatLife::Downed && TwoRoundDowned()) { Parts.Add(FString::Printf(TEXT("Downed (%d round%s, dies if hit)"), Unit->RescueTurnsLeft, Unit->RescueTurnsLeft == 1 ? TEXT("") : TEXT("s"))); }
         for (const FCombatCondition& C : Unit->Conditions)
         {
             Parts.Add(C.RoundsLeft > 0 ? FString::Printf(TEXT("%s (%d round%s)"), ConditionName(C.Condition), C.RoundsLeft, C.RoundsLeft == 1 ? TEXT("") : TEXT("s")) : FString(ConditionName(C.Condition)));
@@ -811,7 +813,7 @@ TArray<int32> FCombatBattle::LegalTargetsRaw(int32 Id, ECombatCommandType Action
             for (const auto& T : State.Encounter.Combatants)
             {
                 const bool Kind = A.Target == EAbilityTarget::Self ? T.Id == Id : A.Target == EAbilityTarget::Enemy ? T.Side != Unit->Side : T.Side == Unit->Side && (A.Target == EAbilityTarget::Friendly || T.Id != Id);
-                if (Kind && (A.Effect != EAbilityEffect::Healing || T.HP < T.MaxHP) && T.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, T.Cell) <= A.Range && HasLineOfSight(Unit->Cell, T.Cell)) { Result.Add(T.Id); }
+                if (Kind && (A.Effect != EAbilityEffect::Healing || T.HP < T.MaxHP) && (T.Life == ECombatLife::Conscious || (A.Effect == EAbilityEffect::Healing && T.Life == ECombatLife::Downed && TwoRoundDowned())) && GridDistance(Unit->Cell, T.Cell) <= A.Range && HasLineOfSight(Unit->Cell, T.Cell)) { Result.Add(T.Id); }
             }
         }
         return Result;
@@ -825,7 +827,7 @@ TArray<int32> FCombatBattle::LegalTargetsRaw(int32 Id, ECombatCommandType Action
     for (const FCombatantState& Target : State.Encounter.Combatants)
     {
         bool bLegal = false;
-        if ((Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike)) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target); }
+        if ((Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike)) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target) || DownedKillable(*Unit, Target); }
         else if (Action == ECombatCommandType::OffHandAttack) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target) && GridDistance(Unit->Cell, Target.Cell) <= 1; }
         else if (Action == ECombatCommandType::MagicMissile)
         {
@@ -852,7 +854,7 @@ TArray<int32> FCombatBattle::LegalTargetsRaw(int32 Id, ECombatCommandType Action
             bLegal = Unit->Side == ECombatSide::Party && Target.Side == Unit->Side && Target.Life != ECombatLife::Dead && Target.HP < Target.MaxHP &&
                 GridDistance(Unit->Cell, Target.Cell) <= TouchRange && HasLineOfSight(Unit->Cell, Target.Cell) &&
                 (Action != ECombatCommandType::Rescue || Target.Life == ECombatLife::Downed) &&
-                (Action != ECombatCommandType::CureWounds || Target.Life == ECombatLife::Conscious);
+                (Action != ECombatCommandType::CureWounds || Target.Life == ECombatLife::Conscious || TwoRoundDowned());
         }
         if (bLegal) { Result.Add(Target.Id); }
     }
@@ -908,6 +910,12 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     const FCombatantState* Target = Find(TargetId);
     if (!Actor || !Target || !LegalTargets(ActorId, Action).Contains(TargetId)) { return Forecast; }
     Forecast.bValid = true;
+    if (DownedKillable(*Actor, *Target) && (Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike))
+    {
+        Forecast.bKillsDowned = true; Forecast.HitChancePercent = 100; Forecast.HitChanceOutOf400 = 400;
+        Forecast.Formula = TEXT("Downed: dies if hit");
+        return Forecast;
+    }
     if (Action == ECombatCommandType::Special1 || Action == ECombatCommandType::Special2 || (Action == ECombatCommandType::CureWounds && !Actor->BuildId.IsEmpty()))
     {
         for (const auto& A : FBuildCatalog::Abilities(*Actor))
@@ -1391,6 +1399,11 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     FCombatResult Result = Resolve(Command);
     DiceLog = nullptr;
     if (!Result.bAccepted) { PendingSpellEvents.Reset(); return Result; }
+    // An active unit that drops on its own turn (opportunity or readied attack, hazard) cannot act or end its turn, so pass the turn on.
+    if (State.Phase == EBattlePhase::Fighting)
+    {
+        if (const FCombatantState* Active = Find(ActiveId()); Active && Active->Life != ECombatLife::Conscious) { AdvanceTurn(); }
+    }
     PruneConditions();
     Result.SpellEvents = MoveTemp(PendingSpellEvents);
     if (OnSpellEvent) { for (const FSpellCastEvent& E : Result.SpellEvents) { OnSpellEvent(E); } }
@@ -1689,6 +1702,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 int32 Amount = A.Amount;
                 if (A.bCureDice) { SpendSpellSlot(*User); State.bSlotSpentThisTurn = true; DiceLog = &Result.EffectDice; Result.EffectModifier = CureModifier(User->Id); Amount = FMath::Max(1, RollDice(CureDice,CureDie)+Result.EffectModifier); DiceLog = nullptr; }
                 Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP); Target->HP += Result.Healing;
+                if (Target->Life == ECombatLife::Downed && Target->HP > 0) { Target->Life = ECombatLife::Conscious; Target->RescueTurnsLeft = 0; Target->DownedAtSlot = INDEX_NONE; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0; }
                 Result.Effects.Add({Target->Id, A.Effect, Result.Healing, Target->Cell});
             }
             else if (A.Effect == EAbilityEffect::Rage) { --User->RageUses; User->RageTurns = 2; }
@@ -1746,6 +1760,18 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
+        if (DownedKillable(*Actor, *Target))
+        {
+            // House rule: attacking a Downed hero kills them outright; no roll, the attack is still spent.
+            Target->Life = ECombatLife::Dead; Target->RescueTurnsLeft = 0; Target->DownedAtSlot = INDEX_NONE; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0;
+            Result.bHit = true;
+            if (State.bActionAvailable) { State.bActionAvailable = false; State.bAttackActionTaken = true; State.AttacksRemaining = AttacksPerAction(*Actor) - 1; }
+            else { --State.AttacksRemaining; }
+            CheckOutcome();
+            Result.Feedback = FString::Printf(TEXT("%s > %s: attacks a downed hero | DEAD"), *Actor->Name, *Target->Name);
+        }
+        else
+        {
         const int32 ManeuverBonus = Command.Type != ECombatCommandType::PrecisionStrike ? 0 :
             State.Encounter.bSuperiorityDice ? Roll(FSuperiorityRules::DieSides(FBuildCatalog::ClassLevel(*Actor, EAdventurerRole::Fighter))) : PrecisionBonus;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
@@ -1758,7 +1784,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         }
         else { --State.AttacksRemaining; }
         CheckOutcome();
-        FString TargetStatus = Target->Life == ECombatLife::Downed ? (State.Encounter.bDeathSaves ? FString(TEXT(" DOWNED (death saves)")) : FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft)) :
+        FString TargetStatus = Target->Life == ECombatLife::Downed ? (State.Encounter.bDeathSaves ? FString(TEXT(" DOWNED (death saves)")) : (TwoRoundDowned() ? FString::Printf(TEXT(" DOWNED (%d rounds)"), Target->RescueTurnsLeft) : FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft))) :
             Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : TEXT("");
         if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
         const FString ModeText = Result.AttackRolls.Num() > 1 ?
@@ -1773,6 +1799,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.Feedback = Result.bCounterspelled ? FString::Printf(TEXT("%s > %s: Sacred Flame | %s"), *Actor->Name, *Target->Name, *Result.RollModeSources.Last()) :
                 FString::Printf(TEXT("%s > %s: Sacred Flame | DEX save d20 %d + %d = %d vs DC %d | %s | %d radiant damage. HP %d/%d%s"), *Actor->Name, *Target->Name,
                     Result.NaturalRoll, Result.AttackBonus, Result.AttackTotal, Result.TargetArmorClass, Result.bHit ? TEXT("FAILED") : TEXT("SAVED"), Result.Damage, Target->HP, Target->MaxHP, *TargetStatus);
+        }
         }
     }
     else if (Command.Type == ECombatCommandType::SecondWind || Command.Type == ECombatCommandType::CureWounds ||
@@ -1818,7 +1845,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
             Target->HP += Result.Healing;
             Target->Life = ECombatLife::Conscious;
-            Target->RescueTurnsLeft = 0; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0;
+            Target->RescueTurnsLeft = 0; Target->DownedAtSlot = INDEX_NONE; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0;
         }
         if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
         else { State.bActionAvailable = false; }
@@ -2041,6 +2068,12 @@ int32 FCombatBattle::ProtectionFor(const FCombatantState& Target) const
 
 void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
 {
+    if (TwoRoundDowned() && Target.Life == ECombatLife::Downed)
+    {
+        // House rule: any damage to a Downed hero kills them; no failed death saves to count.
+        if (Damage > 0) { Target.Life = ECombatLife::Dead; Target.RescueTurnsLeft = 0; Target.DownedAtSlot = INDEX_NONE; Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; }
+        return;
+    }
     Damage = SpellDamageIntake(Target, Damage);
     if (Target.WildShapeHP > 0 && Damage > 0)
     {
@@ -2082,7 +2115,8 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         for (auto& U : State.Encounter.Combatants) { if (U.HelpedById == Target.Id) { U.HelpedById = INDEX_NONE; } }
         Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
         if (bMassive) { Target.Life = ECombatLife::Dead; }
-        Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
+        Target.RescueTurnsLeft = Target.Life != ECombatLife::Downed ? 0 : TwoRoundDowned() ? DownedRounds : 3;
+        Target.DownedAtSlot = Target.Life == ECombatLife::Downed && TwoRoundDowned() ? State.TurnIndex : INDEX_NONE;
         Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0; EndConcentration(Target);
     }
 }
@@ -2114,12 +2148,34 @@ void FCombatBattle::CheckOutcome()
                 Unit.Life = bSurvives ? ECombatLife::Conscious : ECombatLife::Dead; Unit.HP = bSurvives ? 1 : 0;
                 Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0;
             }
+            Unit.DownedAtSlot = INDEX_NONE;
         }
     }
 }
 
+void FCombatBattle::TickDownedSlots()
+{
+    if (!TwoRoundDowned()) { return; }
+    for (FCombatantState& Unit : State.Encounter.Combatants)
+    {
+        if (Unit.Life != ECombatLife::Downed) { Unit.DownedAtSlot = INDEX_NONE; continue; }
+        const int32 Slot = Unit.DownedAtSlot != INDEX_NONE ? Unit.DownedAtSlot : State.TurnOrder.IndexOfByKey(Unit.Id);
+        if (Slot != State.TurnIndex || Unit.DeathSaveSuccesses >= 3) { continue; } // Spare the Dying: stable stops the clock
+        // One full round has passed since the hero dropped (the slot that was acting has come round again).
+        if (--Unit.RescueTurnsLeft <= 0) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; Unit.DownedAtSlot = INDEX_NONE; Unit.DeathSaveSuccesses = 0; }
+    }
+}
+
+bool FCombatBattle::DownedKillable(const FCombatantState& Attacker, const FCombatantState& Target) const
+{
+    if (!TwoRoundDowned() || Target.Life != ECombatLife::Downed || Target.Side == Attacker.Side) { return false; }
+    FCombatantState Standing = Target; Standing.HP = 1; Standing.Life = ECombatLife::Conscious; Standing.Conditions.RemoveAll([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Unconscious; }); // same reach and sight as a standing target
+    return CanTargetFrom(Attacker, Attacker.Cell, Standing);
+}
+
 void FCombatBattle::DownedTurn(FCombatantState& Unit)
 {
+    if (TwoRoundDowned()) { return; } // the house-rule clock ticks by round slot in TickDownedSlots
     if (!State.Encounter.bDeathSaves)
     {
         if (Unit.DeathSaveSuccesses >= 3) { return; } // Spare the Dying: stable
@@ -2144,6 +2200,7 @@ void FCombatBattle::AdvanceTurn()
     {
         State.TurnIndex = (State.TurnIndex + 1) % State.TurnOrder.Num();
         if (State.TurnIndex == 0) { ++State.Round; }
+        TickDownedSlots();
         FCombatantState* Next = MutableFind(ActiveId());
         if (State.Round > 1) { for (FCombatantState& Unit : State.Encounter.Combatants) { Unit.bSurprised = false; } }
         if (Next->Life == ECombatLife::Downed) { AuraOfLifeRevives(*Next); }
@@ -2239,7 +2296,9 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     if (LegalTargets(Id).IsEmpty() && State.MovementLeft > 0 && State.bActionAvailable) { bReachable = StepToward(); }
     // Still out of reach: Dash toward the nearest firing cell.
     if (bReachable && LegalTargets(Id).IsEmpty() && State.Phase == EBattlePhase::Fighting && SelfAction(ECombatCommandType::Dash)) { StepToward(); }
-    TArray<int32> Targets = LegalTargets(Id);
+    // House rule: Downed heroes are legal targets; the AI finishes one only when no conscious hero is in reach.
+    auto AITargets = [&]() { TArray<int32> T = LegalTargets(Id); T.StableSort([&](int32 A, int32 B) { return Find(A)->Life == ECombatLife::Conscious && Find(B)->Life != ECombatLife::Conscious; }); return T; };
+    TArray<int32> Targets = AITargets();
     // Multiattack: a stat block's attacks per Attack action (Thug, Scout); ordinary foes swing once.
     for (int32 Swing = 0; !Targets.IsEmpty() && State.Phase == EBattlePhase::Fighting; ++Swing)
     {
@@ -2247,7 +2306,7 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
         const FCombatResult Swung = Submit({ECombatCommandType::Attack, Id, {}, Targets[0]});
         Results.Add(Swung);
         if (!Swung.bAccepted) { break; }
-        Targets = LegalTargets(Id);
+        Targets = AITargets();
     }
     // No hero in reach at all, even dashing: ranged foes Hide, melee foes Dodge.
     if (!bReachable && State.Phase == EBattlePhase::Fighting && !SelfAction(Find(Id)->Range > 1 ? ECombatCommandType::Hide : ECombatCommandType::Dodge)) { SelfAction(ECombatCommandType::Dodge); }
@@ -2312,6 +2371,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         if (Unit.Name.IsEmpty() || Unit.Name.Len() > 80 || Unit.Role.IsEmpty() || Unit.Role.Len() > 80 ||
             Unit.Initiative < 1 + Unit.InitiativeBonus || Unit.Initiative > 20 + Unit.InitiativeBonus ||
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
+            Unit.DownedAtSlot < INDEX_NONE || Unit.DownedAtSlot >= Snapshot.TurnOrder.Num() ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
                 Unit.bDodging || Unit.bReckless || Unit.SacredWeaponTurns != 0 || Unit.QuickenState != 0 || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
@@ -2706,7 +2766,7 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
         DiceLog = nullptr;
         Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
         Target->HP += Result.Healing;
-        if (Target->HP > 0) { Target->Life = ECombatLife::Conscious; Target->RescueTurnsLeft = 0; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0; }
+        if (Target->HP > 0) { Target->Life = ECombatLife::Conscious; Target->RescueTurnsLeft = 0; Target->DownedAtSlot = INDEX_NONE; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0; }
         Result.Effects.Add({Target->Id, EAbilityEffect::Healing, Result.Healing, Target->Cell});
         Result.bHit = true;
         Result.Feedback = FString::Printf(TEXT("%s: %s (%s) > %s | heal %d | HP %d/%d"), *User->Name, S.Name, *SlotText, *Target->Name, Result.Healing, Target->HP, Target->MaxHP);

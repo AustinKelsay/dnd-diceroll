@@ -13,6 +13,7 @@ Branch `feature/dnd-defaults`. Suite: 241 automation tests green. No push.
 - Ranged attacks: disadvantage only from an adjacent hostile that can see the attacker and isn't Incapacitated (`NearbyFoeSees`).
 - Speed 0 only for Grappled, Restrained, Paralyzed, Petrified and Unconscious (Stunned/Incapacitated can move); Unconscious adds Prone (no direct test: the helper is private).
 - Source comments citing SRD 5.1 updated to 5.2.1 where the rule matches 5.2.1; monster stat blocks and rules still on 5.1 text (group checks, beasts, tools, levels, spells, performance, lore) keep the 5.1 cite.
+- House rule (SRD deviation, needs Austin's sign-off): `bTwoRoundDowned` (default on, schema 5). No death saves; Downed for 2 full rounds, any healing revives at the healed HP, any attack or damage kills. An active unit that drops on its own turn now ends its turn. Tests: `Project.Expedition.DownedHouseRule.*` (6); legacy rescue tests pin the flag off. 247/247 pass.
 
 ## Spell coverage (SRD 5.2.1, castable / total / documented exceptions)
 | Level | Castable | Total | Exceptions |

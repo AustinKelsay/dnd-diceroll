@@ -51,6 +51,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() EAdventurerRole AdventurerRole = EAdventurerRole::None;
     UPROPERTY() ECombatLife Life = ECombatLife::Conscious;
     UPROPERTY() int32 RescueTurnsLeft = 0;
+    /** House rule (bTwoRoundDowned): the turn-order slot active when this unit dropped; its countdown ticks each time that slot comes round. INDEX_NONE = its own slot, or not downed. */
+    UPROPERTY() int32 DownedAtSlot = INDEX_NONE;
     UPROPERTY() int32 SecondWindUses = 0;
     UPROPERTY() int32 SpellSlots = 0;
     /** Per-level slot pool (#71): empty, or one count per spell level 1..FSpellRules::MaxSpellLevel (legacy saves: 3) within FSpellRules::SlotsFor; level 1 mirrors SpellSlots. */
@@ -201,6 +203,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() TArray<FCombatantState> Combatants;
     /** #67: downed heroes roll SRD death saves instead of the three-turn rescue clock. Off by default to keep seeded battles. */
     UPROPERTY() bool bDeathSaves = false;
+    /** HOUSE RULE, not SRD (needs Austin's sign-off): no death saves; a hero at 0 HP is Downed for 2 full rounds, any healing revives them at the healed HP, and any attack or damage while Downed kills them. On by default; ignored when bDeathSaves is on. Off restores the 3-turn rescue clock. */
+    UPROPERTY() bool bTwoRoundDowned = true;
     /** #63: other creatures in the line of attack give half cover (+2). Off by default to keep seeded results. */
     UPROPERTY() bool bCreatureCover = false;
     /** #78/#79: the Battle Master maneuver spends a superiority die (d8) added to the attack roll (SRD Precision Attack). On by default; off restores the old flat +2 hit/damage. */
@@ -460,6 +464,8 @@ struct DNDDICEROLL_API FActionForecast
     EDamageResponse DamageResponse = EDamageResponse::Normal;
     /** Damage only: the best possible roll, counting a critical hit, reaches remaining health. */
     bool bCanDrop = false;
+    /** Two-round Downed house rule: the target is Downed, so this attack kills it outright with no roll. */
+    bool bKillsDowned = false;
     FString Formula;
     /** Ordered deterministic area damage and mitigation facts, matching committed effects. */
     TArray<FTargetEffect> Effects;
@@ -568,6 +574,10 @@ public:
     static const TCHAR* ConditionName(ECombatCondition Condition);
     /** "Poisoned (2 rounds), Prone"; empty without conditions. */
     FString StatusText(int32 Id) const;
+    /** The two-round Downed house rule is in force (bTwoRoundDowned and not bDeathSaves). */
+    bool TwoRoundDowned() const { return State.Encounter.bTwoRoundDowned && !State.Encounter.bDeathSaves; }
+    /** Rounds a Downed hero has left before dying, by the clock in force. */
+    static constexpr int32 DownedRounds = 2;
     /** "AC 18 (Chain Mail, shield)" from worn armor, else "AC 13". */
     FString ArmorClassText(int32 Id) const;
     // Spell effects (CombatSpellEffects.cpp, spells phases 3-4). Read-only, no RNG.
@@ -702,6 +712,9 @@ private:
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
     void DownedTurn(FCombatantState& Unit);
+    /** House rule: tick Downed countdowns whose slot just came round; clear stale slots. */
+    void TickDownedSlots();
+    bool DownedKillable(const FCombatantState& Attacker, const FCombatantState& Target) const;
     /** Starts the active unit's turn: movement from speed, grapple/restraint, and standing up from prone. */
     void BeginTurn();
     /** One weapon attack roll and its damage, without spending any budget. Shared by Attack and reactions. */

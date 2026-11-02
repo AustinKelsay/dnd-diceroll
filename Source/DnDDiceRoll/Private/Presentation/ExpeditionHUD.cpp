@@ -408,12 +408,13 @@ void AExpeditionHUD::DrawWorldOverlays()
         if (Display->Life == ECombatLife::Downed)
         {
             Text(TEXT("DOWNED"), Point.X, Point.Y - 26, FLinearColor(1.0f, 0.6f, 0.3f), 0.72f, EAlign::Center);
-            for (int32 Pip = 0; Pip < 3; ++Pip)
+            const int32 Pips = Rules.TwoRoundDowned() ? FCombatBattle::DownedRounds : 3;
+            for (int32 Pip = 0; Pip < Pips; ++Pip)
             {
                 const bool bLeft = Pip < Unit.RescueTurnsLeft;
-                Circle(FVector2D(Point.X - 14 + Pip * 14, Point.Y - 2), 5.0f, bLeft ? FLinearColor(1.0f, 0.6f, 0.3f) : FLinearColor(0.25f, 0.2f, 0.2f, 0.8f));
+                Circle(FVector2D(Point.X - 7 * (Pips - 1) + Pip * 14, Point.Y - 2), 5.0f, bLeft ? FLinearColor(1.0f, 0.6f, 0.3f) : FLinearColor(0.25f, 0.2f, 0.2f, 0.8f));
             }
-            if (bFocus) { Text(FString::Printf(TEXT("%s · rescue within %d turns"), *Unit.Name, Unit.RescueTurnsLeft), Point.X, Point.Y + 8, Parchment, 0.68f, EAlign::Center); }
+            if (bFocus) { Text(Rules.TwoRoundDowned() ? FString::Printf(TEXT("%s · heal within %d rnd · dies if hit"), *Unit.Name, Unit.RescueTurnsLeft) : FString::Printf(TEXT("%s · rescue within %d turns"), *Unit.Name, Unit.RescueTurnsLeft), Point.X, Point.Y + 8, Parchment, 0.68f, EAlign::Center); }
             continue;
         }
         const float Fraction = Display->ShownHP / Display->MaxHP;
@@ -550,7 +551,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     }
     else if (Life == ECombatLife::Downed)
     {
-        Text(FString::Printf(TEXT("DOWNED  ·  %d turns to rescue"), Unit.RescueTurnsLeft), X + 64, Y + 32, FLinearColor(1.0f, 0.6f, 0.3f), 0.74f);
+        Text(View->Rules().TwoRoundDowned() ? FString::Printf(TEXT("DOWNED · %d rnd"), Unit.RescueTurnsLeft) : FString::Printf(TEXT("DOWNED  ·  %d turns to rescue"), Unit.RescueTurnsLeft), X + 64, Y + 32, FLinearColor(1.0f, 0.6f, 0.3f), 0.74f, EAlign::Left, 176);
     }
     else
     {
@@ -735,14 +736,15 @@ void AExpeditionHUD::DrawForecast()
         if (!Target || !Forecast.bValid) { return; }
         Lines.Add({FString::Printf(TEXT("%s  ·  %s  ·  HP %d/%d"), *Target->Name, *Rules.ArmorClassText(TargetId), Target->HP, Target->MaxHP), ExpeditionStyle::UnitColor(*Target)});
         if (const FString Status = Rules.StatusText(TargetId); !Status.IsEmpty()) { Lines.Add({Status, Gold}); }
-        if (Forecast.bAttackRoll)
+        if (Forecast.bKillsDowned) { Lines.Add({TEXT("Downed: dies if hit (no roll)"), Danger}); }
+        else if (Forecast.bAttackRoll)
         {
             const FLinearColor Chance = Forecast.HitChancePercent >= 65 ? Safe : Forecast.HitChancePercent >= 40 ? Gold : Danger;
             Lines.Add({FString::Printf(TEXT("%d%% to hit%s"), Forecast.HitChancePercent, Forecast.RollMode == ERollMode::Normal ? TEXT("") :
                 Forecast.RollMode == ERollMode::Advantage ? TEXT("  (advantage)") : TEXT("  (disadvantage)")), Chance});
         }
         else if (!Forecast.bHealing && Forecast.MaxAmount > 0) { Lines.Add({TEXT("Never misses"), Safe}); }
-        Lines.Add({ExpeditionStyle::ForecastAmount(Forecast), Parchment});
+        if (!Forecast.bKillsDowned) { Lines.Add({ExpeditionStyle::ForecastAmount(Forecast), Parchment}); }
         if (Forecast.bSneakAttack) { Lines.Add({TEXT("Sneak Attack: an ally is beside them"), Safe}); }
         if (Forecast.bCanDrop) { Lines.Add({Forecast.MaxAmount >= Target->HP ? TEXT("A strong hit can drop them") : TEXT("A critical hit can drop them"), Danger}); }
         if (Forecast.bAttackRoll) { const auto* Actor = Rules.Find(Player->Actor()); const auto* Build = Actor ? FBuildCatalog::Find(Actor->BuildId) : nullptr; Lines.Add({FString::Printf(TEXT("Critical %d-20 doubles damage dice"), Build ? Build->CriticalThreshold : 20), Muted}); }
@@ -1058,7 +1060,7 @@ void AExpeditionHUD::DrawHelp()
         if (Index < UE_ARRAY_COUNT(Left)) { Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f); }
         if (Index < UE_ARRAY_COUNT(Right)) { Text(Right[Index], X + Width * 0.5f + 12, Y + 66 + Index * 28.0f, Parchment, 0.8f); }
     }
-    Text(TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
+    Text(View->Rules().TwoRoundDowned() ? TEXT("House rule: a downed ally dies after 2 full rounds, or at once if attacked. Any healing revives them. Heal before the last enemy falls.") : TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }

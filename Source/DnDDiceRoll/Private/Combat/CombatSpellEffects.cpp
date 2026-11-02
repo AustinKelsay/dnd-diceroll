@@ -458,7 +458,7 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
         {
             Entry.Value = Spec.MaxHpPerSlot * (1 + Above);
             Target->MaxHP += Entry.Value; Target->HP += Entry.Value;
-            if (Target->HP > 0) { Target->Life = ECombatLife::Conscious; }
+            if (Target->HP > 0) { Target->Life = ECombatLife::Conscious; Target->RescueTurnsLeft = 0; Target->DownedAtSlot = INDEX_NONE; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0; }
             Text += FString::Printf(TEXT(" +%d max HP"), Entry.Value);
         }
         if (Spec.TempSides > 0 || Spec.TempFlat > 0)

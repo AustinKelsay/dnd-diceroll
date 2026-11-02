@@ -125,6 +125,7 @@ bool FSneakAttackTest::RunTest(const FString& Parameters)
     {
         auto Encounter=RoleDuel(EAdventurerRole::Rogue);
         Encounter.Combatants[0].bSneakWeapon=Case!=1; Encounter.Combatants[0].AttackBonus=30;
+        Encounter.bTwoRoundDowned=false; // legacy rescue clock
         Encounter.Combatants[0].Cell=FIntPoint(0,2); // shoot from range: an adjacent hostile would impose disadvantage
         FCombatantState Ally=Encounter.Combatants[0]; Ally.Id=2; Ally.Cell=Case==2?FIntPoint(6,6):FIntPoint(1,1); Ally.InitiativeBonus=-10;
         if(Case==3) { Ally.Life=ECombatLife::Downed; Ally.HP=0; Ally.RescueTurnsLeft=3; }
@@ -160,7 +161,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRescueTest, "Project.Expedition.Party.RescueDe
 bool FRescueTest::RunTest(const FString& Parameters)
 {
     FString Error;
-    auto Encounter=RoleDuel(EAdventurerRole::Cleric);
+    auto Encounter=RoleDuel(EAdventurerRole::Cleric); Encounter.bTwoRoundDowned=false; // legacy rescue clock; house rule in DownedHouseRuleTest
     FCombatantState Ally=Encounter.Combatants[0]; Ally.Id=2; Ally.Cell={0,1}; Ally.HP=0;
     Ally.Life=ECombatLife::Downed; Ally.RescueTurnsLeft=3; Ally.InitiativeBonus=-10;
     Encounter.Combatants.Add(Ally);
@@ -199,7 +200,7 @@ bool FRescueTest::RunTest(const FString& Parameters)
     }
     TestFalse(TEXT("Dead ID cannot act"),Battle.Submit({ECombatCommandType::EndTurn,2}).bAccepted);
     // An actual hit creates the countdown rather than merely removing a turn.
-    Encounter=RoleDuel(EAdventurerRole::None);
+    Encounter=RoleDuel(EAdventurerRole::None); Encounter.bTwoRoundDowned=false;
     Encounter.Combatants[0].InitiativeBonus=-10;
     Encounter.Combatants[1].InitiativeBonus=30; Encounter.Combatants[1].AttackBonus=30; Encounter.Combatants[1].DamageBonus=100;
     Ally.Life=ECombatLife::Conscious; Ally.HP=20; Ally.RescueTurnsLeft=0; Encounter.Combatants.Add(Ally);
@@ -242,7 +243,7 @@ bool FAbilityLimitsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Cannot cast without slot"),Battle.Submit({ECombatCommandType::MagicMissile,1,{},20}).bAccepted);
     TestTrue(TEXT("Exhaustion atomic"),Same(Before,Battle.Snapshot()));
     TestTrue(TEXT("Cantrip remains useful without a slot"),Battle.Submit({ECombatCommandType::Attack,1,{},20}).bAccepted);
-    Encounter=RoleDuel(EAdventurerRole::Cleric);
+    Encounter=RoleDuel(EAdventurerRole::Cleric); Encounter.bTwoRoundDowned=false;
     FCombatantState Ally=Encounter.Combatants[0]; Ally.Id=2; Ally.Cell={0,2}; Ally.HP=0; Ally.Life=ECombatLife::Downed; Ally.RescueTurnsLeft=3; Ally.InitiativeBonus=-10;
     Encounter.Combatants.Add(Ally); Battle.Start(Encounter,42,Error); Before=Battle.Snapshot();
     for(auto Action:{ECombatCommandType::CureWounds,ECombatCommandType::Rescue,ECombatCommandType::Potion})
@@ -258,7 +259,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVictoryLossPolicyTest, "Project.Expedition.Par
 bool FVictoryLossPolicyTest::RunTest(const FString& Parameters)
 {
     FString Error;
-    auto Encounter=RoleDuel(EAdventurerRole::Wizard); Encounter.Combatants[1].HP=1;
+    auto Encounter=RoleDuel(EAdventurerRole::Wizard); Encounter.Combatants[1].HP=1; Encounter.bTwoRoundDowned=false;
     FCombatantState Ally=Encounter.Combatants[0]; Ally.Id=2; Ally.Cell={0,1}; Ally.HP=0; Ally.Life=ECombatLife::Downed; Ally.RescueTurnsLeft=3; Ally.InitiativeBonus=-10;
     Encounter.Combatants.Add(Ally);
     FCombatBattle Battle; Battle.Start(Encounter,42,Error); Battle.Submit({ECombatCommandType::MagicMissile,1,{},20});

@@ -261,7 +261,7 @@ bool FSpellUtilityPhaseTest::RunTest(const FString& Parameters)
 {
     auto WithAlly = [](EAdventurerRole Role, ECombatLife Life)
     {
-        FCombatEncounter E = Caster(Role, 5, {4, 0});
+        FCombatEncounter E = Caster(Role, 5, {4, 0}); E.bTwoRoundDowned = false;
         FCombatantState Ally = E.Combatants[0];
         Ally.Id = 11; Ally.Name = TEXT("Ally"); Ally.Cell = {0, 1}; Ally.InitiativeBonus = 0; Ally.Life = Life; Ally.HP = Life == ECombatLife::Conscious ? 30 : 0; Ally.RescueTurnsLeft = Life == ECombatLife::Downed ? 3 : 0;
         Ally.SlotsByLevel.Init(0, FSpellRules::MaxSpellLevel); Ally.SpellSlots = 0;

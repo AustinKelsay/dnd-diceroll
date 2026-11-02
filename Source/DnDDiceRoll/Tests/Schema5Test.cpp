@@ -1051,7 +1051,7 @@ bool FSchema5DeathSavesInBattleTest::RunTest(const FString& Parameters)
     auto Downed = [](bool bDeathSaves)
     {
         FCombatEncounter Encounter = Pair({2, 1});
-        Encounter.bDeathSaves = bDeathSaves;
+        Encounter.bDeathSaves = bDeathSaves; Encounter.bTwoRoundDowned = false;
         FCombatantState Friend = Encounter.Combatants[0];
         Friend.Id = 11; Friend.Name = TEXT("Friend"); Friend.Cell = {1, 1}; Friend.InitiativeBonus = 0; Friend.TemporaryHP = 50;
         Encounter.Combatants.Add(Friend);

@@ -219,7 +219,7 @@ bool FCombatBattle::AuraOfLifeRevives(FCombatantState& Unit)
     {
         const FCombatantState* Caster = IsId(A.SpellId, TEXT("aura-of-life")) ? Find(A.CasterId) : nullptr;
         if (!Caster || Caster->Life != ECombatLife::Conscious || Caster->Side != Unit.Side || !ZoneCovers(A, Unit.Cell)) { continue; }
-        Unit.HP = 1; Unit.Life = ECombatLife::Conscious; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0;
+        Unit.HP = 1; Unit.Life = ECombatLife::Conscious; Unit.RescueTurnsLeft = 0; Unit.DownedAtSlot = INDEX_NONE; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0;
         EmitSpellEvent(ESpellEventKind::Trigger, A, {Unit.Id});
         return true;
     }
@@ -674,7 +674,7 @@ bool FCombatBattle::ResolveUtilitySpell(const FCombatCommand& Command, const FSr
     else if (Is(S, TEXT("revivify")))
     {
         FCombatantState* T = MutableFind(Command.TargetId);
-        T->Life = ECombatLife::Conscious; T->HP = 1; T->RescueTurnsLeft = 0; T->DeathSaveSuccesses = 0; T->DeathSaveFailures = 0;
+        T->Life = ECombatLife::Conscious; T->HP = 1; T->RescueTurnsLeft = 0; T->DownedAtSlot = INDEX_NONE; T->DeathSaveSuccesses = 0; T->DeathSaveFailures = 0;
         Result.Healing = 1; Result.bHit = true; Touched.Add(T->Id);
         Result.Effects.Add({T->Id, EAbilityEffect::Healing, 1, T->Cell});
         Lines = FString::Printf(TEXT(" | %s returns with 1 HP"), *T->Name);

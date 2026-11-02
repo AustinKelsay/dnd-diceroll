@@ -29,6 +29,22 @@ An adventurer reduced to zero HP becomes **Downed**, cannot act and has three re
 
 If no conscious adventurer remains, the party loses immediately: every remaining downed adventurer dies because no rescuer can continue. If all enemies die while a conscious adventurer remains, the party wins; any unresolved downed adventurer dies at that point. Rescue **before** the finishing blow. The victory HUD explicitly states this policy. Dead members retain their identities and never receive turns, healing, loot or resurrection. Survivors can continue with a smaller party. A wipe cannot continue.
 
+### House rule: two-round Downed (`bTwoRoundDowned`, default on) — SRD deviation, needs Austin's sign-off
+
+When `bTwoRoundDowned` is on (the default; saved in schema 5 together with each unit's `DownedAtSlot`), it replaces the rescue-tick countdown above. SRD 5.2.1 death saving throws are **not** used.
+
+| Event | Result |
+|---|---|
+| Adventurer drops to 0 HP | **Downed** for 2 full rounds; the clock ticks at the initiative slot where it dropped (its own slot if it dropped on its own turn). The HUD and forecasts show the rounds left. |
+| Any healing (Cure Wounds, potion, Rescue, kit healing) while Downed | Revives at the healed HP and clears the clock. |
+| Any attack or damage while Downed | Dead. |
+| 2 full rounds pass with no healing | Dead. |
+| Spare the Dying | Stops the clock (stable at 0 HP). |
+| Victory / wipe | Unchanged: unresolved Downed adventurers die. |
+| Active unit drops on its own turn (opportunity or readied attack, hazard) | Its turn ends at once. |
+
+Enemy AI prefers conscious targets and attacks a Downed hero only when no conscious one is reachable. Off-hand attacks are not offered against Downed targets. With the flag off, the three-tick rescue countdown applies.
+
 ## Seeded expedition, rewards and recovery
 
 Each run starts four fresh adventurers with full health, two fighter Wind uses, two cleric/wizard slots, one owned potion each and no gear ranks. The visible seed reproduces the same gameplay with the same commands. Each fresh expedition has a distinct stable run identity, including when reusing a seed; resume retains it. No permanent power carries to a new run.

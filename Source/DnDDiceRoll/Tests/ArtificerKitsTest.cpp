@@ -95,7 +95,7 @@ bool FArtificerWorkedTest::RunTest(const FString& Parameters)
         }
         for(int32 Constraint=0;Constraint<(C.Heal>0?4:2);++Constraint)
         {
-            auto Restricted=Encounter;
+            auto Restricted=Encounter; Restricted.bTwoRoundDowned=false;
             auto* T=Restricted.Combatants.FindByPredicate([&](const auto& U){return U.Id==C.Target;});
             if(Constraint==0) { T->HP=0; T->Life=ECombatLife::Dead; }
             else if(Constraint==1) { if(C.Target==1) { continue; } T->Cell={7,7}; }

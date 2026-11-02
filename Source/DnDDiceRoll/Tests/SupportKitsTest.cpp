@@ -299,7 +299,7 @@ bool FSupportLifeTargetsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("One Kit use"),B.Find(1)->KitUses,1); TestEqual(TEXT("One Slot"),B.Find(1)->SpellSlots,1);
     for(int32 Case=0;Case<3;++Case)
     {
-        auto Restricted=E; auto& T=Restricted.Combatants[1];
+        auto Restricted=E; Restricted.bTwoRoundDowned=false; auto& T=Restricted.Combatants[1];
         if(Case==0) { T.Life=ECombatLife::Downed; T.HP=0; T.RescueTurnsLeft=3; }
         if(Case==1) { T.Life=ECombatLife::Dead; T.HP=0; }
         if(Case==2) { T.Cell={3,1}; }
