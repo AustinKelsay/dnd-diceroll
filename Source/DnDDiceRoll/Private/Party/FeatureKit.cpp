@@ -3,6 +3,7 @@
 #include "Rules/WeaponRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/SpellRules.h"
+#include "Rules/WarlockRules.h"
 
 const TCHAR* FFeatureKit::StyleName(EFightingStyle Style)
 {
@@ -115,6 +116,40 @@ void FFeatureKit::ShortRest(FCombatantState& Hero)
     Hero.ChannelUses = ChannelCap(Hero);
     Hero.WildShapeUses = WildShapeCap(Hero);
     Hero.KiPoints = KiCap(Hero);
+    // SRD 5.2.1 Pact Magic: all expended Pact Magic slots come back on a Short or Long Rest.
+    if (HasPactMagic(Hero)) { PactRecover(Hero, MAX_int32); }
+}
+bool FFeatureKit::HasPactMagic(const FCombatantState& Hero)
+{
+    if (Hero.Side != ECombatSide::Party || FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) < 1) { return false; }
+    // Multiclass: SRD keeps Pact slots separate from Spellcasting slots; this engine has one pool, so it is the Pact pool only
+    // when the other class adds no slots (a Fighter/Warlock yes, a Wizard/Warlock keeps the wizard's long-rest pool).
+    const EAdventurerRole Other = Hero.AdventurerRole == EAdventurerRole::Warlock ? Hero.SecondaryRole : Hero.AdventurerRole;
+    const int32 OtherLevel = Other == EAdventurerRole::None ? 0 : FBuildCatalog::ClassLevel(Hero, Other);
+    return OtherLevel == 0 || FSpellRules::SlotsFor(Other, OtherLevel, 1) == 0;
+}
+int32 FFeatureKit::PactRecover(FCombatantState& Hero, int32 Budget)
+{
+    if (!HasPactMagic(Hero) || Budget <= 0) { return 0; }
+    int32 Restored = 0;
+    const int32 Level = FWarlockRules::PactSlotLevel(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock));
+    if (Level == 1)
+    {
+        const int32 Cap = FMath::Min(FBuildCatalog::SlotCap(Hero), FBuildCatalog::SlotMax(Hero, 1));
+        while (Budget > Restored && Hero.SpellSlots < Cap) { ++Hero.SpellSlots; ++Restored; }
+        if (!Hero.SlotsByLevel.IsEmpty()) { Hero.SlotsByLevel[0] = Hero.SpellSlots; }
+    }
+    else if (Hero.SlotsByLevel.IsValidIndex(Level - 1))
+    {
+        int32& Pool = Hero.SlotsByLevel[Level - 1];
+        while (Budget > Restored && Pool < FBuildCatalog::SlotMax(Hero, Level)) { ++Pool; ++Restored; }
+    }
+    // Kit warlocks spend kit uses as their pact resource.
+    if (const auto* Build = FBuildCatalog::Find(Hero.BuildId); Build && Build->Profile.ClassId == TEXT("warlock"))
+    {
+        while (Budget > Restored && Hero.KitUses < Build->KitCap) { ++Hero.KitUses; ++Restored; }
+    }
+    return Restored;
 }
 int32 FFeatureKit::SorceryCap(const FCombatantState& Hero)
 {

@@ -432,6 +432,33 @@ bool FArcaneRecoveryTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPactMagicTest, "Project.Expedition.Features.PactMagic",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPactMagicTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (int32 Level = 1; Level <= 5; ++Level)
+    {
+        FCombatantState Lock = Hero(TEXT("warlock.fiend"), Level);
+        FFeatureKit::Refill(Lock);
+        TestTrue(FString::Printf(TEXT("Warlock %d has Pact Magic"), Level), FFeatureKit::HasPactMagic(Lock));
+        const FCombatantState Full = Lock;
+        Lock.KitUses = 0;
+        const int32 PactLevel = FMath::Min(5, (Level + 1) / 2);
+        if (Lock.SlotsByLevel.IsValidIndex(PactLevel - 1) && PactLevel > 1) { Lock.SlotsByLevel[PactLevel - 1] = 0; }
+        FFeatureKit::ShortRest(Lock);
+        TestEqual(FString::Printf(TEXT("Warlock %d: short rest restores kit uses"), Level), Lock.KitUses, Full.KitUses);
+        TestEqual(FString::Printf(TEXT("Warlock %d: short rest restores pact slots"), Level), Lock.SlotsByLevel, Full.SlotsByLevel);
+        TestTrue(FString::Printf(TEXT("Warlock %d: still valid"), Level), FBuildCatalog::ValidResources(Lock) && FFeatureKit::Valid(Lock));
+    }
+    FCombatantState FighterLock = Hero(TEXT("fighter.champion"), 3); FighterLock.SecondaryRole = EAdventurerRole::Warlock; FighterLock.SecondaryLevel = 1;
+    TestTrue(TEXT("Fighter/Warlock 1: Pact Magic (class level, multiclass-safe)"), FFeatureKit::HasPactMagic(FighterLock));
+    FCombatantState WizardLock = Hero(TEXT("wizard.evocation"), 3); WizardLock.SecondaryRole = EAdventurerRole::Warlock; WizardLock.SecondaryLevel = 1;
+    TestFalse(TEXT("Wizard/Warlock: the wizard pool is not refilled on a short rest"), FFeatureKit::HasPactMagic(WizardLock));
+    TestFalse(TEXT("Bard has no Pact Magic"), FFeatureKit::HasPactMagic(Hero(TEXT("bard.lore"), 3)));
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)

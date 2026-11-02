@@ -74,8 +74,12 @@ public:
     static constexpr int32 QuickenCost = 2;
     static bool HasQuickenedSpell(const FCombatantState& Hero);
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }
-    /** Short rest: refills the short-rest pools (Action Surge, Channel Divinity, Wild Shape, ki). */
+    /** Short rest: refills the short-rest pools (Action Surge, Channel Divinity, Wild Shape, ki, Warlock Pact Magic slots). */
     static void ShortRest(FCombatantState& Hero);
+    /** Warlock 1 Pact Magic: true when the hero's slot pool is the Pact Magic table (no other slot-casting class adds to it). */
+    static bool HasPactMagic(const FCombatantState& Hero);
+    /** Regains up to Budget expended Pact Magic slots (pact slot level; kit warlocks regain kit uses); returns how many came back. */
+    static int32 PactRecover(FCombatantState& Hero, int32 Budget);
     // SRD wolf (CR 1/4), the basic form: AC 13, 11 HP, bite +4 for 2d4+2.
     static constexpr int32 WolfHP = 11;
     static constexpr int32 WolfAC = 13;
