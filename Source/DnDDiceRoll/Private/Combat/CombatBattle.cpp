@@ -7,6 +7,9 @@
 #include "Rules/WeaponRules.h"
 #include "Rules/ArmorRules.h"
 #include "Rules/ProficiencyRules.h"
+#include "Rules/SpellcastingRules.h"
+#include "Rules/AreaRules.h"
+#include "Rules/CheckRules.h"
 
 namespace
 {
@@ -250,6 +253,33 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
     return FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
 }
 
+namespace CombatSpellSlots
+{
+/** Requested level (0 = lowest open) if a slot of it is left, else 0. */
+int32 CastSlotLevel(const FCombatantState& Unit, int32 Requested)
+{
+    for (int32 Level = FMath::Max(1, Requested); Level <= FSpellRules::MaxSpellLevel; ++Level)
+    {
+        const int32 Left = Level == 1 ? Unit.SpellSlots : Unit.SlotsByLevel.IsValidIndex(Level - 1) ? Unit.SlotsByLevel[Level - 1] : 0;
+        if (Left > 0) { return Level; }
+        if (Requested > 0) { return 0; }
+    }
+    return 0;
+}
+/** Extra dice an upcast adds over the spell's base count. */
+int32 UpcastExtra(ESpell Spell, int32 Slot) { return FSpellRules::UpcastDiceCount(Spell, Slot) - FSpellRules::UpcastDiceCount(Spell, FSpellRules::Facts(Spell).Level); }
+bool IsAreaSpell(ECombatCommandType Action) { return Action == ECombatCommandType::BurningHands || Action == ECombatCommandType::Thunderwave; }
+ESpell AreaSpell(ECombatCommandType Action) { return Action == ECombatCommandType::BurningHands ? ESpell::BurningHands : ESpell::Thunderwave; }
+/** Burning Hands: 15-ft cone; Thunderwave: 15-ft cube. Both start at the caster and aim at the chosen target. */
+FAreaTemplate SpellArea(ECombatCommandType Action, FIntPoint Caster, FIntPoint Aim)
+{
+    FAreaTemplate Area;
+    Area.Shape = Action == ECombatCommandType::BurningHands ? EAreaShape::Cone : EAreaShape::Cube;
+    Area.Origin = Caster; Area.Direction = Aim - Caster; Area.SizeFeet = 15;
+    return Area;
+}
+}
+
 void FCombatBattle::SpendSpellSlot(FCombatantState& Unit)
 {
     if (Unit.SpellSlots <= 0) { return; }
@@ -425,12 +455,13 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
     if (!State.bActionAvailable && !(bWeaponAttack && State.AttacksRemaining > 0)) { return nullptr; }
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return nullptr; }
-    if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
-    if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
+    if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
+    if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
+    if (CombatSpellSlots::IsAreaSpell(Action) && (Unit->Side != ECombatSide::Party || !FSpellRules::OnClassList(Unit->AdventurerRole, CombatSpellSlots::AreaSpell(Action)) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
     if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return nullptr; } }
     if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return nullptr; }
     if (bWeaponAttack && NeedsAmmunition(*Unit) && Unit->Ammunition <= 0) { return nullptr; }
-    if ((Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::MagicMissile) && ArmorPenaltiesOf(*this, *Unit).bCannotCastSpells) { return nullptr; }
+    if ((Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::MagicMissile || CombatSpellSlots::IsAreaSpell(Action)) && ArmorPenaltiesOf(*this, *Unit).bCannotCastSpells) { return nullptr; }
     return Unit;
 }
 
@@ -523,6 +554,10 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         else if (Action == ECombatCommandType::MagicMissile)
         {
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= MissileRange && HasLineOfSight(Unit->Cell, Target.Cell);
+        }
+        else if (CombatSpellSlots::IsAreaSpell(Action))
+        {
+            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && FAreaRules::Covers(CombatSpellSlots::SpellArea(Action, Unit->Cell, Target.Cell), Target.Cell);
         }
         else if (Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion)
         {
@@ -1062,13 +1097,21 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FCombatantState* User = MutableFind(Command.ActorId);
         FCombatantState* Target = MutableFind(Command.TargetId);
         FString Ability = TEXT("Rescue");
+        int32 Slot = 1;
+        if (Command.Type == ECombatCommandType::MagicMissile || Command.Type == ECombatCommandType::CureWounds)
+        {
+            Slot = CombatSpellSlots::CastSlotLevel(*User, Command.SlotLevel);
+            if (Slot == 0) { return Reject(TEXT("No spell slot of that level left.")); }
+        }
+        auto SpendSlot = [User, Slot]() { if (Slot == 1) { SpendSpellSlot(*User); } else { --User->SlotsByLevel[Slot - 1]; } };
         if (Command.Type == ECombatCommandType::MagicMissile)
         {
-            SpendSpellSlot(*User);
+            SpendSlot();
             if (const auto* B = FBuildCatalog::Find(User->BuildId)) { User->KitUses -= B->MissileKitCost; }
+            const int32 Darts = MissileDarts + CombatSpellSlots::UpcastExtra(ESpell::MagicMissile, Slot);
             DiceLog = &Result.EffectDice;
-            Result.EffectModifier = MissileDarts * DartBonus;
-            Result.Damage = RollDice(MissileDarts, MissileDie) + Result.EffectModifier;
+            Result.EffectModifier = Darts * DartBonus;
+            Result.Damage = RollDice(Darts, MissileDie) + Result.EffectModifier;
             DiceLog = nullptr;
             Result.bHit = true;
             ApplyDefenses(Result, Command.ActorId, Command.Type, Command.TargetId);
@@ -1076,14 +1119,14 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
             ApplyDamage(*Target, Result.Damage);
             Result.Damage -= Result.DamagePrevented;
-            Ability = FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), MissileDarts);
+            Ability = Slot == 1 ? FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), Darts) : FString::Printf(TEXT("Magic Missile (%d darts, level %d slot)"), Darts, Slot);
         }
         else
         {
             int32 Amount = 1;
             DiceLog = &Result.EffectDice;
             if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
-            else if (Command.Type == ECombatCommandType::CureWounds) { SpendSpellSlot(*User); Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { SpendSlot(); Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice + CombatSpellSlots::UpcastExtra(ESpell::CureWounds, Slot), CureDie) + HealingModifier; Ability = Slot == 1 ? FString(TEXT("Cure Wounds (1 slot)")) : FString::Printf(TEXT("Cure Wounds (level %d slot)"), Slot); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             else { Result.EffectModifier = 1; }
             DiceLog = nullptr;
@@ -1095,6 +1138,53 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
         else { State.bActionAvailable = false; }
         Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d%s | HP %d/%d"), *User->Name, *Ability, *Target->Name, Result.Healing, Result.Damage, *DefenseText(Result), Target->HP, Target->MaxHP);
+        CheckOutcome();
+    }
+    else if (CombatSpellSlots::IsAreaSpell(Command.Type))
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Spell unavailable: check class list, slots, armor, and that the target is in the area.")); }
+        FCombatantState* User = MutableFind(Command.ActorId);
+        const int32 Slot = CombatSpellSlots::CastSlotLevel(*User, Command.SlotLevel);
+        if (Slot == 0) { return Reject(TEXT("No spell slot of that level left.")); }
+        const ESpell Spell = CombatSpellSlots::AreaSpell(Command.Type);
+        const FSpellDelivery Delivery = FSpellcastingRules::Delivery(Spell);
+        const FAreaTemplate Area = CombatSpellSlots::SpellArea(Command.Type, User->Cell, Find(Command.TargetId)->Cell);
+        const int32 Dc = FSpellcastingRules::SaveDc(FProficiencyRules::ProficiencyBonus(User->Level), AbilityModifier(User->Id, FSpellcastingRules::SpellcastingAbility(User->AdventurerRole)));
+        if (Slot == 1) { SpendSpellSlot(*User); } else { --User->SlotsByLevel[Slot - 1]; }
+        // One damage roll for the whole area, then a save per creature in it (allies too), in roster order.
+        DiceLog = &Result.EffectDice;
+        const int32 Rolled = RollDice(FSpellRules::UpcastDiceCount(Spell, Slot), FSpellRules::Facts(Spell).DieSides);
+        DiceLog = nullptr;
+        TArray<int32> Victims;
+        for (const FCombatantState& Unit : State.Encounter.Combatants) { if (Unit.Id != User->Id && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell)) { Victims.Add(Unit.Id); } }
+        FString Lines;
+        for (const int32 VictimId : Victims)
+        {
+            const bool bSaved = FCheckRules::Resolve(Character(VictimId).SaveBonus(Delivery.SaveAbility), Dc, ERollMode::Normal, State.RandomState).bSuccess;
+            FCombatResult Part;
+            Part.Damage = FSpellcastingRules::DamageAfterSave(Rolled, bSaved, Delivery.bHalfOnSave);
+            ApplyDefenses(Part, User->Id, Command.Type, VictimId);
+            FCombatantState* Victim = MutableFind(VictimId);
+            const int32 Prevented = FMath::Min(Part.Damage, ProtectionFor(*Victim));
+            ApplyDamage(*Victim, Part.Damage);
+            const int32 Dealt = Part.Damage - Prevented;
+            Result.Damage += Dealt; Result.DamagePrevented += Prevented;
+            Result.Effects.Add({VictimId, EAbilityEffect::Area, Dealt, Victim->Cell});
+            // Thunderwave: a failed save pushes the creature 10 feet straight away from the caster.
+            if (Command.Type == ECombatCommandType::Thunderwave && !bSaved && Victim->Life != ECombatLife::Dead)
+            {
+                const FIntPoint Delta = Victim->Cell - User->Cell;
+                const bool bAlongX = FMath::Abs(Delta.X) >= FMath::Abs(Delta.Y);
+                const FIntPoint Step(bAlongX ? FMath::Sign(Delta.X) : 0, bAlongX ? 0 : FMath::Sign(Delta.Y));
+                for (int32 Index = 0; Index < 2 && IsInside(Victim->Cell + Step) && IsOpen(Victim->Cell + Step, VictimId); ++Index) { Victim->Cell += Step; }
+                Result.Effects.Add({VictimId, EAbilityEffect::Push, 0, Victim->Cell});
+            }
+            Lines += FString::Printf(TEXT(" | %s %s %d"), *Victim->Name, bSaved ? TEXT("saves,") : TEXT("fails,"), Dealt);
+        }
+        Result.bHit = true;
+        Result.DamageType = FSpellRules::Facts(Spell).DamageType;
+        State.bActionAvailable = false;
+        Result.Feedback = FString::Printf(TEXT("%s: %s (level %d slot, DC %d)%s"), *User->Name, FSpellRules::Facts(Spell).Name, Slot, Dc, *Lines);
         CheckOutcome();
     }
     else if (Command.Type == ECombatCommandType::EndTurn)
@@ -1114,6 +1204,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
 EDamageType FCombatBattle::DamageTypeOf(int32 ActorId, ECombatCommandType Action) const
 {
     if (Action == ECombatCommandType::MagicMissile) { return EDamageType::Force; }
+    if (Action == ECombatCommandType::BurningHands) { return EDamageType::Fire; }
+    if (Action == ECombatCommandType::Thunderwave) { return EDamageType::Thunder; }
     const FCombatantState* Actor = Find(ActorId);
     if (!Actor) { return EDamageType::Slashing; }
     // Prebuilt profiles: longsword, shortbow, the cleric's radiant ranged profile, Fire Bolt; enemies by role.

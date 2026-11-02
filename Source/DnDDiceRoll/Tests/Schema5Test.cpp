@@ -635,4 +635,84 @@ bool FSchema5ExtraAttackCatalogSneakTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5UpcastAreaSpellsTest, "Project.Expedition.Schema5.UpcastAndAreaSpells",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5UpcastAreaSpellsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Wizard = [](FIntPoint EnemyCell)
+    {
+        FCombatEncounter Encounter = Pair(EnemyCell);
+        FCombatantState& W = Encounter.Combatants[0];
+        W.Name = TEXT("Wizard"); W.AdventurerRole = EAdventurerRole::Wizard; W.Level = 3; W.SpellSlots = 2; W.SlotsByLevel = {2, 2, 0};
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        FCombatantState Far = Encounter.Combatants[1];
+        Far.Id = 21; Far.Name = TEXT("Far"); Far.Cell = {6, 6};
+        Encounter.Combatants.Add(Far);
+        return Encounter;
+    };
+    {
+        FCombatBattle Battle;
+        if (!TestTrue(TEXT("Wizard starts"), Battle.Start(Wizard({2, 0}), 7, Error))) { AddError(Error); return false; }
+        FCombatCommand Missile{ECombatCommandType::MagicMissile, 10, {}, 20}; Missile.SlotLevel = 3;
+        TestFalse(TEXT("No 3rd-level slot"), Battle.Submit(Missile).bAccepted);
+        Missile.SlotLevel = 2;
+        const FCombatResult R = Battle.Submit(Missile);
+        TestTrue(TEXT("Upcast Magic Missile"), R.bAccepted);
+        TestEqual(TEXT("Four darts at 2nd level"), R.EffectDice.Num(), 4);
+        TestEqual(TEXT("2nd-level slot spent"), Battle.Find(10)->SlotsByLevel[1], 1);
+        TestEqual(TEXT("1st-level slots kept"), Battle.Find(10)->SpellSlots, 2);
+    }
+    {
+        FCombatEncounter Encounter = Wizard({2, 0});
+        Encounter.Combatants[0].SpellSlots = 0; Encounter.Combatants[0].SlotsByLevel = {0, 2, 0};
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts without 1st-level slots"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult R = Battle.Submit({ECombatCommandType::MagicMissile, 10, {}, 20});
+        TestTrue(TEXT("Lowest open slot is used"), R.bAccepted);
+        TestEqual(TEXT("Auto upcast to four darts"), R.EffectDice.Num(), 4);
+        TestEqual(TEXT("Spent from level 2"), Battle.Find(10)->SlotsByLevel[1], 1);
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Burning Hands battle"), Battle.Start(Wizard({1, 0}), 7, Error));
+        TestTrue(TEXT("Cone covers the adjacent foe"), Battle.LegalTargets(10, ECombatCommandType::BurningHands).Contains(20));
+        TestFalse(TEXT("Far foe is outside the cone"), Battle.LegalTargets(10, ECombatCommandType::BurningHands).Contains(21));
+        FCombatCommand Cast{ECombatCommandType::BurningHands, 10, {}, 20}; Cast.SlotLevel = 2;
+        const FCombatResult R = Battle.Submit(Cast);
+        TestTrue(TEXT("Burning Hands resolves"), R.bAccepted);
+        TestEqual(TEXT("4d6 at 2nd level"), R.EffectDice.Num(), 4);
+        TestEqual(TEXT("Fire"), R.DamageType, EDamageType::Fire);
+        TestTrue(TEXT("Foe burned"), Battle.Find(20)->HP < 500);
+        TestEqual(TEXT("Far foe untouched"), Battle.Find(21)->HP, 500);
+        TestFalse(TEXT("Action spent"), Battle.Snapshot().bActionAvailable);
+    }
+    {
+        bool bPushed = false;
+        for (int32 Seed = 1; Seed < 60 && !bPushed; ++Seed)
+        {
+            FCombatBattle Battle;
+            TestTrue(TEXT("Thunderwave battle"), Battle.Start(Wizard({1, 0}), Seed, Error));
+            const FCombatResult R = Battle.Submit({ECombatCommandType::Thunderwave, 10, {}, 20});
+            TestTrue(TEXT("Thunderwave resolves"), R.bAccepted);
+            TestEqual(TEXT("2d8"), R.EffectDice.Num(), 2);
+            TestTrue(TEXT("Foe hurt"), Battle.Find(20)->HP < 500);
+            bPushed = Battle.Find(20)->Cell == FIntPoint(3, 0);
+        }
+        TestTrue(TEXT("A failed save pushes 10 feet"), bPushed);
+    }
+    {
+        FCombatEncounter Encounter = Wizard({1, 0});
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Cleric;
+        FCombatBattle Battle;
+        TestTrue(TEXT("Cleric battle"), Battle.Start(Encounter, 7, Error));
+        TestEqual(TEXT("Cleric lacks Burning Hands"), Battle.LegalTargets(10, ECombatCommandType::BurningHands).Num(), 0);
+        Encounter = Wizard({1, 0});
+        Encounter.Combatants[0].ArmorWorn = static_cast<int32>(EArmor::Plate);
+        TestTrue(TEXT("Armored wizard"), Battle.Start(Encounter, 7, Error));
+        TestEqual(TEXT("No casting in unproficient armor"), Battle.LegalTargets(10, ECombatCommandType::Thunderwave).Num(), 0);
+    }
+    return !HasAnyErrors();
+}
 #endif

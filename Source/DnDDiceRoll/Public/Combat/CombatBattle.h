@@ -11,7 +11,7 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -126,6 +126,8 @@ struct DNDDICEROLL_API FCombatCommand
     int32 ActorId = INDEX_NONE;
     FIntPoint Destination = FIntPoint::ZeroValue;
     int32 TargetId = INDEX_NONE;
+    /** Spells only: slot level to cast with; 0 picks the lowest open slot. Not persisted. */
+    int32 SlotLevel = 0;
 };
 
 /** One die in an effect roll, in the order it was rolled. */
