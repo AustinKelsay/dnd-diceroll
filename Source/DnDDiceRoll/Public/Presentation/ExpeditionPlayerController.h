@@ -53,6 +53,13 @@ public:
     /** True when the board should show where the keyboard cursor is. */
     bool UsingKeyboardCursor() const { return bKeyboardCursor; }
     FIntPoint KeyboardCursorCell() const { return GridCursor; }
+    bool SelectBuild(const FString& Id);
+    void StepClass(int32 Direction);
+    void StepBuild(int32 Direction);
+    bool ShowingBuilder() const;
+    FName MenuFocus() const { return Focus; }
+    /** Refresh after the HUD registers this frame's visible, enabled controls. */
+    void UpdateMenuFocus();
 private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
@@ -79,6 +86,8 @@ private:
     FString CreatorTrialOut;
     int32 CreatorTrialStage = 0;
     float CreatorTrialClock = 0.0f;
+    bool bNextParty = false;
+    FName Focus, SavedFocus;
     void Preset();
     void CycleClass();
     void CycleBuild();

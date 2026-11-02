@@ -172,13 +172,15 @@ bool AExpeditionHUD::Hovered(float X, float Y, float Width, float Height) const
 bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled, bool bSelected, FLinearColor Accent)
 {
     const bool bHover = bEnabled && Hovered(X, Y, Width, Height);
-    const float Lift = bHover ? -1.5f : 0.0f;
+    const float Lift = 0.0f;
+    const bool bFocused = bEnabled && Player.IsValid() && Player->MenuFocus() == Id;
     Rect(FLinearColor(0, 0, 0, 0.4f), X + 2, Y + 3, Width, Height);
     const FLinearColor Base = bSelected ? FLinearColor(Accent.R * 0.12f, Accent.G * 0.12f, Accent.B * 0.12f, 0.97f)
         : bHover ? FLinearColor(0.05f, 0.035f, 0.025f, 0.97f) : FLinearColor(0.016f, 0.012f, 0.01f, 0.94f);
     Rect(Base, X, Y + Lift, Width, Height);
     Rect(FLinearColor(1, 1, 1, bHover ? 0.07f : 0.035f), X, Y + Lift, Width, Height * 0.45f);
     Frame(WithAlpha(Accent, bSelected ? 0.95f : bHover ? 0.7f : bEnabled ? 0.35f : 0.12f), X, Y + Lift, Width, Height, bSelected ? 2.0f : 1.0f);
+    if (bFocused) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     const FLinearColor LabelColor = bEnabled ? (bSelected ? Accent : Parchment) : FLinearColor(0.45f, 0.48f, 0.52f);
     const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 : Y + Lift + Height * 0.5f - 19;
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
@@ -256,7 +258,7 @@ void AExpeditionHUD::DrawHUD()
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
-    S = FMath::Max(0.5f, Canvas->SizeX / DesignWidth);
+    S = FMath::Max(0.5f, FMath::Min(Canvas->SizeX / DesignWidth, Canvas->SizeY / 720.0f));
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
@@ -269,8 +271,8 @@ void AExpeditionHUD::DrawHUD()
     if (!View->HasRun()) { DrawTitle(); }
     else
     {
-        DrawParty();
-        DrawLog();
+        if (View->InCombat() || View->Progress().Phase == EExpeditionPhase::Route || View->Progress().Phase == EExpeditionPhase::Reward || View->Progress().Phase == EExpeditionPhase::Recovery) { DrawParty(); }
+        if (View->InCombat()) { DrawLog(); }
         if (View->InCombat())
         {
             DrawInitiative();
@@ -291,13 +293,19 @@ void AExpeditionHUD::DrawHUD()
         }
         else { DrawDice(); }
     }
-    DrawBanner();
+    if (View->InCombat()) { DrawBanner(); }
+    if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
+    {
+        float FeedbackY=H-64;
+        for (const auto& Line : Wrap(View->Messages().Last(),900,0.85f)) { Text(Line,(W-900)/2,FeedbackY,Parchment,0.85f); FeedbackY+=23; }
+    }
     // Overlays own every click: buttons hidden beneath them must not fire.
     const bool bCreator = Player->Creator().bOpen;
     if (View->ShowingRecords() || Player->ShowingHelp() || bCreator) { Buttons.Reset(); }
     if (bCreator) { DrawCreator(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
+    Player->UpdateMenuFocus();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -450,6 +458,7 @@ void AExpeditionHUD::DrawWorldOverlays()
 
 void AExpeditionHUD::DrawTopBar()
 {
+    if (Player->ShowingBuilder() || (View->HasRun() && (View->Progress().Phase == EExpeditionPhase::Victory || View->Progress().Phase == EExpeditionPhase::Defeat))) { return; }
     if (View->HasRun())
     {
         const FExpeditionProgress& Run = View->Progress();
@@ -469,7 +478,7 @@ void AExpeditionHUD::DrawTopBar()
     };
     System(TEXT("Help"), TEXT("? Help"), 74);
     const FString Speed = View->Speed() == EPlaybackSpeed::Normal ? TEXT("1x") : View->Speed() == EPlaybackSpeed::Fast ? TEXT("2x") : TEXT("Instant");
-    System(TEXT("Speed"), TEXT("T  Speed ") + Speed, 128);
+    if (View->InCombat()) { System(TEXT("Speed"), TEXT("T  Speed ") + Speed, 128); }
     System(TEXT("Records"), TEXT("H  Records"), 104);
     System(TEXT("Resume"), TEXT("O  Resume"), 98);
     System(TEXT("Save"), TEXT("K  Save"), 82, View->HasRun());
@@ -541,6 +550,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Panel(X, Y, Width, Height, bActive ? Gold : Color, bSelected || bHover ? 0.97f : 0.86f);
     if (bActive) { Frame(WithAlpha(Gold, 0.6f + 0.3f * FMath::Sin(Clock * 4.0f)), X, Y, Width, Height, 2.0f); }
     else if (bSelected) { Frame(FLinearColor(0.9f, 0.95f, 1.0f, 0.7f), X, Y, Width, Height, 1.5f); }
+    if (Player->MenuFocus() == FName(*FString::Printf(TEXT("Party%d"), Index))) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     Rect(WithAlpha(Color, Life == ECombatLife::Dead ? 0.25f : 0.9f), X, Y, 4, Height);
     // Portrait medallion.
     const FVector2D Portrait(X + 34, Y + 34);
@@ -855,53 +865,59 @@ void AExpeditionHUD::DrawBanner()
 
 void AExpeditionHUD::DrawTitle()
 {
-    const float Width = 700, Height = 570;
-    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
-    Panel(X, Y, Width, Height, Gold, 0.98f);
-    Text(View->HasRun() ? (View->Progress().Phase == EExpeditionPhase::Victory ? TEXT("VICTORY / NEXT PARTY") : TEXT("DEFEAT / NEXT PARTY")) : TEXT("NEXT EXPEDITION / PARTY BUILDER"), W * 0.5f, Y + 18, Gold, 1.2f, EAlign::Center);
-    Text(TEXT("1-4 select slot / Up-Down class / Left-Right kit / G familiar preset"), W * 0.5f, Y + 52, Muted, 0.7f, EAlign::Center);
+    const float X = (W - 1200) / 2, Y = (H - 660) / 2;
+    Panel(X, Y, 1200, 660, Gold, 0.98f);
+    Text(TEXT("dnd-diceroll"), X + 24, Y + 12, Gold, 1.6f);
+    if (View->HasRun()) { Button(TEXT("Close"), TEXT("Back to result"), TEXT("Esc"), X + 972, Y + 14, 200, 48); }
+    Text(TEXT("Four heroes / five battles / levels 1-5 / compact tabletop kits"), X + 24, Y + 49, Muted, 0.85f);
     for (int32 I = 0; I < Player->NextParty().Num(); ++I)
     {
         const auto& P = Player->NextParty()[I];
-        FCombatantState Preview; FBuildCatalog::Create(P.BuildId, P.Id, P.Name, Preview);
-        const float CardX = X + 18 + I * 166;
-        Button(FName(*FString::Printf(TEXT("Party%d"), I)), TEXT(""), TEXT(""), CardX, Y + 84, 160, 78, true, Player->BuilderSlot() == I, Sky);
-        Text(P.Name + TEXT(" / ") + Preview.Role, CardX + 80, Y + 92, Parchment, 0.72f, EAlign::Center, 148);
-        float LabelY = Y + 117;
-        if (P.Sheet.IsCustom())
-        {
-            Text(TEXT("Custom hero"), CardX + 80, LabelY, Gold, 0.72f, EAlign::Center);
-            for (int32 C = 0; C < P.Sheet.Colors.Num(); ++C) { Rect(FCharacterCreator::PaletteColor(P.Sheet.Colors[C]), CardX + 50 + C * 22, LabelY + 24, 16, 16); Frame(FLinearColor(0, 0, 0, 0.9f), CardX + 50 + C * 22, LabelY + 24, 16, 16); }
-        }
-        else
-        {
-            for (const auto& Line : Wrap(FBuildCatalog::DisplayName(Preview).RightChop(Preview.Role.Len() + 3), 148, 0.72f))
-            { Text(Line, CardX + 80, LabelY, Muted, 0.72f, EAlign::Center); LabelY += 18; }
-        }
+        FCombatantState Hero; FBuildCatalog::Create(P.BuildId, P.Id, P.Name, Hero);
+        Button(FName(*FString::Printf(TEXT("Party%d"), I)), FString::Printf(TEXT("%d  %s"), I+1, *P.Name), P.Sheet.IsCustom() ? FString(TEXT("Custom hero (27-point buy)")) : FBuildCatalog::DisplayName(Hero), X+24+I*290, Y+82, 280, 64, true, Player->BuilderSlot()==I, Sky);
+        if (P.Sheet.IsCustom()) { for (int32 C = 0; C < P.Sheet.Colors.Num(); ++C) { const float SX = X+24+I*290+280-24-C*22; Rect(FCharacterCreator::PaletteColor(P.Sheet.Colors[C]), SX, Y+90, 16, 16); Frame(FLinearColor(0, 0, 0, 0.9f), SX, Y+90, 16, 16); } }
     }
     const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
     FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
-    Text(Choice.Sheet.IsCustom() ? FString::Printf(TEXT("%s  ·  custom %s (27-point buy)"), *Choice.Name, *Hero.Role) : FBuildCatalog::DisplayName(Hero), X + 24, Y + 170, Parchment, 0.95f, EAlign::Left, 440);
-    Button(TEXT("CreateHero"), Choice.Sheet.IsCustom() ? TEXT("Edit hero") : TEXT("Create hero"), TEXT("Enter  ·  point buy"), X + 476, Y + 164, 200, 40, true, false, Gold);
-    float Row = Y + 208;
-    for (const auto& A : FBuildCatalog::Abilities(Hero))
+    Text(TEXT("CLASS"), X+24, Y+160, Gold, 0.85f);
+    Button(TEXT("CreateHero"), Choice.Sheet.IsCustom() ? TEXT("Edit hero") : TEXT("Create hero"), TEXT("point buy"), X+972, Y+484, 200, 42, true, false, Gold);
+    TArray<FString> Classes;
+    int32 ClassIndex=0, BuildIndex=0;
+    for (const auto& B : FBuildCatalog::All())
     {
-        Text(A.Name, X + 24, Row, Gold, 0.82f); Row += 21;
-        for (const auto& Line : Wrap(A.Description, Width - 48, 0.72f)) { Text(Line, X + 24, Row, Parchment, 0.72f); Row += 19; }
-        Row += 12;
+        if (!Classes.Contains(B.Profile.ClassId))
+        {
+            Classes.Add(B.Profile.ClassId);
+            Button(FName(*(TEXT("Class:")+B.Profile.ClassId)), B.Profile.Role, TEXT(""), X+24+(ClassIndex%2)*140, Y+190+(ClassIndex/2)*40, 132, 34, true, B.Profile.ClassId==Hero.ClassId);
+            ++ClassIndex;
+        }
+        if (B.Profile.ClassId == Hero.ClassId)
+        {
+            const FString Label=FBuildCatalog::DisplayName(B.Profile).RightChop(B.Profile.Role.Len()+3);
+            Button(FName(*(TEXT("Build:")+B.Id)), Label, TEXT(""), X+320, Y+190+BuildIndex*29, 280, 26, true, B.Id==Hero.BuildId, Sky);
+            ++BuildIndex;
+        }
     }
-    const auto* Build = FBuildCatalog::Find(Hero.BuildId);
-    if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X + 24, Row, Safe, 0.75f); }
-    if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), X + 24, Row, Safe, 0.75f); }
-    Button(TEXT("ClassNext"), TEXT("Next class"), TEXT("Up / Down"), X + 24, Y + 370, 200, 44, true);
-    Button(TEXT("BuildNext"), TEXT("Next compatible kit"), TEXT("Left / Right"), X + 240, Y + 370, 220, 44, true);
-    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), X + 476, Y + 370, 200, 44, true);
-    Button(TEXT("New"), TEXT("New Expedition"), TEXT("N"), X + 24, Y + 434, 200, 54, true, false, Gold);
-    Button(TEXT("Resume"), TEXT("Continue saved party"), TEXT("O"), X + 240, Y + 434, 220, 54, true, false, Sky);
-    Button(TEXT("Records"), TEXT("Past Expeditions"), TEXT("H"), X + 476, Y + 434, 200, 54, true);
-    const auto& Messages = View->Messages();
-    if (!Messages.IsEmpty()) { Text(Messages.Last(), X + 24, Y + 510, Muted, 0.7f, EAlign::Left, Width - 48); }
-
+    Text(TEXT("SUBCLASS"), X+320, Y+160, Gold, 0.85f);
+    Text(FBuildCatalog::DisplayName(Hero), X+628, Y+160, Parchment, 1.0f);
+    Text(FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range), X+628, Y+190, Muted, 0.85f);
+    float Row=Y+228;
+    for (const auto& Ability : FBuildCatalog::Abilities(Hero))
+    {
+        Text(Ability.Name, X+628, Row, Gold, 0.9f); Row+=25;
+        for (const auto& Line : Wrap(Ability.Description, 540, 0.8f)) { Text(Line, X+628, Row, Parchment, 0.8f); Row+=21; }
+        Row+=12;
+    }
+    const auto* Build=FBuildCatalog::Find(Hero.BuildId);
+    if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X+628, Row, Safe, 0.8f); }
+    if (Build->CriticalThreshold==19) { Text(TEXT("Passive: critical hits on 19-20"), X+628, Row, Safe, 0.8f); }
+    Text(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), X+24, Y+496, Muted, 0.8f);
+    Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), X+24, Y+534, 250, 52);
+    Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), X+286, Y+534, 250, 52);
+    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), X+548, Y+534, 200, 52);
+    Button(TEXT("Records"), TEXT("Records"), TEXT("H"), X+760, Y+534, 200, 52);
+    Button(TEXT("Help"), TEXT("Help"), TEXT("?"), X+972, Y+534, 200, 52);
+    if (!View->Messages().IsEmpty()) { float MsgY=Y+600; for (const auto& Line : Wrap(View->Messages().Last(), 1152, 0.8f)) { Text(Line, X+24, MsgY, Parchment, 0.8f); MsgY+=21; } }
 }
 
 void AExpeditionHUD::DrawRoutes()
@@ -909,6 +925,7 @@ void AExpeditionHUD::DrawRoutes()
     const FExpeditionProgress& Run = View->Progress();
     const float CardWidth = 340, CardHeight = 250, Gap = 30;
     const float Top = H * 0.5f - CardHeight * 0.5f - 10;
+    Panel(W * 0.5f - 370, Top - 84, 740, 76, Gold, 0.95f);
     Text(TEXT("CHOOSE YOUR PATH"), W * 0.5f, Top - 66, Gold, 1.5f, EAlign::Center);
     Text(FString::Printf(TEXT("Encounter %d of %d  ·  Injuries and losses carry forward  ·  No automatic rest"), Run.EncountersCompleted + 1, FExpeditionRun::EncounterCount), W * 0.5f, Top - 30, Muted, 0.76f, EAlign::Center);
     for (int32 Index = 0; Index < Run.Offers.Num() && Index < 2; ++Index)
@@ -917,8 +934,11 @@ void AExpeditionHUD::DrawRoutes()
         const float X = W * 0.5f + (Index == 0 ? -CardWidth - Gap * 0.5f : Gap * 0.5f);
         const FLinearColor Accent = Route.bDangerous ? Danger : Safe;
         const bool bHover = Hovered(X, Top, CardWidth, CardHeight);
-        Panel(X, Top - (bHover ? 4 : 0), CardWidth, CardHeight, Accent, bHover ? 0.98f : 0.9f);
-        const float Y = Top - (bHover ? 4 : 0);
+        const FName Id(*FString::Printf(TEXT("Route%d"), Index));
+        const bool bFocused = Player->MenuFocus() == Id;
+        Panel(X, Top, CardWidth, CardHeight, Accent, bHover || bFocused ? 0.98f : 0.9f);
+        if (bFocused) { Frame(Parchment, X - 3, Top - 3, CardWidth + 6, CardHeight + 6, 2); }
+        const float Y = Top;
         Rect(WithAlpha(Accent, 0.22f), X + 16, Y + 16, Measure(Route.bDangerous ? TEXT("DANGEROUS") : TEXT("GUARDED"), 0.7f).X + 16, 22);
         Text(Route.bDangerous ? TEXT("DANGEROUS") : TEXT("GUARDED"), X + 24, Y + 18, Accent, 0.7f);
         Text(Index == 0 ? TEXT("Z") : TEXT("X"), X + CardWidth - 18, Y + 16, Muted, 0.9f, EAlign::Right);
@@ -939,8 +959,8 @@ void AExpeditionHUD::DrawRoutes()
             Text(Facts[Fact], X + 16, FactY, bReward ? Gold : Parchment, 0.8f, EAlign::Left, CardWidth - 32);
             FactY += 24;
         }
-        Buttons.Add({FName(*FString::Printf(TEXT("Route%d"), Index)), FBox2D(FVector2D(X, Top) * S, FVector2D(X + CardWidth, Top + CardHeight) * S), true});
-        Text(bHover ? TEXT("Click to set out") : TEXT(""), X + CardWidth * 0.5f, Y + CardHeight - 30, Accent, 0.8f, EAlign::Center);
+        Buttons.Add({Id, FBox2D(FVector2D(X, Top) * S, FVector2D(X + CardWidth, Top + CardHeight) * S), true});
+        Text(bFocused ? TEXT("Enter to set out") : bHover ? TEXT("Click to set out") : TEXT(""), X + CardWidth * 0.5f, Y + CardHeight - 30, Accent, 0.8f, EAlign::Center);
     }
 }
 
@@ -948,7 +968,7 @@ void AExpeditionHUD::DrawReward()
 {
     const FExpeditionProgress& Run = View->Progress();
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 520, Height = 210;
+    const float Width = 720, Height = 240;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
     Panel(X, Y, Width, Height, Gold, 0.95f);
     Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
@@ -999,13 +1019,14 @@ void AExpeditionHUD::DrawReward()
 void AExpeditionHUD::DrawCamp()
 {
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 560, Height = 250;
+    const float Width = 720, Height = 300;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
     Panel(X, Y, Width, Height, FLinearColor(1.0f, 0.6f, 0.3f), 0.94f);
     Text(TEXT("MAKE CAMP?"), W * 0.5f, Y + 16, FLinearColor(1.0f, 0.7f, 0.4f), 1.4f, EAlign::Center);
     Text(TEXT("Once per expedition. If you press on, the chance is gone."), W * 0.5f, Y + 56, Muted, 0.76f, EAlign::Center);
-    Text(FExpeditionRun::RecoveryDescription(), W * 0.5f, Y + 82, Parchment, 0.74f, EAlign::Center, Width - 40);
-    float Row = Y + 112;
+    float DescriptionY=Y+82;
+    for (const auto& Line : Wrap(FExpeditionRun::RecoveryDescription(),Width-48,0.88f)) { Text(Line,X+24,DescriptionY,Parchment,0.88f); DescriptionY+=24; }
+    float Row = Y + 162;
     FString Status;
     for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
     {
@@ -1013,19 +1034,32 @@ void AExpeditionHUD::DrawCamp()
         Status += (Status.IsEmpty() ? TEXT("") : TEXT("    ")) + (Unit.Life == ECombatLife::Dead ? Unit.Name + TEXT(" (fallen)") : FString::Printf(TEXT("%s %d/%d"), *Unit.Name, Unit.HP, Unit.MaxHP));
     }
     Text(Status, W * 0.5f, Row, Parchment, 0.76f, EAlign::Center, Width - 40);
-    Button(TEXT("Camp"), TEXT("Rest by the fire"), TEXT("C"), W * 0.5f - 250, Y + 160, 240, 56, true, false, FLinearColor(1.0f, 0.6f, 0.3f));
-    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V  ·  forfeit the rest"), W * 0.5f + 10, Y + 160, 240, 56, true, false, Muted);
+    Button(TEXT("Camp"), TEXT("Rest by the fire"), TEXT("C"), W * 0.5f - 250, Y + 220, 240, 56, true, false, FLinearColor(1.0f, 0.6f, 0.3f));
+    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V  ·  forfeit the rest"), W * 0.5f + 10, Y + 220, 240, 56, true, false, Muted);
 }
 
 void AExpeditionHUD::DrawEnding()
 {
-    DrawTitle();
-
+    if (Player->ShowingBuilder()) { DrawTitle(); return; }
+    const auto& Run = View->Progress();
+    const float X=(W-880)/2, Y=(H-500)/2;
+    Panel(X,Y,880,500,Gold,0.98f);
+    Text(Run.Phase==EExpeditionPhase::Victory ? TEXT("ARTIFACT RECOVERED") : TEXT("EXPEDITION LOST"), X+32,Y+24,Gold,1.5f);
+    Text(FString::Printf(TEXT("%d / 5 battles won / Seed %d"), Run.EncountersCompleted, Run.Seed), X+32,Y+72,Parchment,1.0f);
+    float Row=Y+122;
+    for (const auto& Unit : View->Rules().Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side!=ECombatSide::Party) { continue; }
+        Text(Unit.Name+TEXT(" / ")+FBuildCatalog::DisplayName(Unit)+ (Unit.Life==ECombatLife::Dead ? TEXT(" / Fallen") : TEXT(" / Survived")), X+32,Row,Unit.Life==ECombatLife::Dead ? Danger : Parchment,0.9f); Row+=36;
+    }
+    Text(TEXT("History is kept. The next expedition starts with fresh heroes."),X+32,Y+308,Muted,0.85f);
+    Button(TEXT("Builder"),TEXT("Choose next party"),TEXT("Tab / Enter"),X+32,Y+362,390,64);
+    Button(TEXT("Records"),TEXT("View records"),TEXT("H"),X+450,Y+362,398,64);
 }
 
 void AExpeditionHUD::DrawRecords()
 {
-    const float Width = 680, Height = 330;
+    const float Width = 1000, Height = 500;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 10;
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Gold, 0.98f);
@@ -1042,14 +1076,15 @@ void AExpeditionHUD::DrawRecords()
         {
             const FExpeditionEnding& Record = Records[Index];
             const bool bWon = Record.Outcome == EExpeditionPhase::Victory;
-            Rect(FLinearColor(1, 1, 1, 0.04f), X + 20, Row - 4, Width - 40, 38);
+            Rect(FLinearColor(1, 1, 1, 0.04f), X + 20, Row - 4, Width - 40, 72);
             Text(bWon ? TEXT("RECOVERED") : TEXT("LOST"), X + 32, Row + 4, bWon ? Gold : Danger, 0.78f);
-            Text(FString::Printf(TEXT("Seed %d  ·  %s"), Record.Seed, *Record.Summary), X + 150, Row + 4, Parchment, 0.74f, EAlign::Left, Width - 190);
-            Row += 44;
+            float DetailY=Row;
+            for (const auto& Line : Wrap(FString::Printf(TEXT("Seed %d / %s"), Record.Seed, *Record.Summary), Width-190, 0.85f)) { Text(Line,X+150,DetailY,Parchment,0.85f); DetailY+=22; }
+            Row += 76;
         }
     }
-    Button(TEXT("Older"), TEXT("Older"), TEXT("Page Up"), X + 24, Y + Height - 64, 130, 46);
-    Button(TEXT("Newer"), TEXT("Newer"), TEXT("Page Down"), X + 164, Y + Height - 64, 130, 46);
+    Button(TEXT("Older"), TEXT("Older"), TEXT("Page Up"), X + 24, Y + Height - 64, 130, 46, View->RecordOffset() + View->RecordsPerPage < Records.Num());
+    Button(TEXT("Newer"), TEXT("Newer"), TEXT("Page Down"), X + 164, Y + Height - 64, 130, 46, View->RecordOffset() > 0);
     Button(TEXT("Close"), TEXT("Close"), TEXT("H / Esc"), X + Width - 154, Y + Height - 64, 130, 46, true, false, Gold);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
@@ -1061,6 +1096,27 @@ void AExpeditionHUD::DrawHelp()
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Sky, 0.98f);
     Text(TEXT("HOW TO PLAY"), X + 24, Y + 18, Sky, 1.2f);
+    if (!View->InCombat())
+    {
+        const TArray<FString> Lines = Player->ShowingBuilder() ? TArray<FString>{
+            TEXT("Choose four independent heroes. Duplicates are welcome."),
+            TEXT("Click a slot (1-4), then a class and compatible subclass."),
+            TEXT("Up / Down changes class. Left / Right changes subclass."),
+            TEXT("G restores the familiar party. N begins the expedition."),
+            TEXT("O resumes the exact saved party, keeping its spent resources."),
+            TEXT("An unfinished saved expedition must be resumed before starting anew.")
+        } : TArray<FString>{
+            TEXT("Z / X chooses a route. Compare danger and promised rewards."),
+            TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
+            TEXT("Gear caps at rank 3. Potions remain useful at the gear cap."),
+            TEXT("C takes the one recovery opportunity; V forfeits it."),
+            TEXT("Deaths are permanent. Recovery never resurrects fallen heroes."),
+            TEXT("The ending keeps a record; choose next party to begin again.")};
+        float Row=Y+70;
+        for (const auto& Line : Lines) { for (const auto& Part : Wrap(Line,Width-64,0.9f)) { Text(Part,X+32,Row,Parchment,0.9f); Row+=27; } }
+        Button(TEXT("Close"),TEXT("Back"),TEXT("Esc / ?"),X+Width-154,Y+Height-60,130,44);
+        return;
+    }
     const TCHAR* Left[] = {
         TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Y / U  Burning Hands / Thunderwave"), TEXT("I / W  Shove / Grapple"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
@@ -1221,4 +1277,11 @@ void AExpeditionHUD::DrawCreator()
     Focus(FCreatorScreen::RowConfirm, X + Width - 364, FY + 6, 164, 44);
     Focus(FCreatorScreen::RowCancel, X + Width - 188, FY + 6, 164, 44);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+TArray<FName> AExpeditionHUD::MenuButtons() const
+{
+    TArray<FName> Result;
+    for (const auto& Button : Buttons) { if (Button.bEnabled) { Result.AddUnique(Button.Id); } }
+    return Result;
 }

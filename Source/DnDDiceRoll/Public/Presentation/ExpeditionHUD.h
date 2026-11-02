@@ -22,6 +22,7 @@ public:
     bool ButtonAt(FVector2D ScreenPosition, FName& Id) const;
     /** Panels that should swallow clicks instead of passing them to the board. */
     bool CoversBoard(FVector2D ScreenPosition) const;
+    TArray<FName> MenuButtons() const;
 private:
     enum class EAlign : uint8 { Left, Center, Right };
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };

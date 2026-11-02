@@ -92,6 +92,9 @@ bool FNextRunSubclassTest::RunTest(const FString& Parameters)
             View->ConfigureStorage(Path);
             View->DispatchBeginPlay();
             Player->HandleButton(TEXT("Resume"));
+            TestFalse(TEXT("Ending starts with recap before draft editing"), Player->ShowingBuilder());
+            Player->HandleButton(TEXT("Builder"));
+            TestTrue(TEXT("Explicit next party opens draft"), Player->ShowingBuilder());
             TestEqual(TEXT("Resumed Fighter is Champion"), View->Rules().Find(1)->FighterSubclass, EFighterSubclass::Champion);
             Player->HandleButton(TEXT("Help"));
             Player->HandleButton(TEXT("BattleMaster"));
@@ -305,6 +308,51 @@ bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
 #endif
 
 #if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTerminalPlaybackSkipTest, "Project.Expedition.Presentation.SkipBattleEndingPlayback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FTerminalPlaybackSkipTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient terminal playback world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/TerminalPlayback"), FGuid::NewGuid().ToString());
+    auto* Player = World->SpawnActor<AExpeditionPlayerController>();
+    Player->DispatchBeginPlay();
+    auto* View = Player->GetBattleView();
+    View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+    View->DispatchBeginPlay();
+    Player->HandleButton(TEXT("New"));
+    Player->HandleButton(TEXT("Route0"));
+    // Yield real turns until the final enemy action commits defeat. Keep its playback pending.
+    for (int32 Turn = 0; Turn < 600 && View->InCombat(); ++Turn)
+    {
+        View->SkipPresentation();
+        const auto* Active = View->Rules().Find(View->Rules().ActiveId());
+        if (!Active) { break; }
+        if (Active->Side == ECombatSide::Party) { Player->HandleButton(TEXT("EndTurn")); }
+        else { View->Tick(1.0f); }
+    }
+    TestEqual(TEXT("Real combat reaches defeat"), View->Progress().Phase, EExpeditionPhase::Defeat);
+    TestTrue(TEXT("Ending action still has playback"), View->IsPresenting());
+    const FCombatSnapshot Committed = View->Rules().Snapshot();
+    Player->HandleButton(TEXT("Help"));
+    Player->HandleButton(TEXT("Skip"));
+    TestTrue(TEXT("Help retains ending playback"), View->IsPresenting());
+    Player->HandleButton(TEXT("Close"));
+    Player->HandleButton(TEXT("Records"));
+    Player->HandleButton(TEXT("Skip"));
+    TestTrue(TEXT("Records retains ending playback"), View->IsPresenting());
+    Player->HandleButton(TEXT("Close"));
+    Player->HandleButton(TEXT("Skip"));
+    TestFalse(TEXT("Controller skip finishes playback after combat phase ends"), View->IsPresenting());
+    TestTrue(TEXT("Skip preserves committed rules"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Committed, &View->Rules().Snapshot(), 0));
+    TestTrue(TEXT("Ending display converges"), DisplayMatchesRules(*View));
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCorpseVisibilityTest, "Project.Expedition.Presentation.OccupiedCorpseCellsStayVisible",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
@@ -440,6 +488,25 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
         Player->HandleButton(TEXT("ClassNext"));
     }
     TestEqual(TEXT("Builder exposes all seventy authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 70);
+    const FString BeforeReverse = Player->NextParty()[0].BuildId;
+    Player->StepBuild(1); Player->StepBuild(-1);
+    TestEqual(TEXT("Opposite subclass navigation restores choice"),Player->NextParty()[0].BuildId,BeforeReverse);
+    Player->StepClass(1); Player->StepClass(-1);
+    TestEqual(TEXT("Opposite class navigation restores class"),FBuildCatalog::Find(Player->NextParty()[0].BuildId)->Profile.ClassId,FBuildCatalog::Find(BeforeReverse)->Profile.ClassId);
+    const FString OtherSlot=Player->NextParty()[1].BuildId;
+    Player->HandleButton(TEXT("Class:wizard"));
+    TestEqual(TEXT("Direct class chooses a compatible starting subclass"), FBuildCatalog::Find(Player->NextParty()[0].BuildId)->Profile.ClassId, FString(TEXT("wizard")));
+    TestTrue(TEXT("Direct longest class choice accepted"),Player->SelectBuild(TEXT("wizard.evocation")));
+    Player->HandleButton(TEXT("Class:wizard"));
+    TestEqual(TEXT("Selecting the current class preserves its chosen subclass"), Player->NextParty()[0].BuildId, FString(TEXT("wizard.evocation")));
+    TestEqual(TEXT("Direct choice preserves independent slot"),Player->NextParty()[1].BuildId,OtherSlot);
+    TestFalse(TEXT("Unknown catalog choice rejected"),Player->SelectBuild(TEXT("unknown.kit")));
+    Player->HandleButton(TEXT("Help"));
+    Player->HandleButton(TEXT("Class:fighter"));
+    TestEqual(TEXT("Modal rejects direct class selection"), Player->NextParty()[0].BuildId, FString(TEXT("wizard.evocation")));
+    TestFalse(TEXT("Modal rejects direct roster selection"),Player->SelectBuild(TEXT("fighter.champion")));
+    Player->HandleButton(TEXT("Close"));
+
     TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
     TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
     Player->HandleButton(TEXT("Preset"));
