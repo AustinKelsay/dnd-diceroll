@@ -12,6 +12,7 @@
 #include "Rules/CheckRules.h"
 #include "Rules/StandardActionRules.h"
 #include "Rules/DeathSaveRules.h"
+#include "Rules/ConcentrationRules.h"
 
 namespace
 {
@@ -119,6 +120,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 2 ||
             (Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
             Unit.TemporaryHP < 0 || Unit.TemporaryHP > 999 || Unit.HitDiceSpent < 0 || Unit.HitDiceSpent > Unit.Level ||
+            (Unit.bConcentrating && Unit.Life != ECombatLife::Conscious) ||
             Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
             (Unit.Side != ECombatSide::Party && Unit.Side != ECombatSide::Enemy))
@@ -1587,6 +1589,12 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     const int32 Real = FDeathSaveRules::AbsorbWithTemporary(Target.TemporaryHP, FMath::Max(0, Damage - Protection));
     Target.HP = FMath::Max(0, Target.HP - Real);
     const bool bMassive = State.Encounter.bDeathSaves && FDeathSaveRules::InstantDeath(Real, HPBefore, Target.MaxHP);
+    if (Target.bConcentrating && Target.HP > 0 && Real > 0)
+    {
+        // Rolls only while concentrating, so battles without concentration keep their seeded streams.
+        Target.bConcentrating = FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
+            SaveMode(Target, EAbility::Constitution, ERollMode::Normal), State.RandomState).bSuccess;
+    }
     if (Target.HP == 0)
     {
         Target.GuardTurns = 0; Target.GuardAmount = 0; Target.RageTurns = 0; Target.GuardTargetId = INDEX_NONE; Target.LastSurge = 0;
@@ -1596,7 +1604,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
         if (bMassive) { Target.Life = ECombatLife::Dead; }
         Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
-        Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0;
+        Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0; Target.bConcentrating = false;
     }
 }
 
@@ -1618,7 +1626,7 @@ void FCombatBattle::CheckOutcome()
         {
             Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
             Unit.bReactionAvailable = true;
-            Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE;
+            Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE; Unit.bConcentrating = false;
             if (Unit.Life == ECombatLife::Downed)
             {
                 // With death saves, a stable hero survives a victory on 1 HP; anyone still dying is lost.

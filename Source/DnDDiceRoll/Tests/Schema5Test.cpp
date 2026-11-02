@@ -1116,4 +1116,33 @@ bool FSchema5ShortRestTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("A wounded survivor rested"), bChecked);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ConcentrationInBattleTest, "Project.Expedition.Schema5.ConcentrationInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ConcentrationInBattleTest::RunTest(const FString& Parameters)
+{
+    bool bKept = false, bLost = false;
+    for (int32 Seed = 1; Seed <= 80 && !(bKept && bLost); ++Seed)
+    {
+        FString Error;
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[0].bConcentrating = true;
+        Encounter.Combatants[0].MaxHP = Encounter.Combatants[0].HP = 200;
+        FCombatBattle B;
+        if (!TestTrue(TEXT("Concentration battle starts"), B.Start(Encounter, Seed, Error))) { return false; }
+        FCombatBattle Copy;
+        TestTrue(TEXT("Concentration restores"), Copy.Restore(B.Snapshot(), Error));
+        B.Submit({ECombatCommandType::EndTurn, 10});
+        const FCombatResult Hit = B.Submit({ECombatCommandType::Attack, 20, {}, 10});
+        if (!Hit.bHit || B.Find(10)->HP == 200) { TestTrue(TEXT("A miss keeps concentration"), B.Find(10)->bConcentrating); continue; }
+        (B.Find(10)->bConcentrating ? bKept : bLost) = true;
+    }
+    TestTrue(TEXT("Some CON saves keep concentration"), bKept);
+    TestTrue(TEXT("Some CON saves break it"), bLost);
+    FString Error;
+    FCombatEncounter Bad = Pair({1, 0});
+    Bad.Combatants[0].bConcentrating = true; Bad.Combatants[0].HP = 0; Bad.Combatants[0].Life = ECombatLife::Downed; Bad.Combatants[0].RescueTurnsLeft = 3;
+    FCombatBattle B;
+    TestFalse(TEXT("Downed units cannot concentrate"), B.Start(Bad, 1, Error));
+    return true;
+}
 #endif

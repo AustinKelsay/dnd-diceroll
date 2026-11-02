@@ -98,6 +98,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 TemporaryHP = 0;
     /** Hit dice spent on short rests (#76); a hero has one die per level. */
     UPROPERTY() int32 HitDiceSpent = 0;
+    /** #74: holding a concentration spell; damage forces a CON save (DC max(10, half)), 0 HP ends it. */
+    UPROPERTY() bool bConcentrating = false;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
