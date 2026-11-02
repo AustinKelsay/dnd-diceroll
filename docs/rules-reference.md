@@ -142,3 +142,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #88: light, vision and darkvision
 
 `FLightRules`: cells are bright, dim or dark. Dim light lightly obscures (disadvantage on sight-based Perception); darkness heavily obscures (sight checks fail and the observer is effectively blinded). Darkvision (60 ft on Goblin, Skeleton, Zombie, Ice Mephit and Fire Elemental profiles) treats darkness as dim and dim as bright within range. Attacking a target you cannot see has disadvantage; attacking one that cannot see you has advantage; both cancel. Hiding needs obscurement. Battle lighting per cell is not wired: it needs a light value per terrain cell (saved terrain, with #64). Adventurers have no darkvision until ancestries exist (decision for Austin).
+
+## Issue #90: Sleight of Hand
+
+`FSleightRules`: lifting or planting an item is a Dexterity (Sleight of Hand) check against the target's passive Perception as the DC. Meeting it takes the item unnoticed; missing by 1-4 achieves nothing; missing by 5 or more gets the thief caught (the target turns hostile). The forecast is exact and spends no RNG. Rogues from level 2 can do it as a bonus action (Cunning Action, use an object). Route and social node wiring and item transfer wait for saved inventory (#39); an alert target rolling active Perception is left for the contest resolver when nodes exist.
