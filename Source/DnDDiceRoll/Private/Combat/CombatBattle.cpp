@@ -393,6 +393,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::FontOfMagic: return TEXT("FONT OF MAGIC | Bonus + 2 sorcery points | self | regain one spell use (a 1st-level slot); points = Sorcerer level per long rest");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
@@ -2025,6 +2026,11 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
     case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
+    case ECombatCommandType::FontOfMagic:
+    {
+        const auto* Build = FBuildCatalog::Find(Unit.BuildId);
+        return Unit.SorceryPoints >= FFeatureKit::FontCost && State.bBonusActionAvailable && Build && Unit.KitUses < Build->KitCap;
+    }
     default: return false;
     }
 }
@@ -2068,6 +2074,11 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = false;
         User->WildShapeHP = FFeatureKit::WolfHP;
         return FString::Printf(TEXT("%s takes the shape of a wolf (%d form HP, AC %d; %d uses left)."), *User->Name, User->WildShapeHP, FFeatureKit::WolfAC, User->WildShapeUses);
+    case ECombatCommandType::FontOfMagic:
+        User->SorceryPoints -= FFeatureKit::FontCost;
+        State.bBonusActionAvailable = false;
+        ++User->KitUses;
+        return FString::Printf(TEXT("%s turns %d sorcery points into a spell use (%d uses, %d points left) (bonus action)."), *User->Name, FFeatureKit::FontCost, User->KitUses, User->SorceryPoints);
     case ECombatCommandType::PatientDefense:
     case ECombatCommandType::StepOfTheWind:
         --User->KiPoints;

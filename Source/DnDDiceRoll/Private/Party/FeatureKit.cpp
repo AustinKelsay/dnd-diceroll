@@ -64,6 +64,7 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.WildShapeUses = WildShapeCap(Hero);
     Hero.WildShapeHP = 0;
     Hero.KiPoints = KiCap(Hero);
+    Hero.SorceryPoints = SorceryCap(Hero);
 }
 void FFeatureKit::ShortRest(FCombatantState& Hero)
 {
@@ -71,6 +72,11 @@ void FFeatureKit::ShortRest(FCombatantState& Hero)
     Hero.ChannelUses = ChannelCap(Hero);
     Hero.WildShapeUses = WildShapeCap(Hero);
     Hero.KiPoints = KiCap(Hero);
+}
+int32 FFeatureKit::SorceryCap(const FCombatantState& Hero)
+{
+    const int32 Sorcerer = FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Sorcerer);
+    return Hero.Side == ECombatSide::Party && Sorcerer >= 2 ? Sorcerer : 0;
 }
 int32 FFeatureKit::KiCap(const FCombatantState& Hero)
 {
@@ -86,6 +92,7 @@ void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
     Raise(Hero.BardicUses, BardicCap(Hero), BardicCap(Before));
     Raise(Hero.WildShapeUses, WildShapeCap(Hero), WildShapeCap(Before));
     Raise(Hero.KiPoints, KiCap(Hero), KiCap(Before));
+    Raise(Hero.SorceryPoints, SorceryCap(Hero), SorceryCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 {
@@ -128,6 +135,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("Flurry of Blows");
     case ECombatCommandType::PatientDefense: return TEXT("Patient Defense");
     case ECombatCommandType::StepOfTheWind: return TEXT("Step of the Wind");
+    case ECombatCommandType::FontOfMagic: return TEXT("Font of Magic");
     default: return TEXT("Feature");
     }
 }
@@ -137,6 +145,7 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
     {
     case ECombatCommandType::ActionSurge: return EActionCost::Free;
     case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
+    case ECombatCommandType::FontOfMagic:
         return EActionCost::BonusAction;
     default: return EActionCost::Action;
     }
@@ -150,6 +159,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
+    case ECombatCommandType::FontOfMagic: return FString::Printf(TEXT("bonus, %d points"), Hero.SorceryPoints);
     default: return FString();
     }
 }
@@ -160,6 +170,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
+    if (SorceryCap(Hero)) { Out.Add(ECombatCommandType::FontOfMagic); }
     if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
     return Out;
 }
@@ -173,5 +184,5 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
-        Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero);
+        Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero);
 }

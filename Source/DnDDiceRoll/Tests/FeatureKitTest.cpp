@@ -316,4 +316,33 @@ bool FKiTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Short rest refills ki"), Monk.KiPoints, 3);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSorceryPointsTest, "Project.Expedition.Features.SorceryPoints",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSorceryPointsTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    TestEqual(TEXT("None at Sorcerer 1"), FFeatureKit::SorceryCap(Hero(TEXT("sorcerer.wild-magic"), 1)), 0);
+    FCombatantState Sorcerer = Hero(TEXT("sorcerer.wild-magic"), 4);
+    FFeatureKit::Refill(Sorcerer);
+    TestEqual(TEXT("Points = Sorcerer level"), Sorcerer.SorceryPoints, 4);
+    TestTrue(TEXT("Bonus tag"), FCombatBattle::ActionCost(ECombatCommandType::FontOfMagic, Sorcerer) == EActionCost::BonusAction);
+    const int32 Cap = FBuildCatalog::Find(Sorcerer.BuildId)->KitCap;
+    FString Error;
+    {
+        FCombatBattle Battle; Battle.Start(Duel(Sorcerer, {3, 0}), 3, Error);
+        TestTrue(TEXT("Nothing to regain at full uses"), Battle.LegalTargets(10, ECombatCommandType::FontOfMagic).IsEmpty());
+    }
+    Sorcerer.KitUses = FMath::Max(0, Cap - 2);
+    FCombatBattle Battle;
+    if (!TestTrue(TEXT("Start"), Battle.Start(Duel(Sorcerer, {3, 0}), 3, Error))) { AddError(Error); return true; }
+    TestTrue(TEXT("Font"), Battle.Submit({ECombatCommandType::FontOfMagic, 10, {}, 10}).bAccepted);
+    TestEqual(TEXT("One use regained"), Battle.Find(10)->KitUses, Sorcerer.KitUses + 1);
+    TestEqual(TEXT("Two points spent"), Battle.Find(10)->SorceryPoints, 2);
+    TestFalse(TEXT("Bonus spent"), Battle.Snapshot().bBonusActionAvailable);
+    FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error));
+    FCombatantState Bad = Sorcerer; Bad.SorceryPoints = 5;
+    TestFalse(TEXT("Points above cap invalid"), FFeatureKit::Valid(Bad));
+    return true;
+}
 #endif

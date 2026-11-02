@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::StepOfTheWind;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::FontOfMagic;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -45,6 +45,10 @@ public:
     static int32 WildShapeCap(const FCombatantState& Hero);
     /** Monk level from Monk 2. */
     static int32 KiCap(const FCombatantState& Hero);
+    /** Sorcerer level from Sorcerer 2. */
+    static int32 SorceryCap(const FCombatantState& Hero);
+    /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */
+    static constexpr int32 FontCost = 2;
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }
     /** Short rest: refills the short-rest pools (Action Surge, Channel Divinity, Wild Shape, ki). */
     static void ShortRest(FCombatantState& Hero);
