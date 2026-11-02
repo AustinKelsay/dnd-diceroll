@@ -455,4 +455,66 @@ bool FArtificerSpentRecoveryTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCappedCampCheckpointTest,"Project.Expedition.Catalog.CappedCampAfterBonusVictory",EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCappedCampCheckpointTest::RunTest(const FString& Parameters)
+{
+    FString Error; TArray<FPartyBuildSelection> Party;
+    for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Hero %d"),Id); P.BuildId=TEXT("artificer.artillerist"); Party.Add(P); }
+    FExpeditionRun Run;
+    if(!TestTrue(TEXT("Create capped recovery run"),Run.NewRun(42,Party,Error,TEXT("capped-bonus-camp"))) ||
+       !TestTrue(TEXT("Enter first generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    int32 Finisher=INDEX_NONE;
+    for(int32 Turn=0;Turn<400 && Run.Progress().Phase==EExpeditionPhase::Combat;++Turn)
+    {
+        const int32 Id=Run.Battle().ActiveId();
+        if(Run.Battle().Find(Id)->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
+        auto Targets=Run.Battle().LegalTargets(Id);
+        if(Targets.IsEmpty())
+        {
+            auto Moves=Run.Battle().LegalMoves(Id);
+            auto Nearest=[&](FIntPoint Cell)
+            {
+                int32 Best=1000;
+                for(const auto& U:Run.Battle().Snapshot().Encounter.Combatants)
+                { if(U.Side==ECombatSide::Enemy && U.HP>0) { Best=FMath::Min(Best,ExpeditionTestSupport::Distance(Cell,U.Cell)); } }
+                return Best;
+            };
+            Moves.Sort([&](FIntPoint A,FIntPoint B) { const int32 DA=Nearest(A),DB=Nearest(B); return DA==DB?(A.Y==B.Y?A.X<B.X:A.Y<B.Y):DA<DB; });
+            if(!Moves.IsEmpty()) { Run.Submit({ECombatCommandType::Move,Id,Moves[0]}); }
+            Targets=Run.Battle().LegalTargets(Id);
+        }
+        if(!Targets.IsEmpty())
+        {
+            const FCombatCommand Attack{ECombatCommandType::Attack,Id,{},Targets[0]};
+            FExpeditionRun Trial=Run; Trial.Submit(Attack);
+            const auto Allies=Run.Battle().LegalTargets(Id,ECombatCommandType::Special2);
+            if(Trial.Progress().Phase==EExpeditionPhase::Reward && Run.Battle().Find(Id)->KitUses==2 && !Allies.IsEmpty())
+            {
+                if(!TestTrue(TEXT("Spend real Bonus protection before finishing blow"),Run.Submit({ECombatCommandType::Special2,Id,{},Allies[0]}).bAccepted)) { return false; }
+                Finisher=Id;
+            }
+            if(!TestTrue(TEXT("Submit actual basic attack"),Run.Submit(Attack).bAccepted)) { return false; }
+        }
+        if(Run.Progress().Phase==EExpeditionPhase::Combat) { Run.Submit({ECombatCommandType::EndTurn,Id}); }
+    }
+    if(!TestTrue(TEXT("A real Bonus-spending hero wins"),Finisher!=INDEX_NONE && Run.Progress().Phase==EExpeditionPhase::Reward)) { return false; }
+    TestFalse(TEXT("Victory retains spent Bonus budget"),Run.Battle().Snapshot().bBonusActionAvailable);
+    TestEqual(TEXT("Victory retains one unspent Kit"),Run.Battle().Find(Finisher)->KitUses,1);
+    const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/CappedCamp"),FGuid::NewGuid().ToString());
+    const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    FExpeditionSaveData Data; Data.Current=Run.Snapshot();
+    if(!TestTrue(TEXT("Write genuine victory checkpoint"),FExpeditionSave::Write(Path,Data,Error))) { return false; }
+    FExpeditionSession Session(Path);
+    if(!TestTrue(TEXT("Resume before reward"),Session.Resume(Error)) ||
+       !TestTrue(TEXT("Commit actual reward"),Session.ClaimReward(Finisher,Error)) ||
+       !TestTrue(TEXT("Commit camp recovery back to Kit cap"),Session.Recover(true,Error))) { return false; }
+    TestEqual(TEXT("Camp restores exactly to two"),Session.Run().Battle().Find(Finisher)->KitUses,2);
+    TestFalse(TEXT("Historical combat budget stays spent"),Session.Run().Battle().Snapshot().bBonusActionAvailable);
+    FExpeditionSession Resumed(Path);
+    TestTrue(TEXT("Fresh session resumes capped camp"),Resumed.Resume(Error));
+    TestTrue(TEXT("Resume retains complete state and RNG"),ExpeditionTestSupport::SameRun(Session.Run().Snapshot(),Resumed.Run().Snapshot()));
+    IFileManager::Get().DeleteDirectory(*Directory,false,true);
+    return true;
+}
+
 #endif

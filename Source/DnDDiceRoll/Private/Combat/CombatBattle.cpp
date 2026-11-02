@@ -797,7 +797,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         {
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
             if (Build && Build->KitCap > 0)
-            { return Active->KitUses >= Build->KitCap || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
+            { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses >= Build->KitCap) || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
             if (Active->AdventurerRole == EAdventurerRole::Barbarian)
             { return Snapshot.Phase == EBattlePhase::Fighting && Active->RageTurns == 0; }
             return Active->AdventurerRole != EAdventurerRole::Fighter || (Snapshot.Phase == EBattlePhase::Fighting && Active->SecondWindUses > 1);
