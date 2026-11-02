@@ -166,3 +166,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #85: exploration hazards
 
 `FHazardRules` resolves a hazard with one skill check: cliff (Athletics DC 12, 4 HP on a fail), ledge (Acrobatics DC 12, 3 HP), getting lost (Survival DC 13, 1 supply and a reroute) and a hidden passage (Investigation DC 15, success opens a shortcut). `ForecastOutOf400` shows the exact chance before committing. Placing hazards on the map, spending supplies and saving rerouted paths need run state (#39); DCs and costs are tuning for Austin.
+
+## Issue #80: stealth, hidden attackers and surprise
+
+`FStealthRules`: passive scores are 10 + modifier (+/-5 for advantage/disadvantage). A creature is hidden from an observer when its Stealth total meets or beats the observer's passive Perception; the tie going to the hider is our reading and is flagged for Austin. Attacking while hidden gives advantage (an unseen target gives disadvantage; both cancel) and always reveals the attacker. A side is surprised only if every ambusher is hidden from it, and surprised creatures cannot act in round 1. A per-unit hidden flag and pre-battle ambush state need battle and run state (#39).
