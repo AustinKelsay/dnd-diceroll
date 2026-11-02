@@ -198,6 +198,10 @@ private:
     UPROPERTY() TArray<FExpeditionPart> ShotMeshes;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
     UPROPERTY() TArray<FExpeditionPart> SparkMeshes;
+    // Watercolor wash for spell effects only (additive layer over the theme); null falls back to BaseMaterial.
+    UPROPERTY() TObjectPtr<UMaterialInterface> WashMaterial;
+    UPROPERTY() TArray<TObjectPtr<UMaterialInstanceDynamic>> ShotWash;
+    UPROPERTY() TArray<TObjectPtr<UMaterialInstanceDynamic>> SparkWash;
     UPROPERTY() TArray<FExpeditionPart> CampParts;
     UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
     UPROPERTY() TArray<FExpeditionPart> WaystoneParts;
@@ -228,6 +232,7 @@ private:
     void UpdateTiles();
     void UpdateMarkers();
     void UpdateEffects();
+    bool PaintWash(FExpeditionPart& Part, const TArray<TObjectPtr<UMaterialInstanceDynamic>>& Wash, int32 Index, EExpeditionSpell Spell, const FLinearColor& Color);
     void UpdateCamera(float DeltaSeconds);
     void Record(const FCombatResult& Result);
     void Present(const TArray<FCombatResult>& Results);

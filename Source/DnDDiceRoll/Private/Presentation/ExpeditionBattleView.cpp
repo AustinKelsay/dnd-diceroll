@@ -200,6 +200,10 @@ void AExpeditionBattleView::BeginPlay()
         if (!ThemeMaterial) { Theme = nullptr; }
         OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
     }
+    if (!FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")))
+    {
+        WashMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/DnDDiceRoll/FX/M_WatercolorFX.M_WatercolorFX"), nullptr, LOAD_NoWarn | LOAD_Quiet);
+    }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -637,10 +641,15 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         ShotMeshes.Last().Mesh->SetVisibility(false);
         ShotLights.Add(MakeLight(ShotMeshes.Last().Mesh, FVector::ZeroVector, FLinearColor::White, 0.0f, 450.0f));
     }
+    ShotWash.Reset(); SparkWash.Reset();
     for (int32 Index = 0; Index < SparkPool; ++Index)
     {
         SparkMeshes.Add(MakePart(Sphere, nullptr, FVector::ZeroVector, FVector(0.07f), FLinearColor::White));
         SparkMeshes.Last().Mesh->SetVisibility(false);
+    }
+    for (int32 Index = 0; WashMaterial && Index < ShotPool + SparkPool; ++Index)
+    {
+        (Index < ShotPool ? ShotWash : SparkWash).Add(UMaterialInstanceDynamic::Create(WashMaterial, this));
     }
     // Camp: stones, crossed logs, flames and a warm light. Shown only at the recovery choice.
     const FVector Camp = BoardPosition(FVector2D(1.6f, (Encounter.Height - 1) * 0.5f));
@@ -760,6 +769,15 @@ void AExpeditionBattleView::UpdateMarkers()
     }
 }
 
+bool AExpeditionBattleView::PaintWash(FExpeditionPart& Part, const TArray<TObjectPtr<UMaterialInstanceDynamic>>& Wash, int32 Index, EExpeditionSpell Spell, const FLinearColor& Color)
+{
+    UMaterialInstanceDynamic* Paint = Spell != EExpeditionSpell::None && Wash.IsValidIndex(Index) ? Wash[Index].Get() : nullptr;
+    UMaterialInterface* Want = Paint ? static_cast<UMaterialInterface*>(Paint) : static_cast<UMaterialInterface*>(Part.Material.Get());
+    if (Want && Part.Mesh->GetMaterial(0) != Want) { Part.Mesh->SetMaterial(0, Want); }
+    if (Paint) { Paint->SetVectorParameterValue(TEXT("Color"), Color); }
+    return Paint != nullptr;
+}
+
 void AExpeditionBattleView::UpdateEffects()
 {
     const TArray<FPlaybackProjectile>& Shots = Show.Projectiles();
@@ -780,7 +798,7 @@ void AExpeditionBattleView::UpdateEffects()
         Part.Mesh->SetRelativeLocation(Position);
         Part.Mesh->SetRelativeRotation((To - From).Rotation());
         Part.Mesh->SetRelativeScale3D(Shot.bArrow ? FVector(0.5f, 0.05f, 0.05f) : FVector(Shot.Size));
-        Part.SetColor(Shot.bArrow ? Shot.Color : Shot.Color * 6.0f);
+        if (!PaintWash(Part, ShotWash, Index, Shot.Spell, Shot.Color * 3.0f)) { Part.SetColor(Shot.bArrow ? Shot.Color : Shot.Color * 6.0f); }
         if (!Shot.bArrow) { ShotLights[Index]->SetLightColor(Shot.Color); ShotLights[Index]->SetIntensity(180.0f); }
     }
     const TArray<FPlaybackSparkle>& Sparks = Show.Sparkles();
@@ -793,9 +811,11 @@ void AExpeditionBattleView::UpdateEffects()
         const FPlaybackSparkle& Spark = Sparks[Index];
         const float Alpha = Spark.Age / Spark.Life;
         const float Angle = Spark.Angle + Alpha * 3.0f;
-        Part.Mesh->SetRelativeLocation(BoardPosition(Spark.Cell, 20.0f + Alpha * 100.0f) + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0) * (28.0f + Alpha * 10.0f));
-        Part.Mesh->SetRelativeScale3D(FVector(0.08f * (1.0f - Alpha * 0.7f)));
-        Part.SetColor(Spark.Color * 5.0f);
+        Part.Mesh->SetRelativeLocation(BoardPosition(Spark.Cell, 20.0f + Alpha * Spark.Rise) + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0) * (28.0f + Alpha * 10.0f));
+        // Watercolor blots are larger, softer dabs that bloom then fade.
+        const float Blot = Spark.Spell != EExpeditionSpell::None && WashMaterial ? 1.6f * FMath::Sin(FMath::Min(1.0f, Alpha * 1.4f) * PI * 0.5f + 0.35f) : 1.0f;
+        Part.Mesh->SetRelativeScale3D(FVector(0.08f * Blot * (1.0f - Alpha * 0.7f)));
+        if (!PaintWash(Part, SparkWash, Index, Spark.Spell, Spark.Color * 2.5f)) { Part.SetColor(Spark.Color * 5.0f); }
     }
     // Torches and the campfire flicker; the camp appears only at the recovery choice.
     for (int32 Index = 0; Index < Flames.Num(); ++Index)
