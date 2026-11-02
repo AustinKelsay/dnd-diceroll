@@ -214,3 +214,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #59: opportunity attack triggers (rules only)
 
 `FOpportunityRules` measures reach in grid cells with diagonals counting as 1. A step provokes when it leaves a reactor's reach voluntarily, the mover hasn't disengaged, and the reactor still has its reaction. `FirstProvokingCell` flags the path cell being left (one provocation per reactor). Spending and restoring reactions, resolving the attack mid-move and the AI's use of it need saved reaction state in battles (#39) and are not wired.
+
+## Issue #74: concentration (rules only)
+
+`FConcentrationRules`: after taking damage a concentrating caster makes a Constitution save against DC 10 or half the damage, whichever is higher, with an exact forecast. Starting another concentration spell or becoming incapacitated ends it. None of the current eight spells needs concentration, so nothing in battles changes yet; tracking the active spell needs battle state (#39) once such spells arrive.
