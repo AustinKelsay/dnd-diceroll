@@ -468,4 +468,62 @@ bool FCureWisdomTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Description names WIS"), FCombatBattle::DescribeAction(ECombatCommandType::CureWounds).Contains(TEXT("WIS")));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSecondClassFeaturesTest, "Project.Expedition.Features.SecondClass",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSecondClassFeaturesTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    auto Multi = [](const TCHAR* Build, int32 Level, EAdventurerRole Second, int32 SecondLevel)
+    {
+        FCombatantState H = Hero(Build, Level);
+        H.SecondaryRole = Second; H.SecondaryLevel = SecondLevel;
+        H.SlotsByLevel.Reset(); H.SpellSlots = FMath::Min(H.SpellSlots, FBuildCatalog::SlotCap(H));
+        H.MaxHP = H.HP = FBuildCatalog::MaxHitPoints(H);
+        FFeatureKit::Refill(H);
+        return H;
+    };
+    FString Error;
+    auto Starts = [&](const FCombatantState& H, const TCHAR* Label)
+    {
+        FCombatBattle Battle;
+        TestTrue(FString(Label) + TEXT(" starts"), Battle.Start(Duel(H, {1, 0}), 3, Error));
+        if (!Error.IsEmpty()) { AddError(Error); Error.Reset(); }
+        TestTrue(FString(Label) + TEXT(" valid"), FFeatureKit::Valid(H));
+    };
+    const FCombatantState RogueFighter = Multi(TEXT("rogue.thief"), 4, EAdventurerRole::Fighter, 2);
+    TestEqual(TEXT("Fighter 2 secondary: Action Surge"), RogueFighter.ActionSurgeUses, 1);
+    TestTrue(TEXT("Fighter 1 secondary: Fighting Style"), FFeatureKit::HasFightingStyle(RogueFighter));
+    TestFalse(TEXT("Rogue 2 primary: no Uncanny Dodge yet"), FFeatureKit::HasUncannyDodge(RogueFighter));
+    Starts(RogueFighter, TEXT("Rogue/Fighter"));
+    const FCombatantState FighterMonk = Multi(TEXT("fighter.champion"), 4, EAdventurerRole::Monk, 2);
+    TestEqual(TEXT("Monk 2 secondary: 2 ki"), FighterMonk.KiPoints, 2);
+    TestTrue(TEXT("Flurry listed"), FFeatureKit::Commands(FighterMonk).Contains(ECombatCommandType::FlurryOfBlows));
+    Starts(FighterMonk, TEXT("Fighter/Monk"));
+    const FCombatantState FighterBarb = Multi(TEXT("fighter.champion"), 4, EAdventurerRole::Barbarian, 2);
+    TestTrue(TEXT("Barbarian 2 secondary: Reckless"), FFeatureKit::HasRecklessAttack(FighterBarb));
+    Starts(FighterBarb, TEXT("Fighter/Barbarian"));
+    const FCombatantState ClericDruid = Multi(TEXT("cleric.life"), 4, EAdventurerRole::Druid, 2);
+    TestEqual(TEXT("Druid 2 secondary: Wild Shape"), ClericDruid.WildShapeUses, 2);
+    Starts(ClericDruid, TEXT("Cleric/Druid"));
+    const FCombatantState FighterSorc = Multi(TEXT("fighter.champion"), 4, EAdventurerRole::Sorcerer, 2);
+    TestEqual(TEXT("Sorcerer 2 secondary: points"), FighterSorc.SorceryPoints, 2);
+    Starts(FighterSorc, TEXT("Fighter/Sorcerer"));
+    FCombatantState FighterWizard = Multi(TEXT("fighter.champion"), 3, EAdventurerRole::Wizard, 1);
+    FighterWizard.SpellSlots = FBuildCatalog::SlotCap(FighterWizard);
+    TestTrue(TEXT("Wizard 1 secondary: Arcane Recovery"), FFeatureKit::HasArcaneRecovery(FighterWizard));
+    if (FighterWizard.SpellSlots > 0)
+    {
+        FighterWizard.SpellSlots -= 1;
+        TestEqual(TEXT("Recovers one level-1 slot"), FFeatureKit::ArcaneRecover(FighterWizard), 1);
+        TestTrue(TEXT("Resources still valid"), FBuildCatalog::ValidResources(FighterWizard));
+    }
+    const FCombatantState FighterBard = Multi(TEXT("fighter.champion"), 3, EAdventurerRole::Bard, 1);
+    TestTrue(TEXT("Bard 1 secondary: inspiration"), FighterBard.BardicUses >= 1);
+    Starts(FighterBard, TEXT("Fighter/Bard"));
+    const FCombatantState FighterCleric = Multi(TEXT("fighter.champion"), 4, EAdventurerRole::Cleric, 2);
+    TestEqual(TEXT("Cleric 2 secondary: Channel Divinity"), FighterCleric.ChannelUses, 1);
+    TestTrue(TEXT("Turn Undead listed"), FFeatureKit::Commands(FighterCleric).Contains(ECombatCommandType::TurnUndead));
+    return true;
+}
 #endif
