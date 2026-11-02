@@ -56,6 +56,8 @@ public:
     static int32 ArcaneRecoveryPreview(const FCombatantState& Hero);
     /** Applies Arcane Recovery; returns the slot levels restored (0 = refused). */
     static int32 ArcaneRecover(FCombatantState& Hero);
+    /** Reward info sheet: one "Name [Tag]: usage" line per feature (HUD-independent so it survives HUD rework). */
+    static TArray<FString> RewardSheet(const FCombatantState& Hero);
     /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */
     static constexpr int32 FontCost = 2;
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }

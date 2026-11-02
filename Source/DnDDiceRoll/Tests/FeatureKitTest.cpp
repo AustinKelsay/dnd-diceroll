@@ -526,4 +526,22 @@ bool FSecondClassFeaturesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Turn Undead listed"), FFeatureKit::Commands(FighterCleric).Contains(ECombatCommandType::TurnUndead));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRewardSheetTest, "Project.Expedition.Features.RewardSheet",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRewardSheetTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Fighter = Hero(TEXT("fighter.champion"), 2);
+    FFeatureKit::Refill(Fighter);
+    const TArray<FString> Lines = FFeatureKit::RewardSheet(Fighter);
+    TestEqual(TEXT("One line per feature command"), Lines.Num(), FFeatureKit::Commands(Fighter).Num());
+    TestTrue(TEXT("Action Surge tagged Free with uses"), Lines.ContainsByPredicate([](const FString& L) { return L.StartsWith(TEXT("Action Surge [Free]")); }));
+    FCombatantState Evoker = Hero(TEXT("wizard.evocation"), 3);
+    FFeatureKit::Refill(Evoker);
+    TestTrue(TEXT("Wizard lists Arcane Recovery"), FFeatureKit::RewardSheet(Evoker).ContainsByPredicate([](const FString& L) { return L.StartsWith(TEXT("Arcane Recovery [Free]")); }));
+    Evoker.bArcaneRecovered = true;
+    TestTrue(TEXT("Shows used"), FFeatureKit::RewardSheet(Evoker).ContainsByPredicate([](const FString& L) { return L.Contains(TEXT("used until camp")); }));
+    return true;
+}
+
 #endif

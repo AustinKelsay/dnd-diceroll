@@ -957,6 +957,8 @@ void AExpeditionHUD::DrawReward()
         Button(TEXT("ArcaneRecovery"), TEXT("Arcane Recovery"), Selected->bArcaneRecovered ? FString(TEXT("used until camp")) : Preview > 0 ? FString::Printf(TEXT("free: regain %d slot level%s"), Preview, Preview == 1 ? TEXT("") : TEXT("s")) : FString(TEXT("nothing spent")),
             W * 0.5f + 260, Y + 140, 240, 52, Preview > 0, false, Gold);
     }
+    // Reward info sheet: the selected survivor's features with their action tags and uses (data from FFeatureKit::RewardSheet).
+    if (bReady) { const TArray<FString> Sheet = FFeatureKit::RewardSheet(*Selected); if (!Sheet.IsEmpty()) { Text(FString::Join(Sheet, TEXT("   |   ")), W * 0.5f, Y + 196, Muted, 0.66f, EAlign::Center, Width - 32); } }
     Text(FString::Printf(TEXT("Purse: %s"), *FCoinRules::Format(Run.Coins)), X + Width - 16, Y + 16, Gold, 0.74f, EAlign::Right);
     // Rest-point activities: one try each, by the selected survivor.
     const int32 Used = Run.History.IsEmpty() ? 0 : Run.History.Last().ActivitiesUsed;

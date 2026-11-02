@@ -245,3 +245,17 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
         (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero));
 }
+TArray<FString> FFeatureKit::RewardSheet(const FCombatantState& Hero)
+{
+    static const TCHAR* Tags[] = { TEXT("Action"), TEXT("Bonus"), TEXT("Reaction"), TEXT("Free") };
+    TArray<FString> Lines;
+    for (const ECombatCommandType Action : Commands(Hero))
+    {
+        Lines.Add(FString::Printf(TEXT("%s [%s]: %s"), CommandName(Action), Tags[static_cast<uint8>(Cost(Action))], *Usage(Action, Hero)));
+    }
+    if (HasArcaneRecovery(Hero))
+    {
+        Lines.Add(Hero.bArcaneRecovered ? FString(TEXT("Arcane Recovery [Free]: used until camp")) : FString::Printf(TEXT("Arcane Recovery [Free]: %d slot level(s) at a short rest"), ArcaneRecoveryPreview(Hero)));
+    }
+    return Lines;
+}
