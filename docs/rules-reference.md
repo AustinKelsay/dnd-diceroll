@@ -190,3 +190,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #65: falling, prone and forced movement (rules only)
 
 `FDiceRules::Roll` sums plain dice with the combat random stream. `FMovementRules`: a fall deals 1d6 per 10 ft (max 20d6) and leaves the creature prone; standing costs half the speed rounded up; crawling costs double; a push stops before a blocker; attacks against a prone target have advantage within 5 ft and disadvantage beyond. A saved prone condition, elevation on the map and applying pushes in a battle need battle state (#39).
+
+## Issue #66: grapple and shove (rules only)
+
+`FGrappleRules`: grappling and shoving work on targets at most one size larger. Both are Athletics contests where the actor must beat the defender (ties hold); `ContestOutOf400` gives the exact chance. A grappled creature's speed is 0, dragging it costs double, and escaping is the reverse contest. A won shove knocks the target prone or pushes it 1 cell. Saved grappled/prone conditions and creature sizes on profiles need battle state (#39).
