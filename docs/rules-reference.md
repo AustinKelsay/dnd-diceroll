@@ -238,7 +238,7 @@ Save version 5 adds required fields; versions 1-4 are rejected with no migration
 ## #79 Leveling, multiclass and SRD defaults
 
 - **Advancement:** SRD XP table (milestone XP awarded per encounter), max level 20. HP = full hit die at level 1 + average (die/2+1+CON) per later level. Starting parties are deliberately at SRD level-1 HP (roughly half the old pools); balance is tuned through encounters, not HP.
-- **Multiclass:** one secondary class. It adds HP/hit dice and, for modelled classes, its signature feature: Fighter → Second Wind, Cleric → Cure Wounds + 2 slots, Wizard → Magic Missile + 2 slots (+Shield). Other secondary classes add HP/hit dice only for now.
+- **Multiclass:** one secondary class. It adds HP/hit dice, its signature feature (Fighter: Second Wind; Cleric: Cure Wounds + 2 slots; Wizard: Magic Missile + 2 slots, +Shield) and every playable level 1-5 feature of that class at the secondary class level (FeatureKit uses combined class levels). Multiclass Cure Wounds heals 1d8 + the hero's WIS modifier (minimum 1) and may target self.
 - **ASI:** at class levels 4/8/12/16/19 (Fighter also 6/14, Rogue also 10).
 - **Action economy tags:** every command and feature is tagged [Action], [Bonus Action], [Reaction] or [Free].
 - **Reactions:** opportunity attacks (always on) and Shield (party Wizard, 1 slot, +5 AC until its next turn, auto-cast only when it turns a hit into a miss; never spends kit-reserved slots). Counterspell is not implemented (no enemy casters).
@@ -246,5 +246,7 @@ Save version 5 adds required fields; versions 1-4 are rejected with no migration
 - **Superiority dice (default on):** Battle Master spends a d8 added to the attack roll (Precision Attack). 2 dice before Fighter 3, 4 from Fighter 3. `bSuperiorityDice=false` restores the legacy flat +2 hit/damage.
 - **Sneak Attack (default on):** ceil(level/2)d6, once per turn. `bScaledSneakAttack=false` keeps 1d6.
 - **Defaults:** Extra Attack (Fighter/Barbarian/Monk/Paladin/Ranger 5), opportunity attacks and advantage/disadvantage always on; death saves off (`bDeathSaves=false`).
-- **Level 1–5 features:** `FClassFeatureRules::FeaturesThrough` lists them per class with tags; `*` in the summary marks features listed but not yet playable (Fighting Style, Action Surge, Channel Divinity, Bardic Inspiration, Wild Shape, Ki, Sorcery Points, Uncanny Dodge, Reckless Attack, Arcane Recovery).
+- **Level 1-5 features:** `FClassFeatureRules::FeaturesThrough` lists them per class with tags; `*` in the summary marks features listed but not yet playable: Monk Martial Arts, Monk Deflect Missiles and Paladin Channel Divinity. All others (Fighting Style, Action Surge, Channel Divinity, Bardic Inspiration, Wild Shape, Ki, Sorcery Points, Uncanny Dodge, Reckless Attack, Arcane Recovery at the rest point, ...) are playable with a tagged HUD button, tooltip and saved uses.
 - **Menus:** `FBuildCatalog::ProgressSheet` provides level/XP, classes, HP/hit dice, resources, features and level-up/ASI flags for the HUD.
+- **Reward info sheet:** `FFeatureKit::RewardSheet` lists the selected survivor's features as `Name [Tag]: usage`; the reward panel shows it on one line. Kept HUD-independent so the #110 menu rework can rebase over it.
+- **Deferred:** encounter tuning for halved HP (changing enemy stats shifts seeded-run tests such as Run.ManySeedsConnectedActionableAndVaried and Schema5.CampTreat; needs maintainer sign-off). Counterspell: N/A, no enemy casters.
