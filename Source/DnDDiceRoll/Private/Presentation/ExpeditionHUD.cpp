@@ -938,12 +938,13 @@ void AExpeditionHUD::DrawReward()
     // Rest-point activities: one try each, by the selected survivor.
     const int32 Used = Run.History.IsEmpty() ? 0 : Run.History.Last().ActivitiesUsed;
     const int32 Count = static_cast<int32>(ECampActivity::Count);
-    const float ActWidth = 160, ActLeft = W * 0.5f - (Count * (ActWidth + 8) - 8) * 0.5f;
+    const int32 PerRow = 5;
+    const float ActWidth = 160, ActLeft = W * 0.5f - (FMath::Min(Count, PerRow) * (ActWidth + 8) - 8) * 0.5f;
     for (int32 Index = 0; Index < Count; ++Index)
     {
         const bool bOpen = bReady && !(Used & (1 << Index));
         Button(FName(*FString::Printf(TEXT("Camp_%d"), Index)), FExpeditionRun::CampActivityName(static_cast<ECampActivity>(Index)), bOpen ? TEXT("once per rest") : TEXT("done"),
-            ActLeft + Index * (ActWidth + 8), Y + Height + 8, ActWidth, 40, bOpen, false, Sky);
+            ActLeft + (Index % PerRow) * (ActWidth + 8), Y + Height + 8 + (Index / PerRow) * 48, ActWidth, 40, bOpen, false, Sky);
     }
 }
 
