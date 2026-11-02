@@ -14,7 +14,7 @@ const TCHAR* const IcoPath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_Ic
 const TCHAR* const ShardPath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_Shard.SM_SpellFX_Shard");
 const TCHAR* const FramePath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_CellFrame.SM_SpellFX_CellFrame");
 // Fire: ember orange with a yellow core (kept off party gold, enemy red-orange, Danger and the cyan path).
-const FLinearColor FireCore(1.0f, 0.88f, 0.42f);
+const FLinearColor FireCore(1.0f, 0.74f, 0.14f);   // saturated yellow core (was pale cream 1/0.88/0.42)
 const FLinearColor FireHue(1.0f, 0.5f, 0.06f);
 const FLinearColor EmberDeep(0.7f, 0.16f, 0.02f);
 const FLinearColor WhiteHot(1.0f, 0.97f, 0.86f);
@@ -33,7 +33,7 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
     if (Event.SpellId == TEXT("fire-bolt"))
     {
         // Cantrip (size class 0): one small mote, about 0.4 s end to end, burst under half a cell.
-        Out.Glow = 1.6f; Out.Travel = 0.2f; Out.BoltScale = 1.0f;
+        Out.Glow = 1.0f; Out.Travel = 0.2f; Out.BoltScale = 1.0f;
         Out.ImpactGrow = 0.12f; Out.ImpactHold = 0.05f; Out.ImpactLinger = 0.05f; Out.LingerOpacity = 0.3f; Out.ImpactScale = 0.95f;
         return true;
     }
@@ -162,12 +162,25 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         // The blast (Fireball) or the burst (Fire Bolt): flat bands, ink shell, ragged outer edge.
         FExpeditionSpellFXPiece& P = Add(Ico, Style, true, FVector::UpVector, true);
         P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Gone; P.PeakOpacity = Style.bArea ? 0.55f : 1.0f;
-        // Area blast reads as ember orange; the yellow/white-hot centre comes from the core piece.
-        if (Style.bArea) { P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep); } P.LingerOpacity = Style.LingerOpacity;
+        // Both blasts read as ember orange (the camera looks straight down, so the face-on band is what shows);
+        // the yellow (Fire Bolt) or white-hot (Fireball) centre comes from the core piece below.
+        P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
+        P.LingerOpacity = Style.LingerOpacity;
         P.From = P.To = Impact;
         const FVector Size(Diameter, Diameter, Style.bArea ? Diameter * 0.5f : Diameter);
         P.ScaleFrom = Size * 0.2f; P.ScaleTo = Size;
         P.InkScale = Style.bArea ? 1.025f : 1.12f;
+    }
+    if (!Style.bArea)
+    {
+        // Fire Bolt: small yellow core inside the orange burst.
+        FExpeditionSpellFXPiece& P = Add(Ico, Style, false, FVector::UpVector, true);
+        P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Fade + 0.03f; P.PeakOpacity = 1.0f;
+        P.From = P.To = Impact + FVector(0, 0, 8);
+        P.ScaleFrom = FVector(Diameter * 0.1f); P.ScaleTo = FVector(Diameter * 0.38f);
+        P.Material->SetVectorParameterValue(TEXT("Core"), FireCore);
+        P.Material->SetVectorParameterValue(TEXT("Hue"), Style.Hue);
+        P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
     }
     if (Style.bArea)
     {
