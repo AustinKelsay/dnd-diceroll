@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/ExpeditionMotion.h"
 
 /** Sounds and moments the playback asks the world to express. */
 enum class EExpeditionCue : uint8
@@ -48,6 +49,7 @@ struct DNDDICEROLL_API FPlaybackProjectile
     float Size = 0.18f;
     FLinearColor Color = FLinearColor::White;
     bool bArrow = false;
+    EExpeditionSpell Spell = EExpeditionSpell::None;
 };
 
 struct DNDDICEROLL_API FPlaybackSparkle
@@ -57,6 +59,8 @@ struct DNDDICEROLL_API FPlaybackSparkle
     float Age = 0.0f;
     float Life = 0.8f;
     float Angle = 0.0f;
+    EExpeditionSpell Spell = EExpeditionSpell::None;
+    float Rise = 100.0f; // Centimetres climbed over the sparkle's life.
 };
 
 struct DNDDICEROLL_API FShownDie
@@ -113,7 +117,9 @@ public:
 
     void ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life = 1.6f);
     void ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale = 1.0f, float Life = 1.3f);
-    void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8);
+    void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8, EExpeditionSpell Spell = EExpeditionSpell::None, float Rise = 100.0f);
+    /** Durations of the queued steps not yet finished, for tests and timing budgets. */
+    TArray<float> QueuedDurations() const;
 
     float Speed = 1.0f;
     const FUnitDisplay* Unit(int32 Id) const { return Displays.Find(Id); }
@@ -152,7 +158,7 @@ private:
     void AddMove(const FCombatResult& Result);
     void AddAttack(const FCombatResult& Result, const FCombatSnapshot& After);
     void AddHealing(const FCombatResult& Result, const FCombatSnapshot& After);
-    void AddImpact(const FCombatResult& Result, FVector2D Direction);
+    void AddImpact(const FCombatResult& Result, FVector2D Direction, EExpeditionSpell Spell = EExpeditionSpell::None);
     void AddFalls(const FCombatResult& Result, const FCombatSnapshot& After);
     void StepRunner(float Seconds);
     void Advance(float Seconds);

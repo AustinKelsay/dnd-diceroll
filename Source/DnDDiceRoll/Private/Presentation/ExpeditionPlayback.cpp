@@ -149,11 +149,11 @@ void FExpeditionPlayback::ShowText(FVector2D Cell, const FString& Text, FLinearC
     Floaters.Add({Text, Color, Cell, -0.12f * Overlap, Life, Scale});
 }
 
-void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count)
+void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count, EExpeditionSpell Spell, float Rise)
 {
     for (int32 Index = 0; Index < Count; ++Index)
     {
-        Glitter.Add({Cell, Color, -0.05f * Index, 0.9f, Index * (2.0f * PI / Count)});
+        Glitter.Add({Cell, Color, -0.05f * Index, 0.9f, Index * (2.0f * PI / Count), Spell, Rise});
     }
 }
 
@@ -255,7 +255,8 @@ void FExpeditionPlayback::AddMove(const FCombatResult& Result)
     for (const FIntPoint Cell : Result.Path)
     {
         TSharedRef<FVector2D> From = MakeShared<FVector2D>();
-        Add(0.15f, [this, Id, Cell, From]()
+        const FMotionProfile& Step = ExpeditionMotion::Profile(EExpeditionMotion::Step);
+        Add(Step.Strike, [this, Id, Cell, From]()
         {
             FUnitDisplay* Unit = Displays.Find(Id);
             if (!Unit) { return; }
@@ -263,12 +264,14 @@ void FExpeditionPlayback::AddMove(const FCombatResult& Result)
             *From = Unit->Position;
             Unit->Facing = SafeDirection(*From, CellOf(Cell));
             Cue(EExpeditionCue::Step);
-        }, [this, Id, Cell, From](float Alpha)
+        }, [this, Id, Cell, From, Hop = Step.Hop](float Alpha)
         {
             if (FUnitDisplay* Unit = Displays.Find(Id))
             {
                 Unit->Position = FMath::Lerp(*From, CellOf(Cell), EaseInOut(Alpha));
-                Unit->Hop = Bump(Alpha) * 16.0f;
+                Unit->Hop = ExpeditionMotion::Arc(Hop, Alpha);
+                // A slight forward lean while striding, gone at each footfall.
+                Unit->Lean = Unit->Facing * ExpeditionMotion::Arc(0.04f, Alpha);
             }
         });
     }
@@ -287,9 +290,11 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const FString ActorName = Actor->Name, TargetName = Target->Name;
     const EAdventurerRole Role = Actor->AdventurerRole;
     const bool bArrow = Role == EAdventurerRole::Rogue || (Actor->Side == ECombatSide::Enemy && bRanged);
+    const EExpeditionSpell Spell = ExpeditionMotion::SpellFor(static_cast<uint8>(Result.Type), Role == EAdventurerRole::Wizard, bRanged);
+    const FMotionProfile& Motion = ExpeditionMotion::Profile(bMissile ? EExpeditionMotion::Cast : bRanged ? EExpeditionMotion::Shoot : EExpeditionMotion::Melee);
 
     // Wind up while the d20 (or spell dice) tumble.
-    Add(bMissile ? 0.3f : FDiceTray::TumbleSeconds + 0.05f, [=, this]()
+    Add(Motion.WindUp, [=, this]()
     {
         Focus = ActorId;
         if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Facing = Direction; if (bMissile) { Unit->Glow = 1.0f; } }
@@ -313,7 +318,11 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
         Cue(EExpeditionCue::DiceRoll);
     }, [=, this](float Alpha)
     {
-        if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = -Direction * 0.12f * EaseInOut(Alpha); }
+        if (FUnitDisplay* Unit = Displays.Find(ActorId))
+        {
+            Unit->Lean = Direction * ExpeditionMotion::WindUpLean(Motion, Alpha);
+            Unit->Hop = ExpeditionMotion::Arc(Motion.Hop, Alpha * 0.5f); // Casters rise and hold.
+        }
     });
 
     if (!bMissile)
@@ -334,45 +343,60 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     // Deliver the blow: a lunge in melee, a projectile at range.
     if (bMissile)
     {
-        Add(0.5f, [=, this]()
+        Add(Motion.Strike, [=, this]()
         {
             Cue(EExpeditionCue::Spell);
             for (int32 Index = 0; Index < 3; ++Index)
             {
-                Shots.Add({From, To, -0.09f * Index, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false});
+                Shots.Add({From, To, -0.09f * Index, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false, Spell});
             }
+        }, [=, this](float Alpha)
+        {
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Direction * ExpeditionMotion::StrikeLean(Motion, FMath::Min(1.0f, Alpha * 3.0f)); }
         });
     }
     else if (bRanged)
     {
-        Add(0.3f, [=, this]()
+        Add(Motion.Strike, [=, this]()
         {
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
             const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
                 Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.9f, 0.5f) : FLinearColor(0.85f, 0.75f, 0.6f);
-            Shots.Add({From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow});
+            Shots.Add({From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow, Spell});
+            if (Spell == EExpeditionSpell::FireBolt)
+            {
+                // Two trailing embers chase the bolt like a dragged brush.
+                Shots.Add({From, To, -0.05f, 0.3f, 14.0f, 0.12f, FLinearColor(1.0f, 0.7f, 0.25f), false, Spell});
+                Shots.Add({From, To, -0.1f, 0.3f, 8.0f, 0.08f, FLinearColor(0.9f, 0.3f, 0.1f), false, Spell});
+            }
+        }, [=, this](float Alpha)
+        {
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Direction * ExpeditionMotion::StrikeLean(Motion, Alpha); }
         });
     }
     else
     {
-        Add(0.16f, [=, this]() { Cue(EExpeditionCue::Swing); }, [=, this](float Alpha)
+        Add(Motion.Strike, [=, this]() { Cue(EExpeditionCue::Swing); }, [=, this](float Alpha)
         {
-            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Direction * FMath::Lerp(-0.12f, 0.42f, EaseInOut(Alpha)); }
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Direction * ExpeditionMotion::StrikeLean(Motion, Alpha); }
         });
     }
-    AddImpact(Result, Direction);
-    Add(0.14f, nullptr, [=, this](float Alpha)
+    AddImpact(Result, Direction, Spell);
+    TSharedRef<FVector2D> Settled = MakeShared<FVector2D>();
+    Add(Motion.Recover, [=, this]() { if (const FUnitDisplay* Unit = Displays.Find(ActorId)) { *Settled = Unit->Lean; } }, [=, this](float Alpha)
     {
-        if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Unit->Lean * (1.0f - Alpha); }
+        if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = *Settled * (1.0f - EaseInOut(Alpha)); Unit->Hop = 0.0f; }
     });
     AddFalls(Result, After);
 }
 
-void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direction)
+void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direction, EExpeditionSpell Spell)
 {
     const int32 TargetId = Result.TargetId;
     const bool bMissile = Result.Type == ECombatCommandType::MagicMissile;
-    Add(0.38f, [=, this]()
+    const FMotionProfile& Recoil = ExpeditionMotion::Profile(EExpeditionMotion::Recoil);
+    const FMotionProfile& Dodge = ExpeditionMotion::Profile(EExpeditionMotion::Dodge);
+    Add(Recoil.Strike, [=, this]()
     {
         FUnitDisplay* Target = Displays.Find(TargetId);
         if (!Target) { return; }
@@ -389,6 +413,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
         if (Result.bSneakAttack) { ShowText(Target->Position, TEXT("SNEAK ATTACK"), FLinearColor(0.4f, 1.0f, 0.6f), 0.75f); }
         Cue(Result.bCritical ? EExpeditionCue::Critical : EExpeditionCue::Hit);
         Shake(Result.bCritical ? 0.45f : 0.2f);
+        if (Spell == EExpeditionSpell::FireBolt) { ShowSparkles(Target->Position, FLinearColor(1.0f, 0.45f, 0.12f), 10, Spell, 40.0f); }
+        else if (Spell == EExpeditionSpell::MagicMissile) { ShowSparkles(Target->Position, FLinearColor(0.62f, 0.45f, 1.0f), 9, Spell, 30.0f); }
         if (!bMissile)
         {
             for (int32 Index = 0; Index < Result.EffectDice.Num(); ++Index)
@@ -403,7 +429,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
         if (FUnitDisplay* Target = Displays.Find(TargetId))
         {
             const FVector2D Side(-Direction.Y, Direction.X);
-            Target->Lean = Result.bHit ? Direction * 0.16f * Bump(Alpha) : Side * 0.28f * Bump(Alpha);
+            Target->Lean = Result.bHit ? Direction * ExpeditionMotion::Arc(Recoil.Reach, Alpha) : Side * ExpeditionMotion::Arc(Dodge.Reach, Alpha);
+            Target->Hop = Result.bHit ? 0.0f : ExpeditionMotion::Arc(Dodge.Hop, Alpha);
         }
     });
 }
@@ -420,7 +447,7 @@ void FExpeditionPlayback::AddFalls(const FCombatResult& Result, const FCombatSna
         const bool bEnemy = Unit->Side == ECombatSide::Enemy;
         const FString Name = Unit->Name;
         TSharedRef<float> StartTilt = MakeShared<float>(0.0f);
-        Add(0.5f, [=, this]()
+        Add(ExpeditionMotion::Profile(EExpeditionMotion::Fall).Strike, [=, this]()
         {
             FUnitDisplay* Display = Displays.Find(Id);
             if (!Display) { return; }
@@ -453,7 +480,10 @@ void FExpeditionPlayback::AddHealing(const FCombatResult& Result, const FCombatS
         : FString::Printf(TEXT("%s uses %s on %s"), *Actor->Name, *Ability, *Target->Name);
     const FVector2D Direction = SafeDirection(CellOf(Actor->Cell), CellOf(Target->Cell));
     const FLinearColor Color = Result.Type == ECombatCommandType::SecondWind ? PlaybackGold : Mint;
-    Add(Result.EffectDice.IsEmpty() ? 0.3f : FDiceTray::TumbleSeconds, [=, this]()
+    const EExpeditionSpell Spell = ExpeditionMotion::SpellFor(static_cast<uint8>(Result.Type), false, false);
+    const FMotionProfile& Heal = ExpeditionMotion::Profile(EExpeditionMotion::Heal);
+    const FMotionProfile& Rise = ExpeditionMotion::Profile(EExpeditionMotion::Rise);
+    Add(Result.EffectDice.IsEmpty() ? 0.3f : FMath::Max(Heal.WindUp, FDiceTray::TumbleSeconds), [=, this]()
     {
         Focus = ActorId;
         if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Glow = 1.0f; if (ActorId != TargetId) { Unit->Facing = Direction; } }
@@ -471,28 +501,34 @@ void FExpeditionPlayback::AddHealing(const FCombatResult& Result, const FCombatS
     {
         if (FUnitDisplay* Unit = Displays.Find(ActorId))
         {
-            Unit->Hop = Bump(Alpha) * 10.0f;
-            if (ActorId != TargetId) { Unit->Lean = Direction * 0.2f * Bump(Alpha); }
+            Unit->Hop = ExpeditionMotion::Arc(Heal.Hop, Alpha);
+            if (ActorId != TargetId) { Unit->Lean = Direction * ExpeditionMotion::Arc(Heal.Reach, Alpha); }
         }
     });
     TSharedRef<float> StartTilt = MakeShared<float>(0.0f);
-    Add(0.55f, [=, this]()
+    TSharedRef<bool> bRising = MakeShared<bool>(false);
+    Add(Heal.Strike, [=, this]()
     {
         FUnitDisplay* Unit = Displays.Find(TargetId);
         if (!Unit) { return; }
         Focus = TargetId;
         const bool bWasDown = Unit->Life == ECombatLife::Downed;
         *StartTilt = Unit->Tilt;
+        *bRising = *StartTilt > 0.01f;
         Unit->HP = FMath::Min(Unit->MaxHP, Unit->HP + Result.Healing);
         Unit->Life = ECombatLife::Conscious;
         Unit->Glow = 1.0f;
-        ShowSparkles(Unit->Position, Color);
+        ShowSparkles(Unit->Position, Color, Spell == EExpeditionSpell::CureWounds ? 12 : 8, Spell);
         ShowText(Unit->Position, FString::Printf(TEXT("+%d"), Result.Healing), Color, 1.25f);
         if (bWasDown) { ShowText(Unit->Position, TEXT("BACK ON THEIR FEET"), Mint, 0.8f, 1.8f); }
         Cue(EExpeditionCue::Heal);
     }, [=, this](float Alpha)
     {
-        if (FUnitDisplay* Unit = Displays.Find(TargetId)) { Unit->Tilt = FMath::Lerp(*StartTilt, 0.0f, EaseInOut(Alpha)); }
+        if (FUnitDisplay* Unit = Displays.Find(TargetId))
+        {
+            Unit->Tilt = FMath::Lerp(*StartTilt, 0.0f, EaseInOut(Alpha));
+            if (*bRising) { Unit->Hop = ExpeditionMotion::Arc(Rise.Hop, Alpha); } // A small push off the floor.
+        }
     });
     AddFalls(Result, After);
 }
@@ -556,6 +592,13 @@ void FExpeditionPlayback::StepRunner(float Seconds)
     Current = 0;
 }
 
+TArray<float> FExpeditionPlayback::QueuedDurations() const
+{
+    TArray<float> Durations;
+    for (int32 Index = Current; Index < Steps.Num(); ++Index) { Durations.Add(Steps[Index].Duration); }
+    return Durations;
+}
+
 void FExpeditionPlayback::Finish()
 {
     if (!IsBusy()) { return; }
@@ -564,6 +607,6 @@ void FExpeditionPlayback::Finish()
     bSkipping = false;
     Shots.Reset();
     Glitter.Reset();
-    for (auto& Pair : Displays) { Pair.Value.ShownHP = Pair.Value.TrailHP = Pair.Value.HP; }
+    for (auto& Pair : Displays) { Pair.Value.ShownHP = Pair.Value.TrailHP = Pair.Value.HP; Pair.Value.Lean = FVector2D::ZeroVector; Pair.Value.Hop = 0.0f; }
     Dice.Age = FMath::Max(Dice.Age, FDiceTray::TumbleSeconds + 0.5f);
 }
