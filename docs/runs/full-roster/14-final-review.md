@@ -15,3 +15,9 @@ Root added a shared public regression that starts a real generated four-Artiller
 ## Limits
 
 Read-only review does not certify test counts, packaging or rendered behavior. Root's current-theme package, keyboard/builder/combat/Resume inspection, sizes and pointer attempt are recorded separately. Accepted engine risks32/35, pointer tooling, sound, human balance and primitive fallback visuals for new classes remain explicit limitations. This report does not imply staging integration, issue closure or release.
+
+## Final correction rechecks
+
+Fresh separate Standards and Spec sessions rechecked `32c1b7b1dc30be0c8c985219d2655d0315bc52b1` against the fixed full-feature baseline and correction `695aa565..32c1b7b`. **Standards:0 actionable findings. Spec:0 remaining actionable findings.** Both confirmed the capped-camp defect closed, the genuine-command regression covers the trigger, and Fighting-phase inference/bonus ownership/resource/effect/profile/phase validation remains enforced. No correction regression identified. Reviewers explicitly leave corrected-package/native acceptance with root and do not certify the recorded83/83/50 execution counts.
+
+Fresh separate Standards and Spec sessions then reviewed the final one-line HUD correction `32c1b7b..b356fb12b912c2b95d4bb6f2cd9351dd08befdf3`. **Standards:0 actionable findings. Spec:0 actionable findings.** The log panel bottom moves to `H − 128`, leaving20 design pixels before the budget-label origin at `H − 108` under the same Canvas scale. No gameplay, persistence, command or input changes. This incremental source review retains the prior full-feature clearances; root's final package/native evidence is separate.

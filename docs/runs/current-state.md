@@ -16,6 +16,7 @@ Updated 2026-11-01 with [issue #46](https://github.com/AustinKelsay/dnd-diceroll
 
 - Issue #32: one-time rendering assertion in scene culling, accepted risk.
 - Issue #35: intermittent packaged startup crash during macOS launch.
+- Issue #105: inherited theme materials emit Nanite usage/default-material warnings in rendered Mac packages; null-rendered automation does not expose this path.
 - Issues #37–#45: full roster with selectable parties, claimed by the repository owner on its own feature branch; coordinate before touching party or roster work. New characters need themed meshes through the same `Art/` record and import recipe as #38.
 - Issue #48 and PR #49: Windows MSVC build error and a save-commit failure after the first checkpoint, from CouchCoopGaming on a Windows host with the pinned engine. Windows is not a validated host; the maintainer verifies Unreal claims on the supported Mac before integration.
 - Issue #46 and PR #47: this onboarding pass.
@@ -24,6 +25,6 @@ Updated 2026-11-01 with [issue #46](https://github.com/AustinKelsay/dnd-diceroll
 
 `staging` and `main` require a PR, the "Repository hygiene and helper tests" check, and one approving review; force pushes and branch deletion are blocked. The repository owner retains admin bypass for release promotion.
 
-## Pending full-roster source unit (#45)
+## Full-roster local acceptance, pending integration (#37 / #45)
 
-On the owned feature branch, final source/test/UI work builds from the combined baseline91cf0d6; [source contract](full-roster/13-final-roster.md). Catalog revision7 reconciles Evocation to two authored commands; full Project automation82/82 zero warnings and helpers50/50 pass. Root still owns independent review, current-theme package/native inspection and PR delivery. No new staging integration or asset completion is claimed; new classes retain primitive fallback rigs.
+The owned feature branch contains all70 approved subclasses/13classes, any-four party selection, catalog revision7 and schema4; [source contract](full-roster/13-final-roster.md). Final runtimeb356fb12 passes pinned build,83/83 Project automation with zero warnings,50/50 helpers, independent Standards/Spec reviews with0/0 actionable findings, current-theme Mac package and inspected native keyboard/fresh-process Resume at1280×720 and1024×576. [Selected acceptance report](full-roster/15-final-acceptance.md) separates headless checks from native outcomes and limitations. A capped-camp checkpoint defect and log/budget overlap were corrected. Maintainer approval/staging integration and release remain pending; keep parent/children open until integration. New classes retain primitive fallback rigs; existing engine risks, pointer automation, sound, human balance and theme warning #105 remain follow-ups.
