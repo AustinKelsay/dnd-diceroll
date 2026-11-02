@@ -1,5 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "Rules/AbilityRules.h"
+#include "Rules/ArmorRules.h"
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Party/FeatureKit.h"
@@ -653,6 +655,23 @@ bool FQuickenFlexTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Quicken spent"), Battle.Find(10)->QuickenState, 2);
     TestTrue(TEXT("Action still free"), Battle.LegalTargets(10, ECombatCommandType::Dodge).Num() > 0);
     TestTrue(TEXT("Bonus spent"), Battle.LegalTargets(10, ECombatCommandType::Special2).IsEmpty());
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnarmoredDefenseTest, "Project.Expedition.Features.UnarmoredDefense",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FUnarmoredDefenseTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (const auto* Id : {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("rogue.thief")})
+    {
+        FCombatantState H = Hero(Id, 1); H.ArmorWorn = static_cast<int32>(EArmor::None); H.bShieldEquipped = false;
+        FCombatBattle Battle; FString Error;
+        if (!TestTrue(TEXT("Starts"), Battle.Start(Duel(H, {4, 0}), 3, Error))) { continue; }
+        FAbilityScores S; FBuildCatalog::HeroScores(*Battle.Find(10), S);
+        const int32 Base = 10 + FAbilityRules::Modifier(S.Dexterity);
+        const int32 Extra = FCString::Strstr(Id, TEXT("barbarian")) ? FAbilityRules::Modifier(S.Constitution) : FCString::Strstr(Id, TEXT("monk")) ? FAbilityRules::Modifier(S.Wisdom) : 0;
+        TestEqual(Id, Battle.EffectiveArmorClass(10), Base + FMath::Max(0, Extra));
+    }
     return true;
 }
 #endif

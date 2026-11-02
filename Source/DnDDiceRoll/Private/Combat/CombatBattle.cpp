@@ -315,7 +315,15 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
     if (Unit->WildShapeHP > 0) { return FFeatureKit::WolfAC; }
     const int32 Spell = (Unit->bShielded ? 5 : 0) + (Unit->ArmorWorn >= 0 && FFeatureKit::Style(*Unit) == EFightingStyle::Defense ? 1 : 0);
     if (Unit->ArmorWorn < 0) { return Spell + Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
-    return Spell + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
+    // SRD Unarmored Defense: Barbarian 1 adds CON with no armor (shield allowed); Monk 1 adds WIS with no armor and no shield.
+    const FAbilityScores Scores = AbilityScores(Id);
+    int32 Unarmored = 0;
+    if (Unit->Side == ECombatSide::Party && Unit->ArmorWorn == static_cast<int32>(EArmor::None))
+    {
+        if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Barbarian) > 0) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Constitution)); }
+        if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Monk) > 0 && !Unit->bShieldEquipped) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Wisdom)); }
+    }
+    return Spell + Unarmored + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, Scores.Get(EAbility::Dexterity));
 }
 
 namespace CombatSpellSlots

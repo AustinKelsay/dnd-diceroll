@@ -28,7 +28,7 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
 {
     using C = EActionCost; using R = EAdventurerRole;
     struct FRow { R Role; FClassFeature F; };
-    static const FRow Table[] = {
+    static const FRow FeatureRows[] = {
         {R::Fighter, {TEXT("Fighting Style"), 1, C::Free, true}}, {R::Fighter, {TEXT("Second Wind"), 1, C::BonusAction, true}},
         {R::Fighter, {TEXT("Action Surge"), 2, C::Free, true}}, {R::Fighter, {TEXT("Superiority Dice"), 3, C::Free, true}},
         {R::Fighter, {TEXT("Extra Attack"), 5, C::Action, true}},
@@ -37,9 +37,9 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Cleric, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Cleric, {TEXT("Channel Divinity"), 2, C::Action, true}},
         {R::Wizard, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Wizard, {TEXT("Arcane Recovery"), 1, C::Free, true}},
         {R::Wizard, {TEXT("Shield"), 1, C::Reaction, true}},
-        {R::Barbarian, {TEXT("Rage"), 1, C::BonusAction, true}}, {R::Barbarian, {TEXT("Reckless Attack"), 2, C::Free, true}},
+        {R::Barbarian, {TEXT("Rage"), 1, C::BonusAction, true}}, {R::Barbarian, {TEXT("Unarmored Defense"), 1, C::Free, true}}, {R::Barbarian, {TEXT("Reckless Attack"), 2, C::Free, true}},
         {R::Barbarian, {TEXT("Extra Attack"), 5, C::Action, true}},
-        {R::Monk, {TEXT("Martial Arts"), 1, C::BonusAction, true}}, {R::Monk, {TEXT("Ki"), 2, C::BonusAction, true}},
+        {R::Monk, {TEXT("Martial Arts"), 1, C::BonusAction, true}}, {R::Monk, {TEXT("Unarmored Defense"), 1, C::Free, true}}, {R::Monk, {TEXT("Ki"), 2, C::BonusAction, true}},
         {R::Monk, {TEXT("Deflect Missiles"), 3, C::Reaction, true}}, {R::Monk, {TEXT("Extra Attack"), 5, C::Action, true}},
         {R::Paladin, {TEXT("Lay on Hands"), 1, C::Action, true}}, {R::Paladin, {TEXT("Fighting Style"), 2, C::Free, true}},
         {R::Paladin, {TEXT("Divine Smite"), 2, C::Free, true}}, {R::Paladin, {TEXT("Channel Divinity"), 3, C::Action, true}},
@@ -52,7 +52,7 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Bard, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Bard, {TEXT("Bardic Inspiration"), 1, C::BonusAction, true}},
     };
     TArray<FClassFeature> Out;
-    for (const auto& Row : Table) { if (Row.Role == Role && Row.F.Level <= FMath::Min(Level, 5)) { Out.Add(Row.F); } }
+    for (const auto& Row : FeatureRows) { if (Row.Role == Role && Row.F.Level <= FMath::Min(Level, 5)) { Out.Add(Row.F); } }
     return Out;
 }
 
