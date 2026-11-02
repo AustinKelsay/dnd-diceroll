@@ -178,3 +178,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #82: social influence
 
 `FSocialRules`: Persuasion or Intimidation meets an attitude DC (friendly 10, indifferent 15, hostile 20) to move the NPC one step toward friendly. Deception is a contest against Insight and ties go to the target. A swayed hostile NPC avoids the fight, a newly friendly one shares information and an already friendly one gives a reward. NPC attitudes and granted rewards need run state (#39); the outcome table is a design call for Austin.
+
+## Issue #84: coins and prices
+
+`FCoinRules` keeps money in copper (1 gp = 10 sp = 100 cp) and formats it largest coin first. Shop prices follow the SRD equipment list; merchants buy at half price. Haggling is a house rule for Austin: Persuasion 15 takes 10% off, 20 takes 20% off. Party purse, shop stock and owned items need run state (#39).
