@@ -62,6 +62,7 @@ public:
     bool ClaimReward(int32 Id, FString& Error);
     bool Recover(bool bTake, FString& Error);
     bool ShortRest(int32 Id, int32& Healed, FString& Error);
+    bool ArcaneRecovery(int32 Id, int32& Restored, FString& Error);
     bool CampActivity(int32 Id, ECampActivity Activity, FString& Outcome, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();

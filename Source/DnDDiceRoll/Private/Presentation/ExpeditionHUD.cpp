@@ -950,6 +950,13 @@ void AExpeditionHUD::DrawReward()
     const bool bCanRest = bReady && Selected->HitDiceSpent < Selected->Level && Selected->HP < Selected->MaxHP;
     Button(TEXT("ShortRest"), TEXT("Short rest"), bReady ? FString::Printf(TEXT("spend a hit die (%d left)"), Selected->Level - Selected->HitDiceSpent) : TEXT("hit dice"),
         W * 0.5f + 10, Y + 140, 240, 52, bCanRest, false, Sky);
+    if (bReady && FFeatureKit::HasArcaneRecovery(*Selected))
+    {
+        // Wizard 1 Arcane Recovery (Free, at this short rest): half the wizard level in slot levels, once per long rest.
+        const int32 Preview = FFeatureKit::ArcaneRecoveryPreview(*Selected);
+        Button(TEXT("ArcaneRecovery"), TEXT("Arcane Recovery"), Selected->bArcaneRecovered ? FString(TEXT("used until camp")) : Preview > 0 ? FString::Printf(TEXT("free: regain %d slot level%s"), Preview, Preview == 1 ? TEXT("") : TEXT("s")) : FString(TEXT("nothing spent")),
+            W * 0.5f + 260, Y + 140, 240, 52, Preview > 0, false, Gold);
+    }
     Text(FString::Printf(TEXT("Purse: %s"), *FCoinRules::Format(Run.Coins)), X + Width - 16, Y + 16, Gold, 0.74f, EAlign::Right);
     // Rest-point activities: one try each, by the selected survivor.
     const int32 Used = Run.History.IsEmpty() ? 0 : Run.History.Last().ActivitiesUsed;

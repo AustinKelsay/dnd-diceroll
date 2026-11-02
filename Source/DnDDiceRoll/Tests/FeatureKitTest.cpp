@@ -4,6 +4,7 @@
 #include "Party/BuildCatalog.h"
 #include "Party/FeatureKit.h"
 #include "Rules/WeaponRules.h"
+#include "Rules/ClassFeatureRules.h"
 
 namespace FeatureTest
 {
@@ -394,6 +395,38 @@ bool FRecklessAttackTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Cleared at the barbarian's next turn"), Battle.Find(10)->bReckless);
     FCombatantState Bad = Hero(TEXT("wizard.evocation"), 2); Bad.bReckless = true;
     TestFalse(TEXT("Non-barbarian reckless invalid"), FFeatureKit::Valid(Bad));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArcaneRecoveryTest, "Project.Expedition.Features.ArcaneRecovery",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FArcaneRecoveryTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Evoker = Hero(TEXT("wizard.evocation"), 3);
+    FFeatureKit::Refill(Evoker);
+    TestTrue(TEXT("Wizard has it"), FFeatureKit::HasArcaneRecovery(Evoker));
+    TestEqual(TEXT("Nothing to recover when full"), FFeatureKit::ArcaneRecoveryPreview(Evoker), 0);
+    const int32 Full = Evoker.SpellSlots;
+    Evoker.SpellSlots = 0; Evoker.KitUses = 0;
+    if (!Evoker.SlotsByLevel.IsEmpty()) { Evoker.SlotsByLevel[0] = 0; }
+    TestEqual(TEXT("Preview: 2 slot levels at Wizard 3"), FFeatureKit::ArcaneRecoveryPreview(Evoker), FMath::Min(2, Full));
+    TestEqual(TEXT("Recover"), FFeatureKit::ArcaneRecover(Evoker), FMath::Min(2, Full));
+    TestEqual(TEXT("Slots back"), Evoker.SpellSlots, FMath::Min(2, Full));
+    TestTrue(TEXT("Marked used"), Evoker.bArcaneRecovered);
+    TestTrue(TEXT("Still valid"), FFeatureKit::Valid(Evoker) && FBuildCatalog::ValidResources(Evoker));
+    Evoker.SpellSlots = 0;
+    TestEqual(TEXT("Once per long rest"), FFeatureKit::ArcaneRecover(Evoker), 0);
+    FFeatureKit::Refill(Evoker);
+    TestFalse(TEXT("Long rest resets"), Evoker.bArcaneRecovered);
+
+    FCombatantState Illusionist = Hero(TEXT("wizard.illusion"), 1);
+    const int32 Cap = FBuildCatalog::Find(Illusionist.BuildId)->KitCap;
+    Illusionist.KitUses = 0;
+    TestEqual(TEXT("Kit wizard regains one use at Wizard 1"), FFeatureKit::ArcaneRecover(Illusionist), FMath::Min(1, Cap));
+    FCombatantState Fighter = Hero(TEXT("fighter.champion"), 3); Fighter.bArcaneRecovered = true;
+    TestFalse(TEXT("Non-wizard flag invalid"), FFeatureKit::Valid(Fighter));
+    TestTrue(TEXT("Free tag in the rules table"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Wizard, 1).ContainsByPredicate([](const FClassFeature& F) { return FCString::Strcmp(F.Name, TEXT("Arcane Recovery")) == 0 && F.bPlayable; }));
     return true;
 }
 #endif

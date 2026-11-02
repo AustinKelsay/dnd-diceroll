@@ -1,6 +1,8 @@
 #include "Party/FeatureKit.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/WeaponRules.h"
+#include "Rules/ClassFeatureRules.h"
+#include "Rules/SpellRules.h"
 
 const TCHAR* FFeatureKit::StyleName(EFightingStyle Style)
 {
@@ -65,6 +67,47 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.WildShapeHP = 0;
     Hero.KiPoints = KiCap(Hero);
     Hero.SorceryPoints = SorceryCap(Hero);
+    Hero.bArcaneRecovered = false;
+}
+bool FFeatureKit::HasArcaneRecovery(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Wizard) >= 1;
+}
+int32 FFeatureKit::ArcaneRecoveryPreview(const FCombatantState& Hero)
+{
+    FCombatantState Copy = Hero;
+    return ArcaneRecover(Copy);
+}
+int32 FFeatureKit::ArcaneRecover(FCombatantState& Hero)
+{
+    if (!HasArcaneRecovery(Hero) || Hero.bArcaneRecovered) { return 0; }
+    int32 Budget = FClassFeatureRules::ArcaneRecoveryLevels(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Wizard));
+    int32 Restored = 0;
+    if (FBuildCatalog::SlotCap(Hero) > 0)
+    {
+        // Real slots: highest levels first (SRD: none of 6th level or higher), level 1 within the build's slot cap.
+        for (int32 Level = FMath::Min(5, Budget); Level >= 1; --Level)
+        {
+            const int32 Cap = Level == 1 ? FMath::Min(FBuildCatalog::SlotCap(Hero), Hero.SlotsByLevel.IsEmpty() ? 2 : FMath::Min(2, FSpellRules::SlotsFor(Hero.AdventurerRole, Hero.Level, 1)))
+                : Hero.SlotsByLevel.IsValidIndex(Level - 1) ? FSpellRules::SlotsFor(Hero.AdventurerRole, Hero.Level, Level) : 0;
+            if (Cap <= 0 || (Level > 1 && !Hero.SlotsByLevel.IsValidIndex(Level - 1))) { continue; }
+            while (Budget >= Level)
+            {
+                int32& Pool = Level == 1 ? Hero.SpellSlots : Hero.SlotsByLevel[Level - 1];
+                if (Pool >= Cap) { break; }
+                ++Pool; Budget -= Level; Restored += Level;
+            }
+        }
+        if (!Hero.SlotsByLevel.IsEmpty()) { Hero.SlotsByLevel[0] = Hero.SpellSlots; }
+    }
+    else if (const auto* Build = FBuildCatalog::Find(Hero.BuildId); Build && Build->Profile.ClassId == TEXT("wizard") && Build->KitCap > 0)
+    {
+        // Kit wizards spend kit uses as their spell resource: one use per slot level.
+        Restored = FMath::Min(Budget, Build->KitCap - Hero.KitUses);
+        Hero.KitUses += Restored;
+    }
+    if (Restored > 0) { Hero.bArcaneRecovered = true; }
+    return Restored;
 }
 void FFeatureKit::ShortRest(FCombatantState& Hero)
 {
@@ -200,5 +243,5 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
-        (!Hero.bReckless || HasRecklessAttack(Hero));
+        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero));
 }

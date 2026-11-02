@@ -237,6 +237,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Route1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
     else if (Name == TEXT("ShortRest")) { if (AllowsGameplayInput()) { BattleView->ShortRest(SelectedId); } }
+    else if (Name == TEXT("ArcaneRecovery")) { if (AllowsGameplayInput()) { BattleView->ArcaneRecovery(SelectedId); } }
     else if (Name.StartsWith(TEXT("Camp_"))) { if (AllowsGameplayInput()) { BattleView->CampActivity(SelectedId, static_cast<ECampActivity>(FCString::Atoi(*Name.Mid(5)))); } }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }

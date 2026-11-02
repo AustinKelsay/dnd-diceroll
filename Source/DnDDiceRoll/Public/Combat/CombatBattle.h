@@ -146,6 +146,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 KiPoints = 0;
     /** Sorcerer 2: sorcery points left (Sorcerer level per long rest). */
     UPROPERTY() int32 SorceryPoints = 0;
+    /** Wizard 1 Arcane Recovery taken since the last long rest. */
+    UPROPERTY() bool bArcaneRecovered = false;
 };
 
 USTRUCT()

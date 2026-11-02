@@ -50,6 +50,12 @@ public:
     /** Rogue 5: an automatic reaction that halves the damage of a hit from an attacker the rogue can see (HUD shows it as a passive button). */
     static bool HasUncannyDodge(const FCombatantState& Hero);
     static bool HasRecklessAttack(const FCombatantState& Hero);
+    /** Wizard 1: once per long rest, at a short rest (the rest point), regain spell resources worth half the wizard level (rounded up) in slot levels. */
+    static bool HasArcaneRecovery(const FCombatantState& Hero);
+    /** Slot levels Arcane Recovery would restore now (0 when used or nothing is missing). */
+    static int32 ArcaneRecoveryPreview(const FCombatantState& Hero);
+    /** Applies Arcane Recovery; returns the slot levels restored (0 = refused). */
+    static int32 ArcaneRecover(FCombatantState& Hero);
     /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */
     static constexpr int32 FontCost = 2;
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }

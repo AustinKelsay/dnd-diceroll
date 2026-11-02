@@ -275,6 +275,11 @@ bool FExpeditionSession::ShortRest(int32 Id, int32& Healed, FString& Error)
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
     auto Candidate = Current; return Candidate.ShortRest(Id, Healed, Error) && Commit(MoveTemp(Candidate), Error);
 }
+bool FExpeditionSession::ArcaneRecovery(int32 Id, int32& Restored, FString& Error)
+{
+    if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
+    auto Candidate = Current; return Candidate.ArcaneRecovery(Id, Restored, Error) && Commit(MoveTemp(Candidate), Error);
+}
 bool FExpeditionSession::CampActivity(int32 Id, ECampActivity Activity, FString& Outcome, FString& Error)
 {
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }

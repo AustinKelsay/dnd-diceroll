@@ -990,6 +990,21 @@ void AExpeditionBattleView::ShortRest(int32 UnitId)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
+void AExpeditionBattleView::ArcaneRecovery(int32 UnitId)
+{
+    if (bShowRecords) { return; }
+    FString Error;
+    int32 Restored = 0;
+    if (Session.ArcaneRecovery(UnitId, Restored, Error))
+    {
+        Show.Finish();
+        Record({true, FString::Printf(TEXT("Arcane Recovery: %d slot level%s of spells regained."), Restored, Restored == 1 ? TEXT("") : TEXT("s"))});
+        Show.Sync(Rules().Snapshot());
+        PlayCue(EExpeditionCue::Camp);
+    }
+    else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
 void AExpeditionBattleView::CampActivity(int32 UnitId, ECampActivity Activity)
 {
     if (bShowRecords) { return; }
