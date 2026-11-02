@@ -234,7 +234,9 @@ struct DNDDICEROLL_API FAbilityFacts
     bool bCureDice = false;
     bool bBonus = true;
     /** #79: the economy tag; always agrees with bBonus. */
-    EActionCost Cost() const { return bBonus ? EActionCost::BonusAction : EActionCost::Action; }
+    /** Rides on an attack it modifies (Precision Attack); costs no action of its own. */
+    bool bRider = false;
+    EActionCost Cost() const { return bRider ? EActionCost::Free : bBonus ? EActionCost::BonusAction : EActionCost::Action; }
     bool bResourceAvailable = false;
     int32 Range = 0, Amount = 0;
 };

@@ -119,4 +119,27 @@ bool FProgressSheetTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Level up flagged"), FBuildCatalog::ProgressSheet(Hero).Contains(TEXT("Level up available")));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCatalogTagAuditTest, "Project.Expedition.Rules.CatalogTagAudit",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCatalogTagAuditTest::RunTest(const FString& Parameters)
+{
+    // Verifies tags only; the catalog abilities keep their designed costs (mismatches vs SRD analogs are documented, not changed).
+    int32 Checked = 0;
+    for (const FBuildDefinition& Build : FBuildCatalog::All())
+    {
+        FCombatantState Hero; if (!FBuildCatalog::Create(Build.Id, 1, TEXT("H"), Hero)) { AddError(Build.Id); continue; }
+        Hero.Level = 5;
+        for (const auto& A : FBuildCatalog::Abilities(Hero))
+        {
+            const FString Label = FStandardActionRules::CostLabel(A.Cost());
+            const FString First = Label.Left(Label.Find(TEXT(" ")) < 0 ? Label.Len() : Label.Find(TEXT(" ")));
+            if (!A.Description.StartsWith(First) && !A.Description.Contains(TEXT("| ") + First)) { AddError(FString::Printf(TEXT("%s %s: description %s vs tag %s"), *Build.Id, *A.Name, *A.Description.Left(12), *Label)); }
+            TestTrue(Build.Id + TEXT(" budget"), FCombatBattle::ActionCost(A.Command, Hero) == A.Cost());
+            TestTrue(Build.Id + TEXT(" tooltip prefix"), FCombatBattle::CostPrefix(A.Command, Hero).Contains(Label));
+            ++Checked;
+        }
+    }
+    TestTrue(TEXT("Audited every catalog kit ability"), Checked >= 128);
+    return true;
+}
 #endif
