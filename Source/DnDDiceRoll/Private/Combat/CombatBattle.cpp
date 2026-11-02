@@ -3024,6 +3024,8 @@ void FCombatBattle::SpellsOnStep(int32 MoverId, FIntPoint From, FIntPoint To)
 void FCombatBattle::SpellsOnTurnStart(int32 UnitId)
 {
     for (FActiveSpell& A : State.ActiveSpells) { A.TriggeredThisTurn.Reset(); }
+    // Blink: the caster returns from the Ethereal Plane at the start of its turn.
+    for (FActiveSpell& A : State.ActiveSpells) { if (A.TargetId == UnitId && A.SpellId.Equals(TEXT("blink"), ESearchCase::IgnoreCase)) { A.Value = 0; } }
     // The caster's spells count down at the start of each of its turns (1 minute = 10 rounds).
     TArray<int32> Serials;
     for (const FActiveSpell& A : State.ActiveSpells) { if (A.CasterId == UnitId && A.RoundsLeft > 0) { Serials.Add(A.Serial); } }
@@ -3055,6 +3057,15 @@ void FCombatBattle::SpellsOnTurnStart(int32 UnitId)
 
 void FCombatBattle::SpellsOnTurnEnd(int32 UnitId)
 {
+    // Blink: at the end of each of the caster's turns, 1d6 of 4-6 vanishes it to the Ethereal Plane until its next turn.
+    for (int32 I = 0; I < State.ActiveSpells.Num(); ++I)
+    {
+        if (State.ActiveSpells[I].TargetId == UnitId && State.ActiveSpells[I].SpellId.Equals(TEXT("blink"), ESearchCase::IgnoreCase))
+        {
+            State.ActiveSpells[I].Value = RollDice(1, 6) >= 4 ? 1 : 0;
+            if (State.ActiveSpells[I].Value == 1) { EmitSpellEvent(ESpellEventKind::Trigger, State.ActiveSpells[I], {UnitId}); }
+        }
+    }
     TArray<int32> Serials;
     for (const FActiveSpell& A : State.ActiveSpells) { Serials.Add(A.Serial); }
     for (const int32 Serial : Serials)

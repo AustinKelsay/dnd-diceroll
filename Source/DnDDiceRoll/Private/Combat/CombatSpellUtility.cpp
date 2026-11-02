@@ -95,6 +95,8 @@ uint8 ZoneKind(const FString& Id)
     return 0;
 }
 bool FollowsCaster(const FString& Id) { const FSpellZone* Z = FSpellTacticsRules::Zone(Id); return Z && Z->bFollowsCaster; }
+/** Spells SRD 5.2.1 calls curses, ended by Remove Curse. */
+bool IsCurse(const FString& Id) { return IsId(Id, TEXT("hex")) || IsId(Id, TEXT("bestow-curse")); }
 FIntPoint GustDir(int32 Value) { return FIntPoint(Value / 3 - 1, Value % 3 - 1); }
 }
 using namespace CombatSpellUtilityLocal;
@@ -105,6 +107,8 @@ const FActiveSpell* FCombatBattle::SpellExtraOn(int32 Id, uint32 Bit) const
     {
         const FSpellEffectSpec* Spec = A.TargetId == Id ? FSpellEffectRules::Find(A.SpellId) : nullptr;
         if (Spec && (Spec->Extra & Bit)) { return &A; }
+        // Blink: while Ethereal the caster is out of reach like a sealed sphere.
+        if (Spec && (Bit & SpellEffectExtra::Sphere) && (Spec->Extra & SpellEffectExtra::Blink) && A.Value == 1) { return &A; }
     }
     return nullptr;
 }
@@ -302,6 +306,14 @@ bool FCombatBattle::UtilityTargets(int32 Id, const FSrdSpell& S, int32 SlotLevel
         {
             if (T.Life == ECombatLife::Dead || !Reach(T, Range)) { continue; }
             if (State.ActiveSpells.ContainsByPredicate([&](const FActiveSpell& A) { return A.TargetId == T.Id || (A.CasterId == T.Id && A.TargetId == INDEX_NONE && ZoneCovers(A, T.Cell)); })) { Out.Add(T.Id); }
+        }
+        return true;
+    }
+    if (Is(S, TEXT("remove-curse")))
+    {
+        for (const FCombatantState& T : State.Encounter.Combatants)
+        {
+            if (T.Life != ECombatLife::Dead && Reach(T, 1) && State.ActiveSpells.ContainsByPredicate([&](const FActiveSpell& A) { return A.TargetId == T.Id && IsCurse(A.SpellId); })) { Out.Add(T.Id); }
         }
         return true;
     }
@@ -698,6 +710,17 @@ bool FCombatBattle::ResolveUtilitySpell(const FCombatCommand& Command, const FSr
         }
         Result.bHit = Ended > 0; Touched.Add(TargetId);
         Lines = FString::Printf(TEXT(" | %s: %d spell(s) ended"), *Name(TargetId), Ended);
+    }
+    else if (Is(S, TEXT("remove-curse")))
+    {
+        const int32 TargetId = Command.TargetId;
+        int32 Ended = 0;
+        for (int32 I = State.ActiveSpells.Num() - 1; I >= 0; --I)
+        {
+            if (State.ActiveSpells.IsValidIndex(I) && State.ActiveSpells[I].TargetId == TargetId && IsCurse(State.ActiveSpells[I].SpellId)) { RemoveActiveSpell(I); ++Ended; }
+        }
+        Result.bHit = Ended > 0; Touched.Add(TargetId);
+        Lines = FString::Printf(TEXT(" | %s: %d curse(s) ended"), *Name(TargetId), Ended);
     }
     else if (U && U->Kind == ESpellUtility::Teleport)
     {

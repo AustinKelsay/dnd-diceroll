@@ -84,6 +84,7 @@ const FSpellEffectSpec Specs[] = {
     { .Id = TEXT("enhance-ability"), .Target = Ally, .Flags = Buff, .Targets = 1, .TargetsPerSlot = 1, .Extra = CheckAdvantage },
     { .Id = TEXT("levitate"), .Target = Ally, .Flags = Buff | SpeedZero, .Extra = Aloft | BothSides },
     { .Id = TEXT("ray-of-enfeeblement"), .Flags = Buff, .Extra = Enfeebled },
+    { .Id = TEXT("blink"), .Target = Self, .Flags = Buff, .Extra = Blink },
     { .Id = TEXT("see-invisibility"), .Target = Self, .Flags = Buff, .Extra = SeeInvisible },
     { .Id = TEXT("beacon-of-hope"), .Target = Ally, .Flags = Buff, .Targets = 12, .Extra = MaxHealing | WisDeathAdvantage | AllInRange },
     { .Id = TEXT("fly"), .Target = Ally, .Flags = Buff, .Targets = 1, .TargetsPerSlot = 1, .Extra = FlySpeed },

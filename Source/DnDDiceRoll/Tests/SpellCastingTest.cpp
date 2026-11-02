@@ -59,7 +59,7 @@ bool FSpellCastingTableTest::RunTest(const FString& Parameters)
         bool bCastBySomeone = false;
         if (Spec && (Spec->Flags & SpellEffectFlag::Smite)) { bCastBySomeone = true; ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // smites: SpellEffectsTest
         // Situational: need a downed/dead/afflicted/enchanted creature first (SpellUtilityTest).
-        static const TCHAR* const Situational[] = {TEXT("spare-the-dying"), TEXT("revivify"), TEXT("lesser-restoration"), TEXT("dispel-magic")};
+        static const TCHAR* const Situational[] = {TEXT("spare-the-dying"), TEXT("revivify"), TEXT("lesser-restoration"), TEXT("dispel-magic"), TEXT("remove-curse")};
         if (Algo::FindByPredicate(Situational, [&](const TCHAR* Id) { return FCString::Stricmp(Id, Spell.Id) == 0; })) { ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; }
         if (Spell.CastTime == ESpellCastTime::Reaction) { ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // reactions fire automatically: SpellReactionTest
         bCastBySomeone = false;
@@ -309,6 +309,47 @@ bool FSpellUtilityPhaseTest::RunTest(const FString& Parameters)
         const FCombatResult R = Battle.Submit(Cast(TEXT("fog-cloud"), 20, 1));
         TestTrue(FString::Printf(TEXT("Fog Cloud: %s"), *R.Feedback), R.bAccepted);
         TestFalse(TEXT("no sight into fog"), Battle.SpellTargets(10, TEXT("fire-bolt")).Contains(20));
+    }
+    {
+        // Illusions are sight-blocking images: Major Image over the foe hides it like a fog.
+        FString Error; FCombatBattle Battle;
+        Battle.Start(Caster(EAdventurerRole::Wizard, 5, {6, 0}), 3, Error);
+        const FCombatResult R = Battle.Submit(Cast(TEXT("major-image"), 20, 3));
+        TestTrue(FString::Printf(TEXT("Major Image: %s"), *R.Feedback), R.bAccepted);
+        TestFalse(TEXT("no sight through the image"), Battle.SpellTargets(10, TEXT("fire-bolt")).Contains(20));
+        TestTrue(TEXT("concentration on the image"), Battle.Find(10)->bConcentrating);
+    }
+    {
+        // Remove Curse ends Hex on the creature.
+        FString Error; FCombatBattle Battle;
+        if (TestTrue(TEXT("start warlock"), Battle.Start(Caster(EAdventurerRole::Warlock, 5, {1, 0}), 3, Error) || (AddError(Error), false)))
+        {
+            const FCombatResult H = Battle.Submit(Cast(TEXT("hex"), 20));
+            TestTrue(FString::Printf(TEXT("Hex: %s"), *H.Feedback), H.bAccepted);
+            Battle.Submit(FCombatCommand{ECombatCommandType::EndTurn, 10}); Battle.Submit(FCombatCommand{ECombatCommandType::EndTurn, 20});
+            TestTrue(TEXT("hexed foe is a Remove Curse target"), Battle.SpellTargets(10, TEXT("remove-curse")).Contains(20));
+            const FCombatResult R = Battle.Submit(Cast(TEXT("remove-curse"), 20));
+            TestTrue(FString::Printf(TEXT("Remove Curse: %s"), *R.Feedback), R.bAccepted);
+            TestFalse(TEXT("Hex ended"), Battle.ActiveSpells().ContainsByPredicate([](const FActiveSpell& A) { return A.SpellId == TEXT("hex") && A.TargetId == 20; }));
+        }
+    }
+    {
+        // Blink: 1d6 at the end of the caster's turn; on 4-6 it is Ethereal (no foe can target it) until its next turn.
+        bool bAway = false, bStayed = false;
+        for (int32 Seed = 1; Seed <= 40 && !(bAway && bStayed); ++Seed)
+        {
+            FString Error; FCombatBattle Battle;
+            Battle.Start(Caster(EAdventurerRole::Wizard, 5, {1, 0}), Seed, Error);
+            if (!TestTrue(TEXT("Blink cast"), Battle.Submit(Cast(TEXT("blink"), 10, 3)).bAccepted)) { break; }
+            Battle.Submit(FCombatCommand{ECombatCommandType::EndTurn, 10});
+            const FActiveSpell* B = Battle.ActiveSpells().FindByPredicate([](const FActiveSpell& A) { return A.SpellId == TEXT("blink"); });
+            if (!TestNotNull(TEXT("Blink lasts"), B)) { break; }
+            const bool bTargetable = Battle.LegalTargets(20).Contains(10);
+            if (B->Value == 1) { bAway = true; TestFalse(TEXT("Ethereal caster untargetable"), bTargetable); }
+            else { bStayed = true; TestTrue(TEXT("present caster targetable"), bTargetable); }
+        }
+        TestTrue(TEXT("Blink vanishes on some rolls"), bAway);
+        TestTrue(TEXT("Blink stays on others"), bStayed);
     }
     {
         // Silence: no verbal spells inside.

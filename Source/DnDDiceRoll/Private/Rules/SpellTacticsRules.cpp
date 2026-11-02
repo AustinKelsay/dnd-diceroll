@@ -23,6 +23,10 @@ const FSpellZone Zones[] =
     { TEXT("continual-flame"), 0, 20, false, false, false },
     { TEXT("daylight"), 0, 60, false, false, false },
     { TEXT("silence"), 0, 20, false, false, false },
+    // Illusions as sight-blocking images: Minor Illusion one cell, Silent Image 15-ft cube (radius 1 cell), Major Image 20-ft cube (radius 2).
+    { TEXT("minor-illusion"), 0, 0, false, false, false },
+    { TEXT("silent-image"), 0, 5, false, false, false },
+    { TEXT("major-image"), 0, 10, false, false, false },
     { TEXT("plant-growth"), 0, 100, false, false, true },
     { TEXT("guardian-of-faith"), Enter | StartTurn, 10, false, true, false },
     { TEXT("aura-of-life"), 0, 30, true, true, false },

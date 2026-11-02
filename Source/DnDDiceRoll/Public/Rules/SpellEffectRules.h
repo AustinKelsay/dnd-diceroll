@@ -82,7 +82,8 @@ enum : uint32
     Sphere = 1u << 15,            // Resilient Sphere: nothing passes in or out; immune to damage
     AllInRange = 1u << 16,        // Beacon of Hope: every chosen ally in range (no ExtraTargetIds needed)
     Pacified = 1u << 17,          // Suggestion: pursues a harmless course; takes no actions
-    BothSides = 1u << 18,         // Enlarge/Reduce, Levitate, Resilient Sphere: allies or foes (foes save)
+    BothSides = 1u << 18,
+    Blink = 1u << 19,             // Blink: Ethereal between turns on a d6 of 4-6 (FActiveSpell::Value = 1 while away)         // Enlarge/Reduce, Levitate, Resilient Sphere: allies or foes (foes save)
 };
 }
 
