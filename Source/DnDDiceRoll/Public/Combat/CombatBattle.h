@@ -120,6 +120,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() TArray<FCombatantState> Combatants;
     /** #67: downed heroes roll SRD death saves instead of the three-turn rescue clock. Off by default to keep seeded battles. */
     UPROPERTY() bool bDeathSaves = false;
+    /** #63: other creatures in the line of attack give half cover (+2). Off by default to keep seeded results. */
+    UPROPERTY() bool bCreatureCover = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */

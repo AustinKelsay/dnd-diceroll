@@ -991,7 +991,16 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
 {
     const FCombatantState* Actor = Find(ActorId);
     const FCombatantState* Target = Find(TargetId);
-    if (!Actor || !Target || State.Encounter.BlockedCells.IsEmpty()) { return 0; }
+    if (!Actor || !Target) { return 0; }
+    TArray<FIntPoint> Creatures;
+    if (State.Encounter.bCreatureCover)
+    {
+        for (const FCombatantState& Other : State.Encounter.Combatants)
+        {
+            if (Other.Id != ActorId && Other.Id != TargetId && Other.Life == ECombatLife::Conscious) { Creatures.Add(Other.Cell); }
+        }
+    }
+    if (State.Encounter.BlockedCells.IsEmpty() && Creatures.IsEmpty()) { return 0; }
     // SRD/DMG grid cover: from the attacker's best cell corner, trace a line to each corner of the target's cell.
     // A line is blocked when it passes through the interior of a blocked cell (edges and corners do not block).
     auto Crosses = [](FVector2D A, FVector2D B, FIntPoint Cell)
@@ -1012,20 +1021,27 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
         return Enter < Exit;
     };
     auto Corner = [](FIntPoint Cell, int32 Index) { return FVector2D(Cell.X + (Index & 1), Cell.Y + (Index >> 1)); };
-    int32 Best = 4;
-    for (int32 From = 0; From < 4 && Best > 0; ++From)
+    auto BestLines = [&](const TArray<FIntPoint>& Cells)
     {
-        int32 Lines = 0;
-        for (int32 To = 0; To < 4; ++To)
+        int32 Best = 4;
+        for (int32 From = 0; From < 4 && Best > 0; ++From)
         {
-            for (FIntPoint Cell : State.Encounter.BlockedCells)
+            int32 Lines = 0;
+            for (int32 To = 0; To < 4; ++To)
             {
-                if (Crosses(Corner(Actor->Cell, From), Corner(Target->Cell, To), Cell)) { ++Lines; break; }
+                for (FIntPoint Cell : Cells)
+                {
+                    if (Crosses(Corner(Actor->Cell, From), Corner(Target->Cell, To), Cell)) { ++Lines; break; }
+                }
             }
+            Best = FMath::Min(Best, Lines);
         }
-        Best = FMath::Min(Best, Lines);
-    }
-    return Best >= 3 ? 5 : Best > 0 ? 2 : 0;
+        return Best;
+    };
+    const int32 Walls = State.Encounter.BlockedCells.IsEmpty() ? 0 : BestLines(State.Encounter.BlockedCells);
+    const int32 WallBonus = Walls >= 3 ? 5 : Walls > 0 ? 2 : 0;
+    // Creatures never give more than half cover.
+    return FMath::Max(WallBonus, !Creatures.IsEmpty() && BestLines(Creatures) > 0 ? 2 : 0);
 }
 
 FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) const

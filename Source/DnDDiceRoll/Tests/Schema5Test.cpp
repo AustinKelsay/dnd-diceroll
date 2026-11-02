@@ -1206,4 +1206,25 @@ bool FSchema5GrappleSizeTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Invalid size rejected"), Bad.Start(Encounter, 7, Error));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CreatureCoverTest, "Project.Expedition.Schema5.CreatureCover",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CreatureCoverTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({4, 0});
+    Encounter.Combatants[0].MainHand = static_cast<int32>(EWeapon::Shortbow);
+    Encounter.Combatants[0].Ammunition = 20;
+    FCombatantState Blocker = Encounter.Combatants[1];
+    Blocker.Id = 21; Blocker.Name = TEXT("Blocker"); Blocker.Cell = {2, 0};
+    Encounter.Combatants.Add(Blocker);
+    FString Error;
+    FCombatBattle Off;
+    TestTrue(TEXT("Starts"), Off.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Default: creatures give no cover"), Off.CoverBonus(10, 20), 0);
+    Encounter.bCreatureCover = true;
+    FCombatBattle On;
+    TestTrue(TEXT("Starts with creature cover"), On.Start(Encounter, 7, Error));
+    TestEqual(TEXT("A creature in the line gives half cover"), On.CoverBonus(10, 20), 2);
+    TestEqual(TEXT("No creature between, no cover"), On.CoverBonus(10, 21), 0);
+    return true;
+}
 #endif
