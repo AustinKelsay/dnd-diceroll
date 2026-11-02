@@ -117,7 +117,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     FIntPoint Hover;
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
-    const bool bHover = !bOverPanel && !bShowHelp && HoverCell(Hover);
+    const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -156,7 +156,8 @@ bool AExpeditionPlayerController::KeyboardCell(FIntPoint& Cell) const
 void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
 {
     if (!AllowsGameplayInput()) { return; }
-    if (CanSelectSubclass()) { if (ScreenOffset.Y) { CycleClass(); } else { CycleBuild(); } return; }
+    if (CanSelectSubclass()) { if (ScreenOffset.Y) { StepClass(-ScreenOffset.Y); } else { StepBuild(ScreenOffset.X); } return; }
+    if (!BattleView->InCombat()) { Skip(); return; }
     // Arrows follow the screen: map "up" to whichever board axis faces away from the camera.
     const float Radians = FMath::DegreesToRadians(BattleView->CameraYaw());
     const FVector2D Forward(-FMath::Cos(Radians), -FMath::Sin(Radians));
@@ -175,7 +176,17 @@ void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
 void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
 void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
 void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
-void AExpeditionPlayerController::ConfirmCell() { if (AllowsGameplayInput() && BattleView->InCombat()) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
+void AExpeditionPlayerController::ConfirmCell() { if (const auto* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && !Hud->MenuButtons().Contains(Focus)) { Focus=NAME_None; } if (IsValid(BattleView) && (!BattleView->InCombat() || !AllowsGameplayInput())) { if (Focus.IsNone())
+        {
+            if (bShowHelp || BattleView->ShowingRecords()) { Focus=TEXT("Close"); }
+            else if (ShowingBuilder()) { Focus=TEXT("New"); }
+            else { switch (BattleView->Progress().Phase) {
+            case EExpeditionPhase::Route: Focus=TEXT("Route0"); break;
+            case EExpeditionPhase::Reward: Focus=TEXT("Claim"); break;
+            case EExpeditionPhase::Recovery: Focus=TEXT("Camp"); break;
+            default: Focus=TEXT("Builder"); break; } }
+        }
+        HandleButton(Focus); return; } if (AllowsGameplayInput() && BattleView->InCombat()) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
 
 void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
 {
@@ -210,6 +221,8 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     if (!IsValid(BattleView)) { return; }
     const FString Name = Id.ToString();
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
+    if (Name == TEXT("Builder") && BattleView->HasRun() && (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)) { bNextParty = true; Focus = TEXT("New"); return; }
+    if (Name.StartsWith(TEXT("Build:"))) { SelectBuild(Name.RightChop(6)); return; }
     if (Name == TEXT("ClassNext")) { CycleClass(); return; }
     if (Name == TEXT("BuildNext")) { CycleBuild(); return; }
     if (Name == TEXT("Preset")) { Preset(); return; }
@@ -284,22 +297,24 @@ void AExpeditionPlayerController::Preset()
     const TCHAR* Builds[] = {TEXT("fighter.champion"), TEXT("rogue.thief"), TEXT("cleric.life"), TEXT("wizard.evocation")};
     for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection P; P.Id = I + 1; P.Name = Names[I]; P.BuildId = Builds[I]; Party.Add(P); }
 }
-void AExpeditionPlayerController::CycleClass()
+void AExpeditionPlayerController::CycleClass() { StepClass(1); }
+void AExpeditionPlayerController::StepClass(int32 Direction)
 {
     if (!CanSelectSubclass() || Party.Num() != 4) { return; }
     TArray<FString> Classes;
     for (const auto& B : FBuildCatalog::All()) { Classes.AddUnique(B.Profile.ClassId); }
     const auto* Current = FBuildCatalog::Find(Party[Slot].BuildId);
-    const FString Next = Classes[(Classes.IndexOfByKey(Current->Profile.ClassId) + 1) % Classes.Num()];
+    const FString Next = Classes[(Classes.IndexOfByKey(Current->Profile.ClassId) + Classes.Num() + FMath::Sign(Direction)) % Classes.Num()];
     for (const auto& B : FBuildCatalog::All()) { if (B.Profile.ClassId == Next) { Party[Slot].BuildId = B.Id; break; } }
 }
-void AExpeditionPlayerController::CycleBuild()
+void AExpeditionPlayerController::CycleBuild() { StepBuild(1); }
+void AExpeditionPlayerController::StepBuild(int32 Direction)
 {
     if (!CanSelectSubclass() || Party.Num() != 4) { return; }
     TArray<FString> Builds;
     const auto* Current = FBuildCatalog::Find(Party[Slot].BuildId);
     for (const auto& B : FBuildCatalog::All()) { if (B.Profile.ClassId == Current->Profile.ClassId) { Builds.Add(B.Id); } }
-    Party[Slot].BuildId = Builds[(Builds.IndexOfByKey(Current->Id) + 1) % Builds.Num()];
+    Party[Slot].BuildId = Builds[(Builds.IndexOfByKey(Current->Id) + Builds.Num() + FMath::Sign(Direction)) % Builds.Num()];
 }
 
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
@@ -315,7 +330,7 @@ bool AExpeditionPlayerController::AllowsGameplayInput() const
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
     if (!AllowsGameplayInput()) { return false; }
-    return !BattleView->HasRun() || BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat;
+    return ShowingBuilder();
 }
 void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
 void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
@@ -329,33 +344,58 @@ void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { Ba
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
-void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { BattleView->NewRun(Party); } }
-void AExpeditionPlayerController::Save() { if (IsValid(BattleView)) { BattleView->Save(); } }
+void AExpeditionPlayerController::NewRun() { if (AllowsGameplayInput()) { if (!ShowingBuilder() && !BattleView->InCombat() && (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)) { bNextParty = true; return; } BattleView->NewRun(Party); if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; } } }
+void AExpeditionPlayerController::Save() { if (AllowsGameplayInput()) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume() { if (AllowsGameplayInput()) { BattleView->Resume(); } }
-void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { bShowHelp = false; BattleView->ToggleRecords(); } }
+void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { if (!BattleView->ShowingRecords()) { if (!bShowHelp) { SavedFocus = Focus; } Focus = TEXT("Close"); bDragging = false; } else { Focus = SavedFocus; } bShowHelp = false; BattleView->ToggleRecords(); } }
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
 void AExpeditionPlayerController::EndTurn() { if (AllowsGameplayInput()) { BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
-void AExpeditionPlayerController::RotateLeft() { if (IsValid(BattleView)) { BattleView->Orbit(-45); } }
-void AExpeditionPlayerController::RotateRight() { if (IsValid(BattleView)) { BattleView->Orbit(45); } }
-void AExpeditionPlayerController::ZoomIn() { if (IsValid(BattleView)) { BattleView->Zoom(-120); } }
-void AExpeditionPlayerController::ZoomOut() { if (IsValid(BattleView)) { BattleView->Zoom(120); } }
+void AExpeditionPlayerController::RotateLeft() { if (AllowsGameplayInput()) { BattleView->Orbit(-45); } }
+void AExpeditionPlayerController::RotateRight() { if (AllowsGameplayInput()) { BattleView->Orbit(45); } }
+void AExpeditionPlayerController::ZoomIn() { if (AllowsGameplayInput()) { BattleView->Zoom(-120); } }
+void AExpeditionPlayerController::ZoomOut() { if (AllowsGameplayInput()) { BattleView->Zoom(120); } }
 void AExpeditionPlayerController::SelectOne() { SelectPartyIndex(0); }
 void AExpeditionPlayerController::SelectTwo() { SelectPartyIndex(1); }
 void AExpeditionPlayerController::SelectThree() { SelectPartyIndex(2); }
 void AExpeditionPlayerController::SelectFour() { SelectPartyIndex(3); }
-void AExpeditionPlayerController::Skip() { if (IsValid(BattleView)) { BattleView->SkipPresentation(); } }
-void AExpeditionPlayerController::Speed() { if (IsValid(BattleView)) { BattleView->CycleSpeed(); } }
-void AExpeditionPlayerController::ToggleHelp() { bShowHelp = !bShowHelp; if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); } }
+void AExpeditionPlayerController::Skip()
+{
+    if (!IsValid(BattleView)) { return; }
+    if (!BattleView->InCombat() || !AllowsGameplayInput())
+    {
+        const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
+        const auto Items = Hud ? Hud->MenuButtons() : TArray<FName>();
+        if (!Items.IsEmpty()) { Focus = Items[(Items.IndexOfByKey(Focus) + 1) % Items.Num()]; }
+        return;
+    }
+    BattleView->SkipPresentation();
+}
+void AExpeditionPlayerController::Speed() { if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
+void AExpeditionPlayerController::ToggleHelp() { if (!bShowHelp) { if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SavedFocus = Focus; } Focus = TEXT("Close"); bDragging = false; } else { Focus = SavedFocus; } bShowHelp = !bShowHelp; if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); } }
 void AExpeditionPlayerController::CloseOverlays()
 {
+    Focus = SavedFocus;
     bShowHelp = false;
     if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); }
 }
 void AExpeditionPlayerController::BeginDrag()
 {
+    if (!AllowsGameplayInput()) { return; }
     float MouseX = 0, MouseY = 0;
     bDragging = GetMousePosition(MouseX, MouseY);
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+
+bool AExpeditionPlayerController::ShowingBuilder() const
+{
+    return IsValid(BattleView) && (!BattleView->HasRun() || (bNextParty &&
+        (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)));
+}
+bool AExpeditionPlayerController::SelectBuild(const FString& Id)
+{
+    if (!CanSelectSubclass() || Party.Num() != 4 || !FBuildCatalog::Find(Id)) { return false; }
+    Party[Slot].BuildId = Id;
+    return true;
+}

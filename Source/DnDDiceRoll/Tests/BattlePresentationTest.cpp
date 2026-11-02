@@ -92,6 +92,9 @@ bool FNextRunSubclassTest::RunTest(const FString& Parameters)
             View->ConfigureStorage(Path);
             View->DispatchBeginPlay();
             Player->HandleButton(TEXT("Resume"));
+            TestFalse(TEXT("Ending starts with recap before draft editing"), Player->ShowingBuilder());
+            Player->HandleButton(TEXT("Builder"));
+            TestTrue(TEXT("Explicit next party opens draft"), Player->ShowingBuilder());
             TestEqual(TEXT("Resumed Fighter is Champion"), View->Rules().Find(1)->FighterSubclass, EFighterSubclass::Champion);
             Player->HandleButton(TEXT("Help"));
             Player->HandleButton(TEXT("BattleMaster"));
@@ -440,6 +443,19 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
         Player->HandleButton(TEXT("ClassNext"));
     }
     TestEqual(TEXT("Builder exposes all seventy authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 70);
+    const FString BeforeReverse = Player->NextParty()[0].BuildId;
+    Player->StepBuild(1); Player->StepBuild(-1);
+    TestEqual(TEXT("Opposite subclass navigation restores choice"),Player->NextParty()[0].BuildId,BeforeReverse);
+    Player->StepClass(1); Player->StepClass(-1);
+    TestEqual(TEXT("Opposite class navigation restores class"),FBuildCatalog::Find(Player->NextParty()[0].BuildId)->Profile.ClassId,FBuildCatalog::Find(BeforeReverse)->Profile.ClassId);
+    const FString OtherSlot=Player->NextParty()[1].BuildId;
+    TestTrue(TEXT("Direct longest class choice accepted"),Player->SelectBuild(TEXT("wizard.evocation")));
+    TestEqual(TEXT("Direct choice preserves independent slot"),Player->NextParty()[1].BuildId,OtherSlot);
+    TestFalse(TEXT("Unknown catalog choice rejected"),Player->SelectBuild(TEXT("unknown.kit")));
+    Player->HandleButton(TEXT("Help"));
+    TestFalse(TEXT("Modal rejects direct roster selection"),Player->SelectBuild(TEXT("fighter.champion")));
+    Player->HandleButton(TEXT("Close"));
+
     TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
     TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
     Player->HandleButton(TEXT("Preset"));
