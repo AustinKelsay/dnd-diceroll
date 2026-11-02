@@ -31,7 +31,7 @@
                   {
                       "role":  "source",
                       "path":  "Content/Python/build_spell_fx.py",
-                      "sha256":  "890a19d3c0cae3fd2544f69aad1b3fde7f95ebf3596943ca2fa9c3be5c0f4735"
+                      "sha256":  "d69476915ba19ae251ff78b826a7de5c5b0b2c332c3a60589d86f1a3b744601a"
                   },
                   {
                       "role":  "export",
