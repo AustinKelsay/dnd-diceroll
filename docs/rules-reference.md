@@ -265,3 +265,25 @@ Save version 5 adds required fields; versions 1-4 are rejected with no migration
 | Superiority Die (Precision Attack) showed Action; it is a free rider on an attack | BuildCatalog ability panel | Fixed (f0a156b) |
 | Defense fighting style also applies when unarmored (ArmorWorn >= 0); SRD needs armor | Fighting-style AC | Reported, not changed |
 | Unmodelled SRD level 1-5 features | Class feature table | Listed, marked * |
+## Verified level gating (SRD 5.1, levels 1-5) — audit 2026-11-02
+
+Class features unlock on **class level**, never character level. Proficiency bonus and cantrip dice use **total character level**. Locked by `Project.Expedition.Rules.LevelGating`.
+
+| Class | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Fighter | Fighting Style, Second Wind | Action Surge | Archetype: Champion Improved Critical / Superiority Dice* | ASI | Extra Attack |
+| Rogue | Expertise, Sneak Attack 1d6 | Cunning Action | Thief: Fast Hands; Sneak 2d6 | ASI | Uncanny Dodge; Sneak 3d6 |
+| Cleric | Spellcasting, Life: Disciple of Life | Channel Divinity (1) | 2nd-level slots | ASI | Destroy Undead; 3rd-level slots |
+| Wizard | Spellcasting, Arcane Recovery | Evocation: Sculpt Spells | 2nd-level slots | ASI | 3rd-level slots (Counterspell) |
+| Barbarian | Rage, Unarmored Defense | Reckless Attack, Danger Sense | Berserker: Frenzy | ASI | Extra Attack, Fast Movement |
+| Monk | Martial Arts, Unarmored Defense | Ki, Unarmored Movement | Deflect Missiles, Open Hand Technique | ASI, Slow Fall | Extra Attack, Stunning Strike |
+| Paladin | Divine Sense, Lay on Hands | Fighting Style, Spellcasting, Divine Smite | Divine Health, Oath Channel Divinity | ASI | Extra Attack, 2nd-level slots |
+| Ranger | Favored Enemy, Natural Explorer | Fighting Style, Spellcasting | Hunter: Colossus Slayer, Primeval Awareness | ASI | Extra Attack, 2nd-level slots |
+| Sorcerer | Spellcasting, Draconic: Dragon Resilience | Font of Magic (Sorcery Points) | Metamagic | ASI | 3rd-level slots (Counterspell) |
+| Warlock | Pact Magic (1 slot, 1st), Fiend: Dark One's Blessing | Eldritch Invocations (2 slots) | Pact Boon (2nd-level slots) | ASI | 3rd-level pact slots |
+| Druid | Spellcasting | Wild Shape, Land: Natural Recovery | 2nd-level slots | ASI | 3rd-level slots |
+| Bard | Spellcasting, Bardic Inspiration d6 | Jack of All Trades, Song of Rest | Lore: Cutting Words, Expertise | ASI | Font of Inspiration, d8 |
+
+\* Deviation by directive: Superiority Dice (Battle Master) replace Precision Strike and are listed beside the Champion row.
+
+Multiclassing: Extra Attack does not stack (max of the classes); Sneak Attack dice and Cunning Action use Rogue class level; spell slots use the class's own table when only one class has Spellcasting, otherwise the SRD multiclass spellcaster table (full = levels, Paladin/Ranger = half rounded down, Warlock Pact Magic separate). Half casters single-class: no slots at 1, then the full-caster row at ceil(level / 2).
