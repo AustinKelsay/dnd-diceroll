@@ -8,7 +8,7 @@ UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
 
 /** Rest-point activities after a victory: one try each per rest point, keyed rolls (never shift the run stream). */
-enum class ECampActivity : uint8 { PickLock, Parley, BuyPotion, Forage, Pickpocket, Count };
+enum class ECampActivity : uint8 { PickLock, Parley, BuyPotion, Forage, Pickpocket, Perform, Count };
 
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()
@@ -107,6 +107,7 @@ public:
     static FString CampActivityName(ECampActivity Activity);
     static constexpr int32 VictoryPurseCopper = 2500;
     static constexpr int32 PickpocketCopper = 1000;
+    static constexpr int32 PerformanceCopper = 500;
     /** Toggle route hazards while choosing a route. */
     bool SetRouteHazards(bool bEnabled, FString& Error);
     static FString HazardDescription(const FExpeditionEncounterRecord& Record);

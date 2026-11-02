@@ -1569,4 +1569,29 @@ bool FSchema5CampPickpocketTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some lift fails"), bNoGain);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampPerformTest, "Project.Expedition.Schema5.CampPerform",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampPerformTest::RunTest(const FString& Parameters)
+{
+    bool bPaid = false, bUnpaid = false;
+    for (int32 Seed = 1; Seed < 150 && !(bPaid && bUnpaid); ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        const int32 Before = Run.Progress().Coins;
+        TestTrue(TEXT("Perform"), Run.CampActivity(Hero, ECampActivity::Perform, Outcome, Error));
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::Perform, Outcome, Error));
+        const int32 Delta = Run.Progress().Coins - Before;
+        TestTrue(TEXT("Base, double, or nothing"), Delta == 0 || Delta == FExpeditionRun::PerformanceCopper || Delta == 2 * FExpeditionRun::PerformanceCopper);
+        TestTrue(TEXT("Inspiration only on a standout"), !Run.Battle().Find(Hero)->bInspired || Delta == 2 * FExpeditionRun::PerformanceCopper);
+        (Delta > 0 ? bPaid : bUnpaid) = true;
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Some show pays"), bPaid);
+    TestTrue(TEXT("Some show flops"), bUnpaid);
+    return true;
+}
 #endif

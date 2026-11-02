@@ -11,6 +11,8 @@
 #include "Rules/HazardRules.h"
 #include "Rules/GroupCheckRules.h"
 #include "Rules/SleightRules.h"
+#include "Rules/PerformanceRules.h"
+#include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -333,6 +335,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::BuyPotion: return TEXT("Buy a potion");
     case ECampActivity::Forage: return TEXT("Forage together");
     case ECampActivity::Pickpocket: return TEXT("Lift a purse");
+    case ECampActivity::Perform: return TEXT("Perform for coin");
     default: return TEXT("Unknown");
     }
 }
@@ -414,6 +417,18 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         Outcome = FString::Printf(TEXT("%s tries to lift a purse (%d vs passive 12): %s"), *Hero->Name, Lift.Check.Total,
             Lift.Result == ESleightResult::Unnoticed ? *FString::Printf(TEXT("unnoticed, +%s."), *FCoinRules::Format(Gain)) :
             Lift.Result == ESleightResult::Caught ? *FString::Printf(TEXT("caught, fined %s."), *FCoinRules::Format(-Gain)) : TEXT("fumbles but slips away."));
+        break;
+    }
+    case ECampActivity::Perform:
+    {
+        // #91: Performance DC 12 for coin (double on beating it by 10); a standout show also grants heroic inspiration.
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(3000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
+        const FPerformanceOutcome Show = FPerformanceRules::Resolve(Sheet.SkillBonus(ESkill::Performance), ERollMode::Normal, 12, PerformanceCopper, Dice);
+        State.Coins += Show.Coins;
+        const bool bStandout = Show.Check.Total >= 22;
+        if (bStandout) { FInspirationRules::Grant(Combat.MutableFind(UnitId)->bInspired); }
+        Outcome = FString::Printf(TEXT("%s performs (%d vs DC 12): %s%s"), *Hero->Name, Show.Check.Total,
+            Show.Coins > 0 ? *FString::Printf(TEXT("+%s"), *FCoinRules::Format(Show.Coins)) : TEXT("the crowd drifts away"), bStandout ? TEXT(" and heroic inspiration.") : TEXT("."));
         break;
     }
     default: break;
