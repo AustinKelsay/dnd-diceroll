@@ -21,7 +21,7 @@ The parent issue owns the approved program boundaries. Concrete child contracts 
 
 | Slice | Fixed review baseline | Implementation | Verification | Independent review | Remaining |
 | --- | --- | --- | --- | --- | --- |
-| #50 targeting | `df25f32` | Mac source preserved at `661e216`; desktop placement/semantics corrections `6988b7e`, followed by connector clipping | Historical Mac build passed; latest native suite remains 84/85. Newer Ultra source has no Unreal build/test evidence. Helpers 50/50 and portable production geometry/connector sanitizer checks pass. | Rounds 1/2 requested changes; root corrections awaiting fresh review | Allocated native build, targeting/full tests, fresh review, package/render/input acceptance, PR/integration |
+| #50 targeting | `df25f32` | Mac source preserved at `661e216`; desktop placement/semantics corrections `6988b7e`, connector clipping `86c86c4`, followed by fixed-text frame exclusions | Historical Mac build passed; latest native suite remains 84/85. Newer Ultra source has no Unreal build/test evidence. Helpers 50/50; portable production geometry/connector checks through `86c86c4` passed. | Rounds 1–3 requested changes; root corrections awaiting fresh review | Allocated native build, targeting/full tests, fresh review, package/render/input acceptance, PR/integration |
 
 ## Coordination and evidence
 

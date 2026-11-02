@@ -13,6 +13,16 @@ struct Rect { double Left, Top, Right, Bottom; };
 struct Chip { Point Anchor; Rect Panel; };
 struct Segment { Point From, To; };
 
+// Fixed text need not own a panel. Reserve the complete HUD frame around the
+// board content for connectors, using the same content bounds as chip placement.
+inline void ExcludeHUDFrame(const Rect& Viewport, const Rect& Content, std::vector<Rect>& Exclusions)
+{
+    Exclusions.push_back({Viewport.Left, Viewport.Top, Viewport.Right, Content.Top});
+    Exclusions.push_back({Viewport.Left, Content.Bottom, Viewport.Right, Viewport.Bottom});
+    Exclusions.push_back({Viewport.Left, Content.Top, Content.Left, Content.Bottom});
+    Exclusions.push_back({Content.Right, Content.Top, Viewport.Right, Content.Bottom});
+}
+
 inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
 {
     return A.Left < B.Right + Gap && A.Right + Gap > B.Left &&

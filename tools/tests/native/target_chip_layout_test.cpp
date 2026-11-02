@@ -82,6 +82,19 @@ int main()
         const double Scale = std::max(0.5, std::min(Viewport.X / 1280, Viewport.Y / 720));
         const double W = Viewport.X / Scale, H = Viewport.Y / Scale;
         const Rect Area = {8, 150, W - 8, H - 160};
+        // Fixed legend at Y=133, budget/turn row at H-108 and bottom help text
+        // have no panels. Test the production frame reservation at every size.
+        std::vector<Rect> Frame;
+        ExcludeHUDFrame({0,0,W,H}, Area, Frame);
+        assert(VisibleLeader({W/2,100},{W/2,150},Frame).empty());
+        assert(VisibleLeader({W/2,H-50},{W/2,H-160},Frame).empty());
+        Segments = VisibleLeader({W/2,100},{W/2,300},Frame);
+        assert(Segments.size() == 1 && Near(Segments[0].From.Y,156));
+        Segments = VisibleLeader({W/2,H-50},{W/2,H-250},Frame);
+        assert(Segments.size() == 1 && Near(Segments[0].From.Y,H-166));
+        CheckLeader({W/2,100},{W/2,300},Frame);
+        CheckLeader({W/2,H-50},{W/2,H-250},Frame);
+        CheckLeader({W-1,100},{W/2,H-250},Frame);
         // Party, log, lingering dice, turn banner and a large hover forecast.
         const std::vector<Rect> Panels = {{12, 96, 262, 556}, {274, H-230, 710, H-128},
             {W-452, 54, W-12, 182}, {0, H*0.24, W, H*0.24+82}, {W-408, 350, W-8, 490}};
@@ -101,5 +114,5 @@ int main()
     Chip Result;
     assert(!PlaceChip({0, 0}, 290, 24, {0, 0, 200, 20}, {}, Result));
     assert(!PlaceChip({640, 300}, 290, 24, Bounds, {Bounds}, Result));
-    std::cout << "PASS: collision regressions, edge anchors, HUD and chip leader clipping, four viewport sizes, 3200 randomized placements, no-space refusal\n";
+    std::cout << "PASS: collision regressions, edge anchors, HUD/chip/fixed-text leader clipping, four viewport sizes, 3200 randomized placements, no-space refusal\n";
 }

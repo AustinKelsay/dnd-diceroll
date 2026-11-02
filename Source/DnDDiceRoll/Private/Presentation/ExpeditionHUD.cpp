@@ -454,6 +454,7 @@ void AExpeditionHUD::DrawTargetChips()
     }
     // Every leader sees every chip, including ones drawn later. Draw all clipped
     // segments before chip text so connector order cannot obscure a label.
+    ExpeditionLayout::ExcludeHUDFrame({0, 0, W, H}, Bounds, Occupied);
     for (const auto& Draw : Chips)
     {
         const auto& Chip = Draw.Geometry;
