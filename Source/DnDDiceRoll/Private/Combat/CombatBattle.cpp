@@ -359,7 +359,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
                 }
             }
             if (A.Effect == EAbilityEffect::Healing)
-            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { Forecast.MinAmount = FMath::Min(5,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(19,Target->MaxHP-Target->HP); } }
+            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { Forecast.MinAmount = FMath::Min(CureDice + HealingModifier,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(CureDice * CureDie + HealingModifier,Target->MaxHP-Target->HP); } }
             Forecast.bDiscreteAmounts = A.Effect == EAbilityEffect::Surge;
             if (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Surge || A.Effect == EAbilityEffect::Push || A.Effect == EAbilityEffect::Area)
             {

@@ -311,4 +311,52 @@ bool FSupportLifeTargetsTest::RunTest(const FString& Parameters)
     }
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSupportSpentRecoveryTest,"Project.Expedition.Catalog.LifeSpentPoolsAcrossProgression",EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FSupportSpentRecoveryTest::RunTest(const FString& Parameters)
+{
+    FString Error; TArray<FPartyBuildSelection> Party;
+    for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Hero %d"),Id); P.BuildId=Id==1?TEXT("cleric.life"):TEXT("cleric.light"); Party.Add(P); }
+    FExpeditionRun Run;
+    if(!TestTrue(TEXT("Construct spent-pool run"),Run.NewRun(42,Party,Error,TEXT("life-spent-pools"))) ||
+       !TestTrue(TEXT("Enter generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    for(int32 Turn=0;Turn<8 && Run.Battle().ActiveId()!=1;++Turn)
+    {
+        const int32 Id=Run.Battle().ActiveId();
+        if(Run.Battle().Find(Id)->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); }
+        else { Run.Submit({ECombatCommandType::EndTurn,Id}); }
+    }
+    if(!TestEqual(TEXT("Life reaches own turn"),Run.Battle().ActiveId(),1)) { return false; }
+    auto Injured=Run.Snapshot();
+    Injured.Battle.Encounter.Combatants.FindByPredicate([](const auto& U){return U.Id==1;})->HP=10;
+    if(!TestTrue(TEXT("Restore coherent injured fixture"),Run.Restore(Injured,Error))) { return false; }
+    TestTrue(TEXT("Spend first Kit and Slot on actual Cure"),Run.Submit({ECombatCommandType::CureWounds,1,{},1}).bAccepted);
+    const auto Allies=Run.Battle().LegalTargets(1,ECombatCommandType::Special2);
+    if(!TestFalse(TEXT("Sanctuary has adjacent ally"),Allies.IsEmpty())) { return false; }
+    TestTrue(TEXT("Spend remaining Kit on actual Sanctuary"),Run.Submit({ECombatCommandType::Special2,1,{},Allies[0]}).bAccepted);
+    TestEqual(TEXT("Both authored actions deplete shared Kit"),Run.Battle().Find(1)->KitUses,0);
+    TestEqual(TEXT("Only Cure consumes a Slot"),Run.Battle().Find(1)->SpellSlots,1);
+    if(!TestTrue(TEXT("Public combat policy wins"),ExpeditionTestSupport::FinishCombat(Run))) { return false; }
+    TestEqual(TEXT("Victory reaches reward"),Run.Progress().Phase,EExpeditionPhase::Reward);
+    TestEqual(TEXT("Conscious Life levels up"),Run.Battle().Find(1)->Level,2);
+    TestEqual(TEXT("Victory and level do not refill Kit"),Run.Battle().Find(1)->KitUses,0);
+    TestEqual(TEXT("Victory and level do not refill Slots"),Run.Battle().Find(1)->SpellSlots,1);
+    if(!TestTrue(TEXT("Claim actual reward"),Run.ClaimReward(1,Error)) ||
+       !TestTrue(TEXT("Take explicit camp"),Run.Recover(true,Error))) { return false; }
+    TestEqual(TEXT("Camp restores exactly one Kit"),Run.Battle().Find(1)->KitUses,1);
+    TestEqual(TEXT("Camp restores exactly one Slot"),Run.Battle().Find(1)->SpellSlots,2);
+    if(!TestTrue(TEXT("Enter next generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    TestEqual(TEXT("Route leaves spent Kit balance"),Run.Battle().Find(1)->KitUses,1);
+    TestEqual(TEXT("Route leaves Slot balance"),Run.Battle().Find(1)->SpellSlots,2);
+    const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Support"),FGuid::NewGuid().ToString());
+    const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    FExpeditionSaveData Data; Data.Current=Run.Snapshot();
+    TestTrue(TEXT("Write actual post-camp checkpoint"),FExpeditionSave::Write(Path,Data,Error));
+    FExpeditionSession Session(Path);
+    TestTrue(TEXT("Fresh session Resume"),Session.Resume(Error));
+    TestTrue(TEXT("Resume preserves all values and RNG"),ExpeditionTestSupport::SameRun(Data.Current,Session.Run().Snapshot()));
+    TestEqual(TEXT("Resume cannot refill Kit"),Session.Run().Battle().Find(1)->KitUses,1);
+    TestEqual(TEXT("Resume cannot refill Slots"),Session.Run().Battle().Find(1)->SpellSlots,2);
+    IFileManager::Get().DeleteDirectory(*Directory,false,true);
+    return true;
+}
 #endif
