@@ -1,0 +1,15 @@
+# Martial review and acceptance (#41)
+
+Fixed baseline `45b4d51586c8e44e27c13535973ef8828088f9bb`; initial source `e140aaf0b95cf13214a1ebb011ad73144a6a7f94`. Fresh independent Standards and Spec reviewers read the complete #37/#41 discussions and diff. Reviews were read-only; author build/test evidence was not presented as reviewer execution.
+
+Standards found a P2 source defect: direct combat Restore accepted recognized Thief builds carrying legacy spell-slot or Wind resources absent from their catalog definition, while run Restore rejected them. Root now applies the catalog's resource validator to recognized builds in encounter validation. Uncatalogued bounded fixtures remain supported. The public regression reproduced both accepted invalid pools and their non-atomic installation before the fix: four expected failures in `.local/automation/20261101T232106541590Z/index.json`.
+
+Standards also requested malformed actual JSON coverage. The existing real-JSON continuation test now mutates required Kit/protection fields, fractional/wrong-type/out-of-cap resources, unknown protection targets and wrong-class spell pools through `FExpeditionSave::Decode`, asserting the entire prior output remains unchanged. Three build scenarios each exercise nine wire mutations.
+
+Spec found no concrete gameplay correctness defect by inspection, but requested independently specified second-slot combinations and spatial boundaries. Literal second-slot expectations now cover all 22 newly authored kits, including shared-pool depletion, both budgets, same-budget refusal until the next turn, forecasts, effects after the first slot and normal/accelerated/Finish playback positions. Blocked, occupied and out-of-bounds pushes each preserve the victim's cell while committing exactly five damage, one spent use and one ordered damage fact.
+
+One proposed scenario, an occluded adjacent area secondary, cannot be constructed with this contract: secondary membership uses Manhattan distance at most one from the selected target, so a valid neighbouring occupied cell has no intervening grid cell for a wall. Blocked cells cannot also contain a combatant. No radius or sight policy was changed to manufacture that test. Existing legal-target sight rejection and literal primary/secondary area outcomes remain in place. Wider-area occlusion will need a real boundary scenario if a later slice introduces that geometry.
+
+Possible duplicated area-membership queries remain a nonblocking heuristic, not a documented-standard breach. Package/rendered checks and fresh rechecks of root's corrections are recorded separately in the ledger. No engine fix, full-roster completion or staging integration is claimed.
+
+Fresh independent Standards and Spec rechecks of the complete baseline-to-`a1dfeb977cae1274ae36da24897555db0fc34112` range both report no actionable source findings. Both agree that the resource defect, malformed-wire gap and second-slot/spatial coverage gaps are closed by inspection, and the occluded adjacent secondary is not a possible state. Reviewers did not execute tests or native/package checks. The duplicated area query remains explicitly nonblocking.

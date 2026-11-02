@@ -1,8 +1,9 @@
 #include "Presentation/ExpeditionPlayback.h"
+#include "Party/BuildCatalog.h"
 
 namespace
 {
-const FLinearColor Gold(1.0f, 0.78f, 0.25f);
+const FLinearColor PlaybackGold(1.0f, 0.78f, 0.25f);
 const FLinearColor Blood(1.0f, 0.32f, 0.22f);
 const FLinearColor Mint(0.35f, 1.0f, 0.55f);
 const FLinearColor Ash(0.75f, 0.78f, 0.82f);
@@ -45,10 +46,24 @@ FLinearColor UnitColor(const FCombatantState& Unit)
 {
     return Unit.Side == ECombatSide::Party ? PartyColor(Unit.Id) : FLinearColor(1.0f, 0.42f, 0.32f);
 }
-bool IsFriendlyAction(ECombatCommandType Action)
+bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor)
 {
+    if (Actor)
+    {
+        for (const auto& Ability : FBuildCatalog::Abilities(*Actor))
+        { if (Ability.Command == Action) { return Ability.Target != EAbilityTarget::Enemy; } }
+    }
     return Action == ECombatCommandType::SecondWind || Action == ECombatCommandType::CureWounds ||
         Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion;
+}
+FString ForecastAmount(const FActionForecast& Forecast)
+{
+    if (Forecast.MaxAmount == 0) { return Forecast.Formula; }
+    const TCHAR* Verb = Forecast.bHealing ? TEXT("Heals") : TEXT("Deals");
+    if (Forecast.MinAmount == Forecast.MaxAmount) { return FString::Printf(TEXT("%s %d  (%s)"), Verb, Forecast.MinAmount, *Forecast.Formula); }
+    return Forecast.bDiscreteAmounts
+        ? FString::Printf(TEXT("%s %d or %d  (%s)"), Verb, Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula)
+        : FString::Printf(TEXT("%s %d-%d  (%s)"), Verb, Forecast.MinAmount, Forecast.MaxAmount, *Forecast.Formula);
 }
 FString ActionName(ECombatCommandType Action)
 {
@@ -144,6 +159,7 @@ void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32
 
 void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After)
 {
+    if (!Results.ContainsByPredicate([](const auto& R) { return R.bAccepted; })) { return; }
     bool bTurnEnded = false;
     for (const FCombatResult& Result : Results)
     {
@@ -157,7 +173,7 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
         Focus = INDEX_NONE;
         if (After.Phase == EBattlePhase::Victory)
         {
-            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), Gold, 2.4f); Cue(EExpeditionCue::Victory);
+            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), PlaybackGold, 2.4f); Cue(EExpeditionCue::Victory);
         }
         else if (After.Phase == EBattlePhase::Defeat)
         {
@@ -179,6 +195,45 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)
 {
+    if (Result.Type == ECombatCommandType::Special1 || Result.Type == ECombatCommandType::Special2)
+    {
+        for (const auto& Effect : Result.Effects)
+        {
+            Add(0.45f, [this, Effect, Result]()
+            {
+                auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }
+                Focus = Result.ActorId;
+                Dice = FDiceTray();
+                if (Effect.Effect == EAbilityEffect::Rage)
+                {
+                    Unit->Glow = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Rage: %d own turn ends"), Effect.Amount), PlaybackGold);
+                    Cue(EExpeditionCue::PartyTurn);
+                }
+                else if (Effect.Effect == EAbilityEffect::Protect)
+                {
+                    Unit->Glow = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Shelter: -%d incoming"), Effect.Amount), PlaybackGold);
+                    Cue(EExpeditionCue::Spell);
+                }
+                else if (Effect.Effect == EAbilityEffect::Mitigation)
+                { ShowText(CellOf(Effect.Cell),FString::Printf(TEXT("Prevented %d"),Effect.Amount),PlaybackGold); }
+                else if (Effect.Effect == EAbilityEffect::Swap || Effect.Effect == EAbilityEffect::Push)
+                { Unit->Position = CellOf(Effect.Cell); ShowText(CellOf(Effect.Cell), TEXT("Repositioned"), PlaybackGold); Cue(EExpeditionCue::Step); }
+                else if (Effect.Effect == EAbilityEffect::Healing)
+                { Unit->HP += Effect.Amount; ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("+%d"), Effect.Amount), Mint); Cue(EExpeditionCue::Spell); }
+                else
+                {
+                    Unit->HP = FMath::Max(0, Unit->HP - Effect.Amount); Unit->Flash = 1.0f;
+                    ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("-%d"), Effect.Amount), Blood);
+                    if (Effect.Effect == EAbilityEffect::Surge) { ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Wild Bolt outcome %d"), Result.SurgeOutcome), PlaybackGold, 0.75f); }
+                    Cue(EExpeditionCue::Hit);
+                }
+            });
+        }
+        AddFalls(Result, After);
+        return;
+    }
     switch (Result.Type)
     {
     case ECombatCommandType::Move: AddMove(Result); break;
@@ -267,7 +322,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
             Cue(EExpeditionCue::DiceLand);
             Dice.Detail = FString::Printf(TEXT("d20 %d %s %d = %d  vs  AC %d"), Result.NaturalRoll, Result.AttackBonus >= 0 ? TEXT("+") : TEXT("-"),
                 FMath::Abs(Result.AttackBonus), Result.AttackTotal, Result.TargetArmorClass);
-            if (Result.bCritical) { Dice.Verdict = TEXT("CRITICAL HIT!"); Dice.VerdictColor = Gold; Cue(EExpeditionCue::Critical); Shake(0.5f); }
+            if (Result.bCritical) { Dice.Verdict = TEXT("CRITICAL HIT!"); Dice.VerdictColor = PlaybackGold; Cue(EExpeditionCue::Critical); Shake(0.5f); }
             else if (Result.NaturalRoll == 1) { Dice.Verdict = TEXT("NATURAL 1 — MISS"); Dice.VerdictColor = Blood; }
             else if (Result.bHit) { Dice.Verdict = TEXT("HIT"); Dice.VerdictColor = FLinearColor(1.0f, 0.55f, 0.35f); }
             else { Dice.Verdict = TEXT("MISS"); Dice.VerdictColor = Ash; }
@@ -328,7 +383,7 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
         Target->HP = FMath::Max(0, Target->HP - Result.Damage);
         Target->Flash = 1.0f;
         ShowText(Target->Position, FString::Printf(TEXT("-%d%s"), Result.Damage, Result.bCritical ? TEXT("!") : TEXT("")),
-            Result.bCritical ? Gold : Blood, Result.bCritical ? 1.6f : 1.25f);
+            Result.bCritical ? PlaybackGold : Blood, Result.bCritical ? 1.6f : 1.25f);
         if (Result.bSneakAttack) { ShowText(Target->Position, TEXT("SNEAK ATTACK"), FLinearColor(0.4f, 1.0f, 0.6f), 0.75f); }
         Cue(Result.bCritical ? EExpeditionCue::Critical : EExpeditionCue::Hit);
         Shake(Result.bCritical ? 0.45f : 0.2f);
@@ -338,7 +393,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
             {
                 Dice.Dice.Add({Result.EffectDice[Index].Sides, Result.EffectDice[Index].Value, Dice.Age + 0.05f * Index, FLinearColor(1.0f, 0.55f, 0.45f)});
             }
-            Dice.Detail += FString::Printf(TEXT("   ·   damage %s = %d"), *DiceText(Result.EffectDice, Result.EffectModifier), Result.Damage);
+            const FString Protection = Result.DamagePrevented > 0 ? FString::Printf(TEXT(" - %d protection"), Result.DamagePrevented) : FString();
+            Dice.Detail += FString::Printf(TEXT("   ·   damage %s%s = %d"), *DiceText(Result.EffectDice, Result.EffectModifier), *Protection, Result.Damage);
         }
     }, [=, this](float Alpha)
     {
@@ -394,7 +450,7 @@ void FExpeditionPlayback::AddHealing(const FCombatResult& Result, const FCombatS
     const FString Title = ActorId == TargetId ? FString::Printf(TEXT("%s uses %s"), *Actor->Name, *Ability)
         : FString::Printf(TEXT("%s uses %s on %s"), *Actor->Name, *Ability, *Target->Name);
     const FVector2D Direction = SafeDirection(CellOf(Actor->Cell), CellOf(Target->Cell));
-    const FLinearColor Color = Result.Type == ECombatCommandType::SecondWind ? Gold : Mint;
+    const FLinearColor Color = Result.Type == ECombatCommandType::SecondWind ? PlaybackGold : Mint;
     Add(Result.EffectDice.IsEmpty() ? 0.3f : FDiceTray::TumbleSeconds, [=, this]()
     {
         Focus = ActorId;

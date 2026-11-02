@@ -34,11 +34,23 @@ struct DNDDICEROLL_API FExpeditionEncounterRecord
     UPROPERTY() int32 Survivors = 4;
 };
 
+/** Selection is fixed for a run; instance identity does not imply a class. */
+USTRUCT()
+struct DNDDICEROLL_API FPartyBuildSelection
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Id = INDEX_NONE;
+    UPROPERTY() FString Name;
+    UPROPERTY() FString BuildId;
+};
+
 /** All run metadata is reflected, bounded, and independent of presentation lifetime. */
 USTRUCT()
 struct DNDDICEROLL_API FExpeditionProgress
 {
     GENERATED_BODY()
+    UPROPERTY() TArray<FPartyBuildSelection> Party;
+    UPROPERTY() int32 CatalogRevision = 7;
     UPROPERTY() int32 Seed = 0;
     UPROPERTY() FString RunId;
     UPROPERTY() int32 GenerationRandomState = 0;
@@ -69,6 +81,7 @@ public:
     /** Combats in one expedition; winning the last recovers the artifact. */
     static constexpr int32 EncounterCount = 5;
     bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), EFighterSubclass Subclass = EFighterSubclass::Champion);
+    bool NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity = FString());
     /** Validates a detached candidate in full, then installs without rolling. */
     bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);

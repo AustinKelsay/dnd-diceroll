@@ -1,4 +1,5 @@
 #include "Party/PartyContinuity.h"
+#include "Party/BuildCatalog.h"
 
 bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, FString& Error)
 {
@@ -59,7 +60,7 @@ constexpr int32 ResourceCap = 2;
 
 FString FPartyContinuity::RecoveryDescription()
 {
-    return FString::Printf(TEXT("Survivors: +%d HP, +%d Wind/slot (caps: max HP/%d). No revival or potions."), CampHealing, CampResource, ResourceCap);
+    return FString::Printf(TEXT("Survivors: +%d HP, +%d Wind/slot/Rage/Kit (caps: max HP/%d). No revival or potions."), CampHealing, CampResource, ResourceCap);
 }
 
 bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
@@ -70,9 +71,20 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
     {
         if (Survivor.Side != ECombatSide::Party || Survivor.Life != ECombatLife::Conscious) { continue; }
         Survivor.HP = FMath::Min(Survivor.MaxHP, Survivor.HP + CampHealing);
-        if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
-        if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
-        { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+        if (const auto* B = FBuildCatalog::Find(Survivor.BuildId))
+        {
+            Survivor.KitUses = FMath::Min(B->KitCap, Survivor.KitUses + B->KitRecovery);
+            Survivor.RageUses = FMath::Min(B->RageCap, Survivor.RageUses + B->RageRecovery);
+            Survivor.SecondWindUses = FMath::Min(B->WindCap, Survivor.SecondWindUses + B->WindRecovery);
+            Survivor.SpellSlots = FMath::Min(B->SlotCap, Survivor.SpellSlots + B->SlotRecovery);
+            Survivor.ManeuverUses = FMath::Min(B->ManeuverCap, Survivor.ManeuverUses + B->ManeuverRecovery);
+        }
+        else
+        {
+            if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
+            if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
+            { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+        }
     }
     return true;
 }
