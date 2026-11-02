@@ -42,6 +42,12 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         if (!Inside(Cell) || Occupied.Contains(Cell)) { return Reject(TEXT("Invalid blocked cell.")); }
         Occupied.Add(Cell);
     }
+    TSet<FIntPoint> Difficult;
+    for (FIntPoint Cell : Encounter.DifficultCells)
+    {
+        if (!Inside(Cell) || Occupied.Contains(Cell) || Difficult.Contains(Cell)) { return Reject(TEXT("Invalid difficult terrain cell.")); }
+        Difficult.Add(Cell);
+    }
     TSet<int32> Ids;
     for (const FCombatantState& Unit : Encounter.Combatants)
     {
@@ -254,24 +260,37 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
     TMap<FIntPoint, int32> Result;
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return Result; }
-    TArray<FIntPoint> Queue = {Unit->Cell};
+    // Deterministic Dijkstra with FIFO cost buckets. With uniform step costs it visits cells and picks
+    // parents in exactly the order of the earlier breadth-first search, so existing routes are unchanged.
+    TArray<TArray<FIntPoint>> Buckets;
+    Buckets.SetNum(1);
+    Buckets[0].Add(Unit->Cell);
     Result.Add(Unit->Cell, 0);
-    for (int32 Index = 0; Index < Queue.Num(); ++Index)
+    for (int32 Cost = 0; Cost < Buckets.Num(); ++Cost)
     {
-        const FIntPoint Cell = Queue[Index];
-        const int32 Cost = Result[Cell] + 1;
-        for (FIntPoint Offset : Neighbors)
+        for (int32 Index = 0; Index < Buckets[Cost].Num(); ++Index)
         {
-            const FIntPoint Next = Cell + Offset;
-            if (IsOpen(Next, Id) && !Result.Contains(Next))
+            const FIntPoint Cell = Buckets[Cost][Index];
+            if (Result[Cell] != Cost) { continue; }
+            for (FIntPoint Offset : Neighbors)
             {
-                Result.Add(Next, Cost);
+                const FIntPoint Next = Cell + Offset;
+                if (!IsOpen(Next, Id)) { continue; }
+                const int32 NextCost = Cost + StepCost(Next);
+                if (const int32* Known = Result.Find(Next); Known && *Known <= NextCost) { continue; }
+                Result.Add(Next, NextCost);
                 if (Parents) { Parents->Add(Next, Cell); }
-                Queue.Add(Next);
+                if (Buckets.Num() <= NextCost) { Buckets.SetNum(NextCost + 1); }
+                Buckets[NextCost].Add(Next);
             }
         }
     }
     return Result;
+}
+
+int32 FCombatBattle::StepCost(FIntPoint Cell) const
+{
+    return State.Encounter.DifficultCells.Contains(Cell) ? 2 : 1;
 }
 
 TArray<FIntPoint> FCombatBattle::LegalMoves(int32 Id) const
@@ -826,7 +845,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     {
         Result.Path = PathTo(Command.ActorId, Command.Destination);
         if (Result.Path.IsEmpty()) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
-        // Every step costs one. Each step out of a melee enemy's reach may provoke its reaction (#59).
+        // Each step costs StepCost (two into difficult terrain). Each step out of a melee enemy's reach may provoke its reaction (#59).
         FCombatantState* Moving = MutableFind(Command.ActorId);
         const FString MoverName = Moving->Name;
         const TArray<FIntPoint> Planned = Result.Path;
@@ -849,7 +868,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (Moving->Life != ECombatLife::Conscious) { break; }
             Moving->Cell = Next;
             Result.Path.Add(Next);
-            --State.MovementLeft;
+            State.MovementLeft -= StepCost(Next);
         }
         CheckOutcome();
         const int32 Steps = Result.Path.Num();

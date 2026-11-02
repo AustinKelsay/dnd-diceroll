@@ -277,4 +277,58 @@ bool FSchema5ExtraAttackTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5DifficultTerrainTest, "Project.Expedition.Schema5.DifficultTerrainCostsDoubleMovement",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5DifficultTerrainTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        Encounter.DifficultCells = {{1, 0}, {1, 1}, {0, 1}};
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts surrounded by rubble"), Battle.Start(Encounter, 7, Error));
+        TestTrue(TEXT("Three cells cost 2+1"), Battle.LegalMoves(10).Contains(FIntPoint(2, 0)));
+        TestFalse(TEXT("Four cells would cost 5"), Battle.LegalMoves(10).Contains(FIntPoint(4, 0)));
+        TestTrue(TEXT("Move through rubble"), Battle.Submit({ECombatCommandType::Move, 10, {2, 0}}).bAccepted);
+        TestEqual(TEXT("Entering difficult terrain spends two"), Battle.Snapshot().MovementLeft, 1);
+    }
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        Encounter.DifficultCells = {{1, 0}};
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult Moved = Battle.Submit({ECombatCommandType::Move, 10, {1, 1}});
+        TestTrue(TEXT("Moves"), Moved.bAccepted);
+        TestEqual(TEXT("Cheapest route steps around the rubble, not the first-listed neighbour"), Moved.Path[0], FIntPoint(0, 1));
+        TestEqual(TEXT("Clear route costs two"), Battle.Snapshot().MovementLeft, 2);
+    }
+    {
+        FCombatEncounter Plain = Pair({7, 7});
+        FCombatBattle Battle;
+        TestTrue(TEXT("Starts"), Battle.Start(Plain, 7, Error));
+        TestTrue(TEXT("Without terrain four cells are reachable"), Battle.LegalMoves(10).Contains(FIntPoint(4, 0)));
+    }
+    TArray<TArray<FIntPoint>> Bad = {{{8, 0}}, {{2, 2}, {2, 2}}, {{3, 3}}};
+    for (const auto& Cells : Bad)
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        Encounter.BlockedCells = {{3, 3}};
+        Encounter.DifficultCells = Cells;
+        FCombatBattle Battle;
+        TestFalse(TEXT("Outside, duplicate or blocked difficult cells rejected"), Battle.Start(Encounter, 7, Error));
+    }
+    {
+        FExpeditionRun Run; FString Json;
+        ActiveRun(Run);
+        FExpeditionSaveData Data; Data.Current = Run.Snapshot();
+        FExpeditionSave::Encode(Data, Json, Error);
+        TSharedPtr<FJsonObject> Root;
+        FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
+        Root->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->GetObjectField(TEXT("Encounter"))->RemoveField(TEXT("DifficultCells"));
+        FExpeditionSaveData Loaded;
+        TestFalse(TEXT("Terrain is a required schema 5 field"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+    }
+    return !HasAnyErrors();
+}
 #endif

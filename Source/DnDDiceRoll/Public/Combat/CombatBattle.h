@@ -85,6 +85,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() int32 Width = 8;
     UPROPERTY() int32 Height = 8;
     UPROPERTY() TArray<FIntPoint> BlockedCells;
+    /** Difficult terrain (#64): entering one of these open cells costs two movement. */
+    UPROPERTY() TArray<FIntPoint> DifficultCells;
     UPROPERTY() TArray<FCombatantState> Combatants;
 };
 
@@ -314,6 +316,8 @@ private:
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
     TMap<FIntPoint, int32> Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents = nullptr) const;
     bool HasLineOfSight(FIntPoint From, FIntPoint To) const;
+    /** Movement spent to enter Cell. */
+    int32 StepCost(FIntPoint Cell) const;
     /** The unit when it may use a targeted action now (turn, life, action budget, role, uses); otherwise null. */
     const FCombatantState* ActionUser(int32 Id, ECombatCommandType Action) const;
     static int32 ActionRange(const FCombatantState& Unit, ECombatCommandType Action);
