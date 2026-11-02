@@ -18,6 +18,19 @@ UENUM()
 enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
+/** SRD conditions tracked in combat. Values are persisted (schema 5); append only. */
+UENUM()
+enum class ECombatCondition : uint8 { Prone, Poisoned, Blinded, Frightened, Restrained, Grappled };
+
+/** One active condition: its source (INDEX_NONE when none) and remaining owner turns (-1 until removed). */
+USTRUCT()
+struct DNDDICEROLL_API FCombatCondition
+{
+    GENERATED_BODY()
+    UPROPERTY() ECombatCondition Condition = ECombatCondition::Prone;
+    UPROPERTY() int32 SourceId = INDEX_NONE;
+    UPROPERTY() int32 RoundsLeft = -1;
+};
 
 /** Serializable combat and persistent adventurer values; IDs never change between encounters. */
 USTRUCT()
@@ -60,6 +73,7 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Speed = 4;
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
+    UPROPERTY() TArray<FCombatCondition> Conditions;
 };
 
 USTRUCT()
@@ -288,6 +302,11 @@ private:
     int32 Roll(int32 Sides);
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
+    /** Starts the active unit's turn: movement from speed, grapple/restraint, and standing up from prone. */
+    void BeginTurn();
+    /** Drops conditions whose source or situation no longer supports them. */
+    void PruneConditions();
+    static bool HasCondition(const FCombatantState& Unit, ECombatCondition Condition);
     void CheckOutcome();
     TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 ProtectionFor(const FCombatantState& Target) const;

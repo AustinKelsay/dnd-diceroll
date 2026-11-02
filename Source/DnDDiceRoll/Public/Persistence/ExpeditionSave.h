@@ -23,7 +23,7 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 4;
+    UPROPERTY() int32 Version = 5;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
@@ -33,8 +33,8 @@ struct DNDDICEROLL_API FExpeditionSaveData
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    // Version 4 adds explicit catalog identities and revision; older saves are unsupported.
-    static constexpr int32 Version = 4;
+    // Version 5 adds persisted rules state (conditions, reactions, attacks, terrain, slots, equipment); older saves are unsupported.
+    static constexpr int32 Version = 5;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);

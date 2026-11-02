@@ -1,6 +1,7 @@
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellRules.h"
+#include "Rules/MovementRules.h"
 
 namespace
 {
@@ -98,6 +99,23 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         Ids.Add(Unit.Id);
         Occupied.Add(Unit.Cell);
     }
+    for (const FCombatantState& Unit : Encounter.Combatants)
+    {
+        if (Unit.Conditions.Num() > 8 || (Unit.Life == ECombatLife::Dead && !Unit.Conditions.IsEmpty())) { return Reject(TEXT("Invalid condition list.")); }
+        TSet<TPair<uint8, int32>> Seen;
+        for (const FCombatCondition& Condition : Unit.Conditions)
+        {
+            const FCombatantState* Source = Condition.SourceId == INDEX_NONE ? nullptr :
+                Encounter.Combatants.FindByPredicate([&Condition](const FCombatantState& S) { return S.Id == Condition.SourceId; });
+            const TPair<uint8, int32> Key(static_cast<uint8>(Condition.Condition), Condition.SourceId);
+            if (static_cast<uint8>(Condition.Condition) > static_cast<uint8>(ECombatCondition::Grappled) || Seen.Contains(Key) ||
+                (Condition.SourceId != INDEX_NONE && (!Source || Source->Id == Unit.Id || Source->Life == ECombatLife::Dead)) ||
+                (Condition.RoundsLeft != -1 && (Condition.RoundsLeft < 1 || Condition.RoundsLeft > 10)) ||
+                (Condition.Condition == ECombatCondition::Grappled && (!Source || Source->Life != ECombatLife::Conscious || GridDistance(Source->Cell, Unit.Cell) > 1)))
+            { return Reject(TEXT("Invalid condition, source, or duration.")); }
+            Seen.Add(Key);
+        }
+    }
     return true;
 }
 
@@ -127,7 +145,8 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
         if (--First->RescueTurnsLeft == 0) { First->Life = ECombatLife::Dead; }
         AdvanceTurn();
     }
-    State.MovementLeft = Find(ActiveId())->Speed;
+    else { BeginTurn(); }
+    PruneConditions();
     return true;
 }
 
@@ -671,8 +690,64 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
             }
         }
     }
+    const FCombatantState* Target = Find(TargetId);
+    for (const FCombatCondition& Condition : Actor->Conditions)
+    {
+        const FCombatantState* Source = Find(Condition.SourceId);
+        switch (Condition.Condition)
+        {
+        case ECombatCondition::Poisoned: Mode.Disadvantage.Add(TEXT("attacker poisoned")); break;
+        case ECombatCondition::Blinded: Mode.Disadvantage.Add(TEXT("attacker blinded")); break;
+        case ECombatCondition::Restrained: Mode.Disadvantage.Add(TEXT("attacker restrained")); break;
+        case ECombatCondition::Prone: Mode.Disadvantage.Add(TEXT("attacker prone")); break;
+        case ECombatCondition::Frightened:
+            if (!Source || (Source->Life == ECombatLife::Conscious && HasLineOfSight(Actor->Cell, Source->Cell))) { Mode.Disadvantage.Add(TEXT("attacker frightened")); }
+            break;
+        default: break;
+        }
+    }
+    if (HasCondition(*Target, ECombatCondition::Blinded)) { Mode.Advantage.Add(TEXT("target blinded")); }
+    if (HasCondition(*Target, ECombatCondition::Restrained)) { Mode.Advantage.Add(TEXT("target restrained")); }
+    if (HasCondition(*Target, ECombatCondition::Prone))
+    {
+        (FMovementRules::AttackAgainstProne(GridDistance(Actor->Cell, Target->Cell)) == ERollMode::Advantage ? Mode.Advantage : Mode.Disadvantage).Add(TEXT("target prone"));
+    }
     Mode.Mode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num());
     return Mode;
+}
+
+bool FCombatBattle::HasCondition(const FCombatantState& Unit, ECombatCondition Condition)
+{
+    return Unit.Conditions.ContainsByPredicate([Condition](const FCombatCondition& C) { return C.Condition == Condition; });
+}
+
+void FCombatBattle::BeginTurn()
+{
+    FCombatantState* Unit = MutableFind(ActiveId());
+    if (!Unit) { return; }
+    const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained);
+    State.MovementLeft = bHeld ? 0 : Unit->Speed;
+    if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone))
+    {
+        Unit->Conditions.RemoveAll([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Prone; });
+        State.MovementLeft = FMath::Max(0, Unit->Speed - FMovementRules::StandUpCost(Unit->Speed));
+    }
+}
+
+void FCombatBattle::PruneConditions()
+{
+    const bool bFighting = State.Phase == EBattlePhase::Fighting;
+    for (FCombatantState& Unit : State.Encounter.Combatants)
+    {
+        if (Unit.Life == ECombatLife::Dead) { Unit.Conditions.Reset(); continue; }
+        Unit.Conditions.RemoveAll([&](const FCombatCondition& C)
+        {
+            if (C.SourceId == INDEX_NONE) { return !bFighting && C.Condition == ECombatCondition::Prone; }
+            const FCombatantState* Source = Find(C.SourceId);
+            return !bFighting || !Source || Source->Life == ECombatLife::Dead ||
+                (C.Condition == ECombatCondition::Grappled && (Source->Life != ECombatLife::Conscious || GridDistance(Source->Cell, Unit.Cell) > 1));
+        });
+    }
 }
 
 FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
@@ -682,6 +757,7 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     FCombatResult Result = Resolve(Command);
     DiceLog = nullptr;
     if (!Result.bAccepted) { return Result; }
+    PruneConditions();
     if (Result.DamagePrevented > 0) { Result.Feedback += FString::Printf(TEXT(" | protection prevented %d damage"),Result.DamagePrevented); }
     Result.Type = Command.Type;
     Result.ActorId = Command.ActorId;
@@ -867,6 +943,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         Result.Feedback = Actor->Name + TEXT(" ends turn.");
         auto* User = MutableFind(Command.ActorId);
         if (User->RageTurns > 0 && --User->RageTurns == 0) { User->GuardTargetId = INDEX_NONE; }
+        for (FCombatCondition& Condition : User->Conditions) { if (Condition.RoundsLeft > 0) { --Condition.RoundsLeft; } }
+        User->Conditions.RemoveAll([](const FCombatCondition& Condition) { return Condition.RoundsLeft == 0; });
         AdvanceTurn();
     }
     else { return Reject(TEXT("Unknown command.")); }
@@ -972,7 +1050,7 @@ void FCombatBattle::AdvanceTurn()
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
-            State.MovementLeft = Next->Speed;
+            BeginTurn();
             State.bActionAvailable = true;
             State.bBonusActionAvailable = true;
             return;
@@ -1080,7 +1158,8 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             Unit.Initiative < 1 + Unit.InitiativeBonus || Unit.Initiative > 20 + Unit.InitiativeBonus ||
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
-            (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0))) { return Reject(); }
+            (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 ||
+                Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
     }
