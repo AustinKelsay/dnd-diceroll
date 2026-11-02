@@ -1,4 +1,5 @@
 #include "Combat/CombatBattle.h"
+#include "Party/CharacterCreator.h"
 #include "Rules/SpellEffectRules.h"
 #include "Rules/SpellTacticsRules.h"
 #include "Rules/SpellUtilityRules.h"
@@ -1102,6 +1103,7 @@ FCharacterRules FCombatBattle::Character(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return FCharacterRules(); }
+    if (Unit->Side == ECombatSide::Party && Unit->Sheet.IsCustom()) { return FCharacterCreator::SheetCharacter(*Unit); }
     return Unit->Side == ECombatSide::Party && Unit->AdventurerRole != EAdventurerRole::None ?
         FProficiencyRules::PrebuiltCharacter(Unit->AdventurerRole, Unit->Level) : FProficiencyRules::EnemyCharacter(Unit->Role);
 }

@@ -244,7 +244,8 @@ int32 FBuildCatalog::MaxHitPoints(const FCombatantState& Hero)
 }
 bool FBuildCatalog::HeroScores(const FCombatantState& Hero, FAbilityScores& Out)
 {
-    Out = FAbilityRules::PrebuiltScores(Hero.AdventurerRole);
+    // Character creator: a custom hero's point-buy scores replace the prebuilt base.
+    if (!Hero.Sheet.Scores(Out)) { Out = FAbilityRules::PrebuiltScores(Hero.AdventurerRole); }
     if (Hero.AsiChoices.Num() % 2) { return false; }
     FString Error;
     for (int32 I = 0; I < Hero.AsiChoices.Num(); I += 2)

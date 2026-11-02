@@ -51,6 +51,8 @@ struct DNDDICEROLL_API FPartyBuildSelection
     UPROPERTY() int32 Id = INDEX_NONE;
     UPROPERTY() FString Name;
     UPROPERTY() FString BuildId;
+    /** Character creator (local proposal): empty for a catalog prebuilt; otherwise validated by FCharacterCreator. */
+    UPROPERTY() FHeroSheet Sheet;
 };
 
 /** All run metadata is reflected, bounded, and independent of presentation lifetime. */

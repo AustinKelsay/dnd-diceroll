@@ -37,6 +37,37 @@ struct DNDDICEROLL_API FCombatCondition
     UPROPERTY() int32 RoundsLeft = -1;
 };
 
+/**
+ * Character-creator choices for a custom hero (local proposal, not yet approved scope). Empty = a catalog prebuilt.
+ * Additive within save schema 5: missing in older v5 files is read as empty (see ExpeditionSave ImportStruct).
+ * Plain int32 arrays because the strict save codec only handles int/bool/string/enum/struct/array.
+ */
+USTRUCT()
+struct DNDDICEROLL_API FHeroSheet
+{
+    GENERATED_BODY()
+    /** Six point-buy base scores in EAbility order (8..15, 27 points). Replaces the prebuilt scores; ASIs still replay on top. */
+    UPROPERTY() TArray<int32> BaseScores;
+    /** Level-1 class skill picks (ESkill indices). */
+    UPROPERTY() TArray<int32> ClassSkills;
+    /** Level-1 Expertise picks (ESkill indices; Rogue only at level 1). Later Expertise is filled deterministically. */
+    UPROPERTY() TArray<int32> ExpertiseSkills;
+    /** Cosmetic palette indices: primary, secondary, accent. */
+    UPROPERTY() TArray<int32> Colors;
+
+    bool IsCustom() const { return BaseScores.Num() == 6; }
+    bool IsEmpty() const { return BaseScores.IsEmpty() && ClassSkills.IsEmpty() && ExpertiseSkills.IsEmpty() && Colors.IsEmpty(); }
+    bool SameAs(const FHeroSheet& Other) const { return BaseScores == Other.BaseScores && ClassSkills == Other.ClassSkills && ExpertiseSkills == Other.ExpertiseSkills && Colors == Other.Colors; }
+    /** Base scores as FAbilityScores; false unless IsCustom. */
+    bool Scores(FAbilityScores& Out) const
+    {
+        if (!IsCustom()) { return false; }
+        Out.Strength = BaseScores[0]; Out.Dexterity = BaseScores[1]; Out.Constitution = BaseScores[2];
+        Out.Intelligence = BaseScores[3]; Out.Wisdom = BaseScores[4]; Out.Charisma = BaseScores[5];
+        return true;
+    }
+};
+
 /** Serializable combat and persistent adventurer values; IDs never change between encounters. */
 USTRUCT()
 struct DNDDICEROLL_API FCombatantState
@@ -67,6 +98,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 SecondaryLevel = 0;
     /** #79 ability score improvements, as (first, second) EAbility pairs replayed onto the prebuilt scores. */
     UPROPERTY() TArray<uint8> AsiChoices;
+    /** Character creator (local proposal): custom base scores, skills and colours. Empty for catalog prebuilts. */
+    UPROPERTY() FHeroSheet Sheet;
     /** #79: the character level whose multiclass choice was spent (0 = none yet). */
     UPROPERTY() int32 ChoiceLevel = 0;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;

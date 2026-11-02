@@ -45,8 +45,10 @@ bool ImportStruct(const UStruct* Type, const TSharedPtr<FJsonObject>& Json, void
     int32 Fields = 0;
     for (TFieldIterator<FProperty> It(Type); It; ++It)
     {
-        ++Fields;
         const auto* Field = Json->Values.Find(FJsonObject::FStringType(It->GetName()));
+        // Character creator (local proposal): Sheet is additive within schema 5; older v5 files omit it and read as empty.
+        if (!Field && It->GetName() == TEXT("Sheet")) { continue; }
+        ++Fields;
         if (!Field || !ImportValue(*It, *Field, It->ContainerPtrToValuePtr<void>(Value))) { return false; }
     }
     return Fields == Json->Values.Num();

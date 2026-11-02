@@ -21,6 +21,7 @@
 #include "Rules/LevelRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
+#include "Party/CharacterCreator.h"
 
 namespace
 {
@@ -110,6 +111,8 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
         const auto& Slot = Selection[I];
         if (Slot.Id != I + 1 || !FBuildCatalog::Create(Slot.BuildId, Slot.Id, Slot.Name, Party.Combatants[I]))
         { Error = TEXT("Choose a valid build and name for each independent slot 1–4."); return false; }
+        // Character creator: a custom sheet replaces the prebuilt scores and skills.
+        if (!Slot.Sheet.IsEmpty() && !FCharacterCreator::Apply(Slot.Sheet, Party.Combatants[I], Error)) { return false; }
         Party.Combatants[I].Cell = Cell;
     }
     Candidate.State.Party = Selection;
@@ -620,6 +623,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     {
         const auto& Selection = P.Party[I];
         if (Selection.Id != I + 1 || Selection.Name.IsEmpty() || Selection.Name.Len() > 80 || !FBuildCatalog::Find(Selection.BuildId)) { return Reject(); }
+        FString SheetError;
+        if (!Selection.Sheet.IsEmpty() && !FCharacterCreator::ValidateSheet(FBuildCatalog::Find(Selection.BuildId)->Profile.AdventurerRole, Selection.Sheet, SheetError)) { return Reject(); }
     }
     FExpeditionRun Candidate;
     if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
@@ -697,6 +702,9 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
                 U.FighterSubclass != Build->Profile.FighterSubclass || !FBuildCatalog::ValidResources(U)) { return Reject(); }
             const auto Spawn = Base.Cell;
             Base = Build->Profile; Base.Id = U.Id; Base.Name = U.Name; Base.Cell = Spawn;
+            // Character creator: the saved sheet must match the run's selection and re-derives the same flat bonuses.
+            FString SheetError;
+            if (!U.Sheet.SameAs(P.Party[I].Sheet) || (!U.Sheet.IsEmpty() && !FCharacterCreator::Apply(U.Sheet, Base, SheetError))) { return Reject(); }
             // Names are instance values; detached combat validation bounds them.
             const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
             int32 MinimumLevel = 1;
