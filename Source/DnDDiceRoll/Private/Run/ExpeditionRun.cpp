@@ -345,7 +345,14 @@ bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FStrin
     if (!FLevelRules::CanMulticlass(Hero->AdventurerRole, Role, Scores, Error)) { return false; }
     if (Hero->Level - Hero->SecondaryLevel <= 1) { Error = TEXT("Keep at least one level in the starting class."); return false; }
     const int32 Before = Hero->MaxHP;
+    const bool bFirst = Hero->SecondaryLevel == 0;
     Hero->SecondaryRole = Role; ++Hero->SecondaryLevel; Hero->ChoiceLevel = Hero->Level;
+    if (bFirst) // #79: the new class's level-1 feature arrives ready to use
+    {
+        const auto Feature = FBuildCatalog::SecondaryFeature(Role);
+        if (Feature == ECombatCommandType::SecondWind) { Hero->SecondWindUses = FBuildCatalog::WindCap(*Hero); }
+        else if (Feature != ECombatCommandType::Attack) { Hero->SpellSlots = FBuildCatalog::SlotCap(*Hero); }
+    }
     Hero->MaxHP = FBuildCatalog::MaxHitPoints(*Hero);
     Hero->HP = FMath::Clamp(Hero->HP + Hero->MaxHP - Before, 1, Hero->MaxHP);
     return true;
@@ -677,8 +684,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
-            (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
-            (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
+            (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondaryRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
+            (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SecondaryRole != EAdventurerRole::Cleric && U.SecondaryRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
             (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.Xp != 0 || U.SecondaryLevel != 0 || U.SecondaryRole != EAdventurerRole::None || !U.AsiChoices.IsEmpty() || U.ChoiceLevel != 0 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {

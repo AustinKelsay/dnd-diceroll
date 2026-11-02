@@ -34,6 +34,11 @@ public:
     static bool Create(const FString& BuildId, int32 Id, const FString& Name, FCombatantState& Out);
     static TArray<FAbilityFacts> Abilities(const FCombatantState& Hero);
     static bool HasSpecial(const FCombatantState& Hero, ECombatCommandType Action);
+    /** #79 multiclass: the signature feature a second class grants (Fighter Second Wind, Cleric Cure Wounds, Wizard Magic Missile), or Attack when none is modelled. */
+    static ECombatCommandType SecondaryFeature(EAdventurerRole Role);
+    /** Resource caps and long-rest recovery including a second class's grant. */
+    static int32 WindCap(const FCombatantState& Hero);
+    static int32 SlotCap(const FCombatantState& Hero);
     static FString DisplayName(const FCombatantState& Hero);
     static FString Status(const FCombatantState& Hero);
     static int32 AttackModifier(const FCombatantState& Hero);

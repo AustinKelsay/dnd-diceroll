@@ -80,6 +80,10 @@ bool FLevelProgressionRunTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Cleric level taken"), F->SecondaryLevel, 1);
     TestEqual(TEXT("Max HP: 12 + Cleric average 5 + 2"), F->MaxHP, 19);
     TestEqual(TEXT("Current HP follows the max change"), F->HP, HpBefore - 1);
+    TestTrue(TEXT("Second class grants Cure Wounds"), FBuildCatalog::HasSpecial(*F, ECombatCommandType::CureWounds));
+    TestEqual(TEXT("Cleric 1 brings two slots"), F->SpellSlots, 2);
+    TestTrue(TEXT("Cure Wounds is on the ability bar"), FBuildCatalog::Abilities(*F).ContainsByPredicate([](const auto& A) { return A.Command == ECombatCommandType::CureWounds && A.bResourceAvailable; }));
+    TestTrue(TEXT("Slots stay within the multiclass cap"), FBuildCatalog::ValidResources(*F));
     TestFalse(TEXT("One choice per level"), Run.ChooseMulticlass(1, EAdventurerRole::Cleric, Error));
     TestTrue(TEXT("Multiclassed checkpoint restores"), Restored.Restore(Run.Snapshot(), Error));
     Bad = Run.Snapshot();

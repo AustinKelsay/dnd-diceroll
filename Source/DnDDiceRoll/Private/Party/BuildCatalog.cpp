@@ -196,8 +196,30 @@ bool FBuildCatalog::Create(const FString& BuildId, int32 Id, const FString& Name
     if (!B || Id < 1 || Name.IsEmpty() || Name.Len() > 80) { return false; }
     Out = B->Profile; Out.Id = Id; Out.Name = Name; return true;
 }
+ECombatCommandType FBuildCatalog::SecondaryFeature(EAdventurerRole Role)
+{
+    switch (Role)
+    {
+    case EAdventurerRole::Fighter: return ECombatCommandType::SecondWind;
+    case EAdventurerRole::Cleric: return ECombatCommandType::CureWounds;
+    case EAdventurerRole::Wizard: return ECombatCommandType::MagicMissile;
+    default: return ECombatCommandType::Attack;
+    }
+}
+int32 FBuildCatalog::WindCap(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId); const int32 Own = B ? B->WindCap : 0;
+    return Own == 0 && Hero.SecondaryLevel > 0 && SecondaryFeature(Hero.SecondaryRole) == ECombatCommandType::SecondWind ? 1 : Own;
+}
+int32 FBuildCatalog::SlotCap(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId); const int32 Own = B ? B->SlotCap : 0;
+    const auto F = SecondaryFeature(Hero.SecondaryRole);
+    return Own == 0 && Hero.SecondaryLevel > 0 && (F == ECombatCommandType::CureWounds || F == ECombatCommandType::MagicMissile) ? 2 : Own;
+}
 bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType Action)
 {
+    if (Hero.SecondaryLevel > 0 && Action != ECombatCommandType::Attack && SecondaryFeature(Hero.SecondaryRole) == Action) { return true; }
     if (const auto* B = Find(Hero.BuildId)) { return B->Specials.Contains(Action); }
     // Standalone combat fixtures may intentionally use custom profiles without catalog identity.
     return Hero.BuildId.IsEmpty() && ((Action == ECombatCommandType::SecondWind && Hero.AdventurerRole == EAdventurerRole::Fighter) ||
@@ -231,27 +253,32 @@ int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { r
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);
-    return B && ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= B->WindCap && Hero.SpellSlots >= 0 && Hero.SpellSlots <= B->SlotCap && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
+    return B && ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= WindCap(Hero) && Hero.SpellSlots >= 0 && Hero.SpellSlots <= SlotCap(Hero) && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
 }
 
 TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);
     TArray<FAbilityFacts> Result = B ? B->Abilities : TArray<FAbilityFacts>();
-    if (B && Result.IsEmpty())
+    const auto Special = [&Hero](ECombatCommandType Command)
     {
-        for (const auto Command : B->Specials)
-        {
             FAbilityFacts A; A.Command = Command; A.Description = FCombatBattle::DescribeAction(Command); A.ResourceCost = 1;
             if (Command == ECombatCommandType::SecondWind) { A.Name = TEXT("Second Wind"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Wind"); A.bResourceAvailable = Hero.SecondWindUses > 0; }
             else if (Command == ECombatCommandType::PrecisionStrike) { A.Name = TEXT("Precision Strike"); A.Effect = EAbilityEffect::WeaponAttack; A.ResourceName = TEXT("Maneuver"); A.Target = EAbilityTarget::Enemy; A.Range = Hero.Range; A.bBonus = false; A.bResourceAvailable = Hero.ManeuverUses > 0; }
             else if (Command == ECombatCommandType::CureWounds) { A.Name = TEXT("Cure Wounds"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Ally; A.Range = BuildRules::TouchRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
             else { A.Name = TEXT("Magic Missile"); A.Effect = EAbilityEffect::Missile; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Enemy; A.Range = BuildRules::MissileRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
-            Result.Add(A);
-        }
+            return A;
+    };
+    const ECombatCommandType Extra = Hero.SecondaryLevel > 0 ? SecondaryFeature(Hero.SecondaryRole) : ECombatCommandType::Attack;
+    const bool bExtra = Extra != ECombatCommandType::Attack && !(B && B->Specials.Contains(Extra));
+    if (B && Result.IsEmpty())
+    {
+        for (const auto Command : B->Specials) { Result.Add(Special(Command)); }
+        if (bExtra) { Result.Add(Special(Extra)); }
         return Result;
     }
     for (auto& A : Result) { A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
+    if (bExtra) { Result.Add(Special(Extra)); } // #79: a second class's feature sits beside the kit
     return Result;
 }
 
@@ -268,8 +295,8 @@ FString FBuildCatalog::Status(const FCombatantState& Hero)
     const auto* B = Find(Hero.BuildId); if (!B) { return FString(); }
     FString Text;
     if (B->KitCap) { Text += FString::Printf(TEXT("Kit %d / "), Hero.KitUses); }
-    if (B->WindCap) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
-    if (B->SlotCap) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
+    if (WindCap(Hero)) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
+    if (SlotCap(Hero)) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
     if (B->ManeuverCap) { Text += FString::Printf(TEXT("Maneuvers %d / "), Hero.ManeuverUses); }
     if (B->RageCap) { Text += FString::Printf(TEXT("Rage %d; %d own turn ends / "), Hero.RageUses, Hero.RageTurns); }
     if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Protection -> %d (%d, until next own turn) / "), Hero.GuardTargetId, Hero.GuardAmount > 0 ? Hero.GuardAmount : 3); }
