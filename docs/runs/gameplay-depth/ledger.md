@@ -21,9 +21,13 @@ The parent issue owns the approved program boundaries. Concrete child contracts 
 
 | Slice | Fixed review baseline | Implementation | Verification | Independent review | Remaining |
 | --- | --- | --- | --- | --- | --- |
-| #50 targeting | `df25f32` | Mac source preserved at `661e216`; desktop placement/semantics corrections `6988b7e`, connector clipping `86c86c4`, followed by fixed-text frame exclusions | Historical Mac build passed; latest native suite remains 84/85. Newer Ultra source has no Unreal build/test evidence. Helpers 50/50; portable production geometry/connector checks through `86c86c4` passed. | Rounds 1–3 requested changes; root corrections awaiting fresh review | Allocated native build, targeting/full tests, fresh review, package/render/input acceptance, PR/integration |
+| #50 targeting | `df25f32` | Mac source preserved at `661e216`; desktop placement/semantics `6988b7e`, connector clipping `86c86c4`, fixed-text frame exclusions `4f3035f` | Historical Mac build passed; latest native suite remains 84/85. Newer Ultra source has no Unreal build/test evidence. Helpers 50/50; latest portable geometry/frame checks at `4f3035f` passed strict warnings + ASan/UBSan. | Round 4: no actionable Standards or Spec source findings at `4f3035f`; all prior findings addressed | Exact Linux engine and native allocation; current build, targeting/full tests, package/render/input acceptance, PR/integration |
 
 ## Coordination and evidence
+
+Ultra is now primary. Stability owns #32/#35 and shared engine setup in its separate desktop checkout; it alone allocates native workloads. The latest allocated portable geometry check completed and its slot was released. No Unreal build/editor/package slot is allocated, and the exact Linux engine is not yet available. See the [desktop record](04-ultra-review.md) for current evidence and pending acceptance.
+
+### Historical Mac coordination
 
 The separate stability session owns #32/#35 and `feature/32-renderer-stability` in `t3-cf27a55f`. Coordination was sent before this program's implementation. Its debugger/native workload must not be interrupted or competed with. The original project's editor and shared MCP endpoint remain outside this task's ownership. No editor lifecycle or native app action was performed for this program.
 
