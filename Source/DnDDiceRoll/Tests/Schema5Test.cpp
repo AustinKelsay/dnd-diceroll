@@ -3,6 +3,8 @@
 #include "Combat/CombatBattle.h"
 #include "Run/ExpeditionRun.h"
 #include "Persistence/ExpeditionSave.h"
+#include "Rules/WeaponRules.h"
+#include "Rules/ArmorRules.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -383,6 +385,97 @@ bool FSchema5SlotPoolTest::RunTest(const FString& Parameters)
     FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
     FirstCombatantJson(Root)->RemoveField(TEXT("SlotsByLevel"));
     TestFalse(TEXT("The pool is a required schema 5 field"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5EquipmentTest, "Project.Expedition.Schema5.EquipmentDrivesDamageAndArmorClass",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5EquipmentTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Dice = [](int32 Weapon, bool bShield)
+    {
+        FCombatantState Unit; Unit.MainHand = Weapon; Unit.bShieldEquipped = bShield;
+        int32 Count = 0, Sides = 0; FCombatBattle::WeaponDice(Unit, Count, Sides); return FIntPoint(Count, Sides);
+    };
+    TestEqual(TEXT("No weapon keeps the fixed die"), Dice(-1, false), FIntPoint(1, 6));
+    TestEqual(TEXT("Greatsword 2d6"), Dice(static_cast<int32>(EWeapon::Greatsword), false), FIntPoint(2, 6));
+    TestEqual(TEXT("Longsword two-handed 1d10"), Dice(static_cast<int32>(EWeapon::Longsword), false), FIntPoint(1, 10));
+    TestEqual(TEXT("Longsword with a shield 1d8"), Dice(static_cast<int32>(EWeapon::Longsword), true), FIntPoint(1, 8));
+
+    auto Armored = [](int32 Armor, bool bShield)
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[1].ArmorWorn = Armor; Encounter.Combatants[1].bShieldEquipped = bShield;
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        return Encounter;
+    };
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Plate and shield start"), Battle.Start(Armored(static_cast<int32>(EArmor::Plate), true), 7, Error));
+        TestEqual(TEXT("Plate + shield is AC 20"), Battle.EffectiveArmorClass(20), 20);
+        TestEqual(TEXT("Forecast uses worn armor"), Battle.Forecast(10, ECombatCommandType::Attack, 20).TargetArmorClass, 20);
+        const FCombatResult Swing = Battle.Submit({ECombatCommandType::Attack, 10, {}, 20});
+        TestTrue(TEXT("Attack resolves"), Swing.bAccepted);
+        TestEqual(TEXT("Attack rolls against worn armor"), Swing.TargetArmorClass, 20);
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Leather starts"), Battle.Start(Armored(static_cast<int32>(EArmor::Leather), false), 7, Error));
+        TestEqual(TEXT("Leather adds Dexterity"), Battle.EffectiveArmorClass(20), FArmorRules::ArmorClass(EArmor::Leather, false, Battle.AbilityScores(20).Get(EAbility::Dexterity)));
+        TestTrue(TEXT("Legacy shield"), Battle.Start(Armored(-1, true), 7, Error));
+        TestEqual(TEXT("Legacy AC plus shield"), Battle.EffectiveArmorClass(20), 14);
+    }
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[0].MainHand = static_cast<int32>(EWeapon::Greataxe);
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        bool bChecked = false;
+        for (int32 Seed = 1; Seed < 60 && !bChecked; ++Seed)
+        {
+            FCombatBattle Battle;
+            if (!Battle.Start(Encounter, Seed, Error)) { AddError(Error); break; }
+            const FCombatResult Swing = Battle.Submit({ECombatCommandType::Attack, 10, {}, 20});
+            if (!Swing.bHit) { continue; }
+            bChecked = true;
+            TestEqual(TEXT("Greataxe rolls d12s"), Swing.EffectDice[0].Sides, 12);
+            TestEqual(TEXT("One die, two on a critical"), Swing.EffectDice.Num(), Swing.bCritical ? 2 : 1);
+        }
+        TestTrue(TEXT("Some seed hits"), bChecked);
+    }
+    TArray<TTuple<int32, int32, bool>> Bad = {
+        {static_cast<int32>(EWeapon::Greatsword), -1, true},
+        {static_cast<int32>(EWeapon::Count), -1, false},
+        {-2, -1, false},
+        {-1, static_cast<int32>(EArmor::Shield), false},
+        {-1, static_cast<int32>(EArmor::Count), false}};
+    for (const auto& Gear : Bad)
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        Encounter.Combatants[0].MainHand = Gear.Get<0>(); Encounter.Combatants[0].ArmorWorn = Gear.Get<1>(); Encounter.Combatants[0].bShieldEquipped = Gear.Get<2>();
+        FCombatBattle Battle;
+        TestFalse(TEXT("Unknown or unwieldable equipment rejected"), Battle.Start(Encounter, 7, Error));
+    }
+    {
+        FExpeditionRun Run, Restored; FString Json;
+        FExpeditionSnapshot Snapshot = ActiveRun(Run);
+        FirstParty(Snapshot).MainHand = static_cast<int32>(EWeapon::Longsword);
+        FirstParty(Snapshot).ArmorWorn = static_cast<int32>(EArmor::ChainMail);
+        FirstParty(Snapshot).bShieldEquipped = true;
+        if (!TestTrue(TEXT("Equipment restores"), Restored.Restore(Snapshot, Error))) { AddError(Error); return false; }
+        FExpeditionSaveData Data; Data.Current = Restored.Snapshot();
+        TestTrue(TEXT("Encodes"), FExpeditionSave::Encode(Data, Json, Error));
+        FExpeditionSaveData Loaded;
+        TestTrue(TEXT("Decodes"), FExpeditionSave::Decode(Json, Loaded, Error));
+        TestTrue(TEXT("Equipment survives the JSON round trip"), Same(Loaded.Current, Data.Current));
+        for (const TCHAR* Field : {TEXT("MainHand"), TEXT("ArmorWorn"), TEXT("bShieldEquipped")})
+        {
+            TSharedPtr<FJsonObject> Root;
+            FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
+            FirstCombatantJson(Root)->RemoveField(Field);
+            TestFalse(TEXT("Equipment fields are required"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+        }
+    }
     return !HasAnyErrors();
 }
 #endif

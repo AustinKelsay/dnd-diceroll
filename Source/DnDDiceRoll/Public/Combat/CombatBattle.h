@@ -72,6 +72,12 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 DamageDie = 6;
     UPROPERTY() int32 DamageBonus = 3;
     UPROPERTY() int32 Range = 1;
+    /** Equipment (#69/#70): EWeapon index, or -1 to roll the fixed DamageDie. */
+    UPROPERTY() int32 MainHand = -1;
+    /** EArmor index below Shield, or -1 to use the fixed ArmorClass. */
+    UPROPERTY() int32 ArmorWorn = -1;
+    /** A shield adds its bonus and blocks two-handed weapons. */
+    UPROPERTY() bool bShieldEquipped = false;
     UPROPERTY() int32 Speed = 4;
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
@@ -308,6 +314,10 @@ public:
     static FCombatEncounter TutorialEncounter();
     /** Spends one 1st-level slot from SpellSlots and, when present, the per-level pool. No-op when empty. */
     static void SpendSpellSlot(FCombatantState& Unit);
+    /** Damage dice for one weapon hit before a critical: the MainHand dice (versatile two-handed without a shield), else 1dDamageDie. */
+    static void WeaponDice(const FCombatantState& Unit, int32& OutCount, int32& OutSides);
+    /** AC from worn armor, shield and Dexterity; legacy units use ArmorClass (+2 with a shield). 0 for unknown IDs. */
+    int32 EffectiveArmorClass(int32 Id) const;
 private:
     friend class FPartyContinuity;
     friend class FExpeditionRun;

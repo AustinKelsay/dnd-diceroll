@@ -4,6 +4,8 @@
 #include "Rules/MovementRules.h"
 #include "Rules/OpportunityRules.h"
 #include "Rules/ClassFeatureRules.h"
+#include "Rules/WeaponRules.h"
+#include "Rules/ArmorRules.h"
 
 namespace
 {
@@ -21,6 +23,12 @@ int32 CriticalThreshold(const FCombatantState& Hero)
     return Hero.FighterSubclass == EFighterSubclass::Champion ? 19 : 20;
 }
 const FIntPoint Neighbors[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+int32 WeaponMaxDice(const FCombatantState& Unit)
+{
+    int32 Count = 1, Sides = 0;
+    FCombatBattle::WeaponDice(Unit, Count, Sides);
+    return Count * Sides;
+}
 }
 
 bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString& Error)
@@ -82,6 +90,10 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             { bSlotsOk = Unit.SlotsByLevel[SlotLevel - 1] >= 0 && Unit.SlotsByLevel[SlotLevel - 1] <= FSpellRules::SlotsFor(Unit.AdventurerRole, Unit.Level, SlotLevel); }
             if (!bSlotsOk) { return Reject(TEXT("Spell slots do not match the per-level slot table.")); }
         }
+        if (Unit.MainHand < -1 || Unit.MainHand >= static_cast<int32>(EWeapon::Count) || Unit.ArmorWorn < -1 || Unit.ArmorWorn >= static_cast<int32>(EArmor::Shield) ||
+            (Unit.MainHand >= 0 && !FWeaponRules::CanWield(FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)),
+                FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)).Has(EWeaponProperty::TwoHanded), Unit.bShieldEquipped)))
+        { return Reject(TEXT("Invalid or unwieldable equipment.")); }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
@@ -182,6 +194,22 @@ int32 FCombatBattle::Roll(int32 Sides)
     State.RandomState = Random.GetCurrentSeed();
     if (DiceLog) { DiceLog->Add({Sides, Value}); }
     return Value;
+}
+
+void FCombatBattle::WeaponDice(const FCombatantState& Unit, int32& OutCount, int32& OutSides)
+{
+    OutCount = 1; OutSides = Unit.DamageDie;
+    if (Unit.MainHand < 0 || Unit.MainHand >= static_cast<int32>(EWeapon::Count)) { return; }
+    const FWeaponProfile& Weapon = FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand));
+    FWeaponRules::DamageDice(Weapon, Weapon.Has(EWeaponProperty::TwoHanded) || (Weapon.Has(EWeaponProperty::Versatile) && !Unit.bShieldEquipped), false, OutCount, OutSides);
+}
+
+int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return 0; }
+    if (Unit->ArmorWorn < 0) { return Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
+    return FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
 }
 
 void FCombatBattle::SpendSpellSlot(FCombatantState& Unit)
@@ -549,7 +577,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     {
         Forecast.bAttackRoll = true;
         Forecast.CoverBonus = CoverBonus(ActorId, TargetId);
-        Forecast.TargetArmorClass = Target->ArmorClass + Forecast.CoverBonus;
+        Forecast.TargetArmorClass = EffectiveArmorClass(TargetId) + Forecast.CoverBonus;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
         { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Forecast.TargetArmorClass) ? 1 : 0; }
@@ -561,7 +589,9 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         Forecast.HitChanceOutOf400 = Mode.Mode == ERollMode::Advantage ? 400 - (20 - Hits) * (20 - Hits) :
             Mode.Mode == ERollMode::Disadvantage ? Hits * Hits : Hits * 20;
         Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
-        Effect(1, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        int32 WeaponCount = 1, WeaponSides = 0;
+        WeaponDice(*Actor, WeaponCount, WeaponSides);
+        Effect(WeaponCount, WeaponSides, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
@@ -583,7 +613,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     else
     {
         // A critical doubles the weapon and Sneak Attack dice, so warn on that best case too.
-        const int32 CriticalExtra = Forecast.bAttackRoll ? Actor->DamageDie + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
+        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
         // Defenses apply after every other modifier, so the shown range is the adjusted one.
         Forecast.DamageType = DamageTypeOf(ActorId, Action);
         const FDamageDefenses Defenses = DamageDefenses(TargetId);
@@ -598,7 +628,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     if (!Forecast.bHealing)
     {
         const int32 Protection = ProtectionFor(*Target);
-        const int32 CriticalExtra = Forecast.bAttackRoll ? Actor->DamageDie + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
+        const int32 CriticalExtra = Forecast.bAttackRoll ? WeaponMaxDice(*Actor) + (Forecast.bSneakAttack ? SneakDie : 0) : 0;
         Forecast.bCanDrop = FMath::Max(0, Forecast.MaxAmount + CriticalExtra - Protection) >= Target->HP;
         Forecast.MinAmount = FMath::Max(0, Forecast.MinAmount - Protection);
         Forecast.MaxAmount = FMath::Max(0, Forecast.MaxAmount - Protection);
@@ -826,15 +856,17 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
     Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
     Result.CoverBonus = CoverBonus(ActorId, TargetId);
-    Result.TargetArmorClass = Target->ArmorClass + Result.CoverBonus;
+    Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
     if (Result.bHit)
     {
         DiceLog = &Result.EffectDice;
         // Weapon die, then the critical die; both have the same sides, so totals match earlier builds.
-        Result.Damage = Roll(Actor->DamageDie);
-        if (Result.bCritical) { Result.Damage += Roll(Actor->DamageDie); }
+        int32 DiceCount = 1, DiceSides = 0;
+        WeaponDice(*Actor, DiceCount, DiceSides);
+        Result.Damage = RollDice(DiceCount, DiceSides);
+        if (Result.bCritical) { Result.Damage += RollDice(DiceCount, DiceSides); }
         Result.EffectModifier = FBuildCatalog::AttackModifier(*Actor) + ManeuverBonus;
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
