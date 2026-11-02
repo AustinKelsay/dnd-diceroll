@@ -7,7 +7,7 @@ namespace SpellCatalog
 #include "SpellCatalogData.inl"
     };
     static const TCHAR* ClassNames[] = { TEXT("Bard"), TEXT("Cleric"), TEXT("Druid"), TEXT("Paladin"), TEXT("Ranger"), TEXT("Sorcerer"), TEXT("Warlock"), TEXT("Wizard") };
-    static int32 ByLevel(EAdventurerRole Role, int32 Level, const int32 (&Table)[20]) { return Level < 1 ? 0 : Table[FMath::Min(Level, 20) - 1]; }
+    static int32 ByLevel(EAdventurerRole Role, int32 Level, const int32 (&Values)[20]) { return Level < 1 ? 0 : Values[FMath::Min(Level, 20) - 1]; }
 }
 
 int32 FSpellCatalogRules::Num() { return UE_ARRAY_COUNT(SpellCatalog::Spells); }

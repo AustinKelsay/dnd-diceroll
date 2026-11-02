@@ -24,7 +24,7 @@ bool FClassFeatureRules::HasCunningAction(int32 Level) { return Level >= 2; }
 int32 FClassFeatureRules::ChannelDivinityUses(int32 Level) { return Level >= 18 ? 3 : Level >= 6 ? 2 : Level >= 2 ? 1 : 0; }
 int32 FClassFeatureRules::ArcaneRecoveryLevels(int32 Level) { return Level >= 1 ? (Level + 1) / 2 : 0; }
 
-TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, int32 Level)
+TArray<FClassFeature> FClassFeatureRules::DataFeaturesThrough(EAdventurerRole Role, int32 Level)
 {
     using C = EActionCost; using R = EAdventurerRole;
     struct FRow { R Role; FClassFeature F; };
@@ -66,12 +66,28 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Ranger, {TEXT("Spellcasting"), 2, C::Action, true}}, {R::Ranger, {TEXT("Hunter: Colossus Slayer"), 3, C::Free, false}},
         {R::Ranger, {TEXT("Primeval Awareness"), 3, C::Action, false}},
         {R::Sorcerer, {TEXT("Draconic: Dragon Resilience"), 1, C::Free, false}},
-        {R::Warlock, {TEXT("Fiend: Dark One's Blessing"), 1, C::Free, false}}, {R::Warlock, {TEXT("Eldritch Invocations"), 2, C::Free, false}},
-        {R::Warlock, {TEXT("Pact Boon"), 3, C::Free, false}},
+        // Warlock and Bard follow SRD 5.2.1 (docs/srd-source-notes.md): the Pact Boon is now the Pact of the Blade/Chain/Tome invocations,
+        // the subclass (Fiend Patron, College of Lore) arrives at 3, Expertise at Bard 2, and Song of Rest is gone (SRD 5.1 only).
+        {R::Warlock, {TEXT("Eldritch Invocations"), 1, C::Free, false}}, {R::Warlock, {TEXT("Magical Cunning"), 2, C::Free, false}},
+        {R::Warlock, {TEXT("Fiend: Dark One's Blessing"), 3, C::Free, false}}, {R::Warlock, {TEXT("Fiend: Fiend Spells"), 3, C::Free, false}},
         {R::Druid, {TEXT("Land: Natural Recovery"), 2, C::Free, false}},
-        {R::Bard, {TEXT("Jack of All Trades"), 2, C::Free, false}}, {R::Bard, {TEXT("Song of Rest"), 2, C::Free, false}},
-        {R::Bard, {TEXT("Lore: Cutting Words"), 3, C::Reaction, false}}, {R::Bard, {TEXT("Expertise"), 3, C::Free, false}},
+        {R::Bard, {TEXT("Expertise"), 2, C::Free, false}}, {R::Bard, {TEXT("Jack of All Trades"), 2, C::Free, false}},
+        {R::Bard, {TEXT("Lore: Bonus Proficiencies"), 3, C::Free, false}}, {R::Bard, {TEXT("Lore: Cutting Words"), 3, C::Reaction, false}},
         {R::Bard, {TEXT("Font of Inspiration"), 5, C::Free, false}},
+        // Data past the engine cap (EngineLevelCap = 5): listed by DataFeaturesThrough, never by FeaturesThrough.
+        {R::Warlock, {TEXT("Fiend: Dark One's Own Luck"), 6, C::Free, false}}, {R::Warlock, {TEXT("Ability Score Improvement"), 8, C::Free, false}},
+        {R::Warlock, {TEXT("Contact Patron"), 9, C::Action, false}}, {R::Warlock, {TEXT("Fiend: Fiendish Resilience"), 10, C::Free, false}},
+        {R::Warlock, {TEXT("Mystic Arcanum (level 6 spell)"), 11, C::Action, false}}, {R::Warlock, {TEXT("Ability Score Improvement"), 12, C::Free, false}},
+        {R::Warlock, {TEXT("Mystic Arcanum (level 7 spell)"), 13, C::Action, false}}, {R::Warlock, {TEXT("Fiend: Hurl Through Hell"), 14, C::Free, false}},
+        {R::Warlock, {TEXT("Mystic Arcanum (level 8 spell)"), 15, C::Action, false}}, {R::Warlock, {TEXT("Ability Score Improvement"), 16, C::Free, false}},
+        {R::Warlock, {TEXT("Mystic Arcanum (level 9 spell)"), 17, C::Action, false}}, {R::Warlock, {TEXT("Epic Boon"), 19, C::Free, false}},
+        {R::Warlock, {TEXT("Eldritch Master"), 20, C::Free, false}},
+        {R::Bard, {TEXT("Lore: Magical Discoveries"), 6, C::Free, false}}, {R::Bard, {TEXT("Countercharm"), 7, C::Reaction, false}},
+        {R::Bard, {TEXT("Ability Score Improvement"), 8, C::Free, false}}, {R::Bard, {TEXT("Expertise (two more skills)"), 9, C::Free, false}},
+        {R::Bard, {TEXT("Magical Secrets"), 10, C::Free, false}}, {R::Bard, {TEXT("Ability Score Improvement"), 12, C::Free, false}},
+        {R::Bard, {TEXT("Lore: Peerless Skill"), 14, C::Free, false}}, {R::Bard, {TEXT("Ability Score Improvement"), 16, C::Free, false}},
+        {R::Bard, {TEXT("Superior Inspiration"), 18, C::Free, false}}, {R::Bard, {TEXT("Epic Boon"), 19, C::Free, false}},
+        {R::Bard, {TEXT("Words of Creation"), 20, C::Free, false}},
         {R::Fighter, {TEXT("Ability Score Improvement"), 4, C::Free, true}}, {R::Rogue, {TEXT("Ability Score Improvement"), 4, C::Free, true}},
         {R::Cleric, {TEXT("Ability Score Improvement"), 4, C::Free, true}}, {R::Wizard, {TEXT("Ability Score Improvement"), 4, C::Free, true}},
         {R::Barbarian, {TEXT("Ability Score Improvement"), 4, C::Free, true}}, {R::Monk, {TEXT("Ability Score Improvement"), 4, C::Free, true}},
@@ -80,8 +96,13 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Druid, {TEXT("Ability Score Improvement"), 4, C::Free, true}}, {R::Bard, {TEXT("Ability Score Improvement"), 4, C::Free, true}},
     };
     TArray<FClassFeature> Out;
-    for (const auto& Row : FeatureRows) { if (Row.Role == Role && Row.F.Level <= FMath::Min(Level, 5)) { Out.Add(Row.F); } }
+    for (const auto& Row : FeatureRows) { if (Row.Role == Role && Row.F.Level <= Level) { Out.Add(Row.F); } }
     return Out;
+}
+
+TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, int32 Level)
+{
+    return DataFeaturesThrough(Role, FMath::Min(Level, EngineLevelCap));
 }
 
 FString FClassFeatureRules::FeatureSummary(EAdventurerRole Role, int32 Level)

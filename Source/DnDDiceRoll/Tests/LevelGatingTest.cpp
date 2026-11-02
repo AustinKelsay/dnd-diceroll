@@ -32,11 +32,27 @@ static const FGate Gates[] = {
     {R::Ranger, TEXT("Hunter: Colossus Slayer"), 3}, {R::Ranger, TEXT("Primeval Awareness"), 3}, {R::Ranger, TEXT("Extra Attack"), 5},
     {R::Sorcerer, TEXT("Spellcasting"), 1}, {R::Sorcerer, TEXT("Draconic: Dragon Resilience"), 1}, {R::Sorcerer, TEXT("Sorcery Points"), 2},
     {R::Sorcerer, TEXT("Metamagic: Quickened Spell"), 3}, {R::Sorcerer, TEXT("Counterspell"), 5},
-    {R::Warlock, TEXT("Pact Magic"), 1}, {R::Warlock, TEXT("Fiend: Dark One's Blessing"), 1}, {R::Warlock, TEXT("Eldritch Invocations"), 2}, {R::Warlock, TEXT("Pact Boon"), 3},
+    // Warlock and Bard: SRD 5.2.1 class tables (Pact Boon = Pact invocations; no Song of Rest).
+    {R::Warlock, TEXT("Pact Magic"), 1}, {R::Warlock, TEXT("Eldritch Invocations"), 1}, {R::Warlock, TEXT("Magical Cunning"), 2},
+    {R::Warlock, TEXT("Fiend: Dark One's Blessing"), 3}, {R::Warlock, TEXT("Fiend: Fiend Spells"), 3},
     {R::Druid, TEXT("Spellcasting"), 1}, {R::Druid, TEXT("Wild Shape"), 2}, {R::Druid, TEXT("Land: Natural Recovery"), 2},
-    {R::Bard, TEXT("Spellcasting"), 1}, {R::Bard, TEXT("Bardic Inspiration"), 1}, {R::Bard, TEXT("Jack of All Trades"), 2}, {R::Bard, TEXT("Song of Rest"), 2},
-    {R::Bard, TEXT("Lore: Cutting Words"), 3}, {R::Bard, TEXT("Expertise"), 3}, {R::Bard, TEXT("Font of Inspiration"), 5},
+    {R::Bard, TEXT("Spellcasting"), 1}, {R::Bard, TEXT("Bardic Inspiration"), 1}, {R::Bard, TEXT("Expertise"), 2}, {R::Bard, TEXT("Jack of All Trades"), 2},
+    {R::Bard, TEXT("Lore: Bonus Proficiencies"), 3}, {R::Bard, TEXT("Lore: Cutting Words"), 3}, {R::Bard, TEXT("Font of Inspiration"), 5},
 };
+// SRD 5.2.1 Warlock and Bard features past the engine cap: data only, gated by class level in DataFeaturesThrough.
+static const FGate DataGates[] = {
+    {R::Warlock, TEXT("Fiend: Dark One's Own Luck"), 6}, {R::Warlock, TEXT("Contact Patron"), 9}, {R::Warlock, TEXT("Fiend: Fiendish Resilience"), 10},
+    {R::Warlock, TEXT("Mystic Arcanum (level 6 spell)"), 11}, {R::Warlock, TEXT("Mystic Arcanum (level 7 spell)"), 13}, {R::Warlock, TEXT("Fiend: Hurl Through Hell"), 14},
+    {R::Warlock, TEXT("Mystic Arcanum (level 8 spell)"), 15}, {R::Warlock, TEXT("Mystic Arcanum (level 9 spell)"), 17}, {R::Warlock, TEXT("Epic Boon"), 19},
+    {R::Warlock, TEXT("Eldritch Master"), 20},
+    {R::Bard, TEXT("Lore: Magical Discoveries"), 6}, {R::Bard, TEXT("Countercharm"), 7}, {R::Bard, TEXT("Expertise (two more skills)"), 9},
+    {R::Bard, TEXT("Magical Secrets"), 10}, {R::Bard, TEXT("Lore: Peerless Skill"), 14}, {R::Bard, TEXT("Superior Inspiration"), 18},
+    {R::Bard, TEXT("Epic Boon"), 19}, {R::Bard, TEXT("Words of Creation"), 20},
+};
+bool HasData(EAdventurerRole Role, int32 Level, const TCHAR* Name)
+{
+    return FClassFeatureRules::DataFeaturesThrough(Role, Level).ContainsByPredicate([Name](const FClassFeature& F) { return FCString::Strcmp(F.Name, Name) == 0; });
+}
 bool Has(EAdventurerRole Role, int32 Level, const TCHAR* Name)
 {
     return FClassFeatureRules::FeaturesThrough(Role, Level).ContainsByPredicate([Name](const FClassFeature& F) { return FCString::Strcmp(F.Name, Name) == 0; });
@@ -72,6 +88,31 @@ bool FLevelGatingTest::RunTest(const FString& Parameters)
             TestTrue(FString::Printf(TEXT("%s level is SRD-audited"), F.Name), bAudited);
         }
     }
+    // Past the engine cap: each data feature appears exactly at its SRD level and never in the playable (capped) list.
+    for (const FGate& G : DataGates)
+    {
+        TestFalse(FString::Printf(TEXT("%s (data) not before %d"), G.Name, G.Level), HasData(G.Role, G.Level - 1, G.Name));
+        TestTrue(FString::Printf(TEXT("%s (data) at %d"), G.Name, G.Level), HasData(G.Role, G.Level, G.Name));
+        TestFalse(FString::Printf(TEXT("%s is past the engine cap"), G.Name), Has(G.Role, 20, G.Name));
+        TestTrue(FString::Printf(TEXT("%s is above level %d"), G.Name, FClassFeatureRules::EngineLevelCap), G.Level > FClassFeatureRules::EngineLevelCap);
+    }
+    for (const EAdventurerRole Class : {R::Warlock, R::Bard})
+    {
+        for (const FClassFeature& F : FClassFeatureRules::DataFeaturesThrough(Class, 20))
+        {
+            bool bAudited = FCString::Strcmp(F.Name, TEXT("Ability Score Improvement")) == 0 && (F.Level == 4 || F.Level == 8 || F.Level == 12 || F.Level == 16);
+            for (const FGate& G : Gates) { bAudited |= G.Role == Class && FCString::Strcmp(G.Name, F.Name) == 0 && G.Level == F.Level; }
+            for (const FGate& G : DataGates) { bAudited |= G.Role == Class && FCString::Strcmp(G.Name, F.Name) == 0 && G.Level == F.Level; }
+            TestTrue(FString::Printf(TEXT("%s %d (data) is SRD 5.2.1-audited"), F.Name, F.Level), bAudited);
+        }
+    }
+    TestFalse(TEXT("SRD 5.2.1 has no Song of Rest"), HasData(R::Bard, 20, TEXT("Song of Rest")));
+    TestFalse(TEXT("SRD 5.2.1 has no separate Pact Boon"), HasData(R::Warlock, 20, TEXT("Pact Boon")));
+    // Multiclass-safe: features gate on the class's own level, not total level (Fighter 4 / Warlock 1 has no Magical Cunning).
+    const FCombatantState FW = Hero(R::Fighter, 4, R::Warlock, 1);
+    TestFalse(TEXT("Fighter 4 / Warlock 1: no Magical Cunning"), Has(R::Warlock, FBuildCatalog::ClassLevel(FW, R::Warlock), TEXT("Magical Cunning")));
+    TestFalse(TEXT("Fighter 3 / Bard 2: no Cutting Words"), Has(R::Bard, FBuildCatalog::ClassLevel(Hero(R::Fighter, 3, R::Bard, 2), R::Bard), TEXT("Lore: Cutting Words")));
+    TestTrue(TEXT("Fighter 3 / Bard 2: Jack of All Trades"), Has(R::Bard, FBuildCatalog::ClassLevel(Hero(R::Fighter, 3, R::Bard, 2), R::Bard), TEXT("Jack of All Trades")));
     // Spell slots: no spell level before the class table allows it.
     TestEqual(TEXT("Wizard 4: no 3rd"), FSpellRules::SlotsFor(R::Wizard, 4, 3), 0);
     TestEqual(TEXT("Sorcerer 5: two 3rd"), FSpellRules::SlotsFor(R::Sorcerer, 5, 3), 2);

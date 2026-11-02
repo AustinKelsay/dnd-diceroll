@@ -32,8 +32,12 @@ struct DNDDICEROLL_API FClassFeatureRules
     static int32 ChannelDivinityUses(int32 Level);
     /** Wizard: combined slot levels recovered, half the level rounded up. */
     static int32 ArcaneRecoveryLevels(int32 Level);
-    /** SRD features a class has by this class level (1-5 only), each tagged Action/Bonus/Reaction/Free. */
+    /** Engine cap: heroes advance to level 5; higher-level rows are data only (see DataFeaturesThrough). */
+    static constexpr int32 EngineLevelCap = 5;
+    /** SRD features a class has by this class level (clamped to EngineLevelCap), each tagged Action/Bonus/Reaction/Free. */
     static TArray<FClassFeature> FeaturesThrough(EAdventurerRole Role, int32 Level);
+    /** Uncapped table (levels 1-20 where recorded: Warlock and Bard so far) for data and level-gating tests; not playable past the cap. */
+    static TArray<FClassFeature> DataFeaturesThrough(EAdventurerRole Role, int32 Level);
     /** "Name [Tag]" list joined by ", " for menus. */
     static FString FeatureSummary(EAdventurerRole Role, int32 Level);
 };
