@@ -631,6 +631,7 @@ void AExpeditionHUD::DrawActionBar()
     Chip(FString::Printf(TEXT("Move %d"), Snapshot.MovementLeft), Snapshot.MovementLeft > 0, ChipLeft);
     Chip(TEXT("Action"), Snapshot.bActionAvailable, ChipLeft + 110);
     Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable, ChipLeft + 200);
+    Chip(TEXT("Reaction"), Active->bReactionAvailable, ChipLeft + 330); // #79: opportunity attacks and Shield spend it
 
     const auto Abilities = FBuildCatalog::Abilities(*Active);
     const float Width = 128, Gap = 6, Height = 54;
@@ -677,7 +678,7 @@ void AExpeditionHUD::DrawActionBar()
     if (Active->SpellSlots > 0 || Active->SlotsByLevel.ContainsByPredicate([](int32 N) { return N > 0; }))
     {
         const FString Slot = Player->SlotChoice() ? FString::Printf(TEXT("Spell slot: level %d  (= to change)"), Player->SlotChoice()) : FString(TEXT("Spell slot: lowest open  (= to upcast)"));
-        Button(TEXT("Upcast"), TEXT("Upcast"), Slot, ChipLeft + 330, Chips - 6, 230, 30, true, Player->SlotChoice() > 0, Sky);
+        Button(TEXT("Upcast"), TEXT("Upcast"), Slot, ChipLeft + 440, Chips - 6, 230, 30, true, Player->SlotChoice() > 0, Sky);
     }
     if (const auto* Build = FBuildCatalog::Find(Active->BuildId); Build && Build->SneakDie) { Text(TEXT("Sneak Attack: automatic with adjacent ally"), W * 0.5f, Y - 52, Safe, 0.7f, EAlign::Center); }
     for (const auto& Pair : Hover)
@@ -685,6 +686,7 @@ void AExpeditionHUD::DrawActionBar()
         if (!Pair.Value) { continue; }
         FString Help = FCombatBattle::DescribeAction(Pair.Key);
         for (const auto& A : Abilities) { if (A.Command == Pair.Key) { Help = A.Name + TEXT(": ") + A.Description; } }
+        Help = FCombatBattle::CostPrefix(Pair.Key, *Active, Snapshot.bActionAvailable) + Help; // #79 economy tag
         const float TipWidth = FMath::Min(640.0f, Measure(Help, 0.72f).X + 24);
         Panel(W * 0.5f - TipWidth * 0.5f, Y - 66, TipWidth, 30, Sky, 0.95f, false);
         Text(Help, W * 0.5f, Y - 60, Parchment, 0.72f, EAlign::Center, TipWidth - 16);

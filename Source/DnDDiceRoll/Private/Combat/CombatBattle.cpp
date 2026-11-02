@@ -353,7 +353,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::PrecisionStrike:
-        return TEXT("PRECISION STRIKE | Action + 1 use | attack with +2 hit and +2 damage; no camp refill");
+        return TEXT("PRECISION STRIKE | Free with an attack + 1 use | attack with +2 hit and +2 damage; no camp refill");
     case ECombatCommandType::SecondWind:
         return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+%d healing | target self"), WindDie, FighterLevel);
     case ECombatCommandType::CureWounds:
@@ -409,6 +409,31 @@ FString FCombatBattle::UsageTag(ECombatCommandType Action, const FCombatantState
     default:
         return FString();
     }
+}
+
+EActionCost FCombatBattle::ActionCost(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::Move:
+    case ECombatCommandType::EndTurn:
+    case ECombatCommandType::PrecisionStrike: return EActionCost::Free; // movement, ending a turn; a maneuver rides on an attack
+    case ECombatCommandType::SecondWind:
+    case ECombatCommandType::OffHandAttack: return EActionCost::BonusAction;
+    case ECombatCommandType::Special1:
+    case ECombatCommandType::Special2:
+        for (const auto& A : FBuildCatalog::Abilities(Unit)) { if (A.Command == Action) { return A.Cost(); } }
+        return EActionCost::Action;
+    case ECombatCommandType::Dash: return FStandardActionRules::Cost(EStandardAction::Dash, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
+    case ECombatCommandType::Disengage: return FStandardActionRules::Cost(EStandardAction::Disengage, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
+    case ECombatCommandType::Hide: return FStandardActionRules::Cost(EStandardAction::Hide, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
+    default: return EActionCost::Action;
+    }
+}
+
+FString FCombatBattle::CostPrefix(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable)
+{
+    return FString::Printf(TEXT("[%s] "), FStandardActionRules::CostLabel(ActionCost(Action, Unit, bActionAvailable)));
 }
 
 FString FCombatBattle::SpellTag(ECombatCommandType Action)

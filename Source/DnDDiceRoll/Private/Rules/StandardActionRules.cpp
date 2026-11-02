@@ -7,6 +7,17 @@ bool FStandardActionRules::CanTakeAsBonusAction(EStandardAction Action, EAdventu
     return bCunning && Role == EAdventurerRole::Rogue && Level >= 2;
 }
 
+const TCHAR* FStandardActionRules::CostLabel(EActionCost Cost)
+{
+    switch (Cost)
+    {
+    case EActionCost::BonusAction: return TEXT("Bonus Action");
+    case EActionCost::Reaction: return TEXT("Reaction");
+    case EActionCost::Free: return TEXT("Free");
+    default: return TEXT("Action");
+    }
+}
+
 EActionCost FStandardActionRules::Cost(EStandardAction Action, EAdventurerRole Role, int32 Level, bool bActionAlreadyUsed)
 {
     return bActionAlreadyUsed && CanTakeAsBonusAction(Action, Role, Level) ? EActionCost::BonusAction : EActionCost::Action;

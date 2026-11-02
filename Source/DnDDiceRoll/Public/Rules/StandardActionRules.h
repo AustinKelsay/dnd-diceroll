@@ -6,7 +6,8 @@
 enum class EAdventurerRole : uint8;
 
 enum class EStandardAction : uint8 { Attack, Dash, Disengage, Dodge, Help, Hide };
-enum class EActionCost : uint8 { Action, BonusAction };
+/** SRD action economy tag (#79): every command costs exactly one of these. */
+enum class EActionCost : uint8 { Action, BonusAction, Reaction, Free };
 
 /** SRD standard combat actions, without battle state. */
 struct DNDDICEROLL_API FStandardActionRules
@@ -15,6 +16,8 @@ struct DNDDICEROLL_API FStandardActionRules
     static bool CanTakeAsBonusAction(EStandardAction Action, EAdventurerRole Role, int32 Level);
     static EActionCost Cost(EStandardAction Action, EAdventurerRole Role, int32 Level, bool bActionAlreadyUsed);
     /** Each Dash adds the creature's speed again for this turn. */
+    /** "Action", "Bonus Action", "Reaction" or "Free". */
+    static const TCHAR* CostLabel(EActionCost Cost);
     static int32 MovementBudget(int32 SpeedCells, int32 Dashes);
     /** Dodge: attackers it can see have disadvantage, and it has advantage on Dexterity saves. */
     static ERollMode AttackAgainstDodger(bool bDodging, bool bSeesAttacker);

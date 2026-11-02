@@ -4,6 +4,7 @@
 #include "Rules/ProficiencyRules.h"
 #include "Rules/CheckRules.h"
 #include "Rules/DamageRules.h"
+#include "Rules/StandardActionRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -202,6 +203,8 @@ struct DNDDICEROLL_API FAbilityFacts
     bool bKitResource = false;
     bool bCureDice = false;
     bool bBonus = true;
+    /** #79: the economy tag; always agrees with bBonus. */
+    EActionCost Cost() const { return bBonus ? EActionCost::BonusAction : EActionCost::Action; }
     bool bResourceAvailable = false;
     int32 Range = 0, Amount = 0;
 };
@@ -371,6 +374,10 @@ public:
     static FString CostTag(ECombatCommandType Action);
     /** Remaining-resource text for a unit, e.g. "2 slots left"; empty when the action spends nothing countable. */
     static FString UsageTag(ECombatCommandType Action, const FCombatantState& Unit);
+    /** #79 action economy: what the command costs this unit now (Cunning Action makes Dash/Disengage/Hide a bonus action once the action is spent). */
+    static EActionCost ActionCost(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable = true);
+    /** Tooltip prefix such as "[Bonus Action] ". */
+    static FString CostPrefix(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable = true);
     /** SRD spell facts line (FSpellRules::Summary) for spell actions; empty otherwise. */
     static FString SpellTag(ECombatCommandType Action);
     static FCombatEncounter TutorialEncounter();
