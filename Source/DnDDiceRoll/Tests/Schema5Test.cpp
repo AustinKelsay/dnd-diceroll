@@ -1244,4 +1244,34 @@ bool FSchema5AreaBlockedTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Total cover blocks the cone"), Walled.LegalTargets(10, ECombatCommandType::BurningHands).Contains(20));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5SuperiorityDieTest, "Project.Expedition.Schema5.SuperiorityDieInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5SuperiorityDieTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({1, 0});
+    FCombatantState Master = FBuildCatalog::Find(TEXT("fighter.battle-master"))->Profile;
+    Master.Id = 10; Master.Name = TEXT("Master"); Master.Cell = {0, 0}; Master.InitiativeBonus = 30; Master.Side = ECombatSide::Party;
+    Encounter.Combatants[0] = Master;
+    Encounter.Combatants[1].HP = Encounter.Combatants[1].MaxHP = 200;
+    FString Error;
+    FCombatBattle Plain;
+    TestTrue(TEXT("Starts"), Plain.Start(Encounter, 7, Error));
+    const int32 Base = Plain.Submit({ECombatCommandType::Attack, 10, {}, 20}).AttackBonus;
+    FCombatBattle Flat;
+    TestTrue(TEXT("Starts flat"), Flat.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Default Precision Strike is +2"), Flat.Submit({ECombatCommandType::PrecisionStrike, 10, {}, 20}).AttackBonus, Base + 2);
+    Encounter.bSuperiorityDice = true;
+    TSet<int32> Seen;
+    for (int32 Seed = 1; Seed <= 20; ++Seed)
+    {
+        FCombatBattle Dice;
+        TestTrue(TEXT("Starts dice"), Dice.Start(Encounter, Seed, Error));
+        const FCombatResult R = Dice.Submit({ECombatCommandType::PrecisionStrike, 10, {}, 20});
+        TestTrue(TEXT("Accepted"), R.bAccepted);
+        TestTrue(TEXT("Superiority die is a d8"), R.AttackBonus - Base >= 1 && R.AttackBonus - Base <= 8);
+        Seen.Add(R.AttackBonus - Base);
+    }
+    TestTrue(TEXT("The die varies"), Seen.Num() > 1);
+    return true;
+}
 #endif

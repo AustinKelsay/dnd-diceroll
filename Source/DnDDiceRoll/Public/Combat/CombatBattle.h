@@ -122,6 +122,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bDeathSaves = false;
     /** #63: other creatures in the line of attack give half cover (+2). Off by default to keep seeded results. */
     UPROPERTY() bool bCreatureCover = false;
+    /** #78: Precision Strike adds a rolled superiority die (d8, scaling by level) instead of a flat +2. Off by default. */
+    UPROPERTY() bool bSuperiorityDice = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */

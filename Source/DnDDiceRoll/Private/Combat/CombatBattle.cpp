@@ -16,6 +16,7 @@
 #include "Rules/CantripRules.h"
 #include "Rules/TwoWeaponRules.h"
 #include "Rules/GrappleRules.h"
+#include "Rules/SuperiorityRules.h"
 
 namespace
 {
@@ -1373,7 +1374,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
-        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
+        const int32 ManeuverBonus = Command.Type != ECombatCommandType::PrecisionStrike ? 0 :
+            State.Encounter.bSuperiorityDice ? Roll(FSuperiorityRules::DieSides(Actor->Level)) : PrecisionBonus;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
         Strike(Command.ActorId, Command.TargetId, ManeuverBonus, Result);
         if (State.bActionAvailable)
