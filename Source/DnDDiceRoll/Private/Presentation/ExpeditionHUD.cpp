@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 #include "Rules/CoinRules.h"
 
 namespace
@@ -575,6 +576,8 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
         }
         else { Resources += (Resources.IsEmpty() ? TEXT("") : TEXT(" / ")) + Part; }
     }
+    if (const EFightingStyle Style = FFeatureKit::Style(Unit); Style != EFightingStyle::None) // SRD Fighting Style: passive [Free], Protection uses the reaction
+    { StatusLines.Append(Wrap(FString::Printf(TEXT("Style %s: %s"), FFeatureKit::StyleName(Style), FFeatureKit::StyleEffect(Style)), Width - 24, 0.65f)); }
     Resources += FString::Printf(TEXT(" / Potion %d / Gear +%d"), Unit.Potions, Unit.WeaponRank);
     auto ResourceLines = Wrap(Resources, Width - 24, 0.65f);
     ResourceLines.Append(StatusLines);

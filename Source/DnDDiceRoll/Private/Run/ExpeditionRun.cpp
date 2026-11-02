@@ -1,4 +1,5 @@
 #include "Run/ExpeditionRun.h"
+#include "Party/FeatureKit.h"
 #include "Rules/RestRules.h"
 #include "Rules/MovementRules.h"
 #include "Rules/AbilityRules.h"
@@ -281,6 +282,7 @@ void FExpeditionRun::ResolveCombat()
                 Unit.MaxHP = FBuildCatalog::MaxHitPoints(Unit);
                 Unit.HP += Unit.MaxHP - Before;
                 Unit.DamageBonus = FBuildCatalog::BasicDamage(*FBuildCatalog::Find(Unit.BuildId), Unit.Level);
+                FFeatureKit::Grant(Unit);
             }
         }
     }
@@ -353,6 +355,7 @@ bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FStrin
         if (Feature == ECombatCommandType::SecondWind) { Hero->SecondWindUses = FBuildCatalog::WindCap(*Hero); }
         else if (Feature != ECombatCommandType::Attack) { Hero->SpellSlots = FBuildCatalog::SlotCap(*Hero); }
     }
+    FFeatureKit::Grant(*Hero);
     Hero->MaxHP = FBuildCatalog::MaxHitPoints(*Hero);
     Hero->HP = FMath::Clamp(Hero->HP + Hero->MaxHP - Before, 1, Hero->MaxHP);
     return true;

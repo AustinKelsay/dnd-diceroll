@@ -1,4 +1,5 @@
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 #include "Rules/SuperiorityRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/AbilityRules.h"
@@ -196,7 +197,7 @@ bool FBuildCatalog::Create(const FString& BuildId, int32 Id, const FString& Name
 {
     const auto* B = Find(BuildId);
     if (!B || Id < 1 || Name.IsEmpty() || Name.Len() > 80) { return false; }
-    Out = B->Profile; Out.Id = Id; Out.Name = Name; return true;
+    Out = B->Profile; Out.Id = Id; Out.Name = Name; FFeatureKit::Refill(Out); return true;
 }
 ECombatCommandType FBuildCatalog::SecondaryFeature(EAdventurerRole Role)
 {
@@ -345,6 +346,8 @@ TArray<FString> FBuildCatalog::ProgressSheet(const FCombatantState& Hero)
     FString Features = FClassFeatureRules::FeatureSummary(Hero.AdventurerRole, Primary);
     if (Hero.SecondaryRole != EAdventurerRole::None) { Features += TEXT(", ") + FClassFeatureRules::FeatureSummary(Hero.SecondaryRole, Hero.SecondaryLevel); }
     Lines.Add(TEXT("Features: ") + Features);
+    if (FFeatureKit::Style(Hero) != EFightingStyle::None)
+    { Lines.Add(FString::Printf(TEXT("Fighting Style: %s (%s)"), FFeatureKit::StyleName(FFeatureKit::Style(Hero)), FFeatureKit::StyleEffect(FFeatureKit::Style(Hero)))); }
     const int32 Asi = PendingAsi(Hero);
     if (Asi > 0) { Lines.Add(FString::Printf(TEXT("Ability Score Improvement available (%d)"), Asi)); }
     if (Next && Hero.Xp >= Next) { Lines.Add(TEXT("Level up available")); }

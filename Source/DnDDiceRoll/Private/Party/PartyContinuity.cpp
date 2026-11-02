@@ -1,4 +1,5 @@
 #include "Party/PartyContinuity.h"
+#include "Party/FeatureKit.h"
 #include "Rules/RestRules.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellRules.h"
@@ -90,6 +91,7 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
             { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
         }
         if (!Survivor.SlotsByLevel.IsEmpty()) { Survivor.SlotsByLevel[0] = FMath::Min(Survivor.SpellSlots, FSpellRules::SlotsFor(Survivor.AdventurerRole, Survivor.Level, 1)); Survivor.SpellSlots = Survivor.SlotsByLevel[0]; }
+        if (FBuildCatalog::Find(Survivor.BuildId)) { FFeatureKit::Refill(Survivor); }
     }
     return true;
 }

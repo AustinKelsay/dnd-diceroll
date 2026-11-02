@@ -8,6 +8,7 @@
 #include "Rules/ArmorRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 #include "ExpeditionTestSupport.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
@@ -936,8 +937,8 @@ bool FSchema5CatalogEquipmentTest::RunTest(const FString& Parameters)
         Hero.Cell = {0, 0}; Hero.InitiativeBonus = 30; E.Combatants[0] = Hero;
         FCombatBattle B; FString Error;
         if (!TestTrue(Build.Id + TEXT(" starts"), B.Start(E, 7, Error))) { AddError(Error); continue; }
-        // Equipment replaces the flat AC number without changing it, so balance and old saves are unaffected.
-        TestEqual(Build.Id + TEXT(" keeps its AC"), B.EffectiveArmorClass(10), Build.Profile.ArmorClass);
+        // Equipment replaces the flat AC number without changing it; the SRD Defense fighting style (default for armored fighters) adds 1.
+        TestEqual(Build.Id + TEXT(" keeps its AC"), B.EffectiveArmorClass(10), Build.Profile.ArmorClass + (FFeatureKit::Style(Hero) == EFightingStyle::Defense && Hero.ArmorWorn >= 0 ? 1 : 0));
         if (Hero.ArmorWorn < 0 && !Hero.bShieldEquipped) { continue; }
         ++Equipped;
         const FArmorPenalties P = FArmorRules::Penalties(Hero.AdventurerRole, Hero.ArmorWorn < 0 ? EArmor::None : static_cast<EArmor>(Hero.ArmorWorn), Hero.bShieldEquipped, B.AbilityScores(10).Get(EAbility::Strength));

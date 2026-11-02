@@ -22,6 +22,7 @@
 #include "Rules/LightRules.h"
 #include "Rules/EncumbranceRules.h"
 #include "Rules/CoinRules.h"
+#include "Party/FeatureKit.h"
 
 namespace
 {
@@ -79,14 +80,16 @@ int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit
     const FWeaponProfile* Weapon = MainWeapon(Unit);
     if (!Weapon) { return Unit.AttackBonus; }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
-    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank;
+    const int32 Archery = Weapon->bRanged && FFeatureKit::Style(Unit) == EFightingStyle::Archery ? 2 : 0;
+    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + Archery;
 }
 int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
     if (!Weapon) { return FBuildCatalog::AttackModifier(Unit); }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
-    return FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0);
+    const int32 Dueling = !Weapon->bRanged && !Weapon->Has(EWeaponProperty::TwoHanded) && Unit.OffHand < 0 && FFeatureKit::Style(Unit) == EFightingStyle::Dueling ? 2 : 0;
+    return FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0) + Dueling;
 }
 }
 
@@ -146,6 +149,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         const auto* Build = FBuildCatalog::Find(Unit.BuildId);
         if (Build && !FBuildCatalog::ValidResources(Unit))
         { return Reject(TEXT("Resources do not belong to the selected build.")); }
+        if (!FFeatureKit::Valid(Unit)) { return Reject(TEXT("Class feature state is not available to this hero.")); }
         if (!Unit.SlotsByLevel.IsEmpty())
         {
             bool bSlotsOk = Unit.SlotsByLevel.Num() == FSpellRules::MaxSpellLevel && Unit.SlotsByLevel[0] == Unit.SpellSlots;
@@ -303,7 +307,7 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return 0; }
-    const int32 Spell = Unit->bShielded ? 5 : 0;
+    const int32 Spell = (Unit->bShielded ? 5 : 0) + (Unit->ArmorWorn >= 0 && FFeatureKit::Style(*Unit) == EFightingStyle::Defense ? 1 : 0);
     if (Unit->ArmorWorn < 0) { return Spell + Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
     return Spell + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
 }
@@ -1287,6 +1291,17 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     const FCombatantState* Actor = &Hand;
     FCombatantState* Target = MutableFind(TargetId);
     FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
+    // SRD Protection style: an adjacent ally with a shield spends its reaction to impose disadvantage.
+    for (FCombatantState& Guard : State.Encounter.Combatants)
+    {
+        if (Guard.Id == TargetId || Guard.Side != Target->Side || Guard.Life != ECombatLife::Conscious || IsIncapacitated(Guard) || !Guard.bReactionAvailable ||
+            !Guard.bShieldEquipped || FFeatureKit::Style(Guard) != EFightingStyle::Protection || GridDistance(Guard.Cell, Target->Cell) > 1) { continue; }
+        Guard.bReactionAvailable = false;
+        Mode.Disadvantage.Add(FString::Printf(TEXT("%s Protection (reaction)"), *Guard.Name));
+        Mode.Mode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num());
+        Result.bProtectionReaction = true;
+        break;
+    }
     if (State.Encounter.bInspiration && Mode.Mode != ERollMode::Advantage && MutableFind(ActorId)->bInspired)
     {
         FInspirationRules::Spend(MutableFind(ActorId)->bInspired);
@@ -1324,9 +1339,14 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         // Weapon die, then the critical die; both have the same sides, so totals match earlier builds.
         int32 DiceCount = 1, DiceSides = 0;
         WeaponDice(*Actor, DiceCount, DiceSides);
-        Result.Damage = RollDice(DiceCount, DiceSides);
-        if (Result.bCritical) { Result.Damage += RollDice(DiceCount, DiceSides); }
-        Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), false) : WeaponDamageModifier(*this, *Actor)) + (State.Encounter.bSuperiorityDice ? 0 : ManeuverBonus);
+        // SRD Great Weapon Fighting: reroll each 1 or 2 once on a two-handed (or two-handed versatile) melee weapon.
+        const FWeaponProfile* Held = MainWeapon(*Actor);
+        const bool bGreat = Held && !Held->bRanged && FFeatureKit::Style(*Actor) == EFightingStyle::GreatWeaponFighting &&
+            (Held->Has(EWeaponProperty::TwoHanded) || (Held->Has(EWeaponProperty::Versatile) && !Actor->bShieldEquipped));
+        auto WeaponRoll = [&]() { int32 Sum = 0; for (int32 I = 0; I < DiceCount; ++I) { int32 Die = Roll(DiceSides); if (bGreat && Die <= 2) { Die = Roll(DiceSides); } Sum += Die; } return Sum; };
+        Result.Damage = WeaponRoll();
+        if (Result.bCritical) { Result.Damage += WeaponRoll(); }
+        Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), FFeatureKit::Style(*Actor) == EFightingStyle::TwoWeaponFighting) : WeaponDamageModifier(*this, *Actor)) + (State.Encounter.bSuperiorityDice ? 0 : ManeuverBonus);
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Result.bSneakAttack) { Result.Damage += RollDice((Result.bCritical ? 2 : 1) * SneakDiceCount(State.Encounter, *Actor), SneakDie); State.SneakAttackUsedBy.Add(ActorId); }

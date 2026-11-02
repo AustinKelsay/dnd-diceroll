@@ -87,7 +87,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassFeatureTableTest, "Project.Expedition.Rul
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FClassFeatureTableTest::RunTest(const FString& Parameters)
 {
-    TestEqual(TEXT("Fighter 1"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1), FString(TEXT("Fighting Style [Free]*, Second Wind [Bonus Action]")));
+    TestEqual(TEXT("Fighter 1"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1), FString(TEXT("Fighting Style [Free], Second Wind [Bonus Action]")));
     TestEqual(TEXT("Fighter 5 has five"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 5).Num(), 5);
     TestEqual(TEXT("Level 20 capped at 5"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 20).Num(), 5);
     TestTrue(TEXT("Rage is a bonus action"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Barbarian, 1).Contains(TEXT("Rage [Bonus Action]")));

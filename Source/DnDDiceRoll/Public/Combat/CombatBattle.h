@@ -124,6 +124,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 CarriedPounds = 0;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
+    /** SRD Fighting Style (EFightingStyle in Party/FeatureKit.h; 0 none). Fighter 1, Paladin 2, Ranger 2. */
+    UPROPERTY() int32 FightingStyle = 0;
 };
 
 USTRUCT()
@@ -271,6 +273,8 @@ struct DNDDICEROLL_API FCombatResult
     int32 CoverBonus = 0;
     /** #79: the target cast Shield as a reaction, turning this hit into a miss. */
     bool bShieldReaction = false;
+    /** An adjacent ally used the Protection fighting style (reaction) to impose disadvantage. */
+    bool bProtectionReaction = false;
     /** Damage or healing dice in roll order; the effect is their sum plus EffectModifier. */
     TArray<FDieRoll> EffectDice;
     int32 EffectModifier = 0;
