@@ -25,6 +25,7 @@
 #include "Rules/EncumbranceRules.h"
 #include "Rules/CoinRules.h"
 #include "Party/FeatureKit.h"
+#include "Rules/WarlockRules.h"
 
 namespace
 {
@@ -1903,6 +1904,19 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         // Rolls only while concentrating, so battles without concentration keep their seeded streams.
         if (!FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
             SaveMode(Target, EAbility::Constitution, ERollMode::Normal), State.RandomState).bSuccess) { EndConcentration(Target); }
+    }
+    if (Target.HP == 0 && HPBefore > 0 && Target.Side == ECombatSide::Enemy)
+    {
+        // SRD 5.2.1 Fiend Patron 3, Dark One's Blessing: a fiend warlock who drops a foe, or sees one drop within 10 ft, gains CHA + Warlock level temp HP (min 1).
+        const int32 Killer = ActiveId();
+        for (FCombatantState& Lock : State.Encounter.Combatants)
+        {
+            if (Lock.Side != ECombatSide::Party || Lock.Life != ECombatLife::Conscious || Lock.BuildId != TEXT("warlock.fiend")) { continue; }
+            const int32 WarlockLevel = FBuildCatalog::ClassLevel(Lock, EAdventurerRole::Warlock);
+            const FIntPoint Gap = Lock.Cell - Target.Cell;
+            if (WarlockLevel < 3 || (Lock.Id != Killer && FMath::Max(FMath::Abs(Gap.X), FMath::Abs(Gap.Y)) > 2)) { continue; }
+            Lock.TemporaryHP = FMath::Max(Lock.TemporaryHP, FWarlockRules::DarkOnesBlessing(AbilityModifier(Lock.Id, EAbility::Charisma), WarlockLevel));
+        }
     }
     if (Target.HP == 0)
     {

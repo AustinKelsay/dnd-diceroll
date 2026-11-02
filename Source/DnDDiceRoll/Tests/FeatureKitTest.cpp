@@ -534,6 +534,31 @@ bool FJackOfAllTradesTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDarkOnesBlessingTest, "Project.Expedition.Features.DarkOnesBlessing",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FDarkOnesBlessingTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (int32 L = 1; L <= 5; ++L)
+    {
+        bool bKilled = false;
+        for (int32 Seed = 1; Seed <= 40 && !bKilled; ++Seed)
+        {
+            FCombatEncounter E = Duel(Hero(TEXT("warlock.fiend"), L), {1, 0});
+            E.Combatants[1].HP = 1;
+            FCombatBattle Battle; FString Error;
+            if (!Battle.Start(E, Seed, Error)) { AddError(Error); return true; }
+            Battle.Submit({ECombatCommandType::Attack, 10, {}, 20});
+            if (Battle.Find(20)->HP > 0) { continue; }
+            bKilled = true;
+            const int32 Expected = L >= 3 ? FWarlockRules::DarkOnesBlessing(Battle.AbilityModifier(10, EAbility::Charisma), L) : 0;
+            TestEqual(FString::Printf(TEXT("Warlock %d temp HP on a kill"), L), Battle.Find(10)->TemporaryHP, Expected);
+        }
+        TestTrue(TEXT("Saw a kill"), bKilled);
+    }
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)
