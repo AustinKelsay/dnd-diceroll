@@ -6,6 +6,8 @@ int32 FClassFeatureRules::ActionSurgeUses(int32 Level) { return Level >= 17 ? 2 
 
 int32 FClassFeatureRules::AttacksPerAction(EAdventurerRole Role, int32 Level)
 {
+    // SRD 5.1: Barbarian, Monk, Paladin and Ranger get one Extra Attack at 5; only the Fighter gains more.
+    if (Role == EAdventurerRole::Barbarian || Role == EAdventurerRole::Monk || Role == EAdventurerRole::Paladin || Role == EAdventurerRole::Ranger) { return Level >= 5 ? 2 : 1; }
     if (Role != EAdventurerRole::Fighter) { return 1; }
     return Level >= 20 ? 4 : Level >= 11 ? 3 : Level >= 5 ? 2 : 1;
 }

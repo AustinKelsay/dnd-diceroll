@@ -115,6 +115,8 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() bool bBonusActionAvailable = true;
     /** Extra Attack: weapon attacks left after the Attack action was taken this turn (#61). */
     UPROPERTY() int32 AttacksRemaining = 0;
+    /** Combatants that already dealt Sneak Attack this turn (once per turn, reactions included); cleared at each turn start. */
+    UPROPERTY() TArray<int32> SneakAttackUsedBy;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
 

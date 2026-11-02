@@ -5,6 +5,8 @@
 #include "Persistence/ExpeditionSave.h"
 #include "Rules/WeaponRules.h"
 #include "Rules/ArmorRules.h"
+#include "Rules/ClassFeatureRules.h"
+#include "Party/BuildCatalog.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -565,6 +567,71 @@ bool FSchema5WeaponArmorTest::RunTest(const FString& Parameters)
         FirstCombatantJson(Root)->RemoveField(TEXT("Ammunition"));
         FExpeditionSaveData Loaded;
         TestFalse(TEXT("Ammunition is a required field"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ExtraAttackCatalogSneakTest, "Project.Expedition.Schema5.CatalogExtraAttackAndSneakOncePerTurn",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ExtraAttackCatalogSneakTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    TestEqual(TEXT("Barbarian 5 Extra Attack"), FClassFeatureRules::AttacksPerAction(EAdventurerRole::Barbarian, 5), 2);
+    TestEqual(TEXT("Paladin 4 one attack"), FClassFeatureRules::AttacksPerAction(EAdventurerRole::Paladin, 4), 1);
+    TestEqual(TEXT("Ranger 11 still two"), FClassFeatureRules::AttacksPerAction(EAdventurerRole::Ranger, 11), 2);
+    {
+        FCombatEncounter Encounter = Pair({2, 0});
+        FCombatantState Beast;
+        TestTrue(TEXT("Beast build"), FBuildCatalog::Create(TEXT("barbarian.beast"), 10, TEXT("Claw"), Beast));
+        Beast.Cell = {0, 0}; Beast.InitiativeBonus = 30; Beast.Level = 5;
+        Encounter.Combatants[0] = Beast;
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        FCombatBattle Battle;
+        if (!TestTrue(TEXT("Beast starts"), Battle.Start(Encounter, 7, Error))) { AddError(Error); return false; }
+        TestTrue(TEXT("Rages first"), Battle.Submit({ECombatCommandType::Special1, 10, {}, 10}).bAccepted);
+        TestTrue(TEXT("Long Claw resolves"), Battle.Submit({ECombatCommandType::Special2, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("An action strike banks Extra Attack"), Battle.Snapshot().AttacksRemaining, 1);
+        TestTrue(TEXT("Moves into reach"), Battle.Submit({ECombatCommandType::Move, 10, {1, 0}}).bAccepted);
+        TestTrue(TEXT("Extra weapon attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("Extra attack spent"), Battle.Snapshot().AttacksRemaining, 0);
+    }
+    {
+        FCombatEncounter Encounter = Pair({1, 0});
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Rogue; Encounter.Combatants[0].bSneakWeapon = true;
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        FCombatantState Friend = Encounter.Combatants[0];
+        Friend.Id = 11; Friend.Name = TEXT("Friend"); Friend.Cell = {1, 1}; Friend.AdventurerRole = EAdventurerRole::None; Friend.bSneakWeapon = false; Friend.InitiativeBonus = 0;
+        Encounter.Combatants.Add(Friend);
+        FCombatBattle Battle;
+        TestTrue(TEXT("Rogue starts"), Battle.Start(Encounter, 7, Error));
+        TestTrue(TEXT("Sneak attack forecast"), Battle.Forecast(10, ECombatCommandType::Attack, 20).bSneakAttack);
+        bool bSneaked = false;
+        for (int32 Seed = 1; Seed < 80 && !bSneaked; ++Seed)
+        {
+            TestTrue(TEXT("Rogue restarts"), Battle.Start(Encounter, Seed, Error));
+            bSneaked = Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bSneakAttack;
+        }
+        if (TestTrue(TEXT("Some seed sneak attacks"), bSneaked))
+        {
+            TestTrue(TEXT("Sneak Attack is recorded for the turn"), Battle.Snapshot().SneakAttackUsedBy.Contains(10));
+            TestFalse(TEXT("No second Sneak Attack this turn"), Battle.Forecast(10, ECombatCommandType::Attack, 20).bSneakAttack);
+            FCombatSnapshot Bad = Battle.Snapshot(); Bad.SneakAttackUsedBy.Add(99);
+            FCombatBattle Copy;
+            TestTrue(TEXT("Used sneak restores"), Copy.Restore(Battle.Snapshot(), Error));
+            TestFalse(TEXT("Unknown sneak user rejected"), Copy.Restore(Bad, Error));
+            TestTrue(TEXT("Ends turn"), Battle.Submit({ECombatCommandType::EndTurn, 10}).bAccepted);
+            TestEqual(TEXT("Cleared at the next turn"), Battle.Snapshot().SneakAttackUsedBy.Num(), 0);
+        }
+    }
+    {
+        FExpeditionRun Run; FString Json;
+        FExpeditionSaveData Data; Data.Current = ActiveRun(Run);
+        TestTrue(TEXT("Encodes"), FExpeditionSave::Encode(Data, Json, Error));
+        TSharedPtr<FJsonObject> Root;
+        FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
+        Root->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->RemoveField(TEXT("SneakAttackUsedBy"));
+        FExpeditionSaveData Loaded;
+        TestFalse(TEXT("SneakAttackUsedBy is required"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
     }
     return !HasAnyErrors();
 }

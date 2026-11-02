@@ -553,7 +553,7 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const
 {
     const bool bSneakBuild = FBuildCatalog::Find(Actor.BuildId) ? FBuildCatalog::Find(Actor.BuildId)->SneakDie > 0 : Actor.AdventurerRole == EAdventurerRole::Rogue;
-    if (!bSneakBuild || !Actor.bSneakWeapon) { return false; }
+    if (!bSneakBuild || !Actor.bSneakWeapon || State.SneakAttackUsedBy.Contains(Actor.Id)) { return false; }
     const ERollMode Mode = AttackRollMode(Actor.Id, Target.Id).Mode;
     return Mode != ERollMode::Disadvantage && (Mode == ERollMode::Advantage ||
         State.Encounter.Combatants.ContainsByPredicate([&Actor, &Target](const FCombatantState& Ally)
@@ -840,6 +840,7 @@ void FCombatBattle::BeginTurn()
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
+    State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained);
     const int32 TurnSpeed = FMath::Max(0, Unit->Speed - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
     State.MovementLeft = bHeld ? 0 : TurnSpeed;
@@ -918,7 +919,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         Result.EffectModifier = WeaponDamageModifier(*this, *Actor) + ManeuverBonus;
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
-        if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); }
+        if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
         DiceLog = nullptr;
         ApplyDefenses(Result, ActorId, ECombatCommandType::Attack, TargetId);
         const int32 Protection = ProtectionFor(*Target);
@@ -1021,6 +1022,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             }
             if (A.Effect == EAbilityEffect::Protect || A.Effect == EAbilityEffect::Rage)
             { Result.Effects.Add({Target->Id, A.Effect, A.Effect == EAbilityEffect::Protect ? (A.Amount > 0 ? A.Amount : 3) : 2, Target->Cell}); }
+            // An action strike is this turn's Attack action, so Extra Attack banks the remaining weapon attacks (#61).
+            if (!A.bBonus && State.bActionAvailable && (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Push))
+            { State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(User->AdventurerRole, User->Level) - 1; }
             if (A.bBonus) { State.bBonusActionAvailable = false; } else { State.bActionAvailable = false; }
             Result.Feedback = A.Name + TEXT(": ") + A.Description + FString::Printf(TEXT(" | committed HP loss %d, heal %d, prevented %d"), Result.Damage, Result.Healing, Result.DamagePrevented);
         }
@@ -1327,6 +1331,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed ||
         Snapshot.AttacksRemaining < 0 || Snapshot.AttacksRemaining >= FClassFeatureRules::AttacksPerAction(Active->AdventurerRole, Active->Level) ||
         (Snapshot.AttacksRemaining > 0 && (Snapshot.bActionAvailable || Snapshot.Phase != EBattlePhase::Fighting)) ||
+        Snapshot.SneakAttackUsedBy.ContainsByPredicate([&](int32 SneakId) { return !Candidate.Find(SneakId) || Snapshot.SneakAttackUsedBy.FilterByPredicate([SneakId](int32 Other) { return Other == SneakId; }).Num() > 1; }) ||
         (!Snapshot.bBonusActionAvailable && ([&]()
         {
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
