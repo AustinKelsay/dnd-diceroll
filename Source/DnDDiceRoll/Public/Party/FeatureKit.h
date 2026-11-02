@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::UncannyDodge;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::RecklessAttack;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -49,6 +49,7 @@ public:
     static int32 SorceryCap(const FCombatantState& Hero);
     /** Rogue 5: an automatic reaction that halves the damage of a hit from an attacker the rogue can see (HUD shows it as a passive button). */
     static bool HasUncannyDodge(const FCombatantState& Hero);
+    static bool HasRecklessAttack(const FCombatantState& Hero);
     /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */
     static constexpr int32 FontCost = 2;
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }

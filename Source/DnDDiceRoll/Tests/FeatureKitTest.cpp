@@ -370,4 +370,30 @@ bool FUncannyDodgeTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Reaction spent"), Battle.Find(10)->bReactionAvailable);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRecklessAttackTest, "Project.Expedition.Features.RecklessAttack",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRecklessAttackTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    TestFalse(TEXT("Not at Barbarian 1"), FFeatureKit::HasRecklessAttack(Hero(TEXT("barbarian.berserker"), 1)));
+    FCombatantState Barbarian = Hero(TEXT("barbarian.berserker"), 2);
+    TestTrue(TEXT("Free tag"), FCombatBattle::ActionCost(ECombatCommandType::RecklessAttack, Barbarian) == EActionCost::Free);
+    FString Error; FCombatBattle Battle;
+    if (!TestTrue(TEXT("Start"), Battle.Start(Duel(Barbarian, {1, 0}), 3, Error))) { AddError(Error); return true; }
+    TestTrue(TEXT("Go reckless"), Battle.Submit({ECombatCommandType::RecklessAttack, 10, {}, 10}).bAccepted);
+    TestTrue(TEXT("Flag set"), Battle.Find(10)->bReckless);
+    TestTrue(TEXT("Action untouched"), Battle.Snapshot().bActionAvailable);
+    TestTrue(TEXT("Once per turn"), Battle.LegalTargets(10, ECombatCommandType::RecklessAttack).IsEmpty());
+    TestTrue(TEXT("Own melee attack has advantage"), Battle.Forecast(10, ECombatCommandType::Attack, 20).AdvantageSources.Contains(TEXT("reckless attack")));
+    { FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error)); }
+    TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    TestTrue(TEXT("End turn"), Battle.Submit({ECombatCommandType::EndTurn, 10, {}, INDEX_NONE}).bAccepted);
+    TestTrue(TEXT("Foe gets advantage"), Battle.Forecast(20, ECombatCommandType::Attack, 10).AdvantageSources.Contains(TEXT("target reckless")));
+    TestTrue(TEXT("Foe ends turn"), Battle.Submit({ECombatCommandType::EndTurn, 20, {}, INDEX_NONE}).bAccepted);
+    TestFalse(TEXT("Cleared at the barbarian's next turn"), Battle.Find(10)->bReckless);
+    FCombatantState Bad = Hero(TEXT("wizard.evocation"), 2); Bad.bReckless = true;
+    TestFalse(TEXT("Non-barbarian reckless invalid"), FFeatureKit::Valid(Bad));
+    return true;
+}
 #endif

@@ -393,6 +393,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::RecklessAttack: return TEXT("RECKLESS ATTACK | Free | self | before your first attack this turn: advantage on melee weapon attacks this turn, but attacks against you have advantage until your next turn");
     case ECombatCommandType::UncannyDodge: return TEXT("UNCANNY DODGE | Reaction | self | automatic: when an attacker you can see hits you, halve the damage");
     case ECombatCommandType::FontOfMagic: return TEXT("FONT OF MAGIC | Bonus + 2 sorcery points | self | regain one spell use (a 1st-level slot); points = Sorcerer level per long rest");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
@@ -1194,6 +1195,12 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     if (FStandardActionRules::AttackAgainstDodger(Target->bDodging && !IsIncapacitated(*Target), !Actor->bHidden && HasLineOfSight(Target->Cell, Actor->Cell)) == ERollMode::Disadvantage)
     { Mode.Disadvantage.Add(TEXT("target dodging")); }
     if (Actor->bHidden) { Mode.Advantage.Add(TEXT("attacker hidden")); }
+    if (Target->bReckless) { Mode.Advantage.Add(TEXT("target reckless")); }
+    if (Actor->bReckless && Actor->Id == ActiveId())
+    {
+        const FWeaponProfile* Held = MainWeapon(*Actor);
+        if (Held ? !Held->bRanged : GridDistance(Actor->Cell, Target->Cell) <= 1) { Mode.Advantage.Add(TEXT("reckless attack")); }
+    }
     if (Target->bHidden) { Mode.Disadvantage.Add(TEXT("target hidden")); }
     if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != Actor->Id && Helper->Side == Actor->Side)
     { Mode.Advantage.Add(FString::Printf(TEXT("helped by %s"), *Helper->Name)); }
@@ -1241,7 +1248,7 @@ void FCombatBattle::BeginTurn()
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
-    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false;
+    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false; Unit->bReckless = false;
     for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
@@ -1995,7 +2002,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
-                Unit.bDodging || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
+                Unit.bDodging || Unit.bReckless || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
                 Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
@@ -2034,6 +2041,7 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
     case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
+    case ECombatCommandType::RecklessAttack: return !Unit.bReckless && State.bActionAvailable && !State.bAttackActionTaken && State.AttacksRemaining == 0;
     case ECombatCommandType::FontOfMagic:
     {
         const auto* Build = FBuildCatalog::Find(Unit.BuildId);
@@ -2082,6 +2090,9 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = false;
         User->WildShapeHP = FFeatureKit::WolfHP;
         return FString::Printf(TEXT("%s takes the shape of a wolf (%d form HP, AC %d; %d uses left)."), *User->Name, User->WildShapeHP, FFeatureKit::WolfAC, User->WildShapeUses);
+    case ECombatCommandType::RecklessAttack:
+        User->bReckless = true;
+        return FString::Printf(TEXT("%s attacks recklessly: advantage on melee attacks this turn, attacks against %s have advantage until its next turn."), *User->Name, *User->Name);
     case ECombatCommandType::FontOfMagic:
         User->SorceryPoints -= FFeatureKit::FontCost;
         State.bBonusActionAvailable = false;

@@ -82,6 +82,10 @@ bool FFeatureKit::HasUncannyDodge(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Rogue) >= 5;
 }
+bool FFeatureKit::HasRecklessAttack(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Barbarian) >= 2;
+}
 int32 FFeatureKit::KiCap(const FCombatantState& Hero)
 {
     const int32 Monk = FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk);
@@ -141,6 +145,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::StepOfTheWind: return TEXT("Step of the Wind");
     case ECombatCommandType::FontOfMagic: return TEXT("Font of Magic");
     case ECombatCommandType::UncannyDodge: return TEXT("Uncanny Dodge");
+    case ECombatCommandType::RecklessAttack: return TEXT("Reckless Attack");
     default: return TEXT("Feature");
     }
 }
@@ -148,7 +153,7 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
 {
     switch (Action)
     {
-    case ECombatCommandType::ActionSurge: return EActionCost::Free;
+    case ECombatCommandType::ActionSurge: case ECombatCommandType::RecklessAttack: return EActionCost::Free;
     case ECombatCommandType::UncannyDodge: return EActionCost::Reaction;
     case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
     case ECombatCommandType::FontOfMagic:
@@ -165,6 +170,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
+    case ECombatCommandType::RecklessAttack: return Hero.bReckless ? TEXT("reckless until your turn") : TEXT("free, before attacking");
     case ECombatCommandType::UncannyDodge: return Hero.bReactionAvailable ? TEXT("auto, reaction ready") : TEXT("auto, reaction spent");
     case ECombatCommandType::FontOfMagic: return FString::Printf(TEXT("bonus, %d points"), Hero.SorceryPoints);
     default: return FString();
@@ -177,6 +183,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
+    if (HasRecklessAttack(Hero)) { Out.Add(ECombatCommandType::RecklessAttack); }
     if (HasUncannyDodge(Hero)) { Out.Add(ECombatCommandType::UncannyDodge); }
     if (SorceryCap(Hero)) { Out.Add(ECombatCommandType::FontOfMagic); }
     if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
@@ -192,5 +199,6 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
-        Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero);
+        Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
+        (!Hero.bReckless || HasRecklessAttack(Hero));
 }
