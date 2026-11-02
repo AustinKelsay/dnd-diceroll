@@ -130,3 +130,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #73: spell attacks, save DC, and saving-throw spells
 
 `FSpellcastingRules`: Cleric casts with Wisdom and Wizard with Intelligence. Spell save DC = 8 + proficiency bonus + ability modifier; spell attack bonus = proficiency bonus + ability modifier. Each spell has a delivery: attack roll (Fire Bolt, Guiding Bolt), saving throw (Sacred Flame: DEX, nothing on a success; Burning Hands: DEX, half; Thunderwave: CON, half), automatic (Magic Missile) or healing. Forecast helpers give the exact attack hit chance (natural 1 misses, natural 20 hits) and the target's save-fail chance in 1/400ths with no RNG; half damage rounds down. Battle Magic Missile and Cure Wounds are unchanged; new save spells in battle wait for the per-level slot pool (#71 schema change).
+
+## Issue #72: cantrips and cantrip scaling
+
+`FCantripRules`: cantrips (Fire Bolt, Sacred Flame) cost no slot and scale their dice by character level: x1 at 1-4, x2 at 5-10, x3 at 11-16, x4 at 17+. Fire Bolt is 1d10, then 2d10 at level 5; Sacred Flame 3d8 at 11. Leveled spells report their slot level as cost and do not scale here (see upcasting in #71). The current Wizard basic attack is not converted to Fire Bolt yet: that is an adaptation call for Austin.
