@@ -150,3 +150,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #91: Performance
 
 `FPerformanceRules`: a Charisma (Performance) check at a camp, town or merchant. Success earns the node's base coin and improves the audience's attitude one step (hostile, indifferent, friendly); beating the DC by 10 doubles the coin; missing by 5 or more gets the performer booed (attitude one step worse, no coin). Coin amounts are Expedition tuning for Austin. Paying coin into the run and remembering NPC attitude need saved currency and node state (#84, #39).
+
+## Issue #92: Animal Handling and mounts
+
+`FBeastRules`: only beasts (Wolf DC 13, Giant Rat 10, Boar 13, Brown Bear 15, Giant Spider 15) can be handled, and not once they have been hurt this fight. A Wisdom (Animal Handling) check that misses leaves the beast hostile; meeting the DC calms it (it will not attack unless attacked); beating it by 5 redirects it out of the fight. Rejected attempts roll nothing and keep the RNG. Mounting or dismounting costs half speed; a controlled mount may only Dash, Disengage or Dodge. Beast profiles are not in the current enemy roster and the calmed behaviour needs a saved per-combatant flag (#39); mounts are optional design for Austin.
