@@ -20,7 +20,7 @@ UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 /** SRD conditions tracked in combat. Values are persisted (schema 5); append only. */
 UENUM()
-enum class ECombatCondition : uint8 { Prone, Poisoned, Blinded, Frightened, Restrained, Grappled };
+enum class ECombatCondition : uint8 { Prone, Poisoned, Blinded, Frightened, Restrained, Grappled, Incapacitated, Stunned, Paralyzed, Unconscious };
 
 /** One active condition: its source (INDEX_NONE when none) and remaining owner turns (-1 until removed). */
 USTRUCT()
@@ -363,6 +363,12 @@ private:
     /** Drops conditions whose source or situation no longer supports them. */
     void PruneConditions();
     static bool HasCondition(const FCombatantState& Unit, ECombatCondition Condition);
+    /** SRD: incapacitated, stunned, paralyzed and unconscious creatures take no actions or reactions. */
+    static bool IsIncapacitated(const FCombatantState& Unit);
+    /** Stunned, paralyzed and unconscious creatures cannot move and auto-fail STR and DEX saves. */
+    static bool IsHelpless(const FCombatantState& Unit);
+    ERollMode SaveMode(const FCombatantState& Unit, EAbility Ability, ERollMode Requested) const;
+    ERollMode CheckMode(const FCombatantState& Unit, ERollMode Requested) const;
     void CheckOutcome();
     TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 ProtectionFor(const FCombatantState& Target) const;

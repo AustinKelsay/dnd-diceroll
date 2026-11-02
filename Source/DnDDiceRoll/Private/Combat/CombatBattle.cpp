@@ -176,7 +176,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             const FCombatantState* Source = Condition.SourceId == INDEX_NONE ? nullptr :
                 Encounter.Combatants.FindByPredicate([&Condition](const FCombatantState& S) { return S.Id == Condition.SourceId; });
             const TPair<uint8, int32> Key(static_cast<uint8>(Condition.Condition), Condition.SourceId);
-            if (static_cast<uint8>(Condition.Condition) > static_cast<uint8>(ECombatCondition::Grappled) || Seen.Contains(Key) ||
+            if (static_cast<uint8>(Condition.Condition) > static_cast<uint8>(ECombatCondition::Unconscious) || Seen.Contains(Key) ||
                 (Condition.SourceId != INDEX_NONE && (!Source || Source->Id == Unit.Id || Source->Life == ECombatLife::Dead)) ||
                 (Condition.RoundsLeft != -1 && (Condition.RoundsLeft < 1 || Condition.RoundsLeft > 10)) ||
                 (Condition.Condition == ECombatCondition::Grappled && (!Source || Source->Life != ECombatLife::Conscious || GridDistance(Source->Cell, Unit.Cell) > 1)))
@@ -376,6 +376,13 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
     Buckets.SetNum(1);
     Buckets[0].Add(Unit->Cell);
     Result.Add(Unit->Cell, 0);
+    // SRD Frightened: no willing step closer to a visible source of fear.
+    TArray<FIntPoint> Fears;
+    for (const FCombatCondition& C : Unit->Conditions)
+    {
+        const FCombatantState* Source = Find(C.SourceId);
+        if (C.Condition == ECombatCondition::Frightened && Source && Source->Life == ECombatLife::Conscious && HasLineOfSight(Unit->Cell, Source->Cell)) { Fears.Add(Source->Cell); }
+    }
     for (int32 Cost = 0; Cost < Buckets.Num(); ++Cost)
     {
         for (int32 Index = 0; Index < Buckets[Cost].Num(); ++Index)
@@ -386,6 +393,7 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
             {
                 const FIntPoint Next = Cell + Offset;
                 if (!IsOpen(Next, Id)) { continue; }
+                if (Fears.ContainsByPredicate([&](const FIntPoint& F) { return GridDistance(Next, F) < GridDistance(Cell, F); })) { continue; }
                 const int32 NextCost = Cost + StepCost(Next);
                 if (const int32* Known = Result.Find(Next); Known && *Known <= NextCost) { continue; }
                 Result.Add(Next, NextCost);
@@ -408,7 +416,7 @@ TArray<int32> FCombatBattle::OpportunityThreats(int32 MoverId, const TArray<FInt
     {
         for (const FCombatantState& Reactor : State.Encounter.Combatants)
         {
-            if (Reactor.Side == Mover->Side || Reactor.Life != ECombatLife::Conscious || RangedAttacker(Reactor) || Threats.Contains(Reactor.Id) ||
+            if (Reactor.Side == Mover->Side || Reactor.Life != ECombatLife::Conscious || IsIncapacitated(Reactor) || RangedAttacker(Reactor) || Threats.Contains(Reactor.Id) ||
                 !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), From, Next, false, false, Reactor.bReactionAvailable)) { continue; }
             Threats.Add(Reactor.Id);
         }
@@ -427,6 +435,10 @@ const TCHAR* FCombatBattle::ConditionName(ECombatCondition Condition)
     case ECombatCondition::Frightened: return TEXT("Frightened");
     case ECombatCondition::Restrained: return TEXT("Restrained");
     case ECombatCondition::Grappled: return TEXT("Grappled");
+    case ECombatCondition::Incapacitated: return TEXT("Incapacitated");
+    case ECombatCondition::Stunned: return TEXT("Stunned");
+    case ECombatCondition::Paralyzed: return TEXT("Paralyzed");
+    case ECombatCondition::Unconscious: return TEXT("Unconscious");
     default: return TEXT("Condition");
     }
 }
@@ -510,6 +522,7 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious) { return nullptr; }
     // Extra Attack (#61): after the Attack action, banked attacks still allow Attack and Precision Strike.
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
+    if (IsIncapacitated(*Unit)) { return nullptr; }
     if (!State.bActionAvailable && !(bWeaponAttack && State.AttacksRemaining > 0)) { return nullptr; }
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return nullptr; }
     if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
@@ -802,12 +815,12 @@ FCharacterRules FCombatBattle::Character(int32 Id) const
 
 int32 FCombatBattle::SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const
 {
-    return Find(Id) ? FCheckRules::SuccessOutOf400(Character(Id).SkillBonus(Skill), Dc, Mode) : 0;
+    return Find(Id) ? FCheckRules::SuccessOutOf400(Character(Id).SkillBonus(Skill), Dc, CheckMode(*Find(Id), Mode)) : 0;
 }
 
 int32 FCombatBattle::SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const
 {
-    return Find(Id) ? FCheckRules::SuccessOutOf400(Character(Id).SaveBonus(Ability), Dc, Mode) : 0;
+    return Find(Id) ? (IsHelpless(*Find(Id)) && (Ability == EAbility::Strength || Ability == EAbility::Dexterity) ? 0 : FCheckRules::SuccessOutOf400(Character(Id).SaveBonus(Ability), Dc, SaveMode(*Find(Id), Ability, Mode))) : 0;
 }
 
 namespace
@@ -825,7 +838,7 @@ bool ValidateD20Test(bool bStarted, const FCombatantState* Unit, int32 Dc, FStri
 bool FCombatBattle::SkillCheck(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error)
 {
     if (!ValidateD20Test(bStarted, Find(Id), Dc, Error)) { return false; }
-    Out = FCheckRules::Resolve(Character(Id).SkillBonus(Skill), Dc, Mode, State.RandomState);
+    Out = FCheckRules::Resolve(Character(Id).SkillBonus(Skill), Dc, CheckMode(*Find(Id), Mode), State.RandomState);
     Error.Reset();
     return true;
 }
@@ -833,7 +846,8 @@ bool FCombatBattle::SkillCheck(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode,
 bool FCombatBattle::SavingThrow(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode, FD20Outcome& Out, FString& Error)
 {
     if (!ValidateD20Test(bStarted, Find(Id), Dc, Error)) { return false; }
-    Out = FCheckRules::Resolve(Character(Id).SaveBonus(Ability), Dc, Mode, State.RandomState);
+    Out = FCheckRules::Resolve(Character(Id).SaveBonus(Ability), Dc, SaveMode(*Find(Id), Ability, Mode), State.RandomState);
+    if (IsHelpless(*Find(Id)) && (Ability == EAbility::Strength || Ability == EAbility::Dexterity)) { Out.bSuccess = false; }
     Error.Reset();
     return true;
 }
@@ -922,6 +936,10 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     }
     if (HasCondition(*Target, ECombatCondition::Blinded)) { Mode.Advantage.Add(TEXT("target blinded")); }
     if (HasCondition(*Target, ECombatCondition::Restrained)) { Mode.Advantage.Add(TEXT("target restrained")); }
+    for (const ECombatCondition Helpless : {ECombatCondition::Stunned, ECombatCondition::Paralyzed, ECombatCondition::Unconscious})
+    {
+        if (HasCondition(*Target, Helpless)) { Mode.Advantage.Add(FString::Printf(TEXT("target %s"), *FString(ConditionName(Helpless)).ToLower())); }
+    }
     if (HasCondition(*Target, ECombatCondition::Prone))
     {
         (FMovementRules::AttackAgainstProne(GridDistance(Actor->Cell, Target->Cell)) == ERollMode::Advantage ? Mode.Advantage : Mode.Disadvantage).Add(TEXT("target prone"));
@@ -935,19 +953,54 @@ bool FCombatBattle::HasCondition(const FCombatantState& Unit, ECombatCondition C
     return Unit.Conditions.ContainsByPredicate([Condition](const FCombatCondition& C) { return C.Condition == Condition; });
 }
 
+bool FCombatBattle::IsHelpless(const FCombatantState& Unit)
+{
+    return HasCondition(Unit, ECombatCondition::Stunned) || HasCondition(Unit, ECombatCondition::Paralyzed) || HasCondition(Unit, ECombatCondition::Unconscious);
+}
+
+bool FCombatBattle::IsIncapacitated(const FCombatantState& Unit)
+{
+    return IsHelpless(Unit) || HasCondition(Unit, ECombatCondition::Incapacitated);
+}
+
+ERollMode FCombatBattle::SaveMode(const FCombatantState& Unit, EAbility Ability, ERollMode Requested) const
+{
+    const int32 Adv = Requested == ERollMode::Advantage ? 1 : 0;
+    const int32 Dis = (Requested == ERollMode::Disadvantage ? 1 : 0) + (Ability == EAbility::Dexterity && HasCondition(Unit, ECombatCondition::Restrained) ? 1 : 0);
+    return FCheckRules::CombineMode(Adv, Dis);
+}
+
+ERollMode FCombatBattle::CheckMode(const FCombatantState& Unit, ERollMode Requested) const
+{
+    int32 Dis = Requested == ERollMode::Disadvantage ? 1 : 0;
+    if (HasCondition(Unit, ECombatCondition::Poisoned)) { ++Dis; }
+    for (const FCombatCondition& C : Unit.Conditions)
+    {
+        const FCombatantState* Source = Find(C.SourceId);
+        if (C.Condition == ECombatCondition::Frightened && (!Source || (Source->Life == ECombatLife::Conscious && HasLineOfSight(Unit.Cell, Source->Cell)))) { ++Dis; break; }
+    }
+    return FCheckRules::CombineMode(Requested == ERollMode::Advantage ? 1 : 0, Dis);
+}
+
 void FCombatBattle::BeginTurn()
 {
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
     State.SneakAttackUsedBy.Reset();
-    const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained);
+    const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
     const int32 TurnSpeed = FMath::Max(0, Unit->Speed - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
     State.MovementLeft = bHeld ? 0 : TurnSpeed;
     if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone))
     {
         Unit->Conditions.RemoveAll([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Prone; });
         State.MovementLeft = FMath::Max(0, TurnSpeed - FMovementRules::StandUpCost(Unit->Speed));
+    }
+    if (IsIncapacitated(*Unit))
+    {
+        State.bActionAvailable = false;
+        State.bBonusActionAvailable = false;
+        Unit->bReactionAvailable = false;
     }
 }
 
@@ -962,7 +1015,7 @@ void FCombatBattle::PruneConditions()
             if (C.SourceId == INDEX_NONE) { return !bFighting && C.Condition == ECombatCondition::Prone; }
             const FCombatantState* Source = Find(C.SourceId);
             return !bFighting || !Source || Source->Life == ECombatLife::Dead ||
-                (C.Condition == ECombatCondition::Grappled && (Source->Life != ECombatLife::Conscious || GridDistance(Source->Cell, Unit.Cell) > 1));
+                (C.Condition == ECombatCondition::Grappled && (Source->Life != ECombatLife::Conscious || IsIncapacitated(*Source) || GridDistance(Source->Cell, Unit.Cell) > 1));
         });
     }
 }
@@ -1008,6 +1061,8 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+    // SRD: any hit on a paralyzed or unconscious creature from within 5 feet is a critical hit.
+    if (Result.bHit && GridDistance(Actor->Cell, Target->Cell) <= 1 && (HasCondition(*Target, ECombatCondition::Paralyzed) || HasCondition(*Target, ECombatCondition::Unconscious))) { Result.bCritical = true; }
     if (Result.bHit)
     {
         DiceLog = &Result.EffectDice;
@@ -1051,7 +1106,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             for (FCombatantState& Reactor : State.Encounter.Combatants)
             {
                 if (Moving->Life != ECombatLife::Conscious) { break; }
-                if (Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || RangedAttacker(Reactor) ||
+                if (Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || IsIncapacitated(Reactor) || RangedAttacker(Reactor) ||
                     !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), Moving->Cell, Next, false, false, Reactor.bReactionAvailable)) { continue; }
                 Reactor.bReactionAvailable = false;
                 FCombatResult Swing;
@@ -1225,7 +1280,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FString Lines;
         for (const int32 VictimId : Victims)
         {
-            const bool bSaved = FCheckRules::Resolve(Character(VictimId).SaveBonus(Delivery.SaveAbility), Dc, ERollMode::Normal, State.RandomState).bSuccess;
+            const FCombatantState& Saver = *Find(VictimId);
+            const bool bRolled = FCheckRules::Resolve(Character(VictimId).SaveBonus(Delivery.SaveAbility), Dc, SaveMode(Saver, Delivery.SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
+            const bool bSaved = bRolled && !(IsHelpless(Saver) && (Delivery.SaveAbility == EAbility::Strength || Delivery.SaveAbility == EAbility::Dexterity));
             FCombatResult Part;
             Part.Damage = FSpellcastingRules::DamageAfterSave(Rolled, bSaved, Delivery.bHalfOnSave);
             ApplyDefenses(Part, User->Id, Command.Type, VictimId);
@@ -1260,7 +1317,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         const FCharacterRules Defender = Character(Command.TargetId);
         const int32 ActorModifier = Character(Command.ActorId).SkillBonus(ESkill::Athletics);
         const int32 DefenderModifier = FMath::Max(Defender.SkillBonus(ESkill::Athletics), Defender.SkillBonus(ESkill::Acrobatics));
-        const int32 ActorRoll = Roll(20), DefenderRoll = Roll(20);
+        // Contests are ability checks: poisoned or frightened sides roll twice and keep the lower die.
+        auto ContestDie = [this](const FCombatantState& Unit) { const int32 First = Roll(20); return CheckMode(Unit, ERollMode::Normal) == ERollMode::Disadvantage ? FMath::Min(First, Roll(20)) : First; };
+        const int32 ActorRoll = ContestDie(*Actor);
+        const int32 DefenderRoll = ContestDie(*Find(Command.TargetId));
         const bool bWon = FCheckRules::ActorWinsContest(ActorRoll + ActorModifier, DefenderRoll + DefenderModifier);
         FCombatantState* Victim = MutableFind(Command.TargetId);
         if (bWon)
@@ -1391,10 +1451,10 @@ void FCombatBattle::AdvanceTurn()
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
-            BeginTurn();
             State.bActionAvailable = true;
             State.AttacksRemaining = 0;
             State.bBonusActionAvailable = true;
+            BeginTurn();
             return;
         }
     }

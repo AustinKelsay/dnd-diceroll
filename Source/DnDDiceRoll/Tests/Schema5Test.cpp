@@ -815,4 +815,75 @@ bool FSchema5ShoveGrappleTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Grapple still allowed"), Already.LegalTargets(10, ECombatCommandType::Grapple).Contains(20));
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5SrdConditionEffectsTest, "Project.Expedition.Schema5.SrdConditionEffects",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5SrdConditionEffectsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Begin = [&Error](const FCombatEncounter& E, int32 Seed, FCombatBattle& B) { const bool bOk = B.Start(E, Seed, Error); return bOk; };
+    TestEqual(TEXT("New condition names"), FString(FCombatBattle::ConditionName(ECombatCondition::Paralyzed)), FString(TEXT("Paralyzed")));
+    {
+        FCombatEncounter E = Pair({1, 0});
+        E.Combatants[1].Conditions = {Cond(ECombatCondition::Stunned)};
+        FCombatBattle B; if (!TestTrue(TEXT("Stunned foe starts"), Begin(E, 3, B))) { AddError(Error); return false; }
+        TestTrue(TEXT("Attacks on a stunned target have advantage"), B.AttackRollMode(10, 20).Mode == ERollMode::Advantage);
+        TestEqual(TEXT("Stunned foe cannot make opportunity attacks"), B.OpportunityThreats(10, {{0, 1}, {0, 2}}).Num(), 0);
+        FD20Outcome Out;
+        TestTrue(TEXT("Save rolls"), B.SavingThrow(20, EAbility::Dexterity, 1, ERollMode::Normal, Out, Error));
+        TestFalse(TEXT("Stunned auto-fails DEX saves"), Out.bSuccess);
+        TestTrue(TEXT("CON save still rolls at DC 1"), B.SavingThrow(20, EAbility::Constitution, 1, ERollMode::Normal, Out, Error) && Out.bSuccess);
+    }
+    int32 Hits = 0;
+    for (int32 Seed = 1; Seed <= 30; ++Seed)
+    {
+        FCombatEncounter E = Pair({1, 0});
+        E.Combatants[1].Conditions = {Cond(ECombatCondition::Paralyzed)};
+        FCombatBattle B; Begin(E, Seed, B);
+        FCombatCommand Attack; Attack.ActorId = 10; Attack.TargetId = 20; Attack.Type = ECombatCommandType::Attack;
+        const FCombatResult R = B.Submit(Attack);
+        if (R.bHit) { ++Hits; TestTrue(TEXT("Hits within 5 ft of a paralyzed target are critical"), R.bCritical); }
+    }
+    TestTrue(TEXT("Some attacks hit"), Hits > 0);
+    {
+        FCombatEncounter E = Pair({3, 0});
+        E.Combatants[0].Conditions = {Cond(ECombatCondition::Stunned)};
+        FCombatBattle B; Begin(E, 1, B);
+        TestEqual(TEXT("Stunned: no movement"), B.Snapshot().MovementLeft, 0);
+        TestFalse(TEXT("Stunned: no action"), B.Snapshot().bActionAvailable);
+        TestFalse(TEXT("Stunned: no reaction"), B.Find(10)->bReactionAvailable);
+    }
+    {
+        FCombatEncounter E = Pair({3, 0});
+        E.Combatants[0].Conditions = {Cond(ECombatCondition::Incapacitated)};
+        FCombatBattle B; Begin(E, 1, B);
+        TestFalse(TEXT("Incapacitated: no action"), B.Snapshot().bActionAvailable);
+        TestTrue(TEXT("Incapacitated alone can still move"), B.Snapshot().MovementLeft > 0);
+    }
+    {
+        FCombatEncounter Plain = Pair({3, 0}), Bound = Pair({3, 0});
+        Bound.Combatants[0].Conditions = {Cond(ECombatCondition::Restrained), Cond(ECombatCondition::Poisoned)};
+        FCombatBattle A, B; Begin(Plain, 1, A); Begin(Bound, 1, B);
+        TestTrue(TEXT("Restrained: DEX save disadvantage"), B.SavingThrowChance(10, EAbility::Dexterity, 12, ERollMode::Normal) < A.SavingThrowChance(10, EAbility::Dexterity, 12, ERollMode::Normal));
+        TestEqual(TEXT("Restrained: other saves normal"), B.SavingThrowChance(10, EAbility::Wisdom, 12, ERollMode::Normal), A.SavingThrowChance(10, EAbility::Wisdom, 12, ERollMode::Normal));
+        TestTrue(TEXT("Poisoned: ability check disadvantage"), B.SkillCheckChance(10, ESkill::Athletics, 12, ERollMode::Normal) < A.SkillCheckChance(10, ESkill::Athletics, 12, ERollMode::Normal));
+    }
+    {
+        FCombatEncounter E = Pair({3, 0});
+        E.Combatants[0].Conditions = {Cond(ECombatCondition::Frightened, 20)};
+        FCombatBattle B; Begin(E, 1, B);
+        FCombatCommand Move; Move.ActorId = 10; Move.Type = ECombatCommandType::Move; Move.Destination = {1, 0};
+        TestFalse(TEXT("Frightened: cannot move closer to the source"), B.Submit(Move).bAccepted);
+        TestFalse(TEXT("Closer cell is not offered"), B.LegalMoves(10).Contains(FIntPoint(1, 0)));
+        Move.Destination = {0, 1};
+        TestTrue(TEXT("Frightened: may move without closing in"), B.Submit(Move).bAccepted);
+    }
+    {
+        FCombatEncounter E = Pair({1, 0});
+        E.Combatants[0].Conditions = {Cond(ECombatCondition::Stunned)};
+        E.Combatants[1].Conditions = {Cond(ECombatCondition::Grappled, 10)};
+        FCombatBattle B; Begin(E, 1, B);
+        TestFalse(TEXT("Grapple ends when the grappler is incapacitated"), Has(B.Find(20), ECombatCondition::Grappled));
+    }
+    return !HasAnyErrors();
+}
 #endif
