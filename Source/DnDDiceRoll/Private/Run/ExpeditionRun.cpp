@@ -9,6 +9,7 @@
 #include "Rules/SocialRules.h"
 #include "Rules/CoinRules.h"
 #include "Rules/HazardRules.h"
+#include "Rules/GroupCheckRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -329,6 +330,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::PickLock: return TEXT("Pick the strongbox");
     case ECampActivity::Parley: return TEXT("Parley with traders");
     case ECampActivity::BuyPotion: return TEXT("Buy a potion");
+    case ECampActivity::Forage: return TEXT("Forage together");
     default: return TEXT("Unknown");
     }
 }
@@ -381,6 +383,23 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         State.Coins -= Price;
         ++Record.BonusPotions;
         Outcome = FString::Printf(TEXT("%s haggles (%d) and buys a healing potion for %s."), *Hero->Name, Total, *FCoinRules::Format(Price));
+        break;
+    }
+    case ECampActivity::Forage:
+    {
+        // #86: every living survivor rolls Survival (DC 12); half or more succeeding finds healing herbs.
+        TArray<FGroupMember> Group;
+        for (const FCombatantState& Unit : Combat.Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious) { continue; }
+            FGroupMember Member;
+            Member.Modifier = Combat.Character(Unit.Id).SkillBonus(ESkill::Survival);
+            Group.Add(Member);
+        }
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), GetTypeHash(2000 + static_cast<int32>(Activity))) & 0x7fffffff) | 1;
+        const FGroupCheckOutcome Result = FGroupCheckRules::Resolve(Group, 12, Dice);
+        if (Result.bSuccess) { ++Record.BonusPotions; }
+        Outcome = FString::Printf(TEXT("The party forages (%d of %d pass DC 12): %s"), Result.Successes, Group.Num(), Result.bSuccess ? TEXT("healing herbs, +1 potion in the loot.") : TEXT("nothing useful."));
         break;
     }
     default: break;

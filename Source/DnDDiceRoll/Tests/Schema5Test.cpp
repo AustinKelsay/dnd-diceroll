@@ -1444,4 +1444,26 @@ bool FSchema5RouteHazardTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some hazard hurt the party"), bHurt);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampForageTest, "Project.Expedition.Schema5.CampForage",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampForageTest::RunTest(const FString& Parameters)
+{
+    bool bFound = false, bEmpty = false;
+    for (int32 Seed = 1; Seed < 150 && !(bFound && bEmpty); ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        TestTrue(TEXT("Forage"), Run.CampActivity(Hero, ECampActivity::Forage, Outcome, Error));
+        TestTrue(TEXT("Group result described"), Outcome.Contains(TEXT("pass DC 12")));
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::Forage, Outcome, Error));
+        (Run.Progress().History.Last().BonusPotions == 1 ? bFound : bEmpty) = true;
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Some group finds herbs"), bFound);
+    TestTrue(TEXT("Some group finds nothing"), bEmpty);
+    return true;
+}
 #endif
