@@ -1,5 +1,6 @@
 #include "Rules/SpellRules.h"
 #include "Combat/CombatBattle.h"
+#include "Rules/LevelRules.h"
 
 namespace SpellTable
 {
@@ -31,8 +32,23 @@ const TCHAR* FSpellRules::SchoolName(ESpellSchool School)
 
 int32 FSpellRules::SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel)
 {
-    if ((Role != EAdventurerRole::Cleric && Role != EAdventurerRole::Wizard) || CharacterLevel < 1 || SpellLevel < 1 || SpellLevel > MaxSpellLevel) { return 0; }
-    return SpellTable::FullCaster[FMath::Min(CharacterLevel, 5) - 1][SpellLevel - 1];
+    if (CharacterLevel < 1 || SpellLevel < 1 || SpellLevel > MaxSpellLevel) { return 0; }
+    switch (Role)
+    {
+    case EAdventurerRole::Bard: case EAdventurerRole::Cleric: case EAdventurerRole::Druid: case EAdventurerRole::Sorcerer: case EAdventurerRole::Wizard:
+        return SpellTable::FullCaster[FMath::Min(CharacterLevel, 5) - 1][SpellLevel - 1];
+    case EAdventurerRole::Paladin: case EAdventurerRole::Ranger:
+        // SRD half casters: no Spellcasting before class level 2; their table equals the full-caster row at ceil(level / 2).
+        return CharacterLevel < 2 ? 0 : SpellTable::FullCaster[FMath::Min((CharacterLevel + 1) / 2, 5) - 1][SpellLevel - 1];
+    case EAdventurerRole::Warlock:
+    {
+        // SRD Pact Magic (levels 1-5): 1/2/2/2/2 slots, all of slot level 1/1/2/2/3.
+        const int32 PactLevel = CharacterLevel >= 5 ? 3 : CharacterLevel >= 3 ? 2 : 1;
+        return SpellLevel == PactLevel ? (CharacterLevel >= 2 ? 2 : 1) : 0;
+    }
+    default:
+        return 0;
+    }
 }
 
 int32 FSpellRules::MaxSlotLevel(EAdventurerRole Role, int32 CharacterLevel)
@@ -40,6 +56,19 @@ int32 FSpellRules::MaxSlotLevel(EAdventurerRole Role, int32 CharacterLevel)
     int32 Best = 0;
     for (int32 SpellLevel = 1; SpellLevel <= MaxSpellLevel; ++SpellLevel) { if (SlotsFor(Role, CharacterLevel, SpellLevel) > 0) { Best = SpellLevel; } }
     return Best;
+}
+
+int32 FSpellRules::HeroSlotsFor(EAdventurerRole Primary, int32 PrimaryLevels, EAdventurerRole Secondary, int32 SecondaryLevels, int32 SpellLevel)
+{
+    // SRD multiclass spellcaster: with Spellcasting from two classes, add caster levels and read the multiclass table;
+    // otherwise the one casting class uses its own table at its own class level. Pact Magic stays separate.
+    const bool bPrimary = Primary != EAdventurerRole::Warlock && SlotsFor(Primary, PrimaryLevels, 1) > 0;
+    const bool bSecondary = Secondary != EAdventurerRole::Warlock && SlotsFor(Secondary, SecondaryLevels, 1) > 0;
+    if (bPrimary && bSecondary)
+    {
+        return SpellLevel > MaxSpellLevel ? 0 : FLevelRules::MulticlassSlots(FLevelRules::CasterLevel(Primary, PrimaryLevels) + FLevelRules::CasterLevel(Secondary, SecondaryLevels), SpellLevel);
+    }
+    return bSecondary ? SlotsFor(Secondary, SecondaryLevels, SpellLevel) : SlotsFor(Primary, PrimaryLevels, SpellLevel);
 }
 
 bool FSpellRules::OnClassList(EAdventurerRole Role, ESpell Spell)

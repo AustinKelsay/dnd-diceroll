@@ -90,7 +90,7 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
             if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
             { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
         }
-        if (!Survivor.SlotsByLevel.IsEmpty()) { Survivor.SlotsByLevel[0] = FMath::Min(Survivor.SpellSlots, FSpellRules::SlotsFor(Survivor.AdventurerRole, Survivor.Level, 1)); Survivor.SpellSlots = Survivor.SlotsByLevel[0]; }
+        if (!Survivor.SlotsByLevel.IsEmpty()) { Survivor.SlotsByLevel[0] = FMath::Min(Survivor.SpellSlots, FBuildCatalog::SlotMax(Survivor, 1)); Survivor.SpellSlots = Survivor.SlotsByLevel[0]; }
         if (FBuildCatalog::Find(Survivor.BuildId)) { FFeatureKit::Refill(Survivor); }
     }
     return true;

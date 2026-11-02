@@ -1,6 +1,7 @@
 #include "Party/BuildCatalog.h"
 #include "Party/FeatureKit.h"
 #include "Rules/SuperiorityRules.h"
+#include "Rules/SpellRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/ArmorRules.h"
@@ -258,6 +259,10 @@ int32 FBuildCatalog::ManeuverCap(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId); if (!B || !B->ManeuverCap) { return 0; }
     return FMath::Max(B->ManeuverCap, FSuperiorityRules::DicePerRest(ClassLevel(Hero, EAdventurerRole::Fighter))); // SRD: 4 dice from Fighter 3
+}
+int32 FBuildCatalog::SlotMax(const FCombatantState& Hero, int32 SpellLevel)
+{
+    return FSpellRules::HeroSlotsFor(Hero.AdventurerRole, Hero.Level - Hero.SecondaryLevel, Hero.SecondaryRole, Hero.SecondaryLevel, SpellLevel);
 }
 int32 FBuildCatalog::ClassLevel(const FCombatantState& Hero, EAdventurerRole Role)
 {

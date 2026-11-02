@@ -167,7 +167,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         {
             bool bSlotsOk = Unit.SlotsByLevel.Num() == FSpellRules::MaxSpellLevel && Unit.SlotsByLevel[0] == Unit.SpellSlots;
             for (int32 SlotLevel = 1; bSlotsOk && SlotLevel <= Unit.SlotsByLevel.Num(); ++SlotLevel)
-            { bSlotsOk = Unit.SlotsByLevel[SlotLevel - 1] >= 0 && Unit.SlotsByLevel[SlotLevel - 1] <= FSpellRules::SlotsFor(Unit.AdventurerRole, Unit.Level, SlotLevel); }
+            { bSlotsOk = Unit.SlotsByLevel[SlotLevel - 1] >= 0 && Unit.SlotsByLevel[SlotLevel - 1] <= FBuildCatalog::SlotMax(Unit, SlotLevel); }
             if (!bSlotsOk) { return Reject(TEXT("Spell slots do not match the per-level slot table.")); }
         }
         if (Unit.MainHand < -1 || Unit.MainHand >= static_cast<int32>(EWeapon::Count) || Unit.ArmorWorn < -1 || Unit.ArmorWorn >= static_cast<int32>(EArmor::Shield) ||

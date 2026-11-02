@@ -88,8 +88,8 @@ int32 FFeatureKit::ArcaneRecover(FCombatantState& Hero)
         // Real slots: highest levels first (SRD: none of 6th level or higher), level 1 within the build's slot cap.
         for (int32 Level = FMath::Min(5, Budget); Level >= 1; --Level)
         {
-            const int32 Cap = Level == 1 ? FMath::Min(FBuildCatalog::SlotCap(Hero), Hero.SlotsByLevel.IsEmpty() ? 2 : FMath::Min(2, FSpellRules::SlotsFor(Hero.AdventurerRole, Hero.Level, 1)))
-                : Hero.SlotsByLevel.IsValidIndex(Level - 1) ? FSpellRules::SlotsFor(Hero.AdventurerRole, Hero.Level, Level) : 0;
+            const int32 Cap = Level == 1 ? FMath::Min(FBuildCatalog::SlotCap(Hero), Hero.SlotsByLevel.IsEmpty() ? 2 : FMath::Min(2, FBuildCatalog::SlotMax(Hero, 1)))
+                : Hero.SlotsByLevel.IsValidIndex(Level - 1) ? FBuildCatalog::SlotMax(Hero, Level) : 0;
             if (Cap <= 0 || (Level > 1 && !Hero.SlotsByLevel.IsValidIndex(Level - 1))) { continue; }
             while (Budget >= Level)
             {

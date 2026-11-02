@@ -41,8 +41,10 @@ struct DNDDICEROLL_API FSpellRules
     static constexpr int32 MaxSpellLevel = 3;
     static const FSpellFacts& Facts(ESpell Spell);
     static const TCHAR* SchoolName(ESpellSchool School);
-    /** Full-caster slot table (Cleric, Wizard) for character levels 1-5; others have none. */
+    /** SRD single-class slot table for class levels 1-5: full casters, half casters (Paladin, Ranger from 2), Warlock pact slots. */
     static int32 SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel);
+    /** Slots for a (possibly multiclassed) hero: class levels, not character level, decide the table (SRD multiclassing). */
+    static int32 HeroSlotsFor(EAdventurerRole Primary, int32 PrimaryLevels, EAdventurerRole Secondary, int32 SecondaryLevels, int32 SpellLevel);
     /** Highest spell level with a slot; 0 when none. */
     static int32 MaxSlotLevel(EAdventurerRole Role, int32 CharacterLevel);
     static bool OnClassList(EAdventurerRole Role, ESpell Spell);

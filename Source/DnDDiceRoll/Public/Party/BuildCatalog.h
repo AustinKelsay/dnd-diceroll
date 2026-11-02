@@ -56,6 +56,8 @@ public:
     static TArray<FString> ProgressSheet(const FCombatantState& Hero);
     /** Levels the hero has in Role across both classes. */
     static int32 ClassLevel(const FCombatantState& Hero, EAdventurerRole Role);
+    /** SRD slot maximum for this hero at SpellLevel, using class levels and the multiclass spellcaster table. */
+    static int32 SlotMax(const FCombatantState& Hero, int32 SpellLevel);
     static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);
 };
