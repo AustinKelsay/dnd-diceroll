@@ -30,3 +30,21 @@ SpellCoverageTest floors: {20, 40, 39, 25, 24}. Exceptions are the Kind=Exceptio
 - No live 4th-level cast: EngineLevelCap = 5, and Start rejects a 4th-level slot. 4th-level scaling is tested in the rules library only.
 - Still exceptions: exploration, social and ritual spells, plus Polymorph, Wind Wall, Gaseous Form, Alter Self, Dragon's Breath and Goodberry (reasons in the table).
 - The VFX hook has no art and no Blueprint/UObject delegate wrapper yet. `OnSpellEvent` is a C++ `TFunction`.
+
+## Character creator — LOCAL PROPOSAL, outside the approved CONTEXT.md scope (2026-11-02)
+Handoff:
+- **Commits:** 47317f2 point buy; 92d6360 class tables; ab25857 model, hero sheet, roster and expedition integration; f8a62f3 title-screen overlay (keyboard and mouse, watercolour magic accents); 4df9f37 capture manifest; this commit adds the docs. 256/256 `Project.Expedition.` tests pass.
+- **Where to look:**
+  - Model and validation: `Party/CharacterCreator.*`.
+  - Overlay model: `Party/CreatorScreen.*`.
+  - Overlay drawing: `AExpeditionHUD::DrawCreator`.
+  - Input and wiring: `AExpeditionPlayerController` (`InputKey`, `RouteCreatorKey`, `OpenCreator`/`FinishCreator`, `TickCreatorTrial`).
+  - Rules, controls, save notes and risks: the "Character creator" section of rules-reference.md.
+- **Save:** optional `Sheet` within schema 5. Older v5 files load as prebuilts. Builds that predate the creator reject new files that include `Sheet` (consider schema 6).
+- **Open risks:**
+  - `AsiChoices` `TArray<uint8>` JSON round trip is unexercised (always empty at level 1).
+  - No species or background bonuses.
+  - Custom heroes use the class's interim base kit.
+  - The title-screen Enter key now opens the creator instead of doing nothing.
+- **Needs Austin:** accept or drop the creator as scope, and decide on the schema bump.
+- **Not done (by instruction):** exhaustion and grappling. Nothing has been pushed.

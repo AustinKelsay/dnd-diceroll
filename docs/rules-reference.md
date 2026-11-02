@@ -1045,3 +1045,39 @@ Castable = resolvable in battle by the catalog, buff, utility or engine paths (`
 | **Total** | **148** | **217** | **69** |
 
 4th-level spells are resolvable but need a 4th-level slot, which no hero has under `EngineLevelCap = 5`.
+
+## Character creator (LOCAL PROPOSAL, outside the approved CONTEXT.md scope)
+The creator isn't part of the approved CONTEXT.md scope. It's a self-contained local proposal for Austin to accept or drop. Prebuilt catalog heroes behave exactly as before, and a slot with an empty `Sheet` is a prebuilt.
+
+**Rules (SRD 5.2.1, level 1):**
+- **Point buy.** 27 points, scores 8–15 before bonuses, cost 8:0 … 13:5, 14:7, 15:9 (`FPointBuyRules`). Each class starts from its recommended array. There are no species or background bonuses (there is no species/background system).
+- **Classes.** All 12 SRD classes show their hit die, number of skill picks, Expertise count and a level-1 feature summary (`FCharacterCreator::Classes`/`ClassInfo`). Starting HP is the hit die plus the CON modifier, minimum 1.
+- **Skills.** Picks come from the class's 5.2.1 list. Expertise must be on a proficient skill and is only offered when the class grants it at level 1 (Rogue 2).
+- **Colours.** Three colours (primary, secondary, accent) from the shared palette.
+- **Name.** 1–24 characters: letters, plus space, `-` and `'` after the first character. Each word is capitalised automatically.
+- **Kit.** The class's interim base kit until a catalog build exists.
+
+**UI** (`FCreatorScreen` model, drawn by `AExpeditionHUD::DrawCreator`):
+- Open it with "Create hero"/"Edit hero" on the title panel, or press Enter on the title.
+- The panel starts below the top bar (design y 56) over a dim layer. While it's open, a full-screen blocker plus `Buttons.Reset()` stop clicks reaching the HUD underneath.
+- Keyboard: Up/Down move between rows (wrapping). Left/Right change the focused row (−/+ score, class, skill cursor, colour, Confirm↔Cancel). Enter picks. Letters, space, `-` and `'` type into the name. Backspace deletes. Escape cancels.
+- Keys are routed in `InputKey(const FInputKeyEventArgs&)` while the creator is open, so game bindings don't fire. The `FInputKeyParams` overload is `final` in 5.8.
+- Mouse ids: `CrPlus<i>`/`CrMinus<i>`, `CrClassNext`/`CrClassPrev`, `CrSkill<i>`, `CrColor<slot>+/-`, `CrConfirm`, `CrCancel`.
+- Clicking a skill cycles it: none → proficient → Expertise (if allowed) → none.
+
+**Behaviour:**
+- Confirm writes the sheet into the selected party slot and keeps the slot `Id`. If the sheet is invalid, Confirm leaves the slot untouched and shows the reason.
+- Choosing a prebuilt class or subclass (`CycleClass`, Champion, Battle Master) clears the custom sheet. Cycling kit (`CycleBuild`) keeps it.
+- Style: dark panels with parchment, gold and ink. The watercolour "candlelit arcane" wash (`Wash`, stepped at 12 fps) appears only on magic accents: the selected ability row, and the emblem and Confirm glow once the hero is ready.
+
+**Save:**
+- `FPartyBuildSelection::Sheet` (`FHeroSheet`) is an optional field within schema 5. The strict codec skips a missing `Sheet`, so older v5 files load as prebuilts.
+- New files that contain `Sheet` can't be read by a build that predates the creator: its strict field check rejects the unknown field. If that matters, bump to schema 6 before merging.
+
+**Risk: `AsiChoices` is a `TArray<uint8>`** (on `FHeroSheet` and the party selection). Byte arrays are the one place where `FJsonObjectConverter` output and our strict reader could disagree: a number array versus a packed or base64 form, and enum bytes being renumbered if `EAbility` order ever changes. There's no ASI at level 1 today, so the array is always empty in saves and the path is unexercised. Before levelling custom heroes, add a round-trip test with a non-empty `AsiChoices`, or store ability names as strings.
+
+**Tests:**
+- `Project.Expedition.Creator.*`: DraftValidation, CustomHeroInRun, Roster, ScreenKeyboard, ScreenSkillsAndConfirm.
+- Point-buy and class-table tests from the earlier creator commits.
+
+**Captures:** `docs/runs/character-creator/captures.md` (dev-only `-CreatorTrial=<dir>` harness; real viewport, not mocks).
