@@ -155,7 +155,7 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Bard,TEXT("bard.valor"),TEXT("valor"),Ability(TEXT("Combat Inspiration"),E::Protect,T::Ally,1,4,true),Ability(TEXT("Valiant Strike"),E::Strike,T::Enemy,3,6,false));
         Kit(Bard,TEXT("bard.creation"),TEXT("creation"),Ability(TEXT("Dancing Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Resonant Burst"),E::Area,T::Enemy,2,5,false));
         Kit(Bard,TEXT("bard.eloquence"),TEXT("eloquence"),Ability(TEXT("Reassuring Word"),E::Protect,T::Ally,4,2,false),Ability(TEXT("Unsettling Note"),E::Strike,T::Enemy,4,5,true));
-        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Action + 1 Kit + 1 Slot; conscious self or ally range 1 + sight; heal 2d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Action + 1 Kit + 1 Slot; conscious self or ally range 1 + sight; heal 1d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
         auto Artificer = Add(TEXT(""),TEXT("artificer"),TEXT(""),TEXT("Artificer"),EAdventurerRole::Artificer,26,15,6,3,3,1);
         Kit(Artificer,TEXT("artificer.alchemist"),TEXT("alchemist"),Ability(TEXT("Restorative Elixir"),E::Healing,T::Ally,2,8,false),Ability(TEXT("Volatile Flask"),E::Area,T::Enemy,3,3,true));
         Kit(Artificer,TEXT("artificer.armorer"),TEXT("armorer"),Ability(TEXT("Defensive Field"),E::Protect,T::Self,0,4,true),Ability(TEXT("Thunder Gauntlet"),E::Push,T::Enemy,1,6,false));
@@ -249,7 +249,12 @@ int32 FBuildCatalog::PendingAsi(const FCombatantState& Hero)
 {
     return FLevelRules::AsiCount(Hero.AdventurerRole, Hero.Level - Hero.SecondaryLevel) + FLevelRules::AsiCount(Hero.SecondaryRole, Hero.SecondaryLevel) - Hero.AsiChoices.Num() / 2;
 }
-int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { return Build.Profile.DamageBonus + Level - 1; }
+// #79 SRD: damage is die + ability modifier; level no longer adds a flat bonus (Extra Attack and cantrip dice scale instead).
+int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { return Build.Profile.DamageBonus; }
+int32 FBuildCatalog::ClassLevel(const FCombatantState& Hero, EAdventurerRole Role)
+{
+    return (Hero.AdventurerRole == Role ? Hero.Level - Hero.SecondaryLevel : 0) + (Hero.SecondaryRole == Role ? Hero.SecondaryLevel : 0);
+}
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);

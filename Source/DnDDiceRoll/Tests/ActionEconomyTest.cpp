@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/CantripRules.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionEconomyTagTest, "Project.Expedition.Rules.ActionEconomyTags",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -48,6 +49,21 @@ bool FShieldReactionTest::RunTest(const FString& Parameters)
     Wiz.bReactionAvailable = true; Wiz.SpellSlots = 0; TestFalse(TEXT("Needs a slot"), FCombatBattle::ShieldWouldBlock(Wiz, 13, 12, false));
     FCombatantState Fighter; FBuildCatalog::Create(TEXT("fighter.champion"), 2, TEXT("F"), Fighter);
     TestFalse(TEXT("Only wizards know Shield"), FCombatBattle::ShieldWouldBlock(Fighter, 13, 12, false));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdDiceDefaultsTest, "Project.Expedition.Rules.SrdDiceDefaults",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSrdDiceDefaultsTest::RunTest(const FString& Parameters)
+{
+    const auto* Fighter = FBuildCatalog::Find(TEXT("fighter.champion"));
+    TestEqual(TEXT("Level adds no flat damage"), FBuildCatalog::BasicDamage(*Fighter, 5), FBuildCatalog::BasicDamage(*Fighter, 1));
+    TestEqual(TEXT("Cure Wounds is 1d8"), BuildRules::CureDice, 1);
+    TestEqual(TEXT("Magic Missile: three darts"), BuildRules::MissileDarts * 10 + BuildRules::MissileDie, 34);
+    FCombatantState Hero; FBuildCatalog::Create(TEXT("cleric.life"), 1, TEXT("C"), Hero); Hero.Level = 4; Hero.SecondaryRole = EAdventurerRole::Fighter; Hero.SecondaryLevel = 1;
+    TestEqual(TEXT("Second Wind scales with fighter levels only"), FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Fighter), 1);
+    TestEqual(TEXT("Primary class levels"), FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric), 3);
+    TestEqual(TEXT("Fire Bolt 2d10 at level 5"), FCantripRules::DiceCount(ESpell::FireBolt, 5), 2);
+    TestEqual(TEXT("Fire Bolt 1d10 at level 4"), FCantripRules::DiceCount(ESpell::FireBolt, 4), 1);
     return true;
 }
 #endif

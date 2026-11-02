@@ -93,8 +93,8 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
         const int32 Target = Action == ECombatCommandType::MagicMissile ? 20 : 1;
         auto Forecast = Battle.Forecast(1, Action, Target);
         TestTrue(TEXT("Catalog special legal"), Forecast.bValid);
-        TestEqual(TEXT("Worked minimum"), Forecast.MinAmount, Action == ECombatCommandType::SecondWind ? 2 : Action == ECombatCommandType::CureWounds ? 5 : 6);
-        TestEqual(TEXT("Worked maximum"), Forecast.MaxAmount, Action == ECombatCommandType::SecondWind ? 11 : Action == ECombatCommandType::CureWounds ? 19 : 15);
+        TestEqual(TEXT("Worked minimum"), Forecast.MinAmount, Action == ECombatCommandType::SecondWind ? 2 : Action == ECombatCommandType::CureWounds ? 4 : 6); // #79 SRD Cure 1d8+3
+        TestEqual(TEXT("Worked maximum"), Forecast.MaxAmount, Action == ECombatCommandType::SecondWind ? 11 : Action == ECombatCommandType::CureWounds ? 11 : 15);
         TestTrue(TEXT("Catalog special executes"), Battle.Submit({Action, 1, {}, Target}).bAccepted);
     }
     return true;

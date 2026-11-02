@@ -356,7 +356,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::PrecisionStrike:
         return TEXT("PRECISION STRIKE | Free with an attack + 1 use | attack with +2 hit and +2 damage; no camp refill");
     case ECombatCommandType::SecondWind:
-        return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+%d healing | target self"), WindDie, FighterLevel);
+        return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+fighter level healing | target self"), WindDie);
     case ECombatCommandType::CureWounds:
         return FString::Printf(TEXT("CURE WOUNDS | Action + 1 slot | ally/self, %d cell | %dd%d+%d healing"), TouchRange, CureDice, CureDie, HealingModifier);
     case ECombatCommandType::MagicMissile:
@@ -944,7 +944,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
             Action == ECombatCommandType::Shove ? TEXT("Prone") : TEXT("Grappled (speed 0)"));
         return Forecast;
     }
-    case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel); break;
+    case ECombatCommandType::SecondWind: Effect(1, WindDie, FMath::Max(1, FBuildCatalog::ClassLevel(*Actor, EAdventurerRole::Fighter))); break;
     case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
     case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = 1; Forecast.Formula = TEXT("1"); break;
@@ -1517,7 +1517,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         {
             int32 Amount = 1;
             DiceLog = &Result.EffectDice;
-            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
+            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FMath::Max(1, FBuildCatalog::ClassLevel(*User, EAdventurerRole::Fighter)); Amount = Roll(WindDie) + Result.EffectModifier; Ability = TEXT("Second Wind (bonus, 1 use)"); }
             else if (Command.Type == ECombatCommandType::CureWounds) { SpendSlot(); Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice + CombatSpellSlots::UpcastExtra(ESpell::CureWounds, Slot), CureDie) + HealingModifier; Ability = Slot == 1 ? FString(TEXT("Cure Wounds (1 slot)")) : FString::Printf(TEXT("Cure Wounds (level %d slot)"), Slot); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             else { Result.EffectModifier = 1; }

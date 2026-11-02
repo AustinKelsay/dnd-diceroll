@@ -103,11 +103,11 @@ bool FSupportWorkedTest::RunTest(const FString& Parameters)
         }
         if (C.Cure)
         {
-            TestEqual(TEXT("Seed42 after four initiatives: Cure 6+4+3 clips to twelve missing HP"),Battle.Find(1)->HP,22);
-            TestEqual(TEXT("Cure uses two d8"),Result.EffectDice.Num(),2);
-            if(Result.EffectDice.Num()==2) { TestEqual(TEXT("First literal d8"),Result.EffectDice[0].Value,6); TestEqual(TEXT("Second literal d8"),Result.EffectDice[1].Value,4); }
-            FRandomStream Expected; Expected.Initialize(Before.RandomState); Expected.RandRange(1,8); Expected.RandRange(1,8);
-            TestEqual(TEXT("Exactly two committed RNG draws"),Battle.Snapshot().RandomState,Expected.GetCurrentSeed());
+            TestEqual(TEXT("Seed42 after four initiatives: SRD Cure 1d8 (6)+3 heals nine"),Battle.Find(1)->HP,19);
+            TestEqual(TEXT("Cure uses one d8"),Result.EffectDice.Num(),1);
+            if(Result.EffectDice.Num()==1) { TestEqual(TEXT("Literal d8"),Result.EffectDice[0].Value,6); }
+            FRandomStream Expected; Expected.Initialize(Before.RandomState); Expected.RandRange(1,8);
+            TestEqual(TEXT("Exactly one committed RNG draw"),Battle.Snapshot().RandomState,Expected.GetCurrentSeed());
         }
         else { TestEqual(TEXT("Primary literal loss"),40-Battle.Find(20)->HP,C.Loss); }
         TestEqual(TEXT("Secondary literal loss"),40-Battle.Find(21)->HP,C.Area?C.Loss:0);
@@ -295,7 +295,7 @@ bool FSupportLifeTargetsTest::RunTest(const FString& Parameters)
     if(!TestTrue(TEXT("Start allied healing"),B.Start(E,42,Error))) { return false; }
     const auto R=B.Submit({ECombatCommandType::CureWounds,1,{},2});
     TestTrue(TEXT("Cure accepts a different class ally"),R.bAccepted);
-    TestEqual(TEXT("Seed42 three initiatives then dice5+6+3 restore14"),B.Find(2)->HP,19);
+    TestEqual(TEXT("Seed42 three initiatives then SRD die 5+3 restores 8"),B.Find(2)->HP,13);
     TestEqual(TEXT("One Kit use"),B.Find(1)->KitUses,1); TestEqual(TEXT("One Slot"),B.Find(1)->SpellSlots,1);
     for(int32 Case=0;Case<3;++Case)
     {

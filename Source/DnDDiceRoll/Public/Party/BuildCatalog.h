@@ -21,7 +21,8 @@ struct DNDDICEROLL_API FBuildDefinition
 namespace BuildRules
 {
 inline constexpr int32 TouchRange = 1, MissileRange = 6, MissileDarts = 3, MissileDie = 4, DartBonus = 1;
-inline constexpr int32 CureDice = 2, CureDie = 8, HealingModifier = 3, WindDie = 10, FighterLevel = 1;
+/** #79 SRD: Cure Wounds 1d8 + spellcasting modifier (prebuilt WIS 16); Second Wind 1d10 + fighter level. */
+inline constexpr int32 CureDice = 1, CureDie = 8, HealingModifier = 3, WindDie = 10, FighterLevel = 1;
 inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
 }
 class DNDDICEROLL_API FBuildCatalog
@@ -49,6 +50,8 @@ public:
     /** #79: improvements earned by class levels, minus those already chosen. */
     static int32 PendingAsi(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
+    /** Levels the hero has in Role across both classes. */
+    static int32 ClassLevel(const FCombatantState& Hero, EAdventurerRole Role);
     static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);
 };
