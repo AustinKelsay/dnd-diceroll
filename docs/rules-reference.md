@@ -297,24 +297,35 @@ All 339 SRD 5.2.1 spells are in `FSpellCatalogRules`. Each spell is tagged with 
 **Status:**
 
 - **Mechanics:** dice, a save plus a condition, or a hand-modelled modifier are stored in the catalog.
-- **Partial:** only the first damage type of a multi-damage spell is kept.
+- **Partial:** only the first effect is modelled (Prismatic Spray, Prismatic Wall, Storm of Vengeance). Ice Knife, Ice Storm, Flame Strike and Meteor Swarm now keep both damage types; Fire Shield, Spirit Guardians and Wall of Thorns model the caster's chosen (first) type and count as Mechanics.
 - **DataOnly:** tags only. The menu marks these spells "Effect not yet modelled".
 
-Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure Wounds, Guiding Bolt, Burning Hands, Healing Word, Thunderwave) can be cast in battle today. The rest are catalog data and rules math.
+**Combat casting (`ECombatCommandType::CastSpell` + `FCombatCommand::SpellId`):** `FSpellCatalogRules::CombatResolvable` picks the Mechanics spells with an Action or Bonus Action cast whose effect the battle can resolve: damage by melee/ranged spell attack or save (plus Magic Missile), all healing, and save-based conditions. `FCombatBattle::CastableSpells` and `SpellTargets` expose the menu and legal targets. A cast checks the class list and class level (primary or multiclass), armor, the action or bonus action, and the slot (lowest open slot at or above the spell level, or the exact upcast level). It uses the class spellcasting ability for the save DC and attack bonus, range in 5-ft cells with line of sight (Touch and target-less Self = 1 cell), and area templates (cones/lines/Self cubes from the caster, spheres/cylinders at the aim point, ranged cubes as spheres of half the side). Areas hit every creature inside except the caster, allies included. Attack spells crit on a natural 20 (dice doubled); saves take half or none per the catalog; damage goes through resistance/vulnerability/immunity and protection. Concentration spells replace the caster's previous concentration, and their conditions (RoundsLeft -1) end when concentration breaks (failed CON save or 0 HP); other spell conditions last one round. The eight older dedicated commands stay as they were.
+
+Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level spells are resolvable by the catalog but not castable yet.
+
+| Level | Castable in battle (level 5 hero) |
+| --- | --- |
+| Cantrip | 11: Acid Splash, Chill Touch, Eldritch Blast, Fire Bolt, Poison Spray, Produce Flame, Ray of Frost, Sacred Flame, Shocking Grasp, Starry Wisp, Vicious Mockery |
+| 1 | 17: Animal Friendship, Burning Hands, Charm Person, Color Spray, Command, Cure Wounds, Dissonant Whispers, Entangle, Grease, Guiding Bolt, Healing Word, Ice Knife, Inflict Wounds, Magic Missile, Ray of Sickness, Sleep, Thunderwave |
+| 2 | 13: Acid Arrow, Flame Blade, Flaming Sphere, Heat Metal, Hold Person, Mind Spike, Moonbeam, Phantasmal Force, Scorching Ray, Shatter, Spiritual Weapon, Suggestion, Web |
+| 3 | 11: Bestow Curse, Call Lightning, Fear, Fireball, Hypnotic Pattern, Lightning Bolt, Mass Healing Word, Sleet Storm, Spirit Guardians, Stinking Cloud, Vampiric Touch |
+
+**Combat gaps:** no forecast for CastSpell; the one-leveled-spell-per-turn rule, prepared/known limits and the 1-minute duration cap are not enforced; Ice Knife's cold burst hits only the target; multi-beam spells (Eldritch Blast, Scorching Ray) resolve as one attack; zones and auras (Moonbeam, Spirit Guardians, Web, Sleet Storm) resolve as a single pulse; Charmed, Deafened, Invisible and Petrified have no combat condition yet (Charm Person, Animal Friendship, Suggestion only spend the slot); no creature-type checks; Modifier and buff spells are not castable; kit builds (Bard, Druid, Warlock and others) cast leveled spells only from their kit slot pool.
 
 | Level | Mechanics | Partial | DataOnly |
 | --- | --- | --- | --- |
 | Cantrip | 11 | 0 | 16 |
-| 1 | 33 | 1 | 23 |
+| 1 | 34 | 0 | 23 |
 | 2 | 21 | 0 | 36 |
-| 3 | 15 | 1 | 26 |
-| 4 | 13 | 2 | 19 |
-| 5 | 14 | 1 | 23 |
-| 6 | 13 | 1 | 17 |
+| 3 | 16 | 0 | 26 |
+| 4 | 15 | 0 | 19 |
+| 5 | 15 | 0 | 23 |
+| 6 | 14 | 0 | 17 |
 | 7 | 6 | 1 | 13 |
 | 8 | 9 | 0 | 8 |
-| 9 | 4 | 3 | 9 |
-| **Total** | **139** | **10** | **190** |
+| 9 | 5 | 2 | 9 |
+| **Total** | **146** | **3** | **190** |
 
 **Combat-wired changes:**
 
@@ -494,7 +505,7 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Hex | 1 | Enchantment | Warlock |  | Bonus | Yes | Mechanics |
 | Hideous Laughter | 1 | Enchantment | Bard, Warlock, Wizard |  | Action | Yes | DataOnly |
 | Hunter's Mark | 1 | Divination | Ranger |  | Bonus | Yes | Mechanics |
-| Ice Knife | 1 | Conjuration | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Ice Knife | 1 | Conjuration | Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
 | Identify | 1 | Divination | Bard, Wizard |  | Extended (ritual) |  | DataOnly |
 | Illusory Script | 1 | Illusion | Bard, Warlock, Wizard |  | Extended (ritual) |  | DataOnly |
 | Inflict Wounds | 1 | Necromancy | Cleric |  | Action |  | Mechanics |
@@ -605,7 +616,7 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Slow | 3 | Transmutation | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
 | Speak with Dead | 3 | Necromancy | Bard, Cleric, Wizard |  | Action |  | DataOnly |
 | Speak with Plants | 3 | Transmutation | Bard, Druid, Ranger |  | Action |  | DataOnly |
-| Spirit Guardians | 3 | Conjuration | Cleric |  | Action | Yes | Partial |
+| Spirit Guardians | 3 | Conjuration | Cleric |  | Action | Yes | Mechanics |
 | Stinking Cloud | 3 | Conjuration | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
 | Tiny Hut | 3 | Evocation | Bard, Wizard |  | Extended (ritual) |  | DataOnly |
 | Tongues | 3 | Divination | Bard, Cleric, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
@@ -630,13 +641,13 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Dominate Beast | 4 | Enchantment | Druid, Ranger, Sorcerer |  | Action | Yes | Mechanics |
 | Fabricate | 4 | Transmutation | Wizard |  | Extended |  | DataOnly |
 | Faithful Hound | 4 | Conjuration | Wizard |  | Action |  | Mechanics |
-| Fire Shield | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Fire Shield | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
 | Freedom of Movement | 4 | Abjuration | Bard, Cleric, Druid, Ranger |  | Action |  | DataOnly |
 | Giant Insect | 4 | Conjuration | Druid |  | Action | Yes | DataOnly |
 | Greater Invisibility | 4 | Illusion | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
 | Guardian of Faith | 4 | Conjuration | Cleric |  | Action |  | DataOnly |
 | Hallucinatory Terrain | 4 | Illusion | Bard, Druid, Warlock, Wizard |  | Extended |  | DataOnly |
-| Ice Storm | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Ice Storm | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
 | Locate Creature | 4 | Divination | Bard, Cleric, Druid, Paladin, Ranger, Wizard |  | Action | Yes | DataOnly |
 | Phantasmal Killer | 4 | Illusion | Bard, Wizard |  | Action | Yes | Mechanics |
 | Polymorph | 4 | Transmutation | Bard, Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
@@ -662,7 +673,7 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Dispel Evil and Good | 5 | Abjuration | Cleric, Paladin |  | Action | Yes | DataOnly |
 | Dominate Person | 5 | Enchantment | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
 | Dream | 5 | Illusion | Bard, Warlock, Wizard |  | Extended |  | Mechanics |
-| Flame Strike | 5 | Evocation | Cleric |  | Action |  | Partial |
+| Flame Strike | 5 | Evocation | Cleric |  | Action |  | Mechanics |
 | Geas | 5 | Enchantment | Bard, Cleric, Druid, Paladin, Wizard |  | Extended |  | Mechanics |
 | Greater Restoration | 5 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger |  | Action |  | DataOnly |
 | Hallow | 5 | Abjuration | Cleric |  | Extended |  | DataOnly |
@@ -713,7 +724,7 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Transport via Plants | 6 | Conjuration | Druid |  | Action |  | DataOnly |
 | True Seeing | 6 | Divination | Bard, Cleric, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
 | Wall of Ice | 6 | Evocation | Wizard |  | Action | Yes | Mechanics |
-| Wall of Thorns | 6 | Conjuration | Druid |  | Action | Yes | Partial |
+| Wall of Thorns | 6 | Conjuration | Druid |  | Action | Yes | Mechanics |
 | Wind Walk | 6 | Transmutation | Druid |  | Extended |  | DataOnly |
 | Word of Recall | 6 | Conjuration | Cleric |  | Action |  | DataOnly |
 | Arcane Sword | 7 | Evocation | Bard, Wizard |  | Action | Yes | Mechanics |
@@ -758,7 +769,7 @@ Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure
 | Gate | 9 | Conjuration | Cleric, Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
 | Imprisonment | 9 | Abjuration | Warlock, Wizard |  | Extended |  | Mechanics |
 | Mass Heal | 9 | Abjuration | Cleric |  | Action |  | DataOnly |
-| Meteor Swarm | 9 | Evocation | Sorcerer, Wizard |  | Action |  | Partial |
+| Meteor Swarm | 9 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
 | Power Word Heal | 9 | Enchantment | Bard, Cleric |  | Action |  | DataOnly |
 | Power Word Kill | 9 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
 | Prismatic Wall | 9 | Abjuration | Bard, Wizard |  | Action |  | Partial |
