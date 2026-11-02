@@ -55,6 +55,14 @@ bool FArmorRules::IsProficient(EAdventurerRole Role, EArmorCategory Category)
     case EAdventurerRole::Fighter: return true;
     case EAdventurerRole::Cleric: return Category != EArmorCategory::Heavy;
     case EAdventurerRole::Rogue: return Category == EArmorCategory::Light;
+    // SRD class armor training for the remaining classes.
+    case EAdventurerRole::Paladin: return true;
+    case EAdventurerRole::Barbarian:
+    case EAdventurerRole::Ranger:
+    case EAdventurerRole::Druid:
+    case EAdventurerRole::Artificer: return Category != EArmorCategory::Heavy;
+    case EAdventurerRole::Bard:
+    case EAdventurerRole::Warlock: return Category == EArmorCategory::Light;
     default: return false;
     }
 }

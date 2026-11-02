@@ -1,4 +1,6 @@
 #include "Party/BuildCatalog.h"
+#include "Rules/AbilityRules.h"
+#include "Rules/ArmorRules.h"
 
 namespace
 {
@@ -156,6 +158,27 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Artificer,TEXT("artificer.armorer"),TEXT("armorer"),Ability(TEXT("Defensive Field"),E::Protect,T::Self,0,4,true),Ability(TEXT("Thunder Gauntlet"),E::Push,T::Enemy,1,6,false));
         Kit(Artificer,TEXT("artificer.artillerist"),TEXT("artillerist"),Ability(TEXT("Force Cannon"),E::Push,T::Enemy,5,5,false),Ability(TEXT("Protector Cannon"),E::Protect,T::Ally,3,2,true));
         Kit(Artificer,TEXT("artificer.battle-smith"),TEXT("battle-smith"),Ability(TEXT("Defender Guard"),E::Protect,T::Ally,1,4,false),Ability(TEXT("Defender Strike"),E::Strike,T::Enemy,2,5,true));
+        // Equip trained SRD armor (and a shield) that gives exactly the build's published AC, so balance is unchanged.
+        // No shield first, lightest armor first; druids avoid metal. Builds with no exact fit stay unarmored.
+        for (auto& B : Result)
+        {
+            auto& P = B.Profile;
+            const FAbilityScores Scores = FAbilityRules::PrebuiltScores(P.AdventurerRole);
+            const bool bDruid = P.AdventurerRole == EAdventurerRole::Druid;
+            bool bDone = false;
+            for (int32 Shield = 0; Shield < 2 && !bDone; ++Shield)
+            {
+                if (Shield && !FArmorRules::IsProficient(P.AdventurerRole, EArmorCategory::Shield)) { break; }
+                for (int32 Index = static_cast<int32>(EArmor::Padded); Index < static_cast<int32>(EArmor::Shield) && !bDone; ++Index)
+                {
+                    const EArmor Armor = static_cast<EArmor>(Index);
+                    if (bDruid && Armor != EArmor::Padded && Armor != EArmor::Leather && Armor != EArmor::Hide) { continue; }
+                    const FArmorPenalties Pen = FArmorRules::Penalties(P.AdventurerRole, Armor, Shield != 0, Scores.Strength);
+                    if (Pen.bStrDexDisadvantage || Pen.SpeedPenaltyFeet || FArmorRules::ArmorClass(Armor, Shield != 0, Scores.Dexterity) != P.ArmorClass) { continue; }
+                    P.ArmorWorn = Index; P.bShieldEquipped = Shield != 0; bDone = true;
+                }
+            }
+        }
         return Result;
     }();
     return Values;

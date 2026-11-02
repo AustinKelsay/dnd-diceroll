@@ -917,4 +917,35 @@ bool FSchema5NewActionForecastTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Area spell usage tag counts slots"), FCombatBattle::UsageTag(ECombatCommandType::BurningHands, *B.Find(10)).Contains(TEXT("slot")));
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CatalogEquipmentTest, "Project.Expedition.Schema5.CatalogBuildsWearArmor",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CatalogEquipmentTest::RunTest(const FString& Parameters)
+{
+    TestTrue(TEXT("Barbarian: medium and shield"), FArmorRules::IsProficient(EAdventurerRole::Barbarian, EArmorCategory::Medium) && FArmorRules::IsProficient(EAdventurerRole::Barbarian, EArmorCategory::Shield) && !FArmorRules::IsProficient(EAdventurerRole::Barbarian, EArmorCategory::Heavy));
+    TestTrue(TEXT("Paladin: everything"), FArmorRules::IsProficient(EAdventurerRole::Paladin, EArmorCategory::Heavy));
+    TestTrue(TEXT("Monk and Sorcerer: none"), !FArmorRules::IsProficient(EAdventurerRole::Monk, EArmorCategory::Light) && !FArmorRules::IsProficient(EAdventurerRole::Sorcerer, EArmorCategory::Light));
+    TestTrue(TEXT("Bard and Warlock: light, no shield"), FArmorRules::IsProficient(EAdventurerRole::Bard, EArmorCategory::Light) && !FArmorRules::IsProficient(EAdventurerRole::Warlock, EArmorCategory::Shield));
+    int32 Equipped = 0;
+    for (const FBuildDefinition& Build : FBuildCatalog::All())
+    {
+        FCombatEncounter E = Pair({1, 0});
+        FCombatantState Hero;
+        if (!TestTrue(TEXT("Create"), FBuildCatalog::Create(Build.Id, 10, TEXT("Hero"), Hero))) { continue; }
+        Hero.Cell = {0, 0}; Hero.InitiativeBonus = 30; E.Combatants[0] = Hero;
+        FCombatBattle B; FString Error;
+        if (!TestTrue(Build.Id + TEXT(" starts"), B.Start(E, 7, Error))) { AddError(Error); continue; }
+        // Equipment replaces the flat AC number without changing it, so balance and old saves are unaffected.
+        TestEqual(Build.Id + TEXT(" keeps its AC"), B.EffectiveArmorClass(10), Build.Profile.ArmorClass);
+        if (Hero.ArmorWorn < 0 && !Hero.bShieldEquipped) { continue; }
+        ++Equipped;
+        const FArmorPenalties P = FArmorRules::Penalties(Hero.AdventurerRole, Hero.ArmorWorn < 0 ? EArmor::None : static_cast<EArmor>(Hero.ArmorWorn), Hero.bShieldEquipped, B.AbilityScores(10).Get(EAbility::Strength));
+        TestTrue(Build.Id + TEXT(" is trained for its armor"), !P.bStrDexDisadvantage && !P.bCannotCastSpells && P.SpeedPenaltyFeet == 0);
+        TestTrue(Build.Id + TEXT(" names its armor"), B.ArmorClassText(10).Contains(Hero.ArmorWorn > 0 ? FArmorRules::Profile(static_cast<EArmor>(Hero.ArmorWorn)).Name : TEXT("shield")));
+    }
+    TestTrue(TEXT("Fighters wear armor"), FBuildCatalog::Find(TEXT("fighter.champion"))->Profile.ArmorWorn > 0);
+    TestTrue(TEXT("Clerics wear armor"), FBuildCatalog::Find(TEXT("cleric.life"))->Profile.ArmorWorn > 0);
+    TestEqual(TEXT("Wizards stay unarmored"), FBuildCatalog::Find(TEXT("wizard.evocation"))->Profile.ArmorWorn, -1);
+    TestTrue(TEXT("Most armored classes equip something"), Equipped >= 20);
+    return !HasAnyErrors();
+}
 #endif
