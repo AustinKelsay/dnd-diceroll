@@ -988,6 +988,14 @@ void AExpeditionBattleView::ShortRest(int32 UnitId)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
+void AExpeditionBattleView::CampActivity(int32 UnitId, ECampActivity Activity)
+{
+    if (bShowRecords) { return; }
+    FString Outcome, Error;
+    if (Session.CampActivity(UnitId, Activity, Outcome, Error)) { Record({true, Outcome}); Show.Sync(Rules().Snapshot()); PlayCue(EExpeditionCue::Camp); }
+    else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
 void AExpeditionBattleView::Recover(bool bTake)
 {
     if (bShowRecords) { return; }

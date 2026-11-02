@@ -933,6 +933,16 @@ void AExpeditionHUD::DrawReward()
     const bool bCanRest = bReady && Selected->HitDiceSpent < Selected->Level && Selected->HP < Selected->MaxHP;
     Button(TEXT("ShortRest"), TEXT("Short rest"), bReady ? FString::Printf(TEXT("spend a hit die (%d left)"), Selected->Level - Selected->HitDiceSpent) : TEXT("hit dice"),
         W * 0.5f + 10, Y + 140, 240, 52, bCanRest, false, Sky);
+    // Rest-point activities: one try each, by the selected survivor.
+    const int32 Used = Run.History.IsEmpty() ? 0 : Run.History.Last().ActivitiesUsed;
+    const int32 Count = static_cast<int32>(ECampActivity::Count);
+    const float ActWidth = 160, ActLeft = W * 0.5f - (Count * (ActWidth + 8) - 8) * 0.5f;
+    for (int32 Index = 0; Index < Count; ++Index)
+    {
+        const bool bOpen = bReady && !(Used & (1 << Index));
+        Button(FName(*FString::Printf(TEXT("Camp_%d"), Index)), FExpeditionRun::CampActivityName(static_cast<ECampActivity>(Index)), bOpen ? TEXT("once per rest") : TEXT("done"),
+            ActLeft + Index * (ActWidth + 8), Y + Height + 8, ActWidth, 40, bOpen, false, Sky);
+    }
 }
 
 void AExpeditionHUD::DrawCamp()

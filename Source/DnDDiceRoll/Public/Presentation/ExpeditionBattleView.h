@@ -108,6 +108,7 @@ public:
     void ClaimReward(int32 RecipientId);
     void Recover(bool bTake);
     void ShortRest(int32 UnitId);
+    void CampActivity(int32 UnitId, ECampActivity Activity);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
     void Save();

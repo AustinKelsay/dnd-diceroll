@@ -7,6 +7,9 @@
 UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
 
+/** Rest-point activities after a victory: one try each per rest point, keyed rolls (never shift the run stream). */
+enum class ECampActivity : uint8 { PickLock, Count };
+
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()
 struct DNDDICEROLL_API FExpeditionRoute
@@ -32,6 +35,9 @@ struct DNDDICEROLL_API FExpeditionEncounterRecord
     UPROPERTY() EBattlePhase Outcome = EBattlePhase::Fighting;
     UPROPERTY() int32 RewardRecipient = INDEX_NONE;
     UPROPERTY() int32 Survivors = 4;
+    /** Camp activities: extra potions added to this victory's loot, and a bit per activity already tried. */
+    UPROPERTY() int32 BonusPotions = 0;
+    UPROPERTY() int32 ActivitiesUsed = 0;
 };
 
 /** Selection is fixed for a run; instance identity does not imply a class. */
@@ -89,6 +95,9 @@ public:
     bool Recover(bool bTakeRecovery, FString& Error);
     /** #76: at the rest point after a victory, a survivor spends one hit die (roll + CON) to heal. */
     bool ShortRest(int32 UnitId, int32& Healed, FString& Error);
+    /** Rest-point activity by a living survivor (lock picking, ...). Outcome describes the roll. */
+    bool CampActivity(int32 UnitId, ECampActivity Activity, FString& Outcome, FString& Error);
+    static FString CampActivityName(ECampActivity Activity);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     const FCombatBattle& Battle() const { return Combat; }
@@ -102,4 +111,5 @@ private:
     void OfferRoutes();
     void ResolveCombat();
     FCombatEncounter Generate(const FExpeditionRoute& Route) const;
+    int32 CampD20(int32 UnitId, ECampActivity Activity) const;
 };

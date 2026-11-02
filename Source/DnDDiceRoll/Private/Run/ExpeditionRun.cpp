@@ -5,6 +5,8 @@
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/ArmorRules.h"
+#include "Rules/LockTrapRules.h"
+#include "Rules/ProficiencyRules.h"
 
 namespace
 {
@@ -244,7 +246,7 @@ bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error)
     Error.Reset();
     if (!bStarted || State.Phase != EExpeditionPhase::Reward)
     { Error = TEXT("Loot can be claimed once after each of the first four victories."); return false; }
-    if (!FPartyContinuity::Reward(Combat, RecipientId, State.History.Last().Route.RewardPotions, Error)) { return false; }
+    if (!FPartyContinuity::Reward(Combat, RecipientId, State.History.Last().Route.RewardPotions + State.History.Last().BonusPotions, Error)) { return false; }
     State.History.Last().RewardRecipient = RecipientId;
     if (State.EncountersCompleted == 1) { State.Phase = EExpeditionPhase::Recovery; }
     else { OfferRoutes(); }
@@ -283,6 +285,54 @@ bool FExpeditionRun::ShortRest(int32 UnitId, int32& Healed, FString& Error)
     return true;
 }
 
+int32 FExpeditionRun::CampD20(int32 UnitId, ECampActivity Activity) const
+{
+    int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(1000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
+    return FDiceRules::Roll(1, 20, Dice);
+}
+
+FString FExpeditionRun::CampActivityName(ECampActivity Activity)
+{
+    switch (Activity)
+    {
+    case ECampActivity::PickLock: return TEXT("Pick the strongbox");
+    default: return TEXT("Unknown");
+    }
+}
+
+bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString& Outcome, FString& Error)
+{
+    Error.Reset();
+    Outcome.Reset();
+    if (!bStarted || State.Phase != EExpeditionPhase::Reward || State.History.IsEmpty()) { Error = TEXT("Camp activities happen at the rest point after a victory."); return false; }
+    if (static_cast<uint8>(Activity) >= static_cast<uint8>(ECampActivity::Count)) { Error = TEXT("Unknown camp activity."); return false; }
+    FExpeditionEncounterRecord& Record = State.History.Last();
+    const int32 Bit = 1 << static_cast<int32>(Activity);
+    if (Record.ActivitiesUsed & Bit) { Error = FString::Printf(TEXT("%s: already tried at this rest point."), *CampActivityName(Activity)); return false; }
+    const FCombatantState* Hero = Combat.Find(UnitId);
+    if (!Hero || Hero->Side != ECombatSide::Party || Hero->Life != ECombatLife::Conscious) { Error = TEXT("Only a living survivor can do that."); return false; }
+    const FCharacterRules Sheet = Combat.Character(UnitId);
+    const int32 D20 = CampD20(UnitId, Activity);
+    switch (Activity)
+    {
+    case ECampActivity::PickLock:
+    {
+        // #81: a strongbox with a good lock; thieves' tools (Rogues) are required.
+        const bool bTools = Hero->AdventurerRole == EAdventurerRole::Rogue;
+        if (!FLockTrapRules::CanPickLock(bTools)) { Error = TEXT("Picking the strongbox needs thieves' tools (a Rogue)."); return false; }
+        const int32 Total = D20 + Sheet.ToolBonus(ETool::ThievesTools, EAbility::Dexterity);
+        const bool bOpen = FLockTrapRules::Picks(Total, ELockTier::Good, bTools);
+        if (bOpen) { ++Record.BonusPotions; }
+        Outcome = FString::Printf(TEXT("%s %s the strongbox (%d vs DC %d)%s"), *Hero->Name, bOpen ? TEXT("picks") : TEXT("fails to pick"), Total,
+            FLockTrapRules::LockDc(ELockTier::Good), bOpen ? TEXT(": +1 healing potion in the loot.") : TEXT("."));
+        break;
+    }
+    default: break;
+    }
+    Record.ActivitiesUsed |= Bit;
+    return true;
+}
+
 bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error)
 {
     Error.Reset();
@@ -291,6 +341,11 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     if (P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
         P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
+    for (const auto& Record : P.History)
+    {
+        if (Record.BonusPotions < 0 || Record.BonusPotions > static_cast<int32>(ECampActivity::Count) || Record.ActivitiesUsed < 0 ||
+            Record.ActivitiesUsed >= (1 << static_cast<int32>(ECampActivity::Count))) { return Reject(); }
+    }
     for (int32 I = 0; I < 4; ++I)
     {
         const auto& Selection = P.Party[I];
@@ -401,7 +456,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         if (U.Side == ECombatSide::Party)
         {
             int32 Gear = 0, SuppliedPotions = 1;
-            for (const auto& H : P.History) { if (H.RewardRecipient == U.Id) { ++Gear; SuppliedPotions += H.Route.RewardPotions; } }
+            for (const auto& H : P.History) { if (H.RewardRecipient == U.Id) { ++Gear; SuppliedPotions += H.Route.RewardPotions + H.BonusPotions; } }
             if (U.WeaponRank != FMath::Min(3, Gear) || U.Potions > SuppliedPotions) { return Reject(); }
         }
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||

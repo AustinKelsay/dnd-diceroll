@@ -1304,4 +1304,52 @@ bool FSchema5AmbushSurpriseTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some seed surprises the foe"), bSurprisedOnce);
     return true;
 }
+namespace CampTest
+{
+bool RewardRun(FExpeditionRun& Run, int32 Seed)
+{
+    FString Error;
+    Run.NewRun(Seed, Error, FString::Printf(TEXT("camp-%d"), Seed));
+    Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+    return ExpeditionTestSupport::FinishCombat(Run) && Run.Progress().Phase == EExpeditionPhase::Reward;
+}
+int32 Living(const FExpeditionRun& Run, TFunctionRef<bool(const FCombatantState&)> Pick)
+{
+    for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious && Pick(Unit)) { return Unit.Id; } }
+    return INDEX_NONE;
+}
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampPickLockTest, "Project.Expedition.Schema5.CampPickLock",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampPickLockTest::RunTest(const FString& Parameters)
+{
+    bool bChecked = false, bOpened = false;
+    for (int32 Seed = 1; Seed < 80; ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        TestFalse(TEXT("No camp on the road"), Run.CampActivity(1, ECampActivity::PickLock, Outcome, Error));
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Rogue = CampTest::Living(Run, [](const FCombatantState& U) { return U.AdventurerRole == EAdventurerRole::Rogue; });
+        const int32 Other = CampTest::Living(Run, [](const FCombatantState& U) { return U.AdventurerRole != EAdventurerRole::Rogue; });
+        if (Rogue == INDEX_NONE || Other == INDEX_NONE) { continue; }
+        bChecked = true;
+        TestFalse(TEXT("Needs thieves' tools"), Run.CampActivity(Other, ECampActivity::PickLock, Outcome, Error));
+        TestTrue(TEXT("Rogue tries the lock"), Run.CampActivity(Rogue, ECampActivity::PickLock, Outcome, Error));
+        TestFalse(TEXT("Once per rest point"), Run.CampActivity(Rogue, ECampActivity::PickLock, Outcome, Error));
+        const int32 Bonus = Run.Progress().History.Last().BonusPotions;
+        bOpened |= Bonus == 1;
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+        const int32 Before = Run.Battle().Find(Rogue)->Potions;
+        TestTrue(TEXT("Claims"), Run.ClaimReward(Rogue, Error));
+        TestEqual(TEXT("Loot includes the strongbox potion"), Run.Battle().Find(Rogue)->Potions - Before, Run.Progress().History.Last().Route.RewardPotions + Bonus);
+        TestTrue(TEXT("Restores after claim"), Copy.Restore(Run.Snapshot(), Error));
+        if (bOpened) { break; }
+    }
+    TestTrue(TEXT("A rogue reached a rest point"), bChecked);
+    TestTrue(TEXT("Some seed opens the lock"), bOpened);
+    return true;
+}
 #endif
