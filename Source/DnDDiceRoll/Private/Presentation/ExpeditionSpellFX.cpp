@@ -40,7 +40,8 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
     if (Event.SpellId == TEXT("fireball"))
     {
         // 3rd level (size class 2): exact cells first, a bead, then a sub-second blast that lingers faintly.
-        Out.Glow = 1.0f; Out.Telegraph = 0.3f; Out.bArea = true; Out.Travel = 0.22f; Out.BoltScale = 0.6f;
+        // Telegraph + travel = 0.30 s before impact (direction budget 0.2-0.4 s).
+        Out.Glow = 1.0f; Out.Telegraph = 0.12f; Out.bArea = true; Out.Travel = 0.18f; Out.BoltScale = 0.6f;
         Out.ImpactGrow = 0.22f; Out.ImpactHold = 0.12f; Out.ImpactLinger = 0.75f; Out.LingerOpacity = 0.35f;
         return true;
     }
