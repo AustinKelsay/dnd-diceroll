@@ -118,4 +118,122 @@ bool FSpellFireBoltTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellFireballTest, "Project.Expedition.Spells.FireballAreaSaveUpcast",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellFireballTest::RunTest(const FString& Parameters)
+{
+    auto Setup = []()
+    {
+        FCombatEncounter E = Caster(EAdventurerRole::Wizard, 5, {6, 0});
+        FCombatantState Ally = E.Combatants[0]; Ally.Id = 11; Ally.Name = TEXT("Ally"); Ally.Cell = {7, 1}; Ally.AdventurerRole = EAdventurerRole::Cleric; Ally.SpellSlots = 0; Ally.SlotsByLevel.Reset(); Ally.InitiativeBonus = 0;
+        E.Combatants.Add(Ally);
+        FCombatantState Far = E.Combatants[1]; Far.Id = 21; Far.Name = TEXT("Far"); Far.Cell = {6, 9};
+        E.Combatants.Add(Far);
+        return E;
+    };
+    bool bSaved = false, bFailed = false;
+    for (int32 Seed = 1; Seed < 200 && !(bSaved && bFailed); ++Seed)
+    {
+        FString Error; FCombatBattle Battle;
+        if (!Battle.Start(Setup(), Seed, Error)) { AddError(Error); return false; }
+        const FCombatResult R = Battle.Submit(Cast(TEXT("fireball"), 20));
+        if (!TestTrue(TEXT("Fireball resolves"), R.bAccepted)) { AddError(R.Feedback); return false; }
+        TestTrue(TEXT("DEX save spell"), R.bSaveSpell);
+        TestEqual(TEXT("8d6 at 3rd level"), R.EffectDice.Num(), 8);
+        TestEqual(TEXT("3rd-level slot spent"), Battle.Find(10)->SlotsByLevel[2], 1);
+        TestEqual(TEXT("Far foe outside 20 ft"), Battle.Find(21)->HP, 500);
+        TestTrue(TEXT("Ally in the burst is burned"), Battle.Find(11)->HP < 300);
+        TestEqual(TEXT("Caster is outside the burst"), Battle.Find(10)->HP, 300);
+        const int32 Full = Sum(R.EffectDice), Lost = 500 - Battle.Find(20)->HP;
+        if (Lost == Full) { bFailed = true; }
+        else { TestEqual(TEXT("Half on a save, rounded down"), Lost, Full / 2); bSaved = true; }
+    }
+    TestTrue(TEXT("Saw a failed save"), bFailed); TestTrue(TEXT("Saw a successful save"), bSaved);
+    // Upcast: +1d6 per slot above 3rd (SRD). Heroes cap at level 5 (3rd-level slots), so check the rule table for higher slots.
+    const FSrdSpell* Fireball = FSpellCatalogRules::Find(TEXT("fireball"));
+    for (int32 Slot = 3; Slot <= 9; ++Slot) { TestEqual(FString::Printf(TEXT("Fireball dice at slot %d"), Slot), FSpellCatalogRules::DiceCount(*Fireball, 5, Slot), 5 + Slot); }
+    FString Error;
+    FCombatBattle Low;
+    Low.Start(Setup(), 9, Error);
+    TestFalse(TEXT("Cannot cast at 2nd level"), Low.Submit(Cast(TEXT("fireball"), 20, 2)).bAccepted);
+    FCombatEncounter Empty = Setup(); Empty.Combatants[0].SlotsByLevel[2] = 0;
+    FCombatBattle None; None.Start(Empty, 9, Error);
+    TestFalse(TEXT("No 3rd-level or higher slot"), None.Submit(Cast(TEXT("fireball"), 20)).bAccepted);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellConcentrationTest, "Project.Expedition.Spells.ConcentrationEndsConditions",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellConcentrationTest::RunTest(const FString& Parameters)
+{
+    bool bHeld = false, bBroken = false, bReplaced = false;
+    for (int32 Seed = 1; Seed < 300 && !(bBroken && bReplaced); ++Seed)
+    {
+        FCombatEncounter E = Caster(EAdventurerRole::Wizard, 5, {2, 0});
+        E.Combatants[0].MaxHP = E.Combatants[0].HP = 200;
+        FCombatantState Brute = E.Combatants[1]; Brute.Id = 21; Brute.Name = TEXT("Brute"); Brute.Cell = {0, 1}; Brute.InitiativeBonus = 0;
+        E.Combatants.Add(Brute);
+        FString Error; FCombatBattle Battle;
+        if (!Battle.Start(E, Seed, Error)) { AddError(Error); return false; }
+        const FCombatResult R = Battle.Submit(Cast(TEXT("hold-person"), 20));
+        if (!TestTrue(TEXT("Hold Person resolves"), R.bAccepted)) { AddError(R.Feedback); return false; }
+        auto Held = [&Battle]() { return Battle.Find(20)->Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Paralyzed && C.SourceId == 10; }); };
+        if (!R.bHit) { TestFalse(TEXT("No hold, no concentration"), Battle.Find(10)->bConcentrating); continue; }
+        bHeld = true;
+        TestTrue(TEXT("Concentrating"), Battle.Find(10)->bConcentrating);
+        TestTrue(TEXT("Paralyzed"), Held());
+        if (!bReplaced && (Seed % 2) == 0)
+        {
+            // Next turn: a new concentration spell ends the old one.
+            Battle.Submit({ECombatCommandType::EndTurn, 10});
+            for (int32 Guard = 0; Guard < 4 && Battle.ActiveId() != 10; ++Guard) { Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId()}); }
+            if (Battle.ActiveId() != 10 || !Held()) { continue; }
+            const FCombatResult Again = Battle.Submit(Cast(TEXT("hold-person"), 21));
+            if (Again.bAccepted) { TestFalse(TEXT("Recasting concentration ends the first hold"), Held()); bReplaced = true; }
+            continue;
+        }
+        Battle.Submit({ECombatCommandType::EndTurn, 10});
+        for (int32 Guard = 0; Guard < 4 && Battle.ActiveId() != 21; ++Guard) { Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId()}); }
+        if (Battle.ActiveId() != 21) { continue; }
+        const int32 Before = Battle.Find(10)->HP;
+        Battle.Submit({ECombatCommandType::Attack, 21, {}, 10});
+        if (Battle.Find(10)->HP == Before) { continue; }
+        if (!Battle.Find(10)->bConcentrating) { TestFalse(TEXT("Broken concentration frees the target"), Held()); bBroken = true; }
+        else { TestTrue(TEXT("Kept concentration keeps the hold"), Held()); }
+    }
+    TestTrue(TEXT("Saw a hold"), bHeld); TestTrue(TEXT("Saw damage break concentration"), bBroken); TestTrue(TEXT("Saw a recast replace it"), bReplaced);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellTwoDamageTypesTest, "Project.Expedition.Spells.TwoDamageTypes",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellTwoDamageTypesTest::RunTest(const FString& Parameters)
+{
+    const FSrdSpell* Storm = FSpellCatalogRules::Find(TEXT("ice-storm"));
+    if (!TestNotNull(TEXT("Ice Storm"), Storm)) { return false; }
+    TestEqual(TEXT("Bludgeoning first"), Storm->DamageType, EDamageType::Bludgeoning);
+    TestEqual(TEXT("Cold second"), Storm->Damage2Type, EDamageType::Cold);
+    TestEqual(TEXT("4d6 cold"), Storm->Dice2[4], 4);
+    // Ice Knife (level 1): piercing on the attack plus its cold burst; upcast adds cold dice.
+    bool bSeen = false, bUp = false;
+    for (int32 Seed = 1; Seed < 200 && !(bSeen && bUp); ++Seed)
+    {
+        FString Error; FCombatBattle Battle;
+        Battle.Start(Caster(EAdventurerRole::Wizard, 5, {4, 0}), Seed, Error);
+        const int32 Slot = (Seed % 2) ? 1 : 2;
+        const FCombatResult R = Battle.Submit(Cast(TEXT("ice-knife"), 20, Slot));
+        if (!TestTrue(TEXT("Ice Knife resolves"), R.bAccepted)) { AddError(R.Feedback); return false; }
+        if (!R.bHit || R.bCritical) { continue; }
+        (Slot == 1 ? bSeen : bUp) = true;
+        TestEqual(TEXT("1d10 piercing + 2d6 cold (+1d6 per slot)"), R.EffectDice.Num(), Slot == 1 ? 3 : 4);
+        TestEqual(TEXT("Both types dealt"), 500 - Battle.Find(20)->HP, Sum(R.EffectDice));
+    }
+    TestTrue(TEXT("Saw an Ice Knife hit"), bSeen); TestTrue(TEXT("Saw an upcast Ice Knife hit"), bUp);
+    for (const TCHAR* Id : {TEXT("flame-strike"), TEXT("meteor-swarm"), TEXT("ice-knife")})
+    {
+        const FSrdSpell* S = FSpellCatalogRules::Find(Id);
+        TestTrue(FString::Printf(TEXT("%s keeps a second type"), Id), S && S->Dice2Sides > 0);
+    }
+    return !HasAnyErrors();
+}
 #endif
