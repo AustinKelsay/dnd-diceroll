@@ -69,4 +69,7 @@ private:
     void DrawEnding();
     void DrawRecords();
     void DrawHelp();
+    void DrawCreator();
+    /** Watercolour accent (magic highlights only): soft stepped blots plus an ink rim. */
+    void Wash(float X, float Y, float Width, float Height, FLinearColor Color, uint32 Seed, float Strength = 1.0f);
 };

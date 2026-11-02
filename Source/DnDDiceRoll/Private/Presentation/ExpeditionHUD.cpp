@@ -7,6 +7,9 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Party/CharacterCreator.h"
+#include "Party/CreatorScreen.h"
+#include "Rules/ProficiencyRules.h"
 #include "Party/FeatureKit.h"
 #include "Rules/CoinRules.h"
 
@@ -290,7 +293,9 @@ void AExpeditionHUD::DrawHUD()
     }
     DrawBanner();
     // Overlays own every click: buttons hidden beneath them must not fire.
-    if (View->ShowingRecords() || Player->ShowingHelp()) { Buttons.Reset(); }
+    const bool bCreator = Player->Creator().bOpen;
+    if (View->ShowingRecords() || Player->ShowingHelp() || bCreator) { Buttons.Reset(); }
+    if (bCreator) { DrawCreator(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
 }
@@ -863,12 +868,21 @@ void AExpeditionHUD::DrawTitle()
         Button(FName(*FString::Printf(TEXT("Party%d"), I)), TEXT(""), TEXT(""), CardX, Y + 84, 160, 78, true, Player->BuilderSlot() == I, Sky);
         Text(P.Name + TEXT(" / ") + Preview.Role, CardX + 80, Y + 92, Parchment, 0.72f, EAlign::Center, 148);
         float LabelY = Y + 117;
-        for (const auto& Line : Wrap(FBuildCatalog::DisplayName(Preview).RightChop(Preview.Role.Len() + 3), 148, 0.72f))
-        { Text(Line, CardX + 80, LabelY, Muted, 0.72f, EAlign::Center); LabelY += 18; }
+        if (P.Sheet.IsCustom())
+        {
+            Text(TEXT("Custom hero"), CardX + 80, LabelY, Gold, 0.72f, EAlign::Center);
+            for (int32 C = 0; C < P.Sheet.Colors.Num(); ++C) { Rect(FCharacterCreator::PaletteColor(P.Sheet.Colors[C]), CardX + 50 + C * 22, LabelY + 24, 16, 16); Frame(FLinearColor(0, 0, 0, 0.9f), CardX + 50 + C * 22, LabelY + 24, 16, 16); }
+        }
+        else
+        {
+            for (const auto& Line : Wrap(FBuildCatalog::DisplayName(Preview).RightChop(Preview.Role.Len() + 3), 148, 0.72f))
+            { Text(Line, CardX + 80, LabelY, Muted, 0.72f, EAlign::Center); LabelY += 18; }
+        }
     }
     const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
     FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
-    Text(FBuildCatalog::DisplayName(Hero), X + 24, Y + 170, Parchment, 0.95f);
+    Text(Choice.Sheet.IsCustom() ? FString::Printf(TEXT("%s  ·  custom %s (27-point buy)"), *Choice.Name, *Hero.Role) : FBuildCatalog::DisplayName(Hero), X + 24, Y + 170, Parchment, 0.95f, EAlign::Left, 440);
+    Button(TEXT("CreateHero"), Choice.Sheet.IsCustom() ? TEXT("Edit hero") : TEXT("Create hero"), TEXT("Enter  ·  point buy"), X + 476, Y + 164, 200, 40, true, false, Gold);
     float Row = Y + 208;
     for (const auto& A : FBuildCatalog::Abilities(Hero))
     {
@@ -1062,5 +1076,149 @@ void AExpeditionHUD::DrawHelp()
     }
     Text(View->Rules().TwoRoundDowned() ? TEXT("House rule: a downed ally dies after 2 full rounds, or at once if attacked. Any healing revives them. Heal before the last enemy falls.") : TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
+    Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+// ---------------------------------------------------------------------------------------
+// Character creator overlay (LOCAL PROPOSAL, see Party/CharacterCreator.h)
+
+void AExpeditionHUD::Wash(float X, float Y, float Width, float Height, FLinearColor Color, uint32 Seed, float Strength)
+{
+    // Candlelit-arcane watercolour: overlapping soft blots with a stepped (12 fps) bleeding edge, then a hard ink rim.
+    const uint32 Frame12 = static_cast<uint32>(Clock * 12.0f);
+    const int32 Blots = FMath::Clamp(FMath::RoundToInt(Width / 26.0f), 4, 24);
+    for (int32 I = 0; I < Blots; ++I)
+    {
+        const uint32 R = Scramble(Seed * 977u + I * 131u + (Frame12 / 3u) * 7u);
+        const float T = (I + 0.5f) / Blots;
+        const float Jx = ((R & 255) / 255.0f - 0.5f) * 10.0f, Jy = (((R >> 8) & 255) / 255.0f - 0.5f) * Height * 0.25f;
+        const float Radius = Height * (0.48f + ((R >> 16) & 255) / 255.0f * 0.22f);
+        Polygon(FVector2D(X + T * Width + Jx, Y + Height * 0.5f + Jy), Radius, 9, (R >> 24) * 0.02f, WithAlpha(Color, 0.10f * Strength), Width / Blots > Radius ? 1.0f : 0.8f);
+    }
+    Rect(WithAlpha(Color, 0.12f * Strength), X, Y, Width, Height);
+    Frame(FLinearColor(Ink.R, Ink.G, Ink.B, 0.9f), X, Y, Width, Height, 2.0f);
+    Frame(WithAlpha(Color, 0.75f * Strength), X + 2, Y + 2, Width - 4, Height - 4, 1.0f);
+}
+
+void AExpeditionHUD::DrawCreator()
+{
+    const FCreatorScreen& C = Player->Creator();
+    const FCharacterDraft& D = C.Draft;
+    const FLinearColor Arcane(0.62f, 0.45f, 1.0f);
+    const float Width = 980, Height = FMath::Min(640.0f, H - 68);
+    const float X = W * 0.5f - Width * 0.5f, Y = 56; // below the system buttons
+    Rect(FLinearColor(0, 0, 0, 0.62f), 0, 0, W, H);
+    Panel(X, Y, Width, Height, Gold, 0.99f);
+    Text(TEXT("FORGE A HERO"), X + 24, Y + 14, Gold, 1.2f);
+    Text(FString::Printf(TEXT("Party slot %d  ·  SRD 5.2.1 point buy  ·  local proposal"), C.SlotIndex + 1), X + Width - 24, Y + 22, Muted, 0.7f, EAlign::Right);
+    Text(TEXT("Up/Down choose a row  ·  Left/Right change  ·  Enter pick  ·  type the name  ·  Esc cancel"), X + 24, Y + 46, Muted, 0.68f);
+    Rect(WithAlpha(Gold, 0.25f), X + 20, Y + 68, Width - 40, 1);
+    auto Focus = [&](int32 Row, float FX, float FY, float FW, float FH)
+    {
+        if (C.Row == Row) { Frame(WithAlpha(Gold, 0.55f + 0.25f * FMath::Sin(Clock * 4.0f)), FX - 3, FY - 3, FW + 6, FH + 6, 1.5f); }
+    };
+
+    // Left column: name, class, features, colours.
+    const float LX = X + 24, LW = 300;
+    Text(TEXT("NAME"), LX, Y + 80, Gold, 0.72f);
+    Button(TEXT("CrName"), FString(), FString(), LX, Y + 100, LW, 36, true, C.Row == FCreatorScreen::RowName, Gold);
+    const bool bCaret = C.Row == FCreatorScreen::RowName && FMath::Fmod(Clock, 1.0f) < 0.55f;
+    Text(D.Name.IsEmpty() && !bCaret ? FString(TEXT("type a name")) : D.Name + (bCaret ? TEXT("_") : TEXT("")), LX + 12, Y + 108, D.Name.IsEmpty() ? Muted : Parchment, 0.9f, EAlign::Left, LW - 24);
+    Focus(FCreatorScreen::RowName, LX, Y + 100, LW, 36);
+
+    Text(TEXT("CLASS"), LX, Y + 148, Gold, 0.72f);
+    Button(TEXT("CrClassPrev"), TEXT("<"), FString(), LX, Y + 168, 36, 36);
+    Button(TEXT("CrClassNext"), TEXT(">"), FString(), LX + LW - 36, Y + 168, 36, 36);
+    Text(FCharacterCreator::ClassName(D.Role), LX + LW * 0.5f, Y + 174, Parchment, 1.0f, EAlign::Center, LW - 90);
+    Focus(FCreatorScreen::RowClass, LX, Y + 168, LW, 36);
+    float Row = Y + 214;
+    Text(FString::Printf(TEXT("Hit die d%d  ·  %d skills  ·  %d Expertise"), FCharacterCreator::HitDie(D.Role), FCharacterCreator::SkillPicks(D.Role), FCharacterCreator::ExpertisePicks(D.Role)), LX, Row, Muted, 0.68f);
+    Row += 20;
+    for (const FString& Line : Wrap(FCharacterCreator::FeatureSummary(D.Role), LW, 0.7f)) { if (Row > Y + 380) { break; } Text(Line, LX, Row, Parchment, 0.7f); Row += 18; }
+    FCombatantState Kit; FBuildCatalog::Create(FCharacterCreator::BuildIdFor(D.Role), 0, D.Name, Kit);
+    Text(TEXT("Kit: ") + FBuildCatalog::DisplayName(Kit).RightChop(Kit.Role.Len() + 3), LX, Y + 388, Muted, 0.66f, EAlign::Left, LW);
+
+    Text(TEXT("COLOURS"), LX, Y + 414, Gold, 0.72f);
+    for (int32 Slot = 0; Slot < FCharacterCreator::ColorSlots; ++Slot)
+    {
+        const float RY = Y + 436 + Slot * 42;
+        Text(FCharacterCreator::SlotName(Slot), LX, RY + 8, Muted, 0.7f);
+        Button(*FString::Printf(TEXT("CrColor%d-"), Slot), TEXT("<"), FString(), LX + 96, RY, 32, 32);
+        Rect(FCharacterCreator::PaletteColor(D.Colors[Slot]), LX + 136, RY + 4, 24, 24);
+        Frame(FLinearColor(0, 0, 0, 0.9f), LX + 136, RY + 4, 24, 24, 2.0f);
+        Text(FCharacterCreator::PaletteName(D.Colors[Slot]), LX + 168, RY + 7, Parchment, 0.74f, EAlign::Left, 90);
+        Button(*FString::Printf(TEXT("CrColor%d+"), Slot), TEXT(">"), FString(), LX + LW - 32, RY, 32, 32);
+        Focus(FCreatorScreen::RowFirstColor + Slot, LX + 92, RY, LW - 92, 32);
+    }
+
+    // Middle column: point buy.
+    const float MX = X + 348, MW = 290;
+    const int32 Left = C.Remaining();
+    Text(TEXT("ABILITY SCORES"), MX, Y + 80, Gold, 0.72f);
+    Text(FString::Printf(TEXT("%d of %d points left"), Left, FPointBuyRules::Budget), MX + MW, Y + 80, Left == 0 ? Safe : Left < 0 ? Danger : Parchment, 0.72f, EAlign::Right);
+    Bar(MX, Y + 100, MW, 6, FMath::Clamp(1.0f - Left / float(FPointBuyRules::Budget), 0.0f, 1.0f), 0.0f, Gold);
+    for (int32 I = 0; I < FAbilityRules::AbilityCount; ++I)
+    {
+        const EAbility Ability = static_cast<EAbility>(I);
+        const float RY = Y + 118 + I * 50;
+        const bool bRow = C.Row == FCreatorScreen::RowFirstAbility + I;
+        if (bRow) { Wash(MX - 6, RY - 4, MW + 12, 46, Arcane, 11u + I); }
+        Text(FAbilityRules::AbilityName(Ability), MX + 4, RY + 4, bRow ? Parchment : Muted, 0.78f);
+        const int32 Cost = FPointBuyRules::RaiseCost(D.Scores, Ability);
+        Text(Cost == INDEX_NONE ? FString(TEXT("max")) : FString::Printf(TEXT("next +%d pt"), Cost), MX + 4, RY + 22, Muted, 0.6f);
+        Button(*FString::Printf(TEXT("CrMinus%d"), I), TEXT("-"), FString(), MX + 128, RY + 3, 32, 32, FPointBuyRules::CanLower(D.Scores, Ability));
+        Text(FString::FromInt(D.Scores.Get(Ability)), MX + 186, RY + 2, Parchment, 1.25f, EAlign::Center);
+        Button(*FString::Printf(TEXT("CrPlus%d"), I), TEXT("+"), FString(), MX + 212, RY + 3, 32, 32, FPointBuyRules::CanRaise(D.Scores, Ability));
+        const int32 Mod = FPointBuyRules::ModifierForecast(D.Scores, Ability);
+        Text(FString::Printf(TEXT("%+d"), Mod), MX + MW - 4, RY + 6, Mod > 0 ? Safe : Mod < 0 ? Danger : Muted, 0.95f, EAlign::Right);
+    }
+    Text(TEXT("8-15 before bonuses  ·  no species or background"), MX, Y + 424, Muted, 0.62f);
+
+    // Right column: skills.
+    const float RX = X + 666, RW = 290;
+    const TArray<ESkill> Skills = FCharacterCreator::SkillList(D.Role);
+    const int32 Picks = FCharacterCreator::SkillPicks(D.Role), Experts = FCharacterCreator::ExpertisePicks(D.Role);
+    Text(TEXT("SKILLS"), RX, Y + 80, Gold, 0.72f);
+    Text(Experts > 0 ? FString::Printf(TEXT("%d/%d picked  ·  %d/%d Expertise"), D.Skills.Num(), Picks, D.Expertise.Num(), Experts) : FString::Printf(TEXT("%d/%d picked"), D.Skills.Num(), Picks),
+        RX + RW, Y + 80, D.Skills.Num() == Picks && D.Expertise.Num() == Experts ? Safe : Parchment, 0.72f, EAlign::Right);
+    const float RowH = FMath::Min(28.0f, 440.0f / FMath::Max(1, Skills.Num()));
+    for (int32 I = 0; I < Skills.Num(); ++I)
+    {
+        const float RY = Y + 104 + I * RowH;
+        const bool bPicked = D.Skills.Contains(Skills[I]), bExpert = D.Expertise.Contains(Skills[I]);
+        Button(*FString::Printf(TEXT("CrSkill%d"), I), FString(), FString(), RX, RY, RW, RowH - 3, true, bPicked, bExpert ? Arcane : Gold);
+        Text(FProficiencyRules::SkillName(Skills[I]), RX + 10, RY + RowH * 0.5f - 11, bPicked ? Parchment : Muted, 0.72f);
+        if (bPicked) { Text(bExpert ? TEXT("EXPERTISE") : TEXT("PROFICIENT"), RX + RW - 10, RY + RowH * 0.5f - 10, bExpert ? Arcane : Gold, 0.6f, EAlign::Right); }
+        if (C.Row == FCreatorScreen::RowSkills && C.SkillCursor == I) { Frame(WithAlpha(Gold, 0.9f), RX - 2, RY - 2, RW + 4, RowH + 1, 1.5f); }
+    }
+    if (Experts > 0) { Text(TEXT("Enter / click again for Expertise, a third time to clear"), RX, Y + 550, Muted, 0.6f, EAlign::Left, RW); }
+
+    // Footer: emblem, summary, confirm / cancel.
+    const float FY = Y + Height - 74;
+    Rect(WithAlpha(Gold, 0.25f), X + 20, FY - 10, Width - 40, 1);
+    FString Error;
+    const bool bReady = C.Ready(Error);
+    const FVector2D Emblem(X + 64, FY + 30);
+    if (bReady)
+    {
+        const float Pulse = 0.75f + 0.25f * FMath::Sin(Clock * 3.0f);
+        for (int32 I = 0; I < 7; ++I)
+        {
+            const uint32 R = Scramble(91u + I * 37u + static_cast<uint32>(Clock * 4.0f));
+            Polygon(Emblem + FVector2D(((R & 255) / 255.0f - 0.5f) * 14.0f, (((R >> 8) & 255) / 255.0f - 0.5f) * 14.0f), 34 + (R >> 24) % 10, 9, I * 0.7f, WithAlpha(Arcane, 0.09f * Pulse));
+        }
+    }
+    Polygon(Emblem, 26, 6, 0.0f, FCharacterCreator::PaletteColor(D.Colors[1]));
+    Polygon(Emblem, 20, 6, 0.0f, FCharacterCreator::PaletteColor(D.Colors[0]));
+    Polygon(Emblem, 8, 4, 0.0f, FCharacterCreator::PaletteColor(D.Colors[2]));
+    const int32 HP = FCharacterCreator::HitDie(D.Role) + FPointBuyRules::ModifierForecast(D.Scores, EAbility::Constitution);
+    Text(FString::Printf(TEXT("%s  ·  %s 1  ·  HP %d"), D.Name.IsEmpty() ? TEXT("Unnamed") : *D.Name, FCharacterCreator::ClassName(D.Role), HP), X + 108, FY + 6, Parchment, 0.9f, EAlign::Left, 480);
+    const FString Status = !C.Message.IsEmpty() ? C.Message : bReady ? FString(TEXT("Ready: confirm to place this hero in the party.")) : Error;
+    Text(Status, X + 108, FY + 34, !C.Message.IsEmpty() ? Danger : bReady ? Safe : Muted, 0.7f, EAlign::Left, 500);
+    if (bReady) { Wash(X + Width - 368, FY + 2, 172, 52, Arcane, 7u, 0.8f); }
+    Button(TEXT("CrConfirm"), TEXT("Confirm hero"), TEXT("Enter"), X + Width - 364, FY + 6, 164, 44, bReady, C.Row == FCreatorScreen::RowConfirm, Gold);
+    Button(TEXT("CrCancel"), TEXT("Cancel"), TEXT("Esc"), X + Width - 188, FY + 6, 164, 44, true, C.Row == FCreatorScreen::RowCancel, Muted);
+    Focus(FCreatorScreen::RowConfirm, X + Width - 364, FY + 6, 164, 44);
+    Focus(FCreatorScreen::RowCancel, X + Width - 188, FY + 6, 164, 44);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }

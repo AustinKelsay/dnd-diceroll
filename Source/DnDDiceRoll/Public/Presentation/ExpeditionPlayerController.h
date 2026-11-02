@@ -3,8 +3,11 @@
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
 #include "Run/ExpeditionRun.h"
+#include "Party/CreatorScreen.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
+
+struct FInputKeyEventArgs;
 
 class AExpeditionBattleView;
 
@@ -17,6 +20,11 @@ public:
     virtual void BeginPlay() override;
     virtual void SetupInputComponent() override;
     virtual void PlayerTick(float DeltaTime) override;
+    /** While the creator overlay is open every non-mouse key goes to it (arrows, Enter, Escape, typing). */
+    using Super::InputKey;
+    virtual bool InputKey(const FInputKeyEventArgs& Params) override;
+    void RouteCreatorKey(const FKey& Key);
+    const FCreatorScreen& Creator() const { return CreatorState; }
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
     /** Who acts on the next command: the active adventurer in combat, else the selection. */
@@ -63,6 +71,14 @@ private:
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
+    FCreatorScreen CreatorState;
+    void OpenCreator();
+    void FinishCreator(FCreatorScreen::EResult Result);
+    /** Dev only: -CreatorTrial=<dir> drives the creator through the real input path and writes viewport captures. */
+    void TickCreatorTrial(float DeltaTime);
+    FString CreatorTrialOut;
+    int32 CreatorTrialStage = 0;
+    float CreatorTrialClock = 0.0f;
     void Preset();
     void CycleClass();
     void CycleBuild();

@@ -7,6 +7,11 @@
 #include "InputCoreTypes.h"
 #include "Party/BuildCatalog.h"
 #include "Party/FeatureKit.h"
+#include "Misc/CommandLine.h"
+#include "InputKeyEventArgs.h"
+#include "Misc/Parse.h"
+#include "Kismet/GameplayStatics.h"
+#include "UnrealClient.h"
 
 void AExpeditionPlayerController::BeginPlay()
 {
@@ -81,6 +86,7 @@ void AExpeditionPlayerController::SetupInputComponent()
 
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
+    TickCreatorTrial(DeltaTime);
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -184,7 +190,7 @@ void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
 void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
 void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
 void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
-void AExpeditionPlayerController::ConfirmCell() { if (AllowsGameplayInput() && BattleView->InCombat()) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
+void AExpeditionPlayerController::ConfirmCell() { if (CanSelectSubclass()) { OpenCreator(); return; } if (AllowsGameplayInput() && BattleView->InCombat()) { bKeyboardCursor = true; ActAtCell(GridCursor); } }
 
 void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
 {
@@ -218,6 +224,8 @@ void AExpeditionPlayerController::HandleButton(FName Id)
 {
     if (!IsValid(BattleView)) { return; }
     const FString Name = Id.ToString();
+    if (Name == TEXT("CreateHero")) { OpenCreator(); return; }
+    if (Name.StartsWith(TEXT("Cr"))) { if (CreatorState.bOpen) { FinishCreator(CreatorState.Button(Name)); BattleView->PlayCue(EExpeditionCue::Click); } return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
     if (Name == TEXT("ClassNext")) { CycleClass(); return; }
     if (Name == TEXT("BuildNext")) { CycleBuild(); return; }
@@ -317,6 +325,7 @@ void AExpeditionPlayerController::CycleClass()
     const auto* Current = FBuildCatalog::Find(Party[Slot].BuildId);
     const FString Next = Classes[(Classes.IndexOfByKey(Current->Profile.ClassId) + 1) % Classes.Num()];
     for (const auto& B : FBuildCatalog::All()) { if (B.Profile.ClassId == Next) { Party[Slot].BuildId = B.Id; break; } }
+    FCreatorScreen::ClearSheet(Party[Slot]); // a prebuilt class replaces any custom hero
 }
 void AExpeditionPlayerController::CycleBuild()
 {
@@ -335,15 +344,15 @@ void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 }
 bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
-    return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords();
+    return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords() && !CreatorState.bOpen;
 }
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
     if (!AllowsGameplayInput()) { return false; }
     return !BattleView->HasRun() || BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat;
 }
-void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
-void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
+void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); FCreatorScreen::ClearSheet(Party[0]); } }
+void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); FCreatorScreen::ClearSheet(Party[0]); } }
 void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(SpecialAction(1)); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
@@ -407,3 +416,118 @@ void AExpeditionPlayerController::BeginDrag()
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+
+// ---------------------------------------------------------------------------------------
+// Character creator overlay (LOCAL PROPOSAL, see Party/CharacterCreator.h)
+
+void AExpeditionPlayerController::OpenCreator()
+{
+    if (!CanSelectSubclass() || !Party.IsValidIndex(Slot)) { return; }
+    CreatorState.Open(Party[Slot], Slot);
+    bKeyboardCursor = false;
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+
+void AExpeditionPlayerController::FinishCreator(FCreatorScreen::EResult Result)
+{
+    if (Result == FCreatorScreen::EResult::Cancel) { CreatorState.Close(); return; }
+    if (Result != FCreatorScreen::EResult::Confirm || !Party.IsValidIndex(CreatorState.SlotIndex)) { return; }
+    FString Error;
+    CreatorState.Confirm(Party[CreatorState.SlotIndex], Error); // stays open with the reason on failure
+}
+
+bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
+{
+    if (!CreatorState.bOpen || Params.Key.IsMouseButton()) { return Super::InputKey(Params); }
+    if (Params.Event == IE_Pressed || Params.Event == IE_Repeat) { RouteCreatorKey(Params.Key); }
+    return true;
+}
+
+void AExpeditionPlayerController::RouteCreatorKey(const FKey& K)
+{
+    using EKey = FCreatorScreen::EKey;
+    FCreatorScreen::EResult Result = FCreatorScreen::EResult::None;
+    if (K == EKeys::Up) { Result = CreatorState.Key(EKey::Up); }
+    else if (K == EKeys::Down) { Result = CreatorState.Key(EKey::Down); }
+    else if (K == EKeys::Left) { Result = CreatorState.Key(EKey::Left); }
+    else if (K == EKeys::Right) { Result = CreatorState.Key(EKey::Right); }
+    else if (K == EKeys::Enter) { Result = CreatorState.Key(EKey::Enter); }
+    else if (K == EKeys::BackSpace) { Result = CreatorState.Key(EKey::Backspace); }
+    else if (K == EKeys::Escape) { Result = CreatorState.Key(EKey::Escape); }
+    else if (K == EKeys::SpaceBar) { CreatorState.Type(TEXT(' ')); }
+    else if (K == EKeys::Hyphen || K == EKeys::Subtract) { CreatorState.Type(TEXT('-')); }
+    else if (K == EKeys::Apostrophe) { CreatorState.Type(TEXT('\'')); }
+    else
+    {
+        const FString Name = K.GetFName().ToString();
+        if (Name.Len() == 1 && FChar::IsAlpha(Name[0])) { CreatorState.Type(Name[0]); }
+    }
+    FinishCreator(Result);
+}
+
+void AExpeditionPlayerController::TickCreatorTrial(float DeltaTime)
+{
+    if (CreatorTrialStage == 0)
+    {
+        CreatorTrialStage = -1;
+        if (!FParse::Value(FCommandLine::Get(), TEXT("CreatorTrial="), CreatorTrialOut) || CreatorTrialOut.IsEmpty()) { return; }
+        CreatorTrialStage = 1; CreatorTrialClock = 0.0f;
+        UE_LOG(LogTemp, Display, TEXT("CREATOR_TRIAL start %s"), *CreatorTrialOut);
+        return;
+    }
+    if (CreatorTrialStage < 1 || CreatorTrialStage > 20) { return; }
+    CreatorTrialClock += DeltaTime;
+    if (CreatorTrialClock < 1.5f) { return; }
+    CreatorTrialClock = 0.0f;
+    auto Shot = [this](const TCHAR* Name)
+    {
+        FScreenshotRequest::RequestScreenshot(FPaths::Combine(CreatorTrialOut, FString(Name) + TEXT(".png")), true, false);
+        UE_LOG(LogTemp, Display, TEXT("CREATOR_TRIAL shot %s"), Name);
+    };
+    auto Press = [this](FKey Key) { RouteCreatorKey(Key); };
+    auto GoRow = [&](int32 Row) { for (int32 Guard = 0; CreatorState.Row != Row && Guard < FCreatorScreen::RowCount; ++Guard) { Press(EKeys::Down); } };
+    auto Spend = [&](int32 Row, int32 Steps, bool bRaise) { GoRow(Row); for (int32 I = 0; I < Steps; ++I) { Press(bRaise ? EKeys::Right : EKeys::Left); } };
+    const int32 A = FCreatorScreen::RowFirstAbility;
+    switch (CreatorTrialStage++)
+    {
+    case 1: SelectPartyIndex(1); break; // second slot (Nix, prebuilt rogue)
+    case 2: Shot(TEXT("01_title_create_hero_button")); break;
+    case 3: HandleButton(TEXT("CreateHero")); break;
+    case 4: Shot(TEXT("02_creator_start")); break;
+    case 5:
+        // Typed name, then from all 8s: DEX 15 and CON 14 so far (11 points left), cursor resting on CON.
+        for (int32 I = 0; I < 8; ++I) { Press(EKeys::BackSpace); }
+        for (const TCHAR* Key : {TEXT("V"), TEXT("E"), TEXT("S"), TEXT("S"), TEXT("A"), TEXT("SpaceBar"), TEXT("T"), TEXT("H"), TEXT("O"), TEXT("R"), TEXT("N")}) { Press(FKey(Key)); }
+        for (int32 I = 0; I < 6; ++I) { Spend(A + I, 8, false); }
+        Spend(A + 1, 7, true);
+        Spend(A + 2, 6, true);
+        break;
+    case 6: Shot(TEXT("03_creator_points_spent")); break;
+    case 7:
+    {
+        Spend(A + 4, 7, true); // WIS 15
+        Spend(A + 5, 2, true); // CHA 10 -> 0 left
+        const TArray<ESkill> List = FCharacterCreator::SkillList(CreatorState.Draft.Role);
+        int32 Picked = 0;
+        for (const ESkill Want : {ESkill::Stealth, ESkill::Perception, ESkill::Acrobatics, ESkill::Investigation})
+        {
+            const int32 Index = List.IndexOfByKey(Want);
+            if (Index == INDEX_NONE) { continue; }
+            HandleButton(*FString::Printf(TEXT("CrSkill%d"), Index));
+            if (Picked++ < 2) { HandleButton(*FString::Printf(TEXT("CrSkill%d"), Index)); } // second pick = Expertise
+        }
+        HandleButton(TEXT("CrColor0+")); HandleButton(TEXT("CrColor0+")); HandleButton(TEXT("CrColor0+")); HandleButton(TEXT("CrColor0+"));
+        HandleButton(TEXT("CrColor1-"));
+        GoRow(FCreatorScreen::RowConfirm);
+        break;
+    }
+    case 8: Shot(TEXT("04_creator_finished_glow")); break;
+    case 9: Press(EKeys::Enter); UE_LOG(LogTemp, Display, TEXT("CREATOR_TRIAL confirmed open=%d custom=%d name=%s"), CreatorState.bOpen ? 1 : 0, Party[1].Sheet.IsCustom() ? 1 : 0, *Party[1].Name); break;
+    case 10: Shot(TEXT("05_finished_hero_in_party")); break;
+    case 11: NewRun(); break;
+    case 12: break;
+    case 13: Shot(TEXT("06_hero_in_run_hud")); break;
+    case 14: UE_LOG(LogTemp, Display, TEXT("CREATOR_TRIAL done")); FPlatformMisc::RequestExit(false); break;
+    default: break;
+    }
+}
