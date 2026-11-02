@@ -67,8 +67,26 @@ def cell_frame():
     return verts, faces
 
 
+def burst(points=9, outer=50.0, inner=33.0, height=30.0):
+    # Chunky low-poly star burst: alternating spike/notch rim, faceted cone top and bottom.
+    # Top-down it reads as a jagged flame bloom, not a soft round or pentagonal disc.
+    verts = [[0.0, 0.0, height], [0.0, 0.0, -height * 0.5]]
+    for k in range(points * 2):
+        a = k * math.pi / points + 0.21
+        r = outer * (1.0 - 0.1 * ((k * 7) % 4)) if k % 2 == 0 else inner * (1.0 - 0.08 * (k % 3))
+        verts.append([r * math.cos(a), r * math.sin(a), (6.0 if k % 2 == 0 else -4.0)])
+    faces = []
+    n = points * 2
+    for k in range(n):
+        i, j = 2 + k, 2 + (k + 1) % n
+        faces.append((0, i, j))
+        faces.append((1, j, i))
+    return verts, faces
+
+
 if __name__ == "__main__":
     write("SM_SpellFX_Ico", *ico())
     write("SM_SpellFX_Shard", *shard())
     write("SM_SpellFX_CellFrame", *cell_frame())
-    print("wrote 3 meshes to " + OUT)
+    write("SM_SpellFX_Burst", *burst())
+    print("wrote 4 meshes to " + OUT)

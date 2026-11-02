@@ -13,7 +13,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FOLDER = "/Game/DnDDiceRoll/Theme/SpellFX"
 MASTER = FOLDER + "/M_SpellFX"
 EVOCATION = FOLDER + "/MI_SpellFX_Evocation"
-MESHES = ["SM_SpellFX_Ico", "SM_SpellFX_Shard", "SM_SpellFX_CellFrame"]
+MESHES = ["SM_SpellFX_Ico", "SM_SpellFX_Shard", "SM_SpellFX_CellFrame", "SM_SpellFX_Burst"]
 SOURCE = os.path.join(ROOT, "Art", "spellfx-evocation", "r001")
 
 tools = unreal.AssetToolsHelpers.get_asset_tools()
@@ -25,7 +25,7 @@ SHADER = r"""
 float3 N = normalize(Nw);
 float3 V = normalize(Cam);
 float F = 1.0 - saturate(abs(dot(N, V)));
-float band = floor(saturate(F * 1.5) * 3.0) / 3.0;
+float band = floor(saturate(F * 1.6) * 2.0) / 2.0;
 float front = Sign > 0.0 ? 1.0 : 0.0;
 float3 p = Wp * 0.05;
 float3 c = floor(p);
@@ -41,10 +41,11 @@ float n011 = frac(sin(dot(c + float3(0,1,1), float3(127.1, 311.7, 74.7))) * 4375
 float n111 = frac(sin(dot(c + float3(1,1,1), float3(127.1, 311.7, 74.7))) * 43758.5453);
 float n = lerp(lerp(lerp(n000, n100, f.x), lerp(n010, n110, f.x), f.y), lerp(lerp(n001, n101, f.x), lerp(n011, n111, f.x), f.y), f.z);
 float3 L = Lead;
-float lead = Radial > 0.5 ? F : saturate(dot(N, normalize(L + float3(0.0001, 0.0, 0.0))));
-float edge = saturate((n - lead * Edge) * 8.0 + 0.6);
-if (InkShell > 0.5) { return float4(Ink, Opacity * (1.0 - front) * edge * saturate(F * 3.0)); }
-return float4(lerp(Core, Hue, band) * Glow, Opacity * front * edge);
+float lead = Radial > 0.5 ? saturate(F * 2.0 - 1.2) : saturate(dot(N, normalize(L + float3(0.0001, 0.0, 0.0))));
+float edge = step(0.5, saturate((n - lead * Edge) * 8.0 + 0.6));
+if (InkShell > 0.5) { return float4(Ink, Opacity * (1.0 - front) * step(0.34, F)); }
+float rim = step(0.86, F);
+return float4(lerp(lerp(Core, Hue, band), Ink, rim) * lerp(Glow, 1.0, rim), Opacity * front * edge);
 """
 
 
