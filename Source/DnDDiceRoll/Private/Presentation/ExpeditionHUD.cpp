@@ -613,7 +613,7 @@ void AExpeditionHUD::DrawActionBar()
         ++Column;
     }
     Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R / adjacent downed ally"), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
-    Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString::Printf(TEXT("P / %d left"), Active->Potions), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
+    Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString(TEXT("P / ")) + FCombatBattle::UsageTag(ECombatCommandType::Potion, *Active), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
     Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + Column * (Width + Gap), Y, Width, Height, true, false, Gold);
     if (const auto* Build = FBuildCatalog::Find(Active->BuildId); Build && Build->SneakDie) { Text(TEXT("Sneak Attack: automatic with adjacent ally"), W * 0.5f, Y - 52, Safe, 0.7f, EAlign::Center); }
     for (const auto& Pair : Hover)
@@ -624,6 +624,13 @@ void AExpeditionHUD::DrawActionBar()
         const float TipWidth = FMath::Min(640.0f, Measure(Help, 0.72f).X + 24);
         Panel(W * 0.5f - TipWidth * 0.5f, Y - 66, TipWidth, 30, Sky, 0.95f, false);
         Text(Help, W * 0.5f, Y - 60, Parchment, 0.72f, EAlign::Center, TipWidth - 16);
+        const FString Spell = FCombatBattle::SpellTag(Pair.Key);
+        if (!Spell.IsEmpty())
+        {
+            const float SpellWidth = FMath::Min(640.0f, Measure(Spell, 0.66f).X + 24);
+            Panel(W * 0.5f - SpellWidth * 0.5f, Y - 96, SpellWidth, 26, Sky, 0.9f, false);
+            Text(Spell, W * 0.5f, Y - 91, Muted, 0.66f, EAlign::Center, SpellWidth - 16);
+        }
     }
     Text(TEXT("Right-drag or Q/E: rotate  ·  Wheel: zoom  ·  Tab: skip  ·  T: speed  ·  ?: help"), W * 0.5f, H - 20, WithAlpha(Muted, 0.8f), 0.6f, EAlign::Center);
 }

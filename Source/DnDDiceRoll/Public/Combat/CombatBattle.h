@@ -250,6 +250,12 @@ public:
     TArray<FCombatResult> PlayEnemyTurn();
     /** Player-facing action facts share the tuning used by validation and resolution. */
     static FString DescribeAction(ECombatCommandType Action);
+    /** Cost field of DescribeAction, e.g. "Action + 1 slot". */
+    static FString CostTag(ECombatCommandType Action);
+    /** Remaining-resource text for a unit, e.g. "2 slots left"; empty when the action spends nothing countable. */
+    static FString UsageTag(ECombatCommandType Action, const FCombatantState& Unit);
+    /** SRD spell facts line (FSpellRules::Summary) for spell actions; empty otherwise. */
+    static FString SpellTag(ECombatCommandType Action);
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;

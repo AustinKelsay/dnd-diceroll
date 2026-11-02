@@ -1,5 +1,6 @@
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/SpellRules.h"
 
 namespace
 {
@@ -174,6 +175,41 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
         return FString::Printf(TEXT("POTION | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
+    }
+}
+
+FString FCombatBattle::CostTag(ECombatCommandType Action)
+{
+    TArray<FString> Fields;
+    DescribeAction(Action).ParseIntoArray(Fields, TEXT(" | "));
+    return Fields.Num() > 1 ? Fields[1] : FString();
+}
+
+FString FCombatBattle::UsageTag(ECombatCommandType Action, const FCombatantState& Unit)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::SecondWind:
+        return FString::Printf(TEXT("bonus, %d left"), Unit.SecondWindUses);
+    case ECombatCommandType::CureWounds:
+    case ECombatCommandType::MagicMissile:
+        return FString::Printf(TEXT("%d slot%s left"), Unit.SpellSlots, Unit.SpellSlots == 1 ? TEXT("") : TEXT("s"));
+    case ECombatCommandType::Potion:
+        return FString::Printf(TEXT("%d left"), Unit.Potions);
+    case ECombatCommandType::PrecisionStrike:
+        return FString::Printf(TEXT("+2 hit/damage, %d left"), Unit.ManeuverUses);
+    default:
+        return FString();
+    }
+}
+
+FString FCombatBattle::SpellTag(ECombatCommandType Action)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::CureWounds: return FSpellRules::Summary(ESpell::CureWounds);
+    case ECombatCommandType::MagicMissile: return FSpellRules::Summary(ESpell::MagicMissile);
+    default: return FString();
     }
 }
 
