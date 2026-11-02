@@ -113,18 +113,18 @@ FExpeditionSpellFXPiece& AExpeditionSpellFX::Add(UStaticMesh* Mesh, const FExped
     };
     if (bInk || bInkFill)
     {
-        auto Ink = Make(10);
-        Piece.Ink = Ink.Key; Piece.InkMaterial = Ink.Value;
+        auto InkPair = Make(10);
+        Piece.Ink = InkPair.Key; Piece.InkMaterial = InkPair.Value;
         if (bInkFill)
         {
             // Flat pieces (cell frames) get a dark under-print instead of a back-face shell.
-            Ink.Value->SetVectorParameterValue(TEXT("Core"), Style.Ink);
-            Ink.Value->SetVectorParameterValue(TEXT("Hue"), Style.Ink);
-            Ink.Value->SetScalarParameterValue(TEXT("Glow"), 1.0f);
-            Ink.Value->SetScalarParameterValue(TEXT("Edge"), 0.0f);
+            InkPair.Value->SetVectorParameterValue(TEXT("Core"), Style.Ink);
+            InkPair.Value->SetVectorParameterValue(TEXT("Hue"), Style.Ink);
+            InkPair.Value->SetScalarParameterValue(TEXT("Glow"), 1.0f);
+            InkPair.Value->SetScalarParameterValue(TEXT("Edge"), 0.0f);
             Piece.InkScale = 1.12f; Piece.bFlatInk = true;
         }
-        else { Ink.Value->SetScalarParameterValue(TEXT("InkShell"), 1.0f); }
+        else { InkPair.Value->SetScalarParameterValue(TEXT("InkShell"), 1.0f); }
     }
     auto Main = Make(11);
     Piece.Mesh = Main.Key; Piece.Material = Main.Value;
