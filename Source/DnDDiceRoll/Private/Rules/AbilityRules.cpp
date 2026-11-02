@@ -58,6 +58,16 @@ FAbilityScores FAbilityRules::PrebuiltScores(EAdventurerRole Role)
     case EAdventurerRole::Rogue: return Make(8, 16, 13, 12, 10, 14);
     case EAdventurerRole::Cleric: return Make(13, 12, 14, 10, 16, 8);
     case EAdventurerRole::Wizard: return Make(8, 12, 14, 16, 13, 10);
+    // Remaining classes: key ability 16 (+3, so +5 to hit at level 1) and DEX/CON/WIS chosen to fit each profile's AC.
+    case EAdventurerRole::Barbarian: return Make(16, 12, 16, 8, 10, 8);
+    case EAdventurerRole::Monk: return Make(10, 16, 14, 8, 12, 10);
+    case EAdventurerRole::Paladin: return Make(16, 10, 14, 8, 10, 14);
+    case EAdventurerRole::Ranger: return Make(10, 16, 14, 8, 14, 10);
+    case EAdventurerRole::Druid: return Make(10, 12, 14, 8, 16, 10);
+    case EAdventurerRole::Bard: return Make(8, 14, 14, 10, 10, 16);
+    case EAdventurerRole::Sorcerer: return Make(8, 12, 14, 10, 10, 16);
+    case EAdventurerRole::Warlock: return Make(8, 12, 14, 10, 10, 16);
+    case EAdventurerRole::Artificer: return Make(10, 12, 14, 16, 12, 8);
     default: return FAbilityScores();
     }
 }
@@ -78,6 +88,13 @@ EAbility FAbilityRules::AttackAbility(EAdventurerRole Role)
     case EAdventurerRole::Rogue: return EAbility::Dexterity;
     case EAdventurerRole::Cleric: return EAbility::Wisdom;
     case EAdventurerRole::Wizard: return EAbility::Intelligence;
+    case EAdventurerRole::Monk:
+    case EAdventurerRole::Ranger: return EAbility::Dexterity;
+    case EAdventurerRole::Druid: return EAbility::Wisdom;
+    case EAdventurerRole::Bard:
+    case EAdventurerRole::Sorcerer:
+    case EAdventurerRole::Warlock: return EAbility::Charisma;
+    case EAdventurerRole::Artificer: return EAbility::Intelligence;
     default: return EAbility::Strength;
     }
 }
