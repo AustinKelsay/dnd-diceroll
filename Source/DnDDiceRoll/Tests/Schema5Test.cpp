@@ -1254,12 +1254,13 @@ bool FSchema5SuperiorityDieTest::RunTest(const FString& Parameters)
     Encounter.Combatants[0] = Master;
     Encounter.Combatants[1].HP = Encounter.Combatants[1].MaxHP = 200;
     FString Error;
+    Encounter.bSuperiorityDice = false; // legacy flat path; the die is the default since #79
     FCombatBattle Plain;
     TestTrue(TEXT("Starts"), Plain.Start(Encounter, 7, Error));
     const int32 Base = Plain.Submit({ECombatCommandType::Attack, 10, {}, 20}).AttackBonus;
     FCombatBattle Flat;
     TestTrue(TEXT("Starts flat"), Flat.Start(Encounter, 7, Error));
-    TestEqual(TEXT("Default Precision Strike is +2"), Flat.Submit({ECombatCommandType::PrecisionStrike, 10, {}, 20}).AttackBonus, Base + 2);
+    TestEqual(TEXT("Legacy Precision Strike is +2"), Flat.Submit({ECombatCommandType::PrecisionStrike, 10, {}, 20}).AttackBonus, Base + 2);
     Encounter.bSuperiorityDice = true;
     TSet<int32> Seen;
     for (int32 Seed = 1; Seed <= 20; ++Seed)

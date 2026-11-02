@@ -51,6 +51,8 @@ public:
     static int32 PendingAsi(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
     /** Levels the hero has in Role across both classes. */
+    /** Superiority dice per rest: the interim 2 below Fighter 3, then the SRD 4. */
+    static int32 ManeuverCap(const FCombatantState& Hero);
     static int32 ClassLevel(const FCombatantState& Hero, EAdventurerRole Role);
     static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);

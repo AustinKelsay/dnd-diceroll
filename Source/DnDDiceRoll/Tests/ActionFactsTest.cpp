@@ -20,7 +20,7 @@ bool FActionFactsTest::RunTest(const FString& Parameters)
     Unit.SpellSlots = 0;
     TestEqual(TEXT("Zero slots"), FCombatBattle::UsageTag(ECombatCommandType::MagicMissile, Unit), FString(TEXT("0 slots left")));
     TestEqual(TEXT("Potion usage"), FCombatBattle::UsageTag(ECombatCommandType::Potion, Unit), FString(TEXT("3 left")));
-    TestEqual(TEXT("Maneuver usage"), FCombatBattle::UsageTag(ECombatCommandType::PrecisionStrike, Unit), FString(TEXT("+2 hit/damage, 2 left")));
+    TestEqual(TEXT("Maneuver usage"), FCombatBattle::UsageTag(ECombatCommandType::PrecisionStrike, Unit), FString(TEXT("+d8 to hit, 2 dice left")));
     TestTrue(TEXT("Attack has no resource"), FCombatBattle::UsageTag(ECombatCommandType::Attack, Unit).IsEmpty());
     // Cost tag is the second field of the action description, so tooltip and chip cannot drift.
     TestEqual(TEXT("Cure cost"), FCombatBattle::CostTag(ECombatCommandType::CureWounds), FString(TEXT("Action + 1 slot")));

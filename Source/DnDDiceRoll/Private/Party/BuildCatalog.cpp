@@ -1,4 +1,5 @@
 #include "Party/BuildCatalog.h"
+#include "Rules/SuperiorityRules.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/ArmorRules.h"
 #include "Rules/LevelRules.h"
@@ -251,6 +252,11 @@ int32 FBuildCatalog::PendingAsi(const FCombatantState& Hero)
 }
 // #79 SRD: damage is die + ability modifier; level no longer adds a flat bonus (Extra Attack and cantrip dice scale instead).
 int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { return Build.Profile.DamageBonus; }
+int32 FBuildCatalog::ManeuverCap(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId); if (!B || !B->ManeuverCap) { return 0; }
+    return FMath::Max(B->ManeuverCap, FSuperiorityRules::DicePerRest(ClassLevel(Hero, EAdventurerRole::Fighter))); // SRD: 4 dice from Fighter 3
+}
 int32 FBuildCatalog::ClassLevel(const FCombatantState& Hero, EAdventurerRole Role)
 {
     return (Hero.AdventurerRole == Role ? Hero.Level - Hero.SecondaryLevel : 0) + (Hero.SecondaryRole == Role ? Hero.SecondaryLevel : 0);
@@ -258,7 +264,7 @@ int32 FBuildCatalog::ClassLevel(const FCombatantState& Hero, EAdventurerRole Rol
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);
-    return B && ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= WindCap(Hero) && Hero.SpellSlots >= 0 && Hero.SpellSlots <= SlotCap(Hero) && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
+    return B && ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= WindCap(Hero) && Hero.SpellSlots >= 0 && Hero.SpellSlots <= SlotCap(Hero) && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= ManeuverCap(Hero) && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
 }
 
 TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
@@ -269,7 +275,7 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
     {
             FAbilityFacts A; A.Command = Command; A.Description = FCombatBattle::DescribeAction(Command); A.ResourceCost = 1;
             if (Command == ECombatCommandType::SecondWind) { A.Name = TEXT("Second Wind"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Wind"); A.bResourceAvailable = Hero.SecondWindUses > 0; }
-            else if (Command == ECombatCommandType::PrecisionStrike) { A.Name = TEXT("Precision Strike"); A.Effect = EAbilityEffect::WeaponAttack; A.ResourceName = TEXT("Maneuver"); A.Target = EAbilityTarget::Enemy; A.Range = Hero.Range; A.bBonus = false; A.bResourceAvailable = Hero.ManeuverUses > 0; }
+            else if (Command == ECombatCommandType::PrecisionStrike) { A.Name = TEXT("Superiority Die"); A.Effect = EAbilityEffect::WeaponAttack; A.ResourceName = TEXT("Superiority die"); A.Target = EAbilityTarget::Enemy; A.Range = Hero.Range; A.bBonus = false; A.bResourceAvailable = Hero.ManeuverUses > 0; }
             else if (Command == ECombatCommandType::CureWounds) { A.Name = TEXT("Cure Wounds"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Ally; A.Range = BuildRules::TouchRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
             else { A.Name = TEXT("Magic Missile"); A.Effect = EAbilityEffect::Missile; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Enemy; A.Range = BuildRules::MissileRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
             return A;
@@ -302,7 +308,7 @@ FString FBuildCatalog::Status(const FCombatantState& Hero)
     if (B->KitCap) { Text += FString::Printf(TEXT("Kit %d / "), Hero.KitUses); }
     if (WindCap(Hero)) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
     if (SlotCap(Hero)) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
-    if (B->ManeuverCap) { Text += FString::Printf(TEXT("Maneuvers %d / "), Hero.ManeuverUses); }
+    if (B->ManeuverCap) { Text += FString::Printf(TEXT("Superiority d8 %d / "), Hero.ManeuverUses); }
     if (B->RageCap) { Text += FString::Printf(TEXT("Rage %d; %d own turn ends / "), Hero.RageUses, Hero.RageTurns); }
     if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Protection -> %d (%d, until next own turn) / "), Hero.GuardTargetId, Hero.GuardAmount > 0 ? Hero.GuardAmount : 3); }
     if (Hero.LastSurge) { Text += FString::Printf(TEXT("Last surge %d / "), Hero.LastSurge); }

@@ -76,7 +76,7 @@ FString ActionName(ECombatCommandType Action)
     case ECombatCommandType::Potion: return TEXT("Healing Potion");
     case ECombatCommandType::Move: return TEXT("Move");
     case ECombatCommandType::EndTurn: return TEXT("End Turn");
-    case ECombatCommandType::PrecisionStrike: return TEXT("Precision Strike");
+    case ECombatCommandType::PrecisionStrike: return TEXT("Superiority Die");
     case ECombatCommandType::Dash: return TEXT("Dash");
     case ECombatCommandType::Disengage: return TEXT("Disengage");
     case ECombatCommandType::Dodge: return TEXT("Dodge");

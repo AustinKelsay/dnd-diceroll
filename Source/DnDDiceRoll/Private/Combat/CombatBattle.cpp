@@ -119,7 +119,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
     for (const FCombatantState& Unit : Encounter.Combatants)
     {
         if (Unit.Id < 0 || Ids.Contains(Unit.Id) || !Inside(Unit.Cell) || Occupied.Contains(Unit.Cell) ||
-            Unit.Level < 1 || Unit.Level > 5 || Unit.ManeuverUses < 0 || Unit.ManeuverUses > 2 ||
+            Unit.Level < 1 || Unit.Level > 5 || Unit.ManeuverUses < 0 || Unit.ManeuverUses > 4 ||
             static_cast<uint8>(Unit.FighterSubclass) > static_cast<uint8>(EFighterSubclass::BattleMaster) ||
             (Unit.FighterSubclass != EFighterSubclass::BattleMaster && Unit.ManeuverUses != 0) ||
             (Unit.AdventurerRole != EAdventurerRole::Fighter && Unit.FighterSubclass != EFighterSubclass::None) ||
@@ -354,7 +354,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::PrecisionStrike:
-        return TEXT("PRECISION STRIKE | Free with an attack + 1 use | attack with +2 hit and +2 damage; no camp refill");
+        return TEXT("SUPERIORITY DIE | Free with an attack + 1 die | Precision Attack: add a d8 superiority die to the attack roll; dice return on a rest");
     case ECombatCommandType::SecondWind:
         return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+fighter level healing | target self"), WindDie);
     case ECombatCommandType::CureWounds:
@@ -406,7 +406,7 @@ FString FCombatBattle::UsageTag(ECombatCommandType Action, const FCombatantState
     case ECombatCommandType::Potion:
         return FString::Printf(TEXT("%d left"), Unit.Potions);
     case ECombatCommandType::PrecisionStrike:
-        return FString::Printf(TEXT("+2 hit/damage, %d left"), Unit.ManeuverUses);
+        return FString::Printf(TEXT("+d8 to hit, %d dice left"), Unit.ManeuverUses);
     default:
         return FString();
     }
@@ -886,16 +886,23 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         for (int32 Natural = 1; Natural <= 20; ++Natural)
         { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + WeaponAttackBonus(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Forecast.TargetArmorClass) ? 1 : 0; }
         const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
+        const bool bDie = Action == ECombatCommandType::PrecisionStrike && State.Encounter.bSuperiorityDice;
+        if (bDie) { Hits = 0; for (int32 Natural = 1; Natural <= 20; ++Natural) { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + WeaponAttackBonus(*this, *Actor) >= Forecast.TargetArmorClass) ? 1 : 0; } }
         Forecast.RollMode = Mode.Mode;
         Forecast.AdvantageSources = Mode.Advantage;
         Forecast.DisadvantageSources = Mode.Disadvantage;
         // Hitting faces are a top run of the d20, so two-die chances are exact squares.
         Forecast.HitChanceOutOf400 = Mode.Mode == ERollMode::Advantage ? 400 - (20 - Hits) * (20 - Hits) :
             Mode.Mode == ERollMode::Disadvantage ? Hits * Hits : Hits * 20;
+        if (bDie)
+        {
+            const int32 Sides = FSuperiorityRules::DieSides(FBuildCatalog::ClassLevel(*Actor, EAdventurerRole::Fighter));
+            Forecast.HitChanceOutOf400 = (FSuperiorityRules::PrecisionHitOutOf(WeaponAttackBonus(*this, *Actor), Forecast.TargetArmorClass, Mode.Mode, Sides) + Sides / 2) / Sides;
+        }
         Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
         int32 WeaponCount = 1, WeaponSides = 0;
         WeaponDice(*Actor, WeaponCount, WeaponSides);
-        Effect(WeaponCount, WeaponSides, WeaponDamageModifier(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        Effect(WeaponCount, WeaponSides, WeaponDamageModifier(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike && !bDie ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { const int32 N = SneakDiceCount(State.Encounter, *Actor); Forecast.MinAmount += N; Forecast.MaxAmount += N * SneakDie; Forecast.Formula += FString::Printf(TEXT(" +%dd%d sneak"), N, SneakDie); }
         break;
@@ -1319,7 +1326,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         WeaponDice(*Actor, DiceCount, DiceSides);
         Result.Damage = RollDice(DiceCount, DiceSides);
         if (Result.bCritical) { Result.Damage += RollDice(DiceCount, DiceSides); }
-        Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), false) : WeaponDamageModifier(*this, *Actor)) + ManeuverBonus;
+        Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), false) : WeaponDamageModifier(*this, *Actor)) + (State.Encounter.bSuperiorityDice ? 0 : ManeuverBonus);
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Result.bSneakAttack) { Result.Damage += RollDice((Result.bCritical ? 2 : 1) * SneakDiceCount(State.Encounter, *Actor), SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
@@ -1460,7 +1467,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
         const int32 ManeuverBonus = Command.Type != ECombatCommandType::PrecisionStrike ? 0 :
-            State.Encounter.bSuperiorityDice ? Roll(FSuperiorityRules::DieSides(Actor->Level)) : PrecisionBonus;
+            State.Encounter.bSuperiorityDice ? Roll(FSuperiorityRules::DieSides(FBuildCatalog::ClassLevel(*Actor, EAdventurerRole::Fighter))) : PrecisionBonus;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
         Strike(Command.ActorId, Command.TargetId, ManeuverBonus, Result);
         if (State.bActionAvailable)

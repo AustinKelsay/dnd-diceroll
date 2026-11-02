@@ -3,6 +3,7 @@
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/CantripRules.h"
+#include "Rules/ClassFeatureRules.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionEconomyTagTest, "Project.Expedition.Rules.ActionEconomyTags",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -64,6 +65,22 @@ bool FSrdDiceDefaultsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Primary class levels"), FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric), 3);
     TestEqual(TEXT("Fire Bolt 2d10 at level 5"), FCantripRules::DiceCount(ESpell::FireBolt, 5), 2);
     TestEqual(TEXT("Fire Bolt 1d10 at level 4"), FCantripRules::DiceCount(ESpell::FireBolt, 4), 1);
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSuperiorityDefaultsTest, "Project.Expedition.Rules.SuperiorityDefaults",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSuperiorityDefaultsTest::RunTest(const FString& Parameters)
+{
+    const FCombatEncounter Defaults;
+    TestTrue(TEXT("Superiority dice on by default"), Defaults.bSuperiorityDice);
+    TestTrue(TEXT("Scaled Sneak Attack on by default"), Defaults.bScaledSneakAttack);
+    TestFalse(TEXT("Death saves off by default"), Defaults.bDeathSaves);
+    TestEqual(TEXT("Extra Attack at Fighter 5"), FClassFeatureRules::AttacksPerAction(EAdventurerRole::Fighter, 5), 2);
+    TestEqual(TEXT("Sneak 3d6 at level 5"), FClassFeatureRules::SneakAttackDice(5), 3);
+    FCombatantState Master = FBuildCatalog::Find(TEXT("fighter.battle-master"))->Profile;
+    TestEqual(TEXT("Interim 2 dice below Fighter 3"), FBuildCatalog::ManeuverCap(Master), 2);
+    Master.Level = 3;
+    TestEqual(TEXT("SRD 4 superiority dice at Fighter 3"), FBuildCatalog::ManeuverCap(Master), 4);
     return true;
 }
 #endif

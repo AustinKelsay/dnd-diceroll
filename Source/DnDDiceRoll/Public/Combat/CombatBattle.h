@@ -140,14 +140,14 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bDeathSaves = false;
     /** #63: other creatures in the line of attack give half cover (+2). Off by default to keep seeded results. */
     UPROPERTY() bool bCreatureCover = false;
-    /** #78: Precision Strike adds a rolled superiority die (d8, scaling by level) instead of a flat +2. Off by default. */
-    UPROPERTY() bool bSuperiorityDice = false;
+    /** #78/#79: the Battle Master maneuver spends a superiority die (d8) added to the attack roll (SRD Precision Attack). On by default; off restores the old flat +2 hit/damage. */
+    UPROPERTY() bool bSuperiorityDice = true;
     /** #80: the party sneaks up: party Stealth vs each foe's passive Perception; surprised foes lose round 1. Off by default. */
     UPROPERTY() bool bPartyAmbush = false;
     /** Off by default: a natural 20 grants inspiration, spent for advantage on the holder's next attack. */
     UPROPERTY() bool bInspiration = false;
-    /** #77: Sneak Attack scales with level (ceil(level/2) d6) instead of a flat single die. Off by default (balance). */
-    UPROPERTY() bool bScaledSneakAttack = false;
+    /** #77/#79: Sneak Attack scales with level (SRD ceil(level/2) d6, once per turn). On by default; off keeps a flat single die. */
+    UPROPERTY() bool bScaledSneakAttack = true;
     /** Off by default: the whole field is dark; only darkvision (by role) sees, which sets attack advantage/disadvantage. */
     UPROPERTY() bool bDarkness = false;
     /** Off by default: variant encumbrance slows units by carried weight (pack + potions + shield) against Strength. */

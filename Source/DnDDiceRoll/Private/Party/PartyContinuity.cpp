@@ -81,7 +81,7 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
             Survivor.RageUses = FMath::Min(B->RageCap, Survivor.RageUses + B->RageRecovery);
             Survivor.SecondWindUses = FMath::Min(FBuildCatalog::WindCap(Survivor), Survivor.SecondWindUses + FMath::Max(B->WindRecovery, B->WindCap ? 0 : 1));
             Survivor.SpellSlots = FMath::Min(FBuildCatalog::SlotCap(Survivor), Survivor.SpellSlots + FMath::Max(B->SlotRecovery, B->SlotCap ? 0 : 1));
-            Survivor.ManeuverUses = FMath::Min(B->ManeuverCap, Survivor.ManeuverUses + B->ManeuverRecovery);
+            Survivor.ManeuverUses = FMath::Min(FBuildCatalog::ManeuverCap(Survivor), Survivor.ManeuverUses + B->ManeuverRecovery + (FBuildCatalog::ManeuverCap(Survivor) > B->ManeuverCap ? 2 : 0));
         }
         else
         {

@@ -415,7 +415,7 @@ bool FSubclassForecastTest::RunTest(const FString& Parameters)
     FCombatBattle Battle;
     TestTrue(TEXT("Start Champion"), Battle.Start(Layout, 42, Error));
     TestEqual(TEXT("Champion 19 and 20 hit even AC40"), Battle.Forecast(1,ECombatCommandType::Attack,2).HitChancePercent,10);
-    Fighter.FighterSubclass = EFighterSubclass::BattleMaster; Fighter.ManeuverUses = 2;
+    Fighter.FighterSubclass = EFighterSubclass::BattleMaster; Fighter.ManeuverUses = 2; Layout.bSuperiorityDice = false; // legacy flat path
     Enemy.ArmorClass = 12;
     TestTrue(TEXT("Start Battle Master"), Battle.Start(Layout,42,Error));
     const auto Forecast = Battle.Forecast(1,ECombatCommandType::PrecisionStrike,2);

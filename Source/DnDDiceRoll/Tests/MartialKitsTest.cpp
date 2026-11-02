@@ -355,7 +355,7 @@ bool FMartialFighterTest::RunTest(const FString& Parameters)
         {
             FString Error; FCombatantState Hero; FBuildCatalog::Create(Build,1,TEXT("Fighter"),Hero); Hero.InitiativeBonus=30; Hero.Cell={0,0};
             FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={1,0}; Enemy.ArmorClass=40; Enemy.HP=Enemy.MaxHP=100; Enemy.InitiativeBonus=-10;
-            FCombatEncounter Encounter; Encounter.Combatants={Hero,Enemy}; FCombatBattle Battle;
+            FCombatEncounter Encounter; Encounter.Combatants={Hero,Enemy}; Encounter.bSuperiorityDice=false; FCombatBattle Battle;
             TestTrue(TEXT("Catalog Fighter starts"),Battle.Start(Encounter,Seed,Error));
             const auto Action=Champion?ECombatCommandType::Attack:ECombatCommandType::PrecisionStrike;
             TestEqual(TEXT("Worked critical-only chance"),Battle.Forecast(1,Action,20).HitChancePercent,Champion?10:5);
