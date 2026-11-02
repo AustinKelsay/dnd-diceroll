@@ -304,6 +304,8 @@ All 339 SRD 5.2.1 spells are in `FSpellCatalogRules`. Each spell is tagged with 
 
 Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level spells are resolvable by the catalog but not castable yet.
 
+> The two tables below are the original Phase 0 snapshot. Current coverage is in **Spell status (cantrips to 4th level)** at the end of this file.
+
 | Level | Castable in battle (level 5 hero) |
 | --- | --- |
 | Cantrip | 11: Acid Splash, Chill Touch, Eldritch Blast, Fire Bolt, Poison Spray, Produce Flame, Ray of Frost, Sacred Flame, Shocking Grasp, Starry Wisp, Vicious Mockery |
@@ -837,7 +839,7 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 - HP: Aid +5 max HP per slot above 1st (reverted at the end), False Life 2d4+4 (+5 per slot) temp HP.
 - Smites: Divine Smite (+1d8 vs fiends and undead), Searing Smite (start-of-turn fire, CON save ends), Shining Smite (attackers have advantage); bonus action against a creature hit in melee this turn.
 - Not modelled: Warding Bond damage sharing, Hex ability-check disadvantage, Reduce half of Enlarge/Reduce, critical doubling of smite dice, Invisibility hiding beyond the condition.
-- Coverage (cantrips to L4 one-cast resolvable): L0 11/27, L1 34/57, L2 24/57, L3 14/42, L4 15/34 = 98/217 (was 62/217). Floors asserted in `Rules.SpellCoverage`.
+- Coverage at the end of Phase 4 (cantrips to L4 one-cast resolvable): L0 11/27, L1 34/57, L2 24/57, L3 14/42, L4 15/34 = 98/217 (was 62/217). Final numbers: see Spell status below.
 
 ## Spell effect hooks (VFX API, no art)
 
@@ -854,3 +856,176 @@ The rules module emits presentation data only; it never reads it back and ships 
 `SizeClass` (FSpellUtilityRules::SizeClass) by spell level: 0 cantrip, 1 levels 1-2, 2 level 3, 3 levels 4-6, 4 levels 7-9.
 
 Tests: `Project.Expedition.Spells.VisualHooks` (size classes, Fire Bolt cast event, Fireball area event, Moonbeam persist snapshot, per-turn events and End).
+
+## Utility spells and final status (Phase 5, SRD 5.2.1)
+
+`FSpellUtilityRules` (Private/Rules/SpellUtilityRules.cpp) classifies every cantrip-to-4th-level spell that the damage/heal/condition catalog path and the buff table (`FSpellEffectRules`) do not cover. Each row has a kind and a one-line ruling; the combat side lives in `CombatSpellUtility.cpp`.
+
+Kinds (`ESpellUtility`):
+
+- **Engine:** resolved by an existing engine path (zone table, held effects).
+- **Reaction:** Shield, Counterspell, Absorb Elements, Hellish Rebuke, Feather Fall and similar, offered at the trigger.
+- **Beams:** one attack (or dart) per beam, each aimed through `FCombatCommand::ExtraTargetIds`. Eldritch Blast 1/2/3/4 at levels 1/5/11/17, Scorching Ray 3 + 1 per slot above 2nd, Magic Missile 3 + 1 per slot above 1st.
+- **ChoiceAttack:** the caster picks the damage type with `Command.Choice` (Chromatic Orb, Sorcerous Burst) or a two-part attack (Ice Knife).
+- **WeaponCantrip:** a weapon attack with the spellcasting modifier (True Strike, Shillelagh).
+- **Restore:** ends a state: stabilize, revive, end conditions, dispel, end curses.
+- **Teleport:** moves to `Command.Destination` (Misty Step, Dimension Door).
+- **Push:** forced movement (Gust of Wind).
+- **Obscure:** heavily obscured zones that block sight (Fog Cloud, Darkness, the illusion images).
+- **Light:** bright-light zones; Darkness and Daylight dispel each other by level.
+- **Silence:** no verbal spells inside, thunder immunity.
+- **Summon:** a token that acts on the caster's turn.
+- **Zone, Debuff, Buff:** lasting area, single-target penalty or self/ally benefit outside the Phase 4 table.
+- **Exception:** no tactical-grid equivalent; the reason is stored on the row and asserted by `Rules.SpellCoverage`.
+
+Exception re-audit (this phase): Minor Illusion, Silent Image and Major Image now block sight as image zones (5-ft, 15-ft and 20-ft cubes); Remove Curse ends Hex and Bestow Curse on a touched creature; Blink rolls 1d6 at the end of the caster's turn and on 4-6 the caster is Ethereal (untargetable and unharmed) until its next turn starts. The spells that stay exceptions are exploration, social, ritual or object-state spells (detection, communication, scouting, long casts, object repair, shapechanging without stat blocks). Goodberry stays an exception because under 5.2.1 the eater spends its own Bonus Action and a downed creature cannot eat, and the battle has no consumable inventory. Detect Magic and Detect Evil and Good stay because every creature's position is already known on the grid.
+
+Upcasting: `Project.Expedition.Spells.UpcastRules` checks every 1st- to 4th-level spell (dice never drop from its level to slot 9, a 4th-level slot averages more when the dice grow, extra targets per slot, beams, per-slot riders) plus SRD spot checks with a 4th-level slot (Fireball 9d6, Lightning Bolt 9d6, Burning Hands 6d6, Thunderwave 5d8, Guiding Bolt 7d6, Shatter 5d8, Inflict Wounds 5d10, Cure Wounds 8d8, Healing Word 8d4, Magic Missile 6 darts, Scorching Ray 5 rays). `Project.Expedition.Spells.UpcastBattle` casts with 3rd-level slots in battle (Magic Missile 5 darts, Burning Hands 5d6, Inflict Wounds 4d10). Live 4th-level casts wait on the engine level cap (Start rejects a 4th-level slot at level 5).
+
+### Handled utility spells (`FSpellUtilityRules`, 54 rows)
+
+| Lvl | Spell | Kind | Ruling |
+|---|---|---|---|
+| 0 | Eldritch Blast | Beams | one attack per beam; ExtraTargetIds aims each beam (empty: all at the first target via the catalog path) |
+| 0 | Guidance | Buff | +1d4 to contested checks (Shove, Grapple, Hide) |
+| 0 | Resistance | Buff | once per turn -1d4 damage of the Choice type |
+| 0 | Sorcerous Burst | ChoiceAttack | Command.Choice = EDamageType; 8s explode up to the spellcasting modifier in extra d8s |
+| 0 | Dancing Lights | Light | lights as one 10-ft bright zone |
+| 0 | Light | Light | 20-ft bright light around the touched creature's cell |
+| 0 | Minor Illusion | Obscure | 5-ft image of an object: blocks sight into and out of its cell (investigation and creature belief not modelled; sound option is exploration) |
+| 0 | Spare the Dying | Restore | stabilizes a downed ally (15/30/60/120 ft by tier) |
+| 0 | Shillelagh | WeaponCantrip | club/quarterstaff uses the spellcasting modifier and d8/d10/d12/2d6 damage |
+| 0 | True Strike | WeaponCantrip | weapon attack with the spellcasting modifier; +radiant d6s from level 5 |
+| 1 | Magic Missile | Beams | darts auto-hit for 1d4+1 each, split across targets |
+| 1 | Chromatic Orb | ChoiceAttack | Command.Choice = EDamageType; matching d8s leap the orb up to slot-level times within 30 ft |
+| 1 | Ice Knife | ChoiceAttack | 1d10 piercing attack, then a cold burst (DEX save) on the target and adjacent creatures, hit or miss |
+| 1 | Ensnaring Strike | Debuff | next hit: STR save or Restrained and 1d6 piercing per turn |
+| 1 | Fog Cloud | Obscure | 20-ft radius (+20 ft/slot) heavily obscured: no sight in or out |
+| 1 | Silent Image | Obscure | 15-ft cube image (3x3 cells, concentration): blocks sight into and out of it |
+| 1 | Hellish Rebuke | Reaction | auto: after damage from a creature within 60 ft, DEX save 2d10 fire (+1d10/slot), half on success |
+| 1 | Shield | Reaction | auto: when hit by an attack it turns into a miss (+5 AC until your next turn) |
+| 2 | Scorching Ray | Beams | one attack per ray, each at its own target |
+| 2 | Darkvision | Buff | 150-ft darkvision |
+| 2 | Enhance Ability | Buff | advantage on checks of the Choice ability |
+| 2 | Levitate | Buff | aloft: out of melee reach |
+| 2 | See Invisibility | Buff | ignores the Invisible condition |
+| 2 | Calm Emotions | Debuff | WIS save: affected foes become indifferent (Pacified) or allies lose Charmed/Frightened |
+| 2 | Ray of Enfeeblement | Debuff | CON save or melee attacks at disadvantage and -1d8 damage |
+| 2 | Spike Growth | Engine | 20-ft zone, difficult terrain, 2d4 per 5 ft moved |
+| 2 | Continual Flame | Light | permanent 20-ft bright light |
+| 2 | Darkness | Obscure | 15-ft magical darkness: blocks sight, darkvision too; dispels light of level 2 or lower |
+| 2 | Gust of Wind | Push | 60x10-ft line toward the target: STR save or pushed 15 ft; repeats on turn start in the line |
+| 2 | Lesser Restoration | Restore | ends Blinded, Deafened, Paralyzed or Poisoned (Command.Choice picks) |
+| 2 | Silence | Silence | 20-ft sphere: no verbal spells, thunder immunity |
+| 2 | Find Steed | Summon | steed token at the caster: slam 1d8+slot radiant each caster turn (mounted combat not modelled) |
+| 2 | Misty Step | Teleport | bonus action: 30 ft to Command.Destination in sight |
+| 2 | Pass without Trace | Zone | 30-ft emanation: +10 to allies' Hide (Stealth) checks |
+| 3 | Beacon of Hope | Buff | advantage on WIS saves and death saves; healing is maximised |
+| 3 | Blink | Buff | end of each of your turns roll 1d6: 4-6 you are Ethereal (untargetable, no damage) until your next turn starts |
+| 3 | Fly | Buff | 60-ft fly speed; can't be reached by ground melee |
+| 3 | Conjure Animals | Engine | pack as a 10-ft zone: DEX save on enter/end turn; the pack's own movement is not modelled |
+| 3 | Daylight | Light | 60-ft sunlight; dispels Darkness of level 3 or lower |
+| 3 | Major Image | Obscure | 20-ft cube image (5x5 cells on the grid, concentration): blocks sight into and out of it |
+| 3 | Counterspell | Reaction | auto (FFeatureKit Counterspell): CON save or the enemy spell fails; enemy casters are stat-block cantrips only |
+| 3 | Dispel Magic | Restore | ends spells on the target; above the slot level needs a check DC 10 + level |
+| 3 | Remove Curse | Restore | touch: ends every curse on the creature (Hex, Bestow Curse) |
+| 3 | Revivify | Restore | touch: a dead ally returns with 1 HP (the 1-minute window is the battle) |
+| 3 | Plant Growth | Zone | 100-ft overgrowth: 4 movement per 5 ft (the 8-hour enrichment is exploration) |
+| 4 | Confusion | Debuff | 10-ft sphere WIS save; d10 behaviour each turn |
+| 4 | Resilient Sphere | Debuff | DEX save: sealed sphere, untargetable and no damage in or out |
+| 4 | Conjure Woodland Beings | Engine | 10-ft emanation: WIS save on enter/end turn; the Disengage bonus action is not modelled |
+| 4 | Faithful Hound | Summon | hound token: a foe within 5 ft makes a DEX save or takes 4d8 force each caster turn |
+| 4 | Giant Insect | Summon | spider token: moves 40 ft and bites 1d6+3+slot piercing + 1d4+slot poison each caster turn |
+| 4 | Dimension Door | Teleport | 500 ft to Command.Destination; ExtraTargetIds[0] adjacent ally comes along |
+| 4 | Aura of Life | Zone | 30-ft emanation: necrotic resistance; downed allies regain 1 HP at turn start |
+| 4 | Conjure Minor Elementals | Zone | 15-ft emanation: caster hits on creatures in it add 2d8 of the Choice type (enemies-only difficult terrain not modelled) |
+| 4 | Guardian of Faith | Zone | 10-ft guardian zone: DEX save, 20 radiant (10 on save) on enter/turn start; vanishes after 60 dealt |
+
+### Documented exceptions (69, cantrip to 9th; 69 at levels 0-4)
+
+| Lvl | Spell | Reason |
+|---|---|---|
+| 0 | Druidcraft | exploration/social utility: no combat effect on the tactical grid |
+| 0 | Elementalism | exploration/social utility: no combat effect on the tactical grid |
+| 0 | Mage Hand | object interaction only; the hand can't attack and there are no objects on the grid |
+| 0 | Mending | 1-minute cast; repairs objects (no object state) |
+| 0 | Message | exploration/social utility: no combat effect on the tactical grid |
+| 0 | Prestidigitation | exploration/social utility: no combat effect on the tactical grid |
+| 0 | Thaumaturgy | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Alarm | 1-minute ritual ward for rest scenes; nothing to trigger in a started battle |
+| 1 | Comprehend Languages | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Create or Destroy Water | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Detect Evil and Good | senses locations and types only: every combatant's location is already known on the grid, so it changes nothing tactically |
+| 1 | Detect Magic | senses magic auras only: no magic items or hidden glyphs on the grid; it reveals no creature |
+| 1 | Detect Poison and Disease | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Disguise Self | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Feather Fall | no falling or elevation on the grid |
+| 1 | Find Familiar | 1-hour ritual: can't be cast in combat; a pre-summoned familiar needs encounter setup (future) |
+| 1 | Floating Disk | carries objects; no inventory weight on the grid |
+| 1 | Goodberry | berries are eaten later with the eater's Bonus Action (1 HP each); no consumable inventory in battle, and a downed ally can't eat |
+| 1 | Identify | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Illusory Script | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Jump | no jumping or elevation on the grid |
+| 1 | Purify Food and Drink | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Speak with Animals | exploration/social utility: no combat effect on the tactical grid |
+| 1 | Unseen Servant | object chores only; the servant can't attack and there are no objects on the grid |
+| 2 | Alter Self | shape options are exploration (aquatic, disguise); natural weapons need a weapon swap (future) |
+| 2 | Animal Messenger | exploration/social utility: no combat effect on the tactical grid |
+| 2 | Arcane Lock | no doors or objects on the grid |
+| 2 | Arcanist's Magic Aura | exploration/social utility: no combat effect on the tactical grid |
+| 2 | Augury | 1-minute ritual divination |
+| 2 | Detect Thoughts | information/social; the probe needs AI state (not modelled) |
+| 2 | Dragon's Breath | grants the target a Magic action command each turn; party commands are class kits (future command) |
+| 2 | Enthrall | Perception penalty only; no passive Perception in battle |
+| 2 | Find Traps | exploration/social utility: no combat effect on the tactical grid |
+| 2 | Gentle Repose | affects corpses out of combat |
+| 2 | Knock | no doors or locks on the grid |
+| 2 | Locate Animals or Plants | exploration/social utility: no combat effect on the tactical grid |
+| 2 | Locate Object | exploration/social utility: no combat effect on the tactical grid |
+| 2 | Magic Mouth | 1-minute ritual |
+| 2 | Prayer of Healing | 10-minute cast: out-of-combat healing |
+| 2 | Rope Trick | extradimensional refuge for rests; no elevation on the grid |
+| 2 | Spider Climb | no walls or ceilings to climb on the grid |
+| 2 | Zone of Truth | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Animate Dead | 1-minute cast; undead servants persist between battles (party roster, future) |
+| 3 | Clairvoyance | 10-minute cast, remote sensing |
+| 3 | Create Food and Water | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Gaseous Form | an escape form: no attacks, spells or objects while gaseous, and its use (squeezing through cracks) needs terrain the grid lacks |
+| 3 | Glyph of Warding | 1-hour cast: a prepared trap, not a combat action |
+| 3 | Magic Circle | 1-minute cast |
+| 3 | Meld into Stone | no stone terrain to meld into |
+| 3 | Nondetection | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Phantom Steed | 1-minute cast; travel mount |
+| 3 | Sending | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Speak with Dead | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Speak with Plants | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Tiny Hut | 1-minute ritual shelter for rests |
+| 3 | Tongues | exploration/social utility: no combat effect on the tactical grid |
+| 3 | Water Breathing | no water on the grid |
+| 3 | Water Walk | no water on the grid |
+| 3 | Wind Wall | needs a wall shape and projectile deflection on lines (future area shape) |
+| 4 | Arcane Eye | remote sensing |
+| 4 | Control Water | no water on the grid |
+| 4 | Divination | ritual divination |
+| 4 | Fabricate | 10-minute crafting |
+| 4 | Hallucinatory Terrain | 10-minute cast; illusory terrain needs AI belief state |
+| 4 | Locate Creature | exploration/social utility: no combat effect on the tactical grid |
+| 4 | Polymorph | needs a beast stat-block swap with its own HP (future summons/shapes system) |
+| 4 | Private Sanctum | 10-minute cast warding an area for rests |
+| 4 | Secret Chest | exploration/social utility: no combat effect on the tactical grid |
+| 4 | Stone Shape | reshapes stone: no destructible or editable terrain |
+
+### Spell status (cantrips to 4th level)
+
+Castable = resolvable in battle by the catalog, buff, utility or engine paths (`Rules.SpellCoverage`, floors asserted). Every spell is either castable or a documented exception.
+
+| Level | Castable | Total | Documented exceptions |
+|---|---|---|---|
+| 0 | 20 | 27 | 7 |
+| 1 | 40 | 57 | 17 |
+| 2 | 39 | 57 | 18 |
+| 3 | 25 | 42 | 17 |
+| 4 | 24 | 34 | 10 |
+| **Total** | **148** | **217** | **69** |
+
+4th-level spells are resolvable but need a 4th-level slot, which no hero has under `EngineLevelCap = 5`.
