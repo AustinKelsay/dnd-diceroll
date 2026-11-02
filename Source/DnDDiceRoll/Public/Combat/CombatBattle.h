@@ -104,6 +104,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 OffHand = -1;
     /** #66: creature size (ECreatureSize index, 2 = Medium); grapple and shove reach at most one size larger. */
     UPROPERTY() int32 Size = 2;
+    /** #80: surprised; skips its first-round turn. */
+    UPROPERTY() bool bSurprised = false;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
@@ -124,6 +126,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bCreatureCover = false;
     /** #78: Precision Strike adds a rolled superiority die (d8, scaling by level) instead of a flat +2. Off by default. */
     UPROPERTY() bool bSuperiorityDice = false;
+    /** #80: the party sneaks up: party Stealth vs each foe's passive Perception; surprised foes lose round 1. Off by default. */
+    UPROPERTY() bool bPartyAmbush = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */

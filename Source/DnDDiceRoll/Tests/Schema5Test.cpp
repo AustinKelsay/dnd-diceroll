@@ -1274,4 +1274,34 @@ bool FSchema5SuperiorityDieTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The die varies"), Seen.Num() > 1);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5AmbushSurpriseTest, "Project.Expedition.Schema5.AmbushSurprise",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5AmbushSurpriseTest::RunTest(const FString& Parameters)
+{
+    // Foe acts first (higher initiative); a surprised foe loses that turn and the ally acts in round 1.
+    FCombatEncounter Encounter = Schema5Test::Pair({5, 5});
+    Encounter.Combatants[0].InitiativeBonus = -10;
+    Encounter.Combatants[1].InitiativeBonus = 30;
+    FString Error;
+    FCombatBattle Normal;
+    TestTrue(TEXT("Starts"), Normal.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Without ambush the foe acts first"), Normal.ActiveId(), 20);
+    Encounter.bPartyAmbush = true;
+    bool bSurprisedOnce = false;
+    for (int32 Seed = 1; Seed <= 20; ++Seed)
+    {
+        FCombatBattle Ambush;
+        TestTrue(TEXT("Starts ambush"), Ambush.Start(Encounter, Seed, Error));
+        if (Ambush.ActiveId() == 10)
+        {
+            bSurprisedOnce = true;
+            TestEqual(TEXT("Still round 1"), Ambush.Snapshot().Round, 1);
+            TestTrue(TEXT("Ends turn"), Ambush.Submit({ECombatCommandType::EndTurn, 10}).bAccepted);
+            TestEqual(TEXT("Foe acts in round 2"), Ambush.ActiveId(), 20);
+            TestEqual(TEXT("Round 2"), Ambush.Snapshot().Round, 2);
+        }
+    }
+    TestTrue(TEXT("Some seed surprises the foe"), bSurprisedOnce);
+    return true;
+}
 #endif

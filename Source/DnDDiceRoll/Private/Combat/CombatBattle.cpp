@@ -17,6 +17,7 @@
 #include "Rules/TwoWeaponRules.h"
 #include "Rules/GrappleRules.h"
 #include "Rules/SuperiorityRules.h"
+#include "Rules/StealthRules.h"
 
 namespace
 {
@@ -226,7 +227,25 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
         const int32 IB = Find(B)->Initiative;
         return IA == IB ? A < B : IA > IB;
     });
-    if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
+    if (State.Encounter.bPartyAmbush)
+    {
+        TArray<int32> Stealth;
+        for (const FCombatantState& Unit : State.Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Stealth.Add(Roll(20) + Character(Unit.Id).SkillBonus(ESkill::Stealth)); }
+        }
+        for (FCombatantState& Unit : State.Encounter.Combatants)
+        {
+            Unit.bSurprised = Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious &&
+                FStealthRules::IsSurprised(Stealth, FStealthRules::PassiveScore(Character(Unit.Id).SkillBonus(ESkill::Perception), ERollMode::Normal));
+        }
+    }
+    if (FCombatantState* Opener = MutableFind(ActiveId()); Opener->bSurprised)
+    {
+        Opener->bSurprised = false;
+        AdvanceTurn();
+    }
+    else if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
     {
         DownedTurn(*First);
         AdvanceTurn();
@@ -1714,7 +1733,9 @@ void FCombatBattle::AdvanceTurn()
         State.TurnIndex = (State.TurnIndex + 1) % State.TurnOrder.Num();
         if (State.TurnIndex == 0) { ++State.Round; }
         FCombatantState* Next = MutableFind(ActiveId());
+        if (State.Round > 1) { for (FCombatantState& Unit : State.Encounter.Combatants) { Unit.bSurprised = false; } }
         if (Next->Life == ECombatLife::Downed) { DownedTurn(*Next); }
+        else if (Next->bSurprised) { Next->bSurprised = false; }
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
