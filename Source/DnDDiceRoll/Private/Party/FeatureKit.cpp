@@ -136,6 +136,8 @@ void FFeatureKit::ShortRest(FCombatantState& Hero)
     Hero.KiPoints = KiCap(Hero);
     // SRD 5.2.1 Pact Magic: all expended Pact Magic slots come back on a Short or Long Rest.
     if (HasPactMagic(Hero)) { PactRecover(Hero, MAX_int32); }
+    // Bard 5 Font of Inspiration: Bardic Inspiration uses also come back on a Short Rest.
+    if (FBardRules::HasFontOfInspiration(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Bard))) { Hero.BardicUses = BardicCap(Hero); }
 }
 bool FFeatureKit::HasPactMagic(const FCombatantState& Hero)
 {

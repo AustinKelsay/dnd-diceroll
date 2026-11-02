@@ -496,6 +496,24 @@ bool FMagicalCunningTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFontOfInspirationTest, "Project.Expedition.Features.FontOfInspiration",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFontOfInspirationTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (int32 L = 1; L <= 5; ++L)
+    {
+        FCombatantState Bard = Hero(TEXT("bard.lore"), L); FFeatureKit::Refill(Bard);
+        const int32 Cap = Bard.BardicUses; Bard.BardicUses = 0;
+        FFeatureKit::ShortRest(Bard);
+        TestEqual(FString::Printf(TEXT("Bard %d short rest"), L), Bard.BardicUses, L >= 5 ? Cap : 0);
+    }
+    FCombatantState FB = Hero(TEXT("fighter.champion"), 5); FB.SecondaryRole = EAdventurerRole::Bard; FB.SecondaryLevel = 1; FFeatureKit::Refill(FB);
+    FB.BardicUses = 0; FFeatureKit::ShortRest(FB);
+    TestEqual(TEXT("Fighter 4/Bard 1: no Font"), FB.BardicUses, 0);
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)
