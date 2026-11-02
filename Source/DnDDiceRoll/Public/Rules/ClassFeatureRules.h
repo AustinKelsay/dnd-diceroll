@@ -2,8 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "Rules/CheckRules.h"
+#include "Rules/StandardActionRules.h"
 
 enum class EAdventurerRole : uint8;
+
+/** One SRD class feature gained at levels 1-5, with its action-economy tag (#79). */
+struct FClassFeature
+{
+    const TCHAR* Name = TEXT("");
+    int32 Level = 1;
+    EActionCost Cost = EActionCost::Free;
+    /** True when the battle engine resolves it today; false = listed and tagged, not yet playable. */
+    bool bPlayable = false;
+};
 
 /** Level-scaling class features as pure tables (SRD levels 1-20). */
 struct DNDDICEROLL_API FClassFeatureRules
@@ -21,4 +32,8 @@ struct DNDDICEROLL_API FClassFeatureRules
     static int32 ChannelDivinityUses(int32 Level);
     /** Wizard: combined slot levels recovered, half the level rounded up. */
     static int32 ArcaneRecoveryLevels(int32 Level);
+    /** SRD features a class has by this class level (1-5 only), each tagged Action/Bonus/Reaction/Free. */
+    static TArray<FClassFeature> FeaturesThrough(EAdventurerRole Role, int32 Level);
+    /** "Name [Tag]" list joined by ", " for menus. */
+    static FString FeatureSummary(EAdventurerRole Role, int32 Level);
 };

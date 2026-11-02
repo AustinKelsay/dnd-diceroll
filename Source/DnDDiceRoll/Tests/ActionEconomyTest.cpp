@@ -83,4 +83,17 @@ bool FSuperiorityDefaultsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("SRD 4 superiority dice at Fighter 3"), FBuildCatalog::ManeuverCap(Master), 4);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassFeatureTableTest, "Project.Expedition.Rules.ClassFeaturesTagged",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FClassFeatureTableTest::RunTest(const FString& Parameters)
+{
+    TestEqual(TEXT("Fighter 1"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1), FString(TEXT("Fighting Style [Free]*, Second Wind [Bonus Action]")));
+    TestEqual(TEXT("Fighter 5 has five"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 5).Num(), 5);
+    TestEqual(TEXT("Level 20 capped at 5"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 20).Num(), 5);
+    TestTrue(TEXT("Rage is a bonus action"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Barbarian, 1).Contains(TEXT("Rage [Bonus Action]")));
+    TestTrue(TEXT("Uncanny Dodge is a reaction"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Rogue, 5).Contains(TEXT("Uncanny Dodge [Reaction]")));
+    for (const EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Barbarian, EAdventurerRole::Cleric, EAdventurerRole::Bard, EAdventurerRole::Druid, EAdventurerRole::Monk, EAdventurerRole::Paladin, EAdventurerRole::Sorcerer})
+    { TestTrue(TEXT("Every requested class has features"), FClassFeatureRules::FeaturesThrough(Role, 5).Num() > 0); }
+    return true;
+}
 #endif
