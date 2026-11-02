@@ -28,6 +28,7 @@ private:
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
     TArray<FButtonArea> Buttons;
     TArray<FBox2D> Blockers;
+    TArray<FBox2D> ChipExclusions; // Visible HUD panels in design units, independent of input blocking.
     float S = 1.0f;
     float W = 1280.0f;
     float H = 720.0f;
@@ -54,6 +55,7 @@ private:
 
     // Layers.
     void DrawWorldOverlays();
+    void DrawTargetChips();
     void DrawTopBar();
     void DrawInitiative();
     void DrawParty();

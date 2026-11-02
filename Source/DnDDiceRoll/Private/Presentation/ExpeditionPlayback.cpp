@@ -78,7 +78,7 @@ FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType
     FString Label = F.bHealing ? TEXT("Heal +") + Amount
         : (F.bAttackRoll ? FString::Printf(TEXT("%d%% | "), F.HitChancePercent) : FString(TEXT("Auto | "))) + Amount;
     for (const auto& A : FBuildCatalog::Abilities(*Actor))
-    { if (A.Command == Action && A.Effect == EAbilityEffect::Push) { Label += TEXT(" + push if open"); } }
+    { if (A.Command == Action && A.Effect == EAbilityEffect::Push && F.MinAmount < Target->HP) { Label += TEXT(" + push if open"); } }
     if (F.bCanDrop) { Label += F.MaxAmount >= Target->HP ? TEXT(" | can drop") : TEXT(" | crit drop"); }
     return Label;
 }
