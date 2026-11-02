@@ -78,6 +78,7 @@ private:
     void ThunderwaveMode();
     void ShoveMode();
     void GrappleMode();
+    void StandardAction(ECombatCommandType Action);
     void CycleSlot();
     void Loot();
     void FirstRoute();

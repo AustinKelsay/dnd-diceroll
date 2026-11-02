@@ -77,6 +77,12 @@ FString ActionName(ECombatCommandType Action)
     case ECombatCommandType::Move: return TEXT("Move");
     case ECombatCommandType::EndTurn: return TEXT("End Turn");
     case ECombatCommandType::PrecisionStrike: return TEXT("Precision Strike");
+    case ECombatCommandType::Dash: return TEXT("Dash");
+    case ECombatCommandType::Disengage: return TEXT("Disengage");
+    case ECombatCommandType::Dodge: return TEXT("Dodge");
+    case ECombatCommandType::Help: return TEXT("Help");
+    case ECombatCommandType::Hide: return TEXT("Hide");
+    case ECombatCommandType::Ready: return TEXT("Ready");
     default: return TEXT("Attack");
     }
 }

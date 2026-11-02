@@ -948,4 +948,87 @@ bool FSchema5CatalogEquipmentTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Most armored classes equip something"), Equipped >= 20);
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5StandardActionsTest, "Project.Expedition.Schema5.StandardActionsInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5StandardActionsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    {
+        FCombatBattle B;
+        TestTrue(TEXT("Dash starts"), B.Start(Pair({7, 7}), 7, Error));
+        const int32 Before = B.Snapshot().MovementLeft;
+        TestTrue(TEXT("Dash accepted"), B.Submit({ECombatCommandType::Dash, 10, {}, 10}).bAccepted);
+        TestEqual(TEXT("Dash adds speed"), B.Snapshot().MovementLeft, Before * 2);
+        TestFalse(TEXT("Dash spends the action"), B.Snapshot().bActionAvailable);
+        TestFalse(TEXT("No second Dash without Cunning Action"), B.Submit({ECombatCommandType::Dash, 10, {}, 10}).bAccepted);
+        FCombatBattle Copy;
+        TestTrue(TEXT("Dashed movement restores"), Copy.Restore(B.Snapshot(), Error));
+    }
+    {
+        FCombatBattle B;
+        TestTrue(TEXT("Disengage starts"), B.Start(Pair({1, 0}), 7, Error));
+        TestTrue(TEXT("Disengage accepted"), B.Submit({ECombatCommandType::Disengage, 10, {}, 10}).bAccepted);
+        const FCombatResult Away = B.Submit({ECombatCommandType::Move, 10, {0, 3}});
+        TestTrue(TEXT("Disengaged move provokes nothing"), Away.bAccepted && Away.Reactions.IsEmpty());
+        TestTrue(TEXT("Foe keeps its reaction"), B.Find(20)->bReactionAvailable);
+    }
+    {
+        FCombatBattle B;
+        TestTrue(TEXT("Dodge starts"), B.Start(Pair({1, 0}), 7, Error));
+        const int32 SaveBefore = B.SavingThrowChance(10, EAbility::Dexterity, 15, ERollMode::Normal);
+        TestTrue(TEXT("Dodge accepted"), B.Submit({ECombatCommandType::Dodge, 10, {}, 10}).bAccepted);
+        TestEqual(TEXT("Attacks against a dodger have disadvantage"), B.AttackRollMode(20, 10).Mode, ERollMode::Disadvantage);
+        TestTrue(TEXT("Dodger has advantage on DEX saves"), B.SavingThrowChance(10, EAbility::Dexterity, 15, ERollMode::Normal) > SaveBefore);
+        B.Submit({ECombatCommandType::EndTurn, 10});
+        TestTrue(TEXT("Dodge lasts through the foe's turn"), B.Find(10)->bDodging);
+        B.Submit({ECombatCommandType::EndTurn, 20});
+        TestFalse(TEXT("Dodge ends at the dodger's next turn"), B.Find(10)->bDodging);
+    }
+    {
+        FCombatEncounter E = Pair({1, 0});
+        FCombatantState Second = E.Combatants[0];
+        Second.Id = 11; Second.Name = TEXT("Second"); Second.Cell = {1, 1}; Second.InitiativeBonus = 20;
+        E.Combatants.Add(Second);
+        FCombatBattle B;
+        TestTrue(TEXT("Help starts"), B.Start(E, 7, Error));
+        TestTrue(TEXT("Help accepted on an adjacent foe"), B.Submit({ECombatCommandType::Help, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("Foe is marked"), B.Find(20)->HelpedById, 10);
+        TestEqual(TEXT("Ally attacks the marked foe with advantage"), B.AttackRollMode(11, 20).Mode, ERollMode::Advantage);
+        TestEqual(TEXT("Helper gains no advantage itself"), B.AttackRollMode(10, 20).Mode, ERollMode::Normal);
+        B.Submit({ECombatCommandType::EndTurn, 10});
+        TestEqual(TEXT("Second acts next"), B.ActiveId(), 11);
+        TestTrue(TEXT("Helped attack"), B.Submit({ECombatCommandType::Attack, 11, {}, 20}).bAccepted);
+        TestEqual(TEXT("Help is used up"), B.Find(20)->HelpedById, INDEX_NONE);
+    }
+    {
+        bool bSawHidden = false;
+        for (int32 Seed = 1; Seed < 40 && !bSawHidden; ++Seed)
+        {
+            FCombatBattle B;
+            B.Start(Pair({7, 7}), Seed, Error);
+            const FCombatResult Hide = B.Submit({ECombatCommandType::Hide, 10, {}, 10});
+            TestTrue(TEXT("Hide accepted"), Hide.bAccepted);
+            TestEqual(TEXT("Hide result matches state"), B.Find(10)->bHidden, Hide.bHit);
+            if (!B.Find(10)->bHidden) { continue; }
+            bSawHidden = true;
+            TestEqual(TEXT("Hidden attacker has advantage"), B.AttackRollMode(10, 20).Mode, ERollMode::Advantage);
+            TestEqual(TEXT("Attacks against the hidden have disadvantage"), B.AttackRollMode(20, 10).Mode, ERollMode::Disadvantage);
+        }
+        TestTrue(TEXT("Some seed hides"), bSawHidden);
+    }
+    {
+        FCombatBattle B;
+        TestTrue(TEXT("Ready starts"), B.Start(Pair({5, 0}), 7, Error));
+        TestTrue(TEXT("Ready accepted"), B.Submit({ECombatCommandType::Ready, 10, {}, 10}).bAccepted);
+        B.Submit({ECombatCommandType::EndTurn, 10});
+        const FCombatResult Approach = B.Submit({ECombatCommandType::Move, 20, {1, 0}});
+        TestTrue(TEXT("Foe approach accepted"), Approach.bAccepted);
+        if (TestEqual(TEXT("Readied attack fires once"), Approach.Reactions.Num(), 1)) { TestEqual(TEXT("By the readier"), Approach.Reactions[0].ReactorId, 10); }
+        TestFalse(TEXT("Readied reaction spent"), B.Find(10)->bReactionAvailable);
+        TestFalse(TEXT("Ready consumed"), B.Find(10)->bReadied);
+    }
+    TestTrue(TEXT("Potion is the Use an Object action"), FCombatBattle::DescribeAction(ECombatCommandType::Potion).Contains(TEXT("Use an Object")));
+    return true;
+}
 #endif

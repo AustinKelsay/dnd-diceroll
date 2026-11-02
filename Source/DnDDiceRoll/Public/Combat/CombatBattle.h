@@ -11,7 +11,7 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -86,6 +86,13 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() TArray<FCombatCondition> Conditions;
     /** Reaction budget; spent by an opportunity attack and restored at the owner's turn start. */
     UPROPERTY() bool bReactionAvailable = true;
+    /** SRD standard actions (#60). Dodge, Disengage and Ready last until the owner's next turn start; Hide until it attacks. */
+    UPROPERTY() bool bDodging = false;
+    UPROPERTY() bool bDisengaged = false;
+    UPROPERTY() bool bHidden = false;
+    UPROPERTY() bool bReadied = false;
+    /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
+    UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
 
 USTRUCT()

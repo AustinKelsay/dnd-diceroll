@@ -245,6 +245,12 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("ModeThunderwave")) { ThunderwaveMode(); }
     else if (Name == TEXT("ModeShove")) { ShoveMode(); }
     else if (Name == TEXT("ModeGrapple")) { GrappleMode(); }
+    else if (Name == TEXT("StdDash")) { StandardAction(ECombatCommandType::Dash); }
+    else if (Name == TEXT("StdDisengage")) { StandardAction(ECombatCommandType::Disengage); }
+    else if (Name == TEXT("StdDodge")) { StandardAction(ECombatCommandType::Dodge); }
+    else if (Name == TEXT("StdHelp")) { StandardAction(ECombatCommandType::Help); }
+    else if (Name == TEXT("StdHide")) { StandardAction(ECombatCommandType::Hide); }
+    else if (Name == TEXT("StdReady")) { StandardAction(ECombatCommandType::Ready); }
     else if (Name == TEXT("Upcast")) { CycleSlot(); }
     else if (Name == TEXT("EndTurn")) { EndTurn(); }
     else if (Name == TEXT("Older")) { OlderRecords(); }
@@ -340,6 +346,13 @@ void AExpeditionPlayerController::BurningHandsMode() { SetMode(ECombatCommandTyp
 void AExpeditionPlayerController::ThunderwaveMode() { SetMode(ECombatCommandType::Thunderwave); }
 void AExpeditionPlayerController::ShoveMode() { SetMode(ECombatCommandType::Shove); }
 void AExpeditionPlayerController::GrappleMode() { SetMode(ECombatCommandType::Grapple); }
+void AExpeditionPlayerController::StandardAction(ECombatCommandType Action)
+{
+    if (!AllowsGameplayInput()) { return; }
+    // Help needs a foe, so it becomes the targeting mode; self actions resolve immediately.
+    if (Action == ECombatCommandType::Help) { SetMode(Action); return; }
+    BattleView->Execute({Action, Actor(), {}, Actor()});
+}
 void AExpeditionPlayerController::CycleSlot()
 {
     if (!AllowsGameplayInput()) { return; }

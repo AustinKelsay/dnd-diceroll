@@ -10,6 +10,7 @@
 #include "Rules/SpellcastingRules.h"
 #include "Rules/AreaRules.h"
 #include "Rules/CheckRules.h"
+#include "Rules/StandardActionRules.h"
 
 namespace
 {
@@ -159,6 +160,9 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.LastSurge > 0 && Unit.Life != ECombatLife::Conscious) ||
             (Unit.GuardTargetId != INDEX_NONE && Unit.GuardTurns == 0 && (Unit.BuildId != TEXT("barbarian.totem-warrior") || Unit.RageTurns == 0)))
         { return Reject(TEXT("Invalid owned ability state.")); }
+        if ((Unit.Life != ECombatLife::Conscious && (Unit.bDodging || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE)) ||
+            (Unit.HelpedById != INDEX_NONE && !Encounter.Combatants.ContainsByPredicate([&](const auto& T) { return T.Id == Unit.HelpedById && T.Side != Unit.Side && T.Life == ECombatLife::Conscious; })))
+        { return Reject(TEXT("Invalid standard action state.")); }
         if (Unit.GuardTargetId != INDEX_NONE)
         {
             const auto* Target = Encounter.Combatants.FindByPredicate([&](const auto& T) { return T.Id == Unit.GuardTargetId; });
@@ -309,7 +313,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::Rescue:
         return FString::Printf(TEXT("RESCUE | Action, no item | downed ally, %d cell | restore 1 HP"), TouchRange);
     case ECombatCommandType::Potion:
-        return FString::Printf(TEXT("POTION | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
+        return FString::Printf(TEXT("POTION (Use an Object) | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
     case ECombatCommandType::BurningHands:
         return TEXT("BURNING HANDS | Action + 1 slot | 15-ft cone from you | 3d6 fire, DEX save halves; +1d6 per slot above 1st");
     case ECombatCommandType::Thunderwave:
@@ -318,6 +322,12 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
         return TEXT("SHOVE | Action | adjacent foe | Athletics vs Athletics/Acrobatics; win knocks prone");
     case ECombatCommandType::Grapple:
         return TEXT("GRAPPLE | Action | adjacent foe | Athletics vs Athletics/Acrobatics; win sets speed 0");
+    case ECombatCommandType::Dash: return TEXT("DASH | Action (Rogue 2+: bonus) | self | adds your speed to this turn's movement");
+    case ECombatCommandType::Disengage: return TEXT("DISENGAGE | Action (Rogue 2+: bonus) | self | your movement provokes no opportunity attacks this turn");
+    case ECombatCommandType::Dodge: return TEXT("DODGE | Action | self | attacks you see have disadvantage; advantage on DEX saves until your next turn");
+    case ECombatCommandType::Help: return TEXT("HELP | Action | adjacent foe | an ally's next attack on it has advantage, until your next turn");
+    case ECombatCommandType::Hide: return TEXT("HIDE | Action (Rogue 2+: bonus) | self | Stealth vs best enemy passive Perception; hidden attacks with advantage");
+    case ECombatCommandType::Ready: return TEXT("READY | Action | self | reaction: attack the first foe that ends a move in your range");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
     }
@@ -429,7 +439,7 @@ TArray<int32> FCombatBattle::OpportunityThreats(int32 MoverId, const TArray<FInt
         for (const FCombatantState& Reactor : State.Encounter.Combatants)
         {
             if (Reactor.Side == Mover->Side || Reactor.Life != ECombatLife::Conscious || IsIncapacitated(Reactor) || RangedAttacker(Reactor) || Threats.Contains(Reactor.Id) ||
-                !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), From, Next, false, false, Reactor.bReactionAvailable)) { continue; }
+                !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), From, Next, Mover->bDisengaged, false, Reactor.bReactionAvailable)) { continue; }
             Threats.Add(Reactor.Id);
         }
         From = Next;
@@ -528,6 +538,24 @@ bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Ori
         HasLineOfSight(Origin, Target.Cell);
 }
 
+namespace
+{
+/** Battle command to SRD standard action (#60). Ready maps to Attack, which is never a bonus action. */
+bool StandardActionOf(ECombatCommandType Action, EStandardAction& Out)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::Dash: Out = EStandardAction::Dash; return true;
+    case ECombatCommandType::Disengage: Out = EStandardAction::Disengage; return true;
+    case ECombatCommandType::Dodge: Out = EStandardAction::Dodge; return true;
+    case ECombatCommandType::Help: Out = EStandardAction::Help; return true;
+    case ECombatCommandType::Hide: Out = EStandardAction::Hide; return true;
+    case ECombatCommandType::Ready: Out = EStandardAction::Attack; return true;
+    default: return false;
+    }
+}
+}
+
 const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Action) const
 {
     const FCombatantState* Unit = Find(Id);
@@ -535,6 +563,10 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     // Extra Attack (#61): after the Attack action, banked attacks still allow Attack and Precision Strike.
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
     if (IsIncapacitated(*Unit)) { return nullptr; }
+    if (EStandardAction Standard; StandardActionOf(Action, Standard))
+    {
+        return State.bActionAvailable || (State.bBonusActionAvailable && FStandardActionRules::CanTakeAsBonusAction(Standard, Unit->AdventurerRole, Unit->Level)) ? Unit : nullptr;
+    }
     if (!State.bActionAvailable && !(bWeaponAttack && State.AttacksRemaining > 0)) { return nullptr; }
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return nullptr; }
     if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
@@ -644,6 +676,10 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious &&
                 FMath::Max(FMath::Abs(Target.Cell.X - Unit->Cell.X), FMath::Abs(Target.Cell.Y - Unit->Cell.Y)) <= 1 &&
                 !Target.Conditions.ContainsByPredicate([Applies](const FCombatCondition& C) { return C.Condition == Applies; });
+        }
+        else if (EStandardAction Standard; StandardActionOf(Action, Standard))
+        {
+            bLegal = Action == ECombatCommandType::Help ? Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= 1 : Target.Id == Unit->Id;
         }
         else if (CombatSpellSlots::IsAreaSpell(Action))
         {
@@ -1010,6 +1046,13 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     {
         (FMovementRules::AttackAgainstProne(GridDistance(Actor->Cell, Target->Cell)) == ERollMode::Advantage ? Mode.Advantage : Mode.Disadvantage).Add(TEXT("target prone"));
     }
+    // Standard actions (#60): Dodge, Hide and Help.
+    if (FStandardActionRules::AttackAgainstDodger(Target->bDodging && !IsIncapacitated(*Target), !Actor->bHidden && HasLineOfSight(Target->Cell, Actor->Cell)) == ERollMode::Disadvantage)
+    { Mode.Disadvantage.Add(TEXT("target dodging")); }
+    if (Actor->bHidden) { Mode.Advantage.Add(TEXT("attacker hidden")); }
+    if (Target->bHidden) { Mode.Disadvantage.Add(TEXT("target hidden")); }
+    if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != Actor->Id && Helper->Side == Actor->Side)
+    { Mode.Advantage.Add(FString::Printf(TEXT("helped by %s"), *Helper->Name)); }
     Mode.Mode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num());
     return Mode;
 }
@@ -1031,7 +1074,8 @@ bool FCombatBattle::IsIncapacitated(const FCombatantState& Unit)
 
 ERollMode FCombatBattle::SaveMode(const FCombatantState& Unit, EAbility Ability, ERollMode Requested) const
 {
-    const int32 Adv = Requested == ERollMode::Advantage ? 1 : 0;
+    const int32 Adv = (Requested == ERollMode::Advantage ? 1 : 0) +
+        (Ability == EAbility::Dexterity && FStandardActionRules::DexSaveWhileDodging(Unit.bDodging && !IsIncapacitated(Unit)) == ERollMode::Advantage ? 1 : 0);
     const int32 Dis = (Requested == ERollMode::Disadvantage ? 1 : 0) + (Ability == EAbility::Dexterity && HasCondition(Unit, ECombatCondition::Restrained) ? 1 : 0);
     return FCheckRules::CombineMode(Adv, Dis);
 }
@@ -1053,6 +1097,8 @@ void FCombatBattle::BeginTurn()
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
+    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false;
+    for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
     const int32 TurnSpeed = FMath::Max(0, Unit->Speed - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
@@ -1127,6 +1173,9 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+    // Attacking reveals a hidden attacker; Help is spent by the first ally attack it benefits.
+    MutableFind(ActorId)->bHidden = false;
+    if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != ActorId && Helper->Side == Actor->Side) { Target->HelpedById = INDEX_NONE; }
     // SRD: any hit on a paralyzed or unconscious creature from within 5 feet is a critical hit.
     if (Result.bHit && GridDistance(Actor->Cell, Target->Cell) <= 1 && (HasCondition(*Target, ECombatCondition::Paralyzed) || HasCondition(*Target, ECombatCondition::Unconscious))) { Result.bCritical = true; }
     if (Result.bHit)
@@ -1173,7 +1222,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             {
                 if (Moving->Life != ECombatLife::Conscious) { break; }
                 if (Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || IsIncapacitated(Reactor) || RangedAttacker(Reactor) ||
-                    !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), Moving->Cell, Next, false, false, Reactor.bReactionAvailable)) { continue; }
+                    !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), Moving->Cell, Next, Moving->bDisengaged, false, Reactor.bReactionAvailable)) { continue; }
                 Reactor.bReactionAvailable = false;
                 FCombatResult Swing;
                 Strike(Reactor.Id, Moving->Id, 0, Swing);
@@ -1185,6 +1234,20 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Moving->Cell = Next;
             Result.Path.Add(Next);
             State.MovementLeft -= StepCost(Next);
+        }
+        // Ready (#60): a readied foe strikes when the mover ends its move within reach or range.
+        for (FCombatantState& Reactor : State.Encounter.Combatants)
+        {
+            if (Result.Path.IsEmpty() || Moving->Life != ECombatLife::Conscious) { break; }
+            if (!Reactor.bReadied || Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || IsIncapacitated(Reactor) || !Reactor.bReactionAvailable ||
+                !CanTargetFrom(Reactor, Reactor.Cell, *Moving) || (NeedsAmmunition(Reactor) && Reactor.Ammunition <= 0)) { continue; }
+            Reactor.bReadied = false;
+            Reactor.bReactionAvailable = false;
+            FCombatResult Swing;
+            Strike(Reactor.Id, Moving->Id, 0, Swing);
+            Result.Reactions.Add({Reactor.Id, Moving->Cell, Swing.NaturalRoll, Swing.AttackTotal, Swing.TargetArmorClass, Swing.bHit, Swing.bCritical, Swing.Damage});
+            Strikes += FString::Printf(TEXT(" | %s readied attack: d20 %d = %d vs AC %d, %s%s"), *Reactor.Name, Swing.NaturalRoll, Swing.AttackTotal,
+                Swing.TargetArmorClass, Swing.bCritical ? TEXT("CRITICAL ") : TEXT(""), Swing.bHit ? *FString::Printf(TEXT("HIT %d"), Swing.Damage) : TEXT("MISS"));
         }
         CheckOutcome();
         const int32 Steps = Result.Path.Num();
@@ -1401,6 +1464,52 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         Result.Feedback = FString::Printf(TEXT("%s: %s > %s | Athletics %d vs %d | %s"), *Actor->Name, bShove ? TEXT("Shove") : TEXT("Grapple"), *Victim->Name,
             ActorRoll + ActorModifier, DefenderRoll + DefenderModifier, bWon ? (bShove ? TEXT("knocked prone") : TEXT("grappled")) : TEXT("resisted"));
     }
+    else if (EStandardAction Standard; StandardActionOf(Command.Type, Standard))
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Standard action unavailable: check action budget and target.")); }
+        FCombatantState* User = MutableFind(Command.ActorId);
+        // Cunning Action keeps the action free when the bonus action can pay instead.
+        const bool bBonus = State.bBonusActionAvailable && FStandardActionRules::CanTakeAsBonusAction(Standard, User->AdventurerRole, User->Level);
+        (bBonus ? State.bBonusActionAvailable : State.bActionAvailable) = false;
+        FString Effect;
+        switch (Command.Type)
+        {
+        case ECombatCommandType::Dash:
+        {
+            const bool bHeld = HasCondition(*User, ECombatCondition::Grappled) || HasCondition(*User, ECombatCondition::Restrained);
+            const int32 Added = bHeld ? 0 : FMath::Max(0, User->Speed - ArmorPenaltiesOf(*this, *User).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+            State.MovementLeft += Added;
+            Effect = FString::Printf(TEXT("dashes (+%d movement, %d left)"), Added, State.MovementLeft);
+            break;
+        }
+        case ECombatCommandType::Disengage: User->bDisengaged = true; Effect = TEXT("disengages"); break;
+        case ECombatCommandType::Dodge: User->bDodging = true; Effect = TEXT("dodges"); break;
+        case ECombatCommandType::Ready: User->bReadied = true; Effect = TEXT("readies an attack"); break;
+        case ECombatCommandType::Help:
+        {
+            FCombatantState* Target = MutableFind(Command.TargetId);
+            Target->HelpedById = User->Id;
+            Effect = FString::Printf(TEXT("helps against %s"), *Target->Name);
+            break;
+        }
+        default:
+        {
+            // Hide: one seeded Stealth check against the best passive Perception among conscious foes.
+            int32 Dc = 10;
+            for (const FCombatantState& Other : State.Encounter.Combatants)
+            {
+                if (Other.Side != User->Side && Other.Life == ECombatLife::Conscious) { Dc = FMath::Max(Dc, 10 + Character(Other.Id).SkillBonus(ESkill::Perception)); }
+            }
+            const FD20Outcome Check = FCheckRules::Resolve(Character(User->Id).SkillBonus(ESkill::Stealth), FMath::Clamp(Dc, FCheckRules::MinDc, FCheckRules::MaxDc), CheckMode(*User, ERollMode::Normal), State.RandomState);
+            User->bHidden = Check.bSuccess;
+            Result.bHit = Check.bSuccess;
+            Result.NaturalRoll = Check.Kept;
+            Effect = FString::Printf(TEXT("Stealth %d vs passive Perception %d: %s"), Check.Total, Dc, Check.bSuccess ? TEXT("hidden") : TEXT("seen"));
+            break;
+        }
+        }
+        Result.Feedback = FString::Printf(TEXT("%s %s%s."), *User->Name, *Effect, bBonus ? TEXT(" (bonus action)") : TEXT(""));
+    }
     else if (Command.Type == ECombatCommandType::EndTurn)
     {
         Result.Feedback = Actor->Name + TEXT(" ends turn.");
@@ -1475,6 +1584,8 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     {
         Target.GuardTurns = 0; Target.GuardAmount = 0; Target.RageTurns = 0; Target.GuardTargetId = INDEX_NONE; Target.LastSurge = 0;
         for (auto& U : State.Encounter.Combatants) { if (U.GuardTargetId == Target.Id) { U.GuardTargetId = INDEX_NONE; U.GuardTurns = 0; U.GuardAmount = 0; } }
+        Target.bDodging = false; Target.bDisengaged = false; Target.bHidden = false; Target.bReadied = false; Target.HelpedById = INDEX_NONE;
+        for (auto& U : State.Encounter.Combatants) { if (U.HelpedById == Target.Id) { U.HelpedById = INDEX_NONE; } }
         Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
         Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
     }
@@ -1498,6 +1609,7 @@ void FCombatBattle::CheckOutcome()
         {
             Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
             Unit.bReactionAvailable = true;
+            Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE;
             if (Unit.Life == ECombatLife::Downed) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; }
         }
     }
@@ -1627,6 +1739,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
+                Unit.bDodging || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
                 Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
@@ -1634,12 +1747,14 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
     const auto Expected = !bParty ? EBattlePhase::Defeat : !bEnemy ? EBattlePhase::Victory : EBattlePhase::Fighting;
     const auto* Active = Candidate.Find(Candidate.ActiveId());
     if (Snapshot.Phase != Expected || !Active || Active->Life != ECombatLife::Conscious ||
-        Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed ||
+        Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed * 3 ||
         Snapshot.AttacksRemaining < 0 || Snapshot.AttacksRemaining >= FClassFeatureRules::AttacksPerAction(Active->AdventurerRole, Active->Level) ||
         (Snapshot.AttacksRemaining > 0 && (Snapshot.bActionAvailable || Snapshot.Phase != EBattlePhase::Fighting)) ||
         Snapshot.SneakAttackUsedBy.ContainsByPredicate([&](int32 SneakId) { return !Candidate.Find(SneakId) || Snapshot.SneakAttackUsedBy.FilterByPredicate([SneakId](int32 Other) { return Other == SneakId; }).Num() > 1; }) ||
         (!Snapshot.bBonusActionAvailable && ([&]()
         {
+            // Cunning Action (#60) can spend the bonus action on Dash, Disengage or Hide.
+            if (FStandardActionRules::CanTakeAsBonusAction(EStandardAction::Dash, Active->AdventurerRole, Active->Level)) { return false; }
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
             if (Build && Build->KitCap > 0)
             { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses >= Build->KitCap) || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }

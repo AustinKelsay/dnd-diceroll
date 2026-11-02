@@ -660,6 +660,19 @@ void AExpeditionHUD::DrawActionBar()
         Hover.Add({E.Action, Button(E.Id, E.Label, FString(E.Key) + (Usage.IsEmpty() ? TEXT(" / Action") : TEXT(" / ") + Usage), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(E.Action), Mode == E.Action, Sky)});
     }
     Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + Column * (Width + Gap), Y, Width, Height, true, false, Gold);
+    // SRD standard actions (#60): a compact row above the action bar. Help picks a foe; the rest act at once.
+    {
+        struct FStd { ECombatCommandType Action; const TCHAR* Id; const TCHAR* Label; };
+        const FStd Standard[] = {{ECombatCommandType::Dash, TEXT("StdDash"), TEXT("Dash")}, {ECombatCommandType::Disengage, TEXT("StdDisengage"), TEXT("Disengage")},
+            {ECombatCommandType::Dodge, TEXT("StdDodge"), TEXT("Dodge")}, {ECombatCommandType::Help, TEXT("StdHelp"), TEXT("Help")},
+            {ECombatCommandType::Hide, TEXT("StdHide"), TEXT("Hide")}, {ECombatCommandType::Ready, TEXT("StdReady"), TEXT("Ready")}};
+        const float StdWidth = 92, StdHeight = 30, StdLeft = W * 0.5f - (6 * (StdWidth + Gap) - Gap) * 0.5f;
+        for (int32 Index = 0; Index < 6; ++Index)
+        {
+            Hover.Add({Standard[Index].Action, Button(Standard[Index].Id, Standard[Index].Label, FCombatBattle::CostTag(Standard[Index].Action),
+                StdLeft + Index * (StdWidth + Gap), Y - 72, StdWidth, StdHeight, Ready(Standard[Index].Action), Mode == Standard[Index].Action, Sky)});
+        }
+    }
     if (Active->SpellSlots > 0 || Active->SlotsByLevel.ContainsByPredicate([](int32 N) { return N > 0; }))
     {
         const FString Slot = Player->SlotChoice() ? FString::Printf(TEXT("Spell slot: level %d  (= to change)"), Player->SlotChoice()) : FString(TEXT("Spell slot: lowest open  (= to upcast)"));
