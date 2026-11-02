@@ -23,6 +23,9 @@ bool FSpellCoverageTest::RunTest(const FString& Parameters)
     for (int32 L = 0; L <= 4; ++L) { AddInfo(FString::Printf(TEXT("COVERAGE L%d total=%d resolvable=%d partial=%d dataonly=%d"), L, Total[L], Resolvable[L], Partial[L], DataOnly[L])); }
     AddInfo(TEXT("COVERAGEGAPS ") + FString::Join(Gaps, TEXT("; ")));
     TestTrue(TEXT("Catalog has cantrips and level 1-4 spells"), Total[0] > 0 && Total[4] > 0);
-    return true;
+    // Floors after spells phases 3-4 (conditions, buffs/debuffs): 98 of 217 one-cast resolvable.
+    const int32 Floor[5] = {11, 34, 24, 14, 15};
+    for (int32 L = 0; L <= 4; ++L) { TestTrue(FString::Printf(TEXT("L%d resolvable >= %d"), L, Floor[L]), Resolvable[L] >= Floor[L]); }
+    return !HasAnyErrors();
 }
 #endif

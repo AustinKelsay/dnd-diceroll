@@ -816,3 +816,25 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 - `ForecastSpell` is a no-RNG preview: hit chance /400 or save DC, min/max amount, affected ids and cells, concentration and duration.
 - `PreparedSpells` limit is enforced in `UsableSpell` and validated at Start/Restore.
 - Exception: `EngineLevelCap = 5` blocks 4th-level slots in battle, so 4th-level behaviour is tested through the rules library, not live casts.
+
+## Conditions and creature types (Phase 3, SRD 5.2.1)
+
+- `ECombatCondition` adds Charmed, Deafened, Invisible, Petrified. Petrified is helpless (auto-fail STR/DEX saves, attackers have advantage) and resists all damage.
+- `FCreatureRules`: creature type per monster role (unknown roles are Humanoid), condition immunities and exhaustion immunity from the stat blocks.
+- `FSpellEffectRules` spec table: type gates (Hold Person and Charm Person humanoids only, Animal Friendship and Dominate Beast beasts only), targets per slot, held conditions, end triggers (any damage, damage from the caster's side, hostile act), repeat saves.
+- Charmed: can't attack or target the charmer (`LegalTargets`). Frightened: can't move closer to a visible source (`LegalMoves`/`PathTo`). Invisible: advantage attacking, disadvantage being attacked.
+- Sleep: incapacitated, then unconscious and prone on a failed end-of-turn save; ends on damage; exhaustion-immune creatures (undead, constructs) succeed automatically. Hideous Laughter: prone, can't stand, re-save with advantage when damaged.
+- An incapacitating condition ends the victim's concentration. A spell's -1 conditions end with the caster's last effect on that target.
+- Not modelled: Suggestion and Dominate Beast control (the condition is held, but the AI is not driven), Command options other than Grovel/Halt, Deafened effects on verbal spells.
+
+## Buffs and debuffs (Phase 4, SRD 5.2.1)
+
+- AC: Shield of Faith +2, Haste +2, Slow -2, Warding Bond +1, Mage Armor 13 + DEX (unarmored only), Barkskin floor 17.
+- d20: Bless +1d4 / Bane -1d4 to attacks and saves; Warding Bond +1 to saves; Haste advantage on DEX saves; Enlarge advantage on STR saves; Slow -2 on DEX saves.
+- Speed: Longstrider +10 ft, Expeditious Retreat and Haste x2, Slow x0.5, Hypnotic Pattern 0. Slow removes reactions. Haste lethargy: incapacitated for 1 round when it ends.
+- Damage: Divine Favor +1d4 radiant, Hex/Hunter's Mark +1d6 on the marked target, Enlarge +1d4, Magic Weapon +1 (+2 at slot 4, +3 at slot 6), Fire Shield 2d8 retaliation and warm/chill resistance, Protection from Energy (choice), Protection from Poison, Stoneskin.
+- Defence: Blur (disadvantage), Faerie Fire (advantage), Sanctuary (WIS save or the attack is lost; ends on a hostile act), Mirror Image (3 duplicates, d6 >= 3 per duplicate), Protection from Evil and Good, Death Ward (drop to 1 HP once), Freedom of Movement, Heroism (immune to frightened, temp HP each turn).
+- HP: Aid +5 max HP per slot above 1st (reverted at the end), False Life 2d4+4 (+5 per slot) temp HP.
+- Smites: Divine Smite (+1d8 vs fiends and undead), Searing Smite (start-of-turn fire, CON save ends), Shining Smite (attackers have advantage); bonus action against a creature hit in melee this turn.
+- Not modelled: Warding Bond damage sharing, Hex ability-check disadvantage, Reduce half of Enlarge/Reduce, critical doubling of smite dice, Invisibility hiding beyond the condition.
+- Coverage (cantrips to L4 one-cast resolvable): L0 11/27, L1 34/57, L2 24/57, L3 14/42, L4 15/34 = 98/217 (was 62/217). Floors asserted in `Rules.SpellCoverage`.
