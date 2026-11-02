@@ -361,6 +361,19 @@ bool FExpeditionRun::ArcaneRecovery(int32 UnitId, int32& Restored, FString& Erro
     return true;
 }
 
+bool FExpeditionRun::MagicalCunning(int32 UnitId, int32& Restored, FString& Error)
+{
+    Error.Reset();
+    Restored = 0;
+    if (!bStarted || State.Phase != EExpeditionPhase::Reward) { Error = TEXT("Magical Cunning's 1-minute rite happens at the rest point after a victory."); return false; }
+    FCombatantState* Hero = Combat.MutableFind(UnitId);
+    if (!Hero || Hero->Side != ECombatSide::Party || Hero->Life != ECombatLife::Conscious || !FFeatureKit::HasMagicalCunning(*Hero)) { Error = TEXT("Only a living warlock of level 2+ can use Magical Cunning."); return false; }
+    if (Hero->bMagicalCunningUsed) { Error = FString::Printf(TEXT("%s already used Magical Cunning since camp."), *Hero->Name); return false; }
+    Restored = FFeatureKit::MagicalCunning(*Hero);
+    if (Restored == 0) { Error = FString::Printf(TEXT("%s has no spent Pact Magic slots to recover."), *Hero->Name); return false; }
+    return true;
+}
+
 bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FString& Error)
 {
     Error.Reset();

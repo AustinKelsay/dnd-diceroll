@@ -152,6 +152,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 SorceryPoints = 0;
     /** Wizard 1 Arcane Recovery taken since the last long rest. */
     UPROPERTY() bool bArcaneRecovered = false;
+    /** Warlock 2 Magical Cunning taken since the last long rest. */
+    UPROPERTY() bool bMagicalCunningUsed = false;
 };
 
 USTRUCT()

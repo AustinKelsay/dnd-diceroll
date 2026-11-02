@@ -109,6 +109,7 @@ public:
     void Recover(bool bTake);
     void ShortRest(int32 UnitId);
     void ArcaneRecovery(int32 UnitId);
+    void MagicalCunning(int32 UnitId);
     void CampActivity(int32 UnitId, ECampActivity Activity);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);

@@ -7,6 +7,7 @@
 #include "Party/FeatureKit.h"
 #include "Rules/WeaponRules.h"
 #include "Rules/ClassFeatureRules.h"
+#include "Rules/WarlockRules.h"
 
 namespace FeatureTest
 {
@@ -456,6 +457,38 @@ bool FPactMagicTest::RunTest(const FString& Parameters)
     FCombatantState WizardLock = Hero(TEXT("wizard.evocation"), 3); WizardLock.SecondaryRole = EAdventurerRole::Warlock; WizardLock.SecondaryLevel = 1;
     TestFalse(TEXT("Wizard/Warlock: the wizard pool is not refilled on a short rest"), FFeatureKit::HasPactMagic(WizardLock));
     TestFalse(TEXT("Bard has no Pact Magic"), FFeatureKit::HasPactMagic(Hero(TEXT("bard.lore"), 3)));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMagicalCunningTest, "Project.Expedition.Features.MagicalCunning",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FMagicalCunningTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    struct FRow { int32 Level; bool bHas; };
+    for (const FRow& Row : {FRow{1, false}, FRow{2, true}, FRow{3, true}, FRow{4, true}, FRow{5, true}})
+    {
+        FCombatantState Lock = Hero(TEXT("warlock.fiend"), Row.Level);
+        FFeatureKit::Refill(Lock);
+        TestEqual(FString::Printf(TEXT("Warlock %d gating"), Row.Level), FFeatureKit::HasMagicalCunning(Lock), Row.bHas);
+        if (!Row.bHas) { continue; }
+        TestEqual(TEXT("Nothing spent"), FFeatureKit::MagicalCunningPreview(Lock), 0);
+        const int32 Full = Lock.KitUses;
+        Lock.KitUses = 0;
+        const int32 Budget = FWarlockRules::MagicalCunningSlots(Row.Level);
+        const int32 Got = FFeatureKit::MagicalCunning(Lock);
+        TestTrue(FString::Printf(TEXT("Warlock %d regains at most half (rounded up)"), Row.Level), Got > 0 && Got <= Budget && Lock.KitUses <= FMath::Min(Full, Budget));
+        TestTrue(TEXT("Marked used"), Lock.bMagicalCunningUsed && FFeatureKit::Valid(Lock));
+        Lock.KitUses = 0;
+        TestEqual(TEXT("Once per long rest"), FFeatureKit::MagicalCunning(Lock), 0);
+        FFeatureKit::Refill(Lock);
+        TestFalse(TEXT("Long rest resets"), Lock.bMagicalCunningUsed);
+    }
+    FCombatantState FighterLock = Hero(TEXT("fighter.champion"), 4); FighterLock.SecondaryRole = EAdventurerRole::Warlock; FighterLock.SecondaryLevel = 1;
+    TestFalse(TEXT("Fighter 3 / Warlock 1: no Magical Cunning"), FFeatureKit::HasMagicalCunning(FighterLock));
+    FighterLock.bMagicalCunningUsed = true;
+    TestFalse(TEXT("Flag invalid without the feature"), FFeatureKit::Valid(FighterLock));
+    TestTrue(TEXT("Sheet line"), FFeatureKit::RewardSheet(Hero(TEXT("warlock.fiend"), 2)).ContainsByPredicate([](const FString& L) { return L.StartsWith(TEXT("Magical Cunning [Free]")); }));
     return true;
 }
 

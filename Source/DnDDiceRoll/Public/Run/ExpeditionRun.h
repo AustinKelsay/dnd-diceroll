@@ -104,6 +104,8 @@ public:
     bool ShortRest(int32 UnitId, int32& Healed, FString& Error);
     /** Wizard Arcane Recovery at the rest point (once per long rest); Restored = slot levels regained. */
     bool ArcaneRecovery(int32 UnitId, int32& Restored, FString& Error);
+    /** Warlock 2 Magical Cunning at the rest point after a victory (once per long rest). */
+    bool MagicalCunning(int32 UnitId, int32& Restored, FString& Error);
     /** #79 level-up choice: the level just gained goes to Role instead (SRD multiclass prerequisites apply). Reward phase only. */
     bool ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FString& Error);
     /** #79 ability score improvement: +1 to each of two abilities, or +2 when First == Second (cap 20). */

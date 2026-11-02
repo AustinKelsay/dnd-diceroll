@@ -1005,6 +1005,21 @@ void AExpeditionBattleView::ArcaneRecovery(int32 UnitId)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
+void AExpeditionBattleView::MagicalCunning(int32 UnitId)
+{
+    if (bShowRecords) { return; }
+    FString Error;
+    int32 Restored = 0;
+    if (Session.MagicalCunning(UnitId, Restored, Error))
+    {
+        Show.Finish();
+        Record({true, FString::Printf(TEXT("Magical Cunning: %d Pact Magic slot%s regained."), Restored, Restored == 1 ? TEXT("") : TEXT("s"))});
+        Show.Sync(Rules().Snapshot());
+        PlayCue(EExpeditionCue::Camp);
+    }
+    else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
 void AExpeditionBattleView::CampActivity(int32 UnitId, ECampActivity Activity)
 {
     if (bShowRecords) { return; }

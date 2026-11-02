@@ -66,6 +66,12 @@ public:
     static int32 ArcaneRecoveryPreview(const FCombatantState& Hero);
     /** Applies Arcane Recovery; returns the slot levels restored (0 = refused). */
     static int32 ArcaneRecover(FCombatantState& Hero);
+    /** Warlock 2 (SRD 5.2.1): a 1-minute rite, once per long rest, regains expended Pact Magic slots up to half the maximum (rounded up). */
+    static bool HasMagicalCunning(const FCombatantState& Hero);
+    /** Pact slots Magical Cunning would restore now (0 when used or nothing is missing). */
+    static int32 MagicalCunningPreview(const FCombatantState& Hero);
+    /** Applies Magical Cunning; returns the slots restored (0 = refused). */
+    static int32 MagicalCunning(FCombatantState& Hero);
     /** Reward info sheet: one "Name [Tag]: usage" line per feature (HUD-independent so it survives HUD rework). */
     static TArray<FString> RewardSheet(const FCombatantState& Hero);
     /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */

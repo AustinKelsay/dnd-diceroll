@@ -69,6 +69,23 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.KiPoints = KiCap(Hero);
     Hero.SorceryPoints = SorceryCap(Hero);
     Hero.bArcaneRecovered = false;
+    Hero.bMagicalCunningUsed = false;
+}
+bool FFeatureKit::HasMagicalCunning(const FCombatantState& Hero)
+{
+    return HasPactMagic(Hero) && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) >= 2;
+}
+int32 FFeatureKit::MagicalCunningPreview(const FCombatantState& Hero)
+{
+    FCombatantState Copy = Hero;
+    return MagicalCunning(Copy);
+}
+int32 FFeatureKit::MagicalCunning(FCombatantState& Hero)
+{
+    if (!HasMagicalCunning(Hero) || Hero.bMagicalCunningUsed) { return 0; }
+    const int32 Restored = PactRecover(Hero, FWarlockRules::MagicalCunningSlots(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock)));
+    if (Restored > 0) { Hero.bMagicalCunningUsed = true; }
+    return Restored;
 }
 bool FFeatureKit::HasArcaneRecovery(const FCombatantState& Hero)
 {
@@ -314,7 +331,7 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
-        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) &&
+        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) && (!Hero.bMagicalCunningUsed || HasMagicalCunning(Hero)) &&
         Hero.SacredWeaponTurns >= 0 && Hero.SacredWeaponTurns <= (HasSacredWeapon(Hero) ? SacredWeaponRounds : 0) &&
         Hero.QuickenState >= 0 && Hero.QuickenState <= (HasQuickenedSpell(Hero) ? 2 : 0);
 }
@@ -329,6 +346,10 @@ TArray<FString> FFeatureKit::RewardSheet(const FCombatantState& Hero)
     if (HasArcaneRecovery(Hero))
     {
         Lines.Add(Hero.bArcaneRecovered ? FString(TEXT("Arcane Recovery [Free]: used until camp")) : FString::Printf(TEXT("Arcane Recovery [Free]: %d slot level(s) at a short rest"), ArcaneRecoveryPreview(Hero)));
+    }
+    if (HasMagicalCunning(Hero))
+    {
+        Lines.Add(Hero.bMagicalCunningUsed ? FString(TEXT("Magical Cunning [Free]: used until camp")) : FString::Printf(TEXT("Magical Cunning [Free]: regain up to %d pact slot(s) at a rest point"), FWarlockRules::MagicalCunningSlots(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock))));
     }
     return Lines;
 }
