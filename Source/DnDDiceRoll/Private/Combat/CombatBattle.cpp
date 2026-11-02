@@ -1,4 +1,5 @@
 #include "Combat/CombatBattle.h"
+#include "Rules/SpellEffectRules.h"
 #include "Rules/SpellTacticsRules.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellRules.h"
@@ -232,7 +233,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             const FCombatantState* Source = Condition.SourceId == INDEX_NONE ? nullptr :
                 Encounter.Combatants.FindByPredicate([&Condition](const FCombatantState& S) { return S.Id == Condition.SourceId; });
             const TPair<uint8, int32> Key(static_cast<uint8>(Condition.Condition), Condition.SourceId);
-            if (static_cast<uint8>(Condition.Condition) > static_cast<uint8>(ECombatCondition::Unconscious) || Seen.Contains(Key) ||
+            if (static_cast<uint8>(Condition.Condition) > static_cast<uint8>(ECombatCondition::Petrified) || Seen.Contains(Key) ||
                 (Condition.SourceId != INDEX_NONE && (!Source || Source->Id == Unit.Id || Source->Life == ECombatLife::Dead)) ||
                 (Condition.RoundsLeft != -1 && (Condition.RoundsLeft < 1 || Condition.RoundsLeft > 10)) ||
                 (Condition.Condition == ECombatCondition::Grappled && (!Source || Source->Life != ECombatLife::Conscious || GridDistance(Source->Cell, Unit.Cell) > 1)))
@@ -330,12 +331,14 @@ void FCombatBattle::WeaponDice(const FCombatantState& Unit, int32& OutCount, int
     FWeaponRules::DamageDice(Weapon, Weapon.Has(EWeaponProperty::TwoHanded) || (Weapon.Has(EWeaponProperty::Versatile) && !Unit.bShieldEquipped), false, OutCount, OutSides);
 }
 
-int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
+int32 FCombatBattle::ArmorClassBeforeSpells(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return 0; }
     if (Unit->WildShapeHP > 0) { return FFeatureKit::WolfAC; }
     const int32 Spell = (Unit->bShielded ? 5 : 0) + (Unit->ArmorWorn >= 0 && FFeatureKit::Style(*Unit) == EFightingStyle::Defense ? 1 : 0);
+    // Mage Armor on a creature with a flat stat-block AC: 13 + DEX if better.
+    if (Unit->ArmorWorn < 0 && SpellUnarmoredBonus(Id) > 0) { return Spell + FMath::Max(Unit->ArmorClass, SpellUnarmoredBonus(Id) + AbilityModifier(Id, EAbility::Dexterity)) + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
     if (Unit->ArmorWorn < 0) { return Spell + Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
     // SRD Unarmored Defense: Barbarian 1 adds CON with no armor (shield allowed); Monk 1 adds WIS with no armor and no shield.
     const FAbilityScores Scores = AbilityScores(Id);
@@ -345,6 +348,7 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
         if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Barbarian) > 0) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Constitution)); }
         // Armor of Shadows: Mage Armor on self at will (13 + DEX unarmored).
         if (FFeatureKit::HasInvocation(*Unit, EInvocation::ArmorOfShadows)) { Unarmored = FMath::Max(Unarmored, 3); }
+        Unarmored = FMath::Max(Unarmored, SpellUnarmoredBonus(Id) > 0 ? 3 : 0); // Mage Armor: 13 + DEX
         if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Monk) > 0 && !Unit->bShieldEquipped) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Wisdom)); }
     }
     return Spell + Unarmored + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, Scores.Get(EAbility::Dexterity));
@@ -596,6 +600,10 @@ const TCHAR* FCombatBattle::ConditionName(ECombatCondition Condition)
     case ECombatCondition::Stunned: return TEXT("Stunned");
     case ECombatCondition::Paralyzed: return TEXT("Paralyzed");
     case ECombatCondition::Unconscious: return TEXT("Unconscious");
+    case ECombatCondition::Charmed: return TEXT("Charmed");
+    case ECombatCondition::Deafened: return TEXT("Deafened");
+    case ECombatCondition::Invisible: return TEXT("Invisible");
+    case ECombatCondition::Petrified: return TEXT("Petrified");
     default: return TEXT("Condition");
     }
 }
@@ -636,7 +644,7 @@ int32 FCombatBattle::StepCost(FIntPoint Cell) const
     return 1;
 }
 
-TArray<FIntPoint> FCombatBattle::LegalMoves(int32 Id) const
+TArray<FIntPoint> FCombatBattle::LegalMovesRaw(int32 Id) const
 {
     TArray<FIntPoint> Result;
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id) { return Result; }
@@ -788,7 +796,7 @@ FActionReach FCombatBattle::Reach(int32 Id, ECombatCommandType Action) const
     return Result;
 }
 
-TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) const
+TArray<int32> FCombatBattle::LegalTargetsRaw(int32 Id, ECombatCommandType Action) const
 {
     TArray<int32> Result;
     const FCombatantState* Unit = Find(Id);
@@ -850,7 +858,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     return Result;
 }
 
-TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
+TArray<FIntPoint> FCombatBattle::PathToRaw(int32 Id, FIntPoint Destination) const
 {
     // Same legality as LegalMoves, with one search that also yields the route.
     TArray<FIntPoint> Path;
@@ -1258,6 +1266,7 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     if (Target->bHidden) { Mode.Disadvantage.Add(TEXT("target hidden")); }
     if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != Actor->Id && Helper->Side == Actor->Side)
     { Mode.Advantage.Add(FString::Printf(TEXT("helped by %s"), *Helper->Name)); }
+    SpellAttackModes(*Actor, *Target, Mode);
     Mode.Mode = FCheckRules::CombineMode(Mode.Advantage.Num(), Mode.Disadvantage.Num());
     return Mode;
 }
@@ -1269,7 +1278,8 @@ bool FCombatBattle::HasCondition(const FCombatantState& Unit, ECombatCondition C
 
 bool FCombatBattle::IsHelpless(const FCombatantState& Unit)
 {
-    return HasCondition(Unit, ECombatCondition::Stunned) || HasCondition(Unit, ECombatCondition::Paralyzed) || HasCondition(Unit, ECombatCondition::Unconscious);
+    return HasCondition(Unit, ECombatCondition::Stunned) || HasCondition(Unit, ECombatCondition::Paralyzed) || HasCondition(Unit, ECombatCondition::Unconscious) ||
+        HasCondition(Unit, ECombatCondition::Petrified);
 }
 
 bool FCombatBattle::IsIncapacitated(const FCombatantState& Unit)
@@ -1282,7 +1292,9 @@ ERollMode FCombatBattle::SaveMode(const FCombatantState& Unit, EAbility Ability,
     const int32 Adv = (Requested == ERollMode::Advantage ? 1 : 0) +
         (Ability == EAbility::Dexterity && FStandardActionRules::DexSaveWhileDodging(Unit.bDodging && !IsIncapacitated(Unit)) == ERollMode::Advantage ? 1 : 0);
     const int32 Dis = (Requested == ERollMode::Disadvantage ? 1 : 0) + (Ability == EAbility::Dexterity && HasCondition(Unit, ECombatCondition::Restrained) ? 1 : 0);
-    return FCheckRules::CombineMode(Adv, Dis);
+    int32 SpellAdv = 0, SpellDis = 0;
+    SpellSaveModes(Unit, Ability, SpellAdv, SpellDis);
+    return FCheckRules::CombineMode(Adv + SpellAdv, Dis + SpellDis);
 }
 
 ERollMode FCombatBattle::CheckMode(const FCombatantState& Unit, ERollMode Requested) const
@@ -1307,10 +1319,11 @@ void FCombatBattle::BeginTurn()
     Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false; Unit->bReckless = false; Unit->QuickenState = 0;
     for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
+    State.MeleeHitThisTurn.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
-    const int32 TurnSpeed = FMath::Max(0, BaseSpeed(*this, *Unit) - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+    const int32 TurnSpeed = SpellSpeed(Unit->Id, FMath::Max(0, BaseSpeed(*this, *Unit) - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell));
     State.MovementLeft = bHeld ? 0 : TurnSpeed;
-    if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone))
+    if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone) && !SpellKeepsProne(Unit->Id))
     {
         Unit->Conditions.RemoveAll([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Prone; });
         State.MovementLeft = FMath::Max(0, TurnSpeed - FMovementRules::StandUpCost(Unit->Speed));
@@ -1321,6 +1334,8 @@ void FCombatBattle::BeginTurn()
         State.bBonusActionAvailable = false;
         Unit->bReactionAvailable = false;
     }
+    if (SpellBlocksReactions(Unit->Id)) { Unit->bReactionAvailable = false; }
+    SpellEffectsOnTurnStart(Unit->Id);
 }
 
 void FCombatBattle::PruneConditions()
@@ -1337,7 +1352,7 @@ void FCombatBattle::PruneConditions()
                 (C.Condition == ECombatCondition::Grappled && (Source->Life != ECombatLife::Conscious || IsIncapacitated(*Source) || GridDistance(Source->Cell, Unit.Cell) > 1));
         });
     }
-    if (!bFighting) { State.ActiveSpells.Reset(); return; }
+    if (!bFighting) { const TArray<FActiveSpell> Ended = MoveTemp(State.ActiveSpells); State.ActiveSpells.Reset(); for (const FActiveSpell& A : Ended) { EndSpellEffects(A); } return; }
     State.ActiveSpells.RemoveAll([this](const FActiveSpell& A)
     {
         const FCombatantState* Caster = Find(A.CasterId);
@@ -1411,6 +1426,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         }
         return;
     }
+    if (SanctuaryStops(ActorId, TargetId, Result)) { return; }
     FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
     // SRD Protection style: an adjacent ally with a shield spends its reaction to impose disadvantage.
     for (FCombatantState& Guard : State.Encounter.Combatants)
@@ -1437,7 +1453,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.NaturalRoll = Mode.Mode == ERollMode::Advantage ? FMath::Max(Result.AttackRolls[0], Result.AttackRolls.Last()) :
         FMath::Min(Result.AttackRolls[0], Result.AttackRolls.Last());
     if (NeedsAmmunition(*Actor)) { --MutableFind(ActorId)->Ammunition; }
-    Result.AttackBonus = WeaponAttackBonus(*this, *Actor) + ManeuverBonus;
+    Result.AttackBonus = WeaponAttackBonus(*this, *Actor) + ManeuverBonus + SpellAttackBonus(ActorId, true, Result);
     Result.AttackTotal = Result.NaturalRoll + Result.AttackBonus;
     Result.CoverBonus = CoverBonus(ActorId, TargetId);
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
@@ -1477,7 +1493,9 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     }
     if (State.Encounter.bInspiration && Result.NaturalRoll == 20) { FInspirationRules::Grant(MutableFind(ActorId)->bInspired); }
     // Attacking reveals a hidden attacker; Help is spent by the first ally attack it benefits.
+    if (Result.bHit && MirrorImageTakes(TargetId, Result)) { Result.bHit = false; }
     MutableFind(ActorId)->bHidden = false;
+    EndOnHostileAct(ActorId);
     if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != ActorId && Helper->Side == Actor->Side) { Target->HelpedById = INDEX_NONE; }
     // SRD: any hit on a paralyzed or unconscious creature from within 5 feet is a critical hit.
     if (Result.bHit && GridDistance(Actor->Cell, Target->Cell) <= 1 && (HasCondition(*Target, ECombatCondition::Paralyzed) || HasCondition(*Target, ECombatCondition::Unconscious))) { Result.bCritical = true; }
@@ -1500,6 +1518,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         if (Result.bSneakAttack) { Result.Damage += RollDice((Result.bCritical ? 2 : 1) * SneakDiceCount(State.Encounter, *Actor), SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
         DiceLog = nullptr;
         ApplyDefenses(Result, ActorId, ECombatCommandType::Attack, TargetId);
+        Result.Damage += SpellHitDamage(ActorId, TargetId, Result.bCritical, true, Result.DamageType, Result);
         if (Result.Damage > 1 && FFeatureKit::HasUncannyDodge(*Target) && Target->Life == ECombatLife::Conscious && Target->bReactionAvailable && !IsIncapacitated(*Target) && HasLineOfSight(Target->Cell, Actor->Cell))
         {
             // SRD Uncanny Dodge: the rogue's reaction halves the hit's damage (rounded down).
@@ -1519,6 +1538,11 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
         ApplyDamage(*Target, Result.Damage);
         Result.Damage -= Result.DamagePrevented;
+        if (GridDistance(Actor->Cell, Target->Cell) <= 1 && !RangedAttacker(*Actor))
+        {
+            State.MeleeHitThisTurn.AddUnique(TargetId);
+            SpellRetaliation(ActorId, TargetId, Result);
+        }
     }
 }
 
@@ -1830,7 +1854,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         case ECombatCommandType::Dash:
         {
             const bool bHeld = HasCondition(*User, ECombatCondition::Grappled) || HasCondition(*User, ECombatCondition::Restrained);
-            const int32 Added = bHeld ? 0 : FMath::Max(0, BaseSpeed(*this, *User) - ArmorPenaltiesOf(*this, *User).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+            const int32 Added = bHeld ? 0 : SpellSpeed(User->Id, FMath::Max(0, BaseSpeed(*this, *User) - ArmorPenaltiesOf(*this, *User).SpeedPenaltyFeet / FWeaponRules::FeetPerCell));
             State.MovementLeft += Added;
             Effect = FString::Printf(TEXT("dashes (+%d movement, %d left)"), Added, State.MovementLeft);
             break;
@@ -1901,7 +1925,9 @@ EDamageType FCombatBattle::DamageTypeOf(int32 ActorId, ECombatCommandType Action
 FDamageDefenses FCombatBattle::DamageDefenses(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
-    return Unit ? FDamageRules::ProfileDefenses(Unit->Role) : FDamageDefenses();
+    FDamageDefenses Defenses = Unit ? FDamageRules::ProfileDefenses(Unit->Role) : FDamageDefenses();
+    if (Unit) { Defenses.Resistances |= SpellResistances(Id); }
+    return Defenses;
 }
 
 void FCombatBattle::ApplyDefenses(FCombatResult& Result, int32 ActorId, ECombatCommandType Action, int32 TargetId) const
@@ -1953,6 +1979,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     const int32 HPBefore = Target.HP;
     const int32 Real = FDeathSaveRules::AbsorbWithTemporary(Target.TemporaryHP, FMath::Max(0, Damage - Protection));
     Target.HP = FMath::Max(0, Target.HP - Real);
+    if (Target.HP == 0 && HPBefore > 0) { DeathWardSaves(Target); }
     const bool bMassive = State.Encounter.bDeathSaves && FDeathSaveRules::InstantDeath(Real, HPBefore, Target.MaxHP);
     if (Target.bConcentrating && Target.HP > 0 && Real > 0)
     {
@@ -1960,6 +1987,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         if (!FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
             SaveMode(Target, EAbility::Constitution, FFeatureKit::HasInvocation(Target, EInvocation::EldritchMind) ? ERollMode::Advantage : ERollMode::Normal), State.RandomState).bSuccess) { EndConcentration(Target); }
     }
+    if (Real > 0) { SpellEffectsOnDamaged(Target.Id, ActiveId()); }
     if (Target.HP == 0 && HPBefore > 0 && Target.Side == ECombatSide::Enemy)
     {
         // SRD 5.2.1 Fiend Patron 3, Dark One's Blessing: a fiend warlock who drops a foe, or sees one drop within 10 ft, gains CHA + Warlock level temp HP (min 1).
@@ -1997,7 +2025,7 @@ void FCombatBattle::CheckOutcome()
     }
     State.Phase = !bParty ? EBattlePhase::Defeat : !bEnemy ? EBattlePhase::Victory : EBattlePhase::Fighting;
     // Rescue must happen during combat. A wipe or an unresolved victory deadline is permanent.
-    if (State.Phase != EBattlePhase::Fighting) { State.ActiveSpells.Reset(); State.bSlotSpentThisTurn = false; }
+    if (State.Phase != EBattlePhase::Fighting) { const TArray<FActiveSpell> Ended = MoveTemp(State.ActiveSpells); State.ActiveSpells.Reset(); for (const FActiveSpell& A : Ended) { EndSpellEffects(A); } State.bSlotSpentThisTurn = false; }
     if (State.Phase != EBattlePhase::Fighting)
     {
         State.AttacksRemaining = 0;
@@ -2448,7 +2476,11 @@ bool ToCombatCondition(ESpellCondition In, ECombatCondition& Out)
     case ESpellCondition::Restrained: Out = ECombatCondition::Restrained; return true;
     case ESpellCondition::Stunned: Out = ECombatCondition::Stunned; return true;
     case ESpellCondition::Unconscious: Out = ECombatCondition::Unconscious; return true;
-    default: return false; // Charmed, Deafened, Invisible, Petrified: no combat condition yet
+    case ESpellCondition::Charmed: Out = ECombatCondition::Charmed; return true;
+    case ESpellCondition::Deafened: Out = ECombatCondition::Deafened; return true;
+    case ESpellCondition::Invisible: Out = ECombatCondition::Invisible; return true;
+    case ESpellCondition::Petrified: Out = ECombatCondition::Petrified; return true;
+    default: return false;
     }
 }
 }
@@ -2499,7 +2531,7 @@ TArray<FString> FCombatBattle::CastableSpells(int32 Id) const
     return Out;
 }
 
-TArray<int32> FCombatBattle::SpellTargets(int32 Id, const FString& SpellId, int32 SlotLevel) const
+TArray<int32> FCombatBattle::SpellTargetsRaw(int32 Id, const FString& SpellId, int32 SlotLevel) const
 {
     TArray<int32> Out;
     const FCombatantState* Unit = Find(Id);
@@ -2542,6 +2574,9 @@ void FCombatBattle::EndConcentration(FCombatantState& Caster)
     const int32 Id = Caster.Id;
     for (FCombatantState& Unit : State.Encounter.Combatants)
     {
+        // Conditions a non-concentration spell of the caster still holds on this creature (Charm Person) stay.
+        const int32 UnitId = Unit.Id;
+        if (State.ActiveSpells.ContainsByPredicate([&](const FActiveSpell& A) { return A.CasterId == Id && A.TargetId == UnitId; })) { continue; }
         Unit.Conditions.RemoveAll([Id](const FCombatCondition& C) { return C.SourceId == Id && C.RoundsLeft == -1 && C.Condition != ECombatCondition::Grappled; });
     }
 }
@@ -2552,7 +2587,8 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
     int32 Slot = 0; EAdventurerRole Class = EAdventurerRole::None;
     const FSrdSpell* Spell = User ? UsableSpell(*User, Command.SpellId, Command.SlotLevel, Slot, Class) : nullptr;
     if (!Spell) { Result.Feedback = TEXT("Spell unavailable: check class list and level, combat support, action budget, slot level and armor."); return false; }
-    if (!SpellTargets(Command.ActorId, Command.SpellId, Command.SlotLevel).Contains(Command.TargetId)) { Result.Feedback = TEXT("Spell target is out of range, out of sight, outside the area, or on the wrong side."); return false; }
+    const TArray<int32> Legal = SpellTargets(Command.ActorId, Command.SpellId, Command.SlotLevel);
+    if (!Legal.Contains(Command.TargetId)) { Result.Feedback = TEXT("Spell target is out of range, out of sight, outside the area, or on the wrong side."); return false; }
     const FSrdSpell& S = *Spell;
     const int32 Prof = FProficiencyRules::ProficiencyBonus(User->Level);
     const int32 Mod = AbilityModifier(User->Id, FSpellcastingRules::SpellcastingAbility(Class));
@@ -2565,6 +2601,9 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
     if (S.CastTime == ESpellCastTime::BonusAction) { State.bBonusActionAvailable = false; } else { State.bActionAvailable = false; }
     User->bHidden = false;
     if (S.bConcentration) { EndConcentration(*User); User->bConcentrating = true; }
+    EndOnHostileAct(User->Id); // casting a spell ends Invisibility and Sanctuary on the caster
+    const FSpellEffectSpec* Spec = FSpellEffectRules::Find(S.Id);
+    if (Spec && FSpellEffectRules::IsBuff(*Spec)) { return ResolveEffectSpell(Command, S, *Spec, Slot, Dc, AttackBonus, Mod, Legal, Result); }
 
     const int32 Count = FSpellCatalogRules::DiceCount(S, User->Level, Slot);
     const bool bMissile = FCString::Stricmp(S.Id, TEXT("magic-missile")) == 0;
@@ -2600,6 +2639,15 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
     const bool bArea = Zone || CombatSpellSlots::CatalogArea(S, User->Cell, Find(Command.TargetId)->Cell, Area);
     TArray<FIntPoint> CastCells;
     TArray<int32> Victims = SpellVictims(*User, S, Command.TargetId, &CastCells);
+    if (Spec)
+    {
+        // Spells phase 3: several chosen targets (Hold Person upcast), creature types, "creatures of your choice".
+        if (Spec->Targets > 0 && !bArea) { Victims = SpellTargetList(Command, S, *Spec, Slot, Legal); }
+        Victims.RemoveAll([&](int32 V) { const FCombatantState* U = Find(V); return !U || !FSpellEffectRules::CanAffect(*Spec, U->Role) || ((Spec->Flags & SpellEffectFlag::SparesAllies) && U->Side == User->Side); });
+    }
+    const bool bCastDamage = !(Spec && (Spec->Flags & SpellEffectFlag::NoCastDamage));
+    const bool bTracked = S.bConcentration || FSpellTacticsRules::RepeatsSaveAtEndOfTurn(S) || (Spec && Spec->ConditionRounds == 0);
+    const int32 UntrackedRounds = Spec && Spec->ConditionRounds > 0 ? Spec->ConditionRounds : 1;
     const TArray<int32> Reached = Victims;
     if (Zone && !(Zone->Triggers & SpellZoneTrigger::OnCast)) { Victims.Reset(); }
     int32 ZoneSerial = INDEX_NONE;
@@ -2629,8 +2677,8 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
         if (Result.RollMode != ERollMode::Normal) { Result.AttackRolls.Add(Roll(20)); }
         Result.NaturalRoll = Result.AttackRolls.Num() == 1 ? Result.AttackRolls[0] :
             Result.RollMode == ERollMode::Advantage ? FMath::Max(Result.AttackRolls[0], Result.AttackRolls[1]) : FMath::Min(Result.AttackRolls[0], Result.AttackRolls[1]);
-        Result.AttackBonus = AttackBonus;
-        Result.AttackTotal = Result.NaturalRoll + AttackBonus;
+        Result.AttackBonus = AttackBonus + SpellAttackBonus(User->Id, false, Result);
+        Result.AttackTotal = Result.NaturalRoll + Result.AttackBonus;
         Result.TargetArmorClass = EffectiveArmorClass(Command.TargetId);
         bCritical = Result.NaturalRoll == 20;
         bAttackHit = bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
@@ -2640,7 +2688,7 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
 
     // One damage roll for the whole spell (both types when it deals two), then each victim's save.
     int32 Rolled = 0, Rolled2 = 0;
-    if (S.Effect == ESpellEffect::Damage && bAttackHit)
+    if (S.Effect == ESpellEffect::Damage && bAttackHit && bCastDamage)
     {
         DiceLog = &Result.EffectDice;
         const int32 Dice = Count * (bCritical ? 2 : 1);
@@ -2656,13 +2704,13 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
         bool bSaved = false;
         if (Result.bSaveSpell)
         {
-            const bool bRolled = FCheckRules::Resolve(Character(VictimId).SaveBonus(S.SaveAbility), Dc, SaveMode(*Victim, S.SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
+            const bool bRolled = RollSpellSave(VictimId, S.SaveAbility, Dc, Spec, Spec && (Spec->Flags & SpellEffectFlag::AdvantageInCombat));
             bSaved = bRolled && !(IsHelpless(*Victim) && (S.SaveAbility == EAbility::Strength || S.SaveAbility == EAbility::Dexterity));
         }
         const bool bAffected = Result.bSaveSpell ? !bSaved : bAttackHit;
         bAnyFailed |= bAffected;
         int32 Dealt = 0;
-        if (S.Effect == ESpellEffect::Damage && (bAffected || (bSaved && S.bHalfOnSave)))
+        if (S.Effect == ESpellEffect::Damage && bCastDamage && (bAffected || (bSaved && S.bHalfOnSave)))
         {
             const FDamageDefenses Defenses = DamageDefenses(VictimId);
             const int32 First = FDamageRules::Adjust(FSpellcastingRules::DamageAfterSave(Rolled, bSaved, S.bHalfOnSave), S.DamageType, Defenses);
@@ -2675,15 +2723,15 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
         }
         // Failed save (or hit): the spell's conditions. Concentration spells hold them until concentration ends (RoundsLeft -1); others last one round.
         FString CondText;
-        if (bAffected && S.Conditions != 0 && Victim->Life == ECombatLife::Conscious)
+        const uint32 Conds = Spec && Spec->Conditions ? Spec->Conditions : S.Conditions;
+        if (bAffected && Conds != 0 && Victim->Life == ECombatLife::Conscious)
         {
             for (int32 Bit = 0; Bit < static_cast<int32>(ESpellCondition::Count); ++Bit)
             {
                 ECombatCondition Kind;
-                if (!(S.Conditions & (1u << Bit)) || !CombatSpellSlots::ToCombatCondition(static_cast<ESpellCondition>(Bit), Kind)) { continue; }
-                if (Victim->Conditions.ContainsByPredicate([&](const FCombatCondition& C) { return C.Condition == Kind && C.SourceId == User->Id; })) { continue; }
-                FCombatCondition Applied; Applied.Condition = Kind; Applied.SourceId = User->Id; Applied.RoundsLeft = S.bConcentration ? -1 : 1;
-                Victim->Conditions.Add(Applied);
+                if (!(Conds & (1u << Bit)) || !CombatSpellSlots::ToCombatCondition(static_cast<ESpellCondition>(Bit), Kind)) { continue; }
+                if (Victim->Conditions.ContainsByPredicate([&](const FCombatCondition& C) { return C.Condition == Kind && C.SourceId == CasterId; })) { continue; }
+                if (!AddSpellCondition(*Victim, Kind, CasterId, bTracked ? -1 : UntrackedRounds)) { continue; }
                 CondText += FString::Printf(TEXT(" %s"), ConditionName(Kind));
             }
             if (!CondText.IsEmpty()) { Held.Add(VictimId); }
@@ -2694,7 +2742,7 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
     // A concentration spell that took hold of nobody ends at once.
     User = MutableFind(CasterId);
     // Track what lasts: held conditions per victim (repeat saves, duration), or one entry so the duration ends concentration.
-    if (!Zone && (S.bConcentration || FSpellTacticsRules::RepeatsSaveAtEndOfTurn(S)))
+    if (!Zone && bTracked)
     {
         if (!Held.IsEmpty()) { for (const int32 Id : Held) { AddActiveSpell(S, CasterId, Id, Slot, Dc, AttackBonus); } }
         else if (S.bConcentration && S.Effect != ESpellEffect::Condition && User->bConcentrating) { AddActiveSpell(S, CasterId, Command.TargetId, Slot, Dc, AttackBonus); }
@@ -2775,6 +2823,7 @@ void FCombatBattle::RemoveActiveSpell(int32 Index, bool bEvent)
     const FActiveSpell Ended = State.ActiveSpells[Index];
     State.ActiveSpells.RemoveAt(Index);
     if (bEvent) { EmitSpellEvent(ESpellEventKind::End, Ended, {}); }
+    EndSpellEffects(Ended);
     // A concentration spell with nothing left in effect ends the concentration too.
     if (Ended.bConcentration && !State.ActiveSpells.ContainsByPredicate([&](const FActiveSpell& A) { return A.CasterId == Ended.CasterId && A.bConcentration; }))
     {
@@ -2944,9 +2993,22 @@ void FCombatBattle::SpellsOnTurnEnd(int32 UnitId)
         // Fear: only a target that cannot see the caster repeats the save.
         const FCombatantState* Caster = Find(A.CasterId);
         if (FCString::Stricmp(S->Id, TEXT("fear")) == 0 && Caster && HasLineOfSight(Caster->Cell, Unit->Cell)) { continue; }
-        const bool bRolled = FCheckRules::Resolve(Character(UnitId).SaveBonus(S->SaveAbility), A.Dc, SaveMode(*Unit, S->SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
+        // Sleep: a creature that failed its repeat save is Unconscious for the duration, no further saves.
+        const FSpellEffectSpec* RSpec = FSpellEffectRules::Find(A.SpellId);
+        const bool bSleep = RSpec && (RSpec->Flags & SpellEffectFlag::SleepEscalates);
+        if (bSleep && A.Value > 0) { continue; }
+        const bool bRolled = RollSpellSave(UnitId, S->SaveAbility, A.Dc, RSpec);
         const bool bSaved = bRolled && !(IsHelpless(*Unit) && (S->SaveAbility == EAbility::Strength || S->SaveAbility == EAbility::Dexterity));
-        if (!bSaved) { continue; }
+        if (!bSaved)
+        {
+            if (bSleep)
+            {
+                State.ActiveSpells[Index].Value = 1;
+                AddSpellCondition(*Unit, ECombatCondition::Unconscious, A.CasterId, -1);
+                AddSpellCondition(*Unit, ECombatCondition::Prone, INDEX_NONE, -1);
+            }
+            continue;
+        }
         const int32 CasterId = A.CasterId;
         Unit->Conditions.RemoveAll([CasterId](const FCombatCondition& C) { return C.SourceId == CasterId && C.RoundsLeft == -1 && C.Condition != ECombatCondition::Grappled; });
         RemoveActiveSpell(Index);

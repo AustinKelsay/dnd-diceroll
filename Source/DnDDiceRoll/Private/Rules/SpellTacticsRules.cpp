@@ -1,4 +1,5 @@
 #include "Rules/SpellTacticsRules.h"
+#include "Rules/SpellEffectRules.h"
 #include "Rules/SpellcastingRules.h"
 
 namespace
@@ -52,6 +53,7 @@ const FSpellZone& FSpellTacticsRules::ZoneAt(int32 Index) { return Zones[Index];
 
 bool FSpellTacticsRules::RepeatsSaveAtEndOfTurn(const FSrdSpell& Spell)
 {
+    if (const FSpellEffectSpec* Spec = FSpellEffectRules::Find(Spell.Id); Spec && (Spec->Flags & (SpellEffectFlag::RepeatSave | SpellEffectFlag::SleepEscalates))) { return true; }
     for (const TCHAR* Id : RepeatSave) { if (FCString::Stricmp(Id, Spell.Id) == 0) { return true; } }
     return false;
 }

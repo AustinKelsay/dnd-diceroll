@@ -1,4 +1,5 @@
 #include "Rules/SpellCatalogRules.h"
+#include "Rules/SpellEffectRules.h"
 #include "Rules/BardRules.h"
 #include "Combat/CombatBattle.h"
 
@@ -55,6 +56,8 @@ bool FSpellCatalogRules::CombatResolvable(const FSrdSpell& Spell)
     static const TCHAR* NotOneCast[] = { TEXT("haste"), TEXT("conjure-animals"), TEXT("conjure-woodland-beings"), TEXT("conjure-elemental"), TEXT("conjure-fey"),
         TEXT("conjure-celestial"), TEXT("faithful-hound"), TEXT("control-water"), TEXT("wind-wall"), TEXT("modify-memory"), TEXT("telekinesis"),
         TEXT("arcane-hand"), TEXT("arcane-sword"), TEXT("holy-aura"), TEXT("searing-smite"), TEXT("ensnaring-strike") };
+    // Spells with an effect spec (conditions, buffs, riders) resolve through it (CombatSpellEffects.cpp).
+    if (FSpellEffectRules::Find(Spell.Id)) { return Spell.CastTime == ESpellCastTime::Action || Spell.CastTime == ESpellCastTime::BonusAction; }
     if (Spell.Implementation != ESpellImplementation::Mechanics || (Spell.CastTime != ESpellCastTime::Action && Spell.CastTime != ESpellCastTime::BonusAction)) { return false; }
     for (const TCHAR* Id : NotOneCast) { if (FCString::Stricmp(Id, Spell.Id) == 0) { return false; } }
     switch (Spell.Effect)

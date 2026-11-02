@@ -6,6 +6,7 @@
 #include "Rules/DamageRules.h"
 #include "Rules/StandardActionRules.h"
 #include "Rules/SpellCatalogRules.h"
+#include "Rules/SpellEffectRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -24,7 +25,7 @@ UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 /** SRD conditions tracked in combat. Values are persisted (schema 5); append only. */
 UENUM()
-enum class ECombatCondition : uint8 { Prone, Poisoned, Blinded, Frightened, Restrained, Grappled, Incapacitated, Stunned, Paralyzed, Unconscious };
+enum class ECombatCondition : uint8 { Prone, Poisoned, Blinded, Frightened, Restrained, Grappled, Incapacitated, Stunned, Paralyzed, Unconscious, Charmed, Deafened, Invisible, Petrified };
 
 /** One active condition: its source (INDEX_NONE when none) and remaining owner turns (-1 until removed). */
 USTRUCT()
@@ -239,6 +240,8 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() TArray<FActiveSpell> ActiveSpells;
     /** SRD 5.2.1: a creature spends at most one spell slot per turn. */
     UPROPERTY() bool bSlotSpentThisTurn = false;
+    /** Creatures the active unit hit with a melee weapon attack this turn (smite spells); cleared at every turn start. */
+    UPROPERTY() TArray<int32> MeleeHitThisTurn;
     UPROPERTY() int32 NextSpellSerial = 1;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
@@ -553,7 +556,60 @@ public:
     FString StatusText(int32 Id) const;
     /** "AC 18 (Chain Mail, shield)" from worn armor, else "AC 13". */
     FString ArmorClassText(int32 Id) const;
+    // Spell effects (CombatSpellEffects.cpp, spells phases 3-4). Read-only, no RNG.
+    /** SRD 5.2.1 creature type of a unit (FCreatureRules by role). */
+    ECreatureType CreatureTypeOf(int32 Id) const;
+    /** Speed in cells after spells (Haste, Slow, Longstrider, Hypnotic Pattern). */
+    int32 SpellSpeed(int32 Id, int32 SpeedCells) const;
+    /** Active spell effect on a creature (TargetId) by spell id; null when none. */
+    const FActiveSpell* SpellEffectOn(int32 Id, const TCHAR* SpellId) const;
+    /** Mirror Image duplicates left. */
+    int32 MirrorImagesLeft(int32 Id) const;
+    /** Damage types resisted from spells (Stoneskin, Protection from Energy, Fire Shield, Warding Bond) and Petrified. */
+    uint16 SpellResistances(int32 Id) const;
+    /** True when a frightened unit's step would end closer to a visible source of its fear (SRD 5.2.1 Frightened). */
+    bool FearBlocksStep(int32 Id, FIntPoint From, FIntPoint To) const;
 private:
+    TArray<int32> LegalTargetsRaw(int32 Id, ECombatCommandType Action) const;
+    TArray<int32> SpellTargetsRaw(int32 Id, const FString& SpellId, int32 SlotLevel) const;
+    TArray<FIntPoint> LegalMovesRaw(int32 Id) const;
+    TArray<FIntPoint> PathToRaw(int32 Id, FIntPoint Destination) const;
+    int32 ArmorClassBeforeSpells(int32 Id) const;
+    void SpellAttackModes(const FCombatantState& Actor, const FCombatantState& Target, FAttackRollMode& Mode) const;
+    void SpellSaveModes(const FCombatantState& Unit, EAbility Ability, int32& Advantage, int32& Disadvantage) const;
+    /** Mage Armor: bonus over 10 for an unarmored creature (13 + DEX), 0 without. */
+    int32 SpellUnarmoredBonus(int32 Id) const;
+    /** A charmed unit can't attack or target its charmer with harmful spells. */
+    bool CharmForbids(int32 ActorId, int32 TargetId) const;
+    bool SpellKeepsProne(int32 Id) const;
+    bool SpellBlocksReactions(int32 Id) const;
+    /** Saving throw against a spell: d4s from Bless/Bane, flat spell bonuses, advantage sources, auto-fails (helpless/petrified STR and DEX). */
+    bool RollSpellSave(int32 VictimId, EAbility Ability, int32 Dc, const struct FSpellEffectSpec* Spec, bool bAdvantage = false);
+    /** Adds a spell condition unless the creature is immune (stat block or a spell); incapacitating ones end its concentration. */
+    bool AddSpellCondition(FCombatantState& Victim, ECombatCondition Kind, int32 SourceId, int32 RoundsLeft);
+    bool ResolveEffectSpell(const FCombatCommand& Command, const struct FSrdSpell& Spell, const struct FSpellEffectSpec& Spec, int32 Slot, int32 Dc, int32 AttackBonus, int32 Mod, const TArray<int32>& Legal, FCombatResult& Result);
+    /** Targets of a multi-target spell: the aimed one plus ExtraTargetIds, legal and unique, up to the slot's cap. */
+    TArray<int32> SpellTargetList(const FCombatCommand& Command, const struct FSrdSpell& Spell, const struct FSpellEffectSpec& Spec, int32 Slot, const TArray<int32>& Legal) const;
+    /** Undo what an ended effect changed (Aid hit points, Haste lethargy, held conditions). */
+    void EndSpellEffects(const FActiveSpell& Ended);
+    /** The creature took damage: Sleep/Hypnotic Pattern/charms end, Hideous Laughter re-saves. */
+    void SpellEffectsOnDamaged(int32 TargetId, int32 SourceId);
+    /** Bless/Bane d4 and Magic Weapon on an attack roll (rolls only when present). */
+    int32 SpellAttackBonus(int32 ActorId, bool bWeapon, FCombatResult& Result);
+    /** Hex, Hunter's Mark, Divine Favor, Enlarge, Magic Weapon dice on a hit, after defenses. Rolls only when present. */
+    int32 SpellHitDamage(int32 ActorId, int32 TargetId, bool bCritical, bool bWeapon, EDamageType WeaponType, FCombatResult& Result);
+    /** Sanctuary: the attacker's WIS save or the attack is lost. */
+    bool SanctuaryStops(int32 ActorId, int32 TargetId, FCombatResult& Result);
+    /** Mirror Image: a duplicate takes the hit. */
+    bool MirrorImageTakes(int32 TargetId, FCombatResult& Result);
+    /** Fire Shield: a melee hit from within 5 ft burns (or chills) the attacker. */
+    void SpellRetaliation(int32 AttackerId, int32 TargetId, FCombatResult& Result);
+    /** Invisibility and Sanctuary end when the creature attacks, casts or deals damage. */
+    void EndOnHostileAct(int32 ActorId);
+    /** Heroism temp HP and Searing Smite damage/save at the start of the creature's turn. */
+    void SpellEffectsOnTurnStart(int32 UnitId);
+    /** Death Ward: a drop to 0 HP leaves 1 HP and ends the spell. */
+    bool DeathWardSaves(FCombatantState& Target);
     const struct FSrdSpell* UsableSpell(const FCombatantState& Unit, const FString& SpellId, int32 RequestedSlot, int32& OutSlot, EAdventurerRole& OutClass) const;
     bool ResolveCatalogSpell(const FCombatCommand& Command, FCombatResult& Result);
     /** Ends the caster's concentration and the conditions its spell holds (RoundsLeft -1, caster as source). */

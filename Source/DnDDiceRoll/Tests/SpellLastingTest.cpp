@@ -8,7 +8,7 @@
 // Spells phase 2 (SRD 5.2.1): durations in rounds, lasting zones, repeat saves, one slot per turn, CastSpell forecast, prepared lists.
 namespace SpellLastingTest
 {
-FCombatEncounter Caster(EAdventurerRole Role, int32 Level, FIntPoint FoeCell)
+FCombatEncounter LastingCaster(EAdventurerRole Role, int32 Level, FIntPoint FoeCell)
 {
     FCombatEncounter Encounter;
     Encounter.Width = Encounter.Height = 12;
@@ -32,12 +32,12 @@ FCombatEncounter Caster(EAdventurerRole Role, int32 Level, FIntPoint FoeCell)
     Encounter.Combatants.Add(Foe);
     return Encounter;
 }
-FCombatCommand Cast(const TCHAR* Id, int32 Target, int32 Slot = 0)
+FCombatCommand LastingCast(const TCHAR* Id, int32 Target, int32 Slot = 0)
 {
     FCombatCommand C{ECombatCommandType::CastSpell, 10, {}, Target}; C.SpellId = Id; C.SlotLevel = Slot; return C;
 }
-FCombatCommand End(int32 Id) { return FCombatCommand{ECombatCommandType::EndTurn, Id}; }
-bool Castable(const TCHAR* Id) { const FSrdSpell* S = FSpellCatalogRules::Find(Id); return S && FSpellCatalogRules::CombatResolvable(*S); }
+FCombatCommand LastingEnd(int32 Id) { return FCombatCommand{ECombatCommandType::EndTurn, Id}; }
+bool LastingCastable(const TCHAR* Id) { const FSrdSpell* S = FSpellCatalogRules::Find(Id); return S && FSpellCatalogRules::CombatResolvable(*S); }
 }
 using namespace SpellLastingTest;
 
@@ -73,15 +73,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellOneSlotPerTurnTest, "Project.Expedition.S
 bool FSpellOneSlotPerTurnTest::RunTest(const FString& Parameters)
 {
     FString Error; FCombatBattle Battle;
-    TestTrue(TEXT("Start cleric"), Battle.Start(Caster(EAdventurerRole::Cleric, 5, {1, 0}), 7, Error));
-    TestTrue(TEXT("Guiding Bolt"), Battle.Submit(Cast(TEXT("guiding-bolt"), 20)).bAccepted);
+    TestTrue(TEXT("Start cleric"), Battle.Start(LastingCaster(EAdventurerRole::Cleric, 5, {1, 0}), 7, Error));
+    TestTrue(TEXT("Guiding Bolt"), Battle.Submit(LastingCast(TEXT("guiding-bolt"), 20)).bAccepted);
     TestTrue(TEXT("Slot spent flag"), Battle.Snapshot().bSlotSpentThisTurn);
-    TestFalse(TEXT("Healing Word (bonus action) needs a second slot this turn"), Battle.Submit(Cast(TEXT("healing-word"), 10)).bAccepted);
+    TestFalse(TEXT("Healing Word (bonus action) needs a second slot this turn"), Battle.Submit(LastingCast(TEXT("healing-word"), 10)).bAccepted);
     TestFalse(TEXT("Not listed castable"), Battle.CastableSpells(10).Contains(TEXT("healing-word")));
-    TestTrue(TEXT("End caster turn"), Battle.Submit(End(10)).bAccepted);
-    TestTrue(TEXT("End foe turn"), Battle.Submit(End(20)).bAccepted);
+    TestTrue(TEXT("End caster turn"), Battle.Submit(LastingEnd(10)).bAccepted);
+    TestTrue(TEXT("End foe turn"), Battle.Submit(LastingEnd(20)).bAccepted);
     TestFalse(TEXT("Flag resets at the next turn"), Battle.Snapshot().bSlotSpentThisTurn);
-    TestTrue(TEXT("Healing Word next turn"), Battle.Submit(Cast(TEXT("healing-word"), 10)).bAccepted);
+    TestTrue(TEXT("Healing Word next turn"), Battle.Submit(LastingCast(TEXT("healing-word"), 10)).bAccepted);
     return !HasAnyErrors();
 }
 
@@ -89,11 +89,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellZonesTest, "Project.Expedition.Spells.Las
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSpellZonesTest::RunTest(const FString& Parameters)
 {
-    if (Castable(TEXT("spirit-guardians")))
+    if (LastingCastable(TEXT("spirit-guardians")))
     {
         FString Error; FCombatBattle Battle;
-        TestTrue(TEXT("Start cleric"), Battle.Start(Caster(EAdventurerRole::Cleric, 5, {1, 0}), 11, Error));
-        const FCombatResult R = Battle.Submit(Cast(TEXT("spirit-guardians"), 20));
+        TestTrue(TEXT("Start cleric"), Battle.Start(LastingCaster(EAdventurerRole::Cleric, 5, {1, 0}), 11, Error));
+        const FCombatResult R = Battle.Submit(LastingCast(TEXT("spirit-guardians"), 20));
         TestTrue(TEXT("Spirit Guardians: ") + R.Feedback, R.bAccepted);
         TestEqual(TEXT("No damage when the emanation appears (SRD 5.2.1)"), Battle.Find(20)->HP, 500);
         TestEqual(TEXT("One zone in effect"), Battle.ActiveSpells().Num(), 1);
@@ -105,8 +105,8 @@ bool FSpellZonesTest::RunTest(const FString& Parameters)
         }
         TestTrue(TEXT("Concentrating"), Battle.Find(10)->bConcentrating);
         TestTrue(TEXT("Cast VFX event"), R.SpellEvents.Num() == 1 && R.SpellEvents[0].Kind == ESpellEventKind::Cast && R.SpellEvents[0].Cells.Num() > 0 && R.SpellEvents[0].DurationRounds == 100);
-        Battle.Submit(End(10));
-        const FCombatResult F = Battle.Submit(End(20));
+        Battle.Submit(LastingEnd(10));
+        const FCombatResult F = Battle.Submit(LastingEnd(20));
         TestTrue(TEXT("Foe ends turn in the zone and takes radiant damage"), Battle.Find(20)->HP < 500);
         TestTrue(TEXT("Trigger event"), F.SpellEvents.ContainsByPredicate([](const FSpellCastEvent& E) { return E.Kind == ESpellEventKind::Trigger && E.TargetIds.Contains(20); }));
         // Mid-zone save and restore keeps the zone; a bad serial is rejected.
@@ -116,30 +116,30 @@ bool FSpellZonesTest::RunTest(const FString& Parameters)
         Bad = Battle.Snapshot(); Bad.Encounter.Combatants[0].bConcentrating = false;
         TestFalse(TEXT("Concentration zone without concentration rejected"), Copy.Restore(Bad, Error));
     }
-    if (Castable(TEXT("moonbeam")))
+    if (LastingCastable(TEXT("moonbeam")))
     {
         FString Error; FCombatBattle Battle;
-        TestTrue(TEXT("Start druid"), Battle.Start(Caster(EAdventurerRole::Druid, 5, {4, 0}), 5, Error));
-        const FCombatResult R = Battle.Submit(Cast(TEXT("moonbeam"), 20));
+        TestTrue(TEXT("Start druid"), Battle.Start(LastingCaster(EAdventurerRole::Druid, 5, {4, 0}), 5, Error));
+        const FCombatResult R = Battle.Submit(LastingCast(TEXT("moonbeam"), 20));
         TestTrue(TEXT("Moonbeam: ") + R.Feedback, R.bAccepted);
         TestTrue(TEXT("Moonbeam hurts when it appears"), Battle.Find(20)->HP < 500);
         // 1 minute: the caster's tenth turn start ends it and its concentration.
         for (int32 Turn = 0; Turn < 10 && Battle.Snapshot().Phase == EBattlePhase::Fighting; ++Turn)
         {
             TestEqual(FString::Printf(TEXT("Still up before turn %d"), Turn), Battle.ActiveSpells().Num(), 1);
-            Battle.Submit(End(10)); Battle.Submit(End(20));
+            Battle.Submit(LastingEnd(10)); Battle.Submit(LastingEnd(20));
         }
         TestEqual(TEXT("Moonbeam ends after 10 rounds"), Battle.ActiveSpells().Num(), 0);
         TestFalse(TEXT("Concentration ends with it"), Battle.Find(10)->bConcentrating);
     }
-    if (Castable(TEXT("spike-growth")))
+    if (LastingCastable(TEXT("spike-growth")))
     {
         FString Error; FCombatBattle Battle;
-        TestTrue(TEXT("Start druid"), Battle.Start(Caster(EAdventurerRole::Druid, 5, {6, 6}), 5, Error));
-        TestTrue(TEXT("Spike Growth"), Battle.Submit(Cast(TEXT("spike-growth"), 20)).bAccepted);
+        TestTrue(TEXT("Start druid"), Battle.Start(LastingCaster(EAdventurerRole::Druid, 5, {6, 6}), 5, Error));
+        TestTrue(TEXT("Spike Growth"), Battle.Submit(LastingCast(TEXT("spike-growth"), 20)).bAccepted);
         TestEqual(TEXT("No damage on casting"), Battle.Find(20)->HP, 500);
         TestTrue(TEXT("Zone is difficult terrain"), Battle.IsDifficultTerrain({6, 7}));
-        Battle.Submit(End(10));
+        Battle.Submit(LastingEnd(10));
         FCombatCommand Move{ECombatCommandType::Move, 20, {6, 7}};
         TestTrue(TEXT("Foe walks one cell in the spikes"), Battle.Submit(Move).bAccepted);
         const int32 After = Battle.Find(20)->HP;
@@ -158,11 +158,11 @@ bool FSpellRepeatSaveTest::RunTest(const FString& Parameters)
     for (int32 Seed = 1; Seed < 60 && !(bHeldOnce && bBroke); ++Seed)
     {
         FString Error; FCombatBattle Battle;
-        if (!Battle.Start(Caster(EAdventurerRole::Wizard, 5, {2, 0}), Seed, Error)) { continue; }
-        if (!Battle.Submit(Cast(TEXT("hold-person"), 20)).bAccepted || Battle.ActiveSpells().IsEmpty()) { continue; }
+        if (!Battle.Start(LastingCaster(EAdventurerRole::Wizard, 5, {2, 0}), Seed, Error)) { continue; }
+        if (!Battle.Submit(LastingCast(TEXT("hold-person"), 20)).bAccepted || Battle.ActiveSpells().IsEmpty()) { continue; }
         bHeldOnce = true;
         TestEqual(TEXT("Held entry tracks the target"), Battle.ActiveSpells()[0].TargetId, 20);
-        for (int32 Round = 0; Round < 9 && !Battle.ActiveSpells().IsEmpty(); ++Round) { Battle.Submit(End(10)); Battle.Submit(End(20)); }
+        for (int32 Round = 0; Round < 9 && !Battle.ActiveSpells().IsEmpty(); ++Round) { Battle.Submit(LastingEnd(10)); Battle.Submit(LastingEnd(20)); }
         const bool bParalyzed = Battle.Find(20)->Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Paralyzed; });
         TestEqual(TEXT("Paralysis lasts exactly while the spell does"), bParalyzed, !Battle.ActiveSpells().IsEmpty());
         if (Battle.ActiveSpells().IsEmpty()) { bBroke = true; TestFalse(TEXT("Concentration drops when the only target saves"), Battle.Find(10)->bConcentrating); }
@@ -177,7 +177,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellForecastTest, "Project.Expedition.Spells.
 bool FSpellForecastTest::RunTest(const FString& Parameters)
 {
     FString Error; FCombatBattle Battle;
-    TestTrue(TEXT("Start wizard"), Battle.Start(Caster(EAdventurerRole::Wizard, 5, {4, 0}), 9, Error));
+    TestTrue(TEXT("Start wizard"), Battle.Start(LastingCaster(EAdventurerRole::Wizard, 5, {4, 0}), 9, Error));
     const int32 Rng = Battle.Snapshot().RandomState;
     const FSpellForecast Bolt = Battle.ForecastSpell(10, TEXT("fire-bolt"), 20);
     TestTrue(TEXT("Fire Bolt forecast valid"), Bolt.bValid && Bolt.bAttackRoll);
@@ -203,12 +203,12 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellPreparedTest, "Project.Expedition.Spells.
 bool FSpellPreparedTest::RunTest(const FString& Parameters)
 {
     FString Error; FCombatBattle Battle;
-    FCombatEncounter E = Caster(EAdventurerRole::Wizard, 1, {2, 0});
+    FCombatEncounter E = LastingCaster(EAdventurerRole::Wizard, 1, {2, 0});
     E.Combatants[0].PreparedSpells = {TEXT("fire-bolt"), TEXT("magic-missile")};
     TestTrue(TEXT("Prepared list accepted: ") + Error, Battle.Start(E, 3, Error));
     const TArray<FString> List = Battle.CastableSpells(10);
     TestTrue(TEXT("Only prepared spells castable"), List.Num() == 2 && List.Contains(TEXT("fire-bolt")) && List.Contains(TEXT("magic-missile")));
-    TestFalse(TEXT("Unprepared Ray of Frost refused"), Battle.Submit(Cast(TEXT("ray-of-frost"), 20)).bAccepted);
+    TestFalse(TEXT("Unprepared Ray of Frost refused"), Battle.Submit(LastingCast(TEXT("ray-of-frost"), 20)).bAccepted);
     FCombatEncounter Wrong = E; Wrong.Combatants[0].PreparedSpells = {TEXT("cure-wounds")};
     TestFalse(TEXT("Off-list spell rejected"), FCombatBattle().Start(Wrong, 3, Error));
     FCombatEncounter High = E; High.Combatants[0].PreparedSpells = {TEXT("fireball")};

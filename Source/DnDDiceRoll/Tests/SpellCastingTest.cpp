@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/SpellCatalogRules.h"
+#include "Rules/SpellEffectRules.h"
 #include "Party/BuildCatalog.h"
 
 namespace SpellCastingTest
@@ -51,14 +52,19 @@ bool FSpellCastingTableTest::RunTest(const FString& Parameters)
     {
         const FSrdSpell& Spell = FSpellCatalogRules::At(Index);
         if (!FSpellCatalogRules::CombatResolvable(Spell)) { continue; }
+        const FSpellEffectSpec* Spec = FSpellEffectRules::Find(Spell.Id);
         bool bCastBySomeone = false;
+        if (Spec && (Spec->Flags & SpellEffectFlag::Smite)) { bCastBySomeone = true; ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // smites: SpellEffectsTest
+        bCastBySomeone = false;
         for (const EAdventurerRole Role : Roles)
         {
             if (!FSpellCatalogRules::CanLearn(Role, 5, Spell)) { continue; }
             FString Error; FCombatBattle Battle;
-            if (!Battle.Start(Caster(Role, 5, {1, 0}), 3, Error)) { continue; } // kit-only classes need a kit build to start
+            FCombatEncounter Encounter = Caster(Role, 5, {1, 0});
+            if (Spec && (Spec->OnlyTypes & FCreatureRules::Bit(ECreatureType::Beast))) { Encounter.Combatants[1].Role = TEXT("Wolf"); }
+            if (!Battle.Start(Encounter, 3, Error)) { continue; } // kit-only classes need a kit build to start
             TestTrue(FString::Printf(TEXT("%s listed castable"), Spell.Id), Battle.CastableSpells(10).Contains(Spell.Id));
-            const int32 Target = Spell.Effect == ESpellEffect::Healing ? 10 : 20;
+            const int32 Target = (Spec ? Spec->Target != ESpellEffectTarget::Foe : Spell.Effect == ESpellEffect::Healing) ? 10 : 20;
             TestTrue(FString::Printf(TEXT("%s has a target"), Spell.Id), Battle.SpellTargets(10, Spell.Id).Contains(Target));
             const FCombatResult R = Battle.Submit(Cast(Spell.Id, Target));
             TestTrue(FString::Printf(TEXT("%s resolves for a level 5 caster: %s"), Spell.Id, *R.Feedback), R.bAccepted);
