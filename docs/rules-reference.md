@@ -182,3 +182,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #84: coins and prices
 
 `FCoinRules` keeps money in copper (1 gp = 10 sp = 100 cp) and formats it largest coin first. Shop prices follow the SRD equipment list; merchants buy at half price. Haggling is a house rule for Austin: Persuasion 15 takes 10% off, 20 takes 20% off. Party purse, shop stock and owned items need run state (#39).
+
+## Issue #60: standard actions (rules only)
+
+`FStandardActionRules`: Rogues from level 2 can Dash, Disengage or Hide as a bonus action (Cunning Action); otherwise each costs the action. Each Dash adds the speed again. Dodge gives attackers it can see disadvantage and gives the dodger advantage on Dexterity saves. Disengage stops leaving reach from provoking. Per-turn Dodge/Disengage flags, the new command types and bonus-action tracking in a battle need battle state and command wiring; they wait for #39 and are left out here.
