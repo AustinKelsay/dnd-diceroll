@@ -687,7 +687,8 @@ void AExpeditionHUD::DrawForecast()
         const FCombatantState* Target = Rules.Find(TargetId);
         const FActionForecast Forecast = Rules.Forecast(Player->Actor(), Player->Action(), TargetId);
         if (!Target || !Forecast.bValid) { return; }
-        Lines.Add({FString::Printf(TEXT("%s  ·  AC %d  ·  HP %d/%d"), *Target->Name, Target->ArmorClass, Target->HP, Target->MaxHP), ExpeditionStyle::UnitColor(*Target)});
+        Lines.Add({FString::Printf(TEXT("%s  ·  %s  ·  HP %d/%d"), *Target->Name, *Rules.ArmorClassText(TargetId), Target->HP, Target->MaxHP), ExpeditionStyle::UnitColor(*Target)});
+        if (const FString Status = Rules.StatusText(TargetId); !Status.IsEmpty()) { Lines.Add({Status, Gold}); }
         if (Forecast.bAttackRoll)
         {
             const FLinearColor Chance = Forecast.HitChancePercent >= 65 ? Safe : Forecast.HitChancePercent >= 40 ? Gold : Danger;
@@ -703,13 +704,22 @@ void AExpeditionHUD::DrawForecast()
     else if (!Player->PreviewPath().IsEmpty())
     {
         const int32 Steps = Player->PreviewPath().Num();
-        Lines.Add({FString::Printf(TEXT("Move %d square%s  ·  %d left after"), Steps, Steps == 1 ? TEXT("") : TEXT("s"), Rules.Snapshot().MovementLeft - Steps), Sky});
+        int32 Cost = 0, Difficult = 0;
+        for (const FIntPoint& Cell : Player->PreviewPath()) { const bool bRough = Rules.IsDifficultTerrain(Cell); Cost += bRough ? 2 : 1; Difficult += bRough ? 1 : 0; }
+        Lines.Add({FString::Printf(TEXT("Move %d square%s  ·  %d left after"), Steps, Steps == 1 ? TEXT("") : TEXT("s"), Rules.Snapshot().MovementLeft - Cost), Sky});
+        if (Difficult > 0) { Lines.Add({FString::Printf(TEXT("Difficult terrain: %d square%s cost double"), Difficult, Difficult == 1 ? TEXT("") : TEXT("s")), Gold}); }
+        for (const int32 ThreatId : Rules.OpportunityThreats(Player->Actor(), Player->PreviewPath()))
+        {
+            if (const FCombatantState* Threat = Rules.Find(ThreatId)) { Lines.Add({FString::Printf(TEXT("Provokes an opportunity attack from %s"), *Threat->Name), Danger}); }
+        }
     }
     else if (const FCombatantState* Unit = Rules.Find(Player->HoveredUnit()))
     {
         if (Unit->Life == ECombatLife::Dead) { return; }
         Lines.Add({FString::Printf(TEXT("%s  ·  %s"), *Unit->Name, *Unit->Role), ExpeditionStyle::UnitColor(*Unit)});
-        Lines.Add({FString::Printf(TEXT("HP %d/%d  ·  AC %d  ·  reach %d"), Unit->HP, Unit->MaxHP, Unit->ArmorClass, Unit->Range), Parchment});
+        Lines.Add({FString::Printf(TEXT("HP %d/%d  ·  %s  ·  reach %d"), Unit->HP, Unit->MaxHP, *Rules.ArmorClassText(Unit->Id), FCombatBattle::ActionRange(*Unit, ECombatCommandType::Attack)), Parchment});
+        if (const FString Status = Rules.StatusText(Unit->Id); !Status.IsEmpty()) { Lines.Add({Status, Gold}); }
+        if (Rules.IsDifficultTerrain(Unit->Cell)) { Lines.Add({TEXT("Standing in difficult terrain"), Muted}); }
         if (Unit->Side == ECombatSide::Enemy && Player->Actor() == Rules.ActiveId()) { Lines.Add({TEXT("Not a legal target from here"), Muted}); }
     }
     if (Lines.IsEmpty()) { return; }

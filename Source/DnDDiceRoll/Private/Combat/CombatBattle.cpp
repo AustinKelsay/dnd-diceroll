@@ -398,6 +398,63 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
     return Result;
 }
 
+TArray<int32> FCombatBattle::OpportunityThreats(int32 MoverId, const TArray<FIntPoint>& Path) const
+{
+    TArray<int32> Threats;
+    const FCombatantState* Mover = Find(MoverId);
+    if (!Mover) { return Threats; }
+    FIntPoint From = Mover->Cell;
+    for (const FIntPoint& Next : Path)
+    {
+        for (const FCombatantState& Reactor : State.Encounter.Combatants)
+        {
+            if (Reactor.Side == Mover->Side || Reactor.Life != ECombatLife::Conscious || RangedAttacker(Reactor) || Threats.Contains(Reactor.Id) ||
+                !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), From, Next, false, false, Reactor.bReactionAvailable)) { continue; }
+            Threats.Add(Reactor.Id);
+        }
+        From = Next;
+    }
+    return Threats;
+}
+
+const TCHAR* FCombatBattle::ConditionName(ECombatCondition Condition)
+{
+    switch (Condition)
+    {
+    case ECombatCondition::Prone: return TEXT("Prone");
+    case ECombatCondition::Poisoned: return TEXT("Poisoned");
+    case ECombatCondition::Blinded: return TEXT("Blinded");
+    case ECombatCondition::Frightened: return TEXT("Frightened");
+    case ECombatCondition::Restrained: return TEXT("Restrained");
+    case ECombatCondition::Grappled: return TEXT("Grappled");
+    default: return TEXT("Condition");
+    }
+}
+
+FString FCombatBattle::StatusText(int32 Id) const
+{
+    TArray<FString> Parts;
+    if (const FCombatantState* Unit = Find(Id))
+    {
+        for (const FCombatCondition& C : Unit->Conditions)
+        {
+            Parts.Add(C.RoundsLeft > 0 ? FString::Printf(TEXT("%s (%d round%s)"), ConditionName(C.Condition), C.RoundsLeft, C.RoundsLeft == 1 ? TEXT("") : TEXT("s")) : FString(ConditionName(C.Condition)));
+        }
+    }
+    return FString::Join(Parts, TEXT(", "));
+}
+
+FString FCombatBattle::ArmorClassText(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit) { return FString(); }
+    TArray<FString> Sources;
+    if (Unit->ArmorWorn > static_cast<int32>(EArmor::None) && Unit->ArmorWorn < static_cast<int32>(EArmor::Shield)) { Sources.Add(FArmorRules::Profile(static_cast<EArmor>(Unit->ArmorWorn)).Name); }
+    if (Unit->bShieldEquipped) { Sources.Add(TEXT("shield")); }
+    const FString Base = FString::Printf(TEXT("AC %d"), EffectiveArmorClass(Id));
+    return Sources.IsEmpty() ? Base : FString::Printf(TEXT("%s (%s)"), *Base, *FString::Join(Sources, TEXT(", ")));
+}
+
 int32 FCombatBattle::StepCost(FIntPoint Cell) const
 {
     return State.Encounter.DifficultCells.Contains(Cell) ? 2 : 1;

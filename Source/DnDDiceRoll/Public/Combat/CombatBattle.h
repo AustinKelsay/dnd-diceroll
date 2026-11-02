@@ -326,6 +326,15 @@ public:
     int32 EffectiveArmorClass(int32 Id) const;
     /** Action range in cells; weapon attacks use the MainHand reach (melee) or long range (ranged), else Range. */
     static int32 ActionRange(const FCombatantState& Unit, ECombatCommandType Action);
+    // HUD facts (#2). Read-only, no RNG.
+    /** Enemies whose reaction a mover would provoke walking Path from its current cell, in the order the move would meet them. */
+    TArray<int32> OpportunityThreats(int32 MoverId, const TArray<FIntPoint>& Path) const;
+    bool IsDifficultTerrain(FIntPoint Cell) const { return StepCost(Cell) > 1; }
+    static const TCHAR* ConditionName(ECombatCondition Condition);
+    /** "Poisoned (2 rounds), Prone"; empty without conditions. */
+    FString StatusText(int32 Id) const;
+    /** "AC 18 (Chain Mail, shield)" from worn armor, else "AC 13". */
+    FString ArmorClassText(int32 Id) const;
 private:
     friend class FPartyContinuity;
     friend class FExpeditionRun;

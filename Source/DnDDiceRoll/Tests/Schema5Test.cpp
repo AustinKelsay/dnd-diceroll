@@ -715,4 +715,31 @@ bool FSchema5UpcastAreaSpellsTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5HudFactsTest, "Project.Expedition.Schema5.HudTerrainConditionsThreatsArmor",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5HudFactsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FCombatEncounter Encounter = Pair({1, 0});
+    Encounter.DifficultCells = {{3, 3}};
+    Encounter.Combatants[0].Conditions = {Cond(ECombatCondition::Poisoned, INDEX_NONE, 2)};
+    Encounter.Combatants[0].ArmorWorn = static_cast<int32>(EArmor::ChainMail);
+    Encounter.Combatants[0].bShieldEquipped = true;
+    FCombatBattle Battle;
+    if (!TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error))) { AddError(Error); return false; }
+    TestTrue(TEXT("Difficult cell flagged"), Battle.IsDifficultTerrain({3, 3}));
+    TestFalse(TEXT("Open cell plain"), Battle.IsDifficultTerrain({2, 2}));
+    TestEqual(TEXT("Condition name"), FString(FCombatBattle::ConditionName(ECombatCondition::Restrained)), FString(TEXT("Restrained")));
+    TestTrue(TEXT("Status lists poison and rounds"), Battle.StatusText(10).Contains(TEXT("Poisoned (2 rounds)")));
+    TestTrue(TEXT("No conditions, empty status"), Battle.StatusText(20).IsEmpty());
+    const FString Armor = Battle.ArmorClassText(10);
+    TestTrue(TEXT("AC text uses effective AC"), Armor.StartsWith(FString::Printf(TEXT("AC %d"), Battle.EffectiveArmorClass(10))));
+    TestTrue(TEXT("AC names the armor"), Armor.Contains(TEXT("Chain Mail")) && Armor.Contains(TEXT("shield")));
+    TestEqual(TEXT("Legacy AC text"), Battle.ArmorClassText(20), FString::Printf(TEXT("AC %d"), Battle.Find(20)->ArmorClass));
+    TestEqual(TEXT("Staying in reach is safe"), Battle.OpportunityThreats(10, {{0, 1}}).Num(), 0);
+    const TArray<int32> Threats = Battle.OpportunityThreats(10, {{0, 1}, {0, 2}});
+    TestTrue(TEXT("Leaving reach warns"), Threats.Num() == 1 && Threats[0] == 20);
+    TestTrue(TEXT("Preview spends no reaction"), Battle.Find(20)->bReactionAvailable);
+    return !HasAnyErrors();
+}
 #endif
