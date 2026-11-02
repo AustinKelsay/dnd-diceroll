@@ -517,6 +517,7 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     if (CombatSpellSlots::IsAreaSpell(Action) && (Unit->Side != ECombatSide::Party || !FSpellRules::OnClassList(Unit->AdventurerRole, CombatSpellSlots::AreaSpell(Action)) || CombatSpellSlots::CastSlotLevel(*Unit, 0) == 0)) { return nullptr; }
     if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return nullptr; } }
     if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return nullptr; }
+    if ((Action == ECombatCommandType::Shove || Action == ECombatCommandType::Grapple) && Unit->Side != ECombatSide::Party) { return nullptr; }
     if (bWeaponAttack && NeedsAmmunition(*Unit) && Unit->Ammunition <= 0) { return nullptr; }
     if ((Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::MagicMissile || CombatSpellSlots::IsAreaSpell(Action)) && ArmorPenaltiesOf(*this, *Unit).bCannotCastSpells) { return nullptr; }
     return Unit;
@@ -611,6 +612,13 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         else if (Action == ECombatCommandType::MagicMissile)
         {
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= MissileRange && HasLineOfSight(Unit->Cell, Target.Cell);
+        }
+        else if (Action == ECombatCommandType::Shove || Action == ECombatCommandType::Grapple)
+        {
+            const ECombatCondition Applies = Action == ECombatCommandType::Shove ? ECombatCondition::Prone : ECombatCondition::Grappled;
+            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious &&
+                FMath::Max(FMath::Abs(Target.Cell.X - Unit->Cell.X), FMath::Abs(Target.Cell.Y - Unit->Cell.Y)) <= 1 &&
+                !Target.Conditions.ContainsByPredicate([Applies](const FCombatCondition& C) { return C.Condition == Applies; });
         }
         else if (CombatSpellSlots::IsAreaSpell(Action))
         {
@@ -1243,6 +1251,29 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         State.bActionAvailable = false;
         Result.Feedback = FString::Printf(TEXT("%s: %s (level %d slot, DC %d)%s"), *User->Name, FSpellRules::Facts(Spell).Name, Slot, Dc, *Lines);
         CheckOutcome();
+    }
+    else if (Command.Type == ECombatCommandType::Shove || Command.Type == ECombatCommandType::Grapple)
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Shove and grapple need an adjacent, conscious foe not already under that condition.")); }
+        // SRD contest: attacker's Athletics against the target's better of Athletics or Acrobatics; ties hold.
+        const bool bShove = Command.Type == ECombatCommandType::Shove;
+        const FCharacterRules Defender = Character(Command.TargetId);
+        const int32 ActorModifier = Character(Command.ActorId).SkillBonus(ESkill::Athletics);
+        const int32 DefenderModifier = FMath::Max(Defender.SkillBonus(ESkill::Athletics), Defender.SkillBonus(ESkill::Acrobatics));
+        const int32 ActorRoll = Roll(20), DefenderRoll = Roll(20);
+        const bool bWon = FCheckRules::ActorWinsContest(ActorRoll + ActorModifier, DefenderRoll + DefenderModifier);
+        FCombatantState* Victim = MutableFind(Command.TargetId);
+        if (bWon)
+        {
+            FCombatCondition Applied;
+            Applied.Condition = bShove ? ECombatCondition::Prone : ECombatCondition::Grappled;
+            Applied.SourceId = bShove ? INDEX_NONE : Command.ActorId;
+            Victim->Conditions.Add(Applied);
+        }
+        State.bActionAvailable = false;
+        Result.bHit = bWon;
+        Result.Feedback = FString::Printf(TEXT("%s: %s > %s | Athletics %d vs %d | %s"), *Actor->Name, bShove ? TEXT("Shove") : TEXT("Grapple"), *Victim->Name,
+            ActorRoll + ActorModifier, DefenderRoll + DefenderModifier, bWon ? (bShove ? TEXT("knocked prone") : TEXT("grappled")) : TEXT("resisted"));
     }
     else if (Command.Type == ECombatCommandType::EndTurn)
     {

@@ -1,6 +1,7 @@
 #include "Run/ExpeditionRun.h"
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/ArmorRules.h"
 
 namespace
 {
@@ -175,7 +176,24 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         Enemy.DamageDie = Route.bDangerous ? 6 : 4;
         Enemy.DamageBonus = 1;
         Enemy.InitiativeBonus = 1;
+        // Equipment (schema 5): light armor whose base equals the tuned AC; the role's Dexterity bonus (+0..+2) now adds on top.
+        Enemy.ArmorWorn = static_cast<int32>(Route.bDangerous ? EArmor::StuddedLeather : EArmor::Leather);
+        // A quiet route catches its first scout resting: prone until it spends half its movement to stand.
+        if (!Route.bDangerous && Index == 0 && !bArcher)
+        {
+            FCombatCondition Resting;
+            Resting.Condition = ECombatCondition::Prone;
+            Enemy.Conditions.Add(Resting);
+        }
         Layout.Combatants.Add(Enemy);
+    }
+    // Rubble: the open cell east of each obstacle is difficult terrain. It only slows, so the floor stays connected.
+    for (const FIntPoint& Wall : Layout.BlockedCells)
+    {
+        const FIntPoint Rubble(Wall.X + 1, Wall.Y);
+        if (Rubble.X >= Layout.Width || Layout.BlockedCells.Contains(Rubble) || Layout.DifficultCells.Contains(Rubble) ||
+            Layout.Combatants.ContainsByPredicate([Rubble](const FCombatantState& U) { return U.Cell == Rubble; })) { continue; }
+        Layout.DifficultCells.Add(Rubble);
     }
     return Layout;
 }

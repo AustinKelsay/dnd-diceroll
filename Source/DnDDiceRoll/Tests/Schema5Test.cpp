@@ -742,4 +742,77 @@ bool FSchema5HudFactsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Preview spends no reaction"), Battle.Find(20)->bReactionAvailable);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5GeneratedFactsTest, "Project.Expedition.Schema5.GenerationPlacesTerrainConditionsEquipment",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5GeneratedFactsTest::RunTest(const FString& Parameters)
+{
+    bool bSawTerrain = false, bSawProne = false;
+    for (int32 Seed = 0; Seed < 16; ++Seed)
+    {
+        for (int32 Choice = 0; Choice < 2; ++Choice)
+        {
+            FExpeditionRun Run; FString Error;
+            Run.NewRun(Seed, Error, TEXT("generation-fixture"));
+            const FExpeditionRoute Route = Run.Progress().Offers[Choice];
+            if (!TestTrue(TEXT("Route starts"), Run.ChooseRoute(Route.Id, Error))) { return false; }
+            const FCombatBattle& Battle = Run.Battle();
+            const FCombatEncounter& Layout = Battle.Snapshot().Encounter;
+            bSawTerrain |= !Layout.DifficultCells.IsEmpty();
+            for (const FIntPoint& Cell : Layout.DifficultCells)
+            {
+                TestFalse(TEXT("Rough ground is never a wall"), Layout.BlockedCells.Contains(Cell));
+                TestFalse(TEXT("Nobody spawns in rough ground"), Layout.Combatants.ContainsByPredicate([Cell](const FCombatantState& U) { return U.Cell == Cell; }));
+            }
+            for (const FCombatantState& Unit : Layout.Combatants)
+            {
+                if (Unit.Side != ECombatSide::Enemy) { continue; }
+                TestTrue(TEXT("Enemies wear armor"), Unit.ArmorWorn > static_cast<int32>(EArmor::None));
+                const int32 Tuned = Route.bDangerous ? 12 : 11;
+                const int32 Worn = Battle.EffectiveArmorClass(Unit.Id);
+                TestTrue(TEXT("Light armor adds only the Dexterity bonus over the tuned AC"), Worn >= Tuned && Worn <= Tuned + 2);
+                TestTrue(TEXT("HUD names the armor"), Battle.ArmorClassText(Unit.Id).Contains(TEXT("Leather")));
+                if (Has(&Unit, ECombatCondition::Prone)) { bSawProne = true; TestFalse(TEXT("Only quiet routes catch a scout resting"), Route.bDangerous); }
+            }
+        }
+    }
+    TestTrue(TEXT("Some layouts have difficult terrain"), bSawTerrain);
+    TestTrue(TEXT("Some layouts start a scout prone"), bSawProne);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ShoveGrappleTest, "Project.Expedition.Schema5.ShoveAndGrappleApplyConditions",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5ShoveGrappleTest::RunTest(const FString& Parameters)
+{
+    const ECombatCommandType Kinds[] = {ECombatCommandType::Shove, ECombatCommandType::Grapple};
+    const ECombatCondition Applied[] = {ECombatCondition::Prone, ECombatCondition::Grappled};
+    for (int32 K = 0; K < 2; ++K)
+    {
+        int32 Wins = 0, Losses = 0;
+        for (int32 Seed = 1; Seed <= 40; ++Seed)
+        {
+            FCombatBattle Battle; FString Error;
+            if (!Battle.Start(Pair({1, 0}), Seed, Error)) { AddError(Error); return false; }
+            TestTrue(TEXT("Adjacent foe is a legal target"), Battle.LegalTargets(10, Kinds[K]).Contains(20));
+            FCombatCommand Command; Command.ActorId = 10; Command.TargetId = 20; Command.Type = Kinds[K];
+            const FCombatResult Result = Battle.Submit(Command);
+            if (!TestTrue(TEXT("Contest accepted"), Result.bAccepted)) { return false; }
+            TestFalse(TEXT("Uses the action"), Battle.Snapshot().bActionAvailable);
+            const bool bWon = Has(Battle.Find(20), Applied[K]);
+            (bWon ? Wins : Losses)++;
+            TestTrue(TEXT("Feedback names the contest"), Result.Feedback.Contains(K == 0 ? TEXT("Shove") : TEXT("Grapple")));
+            if (bWon && K == 1) { TestEqual(TEXT("Grapple remembers its source"), Battle.Find(20)->Conditions.Last().SourceId, 10); }
+        }
+        TestTrue(TEXT("Contest can be won"), Wins > 0);
+        TestTrue(TEXT("Contest can be lost"), Losses > 0);
+    }
+    FCombatBattle Far; FString Error;
+    Far.Start(Pair({3, 0}), 1, Error);
+    TestFalse(TEXT("Shove needs reach"), Far.LegalTargets(10, ECombatCommandType::Shove).Contains(20));
+    FCombatEncounter Down = Pair({1, 0});
+    Down.Combatants[1].Conditions = {Cond(ECombatCondition::Prone)};
+    FCombatBattle Already; Already.Start(Down, 1, Error);
+    TestFalse(TEXT("No shoving a prone foe prone again"), Already.LegalTargets(10, ECombatCommandType::Shove).Contains(20));
+    TestTrue(TEXT("Grapple still allowed"), Already.LegalTargets(10, ECombatCommandType::Grapple).Contains(20));
+    return !HasAnyErrors();
+}
 #endif
