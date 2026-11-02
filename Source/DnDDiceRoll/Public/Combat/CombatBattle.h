@@ -48,6 +48,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 RescueTurnsLeft = 0;
     UPROPERTY() int32 SecondWindUses = 0;
     UPROPERTY() int32 SpellSlots = 0;
+    /** Per-level slot pool (#71): empty, or one count per spell level 1..FSpellRules::MaxSpellLevel within FSpellRules::SlotsFor; level 1 mirrors SpellSlots. */
+    UPROPERTY() TArray<int32> SlotsByLevel;
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;
     UPROPERTY() int32 Level = 1;
@@ -304,6 +306,8 @@ public:
     /** SRD spell facts line (FSpellRules::Summary) for spell actions; empty otherwise. */
     static FString SpellTag(ECombatCommandType Action);
     static FCombatEncounter TutorialEncounter();
+    /** Spends one 1st-level slot from SpellSlots and, when present, the per-level pool. No-op when empty. */
+    static void SpendSpellSlot(FCombatantState& Unit);
 private:
     friend class FPartyContinuity;
     friend class FExpeditionRun;

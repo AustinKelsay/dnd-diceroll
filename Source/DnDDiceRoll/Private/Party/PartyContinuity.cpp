@@ -1,5 +1,6 @@
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/SpellRules.h"
 
 bool FPartyContinuity::Carry(FCombatBattle& Battle, const FCombatEncounter& Layout, int32 Seed, FString& Error)
 {
@@ -85,6 +86,7 @@ bool FPartyContinuity::Recover(FCombatBattle& Battle, FString& Error)
             if (Survivor.AdventurerRole == EAdventurerRole::Cleric || Survivor.AdventurerRole == EAdventurerRole::Wizard)
             { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
         }
+        if (!Survivor.SlotsByLevel.IsEmpty()) { Survivor.SlotsByLevel[0] = FMath::Min(Survivor.SpellSlots, FSpellRules::SlotsFor(Survivor.AdventurerRole, Survivor.Level, 1)); Survivor.SpellSlots = Survivor.SlotsByLevel[0]; }
     }
     return true;
 }

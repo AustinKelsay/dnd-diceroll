@@ -331,4 +331,58 @@ bool FSchema5DifficultTerrainTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5SlotPoolTest, "Project.Expedition.Schema5.PerLevelSlotPoolFollowsTable",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5SlotPoolTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Caster = [](int32 Level, int32 Slots, TArray<int32> Pool)
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        FCombatantState& Unit = Encounter.Combatants[0];
+        Unit.AdventurerRole = EAdventurerRole::Wizard; Unit.Level = Level; Unit.SpellSlots = Slots; Unit.SlotsByLevel = Pool;
+        return Encounter;
+    };
+    FCombatBattle Battle;
+    TestTrue(TEXT("An empty pool keeps the single counter"), Battle.Start(Caster(1, 2, {}), 7, Error));
+    TestTrue(TEXT("Level 1 table: 2/0/0"), Battle.Start(Caster(1, 2, {2, 0, 0}), 7, Error));
+    TestTrue(TEXT("Level 5 table: up to 4/3/2"), Battle.Start(Caster(5, 2, {2, 3, 2}), 7, Error));
+    TestTrue(TEXT("Spent slots are fine"), Battle.Start(Caster(3, 0, {0, 1, 0}), 7, Error));
+    TestFalse(TEXT("No 2nd-level slots at level 1"), Battle.Start(Caster(1, 2, {2, 1, 0}), 7, Error));
+    TestFalse(TEXT("No 3rd-level slots at level 4"), Battle.Start(Caster(4, 2, {2, 3, 1}), 7, Error));
+    TestFalse(TEXT("One entry per spell level"), Battle.Start(Caster(1, 2, {2, 0}), 7, Error));
+    TestFalse(TEXT("Level 1 mirrors SpellSlots"), Battle.Start(Caster(1, 2, {1, 0, 0}), 7, Error));
+    TestFalse(TEXT("No negative counts"), Battle.Start(Caster(5, 2, {2, -1, 0}), 7, Error));
+    {
+        FCombatEncounter Fighter = Caster(5, 0, {0, 1, 0});
+        Fighter.Combatants[0].AdventurerRole = EAdventurerRole::Fighter;
+        TestFalse(TEXT("Non-casters have no slots"), Battle.Start(Fighter, 7, Error));
+    }
+    FCombatantState Unit; Unit.SpellSlots = 2; Unit.SlotsByLevel = {2, 3, 0};
+    FCombatBattle::SpendSpellSlot(Unit);
+    TestEqual(TEXT("Spending lowers the counter"), Unit.SpellSlots, 1);
+    TestEqual(TEXT("and the 1st-level pool"), Unit.SlotsByLevel[0], 1);
+    TestEqual(TEXT("Higher levels untouched"), Unit.SlotsByLevel[1], 3);
+    Unit.SpellSlots = Unit.SlotsByLevel[0] = 0;
+    FCombatBattle::SpendSpellSlot(Unit);
+    TestEqual(TEXT("Never below zero"), Unit.SlotsByLevel[0], 0);
+
+    FExpeditionRun Run, Restored; FString Json;
+    FExpeditionSnapshot Snapshot = ActiveRun(Run);
+    FCombatantState* Wizard = Snapshot.Battle.Encounter.Combatants.FindByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Party && U.SpellSlots > 0; });
+    if (!TestNotNull(TEXT("Fixture has a caster"), Wizard)) { return false; }
+    Wizard->SlotsByLevel = {Wizard->SpellSlots, 0, 0};
+    if (!TestTrue(TEXT("Pool restores"), Restored.Restore(Snapshot, Error))) { AddError(Error); return false; }
+    FExpeditionSaveData Data; Data.Current = Restored.Snapshot();
+    TestTrue(TEXT("Encodes"), FExpeditionSave::Encode(Data, Json, Error));
+    FExpeditionSaveData Loaded;
+    TestTrue(TEXT("Decodes"), FExpeditionSave::Decode(Json, Loaded, Error));
+    TestTrue(TEXT("Pool survives the JSON round trip"), Same(Loaded.Current, Data.Current));
+    TSharedPtr<FJsonObject> Root;
+    FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
+    FirstCombatantJson(Root)->RemoveField(TEXT("SlotsByLevel"));
+    TestFalse(TEXT("The pool is a required schema 5 field"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+    return !HasAnyErrors();
+}
 #endif

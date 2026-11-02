@@ -75,6 +75,13 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         const auto* Build = FBuildCatalog::Find(Unit.BuildId);
         if (Build && !FBuildCatalog::ValidResources(Unit))
         { return Reject(TEXT("Resources do not belong to the selected build.")); }
+        if (!Unit.SlotsByLevel.IsEmpty())
+        {
+            bool bSlotsOk = Unit.SlotsByLevel.Num() == FSpellRules::MaxSpellLevel && Unit.SlotsByLevel[0] == Unit.SpellSlots;
+            for (int32 SlotLevel = 1; bSlotsOk && SlotLevel <= Unit.SlotsByLevel.Num(); ++SlotLevel)
+            { bSlotsOk = Unit.SlotsByLevel[SlotLevel - 1] >= 0 && Unit.SlotsByLevel[SlotLevel - 1] <= FSpellRules::SlotsFor(Unit.AdventurerRole, Unit.Level, SlotLevel); }
+            if (!bSlotsOk) { return Reject(TEXT("Spell slots do not match the per-level slot table.")); }
+        }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
@@ -175,6 +182,13 @@ int32 FCombatBattle::Roll(int32 Sides)
     State.RandomState = Random.GetCurrentSeed();
     if (DiceLog) { DiceLog->Add({Sides, Value}); }
     return Value;
+}
+
+void FCombatBattle::SpendSpellSlot(FCombatantState& Unit)
+{
+    if (Unit.SpellSlots <= 0) { return; }
+    --Unit.SpellSlots;
+    if (!Unit.SlotsByLevel.IsEmpty()) { Unit.SlotsByLevel[0] = Unit.SpellSlots; }
 }
 
 int32 FCombatBattle::RollDice(int32 Count, int32 Sides)
@@ -893,7 +907,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             else if (A.Effect == EAbilityEffect::Healing)
             {
                 int32 Amount = A.Amount;
-                if (A.bCureDice) { --User->SpellSlots; DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice,CureDie)+HealingModifier; DiceLog = nullptr; }
+                if (A.bCureDice) { SpendSpellSlot(*User); DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice,CureDie)+HealingModifier; DiceLog = nullptr; }
                 Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP); Target->HP += Result.Healing;
                 Result.Effects.Add({Target->Id, A.Effect, Result.Healing, Target->Cell});
             }
@@ -966,7 +980,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FString Ability = TEXT("Rescue");
         if (Command.Type == ECombatCommandType::MagicMissile)
         {
-            --User->SpellSlots;
+            SpendSpellSlot(*User);
             if (const auto* B = FBuildCatalog::Find(User->BuildId)) { User->KitUses -= B->MissileKitCost; }
             DiceLog = &Result.EffectDice;
             Result.EffectModifier = MissileDarts * DartBonus;
@@ -985,7 +999,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             int32 Amount = 1;
             DiceLog = &Result.EffectDice;
             if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
-            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { SpendSpellSlot(*User); Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             else { Result.EffectModifier = 1; }
             DiceLog = nullptr;
