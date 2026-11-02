@@ -68,7 +68,7 @@ TArray<FClassFeature> FClassFeatureRules::DataFeaturesThrough(EAdventurerRole Ro
         {R::Sorcerer, {TEXT("Draconic: Dragon Resilience"), 1, C::Free, false}},
         // Warlock and Bard follow SRD 5.2.1 (docs/srd-source-notes.md): the Pact Boon is now the Pact of the Blade/Chain/Tome invocations,
         // the subclass (Fiend Patron, College of Lore) arrives at 3, Expertise at Bard 2, and Song of Rest is gone (SRD 5.1 only).
-        {R::Warlock, {TEXT("Eldritch Invocations"), 1, C::Free, false}}, {R::Warlock, {TEXT("Magical Cunning"), 2, C::Free, true}},
+        {R::Warlock, {TEXT("Eldritch Invocations"), 1, C::Free, true}}, {R::Warlock, {TEXT("Magical Cunning"), 2, C::Free, true}},
         {R::Warlock, {TEXT("Fiend: Dark One's Blessing"), 3, C::Free, true}}, {R::Warlock, {TEXT("Fiend: Fiend Spells"), 3, C::Free, false}},
         {R::Druid, {TEXT("Land: Natural Recovery"), 2, C::Free, false}},
         {R::Bard, {TEXT("Expertise"), 2, C::Free, false}}, {R::Bard, {TEXT("Jack of All Trades"), 2, C::Free, true}},

@@ -559,6 +559,36 @@ bool FDarkOnesBlessingTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEldritchInvocationsTest, "Project.Expedition.Features.EldritchInvocations",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FEldritchInvocationsTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (int32 L = 1; L <= 5; ++L)
+    {
+        FCombatantState Lock = Hero(TEXT("warlock.fiend"), L); FFeatureKit::Refill(Lock);
+        TestEqual(FString::Printf(TEXT("Warlock %d knows the SRD count"), L), Lock.Invocations.Num(), FWarlockRules::InvocationsKnown(L));
+        TestTrue(TEXT("Valid"), FFeatureKit::Valid(Lock));
+        TestTrue(TEXT("Armor of Shadows first"), FFeatureKit::HasInvocation(Lock, EInvocation::ArmorOfShadows));
+        TestEqual(TEXT("Agonizing Blast needs Warlock 2"), FFeatureKit::HasInvocation(Lock, EInvocation::AgonizingBlast), L >= 2);
+    }
+    FCombatantState Lock = Hero(TEXT("warlock.fiend"), 1); FFeatureKit::Refill(Lock);
+    FString Why;
+    TestFalse(TEXT("Agonizing Blast refused at Warlock 1"), FFeatureKit::ChooseInvocations(Lock, {static_cast<int32>(EInvocation::AgonizingBlast)}, Why));
+    TestFalse(TEXT("Too many picks refused"), FFeatureKit::ChooseInvocations(Lock, {static_cast<int32>(EInvocation::ArmorOfShadows), static_cast<int32>(EInvocation::EldritchMind)}, Why));
+    TestTrue(TEXT("Legal pick accepted"), FFeatureKit::ChooseInvocations(Lock, {static_cast<int32>(EInvocation::EldritchMind)}, Why));
+    FCombatantState Fighter = Hero(TEXT("fighter.champion"), 2); Fighter.Invocations = {static_cast<int32>(EInvocation::ArmorOfShadows)};
+    TestFalse(TEXT("Non-warlock holding one is invalid"), FFeatureKit::Valid(Fighter));
+    // Armor of Shadows: unarmored warlock AC is 13 + DEX.
+    FCombatantState Bare = Hero(TEXT("warlock.fiend"), 1); FFeatureKit::Refill(Bare); Bare.ArmorWorn = static_cast<int32>(EArmor::None); Bare.bShieldEquipped = false;
+    FCombatantState Plain = Bare; Plain.Invocations.Reset(); Plain.Invocations.Add(static_cast<int32>(EInvocation::EldritchMind));
+    FCombatBattle A, B; FString Error;
+    TestTrue(TEXT("Start"), A.Start(Duel(Bare, {5, 5}), 1, Error) && B.Start(Duel(Plain, {5, 5}), 1, Error));
+    TestEqual(TEXT("Armor of Shadows +3 AC"), A.EffectiveArmorClass(10) - B.EffectiveArmorClass(10), 3);
+    TestTrue(TEXT("Sheet lists the invocation"), FFeatureKit::RewardSheet(Bare).ContainsByPredicate([](const FString& L) { return L.StartsWith(TEXT("Invocation: Armor of Shadows")); }));
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)

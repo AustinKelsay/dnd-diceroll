@@ -89,6 +89,12 @@ int32 AttacksPerAction(const FCombatantState& Unit)
 }
 /** Sorcerer Quickened Spell: a pending quicken turns the next kit spell into a bonus action. */
 bool KitBonus(const FCombatantState& Unit, const FAbilityFacts& A) { return A.bBonus || (Unit.QuickenState == 1 && A.bKitResource); }
+/** Pact of the Blade (SRD 5.2.1 invocation): the pact weapon may use CHA for attack and damage rolls; modelled for melee weapons. */
+int32 PactAbilityModifier(const FCombatantState& Unit, const FWeaponProfile& Weapon, const FAbilityScores& Scores)
+{
+    const int32 Normal = FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(Weapon, Scores)));
+    return !Weapon.bRanged && FFeatureKit::HasInvocation(Unit, EInvocation::PactOfTheBlade) ? FMath::Max(Normal, FAbilityRules::Modifier(Scores.Charisma)) : Normal;
+}
 int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
@@ -96,7 +102,7 @@ int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit
     if (!Weapon) { return (Unit.WildShapeHP > 0 ? FFeatureKit::WolfAttack : Unit.AttackBonus) + Sacred; }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
     const int32 Archery = Weapon->bRanged && FFeatureKit::Style(Unit) == EFightingStyle::Archery ? 2 : 0;
-    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + Archery + Sacred;
+    return FProficiencyRules::ProficiencyBonus(Unit.Level) + PactAbilityModifier(Unit, *Weapon, Scores) + Unit.WeaponRank + Archery + Sacred;
 }
 int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
@@ -104,7 +110,7 @@ int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& U
     if (!Weapon) { return Unit.WildShapeHP > 0 ? FFeatureKit::WolfDamageBonus : FBuildCatalog::AttackModifier(Unit); }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
     const int32 Dueling = !Weapon->bRanged && !Weapon->Has(EWeaponProperty::TwoHanded) && Unit.OffHand < 0 && FFeatureKit::Style(Unit) == EFightingStyle::Dueling ? 2 : 0;
-    return FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0) + Dueling;
+    return PactAbilityModifier(Unit, *Weapon, Scores) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0) + Dueling;
 }
 }
 
@@ -332,6 +338,8 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
     if (Unit->Side == ECombatSide::Party && Unit->ArmorWorn == static_cast<int32>(EArmor::None))
     {
         if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Barbarian) > 0) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Constitution)); }
+        // Armor of Shadows: Mage Armor on self at will (13 + DEX unarmored).
+        if (FFeatureKit::HasInvocation(*Unit, EInvocation::ArmorOfShadows)) { Unarmored = FMath::Max(Unarmored, 3); }
         if (FBuildCatalog::ClassLevel(*Unit, EAdventurerRole::Monk) > 0 && !Unit->bShieldEquipped) { Unarmored = FMath::Max(Unarmored, FAbilityRules::Modifier(Scores.Wisdom)); }
     }
     return Spell + Unarmored + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, Scores.Get(EAbility::Dexterity));
@@ -1903,7 +1911,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     {
         // Rolls only while concentrating, so battles without concentration keep their seeded streams.
         if (!FCheckRules::Resolve(Character(Target.Id).SaveBonus(EAbility::Constitution), FConcentrationRules::SaveDc(Real),
-            SaveMode(Target, EAbility::Constitution, ERollMode::Normal), State.RandomState).bSuccess) { EndConcentration(Target); }
+            SaveMode(Target, EAbility::Constitution, FFeatureKit::HasInvocation(Target, EInvocation::EldritchMind) ? ERollMode::Advantage : ERollMode::Normal), State.RandomState).bSuccess) { EndConcentration(Target); }
     }
     if (Target.HP == 0 && HPBefore > 0 && Target.Side == ECombatSide::Enemy)
     {
@@ -2490,7 +2498,9 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
 
     const int32 Count = FSpellCatalogRules::DiceCount(S, User->Level, Slot);
     const bool bMissile = FCString::Stricmp(S.Id, TEXT("magic-missile")) == 0;
-    const int32 Flat = S.bAddModifier ? Mod : bMissile ? Count : S.FlatBonus; // Magic Missile: +1 per dart
+    // Agonizing Blast (invocation): + spellcasting modifier to Eldritch Blast damage.
+    const int32 Agonizing = FCString::Stricmp(S.Id, TEXT("eldritch-blast")) == 0 && FFeatureKit::HasInvocation(*User, EInvocation::AgonizingBlast) ? Mod : 0;
+    const int32 Flat = (S.bAddModifier ? Mod : bMissile ? Count : S.FlatBonus) + Agonizing; // Magic Missile: +1 per dart
     const int32 Count2 = S.Level > 0 && Slot >= 1 && Slot <= 9 ? S.Dice2[Slot] : 0;
     Result.EffectModifier = Flat;
     Result.DamageType = S.DamageType;

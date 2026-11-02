@@ -154,6 +154,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bArcaneRecovered = false;
     /** Warlock 2 Magical Cunning taken since the last long rest. */
     UPROPERTY() bool bMagicalCunningUsed = false;
+    /** Warlock 1 Eldritch Invocations held (EInvocation values; SRD 5.2.1 count and prerequisites). */
+    UPROPERTY() TArray<int32> Invocations;
 };
 
 USTRUCT()

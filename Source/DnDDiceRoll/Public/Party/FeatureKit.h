@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Rules/WarlockRules.h"
 
 /** SRD Fighting Style options (FCombatantState::FightingStyle; values are persisted, append only). */
 enum class EFightingStyle : uint8 { None, Archery, Defense, Dueling, GreatWeaponFighting, Protection, TwoWeaponFighting, Count };
@@ -88,6 +89,12 @@ public:
     static int32 PactRecover(FCombatantState& Hero, int32 Budget);
     /** Bard 2 Jack of All Trades: half proficiency (rounded down) added to ability checks without proficiency; the engine applies it to Initiative. */
     static int32 JackOfAllTrades(const FCombatantState& Hero);
+    /** Warlock 1 Eldritch Invocations: keeps the held set legal and fills empty picks from the default order (on long rest and level-up). */
+    static void EnsureInvocations(FCombatantState& Hero);
+    /** Replaces the held invocations when the set is legal for the hero's Warlock level (count, level and invocation prerequisites). */
+    static bool ChooseInvocations(FCombatantState& Hero, const TArray<int32>& Picks, FString& Why);
+    /** True when the hero holds the invocation (always false below Warlock 1). */
+    static bool HasInvocation(const FCombatantState& Hero, EInvocation Invocation);
     // SRD wolf (CR 1/4), the basic form: AC 13, 11 HP, bite +4 for 2d4+2.
     static constexpr int32 WolfHP = 11;
     static constexpr int32 WolfAC = 13;

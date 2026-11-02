@@ -72,6 +72,7 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.SorceryPoints = SorceryCap(Hero);
     Hero.bArcaneRecovered = false;
     Hero.bMagicalCunningUsed = false;
+    EnsureInvocations(Hero);
 }
 bool FFeatureKit::HasMagicalCunning(const FCombatantState& Hero)
 {
@@ -139,6 +140,37 @@ void FFeatureKit::ShortRest(FCombatantState& Hero)
     if (HasPactMagic(Hero)) { PactRecover(Hero, MAX_int32); }
     // Bard 5 Font of Inspiration: Bardic Inspiration uses also come back on a Short Rest.
     if (FBardRules::HasFontOfInspiration(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Bard))) { Hero.BardicUses = BardicCap(Hero); }
+}
+void FFeatureKit::EnsureInvocations(FCombatantState& Hero)
+{
+    const int32 Level = Hero.Side == ECombatSide::Party ? FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) : 0;
+    if (Level < 1) { Hero.Invocations.Reset(); return; }
+    FString Why;
+    // Every warlock knows Eldritch Blast here, so damage/attack-cantrip prerequisites hold.
+    if (!FWarlockRules::ValidSet(Hero.Invocations, Level, true, true, Why)) { Hero.Invocations = FWarlockRules::DefaultSet(Level); return; }
+    for (const int32 Pick : FWarlockRules::DefaultSet(Level))
+    {
+        if (Hero.Invocations.Num() >= FWarlockRules::InvocationsKnown(Level)) { break; }
+        if (!Hero.Invocations.Contains(Pick) && FWarlockRules::CanTake(static_cast<EInvocation>(Pick), Level, Hero.Invocations, true, true, Why)) { Hero.Invocations.Add(Pick); }
+    }
+}
+static bool InvocationsValid(const FCombatantState& Hero)
+{
+    const int32 Level = Hero.Side == ECombatSide::Party ? FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) : 0;
+    FString Why;
+    return Level < 1 ? Hero.Invocations.IsEmpty() : FWarlockRules::ValidSet(Hero.Invocations, Level, true, true, Why);
+}
+bool FFeatureKit::ChooseInvocations(FCombatantState& Hero, const TArray<int32>& Picks, FString& Why)
+{
+    const int32 Level = Hero.Side == ECombatSide::Party ? FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) : 0;
+    if (Level < 1) { Why = TEXT("Only a warlock has Eldritch Invocations."); return false; }
+    if (!FWarlockRules::ValidSet(Picks, Level, true, true, Why)) { return false; }
+    Hero.Invocations = Picks;
+    return true;
+}
+bool FFeatureKit::HasInvocation(const FCombatantState& Hero, EInvocation Invocation)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Warlock) >= 1 && FWarlockRules::Has(Hero.Invocations, Invocation);
 }
 int32 FFeatureKit::JackOfAllTrades(const FCombatantState& Hero)
 {
@@ -224,6 +256,7 @@ void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
     Raise(Hero.BardicUses, BardicCap(Hero), BardicCap(Before));
     Raise(Hero.WildShapeUses, WildShapeCap(Hero), WildShapeCap(Before));
     Raise(Hero.KiPoints, KiCap(Hero), KiCap(Before));
+    EnsureInvocations(Hero);
     Raise(Hero.SorceryPoints, SorceryCap(Hero), SorceryCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
@@ -341,7 +374,7 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8 || Hero.BardicDie == 10 || Hero.BardicDie == 12) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
-        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) && (!Hero.bMagicalCunningUsed || HasMagicalCunning(Hero)) &&
+        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) && (!Hero.bMagicalCunningUsed || HasMagicalCunning(Hero)) && InvocationsValid(Hero) &&
         Hero.SacredWeaponTurns >= 0 && Hero.SacredWeaponTurns <= (HasSacredWeapon(Hero) ? SacredWeaponRounds : 0) &&
         Hero.QuickenState >= 0 && Hero.QuickenState <= (HasQuickenedSpell(Hero) ? 2 : 0);
 }
@@ -356,6 +389,11 @@ TArray<FString> FFeatureKit::RewardSheet(const FCombatantState& Hero)
     if (HasArcaneRecovery(Hero))
     {
         Lines.Add(Hero.bArcaneRecovered ? FString(TEXT("Arcane Recovery [Free]: used until camp")) : FString::Printf(TEXT("Arcane Recovery [Free]: %d slot level(s) at a short rest"), ArcaneRecoveryPreview(Hero)));
+    }
+    for (const int32 Pick : Hero.Invocations)
+    {
+        const FInvocationFacts& F = FWarlockRules::Facts(static_cast<EInvocation>(Pick));
+        Lines.Add(FString::Printf(TEXT("Invocation: %s [%s]%s"), F.Name, F.Cost == EActionCost::BonusAction ? TEXT("Bonus") : F.Cost == EActionCost::Reaction ? TEXT("Reaction") : F.Cost == EActionCost::Action ? TEXT("Action") : TEXT("Free"), F.bPlayable ? TEXT("") : TEXT(" (data only)")));
     }
     if (HasMagicalCunning(Hero))
     {
