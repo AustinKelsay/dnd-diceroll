@@ -23,3 +23,7 @@ Updated 2026-11-01 with [issue #46](https://github.com/AustinKelsay/dnd-diceroll
 ## Repository rules now enforced on GitHub
 
 `staging` and `main` require a PR, the "Repository hygiene and helper tests" check, and one approving review; force pushes and branch deletion are blocked. The repository owner retains admin bypass for release promotion.
+
+## Pending full-roster source unit (#45)
+
+On the owned feature branch, final source/test/UI work builds from the combined baseline91cf0d6; [source contract](full-roster/13-final-roster.md). Catalog revision7 reconciles Evocation to two authored commands; full Project automation82/82 zero warnings and helpers50/50 pass. Root still owns independent review, current-theme package/native inspection and PR delivery. No new staging integration or asset completion is claimed; new classes retain primitive fallback rigs.

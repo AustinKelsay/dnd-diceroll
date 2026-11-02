@@ -5,6 +5,7 @@
 #include "Persistence/ExpeditionSave.h"
 #include "ExpeditionTestSupport.h"
 #include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
@@ -25,9 +26,9 @@ bool FArcaneRosterTest::RunTest(const FString& Parameters)
     if (TestTrue(TEXT("Start familiar Wizard scenario"), Battle.Start(Encounter,42,Error)))
     {
         const int32 Before = Battle.Find(Encounter.Combatants[4].Id)->HP;
-        const auto Result = Battle.Submit({ECombatCommandType::Special1,Encounter.Combatants[3].Id,{},Encounter.Combatants[4].Id});
+        const auto Result = Battle.Submit({ECombatCommandType::Special2,Encounter.Combatants[3].Id,{},Encounter.Combatants[4].Id});
         TestTrue(TEXT("Familiar Wizard casts Sculpted Burst"), Result.bAccepted);
-        TestEqual(TEXT("Sculpted Burst removes exactly five primary HP"), Before-Battle.Find(Encounter.Combatants[4].Id)->HP,5);
+        TestEqual(TEXT("Sculpted Burst removes exactly three primary HP"), Before-Battle.Find(Encounter.Combatants[4].Id)->HP,3);
     }
     return true;
 }
@@ -65,8 +66,8 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         {TEXT("wizard.divination"),2,2,0,0,2,false,false,false,true,false},
         {TEXT("wizard.enchantment"),1,20,3,0,0,false,true,false,true,false},
         {TEXT("wizard.enchantment"),2,2,0,0,0,true,false,false,false,false},
-        {TEXT("wizard.evocation"),1,20,5,0,0,false,false,true,false,false},
-        {TEXT("wizard.evocation"),2,20,3,0,0,false,false,false,true,false},
+        {TEXT("wizard.evocation"),1,20,12,0,0,false,false,false,false,false},
+        {TEXT("wizard.evocation"),2,20,3,0,0,false,false,true,true,false},
         {TEXT("wizard.illusion"),1,1,0,0,4,false,false,false,true,false},
         {TEXT("wizard.illusion"),2,2,0,0,0,true,false,false,false,false},
         {TEXT("wizard.necromancy"),1,20,7,0,0,false,false,false,false,false},
@@ -91,7 +92,7 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         FCombatEncounter Encounter; Encounter.Combatants={Hero,Ally,Enemy,Secondary};
         FCombatBattle Battle;
         if (!TestTrue(TEXT("Start worked scenario"),Battle.Start(Encounter,42,Error))) { continue; }
-        const auto Action=C.Slot==1?ECombatCommandType::Special1:ECombatCommandType::Special2;
+        const auto Action=FBuildCatalog::Abilities(Hero)[C.Slot-1].Command;
         const auto Before=Battle.Snapshot();
         for (int32 Repeat=0;Repeat<3;++Repeat) { TestTrue(TEXT("Repeated preview legal"),Battle.Forecast(1,Action,C.Target).bValid); }
         TestTrue(TEXT("Repeated previews preserve every value including RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&Battle.Snapshot(),0));
@@ -160,11 +161,11 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         FCombatEncounter E; E.Combatants={Hero,Ally,Enemy}; FCombatBattle B;
         if(!TestTrue(TEXT("Start sibling combination"),B.Start(E,42,Error))) { continue; }
-        TestTrue(TEXT("First sibling special"),B.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
+        TestTrue(TEXT("First sibling special"),B.Submit({FBuildCatalog::Abilities(Hero)[0].Command,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Second sibling special"),B.Submit({ECombatCommandType::Special2,1,{},D.Target}).bAccepted);
         TestEqual(TEXT("One common pool depleted"),B.Find(1)->KitUses,0);
         const auto Spent=B.Snapshot();
-        TestFalse(TEXT("No third special from shared pool"),B.Submit({ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
+        TestFalse(TEXT("No third special from shared pool"),B.Submit({FBuildCatalog::Abilities(Hero)[0].Command,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Spent rejection includes RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Spent,&B.Snapshot(),0));
     }
     for(const auto* Build:{TEXT("sorcerer.wild-magic"),TEXT("wizard.evocation")})
@@ -172,15 +173,18 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         FCombatantState Hero; FBuildCatalog::Create(Build,1,TEXT("Caster"),Hero); Hero.Cell={0,0}; Hero.InitiativeBonus=30;
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Primary"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={4,0}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         FCombatEncounter E; E.Combatants={Hero,Enemy}; E.BlockedCells={{2,0}};
+        const auto Action=FBuildCatalog::Abilities(Hero)[0].Command;
+        const int32 Range=FBuildCatalog::Abilities(Hero)[0].Range;
+        E.Combatants[1].Cell={Range,0};
         FCombatBattle B; TestTrue(TEXT("Start actual intervening-wall scenario"),B.Start(E,42,Error));
         const auto Before=B.Snapshot();
-        TestFalse(TEXT("Wall blocks forecast at range boundary"),B.Forecast(1,ECombatCommandType::Special1,20).bValid);
-        TestFalse(TEXT("Wall blocks commit"),B.Submit({ECombatCommandType::Special1,1,{},20}).bAccepted);
+        TestFalse(TEXT("Wall blocks forecast at range boundary"),B.Forecast(1,Action,20).bValid);
+        TestFalse(TEXT("Wall blocks commit"),B.Submit({Action,1,{},20}).bAccepted);
         TestTrue(TEXT("Occluded rejection retains RNG and full snapshot"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&B.Snapshot(),0));
         E.BlockedCells.Reset(); B.Start(E,42,Error);
-        TestTrue(TEXT("Exactly four-cell boundary is legal"),B.Forecast(1,ECombatCommandType::Special1,20).bValid);
-        E.Combatants[1].Cell={5,0}; B.Start(E,42,Error);
-        TestFalse(TEXT("One cell beyond range is illegal"),B.Forecast(1,ECombatCommandType::Special1,20).bValid);
+        TestTrue(TEXT("Exact authored range boundary is legal"),B.Forecast(1,Action,20).bValid);
+        E.Combatants[1].Cell={Range+1,0}; B.Start(E,42,Error);
+        TestFalse(TEXT("One cell beyond range is illegal"),B.Forecast(1,Action,20).bValid);
     }
     TestEqual(TEXT("Exactly 70 implemented kits"),FBuildCatalog::All().Num(),70);
     TestNull(TEXT("Interim Wizard removed"),FBuildCatalog::Find(TEXT("wizard.base")));
@@ -312,6 +316,78 @@ bool FArcaneRunTest::RunTest(const FString& Parameters)
         }
         TestEqual(TEXT("Five encounters completed by worked arcane party"),Run.Progress().EncountersCompleted,5);
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMissileRecoveryTest, "Project.Expedition.Catalog.MissileSpentPoolsAndRollback", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FMissileRecoveryTest::RunTest(const FString& Parameters)
+{
+    FString Error; TArray<FPartyBuildSelection> Party;
+    for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Hero %d"),Id); P.BuildId=Id==1?TEXT("wizard.evocation"):TEXT("cleric.light"); Party.Add(P); }
+    FExpeditionRun Run;
+    if(!TestTrue(TEXT("Create Missile party"),Run.NewRun(42,Party,Error,TEXT("missile-recovery"))) || !TestTrue(TEXT("First route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Missile"),FGuid::NewGuid().ToString());
+    const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    int32 Casts=0;
+    for(int32 Turn=0;Turn<80 && Casts<2 && Run.Progress().Phase==EExpeditionPhase::Combat;++Turn)
+    {
+        const auto& B=Run.Battle(); const int32 Id=B.ActiveId(); const auto* Actor=B.Find(Id);
+        if(Actor->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
+        if(Id==1)
+        {
+            auto Targets=B.LegalTargets(1,ECombatCommandType::MagicMissile);
+            if(Targets.IsEmpty())
+            {
+                auto Moves=B.LegalMoves(1);
+                Moves.Sort([&](FIntPoint A,FIntPoint C) {
+                    auto Nearest=[&](FIntPoint Cell) { int32 Best=1000; for(const auto& U:B.Snapshot().Encounter.Combatants) { if(U.Side==ECombatSide::Enemy && U.Life==ECombatLife::Conscious) { Best=FMath::Min(Best,ExpeditionTestSupport::Distance(Cell,U.Cell)); } } return Best; };
+                    return Nearest(A)==Nearest(C)?(A.Y==C.Y?A.X<C.X:A.Y<C.Y):Nearest(A)<Nearest(C);
+                });
+                if(!Moves.IsEmpty()) { Run.Submit({ECombatCommandType::Move,1,Moves[0]}); }
+                Targets=B.LegalTargets(1,ECombatCommandType::MagicMissile);
+            }
+            if(!Targets.IsEmpty())
+            {
+                const auto Before=Run.Snapshot();
+                TestFalse(TEXT("Retired Special1 alias rejected"),Run.Submit({ECombatCommandType::Special1,1,{},Targets[0]}).bAccepted);
+                TestTrue(TEXT("Alias rejection retains every value/RNG"),ExpeditionTestSupport::SameRun(Before,Run.Snapshot()));
+                FExpeditionSaveData Data; Data.Current=Before;
+                if(!TestTrue(TEXT("Write pre-Missile checkpoint"),FExpeditionSave::Write(Path,Data,Error))) { return false; }
+                FExpeditionSession Session(Path);
+                if(!TestTrue(TEXT("Resume before actual Missile"),Session.Resume(Error))) { return false; }
+                FString BytesBefore; TestTrue(TEXT("Read checkpoint bytes"),FFileHelper::LoadFileToString(BytesBefore,*Path));
+                IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+                const FCombatCommand Command{ECombatCommandType::MagicMissile,1,{},Targets[0]};
+                TestFalse(TEXT("Failed write rejects RNG-consuming Missile"),Session.Submit(Command).bAccepted);
+                TestTrue(TEXT("Failed Missile retains all effects/deaths/resources/RNG"),ExpeditionTestSupport::SameRun(Before,Session.Run().Snapshot()));
+                FString BytesAfter; TestTrue(TEXT("Read retained checkpoint bytes"),FFileHelper::LoadFileToString(BytesAfter,*Path));
+                TestEqual(TEXT("Failed Missile preserves exact file bytes"),BytesAfter,BytesBefore);
+                FExpeditionSaveData Disk; TestTrue(TEXT("Read unchanged checkpoint"),FExpeditionSave::Read(Path,Disk,Error));
+                TestTrue(TEXT("Disk state unchanged"),ExpeditionTestSupport::SameRun(Before,Disk.Current));
+                IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+                TestTrue(TEXT("Actual Missile commits on public turn"),Run.Submit(Command).bAccepted);
+                TestTrue(TEXT("Retry commits same Missile"),Session.Submit(Command).bAccepted);
+                TestTrue(TEXT("Retry equals uninterrupted RNG/damage/state"),ExpeditionTestSupport::SameRun(Run.Snapshot(),Session.Run().Snapshot()));
+                TestTrue(TEXT("Missile consumed RNG"),Run.Snapshot().Battle.RandomState!=Before.Battle.RandomState);
+                ++Casts;
+            }
+        }
+        if(Run.Progress().Phase==EExpeditionPhase::Combat) { Run.Submit({ECombatCommandType::EndTurn,Id}); }
+    }
+    if(!TestEqual(TEXT("Two real Missile turns"),Casts,2)) { return false; }
+    TestEqual(TEXT("Missiles empty Kit"),Run.Battle().Find(1)->KitUses,0);
+    TestEqual(TEXT("Missiles empty Slots"),Run.Battle().Find(1)->SpellSlots,0);
+    if(!TestTrue(TEXT("Complete encounter"),ExpeditionTestSupport::FinishCombat(Run)) || !TestTrue(TEXT("Reward"),Run.ClaimReward(1,Error)) || !TestTrue(TEXT("One camp"),Run.Recover(true,Error))) { return false; }
+    TestEqual(TEXT("Camp Kit below cap"),Run.Battle().Find(1)->KitUses,1);
+    TestEqual(TEXT("Camp Slot below cap"),Run.Battle().Find(1)->SpellSlots,1);
+    if(!TestTrue(TEXT("Next route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
+    FExpeditionSaveData Data; Data.Current=Run.Snapshot();
+    TestTrue(TEXT("Write post-camp route"),FExpeditionSave::Write(Path,Data,Error));
+    FExpeditionSession Fresh(Path); TestTrue(TEXT("Fresh Resume"),Fresh.Resume(Error));
+    TestTrue(TEXT("Complete state/RNG survives route and Resume"),ExpeditionTestSupport::SameRun(Data.Current,Fresh.Run().Snapshot()));
+    TestEqual(TEXT("Resume Kit remains one"),Fresh.Run().Battle().Find(1)->KitUses,1);
+    TestEqual(TEXT("Resume Slots remain one"),Fresh.Run().Battle().Find(1)->SpellSlots,1);
+    IFileManager::Get().DeleteDirectory(*Directory,false,true);
     return true;
 }
 

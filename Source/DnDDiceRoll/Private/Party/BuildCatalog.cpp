@@ -112,7 +112,17 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Wizard,TEXT("wizard.conjuration"),TEXT("conjuration"),Ability(TEXT("Benign Exchange"),E::Swap,T::Ally,5,0,true),Ability(TEXT("Conjured Ram"),E::Push,T::Enemy,3,5,false));
         Kit(Wizard,TEXT("wizard.divination"),TEXT("divination"),Ability(TEXT("Foreseen Opening"),E::Strike,T::Enemy,5,6,false),Ability(TEXT("Foreseen Shelter"),E::Protect,T::Ally,5,2,true));
         Kit(Wizard,TEXT("wizard.enchantment"),TEXT("enchantment"),Ability(TEXT("Compelling Repulse"),E::Push,T::Enemy,2,3,true),Ability(TEXT("Beguiling Exchange"),E::Swap,T::Ally,3,0,false));
-        Kit(Wizard,TEXT("wizard.evocation"),TEXT("evocation"),Ability(TEXT("Sculpted Burst"),E::Area,T::Enemy,4,5,false),Ability(TEXT("Focused Spark"),E::Strike,T::Enemy,5,3,true));
+        Kit(Wizard,TEXT("wizard.evocation"),TEXT("evocation"),Ability(TEXT("Magic Missile"),E::Missile,T::Enemy,6,0,false),Ability(TEXT("Sculpted Burst"),E::Area,T::Enemy,4,3,true));
+        for (auto& B : Result)
+        {
+            if (B.Id == TEXT("wizard.evocation"))
+            {
+                auto& Missile = B.Abilities[0];
+                Missile.Command = B.Specials[0] = ECombatCommandType::MagicMissile;
+                Missile.ResourceName = TEXT("Kit + Slot");
+                Missile.Description = TEXT("Action + 1 Kit + 1 Slot; enemy range 6 + sight; guaranteed 3d4+3 damage");
+            }
+        }
         Kit(Wizard,TEXT("wizard.illusion"),TEXT("illusion"),Ability(TEXT("Mirror Ward"),E::Protect,T::Self,0,4,true),Ability(TEXT("Illusory Exchange"),E::Swap,T::Ally,3,0,false));
         Kit(Wizard,TEXT("wizard.necromancy"),TEXT("necromancy"),Ability(TEXT("Grave Bolt"),E::Strike,T::Enemy,4,7,false),Ability(TEXT("Life Transfer"),E::Healing,T::Ally,2,5,true));
         Kit(Wizard,TEXT("wizard.transmutation"),TEXT("transmutation"),Ability(TEXT("Transposing Exchange"),E::Swap,T::Ally,3,0,false),Ability(TEXT("Restoring Stone"),E::Healing,T::Ally,1,7,true));
@@ -162,7 +172,7 @@ bool FBuildCatalog::Create(const FString& BuildId, int32 Id, const FString& Name
 }
 bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType Action)
 {
-    if (const auto* B = Find(Hero.BuildId)) { return B->Specials.Contains(Action) || (B->MissileKitCost > 0 && Action == ECombatCommandType::MagicMissile); }
+    if (const auto* B = Find(Hero.BuildId)) { return B->Specials.Contains(Action); }
     // Standalone combat fixtures may intentionally use custom profiles without catalog identity.
     return Hero.BuildId.IsEmpty() && ((Action == ECombatCommandType::SecondWind && Hero.AdventurerRole == EAdventurerRole::Fighter) ||
         (Action == ECombatCommandType::PrecisionStrike && Hero.FighterSubclass == EFighterSubclass::BattleMaster) ||
@@ -193,7 +203,7 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
         }
         return Result;
     }
-    for (auto& A : Result) { A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!A.bCureDice || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
+    for (auto& A : Result) { A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
     return Result;
 }
 

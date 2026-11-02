@@ -376,15 +376,19 @@ bool FMartialFighterTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMartialRunTest, "Project.Expedition.Catalog.MartialRunProgression", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FMartialRunTest::RunTest(const FString& Parameters)
 {
-    for(bool Duplicate : {false,true})
+    for(int32 Mode=0;Mode<4;++Mode)
     {
+        const bool Duplicate=Mode==1;
         FString Error; TArray<FPartyBuildSelection> Party;
+        const TCHAR* Melee[]={TEXT("fighter.champion"),TEXT("monk.open-hand"),TEXT("paladin.vengeance"),TEXT("barbarian.beast")};
+        const TCHAR* SupportPoor[]={TEXT("rogue.assassin"),TEXT("rogue.soulknife"),TEXT("ranger.hunter"),TEXT("ranger.swarmkeeper")};
         const TCHAR* Mixed[]={TEXT("fighter.rune-knight"),TEXT("rogue.soulknife"),TEXT("paladin.devotion"),TEXT("ranger.hunter")};
-        for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Slot %d"),Id); P.BuildId=Duplicate?TEXT("ranger.hunter"):Mixed[Id-1]; Party.Add(P); }
+        for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Slot %d"),Id); P.BuildId=Mode==2?Melee[Id-1]:Mode==3?SupportPoor[Id-1]:Duplicate?TEXT("ranger.hunter"):Mixed[Id-1]; Party.Add(P); }
         FExpeditionRun Run; TestTrue(TEXT("Construct martial run"),Run.NewRun(42,Party,Error,Duplicate?TEXT("duplicate-martial"):TEXT("mixed-martial")));
         for(int32 Stage=0;Stage<5;++Stage)
         {
             if(!TestTrue(TEXT("Choose actual generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { break; }
+            for(const auto& U:Run.Battle().Snapshot().Encounter.Combatants) { if(U.Side==ECombatSide::Party && U.Life==ECombatLife::Conscious) { TestEqual(TEXT("Conscious hero enters earned level"),U.Level,Stage+1); } }
             if(!TestTrue(TEXT("Public player policy completes encounter"),ExpeditionTestSupport::FinishCombat(Run))) { break; }
             FExpeditionSaveData Data; Data.Current=Run.Snapshot();
             if(Run.Progress().Phase==EExpeditionPhase::Victory || Run.Progress().Phase==EExpeditionPhase::Defeat) { Data.Records.Add(FExpeditionSave::Ending(Run)); }
@@ -399,6 +403,12 @@ bool FMartialRunTest::RunTest(const FString& Parameters)
             if(Stage==0) { TestTrue(TEXT("One camp"),Run.Recover(true,Error)); }
         }
         TestEqual(TEXT("Five encounters completed by worked martial party"),Run.Progress().EncountersCompleted,5);
+        int32 Rewards=0; for(const auto& Record:Run.Progress().History) { if(Record.RewardRecipient!=INDEX_NONE) { ++Rewards; } }
+        TestEqual(TEXT("Four recorded rewards"),Rewards,4);
+        TestTrue(TEXT("Single camp retained"),Run.Progress().bCampUsed);
+        for(const auto& U:Run.Battle().Snapshot().Encounter.Combatants) { if(U.Side==ECombatSide::Party && U.Life==ECombatLife::Conscious) { TestEqual(TEXT("Conscious finale survivor level five"),U.Level,5); } }
+        const auto Ending=FExpeditionSave::Ending(Run);
+        TestFalse(TEXT("Actual ending record retains identity"),Ending.RunId.IsEmpty());
     }
     return true;
 }

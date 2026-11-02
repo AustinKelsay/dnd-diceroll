@@ -92,6 +92,20 @@ FVector2D AExpeditionHUD::Measure(const FString& Value, float Scale) const
     return FVector2D(Width, Height);
 }
 
+TArray<FString> AExpeditionHUD::Wrap(const FString& Value, float Width, float Scale) const
+{
+    TArray<FString> Words, Lines; Value.ParseIntoArrayWS(Words);
+    FString Line;
+    for (const auto& Word : Words)
+    {
+        const FString Candidate = Line.IsEmpty() ? Word : Line + TEXT(" ") + Word;
+        if (!Line.IsEmpty() && Measure(Candidate, Scale).X > Width) { Lines.Add(Line); Line = Word; }
+        else { Line = Candidate; }
+    }
+    if (!Line.IsEmpty()) { Lines.Add(Line); }
+    return Lines;
+}
+
 void AExpeditionHUD::Text(const FString& Value, float X, float Y, FLinearColor Color, float Scale, EAlign Align, float MaxWidth)
 {
     if (Value.IsEmpty() || Color.A <= 0.01f) { return; }
@@ -468,7 +482,7 @@ void AExpeditionHUD::DrawParty()
     for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
-        DrawPartyCard(Unit, Index, 96 + Index * 104.0f);
+        DrawPartyCard(Unit, Index, 96 + Index * 116.0f);
         ++Index;
     }
 }
@@ -480,7 +494,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     const bool bActive = View->InCombat() && View->Rules().ActiveId() == Unit.Id;
     const bool bSelected = Player->Selection() == Unit.Id;
     const FLinearColor Color = ExpeditionStyle::UnitColor(Unit);
-    const float X = 12, Width = 250, Height = 100;
+    const float X = 12, Width = 250, Height = 112;
     const bool bHover = Hovered(X, Y, Width, Height);
     Panel(X, Y, Width, Height, bActive ? Gold : Color, bSelected || bHover ? 0.97f : 0.86f);
     if (bActive) { Frame(WithAlpha(Gold, 0.6f + 0.3f * FMath::Sin(Clock * 4.0f)), X, Y, Width, Height, 2.0f); }
@@ -512,9 +526,24 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     }
     // Resources as pips: the things that actually run out.
     const float Row = Y + 56;
+    TArray<FString> Parts;
+    FBuildCatalog::Status(Unit).ParseIntoArray(Parts, TEXT(" / "));
+    FString Resources;
     TArray<FString> StatusLines;
-    (FBuildCatalog::Status(Unit) + FString::Printf(TEXT("Potion %d / Gear +%d"), Unit.Potions, Unit.WeaponRank)).ParseIntoArray(StatusLines, TEXT(" / "));
-    for (int32 Line = 0; Line < StatusLines.Num(); ++Line) { Text(StatusLines[Line], X + 12, Row - 6 + Line * 10, Parchment, 0.55f, EAlign::Left, Width - 24); }
+    for (const auto& Part : Parts)
+    {
+        if (Part.StartsWith(TEXT("Protection")))
+        {
+            const auto* Target = View->Rules().Find(Unit.GuardTargetId);
+            const FString Label = Target ? FString::Printf(TEXT("%s [%d]"), *Target->Name, Target->Id) : TEXT("unavailable target");
+            StatusLines.Append(Wrap(FString::Printf(TEXT("Protect %s: -%d damage until next own turn"), *Label, Unit.GuardAmount > 0 ? Unit.GuardAmount : 3), Width - 24, 0.65f));
+        }
+        else { Resources += (Resources.IsEmpty() ? TEXT("") : TEXT(" / ")) + Part; }
+    }
+    Resources += FString::Printf(TEXT(" / Potion %d / Gear +%d"), Unit.Potions, Unit.WeaponRank);
+    auto ResourceLines = Wrap(Resources, Width - 24, 0.65f);
+    ResourceLines.Append(StatusLines);
+    for (int32 I = 0; I < ResourceLines.Num(); ++I) { Text(ResourceLines[I], X + 12, Row - 6 + I * 13, Parchment, 0.65f); }
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
 }
 
@@ -522,17 +551,14 @@ void AExpeditionHUD::DrawLog()
 {
     const TArray<FString>& Messages = View->Messages();
     if (Messages.IsEmpty()) { return; }
-    const int32 Count = FMath::Min(4, Messages.Num());
-    const float Height = 16 + Count * 19.0f;
+    TArray<FString> Lines;
+    for (int32 Index = FMath::Max(0, Messages.Num() - 2); Index < Messages.Num(); ++Index)
+    { Lines.Append(Wrap(Messages[Index], 416, 0.7f)); }
+    const float Height = 16 + Lines.Num() * 18.0f;
     const float Top = H - 96 - Height;
-    Panel(12, Top, 250, Height, Muted, 0.6f, false);
-    for (int32 Index = 0; Index < Count; ++Index)
-    {
-        const FString& Message = Messages[Messages.Num() - Count + Index];
-        const float Fade = 0.45f + 0.55f * (Index + 1) / Count;
-        const FLinearColor Color = Message.StartsWith(TEXT("Cannot act")) ? Danger : Parchment;
-        Text(Message, 22, Top + 8 + Index * 19.0f, WithAlpha(Color, Fade), 0.6f, EAlign::Left, 232);
-    }
+    Panel(274, Top, 436, Height, Muted, 0.86f, false);
+    for (int32 Index = 0; Index < Lines.Num(); ++Index)
+    { Text(Lines[Index], 284, Top + 8 + Index * 18.0f, Parchment, 0.7f); }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -645,9 +671,10 @@ void AExpeditionHUD::DrawForecast()
         if (Unit->Side == ECombatSide::Enemy && Player->Actor() == Rules.ActiveId()) { Lines.Add({TEXT("Not a legal target from here"), Muted}); }
     }
     if (Lines.IsEmpty()) { return; }
-    float Width = 0;
-    for (const auto& Entry : Lines) { Width = FMath::Max(Width, Measure(Entry.Key, 0.74f).X); }
-    Width += 24;
+    TArray<TPair<FString, FLinearColor>> Wrapped;
+    for (const auto& Entry : Lines) { for (const auto& Line : Wrap(Entry.Key, 376, 0.74f)) { Wrapped.Add({Line, Entry.Value}); } }
+    Lines = MoveTemp(Wrapped);
+    const float Width = 400;
     const float Height = 12 + Lines.Num() * 20.0f;
     const float X = FMath::Min(Anchor.X + 20, W - Width - 8);
     const float Y = FMath::Min(Anchor.Y + 18, H - Height - 100);
@@ -731,13 +758,24 @@ void AExpeditionHUD::DrawTitle()
     for (int32 I = 0; I < Player->NextParty().Num(); ++I)
     {
         const auto& P = Player->NextParty()[I];
-        Button(FName(*FString::Printf(TEXT("Party%d"), I)), P.Name, P.BuildId, X + 18 + I * 166, Y + 84, 160, 64, true, Player->BuilderSlot() == I, Sky);
+        FCombatantState Preview; FBuildCatalog::Create(P.BuildId, P.Id, P.Name, Preview);
+        const float CardX = X + 18 + I * 166;
+        Button(FName(*FString::Printf(TEXT("Party%d"), I)), TEXT(""), TEXT(""), CardX, Y + 84, 160, 78, true, Player->BuilderSlot() == I, Sky);
+        Text(P.Name + TEXT(" / ") + Preview.Role, CardX + 80, Y + 92, Parchment, 0.72f, EAlign::Center, 148);
+        float LabelY = Y + 117;
+        for (const auto& Line : Wrap(FBuildCatalog::DisplayName(Preview).RightChop(Preview.Role.Len() + 3), 148, 0.72f))
+        { Text(Line, CardX + 80, LabelY, Muted, 0.72f, EAlign::Center); LabelY += 18; }
     }
     const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
     FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
     Text(FBuildCatalog::DisplayName(Hero), X + 24, Y + 170, Parchment, 0.95f);
     float Row = Y + 208;
-    for (const auto& A : FBuildCatalog::Abilities(Hero)) { Text(A.Name + TEXT(": ") + A.Description, X + 24, Row, Parchment, 0.72f, EAlign::Left, Width - 48); Row += 58; }
+    for (const auto& A : FBuildCatalog::Abilities(Hero))
+    {
+        Text(A.Name, X + 24, Row, Gold, 0.82f); Row += 21;
+        for (const auto& Line : Wrap(A.Description, Width - 48, 0.72f)) { Text(Line, X + 24, Row, Parchment, 0.72f); Row += 19; }
+        Row += 12;
+    }
     const auto* Build = FBuildCatalog::Find(Hero.BuildId);
     if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X + 24, Row, Safe, 0.75f); }
     if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), X + 24, Row, Safe, 0.75f); }

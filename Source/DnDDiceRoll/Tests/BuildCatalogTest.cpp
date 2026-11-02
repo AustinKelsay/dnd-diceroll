@@ -6,6 +6,37 @@
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalCommandTest, "Project.Expedition.Catalog.FinalCommands", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFinalCommandTest::RunTest(const FString& Parameters)
+{
+    // Independent literal membership from approved parent #37, separated by book.
+    const TArray<FString> PHB = {TEXT("barbarian.berserker"), TEXT("barbarian.totem-warrior"), TEXT("bard.lore"), TEXT("bard.valor"), TEXT("cleric.knowledge"), TEXT("cleric.life"), TEXT("cleric.light"), TEXT("cleric.nature"), TEXT("cleric.tempest"), TEXT("cleric.trickery"), TEXT("cleric.war"), TEXT("druid.land"), TEXT("druid.moon"), TEXT("fighter.champion"), TEXT("fighter.battle-master"), TEXT("fighter.eldritch-knight"), TEXT("monk.open-hand"), TEXT("monk.shadow"), TEXT("monk.four-elements"), TEXT("paladin.devotion"), TEXT("paladin.ancients"), TEXT("paladin.vengeance"), TEXT("ranger.hunter"), TEXT("ranger.beast-master"), TEXT("rogue.thief"), TEXT("rogue.assassin"), TEXT("rogue.arcane-trickster"), TEXT("sorcerer.draconic-bloodline"), TEXT("sorcerer.wild-magic"), TEXT("warlock.archfey"), TEXT("warlock.fiend"), TEXT("warlock.great-old-one"), TEXT("wizard.abjuration"), TEXT("wizard.conjuration"), TEXT("wizard.divination"), TEXT("wizard.enchantment"), TEXT("wizard.evocation"), TEXT("wizard.illusion"), TEXT("wizard.necromancy"), TEXT("wizard.transmutation")};
+    const TArray<FString> Tasha = {TEXT("artificer.alchemist"), TEXT("artificer.armorer"), TEXT("artificer.artillerist"), TEXT("artificer.battle-smith"), TEXT("barbarian.beast"), TEXT("barbarian.wild-magic"), TEXT("bard.creation"), TEXT("bard.eloquence"), TEXT("cleric.order"), TEXT("cleric.peace"), TEXT("cleric.twilight"), TEXT("druid.spores"), TEXT("druid.stars"), TEXT("druid.wildfire"), TEXT("fighter.psi-warrior"), TEXT("fighter.rune-knight"), TEXT("monk.mercy"), TEXT("monk.astral-self"), TEXT("paladin.glory"), TEXT("paladin.watchers"), TEXT("ranger.fey-wanderer"), TEXT("ranger.swarmkeeper"), TEXT("rogue.phantom"), TEXT("rogue.soulknife"), TEXT("sorcerer.aberrant-mind"), TEXT("sorcerer.clockwork-soul"), TEXT("warlock.fathomless"), TEXT("warlock.genie"), TEXT("wizard.bladesinging"), TEXT("wizard.order-of-scribes")};
+    TestEqual(TEXT("2014 PHB entries"), PHB.Num(), 40);
+    TestEqual(TEXT("Tasha entries"), Tasha.Num(), 30);
+    TSet<FString> Expected; for(const auto& Id : PHB) { Expected.Add(Id); } for(const auto& Id : Tasha) { Expected.Add(Id); }
+    TestEqual(TEXT("Unique approved identities"), Expected.Num(), 70);
+    TestEqual(TEXT("No extra entries"), FBuildCatalog::All().Num(), 70);
+    for(const auto& Id : Expected) { TestNotNull(*Id, FBuildCatalog::Find(Id)); }
+    for (const auto& B : FBuildCatalog::All())
+    {
+        FCombatantState Hero;
+        TestTrue(TEXT("Every published build constructs"), FBuildCatalog::Create(B.Id, 1, TEXT("Hero"), Hero));
+        const auto Abilities = FBuildCatalog::Abilities(Hero);
+        TestTrue(TEXT("At most two authored commands"), Abilities.Num() <= 2);
+        for (auto Command : {ECombatCommandType::SecondWind, ECombatCommandType::PrecisionStrike, ECombatCommandType::CureWounds, ECombatCommandType::MagicMissile, ECombatCommandType::Special1, ECombatCommandType::Special2})
+        {
+            TestEqual(*B.Id, FBuildCatalog::HasSpecial(Hero, Command), Abilities.ContainsByPredicate([&](const auto& A) { return A.Command == Command; }));
+        }
+    }
+    FCombatantState Wizard; FBuildCatalog::Create(TEXT("wizard.evocation"),1,TEXT("Wizard"),Wizard);
+    auto Abilities=FBuildCatalog::Abilities(Wizard);
+    TestEqual(TEXT("First authored Evocation command is public Missile"),Abilities[0].Command,ECombatCommandType::MagicMissile);
+    Wizard.SpellSlots=0;
+    TestFalse(TEXT("Missile facts require a Slot"),FBuildCatalog::Abilities(Wizard)[0].bResourceAvailable);
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBuildCatalogTest, "Project.Expedition.Catalog.CurrentProfiles", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FBuildCatalogTest::RunTest(const FString& Parameters)
 {
