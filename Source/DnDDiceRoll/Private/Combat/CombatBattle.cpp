@@ -79,10 +79,11 @@ FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantSt
 int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
-    if (!Weapon) { return Unit.WildShapeHP > 0 ? FFeatureKit::WolfAttack : Unit.AttackBonus; }
+    const int32 Sacred = Unit.SacredWeaponTurns > 0 ? FMath::Max(1, FAbilityRules::Modifier(Battle.AbilityScores(Unit.Id).Charisma)) : 0;
+    if (!Weapon) { return (Unit.WildShapeHP > 0 ? FFeatureKit::WolfAttack : Unit.AttackBonus) + Sacred; }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
     const int32 Archery = Weapon->bRanged && FFeatureKit::Style(Unit) == EFightingStyle::Archery ? 2 : 0;
-    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + Archery;
+    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + Archery + Sacred;
 }
 int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
@@ -394,6 +395,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
     case ECombatCommandType::DeflectMissiles: return TEXT("DEFLECT MISSILES | Reaction | self | automatic: when a ranged weapon attack hits you, reduce the damage by 1d10 + DEX + monk level");
+    case ECombatCommandType::SacredWeapon: return TEXT("SACRED WEAPON | Action + Channel Divinity | self | for 1 minute (10 rounds) add your CHA modifier (min +1) to weapon attack rolls; 1 use per rest");
     case ECombatCommandType::MartialArts: return TEXT("MARTIAL ARTS | Bonus | adjacent foe | right after the Attack action, one unarmed strike (no ki)");
     case ECombatCommandType::RecklessAttack: return TEXT("RECKLESS ATTACK | Free | self | before your first attack this turn: advantage on melee weapon attacks this turn, but attacks against you have advantage until your next turn");
     case ECombatCommandType::UncannyDodge: return TEXT("UNCANNY DODGE | Reaction | self | automatic: when an attacker you can see hits you, halve the damage");
@@ -1744,6 +1746,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         Result.Feedback = Actor->Name + TEXT(" ends turn.");
         auto* User = MutableFind(Command.ActorId);
         if (User->RageTurns > 0 && --User->RageTurns == 0) { User->GuardTargetId = INDEX_NONE; }
+        if (User->SacredWeaponTurns > 0) { --User->SacredWeaponTurns; }
         for (FCombatCondition& Condition : User->Conditions) { if (Condition.RoundsLeft > 0) { --Condition.RoundsLeft; } }
         User->Conditions.RemoveAll([](const FCombatCondition& Condition) { return Condition.RoundsLeft == 0; });
         AdvanceTurn();
@@ -1835,7 +1838,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
     }
     if (Target.HP == 0)
     {
-        Target.GuardTurns = 0; Target.GuardAmount = 0; Target.RageTurns = 0; Target.GuardTargetId = INDEX_NONE; Target.LastSurge = 0;
+        Target.GuardTurns = 0; Target.GuardAmount = 0; Target.RageTurns = 0; Target.GuardTargetId = INDEX_NONE; Target.LastSurge = 0; Target.SacredWeaponTurns = 0;
         for (auto& U : State.Encounter.Combatants) { if (U.GuardTargetId == Target.Id) { U.GuardTargetId = INDEX_NONE; U.GuardTurns = 0; U.GuardAmount = 0; } }
         Target.bDodging = false; Target.bDisengaged = false; Target.bHidden = false; Target.bReadied = false; Target.HelpedById = INDEX_NONE;
         for (auto& U : State.Encounter.Combatants) { if (U.HelpedById == Target.Id) { U.HelpedById = INDEX_NONE; } }
@@ -1862,7 +1865,7 @@ void FCombatBattle::CheckOutcome()
         State.AttacksRemaining = 0;
         for (FCombatantState& Unit : State.Encounter.Combatants)
         {
-            Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
+            Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0; Unit.SacredWeaponTurns = 0;
             Unit.bReactionAvailable = true;
             Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE; Unit.bConcentrating = false; Unit.bShielded = false;
             if (Unit.Life == ECombatLife::Downed)
@@ -2018,7 +2021,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
-                Unit.bDodging || Unit.bReckless || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
+                Unit.bDodging || Unit.bReckless || Unit.SacredWeaponTurns != 0 || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
                 Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
@@ -2057,6 +2060,7 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
     case ECombatCommandType::MartialArts: return State.bBonusActionAvailable && State.bAttackActionTaken;
+    case ECombatCommandType::SacredWeapon: return Unit.ChannelUses > 0 && Unit.SacredWeaponTurns == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
     case ECombatCommandType::RecklessAttack: return !Unit.bReckless && State.bActionAvailable && !State.bAttackActionTaken && State.AttacksRemaining == 0;
     case ECombatCommandType::FontOfMagic:
@@ -2121,6 +2125,11 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bBonusActionAvailable = false;
         (Command.Type == ECombatCommandType::PatientDefense ? User->bDodging : User->bDisengaged) = true;
         return FString::Printf(TEXT("%s spends 1 ki and %s (%d ki left) (bonus action)."), *User->Name, Command.Type == ECombatCommandType::PatientDefense ? TEXT("dodges") : TEXT("disengages"), User->KiPoints);
+    case ECombatCommandType::SacredWeapon:
+        --User->ChannelUses;
+        State.bActionAvailable = false;
+        User->SacredWeaponTurns = FFeatureKit::SacredWeaponRounds;
+        return FString::Printf(TEXT("%s channels divinity into a Sacred Weapon: +%d to weapon attacks for %d rounds (%d channel left)."), *User->Name, FMath::Max(1, AbilityModifier(User->Id, EAbility::Charisma)), User->SacredWeaponTurns, User->ChannelUses);
     case ECombatCommandType::MartialArts:
     {
         State.bBonusActionAvailable = false;

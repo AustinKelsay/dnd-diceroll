@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::DeflectMissiles;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::SacredWeapon;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -54,6 +54,9 @@ public:
     static bool HasMartialArts(const FCombatantState& Hero);
     /** Monk 3 Deflect Missiles: automatic reaction, a ranged weapon hit loses 1d10 + DEX + monk level damage. */
     static bool HasDeflectMissiles(const FCombatantState& Hero);
+    /** Paladin 3 Channel Divinity: Sacred Weapon (Oath of Devotion, the SRD oath), 1 minute = 10 rounds; shares ChannelUses. */
+    static bool HasSacredWeapon(const FCombatantState& Hero);
+    static constexpr int32 SacredWeaponRounds = 10;
     /** Wizard 1: once per long rest, at a short rest (the rest point), regain spell resources worth half the wizard level (rounded up) in slot levels. */
     static bool HasArcaneRecovery(const FCombatantState& Hero);
     /** Slot levels Arcane Recovery would restore now (0 when used or nothing is missing). */

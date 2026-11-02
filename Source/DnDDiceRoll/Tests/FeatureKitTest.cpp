@@ -594,4 +594,32 @@ bool FDeflectMissilesTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Melee hits are not deflected"), Punch.RollModeSources.ContainsByPredicate([](const FString& S) { return S.StartsWith(TEXT("Deflect")); }));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSacredWeaponTest, "Project.Expedition.Features.SacredWeapon",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSacredWeaponTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Low = Hero(TEXT("paladin.devotion"), 2); FFeatureKit::Refill(Low);
+    TestFalse(TEXT("Not at Paladin 2"), FFeatureKit::Commands(Low).Contains(ECombatCommandType::SacredWeapon));
+    FCombatantState Paladin = Hero(TEXT("paladin.devotion"), 3); FFeatureKit::Refill(Paladin);
+    TestEqual(TEXT("One Channel Divinity use"), Paladin.ChannelUses, 1);
+    TestFalse(TEXT("Paladins do not Turn Undead"), FFeatureKit::Commands(Paladin).Contains(ECombatCommandType::TurnUndead));
+    TestTrue(TEXT("Action tag"), FFeatureKit::Cost(ECombatCommandType::SacredWeapon) == EActionCost::Action);
+    FCombatBattle Battle; FString Error;
+    TestTrue(TEXT("Starts"), Battle.Start(Duel(Paladin, {1, 0}), 3, Error));
+    const int32 Before = Battle.Forecast(10, ECombatCommandType::Attack, 20).HitChanceOutOf400;
+    TestTrue(TEXT("Channel"), Battle.Submit({ECombatCommandType::SacredWeapon, 10, {}, 10}).bAccepted);
+    TestEqual(TEXT("Use spent"), Battle.Find(10)->ChannelUses, 0);
+    TestEqual(TEXT("Ten rounds"), Battle.Find(10)->SacredWeaponTurns, FFeatureKit::SacredWeaponRounds);
+    TestTrue(TEXT("Action spent"), Battle.LegalTargets(10, ECombatCommandType::Attack).IsEmpty());
+    FCombatantState Blessed = Paladin; Blessed.SacredWeaponTurns = 5;
+    const FActionForecast After = Swing(Blessed, {1, 0});
+    TestTrue(TEXT("Blessed forecast valid"), After.bValid);
+    TestTrue(TEXT("Attack chance improves"), After.HitChanceOutOf400 > Before || Before >= 380);
+    TestTrue(TEXT("End turn"), Battle.Submit({ECombatCommandType::EndTurn, 10, {}, 10}).bAccepted);
+    TestEqual(TEXT("Ticks down at end of own turn"), Battle.Find(10)->SacredWeaponTurns, FFeatureKit::SacredWeaponRounds - 1);
+    FCombatantState Bad = Hero(TEXT("fighter.champion"), 3); Bad.SacredWeaponTurns = 2;
+    TestFalse(TEXT("Non-paladin sacred weapon invalid"), FFeatureKit::Valid(Bad));
+    return true;
+}
 #endif

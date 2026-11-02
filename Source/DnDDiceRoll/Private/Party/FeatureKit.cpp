@@ -133,6 +133,10 @@ bool FFeatureKit::HasDeflectMissiles(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk) >= 3;
 }
+bool FFeatureKit::HasSacredWeapon(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Paladin) >= 3;
+}
 bool FFeatureKit::HasMartialArts(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk) >= 1;
@@ -159,7 +163,7 @@ int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 }
 int32 FFeatureKit::ChannelCap(const FCombatantState& Hero)
 {
-    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric) >= 2 ? 1 : 0;
+    return Hero.Side == ECombatSide::Party && (FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric) >= 2 || FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Paladin) >= 3) ? 1 : 0;
 }
 int32 FFeatureKit::BardicCap(const FCombatantState& Hero)
 {
@@ -198,6 +202,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::UncannyDodge: return TEXT("Uncanny Dodge");
     case ECombatCommandType::RecklessAttack: return TEXT("Reckless Attack");
     case ECombatCommandType::MartialArts: return TEXT("Martial Arts");
+    case ECombatCommandType::SacredWeapon: return TEXT("Sacred Weapon");
     case ECombatCommandType::DeflectMissiles: return TEXT("Deflect Missiles");
     default: return TEXT("Feature");
     }
@@ -224,6 +229,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
     case ECombatCommandType::MartialArts: return TEXT("bonus, after Attack");
+    case ECombatCommandType::SacredWeapon: return Hero.SacredWeaponTurns > 0 ? FString::Printf(TEXT("active, %d rounds"), Hero.SacredWeaponTurns) : FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
     case ECombatCommandType::RecklessAttack: return Hero.bReckless ? TEXT("reckless until your turn") : TEXT("free, before attacking");
     case ECombatCommandType::DeflectMissiles:
     case ECombatCommandType::UncannyDodge: return Hero.bReactionAvailable ? TEXT("auto, reaction ready") : TEXT("auto, reaction spent");
@@ -235,7 +241,8 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
 {
     TArray<ECombatCommandType> Out;
     if (ActionSurgeCap(Hero)) { Out.Add(ECombatCommandType::ActionSurge); }
-    if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
+    if (FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric) >= 2 && ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
+    if (HasSacredWeapon(Hero)) { Out.Add(ECombatCommandType::SacredWeapon); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
     if (HasRecklessAttack(Hero)) { Out.Add(ECombatCommandType::RecklessAttack); }
@@ -257,7 +264,8 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
-        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero));
+        (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) &&
+        Hero.SacredWeaponTurns >= 0 && Hero.SacredWeaponTurns <= (HasSacredWeapon(Hero) ? SacredWeaponRounds : 0);
 }
 TArray<FString> FFeatureKit::RewardSheet(const FCombatantState& Hero)
 {
