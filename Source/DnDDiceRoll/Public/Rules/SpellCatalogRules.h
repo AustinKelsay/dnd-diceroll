@@ -61,6 +61,10 @@ struct DNDDICEROLL_API FSrdSpell
     ESpellModifier Modifier;
     int32 ModifierValue;
     ESpellImplementation Implementation;
+    /** Second damage type dealt together with the first (Ice Knife, Ice Storm, Flame Strike, Meteor Swarm); Dice2 by slot level, 0 when none. */
+    EDamageType Damage2Type;
+    int32 Dice2Sides;
+    int32 Dice2[10];
 };
 
 struct DNDDICEROLL_API FSpellCatalogRules
@@ -74,6 +78,8 @@ struct DNDDICEROLL_API FSpellCatalogRules
     static bool HasCondition(const FSrdSpell& Spell, ESpellCondition Condition);
     static EActionCost ActionCost(const FSrdSpell& Spell);
     static bool CastableInCombat(const FSrdSpell& Spell) { return Spell.CastTime != ESpellCastTime::Extended; }
+    /** One-cast combat resolution exists: damage by attack or save (or Magic Missile's darts), healing, or save-or-condition, as an action or bonus action. Summons, zones, weapon riders, buffs and Partial spells are excluded. */
+    static bool CombatResolvable(const FSrdSpell& Spell);
     /** Dice count: cantrips by character level (SRD 5/11/17 tiers), others by slot level; 0 when the slot is too low. */
     static int32 DiceCount(const FSrdSpell& Spell, int32 CharacterLevel, int32 SlotLevel);
     /** Average effect (damage or healing) rounded down, adding SpellModifier when the spell does. */

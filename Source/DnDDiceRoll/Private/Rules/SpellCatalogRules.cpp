@@ -48,6 +48,25 @@ EActionCost FSpellCatalogRules::ActionCost(const FSrdSpell& Spell)
     }
 }
 
+bool FSpellCatalogRules::CombatResolvable(const FSrdSpell& Spell)
+{
+    // Parsed as save/condition spells but resolved by summons, zones, movement or a weapon hit; not one-cast effects.
+    static const TCHAR* NotOneCast[] = { TEXT("haste"), TEXT("conjure-animals"), TEXT("conjure-woodland-beings"), TEXT("conjure-elemental"), TEXT("conjure-fey"),
+        TEXT("conjure-celestial"), TEXT("faithful-hound"), TEXT("control-water"), TEXT("wind-wall"), TEXT("modify-memory"), TEXT("telekinesis"),
+        TEXT("arcane-hand"), TEXT("arcane-sword"), TEXT("holy-aura"), TEXT("searing-smite"), TEXT("ensnaring-strike") };
+    if (Spell.Implementation != ESpellImplementation::Mechanics || (Spell.CastTime != ESpellCastTime::Action && Spell.CastTime != ESpellCastTime::BonusAction)) { return false; }
+    for (const TCHAR* Id : NotOneCast) { if (FCString::Stricmp(Id, Spell.Id) == 0) { return false; } }
+    switch (Spell.Effect)
+    {
+    case ESpellEffect::Damage:
+        return Spell.Resolution == ESpellResolution::MeleeAttack || Spell.Resolution == ESpellResolution::RangedAttack || Spell.Resolution == ESpellResolution::Save ||
+            FCString::Stricmp(Spell.Id, TEXT("magic-missile")) == 0;
+    case ESpellEffect::Healing: return true;
+    case ESpellEffect::Condition: return Spell.Resolution == ESpellResolution::Save;
+    default: return false;
+    }
+}
+
 int32 FSpellCatalogRules::DiceCount(const FSrdSpell& Spell, int32 CharacterLevel, int32 SlotLevel)
 {
     if (Spell.Level == 0)

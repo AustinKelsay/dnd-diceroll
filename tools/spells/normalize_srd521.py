@@ -27,7 +27,18 @@ for s in json.load(open(sys.argv[1])):
             n,f=base.split('d',1);f=f.split('+')[0].strip()
             inc=re.search(r'increases by (\d+)d(\d+) for each (?:spell )?slot level above',t)
             dm['damage_at_slot_level']={str(k):'%dd%s'%(int(n)+((k-lvl)*int(inc[1]) if inc and inc[2]==f else 0),f) for k in range(lvl,10)}
-        r['damage']=[dm]+([{'extra':True}] if len(types)>1 else [])
+        both={'ice-knife','ice-storm','flame-strike','meteor-swarm'}
+        if s['index'] in both:
+            # Two damage types dealt together: keep the second as its own dice table (scales when the upcast die matches).
+            pt=d['damage_type']['index']
+            n2,f2,t2=next((a,b,c) for a,b,c in re.findall(r'(\d+)d(\d+)(?: \+ \w+)? (\w+) damage',s['description']) if c.lower()!=pt)
+            inc=re.search(r'increases by (\d+)d(\d+)',t)
+            r['damage']=[dm,{'damage_type':{'index':t2.lower(),'name':t2},'damage_at_slot_level':{str(k):'%dd%s'%(int(n2)+((k-lvl)*int(inc[1]) if inc and inc[2]==f2 else 0),f2) for k in range(lvl,10)}}]
+        elif len(types)>1 and s['index'] not in {'fire-shield','spirit-guardians','wall-of-thorns'}:
+            r['damage']=[dm,{'extra':True}]
+        else:
+            # Single type at a time (caster's choice, or a separate later trigger): the first type is modelled.
+            r['damage']=[dm]
     elif s['index']=='magic-missile':
         # Three darts of 1d4 + 1 Force, one more dart per slot level above 1: stored as darts x d4 (+1 per dart).
         r['damage']=[{'damage_type':{'index':'force','name':'Force'},'damage_at_slot_level':{str(k):'%dd4 + %d'%(k+2,k+2) for k in range(1,10)}}]
