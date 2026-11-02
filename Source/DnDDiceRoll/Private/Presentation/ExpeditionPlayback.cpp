@@ -56,6 +56,32 @@ bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor)
     return Action == ECombatCommandType::SecondWind || Action == ECombatCommandType::CureWounds ||
         Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion;
 }
+FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType Action, int32 TargetId)
+{
+    const auto F = Rules.Forecast(ActorId, Action, TargetId);
+    const auto* Target = Rules.Find(TargetId);
+    const auto* Actor = Rules.Find(ActorId);
+    if (!F.bValid || !Target || !Actor) { return FString(); }
+    for (const auto& A : FBuildCatalog::Abilities(*Actor))
+    {
+        if (A.Command != Action) { continue; }
+        if (A.Effect == EAbilityEffect::Rage || A.Effect == EAbilityEffect::Protect || A.Effect == EAbilityEffect::Swap || A.Effect == EAbilityEffect::Mitigation)
+        {
+            if (A.Effect == EAbilityEffect::Swap) { return TEXT("Swap positions"); }
+            if (A.Effect == EAbilityEffect::Rage) { return TEXT("Rage: +2 damage, -1 taken"); }
+            return FString::Printf(TEXT("Protect -%d / next turn"), A.Amount);
+        }
+    }
+    FString Amount = F.MinAmount == F.MaxAmount ? FString::FromInt(F.MinAmount)
+        : FString::Printf(F.bDiscreteAmounts ? TEXT("%d or %d") : TEXT("%d-%d"), F.MinAmount, F.MaxAmount);
+    FString Label = F.bHealing ? TEXT("Heal +") + Amount
+        : (F.bAttackRoll ? FString::Printf(TEXT("%d%% | "), F.HitChancePercent) : FString(TEXT("Auto | "))) + Amount;
+    for (const auto& A : FBuildCatalog::Abilities(*Actor))
+    { if (A.Command == Action && A.Effect == EAbilityEffect::Push) { Label += TEXT(" + push if open"); } }
+    if (F.bCanDrop) { Label += F.MaxAmount >= Target->HP ? TEXT(" | can drop") : TEXT(" | crit drop"); }
+    return Label;
+}
+
 FString ForecastAmount(const FActionForecast& Forecast)
 {
     if (Forecast.MaxAmount == 0) { return Forecast.Formula; }

@@ -126,9 +126,10 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         { if (Unit.Cell == Hover && !(Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { HoverUnitId = Unit.Id; } }
     }
     const int32 ActorId = Actor();
-    if (BattleView->InCombat() && !BattleView->IsPresenting() && ActorId == ActiveId)
+    if (AllowsGameplayInput() && BattleView->InCombat() && !BattleView->IsPresenting() && ActorId == ActiveId)
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
+        Highlights.Reach = Rules.ActionReach(ActorId, SelectedAction);
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
         if (bHover)

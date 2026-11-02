@@ -310,6 +310,37 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     return Result;
 }
 
+FActionReach FCombatBattle::ActionReach(int32 ActorId, ECombatCommandType Action) const
+{
+    FActionReach Result;
+    const auto* Actor = Find(ActorId);
+    if (!bStarted || State.Phase != EBattlePhase::Fighting || !Actor || ActiveId() != ActorId || Actor->Life != ECombatLife::Conscious) { return Result; }
+    int32 Range = -1;
+    if (Action == ECombatCommandType::Attack) { Range = Actor->Range; }
+    else if (Action == ECombatCommandType::Potion || Action == ECombatCommandType::Rescue) { Range = TouchRange; }
+    else
+    {
+        for (const auto& Ability : FBuildCatalog::Abilities(*Actor))
+        { if (Ability.Command == Action) { Range = Ability.Range; break; } }
+        // Legacy adapters use the same constants as their validation.
+        if (Range < 0 && FBuildCatalog::HasSpecial(*Actor, Action))
+        {
+            if (Action == ECombatCommandType::SecondWind) { Range = 0; }
+            else if (Action == ECombatCommandType::PrecisionStrike) { Range = Actor->Range; }
+            else if (Action == ECombatCommandType::MagicMissile) { Range = MissileRange; }
+            else if (Action == ECombatCommandType::CureWounds) { Range = TouchRange; }
+        }
+    }
+    for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
+    for (int32 X = 0; X < State.Encounter.Width; ++X)
+    {
+        const FIntPoint Cell(X, Y);
+        if (GridDistance(Actor->Cell, Cell) > Range) { continue; }
+        (HasLineOfSight(Actor->Cell, Cell) ? Result.Visible : Result.Obstructed).Add(Cell);
+    }
+    return Result;
+}
+
 TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 {
     // Same legality as LegalMoves, with one search that also yields the route.

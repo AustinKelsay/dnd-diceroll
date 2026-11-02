@@ -308,7 +308,7 @@ void AExpeditionHUD::DrawWorldOverlays()
 {
     const FCombatBattle& Rules = View->Rules();
     const FExpeditionPlayback& Show = View->Playback();
-    const bool bCombat = View->InCombat();
+    const bool bCombat = View->InCombat() && !Player->ShowingHelp() && !View->ShowingRecords();
     const int32 Active = bCombat ? Rules.ActiveId() : INDEX_NONE;
 
     // Path preview: a dotted trail from the adventurer to the hovered cell.
@@ -349,19 +349,48 @@ void AExpeditionHUD::DrawWorldOverlays()
         }
     }
 
-    // Legal targets get a pulsing marker above their heads.
-    if (bCombat && !View->IsPresenting())
+    // Geometry is independent of target eligibility and available budgets.
+    if (bCombat && !View->IsPresenting() && !Player->ShowingHelp() && !View->ShowingRecords())
     {
-        const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
-        for (int32 Id : Player->Targets())
+        Text(TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
+        const auto Reach = Rules.ActionReach(Player->Actor(), Player->Action());
+        auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
+        {
+            for (const auto Cell : Cells)
+            {
+                FVector2D P;
+                if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 5), P)) { continue; }
+                const auto Color = bBlocked ? Danger : Sky;
+                if (bBlocked) { Line(P-FVector2D(4,4), P+FVector2D(4,4), Color, 1); Line(P+FVector2D(-4,4), P+FVector2D(4,-4), Color, 1); }
+                else { Circle(P, 4, Color); }
+            }
+        };
+        DrawCells(Reach.Visible, false); DrawCells(Reach.Obstructed, true);
+        TArray<FVector2D> Placed;
+        for (const int32 Id : Rules.LegalTargets(Player->Actor(), Player->Action()))
         {
             FVector2D Point;
-            if (!Project(View->UnitPosition(Id, 185.0f), Point)) { continue; }
-            const bool bHover = Id == Player->HoveredTarget();
-            const float Bob = 4.0f * FMath::Sin(Clock * 5.0f);
-            const FLinearColor Color = bFriendly ? Safe : Danger;
-            Polygon(FVector2D(Point.X, Point.Y + Bob), bHover ? 12.0f : 9.0f, 3, PI / 2, FLinearColor(0, 0, 0, 0.5f));
-            Polygon(FVector2D(Point.X, Point.Y + Bob - 1), bHover ? 10.0f : 7.5f, 3, PI / 2, Color);
+            if (!Project(View->UnitPosition(Id, 185), Point)) { continue; }
+            const FString Label = FString::Printf(TEXT("#%d "), Id) + ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id);
+            const float Width = FMath::Min(290.0f, Measure(Label, 0.72f).X + 16);
+            Point.X = FMath::Clamp(Point.X, Width/2+8, W-Width/2-8);
+            Point.Y = FMath::Clamp(Point.Y, 150.0f, H-210.0f);
+            // Stack colliding labels, retaining a leader to the actual target.
+            const FVector2D Anchor = Point;
+            for (const auto Other : Placed)
+            { if (FMath::Abs(Other.X-Point.X) < 300 && FMath::Abs(Other.Y-Point.Y) < 25) { Point.Y = Other.Y-26; } }
+            Placed.Add(Point);
+            Line(Anchor, Point, Gold, 1);
+            Panel(Point.X-Width/2, Point.Y-12, Width, 24, Gold, 0.96f, false);
+            Text(Label, Point.X, Point.Y-9, Parchment, 0.72f, EAlign::Center, Width-12);
+        }
+        const auto Preview = Rules.Forecast(Player->Actor(), Player->Action(), Player->HoveredTarget());
+        for (const auto& Effect : Preview.Effects)
+        {
+            if (Effect.Effect != EAbilityEffect::Strike) { continue; }
+            FVector2D P;
+            if (Project(View->UnitPosition(Effect.TargetId, 155), P))
+            { Frame(Gold, P.X-20, P.Y-12, 40, 24, 2); Text(TEXT("AREA"), P.X, P.Y-8, Gold, 0.65f, EAlign::Center); }
         }
     }
 

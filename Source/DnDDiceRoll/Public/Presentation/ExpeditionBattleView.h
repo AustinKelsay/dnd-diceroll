@@ -72,6 +72,7 @@ struct FExpeditionSway
 /** What the controller wants emphasised on the board this frame. */
 struct FBoardHighlights
 {
+    FActionReach Reach;
     TArray<FIntPoint> Moves;
     TArray<FIntPoint> Path;
     TArray<int32> Targets;

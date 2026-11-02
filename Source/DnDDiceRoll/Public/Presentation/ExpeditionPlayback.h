@@ -166,6 +166,7 @@ DNDDICEROLL_API FLinearColor UnitColor(const FCombatantState& Unit);
 DNDDICEROLL_API FString ActionName(ECombatCommandType Action);
 /** Actions aimed at allies (healing, rescue) rather than enemies. */
 DNDDICEROLL_API bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor = nullptr);
+DNDDICEROLL_API FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType Action, int32 TargetId);
 DNDDICEROLL_API FString ForecastAmount(const FActionForecast& Forecast);
 DNDDICEROLL_API const FCombatantState* FindUnit(const FCombatSnapshot& Snapshot, int32 Id);
 }

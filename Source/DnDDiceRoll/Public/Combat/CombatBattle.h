@@ -173,6 +173,13 @@ struct DNDDICEROLL_API FActionForecast
     TArray<FTargetEffect> Effects;
 };
 
+/** Geometry only: independent of budgets, resources and occupant eligibility. */
+struct DNDDICEROLL_API FActionReach
+{
+    TArray<FIntPoint> Visible;
+    TArray<FIntPoint> Obstructed;
+};
+
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
  * including enemy decisions, use the same validation. Queries consume no random numbers.
  * Grid: cardinal movement, occupied cells block travel, attacks use Manhattan range and
@@ -188,6 +195,7 @@ public:
     int32 ActiveId() const;
     TArray<FIntPoint> LegalMoves(int32 Id) const;
     TArray<int32> LegalTargets(int32 Id, ECombatCommandType Action = ECombatCommandType::Attack) const;
+    FActionReach ActionReach(int32 ActorId, ECombatCommandType Action) const;
     /** Cells a legal move would enter, in order. Empty when the move is not legal. */
     TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
