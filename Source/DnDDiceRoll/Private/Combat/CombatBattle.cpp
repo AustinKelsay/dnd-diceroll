@@ -365,7 +365,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::SecondWind:
         return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+fighter level healing | target self"), WindDie);
     case ECombatCommandType::CureWounds:
-        return FString::Printf(TEXT("CURE WOUNDS | Action + 1 slot | ally/self, %d cell | %dd%d+%d healing"), TouchRange, CureDice, CureDie, HealingModifier);
+        return FString::Printf(TEXT("CURE WOUNDS | Action + 1 slot | ally/self, %d cell | %dd%d + WIS modifier healing (prebuilt cleric +%d)"), TouchRange, CureDice, CureDie, HealingModifier);
     case ECombatCommandType::MagicMissile:
         return FString::Printf(TEXT("MAGIC MISSILE | Action + 1 slot | enemy, %d cells + sight | %dd%d+%d auto-hit"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
     case ECombatCommandType::Rescue:
@@ -870,7 +870,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
                 }
             }
             if (A.Effect == EAbilityEffect::Healing)
-            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { Forecast.MinAmount = FMath::Min(CureDice + HealingModifier,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(CureDice * CureDie + HealingModifier,Target->MaxHP-Target->HP); } }
+            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { const int32 Mod = CureModifier(ActorId); Forecast.MinAmount = FMath::Clamp(CureDice + Mod,0,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Clamp(CureDice * CureDie + Mod,0,Target->MaxHP-Target->HP); } }
             Forecast.bDiscreteAmounts = A.Effect == EAbilityEffect::Surge;
             if (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Surge || A.Effect == EAbilityEffect::Push || A.Effect == EAbilityEffect::Area)
             {
@@ -972,7 +972,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         return Forecast;
     }
     case ECombatCommandType::SecondWind: Effect(1, WindDie, FMath::Max(1, FBuildCatalog::ClassLevel(*Actor, EAdventurerRole::Fighter))); break;
-    case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
+    case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, CureModifier(ActorId)); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
     case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = 1; Forecast.Formula = TEXT("1"); break;
     default: Forecast.bValid = false; return Forecast;
@@ -1025,6 +1025,12 @@ FAbilityScores FCombatBattle::AbilityScores(int32 Id) const
 int32 FCombatBattle::AbilityModifier(int32 Id, EAbility Ability) const
 {
     return Find(Id) ? FAbilityRules::Modifier(AbilityScores(Id).Get(Ability)) : 0;
+}
+
+int32 FCombatBattle::CureModifier(int32 Id) const
+{
+    const FCombatantState* Unit = Find(Id);
+    return Unit && Unit->Side == ECombatSide::Party && !Unit->BuildId.IsEmpty() ? AbilityModifier(Id, EAbility::Wisdom) : HealingModifier;
 }
 
 FCharacterRules FCombatBattle::Character(int32 Id) const
@@ -1475,7 +1481,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             else if (A.Effect == EAbilityEffect::Healing)
             {
                 int32 Amount = A.Amount;
-                if (A.bCureDice) { SpendSpellSlot(*User); DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice,CureDie)+HealingModifier; DiceLog = nullptr; }
+                if (A.bCureDice) { SpendSpellSlot(*User); DiceLog = &Result.EffectDice; Result.EffectModifier = CureModifier(User->Id); Amount = FMath::Max(1, RollDice(CureDice,CureDie)+Result.EffectModifier); DiceLog = nullptr; }
                 Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP); Target->HP += Result.Healing;
                 Result.Effects.Add({Target->Id, A.Effect, Result.Healing, Target->Cell});
             }
@@ -1588,7 +1594,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             int32 Amount = 1;
             DiceLog = &Result.EffectDice;
             if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FMath::Max(1, FBuildCatalog::ClassLevel(*User, EAdventurerRole::Fighter)); Amount = Roll(WindDie) + Result.EffectModifier; Ability = TEXT("Second Wind (bonus, 1 use)"); }
-            else if (Command.Type == ECombatCommandType::CureWounds) { SpendSlot(); Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice + CombatSpellSlots::UpcastExtra(ESpell::CureWounds, Slot), CureDie) + HealingModifier; Ability = Slot == 1 ? FString(TEXT("Cure Wounds (1 slot)")) : FString::Printf(TEXT("Cure Wounds (level %d slot)"), Slot); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { SpendSlot(); Result.EffectModifier = CureModifier(User->Id); Amount = FMath::Max(1, RollDice(CureDice + CombatSpellSlots::UpcastExtra(ESpell::CureWounds, Slot), CureDie) + Result.EffectModifier); Ability = Slot == 1 ? FString(TEXT("Cure Wounds (1 slot)")) : FString::Printf(TEXT("Cure Wounds (level %d slot)"), Slot); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             else { Result.EffectModifier = 1; }
             DiceLog = nullptr;

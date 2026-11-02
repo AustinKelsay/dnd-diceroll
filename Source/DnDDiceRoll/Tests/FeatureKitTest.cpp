@@ -429,4 +429,43 @@ bool FArcaneRecoveryTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Free tag in the rules table"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Wizard, 1).ContainsByPredicate([](const FClassFeature& F) { return FCString::Strcmp(F.Name, TEXT("Arcane Recovery")) == 0 && F.bPlayable; }));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCureWisdomTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FString Error;
+    auto Check = [&](FCombatantState Unit, const TCHAR* Label)
+    {
+        Unit.HP = 1;
+        FCombatBattle Battle;
+        if (!TestTrue(Label, Battle.Start(Duel(Unit, {5, 0}), 3, Error))) { AddError(Error); return; }
+        const int32 Mod = Battle.AbilityModifier(10, EAbility::Wisdom);
+        TestEqual(FString(Label) + TEXT(": CureModifier is WIS"), Battle.CureModifier(10), Mod);
+        const FActionForecast F = Battle.Forecast(10, ECombatCommandType::CureWounds, 10);
+        if (TestTrue(FString(Label) + TEXT(": forecast"), F.bValid))
+        {
+            TestEqual(FString(Label) + TEXT(": min 1 + WIS"), F.MinAmount, FMath::Clamp(1 + Mod, 0, Unit.MaxHP - 1));
+            TestEqual(FString(Label) + TEXT(": max 8 + WIS"), F.MaxAmount, FMath::Clamp(8 + Mod, 0, Unit.MaxHP - 1));
+        }
+        const int32 Before = Battle.Find(10)->HP;
+        const FCombatResult R = Battle.Submit({ECombatCommandType::CureWounds, 10, {}, 10});
+        if (TestTrue(FString(Label) + TEXT(": cast"), R.bAccepted))
+        {
+            TestEqual(FString(Label) + TEXT(": result modifier"), R.EffectModifier, Mod);
+            const int32 Healed = Battle.Find(10)->HP - Before;
+            TestTrue(FString(Label) + TEXT(": healing within 1d8+WIS"), Healed >= FMath::Max(1, 1 + Mod) - 0 && Healed <= 8 + Mod);
+        }
+    };
+    Check(Hero(TEXT("cleric.life"), 1), TEXT("Life cleric"));
+    FCombatantState Multi = Hero(TEXT("fighter.champion"), 2);
+    Multi.SecondaryRole = EAdventurerRole::Cleric; Multi.SecondaryLevel = 1; Multi.Level = 2;
+    Multi.SpellSlots = 2; Multi.SlotsByLevel.Reset(); // multiclass slots ride on the flat pool
+    Multi.MaxHP = FBuildCatalog::MaxHitPoints(Multi);
+    TestTrue(TEXT("Multiclass grants Cure"), FBuildCatalog::HasSpecial(Multi, ECombatCommandType::CureWounds));
+    Check(Multi, TEXT("Fighter/Cleric"));
+    TestTrue(TEXT("Description names WIS"), FCombatBattle::DescribeAction(ECombatCommandType::CureWounds).Contains(TEXT("WIS")));
+    return true;
+}
 #endif

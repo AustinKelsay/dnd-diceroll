@@ -380,6 +380,8 @@ public:
     FAbilityScores AbilityScores(int32 Id) const;
     /** SRD ability modifier for a combatant; 0 for unknown IDs. */
     int32 AbilityModifier(int32 Id, EAbility Ability) const;
+    /** SRD Cure Wounds: 1d8 + the caster's spellcasting (WIS) modifier; multiclass heroes use their real WIS, unbuilt fixtures keep the prebuilt +3. */
+    int32 CureModifier(int32 Id) const;
     /** Proficiency, skill, save and tool facts for a combatant at its current level. Read-only, no RNG. */
     FCharacterRules Character(int32 Id) const;
     /** Damage type of an action: role weapon or cantrip for attacks, force for Magic Missile. Read-only. */
