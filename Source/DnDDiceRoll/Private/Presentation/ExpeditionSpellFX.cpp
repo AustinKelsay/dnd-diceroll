@@ -18,10 +18,13 @@ const TCHAR* const BurstPath = TEXT("/Game/DnDDiceRoll/Theme/SpellFX/SM_SpellFX_
 constexpr float StepFps = 12.0f;
 constexpr float SnapCm = 4.0f;
 // Fire: ember orange with a yellow core (kept off party gold, enemy red-orange, Danger and the cyan path).
-const FLinearColor FireCore(1.0f, 0.62f, 0.05f);   // saturated yellow core (was pale cream 1/0.88/0.42)
-const FLinearColor FireHue(1.0f, 0.5f, 0.06f);
-const FLinearColor EmberDeep(0.7f, 0.16f, 0.02f);
-const FLinearColor WhiteHot(1.0f, 0.97f, 0.86f);
+// Matte, muddy torch-lit fire (Gauntlet Dark Legacy / late PS1): no white-hot, no glow; values stay under 1.
+const FLinearColor FireCore(0.86f, 0.5f, 0.1f);    // dull amber core
+const FLinearColor FireHue(0.68f, 0.22f, 0.04f);   // muddy orange body
+const FLinearColor EmberDeep(0.3f, 0.07f, 0.02f);  // char-red shadow band
+const FLinearColor WhiteHot(0.92f, 0.66f, 0.24f);  // Fireball centre: brightest value on screen, still matte
+// The Ico mesh is 85 cm across.
+constexpr float IcoCm = 85.0f;
 const FLinearColor InkColor(0.035f, 0.02f, 0.03f);
 
 UStaticMesh* LoadMesh(const TCHAR* Path) { return LoadObject<UStaticMesh>(nullptr, Path, nullptr, LOAD_NoWarn | LOAD_Quiet); }
@@ -36,17 +39,19 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
     Out.Core = FireCore; Out.Hue = FireHue; Out.Ink = InkColor;
     if (Event.SpellId == TEXT("fire-bolt"))
     {
-        // Cantrip (size class 0): one small mote, about 0.4 s end to end, burst under half a cell.
-        Out.Hue = FLinearColor(1.0f, 0.3f, 0.02f); Out.Glow = 0.85f; Out.Travel = 0.2f; Out.BoltScale = 1.25f;   // deeper orange: the tonemapper lifts bright orange toward yellow
-        Out.ImpactGrow = 0.12f; Out.ImpactHold = 0.05f; Out.ImpactLinger = 0.05f; Out.LingerOpacity = 0.3f; Out.ImpactScale = 1.1f; Out.Edge = 0.0f;   // burst stays whole (no eroded holes = no ink speck); the watercolour break lives on the bolt's leading edge
+        // SRD 5.2.1 Fire Bolt: "You hurl a mote of fire at a creature or an object within range" (120 ft ranged spell attack, 1d10 fire).
+        // One small, fast streak straight to the one target, then a small flare on that target only (no area).
+        Out.Glow = 1.0f; Out.Travel = 0.16f; Out.BoltScale = 1.3f;
+        Out.ImpactGrow = 0.08f; Out.ImpactHold = 0.08f; Out.ImpactLinger = 0.17f; Out.LingerOpacity = 0.45f; Out.ImpactScale = 0.55f; Out.Edge = 0.0f;
         return true;
     }
     if (Event.SpellId == TEXT("fireball"))
     {
-        // 3rd level (size class 2): exact cells first, a bead, then a sub-second blast that lingers faintly.
-        // Telegraph + travel = 0.30 s before impact (direction budget 0.2-0.4 s).
-        Out.Glow = 0.85f; Out.Telegraph = 0.12f; Out.bArea = true; Out.Travel = 0.18f; Out.BoltScale = 0.6f;
-        Out.ImpactGrow = 0.22f; Out.ImpactHold = 0.12f; Out.ImpactLinger = 0.75f; Out.LingerOpacity = 0.3f; Out.AreaVisualScale = 0.85f; Out.Edge = 0.5f;
+        // SRD 5.2.1 Fireball: "A bright streak flashes from you to a point you choose within range (150 ft) and then blossoms
+        // into a fiery explosion" filling a 20-foot-radius sphere (8d6 fire, Dex save half). Exact cells first, a small bead
+        // streaks to the point, then a rounded faceted dome exactly 20 ft in radius (4 cells) that chars down.
+        Out.Glow = 1.0f; Out.Telegraph = 0.12f; Out.bArea = true; Out.Travel = 0.22f; Out.BoltScale = 0.45f;
+        Out.ImpactGrow = 0.17f; Out.ImpactHold = 0.17f; Out.ImpactLinger = 0.67f; Out.LingerOpacity = 0.4f; Out.AreaVisualScale = 1.0f; Out.Edge = 0.35f;
         return true;
     }
     return false;
@@ -140,7 +145,6 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
     UStaticMesh* Ico = LoadMesh(IcoPath);
     UStaticMesh* Shard = LoadMesh(ShardPath);
     UStaticMesh* Frame = LoadMesh(FramePath);
-    UStaticMesh* Burst = LoadMesh(BurstPath);
     const FVector Caster = CellToWorld(Event.CasterCell) + FVector(0, 0, BoltHeight);
     FVector Impact = Caster + FVector(CellCm, 0, 0);
     float Radius = 0.5f;   // in cells, area spells only
@@ -149,7 +153,9 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         FVector2D Sum = FVector2D::ZeroVector;
         for (const FIntPoint& C : Event.Cells) { Sum += FVector2D(C.X, C.Y); }
         const FVector2D Centre = Sum / Event.Cells.Num();
-        for (const FIntPoint& C : Event.Cells) { Radius = FMath::Max(Radius, FVector2D::Distance(Centre, FVector2D(C.X, C.Y)) + 0.5f); }
+        for (const FIntPoint& C : Event.Cells) { Radius = FMath::Max(Radius, FVector2D::Distance(Centre, FVector2D(C.X, C.Y))); }
+        // A sphere's footprint is its stated radius (Fireball: 20 ft = 4 squares), not the cell hull.
+        if (Event.AreaFeet > 0) { Radius = Event.AreaFeet / 5.0f; }
         Impact = CellToWorld(FIntPoint(FMath::RoundToInt(Centre.X), FMath::RoundToInt(Centre.Y))) + FVector(0, 0, 10);
     }
     else if (Event.TargetCells.Num() > 0) { Impact = CellToWorld(Event.TargetCells[0]) + FVector(0, 0, BoltHeight); }
@@ -178,7 +184,8 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         FExpeditionSpellFXPiece& P = Add(Shard, BoltStyle, true, Dir, false);
         P.Start = Launch; P.Peak = Hit; P.End = Hit; P.Linger = Hit;
         P.From = Caster + Dir * 40.0f; P.To = Impact - Dir * (Style.bArea ? 0.0f : 20.0f);
-        P.ScaleFrom = P.ScaleTo = FVector(Style.BoltScale, Style.BoltScale * 0.8f, Style.BoltScale * 0.8f);
+        // A long thin streak (Fire Bolt ~90 cm, Fireball bead ~45 cm), not a fat shard.
+        P.ScaleFrom = P.ScaleTo = FVector(Style.BoltScale, Style.BoltScale * 0.4f, Style.BoltScale * 0.4f);
         P.Mesh->SetWorldRotation(Dir.Rotation()); P.Ink->SetWorldRotation(Dir.Rotation());
         // Top-down camera sees the face-on band, so the bolt body is the element hue, not the pale core.
         P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
@@ -188,17 +195,19 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
     {
         // The blast (Fireball) or the burst (Fire Bolt): flat bands, ink shell, ragged outer edge.
         // No back-face ink shell on the big translucent blast: its noisy edge showed through as specks.
-        FExpeditionSpellFXPiece& P = Add(Burst, Style, true, FVector::UpVector, true);
+        // Rounded faceted ball (20-face Ico), not the star-shaped Burst: Fire Bolt is a small flare, Fireball a dome.
+        FExpeditionSpellFXPiece& P = Add(Ico, Style, true, FVector::UpVector, true);
         P.Mesh->SetWorldRotation(FRotator(0, Style.bArea ? 11.0f : 37.0f, 0)); P.Ink->SetWorldRotation(P.Mesh->GetComponentRotation());
         P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Gone; P.PeakOpacity = Style.bArea ? 0.85f : 1.0f;
         // Both blasts read as ember orange (the camera looks straight down, so the face-on band is what shows);
         // the yellow (Fire Bolt) or white-hot (Fireball) centre comes from the core piece below.
         // Deep ember body, orange only on the faceted rim bands: the glow stays in the fire, the board stays dark.
-        P.Material->SetVectorParameterValue(TEXT("Core"), Style.bArea ? FLinearColor(0.9f, 0.22f, 0.02f) : Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
+        P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
         P.LingerOpacity = Style.LingerOpacity;
         P.From = P.To = Impact;
-        const FVector Size(Diameter, Diameter, Style.bArea ? Diameter * 0.5f : Diameter);
-        P.ScaleFrom = Size * 0.2f; P.ScaleTo = Size;
+        const float ToScale = 100.0f / IcoCm;
+        const FVector Size = FVector(Diameter, Diameter, Style.bArea ? Diameter * 0.35f : Diameter) * ToScale;
+        P.ScaleFrom = Size * 0.25f; P.ScaleTo = Size;
         P.InkScale = Style.bArea ? 1.04f : 1.14f;
     }
     if (!Style.bArea)
@@ -207,7 +216,7 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         FExpeditionSpellFXPiece& P = Add(Ico, Style, false, FVector::UpVector, true);
         P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Fade + 0.03f; P.PeakOpacity = 1.0f;
         P.From = P.To = Impact + FVector(0, 0, 8);
-        P.ScaleFrom = FVector(Diameter * 0.08f); P.ScaleTo = FVector(Diameter * 0.3f);
+        P.ScaleFrom = FVector(Diameter * 0.1f * 100.0f / IcoCm); P.ScaleTo = FVector(Diameter * 0.4f * 100.0f / IcoCm);
         P.Material->SetVectorParameterValue(TEXT("Core"), FireCore);
         P.Material->SetVectorParameterValue(TEXT("Hue"), Style.Hue);
         P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
@@ -219,7 +228,7 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         P.Start = Hit; P.Peak = Hit + Style.ImpactGrow * 0.6f; P.End = Fade; P.Linger = Fade + 0.1f; P.PeakOpacity = 1.0f;
         P.From = P.To = Impact + FVector(0, 0, 20);
         P.PeakOpacity = 0.85f;
-        P.ScaleFrom = FVector(0.3f); P.ScaleTo = FVector(Diameter * 0.26f, Diameter * 0.26f, Diameter * 0.18f);
+        P.ScaleFrom = FVector(0.3f); P.ScaleTo = FVector(Diameter * 0.3f, Diameter * 0.3f, Diameter * 0.12f) * (100.0f / IcoCm);
         P.Material->SetVectorParameterValue(TEXT("Core"), WhiteHot);
         P.Material->SetVectorParameterValue(TEXT("Hue"), FireCore);
         P.Material->SetScalarParameterValue(TEXT("Edge"), 0.3f);
