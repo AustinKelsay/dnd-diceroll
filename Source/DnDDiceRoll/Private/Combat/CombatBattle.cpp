@@ -393,6 +393,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::MartialArts: return TEXT("MARTIAL ARTS | Bonus | adjacent foe | right after the Attack action, one unarmed strike (no ki)");
     case ECombatCommandType::RecklessAttack: return TEXT("RECKLESS ATTACK | Free | self | before your first attack this turn: advantage on melee weapon attacks this turn, but attacks against you have advantage until your next turn");
     case ECombatCommandType::UncannyDodge: return TEXT("UNCANNY DODGE | Reaction | self | automatic: when an attacker you can see hits you, halve the damage");
     case ECombatCommandType::FontOfMagic: return TEXT("FONT OF MAGIC | Bonus + 2 sorcery points | self | regain one spell use (a 1st-level slot); points = Sorcerer level per long rest");
@@ -2046,6 +2047,7 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::BardicInspiration: return Unit.BardicUses > 0 && State.bBonusActionAvailable;
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
+    case ECombatCommandType::MartialArts: return State.bBonusActionAvailable && State.bAttackActionTaken;
     case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
     case ECombatCommandType::RecklessAttack: return !Unit.bReckless && State.bActionAvailable && !State.bAttackActionTaken && State.AttacksRemaining == 0;
     case ECombatCommandType::FontOfMagic:
@@ -2069,7 +2071,7 @@ TArray<int32> FCombatBattle::FeatureTargets(const FCombatantState& Unit, ECombat
         }
         return Allies;
     }
-    if (Action == ECombatCommandType::FlurryOfBlows)
+    if (Action == ECombatCommandType::FlurryOfBlows || Action == ECombatCommandType::MartialArts)
     {
         TArray<int32> Foes;
         for (const FCombatantState& Other : State.Encounter.Combatants)
@@ -2110,6 +2112,14 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bBonusActionAvailable = false;
         (Command.Type == ECombatCommandType::PatientDefense ? User->bDodging : User->bDisengaged) = true;
         return FString::Printf(TEXT("%s spends 1 ki and %s (%d ki left) (bonus action)."), *User->Name, Command.Type == ECombatCommandType::PatientDefense ? TEXT("dodges") : TEXT("disengages"), User->KiPoints);
+    case ECombatCommandType::MartialArts:
+    {
+        State.bBonusActionAvailable = false;
+        FCombatResult Swing; Swing.bAccepted = true;
+        Strike(Command.ActorId, Command.TargetId, 0, Swing);
+        Result.bHit = Swing.bHit; Result.Damage = Swing.bHit ? Swing.Damage : 0;
+        return FString::Printf(TEXT("%s follows up with a Martial Arts strike (bonus action): %s %d."), *User->Name, Swing.bHit ? TEXT("hit") : TEXT("miss"), Result.Damage);
+    }
     case ECombatCommandType::FlurryOfBlows:
     {
         --User->KiPoints;

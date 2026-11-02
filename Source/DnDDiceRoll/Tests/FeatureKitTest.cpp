@@ -544,4 +544,25 @@ bool FRewardSheetTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMartialArtsTest, "Project.Expedition.Features.MartialArts",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FMartialArtsTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    const FCombatantState Monk = Hero(TEXT("monk.open-hand"), 1);
+    TestTrue(TEXT("Monk 1 has Martial Arts"), FFeatureKit::HasMartialArts(Monk));
+    TestFalse(TEXT("Fighter lacks it"), FFeatureKit::HasMartialArts(Hero(TEXT("fighter.champion"), 1)));
+    TestTrue(TEXT("Bonus tag"), FFeatureKit::Cost(ECombatCommandType::MartialArts) == EActionCost::BonusAction);
+    FCombatBattle Battle; FString Error;
+    TestTrue(TEXT("Starts"), Battle.Start(Duel(Monk, {1, 0}), 3, Error));
+    TestTrue(TEXT("Not before the Attack action"), Battle.LegalTargets(10, ECombatCommandType::MartialArts).IsEmpty());
+    TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    TestTrue(TEXT("Offered after Attack"), Battle.LegalTargets(10, ECombatCommandType::MartialArts).Contains(20));
+    const int32 Ki = Battle.Find(10)->KiPoints;
+    TestTrue(TEXT("Strike"), Battle.Submit({ECombatCommandType::MartialArts, 10, {}, 20}).bAccepted);
+    TestEqual(TEXT("No ki spent"), Battle.Find(10)->KiPoints, Ki);
+    TestTrue(TEXT("Bonus action spent"), Battle.LegalTargets(10, ECombatCommandType::MartialArts).IsEmpty());
+    TestFalse(TEXT("Table entry playable"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 1).Contains(TEXT("*")));
+    return true;
+}
 #endif

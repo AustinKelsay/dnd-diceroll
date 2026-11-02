@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::RecklessAttack;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::MartialArts;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -50,6 +50,8 @@ public:
     /** Rogue 5: an automatic reaction that halves the damage of a hit from an attacker the rogue can see (HUD shows it as a passive button). */
     static bool HasUncannyDodge(const FCombatantState& Hero);
     static bool HasRecklessAttack(const FCombatantState& Hero);
+    /** Monk 1 Martial Arts: after the Attack action, one unarmed strike as a bonus action (no ki). */
+    static bool HasMartialArts(const FCombatantState& Hero);
     /** Wizard 1: once per long rest, at a short rest (the rest point), regain spell resources worth half the wizard level (rounded up) in slot levels. */
     static bool HasArcaneRecovery(const FCombatantState& Hero);
     /** Slot levels Arcane Recovery would restore now (0 when used or nothing is missing). */

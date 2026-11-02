@@ -14,7 +14,7 @@ enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
 enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack,
     /** Level 1-5 SRD class features (Party/FeatureKit). Append only. */
-    ActionSurge, TurnUndead, BardicInspiration, WildShape, FlurryOfBlows, PatientDefense, StepOfTheWind, FontOfMagic, UncannyDodge, RecklessAttack };
+    ActionSurge, TurnUndead, BardicInspiration, WildShape, FlurryOfBlows, PatientDefense, StepOfTheWind, FontOfMagic, UncannyDodge, RecklessAttack, MartialArts };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
