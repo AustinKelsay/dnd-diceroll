@@ -20,32 +20,32 @@ tools = unreal.AssetToolsHelpers.get_asset_tools()
 library = unreal.EditorAssetLibrary
 mel = unreal.MaterialEditingLibrary
 
-# Flat stepped colour, ink shell on back faces, ragged watercolor break on the leading edge only.
+# Matte stepped colour, blocky grit, ink shell on back faces, ragged break on the leading edge only.
 SHADER = r"""
+// Matte late-PS1 (Gauntlet Dark Legacy grit): hard 3-step bands, nearest-neighbour 6 cm texels, no glow, ink rim.
 float3 N = normalize(Nw);
 float3 V = normalize(Cam);
 float F = 1.0 - saturate(abs(dot(N, V)));
-float band = floor(saturate(F * 1.6) * 2.0) / 2.0;
+float band = floor(saturate(F * 1.8) * 3.0) / 2.0;
+band = saturate(band);
 float front = Sign > 0.0 ? 1.0 : 0.0;
-float3 p = Wp * 0.05;
-float3 c = floor(p);
-float3 f = frac(p);
-f = f * f * (3.0 - 2.0 * f);
-float n000 = frac(sin(dot(c + float3(0,0,0), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n100 = frac(sin(dot(c + float3(1,0,0), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n010 = frac(sin(dot(c + float3(0,1,0), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n110 = frac(sin(dot(c + float3(1,1,0), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n001 = frac(sin(dot(c + float3(0,0,1), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n101 = frac(sin(dot(c + float3(1,0,1), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n011 = frac(sin(dot(c + float3(0,1,1), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n111 = frac(sin(dot(c + float3(1,1,1), float3(127.1, 311.7, 74.7))) * 43758.5453);
-float n = lerp(lerp(lerp(n000, n100, f.x), lerp(n010, n110, f.x), f.y), lerp(lerp(n001, n101, f.x), lerp(n011, n111, f.x), f.y), f.z);
+// Blocky texel noise: one value per 6 cm cell, no interpolation (point-sampled low-res look).
+float3 t = floor(Wp / 6.0);
+float g = frac(sin(dot(t, float3(127.1, 311.7, 74.7))) * 43758.5453);
+float grit = 0.62 + floor(g * 3.0) * 0.19;
+// Coarser 18 cm blocks for the ragged leading edge (hard pixel steps, not a smooth wash).
+float3 e = floor(Wp / 18.0);
+float n = frac(sin(dot(e, float3(269.5, 183.3, 246.1))) * 43758.5453);
 float3 L = Lead;
 float lead = Radial > 0.5 ? saturate(F * 2.0 - 1.2) : saturate(dot(N, normalize(L + float3(0.0001, 0.0, 0.0))));
 float edge = step(0.5, saturate((n - lead * Edge) * 8.0 + 0.6));
 if (InkShell > 0.5) { return float4(Ink, Opacity * (1.0 - front) * step(0.34, F)); }
-float rim = step(0.86, F);
-return float4(lerp(lerp(Core, Hue, band), Ink, rim) * lerp(Glow, 1.0, rim), Opacity * front * edge);
+float rim = step(0.8, F);
+float3 col = lerp(Core, Hue, band) * grit;
+// Muddy: pull a quarter toward grey, never above authored brightness.
+float lum = dot(col, float3(0.3, 0.59, 0.11));
+col = lerp(col, lum.xxx, 0.25) * min(Glow, 1.0);
+return float4(lerp(col, Ink, rim), Opacity * front * edge);
 """
 
 
