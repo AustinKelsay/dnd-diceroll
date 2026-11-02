@@ -18,6 +18,7 @@
 #include "Rules/GrappleRules.h"
 #include "Rules/SuperiorityRules.h"
 #include "Rules/StealthRules.h"
+#include "Rules/InspirationRules.h"
 
 namespace
 {
@@ -1225,7 +1226,13 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     if (bOffHand) { Hand.MainHand = Hand.OffHand; }
     const FCombatantState* Actor = &Hand;
     FCombatantState* Target = MutableFind(TargetId);
-    const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
+    FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
+    if (State.Encounter.bInspiration && Mode.Mode != ERollMode::Advantage && MutableFind(ActorId)->bInspired)
+    {
+        FInspirationRules::Spend(MutableFind(ActorId)->bInspired);
+        Mode.Mode = FInspirationRules::ModeAfterSpending(Mode.Mode, true);
+        Mode.Advantage.Add(TEXT("inspiration"));
+    }
     Result.RollMode = Mode.Mode;
     Result.RollModeSources = Mode.Advantage;
     Result.RollModeSources.Append(Mode.Disadvantage);
@@ -1240,6 +1247,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+    if (State.Encounter.bInspiration && Result.NaturalRoll == 20) { FInspirationRules::Grant(MutableFind(ActorId)->bInspired); }
     // Attacking reveals a hidden attacker; Help is spent by the first ally attack it benefits.
     MutableFind(ActorId)->bHidden = false;
     if (const FCombatantState* Helper = Find(Target->HelpedById); Helper && Helper->Id != ActorId && Helper->Side == Actor->Side) { Target->HelpedById = INDEX_NONE; }

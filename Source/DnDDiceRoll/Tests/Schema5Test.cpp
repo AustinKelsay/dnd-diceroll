@@ -1466,4 +1466,35 @@ bool FSchema5CampForageTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some group finds nothing"), bEmpty);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5InspirationTest, "Project.Expedition.Schema5.InspirationInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5InspirationTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({1, 0});
+    Encounter.Combatants[1].HP = Encounter.Combatants[1].MaxHP = 200;
+    Encounter.Combatants[0].bInspired = true;
+    FString Error;
+    FCombatBattle Off;
+    TestTrue(TEXT("Starts"), Off.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Off by default: plain roll"), Off.Submit({ECombatCommandType::Attack, 10, {}, 20}).RollMode, ERollMode::Normal);
+    Encounter.bInspiration = true;
+    FCombatBattle On;
+    TestTrue(TEXT("Starts on"), On.Start(Encounter, 7, Error));
+    const FCombatResult R = On.Submit({ECombatCommandType::Attack, 10, {}, 20});
+    TestEqual(TEXT("Spent for advantage"), R.RollMode, ERollMode::Advantage);
+    TestTrue(TEXT("Source named"), R.RollModeSources.Contains(TEXT("inspiration")));
+    TestEqual(TEXT("Spent unless a 20 regained it"), On.Find(10)->bInspired, R.NaturalRoll == 20);
+    Encounter.Combatants[0].bInspired = false;
+    bool bGranted = false;
+    for (int32 Seed = 1; Seed < 400 && !bGranted; ++Seed)
+    {
+        FCombatBattle Roll;
+        Roll.Start(Encounter, Seed, Error);
+        const FCombatResult S = Roll.Submit({ECombatCommandType::Attack, 10, {}, 20});
+        TestEqual(TEXT("Only a natural 20 grants"), Roll.Find(10)->bInspired, S.NaturalRoll == 20);
+        bGranted = S.NaturalRoll == 20;
+    }
+    TestTrue(TEXT("Some natural 20 grants inspiration"), bGranted);
+    return true;
+}
 #endif

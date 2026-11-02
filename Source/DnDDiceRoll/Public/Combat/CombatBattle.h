@@ -106,6 +106,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Size = 2;
     /** #80: surprised; skips its first-round turn. */
     UPROPERTY() bool bSurprised = false;
+    /** Heroic inspiration held (#87): spent automatically for advantage on the next attack roll. */
+    UPROPERTY() bool bInspired = false;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
@@ -128,6 +130,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bSuperiorityDice = false;
     /** #80: the party sneaks up: party Stealth vs each foe's passive Perception; surprised foes lose round 1. Off by default. */
     UPROPERTY() bool bPartyAmbush = false;
+    /** Off by default: a natural 20 grants inspiration, spent for advantage on the holder's next attack. */
+    UPROPERTY() bool bInspiration = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
