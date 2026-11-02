@@ -59,6 +59,33 @@ enum : uint32
 };
 }
 
+/** Second flag word (the first is full). SRD 5.2.1 tactical equivalents of utility spells. */
+namespace SpellEffectExtra
+{
+enum : uint32
+{
+    SmiteSave = 1u << 0,          // Ensnaring Strike: the smite target saves; no damage on the cast
+    Enfeebled = 1u << 1,          // Ray of Enfeeblement: -1d8 to its damage rolls, disadvantage on STR attacks
+    Confused = 1u << 2,           // Confusion: d10 behaviour at the start of each of its turns
+    SeeInvisible = 1u << 3,       // See Invisibility
+    Darkvision = 1u << 4,         // Darkvision: 150 ft
+    MaxHealing = 1u << 5,         // Beacon of Hope: healing rolls are maximised
+    WisDeathAdvantage = 1u << 6,  // Beacon of Hope: advantage on WIS saves and death saves
+    CheckAdvantage = 1u << 7,     // Enhance Ability: advantage on checks with the chosen ability (Choice = EAbility)
+    CheckDie = 1u << 8,           // Guidance: +1d4 to ability checks
+    ReduceChosen = 1u << 9,       // Resistance: -1d4 to damage of the chosen type (Choice = EDamageType), once per turn
+    Aloft = 1u << 10,             // Levitate: floats 20 ft up; no melee to or from it
+    FlySpeed = 1u << 11,          // Fly: 60 ft speed
+    CheckDisadvantage = 1u << 12, // Hex: disadvantage on checks with the chosen ability (Choice = EAbility)
+    ShareDamage = 1u << 13,       // Warding Bond: the caster takes the same damage
+    Dominated = 1u << 14,         // Dominate: fights the caster's foes, never the caster's side
+    Sphere = 1u << 15,            // Resilient Sphere: nothing passes in or out; immune to damage
+    AllInRange = 1u << 16,        // Beacon of Hope: every chosen ally in range (no ExtraTargetIds needed)
+    Pacified = 1u << 17,          // Suggestion: pursues a harmless course; takes no actions
+    BothSides = 1u << 18,         // Enlarge/Reduce, Levitate, Resilient Sphere: allies or foes (foes save)
+};
+}
+
 /** One spell's combat effect beyond the catalog row: conditions, creature-type limits, buffs, debuffs, riders. SRD 5.2.1 wording. */
 struct FSpellEffectSpec
 {
@@ -109,6 +136,8 @@ struct FSpellEffectSpec
     int32 TempPerSlot = 0;
     /** FDamageDefenses::Bit mask of resisted damage types. */
     uint16 Resist = 0;
+    /** SpellEffectExtra bits. */
+    uint32 Extra = 0;
 };
 
 struct DNDDICEROLL_API FSpellEffectRules

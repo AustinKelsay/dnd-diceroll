@@ -4,6 +4,9 @@
 #include "Rules/SpellCatalogRules.h"
 #include "Rules/SpellEffectRules.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/SpellUtilityRules.h"
+#include "Algo/Find.h"
+#include "Rules/WeaponRules.h"
 
 namespace SpellCastingTest
 {
@@ -55,6 +58,9 @@ bool FSpellCastingTableTest::RunTest(const FString& Parameters)
         const FSpellEffectSpec* Spec = FSpellEffectRules::Find(Spell.Id);
         bool bCastBySomeone = false;
         if (Spec && (Spec->Flags & SpellEffectFlag::Smite)) { bCastBySomeone = true; ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // smites: SpellEffectsTest
+        // Situational: need a downed/dead/afflicted/enchanted creature first (SpellUtilityTest).
+        static const TCHAR* const Situational[] = {TEXT("spare-the-dying"), TEXT("revivify"), TEXT("lesser-restoration"), TEXT("dispel-magic")};
+        if (Algo::FindByPredicate(Situational, [&](const TCHAR* Id) { return FCString::Stricmp(Id, Spell.Id) == 0; })) { ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; }
         if (Spell.CastTime == ESpellCastTime::Reaction) { ++ByLevel[Spell.Level]; Names[Spell.Level] += FString(Spell.Name) + TEXT(", "); continue; } // reactions fire automatically: SpellReactionTest
         bCastBySomeone = false;
         for (const EAdventurerRole Role : Roles)
@@ -65,9 +71,12 @@ bool FSpellCastingTableTest::RunTest(const FString& Parameters)
             if (Spec && (Spec->OnlyTypes & FCreatureRules::Bit(ECreatureType::Beast))) { Encounter.Combatants[1].Role = TEXT("Wolf"); }
             if (!Battle.Start(Encounter, 3, Error)) { continue; } // kit-only classes need a kit build to start
             TestTrue(FString::Printf(TEXT("%s listed castable"), Spell.Id), Battle.CastableSpells(10).Contains(Spell.Id));
-            const int32 Target = (Spec ? Spec->Target != ESpellEffectTarget::Foe : Spell.Effect == ESpellEffect::Healing) ? 10 : 20;
-            TestTrue(FString::Printf(TEXT("%s has a target"), Spell.Id), Battle.SpellTargets(10, Spell.Id).Contains(Target));
-            const FCombatResult R = Battle.Submit(Cast(Spell.Id, Target));
+            int32 Target = (Spec ? Spec->Target != ESpellEffectTarget::Foe : Spell.Effect == ESpellEffect::Healing) ? 10 : 20;
+            const TArray<int32> Legal = Battle.SpellTargets(10, Spell.Id);
+            if (!Legal.Contains(Target) && FSpellUtilityRules::Handled(Spell.Id) && !Legal.IsEmpty()) { Target = Legal[0]; } // self-centred utility spells
+            TestTrue(FString::Printf(TEXT("%s has a target"), Spell.Id), Legal.Contains(Target));
+            FCombatCommand Command = Cast(Spell.Id, Target); Command.Destination = {2, 2};
+            const FCombatResult R = Battle.Submit(Command);
             TestTrue(FString::Printf(TEXT("%s resolves for a level 5 caster: %s"), Spell.Id, *R.Feedback), R.bAccepted);
             if (Spell.Level > 0 && R.bAccepted)
             {
@@ -230,16 +239,128 @@ bool FSpellTwoDamageTypesTest::RunTest(const FString& Parameters)
         const int32 Slot = (Seed % 2) ? 1 : 2;
         const FCombatResult R = Battle.Submit(Cast(TEXT("ice-knife"), 20, Slot));
         if (!TestTrue(TEXT("Ice Knife resolves"), R.bAccepted)) { AddError(R.Feedback); return false; }
-        if (!R.bHit || R.bCritical) { continue; }
-        (Slot == 1 ? bSeen : bUp) = true;
-        TestEqual(TEXT("1d10 piercing + 2d6 cold (+1d6 per slot)"), R.EffectDice.Num(), Slot == 1 ? 3 : 4);
-        TestEqual(TEXT("Both types dealt"), 500 - Battle.Find(20)->HP, Sum(R.EffectDice));
+        // SRD 5.2.1: the cold burst always rolls (hit or miss); the target takes it only on a failed DEX save.
+        if (R.bCritical) { continue; }
+        const bool bPierce = R.Feedback.Contains(TEXT("piercing"));
+        TestEqual(TEXT("1d10 piercing on a hit + 2d6 cold (+1d6 per slot)"), R.EffectDice.Num(), (bPierce ? 1 : 0) + (Slot == 1 ? 2 : 3));
+        const bool bFailed = R.Feedback.Contains(TEXT("fails"));
+        if (bPierce && bFailed) { (Slot == 1 ? bSeen : bUp) = true; TestEqual(TEXT("Both types dealt"), 500 - Battle.Find(20)->HP, Sum(R.EffectDice)); }
     }
     TestTrue(TEXT("Saw an Ice Knife hit"), bSeen); TestTrue(TEXT("Saw an upcast Ice Knife hit"), bUp);
     for (const TCHAR* Id : {TEXT("flame-strike"), TEXT("meteor-swarm"), TEXT("ice-knife")})
     {
         const FSrdSpell* S = FSpellCatalogRules::Find(Id);
         TestTrue(FString::Printf(TEXT("%s keeps a second type"), Id), S && S->Dice2Sides > 0);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSpellUtilityPhaseTest, "Project.Expedition.Spells.UtilityPhase",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSpellUtilityPhaseTest::RunTest(const FString& Parameters)
+{
+    auto WithAlly = [](EAdventurerRole Role, ECombatLife Life)
+    {
+        FCombatEncounter E = Caster(Role, 5, {4, 0});
+        FCombatantState Ally = E.Combatants[0];
+        Ally.Id = 11; Ally.Name = TEXT("Ally"); Ally.Cell = {0, 1}; Ally.InitiativeBonus = 0; Ally.Life = Life; Ally.HP = Life == ECombatLife::Conscious ? 30 : 0; Ally.RescueTurnsLeft = Life == ECombatLife::Downed ? 3 : 0;
+        Ally.SlotsByLevel.Init(0, FSpellRules::MaxSpellLevel); Ally.SpellSlots = 0;
+        E.Combatants.Add(Ally);
+        return E;
+    };
+    {
+        // Spare the Dying stabilizes a downed ally.
+        FString Error; FCombatBattle Battle;
+        if (TestTrue(TEXT("start downed"), Battle.Start(WithAlly(EAdventurerRole::Cleric, ECombatLife::Downed), 3, Error) || (AddError(Error), false)))
+        {
+            TestTrue(TEXT("downed ally targetable"), Battle.SpellTargets(10, TEXT("spare-the-dying")).Contains(11));
+            const FCombatResult R = Battle.Submit(Cast(TEXT("spare-the-dying"), 11));
+            TestTrue(FString::Printf(TEXT("Spare the Dying resolves: %s"), *R.Feedback), R.bAccepted);
+            TestEqual(TEXT("stable"), Battle.Find(11)->DeathSaveSuccesses, 3);
+        }
+    }
+    {
+        // Revivify: a dead ally returns with 1 HP.
+        FString Error; FCombatBattle Battle;
+        if (TestTrue(TEXT("start dead"), Battle.Start(WithAlly(EAdventurerRole::Cleric, ECombatLife::Dead), 3, Error)))
+        {
+            const FCombatResult R = Battle.Submit(Cast(TEXT("revivify"), 11, 3));
+            TestTrue(FString::Printf(TEXT("Revivify resolves: %s"), *R.Feedback), R.bAccepted);
+            TestEqual(TEXT("1 HP"), Battle.Find(11)->HP, 1);
+            TestEqual(TEXT("alive"), Battle.Find(11)->Life, ECombatLife::Conscious);
+        }
+    }
+    {
+        // Misty Step teleports to an open cell within 30 ft, not beyond.
+        FString Error; FCombatBattle Battle;
+        Battle.Start(Caster(EAdventurerRole::Wizard, 5, {4, 0}), 3, Error);
+        FCombatCommand Far = Cast(TEXT("misty-step"), 10, 2); Far.Destination = {9, 9};
+        TestFalse(TEXT("too far"), Battle.Submit(Far).bAccepted);
+        FCombatCommand Near = Cast(TEXT("misty-step"), 10, 2); Near.Destination = {3, 3};
+        const FCombatResult R = Battle.Submit(Near);
+        TestTrue(FString::Printf(TEXT("Misty Step: %s"), *R.Feedback), R.bAccepted);
+        TestEqual(TEXT("moved"), Battle.Find(10)->Cell, FIntPoint(3, 3));
+    }
+    {
+        // Fog Cloud: a foe inside can't be targeted by a single-target spell.
+        FString Error; FCombatBattle Battle;
+        Battle.Start(Caster(EAdventurerRole::Wizard, 5, {6, 0}), 3, Error);
+        TestTrue(TEXT("bolt before fog"), Battle.SpellTargets(10, TEXT("fire-bolt")).Contains(20));
+        const FCombatResult R = Battle.Submit(Cast(TEXT("fog-cloud"), 20, 1));
+        TestTrue(FString::Printf(TEXT("Fog Cloud: %s"), *R.Feedback), R.bAccepted);
+        TestFalse(TEXT("no sight into fog"), Battle.SpellTargets(10, TEXT("fire-bolt")).Contains(20));
+    }
+    {
+        // Silence: no verbal spells inside.
+        FString Error; FCombatBattle Battle;
+        Battle.Start(Caster(EAdventurerRole::Cleric, 5, {2, 0}), 3, Error);
+        const FCombatResult R = Battle.Submit(Cast(TEXT("silence"), 10, 2));
+        TestTrue(FString::Printf(TEXT("Silence: %s"), *R.Feedback), R.bAccepted);
+        TestFalse(TEXT("sacred flame silenced"), Battle.CastableSpells(10).Contains(TEXT("sacred-flame")));
+    }
+    {
+        // Chromatic Orb deals the chosen type; Magic Missile darts split between targets.
+        bool bFire = false;
+        for (int32 Seed = 1; Seed < 60 && !bFire; ++Seed)
+        {
+            FString Error; FCombatBattle Battle;
+            Battle.Start(Caster(EAdventurerRole::Wizard, 5, {3, 0}), Seed, Error);
+            FCombatCommand C = Cast(TEXT("chromatic-orb"), 20, 1); C.Choice = static_cast<int32>(EDamageType::Fire);
+            const FCombatResult R = Battle.Submit(C);
+            TestTrue(TEXT("orb resolves"), R.bAccepted);
+            if (R.bHit) { bFire = true; TestEqual(TEXT("fire"), R.DamageType, EDamageType::Fire); TestTrue(TEXT("3d8+"), R.EffectDice.Num() >= 3); }
+        }
+        TestTrue(TEXT("saw an orb hit"), bFire);
+        FCombatEncounter E = Caster(EAdventurerRole::Wizard, 5, {3, 0});
+        FCombatantState Second = E.Combatants[1]; Second.Id = 21; Second.Name = TEXT("Foe2"); Second.Cell = {0, 3}; E.Combatants.Add(Second);
+        FString Error; FCombatBattle Battle; TestTrue(FString::Printf(TEXT("two foes start: %s"), *Error), Battle.Start(E, 3, Error));
+        TestTrue(TEXT("second foe legal"), Battle.SpellTargets(10, TEXT("magic-missile"), 1).Contains(21));
+        FCombatCommand C = Cast(TEXT("magic-missile"), 20, 1); C.ExtraTargetIds = {21, 21};
+        const FCombatResult R = Battle.Submit(C);
+        TestTrue(FString::Printf(TEXT("split missiles: %s"), *R.Feedback), R.bAccepted);
+        TestTrue(TEXT("first hurt"), Battle.Find(20)->HP < 500);
+        TestTrue(FString::Printf(TEXT("second hurt: %s"), *R.Feedback), Battle.Find(21)->HP < 500);
+    }
+    {
+        // Gust of Wind pushes a failed saver 15 ft along the line.
+        bool bPushed = false;
+        for (int32 Seed = 1; Seed < 60 && !bPushed; ++Seed)
+        {
+            FString Error; FCombatBattle Battle;
+            Battle.Start(Caster(EAdventurerRole::Wizard, 5, {2, 0}), Seed, Error);
+            const FCombatResult R = Battle.Submit(Cast(TEXT("gust-of-wind"), 20, 2));
+            TestTrue(FString::Printf(TEXT("gust: %s"), *R.Feedback), R.bAccepted);
+            if (Battle.Find(20)->Cell == FIntPoint(5, 0)) { bPushed = true; }
+        }
+        TestTrue(TEXT("saw a push"), bPushed);
+    }
+    {
+        // Shillelagh: the druid's quarterstaff uses a d10 at level 5.
+        FCombatEncounter E = Caster(EAdventurerRole::Druid, 5, {1, 0});
+        E.Combatants[0].MainHand = static_cast<int32>(EWeapon::Quarterstaff);
+        FString Error; FCombatBattle Battle; Battle.Start(E, 3, Error);
+        const FCombatResult R = Battle.Submit(Cast(TEXT("shillelagh"), 10));
+        TestTrue(FString::Printf(TEXT("shillelagh: %s"), *R.Feedback), R.bAccepted && R.Feedback.Contains(TEXT("empowered")));
     }
     return !HasAnyErrors();
 }

@@ -242,6 +242,8 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() bool bSlotSpentThisTurn = false;
     /** Creatures the active unit hit with a melee weapon attack this turn (smite spells); cleared at every turn start. */
     UPROPERTY() TArray<int32> MeleeHitThisTurn;
+    /** Of those, creatures it scored a critical hit on this turn (smite dice double, SRD 5.2.1). */
+    UPROPERTY() TArray<int32> MeleeCritThisTurn;
     UPROPERTY() int32 NextSpellSerial = 1;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
@@ -572,6 +574,29 @@ public:
 private:
     TArray<int32> LegalTargetsRaw(int32 Id, ECombatCommandType Action) const;
     TArray<int32> SpellTargetsRaw(int32 Id, const FString& SpellId, int32 SlotLevel) const;
+    TArray<int32> SpellTargetsSpec(int32 Id, const FString& SpellId, int32 SlotLevel) const;
+    // ---- Spells phase 6: utility spells (CombatSpellUtility.cpp) ----
+    bool ResolveUtilitySpell(const FCombatCommand& Command, const struct FSrdSpell& S, int32 Slot, int32 Dc, int32 AttackBonus, int32 Mod, FCombatResult& Result);
+    bool UtilityTargets(int32 Id, const struct FSrdSpell& S, int32 Slot, TArray<int32>& Out) const;
+    bool UtilityCastBlocked(const FCombatCommand& Command, const struct FSrdSpell& S, FString& Why) const;
+    void ZoneCastExtras(int32 Serial, const FCombatCommand& Command);
+    bool SpellZoneAt(FIntPoint Cell, uint8 Kind) const;
+    bool SpellCanSee(int32 ViewerId, int32 TargetId, bool bInvisible = true) const;
+    const FActiveSpell* SpellExtraOn(int32 Id, uint32 Bit) const;
+    int32 SpellCheckBonus(const FCombatantState& Unit, EAbility Ability, ERollMode& Mode, bool bStealth = false);
+    void SummonsOnTurnStart(int32 UnitId);
+    void PushUnit(int32 Id, FIntPoint Dir, int32 Cells);
+    int32 SpellDamageIntake(FCombatantState& Target, int32 Damage);
+    void SpellDamageShared(int32 TargetId, int32 Real);
+    int32 ResistanceCut(int32 TargetId, EDamageType Type, int32 Damage);
+    bool AuraOfLifeRevives(FCombatantState& Unit);
+    bool UtilityAttack(int32 ActorId, int32 TargetId, int32 AttackBonus, FCombatResult& Result, bool& bCritical, bool bRanged);
+    int32 UtilityDamage(int32 TargetId, int32 Amount, EDamageType Type);
+    int32 StrikeAbilitySwap(const FCombatantState& Actor) const;
+    bool ShillelaghDie(const FCombatantState& Actor, int32& Count, int32& Sides) const;
+    void SpellTurnControl(FCombatantState& Unit, const FActiveSpell& A, const struct FSpellEffectSpec& Spec);
+    bool bTrueStrike = false;
+    bool bSharingDamage = false;
     TArray<FIntPoint> LegalMovesRaw(int32 Id) const;
     TArray<FIntPoint> PathToRaw(int32 Id, FIntPoint Destination) const;
     int32 ArmorClassBeforeSpells(int32 Id) const;

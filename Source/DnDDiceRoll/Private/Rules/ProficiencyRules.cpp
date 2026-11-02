@@ -164,7 +164,8 @@ FCharacterRules FProficiencyRules::PrebuiltCharacter(EAdventurerRole Role, int32
     FCharacterRules Character;
     FString Error;
     const bool bBuilt = BuildCharacter(Role, Level, FAbilityRules::PrebuiltScores(Role), PrebuiltChoice(Role), Character, Error);
-    check(bBuilt || Role == EAdventurerRole::None);
+    // Classes without a prebuilt skill choice (catalog-build classes) still get their ability scores for saves.
+    if (!bBuilt) { Character = FCharacterRules(); Character.Scores = FAbilityRules::PrebuiltScores(Role); }
     return Character;
 }
 

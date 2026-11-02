@@ -8,6 +8,17 @@
 #include "Rules/AreaRules.h"
 #include "Rules/DamageRules.h"
 #include "Rules/AbilityRules.h"
+#include "Rules/WeaponRules.h"
+
+namespace SpellFxLocal
+{
+bool SpellFxRanged(const FCombatantState& Unit)
+{
+    if (Unit.WildShapeHP <= 0 && Unit.MainHand >= 0 && Unit.MainHand < static_cast<int32>(EWeapon::Count)) { return FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)).bRanged; }
+    return Unit.Range > 1;
+}
+}
+using namespace SpellFxLocal;
 
 namespace CombatSpellSlots { bool ToCombatCondition(ESpellCondition In, ECombatCondition& Out); }
 
@@ -77,8 +88,9 @@ int32 FCombatBattle::SpellSpeed(int32 Id, int32 SpeedCells) const
         bZero |= (Spec->Flags & SpellEffectFlag::SpeedZero) != 0;
     }
     if (bZero) { return 0; }
-    if (Feet == 0 && Percent == 100) { return SpeedCells; }
-    return FMath::Max(0, (SpeedCells + Feet / FAreaRules::FeetPerCell) * Percent / 100);
+    const int32 Speed = Feet == 0 && Percent == 100 ? SpeedCells : FMath::Max(0, (SpeedCells + Feet / FAreaRules::FeetPerCell) * Percent / 100);
+    // SRD 5.2.1 Fly: a fly speed of 60 ft (the grid has no altitude; it moves at 60 ft).
+    return SpellExtraOn(Id, SpellEffectExtra::FlySpeed) ? FMath::Max(Speed, 60 / FAreaRules::FeetPerCell) : Speed;
 }
 
 uint16 FCombatBattle::SpellResistances(int32 Id) const
@@ -92,6 +104,12 @@ uint16 FCombatBattle::SpellResistances(int32 Id) const
         Out |= Spec->Resist;
         if (Spec->Flags & SpellEffectFlag::ResistChoice) { Out |= TypeBit(FSpellEffectRules::EnergyChoice(A.Value)); }
         if (Spec->Flags & SpellEffectFlag::FireShield) { Out |= TypeBit(A.Value == 1 ? EDamageType::Fire : EDamageType::Cold); }
+    }
+    // SRD 5.2.1 Aura of Life: allies in the aura resist necrotic damage.
+    for (const FActiveSpell& A : State.ActiveSpells)
+    {
+        const FCombatantState* Caster = A.SpellId == TEXT("aura-of-life") ? Find(A.CasterId) : nullptr;
+        if (Caster && Unit && Caster->Side == Unit->Side && ZoneCovers(A, Unit->Cell)) { Out |= TypeBit(EDamageType::Necrotic); }
     }
     return Out;
 }
@@ -158,8 +176,11 @@ bool FCombatBattle::FearBlocksStep(int32 Id, FIntPoint From, FIntPoint To) const
 
 void FCombatBattle::SpellAttackModes(const FCombatantState& Actor, const FCombatantState& Target, FAttackRollMode& Mode) const
 {
-    if (HasCondition(Actor, ECombatCondition::Invisible)) { Mode.Advantage.Add(TEXT("attacker invisible")); }
-    if (HasCondition(Target, ECombatCondition::Invisible)) { Mode.Disadvantage.Add(TEXT("target invisible")); }
+    if (HasCondition(Actor, ECombatCondition::Invisible) && !SpellExtraOn(Target.Id, SpellEffectExtra::SeeInvisible)) { Mode.Advantage.Add(TEXT("attacker invisible")); }
+    if (HasCondition(Target, ECombatCondition::Invisible) && !SpellExtraOn(Actor.Id, SpellEffectExtra::SeeInvisible)) { Mode.Disadvantage.Add(TEXT("target invisible")); }
+    // Ray of Enfeeblement and Reduce: disadvantage on Strength-based (melee, non-finesse approximated as melee) attacks.
+    if (!SpellFxRanged(Actor) && SpellExtraOn(Actor.Id, SpellEffectExtra::Enfeebled)) { Mode.Disadvantage.Add(TEXT("Ray of Enfeeblement")); }
+    if (const FActiveSpell* Small = SpellEffectOn(Actor.Id, TEXT("enlarge-reduce")); Small && Small->Value == 1 && !SpellFxRanged(Actor)) { Mode.Disadvantage.Add(TEXT("Reduce")); }
     if (HasCondition(Target, ECombatCondition::Petrified)) { Mode.Advantage.Add(TEXT("target petrified")); }
     for (const FActiveSpell& A : State.ActiveSpells)
     {
@@ -185,7 +206,8 @@ void FCombatBattle::SpellSaveModes(const FCombatantState& Unit, EAbility Ability
         const FSpellEffectSpec* Spec = A.TargetId == Unit.Id ? FSpellEffectRules::Find(A.SpellId) : nullptr;
         if (!Spec) { continue; }
         if ((Spec->Flags & SpellEffectFlag::DexSaveAdvantage) && Ability == EAbility::Dexterity) { ++Advantage; }
-        if ((Spec->Flags & SpellEffectFlag::StrSaveAdvantage) && Ability == EAbility::Strength) { ++Advantage; }
+        if ((Spec->Flags & SpellEffectFlag::StrSaveAdvantage) && Ability == EAbility::Strength) { ++(A.Value == 1 && A.SpellId == TEXT("enlarge-reduce") ? Disadvantage : Advantage); }
+        if ((Spec->Extra & SpellEffectExtra::WisDeathAdvantage) && Ability == EAbility::Wisdom) { ++Advantage; } // Beacon of Hope
     }
 }
 
@@ -195,6 +217,18 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
 {
     TArray<int32> Out = LegalTargetsRaw(Id, Action);
     Out.RemoveAll([&](int32 T) { return CharmForbids(Id, T); });
+    const FCombatantState* Actor = Find(Id);
+    if (!Actor || Out.IsEmpty()) { return Out; }
+    // Resilient Sphere: nothing passes the sphere's wall, in or out. Levitate: a creature 20 ft up is out of melee reach.
+    const bool bSealed = SpellExtraOn(Id, SpellEffectExtra::Sphere) != nullptr;
+    const bool bMelee = (Action == ECombatCommandType::Attack || Action == ECombatCommandType::Shove || Action == ECombatCommandType::Grapple) && !SpellFxRanged(*Actor);
+    const bool bAloft = SpellExtraOn(Id, SpellEffectExtra::Aloft) != nullptr;
+    Out.RemoveAll([&](int32 T)
+    {
+        if (T == Id) { return false; }
+        if (bSealed || SpellExtraOn(T, SpellEffectExtra::Sphere)) { return true; }
+        return bMelee && (bAloft || SpellExtraOn(T, SpellEffectExtra::Aloft) != nullptr);
+    });
     return Out;
 }
 
@@ -214,6 +248,27 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 }
 
 TArray<int32> FCombatBattle::SpellTargets(int32 Id, const FString& SpellId, int32 SlotLevel) const
+{
+    const FSrdSpell* Catalog = FSpellCatalogRules::Find(SpellId);
+    TArray<int32> Out;
+    if (!Catalog || !UtilityTargets(Id, *Catalog, SlotLevel, Out)) { Out = SpellTargetsSpec(Id, SpellId, SlotLevel); }
+    const FCombatantState* Unit = Find(Id);
+    if (!Unit || !Catalog) { return Out; }
+    const bool bSealed = SpellExtraOn(Id, SpellEffectExtra::Sphere) != nullptr;
+    Out.RemoveAll([&](int32 T)
+    {
+        if (T == Id) { return false; }
+        const FCombatantState* U = Find(T);
+        if (!U) { return true; }
+        // Resilient Sphere blocks spells in and out (Dispel Magic still reaches it).
+        if ((bSealed || SpellExtraOn(T, SpellEffectExtra::Sphere)) && FCString::Stricmp(Catalog->Id, TEXT("dispel-magic")) != 0) { return true; }
+        // A single foe target must be seen: fog, magical darkness and invisibility (unless See Invisibility) hide it.
+        return U->Side != Unit->Side && Catalog->Area == ESpellArea::None && Catalog->RangeFeet > 0 && !SpellCanSee(Id, T);
+    });
+    return Out;
+}
+
+TArray<int32> FCombatBattle::SpellTargetsSpec(int32 Id, const FString& SpellId, int32 SlotLevel) const
 {
     const FSrdSpell* Catalog = FSpellCatalogRules::Find(SpellId);
     const FSpellEffectSpec* Spec = Catalog ? FSpellEffectRules::Find(Catalog->Id) : nullptr;
@@ -331,8 +386,17 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
         Targets.RemoveAll([&](int32 V) { const FCombatantState* U = Find(V); return !U || !FSpellEffectRules::CanAffect(Spec, U->Role) || ((Spec.Flags & SpellEffectFlag::SparesAllies) && U->Side == User->Side); });
         if (Spec.Targets > 0) { Targets.SetNum(FMath::Min(Targets.Num(), FSpellEffectRules::MaxTargets(Spec, S.Level, Slot))); }
     }
+    else if (Spec.Extra & SpellEffectExtra::AllInRange)
+    {
+        // Beacon of Hope: any number of creatures within range; the chosen ones (or all in range) up to the cap.
+        TArray<int32> Wanted = {Command.TargetId}; Wanted.Append(Command.ExtraTargetIds);
+        for (const int32 Id : Wanted.Num() > 1 ? Wanted : Legal) { if (Legal.Contains(Id) && Targets.Num() < FSpellEffectRules::MaxTargets(Spec, S.Level, Slot)) { Targets.AddUnique(Id); } }
+    }
     else { Targets = SpellTargetList(Command, S, Spec, Slot, Legal); }
-    const bool bSave = Spec.Target == ESpellEffectTarget::Foe && S.Resolution == ESpellResolution::Save && !(Spec.Flags & SpellEffectFlag::Smite);
+    const bool bSave = Spec.Target == ESpellEffectTarget::Foe && S.Resolution == ESpellResolution::Save &&
+        (!(Spec.Flags & SpellEffectFlag::Smite) || (Spec.Extra & SpellEffectExtra::SmiteSave));
+    // Enlarge/Reduce, Levitate, Resilient Sphere: an unwilling creature (a foe) saves; Reduce on a foe.
+    const EAbility FoeAbility = S.Resolution == ESpellResolution::Save ? S.SaveAbility : EAbility::Constitution;
     Result.bSaveSpell = bSave;
     if (bSave) { Result.TargetArmorClass = Dc; }
     Result.DamageType = Spec.HitType;
@@ -343,7 +407,8 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
     {
         FCombatantState* Target = MutableFind(TargetId);
         if (!Target || Target->Life == ECombatLife::Dead) { continue; }
-        if (bSave && RollSpellSave(TargetId, S.SaveAbility, Dc, &Spec))
+        const bool bUnwilling = (Spec.Extra & SpellEffectExtra::BothSides) && Target->Side != User->Side;
+        if ((bSave && RollSpellSave(TargetId, S.SaveAbility, Dc, &Spec)) || (bUnwilling && RollSpellSave(TargetId, FoeAbility, Dc, &Spec)))
         {
             Lines += FString::Printf(TEXT(" | %s saves"), *Target->Name);
             Result.Effects.Add({TargetId, EAbilityEffect::Strike, 0, Target->Cell});
@@ -353,9 +418,10 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
         int32 Dealt = 0;
         if (Spec.Flags & SpellEffectFlag::Smite)
         {
-            // The smite's extra damage lands with the triggering hit (critical doubling not modelled).
-            int32 Dice = Spec.HitDice + Spec.HitDicePerSlot * Above;
-            if (Spec.BonusVsTypes & FCreatureRules::Bit(FCreatureRules::TypeOf(Target->Role))) { ++Dice; }
+            // The smite's extra damage lands with the triggering hit; a critical hit doubles its dice (SRD 5.2.1).
+            int32 Dice = (Spec.Extra & SpellEffectExtra::SmiteSave) ? 0 : Spec.HitDice + Spec.HitDicePerSlot * Above;
+            if (Dice > 0 && (Spec.BonusVsTypes & FCreatureRules::Bit(FCreatureRules::TypeOf(Target->Role)))) { ++Dice; }
+            if (State.MeleeCritThisTurn.Contains(TargetId)) { Dice *= 2; Text += TEXT(" (critical)"); }
             DiceLog = &Result.EffectDice;
             const int32 Rolled = Dice > 0 && Spec.HitSides > 0 ? RollDice(Dice, Spec.HitSides) : 0;
             DiceLog = nullptr;
@@ -383,6 +449,7 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
         FActiveSpell& Entry = AddActiveSpell(S, CasterId, TargetId, Slot, Dc, AttackBonus);
         if (FirstSerial == INDEX_NONE) { FirstSerial = Entry.Serial; }
         Entry.Value = Command.Choice;
+        if (bUnwilling && FCString::Stricmp(S.Id, TEXT("enlarge-reduce")) == 0) { Entry.Value = 1; }
         if (Spec.Flags & SpellEffectFlag::TempHpPerTurn) { Entry.Value = FMath::Max(1, Mod); }
         if (Spec.Flags & SpellEffectFlag::MirrorImages) { Entry.Value = 3; Text += TEXT(" 3 duplicates"); }
         if (Spec.MaxHpPerSlot > 0)
@@ -400,6 +467,14 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
             Target->TemporaryHP = FMath::Max(Target->TemporaryHP, Temp);
             Text += FString::Printf(TEXT(" %d temp HP"), Temp);
         }
+        // Conditions a buff-path spec holds (Ensnaring Strike: Restrained) last while the effect does.
+        for (int32 Bit = 0; Spec.Conditions && Bit < static_cast<int32>(ESpellCondition::Count); ++Bit)
+        {
+            ECombatCondition Kind;
+            if ((Spec.Conditions & (1u << Bit)) && CombatSpellSlots::ToCombatCondition(static_cast<ESpellCondition>(Bit), Kind) &&
+                AddSpellCondition(*MutableFind(TargetId), Kind, CasterId, -1)) { Text += FString::Printf(TEXT(" %s"), ConditionName(Kind)); }
+        }
+        Target = MutableFind(TargetId);
         if (Spec.Flags & SpellEffectFlag::Invisible) { AddSpellCondition(*Target, ECombatCondition::Invisible, CasterId, -1); Text += TEXT(" Invisible"); }
         if (Spec.ConditionImmunity != 0)
         {
@@ -525,9 +600,19 @@ int32 FCombatBattle::SpellHitDamage(int32 ActorId, int32 TargetId, bool bCritica
         if ((Spec->Flags & SpellEffectFlag::MarkOnHit) && A.CasterId == ActorId && A.TargetId == TargetId)
         { Extras.Add({Spec->HitDice + Spec->HitDicePerSlot * Above, Spec->HitSides, 0, Spec->HitType}); }
         if (A.TargetId != ActorId || !bWeapon) { continue; }
-        if (Spec->Flags & SpellEffectFlag::OwnWeaponHit) { Extras.Add({Spec->HitDice, Spec->HitSides, 0, Spec->HitType}); }
+        if (Spec->Flags & SpellEffectFlag::OwnWeaponHit) { Extras.Add({A.Value == 1 && A.SpellId == TEXT("enlarge-reduce") ? -Spec->HitDice : Spec->HitDice, Spec->HitSides, 0, Spec->HitType}); }
         else if (Spec->bWeaponTyped && Spec->HitDice > 0) { Extras.Add({Spec->HitDice, Spec->HitSides, 0, WeaponType}); }
         if (Spec->WeaponBonus > 0) { Extras.Add({0, 0, A.SlotLevel >= 6 ? 3 : A.SlotLevel >= 4 ? 2 : Spec->WeaponBonus, WeaponType}); }
+    }
+    // SRD 5.2.1 Conjure Minor Elementals: the caster's hits on a creature in the emanation deal +2d8 (+1d8/slot above 4) of the chosen type.
+    if (const FCombatantState* Victim = Find(TargetId))
+    {
+        for (const FActiveSpell& A : State.ActiveSpells)
+        {
+            if (A.SpellId != TEXT("conjure-minor-elementals") || A.CasterId != ActorId || !ZoneCovers(A, Victim->Cell)) { continue; }
+            static const EDamageType Types[] = {EDamageType::Acid, EDamageType::Cold, EDamageType::Fire, EDamageType::Lightning};
+            Extras.Add({2 + FMath::Max(0, A.SlotLevel - 4), 8, 0, Types[FMath::Clamp(A.Value, 0, 3)]});
+        }
     }
     if (Extras.IsEmpty()) { return 0; }
     const FDamageDefenses Defenses = DamageDefenses(TargetId);
@@ -536,6 +621,7 @@ int32 FCombatBattle::SpellHitDamage(int32 ActorId, int32 TargetId, bool bCritica
     DiceLog = &Result.EffectDice;
     for (const FExtra& E : Extras)
     {
+        if (E.Dice < 0) { Total -= RollDice(-E.Dice * (bCritical ? 2 : 1), E.Sides); continue; } // Reduce: -1d4
         const int32 Rolled = (E.Dice > 0 && E.Sides > 0 ? RollDice(E.Dice * (bCritical ? 2 : 1), E.Sides) : 0) + E.Flat;
         Total += FDamageRules::Adjust(Rolled, E.Type, Defenses);
     }
@@ -616,6 +702,8 @@ void FCombatBattle::SpellEffectsOnTurnStart(int32 UnitId)
         const FSpellEffectSpec* Spec = FSpellEffectRules::Find(A.SpellId);
         const FSrdSpell* S = FSpellCatalogRules::Find(A.SpellId);
         if (!Spec || !S) { continue; }
+        SpellTurnControl(*Unit, A, *Spec);
+        Unit = MutableFind(UnitId);
         // Heroism: temporary hit points equal to the spellcasting modifier at the start of each of its turns.
         if (Spec->Flags & SpellEffectFlag::TempHpPerTurn) { Unit->TemporaryHP = FMath::Max(Unit->TemporaryHP, A.Value); }
         // Searing Smite: the fire again at the start of each of its turns, then a CON save ends it.

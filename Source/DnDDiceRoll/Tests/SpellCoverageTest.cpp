@@ -35,7 +35,7 @@ bool FSpellCoverageTest::RunTest(const FString& Parameters)
     }
     TestTrue(TEXT("Catalog has cantrips and level 1-4 spells"), Total[0] > 0 && Total[4] > 0);
     // Floors after spells phase 5 item 1 (reactions, engine zones): 104 of 217 resolvable, 75 documented exceptions.
-    const int32 Floor[5] = {11, 36, 25, 16, 16};
+    const int32 Floor[5] = {19, 39, 39, 22, 24};
     for (int32 L = 0; L <= 4; ++L) { TestTrue(FString::Printf(TEXT("L%d resolvable >= %d"), L, Floor[L]), Resolvable[L] >= Floor[L]); }
     return !HasAnyErrors();
 }

@@ -16,6 +16,18 @@ const FSpellZone Zones[] =
     { TEXT("black-tentacles"), OnCast | Enter | EndTurn, 10, false, false, true },
     // Ring form (20-ft diameter): creatures inside or entering take the fire side.
     { TEXT("wall-of-fire"), OnCast | Enter | EndTurn, 10, false, false, false },
+    { TEXT("fog-cloud"), 0, 20, false, false, false },
+    { TEXT("darkness"), 0, 15, false, false, false },
+    { TEXT("light"), 0, 20, false, false, false },
+    { TEXT("dancing-lights"), 0, 10, false, false, false },
+    { TEXT("continual-flame"), 0, 20, false, false, false },
+    { TEXT("daylight"), 0, 60, false, false, false },
+    { TEXT("silence"), 0, 20, false, false, false },
+    { TEXT("plant-growth"), 0, 100, false, false, true },
+    { TEXT("guardian-of-faith"), Enter | StartTurn, 10, false, true, false },
+    { TEXT("aura-of-life"), 0, 30, true, true, false },
+    { TEXT("conjure-minor-elementals"), 0, 15, true, true, false },
+    { TEXT("pass-without-trace"), 0, 30, true, true, false },
 };
 
 const TCHAR* const RepeatSave[] =

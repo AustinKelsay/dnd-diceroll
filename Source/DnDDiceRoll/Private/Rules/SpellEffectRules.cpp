@@ -4,6 +4,7 @@
 namespace SpellEffectTable
 {
 using namespace SpellEffectFlag;
+using namespace SpellEffectExtra;
 constexpr uint32 C(ESpellCondition Condition) { return 1u << static_cast<uint8>(Condition); }
 constexpr uint16 T(ECreatureType Type) { return static_cast<uint16>(1u << static_cast<uint8>(Type)); }
 constexpr uint16 D(EDamageType Type) { return static_cast<uint16>(1u << static_cast<uint8>(Type)); }
@@ -15,8 +16,11 @@ const FSpellEffectSpec Specs[] = {
     { .Id = TEXT("charm-person"), .Flags = EndsOnCasterSideDamage | AdvantageInCombat, .OnlyTypes = T(ECreatureType::Humanoid), .Targets = 1, .TargetsPerSlot = 1 },
     { .Id = TEXT("charm-monster"), .Flags = EndsOnCasterSideDamage | AdvantageInCombat, .Targets = 1, .TargetsPerSlot = 1 },
     { .Id = TEXT("animal-friendship"), .Flags = EndsOnCasterSideDamage, .OnlyTypes = T(ECreatureType::Beast), .Targets = 1, .TargetsPerSlot = 1 },
-    { .Id = TEXT("dominate-beast"), .Flags = AdvantageInCombat, .OnlyTypes = T(ECreatureType::Beast) },
-    { .Id = TEXT("suggestion"), .Flags = EndsOnCasterSideDamage },
+    // Dominate: it fights the caster's foes and never the caster's side; each time it takes damage it repeats the save.
+    { .Id = TEXT("dominate-beast"), .Flags = AdvantageInCombat | SaveOnDamage, .OnlyTypes = T(ECreatureType::Beast), .Extra = Dominated },
+    { .Id = TEXT("dominate-person"), .Flags = AdvantageInCombat | SaveOnDamage, .OnlyTypes = T(ECreatureType::Humanoid), .Extra = Dominated },
+    // Suggestion: the tactical course is "stop fighting": it takes no actions until you or your allies damage it.
+    { .Id = TEXT("suggestion"), .Flags = EndsOnCasterSideDamage, .Extra = Pacified },
     // Command: Choice 0 Grovel (Prone + loses its next turn), 1 Halt (loses its next turn), 2 Approach/Flee/Drop are not modelled; 1 round.
     { .Id = TEXT("command"), .Conditions = C(ESpellCondition::Prone) | C(ESpellCondition::Incapacitated), .Targets = 1, .TargetsPerSlot = 1, .ConditionRounds = 1 },
     { .Id = TEXT("color-spray"), .Conditions = C(ESpellCondition::Blinded), .ConditionRounds = 1 },
@@ -40,7 +44,7 @@ const FSpellEffectSpec Specs[] = {
     { .Id = TEXT("longstrider"), .Target = Ally, .Flags = Buff, .Targets = 1, .TargetsPerSlot = 1, .SpeedFeet = 10 },
     { .Id = TEXT("expeditious-retreat"), .Target = Self, .Flags = Buff, .SpeedPercent = 200 },
     { .Id = TEXT("divine-favor"), .Target = Self, .Flags = Buff | OwnWeaponHit | NoCastDamage, .HitDice = 1, .HitSides = 4, .HitType = EDamageType::Radiant },
-    { .Id = TEXT("hex"), .Flags = Buff | MarkOnHit | NoCastDamage, .HitDice = 1, .HitSides = 6, .HitType = EDamageType::Necrotic },
+    { .Id = TEXT("hex"), .Flags = Buff | MarkOnHit | NoCastDamage, .HitDice = 1, .HitSides = 6, .HitType = EDamageType::Necrotic, .Extra = CheckDisadvantage },
     { .Id = TEXT("hunters-mark"), .Flags = Buff | MarkOnHit | NoCastDamage, .HitDice = 1, .HitSides = 6, .HitType = EDamageType::Force },
     { .Id = TEXT("protection-from-evil-and-good"), .Target = Ally, .Flags = Buff | WardEvilGood },
     { .Id = TEXT("sanctuary"), .Target = Ally, .Flags = Buff | Sanctuary | EndsOnHostileAct },
@@ -53,10 +57,11 @@ const FSpellEffectSpec Specs[] = {
     { .Id = TEXT("invisibility"), .Target = Ally, .Flags = Buff | Invisible | EndsOnHostileAct, .Targets = 1, .TargetsPerSlot = 1 },
     { .Id = TEXT("greater-invisibility"), .Target = Ally, .Flags = Buff | Invisible },
     // Enlarge (Choice 0): +1d4 weapon damage, advantage on STR checks and saves. Reduce is not modelled.
-    { .Id = TEXT("enlarge-reduce"), .Target = Ally, .Flags = Buff | OwnWeaponHit | StrSaveAdvantage, .bWeaponTyped = true, .HitDice = 1, .HitSides = 4 },
+    // Choice 1 (or any foe, which makes a CON save) Reduce: -1d4 weapon damage, disadvantage on STR checks and saves.
+    { .Id = TEXT("enlarge-reduce"), .Target = Ally, .Flags = Buff | OwnWeaponHit | StrSaveAdvantage, .bWeaponTyped = true, .HitDice = 1, .HitSides = 4, .Extra = BothSides },
     { .Id = TEXT("magic-weapon"), .Target = Ally, .Flags = Buff, .WeaponBonus = 1 },
     { .Id = TEXT("warding-bond"), .Target = Ally, .Flags = Buff, .AcBonus = 1, .SaveBonus = 1,
-      .Resist = static_cast<uint16>((1u << static_cast<uint8>(EDamageType::Thunder) << 1) - 1) },
+      .Resist = static_cast<uint16>((1u << static_cast<uint8>(EDamageType::Thunder) << 1) - 1), .Extra = ShareDamage },
     { .Id = TEXT("protection-from-poison"), .Target = Ally, .Flags = Buff, .Resist = D(EDamageType::Poison) },
     { .Id = TEXT("haste"), .Target = Ally, .Flags = Buff | DexSaveAdvantage | Lethargy, .AcBonus = 2, .SpeedPercent = 200 },
     { .Id = TEXT("slow"), .Flags = Buff | NoReactions | SparesAllies, .Targets = 6, .AcBonus = -2, .SpeedPercent = 50, .DexSaveBonus = -2 },
@@ -69,6 +74,21 @@ const FSpellEffectSpec Specs[] = {
     { .Id = TEXT("divine-smite"), .Flags = Smite, .BonusVsTypes = static_cast<uint16>(T(ECreatureType::Fiend) | T(ECreatureType::Undead)), .HitDice = 1, .HitSides = 8, .HitType = EDamageType::Radiant },
     { .Id = TEXT("searing-smite"), .Flags = Smite | StartTurnDamage, .HitDice = 1, .HitSides = 6, .HitType = EDamageType::Fire, .HitDicePerSlot = 1 },
     { .Id = TEXT("shining-smite"), .Flags = Smite | AttackersAdvantage },
+    // Ensnaring Strike: STR save or Restrained; 1d6 piercing (+1d6 per slot) at the start of each of its turns, then the save again (escape check approximated).
+    { .Id = TEXT("ensnaring-strike"), .Flags = Smite | StartTurnDamage, .Conditions = C(ESpellCondition::Restrained), .HitDice = 1, .HitSides = 6, .HitType = EDamageType::Piercing, .HitDicePerSlot = 1, .Extra = SmiteSave },
+    // ---- Phase 6: utility spells as tactical equivalents ----
+    { .Id = TEXT("guidance"), .Target = Ally, .Flags = Buff, .Extra = CheckDie },
+    { .Id = TEXT("resistance"), .Target = Ally, .Flags = Buff, .Extra = ReduceChosen },
+    { .Id = TEXT("calm-emotions"), .Flags = EndsOnAnyDamage | SparesAllies, .Conditions = C(ESpellCondition::Incapacitated), .OnlyTypes = T(ECreatureType::Humanoid) },
+    { .Id = TEXT("darkvision"), .Target = Ally, .Flags = Buff, .Extra = Darkvision },
+    { .Id = TEXT("enhance-ability"), .Target = Ally, .Flags = Buff, .Targets = 1, .TargetsPerSlot = 1, .Extra = CheckAdvantage },
+    { .Id = TEXT("levitate"), .Target = Ally, .Flags = Buff | SpeedZero, .Extra = Aloft | BothSides },
+    { .Id = TEXT("ray-of-enfeeblement"), .Flags = Buff, .Extra = Enfeebled },
+    { .Id = TEXT("see-invisibility"), .Target = Self, .Flags = Buff, .Extra = SeeInvisible },
+    { .Id = TEXT("beacon-of-hope"), .Target = Ally, .Flags = Buff, .Targets = 12, .Extra = MaxHealing | WisDeathAdvantage | AllInRange },
+    { .Id = TEXT("fly"), .Target = Ally, .Flags = Buff, .Targets = 1, .TargetsPerSlot = 1, .Extra = FlySpeed },
+    { .Id = TEXT("confusion"), .Flags = Buff, .Extra = Confused },
+    { .Id = TEXT("resilient-sphere"), .Target = Ally, .Flags = Buff | SpeedZero, .Extra = Sphere | BothSides },
 };
 
 struct FCreatureRow { const TCHAR* Role; ECreatureType Type; uint32 Immune; bool bNoExhaustion; };

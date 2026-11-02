@@ -73,7 +73,7 @@ bool FSpellConditionTypesTest::RunTest(const FString& Parameters)
             Battle.Start(EffectsCaster(Row.Role, 5, TEXT("Raider")), Seed, Error);
             const FCombatResult R = Battle.Submit(EffectsCast(Row.Spell, 20));
             if (!TestTrue(FString::Printf(TEXT("%s resolves: %s"), Row.Spell, *R.Feedback), R.bAccepted)) { return false; }
-            (Has(Battle.Find(20), Row.Kind) ? bLanded : bSaved) = true;
+            (SpellEffectsTest::Has(Battle.Find(20), Row.Kind) ? bLanded : bSaved) = true;
         }
         TestTrue(FString::Printf(TEXT("%s lands on a failed save"), Row.Spell), bLanded);
         TestTrue(FString::Printf(TEXT("%s can be saved against"), Row.Spell), bSaved);
@@ -84,7 +84,7 @@ bool FSpellConditionTypesTest::RunTest(const FString& Parameters)
         FString Error; FCombatBattle Battle;
         Battle.Start(EffectsCaster(EAdventurerRole::Wizard, 5, TEXT("Skeleton")), Seed, Error);
         Battle.Submit(EffectsCast(TEXT("sleep"), 20));
-        TestFalse(TEXT("Sleep never incapacitates a skeleton"), Has(Battle.Find(20), ECombatCondition::Incapacitated));
+        TestFalse(TEXT("Sleep never incapacitates a skeleton"), SpellEffectsTest::Has(Battle.Find(20), ECombatCondition::Incapacitated));
     }
     // A charmed creature can't attack its charmer.
     for (int32 Seed = 1; Seed < 120; ++Seed)
@@ -92,7 +92,7 @@ bool FSpellConditionTypesTest::RunTest(const FString& Parameters)
         FString Error; FCombatBattle Battle;
         Battle.Start(EffectsCaster(EAdventurerRole::Wizard, 5, TEXT("Raider")), Seed, Error);
         Battle.Submit(EffectsCast(TEXT("charm-person"), 20));
-        if (!Has(Battle.Find(20), ECombatCondition::Charmed)) { continue; }
+        if (!SpellEffectsTest::Has(Battle.Find(20), ECombatCondition::Charmed)) { continue; }
         TestFalse(TEXT("Charmed foe can't target the charmer"), Battle.LegalTargets(20, ECombatCommandType::Attack).Contains(10));
         break;
     }
@@ -135,7 +135,7 @@ bool FSpellBuffsTest::RunTest(const FString& Parameters)
         case EProbe::MaxHpDelta: Got = U->MaxHP - Max; break;
         case EProbe::TempHpAtLeast: Got = U->TemporaryHP >= Row.Expected ? Row.Expected : U->TemporaryHP; break;
         case EProbe::Images: Got = Battle.MirrorImagesLeft(Row.Target); break;
-        case EProbe::Invisible: Got = Has(U, ECombatCondition::Invisible) ? 1 : 0; break;
+        case EProbe::Invisible: Got = SpellEffectsTest::Has(U, ECombatCondition::Invisible) ? 1 : 0; break;
         case EProbe::Resists: Got = Battle.SpellResistances(Row.Target) != 0 ? 1 : 0; break;
         }
         TestEqual(FString::Printf(TEXT("%s effect"), Row.Spell), Got, Row.Expected);
