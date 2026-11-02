@@ -1622,4 +1622,40 @@ bool FSchema5CampBeastTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some wolf calms"), bCalmed);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampTreatTest, "Project.Expedition.Schema5.CampTreat",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampTreatTest::RunTest(const FString& Parameters)
+{
+    bool bTreated = false;
+    for (int32 Seed = 1; Seed < 150 && !bTreated; ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        int32 MissingBefore = 0, MissingAfter = 0;
+        for (const FCombatantState& U : Run.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious) { MissingBefore += U.MaxHP - U.HP; }
+        }
+        if (MissingBefore == 0)
+        {
+            TestFalse(TEXT("Nobody hurt"), Run.CampActivity(Hero, ECampActivity::TreatWounds, Outcome, Error));
+            continue;
+        }
+        TestTrue(TEXT("Treat"), Run.CampActivity(Hero, ECampActivity::TreatWounds, Outcome, Error));
+        for (const FCombatantState& U : Run.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious) { MissingAfter += U.MaxHP - U.HP; TestTrue(TEXT("Capped"), U.HP <= U.MaxHP); }
+        }
+        TestTrue(TEXT("Heals"), MissingAfter < MissingBefore);
+        FString Ignored;
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::TreatWounds, Ignored, Error));
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+        bTreated = true;
+    }
+    TestTrue(TEXT("Some party is treated"), bTreated);
+    return true;
+}
 #endif

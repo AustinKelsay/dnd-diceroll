@@ -13,6 +13,7 @@
 #include "Rules/SleightRules.h"
 #include "Rules/PerformanceRules.h"
 #include "Rules/BeastRules.h"
+#include "Rules/LoreRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
 
@@ -338,6 +339,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::Pickpocket: return TEXT("Lift a purse");
     case ECampActivity::Perform: return TEXT("Perform for coin");
     case ECampActivity::CalmBeast: return TEXT("Calm a wolf");
+    case ECampActivity::TreatWounds: return TEXT("Treat wounds");
     default: return TEXT("Unknown");
     }
 }
@@ -450,6 +452,24 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
             Outcome = FString::Printf(TEXT("%s %s the wolf (%d vs DC 13)."), *Hero->Name,
                 Beast.Behaviour == EBeastBehaviour::Redirected ? TEXT("sends off") : TEXT("calms"), Beast.Check.Total);
         }
+        break;
+    }
+    case ECampActivity::TreatWounds:
+    {
+        // #93: Medicine check; the most wounded conscious ally regains FLoreRules::TreatmentHitPoints (capped at max).
+        int32 PatientId = INDEX_NONE, Missing = 0;
+        for (const FCombatantState& Unit : Combat.Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious) { continue; }
+            if (Unit.MaxHP - Unit.HP > Missing) { Missing = Unit.MaxHP - Unit.HP; PatientId = Unit.Id; }
+        }
+        if (PatientId == INDEX_NONE) { Error = TEXT("Nobody needs treatment."); return false; }
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(3000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
+        const FD20Outcome Check = FCheckRules::Resolve(Sheet.SkillBonus(ESkill::Medicine), 10, ERollMode::Normal, Dice);
+        FCombatantState* Patient = Combat.MutableFind(PatientId);
+        const int32 Healed = FMath::Min(Missing, FLoreRules::TreatmentHitPoints(Check.Total, Patient->Level));
+        Patient->HP += Healed;
+        Outcome = FString::Printf(TEXT("%s treats %s (Medicine %d): +%d HP."), *Hero->Name, *Patient->Name, Check.Total, Healed);
         break;
     }
     default: break;
