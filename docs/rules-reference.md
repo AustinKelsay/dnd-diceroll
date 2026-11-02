@@ -170,3 +170,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #80: stealth, hidden attackers and surprise
 
 `FStealthRules`: passive scores are 10 + modifier (+/-5 for advantage/disadvantage). A creature is hidden from an observer when its Stealth total meets or beats the observer's passive Perception; the tie going to the hider is our reading and is flagged for Austin. Attacking while hidden gives advantage (an unseen target gives disadvantage; both cancel) and always reveals the attacker. A side is surprised only if every ambusher is hidden from it, and surprised creatures cannot act in round 1. A per-unit hidden flag and pre-battle ambush state need battle and run state (#39).
+
+## Issue #81: locks and traps
+
+`FLockTrapRules`: lock DCs are 10/15/20 for simple, good and superior locks, and picking one needs thieves' tools. A trap is found when an Investigation total (or passive Perception) meets its DC. Disarming needs thieves' tools; a miss by 5 or more sets the trap off. Chest and door contents, opened state and trap placement need run state (#39).
