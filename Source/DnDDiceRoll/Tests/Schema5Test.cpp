@@ -1145,4 +1145,22 @@ bool FSchema5ConcentrationInBattleTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Downed units cannot concentrate"), B.Start(Bad, 1, Error));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5FireBoltCantripTest, "Project.Expedition.Schema5.FireBoltCantripScaling",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5FireBoltCantripTest::RunTest(const FString& Parameters)
+{
+    FCombatantState Wizard = FBuildCatalog::Find(TEXT("wizard.evocation"))->Profile;
+    int32 Count = 0, Sides = 0;
+    Wizard.Level = 4;
+    FCombatBattle::WeaponDice(Wizard, Count, Sides);
+    TestTrue(TEXT("Fire Bolt is 1d10 before 5th level"), Count == 1 && Sides == 10);
+    Wizard.Level = 5;
+    FCombatBattle::WeaponDice(Wizard, Count, Sides);
+    TestTrue(TEXT("Fire Bolt is 2d10 at 5th level"), Count == 2 && Sides == 10);
+    FCombatantState Fighter = FBuildCatalog::Find(TEXT("fighter.champion"))->Profile;
+    Fighter.Level = 5;
+    FCombatBattle::WeaponDice(Fighter, Count, Sides);
+    TestEqual(TEXT("Weapons do not scale like cantrips"), Count, 1);
+    return true;
+}
 #endif

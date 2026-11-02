@@ -13,6 +13,7 @@
 #include "Rules/StandardActionRules.h"
 #include "Rules/DeathSaveRules.h"
 #include "Rules/ConcentrationRules.h"
+#include "Rules/CantripRules.h"
 
 namespace
 {
@@ -250,7 +251,13 @@ int32 FCombatBattle::Roll(int32 Sides)
 void FCombatBattle::WeaponDice(const FCombatantState& Unit, int32& OutCount, int32& OutSides)
 {
     OutCount = 1; OutSides = Unit.DamageDie;
-    if (Unit.MainHand < 0 || Unit.MainHand >= static_cast<int32>(EWeapon::Count)) { return; }
+    if (Unit.MainHand < 0 || Unit.MainHand >= static_cast<int32>(EWeapon::Count))
+    {
+        // #72: the Wizard's basic attack is the Fire Bolt cantrip, whose dice grow at character level 5.
+        if (Unit.AdventurerRole == EAdventurerRole::Wizard && OutSides == FSpellRules::Facts(ESpell::FireBolt).DieSides)
+        { OutCount = FCantripRules::DiceCount(ESpell::FireBolt, Unit.Level); }
+        return;
+    }
     const FWeaponProfile& Weapon = FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand));
     FWeaponRules::DamageDice(Weapon, Weapon.Has(EWeaponProperty::TwoHanded) || (Weapon.Has(EWeaponProperty::Versatile) && !Unit.bShieldEquipped), false, OutCount, OutSides);
 }
