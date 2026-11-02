@@ -24,6 +24,8 @@ struct DNDDICEROLL_API FProficiencyChoice
     TArray<ESkill> BackgroundSkills;
     /** Skill Expertise picks (SRD 5.2.1 Expertise covers skills only). */
     TArray<ESkill> ExpertiseSkills;
+    /** Character-creator builds have no background (local proposal): BackgroundSkills must then be empty. */
+    bool bNoBackground = false;
 };
 
 /** Class proficiency facts (SRD 5.2.1 class tables). Small value data that can move into the #39 catalog. */

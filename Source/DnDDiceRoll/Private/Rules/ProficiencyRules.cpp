@@ -105,6 +105,38 @@ FClassProficiencies FProficiencyRules::ClassProficiencies(EAdventurerRole Role, 
         // Deft Explorer (level 2) grants one Expertise; Expertise (level 9) two more.
         Class.ExpertisePicks = Level >= 9 ? 3 : Level >= 2 ? 1 : 0;
         break;
+    // SRD 5.2.1 class tables for the catalog-build classes (character creator, local proposal).
+    case EAdventurerRole::Barbarian:
+        Class.SaveMask = Saves(EAbility::Strength, EAbility::Constitution);
+        Class.SkillList = {S::AnimalHandling, S::Athletics, S::Intimidation, S::Nature, S::Perception, S::Survival};
+        Class.SkillPicks = 2;
+        break;
+    case EAdventurerRole::Druid:
+        Class.SaveMask = Saves(EAbility::Intelligence, EAbility::Wisdom);
+        Class.SkillList = {S::AnimalHandling, S::Arcana, S::Insight, S::Medicine, S::Nature, S::Perception, S::Religion, S::Survival};
+        Class.SkillPicks = 2;
+        Class.ToolMask = ToolBit(ETool::HerbalismKit);
+        break;
+    case EAdventurerRole::Monk:
+        Class.SaveMask = Saves(EAbility::Strength, EAbility::Dexterity);
+        Class.SkillList = {S::Acrobatics, S::Athletics, S::History, S::Insight, S::Religion, S::Stealth};
+        Class.SkillPicks = 2;
+        break;
+    case EAdventurerRole::Paladin:
+        Class.SaveMask = Saves(EAbility::Wisdom, EAbility::Charisma);
+        Class.SkillList = {S::Athletics, S::Insight, S::Intimidation, S::Medicine, S::Persuasion, S::Religion};
+        Class.SkillPicks = 2;
+        break;
+    case EAdventurerRole::Sorcerer:
+        Class.SaveMask = Saves(EAbility::Constitution, EAbility::Charisma);
+        Class.SkillList = {S::Arcana, S::Deception, S::Insight, S::Intimidation, S::Persuasion, S::Religion};
+        Class.SkillPicks = 2;
+        break;
+    case EAdventurerRole::Warlock:
+        Class.SaveMask = Saves(EAbility::Wisdom, EAbility::Charisma);
+        Class.SkillList = {S::Arcana, S::Deception, S::History, S::Intimidation, S::Investigation, S::Nature, S::Religion};
+        Class.SkillPicks = 2;
+        break;
     default:
         break;
     }
@@ -115,8 +147,8 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
     const FProficiencyChoice& Choice, FCharacterRules& Out, FString& Error)
 {
     auto Reject = [&Error](const TCHAR* Reason) { Error = Reason; return false; };
-    if (Role == EAdventurerRole::None || (static_cast<uint8>(Role) > static_cast<uint8>(EAdventurerRole::Wizard) &&
-        Role != EAdventurerRole::Bard && Role != EAdventurerRole::Ranger)) { return Reject(TEXT("Unknown class.")); }
+    // Every SRD 5.2.1 class; Artificer is not in the SRD and has no class table here.
+    if (Role == EAdventurerRole::None || static_cast<uint8>(Role) > static_cast<uint8>(EAdventurerRole::Bard)) { return Reject(TEXT("Unknown class.")); }
     if (Level < 1 || Level > 20) { return Reject(TEXT("Level must be 1..20.")); }
     if (!Scores.IsValid()) { return Reject(TEXT("Ability scores must be 1..30.")); }
     const FClassProficiencies Class = ClassProficiencies(Role, Level);
@@ -132,7 +164,7 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
         if (!Valid(Skill) || !Class.SkillList.Contains(Skill) || Candidate.IsProficient(Skill)) { return Reject(TEXT("Class skill is not on the class list or is repeated.")); }
         Candidate.SkillMask |= SkillBit(Skill);
     }
-    if (Choice.BackgroundSkills.Num() != BackgroundPicks) { return Reject(TEXT("Choose exactly two background skills.")); }
+    if (Choice.BackgroundSkills.Num() != (Choice.bNoBackground ? 0 : BackgroundPicks)) { return Reject(Choice.bNoBackground ? TEXT("This build takes no background skills.") : TEXT("Choose exactly two background skills.")); }
     for (ESkill Skill : Choice.BackgroundSkills)
     {
         if (!Valid(Skill) || Candidate.IsProficient(Skill)) { return Reject(TEXT("Background skill is invalid or already proficient.")); }

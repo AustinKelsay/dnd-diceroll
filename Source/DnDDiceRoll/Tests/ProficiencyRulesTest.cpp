@@ -131,4 +131,40 @@ bool FProficiencyRejectionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Persuasion is a 5.2.1 Fighter skill"), FProficiencyRules::BuildCharacter(EAdventurerRole::Fighter, 1, Scores, Choice, Wiz, Error));
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAllSrdClassTablesTest, "Project.Expedition.Rules.AllSrdClassTables",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FAllSrdClassTablesTest::RunTest(const FString& Parameters)
+{
+    using S = ESkill;
+    struct FRow { EAdventurerRole Role; EAbility SaveA; EAbility SaveB; int32 Picks; int32 ListSize; };
+    const FRow Rows[] = {
+        {EAdventurerRole::Barbarian, EAbility::Strength, EAbility::Constitution, 2, 6},
+        {EAdventurerRole::Druid, EAbility::Intelligence, EAbility::Wisdom, 2, 8},
+        {EAdventurerRole::Monk, EAbility::Strength, EAbility::Dexterity, 2, 6},
+        {EAdventurerRole::Paladin, EAbility::Wisdom, EAbility::Charisma, 2, 6},
+        {EAdventurerRole::Sorcerer, EAbility::Constitution, EAbility::Charisma, 2, 6},
+        {EAdventurerRole::Warlock, EAbility::Wisdom, EAbility::Charisma, 2, 7}};
+    for (const FRow& Row : Rows)
+    {
+        const FClassProficiencies Class = FProficiencyRules::ClassProficiencies(Row.Role, 1);
+        TestEqual(TEXT("Skill picks"), Class.SkillPicks, Row.Picks);
+        TestEqual(TEXT("Skill list size"), Class.SkillList.Num(), Row.ListSize);
+        FProficiencyChoice Choice; Choice.bNoBackground = true; Choice.ClassSkills = {Class.SkillList[0], Class.SkillList[1]};
+        FCharacterRules Character; FString Error;
+        TestTrue(FString::Printf(TEXT("Class %d builds without a background"), static_cast<int32>(Row.Role)),
+            FProficiencyRules::BuildCharacter(Row.Role, 1, FAbilityRules::PrebuiltScores(Row.Role), Choice, Character, Error));
+        TestTrue(TEXT("Save A"), Character.IsSaveProficient(Row.SaveA));
+        TestTrue(TEXT("Save B"), Character.IsSaveProficient(Row.SaveB));
+        TestEqual(TEXT("Two skills"), FMath::CountBits(Character.SkillMask), 2);
+    }
+    TestTrue(TEXT("Druid has the Herbalism Kit"), FProficiencyRules::ClassProficiencies(EAdventurerRole::Druid, 1).ToolMask != 0);
+    FProficiencyChoice Off; Off.bNoBackground = true; Off.ClassSkills = {S::Arcana, S::Stealth};
+    FCharacterRules Ignored; FString Error;
+    TestFalse(TEXT("Off-list skill rejected"), FProficiencyRules::BuildCharacter(EAdventurerRole::Sorcerer, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Sorcerer), Off, Ignored, Error));
+    FProficiencyChoice Extra = Off; Extra.ClassSkills = {S::Arcana, S::Deception}; Extra.BackgroundSkills = {S::Stealth};
+    TestFalse(TEXT("No-background build rejects background picks"), FProficiencyRules::BuildCharacter(EAdventurerRole::Sorcerer, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Sorcerer), Extra, Ignored, Error));
+    FProficiencyChoice Art; Art.bNoBackground = true;
+    TestFalse(TEXT("Artificer is not an SRD class"), FProficiencyRules::BuildCharacter(EAdventurerRole::Artificer, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Fighter), Art, Ignored, Error));
+    return !HasAnyErrors();
+}
 #endif
