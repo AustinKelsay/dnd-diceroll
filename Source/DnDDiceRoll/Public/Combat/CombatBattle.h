@@ -5,6 +5,7 @@
 #include "Rules/CheckRules.h"
 #include "Rules/DamageRules.h"
 #include "Rules/StandardActionRules.h"
+#include "Rules/SpellCatalogRules.h"
 #include "CombatBattle.generated.h"
 
 UENUM()
@@ -156,6 +157,35 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bMagicalCunningUsed = false;
     /** Warlock 1 Eldritch Invocations held (EInvocation values; SRD 5.2.1 count and prerequisites). */
     UPROPERTY() TArray<int32> Invocations;
+    /** Prepared/known spell ids (catalog slugs, cantrips included). Empty = every class-list spell the hero can cast; when set, only these, within the SRD cantrip and prepared counts. */
+    UPROPERTY() TArray<FString> PreparedSpells;
+};
+
+/** A spell still in effect after its casting turn (SRD 5.2.1 durations). Zones, held conditions and buffs live here; the battle ticks them. */
+USTRUCT()
+struct DNDDICEROLL_API FActiveSpell
+{
+    GENERATED_BODY()
+    /** Catalog slug. */
+    UPROPERTY() FString SpellId;
+    UPROPERTY() int32 CasterId = INDEX_NONE;
+    /** Creature the spell holds (repeat saves); INDEX_NONE for zones. */
+    UPROPERTY() int32 TargetId = INDEX_NONE;
+    UPROPERTY() int32 SlotLevel = 0;
+    /** Caster turn starts left before it ends; -1 = until dispelled or concentration ends. */
+    UPROPERTY() int32 RoundsLeft = -1;
+    UPROPERTY() bool bConcentration = false;
+    /** Zones: centre cell (follows the caster for emanations) and radius in cells. */
+    UPROPERTY() FIntPoint Origin = FIntPoint::ZeroValue;
+    UPROPERTY() int32 RadiusCells = 0;
+    /** Save DC and spell attack bonus frozen at casting. */
+    UPROPERTY() int32 Dc = 0;
+    UPROPERTY() int32 AttackBonus = 0;
+    /** Spell-specific payload (pool left, chosen option, duplicates). */
+    UPROPERTY() int32 Value = 0;
+    /** Creatures already affected this turn (once-per-turn zone triggers); cleared at every turn start. */
+    UPROPERTY() TArray<int32> TriggeredThisTurn;
+    UPROPERTY() int32 Serial = 0;
 };
 
 USTRUCT()
@@ -205,6 +235,11 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() int32 AttacksRemaining = 0;
     /** Combatants that already dealt Sneak Attack this turn (once per turn, reactions included); cleared at each turn start. */
     UPROPERTY() TArray<int32> SneakAttackUsedBy;
+    /** Spells in effect (durations, zones, held conditions). Empty outside a fight. */
+    UPROPERTY() TArray<FActiveSpell> ActiveSpells;
+    /** SRD 5.2.1: a creature spends at most one spell slot per turn. */
+    UPROPERTY() bool bSlotSpentThisTurn = false;
+    UPROPERTY() int32 NextSpellSerial = 1;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
 
@@ -218,6 +253,35 @@ struct DNDDICEROLL_API FCombatCommand
     int32 SlotLevel = 0;
     /** CastSpell only: SRD catalog slug or name (FSpellCatalogRules::Find). Not persisted. */
     FString SpellId;
+    /** CastSpell only: further targets for multi-target spells and per-beam/ray/dart targets (repeat an id to stack). Not persisted. */
+    TArray<int32> ExtraTargetIds;
+    /** CastSpell only: a spell option (damage type, Enlarge vs Reduce, Command word); 0 = default. Not persisted. */
+    int32 Choice = 0;
+};
+
+/** What a spell event is, for presentation and VFX. */
+enum class ESpellEventKind : uint8 { Cast, Trigger, Tick, End };
+/** VFX hook: everything a renderer needs to show a spell, emitted on cast and on every later trigger. Rules never read it back. */
+struct DNDDICEROLL_API FSpellCastEvent
+{
+    ESpellEventKind Kind = ESpellEventKind::Cast;
+    FString SpellId;
+    uint8 School = 0;
+    int32 SpellLevel = 0;
+    int32 SlotLevel = 0;
+    /** Cantrip damage tier 0..3 (character levels 1/5/11/17); 0 for leveled spells. */
+    int32 Tier = 0;
+    /** ESpellArea value and size; cells covered on the grid (empty for single targets). */
+    uint8 AreaShape = 0;
+    int32 AreaFeet = 0;
+    TArray<FIntPoint> Cells;
+    int32 CasterId = INDEX_NONE;
+    FIntPoint CasterCell = FIntPoint::ZeroValue;
+    TArray<int32> TargetIds;
+    TArray<FIntPoint> TargetCells;
+    /** Rounds the effect lasts (0 instant, -1 until dispelled). */
+    int32 DurationRounds = 0;
+    int32 Serial = 0;
 };
 
 /** One die in an effect roll, in the order it was rolled. */
@@ -331,6 +395,31 @@ struct DNDDICEROLL_API FCombatResult
     int32 SurgeOutcome = 0;
     /** Move only: opportunity attacks in the order they happened. */
     TArray<FReactionStrike> Reactions;
+    /** VFX hooks: spells cast by this command and lasting spells that triggered or ended during it, in order. */
+    TArray<FSpellCastEvent> SpellEvents;
+};
+
+/** CastSpell expectation (SRD 5.2.1 resolution, no RNG): chance per target, amount range, area and duration. */
+struct DNDDICEROLL_API FSpellForecast
+{
+    bool bValid = false;
+    FString SpellId;
+    int32 SlotLevel = 0;
+    bool bAttackRoll = false;
+    bool bSave = false;
+    /** Attack: hit chance vs TargetId; Save: chance TargetId fails, out of 400. */
+    int32 ChanceOutOf400 = 0;
+    int32 SaveDc = 0;
+    int32 MinAmount = 0;
+    int32 MaxAmount = 0;
+    bool bHealing = false;
+    /** Creatures the spell would reach (area victims or the target). */
+    TArray<int32> AffectedIds;
+    TArray<FIntPoint> Cells;
+    int32 DurationRounds = 0;
+    bool bConcentration = false;
+    /** Casting would end the caster's current concentration spell. */
+    bool bEndsConcentration = false;
 };
 
 /** Player-facing expectation for one legal action. Uses the same tuning as resolution. */
@@ -424,6 +513,12 @@ public:
     /** Cells the action could reach now. Empty when LegalTargets would refuse the action outright. Consumes no random numbers. */
     FActionReach Reach(int32 Id, ECombatCommandType Action) const;
     FCombatResult Submit(const FCombatCommand& Command);
+    /** CastSpell forecast for a legal target; invalid otherwise. Consumes no random numbers. */
+    FSpellForecast ForecastSpell(int32 ActorId, const FString& SpellId, int32 TargetId, int32 SlotLevel = 0) const;
+    /** Spells in effect now. */
+    const TArray<FActiveSpell>& ActiveSpells() const { return State.ActiveSpells; }
+    /** Zone cells of an active spell now (emanations follow their caster). */
+    TArray<FIntPoint> ZoneCells(const FActiveSpell& Spell) const;
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
     /** Player-facing action facts share the tuning used by validation and resolution. */
@@ -463,6 +558,25 @@ private:
     bool ResolveCatalogSpell(const FCombatCommand& Command, FCombatResult& Result);
     /** Ends the caster's concentration and the conditions its spell holds (RoundsLeft -1, caster as source). */
     void EndConcentration(FCombatantState& Caster);
+    // Lasting spells (CombatSpellEffects.cpp).
+    FActiveSpell& AddActiveSpell(const struct FSrdSpell& Spell, int32 CasterId, int32 TargetId, int32 Slot, int32 Dc, int32 AttackBonus);
+    bool ZoneCovers(const FActiveSpell& Spell, FIntPoint Cell) const;
+    /** One zone trigger on a creature (save and damage, conditions); respects once per turn. */
+    void TriggerZone(int32 SpellIndex, int32 VictimId);
+    /** The mover entered Cell (or an emanation reached it): enter triggers and per-step zone damage. */
+    void SpellsOnStep(int32 MoverId, FIntPoint From, FIntPoint To);
+    /** Turn start: caster durations tick down, once-per-turn marks reset. */
+    void SpellsOnTurnStart(int32 UnitId);
+    /** Turn end: end-of-turn zone saves and repeat saves against held conditions. */
+    void SpellsOnTurnEnd(int32 UnitId);
+    void RemoveActiveSpell(int32 Index, bool bEvent = true);
+    void EmitSpellEvent(ESpellEventKind Kind, const FActiveSpell& Spell, const TArray<int32>& Targets);
+    bool ValidPreparedSpells(const FCombatantState& Unit, FString& Error) const;
+    /** Creatures a catalog spell reaches from the caster aimed at TargetId (zone radius for lasting zones), and the cells it covers. */
+    TArray<int32> SpellVictims(const FCombatantState& User, const struct FSrdSpell& Spell, int32 TargetId, TArray<FIntPoint>* OutCells) const;
+    int32 IndexOfSpell(int32 Serial) const;
+    /** VFX events gathered while resolving; Submit hands them to the result. */
+    TArray<FSpellCastEvent> PendingSpellEvents;
     friend class FPartyContinuity;
     friend class FExpeditionRun;
     FCombatSnapshot State;

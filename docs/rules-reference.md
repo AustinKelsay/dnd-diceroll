@@ -804,3 +804,15 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 - Combatant pools (`SlotsByLevel`) hold slot levels 1..`FSpellRules::MaxSpellLevel` = 4; saves with the old 3-entry pool still load.
 - Long rest (`FFeatureKit::RefillSlotTable`, called from `Refill`) fills every slot level above 1st straight from the table; 1st level stays tied to the build's flat `SpellSlots` cap.
 - **Exception (by rule, not code):** with `EngineLevelCap = 5`, no class or multiclass reaches a 4th-level slot (SRD: full casters at 7, half casters at 13, Warlock at 7). 4th-level spells are castable the moment the level cap is raised; no table or pool change is needed. Slot levels 5-9 need `MaxSpellLevel` raised alongside the 20-level expansion.
+
+## Lasting spells (Phase 2, SRD 5.2.1)
+
+- `FSpellTacticsRules` (data tables): zone shape/trigger per spell, `DurationRounds` (1 minute = 10 rounds, 10 minutes / 1 hour capped to the fight), repeat-save list, `SpendsSlot`.
+- `FActiveSpell` entries in the snapshot track zones and held effects with serial, caster, target, rounds left and concentration; saved/restored and validated.
+- Zones fire on cast only where SRD says so (Moonbeam, Evard's Black Tentacles, Wall of Fire); Spirit Guardians, Conjure Animals and Conjure Woodland Beings trigger on entering or ending a turn in the area. Spike Growth: difficult terrain (step cost 2) plus 2d4 per 5 ft moved.
+- Repeat saves at end of target's turn (e.g. Hold Person); Fear needs no line of sight.
+- Concentration ending removes every entry the caster concentrates on; dead or missing casters and targets drop their entries.
+- One spell slot per turn (`bSlotSpentThisTurn`) for catalog and legacy kit spells; cantrips are exempt.
+- `ForecastSpell` is a no-RNG preview: hit chance /400 or save DC, min/max amount, affected ids and cells, concentration and duration.
+- `PreparedSpells` limit is enforced in `UsableSpell` and validated at Start/Restore.
+- Exception: `EngineLevelCap = 5` blocks 4th-level slots in battle, so 4th-level behaviour is tested through the rules library, not live casts.
