@@ -250,6 +250,15 @@ void AExpeditionBattleView::RebuildBoard()
         Seed = Route.EncounterSeed;
         BoardTheme = Progress().History.Num() >= FExpeditionRun::EncounterCount ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
+    // Dev only: the -SpellFXTrial capture harness may force the board theme (-SpellFXTrialTheme=Meadow|Ruins|Vault)
+    // so review frames can use a warm board. Never set in normal play.
+    FString TrialTheme;
+    if (FCString::Strifind(FCommandLine::Get(), TEXT("-SpellFXTrial=")) && FParse::Value(FCommandLine::Get(), TEXT("SpellFXTrialTheme="), TrialTheme))
+    {
+        if (TrialTheme == TEXT("Meadow")) { BoardTheme = EBoardTheme::Meadow; }
+        else if (TrialTheme == TEXT("Ruins")) { BoardTheme = EBoardTheme::Ruins; }
+        else if (TrialTheme == TEXT("Vault")) { BoardTheme = EBoardTheme::Vault; }
+    }
     bOverview = WantsOverview();
     ApplyTheme();
     if (bOverview) { BuildOverview(); }
@@ -943,17 +952,7 @@ void AExpeditionBattleView::TickSpellFXTrial(float DeltaSeconds)
         if (SpellFXTrialClock < 4.0f || IsPresenting() || !InCombat()) { return; }
         const FCombatantState* Active = Rules().Find(Rules().ActiveId());
         if (!Active || Active->Side != ECombatSide::Party) { return; }
-        // Fire Bolt: nearest conscious foe. Area spells: the foe with the most other foes within 4 cells.
-        int32 Target = INDEX_NONE; float Best = -1e9f;
-        const auto& All = Rules().Snapshot().Encounter.Combatants;
-        for (const FCombatantState& Foe : All)
-        {
-            if (Foe.Side != ECombatSide::Enemy || Foe.Life != ECombatLife::Conscious) { continue; }
-            float Score = -FVector2D::Distance(FVector2D(Foe.Cell), FVector2D(Active->Cell)) * 0.01f;
-            if (SpellFXTrial != TEXT("fire-bolt"))
-            { for (const FCombatantState& Other : All) { Score += Other.Side == ECombatSide::Enemy && Other.Life == ECombatLife::Conscious && FVector2D::Distance(FVector2D(Other.Cell), FVector2D(Foe.Cell)) <= 4.0f ? 1.0f : 0.0f; } }
-            if (Score > Best) { Best = Score; Target = Foe.Id; }
-        }
+        const int32 Target = ExpeditionSpellFXTrial::PickTarget(Rules().Snapshot(), Active->Id, SpellFXTrial);
         FCombatCommand Cast{ECombatCommandType::CastSpell, Active->Id, {}, Target};
         Cast.SpellId = SpellFXTrial;
         if (SpellFXTrial == TEXT("fireball")) { Cast.SlotLevel = 3; }

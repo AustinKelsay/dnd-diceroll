@@ -5,6 +5,7 @@
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellCatalogRules.h"
 #include "ExpeditionTestSupport.h"
+#include "Presentation/ExpeditionSpellFX.h"
 
 namespace SpellFXTrialFixtureLocal
 {
@@ -64,13 +65,30 @@ bool FSpellFXTrialFixture::RunTest(const FString& Parameters)
         if (!SpellFXTrialFixtureLocal::WizardTurn(Snap)) { continue; }
         FExpeditionRun Check;
         if (!Check.Restore(Snap, Error)) { AddInfo(FString::Printf(TEXT("Seed %d rejected: %s"), Seed, *Error)); continue; }
+        // Review frames need Fire Bolt to hit and Fireball to leave a foe standing (no Victory banner over the blast).
+        // Rolls are deterministic from the snapshot, so simulate both casts exactly as the harness will make them.
+        auto Trial = [&Snap](const FString& Spell, int32 Slot, bool& bHit, bool& bFoeLeft)
+        {
+            FExpeditionRun Sim; FString E;
+            if (!Sim.Restore(Snap, E)) { return false; }
+            const int32 Active = Sim.Battle().ActiveId();
+            FCombatCommand Cast{ECombatCommandType::CastSpell, Active, {}, ExpeditionSpellFXTrial::PickTarget(Sim.Battle().Snapshot(), Active, Spell)};
+            Cast.SpellId = Spell; Cast.SlotLevel = Slot;
+            const FCombatResult R = Sim.Submit(Cast);
+            bHit = R.bHit || R.Damage > 0; bFoeLeft = false;
+            for (const FCombatantState& U : Sim.Battle().Snapshot().Encounter.Combatants) { bFoeLeft |= U.Side == ECombatSide::Enemy && U.Life == ECombatLife::Conscious; }
+            return R.bAccepted;
+        };
+        bool bBoltHit = false, bBoltLeft = false, bBallHit = false, bBallLeft = false;
+        if (!Trial(TEXT("fire-bolt"), 0, bBoltHit, bBoltLeft) || !bBoltHit || !bBoltLeft || !Trial(TEXT("fireball"), 3, bBallHit, bBallLeft) || !bBallHit || !bBallLeft)
+        { AddInfo(FString::Printf(TEXT("Seed %d skipped: bolt hit %d left %d, fireball hit %d left %d"), Seed, bBoltHit, bBoltLeft, bBallHit, bBallLeft)); continue; }
         FExpeditionSaveData Data;
         Data.Current = Snap;
         TestTrue(TEXT("Fixture writes: ") + Error, FExpeditionSave::Write(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("CaptureFixtures"), TEXT("spellfx-trial"), TEXT("current-v1.json")), Data, Error));
         AddInfo(FString::Printf(TEXT("SpellFX trial fixture from seed %d"), Seed));
         return !HasAnyErrors();
     }
-    AddError(TEXT("No seed reached the final battle with a living level-5 wizard."));
+    AddError(TEXT("No seed reached the final battle with a living level-5 wizard whose Fire Bolt hits and whose Fireball leaves a foe standing."));
     return false;
 }
 #endif

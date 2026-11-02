@@ -53,6 +53,13 @@ struct DNDDICEROLL_API FExpeditionSpellFXStyle
     static bool For(const FSpellCastEvent& Event, FExpeditionSpellFXStyle& Out);
 };
 
+/** Dev-only VFX trial helpers shared by the -SpellFXTrial harness and its fixture tool. */
+namespace ExpeditionSpellFXTrial
+{
+/** Fire Bolt: nearest conscious foe. Area spells: the foe with the most other conscious foes within 4 cells. */
+DNDDICEROLL_API int32 PickTarget(const FCombatSnapshot& Battle, int32 ActiveId, const FString& SpellId);
+}
+
 UCLASS(NotBlueprintable)
 class DNDDICEROLL_API AExpeditionSpellFX : public AActor
 {

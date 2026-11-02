@@ -48,6 +48,23 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
     return false;
 }
 
+int32 ExpeditionSpellFXTrial::PickTarget(const FCombatSnapshot& Battle, int32 ActiveId, const FString& SpellId)
+{
+    const auto& All = Battle.Encounter.Combatants;
+    const FCombatantState* Active = All.FindByPredicate([ActiveId](const FCombatantState& U) { return U.Id == ActiveId; });
+    if (!Active) { return INDEX_NONE; }
+    int32 Target = INDEX_NONE; float Best = -1e9f;
+    for (const FCombatantState& Foe : All)
+    {
+        if (Foe.Side != ECombatSide::Enemy || Foe.Life != ECombatLife::Conscious) { continue; }
+        float Score = -FVector2D::Distance(FVector2D(Foe.Cell), FVector2D(Active->Cell)) * 0.01f;
+        if (SpellId != TEXT("fire-bolt"))
+        { for (const FCombatantState& Other : All) { Score += Other.Side == ECombatSide::Enemy && Other.Life == ECombatLife::Conscious && FVector2D::Distance(FVector2D(Other.Cell), FVector2D(Foe.Cell)) <= 4.0f ? 1.0f : 0.0f; } }
+        if (Score > Best) { Best = Score; Target = Foe.Id; }
+    }
+    return Target;
+}
+
 AExpeditionSpellFX::AExpeditionSpellFX()
 {
     PrimaryActorTick.bCanEverTick = true;
