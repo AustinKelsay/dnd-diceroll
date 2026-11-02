@@ -15,15 +15,15 @@ bool FTargetingFeedbackTest::RunTest(const FString& Parameters)
         FCombatEncounter E;
         E.Width = E.Height = 8;
         auto Hero = Build.Profile;
-        Hero.Id = 10; Hero.Cell = {1,1}; Hero.InitiativeBonus = 30;
+        Hero.Id = 10; Hero.Name = TEXT("Actor"); Hero.Cell = {1,1}; Hero.InitiativeBonus = 30;
         Hero.HP = FMath::Max(1, Hero.MaxHP-1); Hero.Potions = 1;
         E.Combatants.Add(Hero);
-        auto Ally = Hero; Ally.Id = 11; Ally.Cell = {1,2}; Ally.InitiativeBonus = -10;
+        auto Ally = Hero; Ally.Id = 11; Ally.Name = TEXT("Ally"); Ally.Cell = {1,2}; Ally.InitiativeBonus = -10;
         E.Combatants.Add(Ally);
         FCombatantState Enemy;
-        Enemy.Id = 20; Enemy.Side = ECombatSide::Enemy; Enemy.Cell = {2,1}; Enemy.InitiativeBonus = -10;
+        Enemy.Id = 20; Enemy.Name = TEXT("Target"); Enemy.Role = TEXT("Raider"); Enemy.Side = ECombatSide::Enemy; Enemy.Cell = {2,1}; Enemy.InitiativeBonus = -10;
         E.Combatants.Add(Enemy);
-        auto NearbyEnemy = Enemy; NearbyEnemy.Id = 21; NearbyEnemy.Cell = {3,1};
+        auto NearbyEnemy = Enemy; NearbyEnemy.Id = 21; NearbyEnemy.Name = TEXT("Area target"); NearbyEnemy.Cell = {3,1};
         E.Combatants.Add(NearbyEnemy);
         FCombatBattle B;
         if (!TestTrue(Build.Id + TEXT(" starts"), B.Start(E, 42, Error))) { continue; }
@@ -85,7 +85,7 @@ bool FTargetingFeedbackTest::RunTest(const FString& Parameters)
     const auto Reach=B.ActionReach(10,ECombatCommandType::Attack);
     TestTrue(TEXT("Occluded target is marked obstructed"),Reach.Obstructed.Contains(T.Cell));
     TestFalse(TEXT("Occluded target cannot be selected"),B.LegalTargets(10).Contains(20));
-    TestFalse(TEXT("Beyond range excluded"),Reach.Visible.Contains({7,7}));
+    TestFalse(TEXT("Beyond range excluded"),Reach.Visible.Contains(FIntPoint(7,7)));
     E.BlockedCells.Reset(); E.Combatants[0].Potions=0;
     TestTrue(TEXT("Resource fixture starts"),B.Start(E,42,Error));
     TestTrue(TEXT("No bottle means no potion target"),B.LegalTargets(10,ECombatCommandType::Potion).IsEmpty());

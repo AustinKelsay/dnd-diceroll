@@ -73,7 +73,8 @@ FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType
         }
     }
     FString Amount = F.MinAmount == F.MaxAmount ? FString::FromInt(F.MinAmount)
-        : FString::Printf(F.bDiscreteAmounts ? TEXT("%d or %d") : TEXT("%d-%d"), F.MinAmount, F.MaxAmount);
+        : F.bDiscreteAmounts ? FString::Printf(TEXT("%d or %d"), F.MinAmount, F.MaxAmount)
+        : FString::Printf(TEXT("%d-%d"), F.MinAmount, F.MaxAmount);
     FString Label = F.bHealing ? TEXT("Heal +") + Amount
         : (F.bAttackRoll ? FString::Printf(TEXT("%d%% | "), F.HitChancePercent) : FString(TEXT("Auto | "))) + Amount;
     for (const auto& A : FBuildCatalog::Abilities(*Actor))

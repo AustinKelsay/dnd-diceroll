@@ -4,7 +4,7 @@
 - Authority: Austin's 2026-11-02 request to deepen the discussed gaps systematically, end to end, full send; bounded design/tuning and slice decisions delegated to the program owner.
 - Root owner/workspace: primary agent, `dnd-diceroll-depth`, branch `feature/gameplay-depth`.
 - Starting baseline: staging `df25f32ae47dded0d1832cb9ef2eddaa251a52d9` (menu #110). Original checkout and other feature worktrees are preserved.
-- Current slice: [#50](https://github.com/AustinKelsay/dnd-diceroll/issues/50), authoritative targeting information and simultaneous outcome previews. No gameplay implementation is claimed yet.
+- Current slice: [#50](https://github.com/AustinKelsay/dnd-diceroll/issues/50), targeting information and simultaneous outcome previews. Source is implemented; integration and acceptance remain incomplete. Mac work is quiesced by the owner's desktop migration direction; continue from the [migration handoff](03-desktop-handoff.md).
 
 ## Ordered delivery
 
@@ -21,7 +21,7 @@ The parent issue owns the approved program boundaries. Concrete child contracts 
 
 | Slice | Fixed review baseline | Implementation | Verification | Independent review | Remaining |
 | --- | --- | --- | --- | --- | --- |
-| #50 targeting | `df25f32` | Source unit cherry-picked as `f1697f3`; root fixture correction follows | Doctor passes on Python 3.15 / UE 5.8.4; helpers 50/50; contribution/whitespace checks pass; native build/automation not run | Round 1 being prepared | Build, automation, native acceptance, review resolution, PR/integration |
+| #50 targeting | `df25f32` | Source unit `f1697f3`, fixture coverage `200ac9a`, compiler/identity corrections in migration commit | Final UE 5.8.4 Development build passes without compiler warnings. Latest executed full suite: 84/85, only new targeting fixture failed; identity correction compiled but not retested. Helpers 50/50. | Not started | Desktop focused/full tests, independent review, package/native acceptance, PR/integration |
 
 ## Coordination and evidence
 
@@ -37,7 +37,7 @@ The child delivered `4d645b1` from isolated `t3-3aadf8f2`; its local merge basel
 
 Root static inspection found that the new test's fabricated spent Bonus Action conflicts with strict restore validation for heroes whose corresponding resource is untouched. The fixture now spends only the Action budget in that restore case. Each authored ability starts with an independent battle, and Barbarian signatures reach the following own turn through real EndTurn commands so Frenzy is actually exercised. A second adjacent enemy exercises nontrivial area victim ordering. These are source-level corrections, with no executable red/green claim yet.
 
-The stability owner explicitly retained the host reservation on 2026-11-02. Root requested the next build/test and package/native slots after this handoff; no engine job will run before that coordination is resolved. Fresh root status reports no editor associated with this checkout and rejects the other project's listener PID 50002. Independent source review may proceed while native acceptance is pending; it cannot authorize integration by itself.
+The stability owner released bounded build/test slots on 2026-11-02; package/native QA was never released or run. The final active build finished successfully after the owner directed migration to desktop. No further Mac tests or engine jobs will run. Fresh root status before the jobs reported no editor associated with this checkout and rejected the other project's listener PID 50002. That editor remains untouched. Independent review was not started; a preparatory snapshot file is not review evidence.
 
 ## Handoff
 

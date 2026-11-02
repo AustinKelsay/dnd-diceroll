@@ -4,7 +4,7 @@
 - Fixed baseline: `df25f32ae47dded0d1832cb9ef2eddaa251a52d9`.
 - Diff command throughout review: `git diff df25f32ae47dded0d1832cb9ef2eddaa251a52d9 -- Source/DnDDiceRoll docs/runs/gameplay-depth`.
 - Review contract: one fresh GPT-6.1 Sol xhigh reviewer per round, Standards and Spec reported separately, no writes or engine/native actions. Working-tree snapshots before/after detect unexpected changes.
-- Current status: first source review is being prepared. Build, native automation, package and rendered/input acceptance remain pending because the stability session holds the host reservation. This record is not approval or integration evidence.
+- Current status: independent review has not started. Bounded Mac verification reached a successful build and a full-suite targeting-fixture failure, then a successful build of the corrected fixture. The owner's desktop migration interrupted further tests. Package and rendered/input acceptance remain pending. See the [handoff](03-desktop-handoff.md). This record is not approval or integration evidence.
 
 ## Findings ledger
 
