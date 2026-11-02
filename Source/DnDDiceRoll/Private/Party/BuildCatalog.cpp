@@ -207,8 +207,25 @@ bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType A
 }
 int32 FBuildCatalog::MaxHitPoints(const FCombatantState& Hero)
 {
-    const int32 Con = FAbilityRules::Modifier(FAbilityRules::PrebuiltScores(Hero.AdventurerRole).Constitution);
-    return FLevelRules::MaxHitPoints(Hero.AdventurerRole, Hero.Level, EAdventurerRole::None, 0, Con);
+    FAbilityScores Scores; HeroScores(Hero, Scores);
+    const int32 Con = FAbilityRules::Modifier(Scores.Constitution);
+    return FLevelRules::MaxHitPoints(Hero.AdventurerRole, Hero.Level - Hero.SecondaryLevel, Hero.SecondaryRole, Hero.SecondaryLevel, Con);
+}
+bool FBuildCatalog::HeroScores(const FCombatantState& Hero, FAbilityScores& Out)
+{
+    Out = FAbilityRules::PrebuiltScores(Hero.AdventurerRole);
+    if (Hero.AsiChoices.Num() % 2) { return false; }
+    FString Error;
+    for (int32 I = 0; I < Hero.AsiChoices.Num(); I += 2)
+    {
+        if (Hero.AsiChoices[I] > 5 || Hero.AsiChoices[I + 1] > 5 ||
+            !FLevelRules::ApplyAsi(Out, static_cast<EAbility>(Hero.AsiChoices[I]), static_cast<EAbility>(Hero.AsiChoices[I + 1]), Error)) { return false; }
+    }
+    return true;
+}
+int32 FBuildCatalog::PendingAsi(const FCombatantState& Hero)
+{
+    return FLevelRules::AsiCount(Hero.AdventurerRole, Hero.Level - Hero.SecondaryLevel) + FLevelRules::AsiCount(Hero.SecondaryRole, Hero.SecondaryLevel) - Hero.AsiChoices.Num() / 2;
 }
 int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { return Build.Profile.DamageBonus + Level - 1; }
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)

@@ -102,6 +102,10 @@ public:
     bool Recover(bool bTakeRecovery, FString& Error);
     /** #76: at the rest point after a victory, a survivor spends one hit die (roll + CON) to heal. */
     bool ShortRest(int32 UnitId, int32& Healed, FString& Error);
+    /** #79 level-up choice: the level just gained goes to Role instead (SRD multiclass prerequisites apply). Reward phase only. */
+    bool ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FString& Error);
+    /** #79 ability score improvement: +1 to each of two abilities, or +2 when First == Second (cap 20). */
+    bool ChooseAbilityIncrease(int32 UnitId, EAbility First, EAbility Second, FString& Error);
     /** Rest-point activity by a living survivor (lock picking, ...). Outcome describes the roll. */
     bool CampActivity(int32 UnitId, ECampActivity Activity, FString& Outcome, FString& Error);
     static FString CampActivityName(ECampActivity Activity);

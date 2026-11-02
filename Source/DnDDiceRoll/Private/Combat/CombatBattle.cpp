@@ -962,8 +962,11 @@ FAbilityScores FCombatBattle::AbilityScores(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return FAbilityScores(); }
-    return Unit->Side == ECombatSide::Party && Unit->AdventurerRole != EAdventurerRole::None ?
-        FAbilityRules::PrebuiltScores(Unit->AdventurerRole) : FAbilityRules::EnemyScores(Unit->Role);
+    if (Unit->Side == ECombatSide::Party && Unit->AdventurerRole != EAdventurerRole::None)
+    {
+        FAbilityScores Scores; FBuildCatalog::HeroScores(*Unit, Scores); return Scores; // #79: ASIs apply
+    }
+    return FAbilityRules::EnemyScores(Unit->Role);
 }
 
 int32 FCombatBattle::AbilityModifier(int32 Id, EAbility Ability) const

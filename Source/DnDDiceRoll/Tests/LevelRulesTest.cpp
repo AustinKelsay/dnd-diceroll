@@ -71,6 +71,29 @@ bool FLevelProgressionRunTest::RunTest(const FString& Parameters)
     auto Bad = Run.Snapshot();
     for (auto& U : Bad.Battle.Encounter.Combatants) { if (U.Id == 1) { U.Xp += 1; } }
     TestFalse(TEXT("XP off the table rejected"), Restored.Restore(Bad, Error));
+    if (!TestTrue(TEXT("Seed 42 fighter survives"), F->Life == ECombatLife::Conscious)) { return true; }
+    TestFalse(TEXT("Fighter DEX 12 cannot multiclass Rogue"), Run.ChooseMulticlass(1, EAdventurerRole::Rogue, Error));
+    TestFalse(TEXT("No ASI at level 2"), Run.ChooseAbilityIncrease(1, EAbility::Strength, EAbility::Strength, Error));
+    const int32 HpBefore = F->HP;
+    TestTrue(TEXT("Fighter WIS 13 multiclasses Cleric"), Run.ChooseMulticlass(1, EAdventurerRole::Cleric, Error));
+    F = Run.Battle().Find(1);
+    TestEqual(TEXT("Cleric level taken"), F->SecondaryLevel, 1);
+    TestEqual(TEXT("Max HP: 12 + Cleric average 5 + 2"), F->MaxHP, 19);
+    TestEqual(TEXT("Current HP follows the max change"), F->HP, HpBefore - 1);
+    TestFalse(TEXT("One choice per level"), Run.ChooseMulticlass(1, EAdventurerRole::Cleric, Error));
+    TestTrue(TEXT("Multiclassed checkpoint restores"), Restored.Restore(Run.Snapshot(), Error));
+    Bad = Run.Snapshot();
+    for (auto& U : Bad.Battle.Encounter.Combatants) { if (U.Id == 1) { U.SecondaryRole = EAdventurerRole::Wizard; } }
+    TestFalse(TEXT("Wizard without INT 13 rejected"), Restored.Restore(Bad, Error));
+    Bad = Run.Snapshot();
+    for (auto& U : Bad.Battle.Encounter.Combatants) { if (U.Id == 1) { U.AsiChoices = {0, 0}; } }
+    TestFalse(TEXT("Unearned ASI rejected"), Restored.Restore(Bad, Error));
+    FCombatantState Four; FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Four"), Four); Four.Level = 4;
+    TestEqual(TEXT("Fighter 4 has one ASI"), FBuildCatalog::PendingAsi(Four), 1);
+    Four.AsiChoices = {static_cast<uint8>(EAbility::Constitution), static_cast<uint8>(EAbility::Constitution)};
+    FAbilityScores S; TestTrue(TEXT("CON +2 replays"), FBuildCatalog::HeroScores(Four, S));
+    TestEqual(TEXT("CON 17"), S.Constitution, 17);
+    TestEqual(TEXT("CON +3 raises HP retroactively: 10+3 + 3*(6+3)"), FBuildCatalog::MaxHitPoints(Four), 40);
     return true;
 }
 #endif

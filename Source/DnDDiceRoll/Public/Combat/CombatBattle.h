@@ -55,6 +55,13 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Level = 1;
     /** #79: experience points; a party hero's level is FLevelRules::LevelForXp(Xp). */
     UPROPERTY() int32 Xp = 0;
+    /** #79 multiclassing: levels taken in a second class (Level counts both classes). */
+    UPROPERTY() EAdventurerRole SecondaryRole = EAdventurerRole::None;
+    UPROPERTY() int32 SecondaryLevel = 0;
+    /** #79 ability score improvements, as (first, second) EAbility pairs replayed onto the prebuilt scores. */
+    UPROPERTY() TArray<uint8> AsiChoices;
+    /** #79: the character level whose multiclass choice was spent (0 = none yet). */
+    UPROPERTY() int32 ChoiceLevel = 0;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
     UPROPERTY() int32 ManeuverUses = 0;
     UPROPERTY() int32 KitUses = 0;

@@ -333,6 +333,40 @@ bool FExpeditionRun::ShortRest(int32 UnitId, int32& Healed, FString& Error)
     return true;
 }
 
+bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FString& Error)
+{
+    Error.Reset();
+    FCombatantState* Hero = Combat.MutableFind(UnitId);
+    if (!bStarted || State.Phase != EExpeditionPhase::Reward || !Hero || Hero->Side != ECombatSide::Party || Hero->Life != ECombatLife::Conscious)
+    { Error = TEXT("Level-up choices happen after a victory, for a living survivor."); return false; }
+    if (Hero->Level < 2 || Hero->ChoiceLevel == Hero->Level) { Error = FString::Printf(TEXT("%s has no level-up choice left."), *Hero->Name); return false; }
+    if (Hero->SecondaryRole != EAdventurerRole::None && Hero->SecondaryRole != Role) { Error = TEXT("This build supports one extra class."); return false; }
+    FAbilityScores Scores; FBuildCatalog::HeroScores(*Hero, Scores);
+    if (!FLevelRules::CanMulticlass(Hero->AdventurerRole, Role, Scores, Error)) { return false; }
+    if (Hero->Level - Hero->SecondaryLevel <= 1) { Error = TEXT("Keep at least one level in the starting class."); return false; }
+    const int32 Before = Hero->MaxHP;
+    Hero->SecondaryRole = Role; ++Hero->SecondaryLevel; Hero->ChoiceLevel = Hero->Level;
+    Hero->MaxHP = FBuildCatalog::MaxHitPoints(*Hero);
+    Hero->HP = FMath::Clamp(Hero->HP + Hero->MaxHP - Before, 1, Hero->MaxHP);
+    return true;
+}
+
+bool FExpeditionRun::ChooseAbilityIncrease(int32 UnitId, EAbility First, EAbility Second, FString& Error)
+{
+    Error.Reset();
+    FCombatantState* Hero = Combat.MutableFind(UnitId);
+    if (!bStarted || State.Phase != EExpeditionPhase::Reward || !Hero || Hero->Side != ECombatSide::Party || Hero->Life != ECombatLife::Conscious)
+    { Error = TEXT("Ability score improvements are chosen after a victory, for a living survivor."); return false; }
+    if (FBuildCatalog::PendingAsi(*Hero) <= 0) { Error = FString::Printf(TEXT("%s has no ability score improvement to spend."), *Hero->Name); return false; }
+    FCombatantState Next = *Hero; Next.AsiChoices.Add(static_cast<uint8>(First)); Next.AsiChoices.Add(static_cast<uint8>(Second));
+    FAbilityScores Scores;
+    if (!FBuildCatalog::HeroScores(Next, Scores)) { Error = TEXT("Ability scores cannot rise above 20."); return false; }
+    Next.MaxHP = FBuildCatalog::MaxHitPoints(Next);
+    Next.HP = FMath::Clamp(Hero->HP + Next.MaxHP - Hero->MaxHP, 1, Next.MaxHP);
+    *Hero = Next;
+    return true;
+}
+
 int32 FExpeditionRun::CampD20(int32 UnitId, ECampActivity Activity) const
 {
     int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(1000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
@@ -634,13 +668,18 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
             Base.MaxHP = FBuildCatalog::MaxHitPoints(U);
             if (U.Xp != (U.Level == 1 ? 0 : FLevelRules::XpForLevel(U.Level))) { return Reject(); }
+            FAbilityScores Scores; FString Ignored;
+            if (!FBuildCatalog::HeroScores(U, Scores) || FBuildCatalog::PendingAsi(U) < 0 || U.SecondaryLevel < 0 || U.SecondaryLevel >= U.Level ||
+                (U.SecondaryLevel > 0) != (U.SecondaryRole != EAdventurerRole::None) || U.SecondaryRole == U.AdventurerRole ||
+                (U.ChoiceLevel != 0 && (U.ChoiceLevel < 2 || U.ChoiceLevel > U.Level)) || (U.SecondaryLevel > 0 && U.ChoiceLevel == 0)) { return Reject(); }
+            if (U.SecondaryRole != EAdventurerRole::None && (!FLevelRules::MeetsMulticlassPrerequisite(U.SecondaryRole, Scores) || !FLevelRules::MeetsMulticlassPrerequisite(U.AdventurerRole, Scores))) { return Reject(); }
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
             (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
-            (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.Xp != 0 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
+            (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.Xp != 0 || U.SecondaryLevel != 0 || U.SecondaryRole != EAdventurerRole::None || !U.AsiChoices.IsEmpty() || U.ChoiceLevel != 0 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
             int32 Gear = 0, SuppliedPotions = 1;
