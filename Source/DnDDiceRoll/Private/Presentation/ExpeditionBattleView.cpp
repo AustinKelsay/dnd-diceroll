@@ -67,11 +67,12 @@ FPalette ThemedPaletteFor(EBoardTheme Theme)
     switch (Theme)
     {
     case EBoardTheme::Ruins:
-        Palette.Sun = {0.6f, 0.68f, 1.0f}; Palette.SunIntensity = 2.4f; Palette.SunPitch = -50.0f; Palette.SunYaw = 60.0f;
-        Palette.Fog = {0.1f, 0.13f, 0.26f}; Palette.FogDensity = 0.035f; break;
+        // Gritty dark fantasy: dull grey-green fill and peat-brown fog, torches carry the warmth (no blue cast).
+        Palette.Sun = {0.62f, 0.6f, 0.52f}; Palette.SunIntensity = 1.9f; Palette.SunPitch = -50.0f; Palette.SunYaw = 60.0f;
+        Palette.Fog = {0.08f, 0.065f, 0.045f}; Palette.FogDensity = 0.035f; break;
     case EBoardTheme::Vault:
-        Palette.Sun = {0.45f, 0.5f, 0.9f}; Palette.SunIntensity = 1.3f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
-        Palette.Fog = {0.05f, 0.06f, 0.14f}; Palette.FogDensity = 0.045f; break;
+        Palette.Sun = {0.5f, 0.46f, 0.4f}; Palette.SunIntensity = 1.0f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
+        Palette.Fog = {0.045f, 0.035f, 0.025f}; Palette.FogDensity = 0.045f; break;
     default:
         Palette.Sun = {1.0f, 0.86f, 0.62f}; Palette.SunIntensity = 3.2f; Palette.SunPitch = -48.0f; Palette.SunYaw = -30.0f;
         Palette.Fog = {0.22f, 0.3f, 0.2f}; Palette.FogDensity = 0.03f; break;
@@ -309,12 +310,19 @@ void AExpeditionBattleView::ApplyTheme()
     Settings.AutoExposureBias = BoardTheme == EBoardTheme::Vault ? -1.7f : BoardTheme == EBoardTheme::Meadow ? -0.6f : -1.0f;
     if (Theme)
     {
-        // Darker, cooler and less saturated than the primitive look; candles carry the warmth.
-        Settings.ColorSaturation = FVector4(0.95f, 0.95f, 0.95f, 1.0f);
+        // Matte and muddy (late PS1): desaturated, no bloom sheen; candles and torches carry the warmth.
+        Settings.ColorSaturation = FVector4(0.78f, 0.78f, 0.78f, 1.0f);
         Settings.ColorContrast = FVector4(1.12f, 1.12f, 1.12f, 1.0f);
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
-        Settings.BloomIntensity = 0.45f;
+        Settings.BloomIntensity = 0.0f;
+        // Kill the baked world's cold blue cast: warm muddy tint, blue channel desaturated, darker overall.
+        Settings.bOverride_SceneColorTint = true;
+        Settings.SceneColorTint = FLinearColor(1.0f, 0.86f, 0.66f);
+        Settings.ColorSaturation = FVector4(0.85f, 0.7f, 0.4f, 0.62f);
+        Settings.bOverride_ColorGamma = true;
+        Settings.ColorGamma = FVector4(1.0f, 1.0f, 1.0f, 0.9f);
+        if (!bOverview && BoardTheme == EBoardTheme::Vault) { Settings.AutoExposureBias = -1.9f; }
     }
 }
 
