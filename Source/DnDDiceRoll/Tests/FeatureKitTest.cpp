@@ -226,4 +226,49 @@ bool FBardicInspirationTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Both branches seen"), Used > 0 && Kept > 0);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWildShapeTest, "Project.Expedition.Features.WildShape",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FWildShapeTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Druid = Hero(TEXT("druid.moon"), 2);
+    FFeatureKit::Refill(Druid);
+    TestEqual(TEXT("Two uses at Druid 2"), Druid.WildShapeUses, 2);
+    TestFalse(TEXT("None at Druid 1"), FFeatureKit::Commands(Hero(TEXT("druid.moon"), 1)).Contains(ECombatCommandType::WildShape));
+    TestTrue(TEXT("Action tag"), FCombatBattle::ActionCost(ECombatCommandType::WildShape, Druid) == EActionCost::Action && FCombatBattle::CostTag(ECombatCommandType::WildShape).StartsWith(TEXT("Action")));
+    FCombatantState Bad = Druid; Bad.WildShapeHP = 12;
+    TestFalse(TEXT("Form HP above the wolf is invalid"), FFeatureKit::Valid(Bad));
+    FCombatantState Shaped = Druid; Shaped.WildShapeHP = FFeatureKit::WolfHP;
+    int32 Count = 0, Sides = 0; FCombatBattle::WeaponDice(Shaped, Count, Sides);
+    TestEqual(TEXT("Bite 2d4"), FIntPoint(Count, Sides), FIntPoint(2, 4));
+    TestEqual(TEXT("Melee reach in form"), FCombatBattle::ActionRange(Shaped, ECombatCommandType::Attack), 1);
+
+    FCombatBattle Battle; FString Error;
+    if (!TestTrue(TEXT("Start"), Battle.Start(Duel(Druid, {1, 0}), 3, Error))) { AddError(Error); return true; }
+    const int32 AcBefore = Battle.EffectiveArmorClass(10);
+    TestTrue(TEXT("Shift"), Battle.Submit({ECombatCommandType::WildShape, 10, {}, 10}).bAccepted);
+    TestFalse(TEXT("Action spent"), Battle.Snapshot().bActionAvailable);
+    TestEqual(TEXT("Form HP"), Battle.Find(10)->WildShapeHP, 11);
+    TestEqual(TEXT("Use spent"), Battle.Find(10)->WildShapeUses, 1);
+    TestEqual(TEXT("Wolf AC"), Battle.EffectiveArmorClass(10), 13);
+    AddInfo(FString::Printf(TEXT("AC before %d"), AcBefore));
+    TestTrue(TEXT("No spells in form"), Battle.LegalTargets(10, ECombatCommandType::CureWounds).IsEmpty());
+    TestTrue(TEXT("Cannot shift again while shaped"), Battle.LegalTargets(10, ECombatCommandType::WildShape).IsEmpty());
+    { FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error)); }
+    // The foe's hits drain the form first.
+    TestTrue(TEXT("End turn"), Battle.Submit({ECombatCommandType::EndTurn, 10, {}, INDEX_NONE}).bAccepted);
+    const int32 HpBefore = Battle.Find(10)->HP;
+    int32 Dealt = 0;
+    for (int32 I = 0; I < 1; ++I)
+    {
+        const FCombatResult Hit = Battle.Submit({ECombatCommandType::Attack, 20, {}, 10});
+        TestTrue(TEXT("Foe attacks"), Hit.bAccepted);
+        if (Hit.bHit) { Dealt += Hit.Damage; }
+    }
+    const FCombatantState* After = Battle.Find(10);
+    TestEqual(TEXT("Form absorbs before HP"), HpBefore - After->HP, FMath::Max(0, Dealt - 11));
+    TestEqual(TEXT("Form HP drained"), After->WildShapeHP, FMath::Max(0, 11 - Dealt));
+    return true;
+}
 #endif

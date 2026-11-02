@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::BardicInspiration;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::WildShape;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -42,6 +42,12 @@ public:
     /** d6 at Bard 1-4, d8 from Bard 5. */
     static int32 BardicSides(const FCombatantState& Bard);
     static constexpr int32 BardicCells = 12;
+    static int32 WildShapeCap(const FCombatantState& Hero);
+    // SRD wolf (CR 1/4), the basic form: AC 13, 11 HP, bite +4 for 2d4+2.
+    static constexpr int32 WolfHP = 11;
+    static constexpr int32 WolfAC = 13;
+    static constexpr int32 WolfAttack = 4;
+    static constexpr int32 WolfDamageBonus = 2;
     /** Whether any feature of the hero can spend the bonus action (save validation). */
     static bool HasBonusFeature(const FCombatantState& Hero);
     /** SRD creature type from the monster profile (Skeleton, Zombie). */

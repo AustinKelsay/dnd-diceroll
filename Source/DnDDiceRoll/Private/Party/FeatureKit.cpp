@@ -61,6 +61,8 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.ActionSurgeUses = ActionSurgeCap(Hero);
     Hero.ChannelUses = ChannelCap(Hero);
     Hero.BardicUses = BardicCap(Hero);
+    Hero.WildShapeUses = WildShapeCap(Hero);
+    Hero.WildShapeHP = 0;
 }
 void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
 {
@@ -69,6 +71,7 @@ void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
     Raise(Hero.ActionSurgeUses, ActionSurgeCap(Hero), ActionSurgeCap(Before));
     Raise(Hero.ChannelUses, ChannelCap(Hero), ChannelCap(Before));
     Raise(Hero.BardicUses, BardicCap(Hero), BardicCap(Before));
+    Raise(Hero.WildShapeUses, WildShapeCap(Hero), WildShapeCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 {
@@ -88,6 +91,10 @@ int32 FFeatureKit::BardicSides(const FCombatantState& Bard)
 {
     return FBuildCatalog::ClassLevel(Bard, EAdventurerRole::Bard) >= 5 ? 8 : 6;
 }
+int32 FFeatureKit::WildShapeCap(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Druid) >= 2 ? 2 : 0;
+}
 bool FFeatureKit::HasBonusFeature(const FCombatantState& Hero)
 {
     return Commands(Hero).ContainsByPredicate([](ECombatCommandType Action) { return Cost(Action) == EActionCost::BonusAction; });
@@ -103,6 +110,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::ActionSurge: return TEXT("Action Surge");
     case ECombatCommandType::TurnUndead: return TEXT("Turn Undead");
     case ECombatCommandType::BardicInspiration: return TEXT("Bardic Inspiration");
+    case ECombatCommandType::WildShape: return TEXT("Wild Shape");
     default: return TEXT("Feature");
     }
 }
@@ -122,6 +130,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::ActionSurge: return FString::Printf(TEXT("free, %d left"), Hero.ActionSurgeUses);
     case ECombatCommandType::TurnUndead: return FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
     case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
+    case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     default: return FString();
     }
 }
@@ -131,6 +140,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (ActionSurgeCap(Hero)) { Out.Add(ECombatCommandType::ActionSurge); }
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
+    if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
     return Out;
 }
 bool FFeatureKit::PicksTarget(ECombatCommandType Action)
@@ -141,5 +151,6 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
     return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
         Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
-        Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8);
+        Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
+        Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0);
 }

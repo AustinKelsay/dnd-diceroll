@@ -48,6 +48,7 @@ int32 WeaponMaxDice(const FCombatantState& Unit)
 }
 const FWeaponProfile* MainWeapon(const FCombatantState& Unit)
 {
+    if (Unit.WildShapeHP > 0) { return nullptr; } // beast form: natural weapons only
     return Unit.MainHand >= 0 && Unit.MainHand < static_cast<int32>(EWeapon::Count) ? &FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)) : nullptr;
 }
 bool RangedAttacker(const FCombatantState& Unit)
@@ -78,7 +79,7 @@ FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantSt
 int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
-    if (!Weapon) { return Unit.AttackBonus; }
+    if (!Weapon) { return Unit.WildShapeHP > 0 ? FFeatureKit::WolfAttack : Unit.AttackBonus; }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
     const int32 Archery = Weapon->bRanged && FFeatureKit::Style(Unit) == EFightingStyle::Archery ? 2 : 0;
     return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + Archery;
@@ -86,7 +87,7 @@ int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit
 int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
-    if (!Weapon) { return FBuildCatalog::AttackModifier(Unit); }
+    if (!Weapon) { return Unit.WildShapeHP > 0 ? FFeatureKit::WolfDamageBonus : FBuildCatalog::AttackModifier(Unit); }
     const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
     const int32 Dueling = !Weapon->bRanged && !Weapon->Has(EWeaponProperty::TwoHanded) && Unit.OffHand < 0 && FFeatureKit::Style(Unit) == EFightingStyle::Dueling ? 2 : 0;
     return FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0) + Dueling;
@@ -292,6 +293,7 @@ int32 FCombatBattle::Roll(int32 Sides)
 void FCombatBattle::WeaponDice(const FCombatantState& Unit, int32& OutCount, int32& OutSides)
 {
     OutCount = 1; OutSides = Unit.DamageDie;
+    if (Unit.WildShapeHP > 0) { OutCount = 2; OutSides = 4; return; } // wolf bite
     if (Unit.MainHand < 0 || Unit.MainHand >= static_cast<int32>(EWeapon::Count))
     {
         // #72: the Wizard's basic attack is the Fire Bolt cantrip, whose dice grow at character level 5.
@@ -307,6 +309,7 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return 0; }
+    if (Unit->WildShapeHP > 0) { return FFeatureKit::WolfAC; }
     const int32 Spell = (Unit->bShielded ? 5 : 0) + (Unit->ArmorWorn >= 0 && FFeatureKit::Style(*Unit) == EFightingStyle::Defense ? 1 : 0);
     if (Unit->ArmorWorn < 0) { return Spell + Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
     return Spell + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
@@ -386,6 +389,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::OffHandAttack: return TEXT("OFF-HAND | Bonus | adjacent foe | after the Attack action with two light weapons; no ability bonus to damage");
     case ECombatCommandType::ActionSurge: return TEXT("ACTION SURGE | Free + 1 use | self | after spending your action, take one more action this turn; 1 use per rest");
     case ECombatCommandType::BardicInspiration: return TEXT("BARDIC INSPIRATION | Bonus + 1 use | ally within 60 ft | the ally holds a d6 (d8 at Bard 5), added to its next attack roll that would miss");
+    case ECombatCommandType::WildShape: return TEXT("WILD SHAPE | Action + 1 use | self | become a wolf: 11 form HP take damage first, AC 13, bite +4 for 2d4+2, no spells; 2 uses per rest");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
@@ -648,6 +652,7 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
     if (IsIncapacitated(*Unit)) { return nullptr; }
     if (FFeatureKit::IsFeature(Action)) { return FeatureReady(*Unit, Action) ? Unit : nullptr; }
+    if (Unit->WildShapeHP > 0 && !SpellTag(Action).IsEmpty()) { return nullptr; } // beasts cannot cast spells
     if (Action == ECombatCommandType::OffHandAttack)
     {
         const FWeaponProfile* Main = MainWeapon(*Unit);
@@ -677,7 +682,7 @@ int32 FCombatBattle::ActionRange(const FCombatantState& Unit, ECombatCommandType
     {
     case ECombatCommandType::Attack: case ECombatCommandType::PrecisionStrike:
         if (const FWeaponProfile* Weapon = MainWeapon(Unit)) { return Weapon->bRanged ? Weapon->LongFeet / FWeaponRules::FeetPerCell : FWeaponRules::ReachCells(*Weapon); }
-        return Unit.Range;
+        return Unit.WildShapeHP > 0 ? 1 : Unit.Range;
     case ECombatCommandType::MagicMissile: return MissileRange;
     case ECombatCommandType::CureWounds: case ECombatCommandType::Rescue: case ECombatCommandType::Potion: return Unit.Side == ECombatSide::Party ? TouchRange : 0;
     default: return 0;
@@ -1776,6 +1781,12 @@ int32 FCombatBattle::ProtectionFor(const FCombatantState& Target) const
 
 void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
 {
+    if (Target.WildShapeHP > 0 && Damage > 0)
+    {
+        // SRD Wild Shape: the beast form takes the damage; at 0 the druid reverts and the excess carries over.
+        const int32 Absorbed = FMath::Min(Target.WildShapeHP, Damage);
+        Target.WildShapeHP -= Absorbed; Damage -= Absorbed;
+    }
     const int32 Protection = ProtectionFor(Target);
     const int32 HPBefore = Target.HP;
     const int32 Real = FDeathSaveRules::AbsorbWithTemporary(Target.TemporaryHP, FMath::Max(0, Damage - Protection));
@@ -2008,6 +2019,7 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::ActionSurge: return Unit.ActionSurgeUses > 0 && !State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::TurnUndead: return Unit.ChannelUses > 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::BardicInspiration: return Unit.BardicUses > 0 && State.bBonusActionAvailable;
+    case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     default: return false;
     }
 }
@@ -2037,6 +2049,11 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = true;
         State.bAttackActionTaken = false;
         return FString::Printf(TEXT("%s uses Action Surge: one more action this turn (%d left)."), *User->Name, User->ActionSurgeUses);
+    case ECombatCommandType::WildShape:
+        --User->WildShapeUses;
+        State.bActionAvailable = false;
+        User->WildShapeHP = FFeatureKit::WolfHP;
+        return FString::Printf(TEXT("%s takes the shape of a wolf (%d form HP, AC %d; %d uses left)."), *User->Name, User->WildShapeHP, FFeatureKit::WolfAC, User->WildShapeUses);
     case ECombatCommandType::BardicInspiration:
     {
         --User->BardicUses;

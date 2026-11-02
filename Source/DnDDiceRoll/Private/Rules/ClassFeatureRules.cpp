@@ -47,7 +47,7 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Ranger, {TEXT("Fighting Style"), 2, C::Free, true}}, {R::Ranger, {TEXT("Extra Attack"), 5, C::Action, true}},
         {R::Sorcerer, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Sorcerer, {TEXT("Sorcery Points"), 2, C::BonusAction, false}},
         {R::Warlock, {TEXT("Pact Magic"), 1, C::Action, true}},
-        {R::Druid, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Druid, {TEXT("Wild Shape"), 2, C::Action, false}},
+        {R::Druid, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Druid, {TEXT("Wild Shape"), 2, C::Action, true}},
         {R::Bard, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Bard, {TEXT("Bardic Inspiration"), 1, C::BonusAction, true}},
     };
     TArray<FClassFeature> Out;
