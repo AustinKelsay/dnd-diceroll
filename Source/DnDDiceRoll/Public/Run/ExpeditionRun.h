@@ -38,6 +38,9 @@ struct DNDDICEROLL_API FExpeditionEncounterRecord
     /** Camp activities: extra potions added to this victory's loot, and a bit per activity already tried. */
     UPROPERTY() int32 BonusPotions = 0;
     UPROPERTY() int32 ActivitiesUsed = 0;
+    /** Route hazard met on the way (EHazard index, -1 none) and whether the party passed its check. */
+    UPROPERTY() int32 Hazard = -1;
+    UPROPERTY() bool bHazardPassed = false;
 };
 
 /** Selection is fixed for a run; instance identity does not imply a class. */
@@ -69,6 +72,8 @@ struct DNDDICEROLL_API FExpeditionProgress
     UPROPERTY() bool bArtifactRecovered = false;
     /** Party purse in copper: a purse per victory, spent at the rest point. */
     UPROPERTY() int32 Coins = 0;
+    /** Off by default: dangerous routes roll an exploration hazard (keyed) before the fight. */
+    UPROPERTY() bool bRouteHazards = false;
 };
 
 /** Detached serialization contract: export both values together. Battle is a
@@ -101,6 +106,9 @@ public:
     bool CampActivity(int32 UnitId, ECampActivity Activity, FString& Outcome, FString& Error);
     static FString CampActivityName(ECampActivity Activity);
     static constexpr int32 VictoryPurseCopper = 2500;
+    /** Toggle route hazards while choosing a route. */
+    bool SetRouteHazards(bool bEnabled, FString& Error);
+    static FString HazardDescription(const FExpeditionEncounterRecord& Record);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     const FCombatBattle& Battle() const { return Combat; }

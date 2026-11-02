@@ -939,6 +939,8 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
     if (Session.ChooseRoute(Id, Error))
     {
         Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
+        const FString Hazard = FExpeditionRun::HazardDescription(Progress().History.Last());
+        if (!Hazard.IsEmpty()) { Record({true, Hazard}); Show.Sync(Rules().Snapshot()); }
         EnemyDelay = 0; RebuildBoard();
         const FCombatantState* First = Rules().Find(Rules().ActiveId());
         Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,

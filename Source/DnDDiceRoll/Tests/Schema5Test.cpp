@@ -1410,4 +1410,38 @@ bool FSchema5CampBuyPotionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Reached a rest point"), bChecked);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5RouteHazardTest, "Project.Expedition.Schema5.RouteHazard",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5RouteHazardTest::RunTest(const FString& Parameters)
+{
+    bool bHurt = false, bOff = false;
+    for (int32 Seed = 1; Seed < 200 && !(bHurt && bOff); ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Plain, Hazards;
+        Plain.NewRun(Seed, Error, TEXT("hazard"));
+        Hazards.NewRun(Seed, Error, TEXT("hazard"));
+        TestTrue(TEXT("Toggle on the road"), Hazards.SetRouteHazards(true, Error));
+        const FExpeditionRoute* Danger = Plain.Progress().Offers.FindByPredicate([](const FExpeditionRoute& R) { return R.bDangerous; });
+        if (!Danger) { continue; }
+        TestTrue(TEXT("Plain route"), Plain.ChooseRoute(Danger->Id, Error));
+        TestTrue(TEXT("Hazard route"), Hazards.ChooseRoute(Danger->Id, Error));
+        TestEqual(TEXT("Off by default: no hazard"), Plain.Progress().History.Last().Hazard, -1);
+        bOff = true;
+        const FExpeditionEncounterRecord& Met = Hazards.Progress().History.Last();
+        TestTrue(TEXT("Hazard rolled"), Met.Hazard >= 0);
+        TestFalse(TEXT("Hazard described"), FExpeditionRun::HazardDescription(Met).IsEmpty());
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Hazard run restores"), Copy.Restore(Hazards.Snapshot(), Error));
+        if (Met.Hazard <= 1 && !Met.bHazardPassed)
+        {
+            bHurt = true;
+            for (const FCombatantState& Unit : Hazards.Battle().Snapshot().Encounter.Combatants)
+            { if (Unit.Side == ECombatSide::Party) { TestTrue(TEXT("Lost HP but alive"), Unit.HP < Plain.Battle().Find(Unit.Id)->HP || Unit.HP == 1); } }
+        }
+    }
+    TestTrue(TEXT("Default compared"), bOff);
+    TestTrue(TEXT("Some hazard hurt the party"), bHurt);
+    return true;
+}
 #endif

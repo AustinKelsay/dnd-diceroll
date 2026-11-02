@@ -8,6 +8,7 @@
 #include "Rules/LockTrapRules.h"
 #include "Rules/SocialRules.h"
 #include "Rules/CoinRules.h"
+#include "Rules/HazardRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -142,6 +143,33 @@ bool FExpeditionRun::ChooseRoute(int32 RouteId, FString& Error)
     if (!bReady) { return false; }
     FExpeditionEncounterRecord Record;
     Record.Route = *Offered;
+    if (State.bRouteHazards && Offered->bDangerous)
+    {
+        // #85: a keyed hazard on dangerous roads; the best-suited living hero leads the check.
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), GetTypeHash(Offered->EncounterSeed ^ 0x4a7a)) & 0x7fffffff) | 1;
+        const EHazard Hazard = static_cast<EHazard>(FDiceRules::Roll(1, 4, Dice) - 1);
+        const FHazardSpec Spec = FHazardRules::Spec(Hazard);
+        int32 Leader = INDEX_NONE, Best = MIN_int32;
+        for (const FCombatantState& Unit : Candidate.Combat.Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious) { continue; }
+            const int32 Bonus = Candidate.Combat.Character(Unit.Id).SkillBonus(Spec.Skill);
+            if (Bonus > Best) { Best = Bonus; Leader = Unit.Id; }
+        }
+        if (Leader != INDEX_NONE)
+        {
+            const FHazardResult Result = FHazardRules::Resolve(Hazard, Best, ERollMode::Normal, Dice);
+            Record.Hazard = static_cast<int32>(Hazard);
+            Record.bHazardPassed = Result.Check.bSuccess;
+            for (const FCombatantState& Unit : Candidate.Combat.Snapshot().Encounter.Combatants)
+            {
+                if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious) { continue; }
+                FCombatantState* Hurt = Candidate.Combat.MutableFind(Unit.Id);
+                Hurt->HP = FMath::Max(1, Hurt->HP - Result.HitPointsLost);
+                if (Result.SuppliesLost > 0 && Unit.Id == Leader) { Hurt->Potions = FMath::Max(0, Hurt->Potions - Result.SuppliesLost); }
+            }
+        }
+    }
     Record.Survivors = CountSurvivors(Candidate.Combat);
     Candidate.State.History.Add(Record);
     Candidate.State.Offers.Reset();
@@ -361,6 +389,24 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
     return true;
 }
 
+bool FExpeditionRun::SetRouteHazards(bool bEnabled, FString& Error)
+{
+    Error.Reset();
+    if (!bStarted || State.Phase != EExpeditionPhase::Route) { Error = TEXT("Route hazards can be toggled while choosing a route."); return false; }
+    State.bRouteHazards = bEnabled;
+    return true;
+}
+
+FString FExpeditionRun::HazardDescription(const FExpeditionEncounterRecord& Record)
+{
+    if (Record.Hazard < 0) { return FString(); }
+    static const TCHAR* Names[] = { TEXT("A crumbling cliff"), TEXT("A narrow ledge"), TEXT("The trail is lost"), TEXT("A hidden passage") };
+    static const TCHAR* Passed[] = { TEXT("climbed safely"), TEXT("crossed safely"), TEXT("found the way"), TEXT("found a shortcut") };
+    static const TCHAR* Failed[] = { TEXT("everyone takes 4 damage"), TEXT("everyone takes 3 damage"), TEXT("the guide drops a potion"), TEXT("missed it") };
+    const int32 Index = FMath::Clamp(Record.Hazard, 0, 3);
+    return FString::Printf(TEXT("%s: %s."), Names[Index], Record.bHazardPassed ? Passed[Index] : Failed[Index]);
+}
+
 bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error)
 {
     Error.Reset();
@@ -371,7 +417,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     for (const auto& Record : P.History)
     {
-        if (P.Coins < 0 || Record.BonusPotions < 0 || Record.BonusPotions > static_cast<int32>(ECampActivity::Count) || Record.ActivitiesUsed < 0 ||
+        if (P.Coins < 0 || Record.Hazard < -1 || Record.Hazard > static_cast<int32>(EHazard::HiddenPassage) || (Record.Hazard >= 0 && !Record.Route.bDangerous) ||
+            (Record.Hazard < 0 && Record.bHazardPassed) || Record.BonusPotions < 0 || Record.BonusPotions > static_cast<int32>(ECampActivity::Count) || Record.ActivitiesUsed < 0 ||
             Record.ActivitiesUsed >= (1 << static_cast<int32>(ECampActivity::Count))) { return Reject(); }
     }
     for (int32 I = 0; I < 4; ++I)
