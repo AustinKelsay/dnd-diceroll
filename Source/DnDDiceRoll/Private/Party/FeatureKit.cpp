@@ -4,6 +4,7 @@
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/SpellRules.h"
 #include "Rules/WarlockRules.h"
+#include "Rules/BardRules.h"
 
 const TCHAR* FFeatureKit::StyleName(EFightingStyle Style)
 {
@@ -233,7 +234,8 @@ int32 FFeatureKit::BardicCap(const FCombatantState& Hero)
 }
 int32 FFeatureKit::BardicSides(const FCombatantState& Bard)
 {
-    return FBuildCatalog::ClassLevel(Bard, EAdventurerRole::Bard) >= 5 ? 8 : 6;
+    // SRD 5.2.1 Bard table: d6 at 1, d8 at 5, d10 at 10, d12 at 15 (Bard class level, multiclass-safe).
+    return FBardRules::InspirationDie(FBuildCatalog::ClassLevel(Bard, EAdventurerRole::Bard));
 }
 int32 FFeatureKit::WildShapeCap(const FCombatantState& Hero)
 {
@@ -328,7 +330,7 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
     return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
         Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
-        Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8) &&
+        Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8 || Hero.BardicDie == 10 || Hero.BardicDie == 12) &&
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
         (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) && (!Hero.bMagicalCunningUsed || HasMagicalCunning(Hero)) &&

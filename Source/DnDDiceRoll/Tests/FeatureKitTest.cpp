@@ -8,6 +8,7 @@
 #include "Rules/WeaponRules.h"
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/WarlockRules.h"
+#include "Rules/BardRules.h"
 
 namespace FeatureTest
 {
@@ -195,6 +196,9 @@ bool FBardicInspirationTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("At least one use"), Bard.BardicUses >= 1 && Bard.BardicUses == FFeatureKit::BardicCap(Bard));
     TestEqual(TEXT("d6 at Bard 1"), FFeatureKit::BardicSides(Bard), 6);
     TestEqual(TEXT("d8 at Bard 5"), FFeatureKit::BardicSides(Hero(TEXT("bard.lore"), 5)), 8);
+    for (const int32 L : {1, 2, 3, 4, 5}) { TestEqual(FString::Printf(TEXT("Die matches SRD table at Bard %d"), L), FFeatureKit::BardicSides(Hero(TEXT("bard.lore"), L)), FBardRules::InspirationDie(L)); }
+    { FCombatantState Held = Hero(TEXT("fighter.champion"), 3); Held.BardicDie = 12; TestTrue(TEXT("A d12 held die is valid (Bard 15 data)"), FFeatureKit::Valid(Held)); Held.BardicDie = 7; TestFalse(TEXT("d7 invalid"), FFeatureKit::Valid(Held)); }
+    { FCombatantState FB = Hero(TEXT("fighter.champion"), 5); FB.SecondaryRole = EAdventurerRole::Bard; FB.SecondaryLevel = 1; TestEqual(TEXT("Fighter 4/Bard 1 rolls d6"), FFeatureKit::BardicSides(FB), 6); }
     TestTrue(TEXT("Bonus tag"), FCombatBattle::ActionCost(ECombatCommandType::BardicInspiration, Bard) == EActionCost::BonusAction && FCombatBattle::CostTag(ECombatCommandType::BardicInspiration).StartsWith(TEXT("Bonus")));
     TestTrue(TEXT("Targets an ally"), FFeatureKit::PicksTarget(ECombatCommandType::BardicInspiration));
     int32 Used = 0, Kept = 0;
