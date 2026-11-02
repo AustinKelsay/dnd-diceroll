@@ -94,7 +94,7 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Paladin,TEXT("paladin.vengeance"),TEXT("vengeance"),Ability(TEXT("Avenging Smite"),E::Strike,T::Enemy,1,8,true),Ability(TEXT("Relentless Exchange"),E::Swap,T::Ally,2,0,false));
         Kit(Paladin,TEXT("paladin.glory"),TEXT("glory"),Ability(TEXT("Heroic Exchange"),E::Swap,T::Ally,3,0,true),Ability(TEXT("Inspiring Touch"),E::Healing,T::Ally,1,8,false));
         Kit(Paladin,TEXT("paladin.watchers"),TEXT("watchers"),Ability(TEXT("Watcher's Rebuke"),E::Area,T::Enemy,2,4,false),Ability(TEXT("Vigil"),E::Protect,T::Self,0,3,true));
-        auto Ranger = Add(TEXT(""),TEXT("ranger"),TEXT(""),TEXT("Ranger"),EAdventurerRole::Ranger,24,14,6,3,4,2);
+        auto Ranger = Add(TEXT(""),TEXT("ranger"),TEXT(""),TEXT("Ranger"),EAdventurerRole::Ranger,24,14,6,3,4,3);
         Kit(Ranger,TEXT("ranger.hunter"),TEXT("hunter"),Ability(TEXT("Volley"),E::Area,T::Enemy,4,4,false),Ability(TEXT("Hunter's Finish"),E::Strike,T::Enemy,4,4,true));
         Kit(Ranger,TEXT("ranger.beast-master"),TEXT("beast-master"),Ability(TEXT("Companion Pounce"),E::Push,T::Enemy,3,4,false),Ability(TEXT("Companion Guard"),E::Protect,T::Ally,3,3,true));
         Kit(Ranger,TEXT("ranger.fey-wanderer"),TEXT("fey-wanderer"),Ability(TEXT("Fey Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Dreadful Strike"),E::Strike,T::Enemy,4,6,false));

@@ -1715,4 +1715,17 @@ bool FSchema5ScaledSneakTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Level 1 is 1d6"), Low.Forecast(1, ECombatCommandType::Attack, 4).Formula.Contains(TEXT("+1d6 sneak")));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5RangerInitiativeTest, "Project.Expedition.Schema5.RangerInitiative",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5RangerInitiativeTest::RunTest(const FString& Parameters)
+{
+    // DEX 16 => +3 initiative (SRD 5.1); the profile used to say +2.
+    for (const TCHAR* Id : {TEXT("ranger.hunter"), TEXT("ranger.beast-master"), TEXT("ranger.fey-wanderer"), TEXT("ranger.swarmkeeper")})
+    {
+        FCombatantState Ranger;
+        TestTrue(FString::Printf(TEXT("%s builds"), Id), FBuildCatalog::Create(Id, 1, TEXT("R"), Ranger));
+        TestEqual(FString::Printf(TEXT("%s initiative"), Id), Ranger.InitiativeBonus, 3);
+    }
+    return true;
+}
 #endif
