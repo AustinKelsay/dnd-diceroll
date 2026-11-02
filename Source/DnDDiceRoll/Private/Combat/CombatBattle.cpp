@@ -20,6 +20,8 @@
 #include "Rules/StealthRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/LightRules.h"
+#include "Rules/EncumbranceRules.h"
+#include "Rules/CoinRules.h"
 
 namespace
 {
@@ -58,6 +60,13 @@ bool NeedsAmmunition(const FCombatantState& Unit)
     return Weapon && Weapon->Has(EWeaponProperty::Ammunition);
 }
 // Armor penalties apply to party adventurers wearing armor or a shield their class is not trained for.
+int32 BaseSpeed(const FCombatBattle& Battle, const FCombatantState& Unit)
+{
+    if (!Battle.Snapshot().Encounter.bEncumbrance) { return Unit.Speed; }
+    const int32 Pounds = Unit.CarriedPounds + Unit.Potions * FEncumbranceRules::Weight(EShopItem::PotionOfHealing) + (Unit.bShieldEquipped ? FEncumbranceRules::Weight(EShopItem::Shield) : 0);
+    return FEncumbranceRules::SpeedCells(Unit.Speed, Pounds, Battle.AbilityScores(Unit.Id).Strength, true);
+}
+
 FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     if (Unit.Side != ECombatSide::Party || Unit.AdventurerRole == EAdventurerRole::None || (Unit.ArmorWorn < 0 && !Unit.bShieldEquipped)) { return FArmorPenalties(); }
@@ -1176,7 +1185,7 @@ void FCombatBattle::BeginTurn()
     for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
-    const int32 TurnSpeed = FMath::Max(0, Unit->Speed - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+    const int32 TurnSpeed = FMath::Max(0, BaseSpeed(*this, *Unit) - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
     State.MovementLeft = bHeld ? 0 : TurnSpeed;
     if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone))
     {
@@ -1572,7 +1581,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         case ECombatCommandType::Dash:
         {
             const bool bHeld = HasCondition(*User, ECombatCondition::Grappled) || HasCondition(*User, ECombatCondition::Restrained);
-            const int32 Added = bHeld ? 0 : FMath::Max(0, User->Speed - ArmorPenaltiesOf(*this, *User).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+            const int32 Added = bHeld ? 0 : FMath::Max(0, BaseSpeed(*this, *User) - ArmorPenaltiesOf(*this, *User).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
             State.MovementLeft += Added;
             Effect = FString::Printf(TEXT("dashes (+%d movement, %d left)"), Added, State.MovementLeft);
             break;

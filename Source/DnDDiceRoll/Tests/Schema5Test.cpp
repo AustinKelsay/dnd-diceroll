@@ -1521,4 +1521,28 @@ bool FSchema5DarknessTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Both sources listed"), B.RollModeSources.Num(), 2);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5EncumbranceTest, "Project.Expedition.Schema5.EncumbranceInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5EncumbranceTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({7, 7});
+    Encounter.Combatants[0].Speed = 6;
+    FString Error;
+    FCombatBattle Probe;
+    TestTrue(TEXT("Starts"), Probe.Start(Encounter, 7, Error));
+    const int32 Strength = Probe.AbilityScores(10).Strength;
+    Encounter.Combatants[0].CarriedPounds = 10 * Strength + 1;
+    FCombatBattle Off;
+    TestTrue(TEXT("Starts off"), Off.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Off by default: full speed"), Off.Snapshot().MovementLeft, 6);
+    Encounter.bEncumbrance = true;
+    FCombatBattle Heavy;
+    TestTrue(TEXT("Starts heavy"), Heavy.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Heavily encumbered: -4 cells"), Heavy.Snapshot().MovementLeft, 2);
+    Encounter.Combatants[0].CarriedPounds = 5 * Strength + 1;
+    FCombatBattle Light;
+    TestTrue(TEXT("Starts light"), Light.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Encumbered: -2 cells"), Light.Snapshot().MovementLeft, 4);
+    return true;
+}
 #endif

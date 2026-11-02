@@ -108,6 +108,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bSurprised = false;
     /** Heroic inspiration held (#87): spent automatically for advantage on the next attack roll. */
     UPROPERTY() bool bInspired = false;
+    /** Pack weight in pounds beyond potions and shield (#89 encumbrance variant). */
+    UPROPERTY() int32 CarriedPounds = 0;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
@@ -134,6 +136,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bInspiration = false;
     /** Off by default: the whole field is dark; only darkvision (by role) sees, which sets attack advantage/disadvantage. */
     UPROPERTY() bool bDarkness = false;
+    /** Off by default: variant encumbrance slows units by carried weight (pack + potions + shield) against Strength. */
+    UPROPERTY() bool bEncumbrance = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
