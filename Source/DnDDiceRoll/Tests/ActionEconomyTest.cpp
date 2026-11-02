@@ -92,7 +92,7 @@ bool FClassFeatureTableTest::RunTest(const FString& Parameters)
     // Deliberate: SRD gap fill added Champion Improved Critical (3) and Ability Score Improvement (4); was 5.
     TestEqual(TEXT("Fighter 5 has seven"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 5).Num(), 7);
     TestEqual(TEXT("Level 20 capped at 5"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 20).Num(), 7);
-    TestTrue(TEXT("Cutting Words is a reaction, listed as not yet modelled"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Bard, 3).Contains(TEXT("Lore: Cutting Words [Reaction]*")));
+    TestTrue(TEXT("Cutting Words is a modelled reaction"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Bard, 3).Contains(TEXT("Lore: Cutting Words [Reaction]")) && !FClassFeatureRules::FeatureSummary(EAdventurerRole::Bard, 3).Contains(TEXT("Lore: Cutting Words [Reaction]*")));
     TestTrue(TEXT("Stunning Strike at Monk 5"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 5).Contains(TEXT("Stunning Strike [Free]*")));
     TestFalse(TEXT("Not before its level"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 4).Contains(TEXT("Stunning Strike")));
     TestTrue(TEXT("Rage is a bonus action"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Barbarian, 1).Contains(TEXT("Rage [Bonus Action]")));

@@ -1429,6 +1429,24 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         Result.RollModeSources.Add(FString::Printf(TEXT("Bardic Inspiration +%d"), Result.BardicRoll));
         Result.bHit = Result.AttackTotal >= Result.TargetArmorClass;
     }
+    // SRD 5.2.1 College of Lore 3, Cutting Words (reaction, 60 ft, seen): a Lore bard spends a Bardic Inspiration use to subtract the die
+    // from a foe's attack roll; the engine spends it only when the die could turn the hit into a miss.
+    if (Result.bHit && !Result.bCritical && Actor->Side == ECombatSide::Enemy)
+    {
+        for (FCombatantState& Bard : State.Encounter.Combatants)
+        {
+            if (Bard.Side != ECombatSide::Party || Bard.Life != ECombatLife::Conscious || Bard.BuildId != TEXT("bard.lore") || !Bard.bReactionAvailable || Bard.BardicUses <= 0 ||
+                FBuildCatalog::ClassLevel(Bard, EAdventurerRole::Bard) < 3 || IsIncapacitated(Bard) || GridDistance(Bard.Cell, Actor->Cell) > 12 || !HasLineOfSight(Bard.Cell, Actor->Cell)) { continue; }
+            const int32 Sides = FFeatureKit::BardicSides(Bard);
+            if (Result.AttackTotal - Sides >= Result.TargetArmorClass) { continue; }
+            --Bard.BardicUses; Bard.bReactionAvailable = false;
+            Result.CuttingRoll = Roll(Sides);
+            Result.AttackBonus -= Result.CuttingRoll; Result.AttackTotal -= Result.CuttingRoll;
+            Result.RollModeSources.Add(FString::Printf(TEXT("Cutting Words -%d (%s)"), Result.CuttingRoll, *Bard.Name));
+            Result.bHit = Result.AttackTotal >= Result.TargetArmorClass;
+            break;
+        }
+    }
     if (Result.bHit && ShieldWouldBlock(*Target, Result.AttackTotal, Result.TargetArmorClass, Result.bCritical))
     {
         SpendSpellSlot(*Target); Target->bReactionAvailable = false; Target->bShielded = true;

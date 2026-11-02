@@ -313,6 +313,8 @@ struct DNDDICEROLL_API FCombatResult
     bool bCounterspelled = false;
     /** Bardic Inspiration die rolled and added to this attack (0 = none). */
     int32 BardicRoll = 0;
+    /** College of Lore 3 Cutting Words die subtracted from this attack by a bard's reaction (0 = none). */
+    int32 CuttingRoll = 0;
     /** An adjacent ally used the Protection fighting style (reaction) to impose disadvantage. */
     bool bProtectionReaction = false;
     /** Uncanny Dodge (Rogue 5) halved this hit's damage with the target's reaction. */

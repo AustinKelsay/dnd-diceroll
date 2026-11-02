@@ -589,6 +589,36 @@ bool FEldritchInvocationsTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCuttingWordsTest, "Project.Expedition.Features.CuttingWords",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCuttingWordsTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    for (const int32 L : {2, 3, 5})
+    {
+        int32 Cut = 0;
+        for (int32 Seed = 1; Seed <= 60; ++Seed)
+        {
+            FCombatantState Bard = Hero(TEXT("bard.lore"), L); FFeatureKit::Refill(Bard);
+            FCombatEncounter E = Duel(Bard, {1, 0}); E.Combatants[1].AttackBonus = 4;
+            FCombatBattle Battle; FString Error;
+            if (!Battle.Start(E, Seed, Error)) { AddError(Error); return true; }
+            Battle.Submit({ECombatCommandType::EndTurn, 10, {}, INDEX_NONE});
+            const int32 Before = Battle.Find(10)->BardicUses;
+            const FCombatResult Hit = Battle.Submit({ECombatCommandType::Attack, 20, {}, 10});
+            if (Hit.CuttingRoll > 0)
+            {
+                ++Cut;
+                TestTrue(TEXT("Die in range"), Hit.CuttingRoll <= FFeatureKit::BardicSides(Bard));
+                TestEqual(TEXT("Use spent"), Battle.Find(10)->BardicUses, Before - 1);
+                TestFalse(TEXT("Reaction spent"), Battle.Find(10)->bReactionAvailable);
+            }
+        }
+        if (L < 3) { TestEqual(TEXT("No Cutting Words before Bard 3"), Cut, 0); } else { TestTrue(FString::Printf(TEXT("Cutting Words seen at Bard %d"), L), Cut > 0); }
+    }
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)
