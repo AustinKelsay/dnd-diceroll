@@ -15,6 +15,7 @@
 #include "Rules/BeastRules.h"
 #include "Rules/LoreRules.h"
 #include "Rules/ToolRules.h"
+#include "Rules/LevelRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
 
@@ -271,7 +272,16 @@ void FExpeditionRun::ResolveCombat()
     {
         for (auto& Unit : Combat.State.Encounter.Combatants)
         {
-            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { ++Unit.Level; Unit.DamageBonus = FBuildCatalog::BasicDamage(*FBuildCatalog::Find(Unit.BuildId), Unit.Level); }
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious)
+            {
+                // #79: each victory awards the XP for the next level (SRD milestone pace); max HP grows by the average hit die + CON.
+                Unit.Xp = FLevelRules::XpForLevel(Unit.Level + 1);
+                Unit.Level = FLevelRules::LevelForXp(Unit.Xp);
+                const int32 Before = Unit.MaxHP;
+                Unit.MaxHP = FBuildCatalog::MaxHitPoints(Unit);
+                Unit.HP += Unit.MaxHP - Before;
+                Unit.DamageBonus = FBuildCatalog::BasicDamage(*FBuildCatalog::Find(Unit.BuildId), Unit.Level);
+            }
         }
     }
     State.bArtifactRecovered = State.EncountersCompleted == EncounterCount;
@@ -622,13 +632,15 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             // occurred; matching the distribution also bounds unidentified deaths.
             if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
             Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
+            Base.MaxHP = FBuildCatalog::MaxHitPoints(U);
+            if (U.Xp != (U.Level == 1 ? 0 : FLevelRules::XpForLevel(U.Level))) { return Reject(); }
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
             U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
             (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
-            (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
+            (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.Xp != 0 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
             int32 Gear = 0, SuppliedPotions = 1;

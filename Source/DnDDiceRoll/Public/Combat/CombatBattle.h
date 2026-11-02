@@ -53,6 +53,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;
     UPROPERTY() int32 Level = 1;
+    /** #79: experience points; a party hero's level is FLevelRules::LevelForXp(Xp). */
+    UPROPERTY() int32 Xp = 0;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
     UPROPERTY() int32 ManeuverUses = 0;
     UPROPERTY() int32 KitUses = 0;

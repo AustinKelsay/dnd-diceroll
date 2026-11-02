@@ -1,6 +1,7 @@
 #include "Party/BuildCatalog.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/ArmorRules.h"
+#include "Rules/LevelRules.h"
 
 namespace
 {
@@ -15,7 +16,9 @@ const TArray<FBuildDefinition>& Definitions()
             FBuildDefinition B; B.Id = Id;
             auto& P = B.Profile;
             P.BuildId = Id; P.ClassId = Class; P.SubclassId = Subclass; P.Role = Role;
-            P.AdventurerRole = AdventurerRole; P.MaxHP = P.HP = HP; P.ArmorClass = Armor;
+            P.AdventurerRole = AdventurerRole; (void)HP;
+            // #79: SRD health pool, full class hit die + CON at level 1 (replaces the fixed catalog HP).
+            P.MaxHP = P.HP = FLevelRules::MaxHitPoints(AdventurerRole, 1, EAdventurerRole::None, 0, FAbilityRules::Modifier(FAbilityRules::PrebuiltScores(AdventurerRole).Constitution)); P.ArmorClass = Armor;
             P.DamageDie = Die; P.DamageBonus = Bonus; P.Range = Range; P.InitiativeBonus = Initiative; P.Potions = 1;
             return B;
         };
@@ -201,6 +204,11 @@ bool FBuildCatalog::HasSpecial(const FCombatantState& Hero, ECombatCommandType A
         (Action == ECombatCommandType::PrecisionStrike && Hero.FighterSubclass == EFighterSubclass::BattleMaster) ||
         (Action == ECombatCommandType::CureWounds && Hero.AdventurerRole == EAdventurerRole::Cleric) ||
         (Action == ECombatCommandType::MagicMissile && Hero.AdventurerRole == EAdventurerRole::Wizard));
+}
+int32 FBuildCatalog::MaxHitPoints(const FCombatantState& Hero)
+{
+    const int32 Con = FAbilityRules::Modifier(FAbilityRules::PrebuiltScores(Hero.AdventurerRole).Constitution);
+    return FLevelRules::MaxHitPoints(Hero.AdventurerRole, Hero.Level, EAdventurerRole::None, 0, Con);
 }
 int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { return Build.Profile.DamageBonus + Level - 1; }
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)

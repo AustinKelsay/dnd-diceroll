@@ -43,7 +43,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     FString Error;
     FCombatantState Hero;
     TestTrue(TEXT("Build accepts independent instance identity"), FBuildCatalog::Create(TEXT("fighter.battle-master"), 4, TEXT("Nix"), Hero));
-    TestEqual(TEXT("Fighter HP"), Hero.MaxHP, 30);
+    TestEqual(TEXT("Fighter HP: d10 + CON 2 (#79)"), Hero.MaxHP, 12);
     TestEqual(TEXT("Fighter damage"), Hero.DamageBonus, 3);
     TestEqual(TEXT("Two maneuvers"), Hero.ManeuverUses, 2);
     TestEqual(TEXT("Two specials"), FBuildCatalog::Find(Hero.BuildId)->Specials.Num(), 2);
@@ -77,7 +77,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     for (const auto* Id : {TEXT("rogue.thief"), TEXT("cleric.life"), TEXT("wizard.evocation")})
     {
         TestTrue(TEXT("Construct current kit"), FBuildCatalog::Create(Id, 1, TEXT("Hero"), Hero));
-        TestEqual(TEXT("Current non-Fighter health"), Hero.MaxHP, 22);
+        TestEqual(TEXT("SRD level-1 health: die + CON (#79)"), Hero.MaxHP, FString(Id) == TEXT("rogue.thief") ? 9 : FString(Id) == TEXT("cleric.life") ? 10 : 8);
         TestEqual(TEXT("Current attack bonus"), Hero.AttackBonus, 5);
     }
     // Independently worked previews of existing source literals; custom combat seam
@@ -86,7 +86,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     {
         const auto* Id = Action == ECombatCommandType::SecondWind ? TEXT("fighter.champion") : Action == ECombatCommandType::CureWounds ? TEXT("cleric.life") : TEXT("wizard.evocation");
         FBuildCatalog::Create(Id, 1, TEXT("Hero"), Hero);
-        Hero.Cell = {0,0}; Hero.HP = 1; Hero.InitiativeBonus = 30;
+        Hero.Cell = {0,0}; Hero.MaxHP = 30; Hero.HP = 1; Hero.InitiativeBonus = 30;
         FCombatantState Enemy; Enemy.Id = 20; Enemy.Side = ECombatSide::Enemy; Enemy.Name = TEXT("Enemy"); Enemy.Cell = {1,0}; Enemy.InitiativeBonus = -10;
         FCombatEncounter Duel; Duel.Combatants = {Hero, Enemy};
         FCombatBattle Battle; TestTrue(TEXT("Start current kit scenario"), Battle.Start(Duel, 42, Error));

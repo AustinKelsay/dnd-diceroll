@@ -77,7 +77,7 @@ bool FSupportWorkedTest::RunTest(const FString& Parameters)
         AddInfo(FString::Printf(TEXT("%s slot %d"),C.Build,C.Slot));
         FCombatantState Hero;
         if (!TestTrue(TEXT("Authored subclass"),FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero))) { continue; }
-        Hero.Cell={1,1}; Hero.InitiativeBonus=30; Hero.HP=10;
+        Hero.Cell={1,1}; Hero.InitiativeBonus=30; Hero.MaxHP=22; Hero.HP=10; /* #79 fixture pool: catalog HP is now SRD hit die + CON */
         FCombatantState Ally; Ally.Id=2; Ally.Name=Ally.Role=TEXT("Ally"); Ally.Cell={1,2}; Ally.HP=5;
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Primary"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         auto Secondary=Enemy; Secondary.Id=21; Secondary.Name=TEXT("Secondary"); Secondary.Cell={2,2};
@@ -150,7 +150,7 @@ bool FSupportWorkedTest::RunTest(const FString& Parameters)
     for (int32 Index=0;Index<UE_ARRAY_COUNT(Cases);Index+=2)
     {
         const auto& C=Cases[Index]; const auto& D=Cases[Index+1];
-        FCombatantState Hero; FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero); Hero.Cell={1,1}; Hero.HP=10; Hero.InitiativeBonus=30;
+        FCombatantState Hero; FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero); Hero.Cell={1,1}; Hero.MaxHP=22; Hero.HP=10; /* #79 fixture pool: catalog HP is now SRD hit die + CON */ Hero.InitiativeBonus=30;
         FCombatantState Ally; Ally.Id=2; Ally.Name=Ally.Role=TEXT("Ally"); Ally.Cell={1,2}; Ally.HP=5;
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         FCombatEncounter E; E.Combatants={Hero,Ally,Enemy}; FCombatBattle B;
@@ -184,7 +184,7 @@ bool FSupportJsonTest::RunTest(const FString& Parameters)
         if(Life)
         {
             auto Fixture=Run.Snapshot();
-            Fixture.Battle.Encounter.Combatants.FindByPredicate([&](const auto& U){return U.Id==Id;})->HP=10;
+            Fixture.Battle.Encounter.Combatants.FindByPredicate([&](const auto& U){return U.Id==Id;})->HP=1;
             TestTrue(TEXT("Valid injured Life checkpoint fixture"),Run.Restore(Fixture,Error));
         }
         const auto Targets=Run.Battle().LegalTargets(Id,Action);
@@ -331,7 +331,7 @@ bool FSupportSpentRecoveryTest::RunTest(const FString& Parameters)
     }
     if(!TestEqual(TEXT("Life reaches own turn"),Run.Battle().ActiveId(),1)) { return false; }
     auto Injured=Run.Snapshot();
-    Injured.Battle.Encounter.Combatants.FindByPredicate([](const auto& U){return U.Id==1;})->HP=10;
+    Injured.Battle.Encounter.Combatants.FindByPredicate([](const auto& U){return U.Id==1;})->HP=1;
     if(!TestTrue(TEXT("Restore coherent injured fixture"),Run.Restore(Injured,Error))) { return false; }
     TestTrue(TEXT("Spend first Kit and Slot on actual Cure"),Run.Submit({ECombatCommandType::CureWounds,1,{},1}).bAccepted);
     if(bSpendBothSlots)
@@ -345,7 +345,7 @@ bool FSupportSpentRecoveryTest::RunTest(const FString& Parameters)
         }
         if(!TestEqual(TEXT("Life reaches second own turn"),Run.Battle().ActiveId(),1)) { return false; }
         Injured=Run.Snapshot();
-        Injured.Battle.Encounter.Combatants.FindByPredicate([](const auto& U){return U.Id==1;})->HP=10;
+        Injured.Battle.Encounter.Combatants.FindByPredicate([](const auto& U){return U.Id==1;})->HP=1;
         if(!TestTrue(TEXT("Coherent second injured fixture"),Run.Restore(Injured,Error))) { return false; }
         TestTrue(TEXT("Spend second Slot through actual Cure"),Run.Submit({ECombatCommandType::CureWounds,1,{},1}).bAccepted);
     }

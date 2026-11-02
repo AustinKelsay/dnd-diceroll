@@ -85,7 +85,7 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
         AddInfo(FString::Printf(TEXT("%s slot %d"),C.Build,C.Slot));
         FCombatantState Hero;
         if (!TestTrue(TEXT("Authored subclass"),FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero))) { continue; }
-        Hero.Cell={1,1}; Hero.InitiativeBonus=30; Hero.HP=10;
+        Hero.Cell={1,1}; Hero.InitiativeBonus=30; Hero.MaxHP=22; Hero.HP=10; /* #79 fixture pool: catalog HP is now SRD hit die + CON */
         FCombatantState Ally; Ally.Id=2; Ally.Name=Ally.Role=TEXT("Ally"); Ally.Cell={1,2}; Ally.HP=5;
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Primary"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         auto Secondary=Enemy; Secondary.Id=21; Secondary.Name=TEXT("Secondary"); Secondary.Cell={2,2};
@@ -156,7 +156,7 @@ bool FArcaneWorkedTest::RunTest(const FString& Parameters)
     for (int32 Index=0;Index<UE_ARRAY_COUNT(Cases);Index+=2)
     {
         const auto& C=Cases[Index]; const auto& D=Cases[Index+1];
-        FCombatantState Hero; FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero); Hero.Cell={1,1}; Hero.HP=10; Hero.InitiativeBonus=30;
+        FCombatantState Hero; FBuildCatalog::Create(C.Build,1,TEXT("Hero"),Hero); Hero.Cell={1,1}; Hero.MaxHP=22; Hero.HP=10; /* #79 fixture pool: catalog HP is now SRD hit die + CON */ Hero.InitiativeBonus=30;
         FCombatantState Ally; Ally.Id=2; Ally.Name=Ally.Role=TEXT("Ally"); Ally.Cell={1,2}; Ally.HP=5;
         FCombatantState Enemy; Enemy.Id=20; Enemy.Name=Enemy.Role=TEXT("Enemy"); Enemy.Side=ECombatSide::Enemy; Enemy.Cell={2,1}; Enemy.HP=Enemy.MaxHP=40; Enemy.InitiativeBonus=-10;
         FCombatEncounter E; E.Combatants={Hero,Ally,Enemy}; FCombatBattle B;

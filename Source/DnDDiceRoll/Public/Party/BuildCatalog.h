@@ -36,6 +36,8 @@ public:
     static FString DisplayName(const FCombatantState& Hero);
     static FString Status(const FCombatantState& Hero);
     static int32 AttackModifier(const FCombatantState& Hero);
+    /** #79: SRD maximum hit points for the hero's class level(s) and CON. */
+    static int32 MaxHitPoints(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
     static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);

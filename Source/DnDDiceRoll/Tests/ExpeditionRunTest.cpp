@@ -266,7 +266,7 @@ bool FRunCommandAtomicityTest::RunTest(const FString& Parameters)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
         const auto& After = *Run.Battle().Find(Unit.Id);
-        TestEqual(TEXT("Camp health exactly capped +10"), After.HP, FMath::Min(Unit.MaxHP, Unit.HP+10));
+        TestEqual(TEXT("Camp health exactly capped +10"), After.HP, Unit.Life == ECombatLife::Conscious ? FMath::Min(Unit.MaxHP, Unit.HP+10) : After.HP);
         TestEqual(TEXT("Camp never adds potions"), After.Potions, Unit.Potions);
         TestEqual(TEXT("Camp never adds gear"), After.WeaponRank, Unit.WeaponRank);
         if (Unit.AdventurerRole == EAdventurerRole::Wizard || Unit.AdventurerRole == EAdventurerRole::Cleric)

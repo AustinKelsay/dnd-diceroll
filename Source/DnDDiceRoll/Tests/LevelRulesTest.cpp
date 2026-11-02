@@ -2,6 +2,9 @@
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/LevelRules.h"
+#include "Party/BuildCatalog.h"
+#include "Run/ExpeditionRun.h"
+#include "ExpeditionTestSupport.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelRulesTest, "Project.Expedition.Rules.LevelRules",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -41,6 +44,33 @@ bool FLevelRulesTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Caster 3: two 2nd"), FLevelRules::MulticlassSlots(3, 2), 2);
     TestEqual(TEXT("Caster 20: one 9th"), FLevelRules::MulticlassSlots(20, 9), 1);
     TestTrue(TEXT("Rogue gains thieves' tools"), FLevelRules::MulticlassProficiencies(EAdventurerRole::Rogue).Contains(TEXT("thieves")));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelProgressionRunTest, "Project.Expedition.Run.LevelProgression",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelProgressionRunTest::RunTest(const FString& Parameters)
+{
+    FString Error; FExpeditionRun Run;
+    if (!TestTrue(TEXT("New run"), Run.NewRun(42, Error, TEXT("levels"), EFighterSubclass::BattleMaster)) ||
+        !TestTrue(TEXT("Route"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error))) { return false; }
+    const FCombatantState Start = *Run.Battle().Find(1);
+    TestEqual(TEXT("Level 1 starts at 0 XP"), Start.Xp, 0);
+    TestEqual(TEXT("Fighter level 1 HP is d10 + CON 2"), Start.MaxHP, 12);
+    if (!TestTrue(TEXT("Win"), ExpeditionTestSupport::FinishCombat(Run))) { return false; }
+    for (const auto& U : Run.Battle().Snapshot().Encounter.Combatants)
+    {
+        if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
+        TestEqual(TEXT("Victory awards the XP for level 2"), U.Xp, 300);
+        TestEqual(TEXT("Level follows the XP table"), U.Level, 2);
+        TestEqual(TEXT("Max HP follows hit dice"), U.MaxHP, FBuildCatalog::MaxHitPoints(U));
+    }
+    const auto* F = Run.Battle().Find(1);
+    if (F->Life == ECombatLife::Conscious) { TestEqual(TEXT("Fighter level 2: 12 + 6 + 2"), F->MaxHP, 20); }
+    FExpeditionRun Restored;
+    TestTrue(TEXT("Leveled checkpoint restores"), Restored.Restore(Run.Snapshot(), Error));
+    auto Bad = Run.Snapshot();
+    for (auto& U : Bad.Battle.Encounter.Combatants) { if (U.Id == 1) { U.Xp += 1; } }
+    TestFalse(TEXT("XP off the table rejected"), Restored.Restore(Bad, Error));
     return true;
 }
 #endif
