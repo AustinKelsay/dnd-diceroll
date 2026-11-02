@@ -1,5 +1,7 @@
 # Menu polish: verification and native observations
 
+Subsequent independent-review corrections and refreshed verification are recorded in [review follow-up](03-review.md). This record preserves the earlier native observations and their exact source state.
+
 Issue [#109](https://github.com/AustinKelsay/dnd-diceroll/issues/109), baseline `9b1837e657b0b87b9ce8da527cddec19f6082587`. The owner requested a full-send menu/UI pass. The implementation keeps Canvas, the themed tabletop, 70 builds, existing rules and schema 4/catalog revision 7. Only presentation/input, their public regression coverage and these records change.
 
 ## Root corrections

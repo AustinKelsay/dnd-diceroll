@@ -157,7 +157,7 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
 {
     if (!AllowsGameplayInput()) { return; }
     if (CanSelectSubclass()) { if (ScreenOffset.Y) { StepClass(-ScreenOffset.Y); } else { StepBuild(ScreenOffset.X); } return; }
-    if (!BattleView->InCombat()) { Skip(); return; }
+    if (!BattleView->InCombat()) { return; }
     // Arrows follow the screen: map "up" to whichever board axis faces away from the camera.
     const float Radians = FMath::DegreesToRadians(BattleView->CameraYaw());
     const FVector2D Forward(-FMath::Cos(Radians), -FMath::Sin(Radians));
@@ -417,6 +417,7 @@ void AExpeditionPlayerController::SelectFour() { SelectPartyIndex(3); }
 void AExpeditionPlayerController::Skip()
 {
     if (!IsValid(BattleView)) { return; }
+    if (AllowsGameplayInput() && BattleView->IsPresenting()) { BattleView->SkipPresentation(); return; }
     if (!BattleView->InCombat() || !AllowsGameplayInput())
     {
         const auto* Hud = Cast<AExpeditionHUD>(GetHUD());

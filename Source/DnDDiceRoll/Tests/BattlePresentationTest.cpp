@@ -308,6 +308,51 @@ bool FPlaybackConvergenceTest::RunTest(const FString& Parameters)
 #endif
 
 #if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTerminalPlaybackSkipTest, "Project.Expedition.Presentation.SkipBattleEndingPlayback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FTerminalPlaybackSkipTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient terminal playback world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/TerminalPlayback"), FGuid::NewGuid().ToString());
+    auto* Player = World->SpawnActor<AExpeditionPlayerController>();
+    Player->DispatchBeginPlay();
+    auto* View = Player->GetBattleView();
+    View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+    View->DispatchBeginPlay();
+    Player->HandleButton(TEXT("New"));
+    Player->HandleButton(TEXT("Route0"));
+    // Yield real turns until the final enemy action commits defeat. Keep its playback pending.
+    for (int32 Turn = 0; Turn < 600 && View->InCombat(); ++Turn)
+    {
+        View->SkipPresentation();
+        const auto* Active = View->Rules().Find(View->Rules().ActiveId());
+        if (!Active) { break; }
+        if (Active->Side == ECombatSide::Party) { Player->HandleButton(TEXT("EndTurn")); }
+        else { View->Tick(1.0f); }
+    }
+    TestEqual(TEXT("Real combat reaches defeat"), View->Progress().Phase, EExpeditionPhase::Defeat);
+    TestTrue(TEXT("Ending action still has playback"), View->IsPresenting());
+    const FCombatSnapshot Committed = View->Rules().Snapshot();
+    Player->HandleButton(TEXT("Help"));
+    Player->HandleButton(TEXT("Skip"));
+    TestTrue(TEXT("Help retains ending playback"), View->IsPresenting());
+    Player->HandleButton(TEXT("Close"));
+    Player->HandleButton(TEXT("Records"));
+    Player->HandleButton(TEXT("Skip"));
+    TestTrue(TEXT("Records retains ending playback"), View->IsPresenting());
+    Player->HandleButton(TEXT("Close"));
+    Player->HandleButton(TEXT("Skip"));
+    TestFalse(TEXT("Controller skip finishes playback after combat phase ends"), View->IsPresenting());
+    TestTrue(TEXT("Skip preserves committed rules"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Committed, &View->Rules().Snapshot(), 0));
+    TestTrue(TEXT("Ending display converges"), DisplayMatchesRules(*View));
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCorpseVisibilityTest, "Project.Expedition.Presentation.OccupiedCorpseCellsStayVisible",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
