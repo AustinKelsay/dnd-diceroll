@@ -186,3 +186,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #60: standard actions (rules only)
 
 `FStandardActionRules`: Rogues from level 2 can Dash, Disengage or Hide as a bonus action (Cunning Action); otherwise each costs the action. Each Dash adds the speed again. Dodge gives attackers it can see disadvantage and gives the dodger advantage on Dexterity saves. Disengage stops leaving reach from provoking. Per-turn Dodge/Disengage flags, the new command types and bonus-action tracking in a battle need battle state and command wiring; they wait for #39 and are left out here.
+
+## Issue #65: falling, prone and forced movement (rules only)
+
+`FDiceRules::Roll` sums plain dice with the combat random stream. `FMovementRules`: a fall deals 1d6 per 10 ft (max 20d6) and leaves the creature prone; standing costs half the speed rounded up; crawling costs double; a push stops before a blocker; attacks against a prone target have advantage within 5 ft and disadvantage beyond. A saved prone condition, elevation on the map and applying pushes in a battle need battle state (#39).
