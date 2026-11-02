@@ -154,3 +154,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #92: Animal Handling and mounts
 
 `FBeastRules`: only beasts (Wolf DC 13, Giant Rat 10, Boar 13, Brown Bear 15, Giant Spider 15) can be handled, and not once they have been hurt this fight. A Wisdom (Animal Handling) check that misses leaves the beast hostile; meeting the DC calms it (it will not attack unless attacked); beating it by 5 redirects it out of the fight. Rejected attempts roll nothing and keep the RNG. Mounting or dismounting costs half speed; a controlled mount may only Dash, Disengage or Dodge. Beast profiles are not in the current enemy roster and the calmed behaviour needs a saved per-combatant flag (#39); mounts are optional design for Austin.
+
+## Issue #93: knowledge and Wisdom checks outside combat
+
+`FLoreRules` gives each skill a use. Recall before a fight: Religion for undead, Arcana for elementals (DC 15), Nature for beasts and History for humanoids (DC 10); a success reveals one fact (resistances first, then abilities, then weaknesses) plus one per 5 over the DC, up to three. Identify: Arcana DC 15 for magic items and runes, History DC 10 for old mundane items. Medicine at camp (DC 10) treats an injury for hit points equal to the patient's level. Insight reads an NPC when it meets 10 + the NPC's Deception modifier. Revealed facts and treated injuries need saved run state (#39) and HUD wiring (#50); amounts are tuning for Austin.
