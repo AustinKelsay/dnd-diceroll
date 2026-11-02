@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/CoinRules.h"
 
 namespace
 {
@@ -933,6 +934,7 @@ void AExpeditionHUD::DrawReward()
     const bool bCanRest = bReady && Selected->HitDiceSpent < Selected->Level && Selected->HP < Selected->MaxHP;
     Button(TEXT("ShortRest"), TEXT("Short rest"), bReady ? FString::Printf(TEXT("spend a hit die (%d left)"), Selected->Level - Selected->HitDiceSpent) : TEXT("hit dice"),
         W * 0.5f + 10, Y + 140, 240, 52, bCanRest, false, Sky);
+    Text(FString::Printf(TEXT("Purse: %s"), *FCoinRules::Format(Run.Coins)), X + Width - 16, Y + 16, Gold, 0.74f, EAlign::Right);
     // Rest-point activities: one try each, by the selected survivor.
     const int32 Used = Run.History.IsEmpty() ? 0 : Run.History.Last().ActivitiesUsed;
     const int32 Count = static_cast<int32>(ECampActivity::Count);

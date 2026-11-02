@@ -8,7 +8,7 @@ UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
 
 /** Rest-point activities after a victory: one try each per rest point, keyed rolls (never shift the run stream). */
-enum class ECampActivity : uint8 { PickLock, Parley, Count };
+enum class ECampActivity : uint8 { PickLock, Parley, BuyPotion, Count };
 
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()
@@ -67,6 +67,8 @@ struct DNDDICEROLL_API FExpeditionProgress
     UPROPERTY() bool bCampResolved = false;
     UPROPERTY() bool bCampUsed = false;
     UPROPERTY() bool bArtifactRecovered = false;
+    /** Party purse in copper: a purse per victory, spent at the rest point. */
+    UPROPERTY() int32 Coins = 0;
 };
 
 /** Detached serialization contract: export both values together. Battle is a
@@ -98,6 +100,7 @@ public:
     /** Rest-point activity by a living survivor (lock picking, ...). Outcome describes the roll. */
     bool CampActivity(int32 UnitId, ECampActivity Activity, FString& Outcome, FString& Error);
     static FString CampActivityName(ECampActivity Activity);
+    static constexpr int32 VictoryPurseCopper = 2500;
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     const FCombatBattle& Battle() const { return Combat; }

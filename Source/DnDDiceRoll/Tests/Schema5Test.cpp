@@ -1379,4 +1379,35 @@ bool FSchema5CampParleyTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some seed earns nothing"), bPlain);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampBuyPotionTest, "Project.Expedition.Schema5.CampBuyPotion",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampBuyPotionTest::RunTest(const FString& Parameters)
+{
+    bool bChecked = false;
+    for (int32 Seed = 1; Seed < 60 && !bChecked; ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        bChecked = true;
+        TestEqual(TEXT("Victory purse"), Run.Progress().Coins, FExpeditionRun::VictoryPurseCopper);
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        TestFalse(TEXT("Cannot afford yet"), Run.CampActivity(Hero, ECampActivity::BuyPotion, Outcome, Error));
+        FExpeditionSnapshot Rich = Run.Snapshot();
+        Rich.Progress.Coins = 10000;
+        TestTrue(TEXT("Richer purse restores"), Run.Restore(Rich, Error));
+        TestTrue(TEXT("Buys"), Run.CampActivity(Hero, ECampActivity::BuyPotion, Outcome, Error));
+        const int32 Spent = 10000 - Run.Progress().Coins;
+        TestTrue(TEXT("Haggled price"), Spent >= 4000 && Spent <= 5000);
+        TestEqual(TEXT("Potion in the loot"), Run.Progress().History.Last().BonusPotions, 1);
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::BuyPotion, Outcome, Error));
+        FExpeditionSnapshot Broke = Run.Snapshot();
+        Broke.Progress.Coins = -1;
+        FExpeditionRun Copy;
+        TestFalse(TEXT("Negative purse rejected"), Copy.Restore(Broke, Error));
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Reached a rest point"), bChecked);
+    return true;
+}
 #endif

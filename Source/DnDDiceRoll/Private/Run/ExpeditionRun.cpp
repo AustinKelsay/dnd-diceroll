@@ -7,6 +7,7 @@
 #include "Rules/ArmorRules.h"
 #include "Rules/LockTrapRules.h"
 #include "Rules/SocialRules.h"
+#include "Rules/CoinRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -239,6 +240,7 @@ void FExpeditionRun::ResolveCombat()
         }
     }
     State.bArtifactRecovered = State.EncountersCompleted == EncounterCount;
+    State.Coins += VictoryPurseCopper;
     State.Phase = State.bArtifactRecovered ? EExpeditionPhase::Victory : EExpeditionPhase::Reward;
 }
 
@@ -298,6 +300,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     {
     case ECampActivity::PickLock: return TEXT("Pick the strongbox");
     case ECampActivity::Parley: return TEXT("Parley with traders");
+    case ECampActivity::BuyPotion: return TEXT("Buy a potion");
     default: return TEXT("Unknown");
     }
 }
@@ -341,6 +344,17 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
             bWon ? TEXT("won over, they share road news and gift a healing potion.") : Result == ESocialOutcome::None ? TEXT("they shrug and move on.") : TEXT("they part peacefully."));
         break;
     }
+    case ECampActivity::BuyPotion:
+    {
+        // #84: haggle (Persuasion) for a healing potion paid from the party purse.
+        const int32 Total = D20 + Sheet.SkillBonus(ESkill::Persuasion);
+        const int32 Price = FCoinRules::HaggledPrice(FCoinRules::Price(EShopItem::PotionOfHealing), Total);
+        if (State.Coins < Price) { Error = FString::Printf(TEXT("A potion costs %s after haggling; the purse holds %s."), *FCoinRules::Format(Price), *FCoinRules::Format(State.Coins)); return false; }
+        State.Coins -= Price;
+        ++Record.BonusPotions;
+        Outcome = FString::Printf(TEXT("%s haggles (%d) and buys a healing potion for %s."), *Hero->Name, Total, *FCoinRules::Format(Price));
+        break;
+    }
     default: break;
     }
     Record.ActivitiesUsed |= Bit;
@@ -357,7 +371,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     for (const auto& Record : P.History)
     {
-        if (Record.BonusPotions < 0 || Record.BonusPotions > static_cast<int32>(ECampActivity::Count) || Record.ActivitiesUsed < 0 ||
+        if (P.Coins < 0 || Record.BonusPotions < 0 || Record.BonusPotions > static_cast<int32>(ECampActivity::Count) || Record.ActivitiesUsed < 0 ||
             Record.ActivitiesUsed >= (1 << static_cast<int32>(ECampActivity::Count))) { return Reject(); }
     }
     for (int32 I = 0; I < 4; ++I)
