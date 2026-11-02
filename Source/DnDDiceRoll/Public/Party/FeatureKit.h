@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::FlexibleCasting;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::Counterspell;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -54,6 +54,9 @@ public:
     static bool HasMartialArts(const FCombatantState& Hero);
     /** Monk 3 Deflect Missiles: automatic reaction, a ranged weapon hit loses 1d10 + DEX + monk level damage. */
     static bool HasDeflectMissiles(const FCombatantState& Hero);
+    /** SRD Counterspell (3rd-level wizard/sorcerer spell, so Wizard or Sorcerer 5): automatic reaction against an enemy spell within 60 ft. */
+    static bool HasCounterspell(const FCombatantState& Hero);
+    static constexpr int32 CounterspellRange = 12;
     /** Paladin 3 Channel Divinity: Sacred Weapon (Oath of Devotion, the SRD oath), 1 minute = 10 rounds; shares ChannelUses. */
     static bool HasSacredWeapon(const FCombatantState& Hero);
     static constexpr int32 SacredWeaponRounds = 10;

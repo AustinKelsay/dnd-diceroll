@@ -1,4 +1,6 @@
 #include "Run/ExpeditionRun.h"
+#include "Rules/MonsterRules.h"
+#include "Rules/AbilityRules.h"
 #include "Party/FeatureKit.h"
 #include "Rules/RestRules.h"
 #include "Rules/MovementRules.h"
@@ -208,20 +210,29 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         FCombatantState Enemy;
         Enemy.Id = 20 + Index;
         Enemy.Side = ECombatSide::Enemy;
-        const bool bArcher = Index == Route.EnemyCount - 1;
-        Enemy.Name = bArcher ? TEXT("Vault bow") : FString::Printf(TEXT("%s %d"), Route.bDangerous ? TEXT("Raider") : TEXT("Scout"), Index + 1);
-        Enemy.Role = bArcher ? TEXT("Archer") : TEXT("Raider");
+        // Encounter tuning (party HP stays halved): the opening fight has no archer.
+        const bool bArcher = Index == Route.EnemyCount - 1 && State.EncountersCompleted >= 1;
+        // SRD 5.1 stat blocks (MonsterRules): the last foe is a Scout archer, a dangerous route leads with a Thug (Multiattack brute),
+        // three or more foes put an Acolyte caster (Sacred Flame, so Counterspell has a target) in the middle; the rest are Bandits.
+        // HP, AC and attack numbers come from the block; the old +2 HP per cleared encounter is gone (SRD foes do not scale).
+        // Encounter tuning (party HP stays halved): the Thug brute only appears once the party has cleared an encounter.
+        // Likewise the archer is a crossbow Bandit until two encounters are cleared, then a Scout (Multiattack longbow).
+        const TCHAR* BlockName = bArcher ? (State.EncountersCompleted >= 2 ? TEXT("Scout") : TEXT("Bandit Archer")) : (Route.bDangerous && Index == 0 && State.EncountersCompleted >= 1) ? TEXT("Thug") :
+            (Route.EnemyCount >= 3 && Index == Route.EnemyCount / 2) ? TEXT("Acolyte") : TEXT("Bandit");
+        const FMonsterStatBlock& Block = *FMonsterRules::Find(BlockName);
+        Enemy.Name = FString::Printf(TEXT("%s %d"), BlockName, Index + 1);
+        Enemy.Role = BlockName;
         Enemy.Cell = {Recipe.EnemyColumn, Recipe.FirstEnemyRow + Index * 2};
         // Three enemies use rows 3/5/7 or 4/6/8; every grid is at least eleven rows tall.
-        Enemy.Range = bArcher ? 4 : 1;
-        Enemy.HP = Enemy.MaxHP = (Route.bDangerous ? 12 : 10) + State.EncountersCompleted * 2;
-        Enemy.ArmorClass = Route.bDangerous ? 12 : 11;
-        Enemy.AttackBonus = 2;
-        Enemy.DamageDie = Route.bDangerous ? 6 : 4;
-        Enemy.DamageBonus = 1;
-        Enemy.InitiativeBonus = 1;
-        // Equipment (schema 5): light armor whose base equals the tuned AC; the role's Dexterity bonus (+0..+2) now adds on top.
-        Enemy.ArmorWorn = static_cast<int32>(Route.bDangerous ? EArmor::StuddedLeather : EArmor::Leather);
+        Enemy.Range = Block.Range;
+        Enemy.HP = Enemy.MaxHP = FMonsterRules::HitPoints(Block);
+        Enemy.ArmorClass = Block.ArmorClass;
+        Enemy.AttackBonus = FMonsterRules::AttackBonus(Block);
+        Enemy.DamageDie = Block.DamageDieSides;
+        Enemy.DamageBonus = FMonsterRules::DamageBonus(Block);
+        Enemy.InitiativeBonus = FAbilityRules::Modifier(Block.Scores.Get(EAbility::Dexterity));
+        // Equipment: SRD leather (11 + DEX) reproduces the block AC; unarmored blocks use 10 + DEX.
+        Enemy.ArmorWorn = static_cast<int32>(Block.bWearsLeather ? EArmor::Leather : EArmor::None);
         // A quiet route catches its first scout resting: prone until it spends half its movement to stand.
         if (!Route.bDangerous && Index == 0 && !bArcher)
         {

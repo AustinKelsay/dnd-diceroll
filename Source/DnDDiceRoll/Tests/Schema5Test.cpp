@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Rules/GrappleRules.h"
 #include "Misc/AutomationTest.h"
+#include "Rules/MonsterRules.h"
 #include "Combat/CombatBattle.h"
 #include "Run/ExpeditionRun.h"
 #include "Persistence/ExpeditionSave.h"
@@ -769,11 +770,12 @@ bool FSchema5GeneratedFactsTest::RunTest(const FString& Parameters)
             for (const FCombatantState& Unit : Layout.Combatants)
             {
                 if (Unit.Side != ECombatSide::Enemy) { continue; }
-                TestTrue(TEXT("Enemies wear armor"), Unit.ArmorWorn > static_cast<int32>(EArmor::None));
-                const int32 Tuned = Route.bDangerous ? 12 : 11;
-                const int32 Worn = Battle.EffectiveArmorClass(Unit.Id);
-                TestTrue(TEXT("Light armor adds only the Dexterity bonus over the tuned AC"), Worn >= Tuned && Worn <= Tuned + 2);
-                TestTrue(TEXT("HUD names the armor"), Battle.ArmorClassText(Unit.Id).Contains(TEXT("Leather")));
+                // Deliberate change (SRD stat blocks): AC is the block's AC; every block but the Acolyte wears leather (11 + DEX).
+                const FMonsterStatBlock* Block = FMonsterRules::Find(Unit.Role);
+                if (!TestNotNull(TEXT("Every enemy uses an SRD stat block"), Block)) { continue; }
+                TestEqual(TEXT("Leather only on leather blocks"), Unit.ArmorWorn > static_cast<int32>(EArmor::None), Block->bWearsLeather);
+                TestEqual(TEXT("Effective AC equals the stat block AC"), Battle.EffectiveArmorClass(Unit.Id), Block->ArmorClass);
+                if (Block->bWearsLeather) { TestTrue(TEXT("HUD names the armor"), Battle.ArmorClassText(Unit.Id).Contains(TEXT("Leather"))); }
                 if (Has(&Unit, ECombatCondition::Prone)) { bSawProne = true; TestFalse(TEXT("Only quiet routes catch a scout resting"), Route.bDangerous); }
             }
         }

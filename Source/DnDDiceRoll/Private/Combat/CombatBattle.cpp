@@ -6,6 +6,7 @@
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/WeaponRules.h"
 #include "Rules/ArmorRules.h"
+#include "Rules/MonsterRules.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/SpellcastingRules.h"
 #include "Rules/AreaRules.h"
@@ -76,6 +77,11 @@ FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantSt
         Battle.AbilityScores(Unit.Id).Get(EAbility::Strength));
 }
 // With a weapon: proficiency + the weapon's ability (finesse picks the better of STR/DEX) + rank. Legacy: AttackBonus.
+/** SRD Extra Attack for heroes; Multiattack from the stat block for enemies. */
+int32 AttacksPerAction(const FCombatantState& Unit)
+{
+    return Unit.Side == ECombatSide::Enemy ? FMonsterRules::AttacksPerAction(Unit.Role) : FClassFeatureRules::AttacksPerAction(Unit.AdventurerRole, Unit.Level);
+}
 /** Sorcerer Quickened Spell: a pending quicken turns the next kit spell into a bonus action. */
 bool KitBonus(const FCombatantState& Unit, const FAbilityFacts& A) { return A.bBonus || (Unit.QuickenState == 1 && A.bKitResource); }
 int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
@@ -404,6 +410,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::Counterspell: return TEXT("COUNTERSPELL | Reaction + 1 spell slot | enemy caster within 60 ft in sight | automatic: an enemy spell (Sacred Flame) fails");
     case ECombatCommandType::DeflectMissiles: return TEXT("DEFLECT MISSILES | Reaction | self | automatic: when a ranged weapon attack hits you, reduce the damage by 1d10 + DEX + monk level");
     case ECombatCommandType::QuickenedSpell: return TEXT("QUICKENED SPELL | Free + 2 sorcery points | self | the next class spell you cast this turn costs your bonus action instead of your action");
     case ECombatCommandType::FlexibleCasting: return TEXT("FLEXIBLE CASTING | Bonus + 1 spell use | self | convert an expended spell slot into 2 sorcery points (up to your sorcerer level)");
@@ -1334,6 +1341,40 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     if (bOffHand) { Hand.MainHand = Hand.OffHand; }
     const FCombatantState* Actor = &Hand;
     FCombatantState* Target = MutableFind(TargetId);
+    if (const FMonsterStatBlock* Block = Actor->Side == ECombatSide::Enemy ? FMonsterRules::Find(Actor->Role) : nullptr; Block && Block->Kind == EMonsterAttack::SaveCantrip)
+    {
+        // SRD Sacred Flame (cantrip): no attack roll and no cover; the target makes a DEX save against the caster's DC or takes 1d8 radiant.
+        Result.bSaveSpell = true;
+        MutableFind(ActorId)->bHidden = false;
+        const int32 Dc = FMonsterRules::SpellSaveDc(*Block);
+        Result.TargetArmorClass = Dc;
+        for (FCombatantState& Counter : State.Encounter.Combatants)
+        {
+            if (Counter.Side == Actor->Side || Counter.Life != ECombatLife::Conscious || IsIncapacitated(Counter) || !Counter.bReactionAvailable ||
+                !FFeatureKit::HasCounterspell(Counter) || GridDistance(Counter.Cell, Actor->Cell) > FFeatureKit::CounterspellRange || !HasLineOfSight(Counter.Cell, Actor->Cell) ||
+                Counter.SpellSlots <= 0) { continue; }
+            // SRD Counterspell: a cantrip (level 0) is stopped automatically, no check.
+            Counter.bReactionAvailable = false; SpendSpellSlot(Counter);
+            Result.bCounterspelled = true;
+            Result.RollModeSources.Add(FString::Printf(TEXT("%s Counterspell (reaction, 1 slot): the spell fails"), *Counter.Name));
+            Result.AttackRolls.Add(0);
+            return;
+        }
+        Result.AttackRolls.Add(Roll(20)); Result.NaturalRoll = Result.AttackRolls[0];
+        Result.AttackBonus = Character(TargetId).SaveBonus(Block->SaveAbility);
+        Result.AttackTotal = Result.NaturalRoll + Result.AttackBonus;
+        Result.bHit = Result.AttackTotal < Dc;
+        Result.RollModeSources.Add(FString::Printf(TEXT("Sacred Flame: DEX save DC %d"), Dc));
+        if (Result.bHit)
+        {
+            DiceLog = &Result.EffectDice; Result.Damage = Roll(Block->DamageDieSides); DiceLog = nullptr;
+            const int32 Protection = ProtectionFor(*Target);
+            Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
+            ApplyDamage(*Target, Result.Damage);
+            Result.Damage -= Result.DamagePrevented;
+        }
+        return;
+    }
     FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
     // SRD Protection style: an adjacent ally with a shield spends its reaction to impose disadvantage.
     for (FCombatantState& Guard : State.Encounter.Combatants)
@@ -1568,7 +1609,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         {
             State.bActionAvailable = false;
             State.bAttackActionTaken = true;
-            State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(Actor->AdventurerRole, Actor->Level) - 1;
+            State.AttacksRemaining = AttacksPerAction(*Actor) - 1;
         }
         else { --State.AttacksRemaining; }
         CheckOutcome();
@@ -1582,6 +1623,12 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.CoverBonus ? *FString::Printf(TEXT(" (%s)"), CoverName(Result.CoverBonus)) : TEXT(""),
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result),
             Target->HP, Target->MaxHP, *TargetStatus);
+        if (Result.bSaveSpell)
+        {
+            Result.Feedback = Result.bCounterspelled ? FString::Printf(TEXT("%s > %s: Sacred Flame | %s"), *Actor->Name, *Target->Name, *Result.RollModeSources.Last()) :
+                FString::Printf(TEXT("%s > %s: Sacred Flame | DEX save d20 %d + %d = %d vs DC %d | %s | %d radiant damage. HP %d/%d%s"), *Actor->Name, *Target->Name,
+                    Result.NaturalRoll, Result.AttackBonus, Result.AttackTotal, Result.TargetArmorClass, Result.bHit ? TEXT("FAILED") : TEXT("SAVED"), Result.Damage, Target->HP, Target->MaxHP, *TargetStatus);
+        }
     }
     else if (Command.Type == ECombatCommandType::SecondWind || Command.Type == ECombatCommandType::CureWounds ||
         Command.Type == ECombatCommandType::MagicMissile || Command.Type == ECombatCommandType::Rescue || Command.Type == ECombatCommandType::Potion)
@@ -1783,7 +1830,7 @@ EDamageType FCombatBattle::DamageTypeOf(int32 ActorId, ECombatCommandType Action
     case EAdventurerRole::Rogue: return EDamageType::Piercing;
     case EAdventurerRole::Cleric: return EDamageType::Radiant;
     case EAdventurerRole::Wizard: return EDamageType::Fire;
-    default: return Actor->Role == TEXT("Archer") ? EDamageType::Piercing : EDamageType::Slashing;
+    default: return Actor->Role == TEXT("Archer") || Actor->Range > 1 ? EDamageType::Piercing : Actor->Role == TEXT("Thug") ? EDamageType::Bludgeoning : EDamageType::Slashing; // SRD: Scout longbow, Thug mace, Bandit scimitar
     }
 }
 
@@ -1938,13 +1985,18 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     const int32 Id = ActiveId();
     const FCombatantState* Enemy = Find(Id);
     if (!bStarted || State.Phase != EBattlePhase::Fighting || !Enemy || Enemy->Side != ECombatSide::Enemy) { return Results; }
-    if (LegalTargets(Id).IsEmpty() && State.MovementLeft > 0 && State.bActionAvailable)
+    const FMonsterStatBlock* Block = FMonsterRules::Find(Enemy->Role);
+    auto SelfAction = [&](ECombatCommandType Type)
     {
-        TMap<FIntPoint, FIntPoint> Parents;
-        const TMap<FIntPoint, int32> Costs = Distances(Id, &Parents);
+        if (!State.bActionAvailable || !LegalTargets(Id, Type).Contains(Id)) { return false; }
+        Results.Add(Submit({Type, Id, {}, Id}));
+        return true;
+    };
+    // Fixed cell order search for the cheapest reachable firing cell; TMap iteration never chooses AI ties.
+    auto FindFiringCell = [&](const TMap<FIntPoint, int32>& Costs) -> TOptional<FIntPoint>
+    {
         TOptional<FIntPoint> Best;
         int32 BestCost = MAX_int32;
-        // Search in fixed cell order for a reachable firing cell. TMap iteration never chooses AI ties.
         for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
         {
             for (int32 X = 0; X < State.Encounter.Width; ++X)
@@ -1954,26 +2006,71 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
                 if (!Cost || *Cost >= BestCost) { continue; }
                 for (const FCombatantState& Target : State.Encounter.Combatants)
                 {
-                    if (CanTargetFrom(*Enemy, Cell, Target))
-                    {
-                        Best = Cell; BestCost = *Cost; break;
-                    }
+                    if (CanTargetFrom(*Find(Id), Cell, Target)) { Best = Cell; BestCost = *Cost; break; }
                 }
             }
         }
-        if (Best.IsSet() && BestCost > 0)
+        return Best;
+    };
+    auto StepToward = [&]()
+    {
+        TMap<FIntPoint, FIntPoint> Parents;
+        const TMap<FIntPoint, int32> Costs = Distances(Id, &Parents);
+        const TOptional<FIntPoint> Best = FindFiringCell(Costs);
+        if (!Best.IsSet() || Costs[Best.GetValue()] == 0 || State.MovementLeft <= 0) { return Best.IsSet(); }
+        FIntPoint Destination = Best.GetValue();
+        while (Costs[Destination] > State.MovementLeft) { Destination = Parents[Destination]; }
+        if (Destination != Find(Id)->Cell) { Results.Add(Submit({ECombatCommandType::Move, Id, Destination})); }
+        return true;
+    };
+    auto NextToHero = [&]()
+    {
+        const FCombatantState& Self = *Find(Id);
+        return State.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& U)
+            { return U.Side != Self.Side && U.Life == ECombatLife::Conscious && GridDistance(U.Cell, Self.Cell) <= 1; });
+    };
+    // Skirmishers (Scouts, archers, the Acolyte) that are bloodied in melee Disengage and fall back instead of provoking.
+    if (Block && Block->bSkirmisher && Enemy->HP * 2 < Enemy->MaxHP && NextToHero() && SelfAction(ECombatCommandType::Disengage))
+    {
+        const TMap<FIntPoint, int32> Costs = Distances(Id);
+        TOptional<FIntPoint> Retreat; int32 BestGap = 1;
+        for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
         {
-            FIntPoint Destination = Best.GetValue();
-            while (Costs[Destination] > State.MovementLeft) { Destination = Parents[Destination]; }
-            Results.Add(Submit({ECombatCommandType::Move, Id, Destination}));
+            for (int32 X = 0; X < State.Encounter.Width; ++X)
+            {
+                const int32* Cost = Costs.Find({X, Y});
+                if (!Cost || *Cost > State.MovementLeft) { continue; }
+                int32 Gap = MAX_int32;
+                for (const FCombatantState& U : State.Encounter.Combatants)
+                {
+                    if (U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious) { Gap = FMath::Min(Gap, GridDistance(U.Cell, FIntPoint(X, Y))); }
+                }
+                if (Gap > BestGap) { BestGap = Gap; Retreat = FIntPoint(X, Y); }
+            }
         }
+        if (Retreat.IsSet()) { Results.Add(Submit({ECombatCommandType::Move, Id, Retreat.GetValue()})); }
+        if (State.Phase == EBattlePhase::Fighting) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
+        return Results;
     }
-    const TArray<int32> Targets = LegalTargets(Id);
-    if (!Targets.IsEmpty()) { Results.Add(Submit({ECombatCommandType::Attack, Id, {}, Targets[0]})); }
+    bool bReachable = true;
+    if (LegalTargets(Id).IsEmpty() && State.MovementLeft > 0 && State.bActionAvailable) { bReachable = StepToward(); }
+    // Still out of reach: Dash toward the nearest firing cell.
+    if (bReachable && LegalTargets(Id).IsEmpty() && State.Phase == EBattlePhase::Fighting && SelfAction(ECombatCommandType::Dash)) { StepToward(); }
+    TArray<int32> Targets = LegalTargets(Id);
+    // Multiattack: a stat block's attacks per Attack action (Thug, Scout); ordinary foes swing once.
+    for (int32 Swing = 0; !Targets.IsEmpty() && State.Phase == EBattlePhase::Fighting; ++Swing)
+    {
+        if (Swing > 0 && State.AttacksRemaining <= 0) { break; }
+        const FCombatResult Swung = Submit({ECombatCommandType::Attack, Id, {}, Targets[0]});
+        Results.Add(Swung);
+        if (!Swung.bAccepted) { break; }
+        Targets = LegalTargets(Id);
+    }
+    // No hero in reach at all, even dashing: ranged foes Hide, melee foes Dodge.
+    if (!bReachable && State.Phase == EBattlePhase::Fighting && !SelfAction(Find(Id)->Range > 1 ? ECombatCommandType::Hide : ECombatCommandType::Dodge)) { SelfAction(ECombatCommandType::Dodge); }
     if (State.Phase == EBattlePhase::Fighting) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
     return Results;
 }
-
 FCombatEncounter FCombatBattle::TutorialEncounter()
 {
     FCombatEncounter Encounter;
@@ -2041,9 +2138,10 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
     }
     const auto Expected = !bParty ? EBattlePhase::Defeat : !bEnemy ? EBattlePhase::Victory : EBattlePhase::Fighting;
     const auto* Active = Candidate.Find(Candidate.ActiveId());
-    if (Snapshot.Phase != Expected || !Active || Active->Life != ECombatLife::Conscious ||
+    // A battle can end on the turn of a foe that died to a reaction (opportunity attack), so only a live fight needs a conscious active unit.
+    if (Snapshot.Phase != Expected || !Active || (Snapshot.Phase == EBattlePhase::Fighting && Active->Life != ECombatLife::Conscious) ||
         Snapshot.MovementLeft < 0 || Snapshot.MovementLeft > Active->Speed * 3 ||
-        Snapshot.AttacksRemaining < 0 || Snapshot.AttacksRemaining >= FClassFeatureRules::AttacksPerAction(Active->AdventurerRole, Active->Level) ||
+        Snapshot.AttacksRemaining < 0 || Snapshot.AttacksRemaining >= AttacksPerAction(*Active) ||
         (Snapshot.AttacksRemaining > 0 && (Snapshot.bActionAvailable || Snapshot.Phase != EBattlePhase::Fighting)) ||
         Snapshot.SneakAttackUsedBy.ContainsByPredicate([&](int32 SneakId) { return !Candidate.Find(SneakId) || Snapshot.SneakAttackUsedBy.FilterByPredicate([SneakId](int32 Other) { return Other == SneakId; }).Num() > 1; }) ||
         (!Snapshot.bBonusActionAvailable && ([&]()

@@ -222,8 +222,10 @@ bool FCombatEnemyTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Party cannot be automated"), A.PlayEnemyTurn().IsEmpty());
     A.Submit({ECombatCommandType::EndTurn, 10}); B.Submit({ECombatCommandType::EndTurn, 10});
     const TArray<FCombatResult> Results = A.PlayEnemyTurn(); B.PlayEnemyTurn();
-    TestEqual(TEXT("Sealed enemy ends immediately"), Results.Num(), 1);
-    TestTrue(TEXT("Enemy ended legally"), Results[0].bAccepted);
+    // Deliberate change (enemy AI): a foe that cannot reach anyone takes the Dodge action before ending its turn.
+    if (!TestEqual(TEXT("Sealed enemy Dodges, then ends"), Results.Num(), 2)) { return false; }
+    TestTrue(TEXT("Dodge accepted"), Results[0].bAccepted && Results[0].Feedback.Contains(TEXT("dodges")));
+    TestTrue(TEXT("Enemy ended legally"), Results[1].bAccepted);
     TestEqual(TEXT("Party turn restored"), A.ActiveId(), 10);
     TestTrue(TEXT("Identical seed/commands give same full state"), SameState(A.Snapshot(), B.Snapshot()));
     // Longer real arena sequence uses only previewed public commands on both replicas.

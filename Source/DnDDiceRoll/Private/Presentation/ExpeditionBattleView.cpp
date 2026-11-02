@@ -596,7 +596,7 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     else
     {
         const bool bArcher = Unit.Range > 1;
-        const bool bRaider = Unit.Name.Contains(TEXT("raider")) || Unit.Name.StartsWith(TEXT("Raider"));
+        const bool bRaider = Unit.Name.Contains(TEXT("raider")) || Unit.Name.StartsWith(TEXT("Raider")) || Unit.Name.StartsWith(TEXT("Thug"));
         const FLinearColor Cloth = bArcher ? FLinearColor(0.32f, 0.2f, 0.12f) : bRaider ? FLinearColor(0.42f, 0.1f, 0.08f) : FLinearColor(0.35f, 0.24f, 0.15f);
         Part(Cube, FVector(0, 0, 28), FVector(0.44f, 0.38f, 0.52f), Cloth);
         Part(Cube, FVector(0, 0, 52), FVector(0.5f, 0.46f, 0.1f), FLinearColor(0.22f, 0.2f, 0.2f));
@@ -1204,7 +1204,7 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
         }
     }
     if (Unit.Range > 1) { return ThemeMesh(Theme->Archer); }
-    const bool bRaider = Unit.Name.Contains(TEXT("raider"));
+    const bool bRaider = Unit.Name.Contains(TEXT("raider")) || Unit.Name.StartsWith(TEXT("Thug"));
     return ThemeMesh(bRaider ? Theme->Raider : Theme->Scout);
 }
 
