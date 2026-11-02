@@ -174,3 +174,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #81: locks and traps
 
 `FLockTrapRules`: lock DCs are 10/15/20 for simple, good and superior locks, and picking one needs thieves' tools. A trap is found when an Investigation total (or passive Perception) meets its DC. Disarming needs thieves' tools; a miss by 5 or more sets the trap off. Chest and door contents, opened state and trap placement need run state (#39).
+
+## Issue #82: social influence
+
+`FSocialRules`: Persuasion or Intimidation meets an attitude DC (friendly 10, indifferent 15, hostile 20) to move the NPC one step toward friendly. Deception is a contest against Insight and ties go to the target. A swayed hostile NPC avoids the fight, a newly friendly one shares information and an already friendly one gives a reward. NPC attitudes and granted rewards need run state (#39); the outcome table is a design call for Austin.
