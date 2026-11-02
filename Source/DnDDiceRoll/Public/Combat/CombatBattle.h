@@ -51,7 +51,7 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 RescueTurnsLeft = 0;
     UPROPERTY() int32 SecondWindUses = 0;
     UPROPERTY() int32 SpellSlots = 0;
-    /** Per-level slot pool (#71): empty, or one count per spell level 1..FSpellRules::MaxSpellLevel within FSpellRules::SlotsFor; level 1 mirrors SpellSlots. */
+    /** Per-level slot pool (#71): empty, or one count per spell level 1..FSpellRules::MaxSpellLevel (legacy saves: 3) within FSpellRules::SlotsFor; level 1 mirrors SpellSlots. */
     UPROPERTY() TArray<int32> SlotsByLevel;
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;

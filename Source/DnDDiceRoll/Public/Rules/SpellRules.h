@@ -38,10 +38,13 @@ struct DNDDICEROLL_API FSpellFacts
 
 struct DNDDICEROLL_API FSpellRules
 {
-    static constexpr int32 MaxSpellLevel = 3;
+    /** Slot levels held in a combatant's SlotsByLevel pool (engine-castable). Raise toward TableSpellLevel when the level cap grows past 6. */
+    static constexpr int32 MaxSpellLevel = 4;
+    /** Slot levels covered by the SRD slot tables (data through character level 20). */
+    static constexpr int32 TableSpellLevel = 9;
     static const FSpellFacts& Facts(ESpell Spell);
     static const TCHAR* SchoolName(ESpellSchool School);
-    /** SRD single-class slot table for class levels 1-5: full casters, half casters (Paladin, Ranger from 2), Warlock pact slots. */
+    /** SRD single-class slot table for class levels 1-20 (data-driven, slot levels 1-9): full casters, half casters (Paladin, Ranger from 2), Warlock pact slots. */
     static int32 SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel);
     /** Slots for a (possibly multiclassed) hero: class levels, not character level, decide the table (SRD multiclassing). */
     static int32 HeroSlotsFor(EAdventurerRole Primary, int32 PrimaryLevels, EAdventurerRole Secondary, int32 SecondaryLevels, int32 SpellLevel);

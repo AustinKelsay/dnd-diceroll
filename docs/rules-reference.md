@@ -797,3 +797,10 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 | True Resurrection | 9 | Necromancy | Cleric, Druid |  | Extended |  | DataOnly |
 | Weird | 9 | Illusion | Warlock, Wizard |  | Action | Yes | Mechanics |
 | Wish | 9 | Conjuration | Sorcerer, Wizard |  | Action |  | Mechanics |
+
+## Spell slot tables (Phase 1, SRD 5.2.1)
+
+- `FSpellRules::SlotsFor` is data-driven through character level 20 and slot level 9 (`TableSpellLevel`): full casters read the shared 20x9 table in `FLevelRules`; Paladin/Ranger read it at ceil(level/2) from class level 2; Warlock Pact Magic uses slot level min(ceil(L/2),5) with 1/2/3/4 slots at 1/2/11/17.
+- Combatant pools (`SlotsByLevel`) hold slot levels 1..`FSpellRules::MaxSpellLevel` = 4; saves with the old 3-entry pool still load.
+- Long rest (`FFeatureKit::RefillSlotTable`, called from `Refill`) fills every slot level above 1st straight from the table; 1st level stays tied to the build's flat `SpellSlots` cap.
+- **Exception (by rule, not code):** with `EngineLevelCap = 5`, no class or multiclass reaches a 4th-level slot (SRD: full casters at 7, half casters at 13, Warlock at 7). 4th-level spells are castable the moment the level cap is raised; no table or pool change is needed. Slot levels 5-9 need `MaxSpellLevel` raised alongside the 20-level expansion.

@@ -173,7 +173,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         if (!FFeatureKit::Valid(Unit)) { return Reject(TEXT("Class feature state is not available to this hero.")); }
         if (!Unit.SlotsByLevel.IsEmpty())
         {
-            bool bSlotsOk = Unit.SlotsByLevel.Num() == FSpellRules::MaxSpellLevel && Unit.SlotsByLevel[0] == Unit.SpellSlots;
+            bool bSlotsOk = (Unit.SlotsByLevel.Num() == 3 || Unit.SlotsByLevel.Num() == FSpellRules::MaxSpellLevel) && Unit.SlotsByLevel[0] == Unit.SpellSlots;
             for (int32 SlotLevel = 1; bSlotsOk && SlotLevel <= Unit.SlotsByLevel.Num(); ++SlotLevel)
             { bSlotsOk = Unit.SlotsByLevel[SlotLevel - 1] >= 0 && Unit.SlotsByLevel[SlotLevel - 1] <= FBuildCatalog::SlotMax(Unit, SlotLevel); }
             if (!bSlotsOk) { return Reject(TEXT("Spell slots do not match the per-level slot table.")); }

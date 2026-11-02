@@ -16,8 +16,6 @@ namespace SpellTable
         { TEXT("Healing Word"), 1, ESpellSchool::Abjuration, TEXT("1 bonus action"), 60, TEXT("60 ft"), true, false, false, TEXT("Instantaneous"), true, false, 2, 4, true, EDamageType::Force, 2 }, // SRD 5.2.1: 2d4 + mod, +2d4 per slot level
         { TEXT("Thunderwave"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Self (15-ft cube)"), true, true, false, TEXT("Instantaneous"), false, true, 2, 8, false, EDamageType::Thunder, 1 },
     };
-    // Rows: character level 1-5; columns: spell level 1-3.
-    static const int32 FullCaster[5][3] = { {2, 0, 0}, {3, 0, 0}, {4, 2, 0}, {4, 3, 0}, {4, 3, 2} };
 }
 
 const FSpellFacts& FSpellRules::Facts(ESpell Spell)
@@ -33,19 +31,22 @@ const TCHAR* FSpellRules::SchoolName(ESpellSchool School)
 
 int32 FSpellRules::SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel)
 {
-    if (CharacterLevel < 1 || SpellLevel < 1 || SpellLevel > MaxSpellLevel) { return 0; }
+    if (CharacterLevel < 1 || SpellLevel < 1 || SpellLevel > TableSpellLevel) { return 0; }
+    CharacterLevel = FMath::Min(CharacterLevel, FLevelRules::MaxLevel);
     switch (Role)
     {
     case EAdventurerRole::Bard: case EAdventurerRole::Cleric: case EAdventurerRole::Druid: case EAdventurerRole::Sorcerer: case EAdventurerRole::Wizard:
-        return SpellTable::FullCaster[FMath::Min(CharacterLevel, 5) - 1][SpellLevel - 1];
+        // The SRD full-caster table is the multiclass spellcaster table (one 20x9 data table in FLevelRules).
+        return FLevelRules::MulticlassSlots(CharacterLevel, SpellLevel);
     case EAdventurerRole::Paladin: case EAdventurerRole::Ranger:
         // SRD half casters: no Spellcasting before class level 2; their table equals the full-caster row at ceil(level / 2).
-        return CharacterLevel < 2 ? 0 : SpellTable::FullCaster[FMath::Min((CharacterLevel + 1) / 2, 5) - 1][SpellLevel - 1];
+        return CharacterLevel < 2 ? 0 : FLevelRules::MulticlassSlots((CharacterLevel + 1) / 2, SpellLevel);
     case EAdventurerRole::Warlock:
     {
-        // SRD Pact Magic (levels 1-5): 1/2/2/2/2 slots, all of slot level 1/1/2/2/3.
-        const int32 PactLevel = CharacterLevel >= 5 ? 3 : CharacterLevel >= 3 ? 2 : 1;
-        return SpellLevel == PactLevel ? (CharacterLevel >= 2 ? 2 : 1) : 0;
+        // SRD Pact Magic table (levels 1-20): slot level min(ceil(L/2), 5); 1 slot at 1, 2 at 2-10, 3 at 11-16, 4 at 17-20.
+        const int32 PactLevel = FMath::Min((CharacterLevel + 1) / 2, 5);
+        const int32 Count = CharacterLevel >= 17 ? 4 : CharacterLevel >= 11 ? 3 : CharacterLevel >= 2 ? 2 : 1;
+        return SpellLevel == PactLevel ? Count : 0;
     }
     default:
         return 0;
@@ -55,7 +56,7 @@ int32 FSpellRules::SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 Sp
 int32 FSpellRules::MaxSlotLevel(EAdventurerRole Role, int32 CharacterLevel)
 {
     int32 Best = 0;
-    for (int32 SpellLevel = 1; SpellLevel <= MaxSpellLevel; ++SpellLevel) { if (SlotsFor(Role, CharacterLevel, SpellLevel) > 0) { Best = SpellLevel; } }
+    for (int32 SpellLevel = 1; SpellLevel <= TableSpellLevel; ++SpellLevel) { if (SlotsFor(Role, CharacterLevel, SpellLevel) > 0) { Best = SpellLevel; } }
     return Best;
 }
 
@@ -67,7 +68,7 @@ int32 FSpellRules::HeroSlotsFor(EAdventurerRole Primary, int32 PrimaryLevels, EA
     const bool bSecondary = Secondary != EAdventurerRole::Warlock && SlotsFor(Secondary, SecondaryLevels, 1) > 0;
     if (bPrimary && bSecondary)
     {
-        return SpellLevel > MaxSpellLevel ? 0 : FLevelRules::MulticlassSlots(FLevelRules::CasterLevel(Primary, PrimaryLevels) + FLevelRules::CasterLevel(Secondary, SecondaryLevels), SpellLevel);
+        return SpellLevel > TableSpellLevel ? 0 : FLevelRules::MulticlassSlots(FLevelRules::CasterLevel(Primary, PrimaryLevels) + FLevelRules::CasterLevel(Secondary, SecondaryLevels), SpellLevel);
     }
     return bSecondary ? SlotsFor(Secondary, SecondaryLevels, SpellLevel) : SlotsFor(Primary, PrimaryLevels, SpellLevel);
 }
@@ -83,7 +84,7 @@ int32 FSpellRules::UpcastDiceCount(ESpell Spell, int32 SlotLevel)
 {
     const FSpellFacts& F = Facts(Spell);
     if (F.Level == 0) { return F.DieCount; }
-    if (SlotLevel < F.Level || SlotLevel > MaxSpellLevel) { return 0; }
+    if (SlotLevel < F.Level || SlotLevel > TableSpellLevel) { return 0; }
     return F.DieCount + F.UpcastDicePerLevel * (SlotLevel - F.Level);
 }
 

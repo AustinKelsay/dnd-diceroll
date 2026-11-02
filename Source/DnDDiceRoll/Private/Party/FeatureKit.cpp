@@ -60,6 +60,18 @@ bool FFeatureKit::ChooseStyle(FCombatantState& Hero, EFightingStyle Choice, FStr
     Hero.FightingStyle = static_cast<int32>(Choice);
     return true;
 }
+void FFeatureKit::RefillSlotTable(FCombatantState& Hero)
+{
+    // Long rest: once a hero's SRD table grants slots above 1st level, keep a per-level pool (1..MaxSpellLevel) full.
+    // Level 1 mirrors the flat SpellSlots pool so kit/legacy builds keep their own 1st-level cap.
+    bool bHigher = false;
+    for (int32 L = 2; L <= FSpellRules::MaxSpellLevel; ++L) { bHigher |= FBuildCatalog::SlotMax(Hero, L) > 0; }
+    if (!bHigher) { return; }
+    Hero.SlotsByLevel.SetNum(FSpellRules::MaxSpellLevel);
+    Hero.SlotsByLevel[0] = FMath::Min(Hero.SpellSlots, FBuildCatalog::SlotMax(Hero, 1));
+    Hero.SpellSlots = Hero.SlotsByLevel[0];
+    for (int32 L = 2; L <= FSpellRules::MaxSpellLevel; ++L) { Hero.SlotsByLevel[L - 1] = FBuildCatalog::SlotMax(Hero, L); }
+}
 void FFeatureKit::Refill(FCombatantState& Hero)
 {
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
@@ -72,6 +84,7 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     Hero.SorceryPoints = SorceryCap(Hero);
     Hero.bArcaneRecovered = false;
     Hero.bMagicalCunningUsed = false;
+    RefillSlotTable(Hero);
     EnsureInvocations(Hero);
 }
 bool FFeatureKit::HasMagicalCunning(const FCombatantState& Hero)

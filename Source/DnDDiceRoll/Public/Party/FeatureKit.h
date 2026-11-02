@@ -22,6 +22,8 @@ public:
     static bool ChooseStyle(FCombatantState& Hero, EFightingStyle Choice, FString& Error);
     /** Long rest / creation / level-up: fills feature pools to their caps and assigns a default style when newly entitled. */
     static void Refill(FCombatantState& Hero);
+    /** Fill SlotsByLevel from the SRD slot tables (FBuildCatalog::SlotMax) when the hero has slots above 1st level. */
+    static void RefillSlotTable(FCombatantState& Hero);
     static bool Valid(const FCombatantState& Hero);
     /** Level-up / new class with the hero as it was before: newly unlocked uses arrive ready. */
     static void Grant(FCombatantState& Hero, const FCombatantState& Before);
