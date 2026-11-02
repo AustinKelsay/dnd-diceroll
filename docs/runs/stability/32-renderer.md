@@ -40,6 +40,7 @@ The initial command is red-capable and actually went red on the exact issue sign
 - Caller: `FSceneCullingBuilder::ProcessPostSceneUpdate +20176`; worker `Background Worker (Standby #0)`, LLDB thread34.
 - Caller disassembly retains builder in x20; the guard reads builder+`0x108`, the BlockData uploader proxy. `NumDirtyBlocks` at +`0x98` is0.
 - Builder `0x75000bc810`, scene-culling object `0x770004c800`; the latter's active-builder field (+`0x2f8`, verified by this binary's disassembly) equals the asserting builder. The active PostUpdateTaskHandle (+`0x570`) is `0x7500123e00`.
+- The task wrapper disassembly and explicit frame2 registers in `lldb.log` identify executing task `x19=0x7500123e00`, equal to the scene's stored PostUpdateTaskHandle at the stop. That weakens a simple wrong-handle-at-stop explanation; it does not establish the earlier wait/upload order.
 - BlockData proxy is `0x75000fa600`. At stop it contains a vtable symbol for `UE::Tasks::Wait<...>`'s executable task, instead of upload arrays. This is an observation of invalid lifetime/ordering state, **not yet the identity of the corrupting writer or a root cause**.
 - `builder.bin`, `scene-culling.bin`, full `lldb.log`, `assertion-context.txt`, timestamped `events.jsonl`, and before/after native images are preserved in that run directory. The initial generic CLI context dump used LLDB's selected main thread for some register/frame commands; `assertion.json` uses the callback's actual SBFrame and is correct. Subsequent explicit thread34 selection captured the asserting caller's full disassembly/registers/memory. The collector was corrected to use explicit `SBExecutionContext` for later runs.
 
@@ -84,6 +85,44 @@ Each attempt has `.local/stability32/<name>/receipt.json`, timestamped CUA event
 - Native totals:9 launch attempts; **1 exact #32 red**,3 completed non-recurrence trials,5 inconclusive attempts (2 distinct #35 startup exits,1 arming incompatibility,1 intrusive trace stall,1 watchpoint callback incompatibility). These unequal/timing-instrumented trials do not estimate a defensible crash probability.
 - Every attempt retained the reward checkpoint hash above. All native/debugger processes were cleaned up normally or exited through their original failure. Explicit absence checks cover owned app PIDs81885,91826,97930,4645,9069,14488,20960,32358,38265. No owned native controller or LLDB remains. Original editor PID50002 was untouched.
 
-At the coordination boundary, **HOST BUILD/TEST RELEASED** was reported. New UBT, package, automation and rendered/timing loops are held pending root reacquisition; native QA has not been granted to the gameplay session. Source and read-only evidence analysis may continue. This record is diagnostic progress, not a fix or independent review.
+At the earlier coordination boundary, **HOST BUILD/TEST RELEASED** was reported. No stability native/build/test work resumed during gameplay's slot. The subsequent owner-migration instruction supersedes reacquisition: **Mac stability work is quiesced and will not resume**. This record is diagnostic progress, not a fix or independent review.
 
 The strongest next targeted experiment is the corrected, bounded hardware watchpoint probe on the same red workload, tracking builder allocation generations and preserving writers through upload/reset/free. Correlate its watched builder with the actual asserting builder; otherwise the result cannot distinguish lifecycle reuse from outside corruption. The exact original workload remains runnable via the initial command above, with before/after snapshots needed to count real Resumes. Repeat the narrow baseline to establish reproduction rate before interpreting a matched process-only `r.SceneCulling.Async.Update=0` differential. That CVar/theme differential has **not** been run, and no production feature disable or broad flush is proposed.
+
+
+## Owner-migration handoff
+
+Latest instruction moves further implementation/engine work to the linked Linux desktop. No active operation remained at the boundary. No job was interrupted for migration and no new engine/native/build/package/test operation was started. The Mac has **no owned QA app, native controller, LLDB, UBT or automation process running**; no stopped debugger needs detachment. Original editor PID50002 and shared MCP18765 were untouched. Native/rendered work must be coordinated separately by root; this unit has released all of its workload.
+
+Head before migration: `fce245635d4d50e262edac4d669b4fe3bee26be0`, diagnostic commit authored before the no-commit migration instruction. No push, PR, tracker write or external message was performed. The delegate left this migration update uncommitted for root. Root inspected the diagnostic source and handoff, then prepared the preservation commit/push on `feature/32-renderer-stability`; no merge and no independent review are claimed. Runtime source fingerprint remains `8e12d7bd31d555e06243ddb1dab2c0706728af46af841f5d94cd12e9c826757d`. There is no production source WIP or proposed runtime fix.
+
+Preserved under the owned checkout:
+
+- `.local/stability32/migration-handoff.json`: exact head/base/source, QA manifest, fixture hash, known-owned-PID absence checks and quiesced host state.
+- `.local/stability32/baseline-menu/`: actual assertion arguments/registers, all-thread stacks, explicit worker disassembly, builder/scene memory, macOS IPS, native images, timestamped input records, receipt and copied `runtime.log`.
+- `.local/stability32/{resume-idle-1,two-resumes-1,historical-repeat-1}/`: completed non-recurrence receipts, native images, assertion breakpoint hit counts0, normal cleanup and copied runtime logs.
+- `.local/stability32/{historical-trace-1,historical-trace-2,historical-trace-3,watch-writer-1,watch-writer-2}/`: failed/inconclusive probe evidence and both distinct startup IPS files. No successful new first-writer capture is claimed.
+- `.local/stability32/preserved-private-save-root/`: copy of the owned sandbox save root, including the byte-identical reward checkpoint and all native runtime logs. Original fixture remains `Saved/CaptureFixtures/reward/current-v1.json`; both hash to `d17acc4f12fcba902ed6c51ef3233f7a60c7b886fd1f06ad022201fc8a557470`.
+- `.local/stability32/{prepare.py,native_loop.py,qa.json,stability32_capture.py,trace_lldb_v1.py,watch_lldb.py}`: runnable preparation/controller and exact prototype sources as preserved at handoff. The watchpoint prototype accepts the third callback argument but its corrected live attempt exited before attachment. The boundary tracer stalled and remains unsupported/inconclusive. The narrow durable collector armed and completed a native workload; its corrected explicit-worker capture path has not yet received a second real red assertion.
+- `Builds/Stability32QA24c6c241/Stability32QA24c6c241.app` and `Builds/20261102T032206321426Z/`: isolated clone and original verified package/metadata. `tools/diagnostics/` contains the versioned collector and portable instructions.
+
+Root's next step is to inspect/commit this handoff and transfer the ledger, tools and relevant ignored evidence to the new owner. Continue the ranked hypotheses with generation-correlated writer/order evidence. Linux native experiments can establish behavior on Linux and may help isolate an engine seam, but **desktop success is not a fix or non-recurrence proof for the Mac crash**. No Mac-specific predicate/layout may be assumed valid for a Linux executable. No supported project correction or shared-engine patch has been identified; #32 remains unresolved and #35 remains outside this unit.
+
+
+### Root preservation receipt
+
+Owner destination: PlebDev Ultra, linked environment `50ceeab6-638f-49e8-ba1b-9f29ea7dfdaa`, Linux x64, project `mcp:eb6b3d30-097f-4eba-a946-678aeb898be2`, checkout `/home/plebdev/dnd-diceroll-t3`. The coordinator owns desktop continuation and transfer; root has started no desktop work. No Linux Unreal installation or validation is claimed here.
+
+Small essential evidence archive, prepared without running Unreal:
+
+- Path in this Mac checkout: `.local/migration/stability32-essential-20261102.tar.gz`.
+- Size: **512876 bytes**; SHA-256 `42c6136b5bbf1bb65bcb2d7033b2820488f5a25738a958b1c072d9165237f657`.
+- Contains 93 manifest-listed files plus the manifest: live assertion/worker LLDB transcript and memory, crash reports, action journals and receipts, private checkpoint and capture fixtures, runtime logs, engine/process identity, prototype scripts, and selected baseline build/test/helper logs. Excludes apps, caches, screenshots and credentials. `MANIFEST.json` gives every included file's size and SHA-256. Baseline menu logs are labeled as baseline evidence; the diagnostic helper result remains the delegate's 53/53 receipt above.
+- Companion checksum: `.local/migration/stability32-essential-20261102.tar.gz.sha256`.
+- Complete ignored evidence remains at `.local/stability32/` and the larger optional archive `.local/migration/stability32-mac-evidence-20261102.tar.gz` (181882863 bytes, SHA-256 `c0d19be017ba08e5b36fbe09f35be124a063c338df773b036fef272add3329fe`). Transfer the small archive; no native build transfer is required. Ignored archives are preserved locally, not published to GitHub or transferred to Ultra by this thread.
+
+The diagnostic child was instructed to preserve and stop, confirmed no active engine/native/debugger operation, and wrote its private-save/log preservation and migration summary before root requested `task_cancel`. Task ID: `node:delegated-task:command%3Amcp%3Af185c915-d46b-4449-9bd9-332262ae61f9%3Adelegate-task%3Astability32-diagnose-20261102`. No replacement delegate was started.
+
+Issue #35 remains a distinct Mac startup failure: `FLLMTracker::PopTag` / `FLLMScope::DestructInTheOpen` during allocator/LaunchServices startup, before game log/frames. This unit preserved two new occurrences plus earlier reports; no Shipping or `-nollm` differential was performed. Investigate separately and do not reinterpret a Linux startup success as a Mac fix.
+
+Next owner should fetch the feature branch and inspect the diagnostic commit and this ledger before integration. Review the ranked #32 hypotheses using generation-correlated lifecycle/writer evidence; do not port hard-coded ARM64 offsets to Linux. Both issues remain unresolved. Independent Standards/Spec review is outstanding; the branch is a diagnostic handoff, not a merge-ready correction. The gameplay owner's separate branch is `feature/gameplay-depth` at `661e216a142a7d7cf8546cbe4cecdc94298046dd`; do not merge it implicitly into this diagnostic branch. Its 84/85 test receipt and compiled-but-untested fixture correction belong to that owner's handoff, not this unit.
