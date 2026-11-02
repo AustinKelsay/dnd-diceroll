@@ -29,7 +29,7 @@ bool StartOr(FAutomationTestBase& T, FCombatBattle& B, const FCombatEncounter& E
 {
     const bool bOk = B.Start(E, Seed, Error); if (!bOk) { T.AddError(Error); } return bOk;
 }
-void EndTurn(FCombatBattle& B) { B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}); }
+void DownedEndTurn(FCombatBattle& B) { B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}); }
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDownedExpiryTest, "Project.Expedition.DownedHouseRule.CountdownExpiresAfterTwoFullRounds",
@@ -48,7 +48,7 @@ bool FDownedExpiryTest::RunTest(const FString& Parameters)
     for (int32 Lap = 1; Lap <= 2; ++Lap)
     {
         // Step until the ally's slot has come round Lap times.
-        for (int32 G = 0; G < 20 && B.Snapshot().Round < Round0 + Lap; ++G) { EndTurn(B); }
+        for (int32 G = 0; G < 20 && B.Snapshot().Round < Round0 + Lap; ++G) { DownedEndTurn(B); }
         const auto* Ally = B.Find(2);
         if (Lap == 1) { TestTrue(TEXT("One round down, one left"), Ally->Life == ECombatLife::Downed && Ally->RescueTurnsLeft == 1); TestTrue(TEXT("Status shows rounds"), B.StatusText(2).Contains(TEXT("Downed (1 round, dies if hit)"))); }
         else { TestTrue(TEXT("Dead after two full rounds"), Ally->Life == ECombatLife::Dead && Ally->RescueTurnsLeft == 0 && Ally->DownedAtSlot == INDEX_NONE); }
@@ -65,7 +65,7 @@ bool FDownedHealedTest::RunTest(const FString& Parameters)
     for (auto Action : {ECombatCommandType::CureWounds, ECombatCommandType::Potion, ECombatCommandType::Rescue})
     {
         FCombatBattle B; StartOr(*this, B, Base(), 42, Error);
-        for (int32 G = 0; G < 10 && B.Snapshot().Round < 2; ++G) { EndTurn(B); } // one full round passes: 1 round left
+        for (int32 G = 0; G < 10 && B.Snapshot().Round < 2; ++G) { DownedEndTurn(B); } // one full round passes: 1 round left
         if (!TestEqual(TEXT("Hero active again"), B.ActiveId(), 1)) { return false; }
         TestEqual(TEXT("One round left"), B.Find(2)->RescueTurnsLeft, 1);
         TestTrue(TEXT("Downed ally is a legal heal target"), B.LegalTargets(1, Action).Contains(2));
@@ -75,7 +75,7 @@ bool FDownedHealedTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Revived at the healed HP"), R.Healing > 0 && Ally->HP == R.Healing);
         TestTrue(TEXT("Clock cleared"), Ally->RescueTurnsLeft == 0 && Ally->DownedAtSlot == INDEX_NONE);
         FCombatBattle Copy; TestTrue(TEXT("Revived state restores"), Copy.Restore(B.Snapshot(), Error));
-        for (int32 I = 0; I < 9; ++I) { EndTurn(B); }
+        for (int32 I = 0; I < 9; ++I) { DownedEndTurn(B); }
         TestTrue(TEXT("Revived ally no longer counts down"), B.Find(2)->Life == ECombatLife::Conscious);
     }
     return !HasAnyErrors();
@@ -88,7 +88,7 @@ bool FDownedAttackedTest::RunTest(const FString& Parameters)
     FString Error;
     auto E = Base(); E.Combatants[2].Cell = {1, 1}; E.Combatants[2].InitiativeBonus = 10; // adjacent to the ally only
     FCombatBattle B; StartOr(*this, B, E, 42, Error);
-    EndTurn(B);
+    DownedEndTurn(B);
     if (!TestEqual(TEXT("Enemy acts"), B.ActiveId(), 20)) { return false; }
     TestTrue(TEXT("Downed hero is attackable"), B.LegalTargets(20, ECombatCommandType::Attack).Contains(2));
     const FActionForecast F = B.Forecast(20, ECombatCommandType::Attack, 2, 0);
@@ -98,12 +98,12 @@ bool FDownedAttackedTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Feedback says dead"), R.Feedback.Contains(TEXT("DEAD")));
     // The AI prefers a conscious hero in reach over finishing the downed one.
     E.Combatants[0].Cell = {2, 1};
-    FCombatBattle AI; StartOr(*this, AI, E, 42, Error); EndTurn(AI);
+    FCombatBattle AI; StartOr(*this, AI, E, 42, Error); DownedEndTurn(AI);
     AI.PlayEnemyTurn();
     TestTrue(TEXT("AI attacks the conscious hero first"), AI.Find(2)->Life == ECombatLife::Downed);
     // With only the downed hero in reach, the AI kills it.
     E.Combatants[0].Cell = {0, 0};
-    FCombatBattle AI2; StartOr(*this, AI2, E, 42, Error); EndTurn(AI2);
+    FCombatBattle AI2; StartOr(*this, AI2, E, 42, Error); DownedEndTurn(AI2);
     AI2.PlayEnemyTurn();
     TestTrue(TEXT("AI finishes a lone downed hero"), AI2.Find(2)->Life == ECombatLife::Dead);
     return !HasAnyErrors();
@@ -118,18 +118,18 @@ bool FDownedMultiTest::RunTest(const FString& Parameters)
     FCombatantState Third = Unit(3, ECombatSide::Party, {6,6}, 0, 1); E.Combatants.Add(Third);
     E.Combatants[2].InitiativeBonus = 20; E.Combatants[2].Cell = {7,6}; E.Combatants[2].AttackBonus = 30; E.Combatants[2].DamageBonus = 50;
     FCombatBattle B; if (!TestTrue(TEXT("Starts"), StartOr(*this, B, E, 7, Error))) { return false; }
-    for (int32 G = 0; G < 10 && B.ActiveId() != 20; ++G) { EndTurn(B); }
+    for (int32 G = 0; G < 10 && B.ActiveId() != 20; ++G) { DownedEndTurn(B); }
     const int32 DropRound = B.Snapshot().Round, DropSlot = B.Snapshot().TurnIndex;
     const auto R = B.Submit({ECombatCommandType::Attack, 20, {}, 3});
     TestTrue(TEXT("Third hero drops"), R.Downed.Contains(3));
     TestTrue(TEXT("Dropped at the enemy's slot with 2 rounds"), B.Find(3)->DownedAtSlot == DropSlot && B.Find(3)->RescueTurnsLeft == 2);
     TestEqual(TEXT("Ally 2 keeps its own clock"), B.Find(2)->DownedAtSlot, INDEX_NONE);
-    EndTurn(B);
-    for (int32 G = 0; G < 20 && !(B.Snapshot().Round == DropRound + 1 && B.ActiveId() == 20) && B.Snapshot().Phase == EBattlePhase::Fighting; ++G) { EndTurn(B); }
+    DownedEndTurn(B);
+    for (int32 G = 0; G < 20 && !(B.Snapshot().Round == DropRound + 1 && B.ActiveId() == 20) && B.Snapshot().Phase == EBattlePhase::Fighting; ++G) { DownedEndTurn(B); }
     TestTrue(TEXT("One full round since the drop"), B.Find(3)->Life == ECombatLife::Downed && B.Find(3)->RescueTurnsLeft == 1);
     TestTrue(TEXT("Ally 2 ticked separately"), B.Find(2)->RescueTurnsLeft == 1);
-    EndTurn(B);
-    for (int32 G = 0; G < 20 && !(B.Snapshot().Round == DropRound + 2 && B.ActiveId() == 20) && B.Snapshot().Phase == EBattlePhase::Fighting; ++G) { EndTurn(B); }
+    DownedEndTurn(B);
+    for (int32 G = 0; G < 20 && !(B.Snapshot().Round == DropRound + 2 && B.ActiveId() == 20) && B.Snapshot().Phase == EBattlePhase::Fighting; ++G) { DownedEndTurn(B); }
     TestTrue(TEXT("Third hero dead after two full rounds"), B.Find(3)->Life == ECombatLife::Dead);
     TestTrue(TEXT("Ally 2 dead on its own slot"), B.Find(2)->Life == ECombatLife::Dead);
     TestTrue(TEXT("Hero 1 fights on"), B.Find(1)->Life == ECombatLife::Conscious && B.Snapshot().Phase == EBattlePhase::Fighting);
@@ -144,13 +144,13 @@ bool FDownedSaveTest::RunTest(const FString& Parameters)
     auto E = Base(); FCombatantState Third = Unit(3, ECombatSide::Party, {6,6}, 0, 1); E.Combatants.Add(Third);
     E.Combatants[2].InitiativeBonus = 20; E.Combatants[2].Cell = {7,6}; E.Combatants[2].AttackBonus = 30; E.Combatants[2].DamageBonus = 50;
     FCombatBattle B; StartOr(*this, B, E, 7, Error);
-    for (int32 G = 0; G < 10 && B.ActiveId() != 20; ++G) { EndTurn(B); }
+    for (int32 G = 0; G < 10 && B.ActiveId() != 20; ++G) { DownedEndTurn(B); }
     B.Submit({ECombatCommandType::Attack, 20, {}, 3});
     const auto Snap = B.Snapshot();
     FCombatBattle Loaded;
     if (!TestTrue(TEXT("Downed countdown restores"), Loaded.Restore(Snap, Error))) { AddError(Error); return false; }
     TestTrue(TEXT("Exact state"), Same(Snap, Loaded.Snapshot()));
-    for (int32 I = 0; I < 8; ++I) { EndTurn(B); EndTurn(Loaded); }
+    for (int32 I = 0; I < 8; ++I) { DownedEndTurn(B); DownedEndTurn(Loaded); }
     TestTrue(TEXT("Restored clock continues identically"), Same(B.Snapshot(), Loaded.Snapshot()));
     auto Bad = Snap; Bad.Encounter.Combatants[3].DownedAtSlot = Bad.TurnOrder.Num();
     TestFalse(TEXT("Out-of-range slot rejected"), Loaded.Restore(Bad, Error));
@@ -180,10 +180,10 @@ bool FDownedToggleOffTest::RunTest(const FString& Parameters)
     FCombatBattle B; if (!TestTrue(TEXT("Starts"), StartOr(*this, B, E, 42, Error))) { return false; }
     TestFalse(TEXT("Rule off"), B.TwoRoundDowned());
     TestFalse(TEXT("Cure Wounds cannot reach a downed ally"), B.LegalTargets(1, ECombatCommandType::CureWounds).Contains(2));
-    EndTurn(B);
+    DownedEndTurn(B);
     TestFalse(TEXT("Downed hero is not attackable"), B.LegalTargets(20, ECombatCommandType::Attack).Contains(2));
     TestFalse(TEXT("No kill forecast"), B.Forecast(20, ECombatCommandType::Attack, 2, 0).bKillsDowned);
-    EndTurn(B); EndTurn(B);
+    DownedEndTurn(B); DownedEndTurn(B);
     TestTrue(TEXT("Old clock ticks per own turn"), B.Find(2)->RescueTurnsLeft == 2 && B.Find(2)->DownedAtSlot == INDEX_NONE);
     TestTrue(TEXT("Status has no house-rule text"), !B.StatusText(2).Contains(TEXT("dies if hit")));
     // Death saves on also disables the house rule.
