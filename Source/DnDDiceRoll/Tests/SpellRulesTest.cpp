@@ -15,8 +15,8 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     const FSpellFacts& Cure = FSpellRules::Facts(ESpell::CureWounds);
     TestTrue(TEXT("Cure Wounds: touch healing 1d8, Cleric"), Cure.Level == 1 && Cure.bHealing && Cure.DieSides == 8 && Cure.RangeFeet == 0 && Cure.bCleric && !Cure.bWizard);
     TestTrue(TEXT("Healing Word is a bonus action, verbal only"), FCString::Strcmp(FSpellRules::Facts(ESpell::HealingWord).CastingTime, TEXT("1 bonus action")) == 0 && !FSpellRules::Facts(ESpell::HealingWord).bSomatic);
-    TestEqual(TEXT("Tooltip summary"), FSpellRules::Summary(ESpell::MagicMissile), FString(TEXT("1st-level evocation | 1 action | 120 ft | V, S | Instantaneous")));
-    TestEqual(TEXT("Cantrip summary"), FSpellRules::Summary(ESpell::FireBolt), FString(TEXT("evocation cantrip | 1 action | 120 ft | V, S | Instantaneous")));
+    TestEqual(TEXT("Tooltip summary"), FSpellRules::Summary(ESpell::MagicMissile), FString(TEXT("1st-level evocation | Sorcerer, Wizard | 1 action | 120 ft | V, S | Instantaneous")));
+    TestEqual(TEXT("Cantrip summary"), FSpellRules::Summary(ESpell::FireBolt), FString(TEXT("evocation cantrip | Sorcerer, Wizard | 1 action | 120 ft | V, S | Instantaneous")));
     // Slots: full caster table.
     TestEqual(TEXT("Wizard 1: two 1st"), FSpellRules::SlotsFor(EAdventurerRole::Wizard, 1, 1), 2);
     TestEqual(TEXT("Cleric 3: four 1st"), FSpellRules::SlotsFor(EAdventurerRole::Cleric, 3, 1), 4);
@@ -29,7 +29,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Class lists"), FSpellRules::OnClassList(EAdventurerRole::Cleric, ESpell::CureWounds) && !FSpellRules::OnClassList(EAdventurerRole::Wizard, ESpell::CureWounds) && FSpellRules::OnClassList(EAdventurerRole::Wizard, ESpell::MagicMissile));
     // Upcasting.
     TestEqual(TEXT("Magic Missile at 2nd: 4 darts"), FSpellRules::UpcastDiceCount(ESpell::MagicMissile, 2), 4);
-    TestEqual(TEXT("Cure Wounds at 3rd: 3d8"), FSpellRules::UpcastDiceCount(ESpell::CureWounds, 3), 3);
+    TestEqual(TEXT("Cure Wounds at 3rd: 6d8 (SRD 5.2.1)"), FSpellRules::UpcastDiceCount(ESpell::CureWounds, 3), 6);
     TestEqual(TEXT("Guiding Bolt at 1st: 4d6"), FSpellRules::UpcastDiceCount(ESpell::GuidingBolt, 1), 4);
     TestEqual(TEXT("Slot too low"), FSpellRules::UpcastDiceCount(ESpell::MagicMissile, 0), 0);
     return !HasAnyErrors();
