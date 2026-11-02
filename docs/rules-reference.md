@@ -218,3 +218,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #74: concentration (rules only)
 
 `FConcentrationRules`: after taking damage a concentrating caster makes a Constitution save against DC 10 or half the damage, whichever is higher, with an exact forecast. Starting another concentration spell or becoming incapacitated ends it. None of the current eight spells needs concentration, so nothing in battles changes yet; tracking the active spell needs battle state (#39) once such spells arrive.
+
+## Issue #76: rests and hit dice (rules only)
+
+`FRestRules`: hit dice are d10 for Fighters, d8 for Rogues and Clerics, d6 for Wizards. A spent hit die heals its roll plus the Constitution modifier (never below 0). A long rest returns half the character's level in hit dice (minimum 1). Second Wind, Action Surge, Channel Divinity and superiority dice refresh on a short rest; hit points, hit dice, spell slots and Arcane Recovery on a long rest. Decision for Austin: a camp counts as a long rest. Spent hit dice and per-pool usage need saved state (#39).
