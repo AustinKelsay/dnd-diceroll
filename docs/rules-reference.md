@@ -250,3 +250,18 @@ Save version 5 adds required fields; versions 1-4 are rejected with no migration
 - **Menus:** `FBuildCatalog::ProgressSheet` provides level/XP, classes, HP/hit dice, resources, features and level-up/ASI flags for the HUD.
 - **Reward info sheet:** `FFeatureKit::RewardSheet` lists the selected survivor's features as `Name [Tag]: usage`; the reward panel shows it on one line. Kept HUD-independent so the #110 menu rework can rebase over it.
 - **Deferred:** encounter tuning for halved HP (changing enemy stats shifts seeded-run tests such as Run.ManySeedsConnectedActionableAndVaried and Schema5.CampTreat; needs maintainer sign-off). Counterspell: N/A, no enemy casters.
+
+## SRD enemies, Counterspell and action-tag audit
+
+- **Attribution:** enemy stat blocks (Bandit, Thug, Scout, Acolyte) and Counterspell come from the System Reference Document 5.1 by Wizards of the Coast LLC, licensed under CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/legalcode). Bandit Archer is the SRD Bandit using its SRD light crossbow.
+- **Blocks (MonsterRules):** HP is the SRD average, AC/attack/damage/scores from the block. Thug has Multiattack (two mace attacks, bludgeoning). Acolyte casts Sacred Flame (DEX save vs DC 12, 1d8 radiant on a failure). Enemy initiative is the DEX modifier.
+- **Counterspell:** Wizard or Sorcerer 5, Reaction, within 12 cells with line of sight, spends one slot; enemy cantrips are stopped with no check. Automatic when ready.
+- **Enemy AI:** moves to a firing cell, Dashes when still out of reach, uses every Multiattack attack, a bloodied Scout or Bandit Archer next to a hero Disengages and falls back, a foe with no reachable hero Hides (ranged) or Dodges (melee). Moving away provokes opportunity attacks normally.
+- **Encounter tuning (party HP stays halved):** the opening fight has no archer; the archer is a Bandit Archer until two encounters are cleared, then a Scout; a dangerous route's lead foe is a Thug only after one cleared encounter; with 3+ foes the middle one is an Acolyte. The old per-encounter enemy HP scaling is removed.
+- **Deliberate test changes:** Schema5 now checks each enemy's armor and AC against its block; CombatBattleTest's sealed enemy now Dodges before ending its turn (2 results); MonsterRulesTest covers blocks and the actions above. Restore now accepts a dead active unit once combat has ended (a foe can die to an opportunity attack on its own turn).
+
+| Audit finding | Where | Status |
+| --- | --- | --- |
+| Superiority Die (Precision Attack) showed Action; it is a free rider on an attack | BuildCatalog ability panel | Fixed (f0a156b) |
+| Defense fighting style also applies when unarmored (ArmorWorn >= 0); SRD needs armor | Fighting-style AC | Reported, not changed |
+| Unmodelled SRD level 1-5 features | Class feature table | Listed, marked * |
