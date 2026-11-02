@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::SacredWeapon;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::FlexibleCasting;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -67,6 +67,9 @@ public:
     static TArray<FString> RewardSheet(const FCombatantState& Hero);
     /** Font of Magic (basic): sorcery points spent to regain one spell (kit) use, the SRD cost of a 1st-level slot. */
     static constexpr int32 FontCost = 2;
+    /** Sorcerer 3 Metamagic: Quickened Spell (2 points). Flexible Casting reverse (Sorcerer 2): a spent spell use (1st-level slot) yields 2 points, bonus action. */
+    static constexpr int32 QuickenCost = 2;
+    static bool HasQuickenedSpell(const FCombatantState& Hero);
     static bool IsKi(ECombatCommandType Action) { return Action >= ECombatCommandType::FlurryOfBlows && Action <= ECombatCommandType::StepOfTheWind; }
     /** Short rest: refills the short-rest pools (Action Surge, Channel Divinity, Wild Shape, ki). */
     static void ShortRest(FCombatantState& Hero);

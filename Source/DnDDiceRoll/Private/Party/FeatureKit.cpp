@@ -137,6 +137,10 @@ bool FFeatureKit::HasSacredWeapon(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Paladin) >= 3;
 }
+bool FFeatureKit::HasQuickenedSpell(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Sorcerer) >= 3;
+}
 bool FFeatureKit::HasMartialArts(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk) >= 1;
@@ -203,6 +207,8 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::RecklessAttack: return TEXT("Reckless Attack");
     case ECombatCommandType::MartialArts: return TEXT("Martial Arts");
     case ECombatCommandType::SacredWeapon: return TEXT("Sacred Weapon");
+    case ECombatCommandType::QuickenedSpell: return TEXT("Quickened Spell");
+    case ECombatCommandType::FlexibleCasting: return TEXT("Flexible Casting");
     case ECombatCommandType::DeflectMissiles: return TEXT("Deflect Missiles");
     default: return TEXT("Feature");
     }
@@ -211,10 +217,10 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
 {
     switch (Action)
     {
-    case ECombatCommandType::ActionSurge: case ECombatCommandType::RecklessAttack: return EActionCost::Free;
+    case ECombatCommandType::ActionSurge: case ECombatCommandType::RecklessAttack: case ECombatCommandType::QuickenedSpell: return EActionCost::Free;
     case ECombatCommandType::UncannyDodge: case ECombatCommandType::DeflectMissiles: return EActionCost::Reaction;
     case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
-    case ECombatCommandType::FontOfMagic: case ECombatCommandType::MartialArts:
+    case ECombatCommandType::FontOfMagic: case ECombatCommandType::MartialArts: case ECombatCommandType::FlexibleCasting:
         return EActionCost::BonusAction;
     default: return EActionCost::Action;
     }
@@ -229,6 +235,8 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
     case ECombatCommandType::MartialArts: return TEXT("bonus, after Attack");
+    case ECombatCommandType::QuickenedSpell: return Hero.QuickenState == 1 ? TEXT("next spell is a bonus action") : FString::Printf(TEXT("free, %d of %d points"), QuickenCost, Hero.SorceryPoints);
+    case ECombatCommandType::FlexibleCasting: return FString::Printf(TEXT("bonus, spell use to %d points"), FontCost);
     case ECombatCommandType::SacredWeapon: return Hero.SacredWeaponTurns > 0 ? FString::Printf(TEXT("active, %d rounds"), Hero.SacredWeaponTurns) : FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
     case ECombatCommandType::RecklessAttack: return Hero.bReckless ? TEXT("reckless until your turn") : TEXT("free, before attacking");
     case ECombatCommandType::DeflectMissiles:
@@ -247,7 +255,8 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
     if (HasRecklessAttack(Hero)) { Out.Add(ECombatCommandType::RecklessAttack); }
     if (HasUncannyDodge(Hero)) { Out.Add(ECombatCommandType::UncannyDodge); }
-    if (SorceryCap(Hero)) { Out.Add(ECombatCommandType::FontOfMagic); }
+    if (SorceryCap(Hero)) { Out.Append({ECombatCommandType::FontOfMagic, ECombatCommandType::FlexibleCasting}); }
+    if (HasQuickenedSpell(Hero)) { Out.Add(ECombatCommandType::QuickenedSpell); }
     if (HasMartialArts(Hero)) { Out.Add(ECombatCommandType::MartialArts); }
     if (HasDeflectMissiles(Hero)) { Out.Add(ECombatCommandType::DeflectMissiles); }
     if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
@@ -265,7 +274,8 @@ bool FFeatureKit::Valid(const FCombatantState& Hero)
         Hero.WildShapeUses >= 0 && Hero.WildShapeUses <= WildShapeCap(Hero) && Hero.WildShapeHP >= 0 && Hero.WildShapeHP <= (WildShapeCap(Hero) ? WolfHP : 0) &&
         Hero.KiPoints >= 0 && Hero.KiPoints <= KiCap(Hero) && Hero.SorceryPoints >= 0 && Hero.SorceryPoints <= SorceryCap(Hero) &&
         (!Hero.bReckless || HasRecklessAttack(Hero)) && (!Hero.bArcaneRecovered || HasArcaneRecovery(Hero)) &&
-        Hero.SacredWeaponTurns >= 0 && Hero.SacredWeaponTurns <= (HasSacredWeapon(Hero) ? SacredWeaponRounds : 0);
+        Hero.SacredWeaponTurns >= 0 && Hero.SacredWeaponTurns <= (HasSacredWeapon(Hero) ? SacredWeaponRounds : 0) &&
+        Hero.QuickenState >= 0 && Hero.QuickenState <= (HasQuickenedSpell(Hero) ? 2 : 0);
 }
 TArray<FString> FFeatureKit::RewardSheet(const FCombatantState& Hero)
 {

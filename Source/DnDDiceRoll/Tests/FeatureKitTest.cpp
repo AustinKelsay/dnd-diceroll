@@ -622,4 +622,37 @@ bool FSacredWeaponTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Non-paladin sacred weapon invalid"), FFeatureKit::Valid(Bad));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FQuickenFlexTest, "Project.Expedition.Features.Metamagic",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FQuickenFlexTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Two = Hero(TEXT("sorcerer.draconic-bloodline"), 2); FFeatureKit::Refill(Two);
+    TestFalse(TEXT("No Quickened Spell at Sorcerer 2"), FFeatureKit::Commands(Two).Contains(ECombatCommandType::QuickenedSpell));
+    TestTrue(TEXT("Flexible Casting at Sorcerer 2"), FFeatureKit::Commands(Two).Contains(ECombatCommandType::FlexibleCasting));
+    TestTrue(TEXT("Quickened tagged Free"), FFeatureKit::Cost(ECombatCommandType::QuickenedSpell) == EActionCost::Free);
+    TestTrue(TEXT("Flexible tagged Bonus"), FFeatureKit::Cost(ECombatCommandType::FlexibleCasting) == EActionCost::BonusAction);
+    {
+        FCombatBattle Battle; FString Error;
+        TestTrue(TEXT("Starts full"), Battle.Start(Duel(Two, {2, 0}), 3, Error));
+        TestTrue(TEXT("Full points: no conversion"), Battle.LegalTargets(10, ECombatCommandType::FlexibleCasting).IsEmpty());
+        FCombatantState Empty = Two; Empty.SorceryPoints = 0;
+        FCombatBattle Other; TestTrue(TEXT("Starts empty"), Other.Start(Duel(Empty, {2, 0}), 3, Error));
+        const int32 Kit = Other.Find(10)->KitUses;
+        TestTrue(TEXT("Convert"), Other.Submit({ECombatCommandType::FlexibleCasting, 10, {}, 10}).bAccepted);
+        TestEqual(TEXT("Two points gained"), Other.Find(10)->SorceryPoints, 2);
+        TestEqual(TEXT("One spell use spent"), Other.Find(10)->KitUses, Kit - 1);
+    }
+    FCombatantState Three = Hero(TEXT("sorcerer.draconic-bloodline"), 3); FFeatureKit::Refill(Three);
+    FCombatBattle Battle; FString Error;
+    TestTrue(TEXT("Starts"), Battle.Start(Duel(Three, {2, 0}), 3, Error));
+    TestTrue(TEXT("Quicken"), Battle.Submit({ECombatCommandType::QuickenedSpell, 10, {}, 10}).bAccepted);
+    TestEqual(TEXT("Points spent"), Battle.Find(10)->SorceryPoints, 1);
+    TestTrue(TEXT("Action spell offered"), Battle.LegalTargets(10, ECombatCommandType::Special1).Contains(20));
+    TestTrue(TEXT("Cast quickened"), Battle.Submit({ECombatCommandType::Special1, 10, {}, 20}).bAccepted);
+    TestEqual(TEXT("Quicken spent"), Battle.Find(10)->QuickenState, 2);
+    TestTrue(TEXT("Action still free"), Battle.LegalTargets(10, ECombatCommandType::Dodge).Num() > 0);
+    TestTrue(TEXT("Bonus spent"), Battle.LegalTargets(10, ECombatCommandType::Special2).IsEmpty());
+    return true;
+}
 #endif

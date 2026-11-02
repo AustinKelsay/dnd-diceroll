@@ -76,6 +76,8 @@ FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantSt
         Battle.AbilityScores(Unit.Id).Get(EAbility::Strength));
 }
 // With a weapon: proficiency + the weapon's ability (finesse picks the better of STR/DEX) + rank. Legacy: AttackBonus.
+/** Sorcerer Quickened Spell: a pending quicken turns the next kit spell into a bonus action. */
+bool KitBonus(const FCombatantState& Unit, const FAbilityFacts& A) { return A.bBonus || (Unit.QuickenState == 1 && A.bKitResource); }
 int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
 {
     const FWeaponProfile* Weapon = MainWeapon(Unit);
@@ -395,6 +397,8 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
     case ECombatCommandType::DeflectMissiles: return TEXT("DEFLECT MISSILES | Reaction | self | automatic: when a ranged weapon attack hits you, reduce the damage by 1d10 + DEX + monk level");
+    case ECombatCommandType::QuickenedSpell: return TEXT("QUICKENED SPELL | Free + 2 sorcery points | self | the next class spell you cast this turn costs your bonus action instead of your action");
+    case ECombatCommandType::FlexibleCasting: return TEXT("FLEXIBLE CASTING | Bonus + 1 spell use | self | convert an expended spell slot into 2 sorcery points (up to your sorcerer level)");
     case ECombatCommandType::SacredWeapon: return TEXT("SACRED WEAPON | Action + Channel Divinity | self | for 1 minute (10 rounds) add your CHA modifier (min +1) to weapon attack rolls; 1 use per rest");
     case ECombatCommandType::MartialArts: return TEXT("MARTIAL ARTS | Bonus | adjacent foe | right after the Attack action, one unarmed strike (no ki)");
     case ECombatCommandType::RecklessAttack: return TEXT("RECKLESS ATTACK | Free | self | before your first attack this turn: advantage on melee weapon attacks this turn, but attacks against you have advantage until your next turn");
@@ -716,7 +720,7 @@ FActionReach FCombatBattle::Reach(int32 Id, ECombatCommandType Action) const
         const FAbilityFacts* Ability = nullptr;
         for (const auto& A : Abilities)
         {
-            if (A.Command == Action && A.bResourceAvailable && (A.bBonus ? State.bBonusActionAvailable : State.bActionAvailable)) { Ability = &A; break; }
+            if (A.Command == Action && A.bResourceAvailable && (KitBonus(*Unit, A) ? State.bBonusActionAvailable : State.bActionAvailable)) { Ability = &A; break; }
         }
         if (!Ability) { return Result; }
         if (Ability->Target == EAbilityTarget::Self) { Result.InSight.Add(Unit->Cell); return Result; }
@@ -754,7 +758,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     {
         for (const auto& A : FBuildCatalog::Abilities(*Unit))
         {
-            if (A.Command != Action || !A.bResourceAvailable || !(A.bBonus ? State.bBonusActionAvailable : State.bActionAvailable)) { continue; }
+            if (A.Command != Action || !A.bResourceAvailable || !(KitBonus(*Unit, A) ? State.bBonusActionAvailable : State.bActionAvailable)) { continue; }
             for (const auto& T : State.Encounter.Combatants)
             {
                 const bool Kind = A.Target == EAbilityTarget::Self ? T.Id == Id : A.Target == EAbilityTarget::Enemy ? T.Side != Unit->Side : T.Side == Unit->Side && (A.Target == EAbilityTarget::Friendly || T.Id != Id);
@@ -1258,7 +1262,7 @@ void FCombatBattle::BeginTurn()
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
-    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false; Unit->bReckless = false;
+    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false; Unit->bReckless = false; Unit->QuickenState = 0;
     for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
@@ -1528,9 +1532,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (A.Effect == EAbilityEffect::Protect || A.Effect == EAbilityEffect::Rage)
             { Result.Effects.Add({Target->Id, A.Effect, A.Effect == EAbilityEffect::Protect ? (A.Amount > 0 ? A.Amount : 3) : 2, Target->Cell}); }
             // An action strike is this turn's Attack action, so Extra Attack banks the remaining weapon attacks (#61).
-            if (!A.bBonus && State.bActionAvailable && (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Push))
+            const bool bQuick = KitBonus(*User, A);
+            if (!bQuick && State.bActionAvailable && (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Push))
             { State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(User->AdventurerRole, User->Level) - 1; }
-            if (A.bBonus) { State.bBonusActionAvailable = false; } else { State.bActionAvailable = false; }
+            if (bQuick) { State.bBonusActionAvailable = false; if (!A.bBonus) { User->QuickenState = 2; } } else { State.bActionAvailable = false; }
             Result.Feedback = A.Name + TEXT(": ") + A.Description + FString::Printf(TEXT(" | committed HP loss %d, heal %d, prevented %d"), Result.Damage, Result.Healing, Result.DamagePrevented);
         }
         CheckOutcome();
@@ -2021,7 +2026,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
-                Unit.bDodging || Unit.bReckless || Unit.SacredWeaponTurns != 0 || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
+                Unit.bDodging || Unit.bReckless || Unit.SacredWeaponTurns != 0 || Unit.QuickenState != 0 || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
                 Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;
@@ -2040,7 +2045,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             if (FStandardActionRules::CanTakeAsBonusAction(EStandardAction::Dash, Active->AdventurerRole, Active->Level)) { return false; }
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
             if (Build && Build->KitCap > 0)
-            { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses >= Build->KitCap) || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
+            { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses >= Build->KitCap) || Active->QuickenState == 2 || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
             if (Active->AdventurerRole == EAdventurerRole::Barbarian)
             { return Snapshot.Phase == EBattlePhase::Fighting && Active->RageTurns == 0; }
             return Active->AdventurerRole != EAdventurerRole::Fighter || (Snapshot.Phase == EBattlePhase::Fighting && Active->SecondWindUses > 1);
@@ -2060,6 +2065,8 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     case ECombatCommandType::WildShape: return Unit.WildShapeUses > 0 && Unit.WildShapeHP == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::FlurryOfBlows: return Unit.KiPoints > 0 && State.bBonusActionAvailable && State.bAttackActionTaken;
     case ECombatCommandType::MartialArts: return State.bBonusActionAvailable && State.bAttackActionTaken;
+    case ECombatCommandType::QuickenedSpell: return Unit.QuickenState == 0 && Unit.SorceryPoints >= FFeatureKit::QuickenCost && State.bBonusActionAvailable && Unit.KitUses > 0;
+    case ECombatCommandType::FlexibleCasting: return Unit.KitUses > 0 && Unit.SorceryPoints + FFeatureKit::FontCost <= FFeatureKit::SorceryCap(Unit) && State.bBonusActionAvailable;
     case ECombatCommandType::SacredWeapon: return Unit.ChannelUses > 0 && Unit.SacredWeaponTurns == 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return Unit.KiPoints > 0 && State.bBonusActionAvailable;
     case ECombatCommandType::RecklessAttack: return !Unit.bReckless && State.bActionAvailable && !State.bAttackActionTaken && State.AttacksRemaining == 0;
@@ -2125,6 +2132,15 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bBonusActionAvailable = false;
         (Command.Type == ECombatCommandType::PatientDefense ? User->bDodging : User->bDisengaged) = true;
         return FString::Printf(TEXT("%s spends 1 ki and %s (%d ki left) (bonus action)."), *User->Name, Command.Type == ECombatCommandType::PatientDefense ? TEXT("dodges") : TEXT("disengages"), User->KiPoints);
+    case ECombatCommandType::QuickenedSpell:
+        User->SorceryPoints -= FFeatureKit::QuickenCost;
+        User->QuickenState = 1;
+        return FString::Printf(TEXT("%s quickens the next spell: it costs the bonus action (%d points left)."), *User->Name, User->SorceryPoints);
+    case ECombatCommandType::FlexibleCasting:
+        --User->KitUses;
+        User->SorceryPoints += FFeatureKit::FontCost;
+        State.bBonusActionAvailable = false;
+        return FString::Printf(TEXT("%s converts a spell use into %d sorcery points (%d uses, %d points left) (bonus action)."), *User->Name, FFeatureKit::FontCost, User->KitUses, User->SorceryPoints);
     case ECombatCommandType::SacredWeapon:
         --User->ChannelUses;
         State.bActionAvailable = false;
