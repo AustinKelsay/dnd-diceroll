@@ -5,6 +5,7 @@
 #include "Rules/SpellRules.h"
 #include "Rules/WarlockRules.h"
 #include "Rules/BardRules.h"
+#include "Rules/ProficiencyRules.h"
 
 const TCHAR* FFeatureKit::StyleName(EFightingStyle Style)
 {
@@ -138,6 +139,11 @@ void FFeatureKit::ShortRest(FCombatantState& Hero)
     if (HasPactMagic(Hero)) { PactRecover(Hero, MAX_int32); }
     // Bard 5 Font of Inspiration: Bardic Inspiration uses also come back on a Short Rest.
     if (FBardRules::HasFontOfInspiration(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Bard))) { Hero.BardicUses = BardicCap(Hero); }
+}
+int32 FFeatureKit::JackOfAllTrades(const FCombatantState& Hero)
+{
+    if (Hero.Side != ECombatSide::Party) { return 0; }
+    return FBardRules::JackOfAllTrades(FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Bard), FProficiencyRules::ProficiencyBonus(Hero.Level));
 }
 bool FFeatureKit::HasPactMagic(const FCombatantState& Hero)
 {

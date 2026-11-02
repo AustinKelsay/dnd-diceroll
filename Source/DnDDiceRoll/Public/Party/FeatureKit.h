@@ -86,6 +86,8 @@ public:
     static bool HasPactMagic(const FCombatantState& Hero);
     /** Regains up to Budget expended Pact Magic slots (pact slot level; kit warlocks regain kit uses); returns how many came back. */
     static int32 PactRecover(FCombatantState& Hero, int32 Budget);
+    /** Bard 2 Jack of All Trades: half proficiency (rounded down) added to ability checks without proficiency; the engine applies it to Initiative. */
+    static int32 JackOfAllTrades(const FCombatantState& Hero);
     // SRD wolf (CR 1/4), the basic form: AC 13, 11 HP, bite +4 for 2d4+2.
     static constexpr int32 WolfHP = 11;
     static constexpr int32 WolfAC = 13;

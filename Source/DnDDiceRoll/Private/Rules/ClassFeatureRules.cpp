@@ -71,7 +71,7 @@ TArray<FClassFeature> FClassFeatureRules::DataFeaturesThrough(EAdventurerRole Ro
         {R::Warlock, {TEXT("Eldritch Invocations"), 1, C::Free, false}}, {R::Warlock, {TEXT("Magical Cunning"), 2, C::Free, true}},
         {R::Warlock, {TEXT("Fiend: Dark One's Blessing"), 3, C::Free, false}}, {R::Warlock, {TEXT("Fiend: Fiend Spells"), 3, C::Free, false}},
         {R::Druid, {TEXT("Land: Natural Recovery"), 2, C::Free, false}},
-        {R::Bard, {TEXT("Expertise"), 2, C::Free, false}}, {R::Bard, {TEXT("Jack of All Trades"), 2, C::Free, false}},
+        {R::Bard, {TEXT("Expertise"), 2, C::Free, false}}, {R::Bard, {TEXT("Jack of All Trades"), 2, C::Free, true}},
         {R::Bard, {TEXT("Lore: Bonus Proficiencies"), 3, C::Free, false}}, {R::Bard, {TEXT("Lore: Cutting Words"), 3, C::Reaction, false}},
         {R::Bard, {TEXT("Font of Inspiration"), 5, C::Free, true}},
         // Data past the engine cap (EngineLevelCap = 5): listed by DataFeaturesThrough, never by FeaturesThrough.

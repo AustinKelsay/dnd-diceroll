@@ -514,6 +514,26 @@ bool FFontOfInspirationTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJackOfAllTradesTest, "Project.Expedition.Features.JackOfAllTrades",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FJackOfAllTradesTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    struct FRow { int32 Level; int32 Bonus; };
+    for (const FRow& Row : {FRow{1, 0}, FRow{2, 1}, FRow{3, 1}, FRow{4, 1}, FRow{5, 1}})
+    {
+        TestEqual(FString::Printf(TEXT("Bard %d"), Row.Level), FFeatureKit::JackOfAllTrades(Hero(TEXT("bard.lore"), Row.Level)), Row.Bonus);
+    }
+    FCombatantState FB = Hero(TEXT("fighter.champion"), 4); FB.SecondaryRole = EAdventurerRole::Bard; FB.SecondaryLevel = 2;
+    TestEqual(TEXT("Fighter 2/Bard 2 has it (Bard class level)"), FFeatureKit::JackOfAllTrades(FB), 1);
+    FB.SecondaryLevel = 1;
+    TestEqual(TEXT("Fighter 3/Bard 1 does not"), FFeatureKit::JackOfAllTrades(FB), 0);
+    FCombatBattle One, Two; FString Error;
+    TestTrue(TEXT("Start"), One.Start(Duel(Hero(TEXT("bard.lore"), 1), {5, 5}), 7, Error) && Two.Start(Duel(Hero(TEXT("bard.lore"), 2), {5, 5}), 7, Error));
+    TestEqual(TEXT("Initiative +1 at Bard 2, same roll"), Two.Find(10)->Initiative - One.Find(10)->Initiative, 1);
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCureWisdomTest, "Project.Expedition.Features.CureWoundsWisdom",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FCureWisdomTest::RunTest(const FString& Parameters)

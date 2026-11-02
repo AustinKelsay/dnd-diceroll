@@ -247,7 +247,7 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
     bStarted = true;
     for (FCombatantState& Unit : State.Encounter.Combatants)
     {
-        Unit.Initiative = Roll(20) + Unit.InitiativeBonus;
+        Unit.Initiative = Roll(20) + Unit.InitiativeBonus + FFeatureKit::JackOfAllTrades(Unit);
         if (Unit.Life != ECombatLife::Dead) { State.TurnOrder.Add(Unit.Id); }
     }
     State.TurnOrder.Sort([this](int32 A, int32 B)
