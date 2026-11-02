@@ -194,3 +194,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #66: grapple and shove (rules only)
 
 `FGrappleRules`: grappling and shoving work on targets at most one size larger. Both are Athletics contests where the actor must beat the defender (ties hold); `ContestOutOf400` gives the exact chance. A grappled creature's speed is 0, dragging it costs double, and escaping is the reverse contest. A won shove knocks the target prone or pushes it 1 cell. Saved grappled/prone conditions and creature sizes on profiles need battle state (#39).
+
+## Issue #87: Inspiration (optional, rules only)
+
+`FInspirationRules`: off by default. A creature holds at most one Inspiration; granting while held does nothing. Spending it gives advantage on one d20 test (cancelling disadvantage to a normal roll). Who holds Inspiration across battles, what grants it and the toggle setting need saved state (#39).
