@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "asset_id": "foe-archer",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SM_Foe_Archer",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/38",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored in the local Blender look-test pipeline approved by the owner on 2026-11-01; no third-party or downloaded content"
+  },
+  "recipe": {
+    "method": "Extracted and adapted from the approved packed Blender scene, exported per asset by scripts/build_*.py",
+    "approved_reference": "Owner-approved dark-fantasy PS1 look tests, issue #38",
+    "parameters": {
+      "units": "meters, 1 cell = 1.10 m",
+      "pivot": "base centre, faces +X",
+      "material": "one baseColor texture"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/vigil.blend",
+      "sha256": "b904e00f6fa898e58e5ce5e6a1dbe01cfb5e95581fc24b1ac7610419c1e25c48"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/build_chars.py",
+      "sha256": "f2e94c9af7d5b9ab5e757ab3f9acadec1a6d14c98682f77f0f3a88211701c185"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/build_props.py",
+      "sha256": "5df8974a756dab306690d013ae948507e01e08a6ff39d038cec36ad31bbeff2d"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/build_tabletop.py",
+      "sha256": "41a5360249e983d0ed141ca282f2fee0d193416fa19192b882dc691ec21bcee2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/build_worlds.py",
+      "sha256": "327645abefac54f089f946fcd04095f5ece36508ad55abf91bac66446945202f"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/calm_root_tile.py",
+      "sha256": "d87c5ecbf45d8e36ba2b098be9038c730084660961cc2d6b4ca4c967d18e5e16"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/contact_sheet.py",
+      "sha256": "202990b5fbe31854ee6bf1baf846f793a06594ff23d606b99a2146f063ad5ffe"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/extract_textures.py",
+      "sha256": "899393e21b5b7b0139ed28503e88537909566cf7f1c96ac94334592e851734b0"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glb_image.py",
+      "sha256": "a4e8373069a919407618c2f27dfd1718c4243f563eb0b043b213fa9a25cdf947"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/manifest.py",
+      "sha256": "06c46169b938ceef6e48a7150a6bc25b45db31db35158db27a1b8ae82488690b"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_checks.py",
+      "sha256": "13a107062878e8ccdc79ea228163daf390ab9ae8a4b7db93f8080c0a6ba245da"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/rescale_rogue.py",
+      "sha256": "e6ef91d3e50fcafcfdb7a9ed09048a4874d1a7d3620b0b30edf3d7b5c1d304cc"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "export",
+      "path": "Art/foe-archer/r001/SM_Foe_Archer.glb",
+      "sha256": "9846bd0f283c57bb0a123a19b1cd4147b4fca7539635a08933f31decfa65ba3c"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 1,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py",
+      "material": "MI_* child of M_DiceRollTheme",
+      "texture_filter": "nearest",
+      "texture_compression": "TC_EDITOR_ICON",
+      "collision": "none (presentation only)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

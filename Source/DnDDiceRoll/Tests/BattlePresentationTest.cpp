@@ -342,7 +342,8 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
             bool bVisibleBody = false;
             for (USceneComponent* Component : Components)
             {
-                if (Component->GetAttachParent() != View->GetRootComponent() || Component->GetNumChildrenComponents() < 4 ||
+                // Unit rigs: primitive figures have many parts; themed figures have base, ring and mesh.
+                if (Component->GetAttachParent() != View->GetRootComponent() || Component->GetNumChildrenComponents() < 3 ||
                     !FVector2D(Component->GetRelativeLocation()).Equals(FVector2D(Cell), 0.1f)) { continue; }
                 TArray<USceneComponent*> Children;
                 Component->GetChildrenComponents(true, Children);
