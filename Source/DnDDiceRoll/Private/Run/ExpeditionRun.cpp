@@ -12,6 +12,7 @@
 #include "Rules/GroupCheckRules.h"
 #include "Rules/SleightRules.h"
 #include "Rules/PerformanceRules.h"
+#include "Rules/BeastRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
 
@@ -336,6 +337,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::Forage: return TEXT("Forage together");
     case ECampActivity::Pickpocket: return TEXT("Lift a purse");
     case ECampActivity::Perform: return TEXT("Perform for coin");
+    case ECampActivity::CalmBeast: return TEXT("Calm a wolf");
     default: return TEXT("Unknown");
     }
 }
@@ -429,6 +431,25 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         if (bStandout) { FInspirationRules::Grant(Combat.MutableFind(UnitId)->bInspired); }
         Outcome = FString::Printf(TEXT("%s performs (%d vs DC 12): %s%s"), *Hero->Name, Show.Check.Total,
             Show.Coins > 0 ? *FString::Printf(TEXT("+%s"), *FCoinRules::Format(Show.Coins)) : TEXT("the crowd drifts away"), bStandout ? TEXT(" and heroic inspiration.") : TEXT("."));
+        break;
+    }
+    case ECampActivity::CalmBeast:
+    {
+        // #92: a wolf prowls the camp. Animal Handling vs its calm DC; if it stays hostile it bites (1d6, never below 1 HP).
+        int32 Dice = static_cast<int32>(HashCombine(HashCombine(GetTypeHash(State.Seed), GetTypeHash(State.EncountersCompleted)), HashCombine(GetTypeHash(UnitId), GetTypeHash(3000 + static_cast<int32>(Activity)))) & 0x7fffffff) | 1;
+        const FBeastOutcome Beast = FBeastRules::Resolve(Sheet.SkillBonus(ESkill::AnimalHandling), ERollMode::Normal, TEXT("Wolf"), false, Dice);
+        if (Beast.Behaviour == EBeastBehaviour::Hostile)
+        {
+            FCombatantState* Bitten = Combat.MutableFind(UnitId);
+            const int32 Bite = 1 + static_cast<int32>(static_cast<uint32>(Dice) % 6u);
+            Bitten->HP = FMath::Max(1, Bitten->HP - Bite);
+            Outcome = FString::Printf(TEXT("%s fails to calm the wolf (%d vs DC 13) and is bitten for %d."), *Hero->Name, Beast.Check.Total, Bite);
+        }
+        else
+        {
+            Outcome = FString::Printf(TEXT("%s %s the wolf (%d vs DC 13)."), *Hero->Name,
+                Beast.Behaviour == EBeastBehaviour::Redirected ? TEXT("sends off") : TEXT("calms"), Beast.Check.Total);
+        }
         break;
     }
     default: break;

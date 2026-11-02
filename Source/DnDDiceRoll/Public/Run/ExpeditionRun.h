@@ -8,7 +8,7 @@ UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
 
 /** Rest-point activities after a victory: one try each per rest point, keyed rolls (never shift the run stream). */
-enum class ECampActivity : uint8 { PickLock, Parley, BuyPotion, Forage, Pickpocket, Perform, Count };
+enum class ECampActivity : uint8 { PickLock, Parley, BuyPotion, Forage, Pickpocket, Perform, CalmBeast, Count };
 
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()

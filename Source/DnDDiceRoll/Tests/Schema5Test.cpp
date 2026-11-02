@@ -1594,4 +1594,32 @@ bool FSchema5CampPerformTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some show flops"), bUnpaid);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampBeastTest, "Project.Expedition.Schema5.CampBeast",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampBeastTest::RunTest(const FString& Parameters)
+{
+    bool bBitten = false, bCalmed = false;
+    for (int32 Seed = 1; Seed < 150 && !(bBitten && bCalmed); ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        const int32 Before = Run.Battle().Find(Hero)->HP;
+        TestTrue(TEXT("Calm"), Run.CampActivity(Hero, ECampActivity::CalmBeast, Outcome, Error));
+        const bool bBit = Outcome.Contains(TEXT("bitten"));
+        FString Ignored;
+        TestFalse(TEXT("Once per rest"), Run.CampActivity(Hero, ECampActivity::CalmBeast, Ignored, Error));
+        const int32 After = Run.Battle().Find(Hero)->HP;
+        TestTrue(TEXT("Never below 1"), After >= 1 && After <= Before);
+        TestTrue(TEXT("Bite is at most 1d6"), Before - After <= 6);
+        (bBit ? bBitten : bCalmed) = true;
+        if (!bBit) { TestEqual(TEXT("Calm costs nothing"), After, Before); }
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Some wolf bites"), bBitten);
+    TestTrue(TEXT("Some wolf calms"), bCalmed);
+    return true;
+}
 #endif
