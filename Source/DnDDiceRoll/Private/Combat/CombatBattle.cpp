@@ -711,7 +711,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         }
         else if (CombatSpellSlots::IsAreaSpell(Action))
         {
-            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && FAreaRules::Covers(CombatSpellSlots::SpellArea(Action, Unit->Cell, Target.Cell), Target.Cell);
+            bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && FAreaRules::Covers(CombatSpellSlots::SpellArea(Action, Unit->Cell, Target.Cell), Target.Cell) && HasLineOfSight(Unit->Cell, Target.Cell);
         }
         else if (Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::Rescue || Action == ECombatCommandType::Potion)
         {
@@ -860,7 +860,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         const FAreaTemplate Area = CombatSpellSlots::SpellArea(Action, Actor->Cell, Target->Cell);
         for (const FCombatantState& Unit : State.Encounter.Combatants)
         {
-            if (Unit.Id != ActorId && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell)) { Forecast.Effects.Add({Unit.Id, EAbilityEffect::Area, Forecast.MaxAmount, Unit.Cell}); }
+            if (Unit.Id != ActorId && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell) && HasLineOfSight(Area.Origin, Unit.Cell)) { Forecast.Effects.Add({Unit.Id, EAbilityEffect::Area, Forecast.MaxAmount, Unit.Cell}); }
         }
         break;
     }
@@ -1461,7 +1461,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         const int32 Rolled = RollDice(FSpellRules::UpcastDiceCount(Spell, Slot), FSpellRules::Facts(Spell).DieSides);
         DiceLog = nullptr;
         TArray<int32> Victims;
-        for (const FCombatantState& Unit : State.Encounter.Combatants) { if (Unit.Id != User->Id && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell)) { Victims.Add(Unit.Id); } }
+        for (const FCombatantState& Unit : State.Encounter.Combatants) { if (Unit.Id != User->Id && Unit.Life != ECombatLife::Dead && FAreaRules::Covers(Area, Unit.Cell) && HasLineOfSight(Area.Origin, Unit.Cell)) { Victims.Add(Unit.Id); } }
         FString Lines;
         for (const int32 VictimId : Victims)
         {

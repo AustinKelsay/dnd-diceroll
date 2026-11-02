@@ -1227,4 +1227,21 @@ bool FSchema5CreatureCoverTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("No creature between, no cover"), On.CoverBonus(10, 21), 0);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5AreaBlockedTest, "Project.Expedition.Schema5.AreaBlockedByWalls",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5AreaBlockedTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({2, 0});
+    FCombatantState& W = Encounter.Combatants[0];
+    W.Name = TEXT("Wizard"); W.AdventurerRole = EAdventurerRole::Wizard; W.Level = 3; W.SpellSlots = 2; W.SlotsByLevel = {2, 2, 0};
+    FString Error;
+    FCombatBattle Open;
+    TestTrue(TEXT("Starts open"), Open.Start(Encounter, 7, Error));
+    TestTrue(TEXT("Cone reaches the foe in the open"), Open.LegalTargets(10, ECombatCommandType::BurningHands).Contains(20));
+    Encounter.BlockedCells.Add({1, 0});
+    FCombatBattle Walled;
+    TestTrue(TEXT("Starts walled"), Walled.Start(Encounter, 7, Error));
+    TestFalse(TEXT("Total cover blocks the cone"), Walled.LegalTargets(10, ECombatCommandType::BurningHands).Contains(20));
+    return true;
+}
 #endif
