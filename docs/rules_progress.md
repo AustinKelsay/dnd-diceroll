@@ -8,6 +8,9 @@ Branch `feature/dnd-defaults`. Suite: 241 automation tests green. No push.
 - 3929159: VFX hook API. SizeClass tiers 0 / 1-2 / 3 / 4-6 / 7-9, `ESpellEventKind::Persist`, `FSpellCastEvent::SizeClass` and `bPersist`, `FCombatBattle::SpellVisuals()`, the `OnSpellEvent` hook, and the `Spells.VisualHooks` test.
 - (this commit): docs. Utility kinds, per-spell rulings, exception reasons and status tables in rules-reference.md.
 
+## SRD 5.2.1 gap fixes and the Downed house rule (2026-11-02, later)
+- Proficiency: skill-only Expertise (no thieves'-tools Expertise; prebuilt Rogue takes Stealth and Sleight of Hand), Bard Expertise (2 at level 2, 4 at 9), Ranger Deft Explorer (1 at 2) and Expertise (3 at 9), Wizard Scholar (1 at 2, restricted list), 5.2.1 skill lists for Fighter, Rogue and Wizard, and Bard and Ranger proficiency tables.
+
 ## Spell coverage (SRD 5.2.1, castable / total / documented exceptions)
 | Level | Castable | Total | Exceptions |
 |---|---|---|---|

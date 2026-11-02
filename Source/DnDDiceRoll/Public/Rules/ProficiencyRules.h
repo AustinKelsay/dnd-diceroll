@@ -22,19 +22,22 @@ struct DNDDICEROLL_API FProficiencyChoice
     TArray<ESkill> ClassSkills;
     /** Background-style picks: any two skills not already chosen. */
     TArray<ESkill> BackgroundSkills;
+    /** Skill Expertise picks (SRD 5.2.1 Expertise covers skills only). */
     TArray<ESkill> ExpertiseSkills;
-    bool bThievesToolsExpertise = false;
 };
 
-/** Class proficiency facts (SRD 5.2.1 class tables; Rogue thieves-tools Expertise is a 5.1 holdover, see #54). Small value data that can move into the #39 catalog. */
+/** Class proficiency facts (SRD 5.2.1 class tables). Small value data that can move into the #39 catalog. */
 struct DNDDICEROLL_API FClassProficiencies
 {
     uint8 SaveMask = 0;
     TArray<ESkill> SkillList;
     int32 SkillPicks = 0;
     uint8 ToolMask = 0;
-    /** Expertise picks available at this level (Rogue: two at level 1; a pick may be thieves' tools). */
+    /** Skill Expertise picks at this level: Rogue 2 at 1 and 4 at 6; Bard 2 at 2 and 4 at 9;
+     *  Ranger Deft Explorer 1 at 2 and Expertise 3 at 9; Wizard Scholar 1 at 2. */
     int32 ExpertisePicks = 0;
+    /** When non-empty, Expertise must come from this list (Wizard Scholar). */
+    TArray<ESkill> ExpertiseList;
 };
 
 /** A validated character's derived check facts. Value-only; no random numbers. */
@@ -77,7 +80,8 @@ struct DNDDICEROLL_API FProficiencyRules
     /** Validates picks against the class table; Out is untouched when rejected. */
     static bool BuildCharacter(EAdventurerRole Role, int32 Level, const FAbilityScores& Scores,
         const FProficiencyChoice& Choice, FCharacterRules& Out, FString& Error);
-    static FProficiencyChoice PrebuiltChoice(EAdventurerRole Role);
+    /** Prebuilt picks; Expertise grows with Level so the choice stays legal at every level. */
+    static FProficiencyChoice PrebuiltChoice(EAdventurerRole Role, int32 Level = 1);
     static FCharacterRules PrebuiltCharacter(EAdventurerRole Role, int32 Level);
     static FCharacterRules EnemyCharacter(const FString& Role);
 };

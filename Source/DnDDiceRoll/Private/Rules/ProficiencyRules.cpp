@@ -69,13 +69,13 @@ FClassProficiencies FProficiencyRules::ClassProficiencies(EAdventurerRole Role, 
     {
     case EAdventurerRole::Fighter:
         Class.SaveMask = Saves(EAbility::Strength, EAbility::Constitution);
-        Class.SkillList = {S::Acrobatics, S::AnimalHandling, S::Athletics, S::History, S::Insight, S::Intimidation, S::Perception, S::Survival};
+        Class.SkillList = {S::Acrobatics, S::AnimalHandling, S::Athletics, S::History, S::Insight, S::Intimidation, S::Persuasion, S::Perception, S::Survival};
         Class.SkillPicks = 2;
         break;
     case EAdventurerRole::Rogue:
         Class.SaveMask = Saves(EAbility::Dexterity, EAbility::Intelligence);
         Class.SkillList = {S::Acrobatics, S::Athletics, S::Deception, S::Insight, S::Intimidation, S::Investigation, S::Perception,
-            S::Performance, S::Persuasion, S::SleightOfHand, S::Stealth};
+            S::Persuasion, S::SleightOfHand, S::Stealth};
         Class.SkillPicks = 4;
         Class.ToolMask = ToolBit(ETool::ThievesTools);
         Class.ExpertisePicks = Level >= 6 ? 4 : 2;
@@ -87,8 +87,23 @@ FClassProficiencies FProficiencyRules::ClassProficiencies(EAdventurerRole Role, 
         break;
     case EAdventurerRole::Wizard:
         Class.SaveMask = Saves(EAbility::Intelligence, EAbility::Wisdom);
-        Class.SkillList = {S::Arcana, S::History, S::Insight, S::Investigation, S::Medicine, S::Religion};
+        Class.SkillList = {S::Arcana, S::History, S::Insight, S::Investigation, S::Medicine, S::Nature, S::Religion};
         Class.SkillPicks = 2;
+        Class.ExpertisePicks = Level >= 2 ? 1 : 0;
+        Class.ExpertiseList = {S::Arcana, S::History, S::Investigation, S::Medicine, S::Nature, S::Religion};
+        break;
+    case EAdventurerRole::Bard:
+        Class.SaveMask = Saves(EAbility::Dexterity, EAbility::Charisma);
+        for (int32 Index = 0; Index < SkillCount; ++Index) { Class.SkillList.Add(static_cast<ESkill>(Index)); }
+        Class.SkillPicks = 3;
+        Class.ExpertisePicks = Level >= 9 ? 4 : Level >= 2 ? 2 : 0;
+        break;
+    case EAdventurerRole::Ranger:
+        Class.SaveMask = Saves(EAbility::Strength, EAbility::Dexterity);
+        Class.SkillList = {S::AnimalHandling, S::Athletics, S::Insight, S::Investigation, S::Nature, S::Perception, S::Stealth, S::Survival};
+        Class.SkillPicks = 3;
+        // Deft Explorer (level 2) grants one Expertise; Expertise (level 9) two more.
+        Class.ExpertisePicks = Level >= 9 ? 3 : Level >= 2 ? 1 : 0;
         break;
     default:
         break;
@@ -100,7 +115,8 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
     const FProficiencyChoice& Choice, FCharacterRules& Out, FString& Error)
 {
     auto Reject = [&Error](const TCHAR* Reason) { Error = Reason; return false; };
-    if (Role == EAdventurerRole::None || static_cast<uint8>(Role) > static_cast<uint8>(EAdventurerRole::Wizard)) { return Reject(TEXT("Unknown class.")); }
+    if (Role == EAdventurerRole::None || (static_cast<uint8>(Role) > static_cast<uint8>(EAdventurerRole::Wizard) &&
+        Role != EAdventurerRole::Bard && Role != EAdventurerRole::Ranger)) { return Reject(TEXT("Unknown class.")); }
     if (Level < 1 || Level > 20) { return Reject(TEXT("Level must be 1..20.")); }
     if (!Scores.IsValid()) { return Reject(TEXT("Ability scores must be 1..30.")); }
     const FClassProficiencies Class = ClassProficiencies(Role, Level);
@@ -122,24 +138,19 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
         if (!Valid(Skill) || Candidate.IsProficient(Skill)) { return Reject(TEXT("Background skill is invalid or already proficient.")); }
         Candidate.SkillMask |= SkillBit(Skill);
     }
-    const int32 ExpertiseCount = Choice.ExpertiseSkills.Num() + (Choice.bThievesToolsExpertise ? 1 : 0);
-    if (ExpertiseCount != Class.ExpertisePicks) { return Reject(TEXT("Wrong number of expertise picks.")); }
+    if (Choice.ExpertiseSkills.Num() != Class.ExpertisePicks) { return Reject(TEXT("Wrong number of expertise picks.")); }
     for (ESkill Skill : Choice.ExpertiseSkills)
     {
         if (!Valid(Skill) || !Candidate.IsProficient(Skill) || Candidate.HasExpertise(Skill)) { return Reject(TEXT("Expertise needs a proficient, unrepeated skill.")); }
+        if (!Class.ExpertiseList.IsEmpty() && !Class.ExpertiseList.Contains(Skill)) { return Reject(TEXT("Expertise skill is not allowed for this class.")); }
         Candidate.ExpertiseMask |= SkillBit(Skill);
-    }
-    if (Choice.bThievesToolsExpertise)
-    {
-        if (!Candidate.IsToolProficient(ETool::ThievesTools)) { return Reject(TEXT("Expertise needs thieves' tools proficiency.")); }
-        Candidate.ToolExpertiseMask |= ToolBit(ETool::ThievesTools);
     }
     Out = Candidate;
     Error.Reset();
     return true;
 }
 
-FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role)
+FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role, int32 Level)
 {
     using S = ESkill;
     FProficiencyChoice Choice;
@@ -149,11 +160,23 @@ FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role)
     case EAdventurerRole::Rogue:
         Choice.ClassSkills = {S::Stealth, S::SleightOfHand, S::Acrobatics, S::Deception};
         Choice.BackgroundSkills = {S::Insight, S::Investigation};
-        Choice.ExpertiseSkills = {S::Stealth};
-        Choice.bThievesToolsExpertise = true;
+        Choice.ExpertiseSkills = {S::Stealth, S::SleightOfHand};
+        if (Level >= 6) { Choice.ExpertiseSkills.Append({S::Acrobatics, S::Deception}); }
         break;
     case EAdventurerRole::Cleric: Choice.ClassSkills = {S::Medicine, S::Religion}; Choice.BackgroundSkills = {S::Insight, S::History}; break;
-    case EAdventurerRole::Wizard: Choice.ClassSkills = {S::Arcana, S::Investigation}; Choice.BackgroundSkills = {S::History, S::Religion}; break;
+    case EAdventurerRole::Wizard: Choice.ClassSkills = {S::Arcana, S::Investigation}; Choice.BackgroundSkills = {S::History, S::Religion};
+        if (Level >= 2) { Choice.ExpertiseSkills = {S::Arcana}; }
+        break;
+    case EAdventurerRole::Bard:
+        Choice.ClassSkills = {S::Performance, S::Persuasion, S::Deception}; Choice.BackgroundSkills = {S::Insight, S::History};
+        if (Level >= 2) { Choice.ExpertiseSkills = {S::Performance, S::Persuasion}; }
+        if (Level >= 9) { Choice.ExpertiseSkills.Append({S::Deception, S::Insight}); }
+        break;
+    case EAdventurerRole::Ranger:
+        Choice.ClassSkills = {S::Perception, S::Stealth, S::Survival}; Choice.BackgroundSkills = {S::Athletics, S::Nature};
+        if (Level >= 2) { Choice.ExpertiseSkills = {S::Stealth}; }
+        if (Level >= 9) { Choice.ExpertiseSkills.Append({S::Perception, S::Survival}); }
+        break;
     default: break;
     }
     return Choice;
@@ -163,7 +186,7 @@ FCharacterRules FProficiencyRules::PrebuiltCharacter(EAdventurerRole Role, int32
 {
     FCharacterRules Character;
     FString Error;
-    const bool bBuilt = BuildCharacter(Role, Level, FAbilityRules::PrebuiltScores(Role), PrebuiltChoice(Role), Character, Error);
+    const bool bBuilt = BuildCharacter(Role, Level, FAbilityRules::PrebuiltScores(Role), PrebuiltChoice(Role, Level), Character, Error);
     // Classes without a prebuilt skill choice (catalog-build classes) still get their ability scores for saves.
     if (!bBuilt) { Character = FCharacterRules(); Character.Scores = FAbilityRules::PrebuiltScores(Role); }
     return Character;

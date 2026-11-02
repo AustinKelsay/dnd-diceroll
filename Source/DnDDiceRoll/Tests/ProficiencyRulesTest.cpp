@@ -34,7 +34,9 @@ bool FProficiencyBonusesTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Expertise doubles: Stealth DEX +3 + 2x2"), Rogue.SkillBonus(ESkill::Stealth), 7);
     TestEqual(TEXT("Proficient only: Acrobatics +3 + 2"), Rogue.SkillBonus(ESkill::Acrobatics), 5);
     TestEqual(TEXT("Unproficient: Athletics STR -1"), Rogue.SkillBonus(ESkill::Athletics), -1);
-    TestEqual(TEXT("Thieves' tools expertise"), Rogue.ToolBonus(ETool::ThievesTools, EAbility::Dexterity), 7);
+    TestEqual(TEXT("Thieves' tools proficiency, no tool Expertise in 5.2.1"), Rogue.ToolBonus(ETool::ThievesTools, EAbility::Dexterity), 5);
+    TestTrue(TEXT("Rogue Expertise: two skills at level 1"), Rogue.HasExpertise(ESkill::SleightOfHand) && FMath::CountBits(Rogue.ExpertiseMask) == 2);
+    TestEqual(TEXT("Rogue level 6 has four Expertise skills"), FMath::CountBits(FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Rogue, 6).ExpertiseMask), 4);
     TestEqual(TEXT("No herbalism proficiency"), Rogue.ToolBonus(ETool::HerbalismKit, EAbility::Wisdom), 0);
     TestEqual(TEXT("Rogue DEX save proficient"), Rogue.SaveBonus(EAbility::Dexterity), 5);
     TestEqual(TEXT("Rogue STR save not proficient"), Rogue.SaveBonus(EAbility::Strength), -1);
@@ -95,9 +97,38 @@ bool FProficiencyRejectionTest::RunTest(const FString& Parameters)
     Rejected(TEXT("Fighter cannot take expertise"), EAdventurerRole::Fighter, Choice);
     Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.ExpertiseSkills = {ESkill::Arcana};
     Rejected(TEXT("Expertise on an unproficient skill"), EAdventurerRole::Rogue, Choice);
-    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.bThievesToolsExpertise = false;
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.ExpertiseSkills = {ESkill::Stealth};
     Rejected(TEXT("Too few rogue expertise picks"), EAdventurerRole::Rogue, Choice);
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.ClassSkills[3] = ESkill::Performance;
+    Rejected(TEXT("Performance is not a 5.2.1 Rogue skill"), EAdventurerRole::Rogue, Choice);
     Rejected(TEXT("No class"), EAdventurerRole::None, Good);
+    // Wizard Scholar: one of Arcana, History, Investigation, Medicine, Nature, Religion, and only if proficient.
+    const FAbilityScores WizScores = FAbilityRules::PrebuiltScores(EAdventurerRole::Wizard);
+    FCharacterRules Wiz;
+    TestTrue(TEXT("Prebuilt wizard 2 Scholar legal"), FProficiencyRules::BuildCharacter(EAdventurerRole::Wizard, 2, WizScores, FProficiencyRules::PrebuiltChoice(EAdventurerRole::Wizard, 2), Wiz, Error));
+    TestTrue(TEXT("Scholar doubles Arcana"), Wiz.HasExpertise(ESkill::Arcana));
+    TestFalse(TEXT("Wizard 1 has no Scholar"), FProficiencyRules::BuildCharacter(EAdventurerRole::Wizard, 1, WizScores, FProficiencyRules::PrebuiltChoice(EAdventurerRole::Wizard, 2), Wiz, Error));
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Wizard); Choice.ClassSkills = {ESkill::Arcana, ESkill::Insight}; Choice.ExpertiseSkills = {ESkill::Insight};
+    TestFalse(TEXT("Scholar rejects Insight"), FProficiencyRules::BuildCharacter(EAdventurerRole::Wizard, 2, WizScores, Choice, Wiz, Error));
+    Choice.ClassSkills = {ESkill::Arcana, ESkill::Investigation}; Choice.ExpertiseSkills = {ESkill::Nature};
+    TestFalse(TEXT("Scholar needs proficiency"), FProficiencyRules::BuildCharacter(EAdventurerRole::Wizard, 2, WizScores, Choice, Wiz, Error));
+    // Bard Expertise 2 at level 2 and 4 at 9; Ranger Deft Explorer 1 at 2 and Expertise 3 at 9.
+    const int32 Levels[] = {1, 2, 9};
+    const int32 BardExp[] = {0, 2, 4}, RangerExp[] = {0, 1, 3};
+    for (int32 Index = 0; Index < 3; ++Index)
+    {
+        const FCharacterRules Bard = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Bard, Levels[Index]);
+        const FCharacterRules Ranger = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Ranger, Levels[Index]);
+        TestEqual(FString::Printf(TEXT("Bard %d expertise"), Levels[Index]), FMath::CountBits(Bard.ExpertiseMask), BardExp[Index]);
+        TestEqual(FString::Printf(TEXT("Ranger %d expertise"), Levels[Index]), FMath::CountBits(Ranger.ExpertiseMask), RangerExp[Index]);
+        TestEqual(TEXT("Bard 3 class + 2 background skills"), FMath::CountBits(Bard.SkillMask), 5);
+        TestTrue(TEXT("Bard DEX/CHA saves"), Bard.IsSaveProficient(EAbility::Dexterity) && Bard.IsSaveProficient(EAbility::Charisma));
+        TestTrue(TEXT("Ranger STR/DEX saves"), Ranger.IsSaveProficient(EAbility::Strength) && Ranger.IsSaveProficient(EAbility::Dexterity));
+    }
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Ranger); Choice.ClassSkills[0] = ESkill::Arcana;
+    TestFalse(TEXT("Arcana is not a Ranger skill"), FProficiencyRules::BuildCharacter(EAdventurerRole::Ranger, 1, Scores, Choice, Wiz, Error));
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Fighter); Choice.ClassSkills = {ESkill::Persuasion, ESkill::Athletics};
+    TestTrue(TEXT("Persuasion is a 5.2.1 Fighter skill"), FProficiencyRules::BuildCharacter(EAdventurerRole::Fighter, 1, Scores, Choice, Wiz, Error));
     return !HasAnyErrors();
 }
 #endif
