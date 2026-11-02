@@ -15,7 +15,7 @@ bool FSupportRosterTest::RunTest(const FString& Parameters)
 {
     FCombatantState Hero;
     TestTrue(TEXT("Life is an authored selectable build"),FBuildCatalog::Create(TEXT("cleric.life"),1,TEXT("Sera"),Hero));
-    TestEqual(TEXT("All approved support kits available"),FBuildCatalog::All().Num(),66);
+    TestEqual(TEXT("All approved support kits available"),FBuildCatalog::All().Num(),70);
     auto E=FCombatBattle::TutorialEncounter(); E.BlockedCells.Reset(); E.Combatants[2].InitiativeBonus=30;
     FCombatBattle B; FString Error;
     if(TestTrue(TEXT("Start support behavior"),B.Start(E,42,Error))) {
@@ -163,7 +163,7 @@ bool FSupportWorkedTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("No third special from shared pool"),B.Submit({C.Cure?ECombatCommandType::CureWounds:ECombatCommandType::Special1,1,{},C.Target}).bAccepted);
         TestTrue(TEXT("Spent rejection includes RNG"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Spent,&B.Snapshot(),0));
     }
-    TestEqual(TEXT("Exactly 66 implemented kits"),FBuildCatalog::All().Num(),66);
+    TestEqual(TEXT("Exactly 70 implemented kits"),FBuildCatalog::All().Num(),70);
     TestNull(TEXT("Interim Cleric removed"),FBuildCatalog::Find(TEXT("cleric.base")));
     return true;
 }

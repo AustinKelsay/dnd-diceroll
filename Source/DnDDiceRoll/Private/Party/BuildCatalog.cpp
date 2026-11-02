@@ -141,6 +141,11 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Bard,TEXT("bard.creation"),TEXT("creation"),Ability(TEXT("Dancing Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Resonant Burst"),E::Area,T::Enemy,2,5,false));
         Kit(Bard,TEXT("bard.eloquence"),TEXT("eloquence"),Ability(TEXT("Reassuring Word"),E::Protect,T::Ally,4,2,false),Ability(TEXT("Unsettling Note"),E::Strike,T::Enemy,4,5,true));
         for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Action + 1 Kit + 1 Slot; conscious self or ally range 1 + sight; heal 2d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+        auto Artificer = Add(TEXT(""),TEXT("artificer"),TEXT(""),TEXT("Artificer"),EAdventurerRole::Artificer,26,15,6,3,3,1);
+        Kit(Artificer,TEXT("artificer.alchemist"),TEXT("alchemist"),Ability(TEXT("Restorative Elixir"),E::Healing,T::Ally,2,8,false),Ability(TEXT("Volatile Flask"),E::Area,T::Enemy,3,3,true));
+        Kit(Artificer,TEXT("artificer.armorer"),TEXT("armorer"),Ability(TEXT("Defensive Field"),E::Protect,T::Self,0,4,true),Ability(TEXT("Thunder Gauntlet"),E::Push,T::Enemy,1,6,false));
+        Kit(Artificer,TEXT("artificer.artillerist"),TEXT("artillerist"),Ability(TEXT("Force Cannon"),E::Push,T::Enemy,5,5,false),Ability(TEXT("Protector Cannon"),E::Protect,T::Ally,3,2,true));
+        Kit(Artificer,TEXT("artificer.battle-smith"),TEXT("battle-smith"),Ability(TEXT("Defender Guard"),E::Protect,T::Ally,1,4,false),Ability(TEXT("Defender Strike"),E::Strike,T::Enemy,2,5,true));
         return Result;
     }();
     return Values;
