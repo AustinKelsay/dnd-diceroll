@@ -265,8 +265,12 @@ struct DNDDICEROLL_API FCombatCommand
 };
 
 /** What a spell event is, for presentation and VFX. */
-enum class ESpellEventKind : uint8 { Cast, Trigger, Tick, End };
-/** VFX hook: everything a renderer needs to show a spell, emitted on cast and on every later trigger. Rules never read it back. */
+/** Cast: the spell goes off. Trigger: a lasting spell fires on someone (Spirit Guardians, Blink vanishing, reactions).
+ *  Tick: a per-turn effect (Moonbeam, Heat Metal, start/end-of-turn damage). End: a lasting spell ends.
+ *  Persist: a snapshot of a spell still in effect, from FCombatBattle::SpellVisuals() (never in Result.SpellEvents). */
+enum class ESpellEventKind : uint8 { Cast, Trigger, Tick, End, Persist };
+/** VFX hook: everything a renderer needs to show a spell, emitted on cast and on every later trigger. Rules never read it back.
+ *  See docs/rules-reference.md "Spell effect hooks". No art lives in the rules module. */
 struct DNDDICEROLL_API FSpellCastEvent
 {
     ESpellEventKind Kind = ESpellEventKind::Cast;
@@ -276,6 +280,10 @@ struct DNDDICEROLL_API FSpellCastEvent
     int32 SlotLevel = 0;
     /** Cantrip damage tier 0..3 (character levels 1/5/11/17); 0 for leveled spells. */
     int32 Tier = 0;
+    /** VFX size class from the spell's level (FSpellUtilityRules::SizeClass): 0 cantrip, 1 levels 1-2, 2 level 3, 3 levels 4-6, 4 levels 7-9. */
+    int32 SizeClass = 0;
+    /** The spell stays in effect after this event (it is in ActiveSpells): keep its looping visual until an End event with the same Serial. */
+    bool bPersist = false;
     /** ESpellArea value and size; cells covered on the grid (empty for single targets). */
     uint8 AreaShape = 0;
     int32 AreaFeet = 0;
@@ -522,6 +530,10 @@ public:
     FSpellForecast ForecastSpell(int32 ActorId, const FString& SpellId, int32 TargetId, int32 SlotLevel = 0) const;
     /** Spells in effect now. */
     const TArray<FActiveSpell>& ActiveSpells() const { return State.ActiveSpells; }
+    /** VFX query: one Persist event per spell in effect now (zone cells, caster/target cells, rounds left). Consumes no random numbers. */
+    TArray<FSpellCastEvent> SpellVisuals() const;
+    /** VFX event hook: called once per event, in order, when an accepted Submit returns (the same events as Result.SpellEvents; rejected commands emit none). Optional; rules never depend on it. */
+    TFunction<void(const FSpellCastEvent&)> OnSpellEvent;
     /** Zone cells of an active spell now (emanations follow their caster). */
     TArray<FIntPoint> ZoneCells(const FActiveSpell& Spell) const;
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
@@ -658,6 +670,7 @@ private:
     void SpellsOnTurnEnd(int32 UnitId);
     void RemoveActiveSpell(int32 Index, bool bEvent = true);
     void EmitSpellEvent(ESpellEventKind Kind, const FActiveSpell& Spell, const TArray<int32>& Targets);
+    FSpellCastEvent MakeSpellEvent(ESpellEventKind Kind, const FActiveSpell& Spell, const TArray<int32>& Targets) const;
     bool ValidPreparedSpells(const FCombatantState& Unit, FString& Error) const;
     /** Creatures a catalog spell reaches from the caster aimed at TargetId (zone radius for lasting zones), and the cells it covers. */
     TArray<int32> SpellVictims(const FCombatantState& User, const struct FSrdSpell& Spell, int32 TargetId, TArray<FIntPoint>* OutCells) const;

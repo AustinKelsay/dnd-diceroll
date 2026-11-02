@@ -44,7 +44,7 @@ struct DNDDICEROLL_API FSpellUtilityRules
     static bool IsException(const FString& Id);
     /** Beams/rays/darts at this cast: Eldritch Blast 1/2/3/4 (levels 1/5/11/17), Scorching Ray 3 + 1 per slot above 2, Magic Missile 3 + 1 per slot above 1. 1 otherwise. */
     static int32 Beams(const FSrdSpell& Spell, int32 CharacterLevel, int32 Slot);
-    /** VFX size class by spell level: 0 cantrip (smallest), 1 levels 1-2, 2 levels 3-4, 3 levels 5-6, 4 levels 7-9. */
+    /** VFX size class by spell level: 0 cantrip (smallest), 1 levels 1-2, 2 level 3, 3 levels 4-6, 4 levels 7-9. */
     static int32 SizeClass(int32 SpellLevel);
     /** Cantrip tier dice (1/2/3/4 at character levels 1/5/11/17). */
     static int32 CantripDice(int32 CharacterLevel);

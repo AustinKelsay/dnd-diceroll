@@ -1,6 +1,7 @@
 #include "Combat/CombatBattle.h"
 #include "Rules/SpellEffectRules.h"
 #include "Rules/SpellTacticsRules.h"
+#include "Rules/SpellUtilityRules.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/SpellRules.h"
 #include "Rules/MovementRules.h"
@@ -1379,6 +1380,7 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     if (!Result.bAccepted) { PendingSpellEvents.Reset(); return Result; }
     PruneConditions();
     Result.SpellEvents = MoveTemp(PendingSpellEvents);
+    if (OnSpellEvent) { for (const FSpellCastEvent& E : Result.SpellEvents) { OnSpellEvent(E); } }
     PendingSpellEvents.Reset();
     if (Result.DamagePrevented > 0) { Result.Feedback += FString::Printf(TEXT(" | protection prevented %d damage"),Result.DamagePrevented); }
     Result.Type = Command.Type;
@@ -2871,7 +2873,7 @@ TArray<FIntPoint> FCombatBattle::ZoneCells(const FActiveSpell& Spell) const
     return Out;
 }
 
-void FCombatBattle::EmitSpellEvent(ESpellEventKind Kind, const FActiveSpell& A, const TArray<int32>& Targets)
+FSpellCastEvent FCombatBattle::MakeSpellEvent(ESpellEventKind Kind, const FActiveSpell& A, const TArray<int32>& Targets) const
 {
     FSpellCastEvent E;
     E.Kind = Kind; E.SpellId = A.SpellId; E.SlotLevel = A.SlotLevel; E.CasterId = A.CasterId; E.Serial = A.Serial; E.DurationRounds = A.RoundsLeft;
@@ -2879,10 +2881,31 @@ void FCombatBattle::EmitSpellEvent(ESpellEventKind Kind, const FActiveSpell& A, 
     {
         E.School = static_cast<uint8>(S->School); E.SpellLevel = S->Level; E.AreaShape = static_cast<uint8>(S->Area); E.AreaFeet = S->AreaFeet;
     }
+    E.SizeClass = FSpellUtilityRules::SizeClass(E.SpellLevel);
     if (const FSpellZone* Zone = FSpellTacticsRules::Zone(A.SpellId)) { E.AreaFeet = Zone->RadiusFeet; E.Cells = ZoneCells(A); }
     if (const FCombatantState* Caster = Find(A.CasterId)) { E.CasterCell = Caster->Cell; }
     for (const int32 Id : Targets) { if (const FCombatantState* T = Find(Id)) { E.TargetIds.Add(Id); E.TargetCells.Add(T->Cell); } }
-    PendingSpellEvents.Add(MoveTemp(E));
+    E.bPersist = Kind != ESpellEventKind::End && State.ActiveSpells.ContainsByPredicate([&](const FActiveSpell& X) { return X.Serial == A.Serial; });
+    return E;
+}
+
+void FCombatBattle::EmitSpellEvent(ESpellEventKind Kind, const FActiveSpell& A, const TArray<int32>& Targets)
+{
+    PendingSpellEvents.Add(MakeSpellEvent(Kind, A, Targets));
+}
+
+TArray<FSpellCastEvent> FCombatBattle::SpellVisuals() const
+{
+    TArray<FSpellCastEvent> Out;
+    for (const FActiveSpell& A : State.ActiveSpells)
+    {
+        TArray<int32> Targets;
+        if (A.TargetId != INDEX_NONE) { Targets.Add(A.TargetId); }
+        FSpellCastEvent E = MakeSpellEvent(ESpellEventKind::Persist, A, Targets);
+        E.bPersist = true;
+        Out.Add(MoveTemp(E));
+    }
+    return Out;
 }
 
 void FCombatBattle::RemoveActiveSpell(int32 Index, bool bEvent)

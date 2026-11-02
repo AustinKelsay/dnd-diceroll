@@ -72,7 +72,7 @@ bool FSpellReactionTest::RunTest(const FString& Parameters)
     }
     // Utility table: size tiers grow with spell level; beam counts follow SRD scaling.
     TestEqual(TEXT("cantrip tier"), FSpellUtilityRules::SizeClass(0), 0);
-    TestEqual(TEXT("L4 tier"), FSpellUtilityRules::SizeClass(4), 2);
+    TestEqual(TEXT("L4 tier"), FSpellUtilityRules::SizeClass(4), 3);
     TestEqual(TEXT("EB beams at 11"), FSpellUtilityRules::Beams(*FSpellCatalogRules::Find(TEXT("eldritch-blast")), 11, 0), 3);
     TestEqual(TEXT("Magic Missile at slot 3"), FSpellUtilityRules::Beams(*FSpellCatalogRules::Find(TEXT("magic-missile")), 5, 3), 5);
     TestEqual(TEXT("Scorching Ray at slot 4"), FSpellUtilityRules::Beams(*FSpellCatalogRules::Find(TEXT("scorching-ray")), 7, 4), 5);

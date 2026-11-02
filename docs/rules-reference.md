@@ -838,3 +838,19 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 - Smites: Divine Smite (+1d8 vs fiends and undead), Searing Smite (start-of-turn fire, CON save ends), Shining Smite (attackers have advantage); bonus action against a creature hit in melee this turn.
 - Not modelled: Warding Bond damage sharing, Hex ability-check disadvantage, Reduce half of Enlarge/Reduce, critical doubling of smite dice, Invisibility hiding beyond the condition.
 - Coverage (cantrips to L4 one-cast resolvable): L0 11/27, L1 34/57, L2 24/57, L3 14/42, L4 15/34 = 98/217 (was 62/217). Floors asserted in `Rules.SpellCoverage`.
+
+## Spell effect hooks (VFX API, no art)
+
+The rules module emits presentation data only; it never reads it back and ships no art.
+
+- `FCombatResult::SpellEvents` — every `FSpellCastEvent` produced by an accepted `Submit`, in order. Rejected commands emit none.
+- `FCombatBattle::OnSpellEvent` — optional `TFunction<void(const FSpellCastEvent&)>`, called once per event when an accepted `Submit` returns (same events, same order).
+- `FCombatBattle::SpellVisuals() const` — query: one `Persist` event per spell in effect now (zone cells, caster and target cells, rounds left). Consumes no random numbers; use it after loading a save or to rebuild looping visuals.
+
+`ESpellEventKind`: `Cast` (the spell goes off), `Trigger` (a lasting spell fires on someone: Spirit Guardians, Moonbeam entry, Blink vanishing, reactions), `Tick` (per-turn effect: Heat Metal, start/end-of-turn damage), `End` (a lasting spell ends), `Persist` (snapshot from `SpellVisuals()` only).
+
+`FSpellCastEvent` fields: `SpellId`, `School` (ESpellSchool), `SpellLevel`, `SlotLevel`, `Tier` (cantrip damage tier 0-3), `SizeClass`, `bPersist` (still in effect after this event; keep the loop until an `End` with the same `Serial`), `AreaShape` (ESpellArea), `AreaFeet`, `Cells`, `CasterId`, `CasterCell`, `TargetIds`, `TargetCells`, `DurationRounds` (0 instant, -1 until dispelled), `Serial`.
+
+`SizeClass` (FSpellUtilityRules::SizeClass) by spell level: 0 cantrip, 1 levels 1-2, 2 level 3, 3 levels 4-6, 4 levels 7-9.
+
+Tests: `Project.Expedition.Spells.VisualHooks` (size classes, Fire Bolt cast event, Fireball area event, Moonbeam persist snapshot, per-turn events and End).

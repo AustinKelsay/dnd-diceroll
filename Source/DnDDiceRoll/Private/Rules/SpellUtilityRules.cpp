@@ -164,5 +164,5 @@ int32 FSpellUtilityRules::Beams(const FSrdSpell& Spell, int32 CharacterLevel, in
 
 int32 FSpellUtilityRules::SizeClass(int32 SpellLevel)
 {
-    return SpellLevel <= 0 ? 0 : SpellLevel <= 2 ? 1 : SpellLevel <= 4 ? 2 : SpellLevel <= 6 ? 3 : 4;
+    return SpellLevel <= 0 ? 0 : SpellLevel <= 2 ? 1 : SpellLevel == 3 ? 2 : SpellLevel <= 6 ? 3 : 4;
 }
