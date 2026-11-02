@@ -91,6 +91,11 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bDisengaged = false;
     UPROPERTY() bool bHidden = false;
     UPROPERTY() bool bReadied = false;
+    /** SRD death saves (#67, used when the encounter opts in): three successes leave a downed hero stable. */
+    UPROPERTY() int32 DeathSaveSuccesses = 0;
+    UPROPERTY() int32 DeathSaveFailures = 0;
+    /** Temporary hit points soak damage before real hit points (#67). */
+    UPROPERTY() int32 TemporaryHP = 0;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
@@ -105,6 +110,8 @@ struct DNDDICEROLL_API FCombatEncounter
     /** Difficult terrain (#64): entering one of these open cells costs two movement. */
     UPROPERTY() TArray<FIntPoint> DifficultCells;
     UPROPERTY() TArray<FCombatantState> Combatants;
+    /** #67: downed heroes roll SRD death saves instead of the three-turn rescue clock. Off by default to keep seeded battles. */
+    UPROPERTY() bool bDeathSaves = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
@@ -366,6 +373,7 @@ private:
     int32 Roll(int32 Sides);
     int32 RollDice(int32 Count, int32 Sides);
     void AdvanceTurn();
+    void DownedTurn(FCombatantState& Unit);
     /** Starts the active unit's turn: movement from speed, grapple/restraint, and standing up from prone. */
     void BeginTurn();
     /** One weapon attack roll and its damage, without spending any budget. Shared by Attack and reactions. */

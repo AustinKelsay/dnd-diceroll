@@ -11,6 +11,7 @@
 #include "Rules/AreaRules.h"
 #include "Rules/CheckRules.h"
 #include "Rules/StandardActionRules.h"
+#include "Rules/DeathSaveRules.h"
 
 namespace
 {
@@ -115,6 +116,9 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
             (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party || Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)) ||
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
+            Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 2 ||
+            (Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
+            Unit.TemporaryHP < 0 || Unit.TemporaryHP > 999 ||
             Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
             (Unit.Side != ECombatSide::Party && Unit.Side != ECombatSide::Enemy))
@@ -214,7 +218,7 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
     });
     if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
     {
-        if (--First->RescueTurnsLeft == 0) { First->Life = ECombatLife::Dead; }
+        DownedTurn(*First);
         AdvanceTurn();
     }
     else { BeginTurn(); }
@@ -1328,7 +1332,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         }
         else { --State.AttacksRemaining; }
         CheckOutcome();
-        FString TargetStatus = Target->Life == ECombatLife::Downed ? FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft) :
+        FString TargetStatus = Target->Life == ECombatLife::Downed ? (State.Encounter.bDeathSaves ? FString(TEXT(" DOWNED (death saves)")) : FString::Printf(TEXT(" DOWNED (%d rescue turns)"), Target->RescueTurnsLeft)) :
             Target->Life == ECombatLife::Dead ? TEXT(" DEAD") : TEXT("");
         if (Result.bSneakAttack) { TargetStatus += FString::Printf(TEXT(" SNEAK +d%d"), SneakDie); }
         const FString ModeText = Result.AttackRolls.Num() > 1 ?
@@ -1382,7 +1386,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP);
             Target->HP += Result.Healing;
             Target->Life = ECombatLife::Conscious;
-            Target->RescueTurnsLeft = 0;
+            Target->RescueTurnsLeft = 0; Target->DeathSaveSuccesses = 0; Target->DeathSaveFailures = 0;
         }
         if (Command.Type == ECombatCommandType::SecondWind) { State.bBonusActionAvailable = false; }
         else { State.bActionAvailable = false; }
@@ -1579,7 +1583,10 @@ int32 FCombatBattle::ProtectionFor(const FCombatantState& Target) const
 void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
 {
     const int32 Protection = ProtectionFor(Target);
-    Target.HP = FMath::Max(0, Target.HP - FMath::Max(0, Damage - Protection));
+    const int32 HPBefore = Target.HP;
+    const int32 Real = FDeathSaveRules::AbsorbWithTemporary(Target.TemporaryHP, FMath::Max(0, Damage - Protection));
+    Target.HP = FMath::Max(0, Target.HP - Real);
+    const bool bMassive = State.Encounter.bDeathSaves && FDeathSaveRules::InstantDeath(Real, HPBefore, Target.MaxHP);
     if (Target.HP == 0)
     {
         Target.GuardTurns = 0; Target.GuardAmount = 0; Target.RageTurns = 0; Target.GuardTargetId = INDEX_NONE; Target.LastSurge = 0;
@@ -1587,7 +1594,9 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         Target.bDodging = false; Target.bDisengaged = false; Target.bHidden = false; Target.bReadied = false; Target.HelpedById = INDEX_NONE;
         for (auto& U : State.Encounter.Combatants) { if (U.HelpedById == Target.Id) { U.HelpedById = INDEX_NONE; } }
         Target.Life = Target.Side == ECombatSide::Party ? ECombatLife::Downed : ECombatLife::Dead;
+        if (bMassive) { Target.Life = ECombatLife::Dead; }
         Target.RescueTurnsLeft = Target.Life == ECombatLife::Downed ? 3 : 0;
+        Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0;
     }
 }
 
@@ -1610,9 +1619,32 @@ void FCombatBattle::CheckOutcome()
             Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
             Unit.bReactionAvailable = true;
             Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE;
-            if (Unit.Life == ECombatLife::Downed) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; }
+            if (Unit.Life == ECombatLife::Downed)
+            {
+                // With death saves, a stable hero survives a victory on 1 HP; anyone still dying is lost.
+                const bool bSurvives = State.Phase == EBattlePhase::Victory && State.Encounter.bDeathSaves && Unit.DeathSaveSuccesses >= 3;
+                Unit.Life = bSurvives ? ECombatLife::Conscious : ECombatLife::Dead; Unit.HP = bSurvives ? 1 : 0;
+                Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0;
+            }
         }
     }
+}
+
+void FCombatBattle::DownedTurn(FCombatantState& Unit)
+{
+    if (!State.Encounter.bDeathSaves)
+    {
+        if (--Unit.RescueTurnsLeft == 0) { Unit.Life = ECombatLife::Dead; }
+        return;
+    }
+    if (Unit.DeathSaveSuccesses >= 3) { return; } // Stable: no more saves.
+    FDeathSaveTally Tally;
+    Tally.Successes = Unit.DeathSaveSuccesses; Tally.Failures = Unit.DeathSaveFailures;
+    const EDeathState Outcome = FDeathSaveRules::ApplySave(Tally, Roll(20));
+    Unit.DeathSaveSuccesses = Tally.Successes; Unit.DeathSaveFailures = Tally.Failures;
+    if (Outcome == EDeathState::Dead) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
+    else if (Outcome == EDeathState::Revived) { Unit.Life = ECombatLife::Conscious; Unit.HP = 1; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
+    else if (Outcome == EDeathState::Stable) { Unit.DeathSaveSuccesses = 3; }
 }
 
 void FCombatBattle::AdvanceTurn()
@@ -1622,10 +1654,7 @@ void FCombatBattle::AdvanceTurn()
         State.TurnIndex = (State.TurnIndex + 1) % State.TurnOrder.Num();
         if (State.TurnIndex == 0) { ++State.Round; }
         FCombatantState* Next = MutableFind(ActiveId());
-        if (Next->Life == ECombatLife::Downed)
-        {
-            if (--Next->RescueTurnsLeft == 0) { Next->Life = ECombatLife::Dead; }
-        }
+        if (Next->Life == ECombatLife::Downed) { DownedTurn(*Next); }
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;

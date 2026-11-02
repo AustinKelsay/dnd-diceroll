@@ -1031,4 +1031,53 @@ bool FSchema5StandardActionsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Potion is the Use an Object action"), FCombatBattle::DescribeAction(ECombatCommandType::Potion).Contains(TEXT("Use an Object")));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5DeathSavesInBattleTest, "Project.Expedition.Schema5.DeathSavesInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5DeathSavesInBattleTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Downed = [](bool bDeathSaves)
+    {
+        FCombatEncounter Encounter = Pair({2, 1});
+        Encounter.bDeathSaves = bDeathSaves;
+        FCombatantState Friend = Encounter.Combatants[0];
+        Friend.Id = 11; Friend.Name = TEXT("Friend"); Friend.Cell = {1, 1}; Friend.InitiativeBonus = 0; Friend.TemporaryHP = 50;
+        Encounter.Combatants.Add(Friend);
+        FCombatantState& Hero = Encounter.Combatants[0];
+        Hero.HP = 0; Hero.Life = ECombatLife::Downed; Hero.RescueTurnsLeft = 3;
+        return Encounter;
+    };
+    {
+        FCombatBattle B;
+        TestTrue(TEXT("Legacy clock starts"), B.Start(Downed(false), 7, Error));
+        TestEqual(TEXT("Legacy rescue clock ticks"), B.Find(10)->RescueTurnsLeft, 2);
+    }
+    bool bSawStable = false, bSawDead = false, bSawSoak = false;
+    for (int32 Seed = 1; Seed <= 40; ++Seed)
+    {
+        FCombatBattle B;
+        if (!TestTrue(TEXT("Death-save battle starts"), B.Start(Downed(true), Seed, Error))) { return false; }
+        const FCombatantState* Hero = B.Find(10);
+        TestTrue(TEXT("First save recorded"), Hero->Life == ECombatLife::Conscious ? Hero->HP == 1 :
+            Hero->DeathSaveSuccesses + Hero->DeathSaveFailures >= 1 && Hero->RescueTurnsLeft == 3);
+        FCombatBattle Copy;
+        TestTrue(TEXT("Death-save state restores"), Copy.Restore(B.Snapshot(), Error));
+        for (int32 Turn = 0; Turn < 12 && B.Snapshot().Phase == EBattlePhase::Fighting && B.Find(10)->Life == ECombatLife::Downed; ++Turn)
+        {
+            const int32 Active = B.Snapshot().TurnOrder[B.Snapshot().TurnIndex];
+            if (Active == 20 && !bSawSoak)
+            {
+                const FCombatResult Hit = B.Submit({ECombatCommandType::Attack, 20, {}, 11});
+                if (Hit.bHit) { bSawSoak = true; TestEqual(TEXT("Temporary HP soak the hit"), B.Find(11)->HP, B.Find(11)->MaxHP); TestTrue(TEXT("Temporary HP spent"), B.Find(11)->TemporaryHP < 50); }
+            }
+            B.Submit({ECombatCommandType::EndTurn, B.Snapshot().TurnOrder[B.Snapshot().TurnIndex]});
+            if (B.Find(10)->DeathSaveSuccesses == 3) { bSawStable = true; break; }
+        }
+        bSawDead |= B.Find(10)->Life == ECombatLife::Dead;
+    }
+    TestTrue(TEXT("Some hero stabilizes"), bSawStable);
+    TestTrue(TEXT("Some hero dies of failed saves"), bSawDead);
+    TestTrue(TEXT("Temporary HP absorbed a hit"), bSawSoak);
+    return true;
+}
 #endif
