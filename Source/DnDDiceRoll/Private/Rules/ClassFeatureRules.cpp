@@ -48,7 +48,7 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
         {R::Sorcerer, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Sorcerer, {TEXT("Sorcery Points"), 2, C::BonusAction, false}},
         {R::Warlock, {TEXT("Pact Magic"), 1, C::Action, true}},
         {R::Druid, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Druid, {TEXT("Wild Shape"), 2, C::Action, false}},
-        {R::Bard, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Bard, {TEXT("Bardic Inspiration"), 1, C::BonusAction, false}},
+        {R::Bard, {TEXT("Spellcasting"), 1, C::Action, true}}, {R::Bard, {TEXT("Bardic Inspiration"), 1, C::BonusAction, true}},
     };
     TArray<FClassFeature> Out;
     for (const auto& Row : Table) { if (Row.Role == Role && Row.F.Level <= FMath::Min(Level, 5)) { Out.Add(Row.F); } }

@@ -385,6 +385,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::Ready: return TEXT("READY | Action | self | reaction: attack the first foe that ends a move in your range");
     case ECombatCommandType::OffHandAttack: return TEXT("OFF-HAND | Bonus | adjacent foe | after the Attack action with two light weapons; no ability bonus to damage");
     case ECombatCommandType::ActionSurge: return TEXT("ACTION SURGE | Free + 1 use | self | after spending your action, take one more action this turn; 1 use per rest");
+    case ECombatCommandType::BardicInspiration: return TEXT("BARDIC INSPIRATION | Bonus + 1 use | ally within 60 ft | the ally holds a d6 (d8 at Bard 5), added to its next attack roll that would miss");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
@@ -1326,6 +1327,15 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+    // SRD Bardic Inspiration: the held die is added after the roll, here only when it could still turn a miss into a hit.
+    if (FCombatantState* Holder = MutableFind(ActorId); !Result.bHit && Result.NaturalRoll != 1 && Holder->BardicDie > 0 && Result.AttackTotal + Holder->BardicDie >= Result.TargetArmorClass)
+    {
+        Result.BardicRoll = Roll(Holder->BardicDie);
+        Holder->BardicDie = 0;
+        Result.AttackBonus += Result.BardicRoll; Result.AttackTotal += Result.BardicRoll;
+        Result.RollModeSources.Add(FString::Printf(TEXT("Bardic Inspiration +%d"), Result.BardicRoll));
+        Result.bHit = Result.AttackTotal >= Result.TargetArmorClass;
+    }
     if (Result.bHit && ShieldWouldBlock(*Target, Result.AttackTotal, Result.TargetArmorClass, Result.bCritical))
     {
         SpendSpellSlot(*Target); Target->bReactionAvailable = false; Target->bShielded = true;
@@ -1976,6 +1986,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         Snapshot.SneakAttackUsedBy.ContainsByPredicate([&](int32 SneakId) { return !Candidate.Find(SneakId) || Snapshot.SneakAttackUsedBy.FilterByPredicate([SneakId](int32 Other) { return Other == SneakId; }).Num() > 1; }) ||
         (!Snapshot.bBonusActionAvailable && ([&]()
         {
+            if (FFeatureKit::HasBonusFeature(*Active)) { return false; } // class features (FFeatureKit) can spend it
             // Cunning Action (#60) can spend the bonus action on Dash, Disengage or Hide.
             if (FStandardActionRules::CanTakeAsBonusAction(EStandardAction::Dash, Active->AdventurerRole, Active->Level)) { return false; }
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
@@ -1996,12 +2007,23 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     {
     case ECombatCommandType::ActionSurge: return Unit.ActionSurgeUses > 0 && !State.bActionAvailable && State.AttacksRemaining == 0;
     case ECombatCommandType::TurnUndead: return Unit.ChannelUses > 0 && State.bActionAvailable && State.AttacksRemaining == 0;
+    case ECombatCommandType::BardicInspiration: return Unit.BardicUses > 0 && State.bBonusActionAvailable;
     default: return false;
     }
 }
 
 TArray<int32> FCombatBattle::FeatureTargets(const FCombatantState& Unit, ECombatCommandType Action) const
 {
+    if (Action == ECombatCommandType::BardicInspiration)
+    {
+        // SRD: one creature other than you within 60 feet who can hear you; one die held at a time.
+        TArray<int32> Allies;
+        for (const FCombatantState& Other : State.Encounter.Combatants)
+        {
+            if (Other.Id != Unit.Id && Other.Side == Unit.Side && Other.Life == ECombatLife::Conscious && Other.BardicDie == 0 && GridDistance(Unit.Cell, Other.Cell) <= FFeatureKit::BardicCells) { Allies.Add(Other.Id); }
+        }
+        return Allies;
+    }
     return {Unit.Id};
 }
 
@@ -2015,6 +2037,14 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = true;
         State.bAttackActionTaken = false;
         return FString::Printf(TEXT("%s uses Action Surge: one more action this turn (%d left)."), *User->Name, User->ActionSurgeUses);
+    case ECombatCommandType::BardicInspiration:
+    {
+        --User->BardicUses;
+        State.bBonusActionAvailable = false;
+        FCombatantState* Ally = MutableFind(Command.TargetId);
+        Ally->BardicDie = FFeatureKit::BardicSides(*User);
+        return FString::Printf(TEXT("%s inspires %s (d%d held; %d left) (bonus action)."), *User->Name, *Ally->Name, Ally->BardicDie, User->BardicUses);
+    }
     case ECombatCommandType::TurnUndead:
     {
         --User->ChannelUses;

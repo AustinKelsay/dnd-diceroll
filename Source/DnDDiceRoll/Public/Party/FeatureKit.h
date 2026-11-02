@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::TurnUndead;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::BardicInspiration;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -38,6 +38,12 @@ public:
     static bool PicksTarget(ECombatCommandType Action);
     static int32 ActionSurgeCap(const FCombatantState& Hero);
     static int32 ChannelCap(const FCombatantState& Hero);
+    static int32 BardicCap(const FCombatantState& Hero);
+    /** d6 at Bard 1-4, d8 from Bard 5. */
+    static int32 BardicSides(const FCombatantState& Bard);
+    static constexpr int32 BardicCells = 12;
+    /** Whether any feature of the hero can spend the bonus action (save validation). */
+    static bool HasBonusFeature(const FCombatantState& Hero);
     /** SRD creature type from the monster profile (Skeleton, Zombie). */
     static bool IsUndead(const FCombatantState& Unit);
     static constexpr int32 TurnUndeadCells = 6;

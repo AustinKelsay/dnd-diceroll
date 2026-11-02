@@ -60,6 +60,7 @@ void FFeatureKit::Refill(FCombatantState& Hero)
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
     Hero.ActionSurgeUses = ActionSurgeCap(Hero);
     Hero.ChannelUses = ChannelCap(Hero);
+    Hero.BardicUses = BardicCap(Hero);
 }
 void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
 {
@@ -67,6 +68,7 @@ void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
     const auto Raise = [](int32& Pool, int32 Now, int32 Was) { Pool = FMath::Clamp(Pool + FMath::Max(0, Now - Was), 0, Now); };
     Raise(Hero.ActionSurgeUses, ActionSurgeCap(Hero), ActionSurgeCap(Before));
     Raise(Hero.ChannelUses, ChannelCap(Hero), ChannelCap(Before));
+    Raise(Hero.BardicUses, BardicCap(Hero), BardicCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 {
@@ -75,6 +77,20 @@ int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 int32 FFeatureKit::ChannelCap(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric) >= 2 ? 1 : 0;
+}
+int32 FFeatureKit::BardicCap(const FCombatantState& Hero)
+{
+    if (Hero.Side != ECombatSide::Party || FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Bard) < 1) { return 0; }
+    FAbilityScores Scores;
+    return FBuildCatalog::HeroScores(Hero, Scores) ? FMath::Max(1, FAbilityRules::Modifier(Scores.Get(EAbility::Charisma))) : 1;
+}
+int32 FFeatureKit::BardicSides(const FCombatantState& Bard)
+{
+    return FBuildCatalog::ClassLevel(Bard, EAdventurerRole::Bard) >= 5 ? 8 : 6;
+}
+bool FFeatureKit::HasBonusFeature(const FCombatantState& Hero)
+{
+    return Commands(Hero).ContainsByPredicate([](ECombatCommandType Action) { return Cost(Action) == EActionCost::BonusAction; });
 }
 bool FFeatureKit::IsUndead(const FCombatantState& Unit)
 {
@@ -86,6 +102,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     {
     case ECombatCommandType::ActionSurge: return TEXT("Action Surge");
     case ECombatCommandType::TurnUndead: return TEXT("Turn Undead");
+    case ECombatCommandType::BardicInspiration: return TEXT("Bardic Inspiration");
     default: return TEXT("Feature");
     }
 }
@@ -94,6 +111,7 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return EActionCost::Free;
+    case ECombatCommandType::BardicInspiration: return EActionCost::BonusAction;
     default: return EActionCost::Action;
     }
 }
@@ -103,6 +121,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     {
     case ECombatCommandType::ActionSurge: return FString::Printf(TEXT("free, %d left"), Hero.ActionSurgeUses);
     case ECombatCommandType::TurnUndead: return FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
+    case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
     default: return FString();
     }
 }
@@ -111,14 +130,16 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     TArray<ECombatCommandType> Out;
     if (ActionSurgeCap(Hero)) { Out.Add(ECombatCommandType::ActionSurge); }
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
+    if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     return Out;
 }
 bool FFeatureKit::PicksTarget(ECombatCommandType Action)
 {
-    return false;
+    return Action == ECombatCommandType::BardicInspiration;
 }
 bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
     return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
-        Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero);
+        Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero) &&
+        Hero.BardicUses >= 0 && Hero.BardicUses <= BardicCap(Hero) && (Hero.BardicDie == 0 || Hero.BardicDie == 6 || Hero.BardicDie == 8);
 }

@@ -180,4 +180,50 @@ bool FTurnUndeadTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some seeds turn the skeleton"), TurnedRuns > 0);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBardicInspirationTest, "Project.Expedition.Features.BardicInspiration",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBardicInspirationTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Bard = Hero(TEXT("bard.lore"), 1);
+    FFeatureKit::Refill(Bard);
+    TestTrue(TEXT("At least one use"), Bard.BardicUses >= 1 && Bard.BardicUses == FFeatureKit::BardicCap(Bard));
+    TestEqual(TEXT("d6 at Bard 1"), FFeatureKit::BardicSides(Bard), 6);
+    TestEqual(TEXT("d8 at Bard 5"), FFeatureKit::BardicSides(Hero(TEXT("bard.lore"), 5)), 8);
+    TestTrue(TEXT("Bonus tag"), FCombatBattle::ActionCost(ECombatCommandType::BardicInspiration, Bard) == EActionCost::BonusAction && FCombatBattle::CostTag(ECombatCommandType::BardicInspiration).StartsWith(TEXT("Bonus")));
+    TestTrue(TEXT("Targets an ally"), FFeatureKit::PicksTarget(ECombatCommandType::BardicInspiration));
+    int32 Used = 0, Kept = 0;
+    for (int32 Seed = 1; Seed <= 30; ++Seed)
+    {
+        FCombatEncounter Line; Line.Width = Line.Height = 10;
+        FCombatantState B = Bard; B.Id = 10; B.Cell = {0, 0}; B.InitiativeBonus = 30;
+        FCombatantState F = Hero(TEXT("fighter.champion"), 1); F.Id = 11; F.Cell = {1, 0}; F.InitiativeBonus = 5;
+        FCombatantState Foe; Foe.Id = 20; Foe.Name = TEXT("Foe"); Foe.Role = TEXT("Raider"); Foe.Side = ECombatSide::Enemy; Foe.Cell = {2, 0}; Foe.InitiativeBonus = -10; Foe.HP = Foe.MaxHP = 200;
+        Line.Combatants = {B, F, Foe};
+        FCombatBattle Battle; FString Error;
+        if (!TestTrue(TEXT("Start"), Battle.Start(Line, Seed, Error))) { AddError(Error); return true; }
+        const TArray<int32> Targets = Battle.LegalTargets(10, ECombatCommandType::BardicInspiration);
+        TestTrue(TEXT("Ally targetable, not self or foe"), Targets.Contains(11) && !Targets.Contains(10) && !Targets.Contains(20));
+        TestTrue(TEXT("Inspire"), Battle.Submit({ECombatCommandType::BardicInspiration, 10, {}, 11}).bAccepted);
+        TestFalse(TEXT("Bonus action spent"), Battle.Snapshot().bBonusActionAvailable);
+        TestTrue(TEXT("Action still free"), Battle.Snapshot().bActionAvailable);
+        TestEqual(TEXT("Die held"), Battle.Find(11)->BardicDie, 6);
+        TestEqual(TEXT("Use spent"), Battle.Find(10)->BardicUses, Bard.BardicUses - 1);
+        { FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error)); }
+        TestTrue(TEXT("End bard turn"), Battle.Submit({ECombatCommandType::EndTurn, 10, {}, INDEX_NONE}).bAccepted);
+        const FCombatResult Swing = Battle.Submit({ECombatCommandType::Attack, 11, {}, 20});
+        TestTrue(TEXT("Ally attacks"), Swing.bAccepted);
+        if (Swing.BardicRoll > 0)
+        {
+            ++Used;
+            TestTrue(TEXT("Roll in range"), Swing.BardicRoll <= 6);
+            TestEqual(TEXT("Die spent"), Battle.Find(11)->BardicDie, 0);
+            TestEqual(TEXT("Total includes the die"), Swing.AttackTotal, Swing.NaturalRoll + Swing.AttackBonus);
+        }
+        else { ++Kept; TestEqual(TEXT("Unneeded die kept"), Battle.Find(11)->BardicDie, 6); }
+    }
+    TestTrue(TEXT("Both branches seen"), Used > 0 && Kept > 0);
+    return true;
+}
 #endif
