@@ -198,3 +198,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #87: Inspiration (optional, rules only)
 
 `FInspirationRules`: off by default. A creature holds at most one Inspiration; granting while held does nothing. Spending it gives advantage on one d20 test (cancelling disadvantage to a normal roll). Who holds Inspiration across battles, what grants it and the toggle setting need saved state (#39).
+
+## Issue #89: carrying capacity and optional encumbrance (rules only)
+
+`FEncumbranceRules`: capacity is 15 x STR lb and push/drag/lift is 30 x STR. Over capacity the speed drops to 1 cell; over push/drag/lift the creature cannot move. The variant rule is off by default: over 5 x STR costs 2 cells of speed, over 10 x STR costs 4 cells and gives disadvantage on Strength/Dexterity/Constitution checks, attacks and saves. Item weights round up to whole pounds (a potion counts as 1 lb; flagged for Austin). Carried inventory and the toggle need saved state (#39).
