@@ -15,6 +15,7 @@
 #include "Rules/ConcentrationRules.h"
 #include "Rules/CantripRules.h"
 #include "Rules/TwoWeaponRules.h"
+#include "Rules/GrappleRules.h"
 
 namespace
 {
@@ -147,6 +148,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         if (Unit.OffHand < -1 || Unit.OffHand >= static_cast<int32>(EWeapon::Count) || (Unit.OffHand >= 0 && (Unit.bShieldEquipped ||
             !FWeaponRules::Profile(static_cast<EWeapon>(Unit.OffHand)).Has(EWeaponProperty::Light))))
         { return Reject(TEXT("Off-hand weapon must be light and needs a free hand.")); }
+        if (Unit.Size < 0 || Unit.Size > static_cast<int32>(ECreatureSize::Gargantuan)) { return Reject(TEXT("Invalid creature size.")); }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
@@ -699,6 +701,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         {
             const ECombatCondition Applies = Action == ECombatCommandType::Shove ? ECombatCondition::Prone : ECombatCondition::Grappled;
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious &&
+                FGrappleRules::SizeAllows(static_cast<ECreatureSize>(Unit->Size), static_cast<ECreatureSize>(Target.Size)) &&
                 FMath::Max(FMath::Abs(Target.Cell.X - Unit->Cell.X), FMath::Abs(Target.Cell.Y - Unit->Cell.Y)) <= 1 &&
                 !Target.Conditions.ContainsByPredicate([Applies](const FCombatCondition& C) { return C.Condition == Applies; });
         }

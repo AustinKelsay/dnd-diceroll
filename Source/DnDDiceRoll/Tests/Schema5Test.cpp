@@ -1,4 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS
+#include "Rules/GrappleRules.h"
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Run/ExpeditionRun.h"
@@ -1183,6 +1184,26 @@ bool FSchema5TwoWeaponTest::RunTest(const FString& Parameters)
     Encounter.Combatants[0].OffHand = static_cast<int32>(EWeapon::Longsword);
     FCombatBattle Heavy;
     TestFalse(TEXT("Non-light off-hand is rejected"), Heavy.Start(Encounter, 7, Error));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5GrappleSizeTest, "Project.Expedition.Schema5.GrappleSizeLimit",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5GrappleSizeTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({1, 0});
+    Encounter.Combatants[1].Size = static_cast<int32>(ECreatureSize::Large);
+    FCombatBattle Battle;
+    FString Error;
+    TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error));
+    TestTrue(TEXT("Medium can grapple Large"), Battle.LegalTargets(10, ECombatCommandType::Grapple).Contains(20));
+    Encounter.Combatants[1].Size = static_cast<int32>(ECreatureSize::Huge);
+    FCombatBattle Huge;
+    TestTrue(TEXT("Starts huge"), Huge.Start(Encounter, 7, Error));
+    TestFalse(TEXT("Medium cannot grapple Huge"), Huge.LegalTargets(10, ECombatCommandType::Grapple).Contains(20));
+    TestFalse(TEXT("Medium cannot shove Huge"), Huge.LegalTargets(10, ECombatCommandType::Shove).Contains(20));
+    Encounter.Combatants[1].Size = 9;
+    FCombatBattle Bad;
+    TestFalse(TEXT("Invalid size rejected"), Bad.Start(Encounter, 7, Error));
     return true;
 }
 #endif

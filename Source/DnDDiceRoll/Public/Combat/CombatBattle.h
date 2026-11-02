@@ -102,6 +102,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bConcentrating = false;
     /** #62: off-hand weapon (EWeapon index, -1 none) for two-weapon fighting. */
     UPROPERTY() int32 OffHand = -1;
+    /** #66: creature size (ECreatureSize index, 2 = Medium); grapple and shove reach at most one size larger. */
+    UPROPERTY() int32 Size = 2;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
