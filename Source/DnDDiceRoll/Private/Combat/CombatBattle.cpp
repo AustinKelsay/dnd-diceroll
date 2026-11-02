@@ -385,6 +385,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::Ready: return TEXT("READY | Action | self | reaction: attack the first foe that ends a move in your range");
     case ECombatCommandType::OffHandAttack: return TEXT("OFF-HAND | Bonus | adjacent foe | after the Attack action with two light weapons; no ability bonus to damage");
     case ECombatCommandType::ActionSurge: return TEXT("ACTION SURGE | Free + 1 use | self | after spending your action, take one more action this turn; 1 use per rest");
+    case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
     }
@@ -1994,6 +1995,7 @@ bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return Unit.ActionSurgeUses > 0 && !State.bActionAvailable && State.AttacksRemaining == 0;
+    case ECombatCommandType::TurnUndead: return Unit.ChannelUses > 0 && State.bActionAvailable && State.AttacksRemaining == 0;
     default: return false;
     }
 }
@@ -2013,6 +2015,24 @@ FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResu
         State.bActionAvailable = true;
         State.bAttackActionTaken = false;
         return FString::Printf(TEXT("%s uses Action Surge: one more action this turn (%d left)."), *User->Name, User->ActionSurgeUses);
+    case ECombatCommandType::TurnUndead:
+    {
+        --User->ChannelUses;
+        State.bActionAvailable = false;
+        const int32 Dc = FSpellcastingRules::SaveDc(FProficiencyRules::ProficiencyBonus(User->Level), AbilityModifier(User->Id, EAbility::Wisdom));
+        int32 Turned = 0, Saved = 0;
+        for (FCombatantState& Other : State.Encounter.Combatants)
+        {
+            if (Other.Side == User->Side || Other.Life != ECombatLife::Conscious || !FFeatureKit::IsUndead(Other)) { continue; }
+            if (GridDistance(User->Cell, Other.Cell) > FFeatureKit::TurnUndeadCells || !HasLineOfSight(User->Cell, Other.Cell)) { continue; }
+            const bool bSaved = FCheckRules::Resolve(Character(Other.Id).SaveBonus(EAbility::Wisdom), Dc, SaveMode(Other, EAbility::Wisdom, ERollMode::Normal), State.RandomState).bSuccess;
+            if (bSaved) { ++Saved; continue; }
+            FCombatCondition Fear; Fear.Condition = ECombatCondition::Frightened; Fear.SourceId = User->Id; Fear.RoundsLeft = FFeatureKit::TurnUndeadRounds;
+            Other.Conditions.Add(Fear); ++Turned;
+        }
+        Result.bHit = Turned > 0;
+        return FString::Printf(TEXT("%s presents a holy symbol (DC %d): %d undead turned, %d resisted (%d channel left)."), *User->Name, Dc, Turned, Saved, User->ChannelUses);
+    }
     default: return FString();
     }
 }

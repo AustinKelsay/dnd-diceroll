@@ -143,4 +143,41 @@ bool FActionSurgeTest::RunTest(const FString& Parameters)
     { FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error)); }
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTurnUndeadTest, "Project.Expedition.Features.TurnUndead",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FTurnUndeadTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState Cleric = Hero(TEXT("cleric.life"), 2);
+    FFeatureKit::Refill(Cleric);
+    TestEqual(TEXT("One Channel Divinity at Cleric 2"), Cleric.ChannelUses, 1);
+    TestTrue(TEXT("Listed"), FFeatureKit::Commands(Cleric).Contains(ECombatCommandType::TurnUndead));
+    TestFalse(TEXT("Not at Cleric 1"), FFeatureKit::Commands(Hero(TEXT("cleric.life"), 1)).Contains(ECombatCommandType::TurnUndead));
+    TestTrue(TEXT("Action tag"), FCombatBattle::ActionCost(ECombatCommandType::TurnUndead, Cleric) == EActionCost::Action && FCombatBattle::CostTag(ECombatCommandType::TurnUndead).StartsWith(TEXT("Action")));
+    int32 TurnedRuns = 0;
+    for (int32 Seed = 1; Seed <= 12; ++Seed)
+    {
+        FCombatEncounter Encounter = Duel(Cleric, {3, 0});
+        Encounter.Combatants[1].Role = TEXT("Skeleton"); Encounter.Combatants[1].Name = TEXT("Skeleton");
+        FCombatantState Far = Encounter.Combatants[1]; Far.Id = 21; Far.Cell = {9, 9};
+        FCombatantState Living = Encounter.Combatants[1]; Living.Id = 22; Living.Role = TEXT("Raider"); Living.Cell = {0, 2};
+        Encounter.Combatants.Add(Far); Encounter.Combatants.Add(Living);
+        FCombatBattle Battle; FString Error;
+        if (!TestTrue(TEXT("Start"), Battle.Start(Encounter, Seed, Error))) { AddError(Error); return true; }
+        const FCombatResult Turn = Battle.Submit({ECombatCommandType::TurnUndead, 10, {}, 10});
+        TestTrue(TEXT("Accepted"), Turn.bAccepted);
+        TestFalse(TEXT("Action spent"), Battle.Snapshot().bActionAvailable);
+        TestEqual(TEXT("Use spent"), Battle.Find(10)->ChannelUses, 0);
+        TestTrue(TEXT("No second channel"), Battle.LegalTargets(10, ECombatCommandType::TurnUndead).IsEmpty());
+        auto Feared = [&](int32 Id) { return Battle.Find(Id)->Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Frightened && C.SourceId == 10; }); };
+        TestFalse(TEXT("Out of range undead unaffected"), Feared(21));
+        TestFalse(TEXT("Living foes unaffected"), Feared(22));
+        TestEqual(TEXT("Hit flag matches the condition"), Turn.bHit, Feared(20));
+        if (Feared(20)) { ++TurnedRuns; }
+        FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Some seeds turn the skeleton"), TurnedRuns > 0);
+    return true;
+}
 #endif

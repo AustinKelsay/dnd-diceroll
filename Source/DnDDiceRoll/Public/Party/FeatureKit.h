@@ -27,7 +27,7 @@ public:
 
     // Feature commands (ECombatCommandType::ActionSurge and later).
     static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
-    static constexpr ECombatCommandType LastCommand = ECombatCommandType::ActionSurge;
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::TurnUndead;
     static const TCHAR* CommandName(ECombatCommandType Action);
     static EActionCost Cost(ECombatCommandType Action);
     /** "1 left" style usage for the HUD button. */
@@ -37,4 +37,9 @@ public:
     /** True when the command picks a target other than the user (HUD targeting mode). */
     static bool PicksTarget(ECombatCommandType Action);
     static int32 ActionSurgeCap(const FCombatantState& Hero);
+    static int32 ChannelCap(const FCombatantState& Hero);
+    /** SRD creature type from the monster profile (Skeleton, Zombie). */
+    static bool IsUndead(const FCombatantState& Unit);
+    static constexpr int32 TurnUndeadCells = 6;
+    static constexpr int32 TurnUndeadRounds = 10;
 };

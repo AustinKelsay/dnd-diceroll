@@ -59,22 +59,33 @@ void FFeatureKit::Refill(FCombatantState& Hero)
 {
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
     Hero.ActionSurgeUses = ActionSurgeCap(Hero);
+    Hero.ChannelUses = ChannelCap(Hero);
 }
 void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
 {
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
     const auto Raise = [](int32& Pool, int32 Now, int32 Was) { Pool = FMath::Clamp(Pool + FMath::Max(0, Now - Was), 0, Now); };
     Raise(Hero.ActionSurgeUses, ActionSurgeCap(Hero), ActionSurgeCap(Before));
+    Raise(Hero.ChannelUses, ChannelCap(Hero), ChannelCap(Before));
 }
 int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Fighter) >= 2 ? 1 : 0;
+}
+int32 FFeatureKit::ChannelCap(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Cleric) >= 2 ? 1 : 0;
+}
+bool FFeatureKit::IsUndead(const FCombatantState& Unit)
+{
+    return Unit.Role == TEXT("Skeleton") || Unit.Role == TEXT("Zombie");
 }
 const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
 {
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return TEXT("Action Surge");
+    case ECombatCommandType::TurnUndead: return TEXT("Turn Undead");
     default: return TEXT("Feature");
     }
 }
@@ -91,6 +102,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return FString::Printf(TEXT("free, %d left"), Hero.ActionSurgeUses);
+    case ECombatCommandType::TurnUndead: return FString::Printf(TEXT("action, %d channel"), Hero.ChannelUses);
     default: return FString();
     }
 }
@@ -98,6 +110,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
 {
     TArray<ECombatCommandType> Out;
     if (ActionSurgeCap(Hero)) { Out.Add(ECombatCommandType::ActionSurge); }
+    if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     return Out;
 }
 bool FFeatureKit::PicksTarget(ECombatCommandType Action)
@@ -107,5 +120,5 @@ bool FFeatureKit::PicksTarget(ECombatCommandType Action)
 bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
     return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
-        Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero);
+        Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero) && Hero.ChannelUses >= 0 && Hero.ChannelUses <= ChannelCap(Hero);
 }
