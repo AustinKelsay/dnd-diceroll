@@ -280,9 +280,9 @@ Class features unlock on **class level**, never character level. Proficiency bon
 | Paladin | Divine Sense, Lay on Hands | Fighting Style, Spellcasting, Divine Smite | Divine Health, Oath Channel Divinity | ASI | Extra Attack, 2nd-level slots |
 | Ranger | Favored Enemy, Natural Explorer | Fighting Style, Spellcasting | Hunter: Colossus Slayer, Primeval Awareness | ASI | Extra Attack, 2nd-level slots |
 | Sorcerer | Spellcasting, Draconic: Dragon Resilience | Font of Magic (Sorcery Points) | Metamagic | ASI | 3rd-level slots (Counterspell) |
-| Warlock | Pact Magic (1 slot, 1st), Fiend: Dark One's Blessing | Eldritch Invocations (2 slots) | Pact Boon (2nd-level slots) | ASI | 3rd-level pact slots |
+| Warlock (SRD 5.2.1) | Pact Magic (1 slot, short-rest recovery), Eldritch Invocations (1) | Magical Cunning, 3 invocations, 2 slots | Fiend: Dark One's Blessing, Fiend Spells*; 2nd-level slots | ASI | 5 invocations; 3rd-level pact slots |
 | Druid | Spellcasting | Wild Shape, Land: Natural Recovery | 2nd-level slots | ASI | 3rd-level slots |
-| Bard | Spellcasting, Bardic Inspiration d6 | Jack of All Trades, Song of Rest | Lore: Cutting Words, Expertise | ASI | Font of Inspiration, d8 |
+| Bard (SRD 5.2.1) | Spellcasting (4 prepared), Bardic Inspiration d6 | Expertise*, Jack of All Trades (Initiative) | Lore: Bonus Proficiencies*, Cutting Words [Reaction] | ASI | Font of Inspiration (short rest), d8; 9 prepared |
 
 \* Deviation by directive: Superiority Dice (Battle Master) replace Precision Strike and are listed beside the Champion row.
 
@@ -336,7 +336,24 @@ Heroes cap at level 5 in battle (slots up to 3rd level), so 4th- and 5th-level s
 
 - **Slot pool:** the run-layer level-1 slot pool stays capped at 2, and only builds with a slot cap use it. Sorcerer, Warlock, Bard and similar kits spend kit uses instead. The per-level SRD slots are in `SlotsByLevel`.
 - **Restore validation:** the check now compares against `FBuildCatalog::SlotCap` instead of a hard-coded Cleric/Wizard role list.
-- **Not modelled yet:** Warlock Mystic Arcanum and Bard Magical Secrets.
+- **Engine cap (`FClassFeatureRules::EngineLevelCap = 5`):** levels 6-20 exist as data only (`DataFeaturesThrough`, `FWarlockRules`, `FBardRules`), locked by `Rules.LevelGating` data gates: Warlock Mystic Arcanum 11/13/15/17, Eldritch Master 20, Contact Patron 9; Bard Magical Discoveries 6, Countercharm 7, Expertise 9, Magical Secrets 10, Superior Inspiration 18, Words of Creation 20.
+
+### Warlock and Bard (SRD 5.2.1) status
+
+| Feature | Lvl | Tag | Status |
+|---|---|---|---|
+| Pact Magic short-rest recovery | W1 | Free | Playable (only when no other slot-casting class; one shared pool) |
+| Eldritch Invocations | W1 | Free | Count/prereqs enforced; Agonizing Blast, Armor of Shadows, Eldritch Mind, Pact of the Blade playable; others data only |
+| Magical Cunning | W2 | Free | Playable at the rest point, once per long rest |
+| Fiend: Dark One's Blessing | W3 | Free | Playable (kill or foe drop within 10 ft) |
+| Fiend: Fiend Spells | W3 | - | Data only |
+| Bardic Inspiration d6/d8/d10/d12 | B1 | Bonus | Playable |
+| Expertise, Lore Bonus Proficiencies | B2/B3 | Free | Data only: no skill-check system |
+| Jack of All Trades | B2 | Free | Playable on Initiative |
+| Cutting Words | B3 | Reaction | Playable (auto when it can turn a hit into a miss) |
+| Font of Inspiration | B5 | Free | Short-rest recharge playable; slot-to-use conversion not modelled |
+| Song of Rest | - | - | Not in SRD 5.2.1 (removed) |
+| Pact Boon | - | - | Now the Pact of the Blade/Chain/Tome invocations |
 
 ### SRD 5.1 → SRD 5.2.1 spell differences (generated)
 
