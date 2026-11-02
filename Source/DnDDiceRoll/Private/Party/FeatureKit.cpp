@@ -78,6 +78,10 @@ int32 FFeatureKit::SorceryCap(const FCombatantState& Hero)
     const int32 Sorcerer = FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Sorcerer);
     return Hero.Side == ECombatSide::Party && Sorcerer >= 2 ? Sorcerer : 0;
 }
+bool FFeatureKit::HasUncannyDodge(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Rogue) >= 5;
+}
 int32 FFeatureKit::KiCap(const FCombatantState& Hero)
 {
     const int32 Monk = FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk);
@@ -136,6 +140,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::PatientDefense: return TEXT("Patient Defense");
     case ECombatCommandType::StepOfTheWind: return TEXT("Step of the Wind");
     case ECombatCommandType::FontOfMagic: return TEXT("Font of Magic");
+    case ECombatCommandType::UncannyDodge: return TEXT("Uncanny Dodge");
     default: return TEXT("Feature");
     }
 }
@@ -144,6 +149,7 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: return EActionCost::Free;
+    case ECombatCommandType::UncannyDodge: return EActionCost::Reaction;
     case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
     case ECombatCommandType::FontOfMagic:
         return EActionCost::BonusAction;
@@ -159,6 +165,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::BardicInspiration: return FString::Printf(TEXT("bonus, d%d, %d left"), BardicSides(Hero), Hero.BardicUses);
     case ECombatCommandType::WildShape: return Hero.WildShapeHP > 0 ? FString::Printf(TEXT("wolf, %d form HP"), Hero.WildShapeHP) : FString::Printf(TEXT("action, %d left"), Hero.WildShapeUses);
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
+    case ECombatCommandType::UncannyDodge: return Hero.bReactionAvailable ? TEXT("auto, reaction ready") : TEXT("auto, reaction spent");
     case ECombatCommandType::FontOfMagic: return FString::Printf(TEXT("bonus, %d points"), Hero.SorceryPoints);
     default: return FString();
     }
@@ -170,6 +177,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (ChannelCap(Hero)) { Out.Add(ECombatCommandType::TurnUndead); }
     if (BardicCap(Hero)) { Out.Add(ECombatCommandType::BardicInspiration); }
     if (WildShapeCap(Hero)) { Out.Add(ECombatCommandType::WildShape); }
+    if (HasUncannyDodge(Hero)) { Out.Add(ECombatCommandType::UncannyDodge); }
     if (SorceryCap(Hero)) { Out.Add(ECombatCommandType::FontOfMagic); }
     if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
     return Out;

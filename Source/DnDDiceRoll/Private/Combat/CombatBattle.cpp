@@ -393,6 +393,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::UncannyDodge: return TEXT("UNCANNY DODGE | Reaction | self | automatic: when an attacker you can see hits you, halve the damage");
     case ECombatCommandType::FontOfMagic: return TEXT("FONT OF MAGIC | Bonus + 2 sorcery points | self | regain one spell use (a 1st-level slot); points = Sorcerer level per long rest");
     case ECombatCommandType::TurnUndead: return TEXT("TURN UNDEAD | Action + Channel Divinity | undead within 30 ft | WIS save vs your spell DC or frightened of you for 1 minute; 1 use per rest");
     default:
@@ -1375,6 +1376,13 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         if (Result.bSneakAttack) { Result.Damage += RollDice((Result.bCritical ? 2 : 1) * SneakDiceCount(State.Encounter, *Actor), SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
         DiceLog = nullptr;
         ApplyDefenses(Result, ActorId, ECombatCommandType::Attack, TargetId);
+        if (Result.Damage > 1 && FFeatureKit::HasUncannyDodge(*Target) && Target->Life == ECombatLife::Conscious && Target->bReactionAvailable && !IsIncapacitated(*Target) && HasLineOfSight(Target->Cell, Actor->Cell))
+        {
+            // SRD Uncanny Dodge: the rogue's reaction halves the hit's damage (rounded down).
+            Target->bReactionAvailable = false;
+            Result.Damage /= 2; Result.bUncannyDodge = true;
+            Result.RollModeSources.Add(TEXT("Uncanny Dodge: damage halved"));
+        }
         const int32 Protection = ProtectionFor(*Target);
         Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
         ApplyDamage(*Target, Result.Damage);

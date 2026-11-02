@@ -345,4 +345,29 @@ bool FSorceryPointsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Points above cap invalid"), FFeatureKit::Valid(Bad));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUncannyDodgeTest, "Project.Expedition.Features.UncannyDodge",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FUncannyDodgeTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    TestFalse(TEXT("Not at Rogue 4"), FFeatureKit::HasUncannyDodge(Hero(TEXT("rogue.thief"), 4)));
+    FCombatantState Rogue = Hero(TEXT("rogue.thief"), 5);
+    Rogue.HP = Rogue.MaxHP = 500;
+    TestTrue(TEXT("Rogue 5"), FFeatureKit::HasUncannyDodge(Rogue));
+    TestTrue(TEXT("Reaction tag"), FCombatBattle::ActionCost(ECombatCommandType::UncannyDodge, Rogue) == EActionCost::Reaction && FCombatBattle::CostTag(ECombatCommandType::UncannyDodge).StartsWith(TEXT("Reaction")));
+    FString Error; FCombatBattle Battle;
+    FCombatEncounter Encounter = Duel(Rogue, {1, 0});
+    Encounter.Combatants[1].AttackBonus = 30; Encounter.Combatants[1].DamageBonus = 9;
+    if (!TestTrue(TEXT("Start"), Battle.Start(Encounter, 3, Error))) { AddError(Error); return true; }
+    TestTrue(TEXT("Not pressable"), Battle.LegalTargets(10, ECombatCommandType::UncannyDodge).IsEmpty());
+    TestTrue(TEXT("End turn"), Battle.Submit({ECombatCommandType::EndTurn, 10, {}, INDEX_NONE}).bAccepted);
+    const int32 Before = Battle.Find(10)->HP;
+    const FCombatResult First = Battle.Submit({ECombatCommandType::Attack, 20, {}, 10});
+    TestTrue(TEXT("Hit"), First.bAccepted && First.bHit);
+    TestTrue(TEXT("Dodged"), First.bUncannyDodge);
+    TestEqual(TEXT("Damage applied matches the halved hit"), Before - Battle.Find(10)->HP, First.Damage);
+    TestFalse(TEXT("Reaction spent"), Battle.Find(10)->bReactionAvailable);
+    return true;
+}
 #endif
