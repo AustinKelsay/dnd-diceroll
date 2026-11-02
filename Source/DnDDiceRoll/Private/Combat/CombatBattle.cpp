@@ -1204,12 +1204,13 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     FAttackRollMode Mode;
     const FCombatantState* Actor = Find(ActorId);
     if (!Actor || !Find(TargetId)) { return Mode; }
-    // SRD: a ranged attack has disadvantage while a hostile, non-incapacitated creature is within five feet.
+    // SRD 5.2.1: a ranged attack has disadvantage while within 5 ft of an enemy who can see you and isn't Incapacitated.
     if (RangedAttacker(*Actor))
     {
         for (const FCombatantState& Other : State.Encounter.Combatants)
         {
-            if (Other.Side != Actor->Side && Other.Life == ECombatLife::Conscious && GridDistance(Other.Cell, Actor->Cell) <= 1)
+            if (Other.Side != Actor->Side && Other.Life == ECombatLife::Conscious && GridDistance(Other.Cell, Actor->Cell) <= 1 &&
+                !IsIncapacitated(Other) && NearbyFoeSees(Other, *Actor))
             {
                 Mode.Disadvantage.Add(FString::Printf(TEXT("ranged attack with %s adjacent"), *Other.Name));
             }
@@ -1283,6 +1284,16 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
 bool FCombatBattle::HasCondition(const FCombatantState& Unit, ECombatCondition Condition)
 {
     return Unit.Conditions.ContainsByPredicate([Condition](const FCombatCondition& C) { return C.Condition == Condition; });
+}
+
+bool FCombatBattle::NearbyFoeSees(const FCombatantState& Viewer, const FCombatantState& Target) const
+{
+    if (HasCondition(Viewer, ECombatCondition::Blinded) || !SpellCanSee(Viewer.Id, Target.Id, true)) { return false; }
+    if (!State.Encounter.bDarkness) { return true; }
+    // #88 darkness: the viewer needs light at the target's cell or darkvision reaching it.
+    const ELight AtTarget = SpellZoneAt(Target.Cell, 1) ? ELight::Bright : ELight::Darkness;
+    const int32 Dv = SpellExtraOn(Viewer.Id, SpellEffectExtra::Darkvision) ? FMath::Max(150, FLightRules::DarkvisionFeet(Viewer.Role)) : FLightRules::DarkvisionFeet(Viewer.Role);
+    return FLightRules::CanSee(FLightRules::PerceivedLight(AtTarget, Dv, GridDistance(Viewer.Cell, Target.Cell) * 5));
 }
 
 bool FCombatBattle::IsHelpless(const FCombatantState& Unit)

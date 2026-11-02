@@ -10,6 +10,7 @@ Branch `feature/dnd-defaults`. Suite: 241 automation tests green. No push.
 
 ## SRD 5.2.1 gap fixes and the Downed house rule (2026-11-02, later)
 - Proficiency: skill-only Expertise (no thieves'-tools Expertise; prebuilt Rogue takes Stealth and Sleight of Hand), Bard Expertise (2 at level 2, 4 at 9), Ranger Deft Explorer (1 at 2) and Expertise (3 at 9), Wizard Scholar (1 at 2, restricted list), 5.2.1 skill lists for Fighter, Rogue and Wizard, and Bard and Ranger proficiency tables.
+- Ranged attacks: disadvantage only from an adjacent hostile that can see the attacker and isn't Incapacitated (`NearbyFoeSees`).
 
 ## Spell coverage (SRD 5.2.1, castable / total / documented exceptions)
 | Level | Castable | Total | Exceptions |

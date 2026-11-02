@@ -101,7 +101,7 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 
 ## Issue #56: attack advantage and disadvantage
 
-Attack rolls resolve advantage and disadvantage per SRD 5.1: any number of sources of each cancel to a normal roll; otherwise two d20s are rolled and the higher (advantage) or lower (disadvantage) is kept, spending exactly one extra RNG draw. The source implemented now is a ranged attack (weapon range above one cell) made while a conscious hostile is adjacent, which imposes disadvantage. Forecasts report the mode, its named sources and the exact chance out of 400 (normal 20x, advantage 400-(20-x)^2, disadvantage x^2 for x winning faces) without spending RNG. Feedback and playback show both d20s and the mode. Conditions (#57) will add further sources.
+Attack rolls resolve advantage and disadvantage per SRD 5.1: any number of sources of each cancel to a normal roll; otherwise two d20s are rolled and the higher (advantage) or lower (disadvantage) is kept, spending exactly one extra RNG draw. The source implemented now is a ranged attack (weapon range above one cell) made while an adjacent conscious hostile can see the attacker and isn't Incapacitated (SRD 5.2.1): an Incapacitated, Stunned, Paralyzed, Unconscious, Petrified or Blinded neighbour imposes nothing, and neither does one that can't see the attacker (invisible attacker, heavy obscurement, or darkness without darkvision reach). Forecasts report the mode, its named sources and the exact chance out of 400 (normal 20x, advantage 400-(20-x)^2, disadvantage x^2 for x winning faces) without spending RNG. Feedback and playback show both d20s and the mode. Conditions (#57) will add further sources.
 
 ## Issue #68: damage types, resistance, vulnerability and immunity
 

@@ -45,6 +45,22 @@ bool FAttackAdvantageForecastTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Disadvantage denies Sneak Attack"), Forecast.bSneakAttack);
     TestEqual(TEXT("Melee attack on the adjacent hostile is normal"), (int32)Pressed.AttackRollMode(3, 1).Mode, (int32)ERollMode::Normal);
     TestTrue(TEXT("Queries spend no RNG"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before, &Pressed.Snapshot(), 0));
+    // SRD 5.2.1: only an adjacent enemy that can see the attacker and isn't Incapacitated imposes disadvantage.
+    for (ECombatCondition Blocker : {ECombatCondition::Incapacitated, ECombatCondition::Stunned, ECombatCondition::Blinded})
+    {
+        FCombatEncounter Layout = RangedLayout(true);
+        FCombatCondition C; C.Condition = Blocker; Layout.Combatants[2].Conditions.Add(C);
+        FCombatBattle Battle;
+        TestTrue(TEXT("Blocked layout starts"), Battle.Start(Layout, 5, Error));
+        TestTrue(FString::Printf(TEXT("%s neighbour imposes no ranged disadvantage"), FCombatBattle::ConditionName(Blocker)),
+            Battle.AttackRollMode(1, 4).Disadvantage.IsEmpty());
+    }
+    FCombatEncounter Hidden = RangedLayout(true);
+    FCombatCondition Invisible; Invisible.Condition = ECombatCondition::Invisible; Hidden.Combatants[0].Conditions.Add(Invisible);
+    FCombatBattle Unseen;
+    TestTrue(TEXT("Invisible archer layout starts"), Unseen.Start(Hidden, 5, Error));
+    TestFalse(TEXT("Neighbour that can't see an invisible archer imposes no disadvantage"),
+        Unseen.AttackRollMode(1, 4).Disadvantage.ContainsByPredicate([](const FString& S) { return S.Contains(TEXT("adjacent")); }));
     return !HasAnyErrors();
 }
 
