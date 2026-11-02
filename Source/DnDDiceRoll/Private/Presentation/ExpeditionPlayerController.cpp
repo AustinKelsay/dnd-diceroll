@@ -252,6 +252,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("StdHelp")) { StandardAction(ECombatCommandType::Help); }
     else if (Name == TEXT("StdHide")) { StandardAction(ECombatCommandType::Hide); }
     else if (Name == TEXT("StdReady")) { StandardAction(ECombatCommandType::Ready); }
+    else if (Name == TEXT("StdOffHand")) { StandardAction(ECombatCommandType::OffHandAttack); }
     else if (Name == TEXT("Upcast")) { CycleSlot(); }
     else if (Name == TEXT("EndTurn")) { EndTurn(); }
     else if (Name == TEXT("Older")) { OlderRecords(); }
@@ -351,7 +352,7 @@ void AExpeditionPlayerController::StandardAction(ECombatCommandType Action)
 {
     if (!AllowsGameplayInput()) { return; }
     // Help needs a foe, so it becomes the targeting mode; self actions resolve immediately.
-    if (Action == ECombatCommandType::Help) { SetMode(Action); return; }
+    if (Action == ECombatCommandType::Help || Action == ECombatCommandType::OffHandAttack) { SetMode(Action); return; }
     BattleView->Execute({Action, Actor(), {}, Actor()});
 }
 void AExpeditionPlayerController::CycleSlot()

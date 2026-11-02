@@ -1163,4 +1163,26 @@ bool FSchema5FireBoltCantripTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Weapons do not scale like cantrips"), Count, 1);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5TwoWeaponTest, "Project.Expedition.Schema5.TwoWeaponOffHand",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5TwoWeaponTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({1, 0});
+    Encounter.Combatants[0].MainHand = static_cast<int32>(EWeapon::Shortsword);
+    Encounter.Combatants[0].OffHand = static_cast<int32>(EWeapon::Dagger);
+    Encounter.Combatants[1].HP = Encounter.Combatants[1].MaxHP = 200;
+    FCombatBattle Battle;
+    FString Error;
+    TestTrue(TEXT("Starts"), Battle.Start(Encounter, 7, Error));
+    TestFalse(TEXT("Off-hand needs the Attack action first"), Battle.Submit({ECombatCommandType::OffHandAttack, 10, {0, 0}, 20}).bAccepted);
+    TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {0, 0}, 20}).bAccepted);
+    TestTrue(TEXT("Off-hand target is legal"), Battle.LegalTargets(10, ECombatCommandType::OffHandAttack).Contains(20));
+    TestTrue(TEXT("Off-hand bonus attack"), Battle.Submit({ECombatCommandType::OffHandAttack, 10, {0, 0}, 20}).bAccepted);
+    TestFalse(TEXT("Bonus action spent"), Battle.Snapshot().bBonusActionAvailable);
+    TestFalse(TEXT("Only one off-hand attack"), Battle.Submit({ECombatCommandType::OffHandAttack, 10, {0, 0}, 20}).bAccepted);
+    Encounter.Combatants[0].OffHand = static_cast<int32>(EWeapon::Longsword);
+    FCombatBattle Heavy;
+    TestFalse(TEXT("Non-light off-hand is rejected"), Heavy.Start(Encounter, 7, Error));
+    return true;
+}
 #endif

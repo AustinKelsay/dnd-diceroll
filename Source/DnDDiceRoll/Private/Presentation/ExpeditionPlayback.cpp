@@ -83,6 +83,7 @@ FString ActionName(ECombatCommandType Action)
     case ECombatCommandType::Help: return TEXT("Help");
     case ECombatCommandType::Hide: return TEXT("Hide");
     case ECombatCommandType::Ready: return TEXT("Ready");
+    case ECombatCommandType::OffHandAttack: return TEXT("Off-hand Attack");
     default: return TEXT("Attack");
     }
 }

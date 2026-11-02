@@ -11,7 +11,7 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -100,6 +100,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 HitDiceSpent = 0;
     /** #74: holding a concentration spell; damage forces a CON save (DC max(10, half)), 0 HP ends it. */
     UPROPERTY() bool bConcentrating = false;
+    /** #62: off-hand weapon (EWeapon index, -1 none) for two-weapon fighting. */
+    UPROPERTY() int32 OffHand = -1;
     /** Set on an enemy by the Help action: the helper's Id; the next attack by one of the helper's allies has advantage. */
     UPROPERTY() int32 HelpedById = INDEX_NONE;
 };
@@ -131,6 +133,8 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() int32 MovementLeft = 0;
     UPROPERTY() bool bActionAvailable = true;
     UPROPERTY() bool bBonusActionAvailable = true;
+    /** #62: the active unit took the Attack action this turn (enables the off-hand bonus attack). */
+    UPROPERTY() bool bAttackActionTaken = false;
     /** Extra Attack: weapon attacks left after the Attack action was taken this turn (#61). */
     UPROPERTY() int32 AttacksRemaining = 0;
     /** Combatants that already dealt Sneak Attack this turn (once per turn, reactions included); cleared at each turn start. */
@@ -381,7 +385,7 @@ private:
     /** Starts the active unit's turn: movement from speed, grapple/restraint, and standing up from prone. */
     void BeginTurn();
     /** One weapon attack roll and its damage, without spending any budget. Shared by Attack and reactions. */
-    void Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, FCombatResult& Result);
+    void Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, FCombatResult& Result, bool bOffHand = false);
     /** Drops conditions whose source or situation no longer supports them. */
     void PruneConditions();
     static bool HasCondition(const FCombatantState& Unit, ECombatCondition Condition);

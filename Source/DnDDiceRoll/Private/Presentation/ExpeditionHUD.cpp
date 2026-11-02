@@ -665,9 +665,9 @@ void AExpeditionHUD::DrawActionBar()
         struct FStd { ECombatCommandType Action; const TCHAR* Id; const TCHAR* Label; };
         const FStd Standard[] = {{ECombatCommandType::Dash, TEXT("StdDash"), TEXT("Dash")}, {ECombatCommandType::Disengage, TEXT("StdDisengage"), TEXT("Disengage")},
             {ECombatCommandType::Dodge, TEXT("StdDodge"), TEXT("Dodge")}, {ECombatCommandType::Help, TEXT("StdHelp"), TEXT("Help")},
-            {ECombatCommandType::Hide, TEXT("StdHide"), TEXT("Hide")}, {ECombatCommandType::Ready, TEXT("StdReady"), TEXT("Ready")}};
-        const float StdWidth = 92, StdHeight = 30, StdLeft = W * 0.5f - (6 * (StdWidth + Gap) - Gap) * 0.5f;
-        for (int32 Index = 0; Index < 6; ++Index)
+            {ECombatCommandType::Hide, TEXT("StdHide"), TEXT("Hide")}, {ECombatCommandType::Ready, TEXT("StdReady"), TEXT("Ready")}, {ECombatCommandType::OffHandAttack, TEXT("StdOffHand"), TEXT("Off-hand")}};
+        const float StdWidth = 92, StdHeight = 30, StdLeft = W * 0.5f - (7 * (StdWidth + Gap) - Gap) * 0.5f;
+        for (int32 Index = 0; Index < 7; ++Index)
         {
             Hover.Add({Standard[Index].Action, Button(Standard[Index].Id, Standard[Index].Label, FCombatBattle::CostTag(Standard[Index].Action),
                 StdLeft + Index * (StdWidth + Gap), Y - 72, StdWidth, StdHeight, Ready(Standard[Index].Action), Mode == Standard[Index].Action, Sky)});

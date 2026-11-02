@@ -14,6 +14,7 @@
 #include "Rules/DeathSaveRules.h"
 #include "Rules/ConcentrationRules.h"
 #include "Rules/CantripRules.h"
+#include "Rules/TwoWeaponRules.h"
 
 namespace
 {
@@ -143,6 +144,9 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
                 FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)).Has(EWeaponProperty::TwoHanded), Unit.bShieldEquipped)))
         { return Reject(TEXT("Invalid or unwieldable equipment.")); }
         if (Unit.Ammunition < 0 || Unit.Ammunition > 99) { return Reject(TEXT("Ammunition must be 0-99.")); }
+        if (Unit.OffHand < -1 || Unit.OffHand >= static_cast<int32>(EWeapon::Count) || (Unit.OffHand >= 0 && (Unit.bShieldEquipped ||
+            !FWeaponRules::Profile(static_cast<EWeapon>(Unit.OffHand)).Has(EWeaponProperty::Light))))
+        { return Reject(TEXT("Off-hand weapon must be light and needs a free hand.")); }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
@@ -341,6 +345,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::Help: return TEXT("HELP | Action | adjacent foe | an ally's next attack on it has advantage, until your next turn");
     case ECombatCommandType::Hide: return TEXT("HIDE | Action (Rogue 2+: bonus) | self | Stealth vs best enemy passive Perception; hidden attacks with advantage");
     case ECombatCommandType::Ready: return TEXT("READY | Action | self | reaction: attack the first foe that ends a move in your range");
+    case ECombatCommandType::OffHandAttack: return TEXT("OFF-HAND | Bonus | adjacent foe | after the Attack action with two light weapons; no ability bonus to damage");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
     }
@@ -576,6 +581,12 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     // Extra Attack (#61): after the Attack action, banked attacks still allow Attack and Precision Strike.
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
     if (IsIncapacitated(*Unit)) { return nullptr; }
+    if (Action == ECombatCommandType::OffHandAttack)
+    {
+        const FWeaponProfile* Main = MainWeapon(*Unit);
+        const bool bOffHand = Unit->OffHand >= 0 && Unit->OffHand < static_cast<int32>(EWeapon::Count);
+        return Main && bOffHand && FTwoWeaponRules::CanOffHandAttack(*Main, FWeaponRules::Profile(static_cast<EWeapon>(Unit->OffHand)), State.bAttackActionTaken, !State.bBonusActionAvailable) ? Unit : nullptr;
+    }
     if (EStandardAction Standard; StandardActionOf(Action, Standard))
     {
         return State.bActionAvailable || (State.bBonusActionAvailable && FStandardActionRules::CanTakeAsBonusAction(Standard, Unit->AdventurerRole, Unit->Level)) ? Unit : nullptr;
@@ -679,6 +690,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     {
         bool bLegal = false;
         if ((Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike)) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target); }
+        else if (Action == ECombatCommandType::OffHandAttack) { bLegal = CanTargetFrom(*Unit, Unit->Cell, Target) && GridDistance(Unit->Cell, Target.Cell) <= 1; }
         else if (Action == ECombatCommandType::MagicMissile)
         {
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= MissileRange && HasLineOfSight(Unit->Cell, Target.Cell);
@@ -1167,9 +1179,12 @@ FCombatResult FCombatBattle::Submit(const FCombatCommand& Command)
     return Result;
 }
 
-void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, FCombatResult& Result)
+void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, FCombatResult& Result, bool bOffHand)
 {
-    const FCombatantState* Actor = Find(ActorId);
+    // The off-hand swing (#62) uses the off-hand weapon's profile and drops a positive ability modifier from damage.
+    FCombatantState Hand = *Find(ActorId);
+    if (bOffHand) { Hand.MainHand = Hand.OffHand; }
+    const FCombatantState* Actor = &Hand;
     FCombatantState* Target = MutableFind(TargetId);
     const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
     Result.RollMode = Mode.Mode;
@@ -1199,7 +1214,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         WeaponDice(*Actor, DiceCount, DiceSides);
         Result.Damage = RollDice(DiceCount, DiceSides);
         if (Result.bCritical) { Result.Damage += RollDice(DiceCount, DiceSides); }
-        Result.EffectModifier = WeaponDamageModifier(*this, *Actor) + ManeuverBonus;
+        Result.EffectModifier = (bOffHand ? FTwoWeaponRules::OffHandDamageModifier(WeaponDamageModifier(*this, *Actor), false) : WeaponDamageModifier(*this, *Actor)) + ManeuverBonus;
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); State.SneakAttackUsedBy.Add(ActorId); }
@@ -1327,6 +1342,14 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         }
         CheckOutcome();
     }
+    else if (Command.Type == ECombatCommandType::OffHandAttack)
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Off-hand attack needs the Attack action, two light weapons, a bonus action and an adjacent foe.")); }
+        Strike(Command.ActorId, Command.TargetId, 0, Result, true);
+        State.bBonusActionAvailable = false;
+        CheckOutcome();
+        Result.Feedback = FString::Printf(TEXT("%s off-hand > %s | %s | damage %d%s"), *Actor->Name, *Find(Command.TargetId)->Name, Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result));
+    }
     else if (Command.Type == ECombatCommandType::Attack || Command.Type == ECombatCommandType::PrecisionStrike)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
@@ -1337,6 +1360,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (State.bActionAvailable)
         {
             State.bActionAvailable = false;
+            State.bAttackActionTaken = true;
             State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(Actor->AdventurerRole, Actor->Level) - 1;
         }
         else { --State.AttacksRemaining; }
@@ -1674,6 +1698,7 @@ void FCombatBattle::AdvanceTurn()
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
             State.bActionAvailable = true;
+            State.bAttackActionTaken = false;
             State.AttacksRemaining = 0;
             State.bBonusActionAvailable = true;
             BeginTurn();
@@ -1762,7 +1787,8 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
     auto Reject = [&Error]() { Error = TEXT("Invalid saved combat phase, initiative, turn or budget."); return false; };
     if (static_cast<uint8>(Snapshot.Phase) > static_cast<uint8>(EBattlePhase::Defeat) ||
         Snapshot.Round < 1 || Snapshot.Round > 1000000 || Snapshot.TurnOrder.IsEmpty() ||
-        Snapshot.TurnOrder.Num() > Snapshot.Encounter.Combatants.Num() || !Snapshot.TurnOrder.IsValidIndex(Snapshot.TurnIndex)) { return Reject(); }
+        Snapshot.TurnOrder.Num() > Snapshot.Encounter.Combatants.Num() || !Snapshot.TurnOrder.IsValidIndex(Snapshot.TurnIndex) ||
+        (Snapshot.bAttackActionTaken && Snapshot.bActionAvailable)) { return Reject(); }
     FCombatBattle Candidate;
     Candidate.State = Snapshot;
     Candidate.bStarted = true;
