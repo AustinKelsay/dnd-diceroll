@@ -162,3 +162,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #94: tools and kits
 
 `FToolRules`: a tool check adds the proficiency bonus when you are proficient with the tool you are holding; also being proficient in the matching skill grants advantage (the SRD lets the GM do this; we always do). Some tasks require the tool: no thieves' tools, no lockpicking. A healer's kit (10 uses) stabilizes a dying creature with no check and spends one use. Herbalism kit proficiency lets you brew antitoxin and potions of healing. The existing `ETool` set is unchanged. Kit charges and tool items need saved inventory (#39, the issue's schema change).
+
+## Issue #85: exploration hazards
+
+`FHazardRules` resolves a hazard with one skill check: cliff (Athletics DC 12, 4 HP on a fail), ledge (Acrobatics DC 12, 3 HP), getting lost (Survival DC 13, 1 supply and a reroute) and a hidden passage (Investigation DC 15, success opens a shortcut). `ForecastOutOf400` shows the exact chance before committing. Placing hazards on the map, spending supplies and saving rerouted paths need run state (#39); DCs and costs are tuning for Austin.
