@@ -48,6 +48,8 @@ public:
     void StepBuild(int32 Direction);
     bool ShowingBuilder() const;
     FName MenuFocus() const { return Focus; }
+    /** Refresh after the HUD registers this frame's visible, enabled controls. */
+    void UpdateMenuFocus();
 private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;

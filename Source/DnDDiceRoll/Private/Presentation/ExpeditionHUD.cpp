@@ -168,13 +168,14 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
 {
     const bool bHover = bEnabled && Hovered(X, Y, Width, Height);
     const float Lift = 0.0f;
-    bSelected |= Player.IsValid() && Player->MenuFocus() == Id;
+    const bool bFocused = bEnabled && Player.IsValid() && Player->MenuFocus() == Id;
     Rect(FLinearColor(0, 0, 0, 0.4f), X + 2, Y + 3, Width, Height);
     const FLinearColor Base = bSelected ? FLinearColor(Accent.R * 0.12f, Accent.G * 0.12f, Accent.B * 0.12f, 0.97f)
         : bHover ? FLinearColor(0.05f, 0.035f, 0.025f, 0.97f) : FLinearColor(0.016f, 0.012f, 0.01f, 0.94f);
     Rect(Base, X, Y + Lift, Width, Height);
     Rect(FLinearColor(1, 1, 1, bHover ? 0.07f : 0.035f), X, Y + Lift, Width, Height * 0.45f);
     Frame(WithAlpha(Accent, bSelected ? 0.95f : bHover ? 0.7f : bEnabled ? 0.35f : 0.12f), X, Y + Lift, Width, Height, bSelected ? 2.0f : 1.0f);
+    if (bFocused) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     const FLinearColor LabelColor = bEnabled ? (bSelected ? Accent : Parchment) : FLinearColor(0.45f, 0.48f, 0.52f);
     const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 : Y + Lift + Height * 0.5f - 19;
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
@@ -265,7 +266,7 @@ void AExpeditionHUD::DrawHUD()
     if (!View->HasRun()) { DrawTitle(); }
     else
     {
-        if (View->InCombat() || View->Progress().Phase == EExpeditionPhase::Reward || View->Progress().Phase == EExpeditionPhase::Recovery) { DrawParty(); }
+        if (View->InCombat() || View->Progress().Phase == EExpeditionPhase::Route || View->Progress().Phase == EExpeditionPhase::Reward || View->Progress().Phase == EExpeditionPhase::Recovery) { DrawParty(); }
         if (View->InCombat()) { DrawLog(); }
         if (View->InCombat())
         {
@@ -297,6 +298,7 @@ void AExpeditionHUD::DrawHUD()
     if (View->ShowingRecords() || Player->ShowingHelp()) { Buttons.Reset(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
+    Player->UpdateMenuFocus();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -760,6 +762,7 @@ void AExpeditionHUD::DrawTitle()
     const float X = (W - 1200) / 2, Y = (H - 660) / 2;
     Panel(X, Y, 1200, 660, Gold, 0.98f);
     Text(TEXT("dnd-diceroll"), X + 24, Y + 12, Gold, 1.6f);
+    if (View->HasRun()) { Button(TEXT("Close"), TEXT("Back to result"), TEXT("Esc"), X + 972, Y + 14, 200, 48); }
     Text(TEXT("Four heroes / five battles / levels 1-5 / compact tabletop kits"), X + 24, Y + 49, Muted, 0.85f);
     for (int32 I = 0; I < Player->NextParty().Num(); ++I)
     {
@@ -777,7 +780,7 @@ void AExpeditionHUD::DrawTitle()
         if (!Classes.Contains(B.Profile.ClassId))
         {
             Classes.Add(B.Profile.ClassId);
-            Button(FName(*(TEXT("Build:")+B.Id)), B.Profile.Role, TEXT(""), X+24+(ClassIndex%2)*140, Y+190+(ClassIndex/2)*40, 132, 34, true, B.Profile.ClassId==Hero.ClassId);
+            Button(FName(*(TEXT("Class:")+B.Profile.ClassId)), B.Profile.Role, TEXT(""), X+24+(ClassIndex%2)*140, Y+190+(ClassIndex/2)*40, 132, 34, true, B.Profile.ClassId==Hero.ClassId);
             ++ClassIndex;
         }
         if (B.Profile.ClassId == Hero.ClassId)
@@ -800,7 +803,7 @@ void AExpeditionHUD::DrawTitle()
     const auto* Build=FBuildCatalog::Find(Hero.BuildId);
     if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X+628, Row, Safe, 0.8f); }
     if (Build->CriticalThreshold==19) { Text(TEXT("Passive: critical hits on 19-20"), X+628, Row, Safe, 0.8f); }
-    Text(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab focus / Enter activate"), X+24, Y+496, Muted, 0.8f);
+    Text(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), X+24, Y+496, Muted, 0.8f);
     Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), X+24, Y+534, 250, 52);
     Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), X+286, Y+534, 250, 52);
     Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), X+548, Y+534, 200, 52);
@@ -814,6 +817,7 @@ void AExpeditionHUD::DrawRoutes()
     const FExpeditionProgress& Run = View->Progress();
     const float CardWidth = 340, CardHeight = 250, Gap = 30;
     const float Top = H * 0.5f - CardHeight * 0.5f - 10;
+    Panel(W * 0.5f - 370, Top - 84, 740, 76, Gold, 0.95f);
     Text(TEXT("CHOOSE YOUR PATH"), W * 0.5f, Top - 66, Gold, 1.5f, EAlign::Center);
     Text(FString::Printf(TEXT("Encounter %d of %d  ·  Injuries and losses carry forward  ·  No automatic rest"), Run.EncountersCompleted + 1, FExpeditionRun::EncounterCount), W * 0.5f, Top - 30, Muted, 0.76f, EAlign::Center);
     for (int32 Index = 0; Index < Run.Offers.Num() && Index < 2; ++Index)
@@ -822,8 +826,11 @@ void AExpeditionHUD::DrawRoutes()
         const float X = W * 0.5f + (Index == 0 ? -CardWidth - Gap * 0.5f : Gap * 0.5f);
         const FLinearColor Accent = Route.bDangerous ? Danger : Safe;
         const bool bHover = Hovered(X, Top, CardWidth, CardHeight);
-        Panel(X, Top - (bHover ? 4 : 0), CardWidth, CardHeight, Accent, bHover ? 0.98f : 0.9f);
-        const float Y = Top - (bHover ? 4 : 0);
+        const FName Id(*FString::Printf(TEXT("Route%d"), Index));
+        const bool bFocused = Player->MenuFocus() == Id;
+        Panel(X, Top, CardWidth, CardHeight, Accent, bHover || bFocused ? 0.98f : 0.9f);
+        if (bFocused) { Frame(Parchment, X - 3, Top - 3, CardWidth + 6, CardHeight + 6, 2); }
+        const float Y = Top;
         Rect(WithAlpha(Accent, 0.22f), X + 16, Y + 16, Measure(Route.bDangerous ? TEXT("DANGEROUS") : TEXT("GUARDED"), 0.7f).X + 16, 22);
         Text(Route.bDangerous ? TEXT("DANGEROUS") : TEXT("GUARDED"), X + 24, Y + 18, Accent, 0.7f);
         Text(Index == 0 ? TEXT("Z") : TEXT("X"), X + CardWidth - 18, Y + 16, Muted, 0.9f, EAlign::Right);
@@ -844,8 +851,8 @@ void AExpeditionHUD::DrawRoutes()
             Text(Facts[Fact], X + 16, FactY, bReward ? Gold : Parchment, 0.8f, EAlign::Left, CardWidth - 32);
             FactY += 24;
         }
-        Buttons.Add({FName(*FString::Printf(TEXT("Route%d"), Index)), FBox2D(FVector2D(X, Top) * S, FVector2D(X + CardWidth, Top + CardHeight) * S), true});
-        Text(bHover ? TEXT("Click to set out") : TEXT(""), X + CardWidth * 0.5f, Y + CardHeight - 30, Accent, 0.8f, EAlign::Center);
+        Buttons.Add({Id, FBox2D(FVector2D(X, Top) * S, FVector2D(X + CardWidth, Top + CardHeight) * S), true});
+        Text(bFocused ? TEXT("Enter to set out") : bHover ? TEXT("Click to set out") : TEXT(""), X + CardWidth * 0.5f, Y + CardHeight - 30, Accent, 0.8f, EAlign::Center);
     }
 }
 
@@ -873,7 +880,7 @@ void AExpeditionHUD::DrawReward()
 void AExpeditionHUD::DrawCamp()
 {
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 760, Height = 300;
+    const float Width = 720, Height = 300;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
     Panel(X, Y, Width, Height, FLinearColor(1.0f, 0.6f, 0.3f), 0.94f);
     Text(TEXT("MAKE CAMP?"), W * 0.5f, Y + 16, FLinearColor(1.0f, 0.7f, 0.4f), 1.4f, EAlign::Center);

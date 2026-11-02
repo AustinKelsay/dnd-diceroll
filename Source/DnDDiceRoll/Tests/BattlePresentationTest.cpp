@@ -449,10 +449,16 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
     Player->StepClass(1); Player->StepClass(-1);
     TestEqual(TEXT("Opposite class navigation restores class"),FBuildCatalog::Find(Player->NextParty()[0].BuildId)->Profile.ClassId,FBuildCatalog::Find(BeforeReverse)->Profile.ClassId);
     const FString OtherSlot=Player->NextParty()[1].BuildId;
+    Player->HandleButton(TEXT("Class:wizard"));
+    TestEqual(TEXT("Direct class chooses a compatible starting subclass"), FBuildCatalog::Find(Player->NextParty()[0].BuildId)->Profile.ClassId, FString(TEXT("wizard")));
     TestTrue(TEXT("Direct longest class choice accepted"),Player->SelectBuild(TEXT("wizard.evocation")));
+    Player->HandleButton(TEXT("Class:wizard"));
+    TestEqual(TEXT("Selecting the current class preserves its chosen subclass"), Player->NextParty()[0].BuildId, FString(TEXT("wizard.evocation")));
     TestEqual(TEXT("Direct choice preserves independent slot"),Player->NextParty()[1].BuildId,OtherSlot);
     TestFalse(TEXT("Unknown catalog choice rejected"),Player->SelectBuild(TEXT("unknown.kit")));
     Player->HandleButton(TEXT("Help"));
+    Player->HandleButton(TEXT("Class:fighter"));
+    TestEqual(TEXT("Modal rejects direct class selection"), Player->NextParty()[0].BuildId, FString(TEXT("wizard.evocation")));
     TestFalse(TEXT("Modal rejects direct roster selection"),Player->SelectBuild(TEXT("fighter.champion")));
     Player->HandleButton(TEXT("Close"));
 

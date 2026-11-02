@@ -1,5 +1,7 @@
 # Menu polish source unit — issue 109
 
+Root's subsequent corrections, package and native observations are recorded in [native acceptance](02-native-acceptance.md). The pending items below describe this source-unit handoff, not the later verification state.
+
 Contract: [issue 109](https://github.com/AustinKelsay/dnd-diceroll/issues/109). Baseline `9b1837e657b0b87b9ce8da527cddec19f6082587`, owned branch `feature/109-menu-polish`. Original checkout/editor PID50002 and user playtest app/saves were not operated on. No binary assets, rules, balance, RNG or save fields changed. Canvas is retained; the game-ui-ux skill guided layout and input ownership.
 
 The previous builder used four small cards and forward-only cycling through 70 kits; endings reused that builder. This unit exposes class and compatible subclass buttons, four independent slots, stat/ability/passive previews, a product heading and primary start/resume actions. Opposite arrows reverse selection. Menus use Tab and Enter, with visible button focus; direct hotkeys remain. Help and Records consume camera/save/game actions. Endings show result, five-battle progress and party fates before an explicit next-party action. Records use larger rows and disabled pagination limits; menu help is contextual. Layout scale is bounded by both viewport dimensions. Recovery copy wraps and reward panels have more space.
