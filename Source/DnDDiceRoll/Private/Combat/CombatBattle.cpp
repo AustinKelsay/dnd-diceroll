@@ -303,8 +303,9 @@ int32 FCombatBattle::EffectiveArmorClass(int32 Id) const
 {
     const FCombatantState* Unit = Find(Id);
     if (!Unit) { return 0; }
-    if (Unit->ArmorWorn < 0) { return Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
-    return FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
+    const int32 Spell = Unit->bShielded ? 5 : 0;
+    if (Unit->ArmorWorn < 0) { return Spell + Unit->ArmorClass + (Unit->bShieldEquipped ? FArmorRules::Profile(EArmor::Shield).BaseAC : 0); }
+    return Spell + FArmorRules::ArmorClass(static_cast<EArmor>(Unit->ArmorWorn), Unit->bShieldEquipped, AbilityScores(Id).Get(EAbility::Dexterity));
 }
 
 namespace CombatSpellSlots
@@ -1214,7 +1215,7 @@ void FCombatBattle::BeginTurn()
     FCombatantState* Unit = MutableFind(ActiveId());
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
-    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false;
+    Unit->bDodging = false; Unit->bDisengaged = false; Unit->bReadied = false; Unit->bShielded = false;
     for (FCombatantState& Other : State.Encounter.Combatants) { if (Other.HelpedById == Unit->Id) { Other.HelpedById = INDEX_NONE; } }
     State.SneakAttackUsedBy.Reset();
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
@@ -1299,6 +1300,11 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
     Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+    if (Result.bHit && ShieldWouldBlock(*Target, Result.AttackTotal, Result.TargetArmorClass, Result.bCritical))
+    {
+        SpendSpellSlot(*Target); Target->bReactionAvailable = false; Target->bShielded = true;
+        Result.TargetArmorClass += 5; Result.bHit = false; Result.bShieldReaction = true;
+    }
     if (State.Encounter.bInspiration && Result.NaturalRoll == 20) { FInspirationRules::Grant(MutableFind(ActorId)->bInspired); }
     // Attacking reveals a hidden attacker; Help is spent by the first ally attack it benefits.
     MutableFind(ActorId)->bHidden = false;
@@ -1694,8 +1700,17 @@ void FCombatBattle::ApplyDefenses(FCombatResult& Result, int32 ActorId, ECombatC
     Result.Damage = FDamageRules::Adjust(Result.Damage, Result.DamageType, Defenses);
 }
 
+bool FCombatBattle::ShieldWouldBlock(const FCombatantState& Target, int32 AttackTotal, int32 ArmorClass, bool bCritical)
+{
+    const bool bWizard = Target.AdventurerRole == EAdventurerRole::Wizard || (Target.SecondaryLevel > 0 && Target.SecondaryRole == EAdventurerRole::Wizard);
+    return !bCritical && bWizard && Target.Side == ECombatSide::Party && Target.Life == ECombatLife::Conscious && Target.bReactionAvailable &&
+        !Target.bShielded && Target.SpellSlots > 0 && AttackTotal < ArmorClass + 5 &&
+        FBuildCatalog::ValidResources([&] { FCombatantState After = Target; --After.SpellSlots; return After; }()); // never spend a slot a kit has reserved
+}
+
 FString FCombatBattle::DefenseText(const FCombatResult& Result)
 {
+    if (Result.bShieldReaction) { return TEXT(" | Shield (reaction, 1 slot): +5 AC"); }
     return Result.DamageResponse == EDamageResponse::Normal ? FString() :
         FString::Printf(TEXT(" %s (%s from %d)"), FDamageRules::TypeName(Result.DamageType), FDamageRules::ResponseName(Result.DamageResponse), Result.DamageBeforeDefenses);
 }
@@ -1757,7 +1772,7 @@ void FCombatBattle::CheckOutcome()
         {
             Unit.GuardTurns = 0; Unit.GuardAmount = 0; Unit.RageTurns = 0; Unit.GuardTargetId = INDEX_NONE; Unit.LastSurge = 0;
             Unit.bReactionAvailable = true;
-            Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE; Unit.bConcentrating = false;
+            Unit.bDodging = false; Unit.bDisengaged = false; Unit.bHidden = false; Unit.bReadied = false; Unit.HelpedById = INDEX_NONE; Unit.bConcentrating = false; Unit.bShielded = false;
             if (Unit.Life == ECombatLife::Downed)
             {
                 // With death saves, a stable hero survives a victory on 1 HP; anyone still dying is lost.
@@ -1911,7 +1926,7 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
             (Unit.Life != ECombatLife::Dead && !Ordered.Contains(Unit.Id)) ||
             (Unit.Side == ECombatSide::Enemy && (Unit.AdventurerRole != EAdventurerRole::None || Unit.Life == ECombatLife::Downed)) ||
             (Snapshot.Phase != EBattlePhase::Fighting && (Unit.Life == ECombatLife::Downed || Unit.RageTurns != 0 || Unit.GuardTargetId != INDEX_NONE || Unit.LastSurge != 0 || Unit.GuardTurns != 0 || Unit.GuardAmount != 0 || !Unit.bReactionAvailable ||
-                Unit.bDodging || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
+                Unit.bDodging || Unit.bShielded || Unit.bDisengaged || Unit.bHidden || Unit.bReadied || Unit.HelpedById != INDEX_NONE ||
                 Unit.Conditions.ContainsByPredicate([](const FCombatCondition& C) { return C.SourceId != INDEX_NONE || C.Condition == ECombatCondition::Prone; })))) { return Reject(); }
         bParty |= Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious;
         bEnemy |= Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious;

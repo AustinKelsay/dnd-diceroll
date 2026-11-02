@@ -34,4 +34,20 @@ bool FActionEconomyTagTest::RunTest(const FString& Parameters)
     }
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FShieldReactionTest, "Project.Expedition.Rules.ShieldReaction",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FShieldReactionTest::RunTest(const FString& Parameters)
+{
+    FCombatantState Wiz; FBuildCatalog::Create(TEXT("wizard.evocation"), 1, TEXT("W"), Wiz);
+    TestFalse(TEXT("Slots reserved by kit uses are not spent on Shield"), FCombatBattle::ShieldWouldBlock(Wiz, 15, 12, false) && Wiz.SpellSlots <= Wiz.KitUses);
+    Wiz.KitUses = 0;
+    TestTrue(TEXT("A hit within 5 of AC is shielded"), FCombatBattle::ShieldWouldBlock(Wiz, 15, 12, false));
+    TestFalse(TEXT("A hit at AC + 5 still lands"), FCombatBattle::ShieldWouldBlock(Wiz, 17, 12, false));
+    TestFalse(TEXT("Critical hits ignore Shield"), FCombatBattle::ShieldWouldBlock(Wiz, 13, 12, true));
+    Wiz.bReactionAvailable = false; TestFalse(TEXT("Needs the reaction"), FCombatBattle::ShieldWouldBlock(Wiz, 13, 12, false));
+    Wiz.bReactionAvailable = true; Wiz.SpellSlots = 0; TestFalse(TEXT("Needs a slot"), FCombatBattle::ShieldWouldBlock(Wiz, 13, 12, false));
+    FCombatantState Fighter; FBuildCatalog::Create(TEXT("fighter.champion"), 2, TEXT("F"), Fighter);
+    TestFalse(TEXT("Only wizards know Shield"), FCombatBattle::ShieldWouldBlock(Fighter, 13, 12, false));
+    return true;
+}
 #endif

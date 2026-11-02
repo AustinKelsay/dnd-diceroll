@@ -98,6 +98,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bReactionAvailable = true;
     /** SRD standard actions (#60). Dodge, Disengage and Ready last until the owner's next turn start; Hide until it attacks. */
     UPROPERTY() bool bDodging = false;
+    /** #79 Shield spell (reaction, 1st-level slot): +5 AC until the caster's next turn start. */
+    UPROPERTY() bool bShielded = false;
     UPROPERTY() bool bDisengaged = false;
     UPROPERTY() bool bHidden = false;
     UPROPERTY() bool bReadied = false;
@@ -267,6 +269,8 @@ struct DNDDICEROLL_API FCombatResult
     int32 TargetArmorClass = 0;
     /** Cover bonus included in TargetArmorClass. */
     int32 CoverBonus = 0;
+    /** #79: the target cast Shield as a reaction, turning this hit into a miss. */
+    bool bShieldReaction = false;
     /** Damage or healing dice in roll order; the effect is their sum plus EffectModifier. */
     TArray<FDieRoll> EffectDice;
     int32 EffectModifier = 0;
@@ -376,6 +380,8 @@ public:
     static FString UsageTag(ECombatCommandType Action, const FCombatantState& Unit);
     /** #79 action economy: what the command costs this unit now (Cunning Action makes Dash/Disengage/Hide a bonus action once the action is spent). */
     static EActionCost ActionCost(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable = true);
+    /** #79 SRD Shield: a conscious wizard (either class) with its reaction and a slot casts it when +5 AC turns a non-critical hit into a miss. */
+    static bool ShieldWouldBlock(const FCombatantState& Target, int32 AttackTotal, int32 ArmorClass, bool bCritical);
     /** Tooltip prefix such as "[Bonus Action] ". */
     static FString CostPrefix(ECombatCommandType Action, const FCombatantState& Unit, bool bActionAvailable = true);
     /** SRD spell facts line (FSpellRules::Summary) for spell actions; empty otherwise. */
