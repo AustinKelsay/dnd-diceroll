@@ -80,7 +80,10 @@ FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantSt
 /** SRD Extra Attack for heroes; Multiattack from the stat block for enemies. */
 int32 AttacksPerAction(const FCombatantState& Unit)
 {
-    return Unit.Side == ECombatSide::Enemy ? FMonsterRules::AttacksPerAction(Unit.Role) : FClassFeatureRules::AttacksPerAction(Unit.AdventurerRole, Unit.Level);
+    if (Unit.Side == ECombatSide::Enemy) { return FMonsterRules::AttacksPerAction(Unit.Role); }
+    // SRD multiclassing: Extra Attack comes from class level and never stacks across classes.
+    return FMath::Max(FClassFeatureRules::AttacksPerAction(Unit.AdventurerRole, FBuildCatalog::ClassLevel(Unit, Unit.AdventurerRole)),
+        FClassFeatureRules::AttacksPerAction(Unit.SecondaryRole, FBuildCatalog::ClassLevel(Unit, Unit.SecondaryRole)));
 }
 /** Sorcerer Quickened Spell: a pending quicken turns the next kit spell into a bonus action. */
 bool KitBonus(const FCombatantState& Unit, const FAbilityFacts& A) { return A.bBonus || (Unit.QuickenState == 1 && A.bKitResource); }
@@ -465,9 +468,9 @@ EActionCost FCombatBattle::ActionCost(ECombatCommandType Action, const FCombatan
     case ECombatCommandType::Special2:
         for (const auto& A : FBuildCatalog::Abilities(Unit)) { if (A.Command == Action) { return A.Cost(); } }
         return EActionCost::Action;
-    case ECombatCommandType::Dash: return FStandardActionRules::Cost(EStandardAction::Dash, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
-    case ECombatCommandType::Disengage: return FStandardActionRules::Cost(EStandardAction::Disengage, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
-    case ECombatCommandType::Hide: return FStandardActionRules::Cost(EStandardAction::Hide, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
+    case ECombatCommandType::Dash: return FStandardActionRules::Cost(EStandardAction::Dash, EAdventurerRole::Rogue, FBuildCatalog::ClassLevel(Unit, EAdventurerRole::Rogue), !bActionAvailable);
+    case ECombatCommandType::Disengage: return FStandardActionRules::Cost(EStandardAction::Disengage, EAdventurerRole::Rogue, FBuildCatalog::ClassLevel(Unit, EAdventurerRole::Rogue), !bActionAvailable);
+    case ECombatCommandType::Hide: return FStandardActionRules::Cost(EStandardAction::Hide, EAdventurerRole::Rogue, FBuildCatalog::ClassLevel(Unit, EAdventurerRole::Rogue), !bActionAvailable);
     default: return FFeatureKit::IsFeature(Action) ? FFeatureKit::Cost(Action) : EActionCost::Action;
     }
 }
@@ -841,7 +844,7 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
 
 static int32 SneakDiceCount(const FCombatEncounter& Encounter, const FCombatantState& Actor)
 {
-    return Encounter.bScaledSneakAttack ? FMath::Max(1, FClassFeatureRules::SneakAttackDice(Actor.Level)) : 1;
+    return Encounter.bScaledSneakAttack ? FMath::Max(1, FClassFeatureRules::SneakAttackDice(FBuildCatalog::ClassLevel(Actor, EAdventurerRole::Rogue))) : 1;
 }
 
 bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const
@@ -1583,7 +1586,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             // An action strike is this turn's Attack action, so Extra Attack banks the remaining weapon attacks (#61).
             const bool bQuick = KitBonus(*User, A);
             if (!bQuick && State.bActionAvailable && (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Push))
-            { State.AttacksRemaining = FClassFeatureRules::AttacksPerAction(User->AdventurerRole, User->Level) - 1; }
+            { State.AttacksRemaining = AttacksPerAction(*User) - 1; }
             if (bQuick) { State.bBonusActionAvailable = false; if (!A.bBonus) { User->QuickenState = 2; } } else { State.bActionAvailable = false; }
             Result.Feedback = A.Name + TEXT(": ") + A.Description + FString::Printf(TEXT(" | committed HP loss %d, heal %d, prevented %d"), Result.Damage, Result.Healing, Result.DamagePrevented);
         }
@@ -1760,7 +1763,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Standard action unavailable: check action budget and target.")); }
         FCombatantState* User = MutableFind(Command.ActorId);
         // Cunning Action keeps the action free when the bonus action can pay instead.
-        const bool bBonus = State.bBonusActionAvailable && FStandardActionRules::CanTakeAsBonusAction(Standard, User->AdventurerRole, User->Level);
+        const bool bBonus = State.bBonusActionAvailable && FStandardActionRules::CanTakeAsBonusAction(Standard, EAdventurerRole::Rogue, FBuildCatalog::ClassLevel(*User, EAdventurerRole::Rogue));
         (bBonus ? State.bBonusActionAvailable : State.bActionAvailable) = false;
         FString Effect;
         switch (Command.Type)
