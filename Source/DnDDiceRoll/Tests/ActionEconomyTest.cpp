@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 #include "Rules/CantripRules.h"
 #include "Rules/ClassFeatureRules.h"
 
@@ -11,7 +12,7 @@ bool FActionEconomyTagTest::RunTest(const FString& Parameters)
 {
     FCombatantState Rogue; FBuildCatalog::Create(TEXT("rogue.thief"), 1, TEXT("R"), Rogue); Rogue.Level = 2;
     // Every described command's cost field agrees with its data tag.
-    for (uint8 Raw = 0; Raw <= static_cast<uint8>(ECombatCommandType::OffHandAttack); ++Raw)
+    for (uint8 Raw = 0; Raw <= static_cast<uint8>(FFeatureKit::LastCommand); ++Raw)
     {
         const auto Action = static_cast<ECombatCommandType>(Raw);
         if (Action == ECombatCommandType::Move || Action == ECombatCommandType::EndTurn || Action == ECombatCommandType::Attack ||

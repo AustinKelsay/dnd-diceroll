@@ -58,12 +58,54 @@ bool FFeatureKit::ChooseStyle(FCombatantState& Hero, EFightingStyle Choice, FStr
 void FFeatureKit::Refill(FCombatantState& Hero)
 {
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
+    Hero.ActionSurgeUses = ActionSurgeCap(Hero);
 }
-void FFeatureKit::Grant(FCombatantState& Hero)
+void FFeatureKit::Grant(FCombatantState& Hero, const FCombatantState& Before)
 {
     if (HasFightingStyle(Hero) && Style(Hero) == EFightingStyle::None) { Hero.FightingStyle = static_cast<int32>(DefaultStyle(Hero)); }
+    const auto Raise = [](int32& Pool, int32 Now, int32 Was) { Pool = FMath::Clamp(Pool + FMath::Max(0, Now - Was), 0, Now); };
+    Raise(Hero.ActionSurgeUses, ActionSurgeCap(Hero), ActionSurgeCap(Before));
+}
+int32 FFeatureKit::ActionSurgeCap(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Fighter) >= 2 ? 1 : 0;
+}
+const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::ActionSurge: return TEXT("Action Surge");
+    default: return TEXT("Feature");
+    }
+}
+EActionCost FFeatureKit::Cost(ECombatCommandType Action)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::ActionSurge: return EActionCost::Free;
+    default: return EActionCost::Action;
+    }
+}
+FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Hero)
+{
+    switch (Action)
+    {
+    case ECombatCommandType::ActionSurge: return FString::Printf(TEXT("free, %d left"), Hero.ActionSurgeUses);
+    default: return FString();
+    }
+}
+TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
+{
+    TArray<ECombatCommandType> Out;
+    if (ActionSurgeCap(Hero)) { Out.Add(ECombatCommandType::ActionSurge); }
+    return Out;
+}
+bool FFeatureKit::PicksTarget(ECombatCommandType Action)
+{
+    return false;
 }
 bool FFeatureKit::Valid(const FCombatantState& Hero)
 {
-    return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero));
+    return Hero.FightingStyle >= 0 && Hero.FightingStyle < static_cast<int32>(EFightingStyle::Count) && (Hero.FightingStyle == 0 || HasFightingStyle(Hero)) &&
+        Hero.ActionSurgeUses >= 0 && Hero.ActionSurgeUses <= ActionSurgeCap(Hero);
 }

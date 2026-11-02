@@ -21,7 +21,20 @@ public:
     static bool ChooseStyle(FCombatantState& Hero, EFightingStyle Choice, FString& Error);
     /** Long rest / creation / level-up: fills feature pools to their caps and assigns a default style when newly entitled. */
     static void Refill(FCombatantState& Hero);
-    /** Level-up / new class: assigns a default style when newly entitled and opens pools that were just unlocked (no refresh of spent uses). */
-    static void Grant(FCombatantState& Hero);
     static bool Valid(const FCombatantState& Hero);
+    /** Level-up / new class with the hero as it was before: newly unlocked uses arrive ready. */
+    static void Grant(FCombatantState& Hero, const FCombatantState& Before);
+
+    // Feature commands (ECombatCommandType::ActionSurge and later).
+    static bool IsFeature(ECombatCommandType Action) { return Action >= ECombatCommandType::ActionSurge && Action <= LastCommand; }
+    static constexpr ECombatCommandType LastCommand = ECombatCommandType::ActionSurge;
+    static const TCHAR* CommandName(ECombatCommandType Action);
+    static EActionCost Cost(ECombatCommandType Action);
+    /** "1 left" style usage for the HUD button. */
+    static FString Usage(ECombatCommandType Action, const FCombatantState& Hero);
+    /** Feature commands the hero has (by class levels), in HUD order. */
+    static TArray<ECombatCommandType> Commands(const FCombatantState& Hero);
+    /** True when the command picks a target other than the user (HUD targeting mode). */
+    static bool PicksTarget(ECombatCommandType Action);
+    static int32 ActionSurgeCap(const FCombatantState& Hero);
 };

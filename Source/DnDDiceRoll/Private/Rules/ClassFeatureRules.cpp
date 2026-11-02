@@ -30,7 +30,7 @@ TArray<FClassFeature> FClassFeatureRules::FeaturesThrough(EAdventurerRole Role, 
     struct FRow { R Role; FClassFeature F; };
     static const FRow Table[] = {
         {R::Fighter, {TEXT("Fighting Style"), 1, C::Free, true}}, {R::Fighter, {TEXT("Second Wind"), 1, C::BonusAction, true}},
-        {R::Fighter, {TEXT("Action Surge"), 2, C::Free, false}}, {R::Fighter, {TEXT("Superiority Dice"), 3, C::Free, true}},
+        {R::Fighter, {TEXT("Action Surge"), 2, C::Free, true}}, {R::Fighter, {TEXT("Superiority Dice"), 3, C::Free, true}},
         {R::Fighter, {TEXT("Extra Attack"), 5, C::Action, true}},
         {R::Rogue, {TEXT("Sneak Attack"), 1, C::Free, true}}, {R::Rogue, {TEXT("Cunning Action"), 2, C::BonusAction, true}},
         {R::Rogue, {TEXT("Uncanny Dodge"), 5, C::Reaction, false}},

@@ -79,6 +79,8 @@ private:
     void ShoveMode();
     void GrappleMode();
     void StandardAction(ECombatCommandType Action);
+    /** Class feature buttons: targeted features enter targeting mode, the rest act on the user at once. */
+    void FeatureAction(ECombatCommandType Action);
     void CycleSlot();
     void Loot();
     void FirstRoute();

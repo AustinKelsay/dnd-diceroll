@@ -46,7 +46,7 @@ bool FFightingStyleTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Paladin 1 has no style yet"), FFeatureKit::HasFightingStyle(Paladin));
     Paladin.Level = 2;
     TestTrue(TEXT("Paladin 2 has a style"), FFeatureKit::HasFightingStyle(Paladin));
-    FFeatureKit::Grant(Paladin);
+    FFeatureKit::Grant(Paladin, Hero(TEXT("paladin.devotion"), 1));
     TestTrue(TEXT("Level-up grants a default"), FFeatureKit::Style(Paladin) != EFightingStyle::None);
     FString Error;
     FCombatantState Wizard = Hero(TEXT("wizard.evocation"), 3);
@@ -103,6 +103,44 @@ bool FFightingStyleTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Disadvantage imposed"), Hit.RollMode == ERollMode::Disadvantage || Before.RollMode == ERollMode::Advantage);
     TestTrue(TEXT("Knight's reaction is spent"), Battle.Find(10) && !Battle.Find(10)->bReactionAvailable);
     TestTrue(TEXT("Progress sheet names the style"), FBuildCatalog::ProgressSheet(Duelist).ContainsByPredicate([](const FString& L) { return L.StartsWith(TEXT("Fighting Style: Dueling")); }));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionSurgeTest, "Project.Expedition.Features.ActionSurge",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FActionSurgeTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    FCombatantState One = Hero(TEXT("fighter.champion"), 1);
+    TestFalse(TEXT("No Action Surge at Fighter 1"), FFeatureKit::Commands(One).Contains(ECombatCommandType::ActionSurge));
+    FCombatantState Two = Hero(TEXT("fighter.champion"), 2);
+    FFeatureKit::Refill(Two);
+    TestEqual(TEXT("One use at Fighter 2"), Two.ActionSurgeUses, 1);
+    FFeatureKit::Grant(Two, One);
+    TestEqual(TEXT("Grant does not stack past the cap"), Two.ActionSurgeUses, 1);
+    FCombatantState Spent = Two; Spent.ActionSurgeUses = 0;
+    FFeatureKit::Grant(Spent, Two);
+    TestEqual(TEXT("Grant at the same cap does not refresh a spent use"), Spent.ActionSurgeUses, 0);
+    TestTrue(TEXT("Free tag"), FCombatBattle::ActionCost(ECombatCommandType::ActionSurge, Two) == EActionCost::Free);
+    TestTrue(TEXT("Description is free"), FCombatBattle::CostTag(ECombatCommandType::ActionSurge).StartsWith(TEXT("Free")));
+    FCombatantState Over = Two; Over.ActionSurgeUses = 2;
+    TestFalse(TEXT("Uses above the cap are invalid"), FFeatureKit::Valid(Over));
+
+    Two.MainHand = static_cast<int32>(EWeapon::Longsword); Two.OffHand = -1;
+    FCombatBattle Battle; FString Error;
+    if (!TestTrue(TEXT("Start"), Battle.Start(Duel(Two, {1, 0}), 3, Error))) { AddError(Error); return true; }
+    TestTrue(TEXT("Not ready while the action is unspent"), Battle.LegalTargets(10, ECombatCommandType::ActionSurge).IsEmpty());
+    TestTrue(TEXT("Rejected before the action"), !Battle.Submit({ECombatCommandType::ActionSurge, 10, {}, 10}).bAccepted);
+    TestTrue(TEXT("Attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    TestFalse(TEXT("Action spent"), Battle.Snapshot().bActionAvailable);
+    TestTrue(TEXT("Ready after the action"), Battle.LegalTargets(10, ECombatCommandType::ActionSurge).Contains(10));
+    const FCombatResult Surge = Battle.Submit({ECombatCommandType::ActionSurge, 10, {}, 10});
+    TestTrue(TEXT("Surge accepted"), Surge.bAccepted);
+    TestTrue(TEXT("Action restored"), Battle.Snapshot().bActionAvailable);
+    TestEqual(TEXT("Use spent"), Battle.Find(10)->ActionSurgeUses, 0);
+    TestTrue(TEXT("Second attack"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    TestTrue(TEXT("No second surge"), Battle.LegalTargets(10, ECombatCommandType::ActionSurge).IsEmpty());
+    { FCombatBattle Copy; TestTrue(TEXT("Snapshot round-trips"), Copy.Restore(Battle.Snapshot(), Error)); }
     return true;
 }
 #endif

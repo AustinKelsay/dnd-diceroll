@@ -678,6 +678,17 @@ void AExpeditionHUD::DrawActionBar()
                 StdLeft + Index * (StdWidth + Gap), Y - 72, StdWidth, StdHeight, Ready(Standard[Index].Action), Mode == Standard[Index].Action, Sky)});
         }
     }
+    // Level 1-5 class features (FFeatureKit): one row above the standard actions, only the features this hero has.
+    if (const TArray<ECombatCommandType> Features = FFeatureKit::Commands(*Active); !Features.IsEmpty())
+    {
+        const float FeatWidth = 132, FeatHeight = 30, FeatLeft = W * 0.5f - (Features.Num() * (FeatWidth + Gap) - Gap) * 0.5f;
+        for (int32 Index = 0; Index < Features.Num(); ++Index)
+        {
+            const ECombatCommandType Action = Features[Index];
+            Hover.Add({Action, Button(*FString::Printf(TEXT("Feat_%d"), static_cast<int32>(Action)), FFeatureKit::CommandName(Action), FFeatureKit::Usage(Action, *Active),
+                FeatLeft + Index * (FeatWidth + Gap), Y - 130, FeatWidth, FeatHeight, Ready(Action), Mode == Action, Gold)});
+        }
+    }
     if (Active->SpellSlots > 0 || Active->SlotsByLevel.ContainsByPredicate([](int32 N) { return N > 0; }))
     {
         const FString Slot = Player->SlotChoice() ? FString::Printf(TEXT("Spell slot: level %d  (= to change)"), Player->SlotChoice()) : FString(TEXT("Spell slot: lowest open  (= to upcast)"));

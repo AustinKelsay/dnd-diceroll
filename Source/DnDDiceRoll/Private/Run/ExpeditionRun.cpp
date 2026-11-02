@@ -275,6 +275,7 @@ void FExpeditionRun::ResolveCombat()
         {
             if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious)
             {
+                const FCombatantState Prior = Unit;
                 // #79: each victory awards the XP for the next level (SRD milestone pace); max HP grows by the average hit die + CON.
                 Unit.Xp = FLevelRules::XpForLevel(Unit.Level + 1);
                 Unit.Level = FLevelRules::LevelForXp(Unit.Xp);
@@ -282,7 +283,7 @@ void FExpeditionRun::ResolveCombat()
                 Unit.MaxHP = FBuildCatalog::MaxHitPoints(Unit);
                 Unit.HP += Unit.MaxHP - Before;
                 Unit.DamageBonus = FBuildCatalog::BasicDamage(*FBuildCatalog::Find(Unit.BuildId), Unit.Level);
-                FFeatureKit::Grant(Unit);
+                FFeatureKit::Grant(Unit, Prior);
             }
         }
     }
@@ -347,6 +348,7 @@ bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FStrin
     if (!FLevelRules::CanMulticlass(Hero->AdventurerRole, Role, Scores, Error)) { return false; }
     if (Hero->Level - Hero->SecondaryLevel <= 1) { Error = TEXT("Keep at least one level in the starting class."); return false; }
     const int32 Before = Hero->MaxHP;
+    const FCombatantState Prior = *Hero;
     const bool bFirst = Hero->SecondaryLevel == 0;
     Hero->SecondaryRole = Role; ++Hero->SecondaryLevel; Hero->ChoiceLevel = Hero->Level;
     if (bFirst) // #79: the new class's level-1 feature arrives ready to use
@@ -355,7 +357,7 @@ bool FExpeditionRun::ChooseMulticlass(int32 UnitId, EAdventurerRole Role, FStrin
         if (Feature == ECombatCommandType::SecondWind) { Hero->SecondWindUses = FBuildCatalog::WindCap(*Hero); }
         else if (Feature != ECombatCommandType::Attack) { Hero->SpellSlots = FBuildCatalog::SlotCap(*Hero); }
     }
-    FFeatureKit::Grant(*Hero);
+    FFeatureKit::Grant(*Hero, Prior);
     Hero->MaxHP = FBuildCatalog::MaxHitPoints(*Hero);
     Hero->HP = FMath::Clamp(Hero->HP + Hero->MaxHP - Before, 1, Hero->MaxHP);
     return true;

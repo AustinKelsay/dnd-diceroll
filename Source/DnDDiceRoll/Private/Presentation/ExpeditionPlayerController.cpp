@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 
 void AExpeditionPlayerController::BeginPlay()
 {
@@ -254,6 +255,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("StdHide")) { StandardAction(ECombatCommandType::Hide); }
     else if (Name == TEXT("StdReady")) { StandardAction(ECombatCommandType::Ready); }
     else if (Name == TEXT("StdOffHand")) { StandardAction(ECombatCommandType::OffHandAttack); }
+    else if (Name.StartsWith(TEXT("Feat_"))) { FeatureAction(static_cast<ECombatCommandType>(FCString::Atoi(*Name.RightChop(5)))); }
     else if (Name == TEXT("Upcast")) { CycleSlot(); }
     else if (Name == TEXT("EndTurn")) { EndTurn(); }
     else if (Name == TEXT("Older")) { OlderRecords(); }
@@ -354,6 +356,12 @@ void AExpeditionPlayerController::StandardAction(ECombatCommandType Action)
     if (!AllowsGameplayInput()) { return; }
     // Help needs a foe, so it becomes the targeting mode; self actions resolve immediately.
     if (Action == ECombatCommandType::Help || Action == ECombatCommandType::OffHandAttack) { SetMode(Action); return; }
+    BattleView->Execute({Action, Actor(), {}, Actor()});
+}
+void AExpeditionPlayerController::FeatureAction(ECombatCommandType Action)
+{
+    if (!AllowsGameplayInput() || !FFeatureKit::IsFeature(Action)) { return; }
+    if (FFeatureKit::PicksTarget(Action)) { SetMode(Action); return; }
     BattleView->Execute({Action, Actor(), {}, Actor()});
 }
 void AExpeditionPlayerController::CycleSlot()

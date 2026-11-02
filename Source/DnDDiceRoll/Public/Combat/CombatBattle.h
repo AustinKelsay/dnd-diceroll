@@ -12,7 +12,9 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, BurningHands, Thunderwave, Shove, Grapple, Dash, Disengage, Dodge, Help, Hide, Ready, OffHandAttack,
+    /** Level 1-5 SRD class features (Party/FeatureKit). Append only. */
+    ActionSurge };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -126,6 +128,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 HelpedById = INDEX_NONE;
     /** SRD Fighting Style (EFightingStyle in Party/FeatureKit.h; 0 none). Fighter 1, Paladin 2, Ranger 2. */
     UPROPERTY() int32 FightingStyle = 0;
+    /** Fighter 2: Action Surge uses left (1 per short or long rest). */
+    UPROPERTY() int32 ActionSurgeUses = 0;
 };
 
 USTRUCT()
@@ -424,6 +428,10 @@ private:
     int32 StepCost(FIntPoint Cell) const;
     /** The unit when it may use a targeted action now (turn, life, action budget, role, uses); otherwise null. */
     const FCombatantState* ActionUser(int32 Id, ECombatCommandType Action) const;
+    /** Class feature commands (FFeatureKit): whether the unit may use it now, its legal targets, and its effect. */
+    bool FeatureReady(const FCombatantState& Unit, ECombatCommandType Action) const;
+    TArray<int32> FeatureTargets(const FCombatantState& Unit, ECombatCommandType Action) const;
+    FString ResolveFeature(const FCombatCommand& Command, FCombatResult& Result);
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
     bool SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);

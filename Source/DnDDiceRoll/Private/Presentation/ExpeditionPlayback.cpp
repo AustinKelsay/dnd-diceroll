@@ -1,5 +1,6 @@
 #include "Presentation/ExpeditionPlayback.h"
 #include "Party/BuildCatalog.h"
+#include "Party/FeatureKit.h"
 
 namespace
 {
@@ -84,7 +85,7 @@ FString ActionName(ECombatCommandType Action)
     case ECombatCommandType::Hide: return TEXT("Hide");
     case ECombatCommandType::Ready: return TEXT("Ready");
     case ECombatCommandType::OffHandAttack: return TEXT("Off-hand Attack");
-    default: return TEXT("Attack");
+    default: return FFeatureKit::IsFeature(Action) ? FFeatureKit::CommandName(Action) : TEXT("Attack");
     }
 }
 const FCombatantState* FindUnit(const FCombatSnapshot& Snapshot, int32 Id)

@@ -384,6 +384,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::Hide: return TEXT("HIDE | Action (Rogue 2+: bonus) | self | Stealth vs best enemy passive Perception; hidden attacks with advantage");
     case ECombatCommandType::Ready: return TEXT("READY | Action | self | reaction: attack the first foe that ends a move in your range");
     case ECombatCommandType::OffHandAttack: return TEXT("OFF-HAND | Bonus | adjacent foe | after the Attack action with two light weapons; no ability bonus to damage");
+    case ECombatCommandType::ActionSurge: return TEXT("ACTION SURGE | Free + 1 use | self | after spending your action, take one more action this turn; 1 use per rest");
     default:
         return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
     }
@@ -412,7 +413,7 @@ FString FCombatBattle::UsageTag(ECombatCommandType Action, const FCombatantState
     case ECombatCommandType::PrecisionStrike:
         return FString::Printf(TEXT("+d8 to hit, %d dice left"), Unit.ManeuverUses);
     default:
-        return FString();
+        return FFeatureKit::IsFeature(Action) ? FFeatureKit::Usage(Action, Unit) : FString();
     }
 }
 
@@ -432,7 +433,7 @@ EActionCost FCombatBattle::ActionCost(ECombatCommandType Action, const FCombatan
     case ECombatCommandType::Dash: return FStandardActionRules::Cost(EStandardAction::Dash, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
     case ECombatCommandType::Disengage: return FStandardActionRules::Cost(EStandardAction::Disengage, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
     case ECombatCommandType::Hide: return FStandardActionRules::Cost(EStandardAction::Hide, Unit.AdventurerRole, Unit.Level, !bActionAvailable);
-    default: return EActionCost::Action;
+    default: return FFeatureKit::IsFeature(Action) ? FFeatureKit::Cost(Action) : EActionCost::Action;
     }
 }
 
@@ -644,6 +645,7 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     // Extra Attack (#61): after the Attack action, banked attacks still allow Attack and Precision Strike.
     const bool bWeaponAttack = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike;
     if (IsIncapacitated(*Unit)) { return nullptr; }
+    if (FFeatureKit::IsFeature(Action)) { return FeatureReady(*Unit, Action) ? Unit : nullptr; }
     if (Action == ECombatCommandType::OffHandAttack)
     {
         const FWeaponProfile* Main = MainWeapon(*Unit);
@@ -730,6 +732,7 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
     TArray<int32> Result;
     const FCombatantState* Unit = Find(Id);
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id || !Unit || Unit->Life != ECombatLife::Conscious) { return Result; }
+    if (FFeatureKit::IsFeature(Action)) { return ActionUser(Id, Action) ? FeatureTargets(*Unit, Action) : Result; }
     if (Action == ECombatCommandType::Special1 || Action == ECombatCommandType::Special2 || (Action == ECombatCommandType::CureWounds && !Unit->BuildId.IsEmpty()))
     {
         for (const auto& A : FBuildCatalog::Abilities(*Unit))
@@ -1415,6 +1418,11 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         if (Result.Path.IsEmpty()) { Result.Path.Add(Moving->Cell); }
         Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *MoverName, Steps, State.MovementLeft) + Strikes;
     }
+    else if (FFeatureKit::IsFeature(Command.Type))
+    {
+        if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Class feature unavailable: uses, action budget, timing or target.")); }
+        Result.Feedback = ResolveFeature(Command, Result);
+    }
     else if (Command.Type == ECombatCommandType::Special1 || Command.Type == ECombatCommandType::Special2 || (Command.Type == ECombatCommandType::CureWounds && !Actor->BuildId.IsEmpty()))
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("Special unavailable: budget, stance, resource, target, range or sight.")); }
@@ -1978,6 +1986,35 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         })())) { return Reject(); }
     *this = MoveTemp(Candidate);
     Error.Reset(); return true;
+}
+
+bool FCombatBattle::FeatureReady(const FCombatantState& Unit, ECombatCommandType Action) const
+{
+    if (!FFeatureKit::Commands(Unit).Contains(Action)) { return false; }
+    switch (Action)
+    {
+    case ECombatCommandType::ActionSurge: return Unit.ActionSurgeUses > 0 && !State.bActionAvailable && State.AttacksRemaining == 0;
+    default: return false;
+    }
+}
+
+TArray<int32> FCombatBattle::FeatureTargets(const FCombatantState& Unit, ECombatCommandType Action) const
+{
+    return {Unit.Id};
+}
+
+FString FCombatBattle::ResolveFeature(const FCombatCommand& Command, FCombatResult& Result)
+{
+    FCombatantState* User = MutableFind(Command.ActorId);
+    switch (Command.Type)
+    {
+    case ECombatCommandType::ActionSurge:
+        --User->ActionSurgeUses;
+        State.bActionAvailable = true;
+        State.bAttackActionTaken = false;
+        return FString::Printf(TEXT("%s uses Action Surge: one more action this turn (%d left)."), *User->Name, User->ActionSurgeUses);
+    default: return FString();
+    }
 }
 
 TArray<int32> FCombatBattle::OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const
