@@ -206,3 +206,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #67: death saves (rules only)
 
 `FDeathSaveRules`: a death save succeeds on 10+, a natural 1 counts as two failures and a natural 20 brings the creature back with 1 hit point. Three successes stabilize, three failures kill. Damage at 0 HP adds a failure (two on a critical), and damage of at least the hit point maximum kills outright, as does massive damage on the way down. Temporary hit points absorb damage first and don't stack. Medicine DC 10 stabilizes. Tallies on downed adventurers and temporary hit points in a battle need battle state (#39); the current Downed/Dead flow is unchanged.
+
+## Issue #62: two-weapon fighting (rules only)
+
+`FTwoWeaponRules`: after taking the Attack action with a light melee weapon, a creature holding a second light melee weapon can spend its bonus action on an off-hand attack. Off-hand damage adds no positive ability modifier unless it has the Two-Weapon Fighting style (negative modifiers still apply). Adding the off-hand command, bonus-action tracking and fighting styles to battles waits for battle wiring and #39.
