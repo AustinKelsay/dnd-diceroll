@@ -41,6 +41,7 @@ private:
     void Panel(float X, float Y, float Width, float Height, FLinearColor Accent = FLinearColor(0.85f, 0.7f, 0.4f), float Opacity = 0.9f, bool bBlock = true);
     FVector2D Measure(const FString& Text, float Scale) const;
     void Text(const FString& Value, float X, float Y, FLinearColor Color = FLinearColor::White, float Scale = 1.0f, EAlign Align = EAlign::Left, float MaxWidth = 0.0f);
+    TArray<FString> Wrap(const FString& Value, float Width, float Scale) const;
     void Polygon(FVector2D Center, float Radius, int32 Sides, float Rotation, FLinearColor Color, float Squash = 1.0f);
     void Circle(FVector2D Center, float Radius, FLinearColor Color) { Polygon(Center, Radius, 28, 0.0f, Color); }
     void Line(FVector2D A, FVector2D B, FLinearColor Color, float Thickness = 1.0f);

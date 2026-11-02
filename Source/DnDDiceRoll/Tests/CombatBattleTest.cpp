@@ -312,6 +312,9 @@ bool FSubclassForecastTest::RunTest(const FString& Parameters)
     Layout.BlockedCells.Reset(); Layout.Combatants.SetNum(2);
     auto& Fighter = Layout.Combatants[0]; auto& Enemy = Layout.Combatants[1];
     Fighter.FighterSubclass = EFighterSubclass::Champion; Fighter.InitiativeBonus = 30;
+    // This fixture repurposes the tutorial Rogue as a synthetic AC target.
+    // Remove its authored party identity/resource when changing its side and role.
+    Enemy.BuildId.Reset(); Enemy.ClassId.Reset(); Enemy.SubclassId.Reset(); Enemy.KitUses = 0;
     Enemy.Side = ECombatSide::Enemy; Enemy.AdventurerRole = EAdventurerRole::None;
     Enemy.Cell = {2,1}; Enemy.ArmorClass = 40;
     FCombatBattle Battle;

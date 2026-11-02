@@ -165,6 +165,14 @@ bool FRescueTest::RunTest(const FString& Parameters)
     for (auto Action : {ECombatCommandType::Rescue,ECombatCommandType::CureWounds,ECombatCommandType::Potion})
     {
         FCombatBattle Battle; Battle.Start(Encounter,42,Error);
+        if (Action == ECombatCommandType::CureWounds)
+        {
+            const auto Before=Battle.Snapshot();
+            TestFalse(TEXT("Cure cannot heal a downed ally"),Battle.LegalTargets(1,Action).Contains(2));
+            TestFalse(TEXT("Cure leaves rescue to shared Rescue/potion"),Battle.Submit({Action,1,{},2}).bAccepted);
+            TestTrue(TEXT("Rejected downed healing preserves full state and RNG"),Same(Before,Battle.Snapshot()));
+            continue;
+        }
         TestTrue(TEXT("Downed ally is a legal adjacent target"),Battle.LegalTargets(1,Action).Contains(2));
         const auto Result=Battle.Submit({Action,1,{},2});
         TestTrue(TEXT("Rescued with positive HP"),Result.bAccepted && Battle.Find(2)->HP>0 && Battle.Find(2)->Life==ECombatLife::Conscious);

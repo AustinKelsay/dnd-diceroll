@@ -7,6 +7,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionPlayerController.h"
 #include "ExpeditionTestSupport.h"
+#include "Party/BuildCatalog.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverlayInputTest, "Project.Expedition.Presentation.OverlaysBlockGameplayShortcuts",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -358,6 +359,127 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
     }
     World->DestroyWorld(false);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAbilityFeedbackTest, "Project.Expedition.Presentation.AbilityFeedback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FAbilityFeedbackTest::RunTest(const FString& Parameters)
+{
+    FActionForecast Heal; Heal.bHealing = true; Heal.MinAmount = 2; Heal.MaxAmount = 11; Heal.Formula = TEXT("d10+1");
+    TestEqual(TEXT("Ordinary healing includes intermediate dice results"), ExpeditionStyle::ForecastAmount(Heal), FString(TEXT("Heals 2-11  (d10+1)")));
+    FActionForecast Attack; Attack.MinAmount = 4; Attack.MaxAmount = 9; Attack.Formula = TEXT("d6+3");
+    TestEqual(TEXT("Ordinary weapon damage is a range"), ExpeditionStyle::ForecastAmount(Attack), FString(TEXT("Deals 4-9  (d6+3)")));
+    FActionForecast Surge; Surge.MinAmount = 4; Surge.MaxAmount = 8; Surge.bDiscreteAmounts = true; Surge.Formula = TEXT("Wild Bolt");
+    TestEqual(TEXT("Wild Bolt has exactly two outcomes"), ExpeditionStyle::ForecastAmount(Surge), FString(TEXT("Deals 4 or 8  (Wild Bolt)")));
+    FCombatantState Totem; FBuildCatalog::Create(TEXT("barbarian.totem-warrior"), 1, TEXT("Protector"), Totem);
+    TestTrue(TEXT("Rage overhead marker is friendly"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special1, &Totem));
+    TestTrue(TEXT("Shelter overhead marker is friendly"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special2, &Totem));
+    FCombatantState Beast; FBuildCatalog::Create(TEXT("barbarian.beast"), 1, TEXT("Claw"), Beast);
+    TestFalse(TEXT("Long Claw overhead marker is hostile"), ExpeditionStyle::IsFriendlyAction(ECombatCommandType::Special2, &Beast));
+    FCombatBattle Battle; FString Error; Battle.Start(FCombatBattle::TutorialEncounter(), 42, Error);
+    const auto Before = Battle.Snapshot(); auto After = Before; After.Encounter.Combatants[0].HP -= 2;
+    FCombatResult Hit; Hit.bAccepted = true; Hit.bHit = true; Hit.Type = ECombatCommandType::Attack;
+    Hit.ActorId = 5; Hit.TargetId = 1; Hit.NaturalRoll = 12; Hit.AttackTotal = 17; Hit.Damage = 2;
+    Hit.EffectDice = {{6, 5}}; Hit.DamagePrevented = 3;
+    FExpeditionPlayback Playback; Playback.Reset(Before); Playback.Enqueue({Hit}, After);
+    for (int32 Frame = 0; Frame < 200 && Playback.IsBusy(); ++Frame) { Playback.Tick(0.01f); }
+    TestTrue(TEXT("Damage equation includes committed protection"), Playback.Tray().Detail.Contains(TEXT("5 - 3 protection = 2")));
+    TestEqual(TEXT("Protected hit playback converges"), Playback.Unit(1)->HP, After.Encounter.Combatants[0].HP);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOrderedSpecialPlaybackTest, "Project.Expedition.Presentation.OrderedSpecialEffects",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FOrderedSpecialPlaybackTest::RunTest(const FString& Parameters)
+{
+    FCombatBattle Battle; FString Error; Battle.Start(FCombatBattle::TutorialEncounter(), 42, Error);
+    const auto Before = Battle.Snapshot(); auto After = Before;
+    After.Encounter.Combatants[0].HP -= 4;
+    FCombatResult R; R.bAccepted = true; R.Type = ECombatCommandType::Special2; R.ActorId = 1; R.TargetId = 1; R.SurgeOutcome = 1;
+    R.Effects = {{1, EAbilityEffect::Rage, 2, {1,1}}, {1, EAbilityEffect::Protect, 3, {1,1}}, {1, EAbilityEffect::Surge, 4, {1,1}}};
+    for (float Speed : {1.0f, 3.0f})
+    {
+        FExpeditionPlayback Playback; Playback.Reset(Before); Playback.Speed = Speed; Playback.Enqueue({R}, After);
+        Playback.Tick(0.01f);
+        TestTrue(TEXT("First committed effect emits stance duration"), Playback.Texts().ContainsByPredicate([](const auto& T) { return T.Text.Contains(TEXT("Rage: 2")); }));
+        bool Protection = false, Damage = false;
+        for (int32 Frame = 0; Frame < 200 && Playback.IsBusy(); ++Frame)
+        {
+            Playback.Tick(0.01f);
+            Protection |= Playback.Texts().ContainsByPredicate([](const auto& T) { return T.Text.Contains(TEXT("Shelter: -3")); });
+            Damage |= Playback.Texts().ContainsByPredicate([](const auto& T) { return T.Text == TEXT("-4"); });
+        }
+        TestTrue(TEXT("Protection label uses committed mitigation"), Protection);
+        TestTrue(TEXT("Damage label uses committed HP loss"), Damage);
+        TestFalse(TEXT("Ordinary and accelerated playback complete"), Playback.IsBusy());
+        TestEqual(TEXT("Ordinary playback converges"), Playback.Unit(1)->HP, After.Encounter.Combatants[0].HP);
+        Playback.Reset(Before); Playback.Enqueue({R}, After); Playback.Tick(0.01f);
+        FCombatResult Rejected; Playback.Enqueue({Rejected}, Before);
+        TestTrue(TEXT("Rejected enqueue preserves pending playback"), Playback.IsBusy());
+        Playback.Finish();
+        TestEqual(TEXT("Finish converges HP without applying legacy damage twice"), Playback.Unit(1)->HP, After.Encounter.Combatants[0].HP);
+    }
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPartyBuilderInputTest, "Project.Expedition.Presentation.FourSlotBuilder",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
+{
+    const auto Values = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    auto* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/PartyBuilder"), FGuid::NewGuid().ToString());
+    auto* Player = World->SpawnActor<AExpeditionPlayerController>(); Player->DispatchBeginPlay();
+    auto* View = Player->GetBattleView(); View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json"))); View->DispatchBeginPlay();
+    TSet<FString> ReachableBuilds;
+    Player->HandleButton(TEXT("Party0"));
+    for (int32 Class = 0; Class < 13; ++Class)
+    {
+        for (int32 Kit = 0; Kit < 10; ++Kit)
+        { ReachableBuilds.Add(Player->NextParty()[0].BuildId); Player->HandleButton(TEXT("BuildNext")); }
+        Player->HandleButton(TEXT("ClassNext"));
+    }
+    TestEqual(TEXT("Builder exposes all seventy authored kits through bounded class/kit controls"), ReachableBuilds.Num(), 70);
+    TestTrue(TEXT("Thief is reachable"), ReachableBuilds.Contains(TEXT("rogue.thief")));
+    TestTrue(TEXT("Watchers is reachable"), ReachableBuilds.Contains(TEXT("paladin.watchers")));
+    Player->HandleButton(TEXT("Preset"));
+    for (int32 Slot = 0; Slot < 4; ++Slot)
+    {
+        Player->HandleButton(FName(*FString::Printf(TEXT("Party%d"), Slot)));
+        for (int32 N = 0; N < 13 && FBuildCatalog::Find(Player->NextParty()[Slot].BuildId)->Profile.ClassId != TEXT("barbarian"); ++N) { Player->HandleButton(TEXT("ClassNext")); }
+        TestEqual(TEXT("Every slot independently selects Barbarian"), Player->NextParty()[Slot].BuildId, FString(TEXT("barbarian.berserker")));
+    }
+    Player->HandleButton(TEXT("Help")); Player->HandleButton(TEXT("BuildNext")); Player->HandleButton(TEXT("Preset")); Player->HandleButton(TEXT("New"));
+    TestFalse(TEXT("Help gates hidden New"), View->HasRun());
+    TestEqual(TEXT("Help gates builder edits"), Player->NextParty()[3].BuildId, FString(TEXT("barbarian.berserker")));
+    Player->HandleButton(TEXT("Close")); Player->HandleButton(TEXT("BuildNext"));
+    TestEqual(TEXT("Compatible kit cycling"), Player->NextParty()[3].BuildId, FString(TEXT("barbarian.totem-warrior")));
+    Player->HandleButton(TEXT("New"));
+    for (int32 I = 0; I < 4; ++I) { TestEqual(TEXT("Exact chosen build reaches session"), View->Progress().Party[I].BuildId, Player->NextParty()[I].BuildId); TestEqual(TEXT("Independent slot identity"), View->Progress().Party[I].Id, I + 1); }
+    Player->HandleButton(TEXT("Preset")); Player->HandleButton(TEXT("BuildNext"));
+    TestEqual(TEXT("Active run refuses respec"), Player->NextParty()[3].BuildId, FString(TEXT("barbarian.totem-warrior")));
+    Player->HandleButton(TEXT("Resume"));
+    TestEqual(TEXT("Resume keeps saved party"), View->Rules().Find(4)->BuildId, FString(TEXT("barbarian.totem-warrior")));
+    Player->HandleButton(TEXT("Route0"));
+    for (int32 Turn = 0; Turn < 20; ++Turn)
+    {
+        const auto* Active = View->Rules().Find(View->Rules().ActiveId());
+        if (Active && Active->Side == ECombatSide::Party) { break; }
+        View->Tick(1.0f); View->SkipPresentation();
+    }
+    Player->HandleButton(TEXT("ModeRole"));
+    TestEqual(TEXT("F selects catalog Rage"), Player->Action(), ECombatCommandType::Special1);
+    const auto Actor = Player->Actor();
+    TestTrue(TEXT("Rage has legal self target"), View->Rules().LegalTargets(Actor, Player->Action()).Contains(Actor));
+    const auto Buff = View->Rules().Forecast(Actor, Player->Action(), Actor);
+    TestTrue(TEXT("Buff preview describes native effect"), Buff.bValid && Buff.Formula.Contains(TEXT("+2 basic damage")) && Buff.MaxAmount == 0 && !Buff.bHealing);
+    Player->HandleButton(TEXT("Maneuver"));
+    TestEqual(TEXT("M selects actual second special"), Player->Action(), ECombatCommandType::Special2);
+    Player->HandleButton(TEXT("Records")); Player->HandleButton(TEXT("ModeRole"));
+    TestEqual(TEXT("Records gates ability shortcuts"), Player->Action(), ECombatCommandType::Special2);
+    Player->HandleButton(TEXT("ClassNext"));
+    TestEqual(TEXT("Records gates builder navigation"), Player->NextParty()[3].BuildId, FString(TEXT("barbarian.totem-warrior")));
+    World->DestroyWorld(false); IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
 #endif

@@ -1,4 +1,5 @@
 #include "Persistence/ExpeditionSave.h"
+#include "Party/BuildCatalog.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
@@ -80,11 +81,10 @@ bool ImportValue(FProperty* Property, const TSharedPtr<FJsonValue>& Json, void* 
 }
 bool SameEnding(const FExpeditionEnding& A, const FExpeditionEnding& B)
 { return FExpeditionEnding::StaticStruct()->CompareScriptStruct(&A, &B, 0); }
-FString EndingSummary(EExpeditionPhase Outcome, int32 Victories, const TArray<int32>& Survivors)
+FString EndingSummary(EExpeditionPhase Outcome, int32 Victories, const TArray<FString>& SurvivorNames)
 {
     FString Names;
-    const auto Party = FCombatBattle::TutorialEncounter();
-    for (int32 Id : Survivors) { if (!Names.IsEmpty()) { Names += TEXT(", "); } Names += Party.Combatants[Id - 1].Name; }
+    for (const auto& Name : SurvivorNames) { if (!Names.IsEmpty()) { Names += TEXT(", "); } Names += Name; }
     return FString::Printf(TEXT("%s | %d/5 victories | Survivors: %s"), Outcome == EExpeditionPhase::Victory ? TEXT("Waystone recovered") : TEXT("Party lost"), Victories, Names.IsEmpty() ? TEXT("none") : *Names);
 }
 }
@@ -97,8 +97,8 @@ FExpeditionEnding FExpeditionSave::Ending(const FExpeditionRun& Run)
     Record.RunId = Run.Progress().RunId; Record.Seed = Run.Progress().Seed;
     Record.Outcome = Run.Progress().Phase; Record.Victories = Run.Progress().EncountersCompleted;
     for (const auto& Unit : Run.Battle().Snapshot().Encounter.Combatants)
-    { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Record.Survivors.Add(Unit.Id); } }
-    Record.Summary = EndingSummary(Record.Outcome, Record.Victories, Record.Survivors);
+    { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Record.Survivors.Add(Unit.Id); Record.SurvivorNames.Add(Unit.Name); Record.SurvivorBuilds.Add(Unit.BuildId); } }
+    Record.Summary = EndingSummary(Record.Outcome, Record.Victories, Record.SurvivorNames);
     return Record;
 }
 
@@ -117,9 +117,12 @@ bool FExpeditionSave::Validate(const FExpeditionSaveData& Data, FString& Error)
             (Record.Outcome != EExpeditionPhase::Victory && Record.Outcome != EExpeditionPhase::Defeat) ||
             Record.Victories < 0 || Record.Victories > 5 ||
             (Record.Outcome == EExpeditionPhase::Victory ? Record.Victories != 5 || Record.Survivors.IsEmpty() : Record.Victories > 4 || !Record.Survivors.IsEmpty())) { return Reject(); }
+        if (Record.SurvivorNames.Num() != Record.Survivors.Num() || Record.SurvivorBuilds.Num() != Record.Survivors.Num()) { return Reject(); }
+        for (int32 I = 0; I < Record.Survivors.Num(); ++I)
+        { if (Record.SurvivorNames[I].IsEmpty() || Record.SurvivorNames[I].Len() > 80 || !FBuildCatalog::Find(Record.SurvivorBuilds[I])) { return Reject(); } }
         TSet<int32> Survivors;
         for (int32 Id : Record.Survivors) { if (Id < 1 || Id > 4 || Survivors.Contains(Id)) { return Reject(); } Survivors.Add(Id); }
-        if (Record.Summary != EndingSummary(Record.Outcome, Record.Victories, Record.Survivors)) { return Reject(); }
+        if (Record.Summary != EndingSummary(Record.Outcome, Record.Victories, Record.SurvivorNames)) { return Reject(); }
         Ids.Add(Record.RunId);
     }
     const auto* Existing = Data.Records.FindByPredicate([&](const auto& Record) { return Record.RunId == Data.Current.Progress.RunId; });
@@ -221,13 +224,20 @@ bool FExpeditionSession::Commit(FExpeditionRun&& Candidate, FString& Error)
 
 bool FExpeditionSession::NewRun(int32 Seed, FString& Error, const FString& Identity, FString* PreservedCheckpoint, EFighterSubclass Subclass)
 {
+    FExpeditionRun Selected;
+    if (!Selected.NewRun(Seed, Error, Identity, Subclass)) { return false; }
+    return NewRun(Seed, Selected.Progress().Party, Error, Selected.Progress().RunId, PreservedCheckpoint);
+}
+
+bool FExpeditionSession::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity, FString* PreservedCheckpoint)
+{
     if (PreservedCheckpoint) { PreservedCheckpoint->Reset(); }
     auto IsEnding = [](EExpeditionPhase Phase)
     { return Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat; };
     if (bHasRun && !IsEnding(Current.Progress().Phase))
     { Error = TEXT("Finish this expedition before starting a new run."); return false; }
     FExpeditionRun Candidate;
-    if (!Candidate.NewRun(Seed, Error, Identity, Subclass)) { return false; }
+    if (!Candidate.NewRun(Seed, Party, Error, Identity)) { return false; }
     FString Preserved;
     auto& Files = FPlatformFileManager::Get().GetPlatformFile();
     if (!bHasRun && Files.FileExists(*SavePath))
