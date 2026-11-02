@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Rules/SpellRules.h"
 
-/** SRD 5.1 cantrips: at will, damage dice grow at character levels 5, 11 and 17. */
+/** SRD 5.2.1 cantrips: at will, damage dice grow at character levels 5, 11 and 17. */
 struct DNDDICEROLL_API FCantripRules
 {
     static bool IsCantrip(ESpell Spell);

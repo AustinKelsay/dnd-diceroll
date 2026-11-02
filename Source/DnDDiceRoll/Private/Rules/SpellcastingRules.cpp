@@ -13,7 +13,7 @@ bool FSpellcastingRules::IsSpellcaster(EAdventurerRole Role)
 
 EAbility FSpellcastingRules::SpellcastingAbility(EAdventurerRole Role)
 {
-    // SRD 5.1 spellcasting abilities per class.
+    // SRD 5.2.1 spellcasting abilities per class.
     switch (Role)
     {
     case EAdventurerRole::Cleric: case EAdventurerRole::Druid: case EAdventurerRole::Ranger: return EAbility::Wisdom;

@@ -14,7 +14,7 @@ struct DNDDICEROLL_API FSleightOutcome
     ESleightResult Result = ESleightResult::Fumbled;
 };
 
-/** SRD 5.1 Sleight of Hand (DEX) against a target's Perception. */
+/** SRD 5.2.1 Sleight of Hand (DEX) against a target's Perception. */
 struct DNDDICEROLL_API FSleightRules
 {
     /** An unaware target uses passive Perception as the DC; an alert one rolls Perception (contest, ties to the target). */

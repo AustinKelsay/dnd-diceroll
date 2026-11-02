@@ -18,7 +18,7 @@ struct DNDDICEROLL_API FSpellDelivery
     bool bHalfOnSave = false;
 };
 
-/** SRD 5.1 Spellcasting Ability, spell attacks and saving-throw spells. Read-only, no RNG. */
+/** SRD 5.2.1 Spellcasting Ability, spell attacks and saving-throw spells. Read-only, no RNG. */
 struct DNDDICEROLL_API FSpellcastingRules
 {
     static bool IsSpellcaster(EAdventurerRole Role);

@@ -7,7 +7,7 @@ enum class EAdventurerRole : uint8;
 
 enum class EArmorCategory : uint8 { None, Light, Medium, Heavy, Shield };
 
-/** SRD 5.1 armor and the shield. */
+/** SRD 5.2.1 armor and the shield. */
 enum class EArmor : uint8
 {
     None, Padded, Leather, StuddedLeather, Hide, ChainShirt, ScaleMail, Breastplate, HalfPlate,
@@ -25,7 +25,7 @@ struct DNDDICEROLL_API FArmorProfile
     bool bStealthDisadvantage = false;
 };
 
-/** What an unproficient wearer suffers (SRD 5.1 Armor Proficiency). */
+/** What an unproficient wearer suffers (SRD 5.2.1 Armor Proficiency). */
 struct DNDDICEROLL_API FArmorPenalties
 {
     bool bStrDexDisadvantage = false;

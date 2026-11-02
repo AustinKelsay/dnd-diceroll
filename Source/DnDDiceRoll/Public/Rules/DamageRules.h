@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-/** SRD 5.1 damage types. */
+/** SRD 5.2.1 damage types. */
 enum class EDamageType : uint8 { Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder };
 
 /** How a target's defenses changed one damage instance. */

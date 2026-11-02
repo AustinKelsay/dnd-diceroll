@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-/** SRD 5.1 area-of-effect shapes. */
+/** SRD 5.2.1 area-of-effect shapes. */
 enum class EAreaShape : uint8 { Cone, Cube, Cylinder, Line, Sphere };
 
 /** One area on the 5-foot grid. Origin is a cell for cone/cube/line and a grid intersection for sphere/cylinder. */

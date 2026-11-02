@@ -4,7 +4,7 @@
 #include "Rules/AbilityRules.h"
 #include "Rules/DamageRules.h"
 
-/** SRD 5.1 weapon properties as bits. */
+/** SRD 5.2.1 weapon properties as bits. */
 namespace EWeaponProperty
 {
     enum Type : uint16
@@ -14,7 +14,7 @@ namespace EWeaponProperty
     };
 }
 
-/** SRD 5.1 weapons (Greatclub, Light hammer, Sickle, Flail, Morningstar, Lance, Maul, Pike, Trident, War pick, Blowgun, Net, Sling omitted for now). */
+/** SRD weapons (Greatclub, Light hammer, Sickle, Flail, Morningstar, Lance, Maul, Pike, Trident, War pick, Blowgun, Net, Sling omitted for now). */
 enum class EWeapon : uint8
 {
     Club, Dagger, Handaxe, Javelin, Mace, Quarterstaff, Spear, LightCrossbow, Dart, Shortbow,

@@ -1730,7 +1730,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5RangerInitiativeTest, "Project.Expediti
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSchema5RangerInitiativeTest::RunTest(const FString& Parameters)
 {
-    // DEX 16 => +3 initiative (SRD 5.1); the profile used to say +2.
+    // DEX 16 => +3 initiative (SRD 5.2.1); the profile used to say +2.
     for (const TCHAR* Id : {TEXT("ranger.hunter"), TEXT("ranger.beast-master"), TEXT("ranger.fey-wanderer"), TEXT("ranger.swarmkeeper")})
     {
         FCombatantState Ranger;
