@@ -2,6 +2,8 @@
 
 This is the selected reviewer report for issues #37 and #39–#45. Bulk machine reports, logs, crash reports and original captures remain ignored under `.local/`, `Saved/` and `Builds/`; their exact paths are in the [ledger](ledger.md). This report supplies the reproducible scenarios and observed outcomes without requiring access to the author's local filesystem. Integration and maintainer approval remain separate.
 
+This report describes pre-integration acceptance. [The later integration record](16-staging-integration.md) supersedes its pending-approval/integration statements without changing the execution results or limitations below.
+
 ## Verified source and execution
 
 Final runtime source `b356fb12b912c2b95d4bb6f2cd9351dd08befdf3`, merged with staging `9d133cd7ef0ec727a292aa9c30daf7ddd3aaa913`. Sorted Source paths and bytes SHA256: `45afb663bff0be446b541d660504d71d67f758fd03358bbd748eccf5d5260ebd`. Apple Silicon macOS26.5.2, Python3.15, Xcode26.6, pinned UE5.8.4/CL58902052. Later delivery changes are documentation only.
