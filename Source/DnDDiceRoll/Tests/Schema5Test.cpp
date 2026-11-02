@@ -1497,4 +1497,28 @@ bool FSchema5InspirationTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some natural 20 grants inspiration"), bGranted);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5DarknessTest, "Project.Expedition.Schema5.DarknessInBattle",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5DarknessTest::RunTest(const FString& Parameters)
+{
+    FCombatEncounter Encounter = Schema5Test::Pair({1, 0});
+    Encounter.Combatants[1].Role = TEXT("Goblin");
+    Encounter.Combatants[1].HP = Encounter.Combatants[1].MaxHP = 200;
+    FString Error;
+    FCombatBattle Lit;
+    TestTrue(TEXT("Starts"), Lit.Start(Encounter, 7, Error));
+    TestEqual(TEXT("Off by default: lit field"), Lit.Submit({ECombatCommandType::Attack, 10, {}, 20}).RollMode, ERollMode::Normal);
+    Encounter.bDarkness = true;
+    FCombatBattle Dark;
+    TestTrue(TEXT("Starts dark"), Dark.Start(Encounter, 7, Error));
+    const FCombatResult R = Dark.Submit({ECombatCommandType::Attack, 10, {}, 20});
+    TestEqual(TEXT("Blind human vs darkvision goblin: disadvantage"), R.RollMode, ERollMode::Disadvantage);
+    Encounter.Combatants[1].Role = TEXT("Raider");
+    FCombatBattle BothBlind;
+    TestTrue(TEXT("Starts blind"), BothBlind.Start(Encounter, 7, Error));
+    const FCombatResult B = BothBlind.Submit({ECombatCommandType::Attack, 10, {}, 20});
+    TestEqual(TEXT("Both blind: cancels"), B.RollMode, ERollMode::Normal);
+    TestEqual(TEXT("Both sources listed"), B.RollModeSources.Num(), 2);
+    return true;
+}
 #endif

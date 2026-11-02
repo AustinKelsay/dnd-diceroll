@@ -19,6 +19,7 @@
 #include "Rules/SuperiorityRules.h"
 #include "Rules/StealthRules.h"
 #include "Rules/InspirationRules.h"
+#include "Rules/LightRules.h"
 
 namespace
 {
@@ -1086,6 +1087,15 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
         FWeaponRules::Band(*Weapon, GridDistance(Actor->Cell, Target->Cell), false) == ERangeBand::Long)
     { Mode.Disadvantage.Add(TEXT("long range")); }
     if (ArmorPenaltiesOf(*this, *Actor).bStrDexDisadvantage) { Mode.Disadvantage.Add(TEXT("unproficient armor")); }
+    if (State.Encounter.bDarkness)
+    {
+        // #88: darkness everywhere; darkvision within range turns it into dim light, which still lets a creature see.
+        const int32 Feet = GridDistance(Actor->Cell, Target->Cell) * 5;
+        const bool bActorSees = FLightRules::CanSee(FLightRules::PerceivedLight(ELight::Darkness, FLightRules::DarkvisionFeet(Actor->Role), Feet));
+        const bool bTargetSees = FLightRules::CanSee(FLightRules::PerceivedLight(ELight::Darkness, FLightRules::DarkvisionFeet(Target->Role), Feet));
+        if (!bActorSees) { Mode.Disadvantage.Add(TEXT("can't see the target in darkness")); }
+        if (!bTargetSees) { Mode.Advantage.Add(TEXT("unseen in darkness")); }
+    }
     for (const FCombatCondition& Condition : Actor->Conditions)
     {
         const FCombatantState* Source = Find(Condition.SourceId);

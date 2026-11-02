@@ -132,6 +132,8 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() bool bPartyAmbush = false;
     /** Off by default: a natural 20 grants inspiration, spent for advantage on the holder's next attack. */
     UPROPERTY() bool bInspiration = false;
+    /** Off by default: the whole field is dark; only darkvision (by role) sees, which sets attack advantage/disadvantage. */
+    UPROPERTY() bool bDarkness = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
