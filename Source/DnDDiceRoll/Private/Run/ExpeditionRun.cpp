@@ -6,6 +6,7 @@
 #include "Party/BuildCatalog.h"
 #include "Rules/ArmorRules.h"
 #include "Rules/LockTrapRules.h"
+#include "Rules/SocialRules.h"
 #include "Rules/ProficiencyRules.h"
 
 namespace
@@ -296,6 +297,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     switch (Activity)
     {
     case ECampActivity::PickLock: return TEXT("Pick the strongbox");
+    case ECampActivity::Parley: return TEXT("Parley with traders");
     default: return TEXT("Unknown");
     }
 }
@@ -325,6 +327,18 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         if (bOpen) { ++Record.BonusPotions; }
         Outcome = FString::Printf(TEXT("%s %s the strongbox (%d vs DC %d)%s"), *Hero->Name, bOpen ? TEXT("picks") : TEXT("fails to pick"), Total,
             FLockTrapRules::LockDc(ELockTier::Good), bOpen ? TEXT(": +1 healing potion in the loot.") : TEXT("."));
+        break;
+    }
+    case ECampActivity::Parley:
+    {
+        // #82: persuade wary (indifferent) traders; winning them over (Indifferent -> Friendly, the rules' Information outcome) earns a gift potion.
+        const int32 Total = D20 + Sheet.SkillBonus(ESkill::Persuasion);
+        const ENpcAttitude After = FSocialRules::AfterInfluence(ENpcAttitude::Indifferent, Total);
+        const ESocialOutcome Result = FSocialRules::OutcomeFor(ENpcAttitude::Indifferent, After);
+        const bool bWon = After == ENpcAttitude::Friendly;
+        if (bWon) { ++Record.BonusPotions; }
+        Outcome = FString::Printf(TEXT("%s parleys with traders (%d vs DC %d): %s"), *Hero->Name, Total, FSocialRules::InfluenceDc(ENpcAttitude::Indifferent),
+            bWon ? TEXT("won over, they share road news and gift a healing potion.") : Result == ESocialOutcome::None ? TEXT("they shrug and move on.") : TEXT("they part peacefully."));
         break;
     }
     default: break;

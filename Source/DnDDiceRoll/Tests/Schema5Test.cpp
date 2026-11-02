@@ -1352,4 +1352,31 @@ bool FSchema5CampPickLockTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some seed opens the lock"), bOpened);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampParleyTest, "Project.Expedition.Schema5.CampParley",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampParleyTest::RunTest(const FString& Parameters)
+{
+    bool bChecked = false, bGift = false, bPlain = false;
+    for (int32 Seed = 1; Seed < 120 && !(bGift && bPlain); ++Seed)
+    {
+        FExpeditionRun Run;
+        FString Error, Outcome;
+        if (!CampTest::RewardRun(Run, Seed)) { continue; }
+        const int32 Hero = CampTest::Living(Run, [](const FCombatantState&) { return true; });
+        bChecked = true;
+        TestTrue(TEXT("Anyone may parley"), Run.CampActivity(Hero, ECampActivity::Parley, Outcome, Error));
+        TestFalse(TEXT("Outcome described"), Outcome.IsEmpty());
+        TestFalse(TEXT("Once per rest point"), Run.CampActivity(Hero, ECampActivity::Parley, Outcome, Error));
+        const int32 Bonus = Run.Progress().History.Last().BonusPotions;
+        (Bonus == 1 ? bGift : bPlain) = true;
+        FExpeditionRun Copy;
+        TestTrue(TEXT("Restores"), Copy.Restore(Run.Snapshot(), Error));
+        TestTrue(TEXT("Claims"), Run.ClaimReward(Hero, Error));
+        TestTrue(TEXT("Restores after claim"), Copy.Restore(Run.Snapshot(), Error));
+    }
+    TestTrue(TEXT("Reached a rest point"), bChecked);
+    TestTrue(TEXT("Some seed earns a gift"), bGift);
+    TestTrue(TEXT("Some seed earns nothing"), bPlain);
+    return true;
+}
 #endif
