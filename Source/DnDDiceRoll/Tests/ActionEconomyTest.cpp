@@ -89,12 +89,20 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassFeatureTableTest, "Project.Expedition.Rul
 bool FClassFeatureTableTest::RunTest(const FString& Parameters)
 {
     TestEqual(TEXT("Fighter 1"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1), FString(TEXT("Fighting Style [Free], Second Wind [Bonus Action]")));
-    TestEqual(TEXT("Fighter 5 has five"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 5).Num(), 5);
-    TestEqual(TEXT("Level 20 capped at 5"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 20).Num(), 5);
+    // Deliberate: SRD gap fill added Champion Improved Critical (3) and Ability Score Improvement (4); was 5.
+    TestEqual(TEXT("Fighter 5 has seven"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 5).Num(), 7);
+    TestEqual(TEXT("Level 20 capped at 5"), FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 20).Num(), 7);
+    TestTrue(TEXT("Cutting Words is a reaction, listed as not yet modelled"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Bard, 3).Contains(TEXT("Lore: Cutting Words [Reaction]*")));
+    TestTrue(TEXT("Stunning Strike at Monk 5"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 5).Contains(TEXT("Stunning Strike [Free]*")));
+    TestFalse(TEXT("Not before its level"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 4).Contains(TEXT("Stunning Strike")));
     TestTrue(TEXT("Rage is a bonus action"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Barbarian, 1).Contains(TEXT("Rage [Bonus Action]")));
     TestTrue(TEXT("Uncanny Dodge is a reaction"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Rogue, 5).Contains(TEXT("Uncanny Dodge [Reaction]")));
-    for (const EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Barbarian, EAdventurerRole::Cleric, EAdventurerRole::Bard, EAdventurerRole::Druid, EAdventurerRole::Monk, EAdventurerRole::Paladin, EAdventurerRole::Sorcerer})
-    { TestTrue(TEXT("Every requested class has features"), FClassFeatureRules::FeaturesThrough(Role, 5).Num() > 0); }
+    for (const EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Barbarian, EAdventurerRole::Cleric, EAdventurerRole::Bard, EAdventurerRole::Druid, EAdventurerRole::Monk, EAdventurerRole::Paladin, EAdventurerRole::Sorcerer,
+        EAdventurerRole::Rogue, EAdventurerRole::Wizard, EAdventurerRole::Ranger, EAdventurerRole::Warlock})
+    {
+        TestTrue(TEXT("Every SRD class has features"), FClassFeatureRules::FeaturesThrough(Role, 5).Num() > 0);
+        TestTrue(TEXT("Every SRD class lists its level 4 ASI"), FClassFeatureRules::FeatureSummary(Role, 4).Contains(TEXT("Ability Score Improvement [Free]")));
+    }
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressSheetTest, "Project.Expedition.Rules.ProgressSheet",
