@@ -146,3 +146,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #90: Sleight of Hand
 
 `FSleightRules`: lifting or planting an item is a Dexterity (Sleight of Hand) check against the target's passive Perception as the DC. Meeting it takes the item unnoticed; missing by 1-4 achieves nothing; missing by 5 or more gets the thief caught (the target turns hostile). The forecast is exact and spends no RNG. Rogues from level 2 can do it as a bonus action (Cunning Action, use an object). Route and social node wiring and item transfer wait for saved inventory (#39); an alert target rolling active Perception is left for the contest resolver when nodes exist.
+
+## Issue #91: Performance
+
+`FPerformanceRules`: a Charisma (Performance) check at a camp, town or merchant. Success earns the node's base coin and improves the audience's attitude one step (hostile, indifferent, friendly); beating the DC by 10 doubles the coin; missing by 5 or more gets the performer booed (attitude one step worse, no coin). Coin amounts are Expedition tuning for Austin. Paying coin into the run and remembering NPC attitude need saved currency and node state (#84, #39).
