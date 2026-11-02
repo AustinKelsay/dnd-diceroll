@@ -3,6 +3,7 @@
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "Presentation/ExpeditionSpellFX.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -22,6 +23,7 @@
 #include "Misc/Paths.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UnrealClient.h"
 
 namespace
 {
@@ -903,8 +905,84 @@ void AExpeditionBattleView::Record(const FCombatResult& Result)
 
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
+    // Spell VFX hook: every accepted command's FSpellCastEvent list (the same events FCombatBattle::OnSpellEvent sees).
+    // Spells without a style (everything but the Fire Bolt / Fireball trial) keep their existing presentation.
+    if (PlaybackSpeed != EPlaybackSpeed::Instant)
+    {
+        for (const FCombatResult& Result : Results)
+        {
+            for (const FSpellCastEvent& Event : Result.SpellEvents)
+            {
+                // Hold outcome panels (Victory etc.) until the effect has finished on the board.
+                if (const AExpeditionSpellFX* Fx = AExpeditionSpellFX::Play(GetWorld(), Event, [this](FIntPoint Cell) { return BoardPosition(FVector2D(Cell.X, Cell.Y)); }))
+                { SpellFXHoldUntil = FMath::Max(SpellFXHoldUntil, GetWorld()->GetTimeSeconds() + Fx->Duration()); }
+            }
+        }
+    }
     Show.Enqueue(Results, Rules().Snapshot());
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
+}
+
+void AExpeditionBattleView::TickSpellFXTrial(float DeltaSeconds)
+{
+    if (SpellFXTrialStage == 0)
+    {
+        SpellFXTrialStage = -1;
+        if (!FParse::Value(FCommandLine::Get(), TEXT("SpellFXTrial="), SpellFXTrial) || SpellFXTrial.IsEmpty()) { return; }
+        if (!FParse::Value(FCommandLine::Get(), TEXT("SpellFXTrialOut="), SpellFXTrialOut)) { SpellFXTrialOut = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SpellFXTrial")); }
+        FParse::Value(FCommandLine::Get(), TEXT("SpellFXTrialSlowmo="), SpellFXTrialSlowmo);
+        if (!HasRun()) { Resume(); }
+        SpellFXTrialStage = 1; SpellFXTrialClock = 0.0f;
+        UE_LOG(LogTemp, Display, TEXT("SPELLFX_TRIAL start %s run=%d combat=%d"), *SpellFXTrial, HasRun() ? 1 : 0, InCombat() ? 1 : 0);
+        return;
+    }
+    if (SpellFXTrialStage < 1) { return; }
+    SpellFXTrialClock += DeltaSeconds;
+    if (SpellFXTrialStage == 1)
+    {
+        if (SpellFXTrialClock < 4.0f || IsPresenting() || !InCombat()) { return; }
+        const FCombatantState* Active = Rules().Find(Rules().ActiveId());
+        if (!Active || Active->Side != ECombatSide::Party) { return; }
+        // Fire Bolt: nearest conscious foe. Area spells: the foe with the most other foes within 4 cells.
+        int32 Target = INDEX_NONE; float Best = -1e9f;
+        const auto& All = Rules().Snapshot().Encounter.Combatants;
+        for (const FCombatantState& Foe : All)
+        {
+            if (Foe.Side != ECombatSide::Enemy || Foe.Life != ECombatLife::Conscious) { continue; }
+            float Score = -FVector2D::Distance(FVector2D(Foe.Cell), FVector2D(Active->Cell)) * 0.01f;
+            if (SpellFXTrial != TEXT("fire-bolt"))
+            { for (const FCombatantState& Other : All) { Score += Other.Side == ECombatSide::Enemy && Other.Life == ECombatLife::Conscious && FVector2D::Distance(FVector2D(Other.Cell), FVector2D(Foe.Cell)) <= 4.0f ? 1.0f : 0.0f; } }
+            if (Score > Best) { Best = Score; Target = Foe.Id; }
+        }
+        FCombatCommand Cast{ECombatCommandType::CastSpell, Active->Id, {}, Target};
+        Cast.SpellId = SpellFXTrial;
+        if (SpellFXTrial == TEXT("fireball")) { Cast.SlotLevel = 3; }
+        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), SpellFXTrialSlowmo);
+        const FString CasterName = Active->Name; // Execute may reallocate the roster.
+        UE_LOG(LogTemp, Verbose, TEXT("SPELLFX_TRIAL caster L%d slots %d [%s] action %d"), Active->Level, Active->SpellSlots, *FString::JoinBy(Active->SlotsByLevel, TEXT(","), [](int32 V) { return FString::FromInt(V); }), Rules().Snapshot().bActionAvailable ? 1 : 0);
+        Execute(Cast);
+        UE_LOG(LogTemp, Display, TEXT("SPELLFX_TRIAL cast %s by %s at %d slowmo %.2f: %s"), *SpellFXTrial, *CasterName, Target, SpellFXTrialSlowmo, Feedback.IsEmpty() ? TEXT("") : *Feedback.Last());
+        SpellFXTrialStage = 2; SpellFXTrialClock = 0.0f; SpellFXTrialNextShot = 0.0f;
+        return;
+    }
+    if (SpellFXTrialStage == 2)
+    {
+        // Real viewport frames with the HUD, every 40 ms of game time while the effect plays.
+        if (SpellFXTrialClock >= SpellFXTrialNextShot)
+        {
+            const FString File = FPaths::Combine(SpellFXTrialOut, FString::Printf(TEXT("%s_%03d_t%04dms.png"), *SpellFXTrial, SpellFXTrialShot++, FMath::RoundToInt(SpellFXTrialClock * 1000.0f)));
+            FScreenshotRequest::RequestScreenshot(File, true, false);
+            SpellFXTrialNextShot += 0.04f;
+        }
+        if (SpellFXTrialClock > 2.0f) { SpellFXTrialStage = 3; SpellFXTrialClock = 0.0f; UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f); }
+        return;
+    }
+    if (SpellFXTrialStage == 3 && SpellFXTrialClock > 1.0f)
+    {
+        SpellFXTrialStage = 4;
+        UE_LOG(LogTemp, Display, TEXT("SPELLFX_TRIAL done %d shots in %s"), SpellFXTrialShot, *SpellFXTrialOut);
+        FPlatformMisc::RequestExit(false);
+    }
 }
 
 void AExpeditionBattleView::SkipPresentation() { Show.Finish(); }
@@ -1172,6 +1250,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
+    TickSpellFXTrial(DeltaSeconds);
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());

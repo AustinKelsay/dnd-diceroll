@@ -131,7 +131,7 @@ public:
 
     // Presentation.
     const FExpeditionPlayback& Playback() const { return Show; }
-    bool IsPresenting() const { return Show.IsBusy(); }
+    bool IsPresenting() const { return Show.IsBusy() || (GetWorld() && GetWorld()->GetTimeSeconds() < SpellFXHoldUntil); }
     void SkipPresentation();
     void CycleSpeed();
     EPlaybackSpeed Speed() const { return PlaybackSpeed; }
@@ -161,6 +161,17 @@ private:
     int32 RecordsOffset = 0;
     float EnemyDelay = 0.0f;
     float Clock = 0.0f;
+    /** Spell VFX trial driver (dev only): -SpellFXTrial=<spell id> resumes the save, casts it with the active party
+     *  caster and writes real HUD screenshots to -SpellFXTrialOut=<dir>, then quits. */
+    void TickSpellFXTrial(float DeltaSeconds);
+    FString SpellFXTrial;
+    FString SpellFXTrialOut;
+    int32 SpellFXTrialStage = 0;
+    int32 SpellFXTrialShot = 0;
+    float SpellFXTrialClock = 0.0f;
+    float SpellFXTrialNextShot = 0.0f;
+    float SpellFXTrialSlowmo = 1.0f;
+    float SpellFXHoldUntil = -1.0f;
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
