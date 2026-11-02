@@ -202,3 +202,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #89: carrying capacity and optional encumbrance (rules only)
 
 `FEncumbranceRules`: capacity is 15 x STR lb and push/drag/lift is 30 x STR. Over capacity the speed drops to 1 cell; over push/drag/lift the creature cannot move. The variant rule is off by default: over 5 x STR costs 2 cells of speed, over 10 x STR costs 4 cells and gives disadvantage on Strength/Dexterity/Constitution checks, attacks and saves. Item weights round up to whole pounds (a potion counts as 1 lb; flagged for Austin). Carried inventory and the toggle need saved state (#39).
+
+## Issue #67: death saves (rules only)
+
+`FDeathSaveRules`: a death save succeeds on 10+, a natural 1 counts as two failures and a natural 20 brings the creature back with 1 hit point. Three successes stabilize, three failures kill. Damage at 0 HP adds a failure (two on a critical), and damage of at least the hit point maximum kills outright, as does massive damage on the way down. Temporary hit points absorb damage first and don't stack. Medicine DC 10 stabilizes. Tallies on downed adventurers and temporary hit points in a battle need battle state (#39); the current Downed/Dead flow is unchanged.
