@@ -14,6 +14,7 @@
 #include "Rules/PerformanceRules.h"
 #include "Rules/BeastRules.h"
 #include "Rules/LoreRules.h"
+#include "Rules/ToolRules.h"
 #include "Rules/InspirationRules.h"
 #include "Rules/ProficiencyRules.h"
 
@@ -340,6 +341,7 @@ FString FExpeditionRun::CampActivityName(ECampActivity Activity)
     case ECampActivity::Perform: return TEXT("Perform for coin");
     case ECampActivity::CalmBeast: return TEXT("Calm a wolf");
     case ECampActivity::TreatWounds: return TEXT("Treat wounds");
+    case ECampActivity::BrewPotion: return TEXT("Brew a potion");
     default: return TEXT("Unknown");
     }
 }
@@ -470,6 +472,16 @@ bool FExpeditionRun::CampActivity(int32 UnitId, ECampActivity Activity, FString&
         const int32 Healed = FMath::Min(Missing, FLoreRules::TreatmentHitPoints(Check.Total, Patient->Level));
         Patient->HP += Healed;
         Outcome = FString::Printf(TEXT("%s treats %s (Medicine %d): +%d HP."), *Hero->Name, *Patient->Name, Check.Total, Healed);
+        break;
+    }
+    case ECampActivity::BrewPotion:
+    {
+        // #94: brewing healing needs herbalism kit proficiency (FToolRules::CanBrewHealing); kit + WIS check DC 13 yields a potion.
+        if (!FToolRules::CanBrewHealing(Sheet.IsToolProficient(ETool::HerbalismKit), true)) { Error = TEXT("Brewing needs herbalism kit proficiency."); return false; }
+        const int32 Total = D20 + Sheet.ToolBonus(ETool::HerbalismKit, EAbility::Wisdom);
+        const bool bBrewed = Total >= 13;
+        if (bBrewed) { ++Record.BonusPotions; }
+        Outcome = FString::Printf(TEXT("%s %s (%d vs DC 13)."), *Hero->Name, bBrewed ? TEXT("brews a healing potion") : TEXT("spoils the brew"), Total);
         break;
     }
     default: break;

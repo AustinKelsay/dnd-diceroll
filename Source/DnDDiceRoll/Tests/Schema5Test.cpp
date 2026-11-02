@@ -1658,4 +1658,22 @@ bool FSchema5CampTreatTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Some party is treated"), bTreated);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CampBrewTest, "Project.Expedition.Schema5.CampBrew",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CampBrewTest::RunTest(const FString& Parameters)
+{
+    FExpeditionRun Run;
+    FString Error, Outcome;
+    int32 Seed = 1;
+    while (Seed < 150 && !CampTest::RewardRun(Run, Seed)) { ++Seed; Run = FExpeditionRun(); }
+    TestTrue(TEXT("Reached a rest"), Seed < 150);
+    for (const FCombatantState& U : Run.Battle().Snapshot().Encounter.Combatants)
+    {
+        if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
+        const bool bHerbalist = Run.Battle().Character(U.Id).IsToolProficient(ETool::HerbalismKit);
+        TestEqual(TEXT("Only herbalists brew"), Run.CampActivity(U.Id, ECampActivity::BrewPotion, Outcome, Error), bHerbalist);
+        if (!bHerbalist) { TestTrue(TEXT("Explains"), Error.Contains(TEXT("herbalism"))); }
+    }
+    return true;
+}
 #endif
