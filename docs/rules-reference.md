@@ -287,3 +287,485 @@ Class features unlock on **class level**, never character level. Proficiency bon
 \* Deviation by directive: Superiority Dice (Battle Master) replace Precision Strike and are listed beside the Champion row.
 
 Multiclassing: Extra Attack does not stack (max of the classes); Sneak Attack dice and Cunning Action use Rogue class level; spell slots use the class's own table when only one class has Spellcasting, otherwise the SRD multiclass spellcaster table (full = levels, Paladin/Ranger = half rounded down, Warlock Pact Magic separate). Half casters single-class: no slots at 1, then the full-caster row at ceil(level / 2).
+
+## Spells (SRD 5.2.1 catalog)
+
+Source: System Reference Document 5.2.1 ("SRD 5.2.1") by Wizards of the Coast LLC, available at https://dnd.wizards.com/resources/systems-reference-document and licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/legalcode). See [SRD source notes](srd-source-notes.md). The machine-readable copy comes from 5e-bits/5e-database (`src/2024/en/5e-SRD-Spells.json`, MIT). `tools/spells/normalize_srd521.py` reads save type, half-on-save, area, healing and upcast dice from the SRD 5.2.1 spell text, and `tools/spells/gen_spell_catalog.py` writes `Source/DnDDiceRoll/Private/Rules/SpellCatalogData.inl`. Changes from the SRD: values are reduced to catalog fields, and the wording is not reproduced.
+
+All 339 SRD 5.2.1 spells are in `FSpellCatalogRules`. Each spell is tagged with its level, school, class lists, casting time (Action, Bonus Action, Reaction or Extended), range, components, duration, concentration, ritual, area, attack or save, dice and damage type, upcast or cantrip scaling, conditions and modifier. Class lists gate learning by class level, using the slot tables for each class's own level when multiclassing. Concentration also comes from the catalog. Menus show the tag line, for example `3rd-level evocation | Sorcerer, Wizard | Action | 150 feet | V, S, M | Instantaneous`.
+
+**Status:**
+
+- **Mechanics:** dice, a save plus a condition, or a hand-modelled modifier are stored in the catalog.
+- **Partial:** only the first damage type of a multi-damage spell is kept.
+- **DataOnly:** tags only. The menu marks these spells "Effect not yet modelled".
+
+Only the eight combat-wired spells (Fire Bolt, Sacred Flame, Magic Missile, Cure Wounds, Guiding Bolt, Burning Hands, Healing Word, Thunderwave) can be cast in battle today. The rest are catalog data and rules math.
+
+| Level | Mechanics | Partial | DataOnly |
+| --- | --- | --- | --- |
+| Cantrip | 11 | 0 | 16 |
+| 1 | 33 | 1 | 23 |
+| 2 | 21 | 0 | 36 |
+| 3 | 15 | 1 | 26 |
+| 4 | 13 | 2 | 19 |
+| 5 | 14 | 1 | 23 |
+| 6 | 13 | 1 | 17 |
+| 7 | 6 | 1 | 13 |
+| 8 | 9 | 0 | 8 |
+| 9 | 4 | 3 | 9 |
+| **Total** | **139** | **10** | **190** |
+
+**Combat-wired changes:**
+
+- **Cure Wounds:** now Abjuration. It heals 2d8 + modifier, plus 2d8 per slot level above 1st.
+- **Healing Word:** now Abjuration. It heals 2d4 + modifier, plus 2d4 per slot level above 1st.
+
+**Adaptations:**
+
+- **Slot pool:** the run-layer level-1 slot pool stays capped at 2, and only builds with a slot cap use it. Sorcerer, Warlock, Bard and similar kits spend kit uses instead. The per-level SRD slots are in `SlotsByLevel`.
+- **Restore validation:** the check now compares against `FBuildCatalog::SlotCap` instead of a hard-coded Cleric/Wizard role list.
+- **Not modelled yet:** Warlock Mystic Arcanum and Bard Magical Secrets.
+
+### SRD 5.1 → SRD 5.2.1 spell differences (generated)
+
+- SRD 5.1: 319 spells; SRD 5.2.1: 339 spells (this catalog).
+- Not in SRD 5.2.1 (dropped from the catalog): Branding Smite, Feeblemind.
+- New in SRD 5.2.1: Aura of Life, Befuddlement, Charm Monster, Chromatic Orb, Dissonant Whispers, Divine Smite, Dragon's Breath, Elementalism, Ensnaring Strike, Hex, Ice Knife, Mind Spike, Phantasmal Force, Power Word Heal, Ray of Sickness, Searing Smite, Shining Smite, Sorcerous Burst, Starry Wisp, Summon Dragon, Tsunami, Vitriolic Sphere.
+- Subclass spell tags (Life, Devotion, Fiend, Land) are not on SRD 5.2.1 spell entries; they are subclass features, so the catalog subclass column is empty.
+
+| Spell | Change (5.1 → 5.2.1) |
+| --- | --- |
+| Acid Splash | school Conjuration → Evocation |
+| Aid | adds Bard, Druid, Ranger |
+| Animal Shapes | concentration True → False |
+| Antipathy/Sympathy | adds Bard |
+| Arcane Eye | drops Cleric |
+| Arcane Hand | adds Sorcerer |
+| Augury | adds Druid, Wizard |
+| Bane | adds Warlock |
+| Barkskin | concentration True → False |
+| Blindness/Deafness | school Necromancy → Transmutation |
+| Color Spray | adds Bard |
+| Command | adds Bard |
+| Cone of Cold | adds Druid |
+| Conjure Fey | drops Warlock |
+| Contingency | school Evocation → Abjuration |
+| Continual Flame | adds Druid |
+| Create Food and Water | drops Druid |
+| Cure Wounds | school Evocation → Abjuration |
+| Dancing Lights | school Evocation → Illusion |
+| Demiplane | adds Sorcerer |
+| Detect Magic | adds Warlock |
+| Dispel Magic | adds Ranger |
+| Divination | adds Cleric, Wizard |
+| Divine Favor | school Evocation → Transmutation; concentration True → False |
+| Dominate Beast | adds Ranger |
+| Earthquake | school Evocation → Transmutation |
+| Enhance Ability | adds Ranger, Wizard |
+| Enlarge/Reduce | adds Bard, Druid |
+| Entangle | adds Ranger |
+| Enthrall | concentration False → True |
+| Etherealness | school Transmutation → Conjuration |
+| Faerie Fire | adds Bard |
+| Fire Shield | adds Druid, Sorcerer |
+| Flame Blade | adds Sorcerer |
+| Flaming Sphere | adds Sorcerer |
+| Flesh to Stone | adds Druid, Sorcerer; drops Warlock |
+| Forcecage | concentration False → True |
+| Freezing Sphere | adds Sorcerer |
+| Gate | adds Warlock |
+| Gentle Repose | adds Paladin |
+| Giant Insect | school Transmutation → Conjuration |
+| Glibness | school Transmutation → Enchantment |
+| Goodberry | school Transmutation → Conjuration |
+| Grease | adds Sorcerer |
+| Greater Restoration | adds Paladin, Ranger |
+| Gust of Wind | adds Ranger |
+| Hallow | school Evocation → Abjuration |
+| Heal | school Evocation → Abjuration |
+| Healing Word | school Evocation → Abjuration |
+| Heroes' Feast | adds Bard |
+| Hideous Laughter | adds Warlock |
+| Incendiary Cloud | adds Druid |
+| Magic Weapon | concentration True → False; adds Ranger, Sorcerer |
+| Mass Cure Wounds | school Conjuration → Abjuration |
+| Mass Heal | school Conjuration → Abjuration |
+| Mass Healing Word | school Evocation → Abjuration; adds Bard |
+| Mass Suggestion | drops Warlock |
+| Meld into Stone | adds Druid, Ranger |
+| Message | adds Druid |
+| Mirror Image | adds Bard |
+| Mislead | adds Warlock |
+| Phantasmal Killer | adds Bard |
+| Planar Binding | adds Warlock |
+| Poison Spray | school Conjuration → Necromancy |
+| Prayer of Healing | school Evocation → Abjuration; adds Paladin |
+| Prismatic Spray | adds Bard |
+| Prismatic Wall | adds Bard |
+| Protection from Evil and Good | concentration True → False; adds Druid |
+| Reincarnate | school Transmutation → Necromancy |
+| Resilient Sphere | school Evocation → Abjuration |
+| Revivify | school Conjuration → Necromancy; adds Druid, Ranger |
+| Sending | school Evocation → Divination |
+| Shatter | drops Warlock |
+| Sleep | concentration False → True |
+| Slow | adds Bard |
+| Spare the Dying | adds Druid |
+| Speak with Animals | adds Warlock |
+| Speak with Dead | adds Wizard |
+| Spiritual Weapon | concentration False → True |
+| Stoneskin | school Abjuration → Transmutation |
+| Sunbeam | adds Cleric |
+| Sunburst | adds Cleric |
+| Symbol | adds Druid |
+| Telepathic Bond | adds Bard |
+| Teleportation Circle | adds Warlock |
+| True Strike | concentration True → False |
+| Vampiric Touch | adds Sorcerer |
+| Warding Bond | adds Paladin |
+| Weird | adds Warlock |
+
+### Spell table
+
+| Spell | Lvl | School | Classes | Subclass lists | Cast | Conc. | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Acid Splash | C | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Chill Touch | C | Necromancy | Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Dancing Lights | C | Illusion | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Druidcraft | C | Transmutation | Druid |  | Action |  | DataOnly |
+| Eldritch Blast | C | Evocation | Warlock |  | Action |  | Mechanics |
+| Elementalism | C | Transmutation | Druid, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Fire Bolt | C | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Guidance | C | Divination | Cleric, Druid |  | Action | Yes | DataOnly |
+| Light | C | Evocation | Bard, Cleric, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Mage Hand | C | Conjuration | Bard, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Mending | C | Transmutation | Bard, Cleric, Druid, Sorcerer, Wizard |  | Extended |  | DataOnly |
+| Message | C | Transmutation | Bard, Druid, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Minor Illusion | C | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Poison Spray | C | Necromancy | Druid, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Prestidigitation | C | Transmutation | Bard, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Produce Flame | C | Conjuration | Druid |  | Bonus |  | Mechanics |
+| Ray of Frost | C | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Resistance | C | Abjuration | Cleric, Druid |  | Action | Yes | DataOnly |
+| Sacred Flame | C | Evocation | Cleric |  | Action |  | Mechanics |
+| Shillelagh | C | Transmutation | Druid |  | Bonus |  | DataOnly |
+| Shocking Grasp | C | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Sorcerous Burst | C | Evocation | Sorcerer |  | Action |  | DataOnly |
+| Spare the Dying | C | Necromancy | Cleric, Druid |  | Action |  | DataOnly |
+| Starry Wisp | C | Evocation | Bard, Druid |  | Action |  | Mechanics |
+| Thaumaturgy | C | Transmutation | Cleric |  | Action |  | DataOnly |
+| True Strike | C | Divination | Bard, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Vicious Mockery | C | Enchantment | Bard |  | Action |  | Mechanics |
+| Alarm | 1 | Abjuration | Ranger, Wizard |  | Extended (ritual) |  | DataOnly |
+| Animal Friendship | 1 | Enchantment | Bard, Druid, Ranger |  | Action |  | Mechanics |
+| Bane | 1 | Enchantment | Bard, Cleric, Warlock |  | Action | Yes | Mechanics |
+| Bless | 1 | Enchantment | Cleric, Paladin |  | Action | Yes | Mechanics |
+| Burning Hands | 1 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Charm Person | 1 | Enchantment | Bard, Druid, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Chromatic Orb | 1 | Evocation | Sorcerer, Wizard |  | Action |  | DataOnly |
+| Color Spray | 1 | Illusion | Bard, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Command | 1 | Enchantment | Bard, Cleric, Paladin |  | Action |  | Mechanics |
+| Comprehend Languages | 1 | Divination | Bard, Sorcerer, Warlock, Wizard |  | Action (ritual) |  | DataOnly |
+| Create or Destroy Water | 1 | Transmutation | Cleric, Druid |  | Action |  | DataOnly |
+| Cure Wounds | 1 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger |  | Action |  | Mechanics |
+| Detect Evil and Good | 1 | Divination | Cleric, Paladin |  | Action | Yes | DataOnly |
+| Detect Magic | 1 | Divination | Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, Wizard |  | Action (ritual) | Yes | DataOnly |
+| Detect Poison and Disease | 1 | Divination | Cleric, Druid, Paladin, Ranger |  | Action (ritual) | Yes | DataOnly |
+| Disguise Self | 1 | Illusion | Bard, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Dissonant Whispers | 1 | Enchantment | Bard |  | Action |  | Mechanics |
+| Divine Favor | 1 | Transmutation | Paladin |  | Bonus |  | Mechanics |
+| Divine Smite | 1 | Evocation | Paladin |  | Bonus |  | Mechanics |
+| Ensnaring Strike | 1 | Conjuration | Ranger |  | Bonus | Yes | Mechanics |
+| Entangle | 1 | Conjuration | Druid, Ranger |  | Action | Yes | Mechanics |
+| Expeditious Retreat | 1 | Transmutation | Sorcerer, Warlock, Wizard |  | Bonus | Yes | DataOnly |
+| Faerie Fire | 1 | Evocation | Bard, Druid |  | Action | Yes | Mechanics |
+| False Life | 1 | Necromancy | Sorcerer, Wizard |  | Action |  | DataOnly |
+| Feather Fall | 1 | Transmutation | Bard, Sorcerer, Wizard |  | Reaction |  | DataOnly |
+| Find Familiar | 1 | Conjuration | Wizard |  | Extended (ritual) |  | DataOnly |
+| Floating Disk | 1 | Conjuration | Wizard |  | Action (ritual) |  | DataOnly |
+| Fog Cloud | 1 | Conjuration | Druid, Ranger, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Goodberry | 1 | Conjuration | Druid, Ranger |  | Action |  | DataOnly |
+| Grease | 1 | Conjuration | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Guiding Bolt | 1 | Evocation | Cleric |  | Action |  | Mechanics |
+| Healing Word | 1 | Abjuration | Bard, Cleric, Druid |  | Bonus |  | Mechanics |
+| Hellish Rebuke | 1 | Evocation | Warlock |  | Reaction |  | Mechanics |
+| Heroism | 1 | Enchantment | Bard, Paladin |  | Action | Yes | Mechanics |
+| Hex | 1 | Enchantment | Warlock |  | Bonus | Yes | Mechanics |
+| Hideous Laughter | 1 | Enchantment | Bard, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Hunter's Mark | 1 | Divination | Ranger |  | Bonus | Yes | Mechanics |
+| Ice Knife | 1 | Conjuration | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Identify | 1 | Divination | Bard, Wizard |  | Extended (ritual) |  | DataOnly |
+| Illusory Script | 1 | Illusion | Bard, Warlock, Wizard |  | Extended (ritual) |  | DataOnly |
+| Inflict Wounds | 1 | Necromancy | Cleric |  | Action |  | Mechanics |
+| Jump | 1 | Transmutation | Druid, Ranger, Sorcerer, Wizard |  | Bonus |  | DataOnly |
+| Longstrider | 1 | Transmutation | Bard, Druid, Ranger, Wizard |  | Action |  | Mechanics |
+| Mage Armor | 1 | Abjuration | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Magic Missile | 1 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Protection from Evil and Good | 1 | Abjuration | Cleric, Druid, Paladin, Warlock, Wizard |  | Action |  | Mechanics |
+| Purify Food and Drink | 1 | Transmutation | Cleric, Druid, Paladin |  | Action (ritual) |  | DataOnly |
+| Ray of Sickness | 1 | Necromancy | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Sanctuary | 1 | Abjuration | Cleric |  | Bonus |  | Mechanics |
+| Searing Smite | 1 | Evocation | Paladin |  | Bonus |  | Mechanics |
+| Shield | 1 | Abjuration | Sorcerer, Wizard |  | Reaction |  | Mechanics |
+| Shield of Faith | 1 | Abjuration | Cleric, Paladin |  | Bonus | Yes | Mechanics |
+| Silent Image | 1 | Illusion | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Sleep | 1 | Enchantment | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Speak with Animals | 1 | Divination | Bard, Druid, Ranger, Warlock |  | Action (ritual) |  | DataOnly |
+| Thunderwave | 1 | Evocation | Bard, Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Unseen Servant | 1 | Conjuration | Bard, Warlock, Wizard |  | Action (ritual) |  | DataOnly |
+| Acid Arrow | 2 | Evocation | Wizard |  | Action |  | Mechanics |
+| Aid | 2 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger |  | Action |  | Mechanics |
+| Alter Self | 2 | Transmutation | Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Animal Messenger | 2 | Enchantment | Bard, Druid, Ranger |  | Action (ritual) |  | DataOnly |
+| Arcane Lock | 2 | Abjuration | Wizard |  | Action |  | DataOnly |
+| Arcanist's Magic Aura | 2 | Illusion | Wizard |  | Action |  | DataOnly |
+| Augury | 2 | Divination | Cleric, Druid, Wizard |  | Extended (ritual) |  | DataOnly |
+| Barkskin | 2 | Transmutation | Druid, Ranger |  | Bonus |  | Mechanics |
+| Blindness/Deafness | 2 | Transmutation | Bard, Cleric, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Blur | 2 | Illusion | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Calm Emotions | 2 | Enchantment | Bard, Cleric |  | Action | Yes | DataOnly |
+| Continual Flame | 2 | Evocation | Cleric, Druid, Wizard |  | Action |  | DataOnly |
+| Darkness | 2 | Evocation | Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Darkvision | 2 | Transmutation | Druid, Ranger, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Detect Thoughts | 2 | Divination | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Dragon's Breath | 2 | Transmutation | Sorcerer, Wizard |  | Bonus | Yes | DataOnly |
+| Enhance Ability | 2 | Transmutation | Bard, Cleric, Druid, Ranger, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Enlarge/Reduce | 2 | Transmutation | Bard, Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Enthrall | 2 | Enchantment | Bard, Warlock |  | Action | Yes | DataOnly |
+| Find Steed | 2 | Conjuration | Paladin |  | Action |  | DataOnly |
+| Find Traps | 2 | Divination | Cleric, Druid, Ranger |  | Action |  | DataOnly |
+| Flame Blade | 2 | Evocation | Druid, Sorcerer |  | Bonus | Yes | Mechanics |
+| Flaming Sphere | 2 | Conjuration | Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Gentle Repose | 2 | Necromancy | Cleric, Paladin, Wizard |  | Action (ritual) |  | DataOnly |
+| Gust of Wind | 2 | Evocation | Druid, Ranger, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Heat Metal | 2 | Transmutation | Bard, Druid |  | Action | Yes | Mechanics |
+| Hold Person | 2 | Enchantment | Bard, Cleric, Druid, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Invisibility | 2 | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Knock | 2 | Transmutation | Bard, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Lesser Restoration | 2 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger |  | Bonus |  | DataOnly |
+| Levitate | 2 | Transmutation | Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Locate Animals or Plants | 2 | Divination | Bard, Druid, Ranger |  | Action (ritual) |  | DataOnly |
+| Locate Object | 2 | Divination | Bard, Cleric, Druid, Paladin, Ranger, Wizard |  | Action | Yes | DataOnly |
+| Magic Mouth | 2 | Illusion | Bard, Wizard |  | Extended (ritual) |  | DataOnly |
+| Magic Weapon | 2 | Transmutation | Paladin, Ranger, Sorcerer, Wizard |  | Bonus |  | Mechanics |
+| Mind Spike | 2 | Divination | Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Mirror Image | 2 | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Misty Step | 2 | Conjuration | Sorcerer, Warlock, Wizard |  | Bonus |  | DataOnly |
+| Moonbeam | 2 | Evocation | Druid |  | Action | Yes | Mechanics |
+| Pass without Trace | 2 | Abjuration | Druid, Ranger |  | Action | Yes | DataOnly |
+| Phantasmal Force | 2 | Illusion | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Prayer of Healing | 2 | Abjuration | Cleric, Paladin |  | Extended |  | DataOnly |
+| Protection from Poison | 2 | Abjuration | Cleric, Druid, Paladin, Ranger |  | Action |  | DataOnly |
+| Ray of Enfeeblement | 2 | Necromancy | Warlock, Wizard |  | Action | Yes | DataOnly |
+| Rope Trick | 2 | Transmutation | Wizard |  | Action |  | DataOnly |
+| Scorching Ray | 2 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| See Invisibility | 2 | Divination | Bard, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Shatter | 2 | Evocation | Bard, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Shining Smite | 2 | Transmutation | Paladin |  | Bonus | Yes | Mechanics |
+| Silence | 2 | Illusion | Bard, Cleric, Ranger |  | Action (ritual) | Yes | DataOnly |
+| Spider Climb | 2 | Transmutation | Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Spike Growth | 2 | Transmutation | Druid, Ranger |  | Action | Yes | Mechanics |
+| Spiritual Weapon | 2 | Evocation | Cleric |  | Bonus | Yes | Mechanics |
+| Suggestion | 2 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Warding Bond | 2 | Abjuration | Cleric, Paladin |  | Action |  | DataOnly |
+| Web | 2 | Conjuration | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Zone of Truth | 2 | Enchantment | Bard, Cleric, Paladin |  | Action |  | DataOnly |
+| Animate Dead | 3 | Necromancy | Cleric, Wizard |  | Extended |  | DataOnly |
+| Beacon of Hope | 3 | Abjuration | Cleric |  | Action | Yes | DataOnly |
+| Bestow Curse | 3 | Necromancy | Bard, Cleric, Wizard |  | Action | Yes | Mechanics |
+| Blink | 3 | Transmutation | Sorcerer, Wizard |  | Action |  | DataOnly |
+| Call Lightning | 3 | Conjuration | Druid |  | Action | Yes | Mechanics |
+| Clairvoyance | 3 | Divination | Bard, Cleric, Sorcerer, Wizard |  | Extended | Yes | DataOnly |
+| Conjure Animals | 3 | Conjuration | Druid, Ranger |  | Action | Yes | Mechanics |
+| Counterspell | 3 | Abjuration | Sorcerer, Warlock, Wizard |  | Reaction |  | DataOnly |
+| Create Food and Water | 3 | Conjuration | Cleric, Paladin |  | Action |  | DataOnly |
+| Daylight | 3 | Evocation | Cleric, Druid, Paladin, Ranger, Sorcerer |  | Action |  | DataOnly |
+| Dispel Magic | 3 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Fear | 3 | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Fireball | 3 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Fly | 3 | Transmutation | Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Gaseous Form | 3 | Transmutation | Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Glyph of Warding | 3 | Abjuration | Bard, Cleric, Wizard |  | Extended |  | DataOnly |
+| Haste | 3 | Transmutation | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Hypnotic Pattern | 3 | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Lightning Bolt | 3 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Magic Circle | 3 | Abjuration | Cleric, Paladin, Warlock, Wizard |  | Extended |  | DataOnly |
+| Major Image | 3 | Illusion | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Mass Healing Word | 3 | Abjuration | Bard, Cleric |  | Bonus |  | Mechanics |
+| Meld into Stone | 3 | Transmutation | Cleric, Druid, Ranger |  | Action (ritual) |  | Mechanics |
+| Nondetection | 3 | Abjuration | Bard, Ranger, Wizard |  | Action |  | DataOnly |
+| Phantom Steed | 3 | Illusion | Wizard |  | Extended (ritual) |  | DataOnly |
+| Plant Growth | 3 | Transmutation | Bard, Druid, Ranger |  | Extended |  | DataOnly |
+| Protection from Energy | 3 | Abjuration | Cleric, Druid, Ranger, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Remove Curse | 3 | Abjuration | Cleric, Paladin, Warlock, Wizard |  | Action |  | DataOnly |
+| Revivify | 3 | Necromancy | Cleric, Druid, Paladin, Ranger |  | Action |  | DataOnly |
+| Sending | 3 | Divination | Bard, Cleric, Wizard |  | Action |  | DataOnly |
+| Sleet Storm | 3 | Conjuration | Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Slow | 3 | Transmutation | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Speak with Dead | 3 | Necromancy | Bard, Cleric, Wizard |  | Action |  | DataOnly |
+| Speak with Plants | 3 | Transmutation | Bard, Druid, Ranger |  | Action |  | DataOnly |
+| Spirit Guardians | 3 | Conjuration | Cleric |  | Action | Yes | Partial |
+| Stinking Cloud | 3 | Conjuration | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Tiny Hut | 3 | Evocation | Bard, Wizard |  | Extended (ritual) |  | DataOnly |
+| Tongues | 3 | Divination | Bard, Cleric, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Vampiric Touch | 3 | Necromancy | Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Water Breathing | 3 | Transmutation | Druid, Ranger, Sorcerer, Wizard |  | Action (ritual) |  | DataOnly |
+| Water Walk | 3 | Transmutation | Cleric, Druid, Ranger, Sorcerer |  | Action (ritual) |  | DataOnly |
+| Wind Wall | 3 | Evocation | Druid, Ranger |  | Action | Yes | Mechanics |
+| Arcane Eye | 4 | Divination | Wizard |  | Action | Yes | DataOnly |
+| Aura of Life | 4 | Abjuration | Cleric, Paladin |  | Action | Yes | DataOnly |
+| Banishment | 4 | Abjuration | Cleric, Paladin, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Black Tentacles | 4 | Conjuration | Wizard |  | Action | Yes | Mechanics |
+| Blight | 4 | Necromancy | Druid, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Charm Monster | 4 | Enchantment | Bard, Druid, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Compulsion | 4 | Enchantment | Bard |  | Action | Yes | Mechanics |
+| Confusion | 4 | Enchantment | Bard, Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Conjure Minor Elementals | 4 | Conjuration | Druid, Wizard |  | Action | Yes | DataOnly |
+| Conjure Woodland Beings | 4 | Conjuration | Druid, Ranger |  | Action | Yes | Mechanics |
+| Control Water | 4 | Transmutation | Cleric, Druid, Wizard |  | Action | Yes | Mechanics |
+| Death Ward | 4 | Abjuration | Cleric, Paladin |  | Action |  | DataOnly |
+| Dimension Door | 4 | Conjuration | Bard, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Divination | 4 | Divination | Cleric, Druid, Wizard |  | Action (ritual) |  | DataOnly |
+| Dominate Beast | 4 | Enchantment | Druid, Ranger, Sorcerer |  | Action | Yes | Mechanics |
+| Fabricate | 4 | Transmutation | Wizard |  | Extended |  | DataOnly |
+| Faithful Hound | 4 | Conjuration | Wizard |  | Action |  | Mechanics |
+| Fire Shield | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Freedom of Movement | 4 | Abjuration | Bard, Cleric, Druid, Ranger |  | Action |  | DataOnly |
+| Giant Insect | 4 | Conjuration | Druid |  | Action | Yes | DataOnly |
+| Greater Invisibility | 4 | Illusion | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Guardian of Faith | 4 | Conjuration | Cleric |  | Action |  | DataOnly |
+| Hallucinatory Terrain | 4 | Illusion | Bard, Druid, Warlock, Wizard |  | Extended |  | DataOnly |
+| Ice Storm | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Partial |
+| Locate Creature | 4 | Divination | Bard, Cleric, Druid, Paladin, Ranger, Wizard |  | Action | Yes | DataOnly |
+| Phantasmal Killer | 4 | Illusion | Bard, Wizard |  | Action | Yes | Mechanics |
+| Polymorph | 4 | Transmutation | Bard, Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Private Sanctum | 4 | Abjuration | Wizard |  | Extended |  | DataOnly |
+| Resilient Sphere | 4 | Abjuration | Wizard |  | Action | Yes | DataOnly |
+| Secret Chest | 4 | Conjuration | Wizard |  | Action |  | DataOnly |
+| Stone Shape | 4 | Transmutation | Cleric, Druid, Wizard |  | Action |  | DataOnly |
+| Stoneskin | 4 | Transmutation | Druid, Ranger, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Vitriolic Sphere | 4 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Wall of Fire | 4 | Evocation | Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Animate Objects | 5 | Transmutation | Bard, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Antilife Shell | 5 | Abjuration | Druid |  | Action | Yes | DataOnly |
+| Arcane Hand | 5 | Evocation | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Awaken | 5 | Transmutation | Bard, Druid |  | Extended |  | DataOnly |
+| Cloudkill | 5 | Conjuration | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Commune | 5 | Divination | Cleric |  | Extended (ritual) |  | DataOnly |
+| Commune with Nature | 5 | Divination | Druid, Ranger |  | Extended (ritual) |  | DataOnly |
+| Cone of Cold | 5 | Evocation | Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Conjure Elemental | 5 | Conjuration | Druid, Wizard |  | Action | Yes | Mechanics |
+| Contact Other Plane | 5 | Divination | Warlock, Wizard |  | Extended (ritual) |  | Mechanics |
+| Contagion | 5 | Necromancy | Cleric, Druid |  | Action |  | Mechanics |
+| Creation | 5 | Illusion | Sorcerer, Wizard |  | Extended |  | DataOnly |
+| Dispel Evil and Good | 5 | Abjuration | Cleric, Paladin |  | Action | Yes | DataOnly |
+| Dominate Person | 5 | Enchantment | Bard, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Dream | 5 | Illusion | Bard, Warlock, Wizard |  | Extended |  | Mechanics |
+| Flame Strike | 5 | Evocation | Cleric |  | Action |  | Partial |
+| Geas | 5 | Enchantment | Bard, Cleric, Druid, Paladin, Wizard |  | Extended |  | Mechanics |
+| Greater Restoration | 5 | Abjuration | Bard, Cleric, Druid, Paladin, Ranger |  | Action |  | DataOnly |
+| Hallow | 5 | Abjuration | Cleric |  | Extended |  | DataOnly |
+| Hold Monster | 5 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Insect Plague | 5 | Conjuration | Cleric, Druid, Sorcerer |  | Action | Yes | Mechanics |
+| Legend Lore | 5 | Divination | Bard, Cleric, Wizard |  | Extended |  | DataOnly |
+| Mass Cure Wounds | 5 | Abjuration | Bard, Cleric, Druid |  | Action |  | Mechanics |
+| Mislead | 5 | Illusion | Bard, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Modify Memory | 5 | Enchantment | Bard, Wizard |  | Action | Yes | Mechanics |
+| Passwall | 5 | Transmutation | Wizard |  | Action |  | DataOnly |
+| Planar Binding | 5 | Abjuration | Bard, Cleric, Druid, Warlock, Wizard |  | Extended |  | DataOnly |
+| Raise Dead | 5 | Necromancy | Bard, Cleric, Paladin |  | Extended |  | DataOnly |
+| Reincarnate | 5 | Necromancy | Druid |  | Extended |  | DataOnly |
+| Scrying | 5 | Divination | Bard, Cleric, Druid, Warlock, Wizard |  | Extended | Yes | DataOnly |
+| Seeming | 5 | Illusion | Bard, Sorcerer, Wizard |  | Action |  | DataOnly |
+| Summon Dragon | 5 | Conjuration | Wizard |  | Action | Yes | DataOnly |
+| Telekinesis | 5 | Transmutation | Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Telepathic Bond | 5 | Divination | Bard, Wizard |  | Action (ritual) |  | DataOnly |
+| Teleportation Circle | 5 | Conjuration | Bard, Sorcerer, Warlock, Wizard |  | Extended |  | DataOnly |
+| Tree Stride | 5 | Conjuration | Druid, Ranger |  | Action | Yes | DataOnly |
+| Wall of Force | 5 | Evocation | Wizard |  | Action | Yes | DataOnly |
+| Wall of Stone | 5 | Evocation | Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Blade Barrier | 6 | Evocation | Cleric |  | Action | Yes | Mechanics |
+| Chain Lightning | 6 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Circle of Death | 6 | Necromancy | Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Conjure Fey | 6 | Conjuration | Druid |  | Action | Yes | Mechanics |
+| Contingency | 6 | Abjuration | Wizard |  | Extended |  | DataOnly |
+| Create Undead | 6 | Necromancy | Cleric, Warlock, Wizard |  | Extended |  | DataOnly |
+| Disintegrate | 6 | Transmutation | Sorcerer, Wizard |  | Action |  | DataOnly |
+| Eyebite | 6 | Necromancy | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Find the Path | 6 | Divination | Bard, Cleric, Druid |  | Extended | Yes | DataOnly |
+| Flesh to Stone | 6 | Transmutation | Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Forbiddance | 6 | Abjuration | Cleric |  | Extended (ritual) |  | DataOnly |
+| Freezing Sphere | 6 | Evocation | Sorcerer, Wizard |  | Action |  | Mechanics |
+| Globe of Invulnerability | 6 | Abjuration | Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Guards and Wards | 6 | Abjuration | Bard, Wizard |  | Extended |  | DataOnly |
+| Harm | 6 | Necromancy | Cleric |  | Action |  | Mechanics |
+| Heal | 6 | Abjuration | Cleric, Druid |  | Action |  | DataOnly |
+| Heroes' Feast | 6 | Conjuration | Bard, Cleric, Druid |  | Extended |  | DataOnly |
+| Instant Summons | 6 | Conjuration | Wizard |  | Extended (ritual) |  | DataOnly |
+| Irresistible Dance | 6 | Enchantment | Bard, Wizard |  | Action | Yes | Mechanics |
+| Magic Jar | 6 | Necromancy | Wizard |  | Extended |  | Mechanics |
+| Mass Suggestion | 6 | Enchantment | Bard, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Move Earth | 6 | Transmutation | Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Planar Ally | 6 | Conjuration | Cleric |  | Extended |  | DataOnly |
+| Programmed Illusion | 6 | Illusion | Bard, Wizard |  | Action |  | DataOnly |
+| Sunbeam | 6 | Evocation | Cleric, Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Transport via Plants | 6 | Conjuration | Druid |  | Action |  | DataOnly |
+| True Seeing | 6 | Divination | Bard, Cleric, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Wall of Ice | 6 | Evocation | Wizard |  | Action | Yes | Mechanics |
+| Wall of Thorns | 6 | Conjuration | Druid |  | Action | Yes | Partial |
+| Wind Walk | 6 | Transmutation | Druid |  | Extended |  | DataOnly |
+| Word of Recall | 6 | Conjuration | Cleric |  | Action |  | DataOnly |
+| Arcane Sword | 7 | Evocation | Bard, Wizard |  | Action | Yes | Mechanics |
+| Conjure Celestial | 7 | Conjuration | Cleric |  | Action | Yes | Mechanics |
+| Delayed Blast Fireball | 7 | Evocation | Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Divine Word | 7 | Evocation | Cleric |  | Bonus |  | Mechanics |
+| Etherealness | 7 | Conjuration | Bard, Cleric, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Finger of Death | 7 | Necromancy | Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Fire Storm | 7 | Evocation | Cleric, Druid, Sorcerer |  | Action |  | Mechanics |
+| Forcecage | 7 | Evocation | Bard, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Magnificent Mansion | 7 | Conjuration | Bard, Wizard |  | Extended |  | DataOnly |
+| Mirage Arcane | 7 | Illusion | Bard, Druid, Wizard |  | Extended |  | DataOnly |
+| Plane Shift | 7 | Conjuration | Cleric, Druid, Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Prismatic Spray | 7 | Evocation | Bard, Sorcerer, Wizard |  | Action |  | Partial |
+| Project Image | 7 | Illusion | Bard, Wizard |  | Action | Yes | DataOnly |
+| Regenerate | 7 | Transmutation | Bard, Cleric, Druid |  | Extended |  | DataOnly |
+| Resurrection | 7 | Necromancy | Bard, Cleric |  | Extended |  | DataOnly |
+| Reverse Gravity | 7 | Transmutation | Druid, Sorcerer, Wizard |  | Action | Yes | DataOnly |
+| Sequester | 7 | Transmutation | Wizard |  | Action |  | DataOnly |
+| Simulacrum | 7 | Illusion | Wizard |  | Extended |  | DataOnly |
+| Symbol | 7 | Abjuration | Bard, Cleric, Druid, Wizard |  | Extended |  | Mechanics |
+| Teleport | 7 | Conjuration | Bard, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Animal Shapes | 8 | Transmutation | Druid |  | Action |  | DataOnly |
+| Antimagic Field | 8 | Abjuration | Cleric, Wizard |  | Action | Yes | DataOnly |
+| Antipathy/Sympathy | 8 | Enchantment | Bard, Druid, Wizard |  | Extended |  | Mechanics |
+| Befuddlement | 8 | Enchantment | Bard, Druid, Warlock, Wizard |  | Action |  | Mechanics |
+| Clone | 8 | Necromancy | Wizard |  | Extended |  | DataOnly |
+| Control Weather | 8 | Transmutation | Cleric, Druid, Wizard |  | Extended | Yes | DataOnly |
+| Demiplane | 8 | Conjuration | Sorcerer, Warlock, Wizard |  | Action |  | DataOnly |
+| Dominate Monster | 8 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action | Yes | Mechanics |
+| Earthquake | 8 | Transmutation | Cleric, Druid, Sorcerer |  | Action | Yes | Mechanics |
+| Glibness | 8 | Enchantment | Bard, Warlock |  | Action |  | DataOnly |
+| Holy Aura | 8 | Abjuration | Cleric |  | Action | Yes | Mechanics |
+| Incendiary Cloud | 8 | Conjuration | Druid, Sorcerer, Wizard |  | Action | Yes | Mechanics |
+| Maze | 8 | Conjuration | Wizard |  | Action | Yes | DataOnly |
+| Mind Blank | 8 | Abjuration | Bard, Wizard |  | Action |  | DataOnly |
+| Power Word Stun | 8 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Sunburst | 8 | Evocation | Cleric, Druid, Sorcerer, Wizard |  | Action |  | Mechanics |
+| Tsunami | 8 | Conjuration | Druid |  | Extended | Yes | Mechanics |
+| Astral Projection | 9 | Necromancy | Cleric, Warlock, Wizard |  | Extended |  | DataOnly |
+| Foresight | 9 | Divination | Bard, Druid, Warlock, Wizard |  | Extended |  | DataOnly |
+| Gate | 9 | Conjuration | Cleric, Sorcerer, Warlock, Wizard |  | Action | Yes | DataOnly |
+| Imprisonment | 9 | Abjuration | Warlock, Wizard |  | Extended |  | Mechanics |
+| Mass Heal | 9 | Abjuration | Cleric |  | Action |  | DataOnly |
+| Meteor Swarm | 9 | Evocation | Sorcerer, Wizard |  | Action |  | Partial |
+| Power Word Heal | 9 | Enchantment | Bard, Cleric |  | Action |  | DataOnly |
+| Power Word Kill | 9 | Enchantment | Bard, Sorcerer, Warlock, Wizard |  | Action |  | Mechanics |
+| Prismatic Wall | 9 | Abjuration | Bard, Wizard |  | Action |  | Partial |
+| Shapechange | 9 | Transmutation | Druid, Wizard |  | Action | Yes | DataOnly |
+| Storm of Vengeance | 9 | Conjuration | Druid |  | Action | Yes | Partial |
+| Time Stop | 9 | Transmutation | Sorcerer, Wizard |  | Action |  | DataOnly |
+| True Polymorph | 9 | Transmutation | Bard, Warlock, Wizard |  | Action | Yes | DataOnly |
+| True Resurrection | 9 | Necromancy | Cleric, Druid |  | Extended |  | DataOnly |
+| Weird | 9 | Illusion | Warlock, Wizard |  | Action | Yes | Mechanics |
+| Wish | 9 | Conjuration | Sorcerer, Wizard |  | Action |  | Mechanics |
