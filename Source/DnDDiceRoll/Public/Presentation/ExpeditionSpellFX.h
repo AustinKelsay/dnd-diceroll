@@ -44,6 +44,8 @@ struct DNDDICEROLL_API FExpeditionSpellFXStyle
     // Impact: start after travel, grow, then fade; Linger keeps LingerOpacity until it ends.
     float ImpactGrow = 0.12f, ImpactHold = 0.05f, ImpactLinger = 0.05f, LingerOpacity = 0.0f;
     float ImpactScale = 0.45f;   // cantrip burst diameter in metres (Ico mesh is 1 m)
+    // Area spells: visual blast diameter as a fraction of the true area (cells are telegraphed exactly).
+    float AreaVisualScale = 1.0f;
     // Area spells: telegraph shown first on the exact affected cells.
     float Telegraph = 0.0f;
     bool bArea = false;

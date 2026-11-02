@@ -42,7 +42,7 @@ bool FExpeditionSpellFXStyle::For(const FSpellCastEvent& Event, FExpeditionSpell
         // 3rd level (size class 2): exact cells first, a bead, then a sub-second blast that lingers faintly.
         // Telegraph + travel = 0.30 s before impact (direction budget 0.2-0.4 s).
         Out.Glow = 1.0f; Out.Telegraph = 0.12f; Out.bArea = true; Out.Travel = 0.18f; Out.BoltScale = 0.6f;
-        Out.ImpactGrow = 0.22f; Out.ImpactHold = 0.12f; Out.ImpactLinger = 0.75f; Out.LingerOpacity = 0.35f;
+        Out.ImpactGrow = 0.22f; Out.ImpactHold = 0.12f; Out.ImpactLinger = 0.75f; Out.LingerOpacity = 0.3f; Out.AreaVisualScale = 0.6f;
         return true;
     }
     return false;
@@ -158,11 +158,13 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         P.ScaleFrom = P.ScaleTo = FVector(Style.BoltScale, Style.BoltScale * 0.8f, Style.BoltScale * 0.8f);
         P.Mesh->SetWorldRotation(Dir.Rotation()); P.Ink->SetWorldRotation(Dir.Rotation());
     }
-    const float Diameter = Style.bArea ? Radius * 2.0f * CellCm / 100.0f : Style.ImpactScale;
+    // Area blasts draw well inside the true area (the telegraphed cells stay exact) so the board stays readable.
+    const float Diameter = Style.bArea ? Radius * 2.0f * CellCm / 100.0f * Style.AreaVisualScale : Style.ImpactScale;
     {
         // The blast (Fireball) or the burst (Fire Bolt): flat bands, ink shell, ragged outer edge.
-        FExpeditionSpellFXPiece& P = Add(Ico, Style, true, FVector::UpVector, true);
-        P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Gone; P.PeakOpacity = Style.bArea ? 0.55f : 1.0f;
+        // No back-face ink shell on the big translucent blast: its noisy edge showed through as specks.
+        FExpeditionSpellFXPiece& P = Add(Ico, Style, !Style.bArea, FVector::UpVector, true);
+        P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Gone; P.PeakOpacity = Style.bArea ? 0.5f : 1.0f;
         // Both blasts read as ember orange (the camera looks straight down, so the face-on band is what shows);
         // the yellow (Fire Bolt) or white-hot (Fireball) centre comes from the core piece below.
         P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
@@ -189,7 +191,8 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         FExpeditionSpellFXPiece& P = Add(Ico, Style, false, FVector::UpVector, true);
         P.Start = Hit; P.Peak = Hit + Style.ImpactGrow * 0.6f; P.End = Fade; P.Linger = Fade + 0.1f; P.PeakOpacity = 1.0f;
         P.From = P.To = Impact + FVector(0, 0, 20);
-        P.ScaleFrom = FVector(0.3f); P.ScaleTo = FVector(Diameter * 0.32f, Diameter * 0.32f, Diameter * 0.22f);
+        P.PeakOpacity = 0.85f;
+        P.ScaleFrom = FVector(0.3f); P.ScaleTo = FVector(Diameter * 0.26f, Diameter * 0.26f, Diameter * 0.18f);
         P.Material->SetVectorParameterValue(TEXT("Core"), WhiteHot);
         P.Material->SetVectorParameterValue(TEXT("Hue"), FireCore);
         P.Material->SetScalarParameterValue(TEXT("Edge"), 0.3f);
