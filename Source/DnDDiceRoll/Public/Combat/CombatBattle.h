@@ -78,6 +78,8 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 ArmorWorn = -1;
     /** A shield adds its bonus and blocks two-handed weapons. */
     UPROPERTY() bool bShieldEquipped = false;
+    /** Pieces of ammunition for an Ammunition weapon (0-99); one is spent per shot. */
+    UPROPERTY() int32 Ammunition = 0;
     UPROPERTY() int32 Speed = 4;
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
@@ -318,6 +320,8 @@ public:
     static void WeaponDice(const FCombatantState& Unit, int32& OutCount, int32& OutSides);
     /** AC from worn armor, shield and Dexterity; legacy units use ArmorClass (+2 with a shield). 0 for unknown IDs. */
     int32 EffectiveArmorClass(int32 Id) const;
+    /** Action range in cells; weapon attacks use the MainHand reach (melee) or long range (ranged), else Range. */
+    static int32 ActionRange(const FCombatantState& Unit, ECombatCommandType Action);
 private:
     friend class FPartyContinuity;
     friend class FExpeditionRun;
@@ -334,7 +338,6 @@ private:
     int32 StepCost(FIntPoint Cell) const;
     /** The unit when it may use a targeted action now (turn, life, action budget, role, uses); otherwise null. */
     const FCombatantState* ActionUser(int32 Id, ECombatCommandType Action) const;
-    static int32 ActionRange(const FCombatantState& Unit, ECombatCommandType Action);
     bool CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const;
     bool SneakAttackApplies(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 Roll(int32 Sides);

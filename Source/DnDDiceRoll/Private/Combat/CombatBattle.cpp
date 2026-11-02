@@ -6,6 +6,7 @@
 #include "Rules/ClassFeatureRules.h"
 #include "Rules/WeaponRules.h"
 #include "Rules/ArmorRules.h"
+#include "Rules/ProficiencyRules.h"
 
 namespace
 {
@@ -28,6 +29,42 @@ int32 WeaponMaxDice(const FCombatantState& Unit)
     int32 Count = 1, Sides = 0;
     FCombatBattle::WeaponDice(Unit, Count, Sides);
     return Count * Sides;
+}
+const FWeaponProfile* MainWeapon(const FCombatantState& Unit)
+{
+    return Unit.MainHand >= 0 && Unit.MainHand < static_cast<int32>(EWeapon::Count) ? &FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)) : nullptr;
+}
+bool RangedAttacker(const FCombatantState& Unit)
+{
+    const FWeaponProfile* Weapon = MainWeapon(Unit);
+    return Weapon ? Weapon->bRanged : Unit.Range > 1;
+}
+bool NeedsAmmunition(const FCombatantState& Unit)
+{
+    const FWeaponProfile* Weapon = MainWeapon(Unit);
+    return Weapon && Weapon->Has(EWeaponProperty::Ammunition);
+}
+// Armor penalties apply to party adventurers wearing armor or a shield their class is not trained for.
+FArmorPenalties ArmorPenaltiesOf(const FCombatBattle& Battle, const FCombatantState& Unit)
+{
+    if (Unit.Side != ECombatSide::Party || Unit.AdventurerRole == EAdventurerRole::None || (Unit.ArmorWorn < 0 && !Unit.bShieldEquipped)) { return FArmorPenalties(); }
+    return FArmorRules::Penalties(Unit.AdventurerRole, Unit.ArmorWorn < 0 ? EArmor::None : static_cast<EArmor>(Unit.ArmorWorn), Unit.bShieldEquipped,
+        Battle.AbilityScores(Unit.Id).Get(EAbility::Strength));
+}
+// With a weapon: proficiency + the weapon's ability (finesse picks the better of STR/DEX) + rank. Legacy: AttackBonus.
+int32 WeaponAttackBonus(const FCombatBattle& Battle, const FCombatantState& Unit)
+{
+    const FWeaponProfile* Weapon = MainWeapon(Unit);
+    if (!Weapon) { return Unit.AttackBonus; }
+    const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
+    return FProficiencyRules::ProficiencyBonus(Unit.Level) + FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank;
+}
+int32 WeaponDamageModifier(const FCombatBattle& Battle, const FCombatantState& Unit)
+{
+    const FWeaponProfile* Weapon = MainWeapon(Unit);
+    if (!Weapon) { return FBuildCatalog::AttackModifier(Unit); }
+    const FAbilityScores Scores = Battle.AbilityScores(Unit.Id);
+    return FAbilityRules::Modifier(Scores.Get(FWeaponRules::AttackAbility(*Weapon, Scores))) + Unit.WeaponRank + (Unit.RageTurns > 0 ? 2 : 0);
 }
 }
 
@@ -94,6 +131,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.MainHand >= 0 && !FWeaponRules::CanWield(FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)),
                 FWeaponRules::Profile(static_cast<EWeapon>(Unit.MainHand)).Has(EWeaponProperty::TwoHanded), Unit.bShieldEquipped)))
         { return Reject(TEXT("Invalid or unwieldable equipment.")); }
+        if (Unit.Ammunition < 0 || Unit.Ammunition > 99) { return Reject(TEXT("Ammunition must be 0-99.")); }
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
@@ -375,7 +413,7 @@ bool FCombatBattle::HasLineOfSight(FIntPoint From, FIntPoint To) const
 
 bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const
 {
-    return Target.Side != Attacker.Side && Target.HP > 0 && GridDistance(Origin, Target.Cell) <= Attacker.Range &&
+    return Target.Side != Attacker.Side && Target.HP > 0 && GridDistance(Origin, Target.Cell) <= ActionRange(Attacker, ECombatCommandType::Attack) &&
         HasLineOfSight(Origin, Target.Cell);
 }
 
@@ -391,6 +429,8 @@ const FCombatantState* FCombatBattle::ActionUser(int32 Id, ECombatCommandType Ac
     if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->SpellSlots <= 0)) { return nullptr; }
     if (Action == ECombatCommandType::MagicMissile) { if (const auto* B = FBuildCatalog::Find(Unit->BuildId); B && Unit->KitUses < B->MissileKitCost) { return nullptr; } }
     if (Action == ECombatCommandType::Potion && Unit->Potions <= 0) { return nullptr; }
+    if (bWeaponAttack && NeedsAmmunition(*Unit) && Unit->Ammunition <= 0) { return nullptr; }
+    if ((Action == ECombatCommandType::CureWounds || Action == ECombatCommandType::MagicMissile) && ArmorPenaltiesOf(*this, *Unit).bCannotCastSpells) { return nullptr; }
     return Unit;
 }
 
@@ -398,7 +438,9 @@ int32 FCombatBattle::ActionRange(const FCombatantState& Unit, ECombatCommandType
 {
     switch (Action)
     {
-    case ECombatCommandType::Attack: case ECombatCommandType::PrecisionStrike: return Unit.Range;
+    case ECombatCommandType::Attack: case ECombatCommandType::PrecisionStrike:
+        if (const FWeaponProfile* Weapon = MainWeapon(Unit)) { return Weapon->bRanged ? Weapon->LongFeet / FWeaponRules::FeetPerCell : FWeaponRules::ReachCells(*Weapon); }
+        return Unit.Range;
     case ECombatCommandType::MagicMissile: return MissileRange;
     case ECombatCommandType::CureWounds: case ECombatCommandType::Rescue: case ECombatCommandType::Potion: return Unit.Side == ECombatSide::Party ? TouchRange : 0;
     default: return 0;
@@ -580,7 +622,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         Forecast.TargetArmorClass = EffectiveArmorClass(TargetId) + Forecast.CoverBonus;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
-        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Forecast.TargetArmorClass) ? 1 : 0; }
+        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + WeaponAttackBonus(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Forecast.TargetArmorClass) ? 1 : 0; }
         const FAttackRollMode Mode = AttackRollMode(ActorId, TargetId);
         Forecast.RollMode = Mode.Mode;
         Forecast.AdvantageSources = Mode.Advantage;
@@ -591,7 +633,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         Forecast.HitChancePercent = (Forecast.HitChanceOutOf400 + 2) / 4;
         int32 WeaponCount = 1, WeaponSides = 0;
         WeaponDice(*Actor, WeaponCount, WeaponSides);
-        Effect(WeaponCount, WeaponSides, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        Effect(WeaponCount, WeaponSides, WeaponDamageModifier(*this, *Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
         break;
@@ -748,7 +790,7 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
     const FCombatantState* Actor = Find(ActorId);
     if (!Actor || !Find(TargetId)) { return Mode; }
     // SRD: a ranged attack has disadvantage while a hostile, non-incapacitated creature is within five feet.
-    if (Actor->Range > 1)
+    if (RangedAttacker(*Actor))
     {
         for (const FCombatantState& Other : State.Encounter.Combatants)
         {
@@ -759,6 +801,10 @@ FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) con
         }
     }
     const FCombatantState* Target = Find(TargetId);
+    if (const FWeaponProfile* Weapon = MainWeapon(*Actor); Weapon && Weapon->bRanged &&
+        FWeaponRules::Band(*Weapon, GridDistance(Actor->Cell, Target->Cell), false) == ERangeBand::Long)
+    { Mode.Disadvantage.Add(TEXT("long range")); }
+    if (ArmorPenaltiesOf(*this, *Actor).bStrDexDisadvantage) { Mode.Disadvantage.Add(TEXT("unproficient armor")); }
     for (const FCombatCondition& Condition : Actor->Conditions)
     {
         const FCombatantState* Source = Find(Condition.SourceId);
@@ -795,11 +841,12 @@ void FCombatBattle::BeginTurn()
     if (!Unit) { return; }
     Unit->bReactionAvailable = true;
     const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained);
-    State.MovementLeft = bHeld ? 0 : Unit->Speed;
+    const int32 TurnSpeed = FMath::Max(0, Unit->Speed - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell);
+    State.MovementLeft = bHeld ? 0 : TurnSpeed;
     if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone))
     {
         Unit->Conditions.RemoveAll([](const FCombatCondition& C) { return C.Condition == ECombatCondition::Prone; });
-        State.MovementLeft = FMath::Max(0, Unit->Speed - FMovementRules::StandUpCost(Unit->Speed));
+        State.MovementLeft = FMath::Max(0, TurnSpeed - FMovementRules::StandUpCost(Unit->Speed));
     }
 }
 
@@ -853,8 +900,9 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
     if (Mode.Mode != ERollMode::Normal) { Result.AttackRolls.Add(Roll(20)); }
     Result.NaturalRoll = Mode.Mode == ERollMode::Advantage ? FMath::Max(Result.AttackRolls[0], Result.AttackRolls.Last()) :
         FMath::Min(Result.AttackRolls[0], Result.AttackRolls.Last());
-    Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
-    Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
+    if (NeedsAmmunition(*Actor)) { --MutableFind(ActorId)->Ammunition; }
+    Result.AttackBonus = WeaponAttackBonus(*this, *Actor) + ManeuverBonus;
+    Result.AttackTotal = Result.NaturalRoll + Result.AttackBonus;
     Result.CoverBonus = CoverBonus(ActorId, TargetId);
     Result.TargetArmorClass = EffectiveArmorClass(TargetId) + Result.CoverBonus;
     Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
@@ -867,7 +915,7 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
         WeaponDice(*Actor, DiceCount, DiceSides);
         Result.Damage = RollDice(DiceCount, DiceSides);
         if (Result.bCritical) { Result.Damage += RollDice(DiceCount, DiceSides); }
-        Result.EffectModifier = FBuildCatalog::AttackModifier(*Actor) + ManeuverBonus;
+        Result.EffectModifier = WeaponDamageModifier(*this, *Actor) + ManeuverBonus;
         Result.Damage += Result.EffectModifier;
         Result.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Result.bSneakAttack) { Result.Damage += RollDice(Result.bCritical ? 2 : 1, SneakDie); }
@@ -902,8 +950,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             for (FCombatantState& Reactor : State.Encounter.Combatants)
             {
                 if (Moving->Life != ECombatLife::Conscious) { break; }
-                if (Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || Reactor.Range != 1 ||
-                    !FOpportunityRules::StepProvokes(Reactor.Cell, 1, Moving->Cell, Next, false, false, Reactor.bReactionAvailable)) { continue; }
+                if (Reactor.Side == Moving->Side || Reactor.Life != ECombatLife::Conscious || RangedAttacker(Reactor) ||
+                    !FOpportunityRules::StepProvokes(Reactor.Cell, ActionRange(Reactor, ECombatCommandType::Attack), Moving->Cell, Next, false, false, Reactor.bReactionAvailable)) { continue; }
                 Reactor.bReactionAvailable = false;
                 FCombatResult Swing;
                 Strike(Reactor.Id, Moving->Id, 0, Swing);
@@ -998,7 +1046,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         const FString ModeText = Result.AttackRolls.Num() > 1 ?
             FString::Printf(TEXT(" (%s %d/%d)"), FCheckRules::ModeName(Result.RollMode), Result.AttackRolls[0], Result.AttackRolls[1]) : FString();
         Result.Feedback = FString::Printf(TEXT("%s > %s: d20 %d%s + %d = %d vs AC %d%s | %s | %d damage%s. HP %d/%d%s"),
-            *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, Actor->AttackBonus, Result.AttackTotal, Result.TargetArmorClass,
+            *Actor->Name, *Target->Name, Result.NaturalRoll, *ModeText, WeaponAttackBonus(*this, *Actor), Result.AttackTotal, Result.TargetArmorClass,
             Result.CoverBonus ? *FString::Printf(TEXT(" (%s)"), CoverName(Result.CoverBonus)) : TEXT(""),
             Result.bCritical ? TEXT("CRITICAL") : Result.bHit ? TEXT("HIT") : TEXT("MISS"), Result.Damage, *DefenseText(Result),
             Target->HP, Target->MaxHP, *TargetStatus);

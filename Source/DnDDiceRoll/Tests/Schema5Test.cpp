@@ -478,4 +478,94 @@ bool FSchema5EquipmentTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5WeaponArmorTest, "Project.Expedition.Schema5.WeaponPropertiesAndArmorPenalties",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5WeaponArmorTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Armed = [](FIntPoint EnemyCell, EWeapon Weapon, int32 Ammo)
+    {
+        FCombatEncounter Encounter = Pair(EnemyCell);
+        Encounter.Combatants[0].MainHand = static_cast<int32>(Weapon); Encounter.Combatants[0].Ammunition = Ammo;
+        Encounter.Combatants[1].MaxHP = Encounter.Combatants[1].HP = 500;
+        return Encounter;
+    };
+    {
+        FCombatantState Unit; Unit.Range = 3;
+        TestEqual(TEXT("Legacy range is the unit value"), FCombatBattle::ActionRange(Unit, ECombatCommandType::Attack), 3);
+        Unit.MainHand = static_cast<int32>(EWeapon::Glaive);
+        TestEqual(TEXT("Reach weapon reaches two cells"), FCombatBattle::ActionRange(Unit, ECombatCommandType::Attack), 2);
+        Unit.MainHand = static_cast<int32>(EWeapon::Longsword);
+        TestEqual(TEXT("Melee weapon reaches one cell"), FCombatBattle::ActionRange(Unit, ECombatCommandType::Attack), 1);
+        Unit.MainHand = static_cast<int32>(EWeapon::HandCrossbow);
+        TestEqual(TEXT("Ranged weapon reaches its long range"), FCombatBattle::ActionRange(Unit, ECombatCommandType::Attack), 24);
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Glaive starts"), Battle.Start(Armed({2, 0}, EWeapon::Glaive, 0), 7, Error));
+        TestTrue(TEXT("Glaive reaches two cells"), Battle.LegalTargets(10).Contains(20));
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Hand crossbow starts"), Battle.Start(Armed({0, 7}, EWeapon::HandCrossbow, 1), 7, Error));
+        TestTrue(TEXT("Long range is legal"), Battle.LegalTargets(10).Contains(20));
+        TestTrue(TEXT("Long range imposes disadvantage"), Battle.AttackRollMode(10, 20).Disadvantage.Contains(TEXT("long range")));
+        TestTrue(TEXT("Shot resolves"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+        TestEqual(TEXT("Shot spends ammunition"), Battle.Find(10)->Ammunition, 0);
+    }
+    {
+        FCombatBattle Battle;
+        TestTrue(TEXT("Empty quiver starts"), Battle.Start(Armed({0, 3}, EWeapon::Shortbow, 0), 7, Error));
+        TestEqual(TEXT("No ammunition, no shot"), Battle.LegalTargets(10).Num(), 0);
+        TestFalse(TEXT("Normal range has no long-range disadvantage"), Battle.AttackRollMode(10, 20).Disadvantage.Contains(TEXT("long range")));
+    }
+    {
+        FCombatEncounter Encounter = Armed({1, 0}, EWeapon::Rapier, 0);
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Rogue;
+        FCombatBattle Battle;
+        TestTrue(TEXT("Rogue starts"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult Swing = Battle.Submit({ECombatCommandType::Attack, 10, {}, 20});
+        TestEqual(TEXT("Finesse attacks with Dexterity"), Swing.AttackBonus, 2 + 3);
+    }
+    {
+        FCombatEncounter Encounter = Armed({1, 0}, EWeapon::Longsword, 0);
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Wizard;
+        Encounter.Combatants[0].ArmorWorn = static_cast<int32>(EArmor::Plate);
+        Encounter.Combatants[0].Speed = 6;
+        FCombatBattle Battle;
+        TestTrue(TEXT("Wizard in plate starts"), Battle.Start(Encounter, 7, Error));
+        TestEqual(TEXT("Strength under the requirement costs 10 ft"), Battle.Snapshot().MovementLeft, 4);
+        TestTrue(TEXT("Unproficient armor imposes disadvantage"), Battle.AttackRollMode(10, 20).Disadvantage.Contains(TEXT("unproficient armor")));
+        Encounter.Combatants[0].AdventurerRole = EAdventurerRole::Fighter;
+        TestTrue(TEXT("Fighter in plate starts"), Battle.Start(Encounter, 7, Error));
+        TestEqual(TEXT("Proficient and strong enough"), Battle.Snapshot().MovementLeft, 6);
+        TestEqual(TEXT("No armor disadvantage"), Battle.AttackRollMode(10, 20).Disadvantage.Num(), 0);
+    }
+    {
+        FCombatEncounter Encounter = Pair({2, 0});
+        Encounter.Combatants[1].MainHand = static_cast<int32>(EWeapon::Glaive);
+        FCombatBattle Battle;
+        TestTrue(TEXT("Reach reactor starts"), Battle.Start(Encounter, 7, Error));
+        const FCombatResult Step = Battle.Submit({ECombatCommandType::Move, 10, {0, 3}, INDEX_NONE});
+        TestTrue(TEXT("Move resolves"), Step.bAccepted);
+        TestEqual(TEXT("Leaving a reach weapon's reach provokes"), Step.Reactions.Num(), 1);
+    }
+    {
+        FCombatEncounter Encounter = Pair({7, 7});
+        Encounter.Combatants[0].Ammunition = -1;
+        FCombatBattle Battle;
+        TestFalse(TEXT("Negative ammunition rejected"), Battle.Start(Encounter, 7, Error));
+        FExpeditionRun Run; FString Json;
+        FExpeditionSnapshot Snapshot = ActiveRun(Run);
+        FExpeditionSaveData Data; Data.Current = Snapshot;
+        TestTrue(TEXT("Encodes"), FExpeditionSave::Encode(Data, Json, Error));
+        TSharedPtr<FJsonObject> Root;
+        FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Root);
+        FirstCombatantJson(Root)->RemoveField(TEXT("Ammunition"));
+        FExpeditionSaveData Loaded;
+        TestFalse(TEXT("Ammunition is a required field"), FExpeditionSave::Decode(Text(Root), Loaded, Error));
+    }
+    return !HasAnyErrors();
+}
 #endif
