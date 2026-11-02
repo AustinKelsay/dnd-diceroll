@@ -158,3 +158,7 @@ Attack rolls (Attack, Precision Strike) check cover from blocked cells. From the
 ## Issue #93: knowledge and Wisdom checks outside combat
 
 `FLoreRules` gives each skill a use. Recall before a fight: Religion for undead, Arcana for elementals (DC 15), Nature for beasts and History for humanoids (DC 10); a success reveals one fact (resistances first, then abilities, then weaknesses) plus one per 5 over the DC, up to three. Identify: Arcana DC 15 for magic items and runes, History DC 10 for old mundane items. Medicine at camp (DC 10) treats an injury for hit points equal to the patient's level. Insight reads an NPC when it meets 10 + the NPC's Deception modifier. Revealed facts and treated injuries need saved run state (#39) and HUD wiring (#50); amounts are tuning for Austin.
+
+## Issue #94: tools and kits
+
+`FToolRules`: a tool check adds the proficiency bonus when you are proficient with the tool you are holding; also being proficient in the matching skill grants advantage (the SRD lets the GM do this; we always do). Some tasks require the tool: no thieves' tools, no lockpicking. A healer's kit (10 uses) stabilizes a dying creature with no check and spends one use. Herbalism kit proficiency lets you brew antitoxin and potions of healing. The existing `ETool` set is unchanged. Kit charges and tool items need saved inventory (#39, the issue's schema change).
