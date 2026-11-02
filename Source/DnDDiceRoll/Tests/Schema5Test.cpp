@@ -853,7 +853,7 @@ bool FSchema5SrdConditionEffectsTest::RunTest(const FString& Parameters)
         FCombatEncounter E = Pair({3, 0});
         E.Combatants[0].Conditions = {Cond(ECombatCondition::Stunned)};
         FCombatBattle B; Begin(E, 1, B);
-        TestEqual(TEXT("Stunned: no movement"), B.Snapshot().MovementLeft, 0);
+        TestTrue(TEXT("Stunned (5.2.1): Speed is unchanged"), B.Snapshot().MovementLeft > 0);
         TestFalse(TEXT("Stunned: no action"), B.Snapshot().bActionAvailable);
         TestFalse(TEXT("Stunned: no reaction"), B.Find(10)->bReactionAvailable);
     }
@@ -863,6 +863,13 @@ bool FSchema5SrdConditionEffectsTest::RunTest(const FString& Parameters)
         FCombatBattle B; Begin(E, 1, B);
         TestFalse(TEXT("Incapacitated: no action"), B.Snapshot().bActionAvailable);
         TestTrue(TEXT("Incapacitated alone can still move"), B.Snapshot().MovementLeft > 0);
+    }
+    for (ECombatCondition Frozen : {ECombatCondition::Paralyzed, ECombatCondition::Unconscious, ECombatCondition::Petrified})
+    {
+        FCombatEncounter E = Pair({3, 0});
+        E.Combatants[0].Conditions = {Cond(Frozen)};
+        FCombatBattle B; Begin(E, 1, B);
+        TestEqual(FString::Printf(TEXT("%s: Speed 0"), FCombatBattle::ConditionName(Frozen)), B.Snapshot().MovementLeft, 0);
     }
     {
         FCombatEncounter Plain = Pair({3, 0}), Bound = Pair({3, 0});

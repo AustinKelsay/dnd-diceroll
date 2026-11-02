@@ -366,6 +366,8 @@ bool FCombatBattle::AddSpellCondition(FCombatantState& Victim, ECombatCondition 
     if (Victim.Conditions.ContainsByPredicate([&](const FCombatCondition& C) { return C.Condition == Kind && C.SourceId == SourceId; })) { return true; }
     FCombatCondition Applied; Applied.Condition = Kind; Applied.SourceId = SourceId; Applied.RoundsLeft = RoundsLeft;
     Victim.Conditions.Add(Applied);
+    // SRD 5.2.1 Unconscious: the creature also has the Prone condition, which remains when Unconscious ends.
+    if (Kind == ECombatCondition::Unconscious) { AddSpellCondition(Victim, ECombatCondition::Prone, INDEX_NONE, -1); }
     // SRD 5.2.1: concentration ends when the concentrating creature has the Incapacitated condition.
     if (Incapacitating(Kind) && Victim.bConcentrating) { EndConcentration(Victim); }
     return true;

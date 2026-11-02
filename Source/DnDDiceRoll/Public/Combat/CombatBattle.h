@@ -713,7 +713,7 @@ private:
     static bool IsIncapacitated(const FCombatantState& Unit);
     /** Whether a nearby foe can see Target (not Blinded, not obscured or invisible, light or darkvision in darkness). */
     bool NearbyFoeSees(const FCombatantState& Viewer, const FCombatantState& Target) const;
-    /** Stunned, paralyzed and unconscious creatures cannot move and auto-fail STR and DEX saves. */
+    /** Stunned, Paralyzed, Unconscious and Petrified creatures auto-fail STR and DEX saves (SRD 5.2.1). Speed 0 is separate: not Stunned. */
     static bool IsHelpless(const FCombatantState& Unit);
     ERollMode SaveMode(const FCombatantState& Unit, EAbility Ability, ERollMode Requested) const;
     ERollMode CheckMode(const FCombatantState& Unit, ERollMode Requested) const;

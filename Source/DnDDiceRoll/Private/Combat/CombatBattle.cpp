@@ -1341,7 +1341,9 @@ void FCombatBattle::BeginTurn()
     State.SneakAttackUsedBy.Reset();
     State.MeleeHitThisTurn.Reset();
     State.MeleeCritThisTurn.Reset();
-    const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || IsHelpless(*Unit);
+    // SRD 5.2.1 Speed 0: Grappled, Restrained, Paralyzed, Petrified, Unconscious. Stunned and Incapacitated don't change Speed.
+    const bool bHeld = HasCondition(*Unit, ECombatCondition::Grappled) || HasCondition(*Unit, ECombatCondition::Restrained) || HasCondition(*Unit, ECombatCondition::Paralyzed) ||
+        HasCondition(*Unit, ECombatCondition::Petrified) || HasCondition(*Unit, ECombatCondition::Unconscious);
     const int32 TurnSpeed = SpellSpeed(Unit->Id, FMath::Max(0, BaseSpeed(*this, *Unit) - ArmorPenaltiesOf(*this, *Unit).SpeedPenaltyFeet / FWeaponRules::FeetPerCell));
     State.MovementLeft = bHeld ? 0 : TurnSpeed;
     if (!bHeld && HasCondition(*Unit, ECombatCondition::Prone) && !SpellKeepsProne(Unit->Id))
