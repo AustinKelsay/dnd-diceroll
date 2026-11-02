@@ -1,5 +1,6 @@
 #include "Party/BuildCatalog.h"
 #include "Rules/SuperiorityRules.h"
+#include "Rules/ClassFeatureRules.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/ArmorRules.h"
 #include "Rules/LevelRules.h"
@@ -328,4 +329,24 @@ int32 FBuildCatalog::SurgeCap(const FCombatantState& Hero)
         if (A.Effect == EAbilityEffect::Surge && (A.bKitResource ? Hero.KitUses < B->KitCap : Hero.RageUses < B->RageCap)) { return 2; }
     }
     return 0;
+}
+
+TArray<FString> FBuildCatalog::ProgressSheet(const FCombatantState& Hero)
+{
+    const auto Role = [](EAdventurerRole R) { return StaticEnum<EAdventurerRole>()->GetNameStringByValue(static_cast<int64>(R)); };
+    TArray<FString> Lines;
+    const int32 Next = Hero.Level < FLevelRules::MaxLevel ? FLevelRules::XpForLevel(Hero.Level + 1) : 0;
+    Lines.Add(Next ? FString::Printf(TEXT("Level %d | XP %d / %d"), Hero.Level, Hero.Xp, Next) : FString::Printf(TEXT("Level %d | XP %d (max)"), Hero.Level, Hero.Xp));
+    const int32 Primary = Hero.Level - Hero.SecondaryLevel;
+    Lines.Add(Hero.SecondaryRole == EAdventurerRole::None ? FString::Printf(TEXT("Class: %s %d"), *Role(Hero.AdventurerRole), Primary)
+        : FString::Printf(TEXT("Classes: %s %d / %s %d"), *Role(Hero.AdventurerRole), Primary, *Role(Hero.SecondaryRole), Hero.SecondaryLevel));
+    Lines.Add(FString::Printf(TEXT("HP %d / %d | Hit dice %d / %d"), Hero.HP, Hero.MaxHP, FMath::Max(0, Hero.Level - Hero.HitDiceSpent), Hero.Level));
+    Lines.Add(Status(Hero));
+    FString Features = FClassFeatureRules::FeatureSummary(Hero.AdventurerRole, Primary);
+    if (Hero.SecondaryRole != EAdventurerRole::None) { Features += TEXT(", ") + FClassFeatureRules::FeatureSummary(Hero.SecondaryRole, Hero.SecondaryLevel); }
+    Lines.Add(TEXT("Features: ") + Features);
+    const int32 Asi = PendingAsi(Hero);
+    if (Asi > 0) { Lines.Add(FString::Printf(TEXT("Ability Score Improvement available (%d)"), Asi)); }
+    if (Next && Hero.Xp >= Next) { Lines.Add(TEXT("Level up available")); }
+    return Lines;
 }

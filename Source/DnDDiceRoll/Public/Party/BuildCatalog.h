@@ -50,9 +50,11 @@ public:
     /** #79: improvements earned by class levels, minus those already chosen. */
     static int32 PendingAsi(const FCombatantState& Hero);
     static int32 BasicDamage(const FBuildDefinition& Build, int32 Level);
-    /** Levels the hero has in Role across both classes. */
     /** Superiority dice per rest: the interim 2 below Fighter 3, then the SRD 4. */
     static int32 ManeuverCap(const FCombatantState& Hero);
+    /** #79 menu sheet: level/XP, classes, HP and hit dice, slots and resources, tagged features, pending ASI. Plain text lines so any HUD layout (incl. #110) can draw them. */
+    static TArray<FString> ProgressSheet(const FCombatantState& Hero);
+    /** Levels the hero has in Role across both classes. */
     static int32 ClassLevel(const FCombatantState& Hero, EAdventurerRole Role);
     static int32 SurgeCap(const FCombatantState& Hero);
     static bool ValidResources(const FCombatantState& Hero);

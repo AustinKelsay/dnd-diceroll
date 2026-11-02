@@ -96,4 +96,18 @@ bool FClassFeatureTableTest::RunTest(const FString& Parameters)
     { TestTrue(TEXT("Every requested class has features"), FClassFeatureRules::FeaturesThrough(Role, 5).Num() > 0); }
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProgressSheetTest, "Project.Expedition.Rules.ProgressSheet",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FProgressSheetTest::RunTest(const FString& Parameters)
+{
+    FCombatantState Hero; TestTrue(TEXT("Create"), FBuildCatalog::Create(TEXT("fighter.battle-master"), 1, TEXT("F"), Hero));
+    const TArray<FString> Lines = FBuildCatalog::ProgressSheet(Hero);
+    TestEqual(TEXT("Level line"), Lines[0], FString(TEXT("Level 1 | XP 0 / 300")));
+    TestEqual(TEXT("Class line"), Lines[1], FString(TEXT("Class: Fighter 1")));
+    TestTrue(TEXT("HP and hit dice"), Lines[2].Contains(TEXT("Hit dice 1 / 1")));
+    TestTrue(TEXT("Features tagged"), Lines.Last().Contains(TEXT("[Bonus Action]")) || Lines.ContainsByPredicate([](const FString& L){ return L.Contains(TEXT("[Bonus Action]")); }));
+    Hero.Xp = 300;
+    TestTrue(TEXT("Level up flagged"), FBuildCatalog::ProgressSheet(Hero).Contains(TEXT("Level up available")));
+    return true;
+}
 #endif
