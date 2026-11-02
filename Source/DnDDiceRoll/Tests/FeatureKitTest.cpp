@@ -565,4 +565,33 @@ bool FMartialArtsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Table entry playable"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Monk, 1).Contains(TEXT("*")));
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDeflectMissilesTest, "Project.Expedition.Features.DeflectMissiles",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FDeflectMissilesTest::RunTest(const FString& Parameters)
+{
+    using namespace FeatureTest;
+    TestFalse(TEXT("Not at Monk 2"), FFeatureKit::HasDeflectMissiles(Hero(TEXT("monk.open-hand"), 2)));
+    const FCombatantState Monk = Hero(TEXT("monk.open-hand"), 3);
+    TestTrue(TEXT("Monk 3 has it"), FFeatureKit::HasDeflectMissiles(Monk));
+    TestTrue(TEXT("Reaction tag"), FFeatureKit::Cost(ECombatCommandType::DeflectMissiles) == EActionCost::Reaction);
+    int32 Deflected = 0, Hits = 0;
+    for (int32 Seed = 1; Seed <= 40 && Hits < 6; ++Seed)
+    {
+        FCombatEncounter Encounter = Duel(Monk, {5, 0});
+        Encounter.Combatants[1].Range = 6; Encounter.Combatants[1].AttackBonus = 20; Encounter.Combatants[1].DamageDie = 4; Encounter.Combatants[1].InitiativeBonus = 30; Encounter.Combatants[0].InitiativeBonus = -10;
+        FCombatBattle Battle; FString Error;
+        if (!Battle.Start(Encounter, Seed, Error)) { AddError(Error); return false; }
+        const FCombatResult Shot = Battle.Submit({ECombatCommandType::Attack, 20, {}, 10});
+        if (!Shot.bAccepted || !Shot.bHit) { continue; }
+        ++Hits;
+        if (Shot.RollModeSources.ContainsByPredicate([](const FString& S) { return S.StartsWith(TEXT("Deflect Missiles")); })) { ++Deflected; TestFalse(TEXT("Reaction spent"), Battle.Find(10)->bReactionAvailable); }
+    }
+    TestTrue(TEXT("Some ranged hits"), Hits > 0);
+    TestEqual(TEXT("Every ranged hit deflected"), Deflected, Hits);
+    FCombatEncounter Melee = Duel(Monk, {1, 0}); Melee.Combatants[1].AttackBonus = 20; Melee.Combatants[1].InitiativeBonus = 30; Melee.Combatants[0].InitiativeBonus = -10;
+    FCombatBattle Battle; FString Error; Battle.Start(Melee, 2, Error);
+    const FCombatResult Punch = Battle.Submit({ECombatCommandType::Attack, 20, {}, 10});
+    TestFalse(TEXT("Melee hits are not deflected"), Punch.RollModeSources.ContainsByPredicate([](const FString& S) { return S.StartsWith(TEXT("Deflect")); }));
+    return true;
+}
 #endif

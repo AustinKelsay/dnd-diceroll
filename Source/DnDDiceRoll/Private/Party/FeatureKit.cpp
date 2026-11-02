@@ -129,6 +129,10 @@ bool FFeatureKit::HasRecklessAttack(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Barbarian) >= 2;
 }
+bool FFeatureKit::HasDeflectMissiles(const FCombatantState& Hero)
+{
+    return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk) >= 3;
+}
 bool FFeatureKit::HasMartialArts(const FCombatantState& Hero)
 {
     return Hero.Side == ECombatSide::Party && FBuildCatalog::ClassLevel(Hero, EAdventurerRole::Monk) >= 1;
@@ -194,6 +198,7 @@ const TCHAR* FFeatureKit::CommandName(ECombatCommandType Action)
     case ECombatCommandType::UncannyDodge: return TEXT("Uncanny Dodge");
     case ECombatCommandType::RecklessAttack: return TEXT("Reckless Attack");
     case ECombatCommandType::MartialArts: return TEXT("Martial Arts");
+    case ECombatCommandType::DeflectMissiles: return TEXT("Deflect Missiles");
     default: return TEXT("Feature");
     }
 }
@@ -202,7 +207,7 @@ EActionCost FFeatureKit::Cost(ECombatCommandType Action)
     switch (Action)
     {
     case ECombatCommandType::ActionSurge: case ECombatCommandType::RecklessAttack: return EActionCost::Free;
-    case ECombatCommandType::UncannyDodge: return EActionCost::Reaction;
+    case ECombatCommandType::UncannyDodge: case ECombatCommandType::DeflectMissiles: return EActionCost::Reaction;
     case ECombatCommandType::BardicInspiration: case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind:
     case ECombatCommandType::FontOfMagic: case ECombatCommandType::MartialArts:
         return EActionCost::BonusAction;
@@ -220,6 +225,7 @@ FString FFeatureKit::Usage(ECombatCommandType Action, const FCombatantState& Her
     case ECombatCommandType::FlurryOfBlows: case ECombatCommandType::PatientDefense: case ECombatCommandType::StepOfTheWind: return FString::Printf(TEXT("bonus, %d ki"), Hero.KiPoints);
     case ECombatCommandType::MartialArts: return TEXT("bonus, after Attack");
     case ECombatCommandType::RecklessAttack: return Hero.bReckless ? TEXT("reckless until your turn") : TEXT("free, before attacking");
+    case ECombatCommandType::DeflectMissiles:
     case ECombatCommandType::UncannyDodge: return Hero.bReactionAvailable ? TEXT("auto, reaction ready") : TEXT("auto, reaction spent");
     case ECombatCommandType::FontOfMagic: return FString::Printf(TEXT("bonus, %d points"), Hero.SorceryPoints);
     default: return FString();
@@ -236,6 +242,7 @@ TArray<ECombatCommandType> FFeatureKit::Commands(const FCombatantState& Hero)
     if (HasUncannyDodge(Hero)) { Out.Add(ECombatCommandType::UncannyDodge); }
     if (SorceryCap(Hero)) { Out.Add(ECombatCommandType::FontOfMagic); }
     if (HasMartialArts(Hero)) { Out.Add(ECombatCommandType::MartialArts); }
+    if (HasDeflectMissiles(Hero)) { Out.Add(ECombatCommandType::DeflectMissiles); }
     if (KiCap(Hero)) { Out.Append({ECombatCommandType::FlurryOfBlows, ECombatCommandType::PatientDefense, ECombatCommandType::StepOfTheWind}); }
     return Out;
 }

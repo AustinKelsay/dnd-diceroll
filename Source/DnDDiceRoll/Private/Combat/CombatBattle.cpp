@@ -393,6 +393,7 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::FlurryOfBlows: return TEXT("FLURRY OF BLOWS | Bonus + 1 ki | adjacent foe | right after the Attack action, two more strikes");
     case ECombatCommandType::PatientDefense: return TEXT("PATIENT DEFENSE | Bonus + 1 ki | self | take the Dodge action");
     case ECombatCommandType::StepOfTheWind: return TEXT("STEP OF THE WIND | Bonus + 1 ki | self | take the Disengage action");
+    case ECombatCommandType::DeflectMissiles: return TEXT("DEFLECT MISSILES | Reaction | self | automatic: when a ranged weapon attack hits you, reduce the damage by 1d10 + DEX + monk level");
     case ECombatCommandType::MartialArts: return TEXT("MARTIAL ARTS | Bonus | adjacent foe | right after the Attack action, one unarmed strike (no ki)");
     case ECombatCommandType::RecklessAttack: return TEXT("RECKLESS ATTACK | Free | self | before your first attack this turn: advantage on melee weapon attacks this turn, but attacks against you have advantage until your next turn");
     case ECombatCommandType::UncannyDodge: return TEXT("UNCANNY DODGE | Reaction | self | automatic: when an attacker you can see hits you, halve the damage");
@@ -1396,6 +1397,14 @@ void FCombatBattle::Strike(int32 ActorId, int32 TargetId, int32 ManeuverBonus, F
             Target->bReactionAvailable = false;
             Result.Damage /= 2; Result.bUncannyDodge = true;
             Result.RollModeSources.Add(TEXT("Uncanny Dodge: damage halved"));
+        }
+        if (Result.Damage > 0 && RangedAttacker(*Actor) && FFeatureKit::HasDeflectMissiles(*Target) && Target->Life == ECombatLife::Conscious && Target->bReactionAvailable && !IsIncapacitated(*Target))
+        {
+            // SRD Deflect Missiles: reaction, damage reduced by 1d10 + DEX modifier + monk level (catching the missile is not modelled).
+            Target->bReactionAvailable = false;
+            const int32 Cut = Roll(10) + AbilityModifier(TargetId, EAbility::Dexterity) + FBuildCatalog::ClassLevel(*Target, EAdventurerRole::Monk);
+            Result.Damage = FMath::Max(0, Result.Damage - FMath::Max(0, Cut));
+            Result.RollModeSources.Add(FString::Printf(TEXT("Deflect Missiles: -%d"), FMath::Max(0, Cut)));
         }
         const int32 Protection = ProtectionFor(*Target);
         Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
