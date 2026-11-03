@@ -1081,3 +1081,17 @@ The creator isn't part of the approved CONTEXT.md scope. It's a self-contained l
 - Point-buy and class-table tests from the earlier creator commits.
 
 **Captures:** `docs/runs/character-creator/captures.md` (dev-only `-CreatorTrial=<dir>` harness; real viewport, not mocks).
+
+## Hex grid (supersedes earlier grid wording)
+
+The battle board is a hex grid, the only grid; there is no square mode. Earlier sections that mention cardinal/Manhattan movement, diagonals, cell corners or square templates are historical. `FHexGrid` holds the geometry.
+
+- **Layout.** Pointy-top hexes. Cells keep their saved `(X, Y)` board coordinates as odd-r offsets (odd rows shift half a hex east); all math converts to axial/cube coordinates. One hex is 5 ft. Kit, spell and weapon ranges keep their existing cell counts (a 6-cell Magic Missile reaches 6 hexes).
+- **Distance and movement.** Distance is hex steps (cube distance). Each step to one of the 6 neighbours costs 1 cell of speed (difficult terrain still doubles it). Path search, enemy AI, reach and opportunity attacks all use hex neighbours: reach 1 is the 6 adjacent hexes, reach 2 is the ring of 12 beyond them.
+- **Flanking.** None. No flanking rule exists, and none is planned.
+- **Sight.** Line of sight samples the hex line between cell centres (cube lerp with a tiny nudge so ties on an edge resolve one way). Any blocked hex on that line, excluding the endpoints, blocks sight. Combatants still do not block sight.
+- **Cover.** Six lines go from the attacker's centre to the target hex's 6 corners. A line counts as blocked when it crosses a blocked hex's interior. If the centre line is blocked, the target has total cover. Otherwise, 1 blocked corner line gives half cover (+2 AC) and 2 or more give three-quarters cover (+5 AC). Decision: the square rule's threshold (3+ of 4 corners) can't carry over, because a single blocking hex can shadow at most 2 of the 6 corner lines while the centre line stays clear. A 4/6 threshold would make three-quarters cover impossible.
+- **Area templates.** A sphere or cylinder covers every hex within its radius (in cells) of the origin hex. A cone snaps its aim to the nearest of the 6 hex directions and covers hexes 1 to its length away that lie within 30 degrees of that axis. A line follows the hex line toward the aim and is one hex wide. A cube becomes a filled hex of radius floor(size/2), snapped to the nearest hex direction and sitting flush against the caster (for example, a 15-ft cube covers 7 hexes). The forecast and the resolution use the same cells.
+- **Forced movement.** Push and pull move one hex at a time along the hex direction nearest the line from the source to the target (away for a push, toward for a pull).
+- **Rendering.** Each tile is drawn as a hex built from three rotated bars. A 3-colour tint keeps neighbouring hexes distinct. Mouse picking rounds the cursor to the nearest hex, and the keyboard cursor shows 6 corner brackets.
+- **Save schema 6.** Board cells keep the same fields, but they now mean hex offsets. Saves from schema 5 or earlier are **rejected, not converted**. A square-grid position re-read as a hex is a different tactical situation (distances, reach, cover and areas all change), so a silent conversion would look valid without matching the battle that was saved. The rejection says the save predates the hex grid and asks you to start a new expedition. Explicit New Run still keeps the old bytes beside the new checkpoint.
