@@ -165,3 +165,17 @@ TMap<FIntPoint, int32> FHexGrid::Reachable(FIntPoint Start, int32 Budget, TFunct
     }
     return Best;
 }
+
+TArray<FIntPoint> FHexGrid::BoardNeighbors(FIntPoint Board)
+{
+    TArray<FIntPoint> Out;
+    for (int32 Index = 0; Index < DirectionCount; ++Index) { Out.Add(BoardStep(Board, Index)); }
+    return Out;
+}
+
+TArray<FIntPoint> FHexGrid::BoardLine(FIntPoint A, FIntPoint B, int32 Bias)
+{
+    TArray<FIntPoint> Out = Line(Axial(A), Axial(B), Bias);
+    for (FIntPoint& Cell : Out) { Cell = ToOffset(Cell); }
+    return Out;
+}

@@ -1,51 +1,80 @@
 #include "Rules/AreaRules.h"
+#include "Rules/HexGrid.h"
 
-bool FAreaRules::Covers(const FAreaTemplate& Area, FIntPoint Cell)
+namespace
 {
-    const int64 Size = FMath::Max(Area.SizeFeet, 0) / FeetPerCell;
+int32 SizeCells(const FAreaTemplate& Area) { return FMath::Max(Area.SizeFeet, 0) / FAreaRules::FeetPerCell; }
+
+/** The line hexes after the origin, in order. */
+TArray<FIntPoint> LineCells(const FAreaTemplate& Area)
+{
+    TArray<FIntPoint> Out;
+    const int32 Size = SizeCells(Area);
+    const int32 AimLength = FHexGrid::Length(Area.Direction);
+    if (Size <= 0 || AimLength == 0) { return Out; }
+    // Extend the aim far enough to cover the full length, then keep the first Size steps.
+    const int32 Scale = FMath::DivideAndRoundUp(Size, AimLength);
+    const TArray<FIntPoint> Path = FHexGrid::Line(Area.Origin, Area.Origin + Area.Direction * Scale);
+    for (int32 Index = 1; Index <= Size && Index < Path.Num(); ++Index) { Out.Add(Path[Index]); }
+    return Out;
+}
+
+/** Axial-space test; Area here holds an axial Origin and axial Direction. */
+bool AxialCovers(const FAreaTemplate& Area, FIntPoint Cell)
+{
+    const int32 Size = SizeCells(Area);
     const FIntPoint V = Cell - Area.Origin;
-    const FIntPoint D = Area.Direction;
-    const int64 Norm = (int64)D.X * D.X + (int64)D.Y * D.Y;
-    const int64 Dot = (int64)V.X * D.X + (int64)V.Y * D.Y;
-    const int64 Cross = (int64)V.X * D.Y - (int64)V.Y * D.X;
     switch (Area.Shape)
     {
     case EAreaShape::Sphere:
     case EAreaShape::Cylinder:
-    {
-        // Cell centers within the radius of the intersection (Origin is the cell's top-left corner).
-        const int64 X = 2 * (int64)V.X + 1, Y = 2 * (int64)V.Y + 1;
-        return X * X + Y * Y <= 4 * Size * Size;
-    }
+        return FHexGrid::Length(V) <= Size;
     case EAreaShape::Cone:
-        // Width at any distance equals that distance: perpendicular offset <= half the forward distance.
-        return Norm > 0 && Dot > 0 && Dot * Dot <= Size * Size * Norm && 4 * Cross * Cross <= Dot * Dot;
+    {
+        const int32 Dir = FHexGrid::NearestDirection(Area.Direction);
+        if (Dir == INDEX_NONE) { return false; }
+        // Rotate so the aim points E, then keep hexes within 30 degrees of the E axis:
+        // |y| <= x tan30 with x = sqrt3 (q + r/2), y = 1.5 r  ->  3|r| <= 2q + r.
+        const FIntPoint L = FHexGrid::Rotate(V, -Dir);
+        const int32 Steps = FHexGrid::Length(L);
+        return Steps >= 1 && Steps <= Size && 3 * FMath::Abs(L.Y) <= 2 * L.X + L.Y;
+    }
     case EAreaShape::Line:
-        // 5 ft wide: cell centers within half a cell of the aim line.
-        return Norm > 0 && Dot > 0 && Dot * Dot <= Size * Size * Norm && 4 * Cross * Cross <= Norm;
+        return LineCells(Area).Contains(Cell);
     case EAreaShape::Cube:
     {
-        if (Norm == 0 || Size == 0) { return false; }
-        const FIntPoint Axis = FMath::Abs(D.X) >= FMath::Abs(D.Y) ? FIntPoint(FMath::Sign(D.X), 0) : FIntPoint(0, FMath::Sign(D.Y));
-        const int64 Forward = (int64)V.X * Axis.X + (int64)V.Y * Axis.Y;
-        const int64 Side = (int64)V.Y * Axis.X - (int64)V.X * Axis.Y;
-        // Side cells run from -(n-1)/2 to n/2 so odd cubes are centered on the caster's row.
-        return Forward >= 1 && Forward <= Size && Side >= -((Size - 1) / 2) && Side <= Size / 2;
+        const int32 Dir = FHexGrid::NearestDirection(Area.Direction);
+        if (Dir == INDEX_NONE || Size == 0) { return false; }
+        const int32 Radius = Size / 2;
+        return FHexGrid::Distance(Cell, Area.Origin + FHexGrid::Direction(Dir) * (Radius + 1)) <= Radius;
     }
     default: return false;
     }
 }
 
+/** Board template -> axial template. */
+FAreaTemplate ToAxial(const FAreaTemplate& Area)
+{
+    FAreaTemplate Out = Area;
+    Out.Origin = FHexGrid::Axial(Area.Origin);
+    Out.Direction = FHexGrid::Axial(Area.Origin + Area.Direction) - Out.Origin;
+    return Out;
+}
+}
+
+bool FAreaRules::Covers(const FAreaTemplate& Area, FIntPoint Cell)
+{
+    return AxialCovers(ToAxial(Area), FHexGrid::Axial(Cell));
+}
+
 TArray<FIntPoint> FAreaRules::Cells(const FAreaTemplate& Area)
 {
     TArray<FIntPoint> Out;
-    const int32 Reach = FMath::Max(Area.SizeFeet, 0) / FeetPerCell + 1;
-    for (int32 X = Area.Origin.X - Reach; X <= Area.Origin.X + Reach; ++X)
+    const FAreaTemplate Hex = ToAxial(Area);
+    for (const FIntPoint& Cell : FHexGrid::Range(Hex.Origin, SizeCells(Area) + 1))
     {
-        for (int32 Y = Area.Origin.Y - Reach; Y <= Area.Origin.Y + Reach; ++Y)
-        {
-            if (Covers(Area, FIntPoint(X, Y))) { Out.Add(FIntPoint(X, Y)); }
-        }
+        if (AxialCovers(Hex, Cell)) { Out.Add(FHexGrid::Board(Cell)); }
     }
+    Out.Sort([](const FIntPoint& A, const FIntPoint& B) { return A.X != B.X ? A.X < B.X : A.Y < B.Y; });
     return Out;
 }

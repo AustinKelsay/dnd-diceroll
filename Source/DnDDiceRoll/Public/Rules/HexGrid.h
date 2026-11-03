@@ -44,6 +44,24 @@ struct DNDDICEROLL_API FHexGrid
     /** Every cell of a Width x Height board, row by row. */
     static TArray<FIntPoint> BoardCells(int32 Width, int32 Height);
     /**
+     * Board coordinates. Combat state stores cells as odd-r offset (column, row) on a Width x Height
+     * rectangle; these helpers do the axial math for them. Every (column +-1, row) and (column, row +-1)
+     * step is a hex neighbor.
+     */
+    static FIntPoint Axial(FIntPoint Board) { return FromOffset(Board.X, Board.Y); }
+    static FIntPoint Board(FIntPoint AxialCell) { return ToOffset(AxialCell); }
+    static int32 BoardDistance(FIntPoint A, FIntPoint B) { return Distance(Axial(A), Axial(B)); }
+    /** The six neighbors of a board cell, in Directions order. */
+    static TArray<FIntPoint> BoardNeighbors(FIntPoint Board);
+    /** The board cell one hex in direction Index (0..5) from Board. */
+    static FIntPoint BoardStep(FIntPoint Board, int32 Index) { return ToOffset(Axial(Board) + Direction(Index)); }
+    /** Nearest hex direction from one board cell toward another; INDEX_NONE when equal. */
+    static int32 BoardDirection(FIntPoint From, FIntPoint To) { return NearestDirection(Axial(To) - Axial(From)); }
+    /** Hex line between board cells, as board cells. */
+    static TArray<FIntPoint> BoardLine(FIntPoint A, FIntPoint B, int32 Bias = 1);
+    static FVector2D BoardToWorld(FIntPoint Board, double Size) { return ToWorld(Axial(Board), Size); }
+    static FIntPoint WorldToBoard(FVector2D Point, double Size) { return ToOffset(FromWorld(Point, Size)); }
+    /**
      * Cheapest step totals from Start within Budget. StepCost returns the cost of entering To from From,
      * or <= 0 when the step is not allowed. Start costs 0.
      */
