@@ -54,6 +54,8 @@ struct FExpeditionTile
     GENERATED_BODY()
     FIntPoint Cell = FIntPoint::ZeroValue;
     UPROPERTY() FExpeditionPart Part;
+    /** A hex plate is three overlapping bars at 0/60/120 degrees; Extra holds the two turned bars. */
+    UPROPERTY() TArray<FExpeditionPart> Extra;
 };
 
 /** A themed prop that sways (banners, cages) or flickers (flames) in place. */
@@ -245,6 +247,7 @@ private:
     void ApplyTheme();
     void UpdateRigs();
     void UpdateTiles();
+    void AddHexTile(FIntPoint Cell, UStaticMesh* Mesh, FVector Location, FVector BarScale, FLinearColor Color, float ZStep);
     void UpdateMarkers();
     void UpdateEffects();
     bool PaintWash(FExpeditionPart& Part, const TArray<TObjectPtr<UMaterialInstanceDynamic>>& Wash, int32 Index, EExpeditionSpell Spell, const FLinearColor& Color);

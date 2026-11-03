@@ -1,5 +1,6 @@
 #include "Presentation/ExpeditionPlayback.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/HexGrid.h"
 #include "Party/FeatureKit.h"
 
 namespace
@@ -294,7 +295,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const int32 ActorId = Actor->Id, TargetId = Target->Id;
     const FVector2D From = CellOf(Actor->Cell), To = CellOf(Target->Cell);
     const FVector2D Direction = SafeDirection(From, To);
-    const bool bRanged = FMath::Abs(Actor->Cell.X - Target->Cell.X) + FMath::Abs(Actor->Cell.Y - Target->Cell.Y) > 1;
+    const bool bRanged = FHexGrid::BoardDistance(Actor->Cell, Target->Cell) > 1;
     const FString ActorName = Actor->Name, TargetName = Target->Name;
     const EAdventurerRole Role = Actor->AdventurerRole;
     const bool bArrow = Role == EAdventurerRole::Rogue || (Actor->Side == ECombatSide::Enemy && bRanged);

@@ -24,10 +24,12 @@
 #include "Sound/SoundWaveProcedural.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UnrealClient.h"
+#include "Rules/HexGrid.h"
 
 namespace
 {
-constexpr float CellSize = 110.0f;
+constexpr float CellSize = 110.0f;             // centre-to-centre spacing of neighbouring hexes
+constexpr float HexRadius = CellSize / UE_SQRT_3; // pointy-top hex circumradius (world units)
 constexpr float CursorPlane = 35.0f;
 constexpr float BoardTop = 31.0f;
 constexpr float EnemyThinkSeconds = 0.55f;
@@ -334,20 +336,19 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
     // Ground hides the starter floor; a raised slab makes the board read as a tabletop.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 3.0f), FVector(60.0f, 60.0f, 0.06f), Palette.Ground));
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 12.0f),
-        FVector(Encounter.Width * CellSize / 100.0f + 0.35f, Encounter.Height * CellSize / 100.0f + 0.35f, 0.24f), Palette.Rim));
+        FVector((Encounter.Width + 0.5f) * CellSize / 100.0f + 0.35f, ((Encounter.Height - 1) * UE_SQRT_3 * 0.5f * CellSize + 2.0f * HexRadius) / 100.0f + 0.35f, 0.24f), Palette.Rim));
     for (int32 Y = 0; Y < Encounter.Height; ++Y)
     {
         for (int32 X = 0; X < Encounter.Width; ++X)
         {
             const FIntPoint Cell(X, Y);
             const float Jitter = 0.88f + 0.22f * Hash(X, Y, Seed);
-            const FLinearColor Color = Shade((X + Y) % 2 == 0 ? Palette.TileA : Palette.TileB, Jitter);
+            // Three-colour hex tiling: no two neighbours share a shade.
+            const FIntPoint Axial = FHexGrid::Axial(Cell);
+            const int32 Tint = ((Axial.X - Axial.Y) % 3 + 3) % 3;
+            const FLinearColor Color = Shade(Tint == 0 ? Palette.TileA : Tint == 1 ? Palette.TileB : FMath::Lerp(Palette.TileA, Palette.TileB, 0.5f) * 0.92f, Jitter);
             const FVector Position = CellPosition(Cell);
-            FExpeditionTile Tile;
-            Tile.Cell = Cell;
-            Tile.Part = MakePart(Cube, nullptr, FVector(Position.X, Position.Y, BoardTop - 9.0f + Hash(Y, X, 3) * 2.0f),
-                FVector(1.04f, 1.04f, 0.18f), Color);
-            Tiles.Add(Tile);
+            AddHexTile(Cell, Cube, FVector(Position.X, Position.Y, BoardTop - 9.0f + Hash(Y, X, 3) * 2.0f), FVector(0.96f * CellSize / 100.0f, 0.96f * HexRadius / 100.0f, 0.18f), Color, 100.0f);
         }
     }
     FRandomStream Random(Seed);
@@ -696,12 +697,32 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
 
 FVector AExpeditionBattleView::CellPosition(FIntPoint Cell) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, CursorPlane);
+    const FVector2D World = FHexGrid::BoardToWorld(Cell, HexRadius);
+    return FVector(World.X, World.Y, CursorPlane);
 }
 
 FVector AExpeditionBattleView::BoardPosition(FVector2D Cell, float Height) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, BoardTop + Height);
+    // Board (odd-r offset) coordinates may be fractional while units glide between hexes:
+    // blend the half-hex shift of the two rows so a step to any neighbour moves in a straight line.
+    const float Row = FMath::FloorToFloat(Cell.Y);
+    const float Blend = Cell.Y - Row;
+    const auto Shift = [](float R) { return (FMath::Abs(FMath::FloorToInt(R)) % 2) * 0.5f; };
+    const float Offset = FMath::Lerp(Shift(Row), Shift(Row + 1.0f), Blend);
+    return FVector((Cell.X + Offset) * CellSize, Cell.Y * CellSize * UE_SQRT_3 * 0.5f, BoardTop + Height);
+}
+
+void AExpeditionBattleView::AddHexTile(FIntPoint Cell, UStaticMesh* Mesh, FVector Location, FVector BarScale, FLinearColor Color, float ZStep)
+{
+    FExpeditionTile Tile;
+    Tile.Cell = Cell;
+    Tile.Part = MakePart(Mesh, nullptr, Location, BarScale, Color);
+    // The turned bars sit a hair lower so coplanar faces never fight.
+    for (const float BarYaw : {60.0f, 120.0f})
+    {
+        Tile.Extra.Add(MakePart(Mesh, nullptr, Location - FVector(0, 0, 0.004f * ZStep * (BarYaw / 60.0f)), BarScale, Color, FRotator(0.0f, BarYaw, 0.0f)));
+    }
+    Tiles.Add(Tile);
 }
 
 FVector AExpeditionBattleView::UnitPosition(int32 Id, float Height) const
@@ -719,7 +740,9 @@ void AExpeditionBattleView::UpdateRigs()
         if (!Unit || !Rig.Root) { continue; }
         const float Breath = Unit->Life == ECombatLife::Conscious ? FMath::Sin(Clock * 2.2f + Rig.Phase) : 0.0f;
         const FVector Location = BoardPosition(Unit->Position + Unit->Lean, Unit->Hop);
-        const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Unit->Facing.Y, Unit->Facing.X));
+        // Facing is in board cells; turn it into a world heading so hex rows' half shift is respected.
+        const FVector Heading = BoardPosition(Unit->Position + Unit->Facing) - BoardPosition(Unit->Position);
+        const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Heading.Y, Heading.X));
         const FQuat Turn(FVector::UpVector, FMath::DegreesToRadians(Facing));
         const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
         Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
@@ -756,6 +779,7 @@ void AExpeditionBattleView::UpdateTiles()
             if (Highlights.bHasHover && Highlights.Hover == Tile.Cell) { Color = Color * 1.35f; }
         }
         Tile.Part.SetColor(Color);
+        for (FExpeditionPart& Bar : Tile.Extra) { Bar.SetColor(Color); }
     }
 }
 
@@ -909,7 +933,7 @@ bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint&
     // Board positions are relative to this actor; intersect the board plane in world space.
     const float PlaneZ = GetActorTransform().TransformPosition(FVector(0, 0, CursorPlane)).Z;
     const FVector Intersection = GetActorTransform().InverseTransformPosition(Origin + Direction * ((PlaneZ - Origin.Z) / Direction.Z));
-    Cell = FIntPoint(FMath::RoundToInt(Intersection.X / CellSize), FMath::RoundToInt(Intersection.Y / CellSize));
+    Cell = FHexGrid::WorldToBoard(FVector2D(Intersection.X, Intersection.Y), HexRadius);
     return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Rules().Snapshot().Encounter.Width && Cell.Y < Rules().Snapshot().Encounter.Height;
 }
 
@@ -1332,12 +1356,10 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         {
             const FIntPoint Cell(X, Y);
             const FVector Position = CellPosition(Cell);
-            FExpeditionTile Tile;
-            Tile.Cell = Cell;
             // Darker than the surrounding ground so the move and path tints stand out.
-            Tile.Part = MakePart(TileMesh, nullptr, FVector(Position.X, Position.Y, Ground), FVector::OneVector,
-                FLinearColor::White * (0.6f + 0.12f * Hash(X, Y, Seed)));
-            Tiles.Add(Tile);
+            const float Footprint = FMath::Max(1.0f, (float)TileMesh->GetBounds().GetBox().GetSize().X);
+            AddHexTile(Cell, TileMesh, FVector(Position.X, Position.Y, Ground), FVector(0.96f * CellSize / Footprint, 0.96f * HexRadius / Footprint, 1.0f),
+                FLinearColor::White * (0.6f + 0.12f * Hash(X, Y, Seed)), 1.0f);
         }
     }
     FRandomStream Random(Seed);

@@ -335,21 +335,24 @@ void AExpeditionHUD::DrawWorldOverlays()
         if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
     }
 
-    // Keyboard cursor: bright corner brackets around the cell.
+    // Keyboard cursor: bright corner brackets around the hex.
     if (bCombat && Player->UsingKeyboardCursor())
     {
         const FIntPoint Cell = Player->KeyboardCursorCell();
         const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), 2.0f);
-        const FVector Offsets[] = {{-52, -52, 0}, {52, -52, 0}, {52, 52, 0}, {-52, 52, 0}};
-        FVector2D Corners[4];
+        FVector2D Corners[6];
         bool bVisible = true;
-        for (int32 Index = 0; Index < 4; ++Index) { bVisible &= Project(Center + Offsets[Index], Corners[Index]); }
+        for (int32 Index = 0; Index < 6; ++Index)
+        {
+            const float Angle = FMath::DegreesToRadians(30.0f + 60.0f * Index);
+            bVisible &= Project(Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0f) * 60.0f, Corners[Index]);
+        }
         if (bVisible)
         {
             const FLinearColor Cursor(1.0f, 0.65f, 0.15f, 0.75f + 0.25f * FMath::Sin(Clock * 6.0f));
-            for (int32 Index = 0; Index < 4; ++Index)
+            for (int32 Index = 0; Index < 6; ++Index)
             {
-                const FVector2D A = Corners[Index], B = Corners[(Index + 1) % 4], C = Corners[(Index + 3) % 4];
+                const FVector2D A = Corners[Index], B = Corners[(Index + 1) % 6], C = Corners[(Index + 5) % 6];
                 Line(A, FMath::Lerp(A, B, 0.3f), Cursor, 3.5f);
                 Line(A, FMath::Lerp(A, C, 0.3f), Cursor, 3.5f);
             }
