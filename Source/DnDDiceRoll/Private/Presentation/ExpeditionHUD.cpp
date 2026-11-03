@@ -772,8 +772,8 @@ void AExpeditionHUD::DrawForecast()
         const int32 Steps = Player->PreviewPath().Num();
         int32 Cost = 0, Difficult = 0;
         for (const FIntPoint& Cell : Player->PreviewPath()) { const bool bRough = Rules.IsDifficultTerrain(Cell); Cost += bRough ? 2 : 1; Difficult += bRough ? 1 : 0; }
-        Lines.Add({FString::Printf(TEXT("Move %d square%s  ·  %d left after"), Steps, Steps == 1 ? TEXT("") : TEXT("s"), Rules.Snapshot().MovementLeft - Cost), Sky});
-        if (Difficult > 0) { Lines.Add({FString::Printf(TEXT("Difficult terrain: %d square%s cost double"), Difficult, Difficult == 1 ? TEXT("") : TEXT("s")), Gold}); }
+        Lines.Add({FString::Printf(TEXT("Move %d hex%s  ·  %d left after"), Steps, Steps == 1 ? TEXT("") : TEXT("es"), Rules.Snapshot().MovementLeft - Cost), Sky});
+        if (Difficult > 0) { Lines.Add({FString::Printf(TEXT("Difficult terrain: %d hex%s cost double"), Difficult, Difficult == 1 ? TEXT("") : TEXT("es")), Gold}); }
         for (const int32 ThreatId : Rules.OpportunityThreats(Player->Actor(), Player->PreviewPath()))
         {
             if (const FCombatantState* Threat = Rules.Find(ThreatId)) { Lines.Add({FString::Printf(TEXT("Provokes an opportunity attack from %s"), *Threat->Name), Danger}); }

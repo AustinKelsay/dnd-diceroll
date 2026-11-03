@@ -739,9 +739,9 @@ bool FCombatBattle::ResolveUtilitySpell(const FCombatCommand& Command, const FSr
             FCombatantState* Buddy = MutableFind(Command.ExtraTargetIds[0]);
             if (Buddy && Buddy->Side == User->Side && Buddy->Life == ECombatLife::Conscious && Manhattan(Buddy->Cell, From) <= 1)
             {
-                for (const FIntPoint D : {FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1), FIntPoint(1, 1), FIntPoint(-1, -1), FIntPoint(1, -1), FIntPoint(-1, 1)})
+                for (const FIntPoint Landing : FHexGrid::BoardNeighbors(Command.Destination))
                 {
-                    if (IsOpen(Command.Destination + D, Buddy->Id)) { const FIntPoint Old = Buddy->Cell; Buddy->Cell = Command.Destination + D; SpellsOnStep(Buddy->Id, Old, Buddy->Cell); Touched.Add(Buddy->Id); break; }
+                    if (IsOpen(Landing, Buddy->Id)) { const FIntPoint Old = Buddy->Cell; Buddy->Cell = Landing; SpellsOnStep(Buddy->Id, Old, Buddy->Cell); Touched.Add(Buddy->Id); break; }
                 }
             }
         }
