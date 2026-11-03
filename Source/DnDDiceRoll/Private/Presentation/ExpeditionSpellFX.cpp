@@ -170,29 +170,58 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
 
     if (Style.bArea)
     {
-        // Hex telegraph: every hex edge of the area as a flat matte bar; the area's outer edges are thicker
-        // and darker-inked so cones, lines and cubes read as their real hex footprint (no square frames).
+        // Hex area: every cell is a matte hex tile (three overlapping flat bars whose corners are the hex
+        // vertices), inset so the dark board shows between cells, with ink bars on every hex edge on top.
+        // Inner cells burn brighter than the rim; nothing glows.
         UStaticMesh* Bar = LoadMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
         const TSet<FIntPoint> Inside(Event.Cells);
+        FIntPoint Hub = Event.Cells[0];
+        {
+            const FVector2D ImpactXY(Impact.X, Impact.Y);
+            float Near = TNumericLimits<float>::Max();
+            for (const FIntPoint& C : Event.Cells) { const float D = FVector2D::Distance(FVector2D(CellToWorld(C)), ImpactXY); if (D < Near) { Near = D; Hub = C; } }
+        }
+        int32 Reach = 1;
+        for (const FIntPoint& C : Event.Cells) { Reach = FMath::Max(Reach, FHexGrid::BoardDistance(Hub, C)); }
         for (const FIntPoint& C : Event.Cells)
         {
+            if (!Bar) { break; }
             const FVector Center = CellToWorld(C);
-            for (int32 Side = 0; Side < 6 && Bar; ++Side)
+            const FVector Across0 = CellToWorld(FHexGrid::BoardStep(C, 0)) - Center;
+            const float Apothem2 = Across0.Size2D();                 // flat-to-flat width
+            const float EdgeLen = Apothem2 / FMath::Sqrt(3.0f);      // hex edge = circumradius
+            const float T = FMath::Clamp(float(FHexGrid::BoardDistance(Hub, C)) / Reach, 0.0f, 1.0f);
+            const FLinearColor TileCore = FMath::Lerp(FireCore, FireHue, T);
+            const FLinearColor TileHue = FMath::Lerp(FireHue, EmberDeep, T);
+            for (int32 K = 0; K < 3; ++K)
+            {
+                FExpeditionSpellFXPiece& P = Add(Bar, Style, false, FVector::UpVector, false, false);
+                P.Start = Hit; P.Peak = Full; P.End = Fade; P.Linger = Gone;
+                P.PeakOpacity = 0.8f; P.LingerOpacity = 0.3f;
+                P.From = P.To = Center + FVector(0, 0, 4);
+                P.ScaleFrom = FVector(Apothem2 * 0.86f / 100.0f, EdgeLen * 0.86f / 100.0f, 0.01f) * 0.6f;
+                P.ScaleTo = FVector(Apothem2 * 0.86f / 100.0f, EdgeLen * 0.86f / 100.0f, 0.01f);
+                const FRotator Turn = Across0.Rotation() + FRotator(0, 60.0f * K, 0);
+                P.Mesh->SetWorldRotation(Turn);
+                P.Material->SetVectorParameterValue(TEXT("Core"), TileCore); P.Material->SetVectorParameterValue(TEXT("Hue"), TileHue);
+                P.Material->SetScalarParameterValue(TEXT("Glow"), 0.45f);
+                P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
+            }
+            for (int32 Side = 0; Side < 6; ++Side)
             {
                 const FIntPoint N = FHexGrid::BoardStep(C, Side);
                 const bool bRim = !Inside.Contains(N);
                 // Inner edges are shared: draw each once, from the lower cell.
                 if (!bRim && (N.Y < C.Y || (N.Y == C.Y && N.X < C.X))) { continue; }
                 const FVector Across = CellToWorld(N) - Center;
-                const float Side2 = Across.Size2D() / FMath::Sqrt(3.0f);  // hex edge length = circumradius
-                const FVector Mid = Center + Across * 0.5f + FVector(0, 0, bRim ? 4 : 3);
-                FExpeditionSpellFXPiece& P = Add(Bar, Style, false, FVector::UpVector, false, bRim);
-                P.Start = 0.0f; P.Peak = 0.06f; P.End = Full; P.Linger = Gone;
-                P.PeakOpacity = bRim ? 0.9f : 0.45f; P.LingerOpacity = bRim ? 0.3f : 0.12f;
+                const FVector Mid = Center + Across * 0.5f + FVector(0, 0, bRim ? 9 : 8);
+                FExpeditionSpellFXPiece& P = Add(Bar, Style, false, FVector::UpVector, false, true);
+                P.Start = 0.0f; P.Peak = 0.06f; P.End = Fade; P.Linger = Gone;
+                P.PeakOpacity = bRim ? 1.0f : 0.85f; P.LingerOpacity = bRim ? 0.45f : 0.3f;
                 P.From = P.To = Mid;
-                P.ScaleFrom = P.ScaleTo = FVector(bRim ? 0.07f : 0.035f, Side2 / 100.0f, 0.01f);
+                P.ScaleFrom = P.ScaleTo = FVector(bRim ? 0.11f : 0.06f, EdgeLen * 1.04f / 100.0f, 0.01f);
                 P.Mesh->SetWorldRotation(Across.Rotation()); if (P.Ink) { P.Ink->SetWorldRotation(Across.Rotation()); }
-                P.Material->SetScalarParameterValue(TEXT("Glow"), 0.6f);
+                P.Material->SetScalarParameterValue(TEXT("Glow"), 0.3f);
                 P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
             }
         }
@@ -209,7 +238,8 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
         P.Material->SetVectorParameterValue(TEXT("Core"), Style.Hue); P.Material->SetVectorParameterValue(TEXT("Hue"), EmberDeep);
     }
     // Area blasts draw well inside the true area (the telegraphed cells stay exact) so the board stays readable.
-    const float Diameter = Style.bArea ? Radius * 2.0f * CellCm / 100.0f * Style.AreaVisualScale : Style.ImpactScale;
+    // Area spells: the hex tiles are the blast; the faceted ball is only a small burst at the impact hex.
+    const float Diameter = Style.bArea ? 1.4f * CellCm / 100.0f : Style.ImpactScale;
     {
         // The blast (Fireball) or the burst (Fire Bolt): flat bands, ink shell, ragged outer edge.
         // No back-face ink shell on the big translucent blast: its noisy edge showed through as specks.
