@@ -974,7 +974,7 @@ void AExpeditionBattleView::TickSpellFXTrial(float DeltaSeconds)
         FParse::Value(FCommandLine::Get(), TEXT("SpellFXTrialSlowmo="), SpellFXTrialSlowmo);
         if (!HasRun()) { Resume(); }
         SpellFXTrialStage = 1; SpellFXTrialClock = 0.0f;
-        UE_LOG(LogTemp, Display, TEXT("SPELLFX_TRIAL start %s run=%d combat=%d"), *SpellFXTrial, HasRun() ? 1 : 0, InCombat() ? 1 : 0);
+        UE_LOG(LogTemp, Display, TEXT("SPELLFX_TRIAL start %s run=%d combat=%d: %s"), *SpellFXTrial, HasRun() ? 1 : 0, InCombat() ? 1 : 0, Feedback.IsEmpty() ? TEXT("") : *Feedback.Last());
         return;
     }
     if (SpellFXTrialStage < 1) { return; }
