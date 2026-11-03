@@ -1099,3 +1099,9 @@ The battle board is a hex grid, the only grid; there is no square mode. Earlier 
 - Spell area overlays draw per-hex-edge bars: thick rim edges (opacity 0.9), thin shared inner edges drawn once (0.45). Reach marker is a pointy-top hexagon. Flaming Sphere uses a 5 ft sphere template; Wall of Fire stays a radius-10 zone.
 - Area saves: a Dexterity saver adds wall cover measured from the area origin (`CoverBetween`): +2 half, +5 three-quarters; total cover is still handled by line of sight.
 - Foes with INT 6+ (`FMonsterRules::UsesCoverTactics`) on boards with walls pick firing cells reachable this turn with the best worst-case cover against conscious heroes (ties: lower cost, then row-major), prefer the least-covered target, and after attacking step to better cover if unsheltered and not adjacent. Legacy roles (Raider, Archer) keep old behavior. Deterministic; no save-schema change.
+
+## Round 2 hex rules
+
+- Creature cover: a conscious creature on the line gives half cover (+2) only if it is at least one size larger than the target. The AI uses the same rule when picking a hex to shelter in.
+- Wall of Fire: a 60 ft line of hexes, one hex wide, starting at the aimed hex and passing through caster-placed nodes (BoardLine segments, capped at 12 hexes). It is stored in FActiveSpell.Cells. Height (20 ft) and thickness (1 ft) are descriptive only.
+- Area overlays: matte hex tiles with dark inked edges, so every cell is readable.
