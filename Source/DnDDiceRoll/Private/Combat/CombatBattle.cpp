@@ -14,6 +14,7 @@
 #include "Rules/ProficiencyRules.h"
 #include "Rules/SpellcastingRules.h"
 #include "Rules/AreaRules.h"
+#include "Rules/HexGrid.h"
 #include "Rules/SpellCatalogRules.h"
 #include "Rules/CheckRules.h"
 #include "Rules/StandardActionRules.h"
@@ -33,9 +34,10 @@
 
 namespace
 {
+/** Hex steps between board cells (1 hex = 5 ft). */
 int32 GridDistance(FIntPoint A, FIntPoint B)
 {
-    return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
+    return FHexGrid::BoardDistance(A, B);
 }
 using namespace BuildRules;
 constexpr int32 PotionDice = 2;
@@ -46,7 +48,6 @@ int32 CriticalThreshold(const FCombatantState& Hero)
     if (const auto* B = FBuildCatalog::Find(Hero.BuildId)) { return B->CriticalThreshold; }
     return Hero.FighterSubclass == EFighterSubclass::Champion ? 19 : 20;
 }
-const FIntPoint Neighbors[] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 int32 WeaponMaxDice(const FCombatantState& Unit)
 {
     int32 Count = 1, Sides = 0;
@@ -553,9 +554,8 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
         {
             const FIntPoint Cell = Buckets[Cost][Index];
             if (Result[Cell] != Cost) { continue; }
-            for (FIntPoint Offset : Neighbors)
+            for (const FIntPoint Next : FHexGrid::BoardNeighbors(Cell))
             {
-                const FIntPoint Next = Cell + Offset;
                 if (!IsOpen(Next, Id)) { continue; }
                 if (Fears.ContainsByPredicate([&](const FIntPoint& F) { return GridDistance(Next, F) < GridDistance(Cell, F); })) { continue; }
                 const int32 NextCost = Cost + StepCost(Next);
@@ -661,27 +661,16 @@ TArray<FIntPoint> FCombatBattle::LegalMovesRaw(int32 Id) const
 
 bool FCombatBattle::HasLineOfSight(FIntPoint From, FIntPoint To) const
 {
-    // Supercover grid traversal. At a corner both touching cells must be clear.
-    const FIntPoint Delta = To - From;
-    const int32 NX = FMath::Abs(Delta.X);
-    const int32 NY = FMath::Abs(Delta.Y);
-    const int32 SX = FMath::Sign(Delta.X);
-    const int32 SY = FMath::Sign(Delta.Y);
-    int32 IX = 0;
-    int32 IY = 0;
-    auto Blocked = [this](FIntPoint Cell) { return State.Encounter.BlockedCells.Contains(Cell); };
-    while (IX < NX || IY < NY)
+    // Hex line between centers, walked with both tie-break nudges: a line running exactly along a hex edge
+    // touches both hexes, and either one blocks (the strict rule the square grid used at corners).
+    if (From == To || State.Encounter.BlockedCells.IsEmpty()) { return true; }
+    for (const int32 Bias : {1, -1})
     {
-        const int32 Decision = (1 + 2 * IX) * NY - (1 + 2 * IY) * NX;
-        if (Decision == 0)
+        const TArray<FIntPoint> Path = FHexGrid::BoardLine(From, To, Bias);
+        for (int32 Index = 1; Index < Path.Num(); ++Index)
         {
-            if (Blocked(From + FIntPoint(SX, 0)) || Blocked(From + FIntPoint(0, SY))) { return false; }
-            From += FIntPoint(SX, SY);
-            ++IX; ++IY;
+            if (State.Encounter.BlockedCells.Contains(Path[Index])) { return false; }
         }
-        else if (Decision < 0) { From.X += SX; ++IX; }
-        else { From.Y += SY; ++IY; }
-        if (Blocked(From)) { return false; }
     }
     return true;
 }
@@ -839,7 +828,7 @@ TArray<int32> FCombatBattle::LegalTargetsRaw(int32 Id, ECombatCommandType Action
             const ECombatCondition Applies = Action == ECombatCommandType::Shove ? ECombatCondition::Prone : ECombatCondition::Grappled;
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious &&
                 FGrappleRules::SizeAllows(static_cast<ECreatureSize>(Unit->Size), static_cast<ECreatureSize>(Target.Size)) &&
-                FMath::Max(FMath::Abs(Target.Cell.X - Unit->Cell.X), FMath::Abs(Target.Cell.Y - Unit->Cell.Y)) <= 1 &&
+                GridDistance(Target.Cell, Unit->Cell) <= 1 &&
                 !Target.Conditions.ContainsByPredicate([Applies](const FCombatCondition& C) { return C.Condition == Applies; });
         }
         else if (EStandardAction Standard; StandardActionOf(Action, Standard))
@@ -1166,33 +1155,44 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
         }
     }
     if (State.Encounter.BlockedCells.IsEmpty() && Creatures.IsEmpty()) { return 0; }
-    // SRD/DMG grid cover: from the attacker's best cell corner, trace a line to each corner of the target's cell.
-    // A line is blocked when it passes through the interior of a blocked cell (edges and corners do not block).
-    auto Crosses = [](FVector2D A, FVector2D B, FIntPoint Cell)
+    // DMG grid cover adapted to hexes: from the attacker's best hex corner, trace a line to each of the six
+    // corners of the target's hex. A line is blocked when it passes through the interior of a blocked hex
+    // (edges and corners do not block). 2+ of 6 blocked = three-quarters cover, 1 = half.
+    // (With a clear centre line a single wall can block at most two corner lines on hexes, so 4/6 was unreachable.)
+    auto Corner = [](FIntPoint Cell, int32 Index)
     {
+        const double Angle = FMath::DegreesToRadians(30.0 + 60.0 * Index);
+        return FHexGrid::BoardToWorld(Cell, 1.0) + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
+    };
+    auto Crosses = [&Corner](FVector2D A, FVector2D B, FIntPoint Cell)
+    {
+        // Cyrus-Beck clip of segment AB against the hex's six edge half-planes.
+        constexpr double Eps = 1e-7;
         double Enter = 0.0, Exit = 1.0;
-        const double Start[2] = {A.X, A.Y}, Delta[2] = {B.X - A.X, B.Y - A.Y}, Low[2] = {(double)Cell.X, (double)Cell.Y};
-        for (int32 Axis = 0; Axis < 2; ++Axis)
+        const FVector2D Center = FHexGrid::BoardToWorld(Cell, 1.0), D = B - A;
+        for (int32 Edge = 0; Edge < 6; ++Edge)
         {
-            if (Delta[Axis] == 0.0)
+            const FVector2D V0 = Corner(Cell, Edge), V1 = Corner(Cell, (Edge + 1) % 6);
+            FVector2D Normal(V1.Y - V0.Y, V0.X - V1.X);
+            if (FVector2D::DotProduct(Normal, Center - V0) > 0.0) { Normal = -Normal; } // outward
+            const double Num = FVector2D::DotProduct(Normal, A - V0), Den = FVector2D::DotProduct(Normal, D);
+            if (FMath::Abs(Den) < 1e-12)
             {
-                if (Start[Axis] <= Low[Axis] || Start[Axis] >= Low[Axis] + 1.0) { return false; }
+                if (Num > -Eps) { return false; } // parallel and on or outside this edge
                 continue;
             }
-            double T0 = (Low[Axis] - Start[Axis]) / Delta[Axis], T1 = (Low[Axis] + 1.0 - Start[Axis]) / Delta[Axis];
-            if (T0 > T1) { Swap(T0, T1); }
-            Enter = FMath::Max(Enter, T0); Exit = FMath::Min(Exit, T1);
+            const double T = -Num / Den;
+            if (Den < 0.0) { Enter = FMath::Max(Enter, T); } else { Exit = FMath::Min(Exit, T); }
         }
-        return Enter < Exit;
+        return Exit - Enter > Eps;
     };
-    auto Corner = [](FIntPoint Cell, int32 Index) { return FVector2D(Cell.X + (Index & 1), Cell.Y + (Index >> 1)); };
     auto BestLines = [&](const TArray<FIntPoint>& Cells)
     {
-        int32 Best = 4;
-        for (int32 From = 0; From < 4 && Best > 0; ++From)
+        int32 Best = 6;
+        for (int32 From = 0; From < 6 && Best > 0; ++From)
         {
             int32 Lines = 0;
-            for (int32 To = 0; To < 4; ++To)
+            for (int32 To = 0; To < 6; ++To)
             {
                 for (FIntPoint Cell : Cells)
                 {
@@ -1204,7 +1204,7 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
         return Best;
     };
     const int32 Walls = State.Encounter.BlockedCells.IsEmpty() ? 0 : BestLines(State.Encounter.BlockedCells);
-    const int32 WallBonus = Walls >= 3 ? 5 : Walls > 0 ? 2 : 0;
+    const int32 WallBonus = Walls >= 2 ? 5 : Walls > 0 ? 2 : 0;
     // Creatures never give more than half cover.
     return FMath::Max(WallBonus, !Creatures.IsEmpty() && BestLines(Creatures) > 0 ? 2 : 0);
 }
@@ -1729,9 +1729,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                     Result.DamagePrevented += Prevented;
                     if (A.Effect == EAbilityEffect::Push && Victim->Life == ECombatLife::Conscious)
                     {
-                        const auto Delta = Victim->Cell - User->Cell;
-                        const FIntPoint Step = FMath::Abs(Delta.X) >= FMath::Abs(Delta.Y) ? FIntPoint(FMath::Sign(Delta.X),0) : FIntPoint(0,FMath::Sign(Delta.Y));
-                        if (IsOpen(Victim->Cell + Step, Id)) { Victim->Cell += Step; Result.Effects.Add({Id,EAbilityEffect::Push,0,Victim->Cell}); }
+                        const int32 Away = FHexGrid::BoardDirection(User->Cell, Victim->Cell);
+                        const FIntPoint Step = Away == INDEX_NONE ? Victim->Cell : FHexGrid::BoardStep(Victim->Cell, Away);
+                        if (Away != INDEX_NONE && IsOpen(Step, Id)) { Victim->Cell = Step; Result.Effects.Add({Id,EAbilityEffect::Push,0,Victim->Cell}); }
                     }
                 }
             }
@@ -1890,10 +1890,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             // Thunderwave: a failed save pushes the creature 10 feet straight away from the caster.
             if (Command.Type == ECombatCommandType::Thunderwave && !bSaved && Victim->Life != ECombatLife::Dead)
             {
-                const FIntPoint Delta = Victim->Cell - User->Cell;
-                const bool bAlongX = FMath::Abs(Delta.X) >= FMath::Abs(Delta.Y);
-                const FIntPoint Step(bAlongX ? FMath::Sign(Delta.X) : 0, bAlongX ? 0 : FMath::Sign(Delta.Y));
-                for (int32 Index = 0; Index < 2 && IsInside(Victim->Cell + Step) && IsOpen(Victim->Cell + Step, VictimId); ++Index) { Victim->Cell += Step; }
+                // Straight away along the nearest hex direction, fixed at the first step.
+                const int32 Away = FHexGrid::BoardDirection(User->Cell, Victim->Cell);
+                for (int32 Index = 0; Away != INDEX_NONE && Index < 2 && IsOpen(FHexGrid::BoardStep(Victim->Cell, Away), VictimId); ++Index) { Victim->Cell = FHexGrid::BoardStep(Victim->Cell, Away); }
                 Result.Effects.Add({VictimId, EAbilityEffect::Push, 0, Victim->Cell});
             }
             Lines += FString::Printf(TEXT(" | %s %s %d"), *Victim->Name, bSaved ? TEXT("saves,") : TEXT("fails,"), Dealt);
@@ -2104,8 +2103,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         {
             if (Lock.Side != ECombatSide::Party || Lock.Life != ECombatLife::Conscious || Lock.BuildId != TEXT("warlock.fiend")) { continue; }
             const int32 WarlockLevel = FBuildCatalog::ClassLevel(Lock, EAdventurerRole::Warlock);
-            const FIntPoint Gap = Lock.Cell - Target.Cell;
-            if (WarlockLevel < 3 || (Lock.Id != Killer && FMath::Max(FMath::Abs(Gap.X), FMath::Abs(Gap.Y)) > 2)) { continue; }
+            if (WarlockLevel < 3 || (Lock.Id != Killer && GridDistance(Lock.Cell, Target.Cell) > 2)) { continue; }
             Lock.TemporaryHP = FMath::Max(Lock.TemporaryHP, FWarlockRules::DarkOnesBlessing(AbilityModifier(Lock.Id, EAbility::Charisma), WarlockLevel));
         }
     }
@@ -2579,7 +2577,7 @@ TArray<int32> FCombatBattle::OrderedAreaTargets(const FCombatantState& Actor, co
 
 namespace CombatSpellSlots
 {
-/** Catalog spell area on the grid: cones, lines and self cubes start at the caster and point at the aim; spheres and cylinders centre on the aim (or the caster for Self); a cube cast at range is treated as a sphere of half its side around the aim. */
+/** Catalog spell area on the hex grid: cones, lines and self cubes start at the caster and point at the aim; spheres and cylinders centre on the aim hex (or the caster for Self); a cube cast at range is treated as a sphere of half its side around the aim. */
 bool CatalogArea(const FSrdSpell& Spell, FIntPoint Caster, FIntPoint Aim, FAreaTemplate& Out)
 {
     if (Spell.Area == ESpellArea::None || Spell.AreaFeet <= 0) { return false; }
@@ -2596,7 +2594,7 @@ bool CatalogArea(const FSrdSpell& Spell, FIntPoint Caster, FIntPoint Aim, FAreaT
     if (Out.Shape == EAreaShape::Cone || Out.Shape == EAreaShape::Line || Out.Shape == EAreaShape::Cube)
     {
         Out.Origin = Caster;
-        Out.Direction = Aim == Caster ? FIntPoint(1, 0) : Aim - Caster;
+        Out.Direction = Aim == Caster ? FHexGrid::BoardStep(Caster, 0) - Caster : Aim - Caster;
     }
     else { Out.Origin = bSelf ? Caster : Aim; }
     return true;

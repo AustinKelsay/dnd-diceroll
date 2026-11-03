@@ -28,8 +28,8 @@ bool FCoverFromTerrainTest::RunTest(const FString& Parameters)
     const FCase Cases[] = {
         {TEXT("open ground"), {4, 2}, {}, 0},
         {TEXT("wall beside the line, best corner clear"), {4, 0}, {{2, 1}}, 0},
-        {TEXT("wall at the target's near side: half"), {4, 2}, {{4, 1}}, 2},
-        {TEXT("three walls: three-quarters"), {5, 2}, {{2, 0}, {3, 2}, {5, 1}}, 5}};
+        {TEXT("wall grazing the straight hex row: half"), {4, 0}, {{3, 1}}, 2},
+        {TEXT("wall at the target's near side: three-quarters"), {5, 2}, {{4, 1}}, 5}};
     FString Error;
     for (const FCase& Case : Cases)
     {
@@ -51,7 +51,7 @@ bool FCoverFromTerrainTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Total cover: no line of sight, not targetable"), Hidden.LegalTargets(1, ECombatCommandType::Attack).Contains(2));
     // Hit chance moves by exactly two faces at AC 12 -> 14 with +0 to hit.
     FCombatBattle Half;
-    TestTrue(TEXT("Half start"), Half.Start(CoverDuel({4, 2}, {{4, 1}}, 0), 7, Error));
+    TestTrue(TEXT("Half start"), Half.Start(CoverDuel({4, 0}, {{3, 1}}, 0), 7, Error));
     const FActionForecast HalfForecast = Half.Forecast(1, ECombatCommandType::Attack, 2);
     TestTrue(TEXT("Half cover: 7 of 20 faces hit"), HalfForecast.RollMode != ERollMode::Normal || HalfForecast.HitChanceOutOf400 == 7 * 20);
     return !HasAnyErrors();

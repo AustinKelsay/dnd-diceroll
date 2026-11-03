@@ -360,7 +360,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPersistLostSurvivorTest, "Project.Expedition.P
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPersistLostSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run, Restored; FString Error; Run.NewRun(42,Error,TEXT("lost-member-fixture"));Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
+    FExpeditionRun Run, Restored; FString Error; Run.NewRun(2,Error,TEXT("lost-member-fixture")); /* hex: seed 42 now wipes */Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Step=0;Step<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Step)
     {
         const auto& B=Run.Battle();const auto* A=B.Find(B.ActiveId());

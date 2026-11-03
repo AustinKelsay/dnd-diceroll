@@ -1,8 +1,9 @@
 #include "Rules/OpportunityRules.h"
+#include "Rules/HexGrid.h"
 
 int32 FOpportunityRules::GridDistance(const FIntPoint& A, const FIntPoint& B)
 {
-    return FMath::Max(FMath::Abs(A.X - B.X), FMath::Abs(A.Y - B.Y));
+    return FHexGrid::BoardDistance(A, B);
 }
 
 bool FOpportunityRules::InReach(const FIntPoint& Reactor, int32 ReachCells, const FIntPoint& Cell)

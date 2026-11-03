@@ -316,7 +316,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRunSurvivorTest, "Project.Expedition.Run.DeadR
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRunSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
+    FExpeditionRun Run; FString Error; Run.NewRun(2, Error, TEXT("seeded-fixture")); /* hex: seed 42 now wipes before a lone first death */ Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Turn=0;Turn<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Turn)
     {
         const auto* Active=Run.Battle().Find(Run.Battle().ActiveId());
@@ -349,7 +349,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkipRecoveryTest, "Project.Expedition.Run.Skip
 bool FSkipRecoveryTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run; FString Error;
-    Run.NewRun(42, Error, TEXT("seeded-fixture")); Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+    Run.NewRun(2, Error, TEXT("seeded-fixture")); /* hex: seed 42 now wipes before a lone first death */ Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
     FinishCombat(Run); Run.ClaimReward(1, Error);
     const auto Before = Run.Battle().Snapshot();
     TestTrue(TEXT("Recovery can be explicitly skipped"), Run.Recover(false, Error));

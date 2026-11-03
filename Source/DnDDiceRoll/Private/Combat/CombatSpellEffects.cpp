@@ -6,6 +6,7 @@
 #include "Rules/SpellcastingRules.h"
 #include "Rules/CheckRules.h"
 #include "Rules/AreaRules.h"
+#include "Rules/HexGrid.h"
 #include "Rules/DamageRules.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/WeaponRules.h"
@@ -24,7 +25,7 @@ namespace CombatSpellSlots { bool ToCombatCondition(ESpellCondition In, ECombatC
 
 namespace CombatSpellEffects
 {
-int32 Cells(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y); }
+int32 Cells(FIntPoint A, FIntPoint B) { return FHexGrid::BoardDistance(A, B); }
 uint16 TypeBit(EDamageType T) { return static_cast<uint16>(1u << static_cast<uint8>(T)); }
 constexpr uint16 AllDamage = 0x1FFF;
 uint32 SpellBit(ECombatCondition C)

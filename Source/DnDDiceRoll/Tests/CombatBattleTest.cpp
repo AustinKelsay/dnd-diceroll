@@ -153,13 +153,13 @@ bool FCombatSightTest::RunTest(const FString& Parameters)
     FCombatEncounter Encounter = Duel();
     Encounter.Combatants[0].Range = 8;
     Encounter.Combatants[1].Cell = {2, 2};
-    Encounter.BlockedCells = {{1, 0}}; // diagonal corner is obscured
+    Encounter.BlockedCells = {{0, 1}}; // wall on the hex line to (2, 2)
     FCombatBattle Battle;
     FString Error;
     Battle.Start(Encounter, 42, Error);
     const FCombatSnapshot Before = Battle.Snapshot();
     TestTrue(TEXT("Blocked sight excludes target"), Battle.LegalTargets(10).IsEmpty());
-    TestFalse(TEXT("Cannot attack through a corner"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
+    TestFalse(TEXT("Cannot attack through a wall"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 20}).bAccepted);
     TestFalse(TEXT("Cannot attack self"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 10}).bAccepted);
     TestFalse(TEXT("Cannot attack missing target"), Battle.Submit({ECombatCommandType::Attack, 10, {}, 999}).bAccepted);
     TestFalse(TEXT("Unknown command rejected"), Battle.Submit({static_cast<ECombatCommandType>(255), 10}).bAccepted);
@@ -215,7 +215,7 @@ bool FCombatEnemyTest::RunTest(const FString& Parameters)
 {
     FCombatEncounter Encounter = Duel();
     // A sealed enemy cannot approach; it must still end its turn.
-    Encounter.BlockedCells = {{3, 4}, {4, 3}};
+    Encounter.BlockedCells = {{4, 3}, {3, 3}, {3, 4}}; // every in-bounds hex neighbour of the corner
     FCombatBattle A, B;
     FString Error;
     A.Start(Encounter, 42, Error); B.Start(Encounter, 42, Error);
@@ -323,7 +323,7 @@ bool FCombatReachTest::RunTest(const FString& Parameters)
         FCombatantState Hidden = Encounter.Combatants[1];
         Hidden.Id = 21; Hidden.Cell = {1, 4};                   // distance 3 behind the wall at (1, 3)
         FCombatantState Far = Encounter.Combatants[1];
-        Far.Id = 22; Far.Cell = {6, 3};                         // distance 7: missile only
+        Far.Id = 22; Far.Cell = {6, 3};                         // hex distance 6: missile only
         FCombatantState Friend = Hero;
         Friend.Id = 11; Friend.Cell = {2, 1}; Friend.InitiativeBonus = -5; Friend.HP = 5;
         Encounter.Combatants.Append({Hidden, Far, Friend});
@@ -351,11 +351,11 @@ bool FCombatReachTest::RunTest(const FString& Parameters)
         if (Role == EAdventurerRole::Wizard)
         {
             const FActionReach Missile = Battle.Reach(10, ECombatCommandType::MagicMissile);
-            TestTrue(TEXT("Missile reaches six cells"), Missile.InSight.Contains(FIntPoint(6, 2)) && !Missile.InSight.Contains(FIntPoint(6, 3)) && !Missile.Obscured.Contains(FIntPoint(6, 3)));
+            TestTrue(TEXT("Missile reaches six cells"), Missile.InSight.Contains(FIntPoint(6, 3)) && !Missile.InSight.Contains(FIntPoint(7, 3)) && !Missile.Obscured.Contains(FIntPoint(7, 3)));
         }
         else { TestTrue(TEXT("Only wizards reach with Magic Missile"), Battle.Reach(10, ECombatCommandType::MagicMissile).InSight.IsEmpty()); }
         const FActionReach Potion = Battle.Reach(10, ECombatCommandType::Potion);
-        TestTrue(TEXT("Touch reach includes self and adjacent ally"), Potion.InSight.Contains(FIntPoint(1, 1)) && Potion.InSight.Contains(FIntPoint(2, 1)) && Potion.InSight.Num() + Potion.Obscured.Num() == 5);
+        TestTrue(TEXT("Touch reach includes self and adjacent ally"), Potion.InSight.Contains(FIntPoint(1, 1)) && Potion.InSight.Contains(FIntPoint(2, 1)) && Potion.InSight.Num() + Potion.Obscured.Num() == 7);
         TestEqual(TEXT("Cure reach only for clerics"), Battle.Reach(10, ECombatCommandType::CureWounds).InSight.IsEmpty(), Role != EAdventurerRole::Cleric);
         TestTrue(TEXT("Precision Strike only for Battle Masters"), Battle.Reach(10, ECombatCommandType::PrecisionStrike).InSight.IsEmpty() == (Role != EAdventurerRole::Fighter));
         TestTrue(TEXT("Not the active unit: no reach"), Battle.Reach(11, ECombatCommandType::Attack).InSight.IsEmpty());

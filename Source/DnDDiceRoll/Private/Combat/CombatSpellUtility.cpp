@@ -7,6 +7,7 @@
 #include "Rules/SpellcastingRules.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/AreaRules.h"
+#include "Rules/HexGrid.h"
 #include "Rules/DamageRules.h"
 #include "Rules/AbilityRules.h"
 #include "Party/BuildCatalog.h"
@@ -17,8 +18,8 @@
 
 namespace CombatSpellUtility
 {
-int32 Grid(FIntPoint A, FIntPoint B) { return FMath::Max(FMath::Abs(A.X - B.X), FMath::Abs(A.Y - B.Y)); }
-int32 Manhattan(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y); }
+int32 Grid(FIntPoint A, FIntPoint B) { return FHexGrid::BoardDistance(A, B); }
+int32 Manhattan(FIntPoint A, FIntPoint B) { return FHexGrid::BoardDistance(A, B); } // hex steps; name kept from the square grid
 }
 using namespace CombatSpellUtility;
 
@@ -97,7 +98,15 @@ uint8 ZoneKind(const FString& Id)
 bool FollowsCaster(const FString& Id) { const FSpellZone* Z = FSpellTacticsRules::Zone(Id); return Z && Z->bFollowsCaster; }
 /** Spells SRD 5.2.1 calls curses, ended by Remove Curse. */
 bool IsCurse(const FString& Id) { return IsId(Id, TEXT("hex")) || IsId(Id, TEXT("bestow-curse")); }
-FIntPoint GustDir(int32 Value) { return FIntPoint(Value / 3 - 1, Value % 3 - 1); }
+/** Gust of Wind stores its hex direction index (0..5) in Value. */
+int32 GustDir(int32 Value) { return ((Value % FHexGrid::DirectionCount) + FHexGrid::DirectionCount) % FHexGrid::DirectionCount; }
+/** Gust of Wind: a 60-ft line, 10 ft wide, as two adjacent hex rows from the caster along Dir. */
+bool InGust(FIntPoint Caster, int32 Dir, FIntPoint Cell)
+{
+    const FIntPoint Origin = FHexGrid::Axial(Caster), Side = FHexGrid::Direction(Dir + 1), Hex = FHexGrid::Axial(Cell);
+    for (int32 K = 1; K <= 12; ++K) { const FIntPoint P = Origin + FHexGrid::Direction(Dir) * K; if (Hex == P || Hex == P + Side) { return true; } }
+    return false;
+}
 }
 using namespace CombatSpellUtilityLocal;
 
@@ -343,13 +352,13 @@ bool FCombatBattle::UtilityCastBlocked(const FCombatCommand& Command, const FSrd
     return false;
 }
 
-void FCombatBattle::PushUnit(int32 Id, FIntPoint Dir, int32 Count)
+void FCombatBattle::PushUnit(int32 Id, int32 Dir, int32 Count)
 {
     for (int32 Step = 0; Step < Count; ++Step)
     {
         FCombatantState* Unit = MutableFind(Id);
         if (!Unit || Unit->Life != ECombatLife::Conscious) { return; }
-        const FIntPoint From = Unit->Cell, To = From + Dir;
+        const FIntPoint From = Unit->Cell, To = FHexGrid::BoardStep(From, Dir);
         if (!IsOpen(To, Id)) { return; }
         Unit->Cell = To;
         SpellsOnStep(Id, From, To);
@@ -439,11 +448,8 @@ void FCombatBattle::SummonsOnTurnStart(int32 UnitId)
             // A creature starting its turn in the line: STR save or pushed 15 ft away from the caster.
             const FCombatantState* Unit = Find(UnitId);
             if (!Unit || UnitId == A.CasterId || Unit->Life != ECombatLife::Conscious) { continue; }
-            const FIntPoint Dir = GustDir(A.Value);
-            const FIntPoint Perp(-Dir.Y, Dir.X);
-            bool bIn = false;
-            for (int32 K = 1; K <= 12 && !bIn; ++K) { const FIntPoint P = Caster->Cell + Dir * K; bIn = Unit->Cell == P || Unit->Cell == P + Perp; }
-            if (!bIn) { continue; }
+            const int32 Dir = GustDir(A.Value);
+            if (!InGust(Caster->Cell, Dir, Unit->Cell)) { continue; }
             const FActiveSpell Copy = A;
             if (!RollSpellSave(UnitId, EAbility::Strength, Copy.Dc, nullptr)) { PushUnit(UnitId, Dir, 3); }
             EmitSpellEvent(ESpellEventKind::Trigger, Copy, {UnitId});
@@ -468,8 +474,7 @@ void FCombatBattle::SummonsOnTurnStart(int32 UnitId)
             const FIntPoint Goal = Find(Best)->Cell;
             for (int32 Step = 0; Step < 8 && Manhattan(Token, Goal) > 1; ++Step)
             {
-                const FIntPoint Delta = Goal - Token;
-                Token += FMath::Abs(Delta.X) >= FMath::Abs(Delta.Y) ? FIntPoint(FMath::Sign(Delta.X), 0) : FIntPoint(0, FMath::Sign(Delta.Y));
+                Token = FHexGrid::BoardStep(Token, FHexGrid::BoardDirection(Token, Goal));
             }
             A.Origin = Token;
             BestDistance = Manhattan(Token, Goal);
@@ -747,18 +752,16 @@ bool FCombatBattle::ResolveUtilitySpell(const FCombatCommand& Command, const FSr
     else if (Is(S, TEXT("gust-of-wind")))
     {
         // A 60-ft line, 10 ft wide, from the caster toward the target: each creature in it makes a STR save or is pushed 15 ft. Lasts (concentration).
-        const FIntPoint Delta = Find(Command.TargetId)->Cell - User->Cell;
-        const FIntPoint Dir(FMath::Sign(Delta.X), FMath::Sign(Delta.Y));
+        const int32 Aimed = FHexGrid::BoardDirection(User->Cell, Find(Command.TargetId)->Cell);
+        const int32 Dir = Aimed == INDEX_NONE ? 0 : Aimed;
         FActiveSpell& Entry = AddActiveSpell(S, CasterId, INDEX_NONE, Slot, Dc, AttackBonus);
-        Entry.Value = (Dir.X + 1) * 3 + (Dir.Y + 1);
+        Entry.Value = Dir;
         Entry.Origin = User->Cell;
         Probe = Entry;
-        const FIntPoint Perp(-Dir.Y, Dir.X);
         TArray<int32> InLine;
         for (const FCombatantState& O : State.Encounter.Combatants)
         {
-            if (O.Id == CasterId || O.Life != ECombatLife::Conscious) { continue; }
-            for (int32 K = 1; K <= 12; ++K) { const FIntPoint P = User->Cell + Dir * K; if (O.Cell == P || O.Cell == P + Perp) { InLine.Add(O.Id); break; } }
+            if (O.Id != CasterId && O.Life == ECombatLife::Conscious && InGust(User->Cell, Dir, O.Cell)) { InLine.Add(O.Id); }
         }
         // Farthest first so pushed creatures don't block each other.
         InLine.Sort([&](int32 A, int32 B) { return Manhattan(Find(A)->Cell, User->Cell) > Manhattan(Find(B)->Cell, User->Cell); });

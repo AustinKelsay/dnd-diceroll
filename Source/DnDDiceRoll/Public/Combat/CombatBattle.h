@@ -515,8 +515,8 @@ struct DNDDICEROLL_API FActionReach
 
 /** Authoritative combat module. Start rejects invalid encounters atomically. All commands,
  * including enemy decisions, use the same validation. Queries consume no random numbers.
- * Grid: cardinal movement, occupied cells block travel, attacks use Manhattan range and
- * blocked-cell line of sight. Limits: 16x16 cells, 32 combatants, stats bounded at Start.
+ * Grid: pointy-top hexes stored as odd-r offset board cells (FHexGrid), six-way movement, occupied cells
+ * block travel, ranges in hex steps (1 hex = 5 ft) and blocked-hex line of sight. Limits: 16x16 cells, 32 combatants, stats bounded at Start.
  */
 class DNDDICEROLL_API FCombatBattle
 {
@@ -640,7 +640,8 @@ private:
     const FActiveSpell* SpellExtraOn(int32 Id, uint32 Bit) const;
     int32 SpellCheckBonus(const FCombatantState& Unit, EAbility Ability, ERollMode& Mode, bool bStealth = false);
     void SummonsOnTurnStart(int32 UnitId);
-    void PushUnit(int32 Id, FIntPoint Dir, int32 Cells);
+    /** Push Cells hexes along hex direction Dir (0..5, FHexGrid::Directions). */
+    void PushUnit(int32 Id, int32 Dir, int32 Cells);
     int32 SpellDamageIntake(FCombatantState& Target, int32 Damage);
     void SpellDamageShared(int32 TargetId, int32 Real);
     int32 ResistanceCut(int32 TargetId, EDamageType Type, int32 Damage);
