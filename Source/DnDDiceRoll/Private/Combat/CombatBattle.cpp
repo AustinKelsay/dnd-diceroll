@@ -1206,17 +1206,21 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
     const FCombatantState* Actor = Find(ActorId);
     const FCombatantState* Target = Find(TargetId);
     if (!Actor || !Target) { return 0; }
+    return CoverFor(Actor->Cell, Target->Cell, Target->Size, ActorId, TargetId);
+}
+
+int32 FCombatBattle::CoverFor(FIntPoint From, FIntPoint To, int32 TargetSize, int32 IgnoreA, int32 IgnoreB) const
+{
+    const int32 WallBonus = CoverBetween(From, To);
+    if (WallBonus >= 2) { return WallBonus; }
+    // House rule (Landon): only a creature at least one size larger than the target gives cover, and only half cover (+2).
+    // Same-size and smaller creatures never do. bCreatureCover is legacy and no longer read.
     TArray<FIntPoint> Creatures;
-    if (State.Encounter.bCreatureCover)
+    for (const FCombatantState& Other : State.Encounter.Combatants)
     {
-        for (const FCombatantState& Other : State.Encounter.Combatants)
-        {
-            if (Other.Id != ActorId && Other.Id != TargetId && Other.Life == ECombatLife::Conscious) { Creatures.Add(Other.Cell); }
-        }
+        if (Other.Id != IgnoreA && Other.Id != IgnoreB && Other.Life == ECombatLife::Conscious && Other.Size > TargetSize && Other.Cell != From && Other.Cell != To) { Creatures.Add(Other.Cell); }
     }
-    const int32 WallBonus = CoverBetween(Actor->Cell, Target->Cell);
-    // Creatures never give more than half cover.
-    return FMath::Max(WallBonus, !Creatures.IsEmpty() && CoverLines(Actor->Cell, Target->Cell, Creatures) > 0 ? 2 : 0);
+    return !Creatures.IsEmpty() && CoverLines(From, To, Creatures) > 0 ? 2 : WallBonus;
 }
 
 FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) const
@@ -2239,7 +2243,8 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     if (!bStarted || State.Phase != EBattlePhase::Fighting || !Enemy || Enemy->Side != ECombatSide::Enemy) { return Results; }
     const FMonsterStatBlock* Block = FMonsterRules::Find(Enemy->Role);
     // Thinking foes (stat blocks at or above the Intelligence threshold) use walls; mindless ones keep the plain rush.
-    const bool bTactical = FMonsterRules::UsesCoverTactics(Enemy->Role) && !State.Encounter.BlockedCells.IsEmpty();
+    const bool bTactical = FMonsterRules::UsesCoverTactics(Enemy->Role) && (!State.Encounter.BlockedCells.IsEmpty() ||
+        State.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& U) { return U.Id != Enemy->Id && U.Life == ECombatLife::Conscious && U.Size > Enemy->Size; }));
     // Cover a cell has against the conscious heroes: the most exposed line counts; no line of sight counts as total.
     auto Shelter = [&](FIntPoint Cell)
     {
@@ -2247,7 +2252,7 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
         for (const FCombatantState& U : State.Encounter.Combatants)
         {
             if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
-            Worst = FMath::Min(Worst, HasLineOfSight(U.Cell, Cell) ? CoverBetween(U.Cell, Cell) : 10);
+            Worst = FMath::Min(Worst, HasLineOfSight(U.Cell, Cell) ? CoverFor(U.Cell, Cell, Enemy->Size, U.Id, Enemy->Id) : 10);
         }
         return Worst == MAX_int32 ? 0 : Worst;
     };
@@ -2852,7 +2857,7 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
     FAreaTemplate Area;
     const bool bArea = Zone || CombatSpellSlots::CatalogArea(S, User->Cell, Find(Command.TargetId)->Cell, Area);
     TArray<FIntPoint> CastCells;
-    TArray<int32> Victims = SpellVictims(*User, S, Command.TargetId, &CastCells);
+    TArray<int32> Victims = SpellVictims(*User, S, Command.TargetId, &CastCells, Command.Nodes);
     if (Spec)
     {
         // Spells phase 3: several chosen targets (Hold Person upcast), creature types, "creatures of your choice".
@@ -2870,6 +2875,7 @@ bool FCombatBattle::ResolveCatalogSpell(const FCombatCommand& Command, FCombatRe
         FActiveSpell& Entry = AddActiveSpell(S, User->Id, INDEX_NONE, Slot, Dc, AttackBonus);
         Entry.Origin = Zone->bFollowsCaster || S.RangeFeet == 0 ? User->Cell : Find(Command.TargetId)->Cell;
         Entry.RadiusCells = FMath::Max(0, Zone->RadiusFeet / FAreaRules::FeetPerCell);
+        if (Zone->PathFeet > 0) { Entry.Cells = FSpellTacticsRules::WallPath(Find(Command.TargetId)->Cell, Command.Nodes, Zone->PathFeet); }
         Entry.TriggeredThisTurn = Victims;
         ZoneSerial = Entry.Serial;
         ZoneCastExtras(ZoneSerial, Command);
@@ -3003,6 +3009,7 @@ bool FCombatBattle::ZoneCovers(const FActiveSpell& Spell, FIntPoint Cell) const
 {
     const FSpellZone* Zone = FSpellTacticsRules::Zone(Spell.SpellId);
     if (!Zone) { return false; }
+    if (Zone->PathFeet > 0) { return IsInside(Cell) && Spell.Cells.Contains(Cell); }
     FIntPoint Origin = Spell.Origin;
     if (Zone->bFollowsCaster) { if (const FCombatantState* Caster = Find(Spell.CasterId)) { Origin = Caster->Cell; } }
     return IsInside(Cell) && GridDistance(Origin, Cell) <= Spell.RadiusCells;
@@ -3067,7 +3074,7 @@ void FCombatBattle::RemoveActiveSpell(int32 Index, bool bEvent)
     }
 }
 
-TArray<int32> FCombatBattle::SpellVictims(const FCombatantState& User, const FSrdSpell& S, int32 TargetId, TArray<FIntPoint>* OutCells) const
+TArray<int32> FCombatBattle::SpellVictims(const FCombatantState& User, const FSrdSpell& S, int32 TargetId, TArray<FIntPoint>* OutCells, const TArray<FIntPoint>& Nodes) const
 {
     TArray<int32> Victims;
     const FCombatantState* Aim = Find(TargetId);
@@ -3077,6 +3084,7 @@ TArray<int32> FCombatBattle::SpellVictims(const FCombatantState& User, const FSr
         FActiveSpell Probe; Probe.SpellId = S.Id; Probe.CasterId = User.Id;
         Probe.Origin = Zone->bFollowsCaster || S.RangeFeet == 0 ? User.Cell : Aim->Cell;
         Probe.RadiusCells = FMath::Max(0, Zone->RadiusFeet / FAreaRules::FeetPerCell);
+        if (Zone->PathFeet > 0) { Probe.Cells = FSpellTacticsRules::WallPath(Aim->Cell, Nodes, Zone->PathFeet); }
         if (OutCells) { *OutCells = ZoneCells(Probe); }
         for (const FCombatantState& Unit : State.Encounter.Combatants)
         {

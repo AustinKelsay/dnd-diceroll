@@ -19,6 +19,8 @@ struct DNDDICEROLL_API FSpellZone
     bool bSparesAllies;
     /** The area is difficult terrain. */
     bool bDifficult;
+    /** Wall zones (Wall of Fire): total hex-path length in feet; 0 = radius zone. */
+    int32 PathFeet = 0;
 };
 
 /** SRD 5.2.1 spell timing as data and arithmetic. Combat applies it; nothing here is saved. */
@@ -30,6 +32,8 @@ struct DNDDICEROLL_API FSpellTacticsRules
     /** Lasting damage zone, or null. */
     static const FSpellZone* Zone(const FSrdSpell& Spell);
     static const FSpellZone* Zone(const FString& Id);
+    /** Wall path: hex lines from Aim through each node in order, shared hexes once, cut at MaxFeet (5 ft per hex). Deterministic. */
+    static TArray<FIntPoint> WallPath(FIntPoint Aim, const TArray<FIntPoint>& Nodes, int32 MaxFeet);
     static int32 ZoneCount();
     static const FSpellZone& ZoneAt(int32 Index);
     /** Held-condition spells whose target repeats the save at the end of each of its turns, ending the spell on itself on a success. */

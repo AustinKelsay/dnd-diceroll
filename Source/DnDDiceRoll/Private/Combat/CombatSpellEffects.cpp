@@ -385,7 +385,7 @@ bool FCombatBattle::ResolveEffectSpell(const FCombatCommand& Command, const FSrd
     TArray<int32> Targets;
     if (Spec.Target == ESpellEffectTarget::Foe && S.Area != ESpellArea::None)
     {
-        Targets = SpellVictims(*User, S, Command.TargetId, &CastCells);
+        Targets = SpellVictims(*User, S, Command.TargetId, &CastCells, Command.Nodes);
         Targets.RemoveAll([&](int32 V) { const FCombatantState* U = Find(V); return !U || !FSpellEffectRules::CanAffect(Spec, U->Role) || ((Spec.Flags & SpellEffectFlag::SparesAllies) && U->Side == User->Side); });
         if (Spec.Targets > 0) { Targets.SetNum(FMath::Min(Targets.Num(), FSpellEffectRules::MaxTargets(Spec, S.Level, Slot))); }
     }

@@ -214,6 +214,8 @@ struct DNDDICEROLL_API FActiveSpell
     /** Zones: centre cell (follows the caster for emanations) and radius in cells. */
     UPROPERTY() FIntPoint Origin = FIntPoint::ZeroValue;
     UPROPERTY() int32 RadiusCells = 0;
+    /** Wall zones (Wall of Fire): the hexes the wall fills, from FSpellTacticsRules::WallPath. Empty for radius zones. */
+    UPROPERTY() TArray<FIntPoint> Cells;
     /** Save DC and spell attack bonus frozen at casting. */
     UPROPERTY() int32 Dc = 0;
     UPROPERTY() int32 AttackBonus = 0;
@@ -297,6 +299,8 @@ struct DNDDICEROLL_API FCombatCommand
     FString SpellId;
     /** CastSpell only: further targets for multi-target spells and per-beam/ray/dart targets (repeat an id to stack). Not persisted. */
     TArray<int32> ExtraTargetIds;
+    /** CastSpell only, wall spells (Wall of Fire): further wall nodes after the aimed hex; the wall follows hex lines between them. Not persisted. */
+    TArray<FIntPoint> Nodes;
     /** CastSpell only: a spell option (damage type, Enlarge vs Reduce, Command word); 0 = default. Not persisted. */
     int32 Choice = 0;
 };
@@ -558,6 +562,8 @@ public:
     static const TCHAR* CoverName(int32 Bonus);
     /** Wall cover (0, 2 or 5) for a creature at To against an attack or effect from From; ignores creatures. Read-only. */
     int32 CoverBetween(FIntPoint From, FIntPoint To) const;
+    /** Walls plus creatures at least one size larger than TargetSize (half cover, +2); IgnoreA/IgnoreB are the two ends. */
+    int32 CoverFor(FIntPoint From, FIntPoint To, int32 TargetSize, int32 IgnoreA, int32 IgnoreB) const;
     /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
     int32 SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const;
     int32 SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const;
@@ -719,7 +725,7 @@ private:
     FSpellCastEvent MakeSpellEvent(ESpellEventKind Kind, const FActiveSpell& Spell, const TArray<int32>& Targets) const;
     bool ValidPreparedSpells(const FCombatantState& Unit, FString& Error) const;
     /** Creatures a catalog spell reaches from the caster aimed at TargetId (zone radius for lasting zones), and the cells it covers. */
-    TArray<int32> SpellVictims(const FCombatantState& User, const struct FSrdSpell& Spell, int32 TargetId, TArray<FIntPoint>* OutCells) const;
+    TArray<int32> SpellVictims(const FCombatantState& User, const struct FSrdSpell& Spell, int32 TargetId, TArray<FIntPoint>* OutCells, const TArray<FIntPoint>& Nodes = TArray<FIntPoint>()) const;
     int32 IndexOfSpell(int32 Serial) const;
     /** VFX events gathered while resolving; Submit hands them to the result. */
     TArray<FSpellCastEvent> PendingSpellEvents;

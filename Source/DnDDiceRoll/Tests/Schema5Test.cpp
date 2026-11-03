@@ -1232,11 +1232,11 @@ bool FSchema5CreatureCoverTest::RunTest(const FString& Parameters)
     FString Error;
     FCombatBattle Off;
     TestTrue(TEXT("Starts"), Off.Start(Encounter, 7, Error));
-    TestEqual(TEXT("Default: creatures give no cover"), Off.CoverBonus(10, 20), 0);
-    Encounter.bCreatureCover = true;
+    TestEqual(TEXT("A same-size creature gives no cover"), Off.CoverBonus(10, 20), 0);
+    Encounter.Combatants.Last().Size = static_cast<int32>(ECreatureSize::Large);
     FCombatBattle On;
-    TestTrue(TEXT("Starts with creature cover"), On.Start(Encounter, 7, Error));
-    TestEqual(TEXT("A creature in the line gives half cover"), On.CoverBonus(10, 20), 2);
+    TestTrue(TEXT("Starts with a Large blocker"), On.Start(Encounter, 7, Error));
+    TestEqual(TEXT("A creature one size larger in the line gives half cover"), On.CoverBonus(10, 20), 2);
     TestEqual(TEXT("No creature between, no cover"), On.CoverBonus(10, 21), 0);
     return true;
 }

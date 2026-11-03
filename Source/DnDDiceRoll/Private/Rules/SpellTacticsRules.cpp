@@ -1,4 +1,5 @@
 #include "Rules/SpellTacticsRules.h"
+#include "Rules/HexGrid.h"
 #include "Rules/SpellEffectRules.h"
 #include "Rules/SpellcastingRules.h"
 
@@ -15,7 +16,7 @@ const FSpellZone Zones[] =
     { TEXT("conjure-woodland-beings"), Enter | EndTurn, 10, true, true, false },
     { TEXT("black-tentacles"), OnCast | Enter | EndTurn, 10, false, false, true },
     // Ring form (20-ft diameter): creatures inside or entering take the fire side.
-    { TEXT("wall-of-fire"), OnCast | Enter | EndTurn, 10, false, false, false },
+    { TEXT("wall-of-fire"), OnCast | Enter | EndTurn, 0, false, false, false, 60 },
     { TEXT("fog-cloud"), 0, 20, false, false, false },
     { TEXT("darkness"), 0, 15, false, false, false },
     { TEXT("light"), 0, 20, false, false, false },
@@ -64,6 +65,22 @@ const FSpellZone* FSpellTacticsRules::Zone(const FString& Id)
     return nullptr;
 }
 const FSpellZone* FSpellTacticsRules::Zone(const FSrdSpell& Spell) { return Zone(FString(Spell.Id)); }
+TArray<FIntPoint> FSpellTacticsRules::WallPath(FIntPoint Aim, const TArray<FIntPoint>& Nodes, int32 MaxFeet)
+{
+    const int32 MaxCells = FMath::Max(1, MaxFeet / FHexGrid::FeetPerCell);
+    TArray<FIntPoint> Out = {Aim};
+    FIntPoint From = Aim;
+    for (const FIntPoint& Node : Nodes)
+    {
+        for (const FIntPoint& Cell : FHexGrid::BoardLine(From, Node))
+        {
+            if (Out.Num() >= MaxCells) { return Out; }
+            Out.AddUnique(Cell);
+        }
+        From = Node;
+    }
+    return Out;
+}
 int32 FSpellTacticsRules::ZoneCount() { return UE_ARRAY_COUNT(Zones); }
 const FSpellZone& FSpellTacticsRules::ZoneAt(int32 Index) { return Zones[Index]; }
 

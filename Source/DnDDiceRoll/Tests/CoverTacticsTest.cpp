@@ -80,4 +80,27 @@ bool FCoverTacticsAiTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("CoverBetween matches attack cover with no creatures"), Smart.CoverBetween({0, 0}, {4, 0}), 2);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCoverTacticsMoveTest, "Project.Expedition.Rules.CoverTacticsMove",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCoverTacticsMoveTest::RunTest(const FString& Parameters)
+{
+    using namespace CoverTacticsFixtures;
+    // Scout at (6,0) in the open, heroes at (4,7) and (5,7), a wall at (3..5,4): it must leave the exposed hex and shoot from cover.
+    const TArray<FIntPoint> Walls = {{3, 4}, {4, 4}, {5, 4}};
+    FString Error;
+    FCombatBattle Smart, Plain;
+    if (!TestTrue(TEXT("starts"), Smart.Start(TacticsDuel(TEXT("Scout"), {6, 0}, {4, 7}, {5, 7}, Walls), 7, Error) &&
+        Plain.Start(TacticsDuel(TEXT("Raider"), {6, 0}, {4, 7}, {5, 7}, Walls), 7, Error))) { return false; }
+    if (!TestEqual(TEXT("foe acts first"), Smart.ActiveId(), 2)) { return false; }
+    TestEqual(TEXT("Precondition: start hex is exposed to both heroes"), WorstCover(Smart, {6, 0}), 0);
+    const TArray<FCombatResult> Turn = Smart.PlayEnemyTurn();
+    Plain.PlayEnemyTurn();
+    const FIntPoint End = CellOf(Smart, 2);
+    TestNotEqual(TEXT("Thinking foe leaves the exposed hex"), End, FIntPoint(6, 0));
+    TestTrue(TEXT("Thinking foe ends in cover against both heroes"), WorstCover(Smart, End) > 0);
+    TestTrue(TEXT("Thinking foe still attacks"), AttackedId(Turn) != INDEX_NONE);
+    TestEqual(TEXT("Mindless foe gets no cover"), WorstCover(Plain, CellOf(Plain, 2)), 0);
+    AddInfo(FString::Printf(TEXT("Scout moved %s -> %s, cover %d"), *FIntPoint(6, 0).ToString(), *End.ToString(), WorstCover(Smart, End)));
+    return !HasAnyErrors();
+}
 #endif
