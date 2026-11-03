@@ -38,4 +38,4 @@ int32 FMonsterRules::HitPoints(const FMonsterStatBlock& Block)
 int32 FMonsterRules::AttackBonus(const FMonsterStatBlock& Block) { return Block.ProficiencyBonus + FAbilityRules::Modifier(Block.Scores.Get(Block.AttackAbility)); }
 int32 FMonsterRules::DamageBonus(const FMonsterStatBlock& Block) { return Block.Kind == EMonsterAttack::SaveCantrip ? 0 : FAbilityRules::Modifier(Block.Scores.Get(Block.AttackAbility)); }
 int32 FMonsterRules::SpellSaveDc(const FMonsterStatBlock& Block) { return 8 + Block.ProficiencyBonus + FAbilityRules::Modifier(Block.Scores.Get(Block.SpellAbility)); }
-int32 FMonsterRules::AttacksPerAction(const FString& Role) { const auto* B = Find(Role); return B ? B->Attacks : 1; }
+int32 FMonsterRules::AttacksPerAction(const FString& Role) { const auto* B = Find(Role); return B ? B->Attacks : 1; }bool FMonsterRules::UsesCoverTactics(const FString& Role) { const auto* B = Find(Role); return B && B->Scores.Intelligence >= CoverTacticsIntelligence; }

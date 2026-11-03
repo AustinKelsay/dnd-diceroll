@@ -40,4 +40,8 @@ struct DNDDICEROLL_API FMonsterRules
     static int32 SpellSaveDc(const FMonsterStatBlock& Block);
     /** Attacks per Attack action for a role; 1 without a stat block. */
     static int32 AttacksPerAction(const FString& Role);
+    /** Intelligence at which a stat block uses cover tactics (takes cover, picks exposed targets). */
+    static constexpr int32 CoverTacticsIntelligence = 6;
+    /** True for stat blocks smart enough to use cover; legacy roles and mindless blocks keep the plain rush. */
+    static bool UsesCoverTactics(const FString& Role);
 };

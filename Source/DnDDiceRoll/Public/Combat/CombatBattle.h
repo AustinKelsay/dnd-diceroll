@@ -556,6 +556,8 @@ public:
     /** SRD cover from blocked cells against an attack: 0, 2 (half) or 5 (three-quarters). Creatures give no cover. Read-only. */
     int32 CoverBonus(int32 ActorId, int32 TargetId) const;
     static const TCHAR* CoverName(int32 Bonus);
+    /** Wall cover (0, 2 or 5) for a creature at To against an attack or effect from From; ignores creatures. Read-only. */
+    int32 CoverBetween(FIntPoint From, FIntPoint To) const;
     /** Exact success chance (1/400ths) for a skill check or saving throw. Forecasts spend no random numbers. */
     int32 SkillCheckChance(int32 Id, ESkill Skill, int32 Dc, ERollMode Mode) const;
     int32 SavingThrowChance(int32 Id, EAbility Ability, int32 Dc, ERollMode Mode) const;

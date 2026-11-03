@@ -1141,6 +1141,66 @@ const TCHAR* FCombatBattle::CoverName(int32 Bonus)
     return Bonus >= 5 ? TEXT("three-quarters cover") : Bonus > 0 ? TEXT("half cover") : TEXT("no cover");
 }
 
+namespace
+{
+// DMG grid cover adapted to hexes: from the attacker's best hex corner, trace a line to each of the six
+// corners of the target's hex. A line is blocked when it passes through the interior of a blocked hex
+// (edges and corners do not block). 2+ of 6 blocked = three-quarters cover, 1 = half; a blocked centre
+// line is total cover (HasLineOfSight). With a clear centre line a single wall blocks at most two corner lines.
+FVector2D CoverCorner(FIntPoint Cell, int32 Index)
+{
+    const double Angle = FMath::DegreesToRadians(30.0 + 60.0 * Index);
+    return FHexGrid::BoardToWorld(Cell, 1.0) + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
+}
+bool CoverCrosses(FVector2D A, FVector2D B, FIntPoint Cell)
+{
+    // Cyrus-Beck clip of segment AB against the hex's six edge half-planes.
+    constexpr double Eps = 1e-7;
+    double Enter = 0.0, Exit = 1.0;
+    const FVector2D Center = FHexGrid::BoardToWorld(Cell, 1.0), D = B - A;
+    for (int32 Edge = 0; Edge < 6; ++Edge)
+    {
+        const FVector2D V0 = CoverCorner(Cell, Edge), V1 = CoverCorner(Cell, (Edge + 1) % 6);
+        FVector2D Normal(V1.Y - V0.Y, V0.X - V1.X);
+        if (FVector2D::DotProduct(Normal, Center - V0) > 0.0) { Normal = -Normal; } // outward
+        const double Num = FVector2D::DotProduct(Normal, A - V0), Den = FVector2D::DotProduct(Normal, D);
+        if (FMath::Abs(Den) < 1e-12)
+        {
+            if (Num > -Eps) { return false; } // parallel and on or outside this edge
+            continue;
+        }
+        const double T = -Num / Den;
+        if (Den < 0.0) { Enter = FMath::Max(Enter, T); } else { Exit = FMath::Min(Exit, T); }
+    }
+    return Exit - Enter > Eps;
+}
+/** Fewest blocked lines to the target's six corners, over the attacker's six corners. */
+int32 CoverLines(FIntPoint From, FIntPoint To, const TArray<FIntPoint>& Cells)
+{
+    int32 Best = 6;
+    for (int32 Corner = 0; Corner < 6 && Best > 0; ++Corner)
+    {
+        int32 Lines = 0;
+        for (int32 Target = 0; Target < 6; ++Target)
+        {
+            for (FIntPoint Cell : Cells)
+            {
+                if (CoverCrosses(CoverCorner(From, Corner), CoverCorner(To, Target), Cell)) { ++Lines; break; }
+            }
+        }
+        Best = FMath::Min(Best, Lines);
+    }
+    return Best;
+}
+}
+
+int32 FCombatBattle::CoverBetween(FIntPoint From, FIntPoint To) const
+{
+    if (From == To || State.Encounter.BlockedCells.IsEmpty()) { return 0; }
+    const int32 Walls = CoverLines(From, To, State.Encounter.BlockedCells);
+    return Walls >= 2 ? 5 : Walls > 0 ? 2 : 0;
+}
+
 int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
 {
     const FCombatantState* Actor = Find(ActorId);
@@ -1154,59 +1214,9 @@ int32 FCombatBattle::CoverBonus(int32 ActorId, int32 TargetId) const
             if (Other.Id != ActorId && Other.Id != TargetId && Other.Life == ECombatLife::Conscious) { Creatures.Add(Other.Cell); }
         }
     }
-    if (State.Encounter.BlockedCells.IsEmpty() && Creatures.IsEmpty()) { return 0; }
-    // DMG grid cover adapted to hexes: from the attacker's best hex corner, trace a line to each of the six
-    // corners of the target's hex. A line is blocked when it passes through the interior of a blocked hex
-    // (edges and corners do not block). 2+ of 6 blocked = three-quarters cover, 1 = half.
-    // (With a clear centre line a single wall can block at most two corner lines on hexes, so 4/6 was unreachable.)
-    auto Corner = [](FIntPoint Cell, int32 Index)
-    {
-        const double Angle = FMath::DegreesToRadians(30.0 + 60.0 * Index);
-        return FHexGrid::BoardToWorld(Cell, 1.0) + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle));
-    };
-    auto Crosses = [&Corner](FVector2D A, FVector2D B, FIntPoint Cell)
-    {
-        // Cyrus-Beck clip of segment AB against the hex's six edge half-planes.
-        constexpr double Eps = 1e-7;
-        double Enter = 0.0, Exit = 1.0;
-        const FVector2D Center = FHexGrid::BoardToWorld(Cell, 1.0), D = B - A;
-        for (int32 Edge = 0; Edge < 6; ++Edge)
-        {
-            const FVector2D V0 = Corner(Cell, Edge), V1 = Corner(Cell, (Edge + 1) % 6);
-            FVector2D Normal(V1.Y - V0.Y, V0.X - V1.X);
-            if (FVector2D::DotProduct(Normal, Center - V0) > 0.0) { Normal = -Normal; } // outward
-            const double Num = FVector2D::DotProduct(Normal, A - V0), Den = FVector2D::DotProduct(Normal, D);
-            if (FMath::Abs(Den) < 1e-12)
-            {
-                if (Num > -Eps) { return false; } // parallel and on or outside this edge
-                continue;
-            }
-            const double T = -Num / Den;
-            if (Den < 0.0) { Enter = FMath::Max(Enter, T); } else { Exit = FMath::Min(Exit, T); }
-        }
-        return Exit - Enter > Eps;
-    };
-    auto BestLines = [&](const TArray<FIntPoint>& Cells)
-    {
-        int32 Best = 6;
-        for (int32 From = 0; From < 6 && Best > 0; ++From)
-        {
-            int32 Lines = 0;
-            for (int32 To = 0; To < 6; ++To)
-            {
-                for (FIntPoint Cell : Cells)
-                {
-                    if (Crosses(Corner(Actor->Cell, From), Corner(Target->Cell, To), Cell)) { ++Lines; break; }
-                }
-            }
-            Best = FMath::Min(Best, Lines);
-        }
-        return Best;
-    };
-    const int32 Walls = State.Encounter.BlockedCells.IsEmpty() ? 0 : BestLines(State.Encounter.BlockedCells);
-    const int32 WallBonus = Walls >= 2 ? 5 : Walls > 0 ? 2 : 0;
+    const int32 WallBonus = CoverBetween(Actor->Cell, Target->Cell);
     // Creatures never give more than half cover.
-    return FMath::Max(WallBonus, !Creatures.IsEmpty() && BestLines(Creatures) > 0 ? 2 : 0);
+    return FMath::Max(WallBonus, !Creatures.IsEmpty() && CoverLines(Actor->Cell, Target->Cell, Creatures) > 0 ? 2 : 0);
 }
 
 FAttackRollMode FCombatBattle::AttackRollMode(int32 ActorId, int32 TargetId) const
@@ -1876,7 +1886,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         for (const int32 VictimId : Victims)
         {
             const FCombatantState& Saver = *Find(VictimId);
-            const bool bRolled = FCheckRules::Resolve(Character(VictimId).SaveBonus(Delivery.SaveAbility), Dc, SaveMode(Saver, Delivery.SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
+            // SRD cover adds to Dexterity saves against an effect that starts on the far side of a wall.
+            const int32 SaveCover = Delivery.SaveAbility == EAbility::Dexterity ? CoverBetween(Area.Origin, Saver.Cell) : 0;
+            const bool bRolled = FCheckRules::Resolve(Character(VictimId).SaveBonus(Delivery.SaveAbility) + SaveCover, Dc, SaveMode(Saver, Delivery.SaveAbility, ERollMode::Normal), State.RandomState).bSuccess;
             const bool bSaved = bRolled && !(IsHelpless(Saver) && (Delivery.SaveAbility == EAbility::Strength || Delivery.SaveAbility == EAbility::Dexterity));
             FCombatResult Part;
             Part.Damage = FSpellcastingRules::DamageAfterSave(Rolled, bSaved, Delivery.bHalfOnSave);
@@ -2226,6 +2238,19 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     const FCombatantState* Enemy = Find(Id);
     if (!bStarted || State.Phase != EBattlePhase::Fighting || !Enemy || Enemy->Side != ECombatSide::Enemy) { return Results; }
     const FMonsterStatBlock* Block = FMonsterRules::Find(Enemy->Role);
+    // Thinking foes (stat blocks at or above the Intelligence threshold) use walls; mindless ones keep the plain rush.
+    const bool bTactical = FMonsterRules::UsesCoverTactics(Enemy->Role) && !State.Encounter.BlockedCells.IsEmpty();
+    // Cover a cell has against the conscious heroes: the most exposed line counts; no line of sight counts as total.
+    auto Shelter = [&](FIntPoint Cell)
+    {
+        int32 Worst = MAX_int32;
+        for (const FCombatantState& U : State.Encounter.Combatants)
+        {
+            if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
+            Worst = FMath::Min(Worst, HasLineOfSight(U.Cell, Cell) ? CoverBetween(U.Cell, Cell) : 10);
+        }
+        return Worst == MAX_int32 ? 0 : Worst;
+    };
     auto SelfAction = [&](ECombatCommandType Type)
     {
         if (!State.bActionAvailable || !LegalTargets(Id, Type).Contains(Id)) { return false; }
@@ -2237,6 +2262,25 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     {
         TOptional<FIntPoint> Best;
         int32 BestCost = MAX_int32;
+        if (bTactical)
+        {
+            // Firing cells reachable this turn: most shelter first, then the cheapest, then row-major order.
+            int32 BestShelter = -1;
+            for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
+            {
+                for (int32 X = 0; X < State.Encounter.Width; ++X)
+                {
+                    const FIntPoint Cell(X, Y);
+                    const int32* Cost = Costs.Find(Cell);
+                    if (!Cost || *Cost > State.MovementLeft) { continue; }
+                    const bool bShot = State.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& Target) { return CanTargetFrom(*Find(Id), Cell, Target); });
+                    if (!bShot) { continue; }
+                    const int32 Here = Shelter(Cell);
+                    if (Here > BestShelter || (Here == BestShelter && *Cost < BestCost)) { Best = Cell; BestCost = *Cost; BestShelter = Here; }
+                }
+            }
+            if (Best.IsSet()) { return Best; }
+        }
         for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
         {
             for (int32 X = 0; X < State.Encounter.Width; ++X)
@@ -2297,7 +2341,18 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     // Still out of reach: Dash toward the nearest firing cell.
     if (bReachable && LegalTargets(Id).IsEmpty() && State.Phase == EBattlePhase::Fighting && SelfAction(ECombatCommandType::Dash)) { StepToward(); }
     // House rule: Downed heroes are legal targets; the AI finishes one only when no conscious hero is in reach.
-    auto AITargets = [&]() { TArray<int32> T = LegalTargets(Id); T.StableSort([&](int32 A, int32 B) { return Find(A)->Life == ECombatLife::Conscious && Find(B)->Life != ECombatLife::Conscious; }); return T; };
+    // Thinking foes then prefer the target behind the least cover (stable, so roster order breaks ties).
+    auto AITargets = [&]()
+    {
+        TArray<int32> T = LegalTargets(Id);
+        T.StableSort([&](int32 A, int32 B)
+        {
+            const bool bA = Find(A)->Life == ECombatLife::Conscious, bB = Find(B)->Life == ECombatLife::Conscious;
+            if (bA != bB) { return bA; }
+            return bTactical && CoverBonus(Id, A) < CoverBonus(Id, B);
+        });
+        return T;
+    };
     TArray<int32> Targets = AITargets();
     // Multiattack: a stat block's attacks per Attack action (Thug, Scout); ordinary foes swing once.
     for (int32 Swing = 0; !Targets.IsEmpty() && State.Phase == EBattlePhase::Fighting; ++Swing)
@@ -2307,6 +2362,23 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
         Results.Add(Swung);
         if (!Swung.bAccepted) { break; }
         Targets = AITargets();
+    }
+    // Thinking foes do not end a turn in the open when cover is a short walk away that provokes nothing.
+    if (bTactical && State.Phase == EBattlePhase::Fighting && ActiveId() == Id && State.MovementLeft > 0 && !NextToHero() && Shelter(Find(Id)->Cell) == 0)
+    {
+        const TMap<FIntPoint, int32> Costs = Distances(Id);
+        TOptional<FIntPoint> Haven; int32 BestShelter = 0, BestCost = MAX_int32;
+        for (int32 Y = 0; Y < State.Encounter.Height; ++Y)
+        {
+            for (int32 X = 0; X < State.Encounter.Width; ++X)
+            {
+                const int32* Cost = Costs.Find({X, Y});
+                if (!Cost || *Cost <= 0 || *Cost > State.MovementLeft) { continue; }
+                const int32 Here = Shelter({X, Y});
+                if (Here > BestShelter || (Here == BestShelter && Haven.IsSet() && *Cost < BestCost)) { Haven = FIntPoint(X, Y); BestShelter = Here; BestCost = *Cost; }
+            }
+        }
+        if (Haven.IsSet()) { Results.Add(Submit({ECombatCommandType::Move, Id, Haven.GetValue()})); }
     }
     // No hero in reach at all, even dashing: ranged foes Hide, melee foes Dodge.
     if (!bReachable && State.Phase == EBattlePhase::Fighting && !SelfAction(Find(Id)->Range > 1 ? ECombatCommandType::Hide : ECombatCommandType::Dodge)) { SelfAction(ECombatCommandType::Dodge); }
