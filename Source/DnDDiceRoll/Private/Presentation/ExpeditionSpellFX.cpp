@@ -1,4 +1,5 @@
 #include "Presentation/ExpeditionSpellFX.h"
+#include "Rules/HexGrid.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -169,14 +170,31 @@ void AExpeditionSpellFX::Build(const FSpellCastEvent& Event, const FExpeditionSp
 
     if (Style.bArea)
     {
+        // Hex telegraph: every hex edge of the area as a flat matte bar; the area's outer edges are thicker
+        // and darker-inked so cones, lines and cubes read as their real hex footprint (no square frames).
+        UStaticMesh* Bar = LoadMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+        const TSet<FIntPoint> Inside(Event.Cells);
         for (const FIntPoint& C : Event.Cells)
         {
-            FExpeditionSpellFXPiece& P = Add(Frame, Style, false, FVector::UpVector, false, true);
-            P.Start = 0.0f; P.Peak = 0.06f; P.End = Full; P.Linger = Gone; P.PeakOpacity = 0.9f; P.LingerOpacity = 0.3f;
-            P.From = P.To = CellToWorld(C) + FVector(0, 0, 3);
-            P.ScaleFrom = P.ScaleTo = FVector(CellCm / 100.0f * 0.9f, CellCm / 100.0f * 0.9f, 1.0f);
-            P.Material->SetScalarParameterValue(TEXT("Glow"), 0.8f);
-            P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
+            const FVector Center = CellToWorld(C);
+            for (int32 Side = 0; Side < 6 && Bar; ++Side)
+            {
+                const FIntPoint N = FHexGrid::BoardStep(C, Side);
+                const bool bRim = !Inside.Contains(N);
+                // Inner edges are shared: draw each once, from the lower cell.
+                if (!bRim && (N.Y < C.Y || (N.Y == C.Y && N.X < C.X))) { continue; }
+                const FVector Across = CellToWorld(N) - Center;
+                const float Side2 = Across.Size2D() / FMath::Sqrt(3.0f);  // hex edge length = circumradius
+                const FVector Mid = Center + Across * 0.5f + FVector(0, 0, bRim ? 4 : 3);
+                FExpeditionSpellFXPiece& P = Add(Bar, Style, false, FVector::UpVector, false, bRim);
+                P.Start = 0.0f; P.Peak = 0.06f; P.End = Full; P.Linger = Gone;
+                P.PeakOpacity = bRim ? 0.9f : 0.45f; P.LingerOpacity = bRim ? 0.3f : 0.12f;
+                P.From = P.To = Mid;
+                P.ScaleFrom = P.ScaleTo = FVector(bRim ? 0.07f : 0.035f, Side2 / 100.0f, 0.01f);
+                P.Mesh->SetWorldRotation(Across.Rotation()); if (P.Ink) { P.Ink->SetWorldRotation(Across.Rotation()); }
+                P.Material->SetScalarParameterValue(TEXT("Glow"), 0.6f);
+                P.Material->SetScalarParameterValue(TEXT("Edge"), 0.0f);
+            }
         }
     }
     {

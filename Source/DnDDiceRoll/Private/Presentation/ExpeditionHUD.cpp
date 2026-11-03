@@ -367,7 +367,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         for (const FIntPoint Cell : Span.InSight)
         {
             FVector2D Point;
-            if (Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 3.0f), Point)) { Polygon(Point, 3.5f, 4, 0.0f, Strike * FLinearColor(1, 1, 1, 0.7f)); }
+            if (Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 3.0f), Point)) { Polygon(Point, 4.0f, 6, PI / 6.0f, Strike * FLinearColor(1, 1, 1, 0.7f), 0.6f); }
         }
         for (const FIntPoint Cell : Span.Obscured)
         {
