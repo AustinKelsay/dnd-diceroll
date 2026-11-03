@@ -164,7 +164,7 @@ bool FDownedSaveTest::RunTest(const FString& Parameters)
     FString Json; TestTrue(TEXT("Encodes"), FExpeditionSave::Encode(Data, Json, Error));
     TestTrue(TEXT("Save carries the countdown slot and the toggle"), Json.Contains(TEXT("\"DownedAtSlot\"")) && Json.Contains(TEXT("\"bTwoRoundDowned\"")));
     FExpeditionSaveData Back; TestTrue(TEXT("Decodes"), FExpeditionSave::Decode(Json, Back, Error));
-    TestEqual(TEXT("Version stays 5"), Back.Version, 5);
+    TestEqual(TEXT("Version stays current"), Back.Version, FExpeditionSave::Version);
     FString Missing = Json.Replace(TEXT("\"DownedAtSlot\""), TEXT("\"DownedAtSlotX\""));
     TestFalse(TEXT("Missing field rejected"), FExpeditionSave::Decode(Missing, Back, Error));
     return !HasAnyErrors();

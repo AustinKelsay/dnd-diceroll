@@ -23,7 +23,7 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 5;
+    UPROPERTY() int32 Version = 6;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
@@ -34,7 +34,8 @@ class DNDDICEROLL_API FExpeditionSave
 {
 public:
     // Version 5 adds persisted rules state (conditions, reactions, attacks, terrain, slots, equipment); older saves are unsupported.
-    static constexpr int32 Version = 5;
+    // Version 6 stores board cells as odd-r hex offsets; square-grid saves (5 and older) are rejected, not converted.
+    static constexpr int32 Version = 6;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);

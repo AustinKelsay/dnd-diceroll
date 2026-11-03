@@ -63,8 +63,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5ConditionRoundtripTest, "Project.Expedi
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSchema5ConditionRoundtripTest::RunTest(const FString& Parameters)
 {
-    TestEqual(TEXT("Save schema is version 5"), FExpeditionSave::Version, 5);
-    TestEqual(TEXT("New save data defaults to version 5"), FExpeditionSaveData().Version, 5);
+    TestEqual(TEXT("Save schema is version 6 (hex grid)"), FExpeditionSave::Version, 6);
+    TestEqual(TEXT("New save data defaults to version 6"), FExpeditionSaveData().Version, 6);
     FExpeditionRun Run, Restored;
     FString Error, Json;
     FExpeditionSnapshot Snapshot = ActiveRun(Run);
@@ -84,6 +84,9 @@ bool FSchema5ConditionRoundtripTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Version 4 saves are rejected"), FExpeditionSave::Decode(Text(Root), Old, Error));
     TestTrue(TEXT("Rejected as unsupported"), Error.Contains(TEXT("unsupported")));
     Root->SetNumberField(TEXT("Version"), 5);
+    TestFalse(TEXT("Square-grid version 5 saves are rejected"), FExpeditionSave::Decode(Text(Root), Old, Error));
+    TestTrue(TEXT("Rejection explains the hex grid change"), Error.Contains(TEXT("unsupported")) && Error.Contains(TEXT("hex grid")));
+    Root->SetNumberField(TEXT("Version"), 6);
     FirstCombatantJson(Root)->RemoveField(TEXT("Conditions"));
     TestFalse(TEXT("A combatant without the schema 5 field is rejected"), FExpeditionSave::Decode(Text(Root), Old, Error));
     return !HasAnyErrors();

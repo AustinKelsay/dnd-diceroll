@@ -107,7 +107,13 @@ FExpeditionEnding FExpeditionSave::Ending(const FExpeditionRun& Run)
 bool FExpeditionSave::Validate(const FExpeditionSaveData& Data, FString& Error)
 {
     Error.Reset();
-    if (Data.Version != Version) { Error = TEXT("This expedition save uses an unsupported version."); return false; }
+    if (Data.Version != Version)
+    {
+        Error = Data.Version > 0 && Data.Version < Version
+            ? FString::Printf(TEXT("This expedition save uses an unsupported version (%d): saves from before the hex grid cannot be converted. Start a new expedition."), Data.Version)
+            : TEXT("This expedition save uses an unsupported version.");
+        return false;
+    }
     FExpeditionRun Candidate;
     if (!Candidate.Restore(Data.Current, Error)) { return false; }
     auto Reject = [&Error]() { Error = TEXT("Expedition ending records are invalid or incomplete."); return false; };
