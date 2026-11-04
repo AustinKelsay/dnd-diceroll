@@ -23,7 +23,6 @@ struct DNDDICEROLL_API FProficiencyChoice
     /** Background-style picks: any two skills not already chosen. */
     TArray<ESkill> BackgroundSkills;
     TArray<ESkill> ExpertiseSkills;
-    bool bThievesToolsExpertise = false;
 };
 
 /** Class proficiency facts (SRD 5.1 class tables). Small value data that can move into the #39 catalog. */
@@ -33,7 +32,7 @@ struct DNDDICEROLL_API FClassProficiencies
     TArray<ESkill> SkillList;
     int32 SkillPicks = 0;
     uint8 ToolMask = 0;
-    /** Expertise picks available at this level (Rogue: two at level 1; a pick may be thieves' tools). */
+    /** Expertise picks available at this level (Rogue: two proficient skills at level 1, per SRD 5.2.1). */
     int32 ExpertisePicks = 0;
 };
 
@@ -46,7 +45,6 @@ struct DNDDICEROLL_API FCharacterRules
     uint32 SkillMask = 0;
     uint32 ExpertiseMask = 0;
     uint8 ToolMask = 0;
-    uint8 ToolExpertiseMask = 0;
 
     int32 ProficiencyBonus() const;
     int32 AbilityModifier(EAbility Ability) const;

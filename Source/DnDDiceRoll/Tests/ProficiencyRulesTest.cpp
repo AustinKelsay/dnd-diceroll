@@ -34,7 +34,8 @@ bool FProficiencyBonusesTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Expertise doubles: Stealth DEX +3 + 2x2"), Rogue.SkillBonus(ESkill::Stealth), 7);
     TestEqual(TEXT("Proficient only: Acrobatics +3 + 2"), Rogue.SkillBonus(ESkill::Acrobatics), 5);
     TestEqual(TEXT("Unproficient: Athletics STR -1"), Rogue.SkillBonus(ESkill::Athletics), -1);
-    TestEqual(TEXT("Thieves' tools expertise"), Rogue.ToolBonus(ETool::ThievesTools, EAbility::Dexterity), 7);
+    TestEqual(TEXT("Thieves' tools proficiency, no expertise (SRD 5.2.1 Expertise is skills only)"), Rogue.ToolBonus(ETool::ThievesTools, EAbility::Dexterity), 5);
+    TestTrue(TEXT("Second expertise: Sleight of Hand"), Rogue.HasExpertise(ESkill::SleightOfHand));
     TestEqual(TEXT("No herbalism proficiency"), Rogue.ToolBonus(ETool::HerbalismKit, EAbility::Wisdom), 0);
     TestEqual(TEXT("Rogue DEX save proficient"), Rogue.SaveBonus(EAbility::Dexterity), 5);
     TestEqual(TEXT("Rogue STR save not proficient"), Rogue.SaveBonus(EAbility::Strength), -1);
@@ -81,7 +82,7 @@ bool FProficiencyRejectionTest::RunTest(const FString& Parameters)
     Rejected(TEXT("Fighter cannot take expertise"), EAdventurerRole::Fighter, Choice);
     Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.ExpertiseSkills = {ESkill::Arcana};
     Rejected(TEXT("Expertise on an unproficient skill"), EAdventurerRole::Rogue, Choice);
-    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.bThievesToolsExpertise = false;
+    Choice = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue); Choice.ExpertiseSkills = {ESkill::Stealth};
     Rejected(TEXT("Too few rogue expertise picks"), EAdventurerRole::Rogue, Choice);
     Rejected(TEXT("No class"), EAdventurerRole::None, Good);
     return !HasAnyErrors();

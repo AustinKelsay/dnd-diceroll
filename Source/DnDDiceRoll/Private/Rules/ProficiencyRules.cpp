@@ -29,8 +29,7 @@ int32 FCharacterRules::SaveBonus(EAbility Ability) const
 
 int32 FCharacterRules::ToolBonus(ETool Tool, EAbility Ability) const
 {
-    const bool bExpert = (ToolExpertiseMask & ToolBit(Tool)) != 0;
-    return AbilityModifier(Ability) + (IsToolProficient(Tool) ? ProficiencyBonus() * (bExpert ? 2 : 1) : 0);
+    return AbilityModifier(Ability) + (IsToolProficient(Tool) ? ProficiencyBonus() : 0);
 }
 
 int32 FProficiencyRules::ProficiencyBonus(int32 Level)
@@ -122,17 +121,11 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
         if (!Valid(Skill) || Candidate.IsProficient(Skill)) { return Reject(TEXT("Background skill is invalid or already proficient.")); }
         Candidate.SkillMask |= SkillBit(Skill);
     }
-    const int32 ExpertiseCount = Choice.ExpertiseSkills.Num() + (Choice.bThievesToolsExpertise ? 1 : 0);
-    if (ExpertiseCount != Class.ExpertisePicks) { return Reject(TEXT("Wrong number of expertise picks.")); }
+    if (Choice.ExpertiseSkills.Num() != Class.ExpertisePicks) { return Reject(TEXT("Wrong number of expertise picks.")); }
     for (ESkill Skill : Choice.ExpertiseSkills)
     {
         if (!Valid(Skill) || !Candidate.IsProficient(Skill) || Candidate.HasExpertise(Skill)) { return Reject(TEXT("Expertise needs a proficient, unrepeated skill.")); }
         Candidate.ExpertiseMask |= SkillBit(Skill);
-    }
-    if (Choice.bThievesToolsExpertise)
-    {
-        if (!Candidate.IsToolProficient(ETool::ThievesTools)) { return Reject(TEXT("Expertise needs thieves' tools proficiency.")); }
-        Candidate.ToolExpertiseMask |= ToolBit(ETool::ThievesTools);
     }
     Out = Candidate;
     Error.Reset();
@@ -149,8 +142,7 @@ FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role)
     case EAdventurerRole::Rogue:
         Choice.ClassSkills = {S::Stealth, S::SleightOfHand, S::Acrobatics, S::Deception};
         Choice.BackgroundSkills = {S::Insight, S::Investigation};
-        Choice.ExpertiseSkills = {S::Stealth};
-        Choice.bThievesToolsExpertise = true;
+        Choice.ExpertiseSkills = {S::Stealth, S::SleightOfHand};
         break;
     case EAdventurerRole::Cleric: Choice.ClassSkills = {S::Medicine, S::Religion}; Choice.BackgroundSkills = {S::Insight, S::History}; break;
     case EAdventurerRole::Wizard: Choice.ClassSkills = {S::Arcana, S::Investigation}; Choice.BackgroundSkills = {S::History, S::Religion}; break;
