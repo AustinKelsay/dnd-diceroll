@@ -1,6 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
-#include "Rules/AbilityRules.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/AbilityRules.h"
 
@@ -25,4 +24,17 @@ bool FAbilityModifierTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAbilityPrebuiltScoresTest, "Project.Expedition.Rules.PrebuiltAbilityScores",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FAbilityPrebuiltScoresTest::RunTest(const FString& Parameters)
+{
+    for (EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Rogue, EAdventurerRole::Cleric, EAdventurerRole::Wizard})
+    {
+        const FAbilityScores Scores = FAbilityRules::PrebuiltScores(Role);
+        TestTrue(TEXT("Prebuilt scores valid"), Scores.IsValid());
+        // Level 1 proficiency is +2; key modifier + 2 must equal the existing +5 attack bonus.
+        TestEqual(TEXT("Key modifier + proficiency = +5"), FAbilityRules::Modifier(Scores.Get(FAbilityRules::AttackAbility(Role))) + 2, 5);
+    }
+    return !HasAnyErrors();
+}
 #endif

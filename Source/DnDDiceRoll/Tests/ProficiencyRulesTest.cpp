@@ -1,6 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
-#include "Rules/ProficiencyRules.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/ProficiencyRules.h"
 
@@ -27,6 +26,30 @@ bool FSkillCatalogTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProficiencyBonusesTest, "Project.Expedition.Rules.ProficiencyAndExpertise",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FProficiencyBonusesTest::RunTest(const FString& Parameters)
+{
+    const FCharacterRules Rogue = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Rogue, 1);
+    TestEqual(TEXT("Expertise doubles: Stealth DEX +3 + 2x2"), Rogue.SkillBonus(ESkill::Stealth), 7);
+    TestEqual(TEXT("Proficient only: Acrobatics +3 + 2"), Rogue.SkillBonus(ESkill::Acrobatics), 5);
+    TestEqual(TEXT("Unproficient: Athletics STR -1"), Rogue.SkillBonus(ESkill::Athletics), -1);
+    TestEqual(TEXT("Thieves' tools expertise"), Rogue.ToolBonus(ETool::ThievesTools, EAbility::Dexterity), 7);
+    TestEqual(TEXT("No herbalism proficiency"), Rogue.ToolBonus(ETool::HerbalismKit, EAbility::Wisdom), 0);
+    TestEqual(TEXT("Rogue DEX save proficient"), Rogue.SaveBonus(EAbility::Dexterity), 5);
+    TestEqual(TEXT("Rogue STR save not proficient"), Rogue.SaveBonus(EAbility::Strength), -1);
+    const FCharacterRules Fighter5 = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Fighter, 5);
+    TestEqual(TEXT("Level 5 fighter Athletics +3 + 3"), Fighter5.SkillBonus(ESkill::Athletics), 6);
+    TestEqual(TEXT("Level 5 fighter CON save +2 + 3"), Fighter5.SaveBonus(EAbility::Constitution), 5);
+    TestFalse(TEXT("Fighter has no expertise"), Fighter5.HasExpertise(ESkill::Athletics));
+    for (EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Rogue, EAdventurerRole::Cleric, EAdventurerRole::Wizard})
+    {
+        const FCharacterRules Character = FProficiencyRules::PrebuiltCharacter(Role, 1);
+        TestEqual(TEXT("Two save proficiencies"), FMath::CountBits(Character.SaveMask), 2);
+        TestEqual(TEXT("Class + background skill count"), FMath::CountBits(Character.SkillMask), FProficiencyRules::ClassProficiencies(Role, 1).SkillPicks + 2);
+    }
+    return !HasAnyErrors();
+}
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProficiencyRejectionTest, "Project.Expedition.Rules.InvalidProficiencyChoicesRejected",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FProficiencyRejectionTest::RunTest(const FString& Parameters)
