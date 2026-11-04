@@ -55,8 +55,17 @@ bool FWeaponPropertiesTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Off-hand adds no positive modifier"), FWeaponRules::DamageModifier(3, true), 0);
     TestEqual(TEXT("Off-hand keeps a negative modifier"), FWeaponRules::DamageModifier(-1, true), -1);
     // Heavy
-    TestTrue(TEXT("Heavy: Small wielder has disadvantage"), FWeaponRules::HeavyImposesDisadvantage(Glaive, true));
-    TestFalse(TEXT("Heavy: Medium wielder does not"), FWeaponRules::HeavyImposesDisadvantage(Glaive, false));
+    {
+        FAbilityScores HeavyWeak; HeavyWeak.Strength = 12; HeavyWeak.Dexterity = 16;
+        FAbilityScores HeavyStr; HeavyStr.Strength = 13; HeavyStr.Dexterity = 12;
+        const FWeaponProfile& HeavyBow = FWeaponRules::Profile(EWeapon::Longbow);
+        TestTrue(TEXT("Heavy: STR 12 melee has disadvantage"), FWeaponRules::HeavyImposesDisadvantage(Glaive, HeavyWeak));
+        TestFalse(TEXT("Heavy: STR 13 melee does not"), FWeaponRules::HeavyImposesDisadvantage(Glaive, HeavyStr));
+        TestTrue(TEXT("Heavy: DEX 12 ranged has disadvantage"), FWeaponRules::HeavyImposesDisadvantage(HeavyBow, HeavyStr));
+        TestFalse(TEXT("Heavy: DEX 16 ranged does not"), FWeaponRules::HeavyImposesDisadvantage(HeavyBow, HeavyWeak));
+        TestFalse(TEXT("Heavy: non-heavy weapon never"), FWeaponRules::HeavyImposesDisadvantage(Dagger, HeavyWeak));
+    }
+    TestTrue(TEXT("Light: hand crossbow + dagger qualify (5.2.1)"), FWeaponRules::CanTwoWeaponFight(FWeaponRules::Profile(EWeapon::HandCrossbow), Dagger));
     // Loading
     TestEqual(TEXT("Loading: one shot per action even with two attacks"), FWeaponRules::AttacksPerAction(HandCrossbow, 2), 1);
     TestEqual(TEXT("No loading: both attacks"), FWeaponRules::AttacksPerAction(Longbow, 2), 2);

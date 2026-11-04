@@ -43,7 +43,7 @@ int32 FDamageRules::Adjust(int32 Amount, EDamageType Type, const FDamageDefenses
 
 FDamageDefenses FDamageRules::ProfileDefenses(const FString& Profile)
 {
-    // Subset of SRD 5.1 stat blocks; nonmagical-weapon qualifiers are treated as always applying (no magic weapons yet).
+    // Subset of SRD 5.2.1 stat blocks; nonmagical-weapon qualifiers are treated as always applying (no magic weapons yet).
     FDamageDefenses Defenses;
     if (Profile == TEXT("Skeleton")) { Defenses.Vulnerable(EDamageType::Bludgeoning).Immune(EDamageType::Poison); }
     else if (Profile == TEXT("Zombie")) { Defenses.Immune(EDamageType::Poison); }

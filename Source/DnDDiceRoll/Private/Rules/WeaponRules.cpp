@@ -71,12 +71,13 @@ int32 FWeaponRules::DamageModifier(int32 AbilityModifier, bool bOffHand)
 
 bool FWeaponRules::CanTwoWeaponFight(const FWeaponProfile& Main, const FWeaponProfile& OffHand)
 {
-    return !Main.bRanged && !OffHand.bRanged && Main.Has(EWeaponProperty::Light) && OffHand.Has(EWeaponProperty::Light);
+    return Main.Has(EWeaponProperty::Light) && OffHand.Has(EWeaponProperty::Light);
 }
 
-bool FWeaponRules::HeavyImposesDisadvantage(const FWeaponProfile& Weapon, bool bSmallCreature)
+bool FWeaponRules::HeavyImposesDisadvantage(const FWeaponProfile& Weapon, const FAbilityScores& Scores)
 {
-    return bSmallCreature && Weapon.Has(EWeaponProperty::Heavy);
+    if (!Weapon.Has(EWeaponProperty::Heavy)) { return false; }
+    return (Weapon.bRanged ? Scores.Dexterity : Scores.Strength) < 13;
 }
 
 int32 FWeaponRules::AttacksPerAction(const FWeaponProfile& Weapon, int32 AttacksAvailable)

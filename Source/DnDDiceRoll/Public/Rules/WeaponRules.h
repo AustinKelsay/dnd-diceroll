@@ -4,7 +4,7 @@
 #include "Rules/AbilityRules.h"
 #include "Rules/DamageRules.h"
 
-/** SRD 5.1 weapon properties as bits. */
+/** SRD 5.2.1 weapon properties as bits. */
 namespace EWeaponProperty
 {
     enum Type : uint16
@@ -14,7 +14,7 @@ namespace EWeaponProperty
     };
 }
 
-/** SRD 5.1 weapons (Greatclub, Light hammer, Sickle, Flail, Morningstar, Lance, Maul, Pike, Trident, War pick, Blowgun, Net, Sling omitted for now). */
+/** SRD 5.2.1 weapons (Greatclub, Light hammer, Sickle, Flail, Morningstar, Lance, Maul, Pike, Trident, War pick, Blowgun, Net, Sling omitted for now). */
 enum class EWeapon : uint8
 {
     Club, Dagger, Handaxe, Javelin, Mace, Quarterstaff, Spear, LightCrossbow, Dart, Shortbow,
@@ -58,10 +58,10 @@ struct DNDDICEROLL_API FWeaponRules
     static void DamageDice(const FWeaponProfile& Weapon, bool bTwoHanded, bool bCritical, int32& OutCount, int32& OutSides);
     /** Ability modifier added to damage: an off-hand light-weapon attack adds only a negative modifier. */
     static int32 DamageModifier(int32 AbilityModifier, bool bOffHand);
-    /** Two-weapon fighting needs a light melee weapon in each hand. */
+    /** Light (SRD 5.2.1): the extra attack needs a Light weapon in each hand, melee or ranged. */
     static bool CanTwoWeaponFight(const FWeaponProfile& Main, const FWeaponProfile& OffHand);
-    /** Heavy weapons impose disadvantage on Small creatures. */
-    static bool HeavyImposesDisadvantage(const FWeaponProfile& Weapon, bool bSmallCreature);
+    /** Heavy (SRD 5.2.1): disadvantage on attacks when STR (melee) or DEX (ranged) is below 13. */
+    static bool HeavyImposesDisadvantage(const FWeaponProfile& Weapon, const FAbilityScores& Scores);
     /** Loading: one piece of ammunition per action, bonus action or reaction, whatever the attack count. */
     static int32 AttacksPerAction(const FWeaponProfile& Weapon, int32 AttacksAvailable);
     /** Ammunition: a ranged attack needs a piece; returns false and leaves Ammo untouched when empty. */
