@@ -90,7 +90,7 @@ The current catalog contains exactly70 approved subclasses across13 classes (40 
 
 ## SRD rules libraries (PR 1: #53-#55, #68-#70)
 
-These are pure SRD 5.2.1 libraries with automation tests. Battle does not call them yet, so Compact play, saves and seeded runs are unchanged. Battle wiring arrives in later PRs.
+These are pure SRD 5.2.1 libraries with automation tests. Battle does not call them yet, so Compact play, saves and seeded runs are unchanged. Battle wiring arrives in later PRs. Known coupling: the role-keyed queries take `EAdventurerRole`, which is still defined in `Combat/CombatBattle.h`; the rules headers forward-declare it, so tests that name roles include that header for the enum only.
 
 ### Issue #53: ability scores and modifiers
 
@@ -114,4 +114,4 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 
 ### Issue #70: armor, shields and Dexterity caps
 
-`FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Armor or a shield without proficiency gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred.
+`FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Armor or a shield without proficiency gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred. SRD 5.2.1 Weapon Mastery properties are intentionally left out of this library for now.
