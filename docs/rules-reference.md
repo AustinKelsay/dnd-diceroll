@@ -87,3 +87,31 @@ Issue #44 adds the four Tasha's Artificer specializations through original compa
 ## Final compact roster source contract (#45)
 
 The current catalog contains exactly70 approved subclasses across13 classes (40 from2014 PHB,30 from Tasha). Historical interim/base and compatibility descriptions above are superseded by the [final source contract](runs/full-roster/13-final-roster.md). Evocation now authors Magic Missile as its first action: Action, one Kit plus one Slot, guaranteed3d4+3 at range6 with sight. Its only other special is Sculpted Burst: Bonus, one Kit, safe-area3 at range4 with sight. Special1 is unavailable for this build. Camp recovers one Kit and one Slot within their caps; leveling, route and Resume do not refill. Catalog revision7/schema4 retains strict incompatible-file preservation. Other69 kits keep their batch contracts. Root final acceptance remains pending.
+
+## SRD rules libraries (PR 1: #53-#55, #68-#70)
+
+These are pure SRD 5.2.1 libraries with automation tests. Battle does not call them yet, so Compact play, saves and seeded runs are unchanged. Battle wiring arrives in later PRs.
+
+### Issue #53: ability scores and modifiers
+
+`FAbilityRules` holds six ability scores (STR, DEX, CON, INT, WIS, CHA; range 1-30) and the SRD modifier floor((score - 10) / 2). `PrebuiltScores` gives the per-role scores (Fighter 16/12/15/8/13/10, Rogue 8/16/13/12/10/14, Cleric 13/12/14/10/16/8, Wizard 8/12/14/16/13/10), chosen so the key attack ability modifier (`AttackAbility`) plus the level-1 proficiency bonus equals the existing +5 attack bonus.
+
+### Issue #54: proficiency, skills, saves, tools and expertise
+
+Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abilities (STR: Athletics; DEX: Acrobatics, Sleight of Hand, Stealth; INT: Arcana, History, Investigation, Nature, Religion; WIS: Animal Handling, Insight, Medicine, Perception, Survival; CHA: Deception, Intimidation, Performance, Persuasion). `FProficiencyRules::BuildCharacter` validates class skill picks against the class list and count, two background-style picks from any unchosen skill, and the Rogue's two level-1 expertise picks (a pick may be thieves' tools); any invalid pick rejects the whole build with no partial result. Expertise doubles the proficiency bonus. Saving throw proficiencies: Fighter STR/CON, Rogue DEX/INT, Cleric WIS/CHA, Wizard INT/WIS. Prebuilt choices: Fighter Athletics, Perception + Intimidation, Survival; Rogue Stealth, Sleight of Hand, Acrobatics, Deception + Insight, Investigation, expertise Stealth and thieves' tools; Cleric Medicine, Religion + Insight, History; Wizard Arcana, Investigation + History, Religion.
+
+### Issue #55: ability checks, skill checks and saving throws
+
+`FCheckRules` resolves a d20 + modifier against a DC (1..30). Ability checks and saves have no automatic success on a natural 20 or failure on a natural 1. Advantage and disadvantage combine SRD-style: any advantage plus any disadvantage is a normal roll, however many sources. A normal roll spends one die; advantage or disadvantage spends two from the caller's seeded stream. Forecasts (`SuccessOutOf400`) are exact over all 400 pairs of d20 faces and spend no random numbers. Contested checks: the actor must beat the defender; a tie keeps the status quo.
+
+### Issue #68: damage types, resistance, vulnerability and immunity
+
+`FDamageRules` defines the SRD damage types and a small defense table: Skeleton (vulnerable bludgeoning; immune poison), Zombie (immune poison), Ice Mephit (vulnerable bludgeoning and fire; immune cold and poison), Fire Elemental (resists bludgeoning, piercing and slashing; immune fire and poison). `Adjust` applies after all other modifiers: immunity sets damage to 0, resistance halves it (rounded down) and vulnerability doubles it; with both, halve then double. Repeated sources count once.
+
+### Issue #69: critical hits and weapon properties
+
+`FWeaponRules` holds 24 SRD weapons and every listed property on the 5-foot grid: finesse (higher of STR/DEX), ranged weapons use DEX, thrown melee weapons use STR; reach is 2 cells; range bands convert feet to cells (normal, long = disadvantage, out of range); ammunition needs and spends one piece; thrown weapons use their range only when thrown; versatile uses its larger die two-handed; two-handed (or versatile two-handed) weapons exclude a shield; light weapons allow two-weapon fighting with no positive off-hand damage modifier; heavy weapons impose disadvantage on Small wielders; loading limits a weapon to one shot per action. A critical hit doubles every damage die and adds modifiers once.
+
+### Issue #70: armor, shields and Dexterity caps
+
+`FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Armor or a shield without proficiency gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred.
