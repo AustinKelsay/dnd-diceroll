@@ -39,6 +39,7 @@ bool FDamageAdjustTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Response names"), FDamageRules::Response(EDamageType::Fire, Immune) == EDamageResponse::Immune && FDamageRules::Response(EDamageType::Fire, Both) == EDamageResponse::ResistedAndVulnerable);
     const FDamageDefenses Mephit = FDamageRules::ProfileDefenses(TEXT("Ice Mephit"));
     TestEqual(TEXT("Ice Mephit vulnerable to fire"), FDamageRules::Adjust(5, EDamageType::Fire, Mephit), 10);
+    TestEqual(TEXT("Ice Mephit not vulnerable to bludgeoning (SRD 5.2.1)"), FDamageRules::Adjust(5, EDamageType::Bludgeoning, Mephit), 5);
     TestEqual(TEXT("Ice Mephit immune to cold"), FDamageRules::Adjust(5, EDamageType::Cold, Mephit), 0);
     TestEqual(TEXT("Fire Elemental resists slashing"), FDamageRules::Adjust(9, EDamageType::Slashing, FDamageRules::ProfileDefenses(TEXT("Fire Elemental"))), 4);
     TestEqual(TEXT("Skeleton vulnerable to bludgeoning"), FDamageRules::Adjust(4, EDamageType::Bludgeoning, FDamageRules::ProfileDefenses(TEXT("Skeleton"))), 8);

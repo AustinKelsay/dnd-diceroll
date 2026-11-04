@@ -47,7 +47,7 @@ FDamageDefenses FDamageRules::ProfileDefenses(const FString& Profile)
     FDamageDefenses Defenses;
     if (Profile == TEXT("Skeleton")) { Defenses.Vulnerable(EDamageType::Bludgeoning).Immune(EDamageType::Poison); }
     else if (Profile == TEXT("Zombie")) { Defenses.Immune(EDamageType::Poison); }
-    else if (Profile == TEXT("Ice Mephit")) { Defenses.Vulnerable(EDamageType::Bludgeoning).Vulnerable(EDamageType::Fire).Immune(EDamageType::Cold).Immune(EDamageType::Poison); }
+    else if (Profile == TEXT("Ice Mephit")) { Defenses.Vulnerable(EDamageType::Fire).Immune(EDamageType::Cold).Immune(EDamageType::Poison); }
     else if (Profile == TEXT("Fire Elemental"))
     {
         Defenses.Resist(EDamageType::Bludgeoning).Resist(EDamageType::Piercing).Resist(EDamageType::Slashing).Immune(EDamageType::Fire).Immune(EDamageType::Poison);

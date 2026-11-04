@@ -106,7 +106,7 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 
 ### Issue #68: damage types, resistance, vulnerability and immunity
 
-`FDamageRules` defines the SRD damage types and a small defense table: Skeleton (vulnerable bludgeoning; immune poison), Zombie (immune poison), Ice Mephit (vulnerable bludgeoning and fire; immune cold and poison), Fire Elemental (resists bludgeoning, piercing and slashing; immune fire and poison). `Adjust` applies after all other modifiers: immunity sets damage to 0, resistance halves it (rounded down) and vulnerability doubles it; with both, halve then double. Repeated sources count once.
+`FDamageRules` defines the SRD damage types and a small defense table: Skeleton (vulnerable bludgeoning; immune poison), Zombie (immune poison), Ice Mephit (vulnerable fire; immune cold and poison; SRD 5.2.1 dropped the 5.1 bludgeoning vulnerability), Fire Elemental (resists bludgeoning, piercing and slashing; immune fire and poison). `Adjust` applies after all other modifiers: immunity sets damage to 0, resistance halves it (rounded down) and vulnerability doubles it; with both, halve then double. Repeated sources count once.
 
 ### Issue #69: critical hits and weapon properties
 
