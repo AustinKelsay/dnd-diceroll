@@ -1,0 +1,31 @@
+#if WITH_DEV_AUTOMATION_TESTS
+#include "Misc/AutomationTest.h"
+#include "Rules/DamageRules.h"
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDamageAdjustTest, "Project.Expedition.Rules.DamageResistanceVulnerabilityImmunity",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FDamageAdjustTest::RunTest(const FString& Parameters)
+{
+    FDamageDefenses None, Resist, Vulnerable, Both, Immune;
+    Resist.Resist(EDamageType::Fire).Resist(EDamageType::Fire);
+    Vulnerable.Vulnerable(EDamageType::Fire);
+    Both.Resist(EDamageType::Fire).Vulnerable(EDamageType::Fire);
+    Immune.Immune(EDamageType::Fire).Resist(EDamageType::Fire);
+    TestEqual(TEXT("No defenses"), FDamageRules::Adjust(7, EDamageType::Fire, None), 7);
+    TestEqual(TEXT("Resistance halves, rounding down; repeats count once"), FDamageRules::Adjust(7, EDamageType::Fire, Resist), 3);
+    TestEqual(TEXT("Vulnerability doubles"), FDamageRules::Adjust(7, EDamageType::Fire, Vulnerable), 14);
+    TestEqual(TEXT("Both: halve then double"), FDamageRules::Adjust(7, EDamageType::Fire, Both), 6);
+    TestEqual(TEXT("Immunity zeroes and wins"), FDamageRules::Adjust(7, EDamageType::Fire, Immune), 0);
+    TestEqual(TEXT("Other types unaffected"), FDamageRules::Adjust(7, EDamageType::Cold, Resist), 7);
+    TestTrue(TEXT("Response names"), FDamageRules::Response(EDamageType::Fire, Immune) == EDamageResponse::Immune && FDamageRules::Response(EDamageType::Fire, Both) == EDamageResponse::ResistedAndVulnerable);
+    const FDamageDefenses Mephit = FDamageRules::ProfileDefenses(TEXT("Ice Mephit"));
+    TestEqual(TEXT("Ice Mephit vulnerable to fire"), FDamageRules::Adjust(5, EDamageType::Fire, Mephit), 10);
+    TestEqual(TEXT("Ice Mephit not vulnerable to bludgeoning (SRD 5.2.1)"), FDamageRules::Adjust(5, EDamageType::Bludgeoning, Mephit), 5);
+    TestEqual(TEXT("Ice Mephit immune to cold"), FDamageRules::Adjust(5, EDamageType::Cold, Mephit), 0);
+    TestEqual(TEXT("Fire Elemental resists slashing"), FDamageRules::Adjust(9, EDamageType::Slashing, FDamageRules::ProfileDefenses(TEXT("Fire Elemental"))), 4);
+    TestEqual(TEXT("Skeleton vulnerable to bludgeoning"), FDamageRules::Adjust(4, EDamageType::Bludgeoning, FDamageRules::ProfileDefenses(TEXT("Skeleton"))), 8);
+    TestEqual(TEXT("Raiders have no defenses"), FDamageRules::ProfileDefenses(TEXT("Raider")).Resistances | FDamageRules::ProfileDefenses(TEXT("Raider")).Immunities, 0);
+    return !HasAnyErrors();
+}
+
+#endif

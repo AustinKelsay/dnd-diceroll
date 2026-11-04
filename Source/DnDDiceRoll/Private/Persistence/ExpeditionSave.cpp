@@ -7,6 +7,11 @@
 #include "HAL/PlatformFileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <windows.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
 
 namespace
 {
@@ -161,11 +166,18 @@ bool FExpeditionSave::Write(const FString& Path, const FExpeditionSaveData& Data
     if (!Files.CreateDirectoryTree(*FPaths::GetPath(Path)) ||
         !FFileHelper::SaveStringToFile(Json, *Temporary, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Silent))
     { Error = TEXT("Could not save expedition. Your last checkpoint is retained; this action was not applied."); return false; }
-    // Apple platform MoveFile is a same-directory POSIX rename, replacing atomically.
+    bool bCommitted = false;
+    bool bRestoreFailed = false;
+#if PLATFORM_WINDOWS
+    // One atomic same-volume replace: the old checkpoint is never missing (#83).
+    bCommitted = ::MoveFileExW(*FPaths::ConvertRelativePathToFull(Temporary), *FPaths::ConvertRelativePathToFull(Path),
+        MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
+    // Apple/POSIX MoveFile is a same-directory rename, replacing atomically.
     // Do not use IFileManager::Move, whose replacement can delete the destination first.
-    bool bCommitted = Files.MoveFile(*Path, *Temporary);
+    bCommitted = Files.MoveFile(*Path, *Temporary);
 #if !PLATFORM_APPLE
-    // Windows MoveFile does not replace an existing file: keep the old checkpoint aside, install the new one, restore on failure.
+    // Platforms whose MoveFile does not replace: keep the old checkpoint aside, install the new one, restore on failure.
     if (!bCommitted && Files.FileExists(*Path))
     {
         const FString Previous = Path + TEXT(".previous");
@@ -174,13 +186,16 @@ bool FExpeditionSave::Write(const FString& Path, const FExpeditionSaveData& Data
         {
             bCommitted = Files.MoveFile(*Path, *Temporary);
             if (bCommitted) { Files.DeleteFile(*Previous); }
-            else { Files.MoveFile(*Path, *Previous); }
+            else { bRestoreFailed = !Files.MoveFile(*Path, *Previous); }
         }
     }
+#endif
 #endif
     if (!bCommitted)
     {
         Files.DeleteFile(*Temporary);
+        if (bRestoreFailed)
+        { Error = FString::Printf(TEXT("Could not commit expedition, and the previous checkpoint could not be restored. It remains at %s.previous."), *Path); return false; }
         Error = TEXT("Could not commit expedition. Your last checkpoint is retained; this action was not applied."); return false;
     }
     Error.Reset(); return true;
