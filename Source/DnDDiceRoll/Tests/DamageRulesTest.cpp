@@ -1,25 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Rules/DamageRules.h"
-#include "Combat/CombatBattle.h"
-
-namespace
-{
-// Attacker (id 1, acts first) against one high-HP enemy whose Role selects an SRD defense profile.
-FCombatEncounter DefenseDuel(int32 TutorialIndex, const TCHAR* Profile)
-{
-    const FCombatEncounter Tutorial = FCombatBattle::TutorialEncounter();
-    FCombatEncounter Layout = Tutorial;
-    Layout.BlockedCells.Reset();
-    Layout.Combatants = {Tutorial.Combatants[TutorialIndex], Tutorial.Combatants[4]};
-    FCombatantState& Hero = Layout.Combatants[0];
-    Hero.Id = 1; Hero.Cell = {0, 0}; Hero.InitiativeBonus = 30; Hero.AttackBonus = 30;
-    FCombatantState& Foe = Layout.Combatants[1];
-    Foe.Id = 2; Foe.Role = Profile; Foe.Cell = Hero.Range > 1 ? FIntPoint(2, 0) : FIntPoint(1, 0);
-    Foe.MaxHP = Foe.HP = 200; Foe.Speed = 0;
-    return Layout;
-}
-}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDamageAdjustTest, "Project.Expedition.Rules.DamageResistanceVulnerabilityImmunity",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

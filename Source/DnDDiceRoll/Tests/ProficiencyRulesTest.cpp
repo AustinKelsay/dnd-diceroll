@@ -1,7 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
-#include "Combat/CombatBattle.h"
 #include "Rules/ProficiencyRules.h"
+// Only for the EAdventurerRole definition, which still lives in CombatBattle.h; no battle code is used.
+#include "Combat/CombatBattle.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkillCatalogTest, "Project.Expedition.Rules.SkillCatalog",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

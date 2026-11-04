@@ -1,8 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Rules/CheckRules.h"
-#include "Combat/CombatBattle.h"
-#include "Rules/CheckRules.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRollModeAndChanceTest, "Project.Expedition.Rules.CheckChancesAreExact",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

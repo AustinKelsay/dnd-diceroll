@@ -1,8 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Rules/WeaponRules.h"
-#include "Combat/CombatBattle.h"
-#include "Rules/WeaponRules.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWeaponPropertiesTest, "Project.Expedition.Rules.WeaponProperties",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

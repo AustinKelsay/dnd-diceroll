@@ -1,8 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Rules/ArmorRules.h"
+// Only for the EAdventurerRole definition, which still lives in CombatBattle.h; no battle code is used.
 #include "Combat/CombatBattle.h"
-#include "Rules/ArmorRules.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArmorClassDexCapsTest, "Project.Expedition.Rules.ArmorClassDexCaps",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
