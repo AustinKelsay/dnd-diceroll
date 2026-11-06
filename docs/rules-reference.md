@@ -201,3 +201,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #78: superiority dice
 
 `FSuperiorityRules` holds Battle Master superiority die size and count by level as pure tables.
+
+
+### Issue #80: stealth, hidden attacker and surprise
+
+`FStealthRules` covers Hide checks vs passive Perception, advantage for a hidden attacker, and surprise when a side is caught unaware.
