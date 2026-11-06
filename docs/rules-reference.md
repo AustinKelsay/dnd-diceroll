@@ -266,3 +266,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #93: knowledge and Wisdom checks
 
 `FLoreRules` covers Arcana, History, Nature, Religion, Insight and Perception outside combat as DC bands.
+
+
+### Issue #94: tools and kits
+
+`FToolRules` covers tool proficiency on checks and healer's kit / herbalism kit uses.
