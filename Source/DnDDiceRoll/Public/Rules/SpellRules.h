@@ -8,7 +8,7 @@ enum class EAdventurerRole : uint8;
 enum class ESpellSchool : uint8 { Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation };
 
 /** In-game and near-term SRD 5.2.1 spells. Order is stable. */
-enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Shield, ShieldOfFaith, Guidance, Bless, MageArmor, Count };
+enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Shield, ShieldOfFaith, Guidance, Bless, MageArmor, RayOfFrost, ShockingGrasp, Light, InflictWounds, Bane, Sanctuary, FeatherFall, DetectMagic, Sleep, MistyStep, SpiritualWeapon, ScorchingRay, HoldPerson, Aid, Count };
 
 /** Static SRD spell facts used by tooltips and rules. Nothing here is saved. */
 struct DNDDICEROLL_API FSpellFacts
@@ -40,8 +40,11 @@ struct DNDDICEROLL_API FSpellFacts
     int32 ArmorClassBonus = 0;
     /** While active, Magic Missile deals no damage to you (Shield). */
     bool bNegatesMagicMissile = false;
+    /** Flat numeric addend on each die/dart (Magic Missile +1) or Aid HP bump. */
+    int32 FlatBonus = 0;
+    /** Ritual tag (Detect Magic). Casting still uses the listed casting time when not cast as a ritual. */
+    bool bRitual = false;
 };
-
 
 struct DNDDICEROLL_API FSpellRules
 {

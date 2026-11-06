@@ -13,7 +13,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     const FSpellFacts& Sacred = FSpellRules::Facts(ESpell::SacredFlame);
     TestTrue(TEXT("Sacred Flame: Cleric cantrip, 60 ft, 1d8 radiant, no concentration"), Sacred.bCleric && !Sacred.bWizard && Sacred.RangeFeet == 60 && Sacred.DieSides == 8 && !Sacred.bConcentration);
     const FSpellFacts& Missile = FSpellRules::Facts(ESpell::MagicMissile);
-    TestTrue(TEXT("Magic Missile: 1st-level, 3 darts of 1d4 force"), Missile.Level == 1 && Missile.DieCount == 3 && Missile.DieSides == 4 && Missile.DamageType == EDamageType::Force && !Missile.bConcentration);
+    TestTrue(TEXT("Magic Missile: 1st-level, 3 darts of 1d4+1 force"), Missile.Level == 1 && Missile.DieCount == 3 && Missile.DieSides == 4 && Missile.FlatBonus == 1 && Missile.DamageType == EDamageType::Force && !Missile.bConcentration);
     const FSpellFacts& Cure = FSpellRules::Facts(ESpell::CureWounds);
     TestTrue(TEXT("Cure Wounds: Abjuration touch healing 2d8, Cleric (SRD 5.2.1)"), Cure.Level == 1 && Cure.School == ESpellSchool::Abjuration && Cure.bHealing && Cure.DieCount == 2 && Cure.DieSides == 8 && Cure.RangeFeet == 0 && Cure.bCleric && !Cure.bWizard && !Cure.bConcentration);
     TestTrue(TEXT("Healing Word: Abjuration bonus action, V only, 2d4 (SRD 5.2.1)"), FCString::Strcmp(FSpellRules::Facts(ESpell::HealingWord).CastingTime, TEXT("1 bonus action")) == 0 && !FSpellRules::Facts(ESpell::HealingWord).bSomatic && FSpellRules::Facts(ESpell::HealingWord).School == ESpellSchool::Abjuration && FSpellRules::Facts(ESpell::HealingWord).DieCount == 2 && FSpellRules::Facts(ESpell::HealingWord).DieSides == 4 && !FSpellRules::Facts(ESpell::HealingWord).bConcentration);
@@ -48,6 +48,7 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     const FSpellFacts& Faith = FSpellRules::Facts(ESpell::ShieldOfFaith);
     TestTrue(TEXT("Shield of Faith Cleric abjuration concentration"), Faith.bCleric && !Faith.bWizard && Faith.School == ESpellSchool::Abjuration && Faith.bConcentration && Faith.bMaterial);
     TestEqual(TEXT("Shield of Faith +2 AC"), Faith.ArmorClassBonus, 2);
+    TestEqual(TEXT("Shield of Faith duration"), FString(Faith.Duration), FString(TEXT("Concentration, up to 10 minutes")));
     TestFalse(TEXT("Shield of Faith does not negate MM"), Faith.bNegatesMagicMissile);
 
 
@@ -57,6 +58,31 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Bless: Cleric Enchantment concentration 1 minute"), Bless.Level == 1 && Bless.School == ESpellSchool::Enchantment && Bless.bCleric && Bless.bConcentration && Bless.bMaterial && Bless.RangeFeet == 30 && FCString::Strcmp(Bless.Duration, TEXT("Concentration, up to 1 minute")) == 0);
     const FSpellFacts& MageArmor = FSpellRules::Facts(ESpell::MageArmor);
     TestTrue(TEXT("Mage Armor: Wizard Abjuration 8 hours, not concentration"), MageArmor.Level == 1 && MageArmor.School == ESpellSchool::Abjuration && MageArmor.bWizard && !MageArmor.bCleric && !MageArmor.bConcentration && MageArmor.bMaterial && FCString::Strcmp(MageArmor.Duration, TEXT("8 hours")) == 0);
+
+
+    // Lean #116/#117 finish — SRD 5.2.1 verified rows.
+    const FSpellFacts& Ray = FSpellRules::Facts(ESpell::RayOfFrost);
+    TestTrue(TEXT("Ray of Frost: Wizard cold cantrip 1d8"), Ray.Level == 0 && Ray.bWizard && Ray.DamageType == EDamageType::Cold && Ray.DieCount == 1 && Ray.DieSides == 8 && !Ray.bConcentration);
+    TestTrue(TEXT("Shocking Grasp: Wizard lightning touch cantrip"), FSpellRules::Facts(ESpell::ShockingGrasp).DamageType == EDamageType::Lightning && FSpellRules::Facts(ESpell::ShockingGrasp).RangeFeet == 0);
+    const FSpellFacts& Light = FSpellRules::Facts(ESpell::Light);
+    TestTrue(TEXT("Light: Cleric and Wizard, V M, 1 hour"), Light.bCleric && Light.bWizard && Light.bVerbal && !Light.bSomatic && Light.bMaterial && !Light.bConcentration);
+    const FSpellFacts& Inflict = FSpellRules::Facts(ESpell::InflictWounds);
+    TestTrue(TEXT("Inflict Wounds 5.2.1: 2d10 Necrotic (not 3d10 attack)"), Inflict.School == ESpellSchool::Necromancy && Inflict.DieCount == 2 && Inflict.DieSides == 10 && Inflict.DamageType == EDamageType::Necrotic && Inflict.bCleric);
+    TestTrue(TEXT("Bane concentrates"), FSpellRules::Facts(ESpell::Bane).bConcentration && FSpellRules::Facts(ESpell::Bane).bCleric);
+    TestFalse(TEXT("Sanctuary does not concentrate"), FSpellRules::Facts(ESpell::Sanctuary).bConcentration);
+    TestEqual(TEXT("Feather Fall reaction"), FString(FSpellRules::Facts(ESpell::FeatherFall).CastingTime), FString(TEXT("1 reaction")));
+    const FSpellFacts& Detect = FSpellRules::Facts(ESpell::DetectMagic);
+    TestTrue(TEXT("Detect Magic: ritual concentration both classes"), Detect.bRitual && Detect.bConcentration && Detect.bCleric && Detect.bWizard);
+    const FSpellFacts& Sleep = FSpellRules::Facts(ESpell::Sleep);
+    TestTrue(TEXT("Sleep 5.2.1: concentration Wis sphere 60 ft"), Sleep.bConcentration && Sleep.RangeFeet == 60 && Sleep.bWizard && !Sleep.bCleric && Sleep.bMaterial);
+    TestEqual(TEXT("Misty Step bonus action"), FString(FSpellRules::Facts(ESpell::MistyStep).CastingTime), FString(TEXT("1 bonus action")));
+    const FSpellFacts& Spirit = FSpellRules::Facts(ESpell::SpiritualWeapon);
+    TestTrue(TEXT("Spiritual Weapon 5.2.1: concentration (changed from 5.1)"), Spirit.bConcentration && Spirit.Level == 2 && Spirit.bCleric && Spirit.DieCount == 1 && Spirit.DieSides == 8 && Spirit.DamageType == EDamageType::Force);
+    TestEqual(TEXT("Scorching Ray base 6d6 total"), FSpellRules::UpcastDiceCount(ESpell::ScorchingRay, 2), 6);
+    TestEqual(TEXT("Scorching Ray at 3rd: 8d6"), FSpellRules::UpcastDiceCount(ESpell::ScorchingRay, 3), 8);
+    TestTrue(TEXT("Hold Person both classes concentration"), FSpellRules::Facts(ESpell::HoldPerson).bCleric && FSpellRules::Facts(ESpell::HoldPerson).bWizard && FSpellRules::Facts(ESpell::HoldPerson).bConcentration);
+    TestEqual(TEXT("Aid +5 HP flat"), FSpellRules::Facts(ESpell::Aid).FlatBonus, 5);
+    TestFalse(TEXT("Aid is not concentration"), FSpellRules::Facts(ESpell::Aid).bConcentration);
 
     for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
     {

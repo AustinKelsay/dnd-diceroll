@@ -7,6 +7,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCantripScalingTest, "Project.Expedition.Rules.
 bool FCantripScalingTest::RunTest(const FString& Parameters)
 {
     TestTrue(TEXT("Fire Bolt and Sacred Flame are cantrips"), FCantripRules::IsCantrip(ESpell::FireBolt) && FCantripRules::IsCantrip(ESpell::SacredFlame));
+    TestTrue(TEXT("Ray of Frost is a cantrip"), FCantripRules::IsCantrip(ESpell::RayOfFrost));
+    TestFalse(TEXT("Misty Step is not a cantrip"), FCantripRules::IsCantrip(ESpell::MistyStep));
     TestFalse(TEXT("Magic Missile is not"), FCantripRules::IsCantrip(ESpell::MagicMissile));
     TestEqual(TEXT("Cantrips cost no slot"), FCantripRules::SlotCost(ESpell::FireBolt), 0);
     TestEqual(TEXT("Magic Missile costs a 1st-level slot"), FCantripRules::SlotCost(ESpell::MagicMissile), 1);

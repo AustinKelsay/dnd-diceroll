@@ -26,6 +26,15 @@ bool FSpellcastingDcAttackSaveTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Failed save: full"), FSpellcastingRules::DamageAfterSave(13, false, true), 13);
     TestEqual(TEXT("Saved, half: rounds down"), FSpellcastingRules::DamageAfterSave(13, true, true), 6);
     TestEqual(TEXT("Saved, no half: none"), FSpellcastingRules::DamageAfterSave(13, true, false), 0);
+    TestTrue(TEXT("Ray of Frost is a spell attack"), FSpellcastingRules::Delivery(ESpell::RayOfFrost).Kind == ESpellDelivery::Attack);
+    const FSpellDelivery Inflict = FSpellcastingRules::Delivery(ESpell::InflictWounds);
+    TestTrue(TEXT("Inflict Wounds CON save half"), Inflict.Kind == ESpellDelivery::Save && Inflict.SaveAbility == EAbility::Constitution && Inflict.bHalfOnSave);
+    const FSpellDelivery SleepSave = FSpellcastingRules::Delivery(ESpell::Sleep);
+    TestTrue(TEXT("Sleep Wis save no half"), SleepSave.Kind == ESpellDelivery::Save && SleepSave.SaveAbility == EAbility::Wisdom && !SleepSave.bHalfOnSave);
+    TestTrue(TEXT("Spiritual Weapon is a spell attack"), FSpellcastingRules::Delivery(ESpell::SpiritualWeapon).Kind == ESpellDelivery::Attack);
+    TestTrue(TEXT("Misty Step automatic"), FSpellcastingRules::Delivery(ESpell::MistyStep).Kind == ESpellDelivery::Automatic);
+    const FSpellDelivery Bane = FSpellcastingRules::Delivery(ESpell::Bane);
+    TestTrue(TEXT("Bane Cha save"), Bane.Kind == ESpellDelivery::Save && Bane.SaveAbility == EAbility::Charisma);
     return !HasAnyErrors();
 }
 #endif

@@ -20,13 +20,25 @@ FSpellDelivery FSpellcastingRules::Delivery(ESpell Spell)
     FSpellDelivery Out;
     switch (Spell)
     {
-    case ESpell::FireBolt: case ESpell::GuidingBolt: Out.Kind = ESpellDelivery::Attack; break;
-    case ESpell::SacredFlame: Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Dexterity; break;
-    case ESpell::BurningHands: Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Dexterity; Out.bHalfOnSave = true; break;
-    case ESpell::Thunderwave: Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Constitution; Out.bHalfOnSave = true; break;
-    case ESpell::CureWounds: case ESpell::HealingWord: Out.Kind = ESpellDelivery::Healing; break;
-    case ESpell::Shield: case ESpell::ShieldOfFaith: case ESpell::Guidance: case ESpell::Bless: case ESpell::MageArmor: Out.Kind = ESpellDelivery::Automatic; break;
-    default: Out.Kind = ESpellDelivery::Automatic; break;
+    case ESpell::FireBolt: case ESpell::GuidingBolt: case ESpell::RayOfFrost: case ESpell::ShockingGrasp:
+    case ESpell::SpiritualWeapon: case ESpell::ScorchingRay:
+        Out.Kind = ESpellDelivery::Attack; break;
+    case ESpell::SacredFlame:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Dexterity; break;
+    case ESpell::BurningHands:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Dexterity; Out.bHalfOnSave = true; break;
+    case ESpell::Thunderwave:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Constitution; Out.bHalfOnSave = true; break;
+    case ESpell::InflictWounds:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Constitution; Out.bHalfOnSave = true; break;
+    case ESpell::Sleep: case ESpell::HoldPerson: case ESpell::Sanctuary:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Wisdom; break;
+    case ESpell::Bane:
+        Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Charisma; break;
+    case ESpell::CureWounds: case ESpell::HealingWord:
+        Out.Kind = ESpellDelivery::Healing; break;
+    default:
+        Out.Kind = ESpellDelivery::Automatic; break;
     }
     return Out;
 }
