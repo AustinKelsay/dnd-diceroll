@@ -27,7 +27,7 @@ bool FStealthRules::IsSurprised(const TArray<int32>& AmbusherStealthTotals, int3
     return true;
 }
 
-bool FStealthRules::CanActOnTurn(bool bSurprised, int32 RoundNumber)
+ERollMode FStealthRules::InitiativeMode(bool bSurprised)
 {
-    return !(bSurprised && RoundNumber <= 1);
+    return bSurprised ? ERollMode::Disadvantage : ERollMode::Normal;
 }

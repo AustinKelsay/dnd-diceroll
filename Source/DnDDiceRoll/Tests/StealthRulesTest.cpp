@@ -18,9 +18,8 @@ bool FStealthRulesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Surprised when all ambushers hidden"), FStealthRules::IsSurprised({15, 13}, 12));
     TestFalse(TEXT("One noticed ambusher spoils surprise"), FStealthRules::IsSurprised({15, 9}, 12));
     TestFalse(TEXT("No ambushers, no surprise"), FStealthRules::IsSurprised({}, 12));
-    TestFalse(TEXT("Surprised skip round 1"), FStealthRules::CanActOnTurn(true, 1));
-    TestTrue(TEXT("Surprised act in round 2"), FStealthRules::CanActOnTurn(true, 2));
-    TestTrue(TEXT("Alert creatures act"), FStealthRules::CanActOnTurn(false, 1));
+    TestTrue(TEXT("Surprised Initiative Disadvantage"), FStealthRules::InitiativeMode(true) == ERollMode::Disadvantage);
+    TestTrue(TEXT("Alert Initiative Normal"), FStealthRules::InitiativeMode(false) == ERollMode::Normal);
     return !HasAnyErrors();
 }
 #endif

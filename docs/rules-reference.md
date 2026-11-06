@@ -180,7 +180,7 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 ### Issue #74: concentration
 
-`FConcentrationRules` uses the SRD Constitution save DC max(10, damage/2) when concentrating; failure ends the effect.
+`FConcentrationRules` uses the SRD 5.2.1 Constitution save DC max(10, damage/2), **capped at 30**, when concentrating; failure ends the effect. `RequiresConcentration` reads `FSpellFacts::bConcentration` (none of the current eight catalog spells set it).
 
 
 ### Issue #75: area-of-effect templates
@@ -205,7 +205,7 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 ### Issue #80: stealth, hidden attacker and surprise
 
-`FStealthRules` covers Hide checks vs passive Perception, advantage for a hidden attacker, and surprise when a side is caught unaware.
+`FStealthRules` covers Hide checks vs passive Perception, advantage for a hidden attacker, and surprise. **SRD 5.2.1 Surprise (revised):** a surprised creature has Disadvantage on Initiative and still takes its turn; there is no skipped first turn (that was SRD 5.1 / 2014).
 
 
 ### Issue #81: locks and traps

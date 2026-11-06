@@ -3,19 +3,23 @@
 #include "CoreMinimal.h"
 #include "Rules/CheckRules.h"
 
-/** SRD hiding, hidden attackers and surprise. */
+/** Stealth, hiding and surprise as pure queries (SRD 5.2.1). */
 struct DNDDICEROLL_API FStealthRules
 {
-    /** Passive score: 10 + modifier, +5 with advantage, -5 with disadvantage. */
+    /** 10 + modifier; +5 with advantage, -5 with disadvantage. */
     static int32 PassiveScore(int32 Modifier, ERollMode Mode);
-    /** Hidden from an observer when the Stealth total meets or beats its passive Perception (house reading of the tie). */
+    /** A Stealth total hides from an observer when it meets or beats their passive Perception. */
     static bool HiddenFrom(int32 StealthTotal, int32 ObserverPassivePerception);
-    /** Attacking a target that cannot see you grants advantage; being unseen by the attacker imposes disadvantage. */
+    /** Hidden attacker: advantage. Unseen target: disadvantage. Both cancel. */
     static ERollMode AttackModeWhileHidden(bool bAttackerHidden, bool bTargetHidden);
-    /** Attacking reveals the attacker, hit or miss. */
+    /** Attacking reveals the attacker (ends the Hidden condition for that creature). */
     static bool StaysHiddenAfterAttack();
-    /** A creature is surprised only if it notices no ambusher. */
+    /**
+     * SRD 5.2.1 Surprise (revised vs 5.1): if every ambusher is hidden from the creature,
+     * that creature is surprised and rolls Initiative with Disadvantage. It still takes its
+     * turn normally; there is no skipped first turn.
+     */
     static bool IsSurprised(const TArray<int32>& AmbusherStealthTotals, int32 PassivePerception);
-    /** Surprised creatures cannot move or act on the first turn of combat. */
-    static bool CanActOnTurn(bool bSurprised, int32 RoundNumber);
+    /** Surprised combatants have Disadvantage on Initiative (SRD 5.2.1 Combat). */
+    static ERollMode InitiativeMode(bool bSurprised);
 };
