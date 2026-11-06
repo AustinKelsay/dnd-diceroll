@@ -119,3 +119,15 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 ### Issue #70: armor, shields and Dexterity caps
 
 `FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Worn armor without training gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. An untrained shield gives no AC bonus and imposes none of those armor penalties. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred. SRD 5.2.1 Weapon Mastery properties are intentionally left out of this library for now.
+`FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Armor or a shield without proficiency gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred. SRD 5.2.1 Weapon Mastery properties are intentionally left out of this library for now.
+
+
+## SRD rules libraries (PR 2 start: #64-#65 movement)
+
+Pure libraries only; battle does not call them yet, so Compact stays seed-identical.
+
+### Issues #64 and #65: falling, prone, forced movement and difficult terrain
+
+`FDiceRules` rolls N dice of S faces against a seeded `FRandomStream`, the same stream combat uses. `FMovementRules` covers SRD prone (stand costs half speed rounded up; crawl costs double; melee attacks within 5 ft have advantage, ranged or farther melee have disadvantage), forced movement that stops at the last free cell, and difficult terrain at double cost per cell.
+
+**Falling (house rule vs SRD 5.2.1):** this project locks "first 15 ft free, then 1d6 per full 10 ft (round down), max 20d6." Raw SRD 5.2.1 deals 1d6 per 10 ft from the first foot, still capped at 20d6. `FallingDice` / `FallDamage` / `LandsProne` implement the locked house rule. Taking any falling damage leaves the creature prone.
