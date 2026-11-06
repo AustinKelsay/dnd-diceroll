@@ -131,3 +131,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 `FDiceRules` rolls N dice of S faces against a seeded `FRandomStream`, the same stream combat uses. `FMovementRules` covers SRD prone (stand costs half speed rounded up; crawl costs double; melee attacks within 5 ft have advantage, ranged or farther melee have disadvantage), forced movement that stops at the last free cell, and difficult terrain at double cost per cell.
 
 **Falling (house rule vs SRD 5.2.1):** this project locks "first 15 ft free, then 1d6 per full 10 ft (round down), max 20d6." Raw SRD 5.2.1 deals 1d6 per 10 ft from the first foot, still capped at 20d6. `FallingDice` / `FallDamage` / `LandsProne` implement the locked house rule. Taking any falling damage leaves the creature prone.
+
+
+### Issue #59: opportunity attack triggers
+
+`FOpportunityRules` measures Chebyshev distance on the 5-foot grid (diagonals count as 1). A step provokes when it leaves a reactor's reach voluntarily, without Disengage, while the reactor still has its reaction; forced movement never provokes. `FirstProvokingCell` returns the path index being left at the first such step (one opportunity per reactor per turn by design of the caller).
