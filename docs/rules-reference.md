@@ -166,3 +166,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #71: spell facts and slots
 
 `FSpellRules` holds SRD spell facts (name, level, school, casting time, range, components, duration, concentration) and the full-caster slot table by character level. Pure data and lookups; battle casting comes later.
+
+
+### Issue #72: cantrip scaling
+
+`FCantripRules` returns slot cost 0 for cantrips and SRD cantrip damage-die scaling by character level (2 dice at 5, 3 at 11, 4 at 17).
