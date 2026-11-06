@@ -121,6 +121,10 @@ bool FCompactSeedRegressionTest::RunTest(const FString& Parameters)
     TestTrue(FString::Printf(TEXT("Victory Restore: %s"), *VictoryError), bRestored);
     const bool bEncoded = FExpeditionSave::Encode(VictorySave, VictoryJson, VictoryError);
     TestTrue(FString::Printf(TEXT("Victory Encode: %s"), *VictoryError), bEncoded);
+    FExpeditionSaveData BareVictory; BareVictory.Current = Run.Snapshot();
+    FString BareJson, BareError;
+    TestFalse(TEXT("Victory Encode without Ending records fails"), FExpeditionSave::Encode(BareVictory, BareJson, BareError));
+    TestTrue(TEXT("Bare Victory Encode names incomplete ending records"), BareError.Contains(TEXT("ending records")));
     FExpeditionRun Twin; FString TwinError;
     TestTrue(TEXT("Twin Compact NewRun"), Twin.NewRun(42, TwinError, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact));
     for (int32 Encounter = 0; Encounter < 5; ++Encounter)
