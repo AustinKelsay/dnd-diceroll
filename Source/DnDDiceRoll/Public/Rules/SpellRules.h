@@ -8,7 +8,7 @@ enum class EAdventurerRole : uint8;
 enum class ESpellSchool : uint8 { Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation };
 
 /** In-game and near-term SRD 5.2.1 spells. Order is stable. */
-enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Count };
+enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Shield, Count };
 
 /** Static SRD spell facts used by tooltips and rules. Nothing here is saved. */
 struct DNDDICEROLL_API FSpellFacts

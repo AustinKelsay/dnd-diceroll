@@ -25,6 +25,7 @@ FSpellDelivery FSpellcastingRules::Delivery(ESpell Spell)
     case ESpell::BurningHands: Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Dexterity; Out.bHalfOnSave = true; break;
     case ESpell::Thunderwave: Out.Kind = ESpellDelivery::Save; Out.SaveAbility = EAbility::Constitution; Out.bHalfOnSave = true; break;
     case ESpell::CureWounds: case ESpell::HealingWord: Out.Kind = ESpellDelivery::Healing; break;
+    case ESpell::Shield: Out.Kind = ESpellDelivery::Automatic; break;
     default: Out.Kind = ESpellDelivery::Automatic; break;
     }
     return Out;

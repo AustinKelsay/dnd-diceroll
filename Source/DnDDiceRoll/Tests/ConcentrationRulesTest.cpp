@@ -13,9 +13,12 @@ bool FConcentrationRulesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Second concentration spell ends the first"), FConcentrationRules::NewSpellEndsCurrent(true, true));
     TestFalse(TEXT("Other spells do not"), FConcentrationRules::NewSpellEndsCurrent(true, false));
     TestTrue(TEXT("Incapacitated drops it"), FConcentrationRules::EndsOnIncapacitated(true));
+    TestTrue(TEXT("Shield concentrates"), FConcentrationRules::RequiresConcentration(ESpell::Shield));
     for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
     {
-        TestFalse(TEXT("Current catalog spells need no concentration"), FConcentrationRules::RequiresConcentration((ESpell)SpellIndex));
+        const ESpell Spell = (ESpell)SpellIndex;
+        if (Spell == ESpell::Shield) { continue; }
+        TestFalse(TEXT("Non-Shield catalog spells need no concentration"), FConcentrationRules::RequiresConcentration(Spell));
     }
     return !HasAnyErrors();
 }

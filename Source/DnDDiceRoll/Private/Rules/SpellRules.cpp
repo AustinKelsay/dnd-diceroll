@@ -13,6 +13,7 @@ namespace SpellTable
         { TEXT("Burning Hands"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Self (15-ft cone)"), true, true, false, false, TEXT("Instantaneous"), false, true, 3, 6, false, EDamageType::Fire, 1 },
         { TEXT("Healing Word"), 1, ESpellSchool::Evocation, TEXT("1 bonus action"), 60, TEXT("60 ft"), true, false, false, false, TEXT("Instantaneous"), true, false, 1, 4, true, EDamageType::Force, 1 },
         { TEXT("Thunderwave"), 1, ESpellSchool::Evocation, TEXT("1 action"), 0, TEXT("Self (15-ft cube)"), true, true, false, false, TEXT("Instantaneous"), false, true, 2, 8, false, EDamageType::Thunder, 1 },
+        { TEXT("Shield"), 1, ESpellSchool::Abjuration, TEXT("1 reaction"), 0, TEXT("Self"), true, true, false, true, TEXT("1 minute"), false, true, 0, 0, false, EDamageType::Force, 0 },
     };
     // Rows: character level 1-5; columns: spell level 1-3.
     static const int32 FullCaster[5][3] = { {2, 0, 0}, {3, 0, 0}, {4, 2, 0}, {4, 3, 0}, {4, 3, 2} };

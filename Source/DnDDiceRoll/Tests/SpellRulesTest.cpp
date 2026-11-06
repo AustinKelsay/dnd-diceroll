@@ -32,6 +32,16 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Cure Wounds at 3rd: 3d8"), FSpellRules::UpcastDiceCount(ESpell::CureWounds, 3), 3);
     TestEqual(TEXT("Guiding Bolt at 1st: 4d6"), FSpellRules::UpcastDiceCount(ESpell::GuidingBolt, 1), 4);
     TestEqual(TEXT("Slot too low"), FSpellRules::UpcastDiceCount(ESpell::MagicMissile, 0), 0);
+    TestTrue(TEXT("Shield is Wizard abjuration reaction"), FSpellRules::OnClassList(EAdventurerRole::Wizard, ESpell::Shield) && !FSpellRules::OnClassList(EAdventurerRole::Cleric, ESpell::Shield));
+    TestEqual(TEXT("Shield school"), (int32)FSpellRules::Facts(ESpell::Shield).School, (int32)ESpellSchool::Abjuration);
+    TestTrue(TEXT("Shield concentrates"), FSpellRules::Facts(ESpell::Shield).bConcentration);
+    // Every catalog spell must have school + at least one class tag (#116 lean).
+    for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
+    {
+        const FSpellFacts& F = FSpellRules::Facts((ESpell)SpellIndex);
+        TestTrue(TEXT("Spell has a class tag"), F.bCleric || F.bWizard);
+        TestTrue(TEXT("Spell school in range"), (int32)F.School >= 0 && (int32)F.School <= 7);
+    }
     return !HasAnyErrors();
 }
 #endif

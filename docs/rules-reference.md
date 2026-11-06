@@ -271,3 +271,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #94: tools and kits
 
 `FToolRules` covers tool proficiency on checks and healer's kit / herbalism kit uses.
+
+### Issues #116 / #117 (lean, libraries only)
+
+Catalog still lives in `FSpellRules` facts (not a separate generator yet). Added **Shield** (Wizard abjuration, 1 reaction, concentration 1 minute) so `bConcentration` is exercised. A tag-completeness loop fails if any catalog spell lacks a class tag or school. Full SRD spell JSON generator and half/pact/multiclass slot tables remain follow-ups; ExpeditionRun slot grants stay out of this library PR.
+
