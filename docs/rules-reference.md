@@ -206,3 +206,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #80: stealth, hidden attacker and surprise
 
 `FStealthRules` covers Hide checks vs passive Perception, advantage for a hidden attacker, and surprise when a side is caught unaware.
+
+
+### Issue #81: locks and traps
+
+`FLockTrapRules` covers thieves' tools DCs for locks and trap disarm attempts as pure check helpers.
