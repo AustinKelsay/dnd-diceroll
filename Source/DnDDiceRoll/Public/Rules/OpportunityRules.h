@@ -11,5 +11,5 @@ struct DNDDICEROLL_API FOpportunityRules
     static bool StepProvokes(const FIntPoint& Reactor, int32 ReachCells, const FIntPoint& From, const FIntPoint& To,
         bool bDisengaged, bool bForcedMovement, bool bReactionAvailable);
     /** Index of the path cell being left at the first provoking step, or INDEX_NONE. A reactor gets at most one per turn. */
-    static int32 FirstProvokingCell(const TArray<FIntPoint>& Path, const FIntPoint& Reactor, int32 ReachCells, bool bDisengaged);
+    static int32 FirstProvokingCell(const TArray<FIntPoint>& Path, const FIntPoint& Reactor, int32 ReachCells, bool bDisengaged, bool bReactionAvailable);
 };

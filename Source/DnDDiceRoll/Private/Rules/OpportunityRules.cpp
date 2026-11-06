@@ -16,11 +16,11 @@ bool FOpportunityRules::StepProvokes(const FIntPoint& Reactor, int32 ReachCells,
     return bReactionAvailable && !bDisengaged && !bForcedMovement && InReach(Reactor, ReachCells, From) && !InReach(Reactor, ReachCells, To);
 }
 
-int32 FOpportunityRules::FirstProvokingCell(const TArray<FIntPoint>& Path, const FIntPoint& Reactor, int32 ReachCells, bool bDisengaged)
+int32 FOpportunityRules::FirstProvokingCell(const TArray<FIntPoint>& Path, const FIntPoint& Reactor, int32 ReachCells, bool bDisengaged, bool bReactionAvailable)
 {
     for (int32 Step = 1; Step < Path.Num(); ++Step)
     {
-        if (StepProvokes(Reactor, ReachCells, Path[Step - 1], Path[Step], bDisengaged, false, true)) { return Step - 1; }
+        if (StepProvokes(Reactor, ReachCells, Path[Step - 1], Path[Step], bDisengaged, false, bReactionAvailable)) { return Step - 1; }
     }
     return INDEX_NONE;
 }
