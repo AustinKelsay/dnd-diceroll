@@ -549,10 +549,10 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         TArray<FIntPoint> FullPath;
         FullPath.Add(Moving->Cell);
         FullPath.Append(Result.Path);
-        if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
         Moving->Cell = Command.Destination;
         State.MovementLeft -= Cost;
         Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft);
+        if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
     }
     else if (Command.Type == ECombatCommandType::Special1 || Command.Type == ECombatCommandType::Special2 || (Command.Type == ECombatCommandType::CureWounds && !Actor->BuildId.IsEmpty()))
     {
@@ -1062,7 +1062,7 @@ void FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArr
     for (FCombatantState& Reactor : State.Encounter.Combatants)
     {
         if (Reactor.Id == Mover.Id || Reactor.Side == Mover.Side || Reactor.Life != ECombatLife::Conscious || !Reactor.bReactionAvailable) { continue; }
-        const int32 Reach = FMath::Max(1, Reactor.Range <= 1 ? 1 : 1);
+        const int32 Reach = 1; // melee reach for OA; ranged opportunity deferred
         const int32 Provoking = FOpportunityRules::FirstProvokingCell(Path, Reactor.Cell, Reach, Mover.bDisengaged, Reactor.bReactionAvailable);
         if (Provoking == INDEX_NONE) { continue; }
         Reactor.bReactionAvailable = false;
