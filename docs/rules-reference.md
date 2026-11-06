@@ -196,3 +196,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #77: class feature scaling tables
 
 `FClassFeatureRules` holds level-scaled tables (Second Wind, Action Surge uses, Sneak Attack dice, etc.) as pure lookups.
+
+
+### Issue #78: superiority dice
+
+`FSuperiorityRules` holds Battle Master superiority die size and count by level as pure tables.
