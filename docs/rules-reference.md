@@ -181,3 +181,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #74: concentration
 
 `FConcentrationRules` uses the SRD Constitution save DC max(10, damage/2) when concentrating; failure ends the effect.
+
+
+### Issue #75: area-of-effect templates
+
+`FAreaRules` stamps SRD cone, cube, line and sphere templates onto the square 5-foot grid for preview and resolution. Pure geometry; battle wiring later.
