@@ -246,3 +246,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #82: social influence
 
 `FSocialRules` maps Persuasion, Deception and Intimidation outcomes to NPC attitude steps.
+
+
+### Issue #89: carrying capacity and optional encumbrance
+
+`FEncumbranceRules` uses STR x 15 lb carrying capacity and the optional encumbrance speed penalties.
