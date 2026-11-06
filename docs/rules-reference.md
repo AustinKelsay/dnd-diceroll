@@ -216,3 +216,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #84: coins and prices
 
 `FCoinRules` converts CP/SP/EP/GP/PP and prices goods in a common copper total.
+
+
+### Issue #85: exploration hazards
+
+`FHazardRules` resolves Athletics/Acrobatics/Survival/Investigation route hazards as seeded checks.
