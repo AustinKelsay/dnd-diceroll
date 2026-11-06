@@ -180,7 +180,7 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 ### Issue #74: concentration
 
-`FConcentrationRules` uses the SRD 5.2.1 Constitution save DC max(10, damage/2), **capped at 30**, when concentrating; failure ends the effect. `RequiresConcentration` reads `FSpellFacts::bConcentration` (none of the current eight catalog spells set it).
+`FConcentrationRules` uses the SRD 5.2.1 Constitution save DC max(10, damage/2), **capped at 30**, when concentrating; failure ends the effect. `RequiresConcentration` reads `FSpellFacts::bConcentration` (Shield of Faith sets it; Shield does not).
 
 
 ### Issue #75: area-of-effect templates
@@ -274,5 +274,5 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 ### Issues #116 / #117 (lean, libraries only)
 
-Catalog still lives in `FSpellRules` facts (not a separate generator yet). Added **Shield** (Wizard abjuration, 1 reaction, concentration 1 minute) so `bConcentration` is exercised. A tag-completeness loop fails if any catalog spell lacks a class tag or school. Full SRD spell JSON generator and half/pact/multiclass slot tables remain follow-ups; ExpeditionRun slot grants stay out of this library PR.
+Catalog still lives in `FSpellRules` facts (not a separate generator yet). Catalog includes **Shield** (Wizard abjuration reaction, 1 round, **not** concentration: +5 AC and Magic Missile immunity) and **Shield of Faith** (Cleric, concentration up to 10 minutes, +2 AC). Healing Word and Cure Wounds are Abjuration with SRD 5.2.1 dice (2d4 / 2d8). A tag-completeness loop fails if any catalog spell lacks a class tag or school. Full SRD spell JSON generator and half/pact/multiclass slot tables remain follow-ups; ExpeditionRun slot grants stay out of this library PR.
 

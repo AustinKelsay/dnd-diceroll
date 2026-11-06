@@ -8,7 +8,7 @@ enum class EAdventurerRole : uint8;
 enum class ESpellSchool : uint8 { Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation };
 
 /** In-game and near-term SRD 5.2.1 spells. Order is stable. */
-enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Shield, Count };
+enum class ESpell : uint8 { FireBolt, SacredFlame, MagicMissile, CureWounds, GuidingBolt, BurningHands, HealingWord, Thunderwave, Shield, ShieldOfFaith, Count };
 
 /** Static SRD spell facts used by tooltips and rules. Nothing here is saved. */
 struct DNDDICEROLL_API FSpellFacts
@@ -34,9 +34,14 @@ struct DNDDICEROLL_API FSpellFacts
     bool bHealing = false;
     /** Ignored when bHealing is true (Cure Wounds / Healing Word restore HP; no damage type). */
     EDamageType DamageType = EDamageType::Force;
-    /** Extra dice per slot level above Level (Magic Missile: extra darts). 0 = no upcast benefit. */
+    /** Extra dice per slot level above Level (Magic Missile: extra darts; healing: extra dice). 0 = no upcast benefit. */
     int32 UpcastDicePerLevel = 0;
+    /** Flat AC bonus while the spell lasts (Shield +5, Shield of Faith +2). */
+    int32 ArmorClassBonus = 0;
+    /** While active, Magic Missile deals no damage to you (Shield). */
+    bool bNegatesMagicMissile = false;
 };
+
 
 struct DNDDICEROLL_API FSpellRules
 {
