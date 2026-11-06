@@ -261,3 +261,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #92: Animal Handling, mounts and beasts
 
 `FBeastRules` covers calming/redirecting beasts and basic mount control checks.
+
+
+### Issue #93: knowledge and Wisdom checks
+
+`FLoreRules` covers Arcana, History, Nature, Religion, Insight and Perception outside combat as DC bands.
