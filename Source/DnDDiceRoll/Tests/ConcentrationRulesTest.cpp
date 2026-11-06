@@ -8,13 +8,14 @@ bool FConcentrationRulesTest::RunTest(const FString& Parameters)
 {
     TestEqual(TEXT("Small hit DC 10"), FConcentrationRules::SaveDc(7), 10);
     TestEqual(TEXT("22 damage DC 11"), FConcentrationRules::SaveDc(22), 11);
+    TestEqual(TEXT("Huge hit capped at 30"), FConcentrationRules::SaveDc(1000), 30);
     TestEqual(TEXT("Forecast uses the save math"), FConcentrationRules::KeepOutOf400(2, 30, ERollMode::Normal), FCheckRules::SuccessOutOf400(2, 15, ERollMode::Normal));
     TestTrue(TEXT("Second concentration spell ends the first"), FConcentrationRules::NewSpellEndsCurrent(true, true));
     TestFalse(TEXT("Other spells do not"), FConcentrationRules::NewSpellEndsCurrent(true, false));
     TestTrue(TEXT("Incapacitated drops it"), FConcentrationRules::EndsOnIncapacitated(true));
     for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
     {
-        TestFalse(TEXT("Current spells need no concentration"), FConcentrationRules::RequiresConcentration((ESpell)SpellIndex));
+        TestFalse(TEXT("Current catalog spells need no concentration"), FConcentrationRules::RequiresConcentration((ESpell)SpellIndex));
     }
     return !HasAnyErrors();
 }

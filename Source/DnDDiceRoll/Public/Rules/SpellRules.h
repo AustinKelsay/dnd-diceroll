@@ -24,6 +24,7 @@ struct DNDDICEROLL_API FSpellFacts
     bool bVerbal = true;
     bool bSomatic = true;
     bool bMaterial = false;
+    bool bConcentration = false;
     const TCHAR* Duration = TEXT("Instantaneous");
     bool bCleric = false;
     bool bWizard = false;
@@ -31,6 +32,7 @@ struct DNDDICEROLL_API FSpellFacts
     int32 DieCount = 0;
     int32 DieSides = 0;
     bool bHealing = false;
+    /** Ignored when bHealing is true (Cure Wounds / Healing Word restore HP; no damage type). */
     EDamageType DamageType = EDamageType::Force;
     /** Extra dice per slot level above Level (Magic Missile: extra darts). 0 = no upcast benefit. */
     int32 UpcastDicePerLevel = 0;
