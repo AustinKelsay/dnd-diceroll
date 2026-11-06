@@ -226,3 +226,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #86: passive scores, Help and group checks
 
 `FGroupCheckRules` computes passive scores (10 + modifier), Help granting advantage, and majority-pass group checks.
+
+
+### Issue #87: optional Inspiration
+
+`FInspirationRules` tracks the optional Inspiration flag: gain at most one, spend for advantage on one check/save/attack.
