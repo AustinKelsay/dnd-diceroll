@@ -191,3 +191,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #76: short and long rests, hit dice
 
 `FRestRules` covers short-rest hit-die healing and long-rest full HP / hit-die recovery per SRD 5.2.1.
+
+
+### Issue #77: class feature scaling tables
+
+`FClassFeatureRules` holds level-scaled tables (Second Wind, Action Surge uses, Sneak Attack dice, etc.) as pure lookups.
