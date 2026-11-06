@@ -221,3 +221,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #85: exploration hazards
 
 `FHazardRules` resolves Athletics/Acrobatics/Survival/Investigation route hazards as seeded checks.
+
+
+### Issue #86: passive scores, Help and group checks
+
+`FGroupCheckRules` computes passive scores (10 + modifier), Help granting advantage, and majority-pass group checks.
