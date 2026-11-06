@@ -231,3 +231,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #87: optional Inspiration
 
 `FInspirationRules` tracks the optional Inspiration flag: gain at most one, spend for advantage on one check/save/attack.
+
+
+### Issue #88: light, vision and darkvision
+
+`FLightRules` covers bright/dim/dark bands and darkvision turning darkness into dim within its range.
