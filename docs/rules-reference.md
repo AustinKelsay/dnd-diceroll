@@ -256,3 +256,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #90: Sleight of Hand pickpocket
 
 `FSleightRules` resolves pickpocket contests vs passive Perception / contested Perception.
+
+
+### Issue #92: Animal Handling, mounts and beasts
+
+`FBeastRules` covers calming/redirecting beasts and basic mount control checks.
