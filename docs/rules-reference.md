@@ -156,3 +156,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #67: death saves and temporary hit points
 
 `FDeathSaveRules` follows SRD 5.2.1: 10+ succeeds, a natural 1 is two failures, a natural 20 regains 1 HP and clears the tally. Three successes stabilize; three failures kill. Damage at 0 HP adds one failure (two on a critical); damage of at least max HP at 0 kills outright. Massive damage compares leftover damage after reaching 0 to the hit point maximum. Temporary hit points soak first and do not stack (keep the larger). Medicine DC 10 stabilizes.
+
+
+### Issue #63: cover
+
+`FCoverRules` is pure SRD cover bonuses: half +2 AC and Dex saves, three-quarters +5, total blocks targeting (no AC bonus). Terrain line-of-sight stays in battle. **House rules kept:** a creature at least one size larger than the attacker grants half cover when it interposes; Intelligence 6 or less ignores cover when choosing attacks. Raw SRD 5.2.1 has neither automatic size-based cover nor an INT ignore threshold.
