@@ -136,3 +136,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #59: opportunity attack triggers
 
 `FOpportunityRules` measures Chebyshev distance on the 5-foot grid (diagonals count as 1). A step provokes when it leaves a reactor's reach voluntarily, without Disengage, while the reactor still has its reaction; forced movement never provokes. `FirstProvokingCell` returns the path index being left at the first such step (one opportunity per reactor per turn by design of the caller).
+
+
+### Issue #60: standard actions
+
+`FStandardActionRules` covers Dash, Disengage, Dodge, Help and Hide as pure queries. Rogues at level 2+ (Cunning Action) may take Dash, Disengage or Hide as a bonus action when the Action is already spent. Each Dash adds the creature's speed again. Dodge: attackers it can see have disadvantage; it has advantage on Dexterity saves. Disengage: leaving reach does not provoke.
