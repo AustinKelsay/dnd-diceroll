@@ -5,7 +5,7 @@ public class DnDDiceRoll : ModuleRules
     public DnDDiceRoll(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        // PR2 spellcasting library touch so UBT rebuilds after adding Rules/*.cpp
+        // PR2 concentration library touch so UBT rebuilds after adding Rules/*.cpp
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "Json" });
         PrivateDependencyModuleNames.AddRange(new[] { "RenderCore" });
     }

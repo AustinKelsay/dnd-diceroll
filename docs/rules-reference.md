@@ -176,3 +176,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #73: spell attack, save DC and save spells
 
 `FSpellcastingRules` computes spell save DC (8 + proficiency + ability) and spell attack bonus (proficiency + ability), and resolves save-spell outcomes from a seeded check.
+
+
+### Issue #74: concentration
+
+`FConcentrationRules` uses the SRD Constitution save DC max(10, damage/2) when concentrating; failure ends the effect.
