@@ -241,3 +241,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #91: Performance
 
 `FPerformanceRules` maps Performance check totals to audience outcomes and attitude steps.
+
+
+### Issue #82: social influence
+
+`FSocialRules` maps Persuasion, Deception and Intimidation outcomes to NPC attitude steps.
