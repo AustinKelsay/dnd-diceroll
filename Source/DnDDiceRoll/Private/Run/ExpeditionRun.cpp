@@ -146,6 +146,7 @@ bool FExpeditionRun::ChooseRoute(int32 RouteId, FString& Error)
 FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
 {
     FCombatEncounter Layout = FCombatBattle::TutorialEncounter();
+    Layout.Ruleset = State.Ruleset;
     Layout.Width = Route.Width;
     Layout.Height = Route.Height;
     // Central obstacle clusters leave an open perimeter, spawn columns and lanes

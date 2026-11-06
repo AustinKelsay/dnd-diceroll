@@ -280,3 +280,13 @@ Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean 
 
 `ERuleset` (`Compact` default, or `SRD`) is chosen at `FExpeditionRun::NewRun` and stored on `FExpeditionProgress`. Save version is **5**. Schema **4** files load by injecting `Ruleset=Compact` and bumping to 5 before the strict importer runs. Schema 3 and older, and future versions, remain unreadable; `FExpeditionSession::NewRun` still preserves an unreadable checkpoint beside the path. Compact combat is unchanged: a seeded full-run fingerprint regression guards seed-identity against staging `c28b9cf` battle math (Rules libraries are not called from Compact combat).
 
+
+### PR 4: Battle rules in SRD mode
+
+`FCombatEncounter::Ruleset` (default Compact) gates combat wiring. Compact paths are unchanged (seed-identical golden fingerprint). In **SRD** mode only:
+- Initiative is DEX modifier only (Compact Rogue keeps catalog +1).
+- Magic Missile applies resistance/immunity **per dart**.
+- Cleric ranged Attack becomes **Sacred Flame** (DEX save, 1d8 radiant).
+- Cover AC bonus from intervening terrain and from creatures at least one size larger (house rule); enemy AI with INT `<=` 6 ignores cover (house rule).
+- Opportunity attacks on leaving reach; Grapple/Shove contests; death saves (replacing the three-turn rescue clock); concentration saves on damage; ambush surprise = Initiative Disadvantage (SRD 5.2.1).
+

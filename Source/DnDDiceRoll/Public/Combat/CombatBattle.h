@@ -3,12 +3,16 @@
 #include "CoreMinimal.h"
 #include "CombatBattle.generated.h"
 
+/** Expedition ruleset chosen at NewRun and persisted in schema 5. Compact is the default. */
+UENUM()
+enum class ERuleset : uint8 { Compact = 0, SRD = 1 };
+
 UENUM()
 enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -57,6 +61,16 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Speed = 4;
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
+    /** SRD reaction economy; Compact ignores. Default true so Compact snapshots stay valid. */
+    UPROPERTY() bool bReactionAvailable = true;
+    UPROPERTY() int32 DeathSaveSuccesses = 0;
+    UPROPERTY() int32 DeathSaveFailures = 0;
+    UPROPERTY() int32 TemporaryHP = 0;
+    UPROPERTY() bool bConcentrating = false;
+    /** ECreatureSize index; 2 = Medium. Used by cover/grapple house rules in SRD mode. */
+    UPROPERTY() int32 Size = 2;
+    UPROPERTY() bool bSurprised = false;
+    UPROPERTY() bool bDisengaged = false;
 };
 
 USTRUCT()
@@ -67,6 +81,12 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() int32 Height = 8;
     UPROPERTY() TArray<FIntPoint> BlockedCells;
     UPROPERTY() TArray<FCombatantState> Combatants;
+    /** Compact default keeps seed-identity with staging; SRD enables battle wiring. */
+    UPROPERTY() ERuleset Ruleset = ERuleset::Compact;
+    /** When true in SRD mode, enemies may be surprised (Initiative Disadvantage). Compact ignores. */
+    UPROPERTY() bool bAmbush = false;
+    /** Party Stealth totals used when bAmbush is set (SRD surprise). */
+    UPROPERTY() TArray<int32> AmbushStealthTotals;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
@@ -229,4 +249,8 @@ private:
     void ApplyDamage(FCombatantState& Target, int32 Damage);
     FCombatantState* MutableFind(int32 Id);
     FCombatResult Resolve(const FCombatCommand& Command);
+    bool IsSrd() const { return State.Encounter.Ruleset == ERuleset::SRD; }
+    int32 CoverAcBonus(int32 ActorId, int32 TargetId) const;
+    void ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result);
+    void DownedTurn(FCombatantState& Unit);
 };

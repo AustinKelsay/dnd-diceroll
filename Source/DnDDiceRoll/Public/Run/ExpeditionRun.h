@@ -6,9 +6,7 @@
 
 UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
-/** Expedition ruleset chosen at NewRun and persisted in schema 5. Compact is the default. */
-UENUM()
-enum class ERuleset : uint8 { Compact = 0, SRD = 1 };
+/** ERuleset lives in Combat/CombatBattle.h (also on FCombatEncounter). */
 
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()
