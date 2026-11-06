@@ -796,6 +796,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         Result.bCritical = false; Result.EffectModifier = 0;
         if (Command.Type == ECombatCommandType::Escape)
         {
+            if (!State.bActionAvailable) { return Reject(TEXT("Escape costs your Action.")); }
             // Escaper chooses Athletics or Acrobatics (use the better); grappler uses Athletics.
             const int32 EscMod = FMath::Max(SkillOrAbility(*User, ESkill::Athletics, EAbility::Strength), SkillOrAbility(*User, ESkill::Acrobatics, EAbility::Dexterity));
             const int32 GrpMod = SkillOrAbility(*Target, ESkill::Athletics, EAbility::Strength);
@@ -807,7 +808,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (bFreed)
             {
                 User->GrapplerId = INDEX_NONE;
-                // SRD: after escaping you may still use remaining movement this turn.
+                // Turn start set MovementLeft to GrappledSpeed(0). Escaping restores the speed
+                // that was withheld — equivalent to SRD "remaining movement" for this model
+                // (a grappled unit cannot spend movement before Escape on their turn).
                 State.MovementLeft = User->Speed;
             }
             State.bActionAvailable = false;
@@ -853,7 +856,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                         if (Target->GrapplerId != INDEX_NONE && GridDistance(Target->Cell, Find(Target->GrapplerId)->Cell) > 1)
                         { Target->GrapplerId = INDEX_NONE; }
                     }
-                    else { Detail = TEXT("PUSH BLOCKED"); Result.bHit = false; }
+                    else { Detail = TEXT("PUSH BLOCKED"); }
                 }
             }
             State.bActionAvailable = false;
