@@ -50,6 +50,14 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Shield of Faith +2 AC"), Faith.ArmorClassBonus, 2);
     TestFalse(TEXT("Shield of Faith does not negate MM"), Faith.bNegatesMagicMissile);
 
+
+    const FSpellFacts& Guidance = FSpellRules::Facts(ESpell::Guidance);
+    TestTrue(TEXT("Guidance: Cleric Divination cantrip concentration"), Guidance.Level == 0 && Guidance.School == ESpellSchool::Divination && Guidance.bCleric && !Guidance.bWizard && Guidance.bConcentration && Guidance.DieCount == 1 && Guidance.DieSides == 4 && Guidance.RangeFeet == 0);
+    const FSpellFacts& Bless = FSpellRules::Facts(ESpell::Bless);
+    TestTrue(TEXT("Bless: Cleric Enchantment concentration 1 minute"), Bless.Level == 1 && Bless.School == ESpellSchool::Enchantment && Bless.bCleric && Bless.bConcentration && Bless.bMaterial && Bless.RangeFeet == 30 && FCString::Strcmp(Bless.Duration, TEXT("Concentration, up to 1 minute")) == 0);
+    const FSpellFacts& MageArmor = FSpellRules::Facts(ESpell::MageArmor);
+    TestTrue(TEXT("Mage Armor: Wizard Abjuration 8 hours, not concentration"), MageArmor.Level == 1 && MageArmor.School == ESpellSchool::Abjuration && MageArmor.bWizard && !MageArmor.bCleric && !MageArmor.bConcentration && MageArmor.bMaterial && FCString::Strcmp(MageArmor.Duration, TEXT("8 hours")) == 0);
+
     for (int32 SpellIndex = 0; SpellIndex < (int32)ESpell::Count; ++SpellIndex)
     {
         const FSpellFacts& F = FSpellRules::Facts((ESpell)SpellIndex);

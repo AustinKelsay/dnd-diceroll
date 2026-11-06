@@ -18,6 +18,12 @@ namespace SpellTable
         { TEXT("Shield"), 1, ESpellSchool::Abjuration, TEXT("1 reaction"), 0, TEXT("Self"), true, true, false, false, TEXT("1 round"), false, true, 0, 0, false, EDamageType::Force, 0, 5, true },
         // Shield of Faith: concentration up to 10 minutes; +2 AC (Cleric).
         { TEXT("Shield of Faith"), 1, ESpellSchool::Abjuration, TEXT("1 bonus action"), 60, TEXT("60 ft"), true, true, true, true, TEXT("Concentration, up to 10 minutes"), true, false, 0, 0, false, EDamageType::Force, 0, 2, false },
+        // Guidance: Cleric Divination cantrip; concentration up to 1 minute; +1d4 to one ability check (skill chosen on cast).
+        { TEXT("Guidance"), 0, ESpellSchool::Divination, TEXT("1 action"), 0, TEXT("Touch"), true, true, false, true, TEXT("Concentration, up to 1 minute"), true, false, 1, 4, false, EDamageType::Force, 0, 0, false },
+        // Bless: Cleric Enchantment; concentration up to 1 minute; up to three creatures add 1d4 to attacks and saves.
+        { TEXT("Bless"), 1, ESpellSchool::Enchantment, TEXT("1 action"), 30, TEXT("30 ft"), true, true, true, true, TEXT("Concentration, up to 1 minute"), true, false, 1, 4, false, EDamageType::Force, 0, 0, false },
+        // Mage Armor: Wizard Abjuration; 8 hours; no concentration; base AC becomes 13 + Dex (not a flat bonus).
+        { TEXT("Mage Armor"), 1, ESpellSchool::Abjuration, TEXT("1 action"), 0, TEXT("Touch"), true, true, true, false, TEXT("8 hours"), false, true, 0, 0, false, EDamageType::Force, 0, 0, false },
     };
     // Rows: character level 1-5; columns: spell level 1-3.
     static const int32 FullCaster[5][3] = { {2, 0, 0}, {3, 0, 0}, {4, 2, 0}, {4, 3, 0}, {4, 3, 2} };
