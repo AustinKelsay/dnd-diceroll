@@ -141,3 +141,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #60: standard actions
 
 `FStandardActionRules` covers Dash, Disengage, Dodge, Help and Hide as pure queries. Rogues at level 2+ (Cunning Action) may take Dash, Disengage or Hide as a bonus action when the Action is already spent. Each Dash adds the creature's speed again. Dodge: attackers it can see have disadvantage; it has advantage on Dexterity saves. Disengage: leaving reach does not provoke.
+
+
+### Issue #62: two-weapon fighting
+
+`FTwoWeaponRules` sits on `FWeaponRules::CanTwoWeaponFight` (SRD 5.2.1 Light: melee or ranged Light weapons in each hand). The off-hand attack needs the Attack action this turn and an unused bonus action. Off-hand damage drops a positive ability modifier unless the creature has the Two-Weapon Fighting style; a negative modifier still applies.
