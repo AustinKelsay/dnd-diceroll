@@ -151,3 +151,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #66: grapple and shove
 
 `FGrappleRules` sizes allow a target at most one size larger. Contests are exact over 400 d20 pairs (ties keep the status quo). Grappled speed is 0; dragging costs double movement. A won shove either knocks prone or pushes 1 cell (5 ft).
+
+
+### Issue #67: death saves and temporary hit points
+
+`FDeathSaveRules` follows SRD 5.2.1: 10+ succeeds, a natural 1 is two failures, a natural 20 regains 1 HP and clears the tally. Three successes stabilize; three failures kill. Damage at 0 HP adds one failure (two on a critical); damage of at least max HP at 0 kills outright. Massive damage compares leftover damage after reaching 0 to the hit point maximum. Temporary hit points soak first and do not stack (keep the larger). Medicine DC 10 stabilizes.
