@@ -1,4 +1,4 @@
-﻿#if WITH_DEV_AUTOMATION_TESTS
+#if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/AbilityRules.h"
@@ -228,7 +228,11 @@ bool FSrdGrappleShoveAppliesConditionsTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("Escape legal"), Battle.LegalTargets(2, ECombatCommandType::Escape).Contains(1));
             const FCombatResult Esc = Battle.Submit({ECombatCommandType::Escape, 2, {}, 1});
             TestTrue(FString::Printf(TEXT("Escape accepted: %s"), *Esc.Feedback), Esc.bAccepted);
-            if (Esc.bHit) { TestEqual(TEXT("Freed"), Battle.Find(2)->GrapplerId, (int32)INDEX_NONE); }
+            if (Esc.bHit)
+            {
+                TestEqual(TEXT("Freed"), Battle.Find(2)->GrapplerId, (int32)INDEX_NONE);
+                TestEqual(TEXT("Movement restored after Escape"), Battle.Snapshot().MovementLeft, Battle.Find(2)->Speed);
+            }
         }
     }
 

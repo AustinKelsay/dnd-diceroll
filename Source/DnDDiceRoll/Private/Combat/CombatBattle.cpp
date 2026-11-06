@@ -804,7 +804,12 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             const bool bFreed = FCheckRules::ActorWinsContest(EscTotal, GrpTotal);
             Result.NaturalRoll = EscDie; Result.AttackBonus = EscMod; Result.AttackTotal = EscTotal; Result.TargetArmorClass = GrpTotal;
             Result.bHit = bFreed;
-            if (bFreed) { User->GrapplerId = INDEX_NONE; }
+            if (bFreed)
+            {
+                User->GrapplerId = INDEX_NONE;
+                // SRD: after escaping you may still use remaining movement this turn.
+                State.MovementLeft = User->Speed;
+            }
             State.bActionAvailable = false;
             Result.Feedback = FString::Printf(TEXT("%s escapes %s: %d vs %d | %s"), *User->Name, *Target->Name, EscTotal, GrpTotal, bFreed ? TEXT("FREE") : TEXT("HELD"));
         }

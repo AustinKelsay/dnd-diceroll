@@ -292,3 +292,4 @@ Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean 
 
 
 Grapple sets `GrapplerId` (speed 0 until Escape contest); Shove choice 0 knocks Prone, choice 1 pushes 5 ft (1 cell). Sacred Flame results fill NaturalRoll/AttackTotal/AttackBonus/TargetArmorClass(DC)/EffectDice.
+Prone: stand-up costs half speed (move to own cell); crawling and prone attack modifiers are deferred.
