@@ -276,3 +276,7 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean #116/#117 finish expands the near-term Cleric/Wizard table through level 2 (Ray of Frost, Shocking Grasp, Light, Inflict Wounds, Bane, Sanctuary, Feather Fall, Detect Magic, Sleep, Misty Step, Spiritual Weapon, Scorching Ray, Hold Person, Aid) with `FlatBonus` (Magic Missile +1, Aid +5) and `bRitual` (Detect Magic). Notable **5.2.1 vs 5.1** catalog corrections: Inflict Wounds is a Constitution save for 2d10 (was melee attack 3d10); Sleep is concentration with a Wisdom save at 60 ft (was HP pool, no save, 90 ft); Spiritual Weapon **requires concentration** (was free). Healing Word and Cure Wounds remain Abjuration 2d4/2d8. Tag-completeness loop still required. Full SRD JSON generator and half/pact/multiclass slot tables remain follow-ups.
 
+### PR 3: Ruleset switch and save schema 5
+
+`ERuleset` (`Compact` default, or `SRD`) is chosen at `FExpeditionRun::NewRun` and stored on `FExpeditionProgress`. Save version is **5**. Schema **4** files load by injecting `Ruleset=Compact` and bumping to 5 before the strict importer runs. Schema 3 and older, and future versions, remain unreadable; `FExpeditionSession::NewRun` still preserves an unreadable checkpoint beside the path. Compact combat is unchanged: a seeded full-run fingerprint regression guards seed-identity against staging `c28b9cf` battle math (Rules libraries are not called from Compact combat).
+

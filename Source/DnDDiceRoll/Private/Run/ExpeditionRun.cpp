@@ -59,7 +59,7 @@ int32 CountSurvivors(const FCombatBattle& Battle)
 }
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass)
+bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass, ERuleset Ruleset)
 {
     if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
     TArray<FPartyBuildSelection> Selection;
@@ -71,16 +71,17 @@ bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity,
         if (I == 0) { Slot.BuildId = Subclass == EFighterSubclass::BattleMaster ? TEXT("fighter.battle-master") : TEXT("fighter.champion"); }
         Selection.Add(Slot);
     }
-    return NewRun(Seed, Selection, Error, Identity);
+    return NewRun(Seed, Selection, Error, Identity, Ruleset);
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity)
+bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity, ERuleset Ruleset)
 {
     Error.Reset();
     if (!State.Party.IsEmpty() && State.Phase != EExpeditionPhase::Victory && State.Phase != EExpeditionPhase::Defeat) { Error = TEXT("Finish this expedition before changing its party."); return false; }
     if (Selection.Num() != 4) { Error = TEXT("Choose exactly four adventurers."); return false; }
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
+    Candidate.State.Ruleset = Ruleset;
     Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
     auto Party = FCombatBattle::TutorialEncounter();

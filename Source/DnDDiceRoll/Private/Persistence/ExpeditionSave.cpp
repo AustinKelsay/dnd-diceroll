@@ -150,8 +150,22 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
 {
     TSharedPtr<FJsonObject> Object;
     FExpeditionSaveData Candidate;
-    if (Json.IsEmpty() || Json.Len() > MaxSaveCharacters || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) ||
-        !ImportStruct(FExpeditionSaveData::StaticStruct(), Object, &Candidate))
+    if (Json.IsEmpty() || Json.Len() > MaxSaveCharacters || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) || !Object.IsValid())
+    { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
+    // Schema 4 -> 5: inject Compact ruleset (missing on v4 Progress) and bump version before strict import.
+    const TSharedPtr<FJsonValue>* VersionField = Object->Values.Find(TEXT("Version"));
+    if (VersionField && (*VersionField)->Type == EJson::Number && static_cast<int32>((*VersionField)->AsNumber()) == 4)
+    {
+        Object->SetNumberField(TEXT("Version"), Version);
+        if (TSharedPtr<FJsonObject> Current = Object->GetObjectField(TEXT("Current")))
+        {
+            if (TSharedPtr<FJsonObject> Progress = Current->GetObjectField(TEXT("Progress")))
+            {
+                if (!Progress->HasField(TEXT("Ruleset"))) { Progress->SetNumberField(TEXT("Ruleset"), static_cast<double>(ERuleset::Compact)); }
+            }
+        }
+    }
+    if (!ImportStruct(FExpeditionSaveData::StaticStruct(), Object, &Candidate))
     { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
     if (!Validate(Candidate, Error)) { return false; }
     Data = MoveTemp(Candidate); Error.Reset(); return true;
