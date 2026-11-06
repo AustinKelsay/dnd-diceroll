@@ -146,3 +146,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #62: two-weapon fighting
 
 `FTwoWeaponRules` sits on `FWeaponRules::CanTwoWeaponFight` (SRD 5.2.1 Light: melee or ranged Light weapons in each hand). The off-hand attack needs the Attack action this turn and an unused bonus action. Off-hand damage drops a positive ability modifier unless the creature has the Two-Weapon Fighting style; a negative modifier still applies.
+
+
+### Issue #66: grapple and shove
+
+`FGrappleRules` sizes allow a target at most one size larger. Contests are exact over 400 d20 pairs (ties keep the status quo). Grappled speed is 0; dragging costs double movement. A won shove either knocks prone or pushes 1 cell (5 ft).

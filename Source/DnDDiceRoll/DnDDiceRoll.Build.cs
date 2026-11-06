@@ -5,7 +5,7 @@ public class DnDDiceRoll : ModuleRules
     public DnDDiceRoll(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        // PR2 two-weapon library touch so UBT rebuilds after adding Rules/*.cpp
+        // PR2 grapple library touch so UBT rebuilds after adding Rules/*.cpp
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "Json" });
         PrivateDependencyModuleNames.AddRange(new[] { "RenderCore" });
     }
