@@ -251,3 +251,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #89: carrying capacity and optional encumbrance
 
 `FEncumbranceRules` uses STR x 15 lb carrying capacity and the optional encumbrance speed penalties.
+
+
+### Issue #90: Sleight of Hand pickpocket
+
+`FSleightRules` resolves pickpocket contests vs passive Perception / contested Perception.
