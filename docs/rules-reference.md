@@ -186,3 +186,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #75: area-of-effect templates
 
 `FAreaRules` stamps SRD cone, cube, line and sphere templates onto the square 5-foot grid for preview and resolution. Pure geometry; battle wiring later.
+
+
+### Issue #76: short and long rests, hit dice
+
+`FRestRules` covers short-rest hit-die healing and long-rest full HP / hit-die recovery per SRD 5.2.1.
