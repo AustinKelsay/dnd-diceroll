@@ -211,3 +211,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #81: locks and traps
 
 `FLockTrapRules` covers thieves' tools DCs for locks and trap disarm attempts as pure check helpers.
+
+
+### Issue #84: coins and prices
+
+`FCoinRules` converts CP/SP/EP/GP/PP and prices goods in a common copper total.
