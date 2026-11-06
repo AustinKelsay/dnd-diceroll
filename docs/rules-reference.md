@@ -171,3 +171,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #72: cantrip scaling
 
 `FCantripRules` returns slot cost 0 for cantrips and SRD cantrip damage-die scaling by character level (2 dice at 5, 3 at 11, 4 at 17).
+
+
+### Issue #73: spell attack, save DC and save spells
+
+`FSpellcastingRules` computes spell save DC (8 + proficiency + ability) and spell attack bonus (proficiency + ability), and resolves save-spell outcomes from a seeded check.
