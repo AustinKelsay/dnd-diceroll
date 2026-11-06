@@ -161,3 +161,8 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 ### Issue #63: cover
 
 `FCoverRules` is pure SRD cover bonuses: half +2 AC and Dex saves, three-quarters +5, total blocks targeting (no AC bonus). Terrain line-of-sight stays in battle. **House rules kept:** a creature at least one size larger than the attacker grants half cover when it interposes; Intelligence 6 or less ignores cover when choosing attacks. Raw SRD 5.2.1 has neither automatic size-based cover nor an INT ignore threshold.
+
+
+### Issue #71: spell facts and slots
+
+`FSpellRules` holds SRD spell facts (name, level, school, casting time, range, components, duration, concentration) and the full-caster slot table by character level. Pure data and lookups; battle casting comes later.
