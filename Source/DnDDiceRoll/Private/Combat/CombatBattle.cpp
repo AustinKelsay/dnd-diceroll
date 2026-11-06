@@ -7,6 +7,7 @@
 #include "Rules/DamageRules.h"
 #include "Rules/DeathSaveRules.h"
 #include "Rules/GrappleRules.h"
+#include "Rules/MovementRules.h"
 #include "Rules/OpportunityRules.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/SpellRules.h"
@@ -354,6 +355,10 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
             bLegal = Target.Side != Unit->Side && Target.Life == ECombatLife::Conscious && GridDistance(Unit->Cell, Target.Cell) <= 1
                 && FGrappleRules::SizeAllows(static_cast<ECreatureSize>(Unit->Size), static_cast<ECreatureSize>(Target.Size));
         }
+        else if (IsSrd() && Action == ECombatCommandType::Escape)
+        {
+            bLegal = Unit->GrapplerId != INDEX_NONE && Target.Id == Unit->GrapplerId && Target.Life == ECombatLife::Conscious;
+        }
         if (bLegal) { Result.Add(Target.Id); }
     }
     return Result;
@@ -540,19 +545,39 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     if (!Actor || Actor->Life != ECombatLife::Conscious || ActiveId() != Command.ActorId) { return Reject(TEXT("Only the active combatant can act.")); }
     if (Command.Type == ECombatCommandType::Move)
     {
-        Result.Path = PathTo(Command.ActorId, Command.Destination);
-        if (Result.Path.IsEmpty()) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
-        // Every step costs one: the shortest path length is the movement spent.
-        const int32 Cost = Result.Path.Num();
         FCombatantState* Moving = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.ActorId; });
-        // Opportunity attacks see the path left behind; cell updates after the check uses the destination.
-        TArray<FIntPoint> FullPath;
-        FullPath.Add(Moving->Cell);
-        FullPath.Append(Result.Path);
-        Moving->Cell = Command.Destination;
-        State.MovementLeft -= Cost;
-        Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft);
-        if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
+        // SRD: stand up from prone (half speed) by Moving to your own cell.
+        if (IsSrd() && Moving->bProne && Command.Destination == Moving->Cell)
+        {
+            const int32 StandCost = FMovementRules::StandUpCost(Moving->Speed);
+            if (State.MovementLeft < StandCost) { return Reject(TEXT("Not enough movement to stand from prone.")); }
+            State.MovementLeft -= StandCost;
+            Moving->bProne = false;
+            Result.Feedback = FString::Printf(TEXT("%s stands up (%d movement left)."), *Actor->Name, State.MovementLeft);
+        }
+        else
+        {
+            if (IsSrd() && Moving->GrapplerId != INDEX_NONE) { return Reject(TEXT("Grappled: speed is 0 until you Escape.")); }
+            if (IsSrd() && Moving->bProne) { return Reject(TEXT("Prone: stand up (move to your cell) before crawling elsewhere.")); }
+            Result.Path = PathTo(Command.ActorId, Command.Destination);
+            if (Result.Path.IsEmpty()) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
+            const int32 Cost = Result.Path.Num();
+            TArray<FIntPoint> FullPath;
+            FullPath.Add(Moving->Cell);
+            FullPath.Append(Result.Path);
+            Moving->Cell = Command.Destination;
+            State.MovementLeft -= Cost;
+            Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft);
+            if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
+            // Leaving reach of your own grapple victim ends it.
+            if (IsSrd())
+            {
+                for (FCombatantState& Other : State.Encounter.Combatants)
+                {
+                    if (Other.GrapplerId == Moving->Id && GridDistance(Other.Cell, Moving->Cell) > 1) { Other.GrapplerId = INDEX_NONE; }
+                }
+            }
+        }
     }
     else if (Command.Type == ECombatCommandType::Special1 || Command.Type == ECombatCommandType::Special2 || (Command.Type == ECombatCommandType::CureWounds && !Actor->BuildId.IsEmpty()))
     {
@@ -627,9 +652,17 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 if (Target->AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(Target->AdventurerRole, Target->Level); }
                 FCharacterRules Enemy; Enemy.Scores = AbilityScoresOf(*Target); Enemy.Level = Target->Level; return Enemy;
             }();
-            const int32 CoverDex = CoverAcBonus(Command.ActorId, Command.TargetId); // same numeric bonus as AC for cover
-            const bool bSaved = FCheckRules::Resolve(Defender.AbilityModifier(EAbility::Dexterity) + CoverDex, Dc, ERollMode::Normal, State.RandomState).bSuccess;
-            Result.bHit = !bSaved;
+            const int32 CoverDex = CoverAcBonus(Command.ActorId, Command.TargetId);
+            const int32 DexMod = Defender.AbilityModifier(EAbility::Dexterity) + CoverDex;
+            const FD20Outcome Save = FCheckRules::Resolve(DexMod, Dc, ERollMode::Normal, State.RandomState);
+            Result.Type = Command.Type; Result.ActorId = Command.ActorId; Result.TargetId = Command.TargetId;
+            Result.NaturalRoll = Save.Kept;
+            Result.AttackBonus = DexMod;
+            Result.AttackTotal = Save.Total;
+            Result.TargetArmorClass = Dc; // save DC presented in the AC slot for HUD parity
+            Result.bCritical = false;
+            Result.EffectModifier = 0;
+            Result.bHit = !Save.bSuccess;
             if (Result.bHit)
             {
                 DiceLog = &Result.EffectDice;
@@ -642,8 +675,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             }
             State.bActionAvailable = false;
             CheckOutcome();
-            Result.Feedback = FString::Printf(TEXT("%s Sacred Flame > %s: DEX save DC %d | %s | %d radiant. HP %d/%d"),
-                *Actor->Name, *Target->Name, Dc, bSaved ? TEXT("SAVED") : TEXT("FAIL"), Result.Damage, Target->HP, Target->MaxHP);
+            Result.Feedback = FString::Printf(TEXT("%s Sacred Flame > %s: DEX %d + %d = %d vs DC %d | %s | %d radiant. HP %d/%d"),
+                *Actor->Name, *Target->Name, Save.Kept, DexMod, Save.Total, Dc, Save.bSuccess ? TEXT("SAVED") : TEXT("FAIL"), Result.Damage, Target->HP, Target->MaxHP);
         }
         else
         {
@@ -744,34 +777,85 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         Result.Feedback = FString::Printf(TEXT("%s: %s > %s | heal %d, damage %d | HP %d/%d"), *User->Name, *Ability, *Target->Name, Result.Healing, Result.Damage, Target->HP, Target->MaxHP);
         CheckOutcome();
     }
-    else if (IsSrd() && (Command.Type == ECombatCommandType::Grapple || Command.Type == ECombatCommandType::Shove))
+    else if (IsSrd() && (Command.Type == ECombatCommandType::Grapple || Command.Type == ECombatCommandType::Shove || Command.Type == ECombatCommandType::Escape))
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId))
-        { return Reject(TEXT("Grapple/Shove need an adjacent conscious foe within size limits.")); }
+        {
+            return Reject(Command.Type == ECombatCommandType::Escape
+                ? TEXT("Escape needs your grappler adjacent and conscious.")
+                : TEXT("Grapple/Shove need an adjacent conscious foe within size limits."));
+        }
         FCombatantState* User = MutableFind(Command.ActorId);
         FCombatantState* Target = MutableFind(Command.TargetId);
-        const int32 AtkMod = User->AdventurerRole != EAdventurerRole::None
-            ? FProficiencyRules::PrebuiltCharacter(User->AdventurerRole, User->Level).SkillBonus(ESkill::Athletics)
-            : FAbilityRules::Modifier(AbilityScoresOf(*User).Strength);
-        const int32 DefAth = Target->AdventurerRole != EAdventurerRole::None
-            ? FProficiencyRules::PrebuiltCharacter(Target->AdventurerRole, Target->Level).SkillBonus(ESkill::Athletics)
-            : FAbilityRules::Modifier(AbilityScoresOf(*Target).Strength);
-        const int32 DefAcr = Target->AdventurerRole != EAdventurerRole::None
-            ? FProficiencyRules::PrebuiltCharacter(Target->AdventurerRole, Target->Level).SkillBonus(ESkill::Acrobatics)
-            : FAbilityRules::Modifier(AbilityScoresOf(*Target).Dexterity);
-        const int32 DefMod = FMath::Max(DefAth, DefAcr);
-        const int32 AtkRoll = Roll(20) + AtkMod;
-        const int32 DefRoll = Roll(20) + DefMod;
-        const bool bWon = AtkRoll > DefRoll;
-        Result.bHit = bWon;
-        if (Command.Type == ECombatCommandType::Shove && bWon)
+        auto SkillOrAbility = [&](const FCombatantState& U, ESkill Skill, EAbility Ability) -> int32
         {
-            Target->Cell = Target->Cell; // placeholder; prone/push tracked lightly via feedback for now
+            if (U.AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(U.AdventurerRole, U.Level).SkillBonus(Skill); }
+            return FAbilityRules::Modifier(Ability == EAbility::Strength ? AbilityScoresOf(U).Strength : AbilityScoresOf(U).Dexterity);
+        };
+        Result.Type = Command.Type; Result.ActorId = Command.ActorId; Result.TargetId = Command.TargetId;
+        Result.bCritical = false; Result.EffectModifier = 0;
+        if (Command.Type == ECombatCommandType::Escape)
+        {
+            // Escaper chooses Athletics or Acrobatics (use the better); grappler uses Athletics.
+            const int32 EscMod = FMath::Max(SkillOrAbility(*User, ESkill::Athletics, EAbility::Strength), SkillOrAbility(*User, ESkill::Acrobatics, EAbility::Dexterity));
+            const int32 GrpMod = SkillOrAbility(*Target, ESkill::Athletics, EAbility::Strength);
+            const int32 EscDie = Roll(20), GrpDie = Roll(20);
+            const int32 EscTotal = EscDie + EscMod, GrpTotal = GrpDie + GrpMod;
+            const bool bFreed = FCheckRules::ActorWinsContest(EscTotal, GrpTotal);
+            Result.NaturalRoll = EscDie; Result.AttackBonus = EscMod; Result.AttackTotal = EscTotal; Result.TargetArmorClass = GrpTotal;
+            Result.bHit = bFreed;
+            if (bFreed) { User->GrapplerId = INDEX_NONE; }
+            State.bActionAvailable = false;
+            Result.Feedback = FString::Printf(TEXT("%s escapes %s: %d vs %d | %s"), *User->Name, *Target->Name, EscTotal, GrpTotal, bFreed ? TEXT("FREE") : TEXT("HELD"));
         }
-        State.bActionAvailable = false;
-        Result.Feedback = FString::Printf(TEXT("%s %s %s: %d vs %d | %s"),
-            *User->Name, Command.Type == ECombatCommandType::Grapple ? TEXT("grapples") : TEXT("shoves"), *Target->Name,
-            AtkRoll, DefRoll, bWon ? TEXT("SUCCESS") : TEXT("FAIL"));
+        else
+        {
+            const int32 AtkMod = SkillOrAbility(*User, ESkill::Athletics, EAbility::Strength);
+            const int32 DefMod = FMath::Max(SkillOrAbility(*Target, ESkill::Athletics, EAbility::Strength), SkillOrAbility(*Target, ESkill::Acrobatics, EAbility::Dexterity));
+            const int32 AtkDie = Roll(20), DefDie = Roll(20);
+            const int32 AtkTotal = AtkDie + AtkMod, DefTotal = DefDie + DefMod;
+            const bool bWon = FCheckRules::ActorWinsContest(AtkTotal, DefTotal);
+            Result.NaturalRoll = AtkDie; Result.AttackBonus = AtkMod; Result.AttackTotal = AtkTotal; Result.TargetArmorClass = DefTotal;
+            Result.bHit = bWon;
+            FString Detail = bWon ? TEXT("SUCCESS") : TEXT("FAIL");
+            if (bWon && Command.Type == ECombatCommandType::Grapple)
+            {
+                // One grappler per target; replace any prior.
+                Target->GrapplerId = User->Id;
+                Detail = TEXT("GRAPPLED");
+                Result.Effects.Add({Target->Id, EAbilityEffect::Strike, 0, Target->Cell});
+            }
+            else if (bWon && Command.Type == ECombatCommandType::Shove)
+            {
+                const EShoveChoice Choice = Command.ShoveChoice == 1 ? EShoveChoice::PushAway : EShoveChoice::KnockProne;
+                if (FGrappleRules::ShoveKnocksProne(true, Choice))
+                {
+                    Target->bProne = true;
+                    Detail = TEXT("PRONE");
+                }
+                else if (FGrappleRules::ShovePushCells(true, Choice) > 0)
+                {
+                    const FIntPoint Delta = Target->Cell - User->Cell;
+                    const FIntPoint Step = FMath::Abs(Delta.X) >= FMath::Abs(Delta.Y)
+                        ? FIntPoint(FMath::Sign(Delta.X) == 0 ? 0 : FMath::Sign(Delta.X), 0)
+                        : FIntPoint(0, FMath::Sign(Delta.Y) == 0 ? 0 : FMath::Sign(Delta.Y));
+                    const FIntPoint Dest = Target->Cell + Step;
+                    if (Step != FIntPoint::ZeroValue && IsInside(Dest) && IsOpen(Dest, Target->Id))
+                    {
+                        Target->Cell = Dest;
+                        Detail = TEXT("PUSHED 5 FT");
+                        Result.Effects.Add({Target->Id, EAbilityEffect::Push, 1, Target->Cell});
+                        if (Target->GrapplerId != INDEX_NONE && GridDistance(Target->Cell, Find(Target->GrapplerId)->Cell) > 1)
+                        { Target->GrapplerId = INDEX_NONE; }
+                    }
+                    else { Detail = TEXT("PUSH BLOCKED"); Result.bHit = false; }
+                }
+            }
+            State.bActionAvailable = false;
+            Result.Feedback = FString::Printf(TEXT("%s %s %s: %d vs %d | %s"),
+                *User->Name, Command.Type == ECombatCommandType::Grapple ? TEXT("grapples") : TEXT("shoves"), *Target->Name,
+                AtkTotal, DefTotal, *Detail);
+        }
     }
     else if (Command.Type == ECombatCommandType::EndTurn)
     {
@@ -822,6 +906,9 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
         Target.Life = (Target.Side == ECombatSide::Party && !bMassive) ? ECombatLife::Downed : ECombatLife::Dead;
         Target.RescueTurnsLeft = (!IsSrd() && Target.Life == ECombatLife::Downed) ? 3 : 0;
         Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; Target.TemporaryHP = 0; Target.bConcentrating = false;
+        Target.GrapplerId = INDEX_NONE; Target.bProne = false;
+        for (FCombatantState& Other : State.Encounter.Combatants)
+        { if (Other.GrapplerId == Target.Id) { Other.GrapplerId = INDEX_NONE; } }
     }
 }
 
@@ -885,8 +972,17 @@ void FCombatBattle::AdvanceTurn()
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
-            if (IsSrd()) { Next->bReactionAvailable = true; Next->bDisengaged = false; }
-            State.MovementLeft = Next->Speed;
+            if (IsSrd())
+            {
+                Next->bReactionAvailable = true; Next->bDisengaged = false;
+                if (Next->GrapplerId != INDEX_NONE)
+                {
+                    const FCombatantState* Grappler = Find(Next->GrapplerId);
+                    if (!Grappler || Grappler->Life != ECombatLife::Conscious || GridDistance(Next->Cell, Grappler->Cell) > 1)
+                    { Next->GrapplerId = INDEX_NONE; }
+                }
+            }
+            State.MovementLeft = (IsSrd() && Next->GrapplerId != INDEX_NONE) ? FGrappleRules::GrappledSpeed(Next->Speed) : Next->Speed;
             State.bActionAvailable = true;
             State.bBonusActionAvailable = true;
             return;

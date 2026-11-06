@@ -12,7 +12,7 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove, Escape };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -71,6 +71,10 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Size = 2;
     UPROPERTY() bool bSurprised = false;
     UPROPERTY() bool bDisengaged = false;
+    /** SRD only: knocked prone (Shove). Compact ignores. */
+    UPROPERTY() bool bProne = false;
+    /** SRD only: Id of the creature grappling this one, or INDEX_NONE. */
+    UPROPERTY() int32 GrapplerId = INDEX_NONE;
 };
 
 USTRUCT()
@@ -111,6 +115,8 @@ struct DNDDICEROLL_API FCombatCommand
     int32 ActorId = INDEX_NONE;
     FIntPoint Destination = FIntPoint::ZeroValue;
     int32 TargetId = INDEX_NONE;
+    /** Shove only: 0 = knock prone, 1 = push 5 ft (one cell) away. */
+    int32 ShoveChoice = 0;
 };
 
 /** One die in an effect roll, in the order it was rolled. */

@@ -290,3 +290,5 @@ Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean 
 - Cover AC bonus from intervening terrain and from creatures at least one size larger (house rule); enemy AI with INT `<=` 6 ignores cover (house rule).
 - Opportunity attacks on leaving reach; Grapple/Shove contests; death saves (replacing the three-turn rescue clock); concentration saves on damage; ambush surprise = Initiative Disadvantage (SRD 5.2.1).
 
+
+Grapple sets `GrapplerId` (speed 0 until Escape contest); Shove choice 0 knocks Prone, choice 1 pushes 5 ft (1 cell). Sacred Flame results fill NaturalRoll/AttackTotal/AttackBonus/TargetArmorClass(DC)/EffectDice.

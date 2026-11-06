@@ -1,4 +1,4 @@
-#if WITH_DEV_AUTOMATION_TESTS
+﻿#if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Combat/CombatBattle.h"
 #include "Rules/AbilityRules.h"
@@ -93,7 +93,7 @@ bool FSrdSacredFlameDexSaveTest::RunTest(const FString& Parameters)
     const FCombatResult Result = Battle.Submit({ECombatCommandType::Attack, 1, {}, 2});
     TestTrue(FString::Printf(TEXT("Sacred Flame accepted: %s"), *Result.Feedback), Result.bAccepted);
     TestTrue(TEXT("Feedback names Sacred Flame"), Result.Feedback.Contains(TEXT("Sacred Flame")));
-    TestTrue(TEXT("Feedback is a DEX save"), Result.Feedback.Contains(TEXT("DEX save")));
+    TestTrue(TEXT("Feedback is a DEX save vs DC"), Result.Feedback.Contains(TEXT("DEX")) && Result.Feedback.Contains(TEXT("vs DC")));
 
     FCombatEncounter CompactLayout = Layout; CompactLayout.Ruleset = ERuleset::Compact;
     CompactLayout.Combatants[0].InitiativeBonus = 30;
@@ -196,4 +196,112 @@ bool FSrdOpportunityGrappleDeathConcentrationSmokeTest::RunTest(const FString& P
     TestTrue(TEXT("Hero reached Downed or Dead"), DBattle.Find(1)->Life == ECombatLife::Downed || DBattle.Find(1)->Life == ECombatLife::Dead);
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdGrappleShoveAppliesConditionsTest, "Project.Expedition.Battle.SrdGrappleShoveAppliesConditions",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSrdGrappleShoveAppliesConditionsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    // Grapple applies GrapplerId; Escape clears it.
+    FCombatEncounter G = Duo(ERuleset::SRD);
+    FCombatantState Fighter;
+    FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Arden"), Fighter);
+    Fighter.Cell = {1, 1}; Fighter.InitiativeBonus = 30;
+    G.Combatants[0] = Fighter; G.Combatants[1].Cell = {2, 1}; G.Combatants[1].InitiativeBonus = -10;
+    FCombatBattle Battle;
+    if (!TestTrue(FString::Printf(TEXT("Grapple layout: %s"), *Error), Battle.Start(G, 41, Error))) { return false; }
+    for (int32 Guard = 0; Guard < 8 && Battle.ActiveId() != 1 && Battle.Snapshot().Phase == EBattlePhase::Fighting; ++Guard)
+    { Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId(), {}, INDEX_NONE}); }
+    const FCombatResult Grapple = Battle.Submit({ECombatCommandType::Grapple, 1, {}, 2});
+    TestTrue(FString::Printf(TEXT("Grapple accepted: %s"), *Grapple.Feedback), Grapple.bAccepted);
+    if (Grapple.bHit)
+    {
+        TestEqual(TEXT("Target GrapplerId set"), Battle.Find(2)->GrapplerId, 1);
+        TestTrue(TEXT("Feedback says GRAPPLED"), Grapple.Feedback.Contains(TEXT("GRAPPLED")));
+        // End turns until the grappled foe acts, then Escape.
+        Battle.Submit({ECombatCommandType::EndTurn, 1, {}, INDEX_NONE});
+        for (int32 Guard = 0; Guard < 8 && Battle.ActiveId() != 2 && Battle.Snapshot().Phase == EBattlePhase::Fighting; ++Guard)
+        { Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId(), {}, INDEX_NONE}); }
+        if (Battle.ActiveId() == 2 && Battle.Find(2)->GrapplerId == 1)
+        {
+            TestEqual(TEXT("Grappled speed is 0"), Battle.Snapshot().MovementLeft, 0);
+            TestTrue(TEXT("Escape legal"), Battle.LegalTargets(2, ECombatCommandType::Escape).Contains(1));
+            const FCombatResult Esc = Battle.Submit({ECombatCommandType::Escape, 2, {}, 1});
+            TestTrue(FString::Printf(TEXT("Escape accepted: %s"), *Esc.Feedback), Esc.bAccepted);
+            if (Esc.bHit) { TestEqual(TEXT("Freed"), Battle.Find(2)->GrapplerId, (int32)INDEX_NONE); }
+        }
+    }
+
+    // Shove prone
+    FCombatEncounter S = Duo(ERuleset::SRD);
+    FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Arden"), S.Combatants[0]);
+    S.Combatants[0].Cell = {1, 1}; S.Combatants[0].InitiativeBonus = 30;
+    S.Combatants[1].Cell = {2, 1}; S.Combatants[1].InitiativeBonus = -10;
+    FCombatBattle ShoveBattle;
+    if (!TestTrue(TEXT("Shove layout"), ShoveBattle.Start(S, 43, Error))) { return false; }
+    for (int32 Guard = 0; Guard < 8 && ShoveBattle.ActiveId() != 1 && ShoveBattle.Snapshot().Phase == EBattlePhase::Fighting; ++Guard)
+    { ShoveBattle.Submit({ECombatCommandType::EndTurn, ShoveBattle.ActiveId(), {}, INDEX_NONE}); }
+    FCombatCommand ShoveCmd{ECombatCommandType::Shove, 1, {}, 2};
+    ShoveCmd.ShoveChoice = 0; // prone
+    const FCombatResult Shove = ShoveBattle.Submit(ShoveCmd);
+    TestTrue(FString::Printf(TEXT("Shove accepted: %s"), *Shove.Feedback), Shove.bAccepted);
+    if (Shove.bHit)
+    {
+        TestTrue(TEXT("Target prone"), ShoveBattle.Find(2)->bProne);
+        TestTrue(TEXT("Feedback PRONE"), Shove.Feedback.Contains(TEXT("PRONE")));
+    }
+
+    // Shove push 5 ft
+    FCombatEncounter P = Duo(ERuleset::SRD);
+    FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Arden"), P.Combatants[0]);
+    P.Combatants[0].Cell = {1, 1}; P.Combatants[0].InitiativeBonus = 30;
+    P.Combatants[1].Cell = {2, 1}; P.Combatants[1].InitiativeBonus = -10;
+    FCombatBattle PushBattle;
+    if (!TestTrue(TEXT("Push layout"), PushBattle.Start(P, 47, Error))) { return false; }
+    for (int32 Guard = 0; Guard < 8 && PushBattle.ActiveId() != 1 && PushBattle.Snapshot().Phase == EBattlePhase::Fighting; ++Guard)
+    { PushBattle.Submit({ECombatCommandType::EndTurn, PushBattle.ActiveId(), {}, INDEX_NONE}); }
+    FCombatCommand PushCmd{ECombatCommandType::Shove, 1, {}, 2};
+    PushCmd.ShoveChoice = 1;
+    const FIntPoint Before = PushBattle.Find(2)->Cell;
+    const FCombatResult Push = PushBattle.Submit(PushCmd);
+    TestTrue(FString::Printf(TEXT("Push accepted: %s"), *Push.Feedback), Push.bAccepted);
+    if (Push.bHit && Push.Feedback.Contains(TEXT("PUSHED")))
+    {
+        TestEqual(TEXT("Pushed one cell away"), PushBattle.Find(2)->Cell, FIntPoint(3, 1));
+        TestTrue(TEXT("Moved from before"), PushBattle.Find(2)->Cell != Before);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdSacredFlameResultFieldsTest, "Project.Expedition.Battle.SrdSacredFlameResultFields",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSrdSacredFlameResultFieldsTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    FCombatEncounter Layout = Duo(ERuleset::SRD);
+    FCombatantState Cleric;
+    FBuildCatalog::Create(TEXT("cleric.life"), 1, TEXT("Sera"), Cleric);
+    Cleric.Cell = {1, 1}; Cleric.InitiativeBonus = 30; Cleric.Range = 3;
+    Layout.Combatants[0] = Cleric;
+    Layout.Combatants[1].Cell = {4, 1}; Layout.Combatants[1].ArmorClass = 40; Layout.Combatants[1].InitiativeBonus = -10;
+    FCombatBattle Battle;
+    if (!TestTrue(FString::Printf(TEXT("SF fields layout: %s"), *Error), Battle.Start(Layout, 53, Error))) { return false; }
+    for (int32 Guard = 0; Guard < 8 && Battle.ActiveId() != 1 && Battle.Snapshot().Phase == EBattlePhase::Fighting; ++Guard)
+    { Battle.Submit({ECombatCommandType::EndTurn, Battle.ActiveId(), {}, INDEX_NONE}); }
+    const FCombatResult Result = Battle.Submit({ECombatCommandType::Attack, 1, {}, 2});
+    TestTrue(FString::Printf(TEXT("SF accepted: %s"), *Result.Feedback), Result.bAccepted);
+    TestEqual(TEXT("Type Attack"), (int32)Result.Type, (int32)ECombatCommandType::Attack);
+    TestEqual(TEXT("ActorId"), Result.ActorId, 1);
+    TestEqual(TEXT("TargetId"), Result.TargetId, 2);
+    TestTrue(TEXT("NaturalRoll is a d20"), Result.NaturalRoll >= 1 && Result.NaturalRoll <= 20);
+    TestTrue(TEXT("TargetArmorClass holds save DC"), Result.TargetArmorClass >= 10 && Result.TargetArmorClass <= 20);
+    TestEqual(TEXT("AttackTotal = Natural + AttackBonus"), Result.AttackTotal, Result.NaturalRoll + Result.AttackBonus);
+    TestFalse(TEXT("Not a critical"), Result.bCritical);
+    TestEqual(TEXT("EffectModifier 0"), Result.EffectModifier, 0);
+    if (Result.bHit) { TestEqual(TEXT("Damage die logged"), Result.EffectDice.Num(), 1); TestEqual(TEXT("d8"), Result.EffectDice[0].Sides, 8); }
+    TestTrue(TEXT("Feedback has DEX total vs DC"), Result.Feedback.Contains(TEXT("vs DC")));
+    return !HasAnyErrors();
+}
+
 #endif
+
