@@ -46,6 +46,9 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 - ImageMagick dims the bookshelf behind the title, adds a vignette, the gilded double frame with the corner diamonds of the in-game panels, an ornamental rule and the title "dnd-diceroll", then box-downsamples to 720×370 with no stretching → `Art/splash/r001/Splash.png` (preview) and `Content/Splash/Splash.bmp`.
 - The same script draws the icon, a gold "d" monogram in the gilded frame → `Art/splash/r001/Icon.png` (preview) and `Content/Splash/Icon.bmp`.
 - The title is set in Noto Serif Display Bold (SIL Open Font License 1.1, system font); only rendered letterforms are in the image, and no font file is included.
+- Rebuilding: the script strips the render's metadata, so the same Blender, GPU driver and font give identical files. Another GPU or driver may shift the render's pixels slightly. On another system, point `SPLASH_FONT` at the font file (Arch package `noto-fonts`).
+
+These are raw engine files, not `/Game/DnDDiceRoll` packages, so they have no `asset.json` record (its schema needs an Unreal package path). The editor splash is a separate image (`EdSplash`) and still uses the engine default.
 
 ## Tactical battle runtime presentation
 

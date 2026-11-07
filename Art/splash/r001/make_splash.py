@@ -14,7 +14,10 @@ Run from the repository root:  python3 Art/splash/r001/make_splash.py
 The packaged Linux game loads the splash with SDL_LoadBMP, so the runtime file must be an
 uncompressed BMP (written here as 24-bit BMP3). 720x370 matches the engine's own Splash.bmp and
 64x64 its IconDefault.bmp.
-Tools: Blender 5.2.3 LTS, ImageMagick 7.1.2, font Noto Serif Display (SIL OFL 1.1).
+Tools: Blender 5.2.3 LTS, ImageMagick 7.1.2, font Noto Serif Display Bold (SIL OFL 1.1; Arch package
+noto-fonts). Set SPLASH_FONT to the .ttf path if your system keeps it elsewhere. The render's
+metadata (date, render time) is stripped, so reruns with the same Blender, GPU driver and font
+give identical files; another GPU or driver may change the render's pixels slightly.
 """
 import os
 import subprocess
@@ -24,7 +27,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 W, H = 720, 370
 SS = 2  # supersampling factor for the render and the composition
-FONT = '/usr/share/fonts/noto/NotoSerifDisplay-Bold.ttf'
+FONT = os.environ.get('SPLASH_FONT', '/usr/share/fonts/noto/NotoSerifDisplay-Bold.ttf')
 GOLD = '#d8b46a'
 GOLD_HI = '#f3dca0'
 GOLD_LO = '#7a5a26'
@@ -144,9 +147,15 @@ if __name__ == '__main__':
     if '--' in sys.argv:  # inside Blender
         render_backdrop(sys.argv[sys.argv.index('--') + 1])
     else:
+        if not os.path.isfile(FONT):
+            sys.exit(f'Font not found: {FONT} (set SPLASH_FONT to Noto Serif Display Bold)')
         backdrop = os.path.join(HERE, 'backdrop.png')
+        raw = os.path.join(HERE, 'backdrop.raw.png')
         subprocess.run(['blender', '-b', '--factory-startup', '--python', os.path.abspath(__file__),
-                        '--', backdrop], check=True, stdout=subprocess.DEVNULL)
+                        '--', raw], check=True, stdout=subprocess.DEVNULL)
+        # Blender stamps the date and render time into the PNG; strip them so reruns are reproducible.
+        magick(raw, '-strip', backdrop)
+        os.remove(raw)
         compose(backdrop, os.path.join(HERE, 'Splash.png'), os.path.join(ROOT, 'Content/Splash/Splash.bmp'))
         make_icon(os.path.join(HERE, 'Icon.png'), os.path.join(ROOT, 'Content/Splash/Icon.bmp'))
         print('wrote', os.path.join(ROOT, 'Content/Splash/Splash.bmp'), 'and Icon.bmp')
