@@ -81,17 +81,21 @@ class WorkspaceTests(unittest.TestCase):
             execute.assert_not_called()
 
     def test_build_receipt_tracks_source_deletions_and_binary_changes(self):
-        binary_folder = self.root / "Binaries/Mac"
+        binary_folder = self.root / "Binaries/Linux"
         binary_folder.mkdir(parents=True)
-        (binary_folder / "UnrealEditor.modules").write_text('{"Modules":{"Game":"libGame.dylib"}}')
-        binary = binary_folder / "libGame.dylib"
+        (binary_folder / "UnrealEditor.modules").write_text('{"Modules":{"Game":"libUnrealEditor-Game.so"}}')
+        binary = binary_folder / "libUnrealEditor-Game.so"
         binary.write_bytes(b"compiled")
         self.w.local.mkdir()
         source = self.root / "Source/Game/Example.cpp"
         source.write_text("// source")
-        dev = Dev(self.w)
-        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute"):
+        dev = Dev(self.w, host="linux", cores=2)
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute") as execute:
             dev.build()  # A successful no-action build is valid too.
+        command = [str(a) for a in execute.call_args.args[0]]
+        self.assertTrue(command[0].endswith("Build/BatchFiles/Linux/Build.sh"))
+        self.assertEqual(command[1:4], ["CustomEditor", "Linux", "Development"])
+        self.assertIn("-MaxParallelActions=2", command)
         receipt = json.loads((self.w.local / "build.json").read_text())
         self.assertEqual(receipt, dev.build_identity())
         previous = source_digest(self.w)
@@ -103,13 +107,14 @@ class WorkspaceTests(unittest.TestCase):
         self.assertNotEqual(receipt, dev.build_identity())
 
     def test_close_refuses_dirty_and_pie_without_quit(self):
-        dev = Dev(self.w)
+        dev = Dev(self.w, host="linux")
         for state in ({"dirty_packages":["/Temp/Unsaved"], "pie_active":False}, {"dirty_packages":[], "pie_active":True}):
             @contextmanager
             def connected(): yield Mock(), state
-            with patch.object(dev, "require_engine"), patch.object(dev, "os_identity", return_value=123), patch.object(dev, "connected", connected), patch.object(dev, "execute") as execute:
+            with patch.object(dev, "require_engine"), patch.object(dev, "os_identity", return_value=123), patch.object(dev, "connected", connected), patch.object(dev, "execute") as execute, patch("dev.os.kill") as kill:
                 with self.assertRaises(RuntimeError): dev.close()
                 execute.assert_not_called()
+                kill.assert_not_called()
 
     def test_operation_lock_is_bounded(self):
         first, second = Dev(self.w), Dev(self.w)
@@ -147,16 +152,82 @@ class WorkspaceTests(unittest.TestCase):
                     dev.verify_skills()
         self.assertEqual(len(list(self.w.local.glob("skills/*/verified.json"))), 1)
 
-    def test_automation_command_reads_unreal_bom_report(self):
-        dev = Dev(self.w)
-        self.w.local.mkdir()
-        def execute(args, **kwargs):
+    def fake_automation(self, log_text, code=0, rewrite_config=False):
+        def run(args, log, timeout):
             output = Path(next(str(a).split("=", 1)[1] for a in args if str(a).startswith("-ReportExportPath=")))
             (output / "index.json").write_text(json.dumps({"tests":[{"state":"Success"}]}), encoding="utf-8-sig")
-            (output / "automation.log").write_text("LogAutomation: Display: completed\n")
-        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "execute", side_effect=execute):
+            (output / "automation.log").write_text(log_text)
+            if rewrite_config:
+                with (self.root / "Config/DefaultEngine.ini").open("a") as ini: ini.write("[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]\n")
+            self.commands.append([str(a) for a in args])
+            return code
+        self.commands = []
+        return run
+
+    def test_automation_command_reads_unreal_bom_report(self):
+        dev = Dev(self.w, host="linux", cores=2)
+        self.w.local.mkdir()
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("LogAutomation: Display: completed\n")):
             dev.test("Project.Starter.")
         self.assertEqual(len(list(self.w.local.glob("automation/*/verified.json"))), 1)
+        command = self.commands[0]
+        self.assertTrue(command[0].endswith("Binaries/Linux/UnrealEditor-Cmd"))
+        self.assertIn("-ExecCmds=Automation RunTests Project.Starter.;SoftQuit", command)
+        self.assertIn("-RenderOffscreen", command)
+        self.assertIn("-corelimit=2", command)
+        for flag in ("-nullrhi", "-TestExit=Automation Test Queue Empty"):
+            self.assertNotIn(flag, command)
+
+    def test_automation_gate_refuses_warnings_exit_code_and_config_rewrite(self):
+        self.w.local.mkdir()
+        cases = (({"log_text": "LogTemp: Warning: something\n"}, "zero"),
+                 ({"log_text": "", "code": 1}, "exited 1"),
+                 ({"log_text": "", "rewrite_config": True}, "rewrote tracked config"))
+        for kwargs, message in cases:
+            dev = Dev(self.w, host="linux")
+            original = (self.root / "Config/DefaultEngine.ini").read_bytes()
+            with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation(**kwargs)):
+                with self.assertRaisesRegex(RuntimeError, message): dev.test("Project.")
+            (self.root / "Config/DefaultEngine.ini").write_bytes(original)
+        dev = Dev(self.w, host="linux")
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("LogTemp: Warning: something\n")):
+            dev.test("Project.", allow_warnings=True)
+
+    def test_linux_layout_and_unsupported_host(self):
+        dev = Dev(self.w, host="linux")
+        self.assertTrue(str(dev.editor).endswith("Engine/Binaries/Linux/UnrealEditor"))
+        self.assertTrue(str(dev.cmd).endswith("Engine/Binaries/Linux/UnrealEditor-Cmd"))
+        self.assertEqual(dev.platform, "Linux")
+        self.assertEqual(Dev(self.w, host="mac").platform, "Mac")
+        with patch("dev.current_host", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "Linux x86_64"): Dev(self.w).check_host()
+
+    def test_linux_close_sends_exactly_one_sigterm_after_clean_gate(self):
+        import signal
+        dev = Dev(self.w, host="linux")
+        @contextmanager
+        def connected(): yield Mock(), {"dirty_packages":[], "pie_active":False}
+        with patch.object(dev, "require_engine"), patch.object(dev, "os_identity", return_value=123), patch.object(dev, "connected", connected), \
+             patch.object(dev, "runtime", return_value={"dirty_packages":[], "pie_active":False}), patch.object(dev, "processes", return_value=[]), \
+             patch.object(dev, "listener", return_value=None), patch("dev.os.kill") as kill:
+            dev.close()
+        kill.assert_called_once_with(123, signal.SIGTERM)
+        with patch.object(dev, "require_engine"), patch("dev.os.kill") as kill:
+            with self.assertRaisesRegex(RuntimeError, "save dialog"): dev.close(request_quit=True)
+            kill.assert_not_called()
+
+    def test_linux_package_limits_and_binary_discovery(self):
+        dev = Dev(self.w, host="linux", cores=2)
+        self.assertEqual(dev.package_limits(), ["-ubtargs=-MaxParallelActions=2", "-AdditionalCookerOptions=-corelimit=2", "-AdditionalIoStoreOptions=-corelimit=2"])
+        self.assertEqual(Dev(self.w, host="linux").package_limits(), [])
+        archive = self.root / "Builds/stamp"
+        binary = archive / "Linux/CustomGame/Binaries/Linux/CustomGame"
+        binary.parent.mkdir(parents=True)
+        (archive / "Linux/CustomGame.sh").write_text("#!/bin/sh\n")
+        binary.write_text("")
+        with self.assertRaises(RuntimeError): dev.packaged_binary(archive)  # not executable
+        binary.chmod(0o755)
+        self.assertEqual(dev.packaged_binary(archive), binary)
 
     def test_smoke_preserves_start_failure_when_cleanup_fails(self):
         self.w.local.mkdir()
