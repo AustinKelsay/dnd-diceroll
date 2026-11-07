@@ -31,7 +31,7 @@ git switch -c feature/<issue>-<slug>
 
 For an existing feature branch, stay on that branch and explicitly merge `origin/staging` after inspection instead of switching away and losing context. Use merge for published branches; do not rewrite another contributor's history. Resolve text conflicts with the affected contract in view. Stop on binary conflicts and coordinate an Unreal resolution. Then hydrate LFS assets and repeat relevant verification. A changed source tree requires fresh build evidence before editor launch.
 
-Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and get a native slot before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
+Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and get a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
 
 Completion: the intended baseline is available, current work is preserved, the branch is intentional, and editor ownership is clear.
 
@@ -61,6 +61,8 @@ Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-sco
 | --- | --- |
 | Documentation | Review instructions/links and exercise changed commands where relevant. |
 | Python tooling | Focused success/refusal tests and real read-only inspection on Ultra. |
+
+If you are not on PlebDev Ultra (for example Windows or a Mac), do not offer `doctor` or engine runs as proof. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
 | C++ rules/state | Pinned-engine editor build and explicit relevant automation prefix. |
 | Presentation, input, assets | Saved/reloaded assets as applicable, real interaction, and inspected rendered output. |
 | Engine pin, build/package configuration | Affected upgrade/package validation from development, with maintainer agreement. |

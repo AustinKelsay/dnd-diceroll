@@ -62,11 +62,11 @@ The user explicitly delegated routine architecture, testing, verification, and t
 - Round-trip real save serialization through the public persistence seam and continue the same commands after restore. Exercise invalid/truncated/wrong-version snapshots and preserve the last valid save. Catches lost state/RNG and invalid restores; does not establish OS or power-loss guarantees beyond the adapter's contract.
 - Use existing Unreal native automation conventions under Project.Expedition. Tests specify observable behavior, not private collaborators, and deterministic worked examples control randomness at the seam when required. Use red→green cycles per behavior.
 - Compile each slice with editor closed. Observe actual PIE, mouse/keyboard selection and targeting, camera, HUD, win/defeat, and save/resume through real rendered output. Capture and inspect evidence; API state alone is insufficient for interaction claims.
-- Final acceptance: helper tests, scoped engine automation, fresh bootstrap, current-project identity, rendered PIE interaction, screenshots, Mac Development package and visible packaged startup/play observation. Record exact evidence and limitations.
+- Final acceptance: helper tests, scoped engine automation, fresh bootstrap, current-project identity, rendered PIE interaction, screenshots, Linux Development package on PlebDev Ultra and visible packaged startup/play observation (Mac until #125, 2026-11-07). Record exact evidence and limitations.
 
 ## Out of Scope
 
-Character creation, leveling, multiplayer, official D&D lore/setting IP, full SRD coverage, runtime AI narration, recruitment, resurrection, permanent power grind, open world, elaborate factions/story simulation, production distribution/signing, and non-Mac targets.
+Character creation, leveling, multiplayer, official D&D lore/setting IP, full SRD coverage, runtime AI narration, recruitment, resurrection, permanent power grind, open world, elaborate factions/story simulation, production distribution/signing, and targets other than the validated Linux host (Mac until #125).
 
 ## Further Notes
 

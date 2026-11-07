@@ -2,7 +2,7 @@
 
 ## PlebDev Ultra (Linux) — 2026-11-07, issue #125
 
-The validated host. Omarchy (Arch Linux) kernel 7.2.8-9-omarchy, x86_64; UE 5.8.4 CL 58902052 at `~/Applications/UnrealEngine-5.8.4` with its bundled Clang 20.1.8; NVIDIA RTX 4080 SUPER, driver 615.78.08, Vulkan; Python 3.14.8; Git LFS 3.8.1. Every command ran through `python3 tools/dev.py --cores 2 …` during an allocated native slot.
+The validated host. Omarchy (Arch Linux) kernel 7.2.8-9-omarchy, x86_64; UE 5.8.4 CL 58902052 at `~/Applications/UnrealEngine-5.8.4` with its bundled Clang 20.1.8; NVIDIA RTX 4080 SUPER, driver 615.78.08, Vulkan; Python 3.14.8; Git LFS 3.8.1. Every command ran through `python3 tools/dev.py --cores 2 …` during an agreed turn on Ultra.
 
 | Check | Observed result |
 | --- | --- |

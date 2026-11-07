@@ -12,7 +12,7 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 
 | Command (`python3 tools/dev.py …`) | Purpose |
 | --- | --- |
-| `doctor` | Check interpreter, host tools, pinned engine, and endpoint configurations |
+| `doctor` | Check interpreter, host tools (`git`, `ps`, `lsof`), pinned engine, and endpoint configurations; off Ultra it prints what to do instead |
 | `verify-skills` | With this checkout closed, verify project-skill discovery and Markdown readback in a headless editor |
 | `status` | Report associated processes, verified listener/project/build, map, PIE, and unsaved packages |
 | `close` | Refuse PIE/dirty state; request normal quit of the verified editor PID and wait |
@@ -30,7 +30,7 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
 
-Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, the cook, the editor, and the packaged game.
+Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, bootstrap, the skill check, the editor, the cook, and the packaged game. Other commands refuse it. `build` fails on any compiler or build-tool warning.
 
 Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor`. Live Coding exists only for Win64 x64 in the installed engine; do not use it on Linux.
 
@@ -46,7 +46,7 @@ One agent owns the running editor. The helper serializes all its operations with
 
 The same startup script imports the project authoring skill. [Unreal agent setup](agents/unreal-tools.md) covers optional Epic skills, compatibility rules, skill verification, and direct-connection recovery after editor restarts.
 
-`close` refuses when PIE is active, packages are dirty, or identity cannot be proved. Save intentionally in Unreal, check individual save outcomes, and re-run status. The helper neither silently saves everything nor discards changes.
+`close` refuses when PIE is active, packages are dirty, or identity cannot be proved. One small gap remains: a package could become dirty after the last check and before the quit request. On Linux no save dialog would catch it, so do not edit in the editor while `close` runs. Save intentionally in Unreal, check individual save outcomes, and re-run status. The helper neither silently saves everything nor discards changes.
 
 On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the verified editor PID and waits up to 120 seconds. Unreal treats the first SIGTERM as a normal exit request (exit code 143); a second signal forces exit, so the helper never repeats it and never uses SIGKILL. This path shows no save dialog, which is why the dirty and PIE checks are required. If the editor does not exit, the helper stops and reports it; check the editor yourself rather than signalling again. `close --request-quit` is refused on Linux. Never close an editor by name when several are running.
 
@@ -55,9 +55,9 @@ On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the ve
 Several agents use Ultra at once. Before any build, test, editor, or package job:
 
 1. Check for running `UnrealEditor`, `UnrealEditor-Cmd`, `UnrealBuildTool`, `dotnet`, `ShaderCompileWorker`, or `RunUAT` processes (`ps -eo pid,args | grep -E 'Unreal|dotnet|ShaderCompile|RunUAT'`) and for a listener on port 18765.
-2. Ask the coordinating owner for a native slot and wait for an explicit allocation. In T3 this is the setup thread for Ultra; otherwise ask the maintainer.
+2. Ask whoever coordinates Ultra (the maintainer, or the agent they named) for a turn to run Unreal, and wait until they say it is yours.
 3. Run jobs one at a time from your own checkout with `--cores 2`. Close any editor you started with `close` and check that it exited.
-4. Release the slot with the exact results when your jobs are done.
+4. When you are done, tell the coordinator, with your results, that Ultra is free again.
 
 Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
 

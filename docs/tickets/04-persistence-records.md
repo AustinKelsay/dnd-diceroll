@@ -15,7 +15,7 @@ A player can save and resume the current expedition, including active combat, wi
 - Invalid, incompatible or truncated saves fail clearly. A failed save must preserve the prior valid file; loading cannot partially mutate the live run.
 - UI offers save/resume, fresh run and run records with understandable feedback. Ending records are idempotent and grant no combat power.
 - Tests exercise real serialization round trips and continued commands, invalid snapshots, write failure behavior, irreversible losses and record/reset semantics.
-- Finish helper tests, scoped Unreal automation, bootstrap validation, current-project identity, real rendered PIE interaction and captures, Mac Development packaging, and visible packaged play/save/resume observation. Record exact checks and limitations.
+- Finish helper tests, scoped Unreal automation, bootstrap validation, current-project identity, real rendered PIE interaction and captures, Development packaging on the validated host (Mac at the time; PlebDev Ultra/Linux since #125), and visible packaged play/save/resume observation. Record exact checks and limitations.
 - Run independent Standards/Spec and integrity review, resolve findings, and commit the reviewed slice. Root handles final CodeRabbit and the non-draft PR to staging.
 
 ## Scope
