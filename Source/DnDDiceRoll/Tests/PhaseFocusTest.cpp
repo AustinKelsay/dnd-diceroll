@@ -181,6 +181,18 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Records over recovery focuses Close"), Player->MenuFocus(), FName(TEXT("Close")));
     Game.Press(EKeys::H);
     TestEqual(TEXT("Closing Records restores the recovery choice"), Player->MenuFocus(), FName(TEXT("Camp")));
+    // A control the player chose with Tab survives Help on the same screen; Shift-Tab returns.
+    Game.Press(EKeys::Tab);
+    const FName Chosen = Player->MenuFocus();
+    TestTrue(TEXT("Tab moves focus off the recovery choice"), Chosen != FName() && Chosen != FName(TEXT("Camp")));
+    Game.Press(EKeys::Slash);
+    Game.Press(EKeys::Escape);
+    TestEqual(TEXT("Closing Help restores the chosen control"), Player->MenuFocus(), Chosen);
+    Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftShift, IE_Pressed, 1.0f));
+    Game.Press(EKeys::Tab);
+    Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftShift, IE_Released, 0.0f));
+    Game.Frame();
+    TestEqual(TEXT("Shift-Tab returns to the recovery choice"), Player->MenuFocus(), FName(TEXT("Camp")));
     Game.Press(EKeys::Enter);
     TestFalse(TEXT("Enter on recovery does not open Help"), Player->ShowingHelp());
     if (!TestEqual(TEXT("Enter on recovery takes the rest"), View->Progress().Phase, EExpeditionPhase::Route)) { return false; }
