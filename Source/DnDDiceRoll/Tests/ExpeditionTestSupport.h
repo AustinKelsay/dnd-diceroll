@@ -1,12 +1,39 @@
 #pragma once
 
 #include "Run/ExpeditionRun.h"
+#include "Misc/AutomationTest.h"
+#include "Misc/Paths.h"
+#include "HAL/FileManager.h"
 
 namespace ExpeditionTestSupport
 {
 inline bool SameRun(const FExpeditionSnapshot& A, const FExpeditionSnapshot& B)
 {
     return FExpeditionSnapshot::StaticStruct()->CompareScriptStruct(&A, &B, 0);
+}
+// Checkpoint-failure fixtures put a directory at "<save>.pending" so the write fails.
+// On Linux the engine's Unix file layer logs each failed open as a warning, and the
+// generic file writer opens twice (before and after creating the folder). Declare
+// exactly those messages for this one save path. Other platforms do not log them.
+inline void ExpectFailedCheckpointWrites(FAutomationTestBase& Test, const FString& SavePath, int32 FailedWrites)
+{
+#if PLATFORM_UNIX
+    const FString Fixture = FPaths::GetCleanFilename(FPaths::GetPath(SavePath)) / FPaths::GetCleanFilename(SavePath);
+    Test.AddExpectedMessage(
+        FString::Printf(TEXT("^open\\('.*/\\Q%s\\E\\.pending', Flags=0x[0-9A-F]{8}\\) failed: errno=21 \\(Is a directory\\)$"), *Fixture),
+        ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Exact, 2 * FailedWrites);
+#endif
+}
+// Make the next checkpoint write to SavePath fail once, declaring its expected warnings.
+// Use once per save path; AllowCheckpointWrites undoes it.
+inline void FailNextCheckpointWrite(FAutomationTestBase& Test, const FString& SavePath)
+{
+    ExpectFailedCheckpointWrites(Test, SavePath, 1);
+    IFileManager::Get().MakeDirectory(*(SavePath + TEXT(".pending")), true);
+}
+inline void AllowCheckpointWrites(const FString& SavePath)
+{
+    IFileManager::Get().DeleteDirectory(*(SavePath + TEXT(".pending")), false, true);
 }
 inline int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
 

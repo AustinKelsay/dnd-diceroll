@@ -207,6 +207,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCheckpointDiskTest, "Project.Expedition.Persis
 bool FCheckpointDiskTest::RunTest(const FString& Parameters)
 {
     FSaveFixture Fixture; FExpeditionSession Session(Fixture.Path); FString Error;
+    // Failed writes: route, death, ending, then new run.
+    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Fixture.Path,4);
     TestFalse(TEXT("Startup does not create or overwrite any save"),FPaths::FileExists(Fixture.Path));
     TestTrue(TEXT("Fresh run checkpoint"),Session.NewRun(42,Error));
     const FString FirstId=Session.Run().Progress().RunId;
@@ -341,6 +343,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Requested fresh seed"), Restarted.Run().Progress().Seed, 43);
     }
     FSaveFixture Failed;
+    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Failed.Path,1);
     IFileManager::Get().MakeDirectory(*Failed.Directory, true);
     FFileHelper::SaveStringToFile(Incompatible, *Failed.Path);
     IFileManager::Get().MakeDirectory(*(Failed.Path + TEXT(".pending")), true);
@@ -400,6 +403,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMilestoneFailureTest, "Project.Expedition.Pers
 bool FMilestoneFailureTest::RunTest(const FString& Parameters)
 {
     FSaveFixture Fixture; FExpeditionSession Session(Fixture.Path), Disk(Fixture.Path); FString Error;
+    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Fixture.Path,1);
     Session.NewRun(42,Error); Session.ChooseRoute(Session.Run().Progress().Offers[0].Id,Error);
     for (int32 Step=0; Step<1000 && Session.Run().Progress().Phase==EExpeditionPhase::Combat; ++Step)
     {

@@ -4,8 +4,9 @@ DerivedDataCache/
 Intermediate/
 Saved/
 Builds/
-# Unreal's generated Mac packaging templates and version counters
+# Unreal's generated packaging templates, version counters and file-open orders
 /Build/Mac/
+/Build/Linux/
 Plugins/**/Binaries/
 Plugins/**/Intermediate/
 .vs/

@@ -18,7 +18,7 @@ If the official marketplace is absent, follow [Epic's installation instructions]
 
 | Upstream example or default | This project's contract |
 | --- | --- |
-| Live Coding for C++ | Use the Mac lifecycle in development; this engine's Live Coding path is unsupported on our host. |
+| Live Coding for C++ | Use the close/build/editor lifecycle in development; this engine's Live Coding path is Windows-only and unsupported on Linux. |
 | MCP auto-start in editor preferences | Keep auto-start disabled. The helper starts MCP only for the owned interactive editor; headless commandlets remain isolated. |
 | Default endpoint on port 8000 | Use the committed endpoint from `tools/versions.json` and existing client configuration. Regenerating defaults can introduce another connection or the wrong port. |
 | Independent concurrent calls or multiple editors | One editor owner, sequential calls, with exact path/PID/engine verification before mutation. |
@@ -33,7 +33,7 @@ The editor imports `unreal_starter.skills.ProjectAuthoringSkill` at startup. Its
 
 On unfamiliar editor work, discover the registered AgentSkillToolset using the normal list/describe/call sequence. Read its schema, call `ListSkills`, then `GetSkills` with the returned pilot path. Read the instructions before writing. Do not assume a Python or toolset name is the wire identifier. The pilot is defined in source; edit its Markdown and restart through the safe lifecycle to refresh it, rather than updating the transient class through asset tools.
 
-With this checkout's editor closed, `python3 tools/dev.py verify-skills` runs a headless pinned-engine discovery/readback check. Build the editor target first on a fresh clone. Evidence appears under `.local/skills/`. This proves engine registration and content readback; live MCP/client loading requires a separate owner-controlled check. Headless commandlets can add an unrelated `[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]` section, including a `SecurityToken`, to `Config/DefaultEngine.ini`; remove that section before staging and keep intentional edits.
+With this checkout's editor closed, `python3 tools/dev.py verify-skills` runs a headless pinned-engine discovery/readback check. Build the editor target first on a fresh clone. Evidence appears under `.local/skills/`. This proves engine registration and content readback; live MCP/client loading requires a separate owner-controlled check. The engine's AndroidFileServer plugin is disabled in `DnDDiceRoll.uproject` because its editor settings wrote a `SecurityToken` section into `Config/DefaultEngine.ini` on every run. Keep it disabled; `doctor` checks this, and the helper fails any run that rewrites tracked config.
 
 ## Recover after an editor restart
 
@@ -47,7 +47,7 @@ With this checkout's editor closed, `python3 tools/dev.py verify-skills` runs a 
 
 Epic documents an optional STDIO proxy that retains the client connection across editor shutdowns. A connected proxy or cached tool catalog does not prove a live editor is reachable. [Official setup](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin/blob/0e27bde2b55c5d3f6948532f4296aaa3654d8f4b/skills/unreal-mcp/references/setup.md), [recovery semantics](https://github.com/EpicGames/unreal-engine-skills-for-claude-code-plugin/blob/0e27bde2b55c5d3f6948532f4296aaa3654d8f4b/skills/unreal-mcp/references/operations.md).
 
-On 2026-10-31 the pinned UE 5.8.4 CL 58902052 installation lacked `Engine/Plugins/Experimental/ModelContextProtocol/Extras/Proxy`, including `Bin/Mac/unreal_mcp_proxy`. The authenticated account also received HTTP 404 for `EpicGames/UnrealEngine`; the official source was unavailable through that account. Direct HTTP remains the supported connection. `doctor` reports the optional binary's local availability without treating absence as an environment failure.
+On 2026-10-31 the pinned UE 5.8.4 CL 58902052 installation lacked `Engine/Plugins/Experimental/ModelContextProtocol/Extras/Proxy`, including `Bin/Mac/unreal_mcp_proxy`; the Linux install checked on 2026-11-07 also lacks `Bin/Linux/unreal_mcp_proxy`. The authenticated account also received HTTP 404 for `EpicGames/UnrealEngine`; the official source was unavailable through that account. Direct HTTP remains the supported connection. `doctor` reports the optional binary's local availability without treating absence as an environment failure.
 
 Enable the proxy only after obtaining an official compatible distribution and reviewing its bundled README. Do this in an isolated test checkout with a coordinated editor owner. Preserve the direct configuration, use the actual endpoint, and configure one agent connection. Epic's installer rewrites `.mcp.json`; the current repository checks deliberately require direct HTTP, and the Codex configuration also needs a validated adapter. Changing transport therefore needs a reviewed update to those checks/configurations, not a local installer run against this checkout.
 

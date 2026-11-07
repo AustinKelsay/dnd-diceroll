@@ -2,17 +2,17 @@
 
 ## Baseline and upgrades
 
-`tools/versions.json` pins UE 5.8.4 (CL 58902052), validated on Apple Silicon macOS 26.5.2, Xcode 26.6, and Metal. The engine is installed at `/Users/Shared/Epic Games/UE_5.8`; `UE_ROOT` selects another installation. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
+`tools/versions.json` pins UE 5.8.4 (CL 58902052) and records the validated host, **PlebDev Ultra**: Linux x86_64 (Omarchy), the engine's bundled Clang, an NVIDIA GPU with Vulkan, and Python 3.11+. The engine is installed at `~/Applications/UnrealEngine-5.8.4`; `UE_ROOT` selects another installation. Ultra is the only host whose Unreal results count for merges. The helper keeps its old Mac paths, but Mac is no longer validated; Windows is tracked in #51. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
 
 Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the GitHub repository the contribution checks expect, the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Unreal module/package identifiers use `DnDDiceRoll`.
 
 ## Commands
 
-Use Python **3.11+**, with no third-party dependencies. On the supported Mac host `/opt/homebrew/bin/python3` selects the validated Homebrew interpreter; some shells resolve `python3` to Apple's 3.9. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
+Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is the system interpreter. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
 
 | Command (`python3 tools/dev.py …`) | Purpose |
 | --- | --- |
-| `doctor` | Check interpreter, host tools, pinned engine, and endpoint configurations |
+| `doctor` | Check interpreter, host tools (`git`, `ps`, `lsof`), pinned engine, and endpoint configurations; off Ultra it prints what to do instead |
 | `verify-skills` | With this checkout closed, verify project-skill discovery and Markdown readback in a headless editor |
 | `status` | Report associated processes, verified listener/project/build, map, PIE, and unsaved packages |
 | `close` | Refuse PIE/dirty state; request normal quit of the verified editor PID and wait |
@@ -24,27 +24,42 @@ Use Python **3.11+**, with no third-party dependencies. On the supported Mac hos
 | `mcp` | Initialize a real session and list tools after identity verification |
 | `smoke` | Require clean sandbox, verify exact floor label, start/observe/stop PIE, check new log errors |
 | `capture` | Save a validated viewport PNG under `.local/captures/` |
-| `test` | Run the configured project test prefix headlessly and validate its JSON report |
+| `test` | Run the configured project test prefix headlessly and validate its JSON report; any warning line fails (`--allow-warnings` only reports) |
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
 | `test --filter Project.Tools.CaptureFixtures` | Write real expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
-| `package` | Build/cook/stage/archive a Mac Development app, then verify headless startup to the default sandbox |
+| `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
 
-Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor` on the supported Mac host. Live Coding is Win64 x64 in the installed engine; do not use it on the Mac.
+Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, bootstrap, the skill check, the editor, the cook, and the packaged game. Other commands refuse it. `build` fails on any compiler or build-tool warning. It only sees warnings from files it recompiles, so the merge gate builds each PR in a fresh checkout where every file compiles.
 
-The launcher refuses missing/stale build evidence and an occupied MCP port. A successful build records fingerprints of source, the project descriptor, module manifest, compiled binary, target, and pinned engine. Launch verifies that receipt rather than relying on timestamps; source deletions and no-action builds are handled correctly. It waits for readiness by default; `editor --no-wait` explicitly skips readiness. MCP auto-start is disabled so headless automation cannot claim the editor endpoint. Only the controlled launcher passes `-ModelContextProtocolStartServer`.
+Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor`. Live Coding exists only for Win64 x64 in the installed engine; do not use it on Linux.
+
+On Linux, `test` runs `UnrealEditor-Cmd` with `-RenderOffscreen` and `-ExecCmds="Automation RunTests <prefix>;SoftQuit"`. Do not add `-nullrhi`: it skips SDL setup and Slate then warns "Querying IsUsingWayland before SDL is initialized". Do not add `-TestExit`: on Unix it force-exits with code 1 even when tests pass. The helper also fails a build, test, bootstrap, skill check, or package run that changes any tracked file under `Config/`, even when the engine run itself failed; it reports the change and does not revert it.
+
+The launcher refuses missing/stale build evidence and an occupied MCP port. A successful build records fingerprints of source, the project descriptor, module manifest, compiled binary, target, and pinned engine. Launch verifies that receipt rather than relying on timestamps; source deletions and no-action builds are handled correctly. It waits for readiness by default; `editor --no-wait` explicitly skips readiness. After an editor closes, Linux can hold the MCP port for about a minute (TIME_WAIT), and Unreal's listener cannot bind while it does. `editor` waits for the port to be free, and if Unreal still fails to bind it stops and tells you; close that editor from its window. MCP auto-start is disabled so headless automation cannot claim the editor endpoint. Only the controlled launcher passes `-ModelContextProtocolStartServer`.
 
 ## Identity, ownership, and closing
 
-One agent owns the running editor. The helper serializes all its operations with a nonblocking local lock; other clients and a human editor user must still coordinate. Calls execute sequentially. Verify identity before mutation: the endpoint listener PID must be this project's process under the pinned editor executable, and the project toolset must independently report that PID, the canonical `.uproject` path, and the exact engine build. Matching map names or copied ProjectIDs is insufficient. Finder launches can be associated using the exact open project log, but still require runtime confirmation. Saved launch metadata is advisory and never substitutes for live evidence.
+One agent owns the running editor. The helper serializes all its operations with a nonblocking local lock; other clients and a human editor user must still coordinate. Calls execute sequentially. Verify identity before mutation: the endpoint listener PID must be this project's process under the pinned editor executable, and the project toolset must independently report that PID, the canonical `.uproject` path, and the exact engine build. Matching map names or copied ProjectIDs is insufficient. An editor started outside the helper can be associated using the exact open project log, but still requires runtime confirmation. Saved launch metadata is advisory and never substitutes for live evidence.
 
 `Content/Python/init_unreal.py` registers the small `unreal_starter.status.StarterWorkspaceTools` toolset. It reports both dirty content and dirty map packages, including unsaved packages. It creates no assets. It is pinned to the experimental UE registry API and registration safely does nothing when the registry is unavailable in a commandlet.
 
 The same startup script imports the project authoring skill. [Unreal agent setup](agents/unreal-tools.md) covers optional Epic skills, compatibility rules, skill verification, and direct-connection recovery after editor restarts.
 
-`close` refuses when PIE is active, packages are dirty, or identity cannot be proved. Save intentionally in Unreal, check individual save outcomes, and re-run status. The helper neither silently saves everything nor discards changes. It sends a normal macOS application quit to the exact PID and waits; if a save dialog appears or shutdown stalls, it fails without escalation. Never quit by app name when multiple editors exist. SIGTERM and `QUIT_EDITOR` bypass Unreal's normal save prompt and are unsuitable here.
+`close` refuses when PIE is active, packages are dirty, or identity cannot be proved. One small gap remains: a package could become dirty after the last check and before the quit request. On Linux no save dialog would catch it, so do not edit in the editor while `close` runs. Save intentionally in Unreal, check individual save outcomes, and re-run status. The helper neither silently saves everything nor discards changes.
 
-For the one-time migration from an editor launched before the status tool existed, `close --request-quit` sends only the normal PID-targeted quit after OS identity checks. This explicit escape hatch skips the toolset dirty gate while retaining Unreal's save dialogs. Routine operations use `close`.
+On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the verified editor PID and waits up to 120 seconds. Unreal treats the first SIGTERM as a normal exit request (exit code 143); a second signal forces exit, so the helper never repeats it and never uses SIGKILL. This path shows no save dialog, which is why the dirty and PIE checks are required. If the editor does not exit, the helper stops and reports it; check the editor yourself rather than signalling again. `close --request-quit` is refused on Linux. Never close an editor by name when several are running.
+
+## Shared machine
+
+Several agents use Ultra at once. Before any build, test, editor, or package job:
+
+1. Check for running `UnrealEditor`, `UnrealEditor-Cmd`, `UnrealBuildTool`, `dotnet`, `ShaderCompileWorker`, or `RunUAT` processes (`ps -eo pid,args | grep -E 'Unreal|dotnet|ShaderCompile|RunUAT'`) and for a listener on port 18765.
+2. Ask whoever coordinates Ultra (the maintainer, or the agent they named) for a turn to run Unreal, and wait until they say it is yours.
+3. Run jobs one at a time from your own checkout with `--cores 2`. Close any editor you started with `close` and check that it exited.
+4. When you are done, tell the coordinator, with your results, that Ultra is free again.
+
+Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
 
 ## Agent workflow and evidence
 
@@ -56,11 +71,11 @@ Establish a slice and observable acceptance criteria in the game brief or a focu
 
 Make bounded changes using stable paths, labels, and tags. Save assets explicitly. Preserve existing user work on reruns; fail clearly when existing recipe output is incomplete. `new_level()` can save an empty map before actor creation, so map existence alone is not completion. Bootstrap validates the floor, mesh/collision, lighting, and player start, checks spawn/save results for new output, and emits its completion marker only after success. A partial existing map requires explicit repair; bootstrap does not overwrite it.
 
-Unreal automation is selected by a narrow prefix. The project test loads the configured map, verifies a unique floor with mesh/collision, a player start, and a valid packaged default-map package. The helper requires executed passing tests in `index.json`; process exit code alone is not proof. A zero-match run fails. The test uses null rendering; rendered appearance is established separately by an inspected viewport capture.
+Unreal automation is selected by a narrow prefix. The project test loads the configured map, verifies a unique floor with mesh/collision, a player start, and a valid packaged default-map package. The helper requires executed passing tests in `index.json`; process exit code alone is not proof. A zero-match run fails. Tests render offscreen; rendered appearance is established separately by an inspected viewport capture.
 
 PIE evidence includes identity, build, timestamp, loaded map, observed running/stopped states, and new log errors/warnings. Log scanning begins at the operation's byte offset and matches Unreal severity fields, so historical errors and messages containing the word “Error” are not misclassified. Cleanup preserves the original failure; failed cleanup reports unknown PIE state. Timed-out mutations are not automatically replayed. Inspect failure evidence before acting again.
 
-Generated output stays ignored: editor logs in `Saved/`, operation reports in `.local/`, packaged archives/logs in `Builds/`, and generated packaging templates/counters in `Build/Mac/`. Track platform resources deliberately when a product needs customization. Each automation/package run has a fresh directory. Packaging validates standalone startup using `-nullrhi`; it does not establish packaged rendering, input, performance, shipping signing/notarization, or another platform's SDK. A package failure leaves its logs for diagnosis. This is a Mac Development workflow, not a cross-platform abstraction.
+Generated output stays ignored: editor logs in `Saved/`, operation reports in `.local/`, and packaged archives/logs in `Builds/`. Track platform resources deliberately when a product needs customization. Each automation/package run has a fresh directory. Packaging validates offscreen standalone startup and a normal quit; it does not establish packaged rendering on screen, input, performance, or another platform's SDK. A package failure leaves its logs for diagnosis. This is a Linux Development workflow, not a cross-platform abstraction.
 
 The raw JSON-RPC escape hatch still performs exact identity verification:
 
@@ -85,7 +100,7 @@ The initial setup established editor compilation, commandlet bootstrap, MCP, PIE
 
 - [Epic: UE 5.8.4 hotfix](https://forums.unrealengine.com/t/5-8-4-hotfix-released/2842775)
 - [Epic: Unreal MCP](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor)
-- [Epic: macOS requirements](https://dev.epicgames.com/documentation/en-us/unreal-engine/macos-development-requirements-for-unreal-engine)
+- [Epic: Linux development requirements](https://dev.epicgames.com/documentation/en-us/unreal-engine/linux-development-requirements-for-unreal-engine)
 - [Epic: automation test framework](https://dev.epicgames.com/documentation/en-us/unreal-engine/automation-test-framework-in-unreal-engine)
 - [Epic: packaging](https://dev.epicgames.com/documentation/unreal-engine/packaging-your-project)
 
