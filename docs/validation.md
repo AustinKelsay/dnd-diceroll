@@ -1,4 +1,24 @@
-# Platform validation — 2026-10-30
+# Platform validation
+
+## PlebDev Ultra (Linux) — 2026-11-07, issue #125
+
+The validated host. Omarchy (Arch Linux) kernel 7.2.8-9-omarchy, x86_64; UE 5.8.4 CL 58902052 at `~/Applications/UnrealEngine-5.8.4` with its bundled Clang 20.1.8; NVIDIA RTX 4080 SUPER, driver 615.78.08, Vulkan; Python 3.14.8; Git LFS 3.8.1. Every command ran through `python3 tools/dev.py --cores 2 …` during an allocated native slot.
+
+| Check | Observed result |
+| --- | --- |
+| `doctor` | Host, engine pin, plugins (AndroidFileServer disabled), bundled Clang, Git LFS and MCP configs pass |
+| Helper tests | 54 pass |
+| `build` | Linux Development editor target, up to 2 actions, exit 0, no compiler warnings or errors (38 s) |
+| `test --filter Project.` | 99 executed, 99 passed, 0 failed/not run; zero warning or error lines; engine exit 0 via `SoftQuit` (39 s). The 48 expected checkpoint-fixture messages were matched by their per-test declarations |
+| `editor` → `status` → `close` | Ready on the sandbox map in 11 s; status verified PID, listener, engine and project, no dirty packages, no PIE. Close sent one SIGTERM; the log shows `RequestExit(bForce=false, ReturnCode=143)`, normal teardown, and the process and port were gone in 5 s |
+| `package` | Linux Development BuildCookRun succeeded (cook `-corelimit=2`, one shader worker); the packaged game rendered offscreen on Vulkan, entered `/Game/DnDDiceRoll/Maps/L_AgentSandbox`, and exited normally on one SIGTERM (code 143); zero warning or error lines in package and launch logs |
+| Tracked config | `Config/DefaultEngine.ini` byte-identical before and after every engine run |
+
+Limits: the packaged game ran offscreen, so this proves startup, not on-screen rendering, input or performance. The `smoke`, `capture`, `bootstrap` and `verify-skills` commands share the same Linux paths but were not re-run here. UAT's short global-container UnrealPak step does not accept a core cap. Evidence stays in ignored `.local/` and `Builds/` in the validating checkout.
+
+## Original Apple Silicon Mac validation — 2026-10-30 (historical)
+
+The Mac is no longer a build or test host. This record describes the starter's first validation.
 
 Validated on Apple Silicon macOS 26.5.2, Xcode 26.6, UE 5.8.4 CL 58902052. Host commands used `/opt/homebrew/bin/python3` (3.15.0); editor scripts ran in Unreal's Python 3.11.8.
 

@@ -18,9 +18,9 @@ Claude Code contributors can optionally add [Epic's Unreal skill](docs/agents/un
 
 Accept the collaborator invitation to the public `AustinKelsay/dnd-diceroll` repository; pushing a feature branch needs write access, and the checks expect `origin` to be this repository rather than a fork. Use your own GitHub account; the agent can guide authentication without handling your password. Each person uses their own clone and feature branch. [Reusing the starter](docs/reusing-the-starter.md) creates a different game and is not the joining procedure.
 
-For local Unreal development, the validated target is **Apple Silicon macOS**, the exact engine build in [tools/versions.json](tools/versions.json), Xcode/Metal, Git LFS, and Python 3.11+. Install the engine through Epic and use `UE_ROOT` for a different installation location. Other hosts can contribute suitable docs, planning, source, and review work, but need supported-machine verification for Unreal claims.
+Unreal builds and tests are verified on one machine: **PlebDev Ultra**, a Linux desktop with the exact engine build in [tools/versions.json](tools/versions.json), Git LFS, and Python 3.11+. The Mac is no longer a build or test host. On your own machine you can do docs, planning, source, and review work, and build or play if you like, but Unreal results only count once they are verified on Ultra.
 
-First verify `python3 --version`. Every Python command below assumes 3.11+; if macOS selects Python 3.9, use `/opt/homebrew/bin/python3` consistently after installing a supported interpreter. See [development](docs/development.md) for prerequisites and the authoritative Unreal commands.
+First verify `python3 --version`. Every Python command below assumes 3.11+. See [development](docs/development.md) for prerequisites and the authoritative Unreal commands.
 
 With Git LFS installed, the agent can run:
 
@@ -39,7 +39,7 @@ python3 tools/contribute.py preflight
 
 Inspect existing hooks before LFS installation; preserve custom hooks and the LFS pre-push invocation. Resolve a hook conflict deliberately. The checks never install or replace hooks. On an unsupported host, `check` remains available; `preflight` reports that editor state cannot be verified.
 
-On a supported Mac, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. These operations belong to one editor owner; coordinate before using the machine-wide MCP endpoint.
+On Ultra, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. Several agents share Ultra, so get a native slot first (see "Shared machine" in [development](docs/development.md)); one editor owner at a time.
 
 ## The contribution agreement
 
@@ -57,4 +57,4 @@ Keep questions about product intent and access understandable. Let the agent han
 
 `staging` and `main` are protected: changes arrive through a PR whose repository checks pass and which carries one approving review, and the maintainer merges. For your first PRs, the maintainer acts as the Spec reviewer; your agent still arranges an independent Standards review in a fresh session. Ask for a ticket labeled `good first issue` or `ready-for-agent` with no assignee, or file an idea with the issue template and let the maintainer scope it.
 
-If your machine is not a supported Mac with the pinned engine, you can still build and play on another host, but that evidence is unvalidated: state the host in the PR and ask the maintainer to run Unreal verification on the supported Mac before integration. Documentation, planning, source, and review work need no engine. Claude Code users get a repository hook that blocks destructive Git commands; other agents rely on the workflow's rules, so inspect any `reset`, `clean`, or force-push your agent proposes before approving it.
+If you build or play on your own machine, that evidence is unvalidated: state your host in the PR and ask the maintainer to run Unreal verification on Ultra before integration. Documentation, planning, source, and review work need no engine. Claude Code users get a repository hook that blocks destructive Git commands; other agents rely on the workflow's rules, so inspect any `reset`, `clean`, or force-push your agent proposes before approving it.
