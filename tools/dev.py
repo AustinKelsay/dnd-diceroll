@@ -241,7 +241,10 @@ class Dev:
             check(label, lambda command=command: self.execute(command, capture_output=True, text=True).stdout.strip().replace("\n", "; "))
         check("MCP configurations", self.check_configs)
         if self.host == "linux":
-            gpu = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"], capture_output=True, text=True) if shutil.which("nvidia-smi") else None
+            try:
+                gpu = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"], capture_output=True, text=True, timeout=15) if shutil.which("nvidia-smi") else None
+            except (OSError, subprocess.TimeoutExpired):
+                gpu = None  # informational only; never fail doctor on the GPU probe
             print("INFO GPU: " + (gpu.stdout.strip() if gpu and gpu.returncode == 0 else "nvidia-smi unavailable; Vulkan GPU not inspected"))
             print("INFO Display: " + (os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY") or "none; `editor` needs a desktop session"))
         proxy = self.engine / "Plugins/Experimental/ModelContextProtocol/Extras/Proxy" / self.layout["proxy"]
