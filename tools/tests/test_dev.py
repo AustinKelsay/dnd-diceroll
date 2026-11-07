@@ -137,6 +137,16 @@ class WorkspaceTests(unittest.TestCase):
         with dev.config_guard():
             pass
 
+    def test_editor_waits_for_a_bindable_mcp_port(self):
+        import socket
+        dev = Dev(self.w, host="linux")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as holder:
+            holder.bind(("127.0.0.1", 0))
+            dev.endpoint = dev.endpoint._replace(netloc=f"127.0.0.1:{holder.getsockname()[1]}")
+            with patch("dev.time.sleep"):
+                with self.assertRaisesRegex(RuntimeError, "still held"): dev.wait_for_free_port(timeout=0)
+        dev.wait_for_free_port(timeout=0)
+
     def test_cores_must_be_positive(self):
         import argparse
         for bad in ("0", "-1", "two"):

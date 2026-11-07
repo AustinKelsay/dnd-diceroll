@@ -16,6 +16,7 @@ import platform
 import re
 import shutil
 import signal
+import socket
 import struct
 import subprocess
 import time
@@ -182,6 +183,23 @@ class Dev:
         running = self.processes()
         if running:
             raise RuntimeError(f"This project is open in editor PID(s) {[p['pid'] for p in running]}; close it before this operation")
+
+    def wait_for_free_port(self, timeout=90):
+        """Wait out sockets still holding the MCP port (e.g. TIME_WAIT after the last session).
+
+        Unreal's listener binds without address reuse, so an editor started too soon after
+        the previous one runs without MCP. A plain test bind sees the same conflict."""
+        deadline = time.monotonic() + timeout
+        while True:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                try:
+                    probe.bind(("127.0.0.1", self.endpoint.port))
+                    return
+                except OSError:
+                    pass
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"Port {self.endpoint.port} is still held (e.g. TIME_WAIT); wait a minute and retry")
+            time.sleep(1)
 
     def runtime(self, client, pid):
         status = json.loads(client.call(STATUS, "get_status"))
@@ -406,9 +424,11 @@ class Dev:
         self.require_closed()
         if self.listener():
             raise RuntimeError("MCP port is occupied by another process")
+        self.wait_for_free_port()
         receipt = self.w.local / "build.json"
         if not receipt.is_file() or json.loads(receipt.read_text()) != self.build_identity():
             raise RuntimeError("Editor build evidence is missing or stale; run build first")
+        started = time.time()
         with (self.w.local / "editor-launch.log").open("ab") as log:
             process = subprocess.Popen([str(self.editor), str(self.w.project), "-ModelContextProtocolStartServer", f"-ModelContextProtocolPort={self.endpoint.port}", f"-abslog={self.w.log}", "-nosplash", *self.native_limits()], cwd=self.w.root, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         write_json(self.w.local / "editor.json", {"pid": process.pid, "project_file": str(self.w.project), "mcp_url": self.w.versions["mcp_url"], "launched_at": stamp()})
@@ -418,6 +438,9 @@ class Dev:
             while time.monotonic() < deadline:
                 if process.poll() is not None:
                     raise RuntimeError(f"Editor exited: inspect {self.w.log}")
+                if self.w.log.is_file() and self.w.log.stat().st_mtime >= started and "HttpListener unable to bind" in self.w.log.read_text(errors="replace"):
+                    raise RuntimeError(f"Editor PID {process.pid} could not open MCP port {self.endpoint.port} and is running without MCP. "
+                                       "The helper cannot check it for unsaved work; close it from its window.")
                 try:
                     with self.connected() as (client, state):
                         current = client.call(SCENE, "get_current_level")
