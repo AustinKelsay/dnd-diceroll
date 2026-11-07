@@ -66,6 +66,8 @@ private:
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
     bool bConfirmReturn = false;
+    /** Set when the player put a run away; the start screen then focuses Resume. */
+    bool bReturnedToMenu = false;
     bool bDragging = false;
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
@@ -99,6 +101,10 @@ private:
     void NewRun();
     void Save();
     void Resume();
+    /** Backspace or the Menu button: asks first mid-encounter, else returns at once. */
+    void ReturnToMenu();
+    void ConfirmReturn();
+    void LeaveExpedition();
     void History();
     void OlderRecords();
     void NewerRecords();

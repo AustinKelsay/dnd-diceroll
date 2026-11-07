@@ -108,6 +108,10 @@ public:
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
     void Save();
     void Resume();
+    /** True while a run is in progress (route, encounter, reward or recovery) and can be put away. */
+    bool CanReturnToMenu() const;
+    /** Back to the start screen. Writes nothing: Resume continues from the checkpoint. */
+    void ReturnToMenu();
     void ToggleRecords();
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }

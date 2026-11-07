@@ -70,4 +70,5 @@ private:
     void DrawEnding();
     void DrawRecords();
     void DrawHelp();
+    void DrawReturnConfirm();
 };
