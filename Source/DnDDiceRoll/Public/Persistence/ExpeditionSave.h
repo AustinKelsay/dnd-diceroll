@@ -68,7 +68,9 @@ public:
     bool ReadRecords(TArray<FExpeditionEnding>& Records, FString& Error) const;
     /** Puts the live run away without writing anything. The checkpoint stays exactly as
      * last committed, so Resume continues the run and New Run still refuses to replace it. */
-    void Close() { Current = FExpeditionRun(); bHasRun = false; }
+    void Close();
+    /** True when the checkpoint holds a readable, unfinished run, so New Run would refuse. Read-only. */
+    bool HasUnfinishedCheckpoint() const;
 private:
     FString SavePath;
     FExpeditionRun Current;

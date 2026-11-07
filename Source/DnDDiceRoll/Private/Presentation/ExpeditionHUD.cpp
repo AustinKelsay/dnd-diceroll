@@ -295,7 +295,7 @@ void AExpeditionHUD::DrawHUD()
         for (const auto& Line : Wrap(View->Messages().Last(),900,0.85f)) { Text(Line,(W-900)/2,FeedbackY,Parchment,0.85f); FeedbackY+=23; }
     }
     // Overlays own every click: buttons hidden beneath them must not fire.
-    if (View->ShowingRecords() || Player->ShowingHelp() || Player->ConfirmingReturn()) { Buttons.Reset(); }
+    if (Player->OverlayOpen()) { Buttons.Reset(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
     if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
@@ -429,10 +429,10 @@ void AExpeditionHUD::DrawTopBar()
     }
     const float Top = 14, Size = 30, Gap = 6;
     float X = W - 12;
-    auto System = [&](FName Id, const FString& Label, float Width, bool bEnabled = true)
+    auto System = [&](FName Id, const FString& Label, float Width, bool bEnabled = true, bool bSelected = false)
     {
         X -= Width;
-        Button(Id, Label, FString(), X, Top, Width, Size, bEnabled, false, Sky);
+        Button(Id, Label, FString(), X, Top, Width, Size, bEnabled, bSelected, Sky);
         X -= Gap;
     };
     System(TEXT("Help"), TEXT("? Help"), 74);
@@ -441,7 +441,8 @@ void AExpeditionHUD::DrawTopBar()
     System(TEXT("Records"), TEXT("H  Records"), 104);
     System(TEXT("Resume"), TEXT("O  Resume"), 98);
     System(TEXT("Save"), TEXT("K  Save"), 82, View->HasRun());
-    if (View->CanReturnToMenu()) { System(TEXT("Menu"), TEXT("Bksp  Menu"), 104); }
+    // A pending return (waiting for the enemy or playback) shows as a selected Menu button.
+    if (View->CanReturnToMenu()) { System(TEXT("Menu"), Player->ReturnPending() ? TEXT("Menu: waiting") : TEXT("Bksp  Menu"), 104, true, Player->ReturnPending()); }
 }
 
 void AExpeditionHUD::DrawInitiative()
@@ -1009,13 +1010,13 @@ void AExpeditionHUD::DrawReturnConfirm()
     Panel(X, Y, Width, Height, Gold, 0.98f);
     Text(TEXT("RETURN TO MENU?"), X + 24, Y + 18, Gold, 1.2f);
     float Row = Y + 62;
-    for (const TCHAR* Line : {TEXT("Every resolved action is already saved. Only a move you have not finished is dropped."),
-        TEXT("Resume on the start screen brings you back to this turn.")})
+    for (const TCHAR* Line : {TEXT("Every resolved action is saved and has played out. Only a move you have not finished is dropped."),
+        TEXT("Nothing happens while this is open. Resume on the start screen brings you back to this turn.")})
     {
         for (const auto& Part : Wrap(Line, Width - 48, 0.85f)) { Text(Part, X + 24, Row, Parchment, 0.85f); Row += 24; }
     }
     Button(TEXT("ReturnConfirm"), TEXT("Return to menu"), TEXT("Enter"), X + 24, Y + Height - 70, 270, 50, true, false, Gold);
-    Button(TEXT("Close"), TEXT("Keep playing"), TEXT("Esc"), X + Width - 294, Y + Height - 70, 270, 50, true, false, Sky);
+    Button(TEXT("KeepPlaying"), TEXT("Keep playing"), TEXT("Esc"), X + Width - 294, Y + Height - 70, 270, 50, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
 

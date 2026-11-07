@@ -317,6 +317,18 @@ bool FExpeditionSession::Resume(FString& Error)
     if (!FExpeditionSave::Read(SavePath, Data, Error) || !Candidate.Restore(Data.Current, Error)) { return false; }
     Current = MoveTemp(Candidate); bHasRun = true; return true;
 }
+void FExpeditionSession::Close()
+{
+    Current = FExpeditionRun();
+    bHasRun = false;
+}
+bool FExpeditionSession::HasUnfinishedCheckpoint() const
+{
+    if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*SavePath)) { return false; }
+    FExpeditionSaveData Data; FString Error;
+    if (!FExpeditionSave::Read(SavePath, Data, Error)) { return false; }
+    return Data.Current.Progress.Phase != EExpeditionPhase::Victory && Data.Current.Progress.Phase != EExpeditionPhase::Defeat;
+}
 bool FExpeditionSession::ReadRecords(TArray<FExpeditionEnding>& Records, FString& Error) const
 {
     if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*SavePath)) { Records.Reset(); Error.Reset(); return true; }
