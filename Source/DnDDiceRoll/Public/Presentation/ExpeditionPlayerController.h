@@ -33,6 +33,8 @@ public:
     int32 BuilderSlot() const { return Slot; }
     ECombatCommandType SpecialAction(int32 Index) const;
     bool ShowingHelp() const { return bShowHelp; }
+    /** True while the mid-encounter "Return to menu?" question is open. */
+    bool ConfirmingReturn() const { return bConfirmReturn; }
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
     /** Legal target under the cursor for the selected action. */
@@ -63,6 +65,7 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
+    bool bConfirmReturn = false;
     bool bDragging = false;
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
