@@ -3,6 +3,7 @@
 #include "Run/ExpeditionRun.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/Paths.h"
+#include "HAL/FileManager.h"
 
 namespace ExpeditionTestSupport
 {
@@ -22,6 +23,17 @@ inline void ExpectFailedCheckpointWrites(FAutomationTestBase& Test, const FStrin
         FString::Printf(TEXT("^open\\('.*/\\Q%s\\E\\.pending', Flags=0x[0-9A-F]{8}\\) failed: errno=21 \\(Is a directory\\)$"), *Fixture),
         ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Exact, 2 * FailedWrites);
 #endif
+}
+// Make the next checkpoint write to SavePath fail once, declaring its expected warnings.
+// Use once per save path; AllowCheckpointWrites undoes it.
+inline void FailNextCheckpointWrite(FAutomationTestBase& Test, const FString& SavePath)
+{
+    ExpectFailedCheckpointWrites(Test, SavePath, 1);
+    IFileManager::Get().MakeDirectory(*(SavePath + TEXT(".pending")), true);
+}
+inline void AllowCheckpointWrites(const FString& SavePath)
+{
+    IFileManager::Get().DeleteDirectory(*(SavePath + TEXT(".pending")), false, true);
 }
 inline int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
 

@@ -193,15 +193,14 @@ bool FArtificerJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Commit actual artificer effect"),Run.Submit({Action,Id,{},Targets[0]}).bAccepted);
         const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Artificer"),FGuid::NewGuid().ToString());
         const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
-        ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,1);
         FExpeditionSaveData Data; Data.Current=Run.Snapshot(); FString Json;
         TestTrue(TEXT("Write real checkpoint"),FExpeditionSave::Write(Path,Data,Error));
         FExpeditionSession Session(Path); TestTrue(TEXT("Session Resume owned effects"),Session.Resume(Error));
         const auto BeforeFailure=Session.Run().Snapshot();
-        IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+        ExpeditionTestSupport::FailNextCheckpointWrite(*this,Path);
         TestFalse(TEXT("Failed checkpoint rejects expiration command"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         TestTrue(TEXT("Failure retains resources, protection, cells and RNG"),ExpeditionTestSupport::SameRun(BeforeFailure,Session.Run().Snapshot()));
-        IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+        ExpeditionTestSupport::AllowCheckpointWrites(Path);
         TestTrue(TEXT("Retry commits"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         IFileManager::Get().DeleteDirectory(*Directory,false,true);
         TestTrue(TEXT("Actual JSON encode spent resource and owned effect/cells"),FExpeditionSave::Encode(Data,Json,Error));
@@ -287,7 +286,6 @@ bool FArtificerRandomContinuityTest::RunTest(const FString& Parameters)
     const auto Before=Run.Snapshot();
     const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Artificer"),FGuid::NewGuid().ToString());
     const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
-    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,1);
     FExpeditionSaveData Data; Data.Current=Before;
     if(!TestTrue(TEXT("Write owned-effect checkpoint"),FExpeditionSave::Write(Path,Data,Error))) { return false; }
     FExpeditionSession Session(Path);
@@ -298,12 +296,12 @@ bool FArtificerRandomContinuityTest::RunTest(const FString& Parameters)
     const auto Expected=Run.Submit(Attack);
     TestTrue(TEXT("Reference attack accepted"),Expected.bAccepted);
     TestNotEqual(TEXT("Actual basic attack consumes RNG"),Run.Snapshot().Battle.RandomState,Before.Battle.RandomState);
-    IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+    ExpeditionTestSupport::FailNextCheckpointWrite(*this,Path);
     TestFalse(TEXT("Failed checkpoint rejects RNG-consuming attack"),Session.Submit(Attack).bAccepted);
     TestTrue(TEXT("Failed attack retains all live state/RNG/owned armor"),ExpeditionTestSupport::SameRun(Before,Session.Run().Snapshot()));
     TestTrue(TEXT("Read disk after refusal"),FFileHelper::LoadFileToArray(BytesAfter,*Path));
     TestTrue(TEXT("Failed attack preserves exact checkpoint bytes"),BytesBefore==BytesAfter);
-    IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+    ExpeditionTestSupport::AllowCheckpointWrites(Path);
     const auto Actual=Session.Submit(Attack);
     TestTrue(TEXT("Retry attack commits"),Actual.bAccepted);
     TestEqual(TEXT("Continued natural roll matches uninterrupted run"),Actual.NaturalRoll,Expected.NaturalRoll);
