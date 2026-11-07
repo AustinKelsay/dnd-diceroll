@@ -132,7 +132,7 @@ bool FProficiencyRules::BuildCharacter(EAdventurerRole Role, int32 Level, const 
     return true;
 }
 
-FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role)
+FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role, int32 Level)
 {
     using S = ESkill;
     FProficiencyChoice Choice;
@@ -143,6 +143,7 @@ FProficiencyChoice FProficiencyRules::PrebuiltChoice(EAdventurerRole Role)
         Choice.ClassSkills = {S::Stealth, S::SleightOfHand, S::Acrobatics, S::Deception};
         Choice.BackgroundSkills = {S::Insight, S::Investigation};
         Choice.ExpertiseSkills = {S::Stealth, S::SleightOfHand};
+        if (Level >= 6) { Choice.ExpertiseSkills.Append({S::Acrobatics, S::Deception}); }
         break;
     case EAdventurerRole::Cleric: Choice.ClassSkills = {S::Medicine, S::Religion}; Choice.BackgroundSkills = {S::Insight, S::History}; break;
     case EAdventurerRole::Wizard: Choice.ClassSkills = {S::Arcana, S::Investigation}; Choice.BackgroundSkills = {S::History, S::Religion}; break;
@@ -155,7 +156,7 @@ FCharacterRules FProficiencyRules::PrebuiltCharacter(EAdventurerRole Role, int32
 {
     FCharacterRules Character;
     FString Error;
-    const bool bBuilt = BuildCharacter(Role, Level, FAbilityRules::PrebuiltScores(Role), PrebuiltChoice(Role), Character, Error);
+    const bool bBuilt = BuildCharacter(Role, Level, FAbilityRules::PrebuiltScores(Role), PrebuiltChoice(Role, Level), Character, Error);
     check(bBuilt || Role == EAdventurerRole::None);
     return Character;
 }

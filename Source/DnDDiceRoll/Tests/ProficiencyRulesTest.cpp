@@ -52,6 +52,25 @@ bool FProficiencyBonusesTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPrebuiltProficiencyLevelsTest, "Project.Expedition.Rules.PrebuiltProficienciesAcrossLevels",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPrebuiltProficiencyLevelsTest::RunTest(const FString& Parameters)
+{
+    for (int32 Level = 1; Level <= 20; ++Level)
+    {
+        const FCharacterRules Rogue = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Rogue, Level);
+        TestEqual(TEXT("Prebuilt Rogue keeps requested level"), Rogue.Level, Level);
+        TestEqual(TEXT("Rogue Expertise count changes at level 6"), FMath::CountBits(Rogue.ExpertiseMask), Level >= 6 ? 4 : 2);
+        TestTrue(TEXT("Rogue always has Stealth Expertise"), Rogue.HasExpertise(ESkill::Stealth));
+        TestEqual(TEXT("Additional Expertise starts at level 6"), Rogue.HasExpertise(ESkill::Acrobatics), Level >= 6);
+        FCharacterRules Built;
+        FString Error;
+        TestTrue(TEXT("Level-aware prebuilt picks pass public validation"), FProficiencyRules::BuildCharacter(
+            EAdventurerRole::Rogue, Level, Rogue.Scores, FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue, Level), Built, Error));
+    }
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProficiencyRejectionTest, "Project.Expedition.Rules.InvalidProficiencyChoicesRejected",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FProficiencyRejectionTest::RunTest(const FString& Parameters)

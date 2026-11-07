@@ -75,7 +75,7 @@ struct DNDDICEROLL_API FProficiencyRules
     /** Validates picks against the class table; Out is untouched when rejected. */
     static bool BuildCharacter(EAdventurerRole Role, int32 Level, const FAbilityScores& Scores,
         const FProficiencyChoice& Choice, FCharacterRules& Out, FString& Error);
-    static FProficiencyChoice PrebuiltChoice(EAdventurerRole Role);
+    static FProficiencyChoice PrebuiltChoice(EAdventurerRole Role, int32 Level = 1);
     static FCharacterRules PrebuiltCharacter(EAdventurerRole Role, int32 Level);
     static FCharacterRules EnemyCharacter(const FString& Role);
 };

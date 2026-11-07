@@ -39,8 +39,9 @@ struct DNDDICEROLL_API FArmorRules
     static const FArmorProfile& Profile(EArmor Armor);
     /** Dex cap for a category: unlimited (-1) for none/light, 2 for medium, 0 for heavy. */
     static int32 DexCap(EArmorCategory Category);
-    /** Armor Class from worn armor, optional shield and Dexterity score. */
-    static int32 ArmorClass(EArmor Armor, bool bShield, int32 Dexterity);
+    /** Armor Class from worn armor and Dexterity; a shield adds AC only with shield training. */
+    static int32 ArmorClass(EAdventurerRole Role, EArmor Armor, bool bShield, int32 Dexterity);
     static bool IsProficient(EAdventurerRole Role, EArmorCategory Category);
-    static FArmorPenalties Penalties(EAdventurerRole Role, EArmor Armor, bool bShield, int32 Strength);
+    /** Shield training affects AC, not the restrictions for wearing untrained armor. */
+    static FArmorPenalties Penalties(EAdventurerRole Role, EArmor Armor, int32 Strength);
 };

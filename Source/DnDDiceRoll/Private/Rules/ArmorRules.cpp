@@ -37,14 +37,15 @@ int32 FArmorRules::DexCap(EArmorCategory Category)
     }
 }
 
-int32 FArmorRules::ArmorClass(EArmor Armor, bool bShield, int32 Dexterity)
+int32 FArmorRules::ArmorClass(EAdventurerRole Role, EArmor Armor, bool bShield, int32 Dexterity)
 {
     const FArmorProfile& Worn = Profile(Armor == EArmor::Shield ? EArmor::None : Armor);
     int32 Dex = FAbilityRules::Modifier(Dexterity);
     const int32 Cap = DexCap(Worn.Category);
     if (Worn.Category == EArmorCategory::Heavy) { Dex = 0; }
     else if (Cap >= 0) { Dex = FMath::Min(Dex, Cap); }
-    return Worn.BaseAC + Dex + (bShield || Armor == EArmor::Shield ? Profile(EArmor::Shield).BaseAC : 0);
+    const bool bShieldBonus = (bShield || Armor == EArmor::Shield) && IsProficient(Role, EArmorCategory::Shield);
+    return Worn.BaseAC + Dex + (bShieldBonus ? Profile(EArmor::Shield).BaseAC : 0);
 }
 
 bool FArmorRules::IsProficient(EAdventurerRole Role, EArmorCategory Category)
@@ -59,13 +60,12 @@ bool FArmorRules::IsProficient(EAdventurerRole Role, EArmorCategory Category)
     }
 }
 
-FArmorPenalties FArmorRules::Penalties(EAdventurerRole Role, EArmor Armor, bool bShield, int32 Strength)
+FArmorPenalties FArmorRules::Penalties(EAdventurerRole Role, EArmor Armor, int32 Strength)
 {
     FArmorPenalties Out;
-    const FArmorProfile& Worn = Profile(Armor);
+    const FArmorProfile& Worn = Profile(Armor == EArmor::Shield ? EArmor::None : Armor);
     const bool bArmorOk = IsProficient(Role, Worn.Category);
-    const bool bShieldOk = !bShield || IsProficient(Role, EArmorCategory::Shield);
-    Out.bStrDexDisadvantage = Out.bCannotCastSpells = !(bArmorOk && bShieldOk);
+    Out.bStrDexDisadvantage = Out.bCannotCastSpells = !bArmorOk;
     Out.bStealthDisadvantage = Worn.bStealthDisadvantage;
     Out.SpeedPenaltyFeet = (Worn.StrengthRequirement > 0 && Strength < Worn.StrengthRequirement) ? 10 : 0;
     return Out;
