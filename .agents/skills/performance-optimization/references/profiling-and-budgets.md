@@ -11,13 +11,13 @@ Project adaptation of the upstream profiling reference. Use the pinned engine, a
 | Why is a dense view slow? | Rendered frame timing at the same camera/resolution | Draw submission, passes, materials, shadows, transparency and mesh instances |
 | Why does memory grow? | Repeatable session duration and memory observations | Insights memory/allocation data when enabled; asset/reference lifetimes |
 
-GPU timing/capture availability depends on the platform and renderer. On Apple Silicon, verify the installed Metal/Xcode tool support. RenderDoc is not the Metal capture path. A missing GPU timing metric is a limitation to report, not a zero-cost measurement.
+GPU timing/capture availability depends on the platform and renderer. On Ultra (Linux, Vulkan, NVIDIA), check which capture tools are installed, such as RenderDoc or NVIDIA Nsight; none is assumed. A missing GPU timing metric is a limitation to report, not a zero-cost measurement.
 
 Frame time is constrained by interacting CPU/GPU work, waits and display limits. Fewer draw calls can reduce CPU submission overhead as well as change GPU work. Confirm the expensive thread or pass rather than selecting an optimization from a single count.
 
 ## Compare fairly
 
-Prefer a rendered Mac Development package for target observations, with an explicit warmup, capture duration and repeated trials. Record editor-only measurements as editor-only. Use identical seed/action sequence, camera, resolution, scalability, frame cap/vsync and tracing settings before and after. Separate loading/shader warmup from steady-state behavior. The package helper's null-renderer startup check is not a graphics benchmark.
+Prefer a rendered Linux Development package on Ultra for target observations, with an explicit warmup, capture duration and repeated trials. Record editor-only measurements as editor-only. Use identical seed/action sequence, camera, resolution, scalability, frame cap/vsync and tracing settings before and after. Separate loading/shader warmup from steady-state behavior. The package helper's offscreen startup check is not a graphics benchmark.
 
 Inspect the dominant interval in Unreal Insights, then make the smallest relevant change. For repeated board pieces, shared materials or instanced meshes may reduce submission cost; measure them before adding complexity. A pool requires demonstrated lifetime/spawn cost and a bounded ownership policy. Cached rules queries need correct invalidation and must preserve authoritative command behavior.
 

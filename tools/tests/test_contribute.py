@@ -184,7 +184,7 @@ class ContributionTests(unittest.TestCase):
         self.assertEqual(report["ahead"], 0)
 
     def test_editor_inspection_reuses_closed_gate_without_mcp_or_mutation(self):
-        with patch("contribute.sys.platform", "darwin"), patch("contribute.platform.machine", return_value="arm64"), \
+        with patch("dev.current_host", return_value="linux"), \
                 patch("workspace.Workspace.discover") as discover, patch("dev.Dev") as inspector_type:
             inspector = inspector_type.return_value
             inspector.require_closed.side_effect = RuntimeError("This project is open")
@@ -200,7 +200,7 @@ class ContributionTests(unittest.TestCase):
             discover.assert_called_with(self.root)
 
     def test_unsupported_editor_inspection_is_explicit(self):
-        with patch("contribute.sys.platform", "win32"):
+        with patch("dev.current_host", return_value=None):
             self.assertIn("unverified", editor_problems(self.root)[0])
 
 

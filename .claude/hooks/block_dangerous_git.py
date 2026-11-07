@@ -3,7 +3,7 @@
 
 Reads the tool call as JSON on stdin and exits 2 with a reason when the Bash
 command would discard history or work. Standard library only, so it runs on
-Apple's default Python as well as the Homebrew interpreter.
+any system Python 3.
 """
 import json
 import re

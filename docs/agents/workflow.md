@@ -31,7 +31,7 @@ git switch -c feature/<issue>-<slug>
 
 For an existing feature branch, stay on that branch and explicitly merge `origin/staging` after inspection instead of switching away and losing context. Use merge for published branches; do not rewrite another contributor's history. Resolve text conflicts with the affected contract in view. Stop on binary conflicts and coordinate an Unreal resolution. Then hydrate LFS assets and repeat relevant verification. A changed source tree requires fresh build evidence before editor launch.
 
-Each simultaneous writer uses a separate checkout. On one Mac, clones/worktrees still share the MCP port: keep one editor at a time and transfer ownership intentionally. Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
+Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and get a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
 
 Completion: the intended baseline is available, current work is preserved, the branch is intentional, and editor ownership is clear.
 
@@ -60,10 +60,13 @@ Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-sco
 | Changed behavior | Additional evidence |
 | --- | --- |
 | Documentation | Review instructions/links and exercise changed commands where relevant. |
-| Python tooling | Focused success/refusal tests and real read-only inspection on the supported host. |
+| Python tooling | Focused success/refusal tests and real read-only inspection on Ultra. |
+
 | C++ rules/state | Pinned-engine editor build and explicit relevant automation prefix. |
 | Presentation, input, assets | Saved/reloaded assets as applicable, real interaction, and inspected rendered output. |
 | Engine pin, build/package configuration | Affected upgrade/package validation from development, with maintainer agreement. |
+
+If you are not on PlebDev Ultra (for example Windows or a Mac), do not offer `doctor` or engine runs as proof. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
 
 Use the explicit `Project.Expedition.` filter for game tests. The helper's default `Project.Starter.` and starter smoke only prove their fixture. Headless package startup alone does not prove rendering or input. Report tested commit/source state, host/engine, exact commands, counts, limitations, and accessible selected reports/captures. Bulk reports stay ignored in `.local/`, `Saved/`, or `Builds/`; local absolute paths alone are not reviewer evidence.
 
@@ -87,4 +90,4 @@ The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c]
 
 Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
 
-No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Workflow portability does not add Windows/Linux Unreal support.
+No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.

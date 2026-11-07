@@ -21,7 +21,7 @@ A player can start, control all four roles, complete a battle, choose a route, c
 
 ## Scope
 
-Original fantasy setting; SRD 5.2.1 supplies the chosen open rules/content baseline. The supported subset and deliberate adaptations are listed in the rules reference. Mac Development is the validated target. The look is dark high fantasy with a low-poly PS1 influence, smooth and sharp rather than grainy: our own Blender-made characters, full surrounding worlds per encounter, and a candlelit tabletop for the mission overview. All assets are original with recorded provenance; engine primitives remain the fallback.
+Original fantasy setting; SRD 5.2.1 supplies the chosen open rules/content baseline. The supported subset and deliberate adaptations are listed in the rules reference. Linux Development on PlebDev Ultra is the validated target. The look is dark high fantasy with a low-poly PS1 influence, smooth and sharp rather than grainy: our own Blender-made characters, full surrounding worlds per encounter, and a candlelit tabletop for the mission overview. All assets are original with recorded provenance; engine primitives remain the fallback.
 
 Broad character creation and leveling, multiplayer, official D&D setting IP, runtime AI narration, large narrative/faction simulations, open-world traversal, recruitment, resurrection, and persistent stat grinding are outside V1.
 

@@ -232,10 +232,10 @@ bool FArcaneJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Write real checkpoint"),FExpeditionSave::Write(Path,Data,Error));
         FExpeditionSession Session(Path); TestTrue(TEXT("Session Resume owned effects"),Session.Resume(Error));
         const auto BeforeFailure=Session.Run().Snapshot();
-        IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+        ExpeditionTestSupport::FailNextCheckpointWrite(*this,Path);
         TestFalse(TEXT("Failed checkpoint rejects expiration command"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         TestTrue(TEXT("Failure retains resources, protection, cells and RNG"),ExpeditionTestSupport::SameRun(BeforeFailure,Session.Run().Snapshot()));
-        IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+        ExpeditionTestSupport::AllowCheckpointWrites(Path);
         TestTrue(TEXT("Retry commits"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         IFileManager::Get().DeleteDirectory(*Directory,false,true);
         TestTrue(TEXT("Actual JSON encode spent resource and owned effect/cells"),FExpeditionSave::Encode(Data,Json,Error));
@@ -328,6 +328,8 @@ bool FMissileRecoveryTest::RunTest(const FString& Parameters)
     if(!TestTrue(TEXT("Create Missile party"),Run.NewRun(42,Party,Error,TEXT("missile-recovery"))) || !TestTrue(TEXT("First route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
     const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Missile"),FGuid::NewGuid().ToString());
     const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    // Each of the two Missile casts below fails one checkpoint write first.
+    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,2);
     int32 Casts=0;
     for(int32 Turn=0;Turn<80 && Casts<2 && Run.Progress().Phase==EExpeditionPhase::Combat;++Turn)
     {

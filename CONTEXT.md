@@ -15,6 +15,8 @@ The approved game is a single-player 3D tactical roguelike. One player controls 
 
 ## Engineering direction
 
+Unreal work is built and verified on PlebDev Ultra (Linux), the one validated host since #125 (2026-11-07). Mac evidence cited in the slice history below was the validated host at that time.
+
 Prefer cohesive, deep native modules behind small public interfaces. The existing Unreal runtime module remains the build module. Authoritative combat/run state is separate from actors and UI; engine adapters present and submit commands. See ADR-0001, the V1 spec, and the run ledger.
 
 The user approved the V1 brief and delegated routine architecture, testing, ticket planning, verification, and orchestration. Ask only when a discovered decision changes product intent or requires unavailable access. The technical choices and testing seams are recorded before implementation.

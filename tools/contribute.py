@@ -2,14 +2,13 @@
 """Read-only contribution checks. Python 3.11+, Git, and local Git LFS."""
 import sys
 if sys.version_info < (3, 11):
-    sys.exit("Python 3.11+ required; on Apple Silicon use /opt/homebrew/bin/python3.")
+    sys.exit("Python 3.11+ required.")
 
 import argparse
 import configparser
 import json
 import os
 from pathlib import Path
-import platform
 import re
 import subprocess
 import tomllib
@@ -87,7 +86,7 @@ def check_repository(root):
     problems = []
     for name in files:
         path = Path(name)
-        if GENERATED.intersection(path.parts) or name.startswith("Build/Mac/") or path.suffix == ".pyc":
+        if GENERATED.intersection(path.parts) or name.startswith(("Build/Mac/", "Build/Linux/")) or path.suffix == ".pyc":
             problems.append(f"Generated output is tracked: {name}")
         if name.startswith("Config/") and re.search(rb"(?im)^\s*SecurityToken\s*=\s*[^\s\r\n]+", stored(root, name)):
             problems.append(f"Machine-generated SecurityToken is tracked: {name} (value omitted)")
@@ -127,10 +126,10 @@ def correct_remote(url):
 
 
 def editor_problems(root):
-    if sys.platform != "darwin" or platform.machine() != "arm64":
-        return ["Editor state is unverified: local Unreal inspection supports Apple Silicon macOS only."]
-    # Import the existing Mac inspector only here; `check` stays host-neutral.
-    from dev import Dev
+    # Import the Unreal inspector only here; `check` stays host-neutral.
+    from dev import Dev, current_host
+    if current_host() is None:
+        return ["Editor state is unverified: local Unreal inspection supports Linux x86_64 (validated) and Apple Silicon macOS."]
     from workspace import Workspace
     inspector = Dev(Workspace.discover(root))
     inspector.require_closed()
