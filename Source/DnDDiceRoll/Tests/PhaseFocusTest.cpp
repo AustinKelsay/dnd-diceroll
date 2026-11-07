@@ -135,7 +135,72 @@ struct FHarness
         }
         return !View->InCombat();
     }
+    /** Replays party commands found by ExpeditionTestSupport::FinishCombat, letting enemies act between them. */
+    bool Replay(const TArray<FCombatCommand>& Commands)
+    {
+        for (const FCombatCommand& Command : Commands)
+        {
+            for (int32 Step = 0; Step < 200 && View->InCombat(); ++Step)
+            {
+                const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+                if (Active && Active->Side == ECombatSide::Party) { break; }
+                View->SkipPresentation();
+                View->Tick(1.0f);
+                Frame();
+            }
+            if (!View->InCombat()) { break; }
+            View->Execute(Command);
+            Frame();
+        }
+        return !View->InCombat();
+    }
+    /** Help and Records each take focus while open and give the screen its focus back when closed. */
+    void CheckOverlays(const FString& Screen, FName Primary)
+    {
+        Test.TestEqual(Screen + TEXT(" focuses its primary choice"), Player->MenuFocus(), Primary);
+        Press(EKeys::Slash);
+        Test.TestTrue(Screen + TEXT(": ? opens Help"), Player->ShowingHelp());
+        Test.TestEqual(Screen + TEXT(": Help focuses its Close"), Player->MenuFocus(), FName(TEXT("Close")));
+        Press(EKeys::Escape);
+        Test.TestFalse(Screen + TEXT(": Esc closes Help"), Player->ShowingHelp());
+        Test.TestEqual(Screen + TEXT(": closing Help restores the primary choice"), Player->MenuFocus(), Primary);
+        Press(EKeys::H);
+        Test.TestTrue(Screen + TEXT(": H opens Records"), View->ShowingRecords());
+        Test.TestEqual(Screen + TEXT(": Records focuses its Close"), Player->MenuFocus(), FName(TEXT("Close")));
+        Press(EKeys::H);
+        Test.TestFalse(Screen + TEXT(": H closes Records"), View->ShowingRecords());
+        Test.TestEqual(Screen + TEXT(": closing Records restores the primary choice"), Player->MenuFocus(), Primary);
+    }
 };
+
+int32 Survivor(const FExpeditionRun& Run)
+{
+    for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { return Unit.Id; } }
+    return INDEX_NONE;
+}
+/** A checkpoint at the start of the final battle and party commands that win it. */
+bool FinalBattle(FExpeditionSnapshot& Checkpoint, TArray<FCombatCommand>& Commands)
+{
+    for (int32 Seed = 1; Seed < 60; ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Run;
+        Run.NewRun(Seed, Error, FString::Printf(TEXT("phase-focus-victory-%d"), Seed));
+        while (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted < FExpeditionRun::EncounterCount - 1)
+        {
+            if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !ExpeditionTestSupport::FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { break; }
+            if (!Run.ClaimReward(Survivor(Run), Error)) { break; }
+            if (Run.Progress().Phase == EExpeditionPhase::Recovery) { Run.Recover(true, Error); }
+        }
+        if (Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != FExpeditionRun::EncounterCount - 1) { continue; }
+        if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+        Checkpoint = Run.Snapshot();
+        Commands.Reset();
+        if (ExpeditionTestSupport::FinishCombat(Run, true, &Commands) && Run.Progress().Phase == EExpeditionPhase::Victory) { return true; }
+    }
+    return false;
+}
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPhaseFocusTest, "Project.Expedition.Presentation.PhaseChangesFocusPrimaryChoice",
@@ -149,11 +214,11 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
 
     Game.Frame();
     if (!TestTrue(TEXT("The HUD registers the startup controls"), !Game.Hud->MenuButtons().IsEmpty())) { return false; }
-    TestEqual(TEXT("Startup builder focuses Begin"), Player->MenuFocus(), FName(TEXT("New")));
+    Game.CheckOverlays(TEXT("Startup builder"), TEXT("New"));
     Game.Press(EKeys::Enter);
     if (!TestTrue(TEXT("Enter on Begin starts the expedition"), View->HasRun() && View->Progress().Phase == EExpeditionPhase::Route)) { return false; }
     Game.Settle();
-    TestEqual(TEXT("New run focuses the first route"), Player->MenuFocus(), FName(TEXT("Route0")));
+    Game.CheckOverlays(TEXT("First route"), TEXT("Route0"));
     Game.Press(EKeys::Enter);
     if (!TestTrue(TEXT("Enter on the first route starts its encounter"), View->InCombat())) { return false; }
     TestEqual(TEXT("Combat holds no menu focus"), Player->MenuFocus(), FName());
@@ -163,7 +228,7 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The victory is still being presented"), View->IsPresenting());
     // Open and close Help while the victory plays: Help must not keep focus afterwards.
     Game.Press(EKeys::Slash);
-    TestEqual(TEXT("Help focuses its own Back"), Player->MenuFocus(), FName(TEXT("Close")));
+    TestEqual(TEXT("Help focuses its own Close"), Player->MenuFocus(), FName(TEXT("Close")));
     Game.Press(EKeys::Escape);
     Game.Settle();
     TestFalse(TEXT("Help closed"), Player->ShowingHelp());
@@ -172,15 +237,7 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::One);
     Game.Press(EKeys::L);
     if (!TestEqual(TEXT("1 then L claims the reward"), View->Progress().Phase, EExpeditionPhase::Recovery)) { return false; }
-    TestEqual(TEXT("Recovery focuses Rest by the fire"), Player->MenuFocus(), FName(TEXT("Camp")));
-    Game.Press(EKeys::Slash);
-    TestEqual(TEXT("Help over recovery focuses Back"), Player->MenuFocus(), FName(TEXT("Close")));
-    Game.Press(EKeys::Escape);
-    TestEqual(TEXT("Closing Help restores the recovery choice"), Player->MenuFocus(), FName(TEXT("Camp")));
-    Game.Press(EKeys::H);
-    TestEqual(TEXT("Records over recovery focuses Close"), Player->MenuFocus(), FName(TEXT("Close")));
-    Game.Press(EKeys::H);
-    TestEqual(TEXT("Closing Records restores the recovery choice"), Player->MenuFocus(), FName(TEXT("Camp")));
+    Game.CheckOverlays(TEXT("Recovery"), TEXT("Camp"));
     // A control the player chose with Tab survives Help on the same screen; Shift-Tab returns.
     Game.Press(EKeys::Tab);
     const FName Chosen = Player->MenuFocus();
@@ -199,7 +256,7 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The rest was taken, not forfeited"), View->Progress().bCampUsed);
 
     Game.Settle();
-    TestEqual(TEXT("Next route focuses the first route"), Player->MenuFocus(), FName(TEXT("Route0")));
+    Game.CheckOverlays(TEXT("Next route"), TEXT("Route0"));
     Game.Press(EKeys::Enter);
     TestFalse(TEXT("Enter on the route does not open Help"), Player->ShowingHelp());
     TestTrue(TEXT("Enter on the route starts the second encounter"), View->InCombat());
@@ -230,11 +287,11 @@ bool FEndingFocusTest::RunTest(const FString& Parameters)
         }
         TestEqual(TEXT("A passive party is defeated"), Game.View->Progress().Phase, EExpeditionPhase::Defeat);
         Game.Settle();
-        TestEqual(TEXT("Ending focuses Choose next party"), Game.Player->MenuFocus(), FName(TEXT("Builder")));
+        Game.CheckOverlays(TEXT("Defeat ending"), TEXT("Builder"));
         Game.Press(EKeys::Enter);
         TestFalse(TEXT("Enter on the ending does not open Help"), Game.Player->ShowingHelp());
         TestTrue(TEXT("Enter on the ending opens the next-party builder"), Game.Player->ShowingBuilder());
-        TestEqual(TEXT("Next-party builder focuses Begin"), Game.Player->MenuFocus(), FName(TEXT("New")));
+        Game.CheckOverlays(TEXT("Next-party builder after defeat"), TEXT("New"));
     }
     // Resume from the startup builder straight into each between-battle screen.
     FString Error;
@@ -265,10 +322,38 @@ bool FEndingFocusTest::RunTest(const FString& Parameters)
         Game.Press(EKeys::O);
         TestTrue(FString::Printf(TEXT("O resumes the %s checkpoint"), Case.Name), Game.View->HasRun());
         Game.Settle();
-        TestEqual(FString::Printf(TEXT("Resumed %s focuses its primary choice"), Case.Name), Game.Player->MenuFocus(), Case.Primary);
+        Game.CheckOverlays(FString::Printf(TEXT("Resumed %s"), Case.Name), Case.Primary);
         Game.Press(EKeys::Enter);
         TestFalse(FString::Printf(TEXT("Enter on resumed %s does not open Help"), Case.Name), Game.Player->ShowingHelp());
     }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVictoryFocusTest, "Project.Expedition.Presentation.VictoryEndingFocusesNextParty",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVictoryFocusTest::RunTest(const FString& Parameters)
+{
+    FExpeditionSaveData Data;
+    TArray<FCombatCommand> Commands;
+    if (!TestTrue(TEXT("A seed reaches a winnable final battle"), PhaseFocusTest::FinalBattle(Data.Current, Commands))) { return false; }
+    PhaseFocusTest::FHarness Game(*this, TEXT("VictoryFocus"), &Data);
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::O);
+    Game.Settle();
+    if (!TestTrue(TEXT("O resumes the final battle"), Game.View->InCombat())) { return false; }
+    // The winning commands play through the view; the final blow's playback is still pending.
+    TestTrue(TEXT("The party wins the final battle"), Game.Replay(Commands));
+    if (!TestEqual(TEXT("The expedition is won"), Game.View->Progress().Phase, EExpeditionPhase::Victory)) { return false; }
+    Game.Settle();
+    Game.CheckOverlays(TEXT("Victory ending"), TEXT("Builder"));
+    Game.Press(EKeys::Enter);
+    TestFalse(TEXT("Enter on the victory ending does not open Help"), Game.Player->ShowingHelp());
+    TestTrue(TEXT("Enter on the victory ending opens the next-party builder"), Game.Player->ShowingBuilder());
+    Game.CheckOverlays(TEXT("Next-party builder after victory"), TEXT("New"));
+    Game.Press(EKeys::Escape);
+    TestFalse(TEXT("Esc returns from the draft to the result"), Game.Player->ShowingBuilder());
+    TestEqual(TEXT("The victory ending focuses Choose next party again"), Game.Player->MenuFocus(), FName(TEXT("Builder")));
     return !HasAnyErrors();
 }
 #endif
