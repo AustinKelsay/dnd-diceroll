@@ -176,22 +176,27 @@ void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
 void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
 void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
 void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
-uint32 AExpeditionPlayerController::MenuScreen() const
+uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
-    const bool bRun = BattleView->HasRun();
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bRun) << 3
-        | (bRun ? uint32(BattleView->Progress().Phase) + 1 : 0) << 4;
+    // Phase is offset by one so that "no run yet" (0) differs from every phase.
+    const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | Phase << 3;
+}
+void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
+void AExpeditionPlayerController::RestoreOverlayFocus()
+{
+    Focus = IsValid(BattleView) && SavedFocus.Screen == MenuScreenKey() ? SavedFocus : FMenuFocus();
 }
 void AExpeditionPlayerController::UpdateMenuFocus()
 {
     if (!IsValid(BattleView)) { return; }
     // A new screen (phase, builder or overlay) never inherits the previous screen's focus.
-    const uint32 Screen = MenuScreen();
+    const uint32 Screen = MenuScreenKey();
     if (Focus.Screen != Screen) { Focus = {NAME_None, Screen, false}; }
     if (BattleView->InCombat() && AllowsGameplayInput()) { Focus.Id = NAME_None; return; }
     const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
     const auto Items = Hud ? Hud->MenuButtons() : TArray<FName>();
-    if (Focus.bChosen && Items.Contains(Focus.Id)) { return; }
+    if (Focus.bTabChosen && Items.Contains(Focus.Id)) { return; }
     // Focus only controls actually drawn and enabled. Automatic focus is the screen's
     // primary choice; while a result is still playing and that choice is not drawn yet,
     // nothing is focused, so Enter cannot fall through to a system button such as Help.
@@ -209,7 +214,7 @@ void AExpeditionPlayerController::UpdateMenuFocus()
         }
     }
     Focus.Id = Items.Contains(Preferred) ? Preferred : NAME_None;
-    Focus.bChosen = false;
+    Focus.bTabChosen = false;
 }
 
 void AExpeditionPlayerController::ConfirmCell()
@@ -412,7 +417,16 @@ void AExpeditionPlayerController::Resume()
     BattleView->Resume();
     if (Before != BattleView->PresentationRevision()) { bNextParty = false; Focus = FMenuFocus(); }
 }
-void AExpeditionPlayerController::History() { if (IsValid(BattleView)) { if (!BattleView->ShowingRecords()) { if (!bShowHelp) { SavedFocus = Focus; } bDragging = false; } else { Focus = SavedFocus; } bShowHelp = false; BattleView->ToggleRecords(); } }
+void AExpeditionPlayerController::History()
+{
+    if (!IsValid(BattleView)) { return; }
+    const bool bOpening = !BattleView->ShowingRecords();
+    // Records over Help keeps the focus saved when Help opened.
+    if (bOpening && !bShowHelp) { SaveOverlayFocus(); }
+    bShowHelp = false;
+    BattleView->ToggleRecords();
+    if (bOpening) { bDragging = false; } else { RestoreOverlayFocus(); }
+}
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
 void AExpeditionPlayerController::EndTurn() { if (AllowsGameplayInput()) { BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
@@ -437,14 +451,25 @@ void AExpeditionPlayerController::Skip()
         {
             const int32 Index = Items.IndexOfByKey(Focus.Id);
             Focus.Id = Index == INDEX_NONE ? Items[Direction > 0 ? 0 : Items.Num() - 1] : Items[(Index + Items.Num() + Direction) % Items.Num()];
-            Focus.bChosen = true;
+            Focus.bTabChosen = true;
         }
         return;
     }
     BattleView->SkipPresentation();
 }
 void AExpeditionPlayerController::Speed() { if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
-void AExpeditionPlayerController::ToggleHelp() { if (!bShowHelp) { if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SavedFocus = Focus; } bDragging = false; } else { Focus = SavedFocus; } bShowHelp = !bShowHelp; if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); } }
+void AExpeditionPlayerController::ToggleHelp()
+{
+    if (!bShowHelp)
+    {
+        // Help over Records keeps the focus saved when Records opened.
+        if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SaveOverlayFocus(); }
+        bShowHelp = true;
+        bDragging = false;
+    }
+    else { bShowHelp = false; RestoreOverlayFocus(); }
+    if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
+}
 void AExpeditionPlayerController::CloseOverlays()
 {
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
@@ -452,9 +477,9 @@ void AExpeditionPlayerController::CloseOverlays()
         if (ShowingBuilder() && BattleView->HasRun()) { bNextParty = false; }
         return;
     }
-    Focus = SavedFocus;
     bShowHelp = false;
     if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); }
+    RestoreOverlayFocus();
 }
 void AExpeditionPlayerController::BeginDrag()
 {

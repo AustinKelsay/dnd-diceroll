@@ -69,10 +69,14 @@ private:
     int32 Slot = 0;
     bool bNextParty = false;
     /** A focused menu control and the screen it belongs to. Focus the player did not choose with Tab follows that screen's primary choice. */
-    struct FMenuFocus { FName Id; uint32 Screen = MAX_uint32; bool bChosen = false; };
+    struct FMenuFocus { FName Id; uint32 Screen = MAX_uint32; bool bTabChosen = false; };
     /** Saved while Help or Records covers the screen; restored only onto the same screen. */
     FMenuFocus Focus, SavedFocus;
-    uint32 MenuScreen() const;
+    /** Identifies the visible menu screen: overlay, builder and expedition phase. */
+    uint32 MenuScreenKey() const;
+    void SaveOverlayFocus();
+    /** Call after the overlay has closed. */
+    void RestoreOverlayFocus();
     void Preset();
     void CycleClass();
     void CycleBuild();
