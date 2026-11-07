@@ -228,6 +228,7 @@ bool FArcaneJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Commit actual arcane effect"),Run.Submit({Action,Id,{},Targets[0]}).bAccepted);
         const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Arcane"),FGuid::NewGuid().ToString());
         const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+        ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,1);
         FExpeditionSaveData Data; Data.Current=Run.Snapshot(); FString Json;
         TestTrue(TEXT("Write real checkpoint"),FExpeditionSave::Write(Path,Data,Error));
         FExpeditionSession Session(Path); TestTrue(TEXT("Session Resume owned effects"),Session.Resume(Error));
@@ -328,6 +329,8 @@ bool FMissileRecoveryTest::RunTest(const FString& Parameters)
     if(!TestTrue(TEXT("Create Missile party"),Run.NewRun(42,Party,Error,TEXT("missile-recovery"))) || !TestTrue(TEXT("First route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { return false; }
     const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Missile"),FGuid::NewGuid().ToString());
     const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+    // Each of the two Missile casts below fails one checkpoint write first.
+    ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,2);
     int32 Casts=0;
     for(int32 Turn=0;Turn<80 && Casts<2 && Run.Progress().Phase==EExpeditionPhase::Combat;++Turn)
     {

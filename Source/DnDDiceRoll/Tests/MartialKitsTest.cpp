@@ -240,6 +240,7 @@ bool FMartialJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Commit actual martial effect"),Run.Submit({Action,Id,{},Targets[0]}).bAccepted);
         const FString Directory=FPaths::Combine(FPaths::ProjectSavedDir(),TEXT("Automation/Martial"),FGuid::NewGuid().ToString());
         const FString Path=FPaths::Combine(Directory,TEXT("current-v1.json"));
+        ExpeditionTestSupport::ExpectFailedCheckpointWrites(*this,Path,1);
         FExpeditionSaveData Data; Data.Current=Run.Snapshot(); FString Json;
         TestTrue(TEXT("Write real checkpoint"),FExpeditionSave::Write(Path,Data,Error));
         FExpeditionSession Session(Path); TestTrue(TEXT("Session Resume owned effects"),Session.Resume(Error));
