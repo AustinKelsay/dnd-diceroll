@@ -196,10 +196,10 @@ bool FSupportJsonTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Write real checkpoint"),FExpeditionSave::Write(Path,Data,Error));
         FExpeditionSession Session(Path); TestTrue(TEXT("Session Resume owned effects"),Session.Resume(Error));
         const auto BeforeFailure=Session.Run().Snapshot();
-        IFileManager::Get().MakeDirectory(*(Path+TEXT(".pending")),true);
+        ExpeditionTestSupport::FailNextCheckpointWrite(*this,Path);
         TestFalse(TEXT("Failed checkpoint rejects expiration command"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         TestTrue(TEXT("Failure retains resources, protection, cells and RNG"),ExpeditionTestSupport::SameRun(BeforeFailure,Session.Run().Snapshot()));
-        IFileManager::Get().DeleteDirectory(*(Path+TEXT(".pending")),false,true);
+        ExpeditionTestSupport::AllowCheckpointWrites(Path);
         TestTrue(TEXT("Retry commits"),Session.Submit({ECombatCommandType::EndTurn,Id}).bAccepted);
         IFileManager::Get().DeleteDirectory(*Directory,false,true);
         TestTrue(TEXT("Actual JSON encode spent resource and owned effect/cells"),FExpeditionSave::Encode(Data,Json,Error));

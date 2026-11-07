@@ -1,11 +1,14 @@
 {
-  "verified_on": "2026-10-30",
+  "verified_on": "2026-11-07",
   "unreal_engine": "5.8.4",
   "unreal_changelist": 58902052,
   "unreal_mcp": "Epic ModelContextProtocol and AllToolsets bundled with Unreal Engine 5.8.4",
   "mcp_url": "http://127.0.0.1:18765/mcp",
-  "host_xcode": "26.6",
+  "host": "PlebDev Ultra",
+  "host_os": "Omarchy (Arch Linux), kernel 7.2.8-9-omarchy, x86_64",
+  "host_clang": "20.1.8",
+  "host_gpu": "NVIDIA GeForce RTX 4080 SUPER, driver 615.78.08 (Vulkan)",
   "python_minimum": "3.11",
-  "host_python": "3.15.0",
+  "host_python": "3.14.8",
   "git_lfs": "3.8.1"
 }

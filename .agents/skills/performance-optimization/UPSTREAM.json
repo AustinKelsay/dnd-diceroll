@@ -21,6 +21,6 @@
     "SKILL.md",
     "references/profiling-and-budgets.md"
   ],
-  "adaptation_summary": "Replaced the entrypoint and supporting reference with reproducible Unreal profiling on the validated Mac target, CPU/GPU interaction, Metal tool selection, and measured before/after evidence. Null-renderer startup is not rendering performance evidence.",
+  "adaptation_summary": "Replaced the entrypoint and supporting reference with reproducible Unreal profiling on the validated host, CPU/GPU interaction, GPU capture tool selection for Linux/Vulkan, and measured before/after evidence. Offscreen package startup is not rendering performance evidence.",
   "maintenance": "Review the pinned source and local adaptations before updating. Preserve project rules and source notices; update this revision/hash record and repeat metadata, local-link and relevant script checks. Do not run an unpinned whole-catalog installer over these adapted directories."
 }
