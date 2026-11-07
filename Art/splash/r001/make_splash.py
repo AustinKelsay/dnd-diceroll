@@ -7,9 +7,13 @@ Run from the repository root:  python3 Art/splash/r001/make_splash.py
 2. ImageMagick dims the bookshelf behind the title, adds a vignette, the gilded double frame with
    corner diamonds used by the in-game panels, and the "dnd-diceroll" title, then box-downsamples
    to 720x370 -> Art/splash/r001/Splash.png (preview) and Content/Splash/Splash.bmp.
+3. A matching 64x64 monogram (gilded frame, gold "d") -> Art/splash/r001/Icon.png (preview) and
+   Content/Splash/Icon.bmp. Once a splash exists the engine also looks up Splash/Icon for the
+   splash window's icon and logs "Game icon not found." without it.
 
 The packaged Linux game loads the splash with SDL_LoadBMP, so the runtime file must be an
-uncompressed BMP (written here as 24-bit BMP3). 720x370 matches the engine's own Splash.bmp.
+uncompressed BMP (written here as 24-bit BMP3). 720x370 matches the engine's own Splash.bmp and
+64x64 its IconDefault.bmp.
 Tools: Blender 5.2.3 LTS, ImageMagick 7.1.2, font Noto Serif Display (SIL OFL 1.1).
 """
 import os
@@ -116,6 +120,26 @@ def compose(backdrop, preview, bmp):
     os.remove(tmp)
 
 
+def make_icon(preview, bmp):
+    n = 64 * 4  # supersampled
+    s = 4
+    title = 'd'
+    args = ['-size', f'{n}x{n}', 'radial-gradient:#2a1d12-#060403',
+            '(', '-size', f'{n}x{n}', 'gradient:' + GOLD_HI + '-#a07a38',
+            '(', '-size', f'{n}x{n}', 'xc:black', '-font', FONT, '-pointsize', 50 * s, '-gravity', 'center',
+            '-fill', 'white', '-annotate', f'+0-{2 * s}', title, ')',
+            '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', ')',
+            '-compose', 'Over', '-composite']
+    o, i = 3 * s, 6 * s
+    for cmd in (f'fill none stroke {GOLD_LO} stroke-width {3 * s} rectangle {o},{o} {n - o - 1},{n - o - 1}',
+                f'fill none stroke {GOLD} stroke-width {s} rectangle {o},{o} {n - o - 1},{n - o - 1}',
+                f'fill none stroke {GOLD} stroke-width {s // 2} rectangle {i},{i} {n - i - 1},{n - i - 1}'):
+        args += ['-draw', cmd]
+    args += ['-filter', 'Box', '-resize', '64x64!', '-strip', preview]
+    magick(*args)
+    magick(preview, '-alpha', 'off', '-type', 'TrueColor', 'BMP3:' + bmp)
+
+
 if __name__ == '__main__':
     if '--' in sys.argv:  # inside Blender
         render_backdrop(sys.argv[sys.argv.index('--') + 1])
@@ -124,4 +148,5 @@ if __name__ == '__main__':
         subprocess.run(['blender', '-b', '--factory-startup', '--python', os.path.abspath(__file__),
                         '--', backdrop], check=True, stdout=subprocess.DEVNULL)
         compose(backdrop, os.path.join(HERE, 'Splash.png'), os.path.join(ROOT, 'Content/Splash/Splash.bmp'))
-        print('wrote', os.path.join(ROOT, 'Content/Splash/Splash.bmp'))
+        make_icon(os.path.join(HERE, 'Icon.png'), os.path.join(ROOT, 'Content/Splash/Icon.bmp'))
+        print('wrote', os.path.join(ROOT, 'Content/Splash/Splash.bmp'), 'and Icon.bmp')
