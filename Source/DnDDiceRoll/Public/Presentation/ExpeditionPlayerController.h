@@ -47,7 +47,7 @@ public:
     void StepClass(int32 Direction);
     void StepBuild(int32 Direction);
     bool ShowingBuilder() const;
-    FName MenuFocus() const { return Focus; }
+    FName MenuFocus() const { return Focus.Id; }
     /** Refresh after the HUD registers this frame's visible, enabled controls. */
     void UpdateMenuFocus();
 private:
@@ -68,7 +68,15 @@ private:
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
     bool bNextParty = false;
-    FName Focus, SavedFocus;
+    /** A focused menu control and the screen it belongs to. Focus the player did not choose with Tab follows that screen's primary choice. */
+    struct FMenuFocus { FName Id; uint32 Screen = MAX_uint32; bool bTabChosen = false; };
+    /** Saved while Help or Records covers the screen; restored only onto the same screen. */
+    FMenuFocus Focus, SavedFocus;
+    /** Identifies the visible menu screen: overlay, builder and expedition phase. */
+    uint32 MenuScreenKey() const;
+    void SaveOverlayFocus();
+    /** Call after the overlay has closed. */
+    void RestoreOverlayFocus();
     void Preset();
     void CycleClass();
     void CycleBuild();
