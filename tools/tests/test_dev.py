@@ -288,9 +288,11 @@ class WorkspaceTests(unittest.TestCase):
         def connected(): yield Mock(), {"dirty_packages":[], "pie_active":False}
         with patch.object(dev, "require_engine"), patch.object(dev, "os_identity", return_value=123), patch.object(dev, "connected", connected), \
              patch.object(dev, "runtime", return_value={"dirty_packages":[], "pie_active":False}), patch.object(dev, "processes", return_value=[]), \
-             patch.object(dev, "listener", return_value=None), patch("dev.os.kill") as kill:
+             patch.object(dev, "listener", return_value=None), patch("dev.os.kill") as kill, \
+             patch("dev.pid_exists", side_effect=[True, True, False]), patch("dev.time.sleep") as sleep:
             dev.close()
         kill.assert_called_once_with(123, signal.SIGTERM)
+        self.assertEqual(sleep.call_count, 2)  # waits until the PID is really gone
         with patch.object(dev, "require_engine"), patch("dev.os.kill") as kill:
             with self.assertRaisesRegex(RuntimeError, "save dialog"): dev.close(request_quit=True)
             kill.assert_not_called()

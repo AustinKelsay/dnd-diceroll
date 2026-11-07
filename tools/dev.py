@@ -448,7 +448,7 @@ class Dev:
         getattr(self, self.layout["quit"])(pid)
         deadline = time.monotonic() + 120
         while time.monotonic() < deadline:
-            if not any(p["pid"] == pid for p in self.processes()) and self.listener() != pid:
+            if not pid_exists(pid) and not any(p["pid"] == pid for p in self.processes()) and self.listener() != pid:
                 print(f"Editor PID {pid} exited normally")
                 return
             time.sleep(0.5)
@@ -639,6 +639,17 @@ class Dev:
         write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
                                               "package_warnings": package_events["warnings"], "package_errors": package_events["errors"]})
         print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: launch {len(events['warnings'])}, package {len(package_events['warnings'])}; package error lines: {len(package_events['errors'])}; evidence: {output}")
+
+def pid_exists(pid):
+    """True until the process is fully gone; an exiting editor can drop out of `ps` matching first."""
+    try:
+        os.kill(pid, 0)  # Signal 0 only checks existence; nothing is delivered.
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
 
 def build_warnings(text):
     """Compiler (clang/MSVC) and UnrealBuildTool warning lines."""
