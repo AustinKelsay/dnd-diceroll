@@ -62,10 +62,11 @@ Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-sco
 | Documentation | Review instructions/links and exercise changed commands where relevant. |
 | Python tooling | Focused success/refusal tests and real read-only inspection on Ultra. |
 
-If you are not on PlebDev Ultra (for example Windows or a Mac), do not offer `doctor` or engine runs as proof. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
 | C++ rules/state | Pinned-engine editor build and explicit relevant automation prefix. |
 | Presentation, input, assets | Saved/reloaded assets as applicable, real interaction, and inspected rendered output. |
 | Engine pin, build/package configuration | Affected upgrade/package validation from development, with maintainer agreement. |
+
+If you are not on PlebDev Ultra (for example Windows or a Mac), do not offer `doctor` or engine runs as proof. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
 
 Use the explicit `Project.Expedition.` filter for game tests. The helper's default `Project.Starter.` and starter smoke only prove their fixture. Headless package startup alone does not prove rendering or input. Report tested commit/source state, host/engine, exact commands, counts, limitations, and accessible selected reports/captures. Bulk reports stay ignored in `.local/`, `Saved/`, or `Builds/`; local absolute paths alone are not reviewer evidence.
 
