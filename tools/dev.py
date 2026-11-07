@@ -8,7 +8,6 @@ import argparse
 import base64
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import fcntl
 import hashlib
 import json
 import os
@@ -32,23 +31,53 @@ SCENE = "editor_toolset.toolsets.scene.SceneTools"
 STATUS = "unreal_starter.status.StarterWorkspaceTools"
 
 
-# Linux (PlebDev Ultra) is the validated host. The Mac layout is kept for reference only.
+# Linux (PlebDev Ultra) is the one validated host. Mac still runs through the same
+# commands but is no longer validated; other hosts get guidance only.
 HOSTS = {
     "linux": {"label": "linux/x86_64", "platform": "Linux",
               "engine_root": Path.home() / "Applications/UnrealEngine-5.8.4",
               "editor": "Binaries/Linux/UnrealEditor", "cmd": "Binaries/Linux/UnrealEditor-Cmd",
               "build": "Build/BatchFiles/Linux/Build.sh", "proxy": "Bin/Linux/unreal_mcp_proxy",
-              "process_token": "/Binaries/Linux/UnrealEditor"},
+              "process_token": "/Binaries/Linux/UnrealEditor",
+              # -nullrhi skips SDL setup (Slate then warns about Wayland); offscreen keeps the real RHI path.
+              "headless": ["-RenderOffscreen"],
+              # -TestExit force-exits 1 on Unix; SoftQuit exits normally with the test status.
+              "automation": lambda prefix: [f"-ExecCmds=Automation RunTests {prefix};SoftQuit", "-RenderOffscreen"],
+              "packaged": "**/Binaries/Linux/{target}",
+              "tools": ["git", "ps", "lsof"],
+              "quit": "quit_by_signal", "save_dialog": False,
+              "version_tools": []},
     "mac": {"label": "darwin/arm64", "platform": "Mac",
             "engine_root": Path("/Users/Shared/Epic Games/UE_5.8"),
             "editor": "Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor", "cmd": "Binaries/Mac/UnrealEditor-Cmd",
             "build": "Build/BatchFiles/Mac/Build.sh", "proxy": "Bin/Mac/unreal_mcp_proxy",
-            "process_token": "/Binaries/Mac/UnrealEditor"},
+            "process_token": "/Binaries/Mac/UnrealEditor",
+            "headless": ["-nullrhi"],
+            "automation": lambda prefix: [f"-ExecCmds=Automation RunTests {prefix}", "-TestExit=Automation Test Queue Empty", "-nullrhi"],
+            "packaged": "**/*.app/Contents/MacOS/{target}",
+            "tools": ["git", "ps", "lsof", "osascript"],
+            "quit": "quit_by_app", "save_dialog": True,
+            "version_tools": [("Xcode", ["xcodebuild", "-version"]), ("Metal", ["xcrun", "--find", "metal"])]},
 }
+
+TOOL_HINTS = {
+    "lsof": "install lsof (Arch: `sudo pacman -S lsof`; Debian/Ubuntu: `sudo apt install lsof`)",
+    "ps": "install procps (Arch: `sudo pacman -S procps-ng`; Debian/Ubuntu: `sudo apt install procps`)",
+    "git": "install Git and Git LFS",
+    "osascript": "part of macOS",
+    "xcodebuild": "install Xcode", "xcrun": "install Xcode",
+}
+
+OFF_ULTRA = ("Not on PlebDev Ultra: Unreal results from this machine do not count as verification. "
+             "Do source and docs work here, state your host in the PR, and the maintainer verifies "
+             "Unreal work on Ultra before merge (CONTRIBUTING.md).")
+
+# --cores reaches these commands; others refuse it so a cap is never silently dropped.
+CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package")
 
 
 def current_host():
-    if sys.platform.startswith("linux") and platform.machine() in ("x86_64", "AMD64"):
+    if sys.platform.startswith("linux") and platform.machine() == "x86_64":
         return "linux"
     if sys.platform == "darwin" and platform.machine() == "arm64":
         return "mac"
@@ -66,6 +95,8 @@ def write_json(path, value):
 
 class Dev:
     def __init__(self, workspace, host=None, cores=None):
+        if cores is not None and cores < 1:
+            raise ValueError("--cores must be 1 or more")
         self.w = workspace
         self.supported = (host or current_host()) is not None
         self.host = host or current_host() or "linux"
@@ -89,6 +120,7 @@ class Dev:
     @contextmanager
     def operation(self):
         self.w.local.mkdir(exist_ok=True)
+        import fcntl  # Unix only; imported here so doctor can still guide other hosts.
         with (self.w.local / "operation.lock").open("a") as lock:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -96,8 +128,17 @@ class Dev:
                 raise RuntimeError("Another helper operation owns this workspace") from exc
             yield
 
+    def tool(self, name):
+        path = shutil.which(name)
+        if not path:
+            raise RuntimeError(f"`{name}` is not installed or not on PATH; {TOOL_HINTS.get(name, 'install it')}")
+        return path
+
     def execute(self, args, **kwargs):
-        return subprocess.run([str(a) for a in args], cwd=self.w.root, check=True, **kwargs)
+        args = [str(a) for a in args]
+        if "/" not in args[0]:
+            args[0] = self.tool(args[0])
+        return subprocess.run(args, cwd=self.w.root, check=True, **kwargs)
 
     def processes(self):
         result = self.execute(["ps", "-axww", "-o", "pid=,command="], capture_output=True, text=True)
@@ -115,14 +156,14 @@ class Dev:
             if not owns:
                 # Finder launches may omit the project argument; an open exact log
                 # establishes workspace association but runtime identity is still required.
-                opened = subprocess.run(["lsof", "-a", "-p", str(pid), "-Fn", str(self.w.log)], capture_output=True, text=True)
+                opened = subprocess.run([self.tool("lsof"), "-a", "-p", str(pid), "-Fn", str(self.w.log)], capture_output=True, text=True)
                 owns = f"n{self.w.log}\n" in opened.stdout
             if owns:
                 processes.append({"pid": pid, "command": command})
         return processes
 
     def listener(self):
-        result = subprocess.run(["lsof", "-nP", "-a", "-iTCP:" + str(self.endpoint.port), "-sTCP:LISTEN", "-Fp"], capture_output=True, text=True)
+        result = subprocess.run([self.tool("lsof"), "-nP", "-a", "-iTCP:" + str(self.endpoint.port), "-sTCP:LISTEN", "-Fp"], capture_output=True, text=True)
         if result.returncode not in (0, 1):
             raise RuntimeError(f"Cannot inspect listener: {result.stderr.strip()}")
         pids = {int(x[1:]) for x in result.stdout.splitlines() if x.startswith("p")}
@@ -165,14 +206,19 @@ class Dev:
                 failures.append(label)
                 print(f"FAIL {label}: {exc}")
         print(f"INFO Python {platform.python_version()} at {sys.executable}")
+        if self.host != "linux" or not self.supported:
+            print("NOTE " + OFF_ULTRA)
+        if not self.supported:
+            print(f"SKIP Unreal checks: {sys.platform}/{platform.machine()} has no helper support (Windows is #51)")
+            return
         check("Host", self.check_host)
+        for name in self.layout["tools"]:
+            check(f"Tool {name}", lambda name=name: self.tool(name))
         check("Unreal", self.require_engine)
         check("Editor plugins", self.check_plugins)
-        tools = [("Git LFS", ["git", "lfs", "version"])]
+        tools = [("Git LFS", ["git", "lfs", "version"]), *self.layout["version_tools"]]
         if self.host == "linux":
             check("Clang (engine toolchain)", self.check_clang)
-        else:
-            tools += [("Xcode", ["xcodebuild", "-version"]), ("Metal", ["xcrun", "--find", "metal"])]
         for label, command in tools:
             check(label, lambda command=command: self.execute(command, capture_output=True, text=True).stdout.strip().replace("\n", "; "))
         check("MCP configurations", self.check_configs)
@@ -189,9 +235,7 @@ class Dev:
     def check_host(self):
         if not self.supported:
             raise RuntimeError("This helper supports Linux x86_64 (validated) and Apple Silicon macOS (unvalidated)")
-        if self.host != "linux":
-            print("WARN Mac is no longer a validated host; verify on Linux (docs/development.md)")
-        return f"{self.layout['label']} {platform.release()}"
+        return f"{self.layout['label']} {platform.release()}" + ("" if self.host == "linux" else " (not validated)")
 
     def check_clang(self):
         expected = self.w.versions.get("host_clang", "")
@@ -216,12 +260,23 @@ class Dev:
         return [f"-ubtargs=-MaxParallelActions={self.cores}", f"-AdditionalCookerOptions=-corelimit={self.cores}", f"-AdditionalIoStoreOptions=-corelimit={self.cores}"]
 
     def config_snapshot(self):
-        return {p: p.read_bytes() for p in sorted((self.w.root / "Config").glob("*.ini"))}
+        return {p: p.read_bytes() for p in sorted((self.w.root / "Config").rglob("*")) if p.is_file()}
 
-    def require_config_unchanged(self, before):
-        changed = [str(p.relative_to(self.w.root)) for p in sorted(set(before) | set(self.config_snapshot())) if not p.is_file() or before.get(p) != p.read_bytes()]
-        if changed:
-            raise RuntimeError(f"The engine rewrote tracked config {changed}; inspect `git diff` and restore before committing. The helper does not revert it.")
+    @contextmanager
+    def config_guard(self):
+        """Report any engine write under Config/, even when the engine run itself failed."""
+        before = self.config_snapshot()
+        try:
+            yield
+        finally:
+            after = self.config_snapshot()
+            changed = [str(p.relative_to(self.w.root)) for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
+            if changed:
+                original = sys.exc_info()[1]
+                message = f"The engine changed tracked config {changed}; inspect `git diff` and restore it before committing. The helper does not revert it."
+                if original:
+                    message += f" The run also failed: {original}"
+                raise RuntimeError(message) from original
 
     def check_plugins(self):
         paths = {
@@ -271,10 +326,29 @@ class Dev:
         self.require_engine()
         self.require_closed()
         snapshot = source_digest(self.w)
-        self.execute([self.engine / self.layout["build"], self.w.settings["editor_target"], self.platform, "Development", self.w.project, "-WaitMutex", "-NoHotReloadFromIDE", *self.native_limits(build=True)])
+        log = self.w.local / "build" / f"{stamp()}.log"
+        log.parent.mkdir(parents=True, exist_ok=True)
+        log.touch()
+        with self.config_guard():
+            code = self.run_logged([self.engine / self.layout["build"], self.w.settings["editor_target"], self.platform, "Development", self.w.project, "-WaitMutex", "-NoHotReloadFromIDE", *self.native_limits(build=True)], log)
+        warnings = build_warnings(log.read_text(errors="replace"))
+        if code != 0:
+            raise RuntimeError(f"Build failed with exit {code}; inspect {log}")
+        if warnings:
+            raise RuntimeError(f"{len(warnings)} build warning line(s); a clean build has none. First: {warnings[0]} Inspect {log}")
         if source_digest(self.w) != snapshot:
             raise RuntimeError("Source changed during the build; rerun build before launching")
         write_json(self.w.local / "build.json", self.build_identity(snapshot))
+        print(f"Build passed with 0 warnings; log: {log}")
+
+    def run_logged(self, args, log):
+        """Stream a child's output to the console and a log file; return its exit code."""
+        with log.open("w") as stream:
+            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+            for line in process.stdout:
+                sys.stdout.write(line)
+                stream.write(line)
+            return process.wait()
 
     def build_identity(self, snapshot=None):
         manifest = self.w.root / "Binaries" / self.platform / "UnrealEditor.modules"
@@ -291,9 +365,10 @@ class Dev:
         self.require_closed()
         log = self.w.local / "bootstrap" / f"{stamp()}.log"
         log.parent.mkdir(exist_ok=True)
-        config = self.config_snapshot()
-        self.execute([self.cmd, self.w.project, "-run=pythonscript", f"-script={self.w.root / 'Content/Python/bootstrap_sandbox.py'}", f"-abslog={log}", "-unattended", "-nullrhi", "-nosplash", *self.native_limits()], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        self.require_config_unchanged(config)
+        with self.config_guard():
+            code = self.run_bounded([self.cmd, self.w.project, "-run=pythonscript", f"-script={self.w.root / 'Content/Python/bootstrap_sandbox.py'}", f"-abslog={log}", "-unattended", *self.layout["headless"], "-nosplash", *self.native_limits()], log.with_suffix(".console.log"), timeout=300)
+        if code != 0:
+            raise RuntimeError(f"Bootstrap commandlet exited {code}; inspect {log}")
         validate_bootstrap(log.read_text(errors="replace"))
         print(f"Sandbox validated; commandlet has zero errors/warnings. Log: {log}")
 
@@ -304,14 +379,14 @@ class Dev:
         output.mkdir(parents=True)
         log = output / "commandlet.log"
         script = self.w.root / "Content/Python/verify_project_skill.py"
-        config = self.config_snapshot()
-        self.execute([self.cmd, self.w.project, "-run=pythonscript", f"-script={script}",
-                      f"-abslog={log}", "-unattended", "-nullrhi", "-nosplash", *self.native_limits()],
-                     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        self.require_config_unchanged(config)
+        with self.config_guard():
+            code = self.run_bounded([self.cmd, self.w.project, "-run=pythonscript", f"-script={script}",
+                                     f"-abslog={log}", "-unattended", *self.layout["headless"], "-nosplash", *self.native_limits()],
+                                    output / "console.log", timeout=300)
         content = log.read_text(errors="replace")
         matches = re.findall(r"PROJECT_SKILL_VERIFIED (\{[^\r\n]+\})", content)
-        if len(matches) != 1 or log_events(content)["errors"]:
+        events = log_events(content)
+        if code != 0 or len(matches) != 1 or events["errors"]:
             raise RuntimeError(f"Project skill readback failed; inspect {log}")
         report = json.loads(matches[0])
         expected_engine = f"{self.w.versions['unreal_engine']}-{self.w.versions['unreal_changelist']}+"
@@ -320,8 +395,10 @@ class Dev:
                 or not report["engine_version"].startswith(expected_engine)
                 or report["instructions_sha256"] != hashlib.sha256(source.read_text(encoding="utf-8").encode("utf-8")).hexdigest()):
             raise RuntimeError(f"Project skill readback differs from this checkout/source/engine; inspect {log}")
-        write_json(output / "verified.json", report)
-        print(f"Project skill discovery/readback verified; live MCP not exercised. Evidence: {output}")
+        write_json(output / "verified.json", {**report, "warnings": events["warnings"]})
+        if events["warnings"]:
+            raise RuntimeError(f"{len(events['warnings'])} warning line(s) in the skill check; first: {events['warnings'][0]} Inspect {log}")
+        print(f"Project skill discovery/readback verified with 0 warnings; live MCP not exercised. Evidence: {output}")
 
     def launch(self, wait=True):
         self.require_engine()
@@ -356,8 +433,8 @@ class Dev:
 
     def close(self, request_quit=False):
         self.require_engine()
-        if request_quit and self.host == "linux":
-            raise RuntimeError("--request-quit needs a save dialog, which the Linux quit path does not show; use close")
+        if request_quit and not self.layout["save_dialog"]:
+            raise RuntimeError("--request-quit relies on a save dialog, which this host's quit path does not show; use close")
         pid = self.os_identity()
         if not request_quit:
             with self.connected() as (client, state):
@@ -366,18 +443,9 @@ class Dev:
                 require_clean(self.runtime(client, pid))
         if self.os_identity() != pid:
             raise RuntimeError("Editor identity changed before quit")
-        if self.host == "linux":
-            # Unreal's Unix handler turns the first SIGTERM into a normal engine exit
-            # request. A second signal forces exit, so send exactly one and only after the
-            # PIE/dirty gate above: this path shows no save dialog. Never SIGKILL.
-            os.kill(pid, signal.SIGTERM)
-        else:
-            # NSRunningApplication.terminate sends a normal quit request, honoring
-            # Unreal's dirty/save dialogs. Never use forceTerminate, SIGTERM or QUIT_EDITOR.
-            script = 'ObjC.import("AppKit"); $.NSRunningApplication.runningApplicationWithProcessIdentifier(' + str(pid) + ').terminate;'
-            result = self.execute(["osascript", "-l", "JavaScript", "-e", script], capture_output=True, text=True)
-            if result.stdout.strip() != "true":
-                raise RuntimeError("macOS declined the normal quit request")
+        # Known gap: a package could become dirty between the last check and the quit
+        # request. On Linux there is no save dialog to catch that, so do not edit while closing.
+        getattr(self, self.layout["quit"])(pid)
         deadline = time.monotonic() + 120
         while time.monotonic() < deadline:
             if not any(p["pid"] == pid for p in self.processes()) and self.listener() != pid:
@@ -385,6 +453,19 @@ class Dev:
                 return
             time.sleep(0.5)
         raise RuntimeError("Editor did not exit in time. Check it in Unreal; do not signal it again. No force quit attempted.")
+
+    def quit_by_signal(self, pid):
+        # Unreal's Unix handler turns the first SIGTERM into a normal engine exit request
+        # (exit 143). A second signal forces exit, so send exactly one. Never SIGKILL.
+        os.kill(pid, signal.SIGTERM)
+
+    def quit_by_app(self, pid):
+        # NSRunningApplication.terminate sends a normal quit request, honoring
+        # Unreal's dirty/save dialogs. Never use forceTerminate, SIGTERM or QUIT_EDITOR.
+        script = 'ObjC.import("AppKit"); $.NSRunningApplication.runningApplicationWithProcessIdentifier(' + str(pid) + ').terminate;'
+        result = self.execute(["osascript", "-l", "JavaScript", "-e", script], capture_output=True, text=True)
+        if result.stdout.strip() != "true":
+            raise RuntimeError("macOS declined the normal quit request")
 
     def smoke(self):
         report_path = self.w.local / "smoke-result.json"
@@ -473,12 +554,8 @@ class Dev:
                 raise RuntimeError(f"PID {process.pid} still running after {timeout}s; left running for a normal shutdown, not killed. Inspect {log}") from None
 
     def automation_command(self, pattern, output, log):
-        common = [self.cmd, self.w.project, f"-ReportExportPath={output}", f"-abslog={log}", "-unattended", "-nosound", "-nosplash"]
-        if self.host == "linux":
-            # -nullrhi skips SDL init (Slate then warns about Wayland), and -TestExit
-            # force-exits 1 on Unix. Offscreen rendering plus SoftQuit exits normally.
-            return [*common, f"-ExecCmds=Automation RunTests {pattern};SoftQuit", "-RenderOffscreen", *self.native_limits()]
-        return [*common, f"-ExecCmds=Automation RunTests {pattern}", "-TestExit=Automation Test Queue Empty", "-nullrhi"]
+        return [self.cmd, self.w.project, f"-ReportExportPath={output}", f"-abslog={log}", "-unattended", "-nosound", "-nosplash",
+                *self.layout["automation"](pattern), *self.native_limits()]
 
     def test(self, pattern, allow_warnings=False):
         self.require_engine()
@@ -488,9 +565,8 @@ class Dev:
         output = self.w.local / "automation" / stamp()
         output.mkdir(parents=True)
         log = output / "automation.log"
-        config = self.config_snapshot()
-        code = self.run_bounded(self.automation_command(pattern, output, log), output / "console.log", timeout=300)
-        self.require_config_unchanged(config)
+        with self.config_guard():
+            code = self.run_bounded(self.automation_command(pattern, output, log), output / "console.log", timeout=300)
         report_path = output / "index.json"
         if not report_path.is_file():
             raise RuntimeError(f"Automation produced no test report (possibly zero matched tests); inspect {log}")
@@ -507,10 +583,7 @@ class Dev:
 
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
-        if self.host == "linux":
-            found = [p for p in output.glob(f"**/Binaries/Linux/{target}") if p.is_file() and os.access(p, os.X_OK)]
-        else:
-            found = [p for p in output.glob(f"**/*.app/Contents/MacOS/{target}") if p.is_file()]
+        found = [p for p in output.glob(self.layout["packaged"].format(target=target)) if p.is_file() and os.access(p, os.X_OK)]
         if len(found) != 1:
             raise RuntimeError(f"Cannot identify the packaged {target} executable in {output}: {found}")
         return found[0]
@@ -521,16 +594,13 @@ class Dev:
         output = self.w.root / "Builds" / stamp()
         output.mkdir(parents=True)
         log = output / "package.log"
-        config = self.config_snapshot()
-        with log.open("w") as stream:
+        with self.config_guard(), log.open("w") as stream:
             self.execute([self.engine / "Build/BatchFiles/RunUAT.sh", "BuildCookRun", f"-project={self.w.project}", f"-platform={self.platform}", "-clientconfig=Development", f"-target={self.w.settings['game_target']}", "-build", "-cook", "-stage", "-pak", "-package", "-archive", f"-archivedirectory={output}", "-unattended", "-nop4", "-utf8output", *self.package_limits()], stdout=stream, stderr=subprocess.STDOUT)
-        self.require_config_unchanged(config)
+        package_events = log_events(log.read_text(errors="replace"))
         binary = self.packaged_binary(output)
-        # Offscreen keeps the real RHI path; Linux -nullrhi skips SDL and adds a warning.
-        render = ["-RenderOffscreen"] if self.host == "linux" else ["-nullrhi"]
         launch_log = output / "launch.log"
         with launch_log.open("w") as stream:
-            process = subprocess.Popen([str(binary), "-unattended", *render, "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()], cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT)
+            process = subprocess.Popen([str(binary), "-unattended", *self.layout["headless"], "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()], cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT)
             try:
                 deadline = time.monotonic() + 90
                 loaded = False
@@ -549,12 +619,16 @@ class Dev:
             finally:
                 # This is the packaged process created above, never an editor. One SIGTERM
                 # is Unreal's normal exit request on Linux and macOS; it is not escalated.
+                original = sys.exc_info()[1]
                 if process.poll() is None:
                     process.terminate()
                     try:
                         process.wait(timeout=30)
                     except subprocess.TimeoutExpired:
-                        raise RuntimeError(f"Packaged game PID {process.pid} did not exit after one SIGTERM; left running") from None
+                        message = f"Packaged game PID {process.pid} did not exit after one SIGTERM; left running"
+                        if original:
+                            message += f". Earlier failure: {original}"
+                        raise RuntimeError(message) from original
         text = launch_log.read_text(errors="replace")
         events = log_events(text)
         if events["errors"]:
@@ -562,13 +636,29 @@ class Dev:
         exited = "LogExit: Exiting." in text
         if not exited:
             raise RuntimeError(f"Packaged game did not log a normal exit; inspect {launch_log}")
-        write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events})
-        print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: {len(events['warnings'])}; evidence: {output}")
+        write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
+                                              "package_warnings": package_events["warnings"], "package_errors": package_events["errors"]})
+        print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: launch {len(events['warnings'])}, package {len(package_events['warnings'])}; package error lines: {len(package_events['errors'])}; evidence: {output}")
+
+def build_warnings(text):
+    """Compiler (clang/MSVC) and UnrealBuildTool warning lines."""
+    return [line for line in text.splitlines() if re.search(r"(?i)(?:^|[\s:])warning(?: [A-Z]+\d+)?:", line)]
+
+
+def core_count(value):
+    try:
+        cores = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("--cores takes a whole number") from None
+    if cores < 1:
+        raise argparse.ArgumentTypeError("--cores must be 1 or more")
+    return cores
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", help="Select a root .uproject if the workspace has more than one")
-    parser.add_argument("--cores", type=int, help="Cap build actions / engine cores so native jobs share the machine (e.g. 2)")
+    parser.add_argument("--cores", type=core_count, help="Cap build actions and engine cores so jobs share the machine (e.g. 2); applies to " + ", ".join(CORE_COMMANDS))
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("doctor", "status", "build", "bootstrap", "smoke", "capture", "package", "relaunch", "verify-skills"):
         commands.add_parser(name)
@@ -588,7 +678,12 @@ def main():
     raw.add_argument("--method", default="tools/list")
     raw.add_argument("--params", default="{}")
     args = parser.parse_args()
+    if args.cores and args.command not in CORE_COMMANDS:
+        parser.error(f"--cores does not apply to {args.command}; it applies to " + ", ".join(CORE_COMMANDS))
     dev = Dev(Workspace.discover(ROOT, args.project), cores=args.cores)
+    if args.command == "doctor":  # Read-only; runs without the Unix lock so any host gets guidance.
+        dev.doctor()
+        return 0
     with dev.operation():
         if args.command == "editor":
             dev.launch(wait=not args.no_wait)
