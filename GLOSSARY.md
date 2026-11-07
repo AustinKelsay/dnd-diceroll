@@ -45,6 +45,6 @@ _Avoid_: pawn when discussing game rules
 
 **Next party**: Four ordered build selections edited at startup or after an ending, used only by explicit New Run. Resume retains the saved party.
 
-**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it.
+**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it.
 
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.

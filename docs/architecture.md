@@ -24,6 +24,8 @@ A packaged Linux Development game resolves that default under `~/.config/Epic/Dn
 
 NewRun also enforces unfinished-run protection at the session boundary, including a saved run not yet resumed after startup. An explicit startup NewRun can recover an unreadable/incompatible file by moving it to a unique sibling `.unreadable-…` path; its bytes remain preserved, even if writing the replacement fails. The optional preserved-path result drives visible recovery feedback. Resume never accepts or repairs invalid data, and an active session never quarantines its checkpoint. This is recovery from an unreadable document, not an older-save fallback or migration.
 
+`FExpeditionSession::Close()` (Return to menu, #132) only drops the live run from memory: it writes, moves or deletes nothing, so the checkpoint stays as last committed, Resume restores it and NewRun's unfinished-run protection still applies. `HasUnfinishedCheckpoint()` is the matching read-only query (a readable, unfinished checkpoint) that lets the start screen focus Resume.
+
 ## Expedition presentation
 
 The rules settle each command instantly and return an `FCombatResult` with presentation facts: actor, target, the path walked, every damage or healing die in roll order, and who was newly downed or killed. Rules never read these back. `FCombatBattle::Forecast` and `PathTo` are const queries that share resolution tuning and consume no random numbers.
