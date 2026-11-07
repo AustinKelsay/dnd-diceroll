@@ -35,6 +35,8 @@ public:
     bool ShowingHelp() const { return bShowHelp; }
     /** True while the mid-encounter "Return to menu?" question is open. */
     bool ConfirmingReturn() const { return bConfirmReturn; }
+    /** True while a requested return waits for the party's turn and playback to finish. */
+    bool ReturnPending() const { return bReturnPending; }
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
     /** Legal target under the cursor for the selected action. */
@@ -66,6 +68,7 @@ private:
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
     bool bConfirmReturn = false;
+    bool bReturnPending = false;
     /** Set when the player put a run away; the start screen then focuses Resume. */
     bool bReturnedToMenu = false;
     bool bDragging = false;
