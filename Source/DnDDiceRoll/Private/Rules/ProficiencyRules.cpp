@@ -68,13 +68,13 @@ FClassProficiencies FProficiencyRules::ClassProficiencies(EAdventurerRole Role, 
     {
     case EAdventurerRole::Fighter:
         Class.SaveMask = Saves(EAbility::Strength, EAbility::Constitution);
-        Class.SkillList = {S::Acrobatics, S::AnimalHandling, S::Athletics, S::History, S::Insight, S::Intimidation, S::Perception, S::Survival};
+        Class.SkillList = {S::Acrobatics, S::AnimalHandling, S::Athletics, S::History, S::Insight, S::Intimidation, S::Perception, S::Persuasion, S::Survival};
         Class.SkillPicks = 2;
         break;
     case EAdventurerRole::Rogue:
         Class.SaveMask = Saves(EAbility::Dexterity, EAbility::Intelligence);
         Class.SkillList = {S::Acrobatics, S::Athletics, S::Deception, S::Insight, S::Intimidation, S::Investigation, S::Perception,
-            S::Performance, S::Persuasion, S::SleightOfHand, S::Stealth};
+            S::Persuasion, S::SleightOfHand, S::Stealth};
         Class.SkillPicks = 4;
         Class.ToolMask = ToolBit(ETool::ThievesTools);
         Class.ExpertisePicks = Level >= 6 ? 4 : 2;
@@ -86,7 +86,7 @@ FClassProficiencies FProficiencyRules::ClassProficiencies(EAdventurerRole Role, 
         break;
     case EAdventurerRole::Wizard:
         Class.SaveMask = Saves(EAbility::Intelligence, EAbility::Wisdom);
-        Class.SkillList = {S::Arcana, S::History, S::Insight, S::Investigation, S::Medicine, S::Religion};
+        Class.SkillList = {S::Arcana, S::History, S::Insight, S::Investigation, S::Medicine, S::Nature, S::Religion};
         Class.SkillPicks = 2;
         break;
     default:

@@ -71,6 +71,33 @@ bool FPrebuiltProficiencyLevelsTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassSkillChoicesTest, "Project.Expedition.Rules.ClassSkillChoicesFollowSrd521",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FClassSkillChoicesTest::RunTest(const FString& Parameters)
+{
+    FCharacterRules Out;
+    FString Error;
+    FProficiencyChoice Fighter = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Fighter);
+    Fighter.ClassSkills = {ESkill::Athletics, ESkill::Persuasion};
+    TestTrue(TEXT("Fighter may choose Persuasion in SRD 5.2.1"), FProficiencyRules::BuildCharacter(
+        EAdventurerRole::Fighter, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Fighter), Fighter, Out, Error));
+    FProficiencyChoice Wizard = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Wizard);
+    Wizard.ClassSkills = {ESkill::Arcana, ESkill::Nature};
+    TestTrue(TEXT("Wizard may choose Nature in SRD 5.2.1"), FProficiencyRules::BuildCharacter(
+        EAdventurerRole::Wizard, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Wizard), Wizard, Out, Error));
+    const FCharacterRules Sentinel = Out;
+    FProficiencyChoice Rogue = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue);
+    Rogue.ClassSkills[3] = ESkill::Performance;
+    TestFalse(TEXT("Rogue cannot choose Performance as a class skill in SRD 5.2.1"), FProficiencyRules::BuildCharacter(
+        EAdventurerRole::Rogue, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Rogue), Rogue, Out, Error));
+    TestTrue(TEXT("Rejected obsolete choice preserves output"), Out.SkillMask == Sentinel.SkillMask && Out.SaveMask == Sentinel.SaveMask);
+    Rogue = FProficiencyRules::PrebuiltChoice(EAdventurerRole::Rogue);
+    Rogue.BackgroundSkills[0] = ESkill::Performance;
+    TestTrue(TEXT("Rogue may still select Performance from background"), FProficiencyRules::BuildCharacter(
+        EAdventurerRole::Rogue, 1, FAbilityRules::PrebuiltScores(EAdventurerRole::Rogue), Rogue, Out, Error));
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProficiencyRejectionTest, "Project.Expedition.Rules.InvalidProficiencyChoicesRejected",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FProficiencyRejectionTest::RunTest(const FString& Parameters)
