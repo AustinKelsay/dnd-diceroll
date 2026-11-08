@@ -437,11 +437,12 @@ void AExpeditionPlayerController::Resume()
 void AExpeditionPlayerController::RequestReturnToMenu()
 {
     if (!AllowsGameplayInput() || !BattleView->CanReturnToMenu()) { return; }
-    BattleView->PlayCue(EExpeditionCue::Click);
-    if (bReturnPending) { bReturnPending = false; return; }
+    if (bReturnPending) { bReturnPending = false; BattleView->PlayCue(EExpeditionCue::Click); return; }
     bReturnPending = true;
     PendingPhase = BattleView->Progress().Phase;
     ResolvePendingReturn();
+    // One click per press: leaving plays the view's cue and opening the question plays its own.
+    if (bReturnPending) { BattleView->PlayCue(EExpeditionCue::Click); }
 }
 void AExpeditionPlayerController::ResolvePendingReturn()
 {
@@ -463,6 +464,7 @@ void AExpeditionPlayerController::ResolvePendingReturn()
         SaveOverlayFocus();
         bConfirmReturn = true;
         bDragging = false;
+        BattleView->PlayCue(EExpeditionCue::Click);
         return;
     }
     bReturnPending = false;
