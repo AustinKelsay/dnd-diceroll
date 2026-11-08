@@ -11,7 +11,6 @@
 
 namespace
 {
-constexpr float DesignWidth = 1280.0f;
 // Dark-fantasy palette: warm near-black panels, parchment text and darkened gilt.
 const FLinearColor Ink(0.009f, 0.007f, 0.006f);
 const FLinearColor Parchment(0.93f, 0.86f, 0.72f);
@@ -259,7 +258,7 @@ void AExpeditionHUD::DrawHUD()
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
-    S = FMath::Max(0.5f, FMath::Min(Canvas->SizeX / DesignWidth, Canvas->SizeY / 720.0f));
+    S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
@@ -321,7 +320,7 @@ void AExpeditionHUD::DrawWorldOverlays()
 
     // Path preview: a dotted trail from the adventurer to the hovered cell.
     const TArray<FIntPoint>& Path = Player->PreviewPath();
-    if (bCombat && !Path.IsEmpty() && !View->IsPresenting())
+    if (Player->ShowsTargeting() && !Path.IsEmpty())
     {
         FVector2D Previous;
         bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), 4.0f), Previous);
@@ -337,7 +336,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     }
 
     // Keyboard cursor: bright corner brackets around the cell.
-    if (bCombat && Player->UsingKeyboardCursor())
+    if (Player->ShowsTargeting() && Player->UsingKeyboardCursor())
     {
         const FIntPoint Cell = Player->KeyboardCursorCell();
         const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), 2.0f);
@@ -358,10 +357,10 @@ void AExpeditionHUD::DrawWorldOverlays()
     }
 
     // Geometry is independent of target eligibility and available budgets.
-    if (bCombat && !View->IsPresenting())
+    if (Player->ShowsTargeting())
     {
         Text(TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
-        const auto Reach = Rules.ActionReach(Player->Actor(), Player->Action());
+        const auto& Reach = Player->Reach();
         auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
         {
             for (const auto Cell : Cells)
@@ -436,24 +435,30 @@ void AExpeditionHUD::DrawWorldOverlays()
 
 void AExpeditionHUD::DrawTargetChips()
 {
-    if (!View->InCombat() || View->IsPresenting() || Player->OverlayOpen()) { return; }
+    if (!Player->ShowsTargeting()) { return; }
     const auto& Rules = View->Rules();
     std::vector<ExpeditionLayout::Rect> Occupied;
     for (const auto& Box : ChipExclusions)
     { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
     struct FDrawChip { ExpeditionLayout::Chip Geometry; FString Label; float Width; };
     TArray<FDrawChip> Chips;
-    const ExpeditionLayout::Rect Bounds = {8, 150, W - 8, H - 160};
+    const ExpeditionLayout::Rect Bounds = ExpeditionLayout::ChipBounds(W, H);
+    constexpr float LabelScale = 0.72f;
+    // Text() shrinks a label that exceeds its panel, so fit the name here and keep the forecast at full size.
+    const float LabelFit = float(ExpeditionLayout::ChipMaxWidth - ExpeditionLayout::ChipTextPadding);
+    auto MeasureLabel = [this](const FString& Value) { return Measure(Value, LabelScale).X; };
     int32 Overflow = 0;
-    for (const int32 Id : Rules.LegalTargets(Player->Actor(), Player->Action()))
+    for (const int32 Id : Player->Targets())
     {
         ++ChipsRequested;
         FVector2D Anchor;
         if (!Project(View->UnitPosition(Id, 185), Anchor)) { ++Overflow; continue; }
-        const FString Label = FString::Printf(TEXT("#%d "), Id) + ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id);
-        const float Width = FMath::Min(290.0f, Measure(Label, 0.72f).X + 16);
+        const FCombatantState* Unit = Rules.Find(Id);
+        const FString Label = ExpeditionStyle::ChipLabel(Unit ? Unit->Name : FString(),
+            ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id), LabelFit, MeasureLabel);
+        const float Width = FMath::Min(float(ExpeditionLayout::ChipMaxWidth), Measure(Label, LabelScale).X + float(ExpeditionLayout::ChipTextPadding));
         ExpeditionLayout::Chip Chip;
-        if (!ExpeditionLayout::PlaceChip({Anchor.X, Anchor.Y}, Width, 24, Bounds, Occupied, Chip)) { ++Overflow; continue; }
+        if (!ExpeditionLayout::PlaceChip({Anchor.X, Anchor.Y}, Width, ExpeditionLayout::ChipHeight, Bounds, Occupied, Chip)) { ++Overflow; continue; }
         Occupied.push_back(Chip.Panel);
         Chips.Add({Chip, Label, Width});
     }
@@ -471,8 +476,8 @@ void AExpeditionHUD::DrawTargetChips()
     for (const auto& Draw : Chips)
     {
         const auto& PanelBounds = Draw.Geometry.Panel;
-        Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, 24, Gold, 0.96f, false);
-        Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, 0.72f, EAlign::Center, Draw.Width - 12);
+        Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, ExpeditionLayout::ChipHeight, Gold, 0.96f, false);
+        Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, LabelScale, EAlign::Center, Draw.Width - 12);
     }
     if (Overflow > 0)
     { Text(FString::Printf(TEXT("%d more targets: use arrows to inspect"), Overflow), W * 0.5f, H - 116, Gold, 0.7f, EAlign::Center); }

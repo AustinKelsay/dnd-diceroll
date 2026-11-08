@@ -1,5 +1,7 @@
 # Desktop continuation handoff — 2026-11-02
 
+> **Historical record, superseded.** It describes the 2026-11-02 handoff state, when no Linux engine or Unreal evidence existed. Current results, the host and the open acceptance items are in [the ledger](ledger.md) and [05-overlay-targeting.md](05-overlay-targeting.md).
+
 ## Owner direction and destination
 
 The owner explicitly directed all further project work from the MacBook to **PlebDev Ultra**, starting with this program and stability. Finish only the already active build/test safely, preserve/commit/push owned WIP without merging, and stop Mac implementation and engine jobs. The coordinator creates the continuation threads; this root must not resume Mac work.

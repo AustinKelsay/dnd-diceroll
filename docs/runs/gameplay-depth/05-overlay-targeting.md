@@ -17,3 +17,13 @@ All three canvas targeting gates now use the controller's `OverlayOpen()`, the s
 - Green with the gates on `OverlayOpen()`. Full `Project.` 115/115 (was 114), zero warnings; helpers 60/60.
 
 Limits: the counters prove what the HUD asks to place, not pixels. Rendered confirmation is the on-screen recheck recorded separately.
+
+## PR #137 review follow-ups
+
+Independent Standards and Spec reviews found no correctness bugs. Follow-ups, all headless:
+
+- **One gate.** `AExpeditionPlayerController::ShowsTargeting()` (fight, party member's turn, gameplay input allowed, no overlay, no playback) now gates the controller's highlights and the HUD's reach markers, target chips, path preview and keyboard cursor. The HUD reads the controller's `Reach()` and `Targets()` for the frame instead of recomputing them. Side effect: the keyboard cursor and path preview no longer draw during playback or enemy turns.
+- **Chip text.** The `#id` prefix is gone; a chip reads `Name: forecast`. A long name is cut with `...` so the qualifier (`can drop`, `crit drop`) stays whole at full size; if the forecast alone fills the budget it stands alone. The Rage chip says `+2 basic damage`, matching the catalog, and a test guards that coupling. The dead `Mitigation` ability branch is removed.
+- **Tests.** `TargetChipsFollowActionAndActor` (chips and reach track each action and the next hero), `TargetingHiddenDuringPlayback` (zero chips and markers on every playback frame; verified red by temporarily dropping the playback condition: 12 leaked frames), `TargetChipLabel`. The native layout test uses `CHECK` instead of `assert` and shares scale, bounds and chip size with the HUD through `TargetChipLayout.h`; its recipe is in `tools/tests/native/README.md`.
+- **Still open.** On-screen recheck of the final head (see the ledger).
+

@@ -167,6 +167,12 @@ DNDDICEROLL_API FString ActionName(ECombatCommandType Action);
 /** Actions aimed at allies (healing, rescue) rather than enemies. */
 DNDDICEROLL_API bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor = nullptr);
 DNDDICEROLL_API FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType Action, int32 TargetId);
+/**
+ * "Name: detail" for a target chip, at most MaxWidth wide by Measure. A long name is cut with "..."
+ * so the forecast qualifier ("can drop", "crit drop") always stays whole; when even the detail alone
+ * does not leave room for a name, the detail stands alone.
+ */
+DNDDICEROLL_API FString ChipLabel(const FString& Name, const FString& Detail, float MaxWidth, TFunctionRef<float(const FString&)> Measure);
 DNDDICEROLL_API FString ForecastAmount(const FActionForecast& Forecast);
 DNDDICEROLL_API const FCombatantState* FindUnit(const FCombatSnapshot& Snapshot, int32 Id);
 }

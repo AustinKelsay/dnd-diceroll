@@ -65,12 +65,10 @@ FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType
     for (const auto& A : FBuildCatalog::Abilities(*Actor))
     {
         if (A.Command != Action) { continue; }
-        if (A.Effect == EAbilityEffect::Rage || A.Effect == EAbilityEffect::Protect || A.Effect == EAbilityEffect::Swap || A.Effect == EAbilityEffect::Mitigation)
-        {
-            if (A.Effect == EAbilityEffect::Swap) { return TEXT("Swap positions"); }
-            if (A.Effect == EAbilityEffect::Rage) { return TEXT("Rage: +2 damage, -1 taken"); }
-            return FString::Printf(TEXT("Protect -%d / next turn"), A.Amount);
-        }
+        // Rage's +2 applies to basic attacks only (the catalog says "+2 basic damage").
+        if (A.Effect == EAbilityEffect::Rage) { return TEXT("Rage: +2 basic damage, -1 taken"); }
+        if (A.Effect == EAbilityEffect::Swap) { return TEXT("Swap positions"); }
+        if (A.Effect == EAbilityEffect::Protect) { return FString::Printf(TEXT("Protect -%d / next turn"), A.Amount); }
     }
     FString Amount = F.MinAmount == F.MaxAmount ? FString::FromInt(F.MinAmount)
         : F.bDiscreteAmounts ? FString::Printf(TEXT("%d or %d"), F.MinAmount, F.MaxAmount)
@@ -81,6 +79,20 @@ FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType
     { if (A.Command == Action && A.Effect == EAbilityEffect::Push && F.MinAmount < Target->HP) { Label += TEXT(" + push if open"); } }
     if (F.bCanDrop) { Label += F.MaxAmount >= Target->HP ? TEXT(" | can drop") : TEXT(" | crit drop"); }
     return Label;
+}
+
+FString ChipLabel(const FString& Name, const FString& Detail, float MaxWidth, TFunctionRef<float(const FString&)> Measure)
+{
+    if (Name.IsEmpty()) { return Detail; }
+    const FString Tail = TEXT(": ") + Detail;
+    if (Measure(Name + Tail) <= MaxWidth) { return Name + Tail; }
+    // Keep the longest name prefix that still fits beside the whole detail.
+    for (int32 Keep = Name.Len() - 1; Keep >= 1; --Keep)
+    {
+        const FString Candidate = Name.Left(Keep).TrimEnd() + TEXT("...") + Tail;
+        if (Measure(Candidate) <= MaxWidth) { return Candidate; }
+    }
+    return Detail;
 }
 
 FString ForecastAmount(const FActionForecast& Forecast)

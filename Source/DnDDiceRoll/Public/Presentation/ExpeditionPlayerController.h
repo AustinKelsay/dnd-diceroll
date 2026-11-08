@@ -39,6 +39,11 @@ public:
     bool ReturnPending() const { return bReturnPending; }
     /** Help, Records or the return question covers the screen and owns input. */
     bool OverlayOpen() const;
+    /**
+     * The one gate for targeting feedback (reach markers, target chips, highlights): a party
+     * member has the turn in a fight, no overlay covers the board and no playback is running.
+     */
+    bool ShowsTargeting() const;
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
     /** Legal target under the cursor for the selected action. */
@@ -46,6 +51,8 @@ public:
     const TArray<FIntPoint>& PreviewPath() const { return Path; }
     /** Legal targets for the selected action this frame. */
     const TArray<int32>& Targets() const { return TargetIds; }
+    /** Where the selected action can reach this frame; empty unless ShowsTargeting(). */
+    const FActionReach& Reach() const { return ReachCells; }
     /** True when the board should show where the keyboard cursor is. */
     bool UsingKeyboardCursor() const { return bKeyboardCursor; }
     FIntPoint KeyboardCursorCell() const { return GridCursor; }
@@ -66,6 +73,7 @@ private:
     int32 HoverTargetId = INDEX_NONE;
     TArray<FIntPoint> Path;
     TArray<int32> TargetIds;
+    FActionReach ReachCells;
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;

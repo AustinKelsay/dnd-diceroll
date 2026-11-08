@@ -8,10 +8,22 @@
 // production placement arithmetic can also be tested without an editor.
 namespace ExpeditionLayout
 {
+// The HUD draws a 1280x720 design space scaled to the viewport. Shared with the
+// portable layout test so both use the same scale and chip content bounds.
+constexpr double DesignWidth = 1280, DesignHeight = 720;
+constexpr double ChipHeight = 24, ChipMaxWidth = 290, ChipTextPadding = 16;
+
 struct Point { double X, Y; };
 struct Rect { double Left, Top, Right, Bottom; };
 struct Chip { Point Anchor; Rect Panel; };
 struct Segment { Point From, To; };
+
+inline double ViewScale(double ViewportWidth, double ViewportHeight)
+{ return std::max(0.5, std::min(ViewportWidth / DesignWidth, ViewportHeight / DesignHeight)); }
+
+// Where chips may sit, in design units for a viewport already divided by the scale:
+// below the top bar and legend, above the action bar and budget row.
+inline Rect ChipBounds(double W, double H) { return {8, 150, W - 8, H - 160}; }
 
 // Fixed text need not own a panel. Reserve the complete HUD frame around the
 // board content for connectors, using the same content bounds as chip placement.

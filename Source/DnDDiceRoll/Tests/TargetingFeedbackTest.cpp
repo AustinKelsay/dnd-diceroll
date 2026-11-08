@@ -131,7 +131,7 @@ bool FTargetChipSemanticsTest::RunTest(const FString& Parameters)
     using C = ECombatCommandType;
     struct FCase { const TCHAR* Build; C Action; int32 Target; const TCHAR* Label; };
     const FCase Cases[] = {
-        {TEXT("barbarian.berserker"), C::Special1, 10, TEXT("Rage: +2 damage, -1 taken")},
+        {TEXT("barbarian.berserker"), C::Special1, 10, TEXT("Rage: +2 basic damage, -1 taken")},
         {TEXT("artificer.artillerist"), C::Special2, 11, TEXT("Protect -2 / next turn")},
         {TEXT("rogue.thief"), C::Special1, 11, TEXT("Swap positions")},
         {TEXT("artificer.artillerist"), C::Special1, 20, TEXT("Auto | 5 + push if open")},
@@ -272,6 +272,36 @@ bool FTargetChipAvailabilityTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("Spent special rejects command"),B.Submit({C::Special1,10,{},Target}).bAccepted);
         TestTrue(TEXT("Budget rejection preserves all state"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&B.Snapshot(),0));
     }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTargetChipLabelTest, "Project.Expedition.Presentation.TargetChipLabel",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FTargetChipLabelTest::RunTest(const FString& Parameters)
+{
+    // Seven units per character: the label limit is a character budget, so cases are exact.
+    auto Measure = [](const FString& Value) { return Value.Len() * 7.0f; };
+    const FString Detail = TEXT("70% | 4-9 | can drop");
+    TestEqual(TEXT("A short name leads the forecast"), ExpeditionStyle::ChipLabel(TEXT("Raider 2"), Detail, 274, Measure), FString(TEXT("Raider 2: 70% | 4-9 | can drop")));
+    TestEqual(TEXT("No name leaves the forecast alone"), ExpeditionStyle::ChipLabel(FString(), Detail, 274, Measure), Detail);
+    for (const FString& Name : {FString(TEXT("Sir Bartholomew-Alexander of the Marsh Lantern Guild")), FString(TEXT("W")), FString(TEXT("An exceptionally and needlessly long hero name"))})
+    {
+        for (const float Limit : {274.0f, 220.0f, 180.0f})
+        {
+            const FString Label = ExpeditionStyle::ChipLabel(Name, Detail, Limit, Measure);
+            TestTrue(Name + TEXT(": the label fits its limit"), Measure(Label) <= Limit || Label == Detail);
+            TestTrue(Name + TEXT(": the whole qualifier stays visible"), Label.EndsWith(Detail));
+        }
+    }
+    const FString Cut = ExpeditionStyle::ChipLabel(TEXT("An exceptionally and needlessly long hero name"), Detail, 274, Measure);
+    TestTrue(TEXT("A long name is cut with an ellipsis, not the forecast"), Cut.Contains(TEXT("...: ")) && Cut.StartsWith(TEXT("An exc")));
+    TestEqual(TEXT("When the forecast alone fills the budget the name is dropped"), ExpeditionStyle::ChipLabel(TEXT("Raider"), Detail, 140, Measure), Detail);
+
+    // The Rage chip says what the catalog says: the bonus is for basic attacks only.
+    bool bRageDescribed = false;
+    for (const auto& Build : FBuildCatalog::All())
+    { for (const auto& Ability : Build.Abilities) { if (Ability.Name == TEXT("Rage")) { bRageDescribed = true; TestTrue(TEXT("The catalog still limits Rage's +2 to basic damage"), Ability.Description.Contains(TEXT("+2 basic damage"))); } } }
+    TestTrue(TEXT("A Rage ability exists to compare against"), bRageDescribed);
     return !HasAnyErrors();
 }
 #endif

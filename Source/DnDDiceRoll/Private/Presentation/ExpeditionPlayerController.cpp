@@ -129,10 +129,12 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         { if (Unit.Cell == Hover && !(Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { HoverUnitId = Unit.Id; } }
     }
     const int32 ActorId = Actor();
-    if (AllowsGameplayInput() && BattleView->InCombat() && !BattleView->IsPresenting() && ActorId == ActiveId)
+    ReachCells = FActionReach();
+    if (ShowsTargeting())
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
-        Highlights.Reach = Rules.ActionReach(ActorId, SelectedAction);
+        ReachCells = Rules.ActionReach(ActorId, SelectedAction);
+        Highlights.Reach = ReachCells;
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
         if (bHover)
@@ -395,6 +397,12 @@ bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
     return IsValid(BattleView) && !OverlayOpen();
 }
+bool AExpeditionPlayerController::ShowsTargeting() const
+{
+    return IsValid(BattleView) && AllowsGameplayInput() && BattleView->InCombat() && !BattleView->IsPresenting() &&
+        Actor() == BattleView->Rules().ActiveId();
+}
+
 bool AExpeditionPlayerController::OverlayOpen() const
 {
     return bShowHelp || bConfirmReturn || (IsValid(BattleView) && BattleView->ShowingRecords());
