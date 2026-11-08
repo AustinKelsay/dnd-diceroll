@@ -83,6 +83,7 @@ GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
 CAPTURE_MODES = ("battle", "targeting", "overview", "start")
+# Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 3200)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
