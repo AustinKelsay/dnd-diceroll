@@ -108,9 +108,13 @@ def scalar(material, name, value, x, y):
 def overlay_material():
     material = fresh_material("M_SpikeOverlay", blend_mode=unreal.BlendMode.BLEND_TRANSLUCENT,
                               shading_model=unreal.MaterialShadingModel.MSM_UNLIT, two_sided=True)
+    material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
+    material.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    log("overlay blend=%s shading=%s" % (material.get_editor_property("blend_mode"), material.get_editor_property("shading_model")))
     color = expression(material, unreal.MaterialExpressionVectorParameter, -500, 0, parameter_name="Color", default_value=unreal.LinearColor(1, 1, 1, 1))
     opacity = scalar(material, "Opacity", 0.5, -500, 200)
-    mel.connect_material_property(rgb(material, color, -300, 0), "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    gain = scalar(material, "Gain", 0.12, -500, 100)
+    mel.connect_material_property(mul(material, rgb(material, color, -300, 0), gain, -150, 50), "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
     mel.recompile_material(material)
     return material
@@ -158,9 +162,9 @@ def spike_master(name, sharp):
     fill = scalar(material, "Fill", 0.0, -300, 590)
     rim = scalar(material, "Rim", 0.0, -300, 660)
     # emissive = color * (Glow + vertexAlpha * GlowMask) + (color + 0.04) * (Fill * hemisphere + Rim * fresnel)
-    alpha = expression(material, unreal.MaterialExpressionComponentMask, -500, 300, r=False, g=False, b=False, a=True)
-    mel.connect_material_expressions(vertex, "", alpha, "")
-    masked = mul(material, alpha, glow_mask, -150, 300)
+    masked = expression(material, unreal.MaterialExpressionMultiply, -150, 300)
+    mel.connect_material_expressions(vertex, "A", masked, "A")
+    mel.connect_material_expressions(glow_mask, "", masked, "B")
     glow_total = add(material, glow, masked, 0, 350)
     glow_term = mul(material, color, glow_total, 150, 300)
     normal = expression(material, unreal.MaterialExpressionPixelNormalWS, -500, 800)
@@ -213,6 +217,14 @@ def import_world(name, atlas_png):
     mesh = move(meshes[0], package)
     library.delete_directory(STAGE + "/" + name)
     return mesh
+
+
+def no_nanite(mesh):
+    """The glTF importer turns Nanite on; its fallback mesh is a coarse reduction. Spike renders plain triangles."""
+    settings = mesh.get_editor_property("nanite_settings")
+    settings.enabled = False
+    mesh.set_editor_property("nanite_settings", settings)
+    library.save_loaded_asset(mesh)
 
 
 def mesh_stats(mesh):
@@ -301,8 +313,14 @@ if not library.does_asset_exist(atlas_path):
     move(textures[0], atlas_path)
 atlas = texture_pair(unreal.load_asset(atlas_path), "World_VigilSpike_Atlas")
 
+if os.environ.get("SPIKE_REIMPORT_WORLD"):
+    for stale in ("SM_World_VigilSpike", "SM_World_VigilSpike_Occluders"):
+        if library.does_asset_exist(DEST + "/" + stale):
+            library.delete_asset(DEST + "/" + stale)
 world = import_world("SM_World_VigilSpike", None)
 occluders = import_world("SM_World_VigilSpike_Occluders", None)
+for _mesh in (world, occluders):
+    no_nanite(_mesh)
 rig, idle, walk = import_rig()
 fighter_source = unreal.load_asset(DEST + "/T_Hero_FighterSpike_Source") if library.does_asset_exist(DEST + "/T_Hero_FighterSpike_Source") else None
 fighter = texture_pair(fighter_source, "Hero_FighterSpike") if fighter_source else atlas

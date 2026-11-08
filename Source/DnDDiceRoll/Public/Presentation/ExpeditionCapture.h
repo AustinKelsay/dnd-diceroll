@@ -66,6 +66,7 @@ private:
     };
     double LastTime = 0.0, SumFrame = 0.0, SumGpu = 0.0, SumGame = 0.0;
     int32 Sampled = 0;
+    int32 CompileFrame = 0;
 
     TWeakObjectPtr<AExpeditionPlayerController> Controller;
     TWeakObjectPtr<AExpeditionBattleView> View;

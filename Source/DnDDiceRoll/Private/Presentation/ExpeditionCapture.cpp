@@ -16,6 +16,9 @@
 #include "UnrealClient.h"
 #include "Presentation/ExpeditionSpike.h"
 #include "RHI.h"
+#if WITH_EDITOR
+#include "AssetCompilingManager.h"
+#endif
 #include "RenderTimer.h"
 #include "HAL/PlatformTime.h"
 
@@ -137,6 +140,19 @@ TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::TryCreate(AEx
     return Director;
 }
 
+namespace
+{
+// Spike: freshly imported materials/textures compile on first use in the editor build; wait so a shot never shows the default material.
+bool AssetsCompiling()
+{
+#if WITH_EDITOR
+    return FAssetCompilingManager::Get().GetNumRemainingAssets() > 0;
+#else
+    return false;
+#endif
+}
+}
+
 bool FExpeditionCaptureDirector::Idle() const
 {
     const AExpeditionBattleView* Board = View.Get();
@@ -256,7 +272,7 @@ void FExpeditionCaptureDirector::Tick()
         if (!Poses.Shots.IsValidIndex(NextShot)) { Finish(); return; }
         Pending = FResult();
         Pending.Shot = Poses.Shots[NextShot];
-        SumFrame = SumGpu = SumGame = 0.0; Sampled = 0;
+        SumFrame = SumGpu = SumGame = 0.0; Sampled = 0; CompileFrame = 0;
         FString Skip;
         if (Apply(Pending.Shot, Skip)) { Pending.Status = TEXT("captured"); Stage = EStage::Settling; StageFrames = 0; }
         else { Pending.Status = TEXT("skipped"); Pending.Reason = Skip; Results.Add(Pending); ++NextShot; StageFrames = 0; }
@@ -264,14 +280,15 @@ void FExpeditionCaptureDirector::Tick()
     }
     case EStage::Settling:
         // Spike timing: skip the first 20 frames after the pose (shader/streaming warm-up), average the rest.
-        if (StageFrames > 20 && FrameMs > 0.0)
+        if (AssetsCompiling()) { SumFrame = SumGpu = SumGame = 0.0; Sampled = 0; CompileFrame = StageFrames; }
+        else if (StageFrames > 20 && FrameMs > 0.0)
         {
             SumFrame += FrameMs;
             SumGpu += FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
             SumGame += FPlatformTime::ToMilliseconds(GGameThreadTime);
             ++Sampled;
         }
-        if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
+        if (StageFrames < Poses.SettleFrames || !Idle() || StageFrames < CompileFrame + 40) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
         {
             Pending.File = Pending.Shot.Name + TEXT(".png");
             const FString Path = FPaths::Combine(OutputDir, Pending.File);

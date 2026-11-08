@@ -1572,6 +1572,7 @@ void AExpeditionBattleView::ApplySpikeLights()
     Rim->SetLightColor(FLinearColor(0.55f, 0.65f, 1.0f));
     Rim->SetIntensity(Spike().Rim * 2.0f);
     Rim->SetCastShadows(false);
+    Rim->ForwardShadingPriority = -1;
     Rim->RegisterComponent();
     Rim->SetWorldRotation(FRotator(-28.0f, SunRotation.Yaw + 180.0f, 0.0f));
 }
