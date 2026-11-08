@@ -35,15 +35,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUnionAreaTest, "Project.Expedition.Presentatio
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FUnionAreaTest::RunTest(const FString& Parameters)
 {
-    using namespace ExpeditionLayout;
-    const Rect Screen = {0, 0, 100, 100};
-    auto Area = [&Screen](std::initializer_list<Rect> Boxes) { return UnionArea(std::vector<Rect>(Boxes), Screen); };
+    using LayoutRect = ExpeditionLayout::Rect;
+    const LayoutRect Screen = {0, 0, 100, 100};
+    auto Area = [&Screen](std::initializer_list<LayoutRect> Boxes) { return ExpeditionLayout::UnionArea(std::vector<LayoutRect>(Boxes), Screen); };
     TestEqual(TEXT("Nothing covers nothing"), Area({}), 0.0);
-    TestEqual(TEXT("One box"), Area({Rect{10, 10, 30, 20}}), 200.0);
-    TestEqual(TEXT("A box inside another counts once"), Area({Rect{0, 0, 50, 50}, Rect{10, 10, 20, 20}}), 2500.0);
-    TestEqual(TEXT("Overlapping boxes count the overlap once"), Area({Rect{0, 0, 20, 20}, Rect{10, 10, 30, 30}}), 700.0);
-    TestEqual(TEXT("Disjoint boxes add"), Area({Rect{0, 0, 10, 10}, Rect{50, 50, 60, 70}}), 300.0);
-    TestEqual(TEXT("Anything outside the viewport is clipped"), Area({Rect{-50, -50, 10, 10}, Rect{90, 90, 200, 200}}), 200.0);
+    TestEqual(TEXT("One box"), Area({LayoutRect{10, 10, 30, 20}}), 200.0);
+    TestEqual(TEXT("A box inside another counts once"), Area({LayoutRect{0, 0, 50, 50}, LayoutRect{10, 10, 20, 20}}), 2500.0);
+    TestEqual(TEXT("Overlapping boxes count the overlap once"), Area({LayoutRect{0, 0, 20, 20}, LayoutRect{10, 10, 30, 30}}), 700.0);
+    TestEqual(TEXT("Disjoint boxes add"), Area({LayoutRect{0, 0, 10, 10}, LayoutRect{50, 50, 60, 70}}), 300.0);
+    TestEqual(TEXT("Anything outside the viewport is clipped"), Area({LayoutRect{-50, -50, 10, 10}, LayoutRect{90, 90, 200, 200}}), 200.0);
     return !HasAnyErrors();
 }
 

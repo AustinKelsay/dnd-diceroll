@@ -984,8 +984,15 @@ void AExpeditionHUD::DrawTitle()
     }
     Text(TEXT("SUBCLASS"), LeftX + 14, SubclassLabelY, Gold, 0.8f);
 
-    Panel(RightX, DrawerY, RightWidth, DrawerHeight, Gold, 0.94f);
+    // The right side is two panels sized to their content, details on top and actions at the
+    // foot, so the tabletop shows between them instead of behind an empty drawer.
     const float InnerX = RightX + 14, InnerWidth = RightWidth - 28;
+    const auto* Build = FBuildCatalog::Find(Hero.BuildId);
+    float DetailsEnd = DrawerY + 66;
+    for (const auto& Ability : FBuildCatalog::Abilities(Hero)) { DetailsEnd += 22 + Wrap(Ability.Description, InnerWidth, 0.72f).Num() * 18.0f + 8; }
+    if (Build->SneakDie) { DetailsEnd += 20; }
+    if (Build->CriticalThreshold == 19) { DetailsEnd += 20; }
+    Panel(RightX, DrawerY, RightWidth, DetailsEnd - DrawerY + 6, Gold, 0.94f);
     Text(FBuildCatalog::DisplayName(Hero), InnerX, DrawerY + 12, Parchment, 1.0f, EAlign::Left, InnerWidth);
     Text(FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range), InnerX, DrawerY + 38, Muted, 0.8f);
     float Row = DrawerY + 66;
@@ -995,19 +1002,20 @@ void AExpeditionHUD::DrawTitle()
         for (const auto& Line : Wrap(Ability.Description, InnerWidth, 0.72f)) { Text(Line, InnerX, Row, Parchment, 0.72f); Row += 18; }
         Row += 8;
     }
-    const auto* Build = FBuildCatalog::Find(Hero.BuildId);
     if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), InnerX, Row, Safe, 0.75f); Row += 20; }
     if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), InnerX, Row, Safe, 0.75f); }
     // Actions sit at the foot of the drawer.
     const float Bottom = DrawerY + DrawerHeight - 12;
     const float SmallY = Bottom - 40, BigY = SmallY - 6 - 48;
     const float Half = (InnerWidth - 6) * 0.5f, Third = (InnerWidth - 12) / 3.0f;
+    const TArray<FString> Hint = Wrap(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), InnerWidth, 0.6f);
+    const float ActionsTop = BigY - 8 - Hint.Num() * 15.0f - 10;
+    Panel(RightX, ActionsTop, RightWidth, Bottom + 12 - ActionsTop, Gold, 0.94f);
     Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), InnerX, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
     Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), InnerX + Half + 6, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
     Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), InnerX, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
     Button(TEXT("Records"), TEXT("Records"), TEXT("H"), InnerX + Third + 6, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
     Button(TEXT("Help"), TEXT("Help"), TEXT("?"), InnerX + 2 * (Third + 6), SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
-    const TArray<FString> Hint = Wrap(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), InnerWidth, 0.6f);
     float HintY = BigY - 8 - Hint.Num() * 15.0f;
     for (const auto& Line : Hint) { Text(Line, InnerX, HintY, Muted, 0.6f); HintY += 15; }
     if (!View->Messages().IsEmpty())
