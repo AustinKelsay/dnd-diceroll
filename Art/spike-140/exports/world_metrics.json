@@ -1,0 +1,54 @@
+{
+ "cleared_intruding_tris": 1442,
+ "cleared_components_whole": 80,
+ "flagged_components": 55,
+ "occluder_source_tris": 2420,
+ "world_source_tris": 17540,
+ "residual_occluding_components_in_world_mesh": 0,
+ "residual_occluding_rays": 0,
+ "stones": 1209,
+ "stone_equiv_diameter_cm": [
+  47.2,
+  63.2,
+  69.2
+ ],
+ "stone_bbox_width_cm_p5_p50_p95": [
+  68.7,
+  79.4,
+  88.9
+ ],
+ "stone_top_height_range_cm": [
+  -2.7,
+  2.7
+ ],
+ "stone_tris": 35855,
+ "base_tris": 1976,
+ "arch_tris_before_subdivision": {
+  "world": 18284,
+  "occluders": 2710
+ },
+ "ao_samples": 49507,
+ "world": {
+  "triangles": 72767,
+  "vertices": 42605,
+  "glow_tris": 308,
+  "edge_len_m_median": 0.475,
+  "edge_len_m_p90_within_14_units_of_board": 0.675,
+  "bytes": 7207980
+ },
+ "occluders": {
+  "triangles": 41588,
+  "vertices": 21233,
+  "glow_tris": 566,
+  "edge_len_m_median": 0.467,
+  "edge_len_m_p90_within_14_units_of_board": 0.675,
+  "bytes": 3422852
+ },
+ "architecture_tris_inside_footprint_above_10cm": 0,
+ "footprint_m": [
+  27.0,
+  18.0
+ ],
+ "cell_m": 1.5,
+ "atlas": 2048
+}
