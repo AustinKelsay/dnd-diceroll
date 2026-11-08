@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "asset_id": "world-vigil",
+  "revision": 2,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Worlds/SM_World_Vigil",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/145",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender from the owner-approved Vigil look (issue #38) and the #140 gate-1 decisions; textures are r001 swatches (project-owned) or procedural; no third-party or downloaded content"
+  },
+  "recipe": {
+    "method": "Rebuilt from r001 vigil.blend: all architecture kept except what intrudes into the 18 x 12 footprint, near/occluding pieces split into SM_World_Vigil_Occluders, continuous Voronoi paving with irregular 50-75 cm stones within +-3 cm relief, terraces re-textured to 256 texels/m, rune ring moved off the playable area, vertex light at about 75 cm near the board, glow only from COLOR_0.a",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); parent #138",
+    "parameters": {
+      "units": "metres, 1 cell = 1.50 m, footprint 18 x 12 cells = 27 x 18 m centred on the origin",
+      "axes": "+X forward, Z up",
+      "material": "one baseColor atlas 2048x2048 plus COLOR_0 RGBA",
+      "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
+      "pivot": "origin = board centre at floor level, geometry in place (not per-cell)",
+      "triangles": 117853,
+      "stones": 1745,
+      "stone_equiv_diameter_cm_p5_p50_p95": [
+        49.8,
+        56.4,
+        62.9
+      ],
+      "stone_widest_chord_cm_p5_p50_p95_max": [
+        58.1,
+        65.6,
+        72.9,
+        80.4
+      ],
+      "rune_ring": {
+        "centre_m": [
+          -16.5,
+          -9.0
+        ],
+        "z_m": 0.0,
+        "distance_to_footprint_m": 3.0,
+        "outer_radius_m": 1.88
+      },
+      "atlas_fill": 0.324,
+      "paired_asset": "world-vigil-occluders",
+      "derived_from": "world-vigil r001 (same package, reimport)"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/vigil.blend",
+      "sha256": "b904e00f6fa898e58e5ce5e6a1dbe01cfb5e95581fc24b1ac7610419c1e25c48"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
+      "sha256": "0b7af01c1f70c052e3a4ad7be41d47ee5d7bcb254339ecfb90cea6fdb4e720c1"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_vigil_r002.py",
+      "sha256": "7a505f9a6afa0bf50a9f19958052ae79c480b48563edac336fcda411fe376cb8"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil/r002/SM_World_Vigil.glb",
+      "sha256": "020893c6d17cde0c838fdb460dac805f1f782c931ebf83fe53c23826c8dbc113"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#145 phase 2)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

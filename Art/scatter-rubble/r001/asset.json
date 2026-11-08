@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "asset_id": "scatter-rubble",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Rubble",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/145",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender from the owner-approved Vigil look (issue #38) and the #140 gate-1 decisions; textures are r001 swatches (project-owned) or procedural; no third-party or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_kit_r002.py): small non-blocking scatter prop",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); parent #138",
+    "parameters": {
+      "units": "metres at true scale for a 150 cm cell",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of its cell, at floor level; non-blocking dressing, may be rotated freely",
+      "triangles": 192,
+      "size_m": [
+        0.8562,
+        0.7918,
+        0.1795
+      ],
+      "bbox_min_m": [
+        -0.3962,
+        -0.4456,
+        0
+      ],
+      "bbox_max_m": [
+        0.46,
+        0.3462,
+        0.1795
+      ],
+      "atlas_px": 256,
+      "sampling": "Linear, 8 px wrapped padding per atlas region"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/vigil.blend",
+      "sha256": "b904e00f6fa898e58e5ce5e6a1dbe01cfb5e95581fc24b1ac7610419c1e25c48"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
+      "sha256": "0b7af01c1f70c052e3a4ad7be41d47ee5d7bcb254339ecfb90cea6fdb4e720c1"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_kit_r002.py",
+      "sha256": "1cf9d691ce2bff6d89e2657e00927ba05d0013a3a1d7c02546e69c5a4751b19c"
+    },
+    {
+      "role": "export",
+      "path": "Art/scatter-rubble/r001/SM_Scatter_Rubble.glb",
+      "sha256": "a907f11e527f1a39e9b503978e9e77b11e9f6361d2fad522a69646b591723d95"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#145 phase 2)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

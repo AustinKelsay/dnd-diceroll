@@ -1,0 +1,268 @@
+{
+ "cleared_intruding_tris": 1442,
+ "cleared_components_whole": 80,
+ "flagged_components": 55,
+ "occluder_source_tris": 2420,
+ "world_source_tris": 17540,
+ "residual_occluding_components_in_world_mesh": 0,
+ "residual_occluding_rays": 0,
+ "rune_ring": {
+  "centre_m": [
+   -16.5,
+   -9.0
+  ],
+  "z_m": 0.0,
+  "distance_to_footprint_m": 3.0,
+  "outer_radius_m": 1.88
+ },
+ "stones": 1745,
+ "stones_measured_interior": 1615,
+ "stone_equiv_diameter_cm_p5_p50_p95": [
+  49.8,
+  56.4,
+  62.9
+ ],
+ "stone_widest_chord_cm_p5_p50_p95_max": [
+  58.1,
+  65.6,
+  72.9,
+  80.4
+ ],
+ "stone_top_height_range_cm": [
+  -2.7,
+  2.7
+ ],
+ "stone_tris": 51865,
+ "base_tris": 1976,
+ "arch_tris_before_subdivision": {
+  "world": 18284,
+  "occluders": 2710
+ },
+ "ao_samples": 30200,
+ "atlas": {
+  "size": 2048,
+  "regions": 18,
+  "pad_px": 16,
+  "fill_fraction": 0.324,
+  "regions_px": {
+   "paveT": [
+    512,
+    512
+   ],
+   "wall": [
+    256,
+    512
+   ],
+   "paveB": [
+    256,
+    256
+   ],
+   "paveC": [
+    256,
+    256
+   ],
+   "paveM": [
+    256,
+    256
+   ],
+   "paveA": [
+    256,
+    256
+   ],
+   "soil": [
+    256,
+    256
+   ],
+   "moss": [
+    256,
+    256
+   ],
+   "rune": [
+    256,
+    256
+   ],
+   "pier": [
+    128,
+    512
+   ],
+   "iron": [
+    256,
+    256
+   ],
+   "timber": [
+    256,
+    256
+   ],
+   "sstone": [
+    128,
+    128
+   ],
+   "rose": [
+    128,
+    128
+   ],
+   "gold": [
+    64,
+    64
+   ],
+   "lancet": [
+    32,
+    96
+   ],
+   "flame": [
+    8,
+    8
+   ],
+   "banner": [
+    8,
+    8
+   ]
+  }
+ },
+ "terrace_texels_per_m": 256.0,
+ "r001_terrace_texels_per_m": 85.3,
+ "world": {
+  "triangles": 117853,
+  "glow_tris": 309,
+  "by_material": {
+   "paveB": 13080,
+   "paveC": 10045,
+   "paveM": 13235,
+   "paveA": 15505,
+   "soil": 1404,
+   "moss": 572,
+   "sstone": 3614,
+   "rune": 96,
+   "paveT": 51718,
+   "pier": 4174,
+   "wall": 1208,
+   "iron": 1122,
+   "lancet": 752,
+   "gold": 136,
+   "timber": 1128,
+   "flame": 78
+  },
+  "edge_len_m_all_median": 0.419,
+  "edge_len_m_terrace_within_4p5m": [
+   0.493,
+   0.75,
+   1.5
+  ],
+  "edge_len_m_architecture_above_1m_within_10p5m_median_p90_max": [
+   0.469,
+   0.651,
+   0.851
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.266,
+   0.379
+  ],
+  "glb": {
+   "triangles": 117853,
+   "vertices": 208911,
+   "bbox_min_m": [
+    -81,
+    -61.5,
+    -0.0525
+   ],
+   "bbox_max_m": [
+    55.5,
+    81.75,
+    48
+   ],
+   "size_m": [
+    136.5,
+    143.25,
+    48.0525
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 10865392,
+   "extensions": []
+  }
+ },
+ "occluders": {
+  "triangles": 12307,
+  "glow_tris": 145,
+  "by_material": {
+   "pier": 9216,
+   "wall": 1282,
+   "iron": 1432,
+   "rose": 328,
+   "flame": 108,
+   "banner": 27
+  },
+  "edge_len_m_all_median": 0.644,
+  "edge_len_m_terrace_within_4p5m": [
+   0.45,
+   0.638,
+   0.675
+  ],
+  "edge_len_m_architecture_above_1m_within_10p5m_median_p90_max": [
+   0.643,
+   1.688,
+   2.003
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.0,
+   0.0
+  ],
+  "glb": {
+   "triangles": 12307,
+   "vertices": 17044,
+   "bbox_min_m": [
+    -19.275,
+    -37.5726,
+    0
+   ],
+   "bbox_max_m": [
+    19.275,
+    46.5726,
+    20.439
+   ],
+   "size_m": [
+    38.55,
+    84.1452,
+    20.439
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 1850380,
+   "extensions": []
+  }
+ },
+ "architecture_tris_inside_footprint_above_10cm": 0,
+ "footprint_m": [
+  27.0,
+  18.0
+ ],
+ "cell_m": 1.5
+}
