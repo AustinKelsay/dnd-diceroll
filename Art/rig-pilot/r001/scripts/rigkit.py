@@ -188,6 +188,15 @@ def paint(kind, rng, nz, **k):
             m = ((np.abs(u) < .16) & (np.abs(v) < .66)) | ((np.abs(v + .12) < .14) & (np.abs(u) < .5))
         elif sym == 'star':
             m = (np.abs(u) ** .6 + np.abs(v) ** .6) < .55
+        elif sym == 'sunburst':   # disc with eight tapered rays
+            r = np.hypot(u, v)
+            ang = np.arctan2(v, u)
+            ray = (np.abs(((ang * 8 / (2 * math.pi)) % 1.0) - .5) < .22 * (1.05 - r)) & (r > .34) & (r < .80)
+            m = (r < .27) | ray
+        elif sym == 'tower':      # waystone: tapering monolith with a dark doorway and a crowning notch
+            hw = (.17 + .13 * (v + .72) / 1.44) * (1 - np.clip((-v - .40) / .32, 0, 1))
+            m = (v > -.72) & (v < .72) & (np.abs(u) < hw)
+            m &= ~((np.abs(u) < .09) & (v > .12))
         else:                     # 'sigil': ring with a bar
             r = np.hypot(u, v * .8)
             m = ((r > .38) & (r < .52)) | ((np.abs(u) < .06) & (np.abs(v) < .6))

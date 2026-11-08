@@ -67,7 +67,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/r001/scripts/rigkit.py",
-      "sha256": "a73246a302e6f9abbf4481c59def7c99f966bb2cb183a82f5ddcf49f892c6f2e"
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
     },
     {
       "role": "source",
@@ -77,7 +77,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/r001/scripts/characters.py",
-      "sha256": "8d9ec0e6a84dcd38267b0e575cafe454f34129f9f5e124996569e06ece5593b7"
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
     },
     {
       "role": "source",

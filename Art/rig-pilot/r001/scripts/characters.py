@@ -172,7 +172,7 @@ def build_fighter(rig, M0):
     F = np.array(F)
     B.add(P, UV, F, W, 'cloth', False)
     B.add(np.array(P) + (.006, 0, 0), UV, F[:, [0, 2, 1]], W, 'cloth', False)
-    # tabard: cream surcoat panels hanging over the hips, front with a crimson cross
+    # tabard: cream surcoat panels hanging over the hips, with a crimson-gold sunburst
     sk = skirt_w(1.06, .8, .6, .06)
     zt, zb = 1.06, (.50 if detail(0) else .52)
     hw = .115
@@ -244,8 +244,8 @@ FIGHTER_ATLAS = {
     'bone': ('flat', dict(base=(.92, .88, .76))),
     'accent': ('flat', dict(base=(.96, .97, 1.0))),
     'dark': ('flat', dict(base=(.10, .10, .14))),
-    'emblem': ('emblem', dict(base=(.94, .90, .78), border=(.95, .72, .26), mark=(.80, .12, .15), symbol='cross')),
-    'emblem2': ('emblem', dict(base=(.18, .26, .52), border=(1.0, .80, .32), mark=(.88, .16, .18), symbol='star')),
+    'emblem': ('emblem', dict(base=(.94, .90, .78), border=(.95, .72, .26), mark=(.82, .20, .08), symbol='sunburst')),
+    'emblem2': ('emblem', dict(base=(.18, .26, .52), border=(1.0, .80, .32), mark=(.96, .80, .34), symbol='tower')),
 }
 
 

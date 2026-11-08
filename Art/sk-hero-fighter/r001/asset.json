@@ -57,7 +57,7 @@
     {
       "role": "source",
       "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter_source.blend",
-      "sha256": "53da24befd60c60dbcb36e383911e89bbac31d91b8f9fbdfe638e9eda9413423"
+      "sha256": "351fd947b10554899d49aadcf72df52b2dc8eacf789569715ce99d67ad176d47"
     },
     {
       "role": "source",
@@ -67,7 +67,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/r001/scripts/rigkit.py",
-      "sha256": "a73246a302e6f9abbf4481c59def7c99f966bb2cb183a82f5ddcf49f892c6f2e"
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
     },
     {
       "role": "source",
@@ -77,7 +77,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/r001/scripts/characters.py",
-      "sha256": "8d9ec0e6a84dcd38267b0e575cafe454f34129f9f5e124996569e06ece5593b7"
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
     },
     {
       "role": "source",
@@ -97,17 +97,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter.glb",
-      "sha256": "3d5ae1e634a7d9c8d74dc4f63a776d2bcb0e039afdcd7b3ec7106e7fcb9ec651"
+      "sha256": "7e8d222c85259342ba853952dbf4efe611b98751a4dfc66144ccf3144f0bd9c6"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter_LOD1.glb",
-      "sha256": "69c73f35d0ec912c17750a7e7880519b3c5a731b5c4c9faf4249d942f9165507"
+      "sha256": "5aa2d0c2b8913e60ba0fed8f7511879b98d418b0ec09e8cf783dbe865f30035c"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter_LOD2.glb",
-      "sha256": "c8d2d2ae671a8a630b6347623a5806788ef1be9df71438f9a075a9d650dd5200"
+      "sha256": "18bde36a984eefa332e8852cc0c57c661c54439a1f554ca271a3af7bb006e1bb"
     }
   ],
   "import_policy": {
