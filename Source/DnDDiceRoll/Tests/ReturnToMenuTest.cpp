@@ -459,4 +459,61 @@ bool FReturnToMenuBlockedCheckpointTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("After Resume the enemy acts again"), ExpeditionTestSupport::SameRun(Committed, Game.Live()));
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReturnToMenuDefeatTest, "Project.Expedition.Presentation.ReturnToMenuDroppedWhenDefeated",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReturnToMenuDefeatTest::RunTest(const FString& Parameters)
+{
+    using namespace ReturnToMenuTest;
+    FHarness Game(*this, TEXT("ReturnToMenuDefeat"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    AExpeditionPlayerController* Player = Game.Player;
+    AExpeditionBattleView* View = Game.View;
+    Game.Frame();
+    Game.Press(EKeys::Enter);
+    Game.Settle();
+    Game.Press(EKeys::Enter);
+    // A passive party asks to return at the start of every enemy turn and cancels each question
+    // that opens on its own turn, so the defeating enemy turn ends the battle while a return waits.
+    bool bPendingAtEnd = false;
+    for (int32 Step = 0; Step < 3000 && View->InCombat(); ++Step)
+    {
+        if (Player->ConfirmingReturn()) { Game.Press(EKeys::Escape); continue; }
+        if (EnemyActive(Game))
+        {
+            if (!Player->ReturnPending()) { Game.Press(EKeys::BackSpace); continue; }
+            // PlayerTick runs before the board in a frame, so a battle ended by this frame's
+            // enemy turn still shows the waiting return until the next frame drops it.
+            Game.Frame();
+            bPendingAtEnd = !View->InCombat() && Player->ReturnPending();
+            continue;
+        }
+        if (!View->IsPresenting()) { Game.Press(EKeys::SpaceBar); } else { Game.Frame(); }
+    }
+    if (!TestEqual(TEXT("A passive party is defeated"), View->Progress().Phase, EExpeditionPhase::Defeat)) { return false; }
+    TestTrue(TEXT("The defeating enemy turn ended the battle while a return was waiting"), bPendingAtEnd);
+    const TArray<uint8> Bytes = Game.CheckpointBytes();
+    Game.Settle();
+    TestFalse(TEXT("The defeat drops the waiting return"), Player->ReturnPending());
+    TestFalse(TEXT("No question opens after the defeat"), Player->ConfirmingReturn());
+    TestTrue(TEXT("The ending is shown, not the start screen"), View->HasRun() && !Player->ShowingBuilder());
+    TestEqual(TEXT("The ending focuses Choose next party"), Player->MenuFocus(), FName(TEXT("Builder")));
+    TestTrue(TEXT("The checkpoint bytes are unchanged"), Game.CheckpointBytes() == Bytes);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStartScreenUnreadableFocusTest, "Project.Expedition.Presentation.StartScreenFocusesBeginForUnreadableSave",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FStartScreenUnreadableFocusTest::RunTest(const FString& Parameters)
+{
+    // An unreadable checkpoint cannot be resumed and New Run preserves it, so Begin is the primary choice.
+    ReturnToMenuTest::FHarness Game(*this, TEXT("StartFocusUnreadable"), nullptr, TEXT("{"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    TestEqual(TEXT("A cold launch with a corrupt save focuses Begin"), Game.Player->MenuFocus(), FName(TEXT("New")));
+    Game.Press(EKeys::O);
+    TestFalse(TEXT("Resume refuses the corrupt save"), Game.View->HasRun());
+    TestEqual(TEXT("Begin keeps the focus after the refused Resume"), Game.Player->MenuFocus(), FName(TEXT("New")));
+    return !HasAnyErrors();
+}
 #endif

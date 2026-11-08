@@ -44,12 +44,14 @@ struct FHarness
     FOffscreenTarget Target{FIntPoint(1280, 720)};
     FNoHitProxies HitProxies;
 
-    FHarness(FAutomationTestBase& InTest, const TCHAR* Name, const FExpeditionSaveData* Saved = nullptr) : Test(InTest)
+    /** Saved writes a valid checkpoint first; RawCheckpoint writes these exact contents instead (for unreadable files). */
+    FHarness(FAutomationTestBase& InTest, const TCHAR* Name, const FExpeditionSaveData* Saved = nullptr, const TCHAR* RawCheckpoint = nullptr) : Test(InTest)
     {
         Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), Name, FGuid::NewGuid().ToString());
         Path = FPaths::Combine(Directory, TEXT("current.json"));
         FString Error;
         if (Saved && !Test.TestTrue(TEXT("Fixture checkpoint writes"), FExpeditionSave::Write(Path, *Saved, Error))) { return; }
+        if (RawCheckpoint && !Test.TestTrue(TEXT("Raw checkpoint writes"), FFileHelper::SaveStringToFile(RawCheckpoint, *Path))) { return; }
         const auto Values = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
         World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
         if (!World) { return; }
