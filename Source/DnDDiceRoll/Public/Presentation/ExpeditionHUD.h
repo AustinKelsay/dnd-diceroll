@@ -30,6 +30,14 @@ public:
      */
     int32 TargetChipsRequested() const { return ChipsRequested; }
     int32 ReachMarkersRequested() const { return ReachRequested; }
+    /** Every registered button, in viewport pixels, as the last DrawHUD placed them (#146). */
+    TArray<FBox2D> ButtonRects() const;
+    FVector2D ViewportSize() const { return FVector2D(W * S, H * S); }
+    /**
+     * Fraction of the viewport the last frame's persistent panels and buttons cover, overlaps counted once.
+     * Transient layers (tooltips, forecast, dice, banner, target chips, hover detail) are excluded.
+     */
+    double PersistentCoverage() const;
 private:
     int32 ChipsRequested = 0;
     int32 ReachRequested = 0;
@@ -37,12 +45,17 @@ private:
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
     TArray<FButtonArea> Buttons;
     TArray<FBox2D> Blockers;
+    TArray<FBox2D> Persistent; // Always-on panels in design units, for the coverage budget (#146).
     TArray<FBox2D> ChipExclusions; // Visible HUD panels in design units, independent of input blocking.
     float S = 1.0f;
     float W = 1280.0f;
     float H = 720.0f;
     FVector2D Mouse = FVector2D(-1, -1);
     float Clock = 0.0f;
+    // Combat log fade (#146): the log shows for LogLingerSeconds after its last change or hover.
+    int32 LogCount = -1;
+    FString LogLast;
+    float LogChangedAt = -100.0f;
     TWeakObjectPtr<AExpeditionPlayerController> Player;
     TWeakObjectPtr<const AExpeditionBattleView> View;
 
@@ -58,7 +71,9 @@ private:
     void Line(FVector2D A, FVector2D B, FLinearColor Color, float Thickness = 1.0f);
     void Bar(float X, float Y, float Width, float Height, float Fraction, float Trail, FLinearColor Fill);
     bool Hovered(float X, float Y, float Width, float Height) const;
-    bool Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled = true, bool bSelected = false, FLinearColor Accent = FLinearColor(0.95f, 0.78f, 0.4f));
+    bool Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled = true, bool bSelected = false, FLinearColor Accent = FLinearColor(0.95f, 0.78f, 0.4f), float LabelScale = 0.92f);
+    void Persist(float X, float Y, float Width, float Height) { Persistent.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height))); }
+    float StatusStripWidth() const;
     bool Project(const FVector& World, FVector2D& Screen) const;
     void Die(FVector2D Center, float Radius, int32 Sides, int32 Value, FLinearColor Color, float Spin, float Alpha, bool bLanded);
 
@@ -69,6 +84,7 @@ private:
     void DrawInitiative();
     void DrawParty();
     void DrawPartyCard(const FCombatantState& Unit, int32 Index, float Y);
+    void DrawPartyDetail(const FCombatantState& Unit, float X, float Y);
     void DrawActionBar();
     void DrawForecast();
     void DrawDice();
