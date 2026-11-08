@@ -27,6 +27,7 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 | `test` | Run the configured project test prefix headlessly and validate its JSON report; any warning line fails (`--allow-warnings` only reports) |
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
 | `test --filter Project.Tools.CaptureFixtures` | Write real expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
+| `gallery [--fixture NAME ...] [--res WxH ...] [--primitives] [--poses PATH]` | Render the fixed-pose capture gallery under `.local/gallery/<timestamp>/` (see Capture gallery) |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
 
@@ -60,6 +61,20 @@ Several agents use Ultra at once. Before any build, test, editor, or package job
 4. When you are done, tell the coordinator, with your results, that Ultra is free again.
 
 Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
+
+## Capture gallery
+
+`python3 tools/dev.py --cores 2 gallery` renders a repeatable set of PNGs of the game itself, so later graphics slices compare against the same framings. It replaces driving a packaged window through the compositor: the game has a presentation-only capture mode and the helper only launches it.
+
+1. Write fixtures once per checkout (and after changing fixture code): `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures`. Besides the phase fixtures it writes `default-seed-route`, `default-seed-battle` (seed 20261030), `default-seed-enemy-turn` (the same battle after the party ends its turns, so an enemy holds the turn), `board-16x11` and `board-18x12` under `Saved/CaptureFixtures/<name>/`, each with a `fixture.json` naming the seed and board found (the 16x11 and 18x12 fixtures are the first seeds that generate those boards with the party acting first).
+2. Build (`build`); the gallery refuses missing or stale build evidence, a missing fixture (it tells you to run step 1), a bad `--res`, bad poses, a running editor for this project and a held helper lock.
+3. Run it. Defaults: fixtures `default-seed-battle`, `default-seed-enemy-turn`, `board-16x11`, `board-18x12`, `default-seed-route`; resolutions 1920x1080 and 1280x720; poses `tools/capture/poses.json`. `--primitives` renders the engine-primitive presentation; `--timeout` (default 300 s) bounds each game run, which gets one SIGTERM and is never killed.
+
+Per fixture and resolution the helper copies the checkpoint into a fresh save root under the output folder (the real save and the fixture are never touched), launches `UnrealEditor <project> -game -windowed -ForceRes -ResX/-ResY -RenderOffscreen -UseFixedTimeStep -FPS=30 -ExpeditionSaveRoot -ExpeditionCapture -ExpeditionCaptureOut`, and verifies every shot: the PNG exists, is non-empty and has the requested size. Output: `.local/gallery/<timestamp>/<fixture>/<WxH>/<shot>.png`, a per-run `manifest.json` written by the game (shot, file, mode, yaw, distance, camera location/rotation/FOV, seed, board, themed flag, resolution), `game.log`, and `index.json` at the top (commit SHA and dirty flag, engine, fixture, seed, board, resolution, flags, shot list).
+
+`tools/capture/poses.json` is the poses data (version 1): four yaws (-90, 0, 90, 180) times near (1300), default (the board's framed distance, 1720 + 70 per cell past 8x7) and far (3000) battle shots, two targeting shots, an `overview` shot and the `start-screen` shot. Distances must stay inside the battle clamp 900 to 3200. Modes: `battle`; `targeting` (Attack mode with the keyboard cursor on the nearest enemy in reach, or on the reachable step closest to one when none is in reach, so reach, path and target feedback show); `overview` (the route tabletop, needs a route-phase fixture); `start` (the title screen; always shot last). A shot that does not apply to a fixture (for example `overview` on a battle fixture, or `targeting` when an enemy holds the turn) is recorded as `skipped` with a reason and is not an error; a run with every shot skipped is. The game exits non-zero and writes a failed manifest on a missing checkpoint or a playback that never settles.
+
+Capture mode only resumes and looks. It never submits a combat command (enemy turns are held) and never writes the checkpoint, and with `-ExpeditionCapture` absent the game is unchanged. The fixed time step and a fixed frame count after each pose make flame and idle motion repeat, and exposure adapts quickly (speed 20) so a shot does not depend on the one before it. Determinism limits: camera transforms repeat exactly; pixels repeat to within a mean absolute difference of about 0.03 of 255 on the same machine, GPU and driver (compare images with a tolerance, not byte equality). Results from another GPU or driver, or `-ForceRes` windows larger than the host desktop, are not promised to match. The enemy-turn view comes from the `default-seed-enemy-turn` fixture: fixture preparation (an automation test) ends the party's turns, and capture mode resumes with that enemy's turn held. Capture runs bind no keys or mouse buttons, so a focused capture window cannot act.
 
 ## Agent workflow and evidence
 

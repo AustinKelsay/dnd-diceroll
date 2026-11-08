@@ -264,7 +264,8 @@ void AExpeditionHUD::DrawHUD()
     H = Canvas->SizeY / S;
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
-    Mouse = Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
+    // A capture run ignores the physical pointer so hover never changes a shot.
+    Mouse = !Player->IsCapturing() && Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
 
     // The tabletop overview has no board: unit bars and labels belong to battles only.
     if (View->HasRun() && !View->ShowingOverview()) { DrawWorldOverlays(); }
