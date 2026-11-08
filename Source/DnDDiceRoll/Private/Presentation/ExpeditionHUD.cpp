@@ -295,9 +295,10 @@ void AExpeditionHUD::DrawHUD()
         for (const auto& Line : Wrap(View->Messages().Last(),900,0.85f)) { Text(Line,(W-900)/2,FeedbackY,Parchment,0.85f); FeedbackY+=23; }
     }
     // Overlays own every click: buttons hidden beneath them must not fire.
-    if (View->ShowingRecords() || Player->ShowingHelp()) { Buttons.Reset(); }
+    if (Player->OverlayOpen()) { Buttons.Reset(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
+    if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
     Player->UpdateMenuFocus();
 }
 
@@ -428,10 +429,10 @@ void AExpeditionHUD::DrawTopBar()
     }
     const float Top = 14, Size = 30, Gap = 6;
     float X = W - 12;
-    auto System = [&](FName Id, const FString& Label, float Width, bool bEnabled = true)
+    auto System = [&](FName Id, const FString& Label, float Width, bool bEnabled = true, bool bSelected = false)
     {
         X -= Width;
-        Button(Id, Label, FString(), X, Top, Width, Size, bEnabled, false, Sky);
+        Button(Id, Label, FString(), X, Top, Width, Size, bEnabled, bSelected, Sky);
         X -= Gap;
     };
     System(TEXT("Help"), TEXT("? Help"), 74);
@@ -440,6 +441,8 @@ void AExpeditionHUD::DrawTopBar()
     System(TEXT("Records"), TEXT("H  Records"), 104);
     System(TEXT("Resume"), TEXT("O  Resume"), 98);
     System(TEXT("Save"), TEXT("K  Save"), 82, View->HasRun());
+    // A pending return (waiting for the enemy or playback) shows as a selected Menu button.
+    if (View->CanReturnToMenu()) { System(TEXT("Menu"), Player->ReturnPending() ? TEXT("Menu: waiting") : TEXT("Bksp  Menu"), 104, true, Player->ReturnPending()); }
 }
 
 void AExpeditionHUD::DrawInitiative()
@@ -966,12 +969,14 @@ void AExpeditionHUD::DrawHelp()
             TEXT("Up / Down changes class. Left / Right changes subclass."),
             TEXT("G restores the familiar party. N begins the expedition."),
             TEXT("O resumes the exact saved party, keeping its spent resources."),
+            TEXT("Backspace during an expedition returns here; Resume continues it."),
             TEXT("An unfinished saved expedition must be resumed before starting anew.")
         } : TArray<FString>{
             TEXT("Z / X chooses a route. Compare danger and promised rewards."),
             TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
             TEXT("Gear caps at rank 3. Potions remain useful at the gear cap."),
             TEXT("C takes the one recovery opportunity; V forfeits it."),
+            TEXT("Backspace or Menu returns to the start screen; O resumes from there."),
             TEXT("Deaths are permanent. Recovery never resurrects fallen heroes."),
             TEXT("The ending keeps a record; choose next party to begin again.")};
         float Row=Y+70;
@@ -986,7 +991,7 @@ void AExpeditionHUD::DrawHelp()
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Past expeditions  ·  ?  This help")};
+        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
@@ -994,6 +999,24 @@ void AExpeditionHUD::DrawHelp()
     }
     Text(TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
+    Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+void AExpeditionHUD::DrawReturnConfirm()
+{
+    const float Width = 620, Height = 230;
+    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
+    Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
+    Panel(X, Y, Width, Height, Gold, 0.98f);
+    Text(TEXT("RETURN TO MENU?"), X + 24, Y + 18, Gold, 1.2f);
+    float Row = Y + 62;
+    for (const TCHAR* Line : {TEXT("Every resolved action is saved and has played out. Only a move you have not finished is dropped."),
+        TEXT("Nothing happens while this is open. Resume on the start screen brings you back to this turn.")})
+    {
+        for (const auto& Part : Wrap(Line, Width - 48, 0.85f)) { Text(Part, X + 24, Row, Parchment, 0.85f); Row += 24; }
+    }
+    Button(TEXT("ReturnConfirm"), TEXT("Return to menu"), TEXT("Enter"), X + 24, Y + Height - 70, 270, 50, true, false, Gold);
+    Button(TEXT("KeepPlaying"), TEXT("Keep playing"), TEXT("Esc"), X + Width - 294, Y + Height - 70, 270, 50, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
 

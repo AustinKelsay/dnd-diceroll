@@ -33,6 +33,12 @@ public:
     int32 BuilderSlot() const { return Slot; }
     ECombatCommandType SpecialAction(int32 Index) const;
     bool ShowingHelp() const { return bShowHelp; }
+    /** True while the mid-encounter "Return to menu?" question is open. */
+    bool ConfirmingReturn() const { return bConfirmReturn; }
+    /** True while a requested return waits for the party's turn and playback to finish. */
+    bool ReturnPending() const { return bReturnPending; }
+    /** Help, Records or the return question covers the screen and owns input. */
+    bool OverlayOpen() const;
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
     /** Legal target under the cursor for the selected action. */
@@ -63,6 +69,10 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
+    bool bConfirmReturn = false;
+    bool bReturnPending = false;
+    /** The phase a pending return was requested in; it is dropped if the phase changes. */
+    EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
     bool bDragging = false;
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
@@ -96,6 +106,14 @@ private:
     void NewRun();
     void Save();
     void Resume();
+    /**
+     * Backspace or the Menu button. Waits until the party has the turn and committed results
+     * have played, then asks first mid-encounter or returns at once elsewhere. Again withdraws.
+     */
+    void RequestReturnToMenu();
+    void ResolvePendingReturn();
+    void ConfirmReturn();
+    void LeaveExpedition();
     void History();
     void OlderRecords();
     void NewerRecords();
