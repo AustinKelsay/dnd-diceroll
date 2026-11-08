@@ -1,6 +1,6 @@
 # Desktop targeting review corrections
 
-> **Historical record, superseded.** It describes the 2026-11-02 handoff state, when no Linux engine or Unreal evidence existed. Current results, the host and the open acceptance items are in [the ledger](ledger.md) and [05-overlay-targeting.md](05-overlay-targeting.md).
+> **Historical record, superseded.** It describes the desktop source-review corrections and portable checks before Linux Unreal validation was available. Current results, the host and the open acceptance items are in [the ledger](ledger.md) and [05-overlay-targeting.md](05-overlay-targeting.md).
 
 PlebDev Ultra is the primary execution host. The owned T3 worktree `feature/50-targeting-ultra` adopted the published Mac handoff `661e216a142a7d7cf8546cbe4cecdc94298046dd` by fast-forward from the fixed review baseline `df25f32ae47dded0d1832cb9ef2eddaa251a52d9`. This continues #50 within #112; stability owns #32/#35 and all shared desktop engine setup. No Mac jobs, engine pin changes or other-checkout edits occurred.
 
