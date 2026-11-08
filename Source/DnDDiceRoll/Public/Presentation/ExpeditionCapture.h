@@ -61,7 +61,11 @@ private:
         FVector Location = FVector::ZeroVector;
         FRotator Rotation = FRotator::ZeroRotator;
         float Fov = 0.0f;
+        double FrameMs = 0.0, GpuMs = 0.0, GameMs = 0.0;
+        int32 Samples = 0;
     };
+    double LastTime = 0.0, SumFrame = 0.0, SumGpu = 0.0, SumGame = 0.0;
+    int32 Sampled = 0;
 
     TWeakObjectPtr<AExpeditionPlayerController> Controller;
     TWeakObjectPtr<AExpeditionBattleView> View;

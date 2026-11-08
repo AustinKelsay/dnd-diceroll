@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "battle-yawm90-near",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yawm90-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yawm90-far",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 3000
+    },
+    {
+      "name": "battle-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "targeting-yawm90-default",
+      "mode": "targeting",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "targeting-yawm90-near",
+      "mode": "targeting",
+      "yaw": -90,
+      "distance": 1300
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionAudio.h"
+#include "Presentation/ExpeditionSpike.h"
+#include "Animation/AnimSequence.h"
+#include "Components/DirectionalLightComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "HAL/IConsoleManager.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
@@ -25,7 +31,9 @@
 
 namespace
 {
-constexpr float CellSize = 110.0f;
+inline float CellSize() { return FExpeditionSpike::Get().Cell; }
+inline const FExpeditionSpike& Spike() { return FExpeditionSpike::Get(); }
+constexpr float SpikeGround = 3.5f;
 constexpr float CursorPlane = 35.0f;
 constexpr float BoardTop = 31.0f;
 constexpr float EnemyThinkSeconds = 0.55f;
@@ -153,11 +161,17 @@ FExpeditionPart AExpeditionBattleView::MakePart(UStaticMesh* Mesh, USceneCompone
         UMaterialInterface* Own = Mesh->GetMaterial(0);
         if (Own && Own->GetBaseMaterial() == ThemeMaterial->GetBaseMaterial()) { Look = Own; }
     }
+    if (MaterialOverride) { Look = MaterialOverride; }
     if (Look)
     {
         Part.Material = UMaterialInstanceDynamic::Create(Look, this);
         Component->SetMaterial(0, Part.Material);
         Part.SetColor(Color);
+        if (Spike().bWorld && Spike().Light == FExpeditionSpike::ELight::Key && !MaterialOverride && Look != BaseMaterial)
+        {
+            const float Glow = Part.Material->K2_GetScalarParameterValue(TEXT("Glow"));
+            if (Glow > 0.0f && Glow <= 1.0f) { Part.Material->SetScalarParameterValue(TEXT("Glow"), Glow * 0.15f); }
+        }
     }
     Component->RegisterComponent();
     return Part;
@@ -176,6 +190,7 @@ UPointLightComponent* AExpeditionBattleView::MakeLight(USceneComponent* Parent, 
     Light->SetIntensity(Intensity);
     Light->SetAttenuationRadius(Radius);
     Light->SetCastShadows(false);
+    Light->SetAttenuationRadius(Radius * (Spike().bWorld ? Spike().Cell / 110.0f : 1.0f));
     Light->RegisterComponent();
     return Light;
 }
@@ -199,6 +214,18 @@ void AExpeditionBattleView::BeginPlay()
         ThemeMaterial = Theme && !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
         if (!ThemeMaterial) { Theme = nullptr; }
         OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
+    }
+    Camera->FieldOfView = Spike().Fov();
+    if (Spike().bWorld) { OverlayBase = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/DnDDiceRoll/Spike140/M_SpikeOverlay.M_SpikeOverlay")); if (!OverlayBase) { OverlayBase = BaseMaterial; } }
+    if (Spike().bWorld || Spike().Cam != FExpeditionSpike::ECam::Today || Spike().Filter != FExpeditionSpike::EFilter::Nearest)
+    {
+        if (Spike().Filter != FExpeditionSpike::EFilter::Nearest)
+        { if (IConsoleVariable* Aniso = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MaxAnisotropy"))) { Aniso->Set(8); } }
+        for (const TCHAR* Name : {TEXT("r.MaxAnisotropy"), TEXT("r.DynamicGlobalIlluminationMethod"), TEXT("r.ReflectionMethod"), TEXT("r.Shadow.Virtual.Enable"), TEXT("r.Lumen.HardwareRayTracing"), TEXT("r.GenerateMeshDistanceFields"), TEXT("r.AntiAliasingMethod")})
+        {
+            if (IConsoleVariable* Var = IConsoleManager::Get().FindConsoleVariable(Name)) { UE_LOG(LogTemp, Display, TEXT("SPIKE cvar %s = %s"), Name, *Var->GetString()); }
+        }
+        UE_LOG(LogTemp, Display, TEXT("SPIKE %s"), *Spike().Describe());
     }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
@@ -227,6 +254,7 @@ void AExpeditionBattleView::ClearPresentation()
     Spawned.Reset();
     Tiles.Reset(); Rigs.Reset(); Scenery.Reset(); Flames.Reset(); FlameStrength.Reset(); Markers.Reset();
     ShotMeshes.Reset(); ShotLights.Reset(); SparkMeshes.Reset(); CampParts.Reset(); WaystoneParts.Reset();
+    GridBars.Reset(); RingBars.Reset(); GridUsed = 0; RingUsed = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
 }
@@ -266,14 +294,14 @@ void AExpeditionBattleView::RebuildBoard()
 float AExpeditionBattleView::FramedDistance() const
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    return bOverview ? 300.0f : 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
+    return bOverview ? 300.0f : (1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f) * Spike().DistanceScale();
 }
 
 void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
 {
     if (bOverview) { return; }
     TargetYaw = Yaw = InYaw;
-    TargetDistance = Distance = FMath::Clamp(InDistance, 900.0f, 3200.0f);
+    TargetDistance = Distance = FMath::Clamp(InDistance, 900.0f * Spike().DistanceScale(), 3200.0f * Spike().DistanceScale());
     bCameraPlaced = false;
     UpdateCamera(0.0f);
 }
@@ -339,7 +367,7 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
     // Ground hides the starter floor; a raised slab makes the board read as a tabletop.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 3.0f), FVector(60.0f, 60.0f, 0.06f), Palette.Ground));
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 12.0f),
-        FVector(Encounter.Width * CellSize / 100.0f + 0.35f, Encounter.Height * CellSize / 100.0f + 0.35f, 0.24f), Palette.Rim));
+        FVector(Encounter.Width * CellSize() / 100.0f + 0.35f, Encounter.Height * CellSize() / 100.0f + 0.35f, 0.24f), Palette.Rim));
     for (int32 Y = 0; Y < Encounter.Height; ++Y)
     {
         for (int32 X = 0; X < Encounter.Width; ++X)
@@ -456,8 +484,8 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     {
         // A stream along the far edge with stepping stones.
         const FVector Stream = Ground((W - 1) * 0.5f, H + 2.2f);
-        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, 0, -1), FVector((W + 18) * CellSize / 100.0f, 1.5f, 0.04f), FLinearColor(0.12f, 0.32f, 0.5f)));
-        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, -55, 0), FVector((W + 18) * CellSize / 100.0f, 0.25f, 0.05f), Shade(Palette.Rim, 1.4f)));
+        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, 0, -1), FVector((W + 18) * CellSize() / 100.0f, 1.5f, 0.04f), FLinearColor(0.12f, 0.32f, 0.5f)));
+        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, -55, 0), FVector((W + 18) * CellSize() / 100.0f, 0.25f, 0.05f), Shade(Palette.Rim, 1.4f)));
         for (int32 Stone = 0; Stone < 4; ++Stone) { Boulder((W - 1) * 0.5f - 1.5f + Stone, H + 2.2f + Random.FRandRange(-0.2f, 0.2f), 0.35f); }
         for (int32 Index = 0; Index < 46; ++Index)
         {
@@ -483,7 +511,7 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     {
         // A dusty road on the far side, the watchtower beyond it and scattered ruins.
         const FVector Road = Ground((W - 1) * 0.5f, H + 1.8f);
-        Scenery.Add(MakePart(Cube, nullptr, Road, FVector((W + 18) * CellSize / 100.0f, 1.3f, 0.04f), FLinearColor(0.5f, 0.42f, 0.3f)));
+        Scenery.Add(MakePart(Cube, nullptr, Road, FVector((W + 18) * CellSize() / 100.0f, 1.3f, 0.04f), FLinearColor(0.5f, 0.42f, 0.3f)));
         const FVector Tower = Ground(W + 2.8f, H + 3.6f);
         Scenery.Add(MakePart(Cylinder, nullptr, Tower + FVector(0, 0, 210), FVector(1.7f, 1.7f, 4.2f), Palette.Rock));
         Scenery.Add(MakePart(Cylinder, nullptr, Tower + FVector(0, 0, 430), FVector(2.0f, 2.0f, 0.2f), Palette.RockDark));
@@ -561,11 +589,68 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     { Rig.Parts.Add(MakePart(Mesh, Root, Location, Scale, Color, Rotation)); };
     const FLinearColor Team = ExpeditionStyle::UnitColor(Unit);
     const FLinearColor Skin(0.92f, 0.74f, 0.6f);
-    Part(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
+    const bool bSpike = Spike().bWorld;
+    const float PropScale = bSpike ? Spike().Cell / 110.0f : 1.0f;
+    if (!(bSpike && Spike().bGrid)) { Part(Cylinder, FVector(0, 0, 2), FVector(0.74f * PropScale, 0.74f * PropScale, 0.04f), Shade(Team, 0.45f)); }
     if (UStaticMesh* Figure = UnitMesh(Unit))
     {
         // A faction ring keeps sides readable from overhead; the figure itself is untinted.
-        Part(Cylinder, FVector(0, 0, 4), FVector(0.8f, 0.8f, 0.012f), Team * 0.9f);
+        if (bSpike && Spike().bGrid)
+        {
+            // 56 cm footprint ring instead of the opaque disc.
+            MaterialOverride = OverlayBase;
+            const float Radius = 28.0f * Spike().Cell / 150.0f;
+            for (int32 Seg = 0; Seg < 16; ++Seg)
+            {
+                const float A = (Seg + 0.5f) * 2.0f * PI / 16.0f;
+                Rig.Parts.Add(MakePart(Cube, Root, FVector(FMath::Cos(A) * Radius, FMath::Sin(A) * Radius, SpikeGround), FVector(2.0f * PI * Radius / 16.0f / 100.0f * 1.1f, 0.025f, 0.01f), Team * 1.3f, FRotator(0, FMath::RadiansToDegrees(A) + 90.0f, 0)));
+                Rig.Parts.Last().Material->SetScalarParameterValue(TEXT("Opacity"), 0.9f);
+                Rig.Parts.Last().Mesh->SetCastShadow(false);
+            }
+            MaterialOverride = nullptr;
+        }
+        else { Part(Cylinder, FVector(0, 0, 4), FVector(0.8f * PropScale, 0.8f * PropScale, 0.012f), Team * 0.9f); }
+        if (bSpike)
+        {
+            const float Wanted = 180.0f * Spike().Cell / 150.0f;
+            USkeletalMesh* Rigged = Unit.Side == ECombatSide::Party && Unit.AdventurerRole == EAdventurerRole::Fighter && !FParse::Param(FCommandLine::Get(), TEXT("SpikeNoSkeleton"))
+                ? LoadObject<USkeletalMesh>(nullptr, TEXT("/Game/DnDDiceRoll/Spike140/SK_Hero_FighterSpike.SK_Hero_FighterSpike")) : nullptr;
+            UAnimSequence* Idle = Rigged ? LoadObject<UAnimSequence>(nullptr, TEXT("/Game/DnDDiceRoll/Spike140/A_FighterSpike_Idle.A_FighterSpike_Idle")) : nullptr;
+            if (Rigged && Idle)
+            {
+                USkeletalMeshComponent* Body = NewObject<USkeletalMeshComponent>(this);
+                AddInstanceComponent(Body);
+                Spawned.Add(Body);
+                Body->SetupAttachment(Root);
+                Body->SetMobility(EComponentMobility::Movable);
+                Body->SetSkeletalMesh(Rigged);
+                Body->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                const float Height = FMath::Max(1.0f, Rigged->GetBounds().BoxExtent.Z * 2.0f);
+                Body->SetRelativeScale3D(FVector(Wanted / Height));
+                if (UMaterialInterface* Look = SpikeMaterial(TEXT("Fighter")))
+                {
+                    UMaterialInstanceDynamic* Dynamic = UMaterialInstanceDynamic::Create(Look, this);
+                    ConfigureSpikeMaterial(Dynamic);
+                    Dynamic->SetScalarParameterValue(TEXT("GlowMask"), 0.0f); // the fighter has no vertex alpha mask
+                    for (int32 Slot = 0; Slot < Body->GetNumMaterials(); ++Slot) { Body->SetMaterial(Slot, Dynamic); }
+                }
+                Body->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+                Body->RegisterComponent();
+                Body->SetAnimation(Idle);
+                Body->Play(true);
+                Body->SetPosition(Idle->GetPlayLength() * Rig.Phase / (2.0f * PI));
+                Rig.Skeletal = Body;
+                static bool bLogged = false;
+                if (!bLogged) { bLogged = true; UE_LOG(LogTemp, Display, TEXT("SPIKE skeletal fighter: height %.1f cm -> scale %.3f, idle %.2fs"), Height, Wanted / Height, Idle->GetPlayLength()); }
+            }
+            else
+            {
+                const float Height = FMath::Max(1.0f, Figure->GetBounds().BoxExtent.Z * 2.0f);
+                Part(Figure, FVector::ZeroVector, FVector(Wanted / Height), FLinearColor::White);
+            }
+            Rigs.Add(Rig);
+            return;
+        }
         // Like painted miniatures, figures read larger than life from the tactical camera.
         Part(Figure, FVector::ZeroVector, FVector(1.45f), FLinearColor::White);
         Rigs.Add(Rig);
@@ -659,6 +744,7 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         Markers.Add(MakePart(Cylinder, nullptr, FVector::ZeroVector, FVector(0.92f, 0.92f, 0.02f), Color));
         Markers.Last().Mesh->SetVisibility(false);
     }
+    BuildSpikeOverlays();
     for (int32 Index = 0; Index < ShotPool; ++Index)
     {
         ShotMeshes.Add(MakePart(Sphere, nullptr, FVector::ZeroVector, FVector(0.2f), FLinearColor::White));
@@ -696,12 +782,12 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
 
 FVector AExpeditionBattleView::CellPosition(FIntPoint Cell) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, CursorPlane);
+    return FVector(Cell.X * CellSize(), Cell.Y * CellSize(), CursorPlane);
 }
 
 FVector AExpeditionBattleView::BoardPosition(FVector2D Cell, float Height) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, BoardTop + Height);
+    return FVector(Cell.X * CellSize(), Cell.Y * CellSize(), BoardTop + Height);
 }
 
 FVector AExpeditionBattleView::UnitPosition(int32 Id, float Height) const
@@ -739,6 +825,7 @@ void AExpeditionBattleView::UpdateRigs()
 
 void AExpeditionBattleView::UpdateTiles()
 {
+    if (Spike().bWorld && !Tiles.IsEmpty() && Tiles[0].Part.Mesh && Tiles[0].Part.Mesh->GetStaticMesh() == Cube) { UpdateSpikeGrid(); return; }
     const bool bShowChoices = InCombat() && !IsPresenting();
     const FLinearColor Reach(0.15f, 0.7f, 0.85f);
     const FLinearColor Trail(0.5f, 0.95f, 1.0f);
@@ -782,6 +869,21 @@ void AExpeditionBattleView::UpdateMarkers()
         const bool bHover = Id == Highlights.HoverTargetId;
         Place(Marker, Id, (bHover ? 1.0f : 0.9f) + (bHover ? 0.06f * FMath::Sin(Clock * 8.0f) : 0.0f), 0.8f);
         Marker.SetColor(Highlights.bFriendlyTargets ? FLinearColor(0.3f, 1.0f, 0.5f) * (bHover ? 2.2f : 1.3f) : FLinearColor(1.0f, 0.18f, 0.1f) * (bHover ? 2.5f : 1.4f));
+    }
+    if (Spike().bWorld && Spike().bGrid && !RingBars.IsEmpty())
+    {
+        // Rings instead of opaque discs: redraw every visible marker as a thin ring.
+        int32 Used = 0;
+        const int32 Before = RingUsed;
+        RingUsed = 0;
+        for (FExpeditionPart& Marker : Markers)
+        {
+            if (!Marker.Mesh->IsVisible()) { continue; }
+            SpikeRing(Marker.Mesh->GetRelativeLocation() + FVector(0, 0, SpikeGround - Marker.Mesh->GetRelativeLocation().Z + BoardTop), Marker.Mesh->GetRelativeScale3D().X * 44.0f * Spike().Cell / 150.0f, Marker.Shown, 0.95f);
+            Marker.Mesh->SetVisibility(false);
+        }
+        Used = RingUsed;
+        for (int32 Index = Used; Index < FMath::Min(Before, RingBars.Num()); ++Index) { RingBars[Index].Mesh->SetVisibility(false); }
     }
 }
 
@@ -875,7 +977,21 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     const float Radians = FMath::DegreesToRadians(Yaw);
     // Battles look steeply down at the board; the tabletop gets a low, seated view.
     const float Reach = bOverview ? 1.5f : 0.62f, Rise = bOverview ? 0.62f : 1.0f;
-    const FVector Offset(FMath::Cos(Radians) * Distance * Reach, FMath::Sin(Radians) * Distance * Reach, Distance * Rise);
+    float ReachUse = Reach, RiseUse = Rise;
+    if (!bOverview && Spike().Cam != FExpeditionSpike::ECam::Today)
+    {
+        float Pitch = 45.0f;
+        if (Spike().Cam == FExpeditionSpike::ECam::Zoom)
+        {
+            const float Scale = Spike().DistanceScale();
+            const float D = Distance / Scale, F = FMath::Clamp(FramedDistance() / Scale, 1400.0f, 2900.0f);
+            Pitch = D < F ? FMath::Lerp(35.0f, 45.0f, FMath::Clamp((D - 1300.0f) / (F - 1300.0f), 0.0f, 1.0f))
+                          : FMath::Lerp(45.0f, 60.0f, FMath::Clamp((D - F) / (3000.0f - F), 0.0f, 1.0f));
+        }
+        const float K = 1.1768f; // today's reach/rise vector length, so the camera sits at the same distance.
+        ReachUse = K * FMath::Cos(FMath::DegreesToRadians(Pitch)); RiseUse = K * FMath::Sin(FMath::DegreesToRadians(Pitch));
+    }
+    const FVector Offset(FMath::Cos(Radians) * Distance * ReachUse, FMath::Sin(Radians) * Distance * ReachUse, Distance * RiseUse);
     // Pan the view left of the focus so the board sits clear of the party cards on the left.
     const FVector ScreenLeft(-FMath::Sin(Radians), FMath::Cos(Radians), 0.0f);
     const float Pan = bOverview ? 0.0f : 0.09f;
@@ -886,7 +1002,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 
 // The tabletop is a fixed, composed view; orbit and zoom belong to battles.
 void AExpeditionBattleView::Orbit(float Degrees) { if (!bOverview) { TargetYaw += Degrees; } }
-void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 3200.0f); }
+void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount * Spike().DistanceScale(), 900.0f * Spike().DistanceScale(), 3200.0f * Spike().DistanceScale()); }
 
 bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint& Cell) const
 {
@@ -895,7 +1011,7 @@ bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint&
     // Board positions are relative to this actor; intersect the board plane in world space.
     const float PlaneZ = GetActorTransform().TransformPosition(FVector(0, 0, CursorPlane)).Z;
     const FVector Intersection = GetActorTransform().InverseTransformPosition(Origin + Direction * ((PlaneZ - Origin.Z) / Direction.Z));
-    Cell = FIntPoint(FMath::RoundToInt(Intersection.X / CellSize), FMath::RoundToInt(Intersection.Y / CellSize));
+    Cell = FIntPoint(FMath::RoundToInt(Intersection.X / CellSize()), FMath::RoundToInt(Intersection.Y / CellSize()));
     return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Rules().Snapshot().Encounter.Width && Cell.Y < Rules().Snapshot().Encounter.Height;
 }
 
@@ -1197,15 +1313,42 @@ bool AExpeditionBattleView::WantsOverview() const
 bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
 {
     const bool bForest = BoardTheme == EBoardTheme::Meadow;
+    const bool bSpike = Spike().bWorld;
     UStaticMesh* World = ThemeMesh(bForest ? Theme->RootWorld : Theme->VigilWorld);
     UStaticMesh* TileMesh = ThemeMesh(bForest ? Theme->RootTile : Theme->VigilTile);
+    if (bSpike)
+    {
+        World = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/DnDDiceRoll/Spike140/SM_World_VigilSpike.SM_World_VigilSpike"));
+        TileMesh = Cube;
+        if (!World) { UE_LOG(LogTemp, Error, TEXT("SPIKE world mesh missing")); return false; }
+    }
     if (!World || !TileMesh) { return false; }
-    const float TileHeight = FMath::Max(1.0f, Theme->TileHeight);
+    const float TileHeight = bSpike ? 0.0f : FMath::Max(1.0f, Theme->TileHeight);
+    const float WorldScale = bSpike ? Spike().Cell / 150.0f : 1.0f;
+    const float PropScale = bSpike ? Spike().Cell / 110.0f : 1.0f;
     const float Ground = BoardTop - TileHeight;
     const FVector Center = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f)));
-    Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White));
+    if (bSpike)
+    {
+        MaterialOverride = SpikeMaterial(TEXT("World"));
+        Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector(WorldScale), FLinearColor::White));
+        ConfigureSpikeMaterial(Scenery.Last().Material);
+        if (UStaticMesh* Occluders = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/DnDDiceRoll/Spike140/SM_World_VigilSpike_Occluders.SM_World_VigilSpike_Occluders")))
+        {
+            Scenery.Add(MakePart(Occluders, nullptr, FVector(Center.X, Center.Y, Ground), FVector(WorldScale), FLinearColor::White));
+            ConfigureSpikeMaterial(Scenery.Last().Material);
+            if (!FParse::Param(FCommandLine::Get(), TEXT("SpikeOccluders")))
+            {
+                // Hidden but still shadowing: the camera-blocking pieces cannot be faded in this spike.
+                Scenery.Last().Mesh->SetHiddenInGame(true);
+                Scenery.Last().Mesh->bCastHiddenShadow = true;
+            }
+        }
+        MaterialOverride = nullptr;
+    }
+    else { Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White)); }
     for (int32 Y = 0; Y < Encounter.Height; ++Y)
     {
         for (int32 X = 0; X < Encounter.Width; ++X)
@@ -1214,6 +1357,17 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
             const FVector Position = CellPosition(Cell);
             FExpeditionTile Tile;
             Tile.Cell = Cell;
+            if (bSpike)
+            {
+                // Per-cell tile meshes are hidden; a flat translucent quad carries today's full-tile tint when the grid mock is off.
+                MaterialOverride = OverlayBase;
+                Tile.Part = MakePart(Cube, nullptr, FVector(Position.X, Position.Y, BoardTop + SpikeGround), FVector(Spike().Cell / 100.0f * 0.97f, Spike().Cell / 100.0f * 0.97f, 0.01f), FLinearColor::White);
+                MaterialOverride = nullptr;
+                Tile.Part.Mesh->SetVisibility(false);
+                Tile.Part.Mesh->SetCastShadow(false);
+                Tiles.Add(Tile);
+                continue;
+            }
             // Darker than the surrounding ground so the move and path tints stand out.
             Tile.Part = MakePart(TileMesh, nullptr, FVector(Position.X, Position.Y, Ground), FVector::OneVector,
                 FLinearColor::White * (0.6f + 0.12f * Hash(X, Y, Seed)));
@@ -1227,7 +1381,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
         const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
-        Scenery.Add(MakePart(Obstacle, nullptr, BoardPosition(FVector2D(Cell.X, Cell.Y)), FVector::OneVector,
+        Scenery.Add(MakePart(Obstacle, nullptr, BoardPosition(FVector2D(Cell.X, Cell.Y)), FVector(PropScale),
             FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
     }
     // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
@@ -1241,8 +1395,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     for (const FVector2D& Spot : Braziers)
     {
         const FVector At = BoardPosition(Spot, -TileHeight);
-        if (Brazier) { Scenery.Add(MakePart(Brazier, nullptr, At, FVector::OneVector, FLinearColor::White)); }
-        if (Flame)
+        if (Brazier && !bSpike) { Scenery.Add(MakePart(Brazier, nullptr, At, FVector::OneVector, FLinearColor::White)); }
+        if (Flame && !bSpike)
         {
             Scenery.Add(MakePart(Flame, nullptr, At + FVector(0, 0, BowlTop - 4.0f), FVector::OneVector, FLinearColor::White));
             AddSway(Scenery.Last().Mesh, 0.0f, 0.16f);
@@ -1251,8 +1405,9 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         FlameStrength.SetNum(Flames.Num());
         FlameStrength.Last() = 40.0f;
     }
+    ApplySpikeLights();
     // Iron cages hang on chains from the cathedral's unseen vault and swing slowly.
-    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest)
+    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest && !bSpike)
     {
         for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
         {
@@ -1260,7 +1415,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
             AddSway(Scenery.Last().Mesh, 6.0f, 0.0f);
         }
     }
-    if (Banner)
+    if (Banner && !bSpike)
     {
         for (const float X : {W * 0.22f, W * 0.78f - 1.0f})
         {
@@ -1347,4 +1502,191 @@ void AExpeditionBattleView::UpdateSway()
             Sway.Component->SetRelativeScale3D(Sway.Scale * FVector(1.0f - Sway.Flicker * 0.3f * Lick, 1.0f - Sway.Flicker * 0.3f * Lick, 1.0f + Sway.Flicker * Lick));
         }
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// #140 look-dev spike (throwaway, command-line gated).
+
+UMaterialInterface* AExpeditionBattleView::SpikeMaterial(const TCHAR* Name) const
+{
+    const TCHAR* Filter = Spike().Filter == FExpeditionSpike::EFilter::Sharp ? TEXT("Sharp") : Spike().Filter == FExpeditionSpike::EFilter::Trilinear ? TEXT("Trilinear") : TEXT("Nearest");
+    const FString Path = FString::Printf(TEXT("/Game/DnDDiceRoll/Spike140/MI_Spike_%s_%s.MI_Spike_%s_%s"), Name, Filter, Name, Filter);
+    UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, *Path);
+    if (!Material) { UE_LOG(LogTemp, Error, TEXT("SPIKE material missing: %s"), *Path); }
+    return Material;
+}
+
+void AExpeditionBattleView::ConfigureSpikeMaterial(UMaterialInstanceDynamic* Material)
+{
+    if (!Material) { return; }
+    if (Spike().Light == FExpeditionSpike::ELight::Key)
+    {
+        Material->SetScalarParameterValue(TEXT("Glow"), 0.0f);
+        Material->SetScalarParameterValue(TEXT("GlowMask"), Spike().GlowK);
+        Material->SetScalarParameterValue(TEXT("Fill"), Spike().Fill);
+        Material->SetScalarParameterValue(TEXT("Rim"), Spike().Rim);
+    }
+    else
+    {
+        Material->SetScalarParameterValue(TEXT("GlowMask"), 0.0f);
+        Material->SetScalarParameterValue(TEXT("Fill"), 0.0f);
+        Material->SetScalarParameterValue(TEXT("Rim"), 0.0f);
+    }
+}
+
+void AExpeditionBattleView::ApplySpikeLights()
+{
+    if (!Spike().bWorld) { return; }
+    if (Spike().bLumen)
+    {
+        FPostProcessSettings& Settings = Grade->Settings;
+        Settings.bOverride_DynamicGlobalIlluminationMethod = true;
+        Settings.DynamicGlobalIlluminationMethod = EDynamicGlobalIlluminationMethod::Lumen;
+        Settings.bOverride_ReflectionMethod = true;
+        Settings.ReflectionMethod = EReflectionMethod::Lumen;
+    }
+    if (Spike().Light != FExpeditionSpike::ELight::Key) { return; }
+    FRotator SunRotation(-50.0f, 60.0f, 0.0f);
+    for (TActorIterator<ADirectionalLight> Sun(GetWorld()); Sun; ++Sun)
+    {
+        SunRotation = Sun->GetActorRotation();
+        if (UDirectionalLightComponent* Light = Cast<UDirectionalLightComponent>(Sun->GetLightComponent()))
+        {
+            Light->SetCastShadows(true);
+            Light->DynamicShadowDistanceMovableLight = 7000.0f * Spike().Cell / 110.0f;
+            Light->DynamicShadowCascades = 4;
+            Light->CascadeDistributionExponent = 3.0f;
+            Light->ShadowSlopeBias = 0.5f;
+            Light->MarkRenderStateDirty();
+        }
+    }
+    // At most two shadow-casting point lights: opposite braziers.
+    for (int32 Index : {0, 3})
+    { if (Flames.IsValidIndex(Index) && Flames[Index]) { Flames[Index]->SetCastShadows(true); } }
+    // Cool back/rim fill from the opposite side so dark figures separate from dark ground.
+    UDirectionalLightComponent* Rim = NewObject<UDirectionalLightComponent>(this);
+    AddInstanceComponent(Rim);
+    Spawned.Add(Rim);
+    Rim->SetupAttachment(SceneryRoot.Get());
+    Rim->SetMobility(EComponentMobility::Movable);
+    Rim->SetLightColor(FLinearColor(0.55f, 0.65f, 1.0f));
+    Rim->SetIntensity(Spike().Rim * 2.0f);
+    Rim->SetCastShadows(false);
+    Rim->RegisterComponent();
+    Rim->SetWorldRotation(FRotator(-28.0f, SunRotation.Yaw + 180.0f, 0.0f));
+}
+
+void AExpeditionBattleView::BuildSpikeOverlays()
+{
+    if (!Spike().bWorld || !Spike().bGrid || bOverview) { return; }
+    MaterialOverride = OverlayBase;
+    for (int32 Index = 0; Index < 700; ++Index)
+    {
+        GridBars.Add(MakePart(Cube, nullptr, FVector::ZeroVector, FVector(0.1f, 0.02f, 0.01f), FLinearColor::White));
+        GridBars.Last().Mesh->SetVisibility(false);
+        GridBars.Last().Mesh->SetCastShadow(false);
+    }
+    for (int32 Index = 0; Index < 200; ++Index)
+    {
+        RingBars.Add(MakePart(Cube, nullptr, FVector::ZeroVector, FVector(0.1f, 0.02f, 0.01f), FLinearColor::White));
+        RingBars.Last().Mesh->SetVisibility(false);
+        RingBars.Last().Mesh->SetCastShadow(false);
+    }
+    MaterialOverride = nullptr;
+}
+
+void AExpeditionBattleView::SpikeBar(TArray<FExpeditionPart>& Pool, int32& Used, FVector A, FVector B, float Width, FLinearColor Color, float Opacity)
+{
+    if (!Pool.IsValidIndex(Used)) { return; }
+    FExpeditionPart& Bar = Pool[Used++];
+    const FVector Delta = B - A;
+    Bar.Mesh->SetVisibility(true);
+    Bar.Mesh->SetRelativeLocationAndRotation((A + B) * 0.5f, FRotator(0.0f, FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X)), 0.0f));
+    Bar.Mesh->SetRelativeScale3D(FVector(Delta.Size() / 100.0f, Width / 100.0f, 0.01f));
+    Bar.SetColor(Color);
+    Bar.Material->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+}
+
+void AExpeditionBattleView::SpikeRing(FVector Center, float Radius, FLinearColor Color, float Opacity)
+{
+    constexpr int32 Segments = 16;
+    for (int32 Seg = 0; Seg < Segments; ++Seg)
+    {
+        const float A0 = Seg * 2.0f * PI / Segments, A1 = (Seg + 1.15f) * 2.0f * PI / Segments;
+        SpikeBar(RingBars, RingUsed, Center + FVector(FMath::Cos(A0), FMath::Sin(A0), 0) * Radius, Center + FVector(FMath::Cos(A1), FMath::Sin(A1), 0) * Radius, 2.2f, Color, Opacity);
+    }
+}
+
+void AExpeditionBattleView::UpdateSpikeGrid()
+{
+    const bool bShowChoices = InCombat() && !IsPresenting();
+    const FLinearColor Reach(0.15f, 0.7f, 0.85f), Trail(0.5f, 0.95f, 1.0f);
+    const float Pulse = 0.5f + 0.5f * FMath::Sin(Clock * 3.0f);
+    if (!Spike().bGrid)
+    {
+        // Today's full-tile tint, drawn as a translucent quad per cell.
+        for (FExpeditionTile& Tile : Tiles)
+        {
+            float Opacity = 0.0f;
+            FLinearColor Color = Reach;
+            if (bShowChoices)
+            {
+                if (Highlights.Path.Contains(Tile.Cell)) { Color = Trail; Opacity = 0.55f; }
+                else if (Highlights.Moves.Contains(Tile.Cell)) { Opacity = 0.28f + Pulse * 0.05f; }
+                if (Highlights.bHasHover && Highlights.Hover == Tile.Cell) { Color = FLinearColor::White; Opacity = FMath::Max(Opacity, 0.3f); }
+            }
+            Tile.Part.Mesh->SetVisibility(Opacity > 0.0f);
+            if (Opacity > 0.0f) { Tile.Part.SetColor(Color); Tile.Part.Material->SetScalarParameterValue(TEXT("Opacity"), Opacity); }
+        }
+        return;
+    }
+    // Mock contextual grid: reach contour, faint corner ticks, path ribbon, hover bracket.
+    const int32 Before = GridUsed;
+    GridUsed = 0;
+    if (bShowChoices && GridBars.Num() > 0)
+    {
+        const float Cell = Spike().Cell, Half = Cell * 0.5f, Z = BoardTop + SpikeGround;
+        TSet<FIntPoint> Region(Highlights.Moves);
+        for (const FIntPoint& Step : Highlights.Path) { Region.Add(Step); }
+        auto Center = [&](FIntPoint C) { return FVector(C.X * Cell, C.Y * Cell, Z); };
+        static const FIntPoint Sides[4] = {FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1)};
+        for (const FIntPoint& C : Region)
+        {
+            const FVector At = Center(C);
+            for (const FIntPoint& Side : Sides)
+            {
+                if (Region.Contains(C + Side)) { continue; }
+                const FVector Normal(Side.X, Side.Y, 0), Along(-Side.Y, Side.X, 0);
+                const FVector Mid = At + Normal * Half;
+                SpikeBar(GridBars, GridUsed, Mid - Along * (Half + 1.2f), Mid + Along * (Half + 1.2f), 2.4f, Reach * 1.5f, 0.8f);
+            }
+            // Faint corner ticks (L shaped), 15% opacity.
+            for (const int32 SX : {-1, 1})
+            {
+                for (const int32 SY : {-1, 1})
+                {
+                    const FVector Corner = At + FVector(SX * (Half - 3.0f), SY * (Half - 3.0f), 0);
+                    SpikeBar(GridBars, GridUsed, Corner, Corner - FVector(SX * 0.2f * Cell, 0, 0), 1.6f, FLinearColor::White, 0.15f);
+                    SpikeBar(GridBars, GridUsed, Corner, Corner - FVector(0, SY * 0.2f * Cell, 0), 1.6f, FLinearColor::White, 0.15f);
+                }
+            }
+        }
+        for (int32 Index = 1; Index < Highlights.Path.Num(); ++Index)
+        { SpikeBar(GridBars, GridUsed, Center(Highlights.Path[Index - 1]), Center(Highlights.Path[Index]), 7.0f, Trail * 1.4f, 0.75f); }
+        if (!Highlights.Path.IsEmpty())
+        {
+            const FVector End = Center(Highlights.Path.Last());
+            for (const int32 SX : {-1, 1}) { SpikeBar(GridBars, GridUsed, End + FVector(SX * 14.0f, -14.0f, 0), End + FVector(SX * 14.0f, 14.0f, 0), 3.0f, Trail * 1.6f, 0.9f); }
+        }
+        if (Highlights.bHasHover)
+        {
+            const FVector At = Center(Highlights.Hover);
+            for (const FIntPoint& Side : Sides)
+            {
+                const FVector Normal(Side.X, Side.Y, 0), Along(-Side.Y, Side.X, 0), Mid = At + Normal * (Half - 4.0f);
+                SpikeBar(GridBars, GridUsed, Mid - Along * (Half * 0.5f), Mid + Along * (Half * 0.5f), 2.0f, FLinearColor::White, 0.6f);
+            }
+        }
+    }
+    for (int32 Index = GridUsed; Index < FMath::Min(Before, GridBars.Num()); ++Index) { GridBars[Index].Mesh->SetVisibility(false); }
 }

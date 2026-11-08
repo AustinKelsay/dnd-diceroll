@@ -17,6 +17,7 @@ class UPostProcessComponent;
 class USceneComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
 
@@ -46,6 +47,7 @@ struct FExpeditionUnitRig
     float Phase = 0.0f;
     UPROPERTY() TObjectPtr<USceneComponent> Root;
     UPROPERTY() TArray<FExpeditionPart> Parts;
+    UPROPERTY() TObjectPtr<USkeletalMeshComponent> Skeletal;
 };
 
 USTRUCT()
@@ -227,6 +229,21 @@ private:
     TArray<float> VoiceEnds;
     TMap<int32, TArray<int16>> SoundCache;
     int32 SoundVariation = 0;
+
+    // #140 spike.
+    UPROPERTY() TObjectPtr<UMaterialInterface> MaterialOverride;
+    UPROPERTY() TObjectPtr<UMaterialInterface> OverlayBase;
+    UPROPERTY() TArray<FExpeditionPart> GridBars;
+    UPROPERTY() TArray<FExpeditionPart> RingBars;
+    int32 GridUsed = 0;
+    int32 RingUsed = 0;
+    UMaterialInterface* SpikeMaterial(const TCHAR* Name) const;
+    void ConfigureSpikeMaterial(UMaterialInstanceDynamic* Material);
+    void SpikeBar(TArray<FExpeditionPart>& Pool, int32& Used, FVector A, FVector B, float Width, FLinearColor Color, float Opacity);
+    void SpikeRing(FVector Center, float Radius, FLinearColor Color, float Opacity);
+    void BuildSpikeOverlays();
+    void UpdateSpikeGrid();
+    void ApplySpikeLights();
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);

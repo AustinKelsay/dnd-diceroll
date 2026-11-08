@@ -724,7 +724,7 @@ class Dev:
                     raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
                 raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
 
-    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300):
+    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, game_args=None):
         fixtures = list(dict.fromkeys(fixtures or GALLERY_FIXTURES))
         resolutions = list(dict.fromkeys(resolutions or GALLERY_RESOLUTIONS))
         sizes = {text: parse_resolution(text) for text in resolutions}
@@ -766,7 +766,7 @@ class Dev:
                     command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
-                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *self.native_limits()]
+                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *(game_args or []), *self.native_limits()]
                     print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}")
                     code = self.run_game(command, target / "console.log", timeout)
                     if code != 0:
@@ -776,7 +776,7 @@ class Dev:
                                  "fixture_info": info, "resolution": text, "primitives": primitives, "themed": manifest.get("themed"),
                                  "directory": str(target.relative_to(output)), "shots": manifest["shots"]})
         write_json(output / "index.json", {"commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
-                                          "poses": str(poses_path), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
+                                          "poses": str(poses_path), "game_args": list(game_args or []), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
         pictures = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "captured")
         skipped = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "skipped")
         print(f"Gallery: {len(runs)} run(s), {pictures} picture(s), {skipped} skipped as not applicable; index: {output / 'index.json'}")
@@ -887,6 +887,7 @@ def main():
     gallery.add_argument("--res", action="append", type=resolution_argument, help="Window size WIDTHxHEIGHT (repeatable); default: " + ", ".join(GALLERY_RESOLUTIONS))
     gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
     gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
+    gallery.add_argument("--game-arg", action="append", help="Extra game argument (repeatable), e.g. --game-arg=-SpikeWorld")
     gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
     scaffold = commands.add_parser("new-class")
     scaffold.add_argument("kind", choices=BASES)
@@ -911,7 +912,7 @@ def main():
         elif args.command == "test":
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
         elif args.command == "gallery":
-            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)
+            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, args.game_arg)
         elif args.command == "new-class":
             for path in new_class(dev.w, args.kind, args.name):
                 print(path)

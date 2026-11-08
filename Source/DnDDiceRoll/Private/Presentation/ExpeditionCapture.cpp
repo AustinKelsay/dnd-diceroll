@@ -14,6 +14,10 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "UnrealClient.h"
+#include "Presentation/ExpeditionSpike.h"
+#include "RHI.h"
+#include "RenderTimer.h"
+#include "HAL/PlatformTime.h"
 
 namespace
 {
@@ -171,7 +175,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Targeting:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
-        Board->SnapCamera(Shot.Yaw, Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance());
+        Board->SnapCamera(Shot.Yaw, Shot.Distance > 0.0f ? Shot.Distance * FExpeditionSpike::Get().DistanceScale() : Board->FramedDistance());
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         const int32 ActorId = Board->Rules().ActiveId();
         const FCombatantState* Active = Board->Rules().Find(ActorId);
@@ -223,6 +227,9 @@ void FExpeditionCaptureDirector::Tick()
     if (Stage == EStage::Done) { return; }
     if (!Board || !Controller.IsValid()) { Fail(TEXT("The battle view disappeared")); return; }
     ++Frames; ++StageFrames;
+    const double Now = FPlatformTime::Seconds();
+    const double FrameMs = LastTime > 0.0 ? (Now - LastTime) * 1000.0 : 0.0;
+    LastTime = Now;
     switch (Stage)
     {
     case EStage::Loading:
@@ -249,12 +256,21 @@ void FExpeditionCaptureDirector::Tick()
         if (!Poses.Shots.IsValidIndex(NextShot)) { Finish(); return; }
         Pending = FResult();
         Pending.Shot = Poses.Shots[NextShot];
+        SumFrame = SumGpu = SumGame = 0.0; Sampled = 0;
         FString Skip;
         if (Apply(Pending.Shot, Skip)) { Pending.Status = TEXT("captured"); Stage = EStage::Settling; StageFrames = 0; }
         else { Pending.Status = TEXT("skipped"); Pending.Reason = Skip; Results.Add(Pending); ++NextShot; StageFrames = 0; }
         return;
     }
     case EStage::Settling:
+        // Spike timing: skip the first 20 frames after the pose (shader/streaming warm-up), average the rest.
+        if (StageFrames > 20 && FrameMs > 0.0)
+        {
+            SumFrame += FrameMs;
+            SumGpu += FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
+            SumGame += FPlatformTime::ToMilliseconds(GGameThreadTime);
+            ++Sampled;
+        }
         if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
         {
             Pending.File = Pending.Shot.Name + TEXT(".png");
@@ -268,6 +284,8 @@ void FExpeditionCaptureDirector::Tick()
             Pending.Location = Camera.GetLocation();
             Pending.Rotation = Camera.Rotator();
             Pending.Fov = Board->CameraFieldOfView();
+            Pending.Samples = Sampled;
+            if (Sampled > 0) { Pending.FrameMs = SumFrame / Sampled; Pending.GpuMs = SumGpu / Sampled; Pending.GameMs = SumGame / Sampled; }
             FScreenshotRequest::RequestScreenshot(Path, true, false);
             Stage = EStage::Saving;
             StageFrames = 0;
@@ -299,6 +317,8 @@ void FExpeditionCaptureDirector::WriteManifest() const
     Root->SetNumberField(TEXT("settleFrames"), Poses.SettleFrames);
     Root->SetBoolField(TEXT("primitives"), FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")));
     Root->SetBoolField(TEXT("themed"), View.IsValid() && View->UsesTheme());
+    Root->SetStringField(TEXT("spike"), FExpeditionSpike::Get().Describe());
+    Root->SetStringField(TEXT("commandLine"), FCommandLine::Get());
     TSharedRef<FJsonObject> Size = MakeShared<FJsonObject>();
     Size->SetNumberField(TEXT("width"), Resolution.X);
     Size->SetNumberField(TEXT("height"), Resolution.Y);
@@ -324,6 +344,10 @@ void FExpeditionCaptureDirector::WriteManifest() const
             Camera->SetObjectField(TEXT("rotation"), Vector(FVector(Result.Rotation.Pitch, Result.Rotation.Yaw, Result.Rotation.Roll), TEXT("pitch"), TEXT("yaw"), TEXT("roll")));
             Camera->SetNumberField(TEXT("fov"), Result.Fov);
             Shot->SetObjectField(TEXT("camera"), Camera);
+            Shot->SetNumberField(TEXT("avgFrameMs"), Result.FrameMs);
+            Shot->SetNumberField(TEXT("avgGpuMs"), Result.GpuMs);
+            Shot->SetNumberField(TEXT("avgGameThreadMs"), Result.GameMs);
+            Shot->SetNumberField(TEXT("timingSamples"), Result.Samples);
         }
         Shots.Add(MakeShared<FJsonValueObject>(Shot));
     }
