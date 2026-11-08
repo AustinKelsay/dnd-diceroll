@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionCapture.h"
 #include "Misc/CommandLine.h"
+#include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
@@ -24,6 +25,11 @@ void AExpeditionPlayerController::BeginPlay()
         if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
         // No console either: typed commands could change rendering between shots.
         if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport()) { Viewport->ViewportConsole = nullptr; }
+        // The viewport handles F11 and Alt+Enter before any player input; switch both off for this
+        // process only (in memory, never saved to config) so a shot cannot change window mode.
+        UInputSettings* Settings = GetMutableDefault<UInputSettings>();
+        Settings->bF11TogglesFullscreen = false;
+        Settings->bAltEnterTogglesFullscreen = false;
     }
     bShowMouseCursor = true;
     FInputModeGameOnly Mode;
