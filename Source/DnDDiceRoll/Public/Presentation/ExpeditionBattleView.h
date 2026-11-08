@@ -114,6 +114,8 @@ public:
     void ReturnToMenu();
     /** With no run in play: the checkpoint holds an unfinished run (checked at startup and on return). */
     bool HasUnfinishedCheckpoint() const { return bUnfinishedCheckpoint; }
+    /** A checkpoint write failed; enemy turns are held until the player saves or resumes. */
+    bool CheckpointBlocked() const { return bCheckpointBlocked; }
     void ToggleRecords();
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }

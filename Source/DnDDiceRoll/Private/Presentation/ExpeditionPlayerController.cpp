@@ -447,13 +447,17 @@ void AExpeditionPlayerController::ResolvePendingReturn()
 {
     if (!bReturnPending || !AllowsGameplayInput()) { return; }
     if (!BattleView->CanReturnToMenu() || BattleView->Progress().Phase != PendingPhase) { bReturnPending = false; return; }
-    // Everything committed is shown before leaving: never while a result plays or an enemy acts.
-    // On the party's turn enemies cannot act, so nothing resolves behind the question.
+    // Everything committed is shown before leaving: the wait covers queued playback of committed
+    // actions (IsPresenting) and enemy turns. Decorative reward/camp sparkles, floating text and
+    // banners are not queued playback and never delay it. On the party's turn enemies cannot act,
+    // so nothing resolves behind the question.
     if (BattleView->IsPresenting()) { return; }
     if (BattleView->InCombat())
     {
         const FCombatantState* Active = BattleView->Rules().Find(BattleView->Rules().ActiveId());
-        if (!Active || Active->Side != ECombatSide::Party) { return; }
+        // After a failed checkpoint write enemies are held too, so their turn would never end:
+        // ask now rather than wait forever.
+        if ((!Active || Active->Side != ECombatSide::Party) && !BattleView->CheckpointBlocked()) { return; }
         // Mid-encounter a half-entered move would be dropped, so ask first, like an overlay.
         bReturnPending = false;
         SaveOverlayFocus();
