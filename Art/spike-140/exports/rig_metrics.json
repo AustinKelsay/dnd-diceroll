@@ -1,0 +1,58 @@
+{
+ "triangles": 3441,
+ "vertices": 2567,
+ "bones": 25,
+ "bone_names": [
+  "root",
+  "pelvis",
+  "spine1",
+  "spine2",
+  "chest",
+  "neck",
+  "head",
+  "clavicle.L",
+  "upperarm.L",
+  "forearm.L",
+  "hand.L",
+  "thigh.L",
+  "shin.L",
+  "foot.L",
+  "toe.L",
+  "clavicle.R",
+  "upperarm.R",
+  "forearm.R",
+  "hand.R",
+  "thigh.R",
+  "shin.R",
+  "foot.R",
+  "toe.R",
+  "weapon_socket",
+  "shield_socket"
+ ],
+ "height_m": 1.823,
+ "z_range": [
+  -0.003,
+  1.82
+ ],
+ "helm_top_without_horns_m": 1.74,
+ "atlas": 1024,
+ "materials": 1,
+ "actions": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0
+  }
+ },
+ "glb_bytes": 840596,
+ "fps": 30
+}
