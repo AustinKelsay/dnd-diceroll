@@ -254,6 +254,8 @@ void AExpeditionHUD::DrawHUD()
     Buttons.Reset();
     Blockers.Reset();
     ChipExclusions.Reset();
+    ChipsRequested = 0;
+    ReachRequested = 0;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
@@ -314,7 +316,7 @@ void AExpeditionHUD::DrawWorldOverlays()
 {
     const FCombatBattle& Rules = View->Rules();
     const FExpeditionPlayback& Show = View->Playback();
-    const bool bCombat = View->InCombat() && !Player->ShowingHelp() && !View->ShowingRecords();
+    const bool bCombat = View->InCombat() && !Player->OverlayOpen();
     const int32 Active = bCombat ? Rules.ActiveId() : INDEX_NONE;
 
     // Path preview: a dotted trail from the adventurer to the hovered cell.
@@ -356,7 +358,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     }
 
     // Geometry is independent of target eligibility and available budgets.
-    if (bCombat && !View->IsPresenting() && !Player->ShowingHelp() && !View->ShowingRecords())
+    if (bCombat && !View->IsPresenting())
     {
         Text(TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
         const auto Reach = Rules.ActionReach(Player->Actor(), Player->Action());
@@ -364,6 +366,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         {
             for (const auto Cell : Cells)
             {
+                ++ReachRequested;
                 FVector2D P;
                 if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 5), P)) { continue; }
                 const auto Color = bBlocked ? Danger : Sky;
@@ -433,7 +436,7 @@ void AExpeditionHUD::DrawWorldOverlays()
 
 void AExpeditionHUD::DrawTargetChips()
 {
-    if (!View->InCombat() || View->IsPresenting() || Player->ShowingHelp() || View->ShowingRecords()) { return; }
+    if (!View->InCombat() || View->IsPresenting() || Player->OverlayOpen()) { return; }
     const auto& Rules = View->Rules();
     std::vector<ExpeditionLayout::Rect> Occupied;
     for (const auto& Box : ChipExclusions)
@@ -444,6 +447,7 @@ void AExpeditionHUD::DrawTargetChips()
     int32 Overflow = 0;
     for (const int32 Id : Rules.LegalTargets(Player->Actor(), Player->Action()))
     {
+        ++ChipsRequested;
         FVector2D Anchor;
         if (!Project(View->UnitPosition(Id, 185), Anchor)) { ++Overflow; continue; }
         const FString Label = FString::Printf(TEXT("#%d "), Id) + ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id);

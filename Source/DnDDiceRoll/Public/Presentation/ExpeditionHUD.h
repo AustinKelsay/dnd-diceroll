@@ -23,7 +23,16 @@ public:
     /** Panels that should swallow clicks instead of passing them to the board. */
     bool CoversBoard(FVector2D ScreenPosition) const;
     TArray<FName> MenuButtons() const;
+    /**
+     * Targeting the last DrawHUD asked to place: one per target chip and per reach or blocked-sight
+     * marker. Counted before screen projection, so a headless test without a viewport sees them.
+     * Both are zero whenever an overlay owns the screen.
+     */
+    int32 TargetChipsRequested() const { return ChipsRequested; }
+    int32 ReachMarkersRequested() const { return ReachRequested; }
 private:
+    int32 ChipsRequested = 0;
+    int32 ReachRequested = 0;
     enum class EAlign : uint8 { Left, Center, Right };
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
     TArray<FButtonArea> Buttons;
