@@ -25,9 +25,9 @@
 
 namespace
 {
-constexpr float CellSize = 110.0f;
-constexpr float CursorPlane = 35.0f;
-constexpr float BoardTop = 31.0f;
+// Scenery is authored in reference units (the 110 cm r001 cell) under a root the metric scales.
+constexpr float RefTop = FBoardMetric::ReferenceBoardTop;
+constexpr float RefCell = FBoardMetric::ReferenceCellCm;
 constexpr float EnemyThinkSeconds = 0.55f;
 constexpr int32 TargetMarkers = 8;
 constexpr int32 ShotPool = 4;
@@ -200,6 +200,8 @@ void AExpeditionBattleView::BeginPlay()
         if (!ThemeMaterial) { Theme = nullptr; }
         OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
     }
+    // The theme owns the cell size and figure height; no theme means the same defaults.
+    BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -246,6 +248,7 @@ void AExpeditionBattleView::RebuildBoard()
         BoardTheme = Progress().History.Num() >= FExpeditionRun::EncounterCount ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
     bOverview = WantsOverview();
+    SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
     ApplyTheme();
     if (bOverview) { BuildOverview(); }
     else
@@ -281,6 +284,19 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
 FTransform AExpeditionBattleView::CameraTransform() const { return Camera->GetComponentTransform(); }
 float AExpeditionBattleView::CameraFieldOfView() const { return Camera->FieldOfView; }
 
+void AExpeditionBattleView::SetBoardMetric(const FBoardMetric& Value)
+{
+    BoardMetric = FBoardMetric(Value.CellCm, Value.FigureCm);
+    RebuildBoard();
+}
+
+void AExpeditionBattleView::UsePrimitives()
+{
+    Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr;
+    BoardMetric = FBoardMetric();
+    RebuildBoard();
+}
+
 void AExpeditionBattleView::PrepareExposureForCapture()
 {
     FPostProcessSettings& Settings = Grade->Settings;
@@ -303,10 +319,12 @@ void AExpeditionBattleView::ApplyTheme()
             Sun->SetActorRotation(FRotator(Palette.SunPitch, Palette.SunYaw, 0.0f));
         }
     }
-    Fog->SetFogDensity(Palette.FogDensity);
+    // Fog is tuned in reference cm; stretch it with the board so the look matches at any cell size.
+    const float FogScale = bOverview ? 1.0f : BoardMetric.Scale();
+    Fog->SetFogDensity(Palette.FogDensity / FogScale);
     Fog->SetFogHeightFalloff(0.08f);
     Fog->SetFogInscatteringColor(Palette.Fog);
-    Fog->SetStartDistance(1400.0f);
+    Fog->SetStartDistance(1400.0f * FogScale);
     Fog->SetWorldLocation(FVector(0, 0, -200));
     FPostProcessSettings& Settings = Grade->Settings;
     Settings.bOverride_VignetteIntensity = true;
@@ -335,11 +353,11 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
 {
     if (Theme && BuildThemedScenery(Encounter, Recipe, Seed)) { return; }
     const FPalette Palette = PaletteFor(BoardTheme);
-    const FVector Center = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
+    const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // Ground hides the starter floor; a raised slab makes the board read as a tabletop.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 3.0f), FVector(60.0f, 60.0f, 0.06f), Palette.Ground));
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, 12.0f),
-        FVector(Encounter.Width * CellSize / 100.0f + 0.35f, Encounter.Height * CellSize / 100.0f + 0.35f, 0.24f), Palette.Rim));
+        FVector(Encounter.Width * RefCell / 100.0f + 0.35f, Encounter.Height * RefCell / 100.0f + 0.35f, 0.24f), Palette.Rim));
     for (int32 Y = 0; Y < Encounter.Height; ++Y)
     {
         for (int32 X = 0; X < Encounter.Width; ++X)
@@ -347,10 +365,10 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
             const FIntPoint Cell(X, Y);
             const float Jitter = 0.88f + 0.22f * Hash(X, Y, Seed);
             const FLinearColor Color = Shade((X + Y) % 2 == 0 ? Palette.TileA : Palette.TileB, Jitter);
-            const FVector Position = CellPosition(Cell);
+            const FVector Position = SceneBoard(FVector2D(Cell.X, Cell.Y));
             FExpeditionTile Tile;
             Tile.Cell = Cell;
-            Tile.Part = MakePart(Cube, nullptr, FVector(Position.X, Position.Y, BoardTop - 9.0f + Hash(Y, X, 3) * 2.0f),
+            Tile.Part = MakePart(Cube, nullptr, FVector(Position.X, Position.Y, RefTop - 9.0f + Hash(Y, X, 3) * 2.0f),
                 FVector(1.04f, 1.04f, 0.18f), Color);
             Tiles.Add(Tile);
         }
@@ -363,8 +381,8 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
 void AExpeditionBattleView::BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random)
 {
     const FPalette Palette = PaletteFor(BoardTheme);
-    const FVector Base = CellPosition(Cell);
-    const FVector Floor(Base.X, Base.Y, BoardTop);
+    const FVector Base = SceneBoard(FVector2D(Cell.X, Cell.Y));
+    const FVector Floor(Base.X, Base.Y, RefTop);
     auto Rubble = [&](int32 Count)
     {
         for (int32 Index = 0; Index < Count; ++Index)
@@ -415,7 +433,7 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
 {
     const FPalette Palette = PaletteFor(BoardTheme);
     const float W = Encounter.Width, H = Encounter.Height;
-    auto Ground = [this](float X, float Y) { return BoardPosition(FVector2D(X, Y), -BoardTop + 6.0f); };
+    auto Ground = [this](float X, float Y) { return SceneBoard(FVector2D(X, Y), -RefTop + 6.0f); };
     auto Tree = [&](float X, float Y, float Size)
     {
         const FVector At = Ground(X, Y);
@@ -456,8 +474,8 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     {
         // A stream along the far edge with stepping stones.
         const FVector Stream = Ground((W - 1) * 0.5f, H + 2.2f);
-        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, 0, -1), FVector((W + 18) * CellSize / 100.0f, 1.5f, 0.04f), FLinearColor(0.12f, 0.32f, 0.5f)));
-        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, -55, 0), FVector((W + 18) * CellSize / 100.0f, 0.25f, 0.05f), Shade(Palette.Rim, 1.4f)));
+        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, 0, -1), FVector((W + 18) * RefCell / 100.0f, 1.5f, 0.04f), FLinearColor(0.12f, 0.32f, 0.5f)));
+        Scenery.Add(MakePart(Cube, nullptr, Stream + FVector(0, -55, 0), FVector((W + 18) * RefCell / 100.0f, 0.25f, 0.05f), Shade(Palette.Rim, 1.4f)));
         for (int32 Stone = 0; Stone < 4; ++Stone) { Boulder((W - 1) * 0.5f - 1.5f + Stone, H + 2.2f + Random.FRandRange(-0.2f, 0.2f), 0.35f); }
         for (int32 Index = 0; Index < 46; ++Index)
         {
@@ -483,7 +501,7 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     {
         // A dusty road on the far side, the watchtower beyond it and scattered ruins.
         const FVector Road = Ground((W - 1) * 0.5f, H + 1.8f);
-        Scenery.Add(MakePart(Cube, nullptr, Road, FVector((W + 18) * CellSize / 100.0f, 1.3f, 0.04f), FLinearColor(0.5f, 0.42f, 0.3f)));
+        Scenery.Add(MakePart(Cube, nullptr, Road, FVector((W + 18) * RefCell / 100.0f, 1.3f, 0.04f), FLinearColor(0.5f, 0.42f, 0.3f)));
         const FVector Tower = Ground(W + 2.8f, H + 3.6f);
         Scenery.Add(MakePart(Cylinder, nullptr, Tower + FVector(0, 0, 210), FVector(1.7f, 1.7f, 4.2f), Palette.Rock));
         Scenery.Add(MakePart(Cylinder, nullptr, Tower + FVector(0, 0, 430), FVector(2.0f, 2.0f, 0.2f), Palette.RockDark));
@@ -557,17 +575,34 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     Root->SetMobility(EComponentMobility::Movable);
     Root->RegisterComponent();
     Rig.Root = Root;
+    // The rig root is scaled with the cell (bases and rings grow with it). The body holds the figure and
+    // is fitted so every figure stands at the metric's figure height above the board.
+    USceneComponent* Body = NewObject<USceneComponent>(this);
+    AddInstanceComponent(Body);
+    Spawned.Add(Body);
+    Body->SetupAttachment(Root);
+    Body->SetMobility(EComponentMobility::Movable);
+    Body->RegisterComponent();
+    auto BasePart = [&](UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color)
+    { Rig.Parts.Add(MakePart(Mesh, Root, Location, Scale, Color)); };
+    // Primitive parts are authored in reference cm with default 100 cm shapes; track the highest point.
+    float Top = 1.0f;
     auto Part = [&](UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator)
-    { Rig.Parts.Add(MakePart(Mesh, Root, Location, Scale, Color, Rotation)); };
+    {
+        Rig.Parts.Add(MakePart(Mesh, Body, Location, Scale, Color, Rotation));
+        Top = FMath::Max(Top, FBox(Scale * -50.0f, Scale * 50.0f).TransformBy(FTransform(Rotation, Location)).Max.Z);
+    };
     const FLinearColor Team = ExpeditionStyle::UnitColor(Unit);
     const FLinearColor Skin(0.92f, 0.74f, 0.6f);
-    Part(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
+    BasePart(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
     if (UStaticMesh* Figure = UnitMesh(Unit))
     {
         // A faction ring keeps sides readable from overhead; the figure itself is untinted.
-        Part(Cylinder, FVector(0, 0, 4), FVector(0.8f, 0.8f, 0.012f), Team * 0.9f);
-        // Like painted miniatures, figures read larger than life from the tactical camera.
-        Part(Figure, FVector::ZeroVector, FVector(1.45f), FLinearColor::White);
+        BasePart(Cylinder, FVector(0, 0, 4), FVector(0.8f, 0.8f, 0.012f), Team * 0.9f);
+        // Fit the mesh (origin at its feet) to the metric's figure height; the rig root already carries the cell scale.
+        const float MeshHeight = Figure->GetBounds().GetBox().Max.Z;
+        const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.45f;
+        Part(Figure, FVector::ZeroVector, FVector(Fit), FLinearColor::White);
         Rigs.Add(Rig);
         return;
     }
@@ -648,6 +683,8 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
             Part(Cube, FVector(16, 22, 30), FVector(0.04f, 0.04f, 0.3f), FLinearColor(0.8f, 0.8f, 0.82f), FRotator(-45, 0, 0));
         }
     }
+    // Primitive figures differ in height by role; fit each so they all stand at the figure height.
+    Body->SetRelativeScale3D(FVector(BoardMetric.FigureCm / BoardMetric.Scale() / Top));
     Rigs.Add(Rig);
 }
 
@@ -671,7 +708,7 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         SparkMeshes.Last().Mesh->SetVisibility(false);
     }
     // Camp: stones, crossed logs, flames and a warm light. Shown only at the recovery choice.
-    const FVector Camp = BoardPosition(FVector2D(1.6f, (Encounter.Height - 1) * 0.5f));
+    const FVector Camp = SceneBoard(FVector2D(1.6f, (Encounter.Height - 1) * 0.5f));
     for (int32 Stone = 0; Stone < 7; ++Stone)
     {
         const float Angle = Stone * 2.0f * PI / 7.0f;
@@ -687,7 +724,7 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
     if (BoardTheme == EBoardTheme::Vault)
     {
         // The far-right corner keeps the Waystone clear of the initiative strip.
-        const FVector Pedestal = BoardPosition(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -BoardTop + 6.0f);
+        const FVector Pedestal = SceneBoard(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -RefTop + 6.0f);
         WaystoneParts.Add(MakePart(Cylinder, nullptr, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f)));
         WaystoneParts.Add(MakePart(Cube, nullptr, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * 4.0f, FRotator(45, 45, 0)));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
@@ -696,19 +733,19 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
 
 FVector AExpeditionBattleView::CellPosition(FIntPoint Cell) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, CursorPlane);
+    return BoardMetric.CellPosition(Cell);
 }
 
 FVector AExpeditionBattleView::BoardPosition(FVector2D Cell, float Height) const
 {
-    return FVector(Cell.X * CellSize, Cell.Y * CellSize, BoardTop + Height);
+    return BoardMetric.BoardPosition(Cell, Height);
 }
 
 FVector AExpeditionBattleView::UnitPosition(int32 Id, float Height) const
 {
     const FUnitDisplay* Unit = Show.Unit(Id);
     if (!Unit) { return BoardPosition(FVector2D::ZeroVector, Height); }
-    return BoardPosition(Unit->Position + Unit->Lean, Unit->Hop + Height - Unit->Tilt * 45.0f);
+    return BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop - Unit->Tilt * 45.0f) + Height);
 }
 
 void AExpeditionBattleView::UpdateRigs()
@@ -718,13 +755,13 @@ void AExpeditionBattleView::UpdateRigs()
         const FUnitDisplay* Unit = Show.Unit(Rig.Id);
         if (!Unit || !Rig.Root) { continue; }
         const float Breath = Unit->Life == ECombatLife::Conscious ? FMath::Sin(Clock * 2.2f + Rig.Phase) : 0.0f;
-        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, Unit->Hop);
+        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop));
         const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Unit->Facing.Y, Unit->Facing.X));
         const FQuat Turn(FVector::UpVector, FMath::DegreesToRadians(Facing));
         const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
         Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
         // Bodies still occupy their cells, so keep fallen rigs visible on the board.
-        Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f));
+        Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
         const bool bDead = Unit->Life == ECombatLife::Dead;
         for (FExpeditionPart& Part : Rig.Parts)
         {
@@ -765,7 +802,7 @@ void AExpeditionBattleView::UpdateMarkers()
         const FUnitDisplay* Unit = Show.Unit(Id);
         if (!Unit) { Marker.Mesh->SetVisibility(false); return; }
         Marker.Mesh->SetVisibility(true);
-        Marker.Mesh->SetRelativeLocation(BoardPosition(Unit->Position, Lift));
+        Marker.Mesh->SetRelativeLocation(SceneBoard(Unit->Position, Lift));
         Marker.Mesh->SetRelativeScale3D(FVector(Scale, Scale, 0.02f));
     };
     if (Markers.Num() < 2) { return; }
@@ -799,7 +836,8 @@ void AExpeditionBattleView::UpdateEffects()
         if (!bLive) { continue; }
         const FPlaybackProjectile& Shot = Shots[Index];
         const float Alpha = FMath::Clamp(Shot.Age / Shot.Duration, 0.0f, 1.0f);
-        const FVector From = BoardPosition(Shot.From, 60.0f), To = BoardPosition(Shot.To, 50.0f);
+        // Scenery-local (reference) space: the root scales the shot with the cell.
+        const FVector From = SceneBoard(Shot.From, 60.0f), To = SceneBoard(Shot.To, 50.0f);
         const FVector Side = FVector::CrossProduct((To - From).GetSafeNormal(), FVector::UpVector);
         const float Curve = FMath::Sin(Alpha * PI);
         // Positive arcs lob upward; negative arcs curve sideways.
@@ -820,7 +858,7 @@ void AExpeditionBattleView::UpdateEffects()
         const FPlaybackSparkle& Spark = Sparks[Index];
         const float Alpha = Spark.Age / Spark.Life;
         const float Angle = Spark.Angle + Alpha * 3.0f;
-        Part.Mesh->SetRelativeLocation(BoardPosition(Spark.Cell, 20.0f + Alpha * 100.0f) + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0) * (28.0f + Alpha * 10.0f));
+        Part.Mesh->SetRelativeLocation(SceneBoard(Spark.Cell, 20.0f + Alpha * 100.0f) + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0) * (28.0f + Alpha * 10.0f));
         Part.Mesh->SetRelativeScale3D(FVector(0.08f * (1.0f - Alpha * 0.7f)));
         Part.SetColor(Spark.Color * 5.0f);
     }
@@ -858,10 +896,10 @@ void AExpeditionBattleView::UpdateEffects()
 void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    FVector Desired = bOverview ? FVector(0.0f, 30.0f, OverviewHeight + 22.0f) : BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardTop);
+    FVector Desired = bOverview ? FVector(0.0f, 30.0f, OverviewHeight + 22.0f) : BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
     // Lean the view toward whoever is acting so long boards keep the action framed.
     const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
-    if (!bOverview && FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardTop), 0.4f); }
+    if (!bOverview && FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardMetric.BoardTop()), 0.4f); }
     if (!bCameraPlaced || DeltaSeconds <= 0.0f)
     {
         Focus = Desired; Yaw = TargetYaw; Distance = TargetDistance; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
@@ -873,17 +911,19 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         Distance = FMath::FInterpTo(Distance, TargetDistance, DeltaSeconds, 6.0f);
     }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
-    const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f : FVector::ZeroVector;
+    const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f * SceneScale() : FVector::ZeroVector;
     const float Radians = FMath::DegreesToRadians(Yaw);
     // Battles look steeply down at the board; the tabletop gets a low, seated view.
     const float Reach = bOverview ? 1.5f : 0.62f, Rise = bOverview ? 0.62f : 1.0f;
-    const FVector Offset(FMath::Cos(Radians) * Distance * Reach, FMath::Sin(Radians) * Distance * Reach, Distance * Rise);
+    // Distances are reference units; the board camera scales them with the cell (the tabletop is unscaled).
+    const float Span = Distance * SceneScale();
+    const FVector Offset(FMath::Cos(Radians) * Span * Reach, FMath::Sin(Radians) * Span * Reach, Span * Rise);
     // Pan the view left of the focus so the board sits clear of the party cards on the left.
     const FVector ScreenLeft(-FMath::Sin(Radians), FMath::Cos(Radians), 0.0f);
     const float Pan = bOverview ? 0.0f : 0.09f;
-    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + ScreenLeft * Distance * Pan + Shake);
+    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + ScreenLeft * Span * Pan + Shake);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
-    Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Distance * 0.32f : 0.0f)).Rotation());
+    Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
 }
 
 // The tabletop is a fixed, composed view; orbit and zoom belong to battles.
@@ -894,10 +934,16 @@ bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint&
 {
     FVector Origin, Direction;
     if (!Controller || !Controller->DeprojectMousePositionToWorld(Origin, Direction) || Direction.Z >= -KINDA_SMALL_NUMBER) { return false; }
+    return CellAtRay(Origin, Direction, Cell);
+}
+
+bool AExpeditionBattleView::CellAtRay(const FVector& Origin, const FVector& Direction, FIntPoint& Cell) const
+{
+    if (Direction.Z >= -KINDA_SMALL_NUMBER) { return false; }
     // Board positions are relative to this actor; intersect the board plane in world space.
-    const float PlaneZ = GetActorTransform().TransformPosition(FVector(0, 0, CursorPlane)).Z;
+    const float PlaneZ = GetActorTransform().TransformPosition(FVector(0, 0, BoardMetric.CursorPlane())).Z;
     const FVector Intersection = GetActorTransform().InverseTransformPosition(Origin + Direction * ((PlaneZ - Origin.Z) / Direction.Z));
-    Cell = FIntPoint(FMath::RoundToInt(Intersection.X / CellSize), FMath::RoundToInt(Intersection.Y / CellSize));
+    Cell = BoardMetric.CellAt(Intersection);
     return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Rules().Snapshot().Encounter.Width && Cell.Y < Rules().Snapshot().Encounter.Height;
 }
 
@@ -1203,8 +1249,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     UStaticMesh* TileMesh = ThemeMesh(bForest ? Theme->RootTile : Theme->VigilTile);
     if (!World || !TileMesh) { return false; }
     const float TileHeight = FMath::Max(1.0f, Theme->TileHeight);
-    const float Ground = BoardTop - TileHeight;
-    const FVector Center = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
+    const float Ground = RefTop - TileHeight;
+    const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f)));
     Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White));
@@ -1213,7 +1259,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         for (int32 X = 0; X < Encounter.Width; ++X)
         {
             const FIntPoint Cell(X, Y);
-            const FVector Position = CellPosition(Cell);
+            const FVector Position = SceneBoard(FVector2D(Cell.X, Cell.Y));
             FExpeditionTile Tile;
             Tile.Cell = Cell;
             // Darker than the surrounding ground so the move and path tints stand out.
@@ -1229,7 +1275,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
         const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
-        Scenery.Add(MakePart(Obstacle, nullptr, BoardPosition(FVector2D(Cell.X, Cell.Y)), FVector::OneVector,
+        Scenery.Add(MakePart(Obstacle, nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), FVector::OneVector,
             FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
     }
     // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
@@ -1242,7 +1288,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         {(W - 1) * 0.5f, H + 0.5f}, {-1.5f, (H - 1) * 0.5f}, {W + 0.5f, (H - 1) * 0.5f}};
     for (const FVector2D& Spot : Braziers)
     {
-        const FVector At = BoardPosition(Spot, -TileHeight);
+        const FVector At = SceneBoard(Spot, -TileHeight);
         if (Brazier) { Scenery.Add(MakePart(Brazier, nullptr, At, FVector::OneVector, FLinearColor::White)); }
         if (Flame)
         {
@@ -1258,7 +1304,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
         {
-            Scenery.Add(MakePart(Cage, nullptr, BoardPosition(Spot, -TileHeight + 430.0f), FVector::OneVector, FLinearColor::White));
+            Scenery.Add(MakePart(Cage, nullptr, SceneBoard(Spot, -TileHeight + 430.0f), FVector::OneVector, FLinearColor::White));
             AddSway(Scenery.Last().Mesh, 6.0f, 0.0f);
         }
     }
@@ -1266,7 +1312,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         for (const float X : {W * 0.22f, W * 0.78f - 1.0f})
         {
-            Scenery.Add(MakePart(Banner, nullptr, BoardPosition(FVector2D(X, H + 1.3f), -TileHeight), FVector::OneVector, FLinearColor::White, FRotator(0, -90, 0)));
+            Scenery.Add(MakePart(Banner, nullptr, SceneBoard(FVector2D(X, H + 1.3f), -TileHeight), FVector::OneVector, FLinearColor::White, FRotator(0, -90, 0)));
             AddSway(Scenery.Last().Mesh, 3.5f, 0.0f);
         }
     }

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
+#include "Presentation/BoardMetric.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -145,7 +146,11 @@ public:
     void Orbit(float Degrees);
     void Zoom(float Amount);
     float CameraYaw() const { return TargetYaw; }
-    /** Where the camera frames the whole board by default (the distance a fresh board starts at). */
+    /**
+     * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
+     * the board metric's scale, so framing and the zoom clamp (900 to 3200) look the same at any cell size.
+     * Where the camera frames the whole board by default (the distance a fresh board starts at).
+     */
     float FramedDistance() const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
@@ -159,11 +164,19 @@ public:
     void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
     /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
     void PrepareExposureForCapture();
+    /** The one board metric: cell size, board top, pointer plane and figure height. Every cell-to-world conversion uses it. */
+    const FBoardMetric& Metric() const { return BoardMetric; }
+    /** Replaces the metric and rebuilds the board at the new scale (tests and tools; the theme normally supplies it). */
+    void SetBoardMetric(const FBoardMetric& Value);
+    /** Switches to the engine-primitive presentation (what -ExpeditionPrimitives does at startup) and rebuilds. */
+    void UsePrimitives();
     FVector CellPosition(FIntPoint Cell) const;
     FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
     /** Where a combatant currently appears, including playback motion. */
     FVector UnitPosition(int32 Id, float Height = 0.0f) const;
     bool CursorCell(APlayerController* Controller, FIntPoint& Cell) const;
+    /** The cell a world-space ray crosses on the pointer plane; false when it misses the board. CursorCell is this plus the pointer. */
+    bool CellAtRay(const FVector& Origin, const FVector& Direction, FIntPoint& Cell) const;
 
 private:
     FExpeditionSession Session;
@@ -187,6 +200,7 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
     UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
     UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
     UPROPERTY() TArray<FExpeditionSway> Swaying;
@@ -231,6 +245,10 @@ private:
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);
+    /** Scenery lives under a root scaled by the metric (reference units); the overview table is unscaled. */
+    float SceneScale() const { return bOverview ? 1.0f : BoardMetric.Scale(); }
+    /** Scenery-local position of a board point: reference cm, because the scenery root is scaled. */
+    FVector SceneBoard(FVector2D Cell, float ReferenceHeight = 0.0f) const { return BoardMetric.ReferencePosition(Cell, ReferenceHeight); }
     void ClearPresentation();
     void RebuildBoard();
     void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
