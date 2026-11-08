@@ -1,5 +1,6 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionCapture.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
@@ -14,6 +15,7 @@ void AExpeditionPlayerController::BeginPlay()
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
+    Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
     bShowMouseCursor = true;
     FInputModeGameOnly Mode;
     Mode.SetConsumeCaptureMouseDown(false);
@@ -142,6 +144,14 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     }
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
+    if (Capture.IsValid()) { Capture->Tick(); }
+}
+
+void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
+{
+    SelectedAction = ECombatCommandType::Attack;
+    bKeyboardCursor = bAim;
+    if (bAim) { GridCursor = Cell; }
 }
 
 bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const

@@ -258,9 +258,36 @@ void AExpeditionBattleView::RebuildBoard()
     // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
     // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
     if (bOverview) { TargetYaw = -90.0f; }
-    TargetDistance = bOverview ? 300.0f : 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
+    TargetDistance = FramedDistance();
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
+}
+
+float AExpeditionBattleView::FramedDistance() const
+{
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    return bOverview ? 300.0f : 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
+}
+
+void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
+{
+    if (bOverview) { return; }
+    TargetYaw = Yaw = InYaw;
+    TargetDistance = Distance = FMath::Clamp(InDistance, 900.0f, 3200.0f);
+    bCameraPlaced = false;
+    UpdateCamera(0.0f);
+}
+
+FTransform AExpeditionBattleView::CameraTransform() const { return Camera->GetComponentTransform(); }
+float AExpeditionBattleView::CameraFieldOfView() const { return Camera->FieldOfView; }
+
+void AExpeditionBattleView::PrepareExposureForCapture()
+{
+    FPostProcessSettings& Settings = Grade->Settings;
+    Settings.bOverride_AutoExposureSpeedUp = true;
+    Settings.bOverride_AutoExposureSpeedDown = true;
+    Settings.AutoExposureSpeedUp = 20.0f;
+    Settings.AutoExposureSpeedDown = 20.0f;
 }
 
 void AExpeditionBattleView::ApplyTheme()
@@ -1112,7 +1139,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
     ExpireVoices();
-    if (!HasRun() || bShowRecords || bCheckpointBlocked) { return; }
+    if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
     { EnemyDelay = 0; return; }
