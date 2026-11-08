@@ -198,43 +198,50 @@ def bake_ao(s, bvh, strength=.6, dist=2.4, n=10):
 
 
 # ------------------------------------------------------------------ periodic textures
-def periodic_voronoi_tile(n=512, size_m=2.0, stone_m=.62, seed=5, palettes=None, joint_m=.07, moss=0.0):
-    """Seamlessly tiling irregular paving: n px = size_m metres.  Returns (n,n,4) float32 (top-down) and cell stats."""
+def periodic_flag_tile(n=512, size_m=2.0, seed=5, joint_m=.045):
+    """Seamlessly tiling irregular flagstones (courses of random height, random stone lengths and bond offsets), n px = size_m
+    metres, with a gentle noise warp so joints wobble.  Map it rotated (see build_vigil_r002) so it never lines up with the cells."""
     r = np.random.default_rng(seed)
-    k = int(round(size_m / stone_m))
-    gx = gy = max(k, 2)
-    sites = []
-    for j in range(gy * 2):                       # hex-ish lattice, 2 sites per cell cell-row for 62 cm stones
-        for i in range(gx):
-            sites.append(((i + .5 * (j % 2) + r.uniform(-.22, .22)) / gx, (j + .5 + r.uniform(-.22, .22)) / (gy * 2)))
-    S = np.array(sites)
+    hs = r.uniform(.35, .7, 4)
+    hs = hs / hs.sum() * size_m
+    y_edges = np.concatenate([[0], np.cumsum(hs)])
+    rows = []
+    for k in range(4):
+        cnt = int(r.integers(3, 5))
+        ls = r.uniform(.4, .9, cnt)
+        ls = ls / ls.sum() * size_m
+        off = r.uniform(0, size_m)
+        edges = np.sort((off + np.cumsum(ls)) % size_m)
+        rows.append(edges)
     yy, xx = np.mgrid[0:n, 0:n]
-    px = np.stack([(xx + .5) / n, (yy + .5) / n], -1)
-    best = np.full((n, n), 9.0)
-    second = np.full((n, n), 9.0)
-    arg = np.zeros((n, n), int)
-    wts = r.uniform(-.012, .012, len(S))                           # power-diagram weights: unequal stone sizes
-    spacing = 1 / gx * .9
-    for si, s_ in enumerate(S):
-        for ox in (-1, 0, 1):
-            for oy in (-1, 0, 1):
-                d = (np.square(px[..., 0] - (s_[0] + ox)) + np.square(px[..., 1] - (s_[1] + oy)) - wts[si]) / (2 * spacing)
-                better = d < best
-                second = np.where(better, best, np.minimum(second, d))
-                arg = np.where(better, si, arg)
-                best = np.where(better, d, best)
-    gap = (second - best) * size_m                # ~ distance to the cell border * 2, metres
-    base_cols = palettes or [(.34, .33, .36), (.40, .37, .36), (.30, .31, .35), (.36, .35, .33)]
-    cell_col = np.array([base_cols[r.integers(len(base_cols))] for _ in S]) * r.uniform(.86, 1.12, (len(S), 1))
-    col = cell_col[arg]
+    wx = (xx + .5) / n * size_m + .018 * (_tile_noise(n, 4, seed + 11) - .5) * 2
+    wy = (yy + .5) / n * size_m + .018 * (_tile_noise(n, 4, seed + 12) - .5) * 2
+    wx, wy = wx % size_m, wy % size_m
+    stone_id = np.zeros((n, n), int)
+    dist = np.full((n, n), 9.0)
+    base_id = 0
+    cols_pool = [(.34, .33, .36), (.40, .37, .36), (.30, .31, .35), (.36, .35, .33)]
+    palette = []
+    for k in range(4):
+        m = (wy >= y_edges[k]) & (wy < y_edges[k + 1] + 1e-9)
+        e = rows[k]
+        sid = np.searchsorted(e, wx) % len(e)
+        d = np.min(np.minimum(np.abs(wx[..., None] - e[None, None]), size_m - np.abs(wx[..., None] - e[None, None])), axis=2)
+        dy = np.minimum(np.abs(wy - y_edges[k]), np.abs(wy - y_edges[k + 1]))
+        dy = np.minimum(dy, size_m - dy) if k in (0, 3) else dy
+        dd = np.minimum(d, dy)
+        stone_id = np.where(m, base_id + sid, stone_id)
+        dist = np.where(m, dd, dist)
+        for _ in range(len(e)):
+            palette.append(np.array(cols_pool[r.integers(len(cols_pool))]) * r.uniform(.86, 1.12))
+        base_id += len(e)
+    col = np.array(palette)[stone_id]
     n1, n2 = _tile_noise(n, 5, seed + 1), _tile_noise(n, 15, seed + 2)
     col = col * (.80 + .26 * n1[..., None] + .14 * n2[..., None] - .07)
-    edge = smoothstep(joint_m * .6, joint_m * 1.9, gap)           # 0 in the joint, 1 on the stone
-    bevel = 1 - .22 * (1 - smoothstep(joint_m * 1.9, joint_m * 4.5, gap))
-    col = col * (bevel * (.38 + .62 * edge))[..., None]
-    if moss > 0:
-        m = smoothstep(.45, .7, _tile_noise(n, 6, seed + 3) * .6 + _tile_noise(n, 18, seed + 4) * .4) * moss
-        col = col * (1 - m[..., None]) + np.array((.20, .36, .13)) * (.7 + .5 * n2[..., None]) * m[..., None]
+    jm = joint_m / 2
+    edge = smoothstep(jm * .5, jm * 2.2, dist)
+    bevel = 1 - .14 * (1 - smoothstep(jm * 2.2, jm * 6, dist))
+    col = col * (bevel * (.62 + .38 * edge))[..., None]
     t = np.ones((n, n, 4), np.float32)
     t[..., :3] = np.clip(col, 0, 1)
     return t

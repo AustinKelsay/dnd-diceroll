@@ -10,7 +10,7 @@
     "origin": "Authored by script in Blender from the owner-approved Vigil look (issue #38) and the #140 gate-1 decisions; textures are r001 swatches (project-owned) or procedural; no third-party or downloaded content"
   },
   "recipe": {
-    "method": "Rebuilt from r001 vigil.blend: all architecture kept except what intrudes into the 18 x 12 footprint, near/occluding pieces split into SM_World_Vigil_Occluders, continuous Voronoi paving with irregular 50-75 cm stones within +-3 cm relief, terraces re-textured to 256 texels/m, rune ring moved off the playable area, vertex light at about 75 cm near the board, glow only from COLOR_0.a",
+    "method": "Rebuilt from r001 vigil.blend: all architecture kept except what intrudes into the 18 x 12 footprint, near/occluding pieces split into SM_World_Vigil_Occluders, continuous irregular flagstone paving (35-90 cm, random courses and patch angles) within +-3 cm relief, terraces re-textured to 256 texels/m, rune ring moved off the playable area, vertex light at about 75 cm near the board, glow only from COLOR_0.a",
     "approved_reference": "Gate 1 decision on #140 (2026-11-08); parent #138",
     "parameters": {
       "units": "metres, 1 cell = 1.50 m, footprint 18 x 12 cells = 27 x 18 m centred on the origin",
@@ -18,18 +18,36 @@
       "material": "one baseColor atlas 2048x2048 plus COLOR_0 RGBA",
       "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
       "pivot": "origin = board centre at floor level, geometry in place (not per-cell)",
-      "triangles": 117853,
-      "stones": 1745,
+      "triangles": 130502,
+      "stones": 1515,
       "stone_equiv_diameter_cm_p5_p50_p95": [
-        49.8,
-        56.4,
-        62.9
+        36.6,
+        59.9,
+        81.8
       ],
-      "stone_widest_chord_cm_p5_p50_p95_max": [
-        58.1,
-        65.6,
-        72.9,
-        80.4
+      "stone_long_side_cm_p5_p50_p95_max": [
+        43.0,
+        72.6,
+        92.7,
+        107.4
+      ],
+      "stone_aspect_p5_p50_p95_max": [
+        1.04,
+        1.45,
+        2.35,
+        3.53
+      ],
+      "stone_vertex_count_histogram": {
+        "4": 815,
+        "5": 421,
+        "6": 119,
+        "7": 18,
+        "8": 1
+      },
+      "edge_orientation_resultants_R2_R4_R6": [
+        0.012,
+        0.299,
+        0.031
       ],
       "rune_ring": {
         "centre_m": [
@@ -79,17 +97,17 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
-      "sha256": "0b7af01c1f70c052e3a4ad7be41d47ee5d7bcb254339ecfb90cea6fdb4e720c1"
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_vigil_r002.py",
-      "sha256": "7a505f9a6afa0bf50a9f19958052ae79c480b48563edac336fcda411fe376cb8"
+      "sha256": "6d4f885fc65e79925544655b1ac0b59e56e4e953c998b9bb84e3367dbfd509f4"
     },
     {
       "role": "export",
       "path": "Art/world-vigil/r002/SM_World_Vigil.glb",
-      "sha256": "020893c6d17cde0c838fdb460dac805f1f782c931ebf83fe53c23826c8dbc113"
+      "sha256": "eaddb88d46d81b4f51a93950bb63dc78c66d2c9e9e000c846d6ea12842d6672a"
     }
   ],
   "import_policy": {

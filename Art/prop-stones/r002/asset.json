@@ -71,12 +71,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
-      "sha256": "0b7af01c1f70c052e3a4ad7be41d47ee5d7bcb254339ecfb90cea6fdb4e720c1"
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_kit_r002.py",
-      "sha256": "1cf9d691ce2bff6d89e2657e00927ba05d0013a3a1d7c02546e69c5a4751b19c"
+      "sha256": "68a37cef0f7ea9147a13d0903d4724474e0b43eb9c72a521e4ce3265a343d4b1"
     },
     {
       "role": "export",

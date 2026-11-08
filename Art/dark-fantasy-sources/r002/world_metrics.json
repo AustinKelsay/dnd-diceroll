@@ -15,24 +15,68 @@
   "distance_to_footprint_m": 3.0,
   "outer_radius_m": 1.88
  },
- "stones": 1745,
- "stones_measured_interior": 1615,
+ "stones": 1515,
+ "stones_measured_interior": 1374,
  "stone_equiv_diameter_cm_p5_p50_p95": [
-  49.8,
-  56.4,
-  62.9
+  36.6,
+  59.9,
+  81.8
  ],
- "stone_widest_chord_cm_p5_p50_p95_max": [
-  58.1,
-  65.6,
-  72.9,
-  80.4
+ "stone_long_side_cm_p5_p50_p95_max": [
+  43.0,
+  72.6,
+  92.7,
+  107.4
  ],
+ "stone_short_side_cm_p5_p50_p95": [
+  28.7,
+  47.1,
+  66.0
+ ],
+ "stone_aspect_long_over_short_p5_p50_p95_max": [
+  1.04,
+  1.45,
+  2.35,
+  3.53
+ ],
+ "stone_vertex_count_histogram": {
+  "4": 815,
+  "5": 421,
+  "6": 119,
+  "7": 18,
+  "8": 1
+ },
+ "edge_orientation_histogram_10deg_bins_length_share": [
+  0.021,
+  0.05,
+  0.05,
+  0.052,
+  0.1,
+  0.057,
+  0.127,
+  0.03,
+  0.018,
+  0.021,
+  0.061,
+  0.034,
+  0.061,
+  0.075,
+  0.066,
+  0.127,
+  0.041,
+  0.008
+ ],
+ "edge_orientation_resultants_R2_R4_R6": [
+  0.012,
+  0.299,
+  0.031
+ ],
+ "edge_length_share_within_3deg_of_cell_axes": 0.013,
  "stone_top_height_range_cm": [
   -2.7,
   2.7
  ],
- "stone_tris": 51865,
+ "stone_tris": 34490,
  "base_tris": 1976,
  "arch_tris_before_subdivision": {
   "world": 18284,
@@ -57,15 +101,15 @@
     256,
     256
    ],
+   "paveA": [
+    256,
+    256
+   ],
    "paveC": [
     256,
     256
    ],
    "paveM": [
-    256,
-    256
-   ],
-   "paveA": [
     256,
     256
    ],
@@ -122,18 +166,18 @@
  "terrace_texels_per_m": 256.0,
  "r001_terrace_texels_per_m": 85.3,
  "world": {
-  "triangles": 117853,
+  "triangles": 130502,
   "glow_tris": 309,
   "by_material": {
-   "paveB": 13080,
-   "paveC": 10045,
-   "paveM": 13235,
-   "paveA": 15505,
-   "soil": 1404,
-   "moss": 572,
+   "paveB": 12095,
+   "paveA": 13650,
+   "paveC": 7090,
+   "paveM": 1655,
+   "soil": 1790,
+   "moss": 186,
    "sstone": 3614,
    "rune": 96,
-   "paveT": 51718,
+   "paveT": 81728,
    "pier": 4174,
    "wall": 1208,
    "iron": 1122,
@@ -142,9 +186,9 @@
    "timber": 1128,
    "flame": 78
   },
-  "edge_len_m_all_median": 0.419,
+  "edge_len_m_all_median": 0.514,
   "edge_len_m_terrace_within_4p5m": [
-   0.493,
+   0.393,
    0.75,
    1.5
   ],
@@ -154,12 +198,12 @@
    0.851
   ],
   "edge_len_m_stone_tops_median_p90": [
-   0.266,
-   0.379
+   0.336,
+   0.684
   ],
   "glb": {
-   "triangles": 117853,
-   "vertices": 208911,
+   "triangles": 130502,
+   "vertices": 190760,
    "bbox_min_m": [
     -81,
     -61.5,
@@ -191,7 +235,7 @@
     ]
    ],
    "materials": 1,
-   "bytes": 10865392,
+   "bytes": 10255612,
    "extensions": []
   }
  },
@@ -255,7 +299,7 @@
     ]
    ],
    "materials": 1,
-   "bytes": 1850380,
+   "bytes": 1814852,
    "extensions": []
   }
  },

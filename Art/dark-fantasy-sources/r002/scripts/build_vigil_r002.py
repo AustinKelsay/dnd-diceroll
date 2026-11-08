@@ -26,7 +26,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import r002_lib as R
-from r002_lib import L, bpy, np, Vector, make_bvh, tri_normals, smoothstep, fbm, subdivide, ambient, bake_ao, tri_soup, edge_lengths
+from r002_lib import L, bpy, np, Vector, make_bvh, tri_normals, smoothstep, fbm, vnoise, subdivide, ambient, bake_ao, tri_soup, edge_lengths
 
 import glass
 
@@ -198,10 +198,10 @@ def tiles_procedural():
     t[..., :3] = t[..., :3] * (1 - moss[..., None]) + np.array((.20, .36, .13)) * (.7 + .5 * mid)[..., None] * moss[..., None]
     out['paveM'] = t
     t = np.ones((n, n, 4), np.float32)
-    t[..., :3] = np.array((.17, .33, .12)) * (.65 + .55 * big[..., None]) * (.9 + .2 * mid[..., None])
+    t[..., :3] = np.array((.16, .27, .13)) * (.65 + .55 * big[..., None]) * (.9 + .2 * mid[..., None])
     out['moss'] = t
     t = np.ones((n, n, 4), np.float32)
-    t[..., :3] = np.array((.30, .22, .15)) * (.7 + .5 * big[..., None]) * (.9 + .2 * mid[..., None])
+    t[..., :3] = np.array((.26, .23, .20)) * (.7 + .5 * big[..., None]) * (.9 + .2 * mid[..., None])
     out['soil'] = t
     # rune band: dark teal metal with bright angular glyph strokes
     t = np.ones((n, n, 4), np.float32)
@@ -219,7 +219,7 @@ def tiles_procedural():
                 t[y0:y0 + 2, gx + 2:gx + 13, :3] = (.30, .98, .92)
                 t[y0:y0 + 40, gx + 2:gx + 4, :3] = (.30, .98, .92)
     out['rune'] = t
-    out['paveT'] = R.periodic_voronoi_tile(512, TERRACE_TILE_M, .62, seed=5)
+    out['paveT'] = R.periodic_flag_tile(512, TERRACE_TILE_M, seed=5)
     return out
 
 
@@ -238,56 +238,127 @@ def clip_poly(poly, n, d):
     return out
 
 
-LATTICE = .82          # source units between neighbouring stone sites (60 cm)
-JITTER = .13
-WEIGHT = .05           # power-diagram weight range (units^2): varies stone size by about +-15%
+PATCH_U = 5.5          # source units (6 m): flagstone laying patches, each with its own random orientation
+JOINT_U = .06          # joint width, source units (4.5 cm)
+SIDE_LIM = (.47, 1.20)  # stone long side limits, source units (35-90 cm)
 
 
-def _cell_polys(sites, gap, weights=None):
+def _ccw(poly):
+    poly = np.asarray(poly, float)
+    a = .5 * (np.dot(poly[:, 0], np.roll(poly[:, 1], -1)) - np.dot(poly[:, 1], np.roll(poly[:, 0], -1)))
+    return poly if a > 0 else poly[::-1]
+
+
+def _shrink(poly, g):
+    """Move every edge of a convex CCW polygon inward by g."""
+    pts = [tuple(q) for q in poly]
+    m = len(poly)
+    for i in range(m):
+        a, b = poly[i], poly[(i + 1) % m]
+        d = b - a
+        ln = np.linalg.norm(d)
+        if ln < 1e-9:
+            continue
+        n = np.array((d[1], -d[0])) / ln
+        pts = clip_poly([np.array(q) for q in pts], n, n @ a - g)
+        if len(pts) < 3:
+            return None
+    return np.array(pts)
+
+
+def min_area_rect(poly):
+    """(area, long, short) of the minimum-area bounding rectangle, brute force over 3 degree steps."""
+    best = (9e9, 0.0, 0.0)
+    for ang in np.radians(np.arange(0, 180, 3)):
+        u = np.array((math.cos(ang), math.sin(ang)))
+        v = np.array((-u[1], u[0]))
+        w_, h_ = np.ptp(poly @ u), np.ptp(poly @ v)
+        if w_ * h_ < best[0]:
+            best = (w_ * h_, max(w_, h_), min(w_, h_))
+    return best
+
+
+def flagstone_cells():
+    """Irregular flagstones.  The ground is split into ~6 m patches (Voronoi regions of jittered seeds); inside each patch the
+    stones are laid in courses of random height with random stone lengths and random bond offsets, the whole patch rotated by its
+    own random angle, so no global lattice (square or hex) and no alignment with the 150 cm cells.  Corners are perturbed and
+    often chamfered (4-6 sides), then stones are clipped to the patch and the ground rectangle and shrunk by half a joint."""
+    seeds = []
+    for x in np.arange(-MX - PATCH_U, MX + PATCH_U + 1e-6, PATCH_U):
+        for y in np.arange(-MY - PATCH_U, MY + PATCH_U + 1e-6, PATCH_U):
+            seeds.append((x + rng.uniform(-.3, .3) * PATCH_U + (y // PATCH_U % 2) * .25 * PATCH_U, y + rng.uniform(-.3, .3) * PATCH_U))
+    seeds = np.array(seeds)
     cells = []
-    for i, p in enumerate(sites):
-        d = np.linalg.norm(sites - p, axis=1)
-        nb = np.nonzero((d > 0) & (d < 2.4 * LATTICE))[0]
-        poly = [p + np.array(v) for v in ((-1.6, -1.6), (1.6, -1.6), (1.6, 1.6), (-1.6, 1.6))]
-        for j in nb[np.argsort(d[nb])]:
-            n = (sites[j] - p) / d[j]
-            shift = 0.0 if weights is None else (weights[i] - weights[j]) / (2 * d[j])   # power diagram: unequal stone sizes
-            poly = clip_poly([q - p for q in poly], n, d[j] / 2 + shift - gap / 2)
-            poly = [q + p for q in poly]
-            if len(poly) < 3:
+    for pi, sd in enumerate(seeds):
+        if abs(sd[0]) > MX + PATCH_U * .9 or abs(sd[1]) > MY + PATCH_U * .9:
+            continue
+        # patch region: clip a big square by bisectors with the neighbours
+        region = [sd + np.array(v) for v in ((-PATCH_U * 1.5,) * 2, (PATCH_U * 1.5, -PATCH_U * 1.5), (PATCH_U * 1.5,) * 2, (-PATCH_U * 1.5, PATCH_U * 1.5))]
+        d_all = np.linalg.norm(seeds - sd, axis=1)
+        for j in np.argsort(d_all)[1:12]:
+            n = (seeds[j] - sd) / d_all[j]
+            region = [q + sd for q in clip_poly([q - sd for q in region], n, d_all[j] / 2)]
+            if len(region) < 3:
                 break
-        if len(poly) < 3:
-            cells.append(None)
+        if len(region) < 3:
             continue
-        for n, d0 in ((np.array((1., 0)), MX), (np.array((-1., 0)), MX), (np.array((0, 1.)), MY), (np.array((0, -1.)), MY)):
-            poly = clip_poly(poly, n, d0)
-            if len(poly) < 3:
-                break
-        cells.append(np.array(poly) if len(poly) >= 3 else None)
-    return cells
-
-
-def voronoi_cells(gap=.10):
-    """Hex-ish jittered lattice of sites with random power weights, then clipped power-diagram cells."""
-    sites = []
-    dy = LATTICE * math.sqrt(3) / 2
-    rows = np.arange(-MY - 2 * dy, MY + 2 * dy + 1e-6, dy)
-    for ri, y in enumerate(rows):
-        off = (ri % 2) * LATTICE / 2
-        for x in np.arange(-MX - 2 * LATTICE + off, MX + 2 * LATTICE, LATTICE):
-            sites.append((x + rng.uniform(-JITTER, JITTER), y + rng.uniform(-JITTER, JITTER)))
-    sites = np.array(sites)
-    weights = rng.uniform(-WEIGHT, WEIGHT, len(sites))
-    cells = []
-    for poly in _cell_polys(sites, gap, weights):
-        if poly is None:
-            continue
-        c = poly.mean(0)
-        area = .5 * abs(np.dot(poly[:, 0], np.roll(poly[:, 1], -1)) - np.dot(poly[:, 1], np.roll(poly[:, 0], -1)))
-        if area < .06:
-            continue
-        ang = np.arctan2(poly[:, 1] - c[1], poly[:, 0] - c[0])
-        cells.append((c, poly[np.argsort(ang)], area))
+        region = np.array(region)
+        th = math.radians(rng.uniform(12, 78) + 90 * rng.integers(0, 4))     # never near the cell axes
+        ca, sa = math.cos(th), math.sin(th)
+        Rm = np.array(((ca, -sa), (sa, ca)))
+        reach = float(np.max(np.linalg.norm(region - sd, axis=1))) + 1.0
+        y = -reach
+        slope_b = rng.uniform(-.05, .05)
+        while y < reach:
+            h = rng.uniform(.50, .95)
+            slope_t = float(np.clip(slope_b + rng.uniform(-.03, .03), -.06, .06))     # course edges drift: no parallel lattice
+            x = -reach - rng.uniform(0, 1.2)
+            while x < reach:
+                if rng.random() < .3:
+                    l = h * rng.uniform(.95, 1.35)                                       # near-square stone
+                else:
+                    l = h * rng.uniform(1.2, 2.6)
+                l = float(np.clip(l, *SIDE_LIM))
+                lean = rng.uniform(-.14, .14)                                            # slanted joints
+                yb0, yb1 = y + slope_b * x, y + slope_b * (x + l)
+                yt0, yt1 = y + h + slope_t * x, y + h + slope_t * (x + l)
+                corners = np.array(((x, yb0), (x + l, yb1), (x + l + lean, yt1), (x + lean * .5, yt0)))
+                corners += rng.uniform(-.04, .04, corners.shape)
+                poly = [q for q in corners]
+                for _ in range(rng.integers(0, 3) if rng.random() < .45 else 0):         # chamfer a corner -> 5 or 6 sides
+                    k = rng.integers(len(poly))
+                    a_, b_, c_ = poly[k - 1], poly[k], poly[(k + 1) % len(poly)]
+                    t1, t2 = rng.uniform(.14, .32), rng.uniform(.14, .32)
+                    la, lc = np.linalg.norm(a_ - b_), np.linalg.norm(c_ - b_)
+                    if min(la, lc) < .45:
+                        continue
+                    poly = poly[:k] + [b_ + (a_ - b_) / la * t1 * 1.4, b_ + (c_ - b_) / lc * t2 * 1.4] + poly[k + 1:]
+                x += l
+                world = [Rm @ q + sd for q in poly]
+                cen = np.mean(world, axis=0)
+                if np.linalg.norm(cen - sd) > reach:
+                    continue
+                for n, d0 in [((seeds[j] - sd) / d_all[j], d_all[j] / 2) for j in np.argsort(d_all)[1:12]]:
+                    world = [q + sd for q in clip_poly([q - sd for q in world], n, d0)]
+                    if len(world) < 3:
+                        break
+                if len(world) < 3:
+                    continue
+                for n, d0 in ((np.array((1., 0)), MX), (np.array((-1., 0)), MX), (np.array((0, 1.)), MY), (np.array((0, -1.)), MY)):
+                    world = clip_poly(world, n, d0)
+                    if len(world) < 3:
+                        break
+                if len(world) < 3:
+                    continue
+                pg = _shrink(_ccw(world), JOINT_U / 2)
+                if pg is None or len(pg) < 4:
+                    continue
+                area = .5 * abs(np.dot(pg[:, 0], np.roll(pg[:, 1], -1)) - np.dot(pg[:, 1], np.roll(pg[:, 0], -1)))
+                if area < .07 or min_area_rect(pg)[2] < .28:                       # drop slivers (< 27 cm wide) cut by patch borders
+                    continue
+                cells.append((pg.mean(0), pg, area))
+            y += h
+            slope_b = slope_t
     return cells
 
 
@@ -295,30 +366,36 @@ BASE_Z = -.07        # grout / soil level (source units, 5 cm)
 
 
 def build_paving(light_at, bvh):
-    cells = voronoi_cells()
+    cells = flagstone_cells()
     parts = []
-    diam, ranges = [], []
+    diam, ranges, shorts, nverts, eang = [], [], [], [], []
     heights = []
     stone_c = []
     for c, poly, area in cells:
         m_field = fbm(c[0], c[1])
         edge = 1 - np.clip(min(MX - abs(c[0]), MY - abs(c[1])) / 3.0, 0, 1)
-        moss = float(smoothstep(.53, .68, m_field + .12 * edge))
+        moss = float(smoothstep(.62, .78, m_field + .12 * edge))        # r002: only rare whole mossy stones
+        moss_v = lambda q: smoothstep(.56, .74, .6 * fbm(q[0] * 1.0 + 7, q[1] * 1.0 - 3, 5) + .4 * vnoise(q[0] * 1.7, q[1] * 1.7, 1.0, 9) + .1 * edge)
         soilp = float(smoothstep(.72, .84, fbm(c[0] + 40, c[1] - 17, 31)))
         if rng.random() < soilp * .6:
             continue                                       # a bare soil patch instead of a stone
         stone_c.append(c)
-        interior = bool(np.all(np.abs(poly[:, 0]) < MX - 1e-6) and np.all(np.abs(poly[:, 1]) < MY - 1e-6))
-        if interior:                                       # stones cut by the ground rectangle are not counted
+        interior = bool(np.all(np.abs(poly[:, 0]) < MX - .1) and np.all(np.abs(poly[:, 1]) < MY - .1))
+        if interior and np.linalg.norm(poly[:, None] - poly[None], axis=2).max() > .45:     # skip stones cut small by patch borders / the rectangle
+            best = min_area_rect(poly)
             diam.append(math.sqrt(4 * area / math.pi) * SCALE * 100)          # equivalent circle diameter, cm
-            dd = np.linalg.norm(poly[:, None] - poly[None], axis=2)
-            ranges.append(dd.max() * SCALE * 100)                              # widest chord, cm
+            ranges.append(best[1] * SCALE * 100)                               # long side of the min-area rectangle, cm
+            shorts.append(best[2] * SCALE * 100)
+            nverts.append(len(poly))
+            e_ = np.roll(poly, -1, axis=0) - poly
+            for vv in e_:
+                eang.append((math.degrees(math.atan2(vv[1], vv[0])) % 180, float(np.linalg.norm(vv))))
         h = float(np.clip(rng.normal(0, .016), -.036, .036))
         g = rng.uniform(-.028, .028, 2)
         ztop = lambda q: np.clip(h + g[0] * (q[0] - c[0]) + g[1] * (q[1] - c[1]), -.039, .039)
         heights.append(h)
         k = rng.random()
-        mat = 'paveM' if moss > .45 else ('paveA' if k < .4 else 'paveB' if k < .75 else 'paveC')
+        mat = 'paveM' if moss > .85 else ('paveA' if k < .4 else 'paveB' if k < .75 else 'paveC')
         bright = rng.uniform(.88, 1.1)
         off = rng.uniform(-.05, .05, 2)
 
@@ -333,29 +410,33 @@ def build_paving(light_at, bvh):
         ctop = np.array((c[0], c[1], ztop(c) + .008))
         L_in = light_at(np.array([c]))[0]
         L_poly = light_at(poly)
-        tint = lambda m: 1 + m * (np.array((.72, .92, .62)) - 1) * .7
-        t_top = tint(moss * .8) * bright
-        t_edge = tint(min(1, moss * 1.0 + .3)) * bright * .9
+        tint = lambda m: 1 + m * (np.array((.80, .93, .70)) - 1) * .75
+        mv = np.array([float(moss_v(q)) for q in poly])           # broken patches, mostly on stone edges and in the joints
+        mc = float(moss_v(c))
+        t_top = tint(mc * .3) * bright
+        t_ring = [tint(m_ * .45) * bright * .95 for m_ in mv]
+        t_edge = [tint(min(1, m_ * 1.0 + .05)) * bright * .92 for m_ in mv]
+        t_wall = [tint(m_) for m_ in mv]
         tris, uvs, cols = [], [], []
         for i in range(n):
             j = (i + 1) % n
             a, b = (inner[i][0], inner[i][1], zin[i]), (inner[j][0], inner[j][1], zin[j])
             tris.append((tuple(ctop), a, b))
             uvs.append((uv(c), uv(inner[i]), uv(inner[j])))
-            cols.append((L_in * t_top, L_poly[i] * t_top * .95, L_poly[j] * t_top * .95))
+            cols.append((L_in * t_top, L_poly[i] * t_ring[i], L_poly[j] * t_ring[j]))
             o0, o1 = (poly[i][0], poly[i][1], zout[i]), (poly[j][0], poly[j][1], zout[j])
             # bevel: inner ring -> outer ring (normal up/outwards)
             tris += [(a, o0, o1), (a, o1, b)]
             uvs += [(uv(inner[i]), uv(poly[i]), uv(poly[j])), (uv(inner[i]), uv(poly[j]), uv(inner[j]))]
-            ce0, ce1 = L_poly[i] * t_edge, L_poly[j] * t_edge
-            ci0, ci1 = L_poly[i] * t_top * .95, L_poly[j] * t_top * .95
+            ce0, ce1 = L_poly[i] * t_edge[i], L_poly[j] * t_edge[j]
+            ci0, ci1 = L_poly[i] * t_ring[i], L_poly[j] * t_ring[j]
             cols += [(ci0, ce0, ce1), (ci0, ce1, ci1)]
             # wall down to the soil level
             b0, b1 = (poly[i][0], poly[i][1], BASE_Z), (poly[j][0], poly[j][1], BASE_Z)
             tris += [(o0, b0, b1), (o0, b1, o1)]
             uvs += [(uv(poly[i], zout[i]), uv(poly[i], BASE_Z), uv(poly[j], BASE_Z)), (uv(poly[i], zout[i]), uv(poly[j], BASE_Z), uv(poly[j], zout[j]))]
-            cw = L_poly[i] * .72
-            cols += [(ce0, cw, cw), (ce0, cw, ce1)]
+            cw0, cw1 = L_poly[i] * .84 * t_wall[i], L_poly[j] * .84 * t_wall[j]
+            cols += [(ce0, cw0, cw1), (ce0, cw1, ce1)]
         mats = [mat] * len(tris)
         s = tri_soup(tris, uvs, cols, mat)
         s['UV'] = np.clip(s['UV'], .02, .98)
@@ -377,12 +458,24 @@ def build_paving(light_at, bvh):
     ao = ambient(bvh, pts, np.tile((0, 0, 1.0), (len(pts), 1)), n=10)
     per_tri = np.concatenate([np.full(len(p['P']), a) for p, a in zip(parts, ao)])
     stones['C'] = stones['C'] * (.45 + .55 * per_tri)[:, None, None]
-    diam = np.array(diam)
-    ranges = np.array(ranges)
+    diam, ranges, shorts, nverts = map(np.array, (diam, ranges, shorts, nverts))
+    asp = ranges / shorts
+    pc = lambda v, qs=(5, 50, 95): [round(float(np.percentile(v, q)), 1) for q in qs]
     STATS['stones'] = len(stone_c)
     STATS['stones_measured_interior'] = len(diam)
-    STATS['stone_equiv_diameter_cm_p5_p50_p95'] = [round(float(np.percentile(diam, q)), 1) for q in (5, 50, 95)]
-    STATS['stone_widest_chord_cm_p5_p50_p95_max'] = [round(float(np.percentile(ranges, q)), 1) for q in (5, 50, 95)] + [round(float(ranges.max()), 1)]
+    STATS['stone_equiv_diameter_cm_p5_p50_p95'] = pc(diam)
+    STATS['stone_long_side_cm_p5_p50_p95_max'] = pc(ranges) + [round(float(ranges.max()), 1)]
+    STATS['stone_short_side_cm_p5_p50_p95'] = pc(shorts)
+    STATS['stone_aspect_long_over_short_p5_p50_p95_max'] = [round(float(np.percentile(asp, q)), 2) for q in (5, 50, 95)] + [round(float(asp.max()), 2)]
+    STATS['stone_vertex_count_histogram'] = {int(k): int((nverts == k).sum()) for k in sorted(set(nverts.tolist()))}
+    ea = np.array(eang)
+    hist, _ = np.histogram(ea[:, 0], bins=18, range=(0, 180), weights=ea[:, 1])
+    STATS['edge_orientation_histogram_10deg_bins_length_share'] = [round(float(h / hist.sum()), 3) for h in hist]
+    ang = np.radians(ea[:, 0])
+    wgt = ea[:, 1] / ea[:, 1].sum()
+    STATS['edge_orientation_resultants_R2_R4_R6'] = [round(float(abs((wgt * np.exp(1j * k * ang)).sum())), 3) for k in (2, 4, 6)]
+    near_axis = ((ea[:, 0] < 3) | (ea[:, 0] > 177) | (abs(ea[:, 0] - 90) < 3))
+    STATS['edge_length_share_within_3deg_of_cell_axes'] = round(float(wgt[near_axis].sum()), 3)
     STATS['stone_top_height_range_cm'] = [round(float(min(heights)) * SCALE * 100, 2), round(float(max(heights)) * SCALE * 100, 2)]
     STATS['stone_tris'] = int(len(stones['P']))
     # base plane in 1-unit quads (75 cm vertex spacing): soil / moss by the same field
@@ -392,10 +485,10 @@ def build_paving(light_at, bvh):
             q = [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)]
             m_field = np.array([fbm(*p) for p in q])
             edge = np.array([1 - np.clip(min(MX - abs(p[0]), MY - abs(p[1])) / 3.0, 0, 1) for p in q])
-            moss = smoothstep(.50, .66, m_field + .12 * edge)
-            mat = 'moss' if moss.mean() > .5 else 'soil'
+            moss = smoothstep(.56, .72, m_field + .12 * edge)
+            mat = 'moss' if moss.mean() > .85 else 'soil'
             Lq = light_at(np.array(q))
-            col = [Lq[i] * (1.0 * (1 + moss[i] * (np.array((.75, .95, .7)) - 1))) for i in range(4)]
+            col = [Lq[i] * (1.0 * (1 + moss[i] * (np.array((.85, .95, .8)) - 1))) for i in range(4)]
             o = rng.uniform(-.05, .05, 2)
             cx, cy = x + .5, y + .5
             uvq = [(.5 + (p[0] - cx) / S_TILE + o[0], .5 + (p[1] - cy) / S_TILE + o[1]) for p in q]
@@ -531,7 +624,9 @@ def main():
     # r002: the outer terraces take the same irregular paving as the playable ground, as a seamless 2 m tile
     # (512 px = 256 texels/m, r001 had ~85).  Variation (moss) comes from vertex colour.
     s['mat'][flat] = 'paveT'
-    s['UV'][flat] = s['P'][flat][..., :2] * SCALE / TERRACE_TILE_M
+    ct, st_ = math.cos(math.radians(21)), math.sin(math.radians(21))      # rotated so terrace courses never align with the cells
+    xy_ = s['P'][flat][..., :2] * SCALE / TERRACE_TILE_M
+    s['UV'][flat] = np.stack([xy_[..., 0] * ct - xy_[..., 1] * st_, xy_[..., 0] * st_ + xy_[..., 1] * ct], -1)
     riser_mat = 'sstone'
     P = s['P']
     vert = np.abs(nrm[:, 2]) < .01
@@ -641,8 +736,8 @@ def main():
         t = a['mat'] == 'paveT'
         if t.any():
             xy = a['P'][t][..., :2]
-            m = smoothstep(.50, .68, fbm(xy[..., 0], xy[..., 1]))
-            a['C'][t] = a['C'][t] * (1 + m[..., None] * (np.array((.72, .92, .62)) - 1) * .7)
+            m = smoothstep(.58, .74, fbm(xy[..., 0], xy[..., 1]))
+            a['C'][t] = a['C'][t] * (1 + m[..., None] * (np.array((.82, .94, .72)) - 1) * .6)
     world = L.cat(paving, rise, rune, arch_world)
     occl = arch_occ
     # ---- 6. metres, light shoulder, atlas

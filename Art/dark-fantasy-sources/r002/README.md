@@ -40,12 +40,13 @@ World (from `world_metrics.json`, read back from the glbs by `validate_r002.py`)
 
 | Item | Value |
 | --- | --- |
-| `SM_World_Vigil` | 117,853 triangles, 208,911 vertices, 10.9 MB; 309 glow triangles |
+| `SM_World_Vigil` | 130,502 triangles, 190,760 vertices, 10.3 MB; 309 glow triangles |
 | `SM_World_Vigil_Occluders` | **12,307 triangles** (spike: 41,588), 17,044 vertices, 1.85 MB; 55 flagged components, 2,420 source triangles before subdivision |
-| Triangles by part (world) | stones 51,865, base plane 1,976, outer terrace paving 51,718 (after atlas tile cuts), rune ring 96, rest architecture and risers |
+| Triangles by part (world) | stones 34,490, base plane 1,976, outer terrace paving 81,728 (after atlas tile cuts), rune ring 96, rest architecture and risers |
 | Atlas | 2048 x 2048, 18 regions, **32.4% filled** including padding; 16 px wrapped padding around every region; embedded identically in both glbs (pixel hash checked) |
-| Paving stones | 1,745 stones, 1,615 uncut ones measured. Equivalent-circle diameter p5 / p50 / p95 = **49.8 / 56.4 / 62.9 cm**; widest chord p5 / p50 / p95 / max = **58.1 / 65.6 / 72.9 / 80.4 cm** (spike: p95 chord 89 cm). Top height +-2.7 cm, joints 7.5 cm, not aligned to the 150 cm cells |
-| Terrace texel density | 256 texels/m (512 px tile per 2 m, seamless, stone size matches the playable paving) against r001's 85 |
+| Paving (irregular flagstones) | 1,515 stones, 1,374 uncut ones measured. Long side (min-area rectangle) p5/p50/p95/max = 43.0/72.6/92.7/107.4 cm; short side p5/p50/p95 = 28.7/47.1/66.0 cm; aspect long/short p5/p50/p95/max = 1.04/1.45/2.35/3.53; equivalent diameter 36.6/59.9/81.8 cm. Vertex counts per stone {'4': 815, '5': 421, '6': 119, '7': 18, '8': 1} (mostly 4 to 6). Top height +-2.7 cm, joints 4.5 cm |
+| No dominant lattice | Edge-orientation histogram (10 degree bins, length share, 0-180): [0.021, 0.05, 0.05, 0.052, 0.1, 0.057, 0.127, 0.03, 0.018, 0.021, 0.061, 0.034, 0.061, 0.075, 0.066, 0.127, 0.041, 0.008]; largest bin 12.7%. Resultant lengths R2/R4/R6 = 0.012/0.299/0.031 (R6 about 0.03: no hex order; R4 0.30: some residual right-angle structure, inherent to rectangular flagstones, patch-wise); edge length within 3 degrees of the cell axes: 1.3% |
+| Terrace texel density | 256 texels/m (512 px flagstone tile per 2 m, seamless, mapped rotated 21 degrees) against r001's 85 |
 | Vertex spacing (light) | Stone tops: median edge 27 cm, p90 38 cm. Terrace and risers within 4.5 m of the board: median 49 cm, p90 75 cm, max 1.5 m (ground from 3 m to 10.5 m out is limited to 1.5 m, farther out stays at r001 resolution). Architecture above 1 m within 10.5 m: median 47 cm, p90 65 cm, max 85 cm. Occluders: limit 75 cm up to 4 m height and 2.25 m above; near the floor (below 1.3 m, within 4.5 m of the board) median edge 45 cm, p90 64 cm |
 | Footprint | 0 architecture triangles above 10 cm inside 27 x 18 m (1,442 intruding triangles and 80 whole components cleared) |
 | Occlusion re-test | 0 residual blocking components or rays against 72 cameras x 864 floor targets (3 distances x pitches 35/45/60 x 8 yaws) |
@@ -74,9 +75,9 @@ Largest single mesh is the world shell. No LOD or Nanite is authored or needed.
 
 ## What changed against the spike and r001
 
-- **Paving:** the spike's honeycomb of 95th-percentile 89 cm chords became a jittered lattice with random power-diagram weights (stones differ in size by about 15%), tight to the 50-75 cm brief. Also fixed a spike bug that culled some stone tops (the per-edge triangle count is 5, not 6, which flipped the wrong faces) and added a 5 cm skirt so no gap shows at terrace edges.
+- **Paving (revised after lead review):** the Voronoi stones read as a hexagon lattice, so they were replaced by irregular flagstones: 5.5 units (4 m) patches, each laid in courses of random height with random stone lengths, bond offsets, drifting course edges, slanted joints, perturbed and chamfered corners, and its own random angle (never within 12 degrees of the cell axes). Joints are 4.5 cm and only slightly darker than the stones, with moss concentrated on stone edges and in joints in broken patches. A spike bug that culled some stone tops (5 triangles per edge, not 6) is fixed, and a 5 cm skirt closes terrace edges.
 - **Occluders:** conforming midpoint subdivision (edges are split per geometric edge, so neighbours split together, no T-junctions), coplanar duplicate triangles removed (86, they also made Blender flag the mesh invalid), and an adaptive limit (75 cm below 4 m, 2.25 m above). 41.6k became 12.3k.
-- **Terraces:** a seamless 512 px paving tile with moss from vertex colour, instead of r001's squares.
+- **Terraces:** a seamless 512 px flagstone tile with moss from vertex colour, instead of r001's squares.
 - **Rune ring** moved to the terrace, clear of the playable area.
 - **Textures:** Linear sampling is declared in the material; atlas padding is 16 px (world) or 8 px (kit) instead of 4.
 
@@ -87,7 +88,7 @@ Largest single mesh is the world shell. No LOD or Nanite is authored or needed.
 ## Known limits
 
 - Nothing was imported or rendered in Unreal. Whether the engine reads `COLOR_0.a`, the draw-call and frame cost of a 118k-triangle one-material world, and the real material look are unverified.
-- The world mesh is one 136 x 143 m object (r001's outer architecture is tall, up to 48 m). About 52k of its triangles are flat outer terrace, which could be merged or simplified; there is no culling split or LOD.
+- The world mesh is one 136 x 143 m object (r001's outer architecture is tall, up to 48 m). About 82k of its triangles are flat outer terrace, which could be merged or simplified; there is no culling split or LOD.
 - Occluders are 55 whole components, not instanced pieces. Their pivots are the world origin; dither fade is per piece, so large chained pieces fade together.
 - Baked light is the r001 light resampled plus ray-cast AO; there is no new direct-light bake and no directional AO term. Stone tops carry one light value per ring vertex, so shadows from the key light must come from the game.
 - Architecture textures are r001's 128-256 px tiles, untouched; the 2048 atlas therefore gives no extra wall detail. Only paving and the terrace gained density.
@@ -95,3 +96,6 @@ Largest single mesh is the world shell. No LOD or Nanite is authored or needed.
 - Obstacle footprints are inside 150 cm except a few rubble stones and the sword pommel (up to about 1.6 m wide); scatter props may extend slightly past the cell. The 2-cell arch is 1.47 m deep.
 - The light shafts and mist cards are authored for a translucent, depth-write-off, two-sided card material; the previews' look of them is Blender's.
 - The kit is simple faceted geometry in the PS1 look; no hand-sculpted detail, no bespoke texture painting beyond procedural soft noise. Variants share textures, so they read as one family rather than distinct silhouettes.
+
+- Flagstone patch borders show as straight, slightly wider joints (slivers under 21 cm are dropped there); at the far pose they read as faint crack lines.
+- Light shafts are now pale moonlight blue-white at peak opacity 0.07 (prism) and 0.06 (crossed planes); mist cards are unchanged.

@@ -30,7 +30,7 @@ def main():
         ('A', [P('default_p45'), '-resize', f'{TW}x{TH}'], 'A  default: FOV 40, pitch 45, whole 18 x 12 board'),
         ('B', [P('close_p35'), '-resize', f'{TW}x{TH}'], 'B  close: FOV 40, pitch 35, party framing'),
         ('C', [P('far_p60'), '-resize', f'{TW}x{TH}'], 'C  far: FOV 40, pitch 60 (rune ring bottom left, off the board)'),
-        ('D', [P('paving_close'), '-resize', f'{TW}x{TH}'], 'D  paving 1:1 detail, 50-75 cm stones, 180 cm figures'),
+        ('D', [P('paving_close'), '-resize', f'{TW}x{TH}'], 'D  paving detail: irregular flagstones 35-90 cm, 180 cm figures'),
         ('E', [P('wide_p26'), '-resize', f'{TW}x{TH}'], 'E  wide architecture shot (all occluder pieces drawn)'),
         ('F', [P('occ_highlight'), '-resize', f'{TW}x{TH}'], 'F  same view, occluder mesh tinted orange'),
     ]

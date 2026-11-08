@@ -65,7 +65,7 @@ def procedural_textures():
     m[..., 3] = 1
     out['mist'] = m
     g = np.linspace(1, .55, 64)[:, None, None]                  # shaft: bright at the top, warm
-    out['shaft'] = rgba(np.broadcast_to(np.array((1.0, .90, .62)) * g, (64, 8, 3)).copy())
+    out['shaft'] = rgba(np.broadcast_to(np.array((.80, .88, 1.0)) * g, (64, 8, 3)).copy())
     return out
 
 
@@ -485,7 +485,7 @@ def fx_shaft(kind):
                 b0, b1 = ring(t0 * H, rb + (rt - rb) * t0, lean * t0), ring(t1 * H, rb + (rt - rb) * t1, lean * t1)
                 P = [b0[k], b0[(k + 1) % 4], b1[(k + 1) % 4], b1[k]]
                 U = [(k / 4, 1 - t0), ((k + 1) / 4, 1 - t0), ((k + 1) / 4, 1 - t1), (k / 4, 1 - t1)]
-                A = [.13 * float(smoothstep(0, .35, t) * smoothstep(1.0, .8, t) * (.35 + .65 * t)) for t in (t0, t0, t1, t1)]
+                A = [.07 * float(smoothstep(0, .35, t) * smoothstep(1.0, .8, t) * (.35 + .65 * t)) for t in (t0, t0, t1, t1)]
                 for t in ((0, 1, 2), (0, 2, 3)):
                     tris.append([P[x] for x in t]); uvl.append([U[x] for x in t]); al.append([A[x] for x in t])
     else:
@@ -501,7 +501,7 @@ def fx_shaft(kind):
                     for (s_, t) in ((-1, t0), (1, t0), (1, t1), (-1, t1)):
                         x, y = xs(t, s_)
                         P.append((x, y, t * H)); U.append(((s_ + 1) / 2, 1 - t))
-                        A.append(.11 * float(smoothstep(0, .3, t) * smoothstep(1.0, .8, t) * (.35 + .65 * t)))
+                        A.append(.06 * float(smoothstep(0, .3, t) * smoothstep(1.0, .8, t) * (.35 + .65 * t)))
                     # fade to the card edges: only the centre line of each row carries full opacity
                     for t in ((0, 1, 2), (0, 2, 3)):
                         tris.append([P[x] for x in t]); uvl.append([U[x] for x in t]); al.append([A[x] for x in t])
@@ -511,7 +511,7 @@ def fx_shaft(kind):
     f = L.flipped(s, .004)
     s = L.cat(s, f)
     a = np.concatenate([a, a[:, [0, 2, 1]]])
-    col = np.ones((len(s['P']), 3, 3)) * np.array((1.0, .92, .66))
+    col = np.ones((len(s['P']), 3, 3)) * np.array((.80, .88, 1.0))
     return s, a, col
 
 

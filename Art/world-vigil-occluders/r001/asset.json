@@ -57,17 +57,17 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
-      "sha256": "0b7af01c1f70c052e3a4ad7be41d47ee5d7bcb254339ecfb90cea6fdb4e720c1"
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_vigil_r002.py",
-      "sha256": "7a505f9a6afa0bf50a9f19958052ae79c480b48563edac336fcda411fe376cb8"
+      "sha256": "6d4f885fc65e79925544655b1ac0b59e56e4e953c998b9bb84e3367dbfd509f4"
     },
     {
       "role": "export",
       "path": "Art/world-vigil-occluders/r001/SM_World_Vigil_Occluders.glb",
-      "sha256": "11734736def6884cddafbe57b4b33bbdc40fea96354d3d7ba5fb7e2f089378ff"
+      "sha256": "f80f5d4f08cffccf3f6cc35a6be0306f9784a12ee6b73ffa28f26b4d56ce1816"
     }
   ],
   "import_policy": {
