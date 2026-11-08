@@ -144,6 +144,20 @@ public:
     void Orbit(float Degrees);
     void Zoom(float Amount);
     float CameraYaw() const { return TargetYaw; }
+    /** Where the camera frames the whole board by default (the distance a fresh board starts at). */
+    float FramedDistance() const;
+    float CameraDistance() const { return TargetDistance; }
+    /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
+    void SnapCamera(float InYaw, float InDistance);
+    /** Capture support: settle the camera on its current targets at once. */
+    void SnapCameraToTargets() { bCameraPlaced = false; }
+    FTransform CameraTransform() const;
+    float CameraFieldOfView() const;
+    bool UsesTheme() const { return Theme != nullptr; }
+    /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
+    void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
+    /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
+    void PrepareExposureForCapture();
     FVector CellPosition(FIntPoint Cell) const;
     FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
     /** Where a combatant currently appears, including playback motion. */
@@ -166,6 +180,7 @@ private:
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
+    bool bHoldEnemyTurns = false;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
