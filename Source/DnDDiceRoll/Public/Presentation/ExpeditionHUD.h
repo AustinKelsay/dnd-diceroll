@@ -38,9 +38,12 @@ public:
      * Transient layers (tooltips, forecast, dice, banner, target chips, hover detail) are excluded.
      */
     double PersistentCoverage() const;
+    /** Whether the last draw requested keyboard inspection brackets, before projection. */
+    bool KeyboardCursorRequested() const { return bCursorRequested; }
 private:
     int32 ChipsRequested = 0;
     int32 ReachRequested = 0;
+    bool bCursorRequested = false;
     enum class EAlign : uint8 { Left, Center, Right };
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
     TArray<FButtonArea> Buttons;

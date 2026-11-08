@@ -72,6 +72,12 @@ bool ReachFirstPartyTurn(ExpeditionInputHarness::FHarness& Game)
 void CheckChipsMatchSelection(FAutomationTestBase& Test, const ExpeditionInputHarness::FHarness& Game, const FString& Context)
 {
     const FActionReach& Reach = Game.Player->Reach();
+    const FCombatBattle& Rules = Game.View->Rules();
+    const FActionReach ExpectedReach = Rules.ActionReach(Game.Player->Actor(), Game.Player->Action());
+    Test.TestTrue(Context + TEXT(": target cache matches authoritative rules"),
+        Game.Player->Targets() == Rules.LegalTargets(Game.Player->Actor(), Game.Player->Action()));
+    Test.TestTrue(Context + TEXT(": visible reach cache matches authoritative rules"), Reach.Visible == ExpectedReach.Visible);
+    Test.TestTrue(Context + TEXT(": obstructed reach cache matches authoritative rules"), Reach.Obstructed == ExpectedReach.Obstructed);
     Test.TestEqual(Context + TEXT(": one chip per legal target"), Game.Hud->TargetChipsRequested(), Game.Player->Targets().Num());
     Test.TestEqual(Context + TEXT(": one marker per reach cell"), Game.Hud->ReachMarkersRequested(), Reach.Visible.Num() + Reach.Obstructed.Num());
     for (const int32 Id : Game.Player->Targets())
@@ -150,6 +156,50 @@ bool FTargetingHiddenDuringPlaybackTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("The same hero can aim again once playback is over"), Game.View->InCombat() && Game.Player->ShowsTargeting() && Game.Player->Actor() == Actor)) { return false; }
     CheckChipsMatchSelection(*this, Game, TEXT("After playback"));
     TestTrue(TEXT("Reach returns when playback is over"), Game.Hud->ReachMarkersRequested() > 0);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKeyboardCursorDuringEnemyThinkTest, "Project.Expedition.Presentation.KeyboardCursorDuringEnemyThink",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FKeyboardCursorDuringEnemyThinkTest::RunTest(const FString& Parameters)
+{
+    ExpeditionInputHarness::FHarness Game(*this, TEXT("CursorEnemyThink"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("The party has the first turn"), ReachFirstPartyTurn(Game))) { return false; }
+    Game.Press(EKeys::Right);
+    TestTrue(TEXT("Keyboard inspection starts with visible brackets"), Game.Hud->KeyboardCursorRequested());
+
+    // End party turns without advancing the enemy decision clock. No private state edits.
+    for (int32 Turn = 0; Turn < 4; ++Turn)
+    {
+        const FCombatantState* Active = Game.View->Rules().Find(Game.View->Rules().ActiveId());
+        if (Active && Active->Side == ECombatSide::Enemy) { break; }
+        Game.View->Execute({ECombatCommandType::EndTurn, Game.View->Rules().ActiveId()});
+        Game.View->SkipPresentation();
+        Game.Frame(0.0f);
+    }
+    const int32 EnemyId = Game.View->Rules().ActiveId();
+    const FCombatantState* Enemy = Game.View->Rules().Find(EnemyId);
+    if (!TestTrue(TEXT("An enemy is deciding, with no playback"), Enemy && Enemy->Side == ECombatSide::Enemy && !Game.View->IsPresenting())) { return false; }
+    TestFalse(TEXT("Enemy inspection is not action targeting"), Game.Player->ShowsTargeting());
+    TestTrue(TEXT("Brackets remain visible during the enemy decision beat"), Game.Hud->KeyboardCursorRequested());
+
+    const FIntPoint Before = Game.Player->KeyboardCursorCell();
+    Game.Press(EKeys::Right);
+    if (Game.Player->KeyboardCursorCell() == Before) { Game.Press(EKeys::Left); }
+    TestNotEqual(TEXT("Arrows move the inspection cursor during the decision beat"), Game.Player->KeyboardCursorCell(), Before);
+    TestEqual(TEXT("The same enemy is still deciding"), Game.View->Rules().ActiveId(), EnemyId);
+    TestFalse(TEXT("The decision beat has not entered playback"), Game.View->IsPresenting());
+    TestTrue(TEXT("The moved cursor still requests brackets"), Game.Hud->KeyboardCursorRequested());
+    TestEqual(TEXT("Enemy inspection requests no target chips"), Game.Hud->TargetChipsRequested(), 0);
+    TestEqual(TEXT("Enemy inspection requests no reach markers"), Game.Hud->ReachMarkersRequested(), 0);
+
+    // An overlay still owns inspection as well as targeting.
+    Game.Press(EKeys::H);
+    TestTrue(TEXT("Records opens"), Game.Player->OverlayOpen());
+    TestFalse(TEXT("Records hides the inspection brackets"), Game.Hud->KeyboardCursorRequested());
+    Game.Press(EKeys::H);
+    TestFalse(TEXT("Records closes"), Game.Player->OverlayOpen());
+    TestTrue(TEXT("Closing Records restores inspection brackets"), Game.Hud->KeyboardCursorRequested());
     return !HasAnyErrors();
 }
 #endif
