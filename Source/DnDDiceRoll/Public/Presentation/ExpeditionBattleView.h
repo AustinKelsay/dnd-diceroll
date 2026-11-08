@@ -109,6 +109,14 @@ public:
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
     void Save();
     void Resume();
+    /** True while a run is in progress (route, encounter, reward or recovery) and can be put away. */
+    bool CanReturnToMenu() const;
+    /** Back to the start screen. Writes nothing: Resume continues from the checkpoint. */
+    void ReturnToMenu();
+    /** With no run in play: the checkpoint holds an unfinished run (checked at startup and on return). */
+    bool HasUnfinishedCheckpoint() const { return bUnfinishedCheckpoint; }
+    /** A checkpoint write failed; enemy turns are held until the player saves or resumes. */
+    bool CheckpointBlocked() const { return bCheckpointBlocked; }
     void ToggleRecords();
     bool HasRun() const { return Session.HasRun(); }
     bool ShowingRecords() const { return bShowRecords; }
@@ -151,6 +159,7 @@ private:
     FBoardHighlights Highlights;
     bool bShowRecords = false;
     bool bCheckpointBlocked = false;
+    bool bUnfinishedCheckpoint = false;
     int32 Revision = 0;
     int32 RecordsOffset = 0;
     float EnemyDelay = 0.0f;

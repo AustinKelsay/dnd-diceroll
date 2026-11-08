@@ -203,6 +203,7 @@ void AExpeditionBattleView::BeginPlay()
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
+    bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
     RebuildBoard();
 }
 
@@ -1035,6 +1036,24 @@ void AExpeditionBattleView::Resume()
         PlayCue(EExpeditionCue::Route);
     }
     else { Record({false, Error}); }
+}
+
+bool AExpeditionBattleView::CanReturnToMenu() const
+{
+    if (!HasRun() || bShowRecords) { return false; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    return Phase != EExpeditionPhase::Victory && Phase != EExpeditionPhase::Defeat;
+}
+
+void AExpeditionBattleView::ReturnToMenu()
+{
+    if (!CanReturnToMenu()) { return; }
+    // Every accepted action is already committed; only presentation is dropped here.
+    Session.Close();
+    bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
+    EnemyDelay = 0; bCheckpointBlocked = false; TargetYaw = -90;
+    Feedback.Reset(); Record({true, TEXT("Expedition kept at its last checkpoint. Press O to resume it.")}); RebuildBoard();
+    PlayCue(EExpeditionCue::Click);
 }
 
 void AExpeditionBattleView::ToggleRecords()
