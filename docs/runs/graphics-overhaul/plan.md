@@ -81,7 +81,7 @@ The spike settles values marked ◆.
 
 ## Coordination
 
-- **#50 / #112 (gameplay depth).** `feature/50-targeting-ultra` (0ad8bfb, 24 files, not yet in staging) rewrites `UpdateTiles`, `DrawWorldOverlays` and the forecast chips that P3 and P7 replace. **P2 onward starts from staging after #50 merges**, or from an agreed stacked base with your approval. P3 and P7 keep #50's reach and target semantics and get joint acceptance.
+- **#50 / #112 (gameplay depth).** `feature/50-targeting-ultra` (PR #137, not yet in staging) rewrites `UpdateTiles`, `DrawWorldOverlays` and the forecast chips. The slices that overlap that code (#141 P2, #142 P3, #146 P7) and #151 start from staging after #50 merges, or from an agreed stacked base with owner approval. P3 and P7 keep #50's reach and target semantics and get joint acceptance.
 - **#95 (SRD 5.2.1, Landon).** P0–P11 don't change rules. P12 changes Compact generation, so it must land before #95 PR 3 fixes its seeded Compact baseline, or be agreed with Landon.
 - **#32 / #35 (renderer stability).** Their checkout is left alone. Instancing and the no-Lumen/VSM/Nanite default lower the risk, and rendered runs report any recurrence.
 
@@ -119,11 +119,11 @@ Each P is one issue and PR to `staging` with independent Standards + Spec review
 | Cast rollout | G: all 13 in one push. S/A/O: pilot first. | Your choice: pilot, then batches. |
 | Bone count | G: 19, rigid weights. A: about 30. | Decided in P1/P8 from the import round-trip. |
 
-## Open items (recommendation in brackets)
+## Further decisions (approved 2026-11-08)
 
-1. A dedicated finale world, "Vault", instead of re-grading Vigil [yes, in P10].
-2. Execution starts with P0 and P1 now, while P2+ waits for #50 to land in staging [yes].
-3. Reviews use fresh Sol and Astra seats (and Fable if its rate limit has cleared) for the Standards/Spec axes [yes].
+1. A dedicated finale world, "Vault", instead of re-grading Vigil (in P10, #149).
+2. P0 and P1 start at once. The slices that replace #50's tile, overlay and HUD code (#141, #142, #146), and #151, wait for #50 to land in staging.
+3. Reviews use fresh independent seats for the Standards and Spec axes.
 
 ## Risks
 

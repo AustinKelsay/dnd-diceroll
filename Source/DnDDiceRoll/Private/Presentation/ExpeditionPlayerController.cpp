@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Misc/CommandLine.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
@@ -30,6 +31,8 @@ void AExpeditionPlayerController::BeginPlay()
 void AExpeditionPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
+    // A capture run only looks: with no bindings, no key or click can submit a command or save.
+    if (ExpeditionCapture::Requested(FCommandLine::Get())) { return; }
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);

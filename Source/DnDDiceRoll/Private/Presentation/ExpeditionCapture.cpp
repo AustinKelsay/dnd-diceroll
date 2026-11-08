@@ -106,6 +106,12 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
     return true;
 }
 
+bool ExpeditionCapture::Requested(const TCHAR* CommandLine)
+{
+    FString PosesPath;
+    return CommandLine && FParse::Value(CommandLine, TEXT("ExpeditionCapture="), PosesPath) && !PosesPath.IsEmpty();
+}
+
 TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::TryCreate(AExpeditionPlayerController* Controller, AExpeditionBattleView* View)
 {
     FString PosesPath;

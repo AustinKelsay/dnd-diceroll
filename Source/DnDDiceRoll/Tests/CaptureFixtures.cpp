@@ -9,7 +9,7 @@
  * Developer tool, not a behavior test: writes real checkpoints at each expedition phase
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
- * `tools/dev.py gallery` renders (default-seed-route/-battle, board-16x11, board-18x12), each with a
+ * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12), each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -54,6 +54,20 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         TestTrue(TEXT("The default seed offers a route"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error));
         Write(TEXT("default-seed-battle"), Run);
         Describe(TEXT("default-seed-battle"), Run, DefaultSeed, 0);
+        // Enemy turn: the party ends its turns until an enemy is active. Fixture preparation may play
+        // legal commands; capture mode only resumes this checkpoint and holds the enemy's turn.
+        for (int32 Step = 0; Step < 8 && Run.Progress().Phase == EExpeditionPhase::Combat; ++Step)
+        {
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { break; }
+            Run.Submit({ECombatCommandType::EndTurn, Active->Id});
+        }
+        const FCombatantState* Enemy = Run.Battle().Find(Run.Battle().ActiveId());
+        if (TestTrue(TEXT("The default seed reaches an enemy turn"), Run.Progress().Phase == EExpeditionPhase::Combat && Enemy && Enemy->Side == ECombatSide::Enemy))
+        {
+            Write(TEXT("default-seed-enemy-turn"), Run);
+            Describe(TEXT("default-seed-enemy-turn"), Run, DefaultSeed, 0);
+        }
     }
     auto FindBoard = [&](const TCHAR* Name, int32 Width, int32 Height)
     {

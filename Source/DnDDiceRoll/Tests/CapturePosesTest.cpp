@@ -28,6 +28,13 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("Overview shots do not"), Poses.Shots[2].bHasCamera);
         TestEqual(TEXT("Mode"), Poses.Shots[3].Mode, ECaptureMode::Start);
     }
+    // Capture runs bind no player input; only a real -ExpeditionCapture= value turns that on.
+    TestTrue(TEXT("Capture is requested by a poses path"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionCapture=/tmp/poses.json -ExpeditionSaveRoot=/tmp/s")));
+    TestFalse(TEXT("A normal run is not a capture run"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionSaveRoot=/tmp/s")));
+    TestFalse(TEXT("Capture output alone is not a capture run"), ExpeditionCapture::Requested(TEXT("-ExpeditionCaptureOut=/tmp/o -ExpeditionCaptureFixture=f")));
+    TestFalse(TEXT("An empty poses path is not a capture run"), ExpeditionCapture::Requested(TEXT("-ExpeditionCapture=")));
+    TestFalse(TEXT("No command line is not a capture run"), ExpeditionCapture::Requested(nullptr));
+
     FCapturePoses Defaults;
     TestTrue(TEXT("Settle frames default"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"start\"}]}"), Defaults, Error) && Defaults.SettleFrames == 60);
 

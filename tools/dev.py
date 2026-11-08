@@ -79,7 +79,7 @@ CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relau
 
 # Capture gallery: fixtures written by `test --filter Project.Tools.CaptureFixtures`, rendered by the
 # game's own capture mode (-ExpeditionCapture). Pose rules mirror ExpeditionCapture::ParsePoses.
-GALLERY_FIXTURES = ("default-seed-battle", "board-16x11", "board-18x12", "default-seed-route")
+GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "default-seed-route")
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
 CAPTURE_MODES = ("battle", "targeting", "overview", "start")

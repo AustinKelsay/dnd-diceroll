@@ -32,6 +32,10 @@ constexpr float MinDistance = 900.0f;
 constexpr float MaxDistance = 3200.0f;
 constexpr int32 MaxSettleFrames = 1200;
 
+/** True when the command line asks for a capture run. A capture run binds no player input, so a
+ * focused capture window can never submit a command or write the checkpoint. */
+DNDDICEROLL_API bool Requested(const TCHAR* CommandLine);
+
 DNDDICEROLL_API const TCHAR* ModeName(ECaptureMode Mode);
 /** Pure: validates a poses document (version 1) and fills Out, or fails with a message naming the problem. */
 DNDDICEROLL_API bool ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error);
