@@ -7,10 +7,10 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/TargetChipLayout.h"
 
 namespace
 {
-constexpr float DesignWidth = 1280.0f;
 // Dark-fantasy palette: warm near-black panels, parchment text and darkened gilt.
 const FLinearColor Ink(0.009f, 0.007f, 0.006f);
 const FLinearColor Parchment(0.93f, 0.86f, 0.72f);
@@ -71,6 +71,7 @@ void AExpeditionHUD::Frame(FLinearColor Color, float X, float Y, float Width, fl
 
 void AExpeditionHUD::Panel(float X, float Y, float Width, float Height, FLinearColor Accent, float Opacity, bool bBlock)
 {
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     Rect(FLinearColor(0, 0, 0, 0.35f * Opacity), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, Opacity), X, Y, Width, Height);
     Rect(FLinearColor(1, 1, 1, 0.035f * Opacity), X, Y, Width, Height * 0.45f);
@@ -181,6 +182,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
     if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f, EAlign::Center, Width - 10); }
     Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled});
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
 
@@ -250,10 +252,13 @@ void AExpeditionHUD::DrawHUD()
     Super::DrawHUD();
     Buttons.Reset();
     Blockers.Reset();
+    ChipExclusions.Reset();
+    ChipsRequested = 0;
+    ReachRequested = 0;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
-    S = FMath::Max(0.5f, FMath::Min(Canvas->SizeX / DesignWidth, Canvas->SizeY / 720.0f));
+    S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
@@ -290,6 +295,7 @@ void AExpeditionHUD::DrawHUD()
         else { DrawDice(); }
     }
     if (View->InCombat()) { DrawBanner(); }
+    DrawTargetChips(); // All foreground panel bounds are known now, including the hover forecast.
     if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
     {
         float FeedbackY=H-64;
@@ -310,12 +316,12 @@ void AExpeditionHUD::DrawWorldOverlays()
 {
     const FCombatBattle& Rules = View->Rules();
     const FExpeditionPlayback& Show = View->Playback();
-    const bool bCombat = View->InCombat();
+    const bool bCombat = View->InCombat() && !Player->OverlayOpen();
     const int32 Active = bCombat ? Rules.ActiveId() : INDEX_NONE;
 
     // Path preview: a dotted trail from the adventurer to the hovered cell.
     const TArray<FIntPoint>& Path = Player->PreviewPath();
-    if (bCombat && !Path.IsEmpty() && !View->IsPresenting())
+    if (Player->ShowsTargeting() && !Path.IsEmpty())
     {
         FVector2D Previous;
         bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), 4.0f), Previous);
@@ -331,7 +337,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     }
 
     // Keyboard cursor: bright corner brackets around the cell.
-    if (bCombat && Player->UsingKeyboardCursor())
+    if (Player->ShowsTargeting() && Player->UsingKeyboardCursor())
     {
         const FIntPoint Cell = Player->KeyboardCursorCell();
         const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), 2.0f);
@@ -351,19 +357,31 @@ void AExpeditionHUD::DrawWorldOverlays()
         }
     }
 
-    // Legal targets get a pulsing marker above their heads.
-    if (bCombat && !View->IsPresenting())
+    // Geometry is independent of target eligibility and available budgets.
+    if (Player->ShowsTargeting())
     {
-        const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
-        for (int32 Id : Player->Targets())
+        Text(TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
+        const auto& Reach = Player->Reach();
+        auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
         {
-            FVector2D Point;
-            if (!Project(View->UnitPosition(Id, 185.0f), Point)) { continue; }
-            const bool bHover = Id == Player->HoveredTarget();
-            const float Bob = 4.0f * FMath::Sin(Clock * 5.0f);
-            const FLinearColor Color = bFriendly ? Safe : Danger;
-            Polygon(FVector2D(Point.X, Point.Y + Bob), bHover ? 12.0f : 9.0f, 3, PI / 2, FLinearColor(0, 0, 0, 0.5f));
-            Polygon(FVector2D(Point.X, Point.Y + Bob - 1), bHover ? 10.0f : 7.5f, 3, PI / 2, Color);
+            for (const auto Cell : Cells)
+            {
+                ++ReachRequested;
+                FVector2D P;
+                if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 5), P)) { continue; }
+                const auto Color = bBlocked ? Danger : Sky;
+                if (bBlocked) { Line(P-FVector2D(4,4), P+FVector2D(4,4), Color, 1); Line(P+FVector2D(-4,4), P+FVector2D(4,-4), Color, 1); }
+                else { Circle(P, 4, Color); }
+            }
+        };
+        DrawCells(Reach.Visible, false); DrawCells(Reach.Obstructed, true);
+        const auto Preview = Rules.Forecast(Player->Actor(), Player->Action(), Player->HoveredTarget());
+        for (const auto& Effect : Preview.Effects)
+        {
+            if (Effect.Effect != EAbilityEffect::Strike) { continue; }
+            FVector2D P;
+            if (Project(View->UnitPosition(Effect.TargetId, 155), P))
+            { Frame(Gold, P.X-20, P.Y-12, 40, 24, 2); Text(TEXT("AREA"), P.X, P.Y-8, Gold, 0.65f, EAlign::Center); }
         }
     }
 
@@ -415,6 +433,56 @@ void AExpeditionHUD::DrawWorldOverlays()
 
 // ---------------------------------------------------------------------------------------
 // Persistent frame: location, initiative, system buttons, party, log.
+
+void AExpeditionHUD::DrawTargetChips()
+{
+    if (!Player->ShowsTargeting()) { return; }
+    const auto& Rules = View->Rules();
+    std::vector<ExpeditionLayout::Rect> Occupied;
+    for (const auto& Box : ChipExclusions)
+    { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
+    struct FDrawChip { ExpeditionLayout::Chip Geometry; FString Label; float Width; };
+    TArray<FDrawChip> Chips;
+    const ExpeditionLayout::Rect Bounds = ExpeditionLayout::ChipBounds(W, H);
+    constexpr float LabelScale = 0.72f;
+    // Text() shrinks a label that exceeds its panel, so fit the name here and keep the forecast at full size.
+    const float LabelFit = float(ExpeditionLayout::ChipMaxWidth - ExpeditionLayout::ChipTextPadding);
+    auto MeasureLabel = [this](const FString& Value) { return Measure(Value, LabelScale).X; };
+    int32 Overflow = 0;
+    for (const int32 Id : Player->Targets())
+    {
+        ++ChipsRequested;
+        FVector2D Anchor;
+        if (!Project(View->UnitPosition(Id, 185), Anchor)) { ++Overflow; continue; }
+        const FCombatantState* Unit = Rules.Find(Id);
+        const FString Label = ExpeditionStyle::ChipLabel(Unit ? Unit->Name : FString(),
+            ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id), LabelFit, MeasureLabel);
+        const float Width = FMath::Min(float(ExpeditionLayout::ChipMaxWidth), Measure(Label, LabelScale).X + float(ExpeditionLayout::ChipTextPadding));
+        ExpeditionLayout::Chip Chip;
+        if (!ExpeditionLayout::PlaceChip({Anchor.X, Anchor.Y}, Width, ExpeditionLayout::ChipHeight, Bounds, Occupied, Chip)) { ++Overflow; continue; }
+        Occupied.push_back(Chip.Panel);
+        Chips.Add({Chip, Label, Width});
+    }
+    // Every leader sees every chip, including ones drawn later. Draw all clipped
+    // segments before chip text so connector order cannot obscure a label.
+    ExpeditionLayout::ExcludeHUDFrame({0, 0, W, H}, Bounds, Occupied);
+    for (const auto& Draw : Chips)
+    {
+        const auto& Chip = Draw.Geometry;
+        const ExpeditionLayout::Point Edge = {std::clamp(Chip.Anchor.X, Chip.Panel.Left, Chip.Panel.Right),
+            std::clamp(Chip.Anchor.Y, Chip.Panel.Top, Chip.Panel.Bottom)};
+        for (const auto& Segment : ExpeditionLayout::VisibleLeader(Chip.Anchor, Edge, Occupied))
+        { Line(FVector2D(Segment.From.X, Segment.From.Y), FVector2D(Segment.To.X, Segment.To.Y), Gold, 1); }
+    }
+    for (const auto& Draw : Chips)
+    {
+        const auto& PanelBounds = Draw.Geometry.Panel;
+        Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, ExpeditionLayout::ChipHeight, Gold, 0.96f, false);
+        Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, LabelScale, EAlign::Center, Draw.Width - 12);
+    }
+    if (Overflow > 0)
+    { Text(FString::Printf(TEXT("%d more targets: use arrows to inspect"), Overflow), W * 0.5f, H - 116, Gold, 0.7f, EAlign::Center); }
+}
 
 void AExpeditionHUD::DrawTopBar()
 {
@@ -705,6 +773,7 @@ void AExpeditionHUD::DrawDice()
     if (Alpha <= 0.01f) { return; }
     const float Width = 440, Height = 128;
     const float X = W - 12 - Width, Y = 54;
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     Rect(FLinearColor(0, 0, 0, 0.25f * Alpha), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.86f * Alpha), X, Y, Width, Height);
     Rect(WithAlpha(Gold, 0.7f * Alpha), X, Y, Width, 2);
@@ -752,6 +821,7 @@ void AExpeditionHUD::DrawBanner()
     const float Alpha = FMath::Min(In, Out);
     const float Slide = (1.0f - In) * -60.0f + (1.0f - Out) * 60.0f;
     const float Y = H * 0.24f;
+    ChipExclusions.Add(FBox2D(FVector2D(0, Y), FVector2D(W, Y + 82)));
     Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), 0, Y, W, 82);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 + Slide, Y, 440, 2);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 - Slide, Y + 80, 440, 2);
