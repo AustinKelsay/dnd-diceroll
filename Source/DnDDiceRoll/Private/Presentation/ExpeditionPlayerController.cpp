@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionCapture.h"
 #include "Misc/CommandLine.h"
+#include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
@@ -17,6 +18,13 @@ void AExpeditionPlayerController::BeginPlay()
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
     Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
+    if (Capture.IsValid())
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        // No console either: typed commands could change rendering between shots.
+        if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport()) { Viewport->ViewportConsole = nullptr; }
+    }
     bShowMouseCursor = true;
     FInputModeGameOnly Mode;
     Mode.SetConsumeCaptureMouseDown(false);
@@ -31,8 +39,14 @@ void AExpeditionPlayerController::BeginPlay()
 void AExpeditionPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
-    // A capture run only looks: with no bindings, no key or click can submit a command or save.
-    if (ExpeditionCapture::Requested(FCommandLine::Get())) { return; }
+    // A capture run only looks: with no bindings, no key or click can submit a command or save,
+    // and the engine's debug shortcuts (F1 wireframe, F2 unlit, ...) cannot change later shots.
+    if (ExpeditionCapture::Requested(FCommandLine::Get()))
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        return;
+    }
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
@@ -111,7 +125,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         }
     }
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -150,6 +164,11 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (Capture.IsValid()) { Capture->Tick(); }
 }
 
+bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
+{
+    return !bCapturing && GetMousePosition(X, Y);
+}
+
 void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
 {
     SelectedAction = ECombatCommandType::Attack;
@@ -160,6 +179,7 @@ void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
 bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
+    if (bCapturing) { return false; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
 
@@ -263,7 +283,7 @@ void AExpeditionPlayerController::Click()
 {
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
@@ -567,7 +587,7 @@ void AExpeditionPlayerController::BeginDrag()
 {
     if (!AllowsGameplayInput()) { return; }
     float MouseX = 0, MouseY = 0;
-    bDragging = GetMousePosition(MouseX, MouseY);
+    bDragging = PointerPosition(MouseX, MouseY);
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }

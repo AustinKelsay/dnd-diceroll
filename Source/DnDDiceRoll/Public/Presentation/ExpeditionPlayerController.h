@@ -59,7 +59,12 @@ public:
     void UpdateMenuFocus();
     /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
     void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
+    /** True in a capture run: no input is bound and the physical pointer is ignored. */
+    bool IsCapturing() const { return bCapturing; }
 private:
+    /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
+    bool PointerPosition(float& X, float& Y) const;
+    bool bCapturing = false;
     TSharedPtr<FExpeditionCaptureDirector> Capture;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
