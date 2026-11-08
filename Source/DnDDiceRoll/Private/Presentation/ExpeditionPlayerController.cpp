@@ -71,6 +71,8 @@ void AExpeditionPlayerController::SetupInputComponent()
     // Not F1: development builds reserve F1-F4 for engine view modes (F1 is wireframe).
     Bind(EKeys::Slash, &AExpeditionPlayerController::ToggleHelp);
     Bind(EKeys::Escape, &AExpeditionPlayerController::CloseOverlays);
+    // Return to menu (#132). Not Esc: Esc closes what is open and must never leave a run.
+    Bind(EKeys::BackSpace, &AExpeditionPlayerController::RequestReturnToMenu);
 }
 
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
@@ -84,6 +86,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         SelectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack;
         SelectPartyIndex(0); GridCursor = {1, 1};
     }
+    ResolvePendingReturn();
     const int32 ActiveId = Rules.ActiveId();
     if (ActiveId != LastActiveId)
     {
@@ -180,7 +183,7 @@ uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
     const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | Phase << 3;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | Phase << 4;
 }
 void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
 void AExpeditionPlayerController::RestoreOverlayFocus()
@@ -201,8 +204,10 @@ void AExpeditionPlayerController::UpdateMenuFocus()
     // primary choice; while a result is still playing and that choice is not drawn yet,
     // nothing is focused, so Enter cannot fall through to a system button such as Help.
     FName Preferred = TEXT("Builder");
-    if (bShowHelp || BattleView->ShowingRecords()) { Preferred = TEXT("Close"); }
-    else if (ShowingBuilder()) { Preferred = TEXT("New"); }
+    if (bConfirmReturn) { Preferred = TEXT("ReturnConfirm"); }
+    else if (OverlayOpen()) { Preferred = TEXT("Close"); }
+    // With an unfinished checkpoint New Run would be refused, so the start screen's primary choice is Resume.
+    else if (ShowingBuilder()) { Preferred = !BattleView->HasRun() && BattleView->HasUnfinishedCheckpoint() ? TEXT("Resume") : TEXT("New"); }
     else
     {
         switch (BattleView->Progress().Phase)
@@ -252,7 +257,7 @@ void AExpeditionPlayerController::Click()
         if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button)) { HandleButton(Button); return; }
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
     }
-    if (bShowHelp || BattleView->ShowingRecords()) { return; }
+    if (OverlayOpen()) { return; }
     bKeyboardCursor = false;
     FIntPoint Cell;
     if (HoverCell(Cell)) { ActAtCell(Cell); }
@@ -262,6 +267,13 @@ void AExpeditionPlayerController::HandleButton(FName Id)
 {
     if (!IsValid(BattleView)) { return; }
     const FString Name = Id.ToString();
+    // The confirmation owns every click and key: only its two choices act.
+    if (bConfirmReturn)
+    {
+        if (Name == TEXT("ReturnConfirm")) { ConfirmReturn(); }
+        else if (Name == TEXT("KeepPlaying")) { CloseOverlays(); }
+        return;
+    }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
     if (Name == TEXT("Builder") && BattleView->HasRun() && (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)) { bNextParty = true; return; }
     if (Name.StartsWith(TEXT("Class:")))
@@ -286,6 +298,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Maneuver")) { ManeuverMode(); }
     else if (Name == TEXT("Save")) { Save(); }
     else if (Name == TEXT("Resume")) { Resume(); }
+    else if (Name == TEXT("Menu")) { RequestReturnToMenu(); }
     else if (Name == TEXT("Records")) { History(); }
     else if (Name == TEXT("Speed")) { Speed(); }
     else if (Name == TEXT("Help")) { ToggleHelp(); }
@@ -379,7 +392,11 @@ void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 }
 bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
-    return IsValid(BattleView) && !bShowHelp && !BattleView->ShowingRecords();
+    return IsValid(BattleView) && !OverlayOpen();
+}
+bool AExpeditionPlayerController::OverlayOpen() const
+{
+    return bShowHelp || bConfirmReturn || (IsValid(BattleView) && BattleView->ShowingRecords());
 }
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
@@ -407,7 +424,7 @@ void AExpeditionPlayerController::NewRun()
         return;
     }
     BattleView->NewRun(Party);
-    if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; }
+    if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; bReturnPending = false; }
 }
 void AExpeditionPlayerController::Save() { if (AllowsGameplayInput()) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume()
@@ -415,11 +432,60 @@ void AExpeditionPlayerController::Resume()
     if (!AllowsGameplayInput()) { return; }
     const int32 Before = BattleView->PresentationRevision();
     BattleView->Resume();
-    if (Before != BattleView->PresentationRevision()) { bNextParty = false; Focus = FMenuFocus(); }
+    if (Before != BattleView->PresentationRevision()) { bNextParty = false; bReturnPending = false; Focus = FMenuFocus(); }
+}
+void AExpeditionPlayerController::RequestReturnToMenu()
+{
+    if (!AllowsGameplayInput() || !BattleView->CanReturnToMenu()) { return; }
+    if (bReturnPending) { bReturnPending = false; BattleView->PlayCue(EExpeditionCue::Click); return; }
+    bReturnPending = true;
+    PendingPhase = BattleView->Progress().Phase;
+    ResolvePendingReturn();
+    // One click per press: leaving plays the view's cue and opening the question plays its own.
+    if (bReturnPending) { BattleView->PlayCue(EExpeditionCue::Click); }
+}
+void AExpeditionPlayerController::ResolvePendingReturn()
+{
+    if (!bReturnPending || !AllowsGameplayInput()) { return; }
+    if (!BattleView->CanReturnToMenu() || BattleView->Progress().Phase != PendingPhase) { bReturnPending = false; return; }
+    // Everything committed is shown before leaving: the wait covers queued playback of committed
+    // actions (IsPresenting) and enemy turns. Decorative reward/camp sparkles, floating text and
+    // banners are not queued playback and never delay it. On the party's turn enemies cannot act,
+    // so nothing resolves behind the question.
+    if (BattleView->IsPresenting()) { return; }
+    if (BattleView->InCombat())
+    {
+        const FCombatantState* Active = BattleView->Rules().Find(BattleView->Rules().ActiveId());
+        // After a failed checkpoint write enemies are held too, so their turn would never end:
+        // ask now rather than wait forever.
+        if ((!Active || Active->Side != ECombatSide::Party) && !BattleView->CheckpointBlocked()) { return; }
+        // Mid-encounter a half-entered move would be dropped, so ask first, like an overlay.
+        bReturnPending = false;
+        SaveOverlayFocus();
+        bConfirmReturn = true;
+        bDragging = false;
+        BattleView->PlayCue(EExpeditionCue::Click);
+        return;
+    }
+    bReturnPending = false;
+    LeaveExpedition();
+}
+void AExpeditionPlayerController::ConfirmReturn()
+{
+    if (!bConfirmReturn) { return; }
+    bConfirmReturn = false;
+    // Defensive: the question only opens on the party's turn, so the run cannot end under it.
+    if (IsValid(BattleView) && BattleView->CanReturnToMenu()) { LeaveExpedition(); } else { RestoreOverlayFocus(); }
+}
+void AExpeditionPlayerController::LeaveExpedition()
+{
+    // The rebuilt board's new revision resets selection, action and cursor in PlayerTick.
+    BattleView->ReturnToMenu();
+    if (!BattleView->HasRun()) { bNextParty = false; }
 }
 void AExpeditionPlayerController::History()
 {
-    if (!IsValid(BattleView)) { return; }
+    if (!IsValid(BattleView) || bConfirmReturn) { return; }
     const bool bOpening = !BattleView->ShowingRecords();
     // Records over Help keeps the focus saved when Help opened.
     if (bOpening && !bShowHelp) { SaveOverlayFocus(); }
@@ -460,6 +526,7 @@ void AExpeditionPlayerController::Skip()
 void AExpeditionPlayerController::Speed() { if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
 void AExpeditionPlayerController::ToggleHelp()
 {
+    if (bConfirmReturn) { return; }
     if (!bShowHelp)
     {
         // Help over Records keeps the focus saved when Records opened.
@@ -472,8 +539,10 @@ void AExpeditionPlayerController::ToggleHelp()
 }
 void AExpeditionPlayerController::CloseOverlays()
 {
+    if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
+        if (bReturnPending) { bReturnPending = false; return; }
         if (ShowingBuilder() && BattleView->HasRun()) { bNextParty = false; }
         return;
     }
