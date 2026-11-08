@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "close-yawm90",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 900
+    },
+    {
+      "name": "close-yaw180",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": 900
+    },
+    {
+      "name": "close-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": 900
+    },
+    {
+      "name": "close-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": 900
+    }
+  ]
+}
