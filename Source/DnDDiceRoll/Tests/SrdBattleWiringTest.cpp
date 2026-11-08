@@ -308,4 +308,3 @@ bool FSrdSacredFlameResultFieldsTest::RunTest(const FString& Parameters)
 }
 
 #endif
-

@@ -11,4 +11,3 @@ struct DNDDICEROLL_API FTwoWeaponRules
     /** Off-hand damage adds no positive ability modifier unless the creature has the Two-Weapon Fighting style. */
     static int32 OffHandDamageModifier(int32 AbilityModifier, bool bTwoWeaponFightingStyle);
 };
-
