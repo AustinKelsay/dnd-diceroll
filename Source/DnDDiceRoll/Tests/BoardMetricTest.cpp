@@ -1,5 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "RenderingThread.h"
+#include "UObject/GarbageCollection.h"
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
 #include "HAL/FileManager.h"
@@ -13,6 +15,15 @@
 
 namespace
 {
+// Release a test world's render resources now rather than at the next GC: the picking test
+// builds eight boards, and lingering worlds push RHI reserved memory past its budget later in the suite.
+void DestroyTestWorld(UWorld* World)
+{
+    World->DestroyWorld(false);
+    FlushRenderingCommands();
+    CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+}
+
 UWorld* MakeWorld()
 {
     const UWorld::InitializationValues Values = UWorld::InitializationValues()
@@ -84,6 +95,12 @@ FSeededOutcome PlaySeeded(FAutomationTestBase& Test, UWorld* World, const FStrin
     View->Save();
     Outcome.Battle = View->Rules().Snapshot();
     FFileHelper::LoadFileToString(Outcome.Checkpoint, *Path);
+    // Every NewRun draws a fresh run identity (a GUID); it is the one field that differs by design,
+    // so it is normalised before the byte comparison. Everything else must match exactly.
+    const FString RunId = View->Progress().RunId;
+    Test.TestFalse(TEXT("The run has an identity"), RunId.IsEmpty());
+    Test.TestEqual(TEXT("The identity appears in the checkpoint"), Outcome.Checkpoint.Contains(RunId) ? 1 : 0, 1);
+    if (!RunId.IsEmpty()) { Outcome.Checkpoint.ReplaceInline(*RunId, TEXT("<run-id>"), ESearchCase::CaseSensitive); }
     return Outcome;
 }
 }
@@ -166,7 +183,7 @@ bool FBoardMetricSourceTest::RunTest(const FString& Parameters)
         const FVector Aim = View->CellPosition(FIntPoint(5, 3));
         TestTrue(TEXT("Picking follows the new metric"), View->CellAtRay(Aim + FVector(30, 10, 600), FVector(-30.0f, -10.0f, -600.0f).GetSafeNormal(), Cell) && Cell == FIntPoint(5, 3));
     }
-    World->DestroyWorld(false);
+    DestroyTestWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
@@ -232,7 +249,7 @@ bool FBoardPickingRoundTripTest::RunTest(const FString& Parameters)
                     TestTrue(TEXT("A cell centre maps back through the metric"), View->Metric().CellAt(View->CellPosition(FIntPoint(Board.X - 1, Board.Y - 1))) == FIntPoint(Board.X - 1, Board.Y - 1));
                 }
             }
-            World->DestroyWorld(false);
+            DestroyTestWorld(World);
         }
     }
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -259,7 +276,7 @@ bool FMetricKeepsStateTest::RunTest(const FString& Parameters)
             FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Reference.Battle, &Other.Battle, 0));
         TestTrue(FString::Printf(TEXT("Variant %d: checkpoint bytes are identical"), Variant), Other.Checkpoint == Reference.Checkpoint);
     }
-    World->DestroyWorld(false);
+    DestroyTestWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
