@@ -46,7 +46,7 @@ Convention as r001: metres, +X forward, Z up, glTF Y-up export, `COLOR_0` baked 
 
 - Re-import in a fresh Blender process (`validate_rig.py`): 25 bones with the names above; actions `Idle` (0-60) and `Walk` (0-30), only after setting the scene to 30 fps first (the importer converts seconds to frames at the scene rate, 24 by default); 3,441 tris; 1 material; 1024 px image; 25 vertex groups.
 - Deformation: mid-idle moves vertices up to 4.4 cm; mid-walk (frames 8 and 23) up to 42 to 49 cm (hands, sword, feet). First and last pose of both loops are identical (0.0 mm).
-- Mid-walk frame rendered: `previews/rig_walk_mid.png` (also bind and mid-idle). Knees, hips and arms bend cleanly; the front fauld clips the lifted thigh a little.
+- Mid-walk frame rendered: `previews/rig_walk_mid.png` (also bind and mid-idle). Knees, hips and arms bend without visible tearing; thigh versus fauld clipping was not inspected closely.
 - World: footprint clearance (0 triangles), occlusion re-test, atlas identity, COLOR_0 alpha.
 - Git LFS: `.gitattributes` already tracks `*.glb`, `*.blend` and `*.png`; nothing is missing.
 
@@ -56,7 +56,7 @@ Convention as r001: metres, +X forward, Z up, glTF Y-up export, `COLOR_0` baked 
 
 ## Open issues
 
-- The outer terraces are still r001's square flagstones at about 100 texels/m, so the new irregular paving stops abruptly at the 0.75 m rim and the two meet at a riser; a real build would extend the paving or make a transition ring.
+- The outer terraces are still r001's square flagstones at about 85 texels/m (512 px per 6 m), so the new irregular paving stops abruptly at the 0.75 m rim and the two meet at a riser; a real build would extend the paving or make a transition ring.
 - r001 architecture textures are untouched (128 to 256 px tiles), so a 2048 atlas gives no extra wall detail yet; the atlas is 27% full.
 - Subdivision doubles as the vertex-density answer but makes T-junctions and inflates the occluder mesh to 41.6k tris; per-piece density, a bake with real direct light and shadows, and merging the occluders into a few instanced pieces are left.
 - Stones are individual geometry (36k tris, one draw call); a decision on a ground mesh versus a vertex-painted plane with a stone normal-less texture is open. Some stones are wider than 75 cm.
