@@ -255,6 +255,7 @@ void AExpeditionHUD::DrawHUD()
     ChipExclusions.Reset();
     ChipsRequested = 0;
     ReachRequested = 0;
+    bCursorRequested = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
@@ -336,9 +337,10 @@ void AExpeditionHUD::DrawWorldOverlays()
         if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
     }
 
-    // Keyboard cursor: bright corner brackets around the cell.
-    if (Player->ShowsTargeting() && Player->UsingKeyboardCursor())
+    // Inspection stays available during enemy turns and playback, just like arrow input.
+    if (bCombat && Player->UsingKeyboardCursor())
     {
+        bCursorRequested = true;
         const FIntPoint Cell = Player->KeyboardCursorCell();
         const FBoardMetric& Metric = View->Metric();
         const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), Metric.Scaled(2.0f));

@@ -30,9 +30,12 @@ public:
      */
     int32 TargetChipsRequested() const { return ChipsRequested; }
     int32 ReachMarkersRequested() const { return ReachRequested; }
+    /** Whether the last draw requested keyboard inspection brackets, before projection. */
+    bool KeyboardCursorRequested() const { return bCursorRequested; }
 private:
     int32 ChipsRequested = 0;
     int32 ReachRequested = 0;
+    bool bCursorRequested = false;
     enum class EAlign : uint8 { Left, Center, Right };
     struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
     TArray<FButtonArea> Buttons;
