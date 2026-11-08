@@ -1,0 +1,113 @@
+{
+ "name": "SK_Hero_Fighter",
+ "asset_id": "sk-hero-fighter",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3566,
+   "verts": 2704,
+   "height_m": 1.834,
+   "zmax": 1.831,
+   "zmin": -0.003,
+   "glow_verts": 64
+  },
+  "LOD1": {
+   "tris": 1681,
+   "verts": 1504,
+   "height_m": 1.836,
+   "zmax": 1.833,
+   "zmin": -0.003,
+   "glow_verts": 56
+  },
+  "LOD2": {
+   "tris": 972,
+   "verts": 844,
+   "height_m": 1.836,
+   "zmax": 1.833,
+   "zmin": -0.003,
+   "glow_verts": 56
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Hero_Fighter.glb": 1530224,
+  "SK_Hero_Fighter_LOD1.glb": 705248,
+  "SK_Hero_Fighter_LOD2.glb": 602828
+ }
+}

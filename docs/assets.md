@@ -35,6 +35,10 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Fallbacks:** `AExpeditionBattleView` falls back to the engine primitives below when an entry is missing. The `-ExpeditionPrimitives` command-line flag forces that fallback.
 
+## Rigged character pilot (issue #147)
+
+`Art/rig-pilot/r001/` holds the Blender half of the rigged pilot: the shared 25-bone skeleton contract (`README.md`), the recipes (`scripts/`), checks (`metrics/`) and contact sheets (`previews/`). The fighter, wizard and raider have records at `Art/sk-hero-fighter/r001/`, `Art/sk-hero-wizard/r001/` and `Art/sk-foe-raider/r001/` (skeletal glb with nine clips, plus LOD1 and LOD2 glbs). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository. Nothing is imported into Unreal yet, so the records' validation stays pending.
+
 ## Game splash (issue #131)
 
 `Content/Splash/Splash.bmp` is the splash the packaged Linux game shows while it loads. It is a raw file rather than an Unreal asset: the engine reads `<Project>/Content/Splash/Splash.bmp` directly, and Linux packaging stages that exact file outside the pak (`LinuxPlatform.Automation.cs`). Non-editor builds load it with `SDL_LoadBMP`, so it is an uncompressed 24-bit BMP, 720×370 like the engine's own splash. `Content/Splash/Icon.bmp` (64×64, 24-bit) is the splash window's icon: once a splash exists, the engine also looks up `Splash/Icon` and logs `Game icon not found.` without it. Packaging stages only `Splash.bmp` by itself, so `Config/DefaultGame.ini` adds `+DirectoriesToAlwaysStageAsNonUFS=(Path="Splash")` to ship the folder. Both files are Git LFS tracked (`*.bmp`).

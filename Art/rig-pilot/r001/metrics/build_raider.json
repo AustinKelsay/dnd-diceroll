@@ -1,0 +1,113 @@
+{
+ "name": "SK_Foe_Raider",
+ "asset_id": "sk-foe-raider",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3428,
+   "verts": 2559,
+   "height_m": 2.038,
+   "zmax": 2.035,
+   "zmin": -0.003,
+   "glow_verts": 12
+  },
+  "LOD1": {
+   "tris": 1642,
+   "verts": 1424,
+   "height_m": 2.038,
+   "zmax": 2.035,
+   "zmin": -0.003,
+   "glow_verts": 12
+  },
+  "LOD2": {
+   "tris": 966,
+   "verts": 827,
+   "height_m": 2.038,
+   "zmax": 2.035,
+   "zmin": -0.003,
+   "glow_verts": 12
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Foe_Raider.glb": 1496400,
+  "SK_Foe_Raider_LOD1.glb": 688900,
+  "SK_Foe_Raider_LOD2.glb": 591120
+ }
+}
