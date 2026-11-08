@@ -476,19 +476,22 @@ bool FReturnToMenuDefeatTest::RunTest(const FString& Parameters)
     // A passive party asks to return at the start of every enemy turn and cancels each question
     // that opens on its own turn, so the defeating enemy turn ends the battle while a return waits.
     bool bPendingAtEnd = false;
-    for (int32 Step = 0; Step < 3000 && View->InCombat(); ++Step)
+    for (int32 Step = 0; Step < 6000 && View->InCombat(); ++Step)
     {
         if (Player->ConfirmingReturn()) { Game.Press(EKeys::Escape); continue; }
         if (EnemyActive(Game))
         {
             if (!Player->ReturnPending()) { Game.Press(EKeys::BackSpace); continue; }
+            // Played results are skipped and each frame lasts a second so the enemy acts in it.
             // PlayerTick runs before the board in a frame, so a battle ended by this frame's
             // enemy turn still shows the waiting return until the next frame drops it.
-            Game.Frame();
+            View->SkipPresentation();
+            Game.Frame(1.0f);
             bPendingAtEnd = !View->InCombat() && Player->ReturnPending();
             continue;
         }
-        if (!View->IsPresenting()) { Game.Press(EKeys::SpaceBar); } else { Game.Frame(); }
+        View->SkipPresentation();
+        Game.Press(EKeys::SpaceBar);
     }
     if (!TestEqual(TEXT("A passive party is defeated"), View->Progress().Phase, EExpeditionPhase::Defeat)) { return false; }
     TestTrue(TEXT("The defeating enemy turn ended the battle while a return was waiting"), bPendingAtEnd);
