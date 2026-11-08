@@ -7,6 +7,7 @@
 #include "ExpeditionPlayerController.generated.h"
 
 class AExpeditionBattleView;
+class FExpeditionCaptureDirector;
 
 /** Turns mouse, keyboard and HUD buttons into view commands. Holds selection only. */
 UCLASS()
@@ -56,7 +57,10 @@ public:
     FName MenuFocus() const { return Focus.Id; }
     /** Refresh after the HUD registers this frame's visible, enabled controls. */
     void UpdateMenuFocus();
+    /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
+    void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
 private:
+    TSharedPtr<FExpeditionCaptureDirector> Capture;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
