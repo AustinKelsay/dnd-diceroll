@@ -123,8 +123,10 @@ bool FReturnToMenuTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::L);
     if (!TestEqual(TEXT("1 then L claims the reward"), View->Progress().Phase, EExpeditionPhase::Recovery)) { return false; }
     Game.Settle();
-    // The mouse path: the Menu and Resume buttons dispatch the same commands as a click.
-    ReturnAndResume(Game, TEXT("Recovery"), [&] { Player->HandleButton(Menu); Game.Frame(); }, [&] { Player->HandleButton(Resume); Game.Frame(); }, TEXT("Camp"));
+    ReturnAndResume(Game, TEXT("Recovery"), [&] { Game.Press(EKeys::BackSpace); }, [&] { Game.Press(EKeys::O); }, TEXT("Camp"));
+    // Handler-level only: calls the button handler a click resolves to, without mouse hit-testing.
+    // The real click path is covered by the on-screen check.
+    ReturnAndResume(Game, TEXT("Recovery (button handler, no hit-testing)"), [&] { Player->HandleButton(Menu); Game.Frame(); }, [&] { Player->HandleButton(Resume); Game.Frame(); }, TEXT("Camp"));
     return !HasAnyErrors();
 }
 
@@ -349,6 +351,112 @@ bool FStartScreenSavedFocusTest::RunTest(const FString& Parameters)
         Game.Frame();
         TestEqual(TEXT("A cold launch with a finished save focuses Begin"), Game.Player->MenuFocus(), FName(TEXT("New")));
     }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReturnToMenuBattleEndsTest, "Project.Expedition.Presentation.ReturnToMenuDroppedWhenBattleEnds",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReturnToMenuBattleEndsTest::RunTest(const FString& Parameters)
+{
+    using namespace ReturnToMenuTest;
+    // Each party turn: move toward the enemies (its playback runs), ask to return while it plays,
+    // then attack at once. When that attack wins the battle, the request made in combat must be
+    // dropped by the phase change: the victory and reward follow with no question and no menu.
+    for (int32 Seed = 1; Seed < 40; ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Run;
+        Run.NewRun(Seed, Error, FString::Printf(TEXT("return-battle-ends-%d"), Seed));
+        if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+        FExpeditionSaveData Data;
+        Data.Current = Run.Snapshot();
+        FHarness Game(*this, TEXT("ReturnToMenuBattleEnds"), &Data);
+        if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+        AExpeditionPlayerController* Player = Game.Player;
+        AExpeditionBattleView* View = Game.View;
+        Game.Frame();
+        Game.Press(EKeys::O);
+        bool bEndedWhilePending = false;
+        for (int32 Step = 0; Step < 400 && View->InCombat(); ++Step)
+        {
+            Game.PartyTurn();
+            if (!View->InCombat()) { break; }
+            const int32 Id = View->Rules().ActiveId();
+            const FCombatBattle& Battle = View->Rules();
+            if (Battle.LegalTargets(Id).IsEmpty())
+            {
+                TArray<FIntPoint> Moves = Battle.LegalMoves(Id);
+                auto Nearest = [&Battle](FIntPoint Cell)
+                {
+                    int32 Best = 1000;
+                    for (const auto& Enemy : Battle.Snapshot().Encounter.Combatants)
+                    { if (Enemy.Side == ECombatSide::Enemy && Enemy.HP > 0) { Best = FMath::Min(Best, ExpeditionTestSupport::Distance(Cell, Enemy.Cell)); } }
+                    return Best;
+                };
+                Moves.Sort([&Nearest](FIntPoint A, FIntPoint B) { const int32 DA = Nearest(A), DB = Nearest(B); return DA == DB ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : DA < DB; });
+                if (!Moves.IsEmpty()) { View->Execute({ECombatCommandType::Move, Id, Moves[0]}); }
+            }
+            const TArray<int32> Targets = View->Rules().LegalTargets(Id);
+            const bool bAsk = View->IsPresenting() && !Targets.IsEmpty();
+            if (bAsk)
+            {
+                Player->HandleButton(Menu);
+                TestTrue(TEXT("A return asked during the move's playback waits"), Player->ReturnPending() && !Player->ConfirmingReturn());
+            }
+            if (!Targets.IsEmpty()) { View->Execute({ECombatCommandType::Attack, Id, {}, Targets[0]}); }
+            if (bAsk && !View->InCombat()) { bEndedWhilePending = Player->ReturnPending(); break; }
+            if (bAsk) { Game.Press(EKeys::Escape); TestFalse(TEXT("Esc withdraws the waiting return"), Player->ReturnPending()); }
+            if (View->InCombat() && View->Rules().ActiveId() == Id) { View->Execute({ECombatCommandType::EndTurn, Id}); }
+        }
+        if (!bEndedWhilePending) { continue; }
+        TestEqual(TEXT("The winning attack reaches the reward"), View->Progress().Phase, EExpeditionPhase::Reward);
+        const TArray<uint8> Bytes = Game.CheckpointBytes();
+        Game.Settle();
+        TestFalse(TEXT("The battle's end drops the return asked in combat"), Player->ReturnPending());
+        TestFalse(TEXT("No question opens after the battle"), Player->ConfirmingReturn());
+        TestTrue(TEXT("The run stays in play on the reward"), View->HasRun() && View->Progress().Phase == EExpeditionPhase::Reward && !Player->ShowingBuilder());
+        TestEqual(TEXT("The reward focuses its primary choice"), Player->MenuFocus(), FName(TEXT("Claim")));
+        TestTrue(TEXT("The checkpoint bytes are unchanged"), Game.CheckpointBytes() == Bytes);
+        return !HasAnyErrors();
+    }
+    AddError(TEXT("No seed ended a battle with a move, a waiting return and a winning attack"));
+    return false;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReturnToMenuBlockedCheckpointTest, "Project.Expedition.Presentation.ReturnToMenuAfterFailedCheckpoint",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReturnToMenuBlockedCheckpointTest::RunTest(const FString& Parameters)
+{
+    using namespace ReturnToMenuTest;
+    FHarness Game(*this, TEXT("ReturnToMenuFailedCheckpoint"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    AExpeditionPlayerController* Player = Game.Player;
+    AExpeditionBattleView* View = Game.View;
+    Game.Frame();
+    Game.Press(EKeys::Enter);
+    Game.Settle();
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("An enemy is about to act"), ToEnemyTurn(Game))) { return false; }
+    const FExpeditionSnapshot Committed = Game.Live();
+    const TArray<uint8> Bytes = Game.CheckpointBytes();
+
+    // The enemy's turn cannot be checkpointed, so it is rejected and enemies stop acting
+    // until the player saves or resumes. A waiting return must not wait for a party turn forever.
+    ExpeditionTestSupport::FailNextCheckpointWrite(*this, Game.Path);
+    Game.Press(EKeys::BackSpace);
+    TestTrue(TEXT("The return waits while the enemy thinks"), Player->ReturnPending() && !Player->ConfirmingReturn());
+    UntilConfirm(Game);
+    ExpeditionTestSupport::AllowCheckpointWrites(Game.Path);
+    TestTrue(TEXT("The enemy's turn was rejected and the enemy still has the turn"), EnemyActive(Game) && ExpeditionTestSupport::SameRun(Committed, Game.Live()));
+    if (!TestTrue(TEXT("After the failed checkpoint the question opens instead of waiting forever"), Player->ConfirmingReturn())) { return false; }
+    TestTrue(TEXT("The failed write left the checkpoint bytes unchanged"), Game.CheckpointBytes() == Bytes);
+    Game.Press(EKeys::Enter);
+    TestTrue(TEXT("Enter returns to the start screen"), !View->HasRun() && Player->ShowingBuilder());
+    TestEqual(TEXT("The start screen focuses Resume"), Player->MenuFocus(), Resume);
+    Game.Press(EKeys::Enter);
+    TestTrue(TEXT("Resume restores the last committed turn"), View->HasRun() && ExpeditionTestSupport::SameRun(Committed, Game.Live()));
+    Game.PartyTurn();
+    TestFalse(TEXT("After Resume the enemy acts again"), ExpeditionTestSupport::SameRun(Committed, Game.Live()));
     return !HasAnyErrors();
 }
 #endif
