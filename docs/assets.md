@@ -37,6 +37,11 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Reimport (#143, 2026-11-09):** one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) exited 0 with `THEME_IMPORT_COMPLETE 21/21` and no warnings. The script saves only dirty packages and assigns a mesh material only when it differs, so the run changed exactly `M_DiceRollTheme`, the 21 `MI_*` instances and the 21 `T_*` textures (filtering and mips). Hashes of `Config/` and `Content/` taken before and after showed no mesh, `DA_DiceRollTheme` or other file changed. It imported nothing new: every source is still a self-authored r001 export, so no licence changes.
 
+**Reimport for anisotropic filtering (#143 review, 2026-11-09):** textures now use `TF_DEFAULT` in `TEXTUREGROUP_World`, which `Config/DefaultDeviceProfiles.ini` makes anisotropic with linear mips.
+- **First headless run:** it also re-saved `M_DiceRollTheme` and the 21 `MI_*`, because the script rebuilt the master and re-set every parameter on each run. Those 22 files were restored to their reviewed versions, and the script was made idempotent.
+- **Validation run, from the committed assets:** exit 0, no warnings, `THEME_MASTER kept`. The hash diff showed exactly the 21 `T_*` changed.
+- **Immediate rerun:** changed nothing.
+
 **Contents:**
 
 | Group | Assets |
