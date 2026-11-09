@@ -243,9 +243,9 @@ bool FActionFactsMatchLegalityTest::RunTest(const FString& Parameters)
                         if (B.Reason >= EActionBlocker::Count) { Checks.Fail(Context(), TEXT("a blocker is out of range")); }
                     }
                     // The generic fallback reason only stands when nobody of the right kind exists. For the hero that happens only
-                    // when the one ally is downed (an ability that needs a conscious friend); any other scene has a real cause to report.
-                    const bool bAllyDowned = FString(Scene.Name).StartsWith(TEXT("downed ally"));
-                    if (Actor == 10 && !bAllyDowned && F.Blockers.Num() == 1 && F.Blockers[0].Reason == EActionBlocker::NoEligibleTarget)
+                    // to an ability that needs a conscious other ally while the one ally is downed; anything else has a real cause to report.
+                    const bool bNoConsciousAlly = FString(Scene.Name).StartsWith(TEXT("downed ally")) && F.Target == EActionTargetKind::Ally;
+                    if (Actor == 10 && !bNoConsciousAlly && F.Blockers.Num() == 1 && F.Blockers[0].Reason == EActionBlocker::NoEligibleTarget)
                     { Checks.Fail(Context(), TEXT("the only reason is the generic fallback, so the ladder missed the real cause")); }
                     (F.bAvailable ? Available : Blocked) += 1;
                 }
@@ -482,6 +482,34 @@ bool FActionFactsCoverEveryAbilityTest::RunTest(const FString& Parameters)
     }
     TestEqual(TEXT("Every ability maps to matching facts"), Checks.Failures, 0);
     TestTrue(TEXT("Abilities of every kit were covered"), Abilities > 100);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionFactsPotionCapTest, "Project.Expedition.Combat.ActionFactsPotionCap",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FActionFactsPotionCapTest::RunTest(const FString& Parameters)
+{
+    using namespace ActionFactsTest;
+    const FBuildDefinition* Build = FBuildCatalog::Find(TEXT("fighter.champion"));
+    if (!TestNotNull(TEXT("Champion build"), Build)) { return false; }
+    FCombatBattle Battle;
+    if (!Make(*this, *Build, Scenarios()[0], Battle)) { return false; }
+    const FActionFacts Facts = FActionFactsQuery::For(Battle, 10, EC::Potion);
+    if (!TestEqual(TEXT("A potion spends one resource"), Facts.Resources.Num(), 1)) { return false; }
+    const int32 Cap = Facts.Resources[0].Cap;
+    TestTrue(TEXT("The potion fact carries a cap"), Cap > 0);
+    TestEqual(TEXT("Camp never refills potions"), Facts.Resources[0].CampRecovery, 0);
+    // The cap is the rules' own limit: a battle holding that many bottles loads, and one more is rejected.
+    FString Error;
+    FCombatSnapshot Held = Battle.Snapshot();
+    FCombatantState* Hero = Unit(Held.Encounter, 10);
+    if (!TestNotNull(TEXT("Hero"), Hero)) { return false; }
+    Hero->Potions = Cap;
+    FCombatBattle AtCap;
+    TestTrue(TEXT("Holding the cap is legal"), AtCap.Restore(Held, Error));
+    Hero->Potions = Cap + 1;
+    FCombatBattle OverCap;
+    TestFalse(TEXT("Holding more than the cap is rejected"), OverCap.Restore(Held, Error));
     return !HasAnyErrors();
 }
 #endif

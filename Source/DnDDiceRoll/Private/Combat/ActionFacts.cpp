@@ -5,6 +5,9 @@ namespace
 {
 using namespace BuildRules;
 
+/** The most bottles a combatant can hold: the limit FCombatBattle validates and FPartyContinuity::Reward clamps to. */
+constexpr int32 PotionBottleCap = 9;
+
 int32 HeldOf(const FCombatantState& Unit, EActionResource Resource)
 {
     switch (Resource)
@@ -15,8 +18,9 @@ int32 HeldOf(const FCombatantState& Unit, EActionResource Resource)
     case EActionResource::Maneuver: return Unit.ManeuverUses;
     case EActionResource::Rage: return Unit.RageUses;
     case EActionResource::Potion: return Unit.Potions;
-    default: return 0;
+    case EActionResource::None: return 0;
     }
+    return 0;
 }
 
 FActionResourceCost ResourceCost(const FCombatantState& Unit, const FBuildDefinition* Build, EActionResource Resource, int32 Amount)
@@ -25,7 +29,7 @@ FActionResourceCost ResourceCost(const FCombatantState& Unit, const FBuildDefini
     Cost.Resource = Resource;
     Cost.Amount = Amount;
     Cost.Held = HeldOf(Unit, Resource);
-    if (Resource == EActionResource::Potion) { Cost.CampRecovery = 0; } // Camp never refills potions.
+    if (Resource == EActionResource::Potion) { Cost.Cap = PotionBottleCap; Cost.CampRecovery = 0; } // Camp never refills potions.
     else if (Build)
     {
         switch (Resource)
@@ -35,7 +39,8 @@ FActionResourceCost ResourceCost(const FCombatantState& Unit, const FBuildDefini
         case EActionResource::Wind: Cost.Cap = Build->WindCap; Cost.CampRecovery = Build->WindRecovery; break;
         case EActionResource::Maneuver: Cost.Cap = Build->ManeuverCap; Cost.CampRecovery = Build->ManeuverRecovery; break;
         case EActionResource::Rage: Cost.Cap = Build->RageCap; Cost.CampRecovery = Build->RageRecovery; break;
-        default: break;
+        case EActionResource::None:
+        case EActionResource::Potion: break;
         }
     }
     return Cost;
@@ -51,8 +56,9 @@ EActionTargetKind KindOf(EAbilityTarget Target)
     case EAbilityTarget::Self: return EActionTargetKind::Self;
     case EAbilityTarget::Enemy: return EActionTargetKind::Enemy;
     case EAbilityTarget::Ally: return EActionTargetKind::Ally;
-    default: return EActionTargetKind::Friendly;
+    case EAbilityTarget::Friendly: return EActionTargetKind::Friendly;
     }
+    return EActionTargetKind::Friendly;
 }
 
 /**
@@ -157,9 +163,11 @@ void ClassifyTargets(const FCombatBattle& Battle, const FCombatantState& Unit, E
         case EActionTargetKind::Enemy: return !bSame && T.HP > 0 && T.Life == ECombatLife::Conscious;
         case EActionTargetKind::Ally: return bSame && T.Id != Unit.Id && T.Life == ECombatLife::Conscious;
         case EActionTargetKind::DownedAlly: return bSame && T.Life == ECombatLife::Downed;
-        default: // Friendly: a potion also reaches the downed, everything else needs a conscious friend.
+        case EActionTargetKind::Friendly: // A potion also reaches the downed, everything else needs a conscious friend.
             return bSame && (Action == ECombatCommandType::Potion ? T.Life != ECombatLife::Dead : T.Life == ECombatLife::Conscious);
+        case EActionTargetKind::None: return false;
         }
+        return false;
     };
     TArray<const FCombatantState*> Candidates;
     for (const FCombatantState& T : Snapshot.Encounter.Combatants) { if (OfKind(T)) { Candidates.Add(&T); } }

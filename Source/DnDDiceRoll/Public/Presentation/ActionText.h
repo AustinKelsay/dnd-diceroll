@@ -7,7 +7,6 @@
  * Words for action facts (#58). The facts carry no strings; every cost, usage and reason phrase the
  * player reads comes from here, and these helpers read facts only: they never decide legality.
  * Each enum is mapped by an exhaustive switch, and a test walks every enumerator to prove it has text.
- * Nothing in the HUD calls these yet; the action dock adopts them in the presentation slice of #58.
  */
 namespace ExpeditionStyle
 {
