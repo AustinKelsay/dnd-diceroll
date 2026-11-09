@@ -70,6 +70,21 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
 {
     using namespace ExpeditionCameraRig;
     TestEqual(TEXT("The battle field of view is 40"), FieldOfView, 40.0f);
+    // The active-unit lean never pushes a corner out of the safe rect at rest when the centred board fits it, including
+    // distances where the board fits the rect but not the 99% lean inset (the fallback must test the real rect).
+    {
+        const FBoardMetric Metric(150.0f, 180.0f);
+        const FSafeRect Safe = FSafeRect::ForViewport(1920, 1080);
+        const FVector2D Centre = BoardCentre(18, 12, Metric);
+        const FVector2D Target(17 * 150.0f, 11 * 150.0f);
+        for (const float Distance : {3300.0f, 3400.0f, 3507.4f, 3560.0f, 3649.0f, 3800.0f})
+        {
+            if (!BoardInside(18, 12, Metric, Centre, -90.0f, Distance, 45.0f, Safe, 1.0f)) { continue; }
+            const FVector2D Leaned = LimitLean(Centre, Target, 18, 12, Metric, -90.0f, Distance, 45.0f, Safe);
+            TestTrue(*FString::Printf(TEXT("Lean at distance %.1f keeps the 18x12 board inside the safe rect"), Distance),
+                BoardInside(18, 12, Metric, Leaned, -90.0f, Distance, 45.0f, Safe, 1.0f));
+        }
+    }
     // Pitch is non-decreasing in zoom and hits 35 / 45 / 60 at near / framed / far.
     for (const float Framed : {1400.0f, 2300.0f, 2900.0f, MaxFramed})
     {
@@ -258,10 +273,13 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             // Orbits keep the board inside the safe rect on EVERY frame of the easing, not just once it settles: the yaw,
             // distance and focus ease independently, so the rendered fit must follow the rendered yaw. Includes consecutive
             // orbits issued before the first one finished. The live board is whatever the route generated (see the label).
-            struct FOrbitCase { const TCHAR* Name; TArray<float> Orbits; float Start; };
+            // Consecutive orbits are issued mid-ease (12 frames apart), so they retarget a camera that is still turning.
+            struct FOrbitCase { const TCHAR* Name; TArray<float> Orbits; float Start; float FinalDelta; };
             const FOrbitCase Cases[] = {
-                {TEXT("+90"), {90.0f}, -90.0f}, {TEXT("-90"), {-90.0f}, -90.0f}, {TEXT("+90 -90"), {90.0f, -90.0f}, -90.0f},
-                {TEXT("+90 +90"), {90.0f, 90.0f}, -90.0f}, {TEXT("-90 -90 -90"), {-90.0f, -90.0f, -90.0f}, 0.0f}};
+                {TEXT("+90"), {90.0f}, -90.0f, 90.0f}, {TEXT("-90"), {-90.0f}, -90.0f, -90.0f}, {TEXT("+90 then -90"), {90.0f, -90.0f}, -90.0f, 0.0f},
+                {TEXT("+90 then +90"), {90.0f, 90.0f}, -90.0f, 180.0f}, {TEXT("-90 x3"), {-90.0f, -90.0f, -90.0f}, 0.0f, -270.0f}};
+            constexpr int32 GapFrames = 12, SettleFrames = 150;
+            auto RenderedYaw = [&View]() { return static_cast<float>(View->CameraTransform().Rotator().Yaw); };
             for (const FViewportSize& Size : Viewports)
             {
                 const FSafeRect Rect = FSafeRect::ForViewport(Size.X, Size.Y);
@@ -270,18 +288,31 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
                 {
                     View->SnapCamera(Case.Start, View->FramedDistance(Case.Start));
                     View->Tick(1.0f / 60.0f);
-                    for (const float Degrees : Case.Orbits) { View->Orbit(Degrees); }
-                    for (int32 Frame = 0; Frame < 120; ++Frame)
+                    const float StartYaw = RenderedYaw();
+                    float MaxDeparture = 0.0f;
+                    bool bFailed = false;
+                    for (int32 Command = 0; Command < Case.Orbits.Num() && !bFailed; ++Command)
                     {
-                        View->Tick(1.0f / 60.0f);
-                        const FTransform Camera = View->CameraTransform();
-                        FString Where;
-                        if (!CornersInside(Corners, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect, Where))
+                        View->Orbit(Case.Orbits[Command]);
+                        const int32 Frames = Command + 1 < Case.Orbits.Num() ? GapFrames : SettleFrames;
+                        for (int32 Frame = 0; Frame < Frames; ++Frame)
                         {
-                            AddError(FString::Printf(TEXT("%dx%d board, orbit %s at %dx%d: frame %d leaves the safe rect %s"), Encounter.Width, Encounter.Height, Case.Name, Size.X, Size.Y, Frame, *Where));
-                            break;
+                            View->Tick(1.0f / 60.0f);
+                            MaxDeparture = FMath::Max(MaxDeparture, FMath::Abs(FMath::FindDeltaAngleDegrees(StartYaw, RenderedYaw())));
+                            const FTransform Camera = View->CameraTransform();
+                            FString Where;
+                            if (!CornersInside(Corners, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect, Where))
+                            {
+                                AddError(FString::Printf(TEXT("%dx%d board, orbit %s at %dx%d: command %d, frame %d leaves the safe rect %s"), Encounter.Width, Encounter.Height, Case.Name, Size.X, Size.Y, Command, Frame, *Where));
+                                bFailed = true;
+                                break;
+                            }
                         }
                     }
+                    // The camera really turned, and (for +90 then -90) came back rather than cancelling before moving.
+                    TestTrue(FString::Printf(TEXT("Orbit %s at %dx%d: the camera departed from its start yaw"), Case.Name, Size.X, Size.Y), MaxDeparture > 5.0f);
+                    TestTrue(FString::Printf(TEXT("Orbit %s at %dx%d: it settles at the start yaw plus the orbits"), Case.Name, Size.X, Size.Y),
+                        FMath::Abs(FMath::FindDeltaAngleDegrees(StartYaw + Case.FinalDelta, RenderedYaw())) < 1.0f);
                 }
             }
             // A deliberate zoom-in survives the orbit and its easing.
