@@ -669,7 +669,7 @@ def main():
                 raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
             import_lods(mesh, asset_id, revision, name)
             library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, KIT_TAG_VALUE)
-            mesh.mark_package_dirty()
+            mesh.modify()  # marks the package dirty so the import is saved
         force_nanite_off(mesh)
         check_lod_count(mesh, asset_id, revision)
         apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
