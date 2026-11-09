@@ -41,6 +41,13 @@ public:
     bool ConfirmingReturn() const { return bConfirmReturn; }
     /** True while a requested return waits for the party's turn and playback to finish. */
     bool ReturnPending() const { return bReturnPending; }
+    /**
+     * The top-bar Menu (#146) lists Save, Resume, Records, Speed, Help and Return to start. It is
+     * a transient layer, not an overlay: gameplay keys keep working while it is open.
+     */
+    bool ShowingMenu() const { return bShowMenu && MenuAvailable(); }
+    /** The Menu button exists on every expedition screen except the start screen and the endings. */
+    bool MenuAvailable() const;
     /** Help, Records or the return question covers the screen and owns input. */
     bool OverlayOpen() const;
     /**
@@ -90,6 +97,7 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
+    bool bShowMenu = false;
     bool bConfirmReturn = false;
     bool bReturnPending = false;
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
@@ -106,6 +114,11 @@ private:
     /** Identifies the visible menu screen: overlay, builder and expedition phase. */
     uint32 MenuScreenKey() const;
     void SaveOverlayFocus();
+    void ToggleMenu();
+    /** Closes the Menu and restores the focus saved when it opened. No-op when it is closed. */
+    void CloseMenu();
+    /** Tab and the up/down arrows move the focused menu control; Direction is +1 or -1. */
+    void CycleMenuFocus(int32 Direction);
     /** Call after the overlay has closed. */
     void RestoreOverlayFocus();
     void Preset();

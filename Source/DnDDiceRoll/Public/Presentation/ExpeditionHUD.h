@@ -48,7 +48,8 @@ private:
     int32 ReachRequested = 0;
     bool bCursorRequested = false;
     enum class EAlign : uint8 { Left, Center, Right };
-    struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; };
+    struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; bool bTransient = false; };
+    bool bTransientButtons = false; // Set while the open Menu draws: its buttons are excluded from the persistent budget.
     TArray<FButtonArea> Buttons;
     TArray<FBox2D> Blockers;
     TArray<FBox2D> Persistent; // Always-on panels in design units, for the coverage budget (#146).
@@ -87,6 +88,7 @@ private:
     void DrawWorldOverlays();
     void DrawTargetChips();
     void DrawTopBar();
+    void DrawMenuPanel();
     void DrawInitiative();
     void DrawParty();
     void DrawPartyCard(const FCombatantState& Unit, int32 Index, float Y);

@@ -157,4 +157,156 @@ bool FCompactHudTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("The overlays are closed again"), Game.Player->OverlayOpen());
     return !HasAnyErrors();
 }
+
+namespace CompactHudMenuTest
+{
+const FName Toggle(TEXT("MenuToggle"));
+const TCHAR* ItemNames[] = {TEXT("Save"), TEXT("Resume"), TEXT("Records"), TEXT("Speed"), TEXT("Help"), TEXT("Menu")};
+
+bool HasAll(const ExpeditionInputHarness::FHarness& Game)
+{
+    const TArray<FName> Live = Game.Hud->MenuButtons();
+    bool bAll = Live.Contains(Toggle);
+    for (const TCHAR* Name : ItemNames) { bAll &= Live.Contains(FName(Name)); }
+    return bAll;
+}
+bool HasAny(const ExpeditionInputHarness::FHarness& Game)
+{
+    const TArray<FName> Live = Game.Hud->MenuButtons();
+    bool bAny = false;
+    for (const TCHAR* Name : ItemNames) { bAny |= Live.Contains(FName(Name)); }
+    return bAny;
+}
+}
+
+/**
+ * #146: the secondary controls live in one Menu. It opens by key (I) and by its button, lists every
+ * control inside the viewport, closes by Esc, a second press or a choice, restores focus, and leaves
+ * every hotkey working with the Menu closed or open. It is a transient layer: it never adds to the
+ * persistent budget.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompactHudMenuTest, "Project.Expedition.Presentation.CompactHudMenu",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCompactHudMenuTest::RunTest(const FString& Parameters)
+{
+    using namespace CompactHudMenuTest;
+    using ExpeditionInputHarness::FHarness;
+    FHarness Game(*this, TEXT("CompactHudMenu"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::I);
+    TestFalse(TEXT("The start screen has no Menu to open"), Game.Player->ShowingMenu() || Game.Hud->MenuButtons().Contains(Toggle));
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("Enter on Begin starts the expedition"), Game.View->HasRun())) { return false; }
+    Game.Settle();
+
+    // Closed: one button, none of the old strip.
+    TestTrue(TEXT("The route screen shows the Menu button"), Game.Hud->MenuButtons().Contains(Toggle));
+    TestFalse(TEXT("The secondary controls are not a persistent strip"), HasAny(Game));
+    TestEqual(TEXT("The route screen starts on its primary choice"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // By key: opens, lists everything on screen, focuses Save, closes by Esc and restores focus.
+    Game.Press(EKeys::I);
+    if (!TestTrue(TEXT("I opens the Menu"), Game.Player->ShowingMenu())) { return false; }
+    TestFalse(TEXT("The Menu is not an overlay: gameplay input stays on"), Game.Player->OverlayOpen());
+    TestTrue(TEXT("The open Menu registers the toggle and all six items"), HasAll(Game));
+    TestEqual(TEXT("The open Menu focuses Save"), Game.Player->MenuFocus(), FName(TEXT("Save")));
+    CheckInside(*this, Game, TEXT("Open menu"));
+    Game.Press(EKeys::Tab);
+    TestEqual(TEXT("Tab moves to Resume"), Game.Player->MenuFocus(), FName(TEXT("Resume")));
+    Game.Press(EKeys::Escape);
+    TestFalse(TEXT("Esc closes the Menu"), Game.Player->ShowingMenu());
+    TestFalse(TEXT("The closed Menu drops its items"), HasAny(Game));
+    TestEqual(TEXT("Closing restores the route focus"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // A second press closes it, and the button does both.
+    Game.Press(EKeys::I);
+    Game.Press(EKeys::I);
+    TestFalse(TEXT("A second I closes the Menu"), Game.Player->ShowingMenu());
+    Game.Player->HandleButton(Toggle);
+    Game.Frame();
+    TestTrue(TEXT("The Menu button opens the Menu"), Game.Player->ShowingMenu());
+    Game.Player->HandleButton(Toggle);
+    Game.Frame();
+    TestFalse(TEXT("The Menu button closes the Menu"), Game.Player->ShowingMenu());
+    TestEqual(TEXT("The button restores the route focus too"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // Choosing an item closes the Menu; Help then closes back to the route with its focus.
+    Game.Press(EKeys::I);
+    Game.Player->HandleButton(TEXT("Help"));
+    Game.Frame();
+    TestTrue(TEXT("Choosing Help opens Help and closes the Menu"), Game.Player->ShowingHelp() && !Game.Player->ShowingMenu());
+    Game.Press(EKeys::Escape);
+    TestTrue(TEXT("Closing Help does not bring the Menu back"), !Game.Player->ShowingHelp() && !Game.Player->ShowingMenu());
+    TestEqual(TEXT("Help restores the route focus"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // Keyboard only: Save, Resume, Records, then Speed with Enter.
+    const EPlaybackSpeed Speed = Game.View->Speed();
+    Game.Press(EKeys::I);
+    for (int32 Step = 0; Step < 3; ++Step) { Game.Press(EKeys::Tab); }
+    TestEqual(TEXT("Three Tabs reach Speed"), Game.Player->MenuFocus(), FName(TEXT("Speed")));
+    Game.Press(EKeys::Enter);
+    TestTrue(TEXT("Enter on Speed changes the speed and closes the Menu"), Game.View->Speed() != Speed && !Game.Player->ShowingMenu());
+    TestEqual(TEXT("Choosing an item restores the route focus"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // Hotkeys with the Menu closed.
+    const EPlaybackSpeed Before = Game.View->Speed();
+    Game.Press(EKeys::T);
+    TestTrue(TEXT("T changes the speed with the Menu closed"), Game.View->Speed() != Before);
+    Game.Press(EKeys::H);
+    TestTrue(TEXT("H opens Records with the Menu closed"), Game.View->ShowingRecords());
+    Game.Press(EKeys::H);
+    Game.Press(EKeys::Slash);
+    TestTrue(TEXT("? opens Help with the Menu closed"), Game.Player->ShowingHelp());
+    Game.Press(EKeys::Escape);
+    // ... and with it open.
+    Game.Press(EKeys::I);
+    const EPlaybackSpeed Open = Game.View->Speed();
+    Game.Press(EKeys::T);
+    TestTrue(TEXT("T still changes the speed with the Menu open"), Game.View->Speed() != Open);
+    TestFalse(TEXT("The hotkey closes the Menu"), Game.Player->ShowingMenu());
+    Game.Press(EKeys::I);
+    Game.Press(EKeys::H);
+    TestTrue(TEXT("H still opens Records with the Menu open"), Game.View->ShowingRecords() && !Game.Player->ShowingMenu());
+    Game.Press(EKeys::H);
+    TestEqual(TEXT("Records restores the route focus"), Game.Player->MenuFocus(), FName(TEXT("Route0")));
+
+    // Combat: focus stays empty, the Menu takes it and gives it back, and coverage stays in budget.
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("The first route starts an encounter"), Game.View->InCombat())) { return false; }
+    Game.PartyTurn();
+    if (!TestTrue(TEXT("The party has the turn"), Game.View->InCombat() && Game.Player->ShowsTargeting())) { return false; }
+    CheckInside(*this, Game, TEXT("Party turn"));
+    for (const FIntPoint Size : {FIntPoint(1920, 1080), FIntPoint(1280, 720)})
+    {
+        Game.Target.Size = Size;
+        Game.Frame();
+        const double Closed = Game.Hud->PersistentCoverage();
+        Game.Press(EKeys::I);
+        if (!TestTrue(TEXT("I opens the Menu in combat"), Game.Player->ShowingMenu())) { break; }
+        TestEqual(TEXT("The combat Menu focuses Save"), Game.Player->MenuFocus(), FName(TEXT("Save")));
+        TestTrue(TEXT("The combat Menu lists every control"), HasAll(Game));
+        const double Open = Game.Hud->PersistentCoverage();
+        AddInfo(FString::Printf(TEXT("Persistent combat HUD at %dx%d: %.2f%% closed, %.2f%% with the Menu open"), Size.X, Size.Y, Closed * 100.0, Open * 100.0));
+        TestTrue(FString::Printf(TEXT("The Menu button keeps persistent coverage within %.0f%% at %dx%d"), PersistentBudget * 100.0, Size.X, Size.Y), Closed > 0.0 && Closed <= PersistentBudget);
+        TestTrue(TEXT("An open Menu is transient and adds nothing to persistent coverage"), Open <= Closed + 1e-6);
+        CheckInside(*this, Game, TEXT("Open menu in combat"));
+        Game.Press(EKeys::Escape);
+        TestFalse(TEXT("Esc closes the combat Menu"), Game.Player->ShowingMenu());
+        TestEqual(TEXT("Combat holds no menu focus after closing"), Game.Player->MenuFocus(), FName());
+    }
+    Game.Target.Size = FIntPoint(1280, 720);
+    Game.Frame();
+    // Enter inside the combat Menu acts on the focused item rather than the board cursor.
+    Game.Press(EKeys::I);
+    Game.Press(EKeys::Enter);
+    TestFalse(TEXT("Enter on Save closes the combat Menu"), Game.Player->ShowingMenu());
+    // The return question replaces the Menu.
+    Game.Press(EKeys::I);
+    Game.Press(EKeys::BackSpace);
+    TestTrue(TEXT("Backspace with the Menu open asks to return"), Game.Player->ConfirmingReturn() && !Game.Player->ShowingMenu());
+    Game.Press(EKeys::Escape);
+    TestFalse(TEXT("Esc cancels the question"), Game.Player->ConfirmingReturn());
+    return !HasAnyErrors();
+}
 #endif

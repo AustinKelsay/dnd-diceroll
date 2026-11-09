@@ -183,7 +183,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 * Ratio : Y + Lift + Height * 0.5f - 19 * Ratio;
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, LabelScale, EAlign::Center, Width - 12);
     if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2 * Ratio, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f * Ratio, EAlign::Center, Width - 10); }
-    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled});
+    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled, bTransientButtons});
     ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
@@ -260,6 +260,7 @@ void AExpeditionHUD::DrawHUD()
     ReachRequested = 0;
     DetailUnitId = INDEX_NONE;
     bCursorRequested = false;
+    bTransientButtons = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
@@ -307,6 +308,7 @@ void AExpeditionHUD::DrawHUD()
     }
     // Overlays own every click: buttons hidden beneath them must not fire.
     if (Player->OverlayOpen()) { Buttons.Reset(); }
+    if (Player->ShowingMenu()) { Buttons.Reset(); DrawMenuPanel(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
     if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
@@ -492,7 +494,7 @@ void AExpeditionHUD::DrawTargetChips()
 void AExpeditionHUD::DrawTopBar()
 {
     if (Player->ShowingBuilder() || (View->HasRun() && (View->Progress().Phase == EExpeditionPhase::Victory || View->Progress().Phase == EExpeditionPhase::Defeat))) { return; }
-    constexpr float Top = 8, StripHeight = 38, ButtonHeight = 28, Gap = 4;
+    constexpr float Top = 8, StripHeight = 38, ButtonHeight = 28;
     if (View->HasRun())
     {
         // One strip: where we are, the round and seed, and (in combat) the initiative order.
@@ -505,29 +507,45 @@ void AExpeditionHUD::DrawTopBar()
         Text(FString::Printf(TEXT("%s  ·  Seed %d"), *Status, Run.Seed), 18, Top + 22, Muted, 0.54f, EAlign::Left, View->InCombat() ? 170.0f : 240.0f);
         if (View->InCombat()) { DrawInitiative(); }
     }
-    // Secondary controls share one strip. Registration order (Help first, Menu last) is the Tab order.
-    struct FSystem { FName Id; FString Label; float Width; bool bEnabled; bool bSelected; };
-    TArray<FSystem> Items;
-    Items.Add({TEXT("Help"), TEXT("?"), 34, true, false});
+    // One Menu button holds the secondary controls (#146). Its panel lists them while it is open.
+    const bool bWaiting = Player->ReturnPending();
+    const float MenuWidth = bWaiting ? 112.0f : 76.0f;
+    const FString Label = bWaiting ? TEXT("I  Menu: waiting") : TEXT("I  Menu");
+    const float Total = MenuWidth + 12.0f;
+    Panel(W - 8 - Total, Top, Total, StripHeight, Sky, 0.86f);
+    Persist(W - 8 - Total, Top, Total, StripHeight);
+    Button(TEXT("MenuToggle"), Label, FString(), W - 8 - 6 - MenuWidth, Top + (StripHeight - ButtonHeight) * 0.5f, MenuWidth, ButtonHeight, true, bWaiting || Player->ShowingMenu(), Sky, 0.8f);
+}
+
+void AExpeditionHUD::DrawMenuPanel()
+{
+    // The open Menu is a transient layer: a light scrim, the toggle (to close) and one row per control.
+    // Every drawn button is registered with its drawn rectangle; the controls beneath are not live.
+    constexpr float Top = 8, StripHeight = 38, ButtonHeight = 28, RowHeight = 34, RowGap = 6, PanelWidth = 232, Pad = 12;
+    Rect(FLinearColor(0, 0, 0, 0.35f), 0, 0, W, H);
+    bTransientButtons = true;
+    const bool bWaiting = Player->ReturnPending();
+    const float ToggleWidth = bWaiting ? 112.0f : 76.0f;
+    Button(TEXT("MenuToggle"), bWaiting ? TEXT("I  Menu: waiting") : TEXT("I  Menu"), FString(), W - 8 - 6 - ToggleWidth, Top + (StripHeight - ButtonHeight) * 0.5f, ToggleWidth, ButtonHeight, true, true, Sky, 0.8f);
+    struct FRow { FName Id; FString Label; bool bEnabled; };
     const FString Speed = View->Speed() == EPlaybackSpeed::Normal ? TEXT("1x") : View->Speed() == EPlaybackSpeed::Fast ? TEXT("2x") : TEXT("Instant");
-    if (View->InCombat()) { Items.Add({TEXT("Speed"), TEXT("Speed ") + Speed, 92, true, false}); }
-    Items.Add({TEXT("Records"), TEXT("Records"), 72, true, false});
-    Items.Add({TEXT("Resume"), TEXT("Resume"), 70, true, false});
-    Items.Add({TEXT("Save"), TEXT("Save"), 56, View->HasRun(), false});
-    // A pending return (waiting for the enemy or playback) shows as a selected Menu button.
-    if (View->CanReturnToMenu()) { Items.Add({TEXT("Menu"), Player->ReturnPending() ? TEXT("Menu: waiting") : TEXT("Menu"), Player->ReturnPending() ? 100.0f : 60.0f, true, Player->ReturnPending()}); }
-    float Total = 12 - Gap;
-    for (const FSystem& Item : Items) { Total += Item.Width + Gap; }
-    float X = W - 8;
-    Panel(X - Total, Top, Total, StripHeight, Sky, 0.86f);
-    Persist(X - Total, Top, Total, StripHeight);
-    X -= 6;
-    for (const FSystem& Item : Items)
+    TArray<FRow> Rows;
+    Rows.Add({TEXT("Save"), TEXT("K  Save"), View->HasRun()});
+    Rows.Add({TEXT("Resume"), TEXT("O  Resume"), true});
+    Rows.Add({TEXT("Records"), TEXT("H  Records"), true});
+    Rows.Add({TEXT("Speed"), TEXT("T  Speed ") + Speed, true});
+    Rows.Add({TEXT("Help"), TEXT("?  Help"), true});
+    Rows.Add({TEXT("Menu"), bWaiting ? TEXT("Bksp  Return: waiting") : TEXT("Bksp  Return to start"), View->CanReturnToMenu()});
+    const float Height = Pad * 2 + Rows.Num() * RowHeight + (Rows.Num() - 1) * RowGap;
+    const float X = W - 8 - PanelWidth, Y = Top + StripHeight + 6;
+    Panel(X, Y, PanelWidth, Height, Sky, 0.98f);
+    float RowY = Y + Pad;
+    for (const FRow& Row : Rows)
     {
-        X -= Item.Width;
-        Button(Item.Id, Item.Label, FString(), X, Top + (StripHeight - ButtonHeight) * 0.5f, Item.Width, ButtonHeight, Item.bEnabled, Item.bSelected, Sky, 0.8f);
-        X -= Gap;
+        Button(Row.Id, Row.Label, FString(), X + Pad, RowY, PanelWidth - Pad * 2, RowHeight, Row.bEnabled, false, Sky, 0.8f);
+        RowY += RowHeight + RowGap;
     }
+    bTransientButtons = false;
 }
 
 float AExpeditionHUD::StatusStripWidth() const
@@ -1203,7 +1221,7 @@ void AExpeditionHUD::DrawHelp()
             TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
             TEXT("Gear caps at rank 3. Potions remain useful at the gear cap."),
             TEXT("C takes the one recovery opportunity; V forfeits it."),
-            TEXT("Backspace or Menu returns to the start screen; O resumes from there."),
+            TEXT("Backspace or Menu > Return to start leaves; O resumes from there."),
             TEXT("Deaths are permanent. Recovery never resurrects fallen heroes."),
             TEXT("The ending keeps a record; choose next party to begin again.")};
         float Row=Y+70;
@@ -1218,7 +1236,7 @@ void AExpeditionHUD::DrawHelp()
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu")};
+        TEXT("H  Records  ·  ?  Help  ·  I  Menu")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
@@ -1260,7 +1278,7 @@ double AExpeditionHUD::PersistentCoverage() const
 {
     std::vector<ExpeditionLayout::Rect> Boxes;
     for (const FBox2D& Box : Persistent) { Boxes.push_back({Box.Min.X * S, Box.Min.Y * S, Box.Max.X * S, Box.Max.Y * S}); }
-    for (const FButtonArea& Area : Buttons) { Boxes.push_back({Area.Box.Min.X, Area.Box.Min.Y, Area.Box.Max.X, Area.Box.Max.Y}); }
+    for (const FButtonArea& Area : Buttons) { if (!Area.bTransient) { Boxes.push_back({Area.Box.Min.X, Area.Box.Min.Y, Area.Box.Max.X, Area.Box.Max.Y}); } }
     const double Width = W * S, Height = H * S;
     return Width > 0 && Height > 0 ? ExpeditionLayout::UnionArea(Boxes, {0, 0, Width, Height}) / (Width * Height) : 0.0;
 }
