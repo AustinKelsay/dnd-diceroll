@@ -3,12 +3,16 @@
 #include "CoreMinimal.h"
 #include "CombatBattle.generated.h"
 
+/** Expedition ruleset chosen at NewRun and persisted in schema 5. Compact is the default. */
+UENUM()
+enum class ERuleset : uint8 { Compact = 0, SRD = 1 };
+
 UENUM()
 enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2 };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove, Escape };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -57,6 +61,20 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() int32 Speed = 4;
     UPROPERTY() int32 InitiativeBonus = 0;
     UPROPERTY() int32 Initiative = 0;
+    /** SRD reaction economy; Compact ignores. Default true so Compact snapshots stay valid. */
+    UPROPERTY() bool bReactionAvailable = true;
+    UPROPERTY() int32 DeathSaveSuccesses = 0;
+    UPROPERTY() int32 DeathSaveFailures = 0;
+    UPROPERTY() int32 TemporaryHP = 0;
+    UPROPERTY() bool bConcentrating = false;
+    /** ECreatureSize index; 2 = Medium. Used by cover/grapple house rules in SRD mode. */
+    UPROPERTY() int32 Size = 2;
+    UPROPERTY() bool bSurprised = false;
+    UPROPERTY() bool bDisengaged = false;
+    /** SRD only: knocked prone (Shove). Compact ignores. */
+    UPROPERTY() bool bProne = false;
+    /** SRD only: Id of the creature grappling this one, or INDEX_NONE. */
+    UPROPERTY() int32 GrapplerId = INDEX_NONE;
 };
 
 USTRUCT()
@@ -67,6 +85,12 @@ struct DNDDICEROLL_API FCombatEncounter
     UPROPERTY() int32 Height = 8;
     UPROPERTY() TArray<FIntPoint> BlockedCells;
     UPROPERTY() TArray<FCombatantState> Combatants;
+    /** Compact default keeps seed-identity with staging; SRD enables battle wiring. */
+    UPROPERTY() ERuleset Ruleset = ERuleset::Compact;
+    /** When true in SRD mode, enemies may be surprised (Initiative Disadvantage). Compact ignores. */
+    UPROPERTY() bool bAmbush = false;
+    /** Party Stealth totals used when bAmbush is set (SRD surprise). */
+    UPROPERTY() TArray<int32> AmbushStealthTotals;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
@@ -91,6 +115,8 @@ struct DNDDICEROLL_API FCombatCommand
     int32 ActorId = INDEX_NONE;
     FIntPoint Destination = FIntPoint::ZeroValue;
     int32 TargetId = INDEX_NONE;
+    /** Shove only: 0 = knock prone, 1 = push 5 ft (one cell) away. */
+    int32 ShoveChoice = 0;
 };
 
 /** One die in an effect roll, in the order it was rolled. */
@@ -159,6 +185,8 @@ struct DNDDICEROLL_API FActionForecast
 {
     bool bValid = false;
     bool bAttackRoll = false;
+    /** SRD Sacred Flame: the target makes a saving throw, and HitChancePercent is the chance it fails. */
+    bool bSavingThrow = false;
     int32 HitChancePercent = 0;
     bool bHealing = false;
     /** Only the two endpoints can occur (for example Wild Bolt), rather than a dice range. */
@@ -213,6 +241,21 @@ private:
     bool bStarted = false;
     /** Set only while resolving an effect so its dice can be reported. */
     TArray<FDieRoll>* DiceLog = nullptr;
+    /** Attack or PrecisionStrike roll facts, shared by Forecast and resolution so they always agree. */
+    struct FAttackSetup
+    {
+        /** SRD Sacred Flame: the target makes a Dexterity save instead of an attack roll. */
+        bool bSave = false;
+        /** Attack bonus, or the target's Dexterity save bonus. */
+        int32 Modifier = 0;
+        /** Armor class including cover, or the spell save DC. */
+        int32 TargetNumber = 0;
+        /** SRD: attack rolls against an Unconscious (downed) creature have Advantage. */
+        bool bAdvantage = false;
+        /** SRD: a hit on an Unconscious creature from within 5 feet is a critical hit. */
+        bool bAutoCritical = false;
+    };
+    FAttackSetup AttackSetup(const FCombatantState& Actor, ECombatCommandType Action, const FCombatantState& Target) const;
     static bool ValidateEncounter(const FCombatEncounter& Encounter, FString& Error);
     bool IsInside(FIntPoint Cell) const;
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;
@@ -226,7 +269,12 @@ private:
     void CheckOutcome();
     TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 ProtectionFor(const FCombatantState& Target) const;
-    void ApplyDamage(FCombatantState& Target, int32 Damage);
+    void ApplyDamage(FCombatantState& Target, int32 Damage, bool bCritical = false);
     FCombatantState* MutableFind(int32 Id);
     FCombatResult Resolve(const FCombatCommand& Command);
+    bool IsSrd() const { return State.Encounter.Ruleset == ERuleset::SRD; }
+    int32 CoverAcBonus(int32 ActorId, int32 TargetId) const;
+    /** Path starts at the mover's cell. Places the mover and returns the cells it actually moved. */
+    int32 ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result);
+    void DownedTurn(FCombatantState& Unit);
 };

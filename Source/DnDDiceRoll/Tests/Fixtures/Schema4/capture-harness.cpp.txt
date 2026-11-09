@@ -1,0 +1,61 @@
+#if WITH_DEV_AUTOMATION_TESTS
+#include "Misc/AutomationTest.h"
+#include "Persistence/ExpeditionSave.h"
+#include "ExpeditionTestSupport.h"
+#include "Misc/FileHelper.h"
+using namespace ExpeditionTestSupport;
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPr156CaptureTest, "Project.Tools.Pr156Baseline", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPr156CaptureTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    auto Write = [&](FExpeditionRun& Run, const TCHAR* Name)
+    {
+        FExpeditionSaveData Data; Data.Current = Run.Snapshot();
+        if (Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat) { Data.Records.Add(FExpeditionSave::Ending(Run)); }
+        return TestTrue(Name, FExpeditionSave::Write(FPaths::ProjectSavedDir() / TEXT("Pr156Baseline") / Name, Data, Error));
+    };
+    FExpeditionRun Run;
+    if (!TestTrue(TEXT("New staging run"), Run.NewRun(42, Error, TEXT("seeded-fixture")))) { return false; }
+    for (int32 I = 0; I < 5; ++I)
+    {
+        if (!TestTrue(TEXT("Choose"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error))) { return false; }
+        if (I == 0)
+        {
+            auto Mid = Run;
+            for (int32 Guard = 0; Guard < 8 && Mid.Battle().Find(Mid.Battle().ActiveId())->Side == ECombatSide::Enemy; ++Guard) { Mid.PlayEnemyTurn(); }
+            const int32 Id = Mid.Battle().ActiveId();
+            const auto Moves = Mid.Battle().LegalMoves(Id);
+            if (!TestTrue(TEXT("Spend movement mid-turn"), !Moves.IsEmpty() && Mid.Submit({ECombatCommandType::Move, Id, Moves[0]}).bAccepted)) { return false; }
+            if (!Write(Mid, TEXT("mid-battle-v4.json"))) { return false; }
+            for (int32 Guard = 0; Guard < 30 && Mid.Progress().Phase != EExpeditionPhase::Victory && Mid.Progress().Phase != EExpeditionPhase::Defeat; ++Guard)
+            {
+                switch (Mid.Progress().Phase)
+                {
+                case EExpeditionPhase::Route: Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error); break;
+                case EExpeditionPhase::Combat: FinishCombat(Mid); break;
+                case EExpeditionPhase::Reward: Mid.ClaimReward(1, Error); break;
+                case EExpeditionPhase::Recovery: Mid.Recover(true, Error); break;
+                default: return false;
+                }
+            }
+            if (!Write(Mid, TEXT("expected-mid-victory-v4.json"))) { return false; }
+        }
+        if (!TestTrue(TEXT("Finish"), FinishCombat(Run))) { return false; }
+        if (I < 4)
+        {
+            if (!TestTrue(TEXT("Reward"), Run.ClaimReward(1, Error))) { return false; }
+            if (I == 0)
+            {
+                if (!TestTrue(TEXT("Recover"), Run.Recover(true, Error))) { return false; }
+                if (!Write(Run, TEXT("between-battles-v4.json"))) { return false; }
+            }
+        }
+    }
+    Write(Run, TEXT("expected-victory-v4.json"));
+    const auto S = Run.Snapshot(); int32 PartyHp = 0, EnemyHp = 0, Alive = 0;
+    for (const auto& U : S.Battle.Encounter.Combatants) { if (U.Side == ECombatSide::Party) { PartyHp += U.HP; Alive += U.Life == ECombatLife::Conscious; } else { EnemyHp += U.HP; } }
+    const FString Fingerprint = FString::Printf(TEXT("rng=%d|partyHp=%d|enemyHp=%d|alive=%d|phase=%d|victories=%d|ruleset=0|rounds=%d|turn=%d"), S.Battle.RandomState, PartyHp, EnemyHp, Alive, static_cast<int32>(S.Progress.Phase), S.Progress.EncountersCompleted, S.Battle.Round, S.Battle.TurnIndex);
+    TestTrue(TEXT("Write fingerprint"), FFileHelper::SaveStringToFile(Fingerprint, *(FPaths::ProjectSavedDir() / TEXT("Pr156Baseline/fingerprint.txt")), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM));
+    return !HasAnyErrors();
+}
+#endif

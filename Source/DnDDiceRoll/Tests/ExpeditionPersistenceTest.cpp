@@ -180,8 +180,8 @@ bool FStrictMalformedSaveTest::RunTest(const FString& Parameters)
         TSharedPtr<FJsonObject> Object; FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Object); Mutate(Object);
         FString Text; FJsonSerializer::Serialize(Object.ToSharedRef(),TJsonWriterFactory<>::Create(&Text)); Malformed.Add(Text);
     };
-    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version+1);});
-    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version-1);}); // previous schema is unsupported
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),FExpeditionSave::Version+1);}); // future schema unsupported
+    AddMutation([](auto O){O->SetNumberField(TEXT("Version"),3);}); // schema 3 and older remain unsupported
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("Offers"))[0]->AsObject()->SetStringField(TEXT("Preview"),TEXT("No enemies, no cost"));});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Battle"))->SetNumberField(TEXT("MovementLeft"),99);});
     AddMutation([](auto O){O->GetObjectField(TEXT("Current"))->SetObjectField(TEXT("Battle"),MakeShared<FJsonObject>());});
@@ -319,7 +319,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     FExpeditionSave::Encode(Data, Json, Error);
     TSharedPtr<FJsonObject> Object;
     FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
-    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version - 1);
+    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version + 1); // future schema: unreadable, preserve on NewRun
     FString Incompatible;
     FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Incompatible));
     for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible})

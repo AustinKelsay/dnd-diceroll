@@ -53,12 +53,19 @@ On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the ve
 
 ## Shared machine
 
-Several agents use Ultra at once. Before any build, test, editor, or package job:
+Several agents use Ultra at once, and only one Unreal job may run at a time. A machine-wide lock file enforces that, so no one has to hand out turns. Ultra's host convention is `/home/plebdev/.t3/ultra-unreal.lock`; every checkout on Ultra must use this same lock.
 
-1. Check for running `UnrealEditor`, `UnrealEditor-Cmd`, `UnrealBuildTool`, `dotnet`, `ShaderCompileWorker`, or `RunUAT` processes (`ps -eo pid,args | grep -E 'Unreal|dotnet|ShaderCompile|RunUAT'`) and for a listener on port 18765.
-2. Ask whoever coordinates Ultra (the maintainer, or the agent they named) for a turn to run Unreal, and wait until they say it is yours.
-3. Run jobs one at a time from your own checkout with `--cores 2`. Close any editor you started with `close` and check that it exited.
-4. When you are done, tell the coordinator, with your results, that Ultra is free again.
+1. Wrap every native job in the lock: each `tools/dev.py` `build`, `test`, `bootstrap`, `verify-skills`, `gallery`, `smoke`, `capture` and `package` run, and each `UnrealEditor-Cmd` commandlet. Use `--cores 2` on the helper commands that accept it; omit it for `smoke` and `capture`, which refuse it. Direct commandlets use `-corelimit=2`. On Ultra, replace `relaunch` with `close`, a locked `build`, then `editor`, so the build holds the lock and editor ownership is preserved. For example:
+
+   ```sh
+   flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 build
+   flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 test --filter Project.Expedition.
+   ```
+
+   The lock is held for that one job and released when it exits, so jobs from different checkouts interleave one at a time. `-w 7200` waits up to two hours for the lock; if it times out, report it rather than running without the lock.
+2. Keep each locked job short (about ten minutes or less where practical) so other agents are not starved; split long soaks or galleries into several locked runs.
+3. Do not hold the lock while you play a packaged game or work in an interactive editor. Only one editor may own this project's MCP port (18765) at a time, so before `editor`, check for running `UnrealEditor` processes and a listener on that port, and close any editor you started with `close` and check that it exited.
+4. Run jobs from your own checkout.
 
 Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
 

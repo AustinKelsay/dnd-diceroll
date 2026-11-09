@@ -6,6 +6,7 @@
 
 UENUM()
 enum class EExpeditionPhase : uint8 { Route, Combat, Reward, Recovery, Victory, Defeat };
+/** ERuleset lives in Combat/CombatBattle.h (also on FCombatEncounter). */
 
 /** An opportunity is rolled once, disclosed truthfully, and retained when selected. */
 USTRUCT()
@@ -51,6 +52,8 @@ struct DNDDICEROLL_API FExpeditionProgress
     GENERATED_BODY()
     UPROPERTY() TArray<FPartyBuildSelection> Party;
     UPROPERTY() int32 CatalogRevision = 7;
+    /** Compact (default) or SRD 5.2.1. Schema 4 loads as Compact. */
+    UPROPERTY() ERuleset Ruleset = ERuleset::Compact;
     UPROPERTY() int32 Seed = 0;
     UPROPERTY() FString RunId;
     UPROPERTY() int32 GenerationRandomState = 0;
@@ -80,8 +83,8 @@ class DNDDICEROLL_API FExpeditionRun
 public:
     /** Combats in one expedition; winning the last recovers the artifact. */
     static constexpr int32 EncounterCount = 5;
-    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), EFighterSubclass Subclass = EFighterSubclass::Champion);
-    bool NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity = FString());
+    bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), EFighterSubclass Subclass = EFighterSubclass::Champion, ERuleset Ruleset = ERuleset::Compact);
+    bool NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Party, FString& Error, const FString& Identity = FString(), ERuleset Ruleset = ERuleset::Compact);
     /** Validates a detached candidate in full, then installs without rolling. */
     bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);
