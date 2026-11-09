@@ -27,7 +27,10 @@ public:
     ECombatCommandType Action() const { return SelectedAction; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
-    void SelectPartyIndex(int32 Index);
+    /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
+    void SelectPartyIndex(int32 Index, bool bInspect = true);
+    /** The hero whose full status the player asked for by choosing them again; cleared each turn. */
+    int32 Inspected() const { return InspectedId; }
     void HandleButton(FName Id);
     EFighterSubclass StartupSubclass() const;
     const TArray<FPartyBuildSelection>& NextParty() const { return Party; }
@@ -76,6 +79,7 @@ private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
+    int32 InspectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
     int32 LastRevision = INDEX_NONE;
     int32 HoverUnitId = INDEX_NONE;

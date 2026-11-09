@@ -258,6 +258,7 @@ void AExpeditionHUD::DrawHUD()
     ChipExclusions.Reset();
     ChipsRequested = 0;
     ReachRequested = 0;
+    DetailUnitId = INDEX_NONE;
     bCursorRequested = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
@@ -662,13 +663,15 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     if (Unit.GuardTargetId != INDEX_NONE) { Gear += TEXT("  ·  Guarding"); }
     Text(Gear, X + 48, Y + 50, Muted, 0.5f, EAlign::Left, Width - 54);
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
-    // Full status prose on hover, or on selecting a hero who is not the one acting.
-    if (bHover || (bSelected && !bActive)) { DrawPartyDetail(Unit, X + Width + 8, Y); }
+    // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
+    // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
+    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + 8, Y); }
 }
 
 void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float Y)
 {
     const float Width = 320;
+    DetailUnitId = Unit.Id;
     TArray<TPair<FString, FLinearColor>> Lines;
     Lines.Add({FString::Printf(TEXT("%s  ·  Lv%d %s"), *Unit.Name, Unit.Level, *FBuildCatalog::DisplayName(Unit)), ExpeditionStyle::UnitColor(Unit)});
     if (Unit.Life == ECombatLife::Dead) { Lines.Add({TEXT("Fallen  ·  lost for this expedition"), FLinearColor(0.75f, 0.45f, 0.4f)}); }
@@ -967,6 +970,15 @@ void AExpeditionHUD::DrawTitle()
     for (const auto& B : FBuildCatalog::All()) { Distinct.Add(B.Profile.ClassId); }
     const float ClassRows = FMath::CeilToFloat(Distinct.Num() / 2.0f);
     const float SubclassLabelY = ClassY + ClassRows * 34 + 6;
+    // Long subclass lists (ten for cleric and wizard) switch to two columns and shorter rows, so
+    // every choice stays inside the drawer and Tab never reaches a control drawn off screen.
+    int32 BuildCount = 0;
+    for (const auto& B : FBuildCatalog::All()) { BuildCount += B.Profile.ClassId == Hero.ClassId ? 1 : 0; }
+    const float ListTop = SubclassLabelY + 22, ListBottom = DrawerY + DrawerHeight - 10;
+    const int32 BuildColumns = ListTop + BuildCount * 28 <= ListBottom ? 1 : 2;
+    const int32 BuildRows = FMath::Max(1, FMath::DivideAndRoundUp(BuildCount, BuildColumns));
+    const float BuildRow = FMath::Min(28.0f, (ListBottom - ListTop) / BuildRows);
+    const float BuildWidth = (LeftWidth - 24 - (BuildColumns - 1) * 6) / BuildColumns;
     for (const auto& B : FBuildCatalog::All())
     {
         if (!Classes.Contains(B.Profile.ClassId))
@@ -978,7 +990,8 @@ void AExpeditionHUD::DrawTitle()
         if (B.Profile.ClassId == Hero.ClassId)
         {
             const FString Label = FBuildCatalog::DisplayName(B.Profile).RightChop(B.Profile.Role.Len() + 3);
-            Button(FName(*(TEXT("Build:") + B.Id)), Label, TEXT(""), LeftX + 12, SubclassLabelY + 22 + BuildIndex * 28, LeftWidth - 24, 25, true, B.Id == Hero.BuildId, Sky, 0.8f);
+            Button(FName(*(TEXT("Build:") + B.Id)), Label, TEXT(""), LeftX + 12 + (BuildIndex % BuildColumns) * (BuildWidth + 6), ListTop + (BuildIndex / BuildColumns) * BuildRow,
+                BuildWidth, BuildRow - 3, true, B.Id == Hero.BuildId, Sky, BuildColumns == 1 ? 0.8f : 0.7f);
             ++BuildIndex;
         }
     }

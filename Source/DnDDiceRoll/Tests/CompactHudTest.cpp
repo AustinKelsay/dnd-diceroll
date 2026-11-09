@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
+#include "Party/BuildCatalog.h"
 #include "Presentation/HudCoverage.h"
 
 /**
@@ -56,6 +57,30 @@ bool FCompactHudTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
     Game.Frame();
     CheckInside(*this, Game, TEXT("Start screen"));
+    // Every class's full subclass list registers and stays on screen (cleric and wizard have ten).
+    {
+        const FString Original = Game.Player->NextParty()[Game.Player->BuilderSlot()].BuildId;
+        TSet<FString> Seen;
+        for (const auto& Build : FBuildCatalog::All())
+        {
+            const FString ClassId = Build.Profile.ClassId;
+            if (Seen.Contains(ClassId)) { continue; }
+            Seen.Add(ClassId);
+            Game.Player->HandleButton(FName(*(TEXT("Class:") + ClassId)));
+            Game.Frame();
+            int32 Expected = 0, Shown = 0;
+            for (const auto& Other : FBuildCatalog::All()) { Expected += Other.Profile.ClassId == ClassId ? 1 : 0; }
+            for (const FName Id : Game.Hud->MenuButtons()) { Shown += Id.ToString().StartsWith(TEXT("Build:")) ? 1 : 0; }
+            TestEqual(FString::Printf(TEXT("Start screen, %s: every subclass has a control"), *ClassId), Shown, Expected);
+            CheckInside(*this, Game, FString::Printf(TEXT("Start screen, %s"), *ClassId));
+        }
+        TestTrue(TEXT("The catalog has more than one class"), Seen.Num() > 1);
+        // Restore the starting build so the rest of the test plays the default party.
+        if (const auto* Start = FBuildCatalog::Find(Original)) { Game.Player->HandleButton(FName(*(TEXT("Class:") + Start->Profile.ClassId))); }
+        Game.Player->HandleButton(FName(*(TEXT("Build:") + Original)));
+        Game.Frame();
+        TestEqual(TEXT("The starting build is restored"), Game.Player->NextParty()[Game.Player->BuilderSlot()].BuildId, Original);
+    }
     // The start screen is two drawers: the centre of the screen stays open for the tabletop.
     {
         Game.Target.Size = FIntPoint(1920, 1080);
@@ -77,6 +102,27 @@ bool FCompactHudTest::RunTest(const FString& Parameters)
     Game.PartyTurn();
     if (!TestTrue(TEXT("The party has the turn"), Game.View->InCombat() && Game.Player->ShowsTargeting())) { return false; }
     CheckInside(*this, Game, TEXT("Party turn"));
+    // The acting hero's full status is keyboard reachable: choosing them again toggles it.
+    {
+        const int32 Active = Game.View->Rules().ActiveId();
+        int32 Index = 0, ActiveIndex = INDEX_NONE;
+        for (const FCombatantState& Unit : Game.View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Party) { continue; }
+            if (Unit.Id == Active) { ActiveIndex = Index; }
+            ++Index;
+        }
+        const FKey Keys[] = {EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four};
+        if (TestTrue(TEXT("A party hero acts"), ActiveIndex >= 0 && ActiveIndex < 4))
+        {
+            Game.Frame();
+            TestEqual(TEXT("The acting hero's details stay closed by default"), Game.Hud->PartyDetailUnit(), int32(INDEX_NONE));
+            Game.Press(Keys[ActiveIndex]);
+            TestEqual(TEXT("Choosing the acting hero again opens their details"), Game.Hud->PartyDetailUnit(), Active);
+            Game.Press(Keys[ActiveIndex]);
+            TestEqual(TEXT("Choosing them once more closes the details"), Game.Hud->PartyDetailUnit(), int32(INDEX_NONE));
+        }
+    }
 
     // Persistent area: the party turn is the busiest combat state (cards, strips, dock and log all up).
     for (const FIntPoint Size : {FIntPoint(1920, 1080), FIntPoint(1280, 720)})

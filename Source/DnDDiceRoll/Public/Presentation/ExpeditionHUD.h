@@ -40,7 +40,10 @@ public:
     double PersistentCoverage() const;
     /** Whether the last draw requested keyboard inspection brackets, before projection. */
     bool KeyboardCursorRequested() const { return bCursorRequested; }
+    /** The combatant whose full status panel the last draw showed, or INDEX_NONE. */
+    int32 PartyDetailUnit() const { return DetailUnitId; }
 private:
+    int32 DetailUnitId = INDEX_NONE;
     int32 ChipsRequested = 0;
     int32 ReachRequested = 0;
     bool bCursorRequested = false;

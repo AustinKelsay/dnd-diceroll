@@ -108,8 +108,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (LastRevision != BattleView->PresentationRevision())
     {
         LastRevision = BattleView->PresentationRevision(); LastActiveId = INDEX_NONE;
-        SelectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack;
-        SelectPartyIndex(0); GridCursor = {1, 1};
+        SelectedId = INDEX_NONE; InspectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack;
+        SelectPartyIndex(0, false); GridCursor = {1, 1};
     }
     ResolvePendingReturn();
     const int32 ActiveId = Rules.ActiveId();
@@ -118,6 +118,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         const FCombatantState* Active = Rules.Find(ActiveId);
         if (Active && Active->Side == ECombatSide::Party) { SelectedId = ActiveId; GridCursor = Active->Cell; }
         LastActiveId = ActiveId;
+        InspectedId = INDEX_NONE;
         SelectedAction = ECombatCommandType::Attack;
     }
     // Loot goes to a living survivor; keep the selection on one.
@@ -277,14 +278,20 @@ void AExpeditionPlayerController::ConfirmCell()
     ActAtCell(GridCursor);
 }
 
-void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
+void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 {
     if (!AllowsGameplayInput()) { return; }
     if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return; }
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
-        if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index) { SelectedId = Unit.Id; return; }
+        if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index)
+        {
+            // Choosing the selected hero again toggles their full status (the acting hero is selected by default).
+            if (bInspect) { InspectedId = SelectedId == Unit.Id && InspectedId != Unit.Id ? Unit.Id : INDEX_NONE; }
+            SelectedId = Unit.Id;
+            return;
+        }
     }
 }
 
