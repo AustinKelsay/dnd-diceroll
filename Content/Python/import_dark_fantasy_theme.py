@@ -15,6 +15,10 @@ import json
 import os
 import struct
 import unreal
+# A headless commandlet does not load the mesh editor modules, so their subsystems would be None.
+unreal.load_module("SkeletalMeshEditor")
+if unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem) is None:
+    raise RuntimeError("SkeletalMeshEditorSubsystem is unavailable even after loading the SkeletalMeshEditor module")
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 THEME = "/Game/DnDDiceRoll/Theme"

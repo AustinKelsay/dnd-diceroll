@@ -103,7 +103,7 @@ bool StartRigRun(FExpeditionRun& Run, int32 Seed, const TCHAR* Identity)
 
 // A hand-made scene on a real encounter: a hero, an ally and a foe placed on known cells. Playback only reads the units
 // a result names.
-struct FScene
+struct FPoseScene
 {
     FCombatSnapshot Before, After;
     int32 Hero = INDEX_NONE, Ally = INDEX_NONE, Foe = INDEX_NONE;
@@ -111,7 +111,7 @@ struct FScene
     { return Snapshot.Encounter.Combatants.FindByPredicate([Id](const FCombatantState& U) { return U.Id == Id; }); }
 };
 
-bool MakeScene(FScene& Scene, int32 FoeX)
+bool MakeScene(FPoseScene& Scene, int32 FoeX)
 {
     FExpeditionRun Run;
     if (!StartRigRun(Run, 11, TEXT("pose-scene"))) { return false; }
@@ -148,7 +148,7 @@ FCombatResult MakeResult(ECombatCommandType Type, int32 Actor, int32 Target = IN
 
 // One scene played at every ending; the checks run on the poses seen at 1x and 2x and on the final pose everywhere.
 template <typename TCheck>
-void RunScene(FAutomationTestBase& Test, const TCHAR* Name, const FScene& Scene, const FCombatResult& Outcome, TCheck Check)
+void RunScene(FAutomationTestBase& Test, const TCHAR* Name, const FPoseScene& Scene, const FCombatResult& Outcome, TCheck Check)
 {
     for (const EEnd End : {EEnd::Normal, EEnd::Fast, EEnd::Instant, EEnd::SkipMid})
     {
@@ -219,7 +219,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
     using namespace RigPoseTest;
     // Fresh boards (reset, new run, fresh-process Resume) show the committed pose at once.
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 3))) { return false; }
         Scene.Unit(Scene.Before, Scene.Foe)->Life = ECombatLife::Dead;
         Scene.Unit(Scene.Before, Scene.Foe)->HP = 0;
@@ -233,7 +233,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("A fresh board snaps to the end of the held clip"), Show.Unit(Scene.Foe)->bPoseSnap);
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 3))) { return false; }
         FCombatResult Move = MakeResult(ECombatCommandType::Move, Scene.Hero);
         Move.Path = {FIntPoint(3, 3), FIntPoint(4, 3)};
@@ -248,7 +248,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         });
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 3))) { return false; }
         FCombatResult Strike = MakeResult(ECombatCommandType::Attack, Scene.Hero, Scene.Foe);
         Strike.bHit = true;
@@ -272,7 +272,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         });
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 3))) { return false; }
         FCombatResult Kill = MakeResult(ECombatCommandType::Attack, Scene.Hero, Scene.Foe);
         Kill.bHit = true;
@@ -287,7 +287,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         });
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 7))) { return false; }
         FCombatResult Shot = MakeResult(ECombatCommandType::Attack, Scene.Hero, Scene.Foe);
         Shot.bHit = true;
@@ -308,7 +308,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         });
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 3))) { return false; }
         // The foe downs the hero: the downed clip, not death.
         FCombatResult Blow = MakeResult(ECombatCommandType::Attack, Scene.Foe, Scene.Hero);
@@ -325,7 +325,7 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         });
     }
     {
-        FScene Scene;
+        FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 7))) { return false; }
         // The hero heals a downed ally: Cast for the healer, Recover for the ally, Idle after.
         Scene.Unit(Scene.Before, Scene.Ally)->Life = ECombatLife::Downed;
@@ -556,7 +556,7 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
                 {
                     View->SkipPresentation();
                     View->Tick(0.001f);
-                    ExpectFiguresConverged(*this, Label + TEXT(" after a skip"), *View, TEXT("skip"));
+                    ExpectFiguresConverged(*this, *View, Label + TEXT(" after a skip"));
                     ++Skips;
                 }
             }
