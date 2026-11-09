@@ -4,7 +4,7 @@ Updated 2026-11-03 for [factory follow-through #122](https://github.com/AustinKe
 
 ## Validated host
 
-On 2026-11-07 the owner moved all Unreal development and verification to **PlebDev Ultra** (Linux) ([#125](https://github.com/AustinKelsay/dnd-diceroll/issues/125)). The MacBook is no longer a build or test host. Earlier records below that cite Mac evidence describe that moment. Several agents share Ultra; ask for a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)).
+On 2026-11-07 the owner moved all Unreal development and verification to **PlebDev Ultra** (Linux) ([#125](https://github.com/AustinKelsay/dnd-diceroll/issues/125)). The MacBook is no longer a build or test host. Earlier records below that cite Mac evidence describe that moment. Several agents share Ultra. Since 2026-11-09 they take turns through a machine lock instead of asking a coordinator: every build, test, and package job is wrapped in `flock` on Ultra's shared lock file (see "Shared machine" in [development](../development.md)).
 
 ## Integrated
 
@@ -40,7 +40,7 @@ On 2026-11-07 the owner moved all Unreal development and verification to **PlebD
 
 ## Stability, parked work and limits
 
-- [Issue #32](https://github.com/AustinKelsay/dnd-diceroll/issues/32): recurring scene-culling assertion; [issue #35](https://github.com/AustinKelsay/dnd-diceroll/issues/35): intermittent packaged startup crash in the LLM tracker. Both remain accepted risks, owned by the separate `feature/32-renderer-stability` session. Preserve its checkout and processes; no fix is integrated. Green headless automation does not establish rendered stability.
+- Stability ([records](stability/README.md)): [#32](https://github.com/AustinKelsay/dnd-diceroll/issues/32) remains unresolved; [#35](https://github.com/AustinKelsay/dnd-diceroll/issues/35) has a likely, unvalidated startup-race explanation; [#157](https://github.com/AustinKelsay/dnd-diceroll/issues/157) has a confirmed failing-test trigger and an identified shutdown mechanism. All remain open. Green headless automation does not establish rendered stability.
 - [Issue #105](https://github.com/AustinKelsay/dnd-diceroll/issues/105): theme materials lack the Nanite usage flag. Rendered Mac (Metal SM6) packages warned; rendered Linux packages on Ultra do not, because Linux targets `VULKAN_SM5`, where Nanite is off. The flag is still missing and returns on any SM6 target; offscreen automation does not expose this path.
 - [Hex discussion #111](https://github.com/AustinKelsay/dnd-diceroll/issues/111#issuecomment-6609473858): squares stay. Do not build further work on `feature/111-hex-grid`; revisit only after the opt-in rules work and #112 land, through a separate proposal/ADR.
 - [Destructible terrain #99](https://github.com/AustinKelsay/dnd-diceroll/issues/99) and adjacent ideas #100–#104 are parked. The draft lives on `docs/99-destructible-terrain-spec`, not staging; nine owner decisions remain open. Do not treat its proposed save version or implementation details as accepted scope.
