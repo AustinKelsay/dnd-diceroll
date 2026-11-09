@@ -33,6 +33,17 @@ using namespace BuildRules;
 constexpr int32 PotionDice = 2;
 constexpr int32 PotionDie = 4;
 constexpr int32 PotionBonus = 2;
+constexpr int32 SacredFlameDie = 8; // SRD Sacred Flame, 1d8 radiant at character levels 1-4
+/** Full saving throw bonus: ability modifier plus proficiency where proficient. */
+int32 SaveBonusOf(const FCombatantState& Unit, EAbility Ability)
+{
+    FCharacterRules Character = Unit.AdventurerRole != EAdventurerRole::None
+        ? FProficiencyRules::PrebuiltCharacter(Unit.AdventurerRole, Unit.Level)
+        : FProficiencyRules::EnemyCharacter(Unit.Role);
+    // Enemy rules are built at level 1; proficiency follows the combatant's own level.
+    Character.Level = Unit.Level;
+    return Character.SaveBonus(Ability);
+}
 int32 CriticalThreshold(const FCombatantState& Hero)
 {
     if (const auto* B = FBuildCatalog::Find(Hero.BuildId)) { return B->CriticalThreshold; }
@@ -81,8 +92,11 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
             (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party ||
                 (Encounter.Ruleset == ERuleset::SRD
-                    ? (Unit.RescueTurnsLeft < 0 || Unit.RescueTurnsLeft > 3 || Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 3)
+                    // SRD has no rescue countdown. Dying holds 0-2 of each count; Stable is 3 successes and no failures.
+                    ? (Unit.RescueTurnsLeft != 0 || Unit.DeathSaveFailures > 2 || (Unit.DeathSaveSuccesses == 3 && Unit.DeathSaveFailures != 0))
                     : (Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)))) ||
+            // SRD death-save counts exist only while Downed.
+            (Encounter.Ruleset == ERuleset::SRD && Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
             Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
@@ -174,8 +188,9 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
     });
     if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
     {
-        if (--First->RescueTurnsLeft == 0) { First->Life = ECombatLife::Dead; }
-        AdvanceTurn();
+        DownedTurn(*First);
+        // SRD: a natural 20 death save revives the creature, which then takes this turn.
+        if (First->Life != ECombatLife::Conscious) { AdvanceTurn(); }
     }
     State.MovementLeft = Find(ActiveId())->Speed;
     return true;
@@ -424,6 +439,26 @@ bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FComb
         });
 }
 
+FCombatBattle::FAttackSetup FCombatBattle::AttackSetup(const FCombatantState& Actor, ECombatCommandType Action, const FCombatantState& Target) const
+{
+    FAttackSetup Setup;
+    // SRD Cleric ranged Attack is Sacred Flame (DEX save), Compact keeps the attack roll.
+    Setup.bSave = IsSrd() && Action == ECombatCommandType::Attack && Actor.AdventurerRole == EAdventurerRole::Cleric && Actor.Range > 1;
+    if (Setup.bSave)
+    {
+        const FCharacterRules Caster = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Cleric, Actor.Level);
+        Setup.TargetNumber = FSpellcastingRules::SaveDc(Caster.ProficiencyBonus(), Caster.AbilityModifier(EAbility::Wisdom));
+        // Sacred Flame gives no benefit from cover, so the save is the full Dexterity save bonus alone.
+        Setup.Modifier = SaveBonusOf(Target, EAbility::Dexterity);
+        return Setup;
+    }
+    Setup.Modifier = Actor.AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0);
+    Setup.TargetNumber = Target.ArmorClass + (IsSrd() ? CoverAcBonus(Actor.Id, Target.Id) : 0);
+    Setup.bAdvantage = IsSrd() && Target.Life == ECombatLife::Downed;
+    Setup.bAutoCritical = Setup.bAdvantage && GridDistance(Actor.Cell, Target.Cell) <= 1;
+    return Setup;
+}
+
 FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const
 {
     FActionForecast Forecast;
@@ -479,14 +514,26 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     case ECombatCommandType::PrecisionStrike:
     case ECombatCommandType::Attack:
     {
+        const FAttackSetup Setup = AttackSetup(*Actor, Action, *Target);
+        if (Setup.bSave)
+        {
+            // Saves have no natural 1 or 20 rule; the damage lands when the target fails.
+            Forecast.bSavingThrow = true;
+            Forecast.HitChancePercent = (400 - FCheckRules::SuccessOutOf400(Setup.Modifier, Setup.TargetNumber, ERollMode::Normal) + 2) / 4;
+            Effect(1, SacredFlameDie, 0);
+            break;
+        }
         Forecast.bAttackRoll = true;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
-        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
-        Forecast.HitChancePercent = Hits * 5;
-        Effect(1, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Setup.Modifier >= Setup.TargetNumber) ? 1 : 0; }
+        // Advantage keeps the higher of two d20s, so it misses only when both dice miss.
+        Forecast.HitChancePercent = Setup.bAdvantage ? (400 - (20 - Hits) * (20 - Hits) + 2) / 4 : Hits * 5;
+        // A hit that is always critical doubles the weapon and Sneak Attack dice.
+        const int32 WeaponDice = Setup.bAutoCritical ? 2 : 1;
+        Effect(WeaponDice, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
-        if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
+        if (Forecast.bSneakAttack) { Forecast.MinAmount += WeaponDice; Forecast.MaxAmount += WeaponDice * SneakDie; Forecast.Formula += FString::Printf(TEXT(" +%dd%d sneak"), WeaponDice, SneakDie); }
         break;
     }
     case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
@@ -567,20 +614,32 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (IsSrd() && Moving->bProne) { return Reject(TEXT("Prone: stand up (move to your cell) before crawling elsewhere.")); }
             Result.Path = PathTo(Command.ActorId, Command.Destination);
             if (Result.Path.IsEmpty()) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
-            const int32 Cost = Result.Path.Num();
+            int32 Cost = Result.Path.Num();
             TArray<FIntPoint> FullPath;
             FullPath.Add(Moving->Cell);
             FullPath.Append(Result.Path);
             Moving->Cell = Command.Destination;
+            if (IsSrd())
+            {
+                // A mover an opportunity attack drops stops in the cell it was leaving and pays only for the cells it moved.
+                Cost = ResolveOpportunityAttacks(*Moving, FullPath, Result);
+                Result.Path.SetNum(Cost);
+            }
             State.MovementLeft -= Cost;
-            Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft);
-            if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
+            Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft) + Result.Feedback;
             // Leaving reach of your own grapple victim ends it.
             if (IsSrd())
             {
                 for (FCombatantState& Other : State.Encounter.Combatants)
                 {
                     if (Other.GrapplerId == Moving->Id && GridDistance(Other.Cell, Moving->Cell) > 1) { Other.GrapplerId = INDEX_NONE; }
+                }
+                // A downed or dead mover cannot finish its turn. Pass the turn on even when the battle
+                // just ended, so the active combatant is conscious as Restore requires.
+                if (Moving->Life != ECombatLife::Conscious)
+                {
+                    CheckOutcome();
+                    AdvanceTurn();
                 }
             }
         }
@@ -647,19 +706,11 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
         const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
-        // SRD Cleric ranged Attack is Sacred Flame (DEX save), Compact keeps the attack roll.
-        const bool bSacredFlame = IsSrd() && Command.Type == ECombatCommandType::Attack
-            && Actor->AdventurerRole == EAdventurerRole::Cleric && Actor->Range > 1;
-        if (bSacredFlame)
+        const FAttackSetup Setup = AttackSetup(*Actor, Command.Type, *Target);
+        if (Setup.bSave)
         {
-            const FCharacterRules Caster = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Cleric, Actor->Level);
-            const int32 Dc = FSpellcastingRules::SaveDc(Caster.ProficiencyBonus(), Caster.AbilityModifier(EAbility::Wisdom));
-            const FCharacterRules Defender = [&]() {
-                if (Target->AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(Target->AdventurerRole, Target->Level); }
-                FCharacterRules Enemy; Enemy.Scores = AbilityScoresOf(*Target); Enemy.Level = Target->Level; return Enemy;
-            }();
-            const int32 CoverDex = CoverAcBonus(Command.ActorId, Command.TargetId);
-            const int32 DexMod = Defender.AbilityModifier(EAbility::Dexterity) + CoverDex;
+            const int32 Dc = Setup.TargetNumber;
+            const int32 DexMod = Setup.Modifier;
             const FD20Outcome Save = FCheckRules::Resolve(DexMod, Dc, ERollMode::Normal, State.RandomState);
             Result.Type = Command.Type; Result.ActorId = Command.ActorId; Result.TargetId = Command.TargetId;
             Result.NaturalRoll = Save.Kept;
@@ -672,7 +723,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (Result.bHit)
             {
                 DiceLog = &Result.EffectDice;
-                Result.Damage = Roll(8); // Sacred Flame 1d8 radiant (level 1 cantrip)
+                Result.Damage = Roll(SacredFlameDie);
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
@@ -687,12 +738,14 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         else
         {
             Result.NaturalRoll = Roll(20);
-            Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
-            Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
-            const int32 Cover = IsSrd() ? CoverAcBonus(Command.ActorId, Command.TargetId) : 0;
-            Result.TargetArmorClass = Target->ArmorClass + Cover;
+            // SRD Advantage: roll a second d20 and keep the higher.
+            if (Setup.bAdvantage) { const int32 Second = Roll(20); Result.NaturalRoll = FMath::Max(Result.NaturalRoll, Second); }
+            Result.AttackTotal = Result.NaturalRoll + Setup.Modifier;
+            Result.AttackBonus = Setup.Modifier;
+            Result.TargetArmorClass = Setup.TargetNumber;
             Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
             Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+            Result.bCritical = Result.bCritical || (Result.bHit && Setup.bAutoCritical);
             if (Result.bHit)
             {
                 DiceLog = &Result.EffectDice;
@@ -917,10 +970,11 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage, bool bCri
         if (Real > 0)
         {
             FDeathSaveTally Tally; Tally.Successes = Target.DeathSaveSuccesses; Tally.Failures = Target.DeathSaveFailures;
-            if (Tally.Successes >= 3) { Tally.Successes = 0; }
+            // Damage to a stable creature starts a fresh tally.
+            if (Tally.Successes >= 3) { Tally = FDeathSaveTally(); }
             const EDeathState Outcome = FDeathSaveRules::ApplyDamageAtZero(Tally, Real, bCritical, Target.MaxHP);
             Target.DeathSaveSuccesses = Tally.Successes; Target.DeathSaveFailures = FMath::Min(Tally.Failures, 3);
-            if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; }
+            if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; }
         }
         return;
     }
@@ -988,7 +1042,8 @@ void FCombatBattle::DownedTurn(FCombatantState& Unit)
     Unit.DeathSaveSuccesses = Tally.Successes; Unit.DeathSaveFailures = Tally.Failures;
     if (Outcome == EDeathState::Dead) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
     else if (Outcome == EDeathState::Revived) { Unit.Life = ECombatLife::Conscious; Unit.HP = 1; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
-    else if (Outcome == EDeathState::Stable) { Unit.DeathSaveSuccesses = 3; }
+    // Becoming Stable resets both counts; three successes remain the saved stable marker.
+    else if (Outcome == EDeathState::Stable) { Unit.DeathSaveSuccesses = 3; Unit.DeathSaveFailures = 0; }
 }
 
 void FCombatBattle::AdvanceTurn()
@@ -1003,7 +1058,8 @@ void FCombatBattle::AdvanceTurn()
         }
         FCombatantState* Next = MutableFind(ActiveId());
         if (Next->Life == ECombatLife::Downed) { DownedTurn(*Next); }
-        else if (Next->Life == ECombatLife::Conscious)
+        // SRD: a natural 20 death save revives the creature, which then takes this turn as normal.
+        if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
             if (IsSrd())
@@ -1062,7 +1118,8 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     }
     const TArray<int32> Targets = LegalTargets(Id);
     if (!Targets.IsEmpty()) { Results.Add(Submit({ECombatCommandType::Attack, Id, {}, Targets[0]})); }
-    if (State.Phase == EBattlePhase::Fighting) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
+    // An SRD opportunity attack can end the mover's turn early.
+    if (State.Phase == EBattlePhase::Fighting && ActiveId() == Id) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
     return Results;
 }
 
@@ -1186,29 +1243,38 @@ int32 FCombatBattle::CoverAcBonus(int32 ActorId, int32 TargetId) const
     return Best;
 }
 
-void FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result)
+int32 FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result)
 {
-    if (!IsSrd() || Path.Num() < 2) { return; }
-    for (FCombatantState& Reactor : State.Encounter.Combatants)
+    // Path[0] is the start cell. Reactions resolve in path order, right before the step that leaves
+    // the reactor's reach; reactors provoked by the same step roll in combatant order. Each rolls
+    // its d20, then its damage die and any critical die.
+    const int32 Reach = 1; // melee reach for OA; ranged opportunity deferred
+    for (int32 Step = 1; Step < Path.Num(); ++Step)
     {
-        if (Reactor.Id == Mover.Id || Reactor.Side == Mover.Side || Reactor.Life != ECombatLife::Conscious || !Reactor.bReactionAvailable) { continue; }
-        const int32 Reach = 1; // melee reach for OA; ranged opportunity deferred
-        const int32 Provoking = FOpportunityRules::FirstProvokingCell(Path, Reactor.Cell, Reach, Mover.bDisengaged, Reactor.bReactionAvailable);
-        if (Provoking == INDEX_NONE) { continue; }
-        Reactor.bReactionAvailable = false;
-        const int32 Natural = Roll(20);
-        const int32 Total = Natural + Reactor.AttackBonus;
-        const bool bCrit = Natural >= CriticalThreshold(Reactor);
-        const bool bHit = bCrit || (Natural != 1 && Total >= Mover.ArmorClass);
-        int32 Damage = 0;
-        if (bHit)
+        for (FCombatantState& Reactor : State.Encounter.Combatants)
         {
-            Damage = Roll(Reactor.DamageDie) + Reactor.DamageBonus;
-            if (bCrit) { Damage += Roll(Reactor.DamageDie); }
-            ApplyDamage(Mover, Damage, bCrit);
+            if (Reactor.Id == Mover.Id || Reactor.Side == Mover.Side || Reactor.Life != ECombatLife::Conscious ||
+                !FOpportunityRules::StepProvokes(Reactor.Cell, Reach, Path[Step - 1], Path[Step], Mover.bDisengaged, false, Reactor.bReactionAvailable)) { continue; }
+            Mover.Cell = Path[Step - 1];
+            Reactor.bReactionAvailable = false;
+            const int32 Natural = Roll(20);
+            const int32 Total = Natural + Reactor.AttackBonus;
+            const bool bCrit = Natural >= CriticalThreshold(Reactor);
+            const bool bHit = bCrit || (Natural != 1 && Total >= Mover.ArmorClass);
+            int32 Damage = 0;
+            if (bHit)
+            {
+                DiceLog = &Result.EffectDice;
+                Damage = Roll(Reactor.DamageDie) + Reactor.DamageBonus;
+                if (bCrit) { Damage += Roll(Reactor.DamageDie); }
+                DiceLog = nullptr;
+                ApplyDamage(Mover, Damage, bCrit);
+            }
+            Result.Feedback += FString::Printf(TEXT(" | OA %s: d20 %d+%d=%d vs AC %d %s %d"),
+                *Reactor.Name, Natural, Reactor.AttackBonus, Total, Mover.ArmorClass, bHit ? TEXT("HIT") : TEXT("MISS"), Damage);
+            if (Mover.Life != ECombatLife::Conscious) { return Step - 1; }
         }
-        Result.Feedback += FString::Printf(TEXT(" | OA %s: d20 %d+%d=%d vs AC %d %s %d"),
-            *Reactor.Name, Natural, Reactor.AttackBonus, Total, Mover.ArmorClass, bHit ? TEXT("HIT") : TEXT("MISS"), Damage);
-        if (Mover.Life != ECombatLife::Conscious) { break; }
     }
+    Mover.Cell = Path.Last();
+    return Path.Num() - 1;
 }

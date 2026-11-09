@@ -83,6 +83,7 @@ GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
 CAPTURE_MODES = ("battle", "targeting", "overview", "start")
+# Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 3200)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
@@ -694,17 +695,24 @@ class Dev:
         output = self.w.local / "automation" / stamp()
         output.mkdir(parents=True)
         log = output / "automation.log"
+        crashes_before = crash_folders(self.w.root)
         with self.config_guard():
             code = self.run_bounded(self.automation_command(pattern, output, log), output / "console.log", timeout=300)
+        # Check the process lifecycle first, so a crash is reported even when tests also fail (#157).
+        lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root)
+        failed_lifecycle = f" Failed lifecycle: {'; '.join(lifecycle)}." if lifecycle else ""
         report_path = output / "index.json"
         if not report_path.is_file():
-            raise RuntimeError(f"Automation produced no test report (possibly zero matched tests); inspect {log}")
-        report = automation_result(json.loads(report_path.read_text(encoding="utf-8-sig")))
+            raise RuntimeError(f"Automation produced no test report (possibly zero matched tests); inspect {log}.{failed_lifecycle}")
+        try:
+            report = automation_result(json.loads(report_path.read_text(encoding="utf-8-sig")))
+        except RuntimeError as error:
+            raise RuntimeError(f"{error}.{failed_lifecycle} Inspect {log}") from None
         events = log_events(log.read_text(errors="replace"))
         if events["errors"]:
-            raise RuntimeError(f"Automation logged errors: {events['errors']}")
-        if code != 0:
-            raise RuntimeError(f"Engine exited {code} after the tests; inspect {log}")
+            raise RuntimeError(f"Automation logged errors: {events['errors']}.{failed_lifecycle}")
+        if lifecycle:
+            raise RuntimeError(f"Tests passed but the run is a failed lifecycle: {'; '.join(lifecycle)} after the tests; inspect {log}")
         write_json(output / "verified.json", {**report, "filter": pattern, "project": str(self.w.project), "exit_code": code, "warnings": events["warnings"]})
         if events["warnings"] and not allow_warnings:
             raise RuntimeError(f"{len(events['warnings'])} warning line(s); the gate is zero. First: {events['warnings'][0]} Inspect {log}")
@@ -768,9 +776,11 @@ class Dev:
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
                                f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *self.native_limits()]
                     print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}")
+                    crashes_before = crash_folders(self.w.root)
                     code = self.run_game(command, target / "console.log", timeout)
-                    if code != 0:
-                        raise RuntimeError(f"Game exited {code} for {name} at {text}; inspect {log}")
+                    lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root, who="Game")
+                    if lifecycle:
+                        raise RuntimeError(f"Failed lifecycle for {name} at {text}: {'; '.join(lifecycle)}; inspect {log}")
                     manifest = verify_capture(target / "manifest.json", shots, (width, height), target)
                     runs.append({"fixture": name, "seed": manifest.get("seed", info.get("seed")), "board": [manifest.get("boardWidth"), manifest.get("boardHeight")],
                                  "fixture_info": info, "resolution": text, "primitives": primitives, "themed": manifest.get("themed"),
@@ -839,6 +849,24 @@ class Dev:
         write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
                                               "package_warnings": package_events["warnings"], "package_errors": package_events["errors"]})
         print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: launch {len(events['warnings'])}, package {len(package_events['warnings'])}; package error lines: {len(package_events['errors'])}; evidence: {output}")
+
+def crash_folders(root):
+    """Names of Unreal crash reports under the project's Saved/Crashes (crashinfo-*)."""
+    folder = Path(root) / "Saved" / "Crashes"
+    return {p.name for p in folder.glob("crashinfo-*") if p.is_dir()} if folder.is_dir() else set()
+
+
+def lifecycle_problems(code, new_crashes, root, who="Engine"):
+    """Why a native run's process lifecycle failed (#157): abnormal exit, signal or a new crash report; empty when clean."""
+    problems = []
+    if code is not None and code < 0:
+        problems.append(f"{who} was killed by signal {-code}")
+    elif code:
+        problems.append(f"{who} exited {code}")
+    if new_crashes:
+        problems.append("new crash report(s): " + ", ".join(str(Path(root) / "Saved" / "Crashes" / name) for name in sorted(new_crashes)))
+    return problems
+
 
 def pid_exists(pid):
     """True until the process is fully gone; an exiting editor can drop out of `ps` matching first."""

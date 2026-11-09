@@ -3,7 +3,7 @@
 #include "Rules/ConcentrationRules.h"
 #include "Rules/SpellRules.h"
 
-/** F4 regression: RequiresConcentration reads FSpellFacts::bConcentration. */
+/** RequiresConcentration reads FSpellFacts::bConcentration. */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRequiresConcentrationFlagRegressionTest, "Project.Expedition.Rules.RequiresConcentrationFlag",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRequiresConcentrationFlagRegressionTest::RunTest(const FString& Parameters)

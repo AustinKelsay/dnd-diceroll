@@ -2,7 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Rules/StealthRules.h"
 
-/** F1 regression: SRD 5.2.1 Surprise is Initiative Disadvantage; no skipped turn. */
+/** SRD 5.2.1 Surprise is Initiative Disadvantage; no skipped turn. */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurpriseInitiativeRegressionTest, "Project.Expedition.Rules.SurpriseInitiativeDisadvantage",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSurpriseInitiativeRegressionTest::RunTest(const FString& Parameters)

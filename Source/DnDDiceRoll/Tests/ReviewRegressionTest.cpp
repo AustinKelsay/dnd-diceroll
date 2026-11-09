@@ -1,8 +1,10 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "Templates/Function.h"
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/AbilityRules.h"
+#include "Rules/CheckRules.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/OpportunityRules.h"
 #include "Persistence/ExpeditionSave.h"
@@ -21,6 +23,47 @@ bool Activate(FCombatBattle& B, int32 Id)
 {
     for (int32 I = 0; I < 4 && B.ActiveId() != Id; ++I) { if (!B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}).bAccepted) { return false; } }
     return B.ActiveId() == Id;
+}
+/** A random state whose next d20 satisfies Accept, so a test can pick the roll it needs. */
+int32 StateForD20(TFunctionRef<bool(int32)> Accept)
+{
+    for (int32 Seed = 1; Seed < 100000; ++Seed) { FRandomStream R(Seed); if (Accept(R.RandRange(1, 20))) { return Seed; } }
+    return 0;
+}
+/** ReviewDuo plus a conscious ally, with the hero downed and next in turn order. */
+FCombatSnapshot HeroDownedNext(FCombatBattle& B, int32 Successes, int32 Failures)
+{
+    FString Error; auto E = ReviewDuo(); FCombatantState Ally;
+    FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {1, 2}; E.Combatants.Add(Ally);
+    B.Start(E, 42, Error);
+    auto S = B.Snapshot();
+    S.TurnIndex = (S.TurnOrder.IndexOfByKey(1) + S.TurnOrder.Num() - 1) % S.TurnOrder.Num();
+    S.MovementLeft = 0;
+    auto& Hero = S.Encounter.Combatants[0];
+    Hero.Life = ECombatLife::Downed; Hero.HP = 0; Hero.DeathSaveSuccesses = Successes; Hero.DeathSaveFailures = Failures;
+    return S;
+}
+/** SRD duel: {1,1} attacks {4,2}, with an optional pillar at {4,1} giving the target half cover. */
+FCombatEncounter CoverDuel(const TCHAR* BuildId, const TCHAR* FoeRole, bool bPillar)
+{
+    FCombatEncounter E; E.Ruleset = ERuleset::SRD;
+    if (bPillar) { E.BlockedCells = {{4, 1}}; }
+    FCombatantState Hero; FBuildCatalog::Create(BuildId, 1, TEXT("Hero"), Hero); Hero.Cell = {1, 1}; Hero.Range = 5;
+    FCombatantState Foe; Foe.Id = 2; Foe.Name = FoeRole; Foe.Role = FoeRole; Foe.Side = ECombatSide::Enemy;
+    Foe.Cell = {4, 2}; Foe.HP = Foe.MaxHP = 40; Foe.ArmorClass = 15;
+    E.Combatants = {Hero, Foe}; return E;
+}
+/** One-row corridor: walking {0,0} to {4,0} leaves the foe's reach when stepping off {2,0}. */
+FCombatEncounter Corridor(bool bAlly)
+{
+    FCombatEncounter E; E.Ruleset = ERuleset::SRD; E.Width = 6; E.Height = 2;
+    FCombatantState Hero; FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Arden"), Hero);
+    Hero.Cell = {0, 0}; Hero.MaxHP = 20; Hero.HP = 1; Hero.ArmorClass = 12; Hero.Speed = 6;
+    FCombatantState Foe; Foe.Id = 2; Foe.Name = TEXT("Raider"); Foe.Role = TEXT("Raider"); Foe.Side = ECombatSide::Enemy;
+    Foe.Cell = {2, 1}; Foe.HP = Foe.MaxHP = 40; Foe.AttackBonus = 30; Foe.DamageDie = 4; Foe.DamageBonus = 0;
+    E.Combatants = {Hero, Foe};
+    if (bAlly) { FCombatantState Ally; FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {5, 1}; E.Combatants.Add(Ally); }
+    return E;
 }
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewSavedFieldsTest, "Project.Expedition.Persistence.ReviewSavedFieldValidation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -125,29 +168,49 @@ bool FReviewGrappleSaveTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewZeroHpDamageTest, "Project.Expedition.Combat.DamageAtZeroKeepsTally", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FReviewZeroHpDamageTest::RunTest(const FString& Parameters)
 {
-    FString Error; bool Hit = false, Crit = false;
-    for (int32 Seed = 1; Seed <= 200 && !(Hit && Crit); ++Seed)
+    // Attacks on an Unconscious creature have Advantage, and a hit from within 5 feet is a critical hit.
+    FString Error; bool Near = false, Far = false;
+    for (int32 Seed = 1; Seed <= 200 && !(Near && Far); ++Seed)
     {
+        const bool bAdjacent = Seed % 2 == 1;
         auto E = ReviewDuo(); FCombatantState Ally;
         FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {1, 2}; E.Combatants.Add(Ally);
+        if (!bAdjacent) { E.Combatants[1].Cell = {4, 1}; E.Combatants[1].Range = 3; }
         FCombatBattle B; if (!B.Start(E, Seed, Error) || !Activate(B, 2)) { return false; }
         auto S = B.Snapshot(); auto& Downed = S.Encounter.Combatants[0];
-        Downed.Life = ECombatLife::Downed; Downed.HP = 0; Downed.MaxHP = 40; Downed.DeathSaveSuccesses = 1; Downed.DeathSaveFailures = 1;
+        Downed.Life = ECombatLife::Downed; Downed.HP = 0; Downed.MaxHP = 40; Downed.DeathSaveSuccesses = 1; Downed.DeathSaveFailures = 0;
         if (!TestTrue(TEXT("Restore downed fixture"), B.Restore(S, Error))) { return false; }
+        FRandomStream Dice(S.RandomState);
+        const int32 First = Dice.RandRange(1, 20);
+        const int32 Second = Dice.RandRange(1, 20);
+        const FActionForecast Preview = B.Forecast(2, ECombatCommandType::Attack, 1);
+        TestEqual(TEXT("Forecast reflects Advantage"), Preview.HitChancePercent, 100);
         const auto R = B.Submit({ECombatCommandType::Attack, 2, {}, 1});
         if (!TestTrue(TEXT("SRD can damage a downed target"), R.bAccepted)) { return false; }
+        TestEqual(TEXT("Advantage keeps the higher of two d20s"), R.NaturalRoll, FMath::Max(First, Second));
         if (!R.bHit) { continue; }
-        Hit |= !R.bCritical; Crit |= R.bCritical;
+        if (bAdjacent) { TestTrue(TEXT("Adjacent hit on an Unconscious creature is critical"), R.bCritical); Near = true; }
+        else { Far |= !R.bCritical; }
+        if (bAdjacent || !R.bCritical) { TestEqual(TEXT("Forecast damage matches the hit"), R.Damage, Preview.MinAmount); }
         TestEqual(TEXT("Keep successes on damage while dying"), B.Find(1)->DeathSaveSuccesses, 1);
-        TestEqual(TEXT("One failure or two on critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 3 : 2);
-        TestTrue(TEXT("Third failure kills"), B.Find(1)->Life == (R.bCritical ? ECombatLife::Dead : ECombatLife::Downed));
+        TestEqual(TEXT("One failure or two on critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 2 : 1);
+        TestTrue(TEXT("Still dying"), B.Find(1)->Life == ECombatLife::Downed);
         // Replaying the same hit against temporary HP cannot add a failure.
         S.Encounter.Combatants[0].TemporaryHP = 10;
         if (!TestTrue(TEXT("Restore temp HP fixture"), B.Restore(S, Error))) { return false; }
         B.Submit({ECombatCommandType::Attack, 2, {}, 1});
-        TestEqual(TEXT("Absorbed damage adds no failure"), B.Find(1)->DeathSaveFailures, 1);
+        TestEqual(TEXT("Absorbed damage adds no failure"), B.Find(1)->DeathSaveFailures, 0);
+        if (R.bCritical)
+        {
+            // The same critical on a creature with one failure is its third.
+            S.Encounter.Combatants[0].TemporaryHP = 0; S.Encounter.Combatants[0].DeathSaveFailures = 1;
+            if (!TestTrue(TEXT("Restore one-failure fixture"), B.Restore(S, Error))) { return false; }
+            B.Submit({ECombatCommandType::Attack, 2, {}, 1});
+            TestTrue(TEXT("Third failure kills"), B.Find(1)->Life == ECombatLife::Dead);
+            TestEqual(TEXT("The dead keep no death-save counts"), B.Find(1)->DeathSaveSuccesses + B.Find(1)->DeathSaveFailures, 0);
+        }
     }
-    TestTrue(TEXT("Normal and critical exercised"), Hit && Crit);
+    TestTrue(TEXT("Adjacent and ranged hits exercised"), Near && Far);
     return !HasAnyErrors();
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewDistanceTest, "Project.Expedition.Combat.OpportunityGrappleShareDistance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -160,6 +223,185 @@ bool FReviewDistanceTest::RunTest(const FString& Parameters)
     const auto R = B.Submit({ECombatCommandType::Move, 1, {0, 1}});
     TestTrue(TEXT("Move accepted"), R.bAccepted);
     TestTrue(TEXT("No phantom diagonal opportunity attack"), B.Find(2)->bReactionAvailable);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewOpportunityStopTest, "Project.Expedition.Combat.OpportunityAttackStopsDroppedMover", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewOpportunityStopTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    for (const bool bAlly : {true, false})
+    {
+        for (const int32 Natural : {1, 12, 20})
+        {
+            FCombatBattle B;
+            if (!TestTrue(TEXT("Corridor starts"), B.Start(Corridor(bAlly), 42, Error)) || !TestTrue(TEXT("Hero active"), Activate(B, 1))) { return false; }
+            auto S = B.Snapshot();
+            S.RandomState = StateForD20([Natural](int32 Die) { return Die == Natural; });
+            if (!TestTrue(TEXT("Restore chosen dice"), B.Restore(S, Error))) { return false; }
+            FRandomStream Dice(S.RandomState);
+            TestEqual(TEXT("Chosen attack roll"), Dice.RandRange(1, 20), Natural);
+            const int32 DamageDie = Dice.RandRange(1, 4);
+            const int32 CriticalDie = Dice.RandRange(1, 4);
+            const FCombatResult R = B.Submit({ECombatCommandType::Move, 1, {4, 0}});
+            if (!TestTrue(TEXT("Move accepted"), R.bAccepted)) { return false; }
+            const bool bDropped = Natural != 1;
+            const int32 Moved = bDropped ? 2 : 4;
+            TestEqual(TEXT("Mover stops in the cell it was leaving"), B.Find(1)->Cell, bDropped ? FIntPoint(2, 0) : FIntPoint(4, 0));
+            TestEqual(TEXT("Path holds only the cells moved"), R.Path.Num(), Moved);
+            if (!R.Path.IsEmpty()) { TestEqual(TEXT("Path ends at the mover"), R.Path.Last(), B.Find(1)->Cell); }
+            TestTrue(TEXT("Pays only for the cells moved"), R.Feedback.StartsWith(FString::Printf(TEXT("Arden moves %d cells (%d left)."), Moved, S.MovementLeft - Moved)));
+            TestEqual(TEXT("Damage dice logged"), R.EffectDice.Num(), Natural == 1 ? 0 : Natural == 20 ? 2 : 1);
+            if (R.EffectDice.Num() >= 1) { TestEqual(TEXT("Damage die first"), R.EffectDice[0].Value, DamageDie); TestEqual(TEXT("Weapon die sides"), R.EffectDice[0].Sides, 4); }
+            if (R.EffectDice.Num() >= 2) { TestEqual(TEXT("Critical die second"), R.EffectDice[1].Value, CriticalDie); }
+            const FCombatantState* Active = B.Find(B.ActiveId());
+            if (!TestNotNull(TEXT("Active combatant"), Active)) { return false; }
+            TestTrue(TEXT("Active combatant is conscious"), Active->Life == ECombatLife::Conscious);
+            FCombatBattle Copy;
+            TestTrue(FString::Printf(TEXT("Snapshot restores: %s"), *Error), Copy.Restore(B.Snapshot(), Error));
+            if (!bDropped)
+            {
+                TestEqual(TEXT("Missed mover keeps its turn"), B.ActiveId(), 1);
+                TestEqual(TEXT("Full move paid"), B.Snapshot().MovementLeft, S.MovementLeft - 4);
+                TestFalse(TEXT("Reaction spent"), B.Find(2)->bReactionAvailable);
+            }
+            else if (bAlly)
+            {
+                TestTrue(TEXT("Mover downed"), B.Find(1)->Life == ECombatLife::Downed && R.Downed.Contains(1));
+                TestTrue(TEXT("Battle continues"), B.Snapshot().Phase == EBattlePhase::Fighting);
+                TestTrue(TEXT("Turn passed on"), B.ActiveId() != 1);
+                TestTrue(TEXT("Next combatant can act"), B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}).bAccepted);
+            }
+            else
+            {
+                TestTrue(TEXT("Last hero down is a defeat"), B.Snapshot().Phase == EBattlePhase::Defeat);
+                TestTrue(TEXT("Unrescued hero dies at defeat"), B.Find(1)->Life == ECombatLife::Dead && R.Died.Contains(1));
+            }
+        }
+    }
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewNaturalTwentyTurnTest, "Project.Expedition.Combat.NaturalTwentyDeathSaveTakesTurn", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewNaturalTwentyTurnTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    auto S = HeroDownedNext(B, 1, 2);
+    S.RandomState = StateForD20([](int32 Die) { return Die == 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore downed hero: %s"), *Error), B.Restore(S, Error))) { return false; }
+    if (!TestTrue(TEXT("Previous turn ends"), B.Submit({ECombatCommandType::EndTurn, S.TurnOrder[S.TurnIndex]}).bAccepted)) { return false; }
+    TestEqual(TEXT("Revived creature takes this turn"), B.ActiveId(), 1);
+    TestTrue(TEXT("Revived with 1 HP"), B.Find(1)->Life == ECombatLife::Conscious && B.Find(1)->HP == 1);
+    TestEqual(TEXT("Successes cleared"), B.Find(1)->DeathSaveSuccesses, 0);
+    TestEqual(TEXT("Failures cleared"), B.Find(1)->DeathSaveFailures, 0);
+    TestEqual(TEXT("Full movement"), B.Snapshot().MovementLeft, B.Find(1)->Speed);
+    TestTrue(TEXT("Action and bonus action ready"), B.Snapshot().bActionAvailable && B.Snapshot().bBonusActionAvailable);
+    TestTrue(TEXT("Revived creature can act"), B.Submit({ECombatCommandType::EndTurn, 1}).bAccepted);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewStableResetTest, "Project.Expedition.Combat.StableResetsDeathSaves", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewStableResetTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    auto S = HeroDownedNext(B, 2, 2);
+    S.RandomState = StateForD20([](int32 Die) { return Die >= 10 && Die < 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore dying hero: %s"), *Error), B.Restore(S, Error))) { return false; }
+    if (!TestTrue(TEXT("Previous turn ends"), B.Submit({ECombatCommandType::EndTurn, S.TurnOrder[S.TurnIndex]}).bAccepted)) { return false; }
+    TestTrue(TEXT("Stable creature stays downed"), B.Find(1)->Life == ECombatLife::Downed);
+    TestEqual(TEXT("Stable marker"), B.Find(1)->DeathSaveSuccesses, 3);
+    TestEqual(TEXT("Becoming Stable clears failures"), B.Find(1)->DeathSaveFailures, 0);
+    // Damage to the stable creature starts a fresh tally rather than adding to the old failures.
+    auto Stable = B.Snapshot();
+    Stable.TurnIndex = Stable.TurnOrder.IndexOfByKey(2); Stable.MovementLeft = 0;
+    Stable.RandomState = StateForD20([](int32 Die) { return Die > 1 && Die < 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore stable hero: %s"), *Error), B.Restore(Stable, Error))) { return false; }
+    const FCombatResult R = B.Submit({ECombatCommandType::Attack, 2, {}, 1});
+    if (!TestTrue(TEXT("Foe hits the stable hero"), R.bAccepted && R.bHit)) { return false; }
+    TestTrue(TEXT("Still dying, not dead"), B.Find(1)->Life == ECombatLife::Downed);
+    TestEqual(TEXT("Fresh successes"), B.Find(1)->DeathSaveSuccesses, 0);
+    TestEqual(TEXT("Fresh failures: one, two on a critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 2 : 1);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewForecastAgreementTest, "Project.Expedition.Combat.SrdForecastMatchesResolution", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewForecastAgreementTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    // Sacred Flame: a Dexterity save with the full save bonus (an archer is proficient) and no cover benefit.
+    for (const bool bPillar : {false, true})
+    {
+        const TCHAR* Role = bPillar ? TEXT("Raider") : TEXT("Archer");
+        FCombatBattle B;
+        if (!TestTrue(TEXT("Sacred Flame duel"), B.Start(CoverDuel(TEXT("cleric.life"), Role, bPillar), 7, Error)) || !TestTrue(TEXT("Cleric active"), Activate(B, 1))) { return false; }
+        const FActionForecast Preview = B.Forecast(1, ECombatCommandType::Attack, 2);
+        const FCombatResult R = B.Submit({ECombatCommandType::Attack, 1, {}, 2});
+        if (!TestTrue(TEXT("Sacred Flame accepted"), R.bAccepted && R.Feedback.Contains(TEXT("Sacred Flame")))) { return false; }
+        TestEqual(TEXT("Full Dexterity save bonus, no cover"), R.AttackBonus, FProficiencyRules::EnemyCharacter(Role).SaveBonus(EAbility::Dexterity));
+        TestTrue(TEXT("Forecast is a save, not an attack roll"), Preview.bValid && Preview.bSavingThrow && !Preview.bAttackRoll);
+        TestEqual(TEXT("Forecast fail chance uses the resolved save"), Preview.HitChancePercent, (400 - FCheckRules::SuccessOutOf400(R.AttackBonus, R.TargetArmorClass, ERollMode::Normal) + 2) / 4);
+        TestTrue(TEXT("Forecast damage is 1d8"), Preview.MinAmount == 1 && Preview.MaxAmount == 8);
+        if (R.bHit) { TestTrue(TEXT("Damage within forecast"), R.Damage >= Preview.MinAmount && R.Damage <= Preview.MaxAmount); }
+    }
+    // An enemy's save proficiency follows its own level, not the level 1 default.
+    {
+        FCombatEncounter Veteran = CoverDuel(TEXT("cleric.life"), TEXT("Archer"), false);
+        Veteran.Combatants[1].Level = 5;
+        FCharacterRules Expected = FProficiencyRules::EnemyCharacter(TEXT("Archer"));
+        const int32 LevelOneBonus = Expected.SaveBonus(EAbility::Dexterity);
+        Expected.Level = 5;
+        FCombatBattle Duel;
+        if (!TestTrue(TEXT("Veteran duel"), Duel.Start(Veteran, 7, Error)) || !TestTrue(TEXT("Cleric active against veteran"), Activate(Duel, 1))) { return false; }
+        const FActionForecast VeteranPreview = Duel.Forecast(1, ECombatCommandType::Attack, 2);
+        const FCombatResult VeteranResult = Duel.Submit({ECombatCommandType::Attack, 1, {}, 2});
+        if (!TestTrue(TEXT("Sacred Flame accepted against veteran"), VeteranResult.bAccepted)) { return false; }
+        TestTrue(TEXT("Level 5 raises the proficient save"), Expected.SaveBonus(EAbility::Dexterity) > LevelOneBonus);
+        TestEqual(TEXT("Save bonus uses the enemy's level"), VeteranResult.AttackBonus, Expected.SaveBonus(EAbility::Dexterity));
+        TestEqual(TEXT("Forecast uses the enemy's level"), VeteranPreview.HitChancePercent, (400 - FCheckRules::SuccessOutOf400(VeteranResult.AttackBonus, VeteranResult.TargetArmorClass, ERollMode::Normal) + 2) / 4);
+    }
+    // Weapon attack: forecast and resolution both count the pillar's half cover.
+    FCombatBattle B;
+    if (!TestTrue(TEXT("Weapon duel"), B.Start(CoverDuel(TEXT("rogue.thief"), TEXT("Raider"), true), 7, Error)) || !TestTrue(TEXT("Rogue active"), Activate(B, 1))) { return false; }
+    const FActionForecast Preview = B.Forecast(1, ECombatCommandType::Attack, 2);
+    const FCombatResult R = B.Submit({ECombatCommandType::Attack, 1, {}, 2});
+    if (!TestTrue(TEXT("Attack accepted"), R.bAccepted)) { return false; }
+    TestEqual(TEXT("Half cover adds 2 AC"), R.TargetArmorClass, 17);
+    const FBuildDefinition* Build = FBuildCatalog::Find(TEXT("rogue.thief"));
+    if (!TestNotNull(TEXT("Rogue build"), Build)) { return false; }
+    int32 Hits = 0;
+    for (int32 Natural = 1; Natural <= 20; ++Natural)
+    { Hits += Natural >= Build->CriticalThreshold || (Natural != 1 && Natural + R.AttackBonus >= R.TargetArmorClass) ? 1 : 0; }
+    TestTrue(TEXT("Forecast is an attack roll"), Preview.bValid && Preview.bAttackRoll && !Preview.bSavingThrow);
+    TestEqual(TEXT("Forecast hit chance uses the covered AC"), Preview.HitChancePercent, Hits * 5);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewDeathSaveRestoreTest, "Project.Expedition.Persistence.RestoreRejectsImpossibleDeathSaves", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewDeathSaveRestoreTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    const FCombatSnapshot Good = HeroDownedNext(B, 0, 0);
+    // States the battle can reach load: dying, stable, and dead without counts.
+    for (int32 Case = 0; Case < 3; ++Case)
+    {
+        auto Reachable = Good; auto& Hero = Reachable.Encounter.Combatants[0];
+        if (Case == 0) { Hero.DeathSaveSuccesses = 2; Hero.DeathSaveFailures = 2; }
+        if (Case == 1) { Hero.DeathSaveSuccesses = 3; }
+        if (Case == 2) { Hero.Life = ECombatLife::Dead; }
+        TestTrue(FString::Printf(TEXT("Restore reachable state %d: %s"), Case, *Error), B.Restore(Reachable, Error));
+    }
+    if (!TestTrue(TEXT("Restore dying fixture"), B.Restore(Good, Error))) { return false; }
+    for (int32 Case = 0; Case < 7; ++Case)
+    {
+        auto Bad = Good; auto& Hero = Bad.Encounter.Combatants[0];
+        switch (Case)
+        {
+        case 0: Hero.DeathSaveFailures = 3; break;                              // three failures is death
+        case 1: Hero.DeathSaveSuccesses = 3; Hero.DeathSaveFailures = 1; break; // Stable clears failures
+        case 2: Hero.RescueTurnsLeft = 2; break;                                // no SRD rescue countdown
+        case 3: Hero.Life = ECombatLife::Dead; Hero.DeathSaveFailures = 3; break;
+        case 4: Bad.Encounter.Combatants[2].DeathSaveSuccesses = 1; break;      // conscious ally
+        case 5: Bad.Encounter.Combatants[2].DeathSaveFailures = 1; break;
+        case 6: Bad.Encounter.Combatants[1].DeathSaveSuccesses = 2; break;      // conscious foe
+        }
+        TestFalse(FString::Printf(TEXT("Reject impossible death saves %d"), Case), B.Restore(Bad, Error));
+        TestTrue(TEXT("Atomic restore"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Good, &B.Snapshot(), 0));
+    }
     return !HasAnyErrors();
 }
 #endif

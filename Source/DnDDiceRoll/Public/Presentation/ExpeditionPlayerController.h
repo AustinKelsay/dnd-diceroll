@@ -27,7 +27,10 @@ public:
     ECombatCommandType Action() const { return SelectedAction; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
-    void SelectPartyIndex(int32 Index);
+    /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
+    void SelectPartyIndex(int32 Index, bool bInspect = true);
+    /** The hero whose full status the player asked for by choosing them again; cleared each turn. */
+    int32 Inspected() const { return InspectedId; }
     void HandleButton(FName Id);
     EFighterSubclass StartupSubclass() const;
     const TArray<FPartyBuildSelection>& NextParty() const { return Party; }
@@ -38,6 +41,13 @@ public:
     bool ConfirmingReturn() const { return bConfirmReturn; }
     /** True while a requested return waits for the party's turn and playback to finish. */
     bool ReturnPending() const { return bReturnPending; }
+    /**
+     * The top-bar Menu (#146) lists Save, Resume, Records, Speed, Help and Return to start. It is
+     * a transient layer, not an overlay: gameplay keys keep working while it is open.
+     */
+    bool ShowingMenu() const { return bShowMenu && MenuAvailable(); }
+    /** The Menu button exists on every expedition screen except the start screen and the endings. */
+    bool MenuAvailable() const;
     /** Help, Records or the return question covers the screen and owns input. */
     bool OverlayOpen() const;
     /**
@@ -66,6 +76,10 @@ public:
     void UpdateMenuFocus();
     /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
     void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
+    /** Capture and test support: show the full grid as if the hold key were down. */
+    void PreviewFullGrid(bool bShow);
+    /** True while the hold-for-full-grid key (Alt) is down or a preview asks for it. */
+    bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
 private:
@@ -76,6 +90,7 @@ private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
+    int32 InspectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
     int32 LastRevision = INDEX_NONE;
     int32 HoverUnitId = INDEX_NONE;
@@ -86,11 +101,14 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
+    bool bShowMenu = false;
     bool bConfirmReturn = false;
     bool bReturnPending = false;
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
     EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
     bool bDragging = false;
+    bool bGridHeld = false;
+    bool bGridPreview = false;
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
@@ -102,6 +120,11 @@ private:
     /** Identifies the visible menu screen: overlay, builder and expedition phase. */
     uint32 MenuScreenKey() const;
     void SaveOverlayFocus();
+    void ToggleMenu();
+    /** Closes the Menu and restores the focus saved when it opened. No-op when it is closed. */
+    void CloseMenu();
+    /** Tab and the up/down arrows move the focused menu control; Direction is +1 or -1. */
+    void CycleMenuFocus(int32 Direction);
     /** Call after the overlay has closed. */
     void RestoreOverlayFocus();
     void Preset();
@@ -154,6 +177,8 @@ private:
     void Speed();
     void ToggleHelp();
     void CloseOverlays();
+    void GridDown();
+    void GridUp();
     void BeginDrag();
     void EndDrag();
     void SetMode(ECombatCommandType Action);

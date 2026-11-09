@@ -2,7 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Rules/OpportunityRules.h"
 
-/** F3 regression: FirstProvokingCell respects an unavailable reaction. */
+/** FirstProvokingCell respects an unavailable reaction. */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOpportunityReactionGateRegressionTest, "Project.Expedition.Rules.OpportunityReactionGate",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FOpportunityReactionGateRegressionTest::RunTest(const FString& Parameters)

@@ -17,6 +17,11 @@ class DNDDICEROLL_API UDiceRollTheme : public UPrimaryDataAsset
 {
     GENERATED_BODY()
 public:
+    /** The board metric: one cell in cm (150 = 5 ft). Art authored for r001 is scaled from 110 cm to this. */
+    UPROPERTY(EditDefaultsOnly, Category = "Scale", meta = (ClampMin = "50", Units = "cm")) float CellSize = 150.0f;
+    /** How tall a character stands above the board in cm (175 to 185). Themed meshes are fitted to it. */
+    UPROPERTY(EditDefaultsOnly, Category = "Scale", meta = (ClampMin = "100", Units = "cm")) float FigureHeight = 180.0f;
+
     /** Parent of every themed mesh material: texture x vertex colour x "Color" tint. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UMaterialInterface> TintMaterial;
 

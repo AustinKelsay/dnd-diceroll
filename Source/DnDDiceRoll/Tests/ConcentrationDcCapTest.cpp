@@ -2,7 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Rules/ConcentrationRules.h"
 
-/** F2 regression: concentration DC is max(10, half damage), capped at 30. */
+/** Concentration DC is max(10, half damage), capped at 30. */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FConcentrationDcCapRegressionTest, "Project.Expedition.Rules.ConcentrationSaveDcCap",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FConcentrationDcCapRegressionTest::RunTest(const FString& Parameters)
