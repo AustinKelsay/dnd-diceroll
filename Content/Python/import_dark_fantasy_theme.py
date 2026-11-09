@@ -501,7 +501,8 @@ def import_kit_asset(asset_id, revision, name, folder, replace):
     record_path = os.path.join(os.path.dirname(source), "asset.json")
     with open(record_path) as handle:
         record = json.load(handle)
-    export = [entry for entry in record["files"] if entry["role"] == "export"]
+    # Records list every export (LOD0 and any authored LODs); check the LOD0 file this import reads.
+    export = [entry for entry in record["files"] if entry["role"] == "export" and os.path.basename(entry["path"]) == os.path.basename(source)]
     if record["unreal_package"] != theme_plan.package_path(folder, name) or len(export) != 1 or export[0]["sha256"] != theme_plan.sha256_file(source):
         raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py")
     package = theme_plan.package_path(folder, name)
