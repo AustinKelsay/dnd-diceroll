@@ -76,6 +76,22 @@ FString UsagePillText(const FActionFacts& Facts)
     return Text.IsEmpty() ? FString(TEXT("At will")) : Text;
 }
 
+FString UsageTagText(const FActionFacts& Facts)
+{
+    if (Facts.Cost == EActionCostKind::None) { return FString(); }
+    TArray<FString> Parts;
+    for (const FActionResourceCost& Cost : Facts.Resources)
+    {
+        FString Part = Cost.Amount == 1 ? ResourceName(Cost.Resource) : FString::Printf(TEXT("%d %s"), Cost.Amount, *ResourceName(Cost.Resource));
+        Part += Cost.Cap > 0 ? FString::Printf(TEXT(" %d/%d"), Cost.Held, Cost.Cap) : FString::Printf(TEXT(" %d"), Cost.Held);
+        Parts.Add(Part);
+    }
+    if (!Parts.IsEmpty()) { return FString::Join(Parts, TEXT(" + ")); }
+    if (Facts.bRequiresRage) { return TEXT("Needs Rage"); }
+    if (Facts.bForbidsRage) { return TEXT("Not while raging"); }
+    return TEXT("At will");
+}
+
 FString CampRecoveryText(const FActionResourceCost& Cost)
 {
     if (Cost.CampRecovery == 0) { return TEXT("Not refilled by camp"); }
@@ -97,6 +113,29 @@ TArray<FString> UsageLines(const FActionFacts& Facts)
     if (Facts.bForbidsRage) { Lines.Add(TEXT("Not while raging")); }
     if (Lines.IsEmpty()) { Lines.Add(TEXT("At will")); }
     return Lines;
+}
+
+FString AbilitySummaryText(const FActionFacts& Facts)
+{
+    TArray<FString> Parts;
+    Parts.Add(CostName(Facts.Cost));
+    Parts.Append(UsageLines(Facts));
+    return FString::Join(Parts, TEXT(" | "));
+}
+
+FActionTooltipText TooltipText(const FActionFacts& Facts, const FActionFacts* AlsoMove)
+{
+    FActionTooltipText Text;
+    Text.Headline = TooltipHeadline(Facts);
+    Text.Usage = UsageLines(Facts);
+    auto AddReasons = [&Text](const FActionFacts& From)
+    {
+        if (From.bAvailable) { return; }
+        for (const FActionBlocker& Blocker : From.Blockers) { Text.Reasons.AddUnique(BlockerText(Blocker)); }
+    };
+    AddReasons(Facts);
+    if (AlsoMove) { AddReasons(*AlsoMove); }
+    return Text;
 }
 
 FString BlockerText(const FActionBlocker& Blocker)
