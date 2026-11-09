@@ -3,10 +3,12 @@
 Run headless with the editor closed:
   UnrealEditor DnDDiceRoll.uproject -run=pythonscript -script=<repo>/Content/Python/import_dark_fantasy_theme.py -unattended -nullrhi
 Existing theme meshes and textures are preserved; a revised export is reimported at its
-recorded package through the editor (asset production). Material instances, texture settings
-and the data asset are refreshed on every run.
+recorded package through the editor (asset production). The master material (rebuilt in place, so its
+asset and instances stay), material instances, texture settings and the data asset are refreshed on every run.
 """
+import json
 import os
+import struct
 import unreal
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -14,29 +16,36 @@ THEME = "/Game/DnDDiceRoll/Theme"
 MASTER = THEME + "/Materials/M_DiceRollTheme"
 DATA = THEME + "/DA_DiceRollTheme"
 
-# asset id, export name, folder, data-asset property, glow (emissive share of the texture)
+# Surface looks (#143). Per mesh: asset id, export name, folder, data-asset property, then
+#   roughness  - stone, cloth and ground high; characters and metal lower
+#   rim        - Fresnel rim strength; characters only, so dark figures read against dark ground
+#   fill       - hemisphere fill strength; strong on characters, none or a trace elsewhere
+#   glow       - emissive intensity applied to the vertex-alpha mask (flames, runes, glass); used only when the
+#                mesh really has a varying vertex alpha, see has_alpha_mask()
+#   self_lit   - a constant emissive share for objects that are themselves a light source (the flame) and for the
+#                tabletop overview, which stays as it was. Zero everywhere else: there is no blanket glow any more.
 ASSETS = [
-    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.6),
-    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6),
-    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6),
-    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.6),
-    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.5),
-    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.5),
-    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.5),
-    ("world-root", "SM_World_Root", "Worlds", "root_world", 0.35),
-    ("world-vigil", "SM_World_Vigil", "Worlds", "vigil_world", 0.35),
-    ("tile-root", "SM_Tile_Root", "Worlds", "root_tile", 0.2),
-    ("tile-vigil", "SM_Tile_Vigil", "Worlds", "vigil_tile", 0.2),
-    ("prop-stones", "SM_Prop_Stones", "Props", "stones", 0.12),
-    ("prop-pillar", "SM_Prop_Pillar", "Props", "pillar", 0.12),
-    ("prop-wall", "SM_Prop_Wall", "Props", "wall", 0.12),
-    ("prop-brazier", "SM_Prop_Brazier", "Props", "brazier", 0.08),
-    ("prop-flame", "SM_Prop_Flame", "Props", "flame", 1.4),
-    ("prop-banner", "SM_Prop_Banner", "Props", "banner", 0.15),
-    ("prop-cage", "SM_Prop_Cage", "Props", "cage", 0.12),
-    ("tabletop", "SM_Tabletop", "Overview", "tabletop", 0.3),
-    ("diorama-root", "SM_Diorama_Root", "Overview", "root_diorama", 0.35),
-    ("diorama-vigil", "SM_Diorama_Vigil", "Overview", "vigil_diorama", 0.35),
+    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.55, 1.0, 1.0, 1.0, 0.0),
+    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.65, 1.0, 1.0, 1.0, 0.0),
+    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("world-root", "SM_World_Root", "Worlds", "root_world", 0.9, 0.0, 0.0, 1.0, 0.0),
+    ("world-vigil", "SM_World_Vigil", "Worlds", "vigil_world", 0.9, 0.0, 0.0, 1.0, 0.0),
+    ("tile-root", "SM_Tile_Root", "Worlds", "root_tile", 0.9, 0.0, 0.0, 1.0, 0.0),
+    ("tile-vigil", "SM_Tile_Vigil", "Worlds", "vigil_tile", 0.9, 0.0, 0.0, 1.0, 0.0),
+    ("prop-stones", "SM_Prop_Stones", "Props", "stones", 0.92, 0.0, 0.05, 1.0, 0.0),
+    ("prop-pillar", "SM_Prop_Pillar", "Props", "pillar", 0.9, 0.0, 0.05, 1.0, 0.0),
+    ("prop-wall", "SM_Prop_Wall", "Props", "wall", 0.9, 0.0, 0.05, 1.0, 0.0),
+    ("prop-brazier", "SM_Prop_Brazier", "Props", "brazier", 0.5, 0.0, 0.05, 1.0, 0.0),
+    ("prop-flame", "SM_Prop_Flame", "Props", "flame", 1.0, 0.0, 0.0, 1.0, 1.4),
+    ("prop-banner", "SM_Prop_Banner", "Props", "banner", 0.95, 0.0, 0.05, 1.0, 0.0),
+    ("prop-cage", "SM_Prop_Cage", "Props", "cage", 0.5, 0.0, 0.05, 1.0, 0.0),
+    ("tabletop", "SM_Tabletop", "Overview", "tabletop", 0.8, 0.0, 0.0, 1.0, 0.3),
+    ("diorama-root", "SM_Diorama_Root", "Overview", "root_diorama", 0.9, 0.0, 0.0, 1.0, 0.35),
+    ("diorama-vigil", "SM_Diorama_Vigil", "Overview", "vigil_diorama", 0.9, 0.0, 0.0, 1.0, 0.35),
 ]
 
 tools = unreal.AssetToolsHelpers.get_asset_tools()
@@ -57,32 +66,123 @@ def rgb(material, source, output, x, y):
     return mask
 
 
+def vector(material, name, value, x, y):
+    return expression(material, unreal.MaterialExpressionVectorParameter, x, y, parameter_name=name, default_value=value)
+
+
+def scalar(material, name, value, x, y):
+    return expression(material, unreal.MaterialExpressionScalarParameter, x, y, parameter_name=name, default_value=value)
+
+
+def mul(material, a, b, x, y, a_out="", b_out=""):
+    node = expression(material, unreal.MaterialExpressionMultiply, x, y)
+    mel.connect_material_expressions(a, a_out, node, "A")
+    mel.connect_material_expressions(b, b_out, node, "B")
+    return node
+
+
+def add(material, a, b, x, y):
+    node = expression(material, unreal.MaterialExpressionAdd, x, y)
+    mel.connect_material_expressions(a, "", node, "A")
+    mel.connect_material_expressions(b, "", node, "B")
+    return node
+
+
 def master_material():
+    """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
+
+    base     = Tex.rgb x vertexColor.rgb x Color
+    emissive = base x (vertexColor.a x Glow + SelfLit)           glow only where the vertex alpha says so
+             + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
+             + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
+    roughness = Roughness (per instance)
+    """
     if library.does_asset_exist(MASTER):
-        return unreal.load_asset(MASTER)
-    material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
+        material = unreal.load_asset(MASTER)
+        mel.delete_all_material_expressions(material)
+    else:
+        material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
     white = unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture")
-    tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -900, -100, parameter_name="Tex", texture=white)
-    vertex = expression(material, unreal.MaterialExpressionVertexColor, -900, 200)
-    tint = expression(material, unreal.MaterialExpressionVectorParameter, -900, 400, parameter_name="Color", default_value=unreal.LinearColor(1, 1, 1, 1))
-    glow = expression(material, unreal.MaterialExpressionScalarParameter, -400, 400, parameter_name="Glow", default_value=0.0)
-    lit = expression(material, unreal.MaterialExpressionMultiply, -500, 0)
-    mel.connect_material_expressions(tex, "RGB", lit, "A")
-    mel.connect_material_expressions(rgb(material, vertex, "", -700, 200), "", lit, "B")
-    color = expression(material, unreal.MaterialExpressionMultiply, -300, 100)
-    mel.connect_material_expressions(lit, "", color, "A")
-    mel.connect_material_expressions(rgb(material, tint, "", -700, 400), "", color, "B")
-    emissive = expression(material, unreal.MaterialExpressionMultiply, -150, 300)
-    mel.connect_material_expressions(color, "", emissive, "A")
-    mel.connect_material_expressions(glow, "", emissive, "B")
-    rough = expression(material, unreal.MaterialExpressionConstant, -150, 500, r=0.85)
-    spec = expression(material, unreal.MaterialExpressionConstant, -150, 600, r=0.2)
+    tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -100, parameter_name="Tex", texture=white)
+    vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
+    tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -1100, 400)
+    lit = mul(material, tex, rgb(material, vertex, "", -900, 200), -700, 0, "RGB", "")
+    color = mul(material, lit, rgb(material, tint, "", -900, 400), -500, 100)
+
+    # Glow: vertex alpha is the mask. A mesh without a varying alpha reads as 1 everywhere, so such meshes get Glow 0.
+    glow = scalar(material, "Glow", 0.0, -900, 560)
+    self_lit = scalar(material, "SelfLit", 0.0, -900, 640)
+    masked = expression(material, unreal.MaterialExpressionMultiply, -700, 560)
+    mel.connect_material_expressions(vertex, "A", masked, "A")
+    mel.connect_material_expressions(glow, "", masked, "B")
+    glow_term = mul(material, color, add(material, masked, self_lit, -500, 560), -300, 400)
+
+    # Hemisphere fill: lerp(ground, sky, normalZ * 0.5 + 0.5) times the base colour.
+    normal = expression(material, unreal.MaterialExpressionPixelNormalWS, -1100, 800)
+    up = expression(material, unreal.MaterialExpressionComponentMask, -950, 800, r=False, g=False, b=True, a=False)
+    mel.connect_material_expressions(normal, "", up, "")
+    half = expression(material, unreal.MaterialExpressionMultiply, -800, 800, const_b=0.5)
+    mel.connect_material_expressions(up, "", half, "A")
+    blend = expression(material, unreal.MaterialExpressionAdd, -650, 800, const_b=0.5)
+    mel.connect_material_expressions(half, "", blend, "A")
+    sky = vector(material, "FillSky", unreal.LinearColor(0.3, 0.38, 0.55, 1), -800, 900)
+    ground = vector(material, "FillGround", unreal.LinearColor(0.12, 0.1, 0.09, 1), -800, 1000)
+    hemi = expression(material, unreal.MaterialExpressionLinearInterpolate, -450, 900)
+    mel.connect_material_expressions(rgb(material, ground, "", -600, 1000), "", hemi, "A")
+    mel.connect_material_expressions(rgb(material, sky, "", -600, 900), "", hemi, "B")
+    mel.connect_material_expressions(blend, "", hemi, "Alpha")
+    fill = scalar(material, "Fill", 0.0, -450, 1100)
+    fill_term = mul(material, mul(material, hemi, color, -250, 900), fill, -100, 900)
+
+    # Rim: fresnel (exponent 3, no base reflection) in a cool tint.
+    fresnel = expression(material, unreal.MaterialExpressionFresnel, -450, 1250, exponent=3.0, base_reflect_fraction=0.0)
+    rim_color = vector(material, "RimColor", unreal.LinearColor(0.45, 0.55, 0.85, 1), -700, 1350)
+    rim = scalar(material, "Rim", 0.0, -450, 1350)
+    rim_term = mul(material, mul(material, fresnel, rgb(material, rim_color, "", -550, 1350), -250, 1250), rim, -100, 1250)
+
+    emissive = add(material, add(material, glow_term, fill_term, 100, 600), rim_term, 250, 700)
+    roughness = scalar(material, "Roughness", 0.85, 100, 500)
+    spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-    mel.connect_material_property(rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
     mel.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
     mel.recompile_material(material)
     return material
+
+
+def has_alpha_mask(asset_id, name):
+    """True when the r001 export carries a vertex-colour alpha that actually varies (a real glow mask).
+
+    glTF COLOR_0 is optional and often RGB only; Unreal then reads alpha 1 everywhere, which would make the whole
+    mesh glow. Read the export's accessors and treat only a VEC4 colour with a spread of alpha as a mask.
+    """
+    source = os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
+    if not os.path.isfile(source):
+        return False
+    with open(source, "rb") as handle:
+        data = handle.read()
+    json_length = struct.unpack("<I", data[12:16])[0]
+    header = json.loads(data[20:20 + json_length])
+    binary_at = 20 + json_length
+    binary = data[binary_at + 8:binary_at + 8 + struct.unpack("<I", data[binary_at:binary_at + 4])[0]]
+    formats = {5126: ("f", 4, 1.0), 5121: ("B", 1, 255.0), 5123: ("H", 2, 65535.0)}
+    for mesh in header.get("meshes", []):
+        for primitive in mesh.get("primitives", []):
+            index = primitive.get("attributes", {}).get("COLOR_0")
+            if index is None:
+                continue
+            accessor = header["accessors"][index]
+            if accessor["type"] != "VEC4":
+                continue
+            view = header["bufferViews"][accessor["bufferView"]]
+            code, size, divisor = formats[accessor["componentType"]]
+            start = view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+            stride = view.get("byteStride", 4 * size)
+            alphas = [struct.unpack_from("<" + code, binary, start + i * stride + 3 * size)[0] / divisor for i in range(accessor["count"])]
+            if alphas and max(alphas) - min(alphas) > 0.02 and min(alphas) < 0.99:
+                return True
+    return False
 
 
 def import_mesh(asset_id, name, folder):
@@ -118,7 +218,8 @@ def import_mesh(asset_id, name, folder):
     return unreal.load_asset(package), texture
 
 
-def apply_material(mesh, texture, name, glow, master):
+def apply_material(mesh, texture, asset_id, name, look, master):
+    roughness, rim, fill, glow, self_lit = look
     path = THEME + "/Materials/MI_" + name[3:]
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
         "MI_" + name[3:], THEME + "/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
@@ -127,18 +228,25 @@ def apply_material(mesh, texture, name, glow, master):
         existing = THEME + "/Textures/T_" + name[3:]
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
     if texture is not None:
-        # Crisp pixel art: nearest filtering, uncompressed colour.
-        texture.set_editor_property("filter", unreal.TextureFilter.TF_NEAREST)
+        # Trilinear filtering with anisotropy 8 (r.MaxAnisotropy in DefaultEngine.ini); uncompressed colour.
+        # At 256 texels/m nearest, trilinear and sharp texels looked alike (gate 1), and mips stop shimmer at distance.
+        texture.set_editor_property("filter", unreal.TextureFilter.TF_TRILINEAR)
         texture.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
         texture.set_editor_property("srgb", True)
-        # Mips stop distant pixel textures from shimmering; nearest keeps them crisp up close.
         texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
         texture.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
         mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
-    mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow)
+    # The glow mask guard: without a varying vertex alpha (every r001 export today) glow stays 0.
+    masked = has_alpha_mask(asset_id, name)
+    mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow if masked else 0.0)
+    mel.set_material_instance_scalar_parameter_value(instance, "SelfLit", self_lit)
+    mel.set_material_instance_scalar_parameter_value(instance, "Rim", rim)
+    mel.set_material_instance_scalar_parameter_value(instance, "Fill", fill)
+    mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
     mel.update_material_instance(instance)
     for index in range(mesh.get_num_sections(0)):
         mesh.set_material(index, instance)
+    unreal.log("THEME_MATERIAL {} glow={} mask={}".format(name, glow if masked else 0.0, masked))
 
 
 def theme_asset():
@@ -153,11 +261,11 @@ master = master_material()
 theme = theme_asset()
 theme.set_editor_property("tint_material", master)
 found = 0
-for asset_id, name, folder, prop, glow in ASSETS:
+for asset_id, name, folder, prop, *look in ASSETS:
     mesh, texture = import_mesh(asset_id, name, folder)
     if mesh is None:
         continue
-    apply_material(mesh, texture, name, glow, master)
+    apply_material(mesh, texture, asset_id, name, look, master)
     theme.set_editor_property(prop, mesh)
     found += 1
 if not library.save_directory(THEME, only_if_is_dirty=False, recursive=True):

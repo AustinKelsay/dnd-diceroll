@@ -19,10 +19,19 @@ The game's art set lives under `/Game/DnDDiceRoll/Theme`.
 Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, with its glTF export beside it.
 
 **Import:** `Content/Python/import_dark_fantasy_theme.py` imports the exports. It:
-- creates `M_DiceRollTheme` (texture × vertex colour × `Color` tint, plus a `Glow` emissive share);
+- creates `M_DiceRollTheme`, and rebuilds its graph in place on every run (the asset and its instances survive); see "Theme material" below;
 - gives each mesh its own `MI_*` instance;
-- sets textures to nearest filtering, uncompressed and sRGB;
+- sets textures to trilinear filtering (anisotropy 8 through `r.MaxAnisotropy=8` in `Config/DefaultEngine.ini`), uncompressed and sRGB. Gate 1 found nearest, trilinear and sharp texels nearly identical at 256 texels/m;
 - fills `DA_DiceRollTheme`, a `UDiceRollTheme` data asset.
+
+**Theme material (#143):** `M_DiceRollTheme` computes `base = Tex × vertex colour × Color` and adds three emissive terms, each driven by a per-instance parameter:
+- `Glow` × the vertex-colour alpha mask (flames, runes, glass). There is no blanket glow share any more.
+- `Fill` × a hemisphere fill (sky above, ground below, from the world normal) × the base colour, so shadowed sides keep their form.
+- `Rim` × a cool Fresnel rim (exponent 3), so dark figures read against dark ground.
+
+`Roughness` sets the surface: characters and metal 0.5 to 0.65, stone, cloth and ground 0.9 to 0.95. Characters get `Rim` and `Fill` 1; worlds and tiles get none; props a trace of `Fill`. `SelfLit` is a constant emissive share kept only for the flame (a light source) and the tabletop overview, which stays as it was.
+
+**Vertex-alpha guard:** glTF `COLOR_0` is optional, and Unreal reads a missing vertex alpha as 1, which would make a whole mesh glow. At import the script reads each export's accessors and enables `Glow` only when `COLOR_0` is RGBA with a varying alpha. No r001 export has one (most have no `COLOR_0`; the tabletop and the two worlds have a constant alpha of 1), so every r001 instance imports with `Glow` 0 until a revised export paints a mask. The log lists `THEME_MATERIAL <mesh> glow=<n> mask=<bool>` per mesh.
 
 **Contents:**
 
