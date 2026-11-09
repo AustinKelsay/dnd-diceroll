@@ -330,11 +330,11 @@ void AExpeditionHUD::DrawWorldOverlays()
     if (Player->ShowsTargeting() && !Path.IsEmpty())
     {
         FVector2D Previous;
-        bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), 4.0f), Previous);
+        bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), View->Metric().Scaled(4.0f)), Previous);
         for (int32 Index = 0; Index < Path.Num(); ++Index)
         {
             FVector2D Point;
-            if (!Project(View->BoardPosition(FVector2D(Path[Index].X, Path[Index].Y), 4.0f), Point)) { continue; }
+            if (!Project(View->BoardPosition(FVector2D(Path[Index].X, Path[Index].Y), View->Metric().Scaled(4.0f)), Point)) { continue; }
             if (bHasPrevious) { Line(Previous, Point, FLinearColor(0.5f, 0.95f, 1.0f, 0.9f), 3.0f); }
             Circle(Point, Index == Path.Num() - 1 ? 9.0f : 4.0f, FLinearColor(0.55f, 0.95f, 1.0f, 0.95f));
             Previous = Point; bHasPrevious = true;
@@ -347,8 +347,10 @@ void AExpeditionHUD::DrawWorldOverlays()
     {
         bCursorRequested = true;
         const FIntPoint Cell = Player->KeyboardCursorCell();
-        const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), 2.0f);
-        const FVector Offsets[] = {{-52, -52, 0}, {52, -52, 0}, {52, 52, 0}, {-52, 52, 0}};
+        const FBoardMetric& Metric = View->Metric();
+        const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), Metric.Scaled(2.0f));
+        const float Half = Metric.CellCm * 0.47f;
+        const FVector Offsets[] = {{-Half, -Half, 0}, {Half, -Half, 0}, {Half, Half, 0}, {-Half, Half, 0}};
         FVector2D Corners[4];
         bool bVisible = true;
         for (int32 Index = 0; Index < 4; ++Index) { bVisible &= Project(Center + Offsets[Index], Corners[Index]); }
@@ -375,7 +377,7 @@ void AExpeditionHUD::DrawWorldOverlays()
             {
                 ++ReachRequested;
                 FVector2D P;
-                if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), 5), P)) { continue; }
+                if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), View->Metric().Scaled(5.0f)), P)) { continue; }
                 const auto Color = bBlocked ? Danger : Sky;
                 if (bBlocked) { Line(P-FVector2D(4,4), P+FVector2D(4,4), Color, 1); Line(P+FVector2D(-4,4), P+FVector2D(4,-4), Color, 1); }
                 else { Circle(P, 4, Color); }
@@ -387,7 +389,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         {
             if (Effect.Effect != EAbilityEffect::Strike) { continue; }
             FVector2D P;
-            if (Project(View->UnitPosition(Effect.TargetId, 155), P))
+            if (Project(View->UnitPosition(Effect.TargetId, View->Metric().Figure(1.1f)), P))
             { Frame(Gold, P.X-20, P.Y-12, 40, 24, 2); Text(TEXT("AREA"), P.X, P.Y-8, Gold, 0.65f, EAlign::Center); }
         }
     }
@@ -397,7 +399,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         const FUnitDisplay* Display = Show.Unit(Unit.Id);
         if (!Display) { continue; }
         FVector2D Point;
-        if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? 70.0f : 122.0f), Point)) { continue; }
+        if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? View->Metric().Figure(0.4f) : View->Metric().Figure(0.9f)), Point)) { continue; }
         const bool bFocus = Unit.Id == Active || Unit.Id == Player->HoveredUnit() || Unit.Id == Player->HoveredTarget() || Unit.Id == Player->Selection();
         if (Display->Life == ECombatLife::Dead)
         {
@@ -430,7 +432,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     {
         if (Floater.Age < 0) { continue; }
         FVector2D Point;
-        if (!Project(View->BoardPosition(Floater.Cell, 105.0f + Floater.Age * 55.0f), Point)) { continue; }
+        if (!Project(View->BoardPosition(Floater.Cell, View->Metric().Scaled(105.0f + Floater.Age * 55.0f)), Point)) { continue; }
         const float Life = Floater.Age / Floater.Life;
         const float Alpha = Life < 0.7f ? 1.0f : 1.0f - (Life - 0.7f) / 0.3f;
         const float Pop = 1.0f + 0.6f * FMath::Max(0.0f, 1.0f - Floater.Age / 0.14f);
@@ -460,7 +462,7 @@ void AExpeditionHUD::DrawTargetChips()
     {
         ++ChipsRequested;
         FVector2D Anchor;
-        if (!Project(View->UnitPosition(Id, 185), Anchor)) { ++Overflow; continue; }
+        if (!Project(View->UnitPosition(Id, View->Metric().Figure(1.3f)), Anchor)) { ++Overflow; continue; }
         const FCombatantState* Unit = Rules.Find(Id);
         const FString Label = ExpeditionStyle::ChipLabel(Unit ? Unit->Name : FString(),
             ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id), LabelFit, MeasureLabel);

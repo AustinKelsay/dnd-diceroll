@@ -305,6 +305,8 @@ void FExpeditionCaptureDirector::WriteManifest() const
     Root->SetNumberField(TEXT("settleFrames"), Poses.SettleFrames);
     Root->SetBoolField(TEXT("primitives"), FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")));
     Root->SetBoolField(TEXT("themed"), View.IsValid() && View->UsesTheme());
+    // Shot distances are reference units (110 cm cell); the camera scales them by cellCm / 110.
+    if (View.IsValid()) { Root->SetNumberField(TEXT("cellCm"), View->Metric().CellCm); }
     TSharedRef<FJsonObject> Size = MakeShared<FJsonObject>();
     Size->SetNumberField(TEXT("width"), Resolution.X);
     Size->SetNumberField(TEXT("height"), Resolution.Y);
