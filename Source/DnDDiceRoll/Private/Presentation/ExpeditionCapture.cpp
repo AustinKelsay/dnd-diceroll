@@ -14,6 +14,10 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "UnrealClient.h"
+#if WITH_EDITOR
+#include "AssetCompilingManager.h"
+#include "ShaderCompiler.h"
+#endif
 
 namespace
 {
@@ -262,6 +266,17 @@ void FExpeditionCaptureDirector::Tick()
     }
     case EStage::Settling:
         if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
+#if WITH_EDITOR
+        // Shaders or textures still compiling would be captured as placeholders (a changed material needs new
+        // shader permutations): finish them, then settle a few frames more so the shot uses the real ones.
+        if ((GShaderCompilingManager && GShaderCompilingManager->IsCompiling()) || FAssetCompilingManager::Get().GetNumRemainingAssets() > 0)
+        {
+            if (GShaderCompilingManager) { GShaderCompilingManager->FinishAllCompilation(); }
+            FAssetCompilingManager::Get().FinishAllCompilation();
+            StageFrames = FMath::Max(0, Poses.SettleFrames - 10);
+            return;
+        }
+#endif
         {
             Pending.File = Pending.Shot.Name + TEXT(".png");
             const FString Path = FPaths::Combine(OutputDir, Pending.File);

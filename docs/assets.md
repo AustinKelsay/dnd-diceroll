@@ -42,6 +42,8 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 - **Validation run, from the committed assets:** exit 0, no warnings, `THEME_MASTER kept`. The hash diff showed exactly the 21 `T_*` changed.
 - **Immediate rerun:** changed nothing.
 
+**Camera clip (#143 review, 2026-11-09):** the master became Masked, with a `CameraFade` clip (see "Theme material"). One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings). The hash diff showed exactly `M_DiceRollTheme.uasset` changed: the instances and textures were untouched.
+
 **Contents:**
 
 | Group | Assets |
