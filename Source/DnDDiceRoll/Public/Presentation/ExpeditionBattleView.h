@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -145,6 +146,22 @@ public:
     // Camera and board geometry.
     void Orbit(float Degrees);
     void Zoom(float Amount);
+    /**
+     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The focus is
+     * clamped to the board plus a margin, and returns to the active unit when the turn changes.
+     */
+    void Pan(float Right, float Away);
+    /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
+    FVector CameraFocus() const { return FocusTarget; }
+    /** The camera pitch below horizontal, in degrees, for the current zoom. */
+    float CameraPitch() const;
+    /** The screen area the HUD leaves free; the board is fitted and centred in it. */
+    void SetSafeRect(const ExpeditionCameraRig::FSafeRect& Value);
+    const ExpeditionCameraRig::FSafeRect& SafeRect() const { return Safe; }
+    /** Shadow-casting lights: the directional key plus the local lights chosen by SelectShadowLights. */
+    int32 ShadowCastingLights() const;
+    /** The attenuation radius of the first flame light, in world cm; zero when there is none. */
+    float FlameLightRadius() const;
     float CameraYaw() const { return TargetYaw; }
     /**
      * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
@@ -210,6 +227,13 @@ private:
     float Distance = 1600.0f;
     float TargetDistance = 1600.0f;
     FVector Focus = FVector::ZeroVector;
+    /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
+    FVector FocusTarget = FVector::ZeroVector;
+    FVector2D PanOffset = FVector2D::ZeroVector;
+    int32 LastFocusId = INDEX_NONE;
+    /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
+    TOptional<bool> StarterSunShadows;
+    ExpeditionCameraRig::FSafeRect Safe;
     float ShakeAmount = 0.0f;
     bool bCameraPlaced = false;
 
@@ -269,6 +293,10 @@ private:
     void UpdateMarkers();
     void UpdateEffects();
     void UpdateCamera(float DeltaSeconds);
+    /** The unpanned focus: the board centre leaned toward the acting unit (view space). */
+    FVector BaseFocus() const;
+    /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
+    void SelectShadowLights();
     void Record(const FCombatResult& Result);
     void Present(const TArray<FCombatResult>& Results);
     void ExpireVoices();
