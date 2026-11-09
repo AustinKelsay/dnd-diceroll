@@ -255,6 +255,48 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
                     TestTrue(*(Label + TEXT(": corners inside the safe rect ") + Where), bInside);
                 }
             }
+            // Orbits keep the board inside the safe rect on EVERY frame of the easing, not just once it settles: the yaw,
+            // distance and focus ease independently, so the rendered fit must follow the rendered yaw. Includes consecutive
+            // orbits issued before the first one finished. The live board is whatever the route generated (see the label).
+            struct FOrbitCase { const TCHAR* Name; TArray<float> Orbits; float Start; };
+            const FOrbitCase Cases[] = {
+                {TEXT("+90"), {90.0f}, -90.0f}, {TEXT("-90"), {-90.0f}, -90.0f}, {TEXT("+90 -90"), {90.0f, -90.0f}, -90.0f},
+                {TEXT("+90 +90"), {90.0f, 90.0f}, -90.0f}, {TEXT("-90 -90 -90"), {-90.0f, -90.0f, -90.0f}, 0.0f}};
+            for (const FViewportSize& Size : Viewports)
+            {
+                const FSafeRect Rect = FSafeRect::ForViewport(Size.X, Size.Y);
+                View->SetSafeRect(Rect);
+                for (const FOrbitCase& Case : Cases)
+                {
+                    View->SnapCamera(Case.Start, View->FramedDistance(Case.Start));
+                    View->Tick(1.0f / 60.0f);
+                    for (const float Degrees : Case.Orbits) { View->Orbit(Degrees); }
+                    for (int32 Frame = 0; Frame < 120; ++Frame)
+                    {
+                        View->Tick(1.0f / 60.0f);
+                        const FTransform Camera = View->CameraTransform();
+                        FString Where;
+                        if (!CornersInside(Corners, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect, Where))
+                        {
+                            AddError(FString::Printf(TEXT("%dx%d board, orbit %s at %dx%d: frame %d leaves the safe rect %s"), Encounter.Width, Encounter.Height, Case.Name, Size.X, Size.Y, Frame, *Where));
+                            break;
+                        }
+                    }
+                }
+            }
+            // A deliberate zoom-in survives the orbit and its easing.
+            {
+                View->SetSafeRect(FSafeRect::ForViewport(1920, 1080));
+                View->SnapCamera(-90.0f, View->FramedDistance(-90.0f));
+                View->Tick(1.0f / 60.0f);
+                View->Zoom(-600.0f);
+                const float Chosen = View->CameraDistance();
+                View->Orbit(90.0f);
+                View->Orbit(90.0f);
+                for (int32 Frame = 0; Frame < 120; ++Frame) { View->Tick(1.0f / 60.0f); }
+                TestEqual(TEXT("A deliberate zoom-in is kept through consecutive orbits"), View->CameraDistance(), Chosen, 0.01f);
+                TestEqual(TEXT("The rendered pitch still follows the chosen zoom"), static_cast<float>(-View->CameraTransform().Rotator().Pitch), PitchFor(Chosen, Framed), 0.2f);
+            }
             View->SetSafeRect(FSafeRect());
         }
         // The focus lands in the middle of the free screen area: right of the screen centre, clear of the left HUD.
