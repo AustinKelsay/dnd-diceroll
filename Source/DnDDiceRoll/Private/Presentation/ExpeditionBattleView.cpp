@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/PostProcessComponent.h"
@@ -85,6 +86,29 @@ FPalette OverviewPalette()
     Palette.Fog = {0.06f, 0.035f, 0.02f}; Palette.FogDensity = 0.015f;
     return Palette;
 }
+
+// The contextual grid: how each bar style is drawn. Colours are linear and may exceed 1 (the overlay material is unlit);
+// lifts are reference cm above the board top, layered so a later style never sinks under an earlier one.
+struct FOverlayLook { FLinearColor Color; float Opacity; float Lift; };
+FOverlayLook OverlayLook(BoardOverlay::EStyle Style)
+{
+    using BoardOverlay::EStyle;
+    const FLinearColor Trail(0.5f, 0.95f, 1.0f);
+    switch (Style)
+    {
+    case EStyle::MoveContour: return {FLinearColor(0.15f, 0.7f, 0.85f) * 1.5f, 0.85f, 0.6f};
+    case EStyle::ReachContour: return {FLinearColor(0.35f, 0.5f, 1.0f) * 1.5f, 0.8f, 0.7f};
+    case EStyle::Tick: return {FLinearColor::White, 0.16f, 0.4f};
+    case EStyle::Blocked: return {FLinearColor(0.9f, 0.2f, 0.14f) * 1.3f, 0.5f, 0.8f};
+    case EStyle::Ribbon: return {Trail * 1.5f, 0.85f, 1.0f};
+    case EStyle::PathBracket: return {Trail * 1.7f, 0.95f, 1.1f};
+    case EStyle::HoverBracket: return {FLinearColor::White * 1.5f, 0.7f, 1.1f};
+    case EStyle::Victim: return {FLinearColor(1.0f, 0.82f, 0.3f) * 1.6f, 0.9f, 1.2f};
+    default: return {FLinearColor::White, 0.11f, 0.3f};
+    }
+}
+constexpr TCHAR OverlayMaterialPath[] = TEXT("/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay.M_BoardOverlay");
+constexpr int32 RingSegments = 24;
 
 float Hash(int32 A, int32 B, int32 Salt = 0)
 {
@@ -200,6 +224,9 @@ void AExpeditionBattleView::BeginPlay()
         if (!ThemeMaterial) { Theme = nullptr; }
         OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
     }
+    // The translucent material for the contextual grid and (themed) footprint rings is optional; without it they draw as
+    // dimmed opaque lines. Created by Content/Python/create_board_overlay_material.py.
+    OverlayMaterial = LoadObject<UMaterialInterface>(nullptr, OverlayMaterialPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
@@ -227,7 +254,9 @@ void AExpeditionBattleView::ClearPresentation()
         if (IsValid(Component)) { RemoveInstanceComponent(Component); Component->DestroyComponent(); }
     }
     Spawned.Reset();
-    Tiles.Reset(); Rigs.Reset(); Scenery.Reset(); Flames.Reset(); FlameStrength.Reset(); Markers.Reset();
+    Tiles.Reset(); OverlaySets.Reset(); OverlayCounts.Reset(); OverlayState = BoardOverlay::FMask(); OverlayInput = FBoardHighlights(); OverlayVictimsShown.Reset();
+    bOverlayBuilt = false; bFullGridShown = false;
+    Rigs.Reset(); Scenery.Reset(); Flames.Reset(); FlameStrength.Reset(); Markers.Reset();
     ShotMeshes.Reset(); ShotLights.Reset(); SparkMeshes.Reset(); CampParts.Reset(); WaystoneParts.Reset();
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
@@ -257,13 +286,14 @@ void AExpeditionBattleView::RebuildBoard()
         for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     }
     BuildEffects(Encounter);
+    BuildOverlay();
     Show.Reset(Rules().Snapshot());
     // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
     // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
     if (bOverview) { TargetYaw = -90.0f; }
     TargetDistance = FramedDistance();
     bCameraPlaced = false;
-    UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -594,11 +624,21 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     };
     const FLinearColor Team = ExpeditionStyle::UnitColor(Unit);
     const FLinearColor Skin(0.92f, 0.74f, 0.6f);
-    BasePart(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
+    if (Theme)
+    {
+        // Themed look: a hollow footprint ring (56 cm on a 150 cm cell) in the side's colour keeps sides readable from
+        // overhead. It lies on the board plane, in actor space, so it stays flat when the figure falls; UpdateRigs places it.
+        Rig.Ring = MakeRing(RootComponent, FVector::ZeroVector, Team * 1.15f);
+        if (Rig.Ring.Mesh) { Rig.Ring.Mesh->SetRelativeScale3D(FVector(BoardMetric.FootprintDiameter() / 100.0f)); }
+    }
+    else
+    {
+        // Primitive look, unchanged: the opaque side-coloured base disc under the figure.
+        BasePart(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
+    }
     if (UStaticMesh* Figure = UnitMesh(Unit))
     {
-        // A faction ring keeps sides readable from overhead; the figure itself is untinted.
-        BasePart(Cylinder, FVector(0, 0, 4), FVector(0.8f, 0.8f, 0.012f), Team * 0.9f);
+        // The figure itself is untinted.
         // Fit the mesh (origin at its feet) to the metric's figure height; the rig root already carries the cell scale.
         const float MeshHeight = Figure->GetBounds().GetBox().Max.Z;
         const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.45f;
@@ -693,7 +733,9 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
     for (int32 Index = 0; Index < 2 + TargetMarkers; ++Index)
     {
         const FLinearColor Color = Index == 0 ? FLinearColor(1.0f, 0.82f, 0.2f) * 1.6f : Index == 1 ? FLinearColor(0.9f, 0.95f, 1.0f) : FLinearColor(1.0f, 0.18f, 0.1f) * 1.5f;
-        Markers.Add(MakePart(Cylinder, nullptr, FVector::ZeroVector, FVector(0.92f, 0.92f, 0.02f), Color));
+        // Themed look: hollow rings. Primitive look, unchanged: flat opaque discs.
+        Markers.Add(Theme ? MakeRing(nullptr, FVector::ZeroVector, Color)
+            : MakePart(Cylinder, nullptr, FVector::ZeroVector, FVector(0.92f, 0.92f, 0.02f), Color));
         Markers.Last().Mesh->SetVisibility(false);
     }
     for (int32 Index = 0; Index < ShotPool; ++Index)
@@ -763,13 +805,21 @@ void AExpeditionBattleView::UpdateRigs()
         // Bodies still occupy their cells, so keep fallen rigs visible on the board.
         Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
         const bool bDead = Unit->Life == ECombatLife::Dead;
-        for (FExpeditionPart& Part : Rig.Parts)
+        auto Tint = [&](FExpeditionPart& Part)
         {
             FLinearColor Color = Part.Base;
             if (bDead) { const float Grey = Color.GetLuminance(); Color = FMath::Lerp(Color, FLinearColor(Grey, Grey, Grey) * 0.6f, 0.75f); }
             Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.95f, 0.75f) * 2.0f, Unit->Glow * 0.35f);
             Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.9f, 0.9f) * 3.0f, Unit->Flash * 0.85f);
             Part.SetColor(Color);
+        };
+        for (FExpeditionPart& Part : Rig.Parts) { Tint(Part); }
+        if (Rig.Ring.Mesh)
+        {
+            // Flat on the board under the figure, not hopping or tilting with it.
+            Rig.Ring.Mesh->SetRelativeLocation(BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(0.8f)));
+            Rig.Ring.Mesh->SetRelativeScale3D(FVector(BoardMetric.FootprintDiameter() / 100.0f));
+            Tint(Rig.Ring);
         }
     }
 }
@@ -797,21 +847,24 @@ void AExpeditionBattleView::UpdateTiles()
 
 void AExpeditionBattleView::UpdateMarkers()
 {
-    auto Place = [this](FExpeditionPart& Marker, int32 Id, float Scale, float Lift)
+    // Each marker size is given for both looks: a multiple of the footprint ring (themed) and the original disc scale.
+    auto Place = [this](FExpeditionPart& Marker, int32 Id, float RingScale, float DiscScale, float Lift)
     {
         const FUnitDisplay* Unit = Show.Unit(Id);
         if (!Unit) { Marker.Mesh->SetVisibility(false); return; }
         Marker.Mesh->SetVisibility(true);
         Marker.Mesh->SetRelativeLocation(SceneBoard(Unit->Position, Lift));
-        Marker.Mesh->SetRelativeScale3D(FVector(Scale, Scale, 0.02f));
+        // Themed rings are a multiple of the footprint ring; the markers live under the scaled scenery root.
+        Marker.Mesh->SetRelativeScale3D(Theme ? FVector(BoardMetric.FootprintDiameter() * RingScale / SceneScale() / 100.0f)
+            : FVector(DiscScale, DiscScale, 0.02f));
     };
     if (Markers.Num() < 2) { return; }
     const bool bCombat = InCombat();
     const int32 Active = bCombat && Rules().Snapshot().Phase == EBattlePhase::Fighting ? Rules().ActiveId() : INDEX_NONE;
     const int32 Shown = IsPresenting() && Show.FocusId() != INDEX_NONE ? INDEX_NONE : Active;
-    if (Shown != INDEX_NONE) { Place(Markers[0], Shown, 0.95f + 0.05f * FMath::Sin(Clock * 4.0f), 0.6f); }
+    if (Shown != INDEX_NONE) { Place(Markers[0], Shown, 1.6f + 0.06f * FMath::Sin(Clock * 4.0f), 0.95f + 0.05f * FMath::Sin(Clock * 4.0f), 0.6f); }
     else { Markers[0].Mesh->SetVisibility(false); }
-    if (bCombat && Highlights.SelectedId != INDEX_NONE && Highlights.SelectedId != Shown) { Place(Markers[1], Highlights.SelectedId, 0.9f, 0.4f); }
+    if (bCombat && Highlights.SelectedId != INDEX_NONE && Highlights.SelectedId != Shown) { Place(Markers[1], Highlights.SelectedId, 1.42f, 0.9f, 0.4f); }
     else { Markers[1].Mesh->SetVisibility(false); }
     for (int32 Index = 0; Index < TargetMarkers; ++Index)
     {
@@ -819,7 +872,8 @@ void AExpeditionBattleView::UpdateMarkers()
         if (!bCombat || IsPresenting() || !Highlights.Targets.IsValidIndex(Index)) { Marker.Mesh->SetVisibility(false); continue; }
         const int32 Id = Highlights.Targets[Index];
         const bool bHover = Id == Highlights.HoverTargetId;
-        Place(Marker, Id, (bHover ? 1.0f : 0.9f) + (bHover ? 0.06f * FMath::Sin(Clock * 8.0f) : 0.0f), 0.8f);
+        Place(Marker, Id, (bHover ? 1.34f : 1.22f) + (bHover ? 0.05f * FMath::Sin(Clock * 8.0f) : 0.0f),
+            (bHover ? 1.0f : 0.9f) + (bHover ? 0.06f * FMath::Sin(Clock * 8.0f) : 0.0f), 0.8f);
         Marker.SetColor(Highlights.bFriendlyTargets ? FLinearColor(0.3f, 1.0f, 0.5f) * (bHover ? 2.2f : 1.3f) : FLinearColor(1.0f, 0.18f, 0.1f) * (bHover ? 2.5f : 1.4f));
     }
 }
@@ -1185,7 +1239,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
-    UpdateRigs(); UpdateTiles(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
@@ -1246,27 +1300,20 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
 {
     const bool bForest = BoardTheme == EBoardTheme::Meadow;
     UStaticMesh* World = ThemeMesh(bForest ? Theme->RootWorld : Theme->VigilWorld);
-    UStaticMesh* TileMesh = ThemeMesh(bForest ? Theme->RootTile : Theme->VigilTile);
-    if (!World || !TileMesh) { return false; }
-    const float TileHeight = FMath::Max(1.0f, Theme->TileHeight);
-    const float Ground = RefTop - TileHeight;
+    if (!World) { return false; }
+    // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
+    // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).
+    const float Ground = RefTop;
     const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f)));
     Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White));
-    for (int32 Y = 0; Y < Encounter.Height; ++Y)
+    // The world's ground covers the 18 x 12 footprint, the largest generated board. A custom larger board gets one subtle
+    // plain plane just under the surface (never a checkerboard).
+    if (Encounter.Width > 18 || Encounter.Height > 12)
     {
-        for (int32 X = 0; X < Encounter.Width; ++X)
-        {
-            const FIntPoint Cell(X, Y);
-            const FVector Position = SceneBoard(FVector2D(Cell.X, Cell.Y));
-            FExpeditionTile Tile;
-            Tile.Cell = Cell;
-            // Darker than the surrounding ground so the move and path tints stand out.
-            Tile.Part = MakePart(TileMesh, nullptr, FVector(Position.X, Position.Y, Ground), FVector::OneVector,
-                FLinearColor::White * (0.6f + 0.12f * Hash(X, Y, Seed)));
-            Tiles.Add(Tile);
-        }
+        Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 1.2f),
+            FVector(Encounter.Width * RefCell / 100.0f + 0.2f, Encounter.Height * RefCell / 100.0f + 0.2f, 0.02f), FLinearColor(0.07f, 0.07f, 0.08f)));
     }
     FRandomStream Random(Seed);
     const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
@@ -1288,7 +1335,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         {(W - 1) * 0.5f, H + 0.5f}, {-1.5f, (H - 1) * 0.5f}, {W + 0.5f, (H - 1) * 0.5f}};
     for (const FVector2D& Spot : Braziers)
     {
-        const FVector At = SceneBoard(Spot, -TileHeight);
+        const FVector At = SceneBoard(Spot);
         if (Brazier) { Scenery.Add(MakePart(Brazier, nullptr, At, FVector::OneVector, FLinearColor::White)); }
         if (Flame)
         {
@@ -1304,7 +1351,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
         {
-            Scenery.Add(MakePart(Cage, nullptr, SceneBoard(Spot, -TileHeight + 430.0f), FVector::OneVector, FLinearColor::White));
+            Scenery.Add(MakePart(Cage, nullptr, SceneBoard(Spot, 430.0f), FVector::OneVector, FLinearColor::White));
             AddSway(Scenery.Last().Mesh, 6.0f, 0.0f);
         }
     }
@@ -1312,7 +1359,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     {
         for (const float X : {W * 0.22f, W * 0.78f - 1.0f})
         {
-            Scenery.Add(MakePart(Banner, nullptr, SceneBoard(FVector2D(X, H + 1.3f), -TileHeight), FVector::OneVector, FLinearColor::White, FRotator(0, -90, 0)));
+            Scenery.Add(MakePart(Banner, nullptr, SceneBoard(FVector2D(X, H + 1.3f)), FVector::OneVector, FLinearColor::White, FRotator(0, -90, 0)));
             AddSway(Scenery.Last().Mesh, 3.5f, 0.0f);
         }
     }
@@ -1394,5 +1441,146 @@ void AExpeditionBattleView::UpdateSway()
             const float Lick = 0.6f * FMath::Sin(Clock * 13.0f + Sway.Phase) + 0.4f * FMath::Sin(Clock * 23.0f + Sway.Phase * 2.0f);
             Sway.Component->SetRelativeScale3D(Sway.Scale * FVector(1.0f - Sway.Flicker * 0.3f * Lick, 1.0f - Sway.Flicker * 0.3f * Lick, 1.0f + Sway.Flicker * Lick));
         }
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// Contextual grid and footprint rings (#142). Thin bars on the board plane, instanced per style; no per-cell meshes.
+
+UInstancedStaticMeshComponent* AExpeditionBattleView::MakeBarSet(FExpeditionPart& Part, USceneComponent* Parent, FLinearColor Color, float Opacity)
+{
+    UInstancedStaticMeshComponent* Set = NewObject<UInstancedStaticMeshComponent>(this);
+    AddInstanceComponent(Set);
+    Spawned.Add(Set);
+    Set->SetupAttachment(Parent ? Parent : SceneryRoot.Get());
+    Set->SetMobility(EComponentMobility::Movable);
+    Set->SetStaticMesh(Cube);
+    Set->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Set->SetCastShadow(false);
+    Set->bReceivesDecals = false;
+    Set->SetCanEverAffectNavigation(false);
+    Part.Mesh = Set;
+    Part.Base = Color;
+    UMaterialInterface* Look = OverlayMaterial ? OverlayMaterial.Get() : BaseMaterial.Get();
+    if (Look)
+    {
+        Part.Material = UMaterialInstanceDynamic::Create(Look, this);
+        Set->SetMaterial(0, Part.Material);
+        // Without the translucent material a faint line is drawn dimmer instead, so it never reads as a solid one.
+        Part.SetColor(OverlayMaterial ? Color : Color * Opacity);
+        if (OverlayMaterial) { Part.Material->SetScalarParameterValue(TEXT("Opacity"), Opacity); }
+    }
+    Set->RegisterComponent();
+    return Set;
+}
+
+FExpeditionPart AExpeditionBattleView::MakeRing(USceneComponent* Parent, FVector Location, FLinearColor Color)
+{
+    FExpeditionPart Part;
+    if (!Cube) { return Part; }
+    UInstancedStaticMeshComponent* Set = MakeBarSet(Part, Parent, Color, 1.0f);
+    Set->SetRelativeLocation(Location);
+    // A ring 100 cm across at unit scale: a polygon of thin bars, slightly overlapped so no gap shows. The component
+    // scale makes it any diameter (and thickness stays proportional).
+    TArray<FTransform> Bars;
+    const float Side = 100.0f * FMath::Sin(PI / RingSegments);
+    for (int32 Index = 0; Index < RingSegments; ++Index)
+    {
+        const float Angle = (Index + 0.5f) * 2.0f * PI / RingSegments;
+        Bars.Add(FTransform(FRotator(0.0f, FMath::RadiansToDegrees(Angle) + 90.0f, 0.0f),
+            FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0f) * 50.0f, FVector(Side * 1.1f / 100.0f, 0.05f, 0.012f)));
+    }
+    Set->AddInstances(Bars, false, false, false);
+    return Part;
+}
+
+float AExpeditionBattleView::FootprintRingDiameterCm(int32 UnitId) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    { if (Rig.Id == UnitId && Rig.Ring.Mesh) { return Rig.Ring.Mesh->GetRelativeScale3D().X * 100.0f; } }
+    return 0.0f;
+}
+
+USceneComponent* AExpeditionBattleView::UnitRigRoot(int32 UnitId) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs) { if (Rig.Id == UnitId) { return Rig.Root; } }
+    return nullptr;
+}
+
+int32 AExpeditionBattleView::OverlayBars(BoardOverlay::EStyle Style) const
+{
+    return OverlayCounts.IsValidIndex(static_cast<int32>(Style)) ? OverlayCounts[static_cast<int32>(Style)] : 0;
+}
+
+void AExpeditionBattleView::BuildOverlay()
+{
+    // Themed battle boards only: primitive boards keep the tinted cube tiles and the HUD markers.
+    if (!Theme || bOverview || !Cube) { return; }
+    for (int32 Index = 0; Index < static_cast<int32>(BoardOverlay::EStyle::Count); ++Index)
+    {
+        const FOverlayLook Look = OverlayLook(static_cast<BoardOverlay::EStyle>(Index));
+        FExpeditionPart Part;
+        MakeBarSet(Part, RootComponent, Look.Color, Look.Opacity);
+        Part.Mesh->SetVisibility(false);
+        OverlaySets.Add(Part);
+    }
+    OverlayCounts.SetNumZeroed(OverlaySets.Num());
+}
+
+void AExpeditionBattleView::UpdateOverlay()
+{
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    // Choices show only while the party can act and nothing is playing back, like the tile tints they replace.
+    const bool bChoices = InCombat() && !IsPresenting() && !bOverview;
+    const bool bGrid = Highlights.bFullGrid && InCombat() && !bOverview;
+    static const FBoardHighlights NoChoices;
+    const FBoardHighlights& Source = bChoices ? Highlights : NoChoices;
+    // Scratch storage is reused, so a frame in which nothing changed allocates nothing and builds no mask.
+    OverlayVictims.Reset();
+    if (bChoices)
+    {
+        for (const int32 Id : Highlights.Victims)
+        { if (const FCombatantState* Unit = Rules().Find(Id)) { OverlayVictims.Add(Unit->Cell); } }
+    }
+    // Exactly the inputs BuildMask and BuildBars read.
+    const FBoardHighlights& Last = OverlayInput;
+    const bool bSameInput = Source.Moves == Last.Moves && Source.Reach.Visible == Last.Reach.Visible
+        && Source.Reach.Obstructed == Last.Reach.Obstructed && Source.Path == Last.Path
+        && Source.bHasHover == Last.bHasHover && (!Source.bHasHover || Source.Hover == Last.Hover)
+        && Source.bHasOrigin == Last.bHasOrigin && (!Source.bHasOrigin || Source.Origin == Last.Origin)
+        && OverlayVictims == OverlayVictimsShown;
+    const bool bChanged = !bOverlayBuilt || !bSameInput || bGrid != bFullGridShown
+        || Encounter.Width != OverlayState.Width || Encounter.Height != OverlayState.Height;
+    if (!bChanged) { return; }
+    OverlayInput = Source;
+    OverlayVictimsShown = OverlayVictims;
+    bFullGridShown = bGrid;
+    bOverlayBuilt = true;
+    OverlayState = BoardOverlay::BuildMask(Encounter.Width, Encounter.Height, OverlayInput, OverlayVictimsShown);
+    if (OverlaySets.IsEmpty()) { return; }
+
+    TArray<BoardOverlay::FBar> Bars;
+    BoardOverlay::BuildBars(OverlayState, OverlayInput, bGrid, Bars);
+    TArray<TArray<FTransform>> Groups;
+    Groups.SetNum(OverlaySets.Num());
+    for (const BoardOverlay::FBar& Bar : Bars)
+    {
+        const int32 Index = static_cast<int32>(Bar.Style);
+        if (!Groups.IsValidIndex(Index)) { continue; }
+        const FVector2D Delta = (Bar.B - Bar.A) * BoardMetric.CellCm;
+        const float Length = Delta.Size();
+        // The bar is a 1 cm thick slab lying on the board; its underside is at the layer's lift.
+        const float Height = BoardMetric.Scaled(OverlayLook(Bar.Style).Lift) + 0.5f;
+        Groups[Index].Add(FTransform(FRotator(0.0f, FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X)), 0.0f),
+            BoardPosition((Bar.A + Bar.B) * 0.5f, Height), FVector(Length / 100.0f, Bar.Width * BoardMetric.CellCm / 100.0f, 0.01f)));
+    }
+    for (int32 Index = 0; Index < OverlaySets.Num(); ++Index)
+    {
+        UInstancedStaticMeshComponent* Set = Cast<UInstancedStaticMeshComponent>(OverlaySets[Index].Mesh);
+        if (!Set) { continue; }
+        Set->ClearInstances();
+        if (!Groups[Index].IsEmpty()) { Set->AddInstances(Groups[Index], false, false, false); }
+        Set->SetVisibility(!Groups[Index].IsEmpty());
+        OverlayCounts[Index] = Groups[Index].Num();
     }
 }

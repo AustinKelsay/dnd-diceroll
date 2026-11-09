@@ -72,6 +72,13 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
     Bind(EKeys::G, &AExpeditionPlayerController::Preset);
+    // Hold Alt for the faint full grid (#142). Not a letter: Shift+W/A/S/D pan the camera, and Shift-Tab moves menu focus.
+    // Alt only sets a flag, so Alt+Enter still reaches the viewport's fullscreen toggle and no button reads Alt.
+    for (const FKey& Key : {EKeys::LeftAlt, EKeys::RightAlt})
+    {
+        InputComponent->BindKey(Key, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
+        InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
+    }
     Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
@@ -143,6 +150,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 
     FBoardHighlights Highlights;
     Highlights.SelectedId = SelectedId;
+    // The full grid is presentation only; an open overlay owns the screen, so it hides the grid too.
+    Highlights.bFullGrid = (bGridHeld || bGridPreview) && !OverlayOpen();
     HoverUnitId = HoverTargetId = INDEX_NONE;
     Path.Reset();
     FIntPoint Hover;
@@ -165,11 +174,15 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         Highlights.Reach = ReachCells;
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
+        if (const FCombatantState* Actor = Rules.Find(ActorId)) { Highlights.bHasOrigin = true; Highlights.Origin = Actor->Cell; }
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }
             if (Highlights.Targets.Contains(HoverUnitId)) { HoverTargetId = HoverUnitId; Highlights.HoverTargetId = HoverUnitId; }
         }
+        // Area victims: the same forecast the HUD labels, so the board frames exactly the labelled units.
+        for (const FTargetEffect& Effect : Rules.Forecast(ActorId, SelectedAction, HoverTargetId).Effects)
+        { if (Effect.Effect == EAbilityEffect::Strike) { Highlights.Victims.AddUnique(Effect.TargetId); } }
     }
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
@@ -651,6 +664,9 @@ void AExpeditionPlayerController::BeginDrag()
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+void AExpeditionPlayerController::GridDown() { bGridHeld = true; }
+void AExpeditionPlayerController::GridUp() { bGridHeld = false; }
+void AExpeditionPlayerController::PreviewFullGrid(bool bShow) { bGridPreview = bShow; }
 
 bool AExpeditionPlayerController::ShowingBuilder() const
 {
