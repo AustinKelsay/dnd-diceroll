@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop-root-pillar-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Pillar_B",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS, deep high fantasy with a PS1 look: the Root of the World identity (giant tree, roots, mossy flagstones, fungus, canopy light) from the owner-approved r001 Root (issue #38) and the #140 gate-1 decisions; all textures and geometry procedural; no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_kit_root_r002.py): snapped stump with a jagged crown and glowing shelf fungus; conforming subdivision to 45 cm, vertex colour = ray-cast ambient occlusion x height gradient x moss tint; glow only via COLOR_0.a on fungus caps",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); #145 r002 standard; parent #138",
+    "parameters": {
+      "units": "metres at true scale for a 150 cm cell",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of its 150 cm cell, at floor level",
+      "triangles": 1105,
+      "size_m": [
+        1.6037,
+        1.5685,
+        3.5154
+      ],
+      "bbox_min_m": [
+        -0.7631,
+        -0.7338,
+        -0.015
+      ],
+      "bbox_max_m": [
+        0.8406,
+        0.8347,
+        3.5004
+      ],
+      "atlas_px": 512,
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "theme": "Root of the World (Root encounters only; the Vigil kit is separate)",
+      "lods": {
+        "lod0_triangles": 1105,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 551,
+            "fraction": 0.4986,
+            "file": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0006
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0081,
+              0.0517
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 275,
+            "fraction": 0.2489,
+            "file": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0029,
+              0.0163,
+              0.03
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0303,
+              0.1185
+            ]
+          }
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/root_lib.py",
+      "sha256": "6974f7d811890cc0d34ccb458b2764ea8d484f16bd99062bdaa01b1aba093542"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/build_kit_root_r002.py",
+      "sha256": "2b06aeb9da5ca306f9e1c3079633f500a3819f354d3846dada49dbc380c3f985"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/lod_r002.py",
+      "sha256": "2ee2bb7f99094fa6de541c3f7079c9ab1cb205d454970b9f17d00ab989c68d1d"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/build_lods_root_r002.py",
+      "sha256": "afd865a6e93f1336ca6b688e82acddf0e7f6715cb404b05cda737de74af1e73e"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B.glb",
+      "sha256": "59359bdba212ae3368ee68939ea04640cea278bf4727c0d79c6fda22eed20f5c"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B_LOD1.glb",
+      "sha256": "68f7854e67e857369e4e1824abea09e856b149e63142be1454c8c17b4fe703da"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B_LOD2.glb",
+      "sha256": "0f97f2065e99d4043e7ce6b8a555f62c6872dd45b1a5ce16daa94c4fbdc4d2e1"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#149 phase 2, as #145)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

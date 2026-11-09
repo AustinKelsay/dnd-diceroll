@@ -35,6 +35,10 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Fallbacks:** `AExpeditionBattleView` falls back to the engine primitives below when an entry is missing. The `-ExpeditionPrimitives` command-line flag forces that fallback.
 
+## Root of the World r002 world kit (issue #149)
+
+Blender-side revision of the Root world, built to the #145 standard (150 cm cells, no geometry in the board footprint, a camera clear volume, occluder split, 2048² atlas at about 256 texels/m, vertex light, explicit LODs). Original, agent-authored procedural work by the scripts in `Art/dark-fantasy-sources/r002-root/scripts/` (Blender 5.2.3 LTS); no outside content. `world-root` r002 revises r001 at the same package; the occluders, three variants each of Root pillar, wall and stones, a 2-cell root arch, eight scatter props, three mist cards and two light shafts are new ids at r001 (`world-root-occluders`, `prop-root-*`, `scatter-root-*`, `fx-root-*`), each with a record under `Art/<asset-id>/rNNN/asset.json`. All records are `validation.state: pending`: nothing was imported or rendered in Unreal. Details, rebuild commands, measurements and the camera check are in `Art/dark-fantasy-sources/r002-root/README.md`.
+
 ## Game splash (issue #131)
 
 `Content/Splash/Splash.bmp` is the splash the packaged Linux game shows while it loads. It is a raw file rather than an Unreal asset: the engine reads `<Project>/Content/Splash/Splash.bmp` directly, and Linux packaging stages that exact file outside the pak (`LinuxPlatform.Automation.cs`). Non-editor builds load it with `SDL_LoadBMP`, so it is an uncompressed 24-bit BMP, 720×370 like the engine's own splash. `Content/Splash/Icon.bmp` (64×64, 24-bit) is the splash window's icon: once a splash exists, the engine also looks up `Splash/Icon` and logs `Game icon not found.` without it. Packaging stages only `Splash.bmp` by itself, so `Config/DefaultGame.ini` adds `+DirectoriesToAlwaysStageAsNonUFS=(Path="Splash")` to ship the folder. Both files are Git LFS tracked (`*.bmp`).

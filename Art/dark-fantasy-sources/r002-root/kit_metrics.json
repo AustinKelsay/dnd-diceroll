@@ -1,0 +1,1014 @@
+{
+ "SM_Prop_Root_Pillar": {
+  "triangles": 1708,
+  "vertices": 4025,
+  "bbox_min_m": [
+   -0.7679,
+   -0.7015,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.8348,
+   0.8049,
+   2.9156
+  ],
+  "size_m": [
+   1.6028,
+   1.5064,
+   2.9306
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 228948,
+  "extensions": [],
+  "asset_id": "prop-root-pillar",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Pillar",
+  "glow_tris": 33,
+  "atlas_px": 512,
+  "atlas_fill": 0.169,
+  "file": "Art/prop-root-pillar/r001/SM_Prop_Root_Pillar.glb"
+ },
+ "SM_Prop_Root_Pillar_B": {
+  "triangles": 1105,
+  "vertices": 2202,
+  "bbox_min_m": [
+   -0.7631,
+   -0.7338,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.8406,
+   0.8347,
+   3.5004
+  ],
+  "size_m": [
+   1.6037,
+   1.5685,
+   3.5154
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 164664,
+  "extensions": [],
+  "asset_id": "prop-root-pillar-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Pillar_B",
+  "glow_tris": 28,
+  "atlas_px": 512,
+  "atlas_fill": 0.218,
+  "file": "Art/prop-root-pillar-b/r001/SM_Prop_Root_Pillar_B.glb"
+ },
+ "SM_Prop_Root_Pillar_C": {
+  "triangles": 901,
+  "vertices": 2008,
+  "bbox_min_m": [
+   -0.7737,
+   -0.9226,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.7945,
+   0.8286,
+   1.35
+  ],
+  "size_m": [
+   1.5682,
+   1.7513,
+   1.365
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 155660,
+  "extensions": [],
+  "asset_id": "prop-root-pillar-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Pillar_C",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.216,
+  "file": "Art/prop-root-pillar-c/r001/SM_Prop_Root_Pillar_C.glb"
+ },
+ "SM_Prop_Root_Wall": {
+  "triangles": 1178,
+  "vertices": 3263,
+  "bbox_min_m": [
+   -0.857,
+   -0.7514,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.6746,
+   0.8928,
+   2.2073
+  ],
+  "size_m": [
+   1.5317,
+   1.6442,
+   2.2223
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 234256,
+  "extensions": [],
+  "asset_id": "prop-root-wall",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Wall",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.33,
+  "file": "Art/prop-root-wall/r001/SM_Prop_Root_Wall.glb"
+ },
+ "SM_Prop_Root_Wall_B": {
+  "triangles": 1098,
+  "vertices": 2821,
+  "bbox_min_m": [
+   -0.6657,
+   -0.9148,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.72,
+   0.8773,
+   1.7005
+  ],
+  "size_m": [
+   1.3858,
+   1.7921,
+   1.7155
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 177124,
+  "extensions": [],
+  "asset_id": "prop-root-wall-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Wall_B",
+  "glow_tris": 50,
+  "atlas_px": 512,
+  "atlas_fill": 0.169,
+  "file": "Art/prop-root-wall-b/r001/SM_Prop_Root_Wall_B.glb"
+ },
+ "SM_Prop_Root_Wall_C": {
+  "triangles": 1120,
+  "vertices": 2816,
+  "bbox_min_m": [
+   -0.5939,
+   -0.6947,
+   0
+  ],
+  "bbox_max_m": [
+   0.6525,
+   0.84,
+   0.7032
+  ],
+  "size_m": [
+   1.2464,
+   1.5347,
+   0.7032
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 219868,
+  "extensions": [],
+  "asset_id": "prop-root-wall-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Wall_C",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.357,
+  "file": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C.glb"
+ },
+ "SM_Prop_Root_Stones": {
+  "triangles": 634,
+  "vertices": 1688,
+  "bbox_min_m": [
+   -0.6962,
+   -0.7443,
+   0
+  ],
+  "bbox_max_m": [
+   0.7205,
+   0.6297,
+   0.8593
+  ],
+  "size_m": [
+   1.4167,
+   1.374,
+   0.8593
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 120992,
+  "extensions": [],
+  "asset_id": "prop-root-stones",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Stones",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.165,
+  "file": "Art/prop-root-stones/r001/SM_Prop_Root_Stones.glb"
+ },
+ "SM_Prop_Root_Stones_B": {
+  "triangles": 1395,
+  "vertices": 3353,
+  "bbox_min_m": [
+   -0.5286,
+   -0.768,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.5953,
+   0.5736,
+   2.148
+  ],
+  "size_m": [
+   1.1239,
+   1.3416,
+   2.163
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 239616,
+  "extensions": [],
+  "asset_id": "prop-root-stones-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Stones_B",
+  "glow_tris": 25,
+  "atlas_px": 512,
+  "atlas_fill": 0.334,
+  "file": "Art/prop-root-stones-b/r001/SM_Prop_Root_Stones_B.glb"
+ },
+ "SM_Prop_Root_Stones_C": {
+  "triangles": 927,
+  "vertices": 2138,
+  "bbox_min_m": [
+   -0.6706,
+   -0.8782,
+   0
+  ],
+  "bbox_max_m": [
+   0.7792,
+   0.6238,
+   0.711
+  ],
+  "size_m": [
+   1.4498,
+   1.502,
+   0.711
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 140800,
+  "extensions": [],
+  "asset_id": "prop-root-stones-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Stones_C",
+  "glow_tris": 108,
+  "atlas_px": 512,
+  "atlas_fill": 0.169,
+  "file": "Art/prop-root-stones-c/r001/SM_Prop_Root_Stones_C.glb"
+ },
+ "SM_Prop_Root_Arch2Cell": {
+  "triangles": 2575,
+  "vertices": 6950,
+  "bbox_min_m": [
+   -0.6337,
+   -1.4659,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.5818,
+   1.5359,
+   3.0365
+  ],
+  "size_m": [
+   1.2155,
+   3.0017,
+   3.0515
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 351160,
+  "extensions": [],
+  "asset_id": "prop-root-arch-2cell",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Arch2Cell",
+  "glow_tris": 67,
+  "atlas_px": 512,
+  "atlas_fill": 0.169,
+  "file": "Art/prop-root-arch-2cell/r001/SM_Prop_Root_Arch2Cell.glb"
+ },
+ "SM_Scatter_Root_Mushrooms": {
+  "triangles": 542,
+  "vertices": 1042,
+  "bbox_min_m": [
+   -0.905,
+   -0.7625,
+   0
+  ],
+  "bbox_max_m": [
+   0.5344,
+   0.4,
+   0.3325
+  ],
+  "size_m": [
+   1.4393,
+   1.1625,
+   0.3325
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 53944,
+  "extensions": [],
+  "asset_id": "scatter-root-mushrooms",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Mushrooms",
+  "glow_tris": 117,
+  "atlas_px": 256,
+  "atlas_fill": 0.115,
+  "file": "Art/scatter-root-mushrooms/r001/SM_Scatter_Root_Mushrooms.glb"
+ },
+ "SM_Scatter_Root_Leaves": {
+  "triangles": 68,
+  "vertices": 136,
+  "bbox_min_m": [
+   -0.4965,
+   -0.5747,
+   0.0073
+  ],
+  "bbox_max_m": [
+   0.456,
+   0.657,
+   0.0456
+  ],
+  "size_m": [
+   0.9525,
+   1.2317,
+   0.0383
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 16212,
+  "extensions": [],
+  "asset_id": "scatter-root-leaves",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Leaves",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-root-leaves/r001/SM_Scatter_Root_Leaves.glb"
+ },
+ "SM_Scatter_Root_Twigs": {
+  "triangles": 496,
+  "vertices": 1309,
+  "bbox_min_m": [
+   -0.433,
+   -0.3176,
+   -0.0112
+  ],
+  "bbox_max_m": [
+   0.3098,
+   0.3216,
+   0.053
+  ],
+  "size_m": [
+   0.7428,
+   0.6392,
+   0.0642
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 63248,
+  "extensions": [],
+  "asset_id": "scatter-root-twigs",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Twigs",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-root-twigs/r001/SM_Scatter_Root_Twigs.glb"
+ },
+ "SM_Scatter_Root_Tendrils": {
+  "triangles": 565,
+  "vertices": 1552,
+  "bbox_min_m": [
+   -0.5453,
+   -0.5668,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.5937,
+   0.5719,
+   0.09
+  ],
+  "size_m": [
+   1.139,
+   1.1387,
+   0.105
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 85380,
+  "extensions": [],
+  "asset_id": "scatter-root-tendrils",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Tendrils",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.191,
+  "file": "Art/scatter-root-tendrils/r001/SM_Scatter_Root_Tendrils.glb"
+ },
+ "SM_Scatter_Root_Ferns": {
+  "triangles": 172,
+  "vertices": 300,
+  "bbox_min_m": [
+   -0.7463,
+   -0.1994,
+   0
+  ],
+  "bbox_max_m": [
+   0.6836,
+   0.6796,
+   0.5578
+  ],
+  "size_m": [
+   1.4299,
+   0.879,
+   0.5578
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 16660,
+  "extensions": [],
+  "asset_id": "scatter-root-ferns",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Ferns",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.018,
+  "file": "Art/scatter-root-ferns/r001/SM_Scatter_Root_Ferns.glb"
+ },
+ "SM_Scatter_Root_Pebbles": {
+  "triangles": 200,
+  "vertices": 541,
+  "bbox_min_m": [
+   -0.3564,
+   -0.3722,
+   0
+  ],
+  "bbox_max_m": [
+   0.4496,
+   0.34,
+   0.0989
+  ],
+  "size_m": [
+   0.806,
+   0.7122,
+   0.0989
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 46688,
+  "extensions": [],
+  "asset_id": "scatter-root-pebbles",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Pebbles",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.289,
+  "file": "Art/scatter-root-pebbles/r001/SM_Scatter_Root_Pebbles.glb"
+ },
+ "SM_Scatter_Root_GlowMoss": {
+  "triangles": 170,
+  "vertices": 314,
+  "bbox_min_m": [
+   -0.5569,
+   -0.5824,
+   0.012
+  ],
+  "bbox_max_m": [
+   0.5818,
+   0.5564,
+   0.12
+  ],
+  "size_m": [
+   1.1388,
+   1.1388,
+   0.108
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 22544,
+  "extensions": [],
+  "asset_id": "scatter-root-glowmoss",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_GlowMoss",
+  "glow_tris": 33,
+  "atlas_px": 256,
+  "atlas_fill": 0.106,
+  "file": "Art/scatter-root-glowmoss/r001/SM_Scatter_Root_GlowMoss.glb"
+ },
+ "SM_Scatter_Root_Husks": {
+  "triangles": 240,
+  "vertices": 480,
+  "bbox_min_m": [
+   -0.4442,
+   -0.4095,
+   0
+  ],
+  "bbox_max_m": [
+   0.4089,
+   0.3765,
+   0.2
+  ],
+  "size_m": [
+   0.8531,
+   0.786,
+   0.2
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 30088,
+  "extensions": [],
+  "asset_id": "scatter-root-husks",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Root_Husks",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-root-husks/r001/SM_Scatter_Root_Husks.glb"
+ },
+ "SM_Fx_Root_MistCard": {
+  "triangles": 72,
+  "vertices": 56,
+  "bbox_min_m": [
+   -0.004,
+   -1.5,
+   0
+  ],
+  "bbox_max_m": [
+   0,
+   1.5,
+   1.1
+  ],
+  "size_m": [
+   0.004,
+   3.0,
+   1.1
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 25556,
+  "extensions": [],
+  "asset_id": "fx-root-mist-card",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Root_MistCard",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-root-mist-card/r001/SM_Fx_Root_MistCard.glb"
+ },
+ "SM_Fx_Root_MistCard_B": {
+  "triangles": 64,
+  "vertices": 50,
+  "bbox_min_m": [
+   -0.5739,
+   -1.1,
+   -0.001
+  ],
+  "bbox_max_m": [
+   0,
+   1.1,
+   2.12
+  ],
+  "size_m": [
+   0.5739,
+   2.2,
+   2.121
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 25324,
+  "extensions": [],
+  "asset_id": "fx-root-mist-card-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Root_MistCard_B",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-root-mist-card-b/r001/SM_Fx_Root_MistCard_B.glb"
+ },
+ "SM_Fx_Root_MistCard_C": {
+  "triangles": 144,
+  "vertices": 98,
+  "bbox_min_m": [
+   -1.5,
+   -1.5,
+   0.116
+  ],
+  "bbox_max_m": [
+   1.5,
+   1.5,
+   0.12
+  ],
+  "size_m": [
+   3.0,
+   3.0,
+   0.004
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 27684,
+  "extensions": [],
+  "asset_id": "fx-root-mist-card-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Root_MistCard_C",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-root-mist-card-c/r001/SM_Fx_Root_MistCard_C.glb"
+ },
+ "SM_Fx_Root_LightShaft": {
+  "triangles": 96,
+  "vertices": 112,
+  "bbox_min_m": [
+   -2.9182,
+   -0.5303,
+   -0.0017
+  ],
+  "bbox_max_m": [
+   0.5305,
+   0.5304,
+   6.0015
+  ],
+  "size_m": [
+   3.4487,
+   1.0608,
+   6.0032
+  ],
+  "image_px": [
+   128,
+   128
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 7404,
+  "extensions": [],
+  "asset_id": "fx-root-light-shaft",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Root_LightShaft",
+  "glow_tris": 0,
+  "atlas_px": 128,
+  "atlas_fill": 0.117,
+  "file": "Art/fx-root-light-shaft/r001/SM_Fx_Root_LightShaft.glb"
+ },
+ "SM_Fx_Root_LightShaft_B": {
+  "triangles": 48,
+  "vertices": 56,
+  "bbox_min_m": [
+   -2.35,
+   -0.55,
+   -0.0016
+  ],
+  "bbox_max_m": [
+   0.55,
+   0.55,
+   4.2
+  ],
+  "size_m": [
+   2.9,
+   1.1,
+   4.2016
+  ],
+  "image_px": [
+   128,
+   128
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 4876,
+  "extensions": [],
+  "asset_id": "fx-root-light-shaft-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Root_LightShaft_B",
+  "glow_tris": 0,
+  "atlas_px": 128,
+  "atlas_fill": 0.117,
+  "file": "Art/fx-root-light-shaft-b/r001/SM_Fx_Root_LightShaft_B.glb"
+ }
+}
