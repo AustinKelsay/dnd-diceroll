@@ -84,7 +84,7 @@ GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
 CAPTURE_MODES = ("battle", "targeting", "overview", "start")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
-CAMERA_DISTANCE = (900, 3200)
+CAMERA_DISTANCE = (900, 6400)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
 
@@ -137,9 +137,9 @@ def load_poses(path):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:
                 raise ValueError(f"{name} needs a \"yaw\" from -360 to 360")
-            ok = distance == "default" or (isinstance(distance, (int, float)) and not isinstance(distance, bool) and CAMERA_DISTANCE[0] <= distance <= CAMERA_DISTANCE[1])
+            ok = distance in ("default", "far") or (isinstance(distance, (int, float)) and not isinstance(distance, bool) and CAMERA_DISTANCE[0] <= distance <= CAMERA_DISTANCE[1])
             if not ok:
-                raise ValueError(f"{name} needs a \"distance\" of \"default\" or a number from {CAMERA_DISTANCE[0]} to {CAMERA_DISTANCE[1]}")
+                raise ValueError(f"{name} needs a \"distance\" of \"default\", \"far\" or a number from {CAMERA_DISTANCE[0]} to {CAMERA_DISTANCE[1]}")
     return shots
 
 

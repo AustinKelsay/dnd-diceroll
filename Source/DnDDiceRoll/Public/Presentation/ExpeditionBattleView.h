@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "GameFramework/Actor.h"
@@ -156,13 +157,38 @@ public:
     // Camera and board geometry.
     void Orbit(float Degrees);
     void Zoom(float Amount);
+    /**
+     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The focus is
+     * clamped to the board plus a margin, and returns to the active unit when the turn changes.
+     */
+    void Pan(float Right, float Away);
+    /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
+    FVector CameraFocus() const { return FocusTarget; }
+    /** The camera pitch below horizontal, in degrees, for the current zoom. */
+    float CameraPitch() const;
+    /** The screen area the HUD leaves free; the board is fitted and centred in it. */
+    void SetSafeRect(const ExpeditionCameraRig::FSafeRect& Value);
+    const ExpeditionCameraRig::FSafeRect& SafeRect() const { return Safe; }
+    /** Shadow-casting lights: the directional key plus the local lights chosen by SelectShadowLights. */
+    int32 ShadowCastingLights() const;
+    /** World positions of the shadow-casting local lights, in build order: a stable identity for the chosen set. */
+    TArray<FVector> ShadowedLightPositions() const;
+    /** The attenuation radius of the first flame light, in world cm; zero when there is none. */
+    float FlameLightRadius() const;
     float CameraYaw() const { return TargetYaw; }
     /**
      * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
-     * the board metric's scale, so framing and the zoom clamp (900 to 3200) look the same at any cell size.
-     * Where the camera frames the whole board by default (the distance a fresh board starts at).
+     * the board metric's scale, so framing and the zoom clamp (900 to 6400) look the same at any cell size.
+     * Where the camera frames the whole board by default: the nearest zoom at which the board's four corners sit
+     * inside the HUD-safe rect from the home yaw (-90), at 45 degrees. This is the pitch anchor.
      */
     float FramedDistance() const;
+    /** The default zoom for a board seen from another yaw: its corners fit the safe rect there too (clamped to the zoom range). */
+    float FramedDistance(float ForYaw) const;
+    /** Whether the default zoom for a yaw really contains the board inside the zoom range (false only for a board too large to fit). */
+    bool FramedFits(float ForYaw) const;
+    /** Whether the zoom rests at the default fit for the current yaw. Orbit keeps such a camera fitted; a zoom the player chose is left alone. */
+    bool AtFramedZoom() const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
@@ -235,8 +261,19 @@ private:
     float Distance = 1600.0f;
     float TargetDistance = 1600.0f;
     FVector Focus = FVector::ZeroVector;
+    /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
+    FVector FocusTarget = FVector::ZeroVector;
+    FVector2D PanOffset = FVector2D::ZeroVector;
+    int32 LastFocusId = INDEX_NONE;
+    /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
+    TOptional<bool> StarterSunShadows;
+    ExpeditionCameraRig::FSafeRect Safe;
+    /** The home-yaw fit, kept until the board, metric or safe rect changes. */
+    mutable ExpeditionCameraRig::FFramedCache FramedCache;
     float ShakeAmount = 0.0f;
     bool bCameraPlaced = false;
+    /** The camera rests at (or is easing between) framed distances: the rendered distance never drops under the fit for the rendered yaw. A player zoom clears it. */
+    bool bFramed = false;
 
     UPROPERTY() TObjectPtr<UCameraComponent> Camera;
     UPROPERTY() TObjectPtr<UExponentialHeightFogComponent> Fog;
@@ -311,6 +348,10 @@ private:
     void UpdateMarkers();
     void UpdateEffects();
     void UpdateCamera(float DeltaSeconds);
+    /** The unpanned focus: the board centre leaned toward the acting unit (view space). */
+    FVector BaseFocus() const;
+    /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
+    void SelectShadowLights();
     void Record(const FCombatResult& Result);
     void Present(const TArray<FCombatResult>& Results);
     void ExpireVoices();

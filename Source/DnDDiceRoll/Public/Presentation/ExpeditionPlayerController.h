@@ -110,6 +110,8 @@ private:
     bool bGridHeld = false;
     bool bGridPreview = false;
     float DragX = 0.0f;
+    bool bPanning = false;
+    float PanX = 0.0f, PanY = 0.0f;
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
     bool bNextParty = false;
@@ -181,6 +183,10 @@ private:
     void GridUp();
     void BeginDrag();
     void EndDrag();
+    void BeginPan();
+    void EndPan();
+    /** The A key: attack mode, except while Shift pans the camera. */
+    void AttackKey();
     void SetMode(ECombatCommandType Action);
     bool AllowsGameplayInput() const;
     bool CanSelectSubclass() const;

@@ -21,6 +21,33 @@ struct Segment { Point From, To; };
 inline double ViewScale(double ViewportWidth, double ViewportHeight)
 { return std::max(0.5, std::min(ViewportWidth / DesignWidth, ViewportHeight / DesignHeight)); }
 
+// The part of the viewport the board may fill, in design units for a viewport already divided by the
+// scale: right of the party cards (x 12..262 in DrawPartyCard), below the initiative strip (y 12..68 in
+// DrawInitiative), above the action bar's budget chips (H - 108 in DrawActionBar) and clear of the right edge.
+// The camera rig fits the board to this rectangle (CameraRig.h), so the HUD and the camera share one source.
+constexpr double BoardLeft = 270, BoardTop = 76, BoardRight = 12, BoardBottom = 112;
+
+// The combat log panel (DrawLog): a fixed-width panel in the bottom-left corner whose height follows its wrapped lines
+// (at most LogMaxLines). DrawLog and the board bounds both use this, so the camera cannot frame the board under the log.
+constexpr double LogLeft = 8, LogWidth = 280, LogBottomMargin = 8, LogPadding = 14, LogLineHeight = 16;
+constexpr int LogMaxLines = 4;
+inline double LogHeight(int Lines) { return LogPadding + Lines * LogLineHeight; }
+inline Rect LogRect(double W, double H, int Lines = LogMaxLines)
+{
+    const double Height = LogHeight(Lines);
+    return {LogLeft, H - LogBottomMargin - Height, LogLeft + LogWidth, H - LogBottomMargin};
+}
+
+// The board area stays clear of the party cards, strips and action bar, and also of the tallest the combat log can get:
+// where the log's columns overlap the board's, the bottom edge rises to the log's top.
+inline Rect BoardBounds(double W, double H)
+{
+    Rect Bounds = {BoardLeft, BoardTop, W - BoardRight, H - BoardBottom};
+    const Rect Log = LogRect(W, H);
+    if (Log.Right > Bounds.Left && Log.Left < Bounds.Right) { Bounds.Bottom = std::min(Bounds.Bottom, Log.Top); }
+    return Bounds;
+}
+
 // Where chips may sit, in design units for a viewport already divided by the scale:
 // below the top bar and legend, above the action bar and budget row.
 inline Rect ChipBounds(double W, double H) { return {8, 150, W - 8, H - 160}; }

@@ -19,10 +19,32 @@ The game's art set lives under `/Game/DnDDiceRoll/Theme`.
 Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, with its glTF export beside it.
 
 **Import:** `Content/Python/import_dark_fantasy_theme.py` imports the exports. It:
-- creates `M_DiceRollTheme` (texture × vertex colour × `Color` tint, plus a `Glow` emissive share);
+- creates `M_DiceRollTheme`, and keeps an existing master unless its stored graph revision (`MASTER_GRAPH_REVISION`, the metadata tag `DiceRollGraphRevision`) differs from the script's, and then rebuilds the graph in place (the asset and its instances survive). Set `DND_THEME_REBUILD_MASTER=1` to force a rebuild; bump the revision whenever the graph changes. See "Theme material" below;
 - gives each mesh its own `MI_*` instance;
-- sets textures to nearest filtering, uncompressed and sRGB;
+- sets textures to `TF_DEFAULT` in `TEXTUREGROUP_World`, uncompressed and sRGB. Gate 1 chose trilinear + anisotropic 8 (nearest, trilinear and sharp texels looked nearly identical at 256 texels/m). `TF_TRILINEAR` maps straight to a plain trilinear sampler, and Vulkan enables anisotropy only for anisotropic sampler filters, so `r.MaxAnisotropy=8` (`Config/DefaultEngine.ini`) would do nothing for it. `TF_DEFAULT` defers to the texture group; the engine's World group is aniso with point mips (an anisotropic-point sampler), so `Config/DefaultDeviceProfiles.ini` replaces that one group entry with aniso + linear mips, the anisotropic-linear sampler. This is a Config change (a new file) and needs coordinator approval. The filter fix reimport is expected to change only the 21 `T_*` textures (their `filter` property);
 - fills `DA_DiceRollTheme`, a `UDiceRollTheme` data asset.
+
+**Theme material (#143):** `M_DiceRollTheme` computes `base = Tex × vertex colour × Color` and adds three emissive terms, each driven by a per-instance parameter:
+- `Glow` × the vertex-colour alpha mask (flames, runes, glass). There is no blanket glow share any more.
+- `Fill` × a hemisphere fill (sky above, ground below, from the world normal) × the base colour, so shadowed sides keep their form.
+- `Rim` × a cool Fresnel rim (exponent 3), so dark figures read against dark ground.
+
+`Roughness` sets the surface: characters and metal 0.5 to 0.65, stone, cloth and ground 0.9 to 0.95. Characters get `Rim` and `Fill` 1; worlds and tiles get none; props a trace of `Fill`. The master is Masked: a `CameraFade` clip drops scenery nearer to the camera than `CameraFade` × the camera's height, so a diorama around the board never swallows the camera. The clip goes through a `ShadowPassSwitch` (Default: the clip, Shadow: 1), because a shadow depth pass keeps the player camera's origin and the clip would otherwise remove shadows too. `SelfLit` is a constant emissive share kept only for the flame (a light source) and the tabletop overview, which stays as it was.
+
+**Accepted exception to gate 1's mask-only glow (decided by the lead, 2026-11-09):** the battle flame's `SelfLit` (1.4) and the tabletop overview's self-light stay. The r001 flame has no glow mask and is itself a light source. The exception lasts until r002 art with real glow masks lands (#145, #147), when both move onto `Glow` and `SelfLit` goes away.
+
+**Vertex-alpha guard:** glTF `COLOR_0` is optional, and Unreal reads a missing vertex alpha as 1, which would make a whole mesh glow. At import the script reads each export's accessors and enables `Glow` only when `COLOR_0` is RGBA with a varying alpha. No r001 export has one (most have no `COLOR_0`; the tabletop and the two worlds have a constant alpha of 1), so every r001 instance imports with `Glow` 0 until a revised export paints a mask. The log lists `THEME_MATERIAL <mesh> glow=<n> mask=<bool>` per mesh.
+
+**Reimport (#143, 2026-11-09):** one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) exited 0 with `THEME_IMPORT_COMPLETE 21/21` and no warnings. The script saves only dirty packages and assigns a mesh material only when it differs, so the run changed exactly `M_DiceRollTheme`, the 21 `MI_*` instances and the 21 `T_*` textures (filtering and mips). Hashes of `Config/` and `Content/` taken before and after showed no mesh, `DA_DiceRollTheme` or other file changed. It imported nothing new: every source is still a self-authored r001 export, so no licence changes.
+
+**Reimport for anisotropic filtering (#143 review, 2026-11-09):** textures now use `TF_DEFAULT` in `TEXTUREGROUP_World`, which `Config/DefaultDeviceProfiles.ini` makes anisotropic with linear mips.
+- **First headless run:** it also re-saved `M_DiceRollTheme` and the 21 `MI_*`, because the script rebuilt the master and re-set every parameter on each run. Those 22 files were restored to their reviewed versions, and the script was made idempotent.
+- **Validation run, from the committed assets:** exit 0, no warnings, `THEME_MASTER kept`. The hash diff showed exactly the 21 `T_*` changed.
+- **Immediate rerun:** changed nothing.
+
+**Camera clip (#143 review, 2026-11-09):** the master became Masked, with a `CameraFade` clip (see "Theme material"). One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings). The hash diff showed exactly `M_DiceRollTheme.uasset` changed: the instances and textures were untouched.
+
+**Shadow-pass switch (#143 review round 2, 2026-11-09):** the opacity mask now goes through `ShadowPassSwitch` (Default: the camera clip; Shadow: 1), so clipped scenery keeps its shadows. The master carries graph revision `dice-theme-4`. One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings), and the hash diff showed exactly `M_DiceRollTheme.uasset` changed. An immediate rerun logged `THEME_MASTER kept` and changed nothing.
 
 **Contents:**
 
