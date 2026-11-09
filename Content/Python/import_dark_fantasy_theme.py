@@ -395,23 +395,26 @@ def source_glb(asset_id, name):
 
 
 def import_glb(source, staging, skeleton):
-    task = unreal.AssetImportTask()
-    task.set_editor_property("filename", source)
-    task.set_editor_property("destination_path", staging)
-    task.set_editor_property("automated", True)
-    task.set_editor_property("replace_existing", True)
-    task.set_editor_property("save", False)
-    if skeleton is not None:
-        # Ask the glTF (Interchange) pipeline to reuse the shared skeleton. If this build does not take the option, the
-        # check after the import repairs the assignment or raises.
-        try:
-            pipeline = unreal.InterchangeGenericAssetsPipeline()
-            pipeline.common_skeletal_meshes_and_animations_properties.set_editor_property("skeleton", skeleton)
-            task.set_editor_property("options", pipeline)
-        except Exception as error:  # noqa: BLE001 - API surface differs between engine builds
-            unreal.log_warning("THEME_RIG_SKELETON_OPTION unavailable: {}".format(error))
-    tools.import_asset_tasks([task])
-    return [unreal.load_asset(path) for path in task.get_editor_property("imported_object_paths")]
+    if skeleton is None:
+        task = unreal.AssetImportTask()
+        task.set_editor_property("filename", source)
+        task.set_editor_property("destination_path", staging)
+        task.set_editor_property("automated", True)
+        task.set_editor_property("replace_existing", True)
+        task.set_editor_property("save", False)
+        tools.import_asset_tasks([task])
+        return [unreal.load_asset(path) for path in task.get_editor_property("imported_object_paths")]
+    # Reusing the shared skeleton needs an override pipeline, which only the Interchange manager accepts (an
+    # AssetImportTask ignores it, and SkeletalMesh.skeleton is read-only from Python). Verified by a headless probe.
+    pipeline = unreal.new_object(unreal.InterchangeGenericAssetsPipeline)
+    common = pipeline.get_editor_property("common_skeletal_meshes_and_animations_properties")
+    common.set_editor_property("skeleton", skeleton)
+    params = unreal.ImportAssetParameters()
+    params.set_editor_property("is_automated", True)
+    params.set_editor_property("override_pipelines", [unreal.SoftObjectPath(pipeline.get_path_name())])
+    source_data = unreal.InterchangeManager.create_source_data(source)
+    unreal.InterchangeManager.get_interchange_manager_scripted().import_asset(staging, source_data, params)
+    return [unreal.load_asset(path) for path in library.list_assets(staging, recursive=True)]
 
 
 def clip_of(asset):
