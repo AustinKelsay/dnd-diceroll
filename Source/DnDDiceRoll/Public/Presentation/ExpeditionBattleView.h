@@ -305,6 +305,8 @@ private:
     mutable ExpeditionCameraRig::FFramedCache FramedCache;
     float ShakeAmount = 0.0f;
     bool bCameraPlaced = false;
+    /** The camera rests at (or is easing between) framed distances: the rendered distance never drops under the fit for the rendered yaw. A player zoom clears it. */
+    bool bFramed = false;
 
     UPROPERTY() TObjectPtr<UCameraComponent> Camera;
     UPROPERTY() TObjectPtr<UExponentialHeightFogComponent> Fog;
