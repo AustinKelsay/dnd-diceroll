@@ -107,8 +107,6 @@ def master_material():
         mel.delete_all_material_expressions(material)
     else:
         material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
-    # Skinned meshes need their own shader permutation (#147); without the flag a skeletal mesh draws the default material.
-    material.set_editor_property("used_with_skeletal_mesh", True)
     white = unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture")
     tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -100, parameter_name="Tex", texture=white)
     vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
@@ -156,6 +154,17 @@ def master_material():
     mel.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
     mel.recompile_material(material)
     return material
+
+
+def ensure_skeletal_usage(material):
+    """Skinned meshes need their own shader permutation (#147); without the flag a skeletal mesh draws the default material.
+
+    Written only when different and recompiled only then, so it also holds if the master is not rebuilt on a run.
+    """
+    if not material.get_editor_property("used_with_skeletal_mesh"):
+        material.set_editor_property("used_with_skeletal_mesh", True)
+        mel.recompile_material(material)
+        unreal.log("THEME_MASTER used_with_skeletal_mesh set")
 
 
 def has_alpha_mask(asset_id, name):
@@ -236,9 +245,11 @@ def material_instance(mesh_name, instance_name, texture_name, texture, asset_id,
         existing = THEME + "/Textures/" + texture_name
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
     if texture is not None:
-        # Trilinear filtering with anisotropy 8 (r.MaxAnisotropy in DefaultEngine.ini); uncompressed colour.
+        # Trilinear + anisotropic 8 (gate 1); uncompressed colour. TF_TRILINEAR would map straight to a plain trilinear
+        # sampler, which never uses r.MaxAnisotropy. TF_DEFAULT defers to the texture group, and Config/DefaultDeviceProfiles.ini
+        # makes TEXTUREGROUP_World MinMagFilter=aniso + MipFilter=linear, which is the anisotropic-linear sampler.
         # At 256 texels/m nearest, trilinear and sharp texels looked alike (gate 1), and mips stop shimmer at distance.
-        texture.set_editor_property("filter", unreal.TextureFilter.TF_TRILINEAR)
+        texture.set_editor_property("filter", unreal.TextureFilter.TF_DEFAULT)
         texture.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
         texture.set_editor_property("srgb", True)
         texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
@@ -538,6 +549,7 @@ def import_rig(master, theme):
 
 
 master = master_material()
+ensure_skeletal_usage(master)
 theme = theme_asset()
 theme.set_editor_property("tint_material", master)
 found = 0

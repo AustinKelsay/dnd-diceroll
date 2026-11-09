@@ -177,7 +177,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Targeting:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
-        Board->SnapCamera(Shot.Yaw, Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance());
+        Board->SnapCamera(Shot.Yaw, Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance(Shot.Yaw));
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         const int32 ActorId = Board->Rules().ActiveId();
         const FCombatantState* Active = Board->Rules().Find(ActorId);

@@ -21,6 +21,13 @@ struct Segment { Point From, To; };
 inline double ViewScale(double ViewportWidth, double ViewportHeight)
 { return std::max(0.5, std::min(ViewportWidth / DesignWidth, ViewportHeight / DesignHeight)); }
 
+// The part of the viewport the board may fill, in design units for a viewport already divided by the
+// scale: right of the party cards (x 12..262 in DrawPartyCard), below the initiative strip (y 12..68 in
+// DrawInitiative), above the action bar's budget chips (H - 108 in DrawActionBar) and clear of the right edge.
+// The camera rig fits the board to this rectangle (CameraRig.h), so the HUD and the camera share one source.
+constexpr double BoardLeft = 270, BoardTop = 76, BoardRight = 12, BoardBottom = 112;
+inline Rect BoardBounds(double W, double H) { return {BoardLeft, BoardTop, W - BoardRight, H - BoardBottom}; }
+
 // Where chips may sit, in design units for a viewport already divided by the scale:
 // below the top bar and legend, above the action bar and budget row.
 inline Rect ChipBounds(double W, double H) { return {8, 150, W - 8, H - 160}; }

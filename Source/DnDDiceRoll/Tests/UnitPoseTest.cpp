@@ -522,7 +522,7 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
                 }
                 if (!State.bSkeletal) { continue; }
                 const double Height = FigureHeight(*View, RigRoot);
-                TestTrue(FString::Printf(TEXT("%s stands 170 to 192 cm (measured %.1f)"), *Unit.Name, Height), Height >= 170.0 && Height <= 192.0);
+                TestTrue(FString::Printf(TEXT("%s stands 175 to 185 cm (measured %.1f)"), *Unit.Name, Height), Height >= 175.0 && Height <= 185.0);
             }
             TestTrue(TEXT("The default party has rigged characters"), Expected > 0);
             TestEqual(TEXT("Exactly the expected units are rigged"), View->SkeletalFigureCount(), Expected);
@@ -670,7 +670,7 @@ bool FFigureKindKeepsStateTest::RunTest(const FString& Parameters)
             USceneComponent* RigRoot = View->UnitRigRoot(Unit.Id);
             if (!TestNotNull(*FString::Printf(TEXT("%s: %s has a figure"), *Name, *Unit.Name), RigRoot)) { continue; }
             const double Height = FigureHeight(*View, RigRoot);
-            TestTrue(*FString::Printf(TEXT("%s: %s stands 170 to 192 cm (measured %.1f)"), *Name, *Unit.Name, Height), Height >= 170.0 && Height <= 192.0);
+            TestTrue(*FString::Printf(TEXT("%s: %s stands 175 to 185 cm (measured %.1f)"), *Name, *Unit.Name, Height), Height >= 175.0 && Height <= 185.0);
             TestFalse(*FString::Printf(TEXT("%s: %s has no animation state"), *Name, *Unit.Name), View->UnitAnimation(Unit.Id).bSkeletal);
         }
     }
