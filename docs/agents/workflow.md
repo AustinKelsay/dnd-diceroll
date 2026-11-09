@@ -90,4 +90,4 @@ The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c]
 
 Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
 
-No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.
+No personal filesystem path (except Ultra's documented shared-lock convention), T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.

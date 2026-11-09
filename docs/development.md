@@ -53,9 +53,9 @@ On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the ve
 
 ## Shared machine
 
-Several agents use Ultra at once, and only one Unreal job may run at a time. A machine-wide lock file enforces that, so no one has to hand out turns:
+Several agents use Ultra at once, and only one Unreal job may run at a time. A machine-wide lock file enforces that, so no one has to hand out turns. Ultra's host convention is `/home/plebdev/.t3/ultra-unreal.lock`; every checkout on Ultra must use this same lock.
 
-1. Wrap every native job in the lock: each `tools/dev.py` `build`, `test`, `bootstrap`, `gallery`, `smoke`, `capture` and `package` run, and each `UnrealEditor-Cmd` commandlet. Keep `--cores 2`. For example:
+1. Wrap every native job in the lock: each `tools/dev.py` `build`, `test`, `bootstrap`, `verify-skills`, `gallery`, `smoke`, `capture` and `package` run, and each `UnrealEditor-Cmd` commandlet. Use `--cores 2` on the helper commands that accept it; omit it for `smoke` and `capture`, which refuse it. Direct commandlets use `-corelimit=2`. On Ultra, replace `relaunch` with `close`, a locked `build`, then `editor`, so the build holds the lock and editor ownership is preserved. For example:
 
    ```sh
    flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 build
