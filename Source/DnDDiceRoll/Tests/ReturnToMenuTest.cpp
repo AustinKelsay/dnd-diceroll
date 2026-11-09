@@ -5,6 +5,7 @@ namespace ReturnToMenuTest
 {
 using ExpeditionInputHarness::FHarness;
 const FName Menu(TEXT("Menu"));
+const FName Toggle(TEXT("MenuToggle"));
 const FName Confirm(TEXT("ReturnConfirm"));
 const FName Resume(TEXT("Resume"));
 const FName KeepPlaying(TEXT("KeepPlaying"));
@@ -72,7 +73,10 @@ bool FReturnToMenuTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::Enter);
     if (!TestTrue(TEXT("Enter on Begin starts the expedition"), View->HasRun() && View->Progress().Phase == EExpeditionPhase::Route)) { return false; }
     Game.Settle();
-    TestTrue(TEXT("The route screen shows a Menu button"), Game.Hud->MenuButtons().Contains(Menu));
+    TestTrue(TEXT("The route screen shows the Menu button"), Game.Hud->MenuButtons().Contains(Toggle));
+    Game.Press(EKeys::I);
+    TestTrue(TEXT("The open Menu lists Return to start"), Game.Hud->MenuButtons().Contains(Menu));
+    Game.Press(EKeys::Escape);
 
     // Route: nothing is in progress, so Backspace returns at once; Enter on Resume comes back.
     ReturnAndResume(Game, TEXT("Route"), [&] { Game.Press(EKeys::BackSpace); }, [&] { Game.Press(EKeys::Enter); }, TEXT("Route0"));
@@ -81,7 +85,10 @@ bool FReturnToMenuTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Enter on the first route starts its encounter"), View->InCombat())) { return false; }
     Game.PartyTurn();
     if (!TestTrue(TEXT("The party has the turn"), View->InCombat())) { return false; }
-    TestTrue(TEXT("The encounter shows a Menu button"), Game.Hud->MenuButtons().Contains(Menu));
+    TestTrue(TEXT("The encounter shows the Menu button"), Game.Hud->MenuButtons().Contains(Toggle));
+    Game.Press(EKeys::I);
+    TestTrue(TEXT("The open Menu lists Return to start"), Game.Hud->MenuButtons().Contains(Menu));
+    Game.Press(EKeys::Escape);
     {
         // Mid-encounter, Backspace asks first, and the question blocks everything else.
         const FExpeditionSnapshot Before = Game.Live();
@@ -203,7 +210,9 @@ bool FReturnToMenuBlockedTest::RunTest(const FString& Parameters)
     }
     if (!TestEqual(TEXT("A passive party is defeated"), View->Progress().Phase, EExpeditionPhase::Defeat)) { return false; }
     Game.Settle();
-    TestFalse(TEXT("The ending shows no Menu button"), Game.Hud->MenuButtons().Contains(Menu));
+    TestFalse(TEXT("The ending shows no Menu button"), Game.Hud->MenuButtons().Contains(Toggle) || Game.Hud->MenuButtons().Contains(Menu));
+    Game.Press(EKeys::I);
+    TestFalse(TEXT("The ending has no Menu to open"), Game.Player->ShowingMenu());
     Game.Press(EKeys::BackSpace);
     TestTrue(TEXT("Backspace on the ending does nothing"), View->HasRun() && !Player->ConfirmingReturn() && !Player->ShowingBuilder());
     return !HasAnyErrors();
