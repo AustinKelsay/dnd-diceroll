@@ -1,4 +1,4 @@
-﻿#include "Rules/GrappleRules.h"
+#include "Rules/GrappleRules.h"
 
 bool FGrappleRules::SizeAllows(ECreatureSize Attacker, ECreatureSize Target)
 {

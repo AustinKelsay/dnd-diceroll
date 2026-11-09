@@ -24,7 +24,6 @@ FCombatEncounter Duo(ERuleset Ruleset)
 }
 }
 
-/** Five battle-integration blocks deferred from PR1 (libraries-only): DEX init, MM per-dart, Sacred Flame, size cover, INT<=6 ignore cover. */
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdDexOnlyInitiativeTest, "Project.Expedition.Battle.SrdDexOnlyInitiative",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)

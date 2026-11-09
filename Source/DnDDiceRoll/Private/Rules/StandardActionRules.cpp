@@ -1,4 +1,4 @@
-﻿#include "Rules/StandardActionRules.h"
+#include "Rules/StandardActionRules.h"
 #include "Combat/CombatBattle.h"
 
 bool FStandardActionRules::CanTakeAsBonusAction(EStandardAction Action, EAdventurerRole Role, int32 Level)

@@ -1,4 +1,4 @@
-﻿#include "Rules/TwoWeaponRules.h"
+#include "Rules/TwoWeaponRules.h"
 
 bool FTwoWeaponRules::CanOffHandAttack(const FWeaponProfile& Main, const FWeaponProfile& OffHand, bool bTookAttackAction, bool bBonusActionUsed)
 {

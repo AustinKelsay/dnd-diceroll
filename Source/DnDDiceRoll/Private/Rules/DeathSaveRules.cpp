@@ -1,4 +1,4 @@
-﻿#include "Rules/DeathSaveRules.h"
+#include "Rules/DeathSaveRules.h"
 
 namespace DeathSaveRulesPrivate
 {
