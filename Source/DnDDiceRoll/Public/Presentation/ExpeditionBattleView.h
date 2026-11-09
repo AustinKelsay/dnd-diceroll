@@ -51,6 +51,9 @@ struct FExpeditionUnitRig
     float Phase = 0.0f;
     UPROPERTY() TObjectPtr<USceneComponent> Root;
     UPROPERTY() TArray<FExpeditionPart> Parts;
+    ECombatSide Side = ECombatSide::Party;
+    /** Whether the parts currently render into custom depth (the silhouette pass); dead figures do not. */
+    bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
 };
@@ -241,6 +244,13 @@ public:
     int32 TileCount() const { return Tiles.Num(); }
     /** World diameter in cm of the footprint ring under a combatant, read from the ring's geometry; zero if it has none. */
     float FootprintRingDiameterCm(int32 UnitId) const;
+    /** Custom-depth stencil values the figure silhouette material reads: party 1, enemy 2 (0 is no figure). */
+    static constexpr int32 PartyStencil = 1;
+    static constexpr int32 EnemyStencil = 2;
+    /** The stencil value on a combatant's figure parts when they all render custom depth; 0 when none do (dead, or no rig); -1 when mixed. */
+    int32 FigureStencil(int32 UnitId) const;
+    /** Whether the silhouette post-process material is in the grade's blendables (it is optional; absent when the asset does not exist). */
+    bool HasSilhouetteBlendable() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
@@ -283,6 +293,8 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
     UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
     UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    /** Post-process material that draws hidden figures' silhouettes; optional (see AttachSilhouette). */
+    UPROPERTY() TObjectPtr<UMaterialInterface> SilhouetteMaterial;
     FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
@@ -389,6 +401,10 @@ private:
     void BuildEffects(const FCombatEncounter& Encounter);
     void ApplyTheme();
     void UpdateRigs();
+    /** Adds M_FigureSilhouette to the grade's blendables when the asset exists; does nothing otherwise. */
+    void AttachSilhouette();
+    /** Turns a figure's custom depth and side stencil on or off (the footprint ring is excluded). */
+    void SetFigureSilhouette(FExpeditionUnitRig& Rig, bool bOn);
     void UpdateTiles();
     void BuildOverlay();
     void UpdateOverlay();

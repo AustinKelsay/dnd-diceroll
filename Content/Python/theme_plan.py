@@ -96,6 +96,20 @@ def requested_replacements(value):
     return ids
 
 
+def check_import_result(paths, package, filename):
+    """Validates what an import task reported (task.imported_object_paths) for a reimport over `package`.
+
+    The original object stays loaded when an import fails, so identity alone proves nothing: the import must have reported the
+    expected package, and nothing else. Raises RuntimeError otherwise.
+    """
+    packages = [str(path).split(".")[0] for path in paths]
+    if package not in packages:
+        raise RuntimeError("Reimporting {} did not report {} among its imported objects ({}); the import failed".format(filename, package, packages))
+    strays = [path for path in packages if path != package]
+    if strays:
+        raise RuntimeError("Reimporting {} over {} also created {}; remove them and fix the import".format(filename, package, strays))
+
+
 def lod_exports(asset_id, revision, name):
     """Explicit LOD exports beside an export: <name>_LOD1.glb, <name>_LOD2.glb ... in order. Empty when none are authored."""
     folder = os.path.dirname(export_path(asset_id, revision, name))

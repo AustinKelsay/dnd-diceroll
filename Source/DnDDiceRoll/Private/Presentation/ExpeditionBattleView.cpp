@@ -135,6 +135,7 @@ FOverlayLook OverlayLook(BoardOverlay::EStyle Style)
     }
 }
 constexpr TCHAR OverlayMaterialPath[] = TEXT("/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay.M_BoardOverlay");
+constexpr TCHAR SilhouetteMaterialPath[] = TEXT("/Game/DnDDiceRoll/Theme/Materials/M_FigureSilhouette.M_FigureSilhouette");
 constexpr int32 RingSegments = 24;
 
 float Hash(int32 A, int32 B, int32 Salt = 0)
@@ -255,6 +256,7 @@ void AExpeditionBattleView::BeginPlay()
     // The translucent material for the contextual grid and (themed) footprint rings is optional; without it they draw as
     // dimmed opaque lines. Created by Content/Python/create_board_overlay_material.py.
     OverlayMaterial = LoadObject<UMaterialInterface>(nullptr, OverlayMaterialPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    AttachSilhouette();
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
@@ -684,10 +686,63 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     }
 }
 
+void AExpeditionBattleView::AttachSilhouette()
+{
+    if (!SilhouetteMaterial)
+    {
+        // Created by Content/Python/import_dark_fantasy_theme.py; primitives and tests without the asset simply go without.
+        SilhouetteMaterial = LoadObject<UMaterialInterface>(nullptr, SilhouetteMaterialPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    }
+    if (!SilhouetteMaterial || HasSilhouetteBlendable()) { return; }
+    Grade->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, SilhouetteMaterial));
+}
+
+bool AExpeditionBattleView::HasSilhouetteBlendable() const
+{
+    if (!SilhouetteMaterial) { return false; }
+    for (const FWeightedBlendable& Blendable : Grade->Settings.WeightedBlendables.Array)
+    {
+        if (Blendable.Object == SilhouetteMaterial) { return true; }
+    }
+    return false;
+}
+
+void AExpeditionBattleView::SetFigureSilhouette(FExpeditionUnitRig& Rig, bool bOn)
+{
+    Rig.bSilhouette = bOn;
+    const int32 Stencil = Rig.Side == ECombatSide::Enemy ? EnemyStencil : PartyStencil;
+    for (FExpeditionPart& Part : Rig.Parts)
+    {
+        if (!Part.Mesh) { continue; }
+        Part.Mesh->SetRenderCustomDepth(bOn);
+        Part.Mesh->SetCustomDepthStencilValue(Stencil);
+    }
+}
+
+int32 AExpeditionBattleView::FigureStencil(int32 UnitId) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId) { continue; }
+        int32 Value = 0;
+        bool bAny = false;
+        for (const FExpeditionPart& Part : Rig.Parts)
+        {
+            if (!Part.Mesh) { continue; }
+            const int32 Own = Part.Mesh->bRenderCustomDepth ? Part.Mesh->CustomDepthStencilValue : 0;
+            if (!bAny) { Value = Own; bAny = true; }
+            else if (Own != Value) { return -1; }
+        }
+        return Value;
+    }
+    return 0;
+}
+
 void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
 {
     FExpeditionUnitRig Rig;
     Rig.Id = Unit.Id;
+    Rig.Side = Unit.Side;
     Rig.Phase = Hash(Unit.Id, 11) * 2.0f * PI;
     USceneComponent* Root = NewObject<USceneComponent>(this);
     AddInstanceComponent(Root);
@@ -908,6 +963,9 @@ void AExpeditionBattleView::UpdateRigs()
             Part.SetColor(Color);
         };
         for (FExpeditionPart& Part : Rig.Parts) { Tint(Part); }
+        // Figures behind scenery show a side-coloured silhouette (M_FigureSilhouette reads the custom depth and stencil). The dead
+        // lie on the board as bodies and drop out; the downed still matter (they can be saved), so they keep it.
+        if (Rig.bSilhouette != !bDead) { SetFigureSilhouette(Rig, !bDead); }
         if (Rig.Ring.Mesh)
         {
             // Flat on the board under the figure, not hopping or tilting with it.

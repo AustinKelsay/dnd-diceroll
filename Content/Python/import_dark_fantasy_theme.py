@@ -471,6 +471,74 @@ def build_card_material(material):
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
 
 
+FIGURE_SILHOUETTE_MATERIAL = "M_FigureSilhouette"
+# Bump when build_figure_silhouette_material changes.
+FIGURE_SILHOUETTE_REVISION = "figure-silhouette-1"
+
+
+def figure_silhouette_is_current(material):
+    return library.get_metadata_tag(material, MASTER_REVISION_TAG) == FIGURE_SILHOUETTE_REVISION
+
+
+def build_figure_silhouette_material(material):
+    """Post-process material that draws a hidden figure's silhouette in its side's colour (#145 review, tall kit obstacles).
+
+    Figures render into custom depth with stencil 1 (party) or 2 (enemy). Where CustomDepth is nearer to the camera than SceneDepth by
+    more than `Tolerance` cm the figure is behind some other geometry, and the pixel is mixed toward the side colour by `FillAlpha`.
+    Where the figure is the nearest thing (custom depth equals scene depth) or no figure is there (stencil 0) the pixel is unchanged.
+
+    Blendable Location is After Tonemapping: the fill is then the exact HUD colour, untouched by auto-exposure, bloom, vignette and
+    the grade (before the tonemapper it would also need the pre-exposure scale). Inputs and output are in display (sRGB) space there,
+    so the linear HUD palette (`PartyColor` = Sky 0.4/0.85/1.0, `EnemyColor` = Danger 1.0/0.4/0.3) is encoded with pow(c, 1/2.2).
+    Needs r.CustomDepth=3 (Config/DefaultEngine.ini); the stencil read is zero otherwise and the material then does nothing.
+    """
+    material.set_editor_property("material_domain", unreal.MaterialDomain.MD_POST_PROCESS)
+    material.set_editor_property("blendable_location", unreal.BlendableLocation.BL_SCENE_COLOR_AFTER_TONEMAPPING)
+    material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_OPAQUE)
+
+    def scene(texture_id, x, y):
+        return node(material, unreal.MaterialExpressionSceneTexture, x, y, scene_texture_id=texture_id)
+
+    def red(source, x, y):
+        mask = node(material, unreal.MaterialExpressionComponentMask, x, y, r=True, g=False, b=False, a=False)
+        mel.connect_material_expressions(source, "", mask, "")
+        return mask
+
+    custom_depth = red(scene(unreal.SceneTextureId.PPI_CUSTOM_DEPTH, -1400, 0), -1150, 0)
+    scene_depth = red(scene(unreal.SceneTextureId.PPI_SCENE_DEPTH, -1400, 200), -1150, 200)
+    stencil = red(scene(unreal.SceneTextureId.PPI_CUSTOM_STENCIL, -1400, 400), -1150, 400)
+    input_color = scene(unreal.SceneTextureId.PPI_POST_PROCESS_INPUT0, -1400, 700)
+
+    tolerance = scalar(material, "Tolerance", 3.0, -1150, 560)
+    slope = scalar(material, "Slope", 0.5, -1150, 640)
+    fill_alpha = scalar(material, "FillAlpha", 0.55, -1150, 720)
+    gap = binary(material, unreal.MaterialExpressionSubtract, scene_depth, custom_depth, -900, 100)
+    over = binary(material, unreal.MaterialExpressionSubtract, gap, tolerance, -700, 100)
+    hidden = unary(material, unreal.MaterialExpressionSaturate, binary(material, unreal.MaterialExpressionMultiply, over, slope, -500, 100), -300, 100)
+    # Stencil 0 is "no figure"; 1 is party, 2 is enemy.
+    is_figure = unary(material, unreal.MaterialExpressionSaturate, stencil, -900, 400)
+    is_enemy = unary(material, unreal.MaterialExpressionSaturate, binary(material, unreal.MaterialExpressionSubtract, stencil, None, -1000, 500, const_b=1.0), -700, 500)
+
+    def encoded(name, value, y):
+        parameter = rgb(material, vector(material, name, value, -1150, y), "", -950, y)
+        gamma = node(material, unreal.MaterialExpressionPower, -750, y, const_exponent=1.0 / 2.2)
+        mel.connect_material_expressions(parameter, "", gamma, "Base")
+        return gamma
+
+    party = encoded("PartyColor", unreal.LinearColor(0.4, 0.85, 1.0, 1), 900)
+    enemy = encoded("EnemyColor", unreal.LinearColor(1.0, 0.4, 0.3, 1), 1050)
+    side = node(material, unreal.MaterialExpressionLinearInterpolate, -450, 950)
+    mel.connect_material_expressions(party, "", side, "A")
+    mel.connect_material_expressions(enemy, "", side, "B")
+    mel.connect_material_expressions(is_enemy, "", side, "Alpha")
+    alpha = binary(material, unreal.MaterialExpressionMultiply, binary(material, unreal.MaterialExpressionMultiply, hidden, is_figure, -100, 300), fill_alpha, 100, 300)
+    result = node(material, unreal.MaterialExpressionLinearInterpolate, 300, 500)
+    mel.connect_material_expressions(rgb(material, input_color, "", -100, 700), "", result, "A")
+    mel.connect_material_expressions(side, "", result, "B")
+    mel.connect_material_expressions(alpha, "", result, "Alpha")
+    mel.connect_material_property(result, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+
+
 def ensure_material(name, build, is_current=None, revision=None):
     """Creates a material once. An existing asset is kept; when `is_current` says its graph lacks this script's parameters
     it is rebuilt in place, so the asset, its path and every instance of it survive."""
@@ -571,6 +639,46 @@ def check_lod_count(mesh, asset_id, revision):
         raise RuntimeError("{} has {} LODs, its asset record expects {}".format(mesh.get_path_name(), mesh_tools.get_lod_count(mesh), wanted))
 
 
+def lod_slots(mesh):
+    """The material slot each section of each LOD uses: [[slot, ...] for lod 0, [..] for lod 1, ...]."""
+    return [[mesh_tools.get_lod_material_slot(mesh, lod, section) for section in range(mesh.get_num_sections(lod))]
+            for lod in range(mesh_tools.get_lod_count(mesh))]
+
+
+def repair_lod_slots(mesh, name):
+    """Maps every section of every LOD to material slot 0 (the one MI) and drops the slots the LOD imports added.
+
+    Each LOD glb names its own material (LOD1_SM_X ...), so import_lod appends a slot per LOD and its sections point there; only
+    LOD0 got the instance, and LOD1 and LOD2 rendered with the default grey. A kit mesh has one atlas and one instance, so every
+    section belongs in slot 0. Idempotent: a mesh whose sections already all use slot 0 with one slot is not touched, so a plain run
+    repairs wrong existing meshes in place (a modify, not a reimport) and leaves right ones byte-identical.
+    """
+    before = lod_slots(mesh)
+    fixed = 0
+    for lod, sections in enumerate(before):
+        for section, slot in enumerate(sections):
+            if slot != 0:
+                mesh_tools.set_lod_material_slot(mesh, 0, lod, section)
+                fixed += 1
+    after = lod_slots(mesh)
+    if any(slot != 0 for sections in after for slot in sections):
+        raise RuntimeError("{} still has LOD sections outside material slot 0: {}".format(name, after))
+    trimmed = False
+    materials = list(mesh.get_editor_property("static_materials"))
+    if len(materials) > 1:
+        # No section uses the extra slots any more (checked above), so dropping them cannot change what any LOD draws.
+        try:
+            mesh.set_editor_property("static_materials", materials[:1])
+            trimmed = len(list(mesh.get_editor_property("static_materials"))) == 1
+        except Exception as error:  # the repair stands without the trim; the lead sees the slot count in the log
+            unreal.log_warning("THEME_LOD_SLOTS_TRIM_FAILED {} {}".format(name, error))
+    if fixed or trimmed:
+        mesh.modify()
+    unreal.log("THEME_LOD_SLOTS {} before={} after={} sections_fixed={} slots={} trimmed={}".format(
+        name, before, after, fixed, len(list(mesh.get_editor_property("static_materials"))), trimmed))
+    return fixed or trimmed
+
+
 def stage_import(source, name):
     staging = THEME + "/_Import/" + name
     if library.does_directory_exist(staging):
@@ -640,12 +748,11 @@ def import_over(filename, package, name):
     task.set_editor_property("save", False)
     tools.import_asset_tasks([task])
     paths = [str(path) for path in task.get_editor_property("imported_object_paths")]
+    # A failed import leaves the original object loaded, so identity alone proves nothing: the task must report the package.
+    theme_plan.check_import_result(paths, package, filename)
     after = unreal.load_asset(package)
     if after is None or after != before:
         raise RuntimeError("Reimporting {} did not keep the asset at {} (got {})".format(filename, package, after))
-    strays = [path for path in paths if path.split(".")[0] != package]
-    if strays:
-        raise RuntimeError("Reimporting {} over {} also created {}; remove them and fix the import".format(filename, package, strays))
     return after
 
 
@@ -769,6 +876,7 @@ def main():
     master = master_material()
     occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current, OCCLUDER_GRAPH_REVISION)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
+    ensure_material(FIGURE_SILHOUETTE_MATERIAL, build_figure_silhouette_material, figure_silhouette_is_current, FIGURE_SILHOUETTE_REVISION)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()
     set_if_different(theme, "tint_material", master)
@@ -829,6 +937,8 @@ def main():
             mesh.modify()  # marks the package dirty so the import is saved
         force_nanite_off(mesh)
         check_lod_count(mesh, asset_id, revision)
+        if theme_plan.record_lods(asset_id, revision):
+            repair_lod_slots(mesh, name)
         apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
         asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
         if index is None:

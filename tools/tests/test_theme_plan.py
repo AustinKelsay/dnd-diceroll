@@ -26,6 +26,15 @@ def pascal(snake):
     return "".join(part.capitalize() for part in snake.split("_"))
 
 
+LFS_POINTER = b"version https://git-lfs.github.com/spec/v1"
+
+
+def is_lfs_pointer(path):
+    """True when the file is a Git LFS pointer (CI checks out with lfs: false), not the hydrated export."""
+    with open(path, "rb") as handle:
+        return handle.read(len(LFS_POINTER)) == LFS_POINTER
+
+
 class ThemePlanTests(unittest.TestCase):
     def test_scripts_compile(self):
         with tempfile.TemporaryDirectory() as out:
@@ -34,6 +43,7 @@ class ThemePlanTests(unittest.TestCase):
 
     def test_every_row_matches_its_asset_record(self):
         seen = set()
+        pointers = []
         for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.R002:
             record_path = ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json"
             record = json.loads(record_path.read_text())
@@ -44,11 +54,16 @@ class ThemePlanTests(unittest.TestCase):
             self.assertEqual(len(export), 1)
             source = theme_plan.export_path(asset_id, revision, name)
             self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
-            self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)  # the content hash needs the hydrated file; the record shape above is pointer-safe
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
             self.assertEqual(record["import_policy"]["settings"]["nanite"], "off, set explicitly on import")
             self.assertNotIn(asset_id, seen)
             seen.add(asset_id)
         self.assertEqual(len(theme_plan.R002), 25)
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
 
     def test_new_names_never_collide_with_r001_and_only_four_replace(self):
         old = r001_packages()
@@ -95,6 +110,8 @@ class ThemePlanTests(unittest.TestCase):
         self.assertIn("THEME_MATERIAL_KEPT", text)
 
     def test_export_readers(self):
+        if is_lfs_pointer(theme_plan.export_path("world-vigil", 2, "SM_World_Vigil")):
+            self.skipTest("LFS pointers, not hydrated exports")
         world = theme_plan.export_path("world-vigil", 2, "SM_World_Vigil")
         old_world = theme_plan.export_path("world-vigil", 1, "SM_World_Vigil")
         self.assertEqual(theme_plan.triangle_count(world), 130502)
@@ -107,11 +124,15 @@ class ThemePlanTests(unittest.TestCase):
         """Explicit LOD1 and LOD2 for the world, occluders, obstacle variants, arch and the one scatter over 1k triangles; cards and small scatter exempt."""
         with_lods = {"world-vigil", "world-vigil-occluders", "prop-arch-2cell", "scatter-roots"}
         with_lods |= {"prop-%s%s" % (kind, suffix) for kind in ("pillar", "wall", "stones") for suffix in ("", "-b", "-c")}
+        pointers = []
         for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.R002:
             files = theme_plan.lod_exports(asset_id, revision, name)
             recorded = theme_plan.record_lods(asset_id, revision)
             self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in with_lods else [], asset_id)
             self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
+                pointers.append(asset_id)
+                continue
             triangles = theme_plan.triangle_count(theme_plan.export_path(asset_id, revision, name))
             self.assertEqual(asset_id in with_lods, triangles > 1000 or asset_id.startswith("prop-"), asset_id)
             previous = triangles
@@ -122,6 +143,32 @@ class ThemePlanTests(unittest.TestCase):
                 self.assertGreaterEqual(count / triangles, 0.24 if lod == 2 else 0.48, path)
                 self.assertLessEqual(count / triangles, 0.40 if lod == 2 else 0.52, path)
                 previous = count
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped triangle and hash checks of %d): git lfs pull to run them" % len(pointers))
+
+    def test_a_reimport_must_report_the_package(self):
+        package = "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Wall"
+        texture = "/Game/DnDDiceRoll/Theme/Textures/T_Prop_Wall"
+        theme_plan.check_import_result([package + ".SM_Prop_Wall"], package, "wall.glb")
+        theme_plan.check_import_result([texture + ".T_Prop_Wall"], texture, "wall.png")
+        # A failed mesh import: the original object is still loaded, but nothing was imported.
+        with self.assertRaisesRegex(RuntimeError, "did not report"):
+            theme_plan.check_import_result([], package, "wall.glb")
+        # A failed texture import, and one that reports some other asset instead.
+        with self.assertRaisesRegex(RuntimeError, "did not report"):
+            theme_plan.check_import_result([], texture, "wall.png")
+        with self.assertRaisesRegex(RuntimeError, "did not report"):
+            theme_plan.check_import_result([package + ".SM_Prop_Wall"], texture, "wall.png")
+        # Extra assets are an error too.
+        with self.assertRaisesRegex(RuntimeError, "also created"):
+            theme_plan.check_import_result([package + ".SM_Prop_Wall", package + "_Mat.MI"], package, "wall.glb")
+
+    def test_import_over_uses_the_check_and_lod_slots_are_repaired(self):
+        text = SCRIPT.read_text()
+        self.assertIn("theme_plan.check_import_result(", text)
+        self.assertIn("repair_lod_slots(", text)
+        self.assertIn("set_lod_material_slot(", text)
+        self.assertIn("M_FigureSilhouette", text)
 
     def test_arches_are_for_pillars_and_walls_only(self):
         header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
