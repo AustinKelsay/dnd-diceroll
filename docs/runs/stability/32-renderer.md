@@ -1,6 +1,6 @@
 # Recurring scene-culling assertion (#32)
 
-[Issue #32](https://github.com/AustinKelsay/dnd-diceroll/issues/32). Status as of 2026-11-09: **unresolved, parked. A Mac-side risk with no Mac work planned.** No fix, workaround or production change exists.
+[Issue #32](https://github.com/AustinKelsay/dnd-diceroll/issues/32). Status as of 2026-11-09: **unresolved, parked. A Mac-side risk with no Mac work planned.** No fix, workaround or production change exists. A public summary of the evidence below is on the issue: [2026-11-09 status comment](https://github.com/AustinKelsay/dnd-diceroll/issues/32#issuecomment-6753901345).
 
 ## What fails
 

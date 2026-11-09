@@ -1,6 +1,6 @@
 # Stability investigations
 
-Delivery records for the crash issues that are parked as known, reported risks. None of them blocks a gate or affects a passing run. The detail behind each is paraphrased here; the engine-source notes that support them are private (see each page).
+Delivery records for the crash issues that are parked as known, reported risks. These remain accepted, tracked risks. #157 has only been observed after failing tests; #32 and #35 affect Mac gameplay and startup. The detail behind each is paraphrased here; the engine-source notes that support them are private (see each page).
 
 | Issue | Host | Status | Next action |
 | --- | --- | --- | --- |
