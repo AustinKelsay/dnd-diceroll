@@ -16,13 +16,15 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
     const FString Valid = TEXT("{\"version\":1,\"settleFrames\":12,\"shots\":["
         "{\"name\":\"battle-a\",\"mode\":\"battle\",\"yaw\":-90,\"distance\":1300},"
         "{\"name\":\"battle_b\",\"mode\":\"targeting\",\"yaw\":180.5,\"distance\":\"default\"},"
-        "{\"name\":\"table\",\"mode\":\"overview\"},{\"name\":\"menu\",\"mode\":\"start\"}]}");
+        "{\"name\":\"table\",\"mode\":\"overview\"},{\"name\":\"menu\",\"mode\":\"start\"},"
+        "{\"name\":\"battle-far\",\"mode\":\"battle\",\"yaw\":0,\"distance\":\"far\"}]}");
     if (TestTrue(TEXT("A valid file parses"), ExpeditionCapture::ParsePoses(Valid, Poses, Error)))
     {
-        TestEqual(TEXT("Shot count"), Poses.Shots.Num(), 4);
+        TestEqual(TEXT("Shot count"), Poses.Shots.Num(), 5);
         TestEqual(TEXT("Settle frames"), Poses.SettleFrames, 12);
         TestEqual(TEXT("Explicit distance"), Poses.Shots[0].Distance, 1300.0f);
         TestEqual(TEXT("Default distance is zero"), Poses.Shots[1].Distance, 0.0f);
+        TestEqual(TEXT("Far distance is the far sentinel"), Poses.Shots[4].Distance, ExpeditionCapture::FarDistance);
         TestEqual(TEXT("Yaw"), Poses.Shots[1].Yaw, 180.5f);
         TestTrue(TEXT("Battle shots carry a camera"), Poses.Shots[0].bHasCamera);
         TestFalse(TEXT("Overview shots do not"), Poses.Shots[2].bHasCamera);
@@ -55,6 +57,7 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"battle\",\"yaw\":0,\"distance\":100}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"battle\",\"yaw\":0,\"distance\":9000}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"targeting\",\"yaw\":0,\"distance\":\"near\"}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"battle\",\"yaw\":0,\"distance\":\"Far\"}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"battle\",\"yaw\":\"0\",\"distance\":1300}]}"),
     };
     for (const TCHAR* Text : Bad)

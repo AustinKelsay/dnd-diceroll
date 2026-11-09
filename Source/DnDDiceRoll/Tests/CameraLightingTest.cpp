@@ -104,6 +104,14 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
         const double Scale = ExpeditionLayout::ViewScale(Size.X, Size.Y);
         TestEqual(TEXT("The safe rect starts right of the party cards"), static_cast<float>(Safe.Left * Size.X), static_cast<float>(ExpeditionLayout::BoardLeft * Scale), 0.5f);
         TestEqual(TEXT("The safe rect ends above the action bar"), static_cast<float>(Safe.Bottom * Size.Y), static_cast<float>(ExpeditionLayout::BoardBottom * Scale), 0.5f);
+        // The tallest combat log (DrawLog's footprint) lies outside the board's area, so a framed board never sits under it.
+        {
+            const double W = Size.X / Scale, H = Size.Y / Scale;
+            const ExpeditionLayout::Rect Bounds = ExpeditionLayout::BoardBounds(W, H);
+            const ExpeditionLayout::Rect Log = ExpeditionLayout::LogRect(W, H);
+            TestFalse(FString::Printf(TEXT("The board area clears the combat log at %dx%d"), Size.X, Size.Y), ExpeditionLayout::Overlaps(Bounds, Log));
+            TestTrue(TEXT("The safe rect's bottom edge is at or above the log's top"), (1.0 - Safe.Bottom) * H <= Log.Top + 0.01);
+        }
         for (const TPair<int32, int32>& Board : Boards)
         {
             for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f})
@@ -171,8 +179,16 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
         // Free orbit keeps the pitch.
         View->SnapCamera(-90.0f, Framed);
         View->Orbit(45.0f);
-        View->Tick(2.0f);
-        TestEqual(TEXT("Orbit leaves the pitch alone"), static_cast<float>(-View->CameraTransform().Rotator().Pitch), 45.0f, 0.1f);
+        View->Tick(5.0f);
+        // At the default zoom orbiting refits the board; the pitch follows that distance along the ramp anchored at the home fit.
+        TestEqual(TEXT("Orbit keeps the pitch on the zoom ramp"), static_cast<float>(-View->CameraTransform().Rotator().Pitch), PitchFor(View->CameraDistance(), Framed), 0.1f);
+        // A zoom the player chose is kept through an orbit.
+        View->SnapCamera(-90.0f, 1100.0f);
+        View->Orbit(90.0f);
+        TestEqual(TEXT("Orbit keeps a deliberate zoom"), View->CameraDistance(), 1100.0f, 0.01f);
+        View->SnapCamera(-90.0f, FarStop(Framed));
+        View->Orbit(90.0f);
+        TestEqual(TEXT("Orbit keeps a deliberate far zoom"), View->CameraDistance(), FarStop(Framed), 0.01f);
         // Pan stays inside the board plus margin whatever the yaw, and a snap clears it.
         const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
         const float Cell = View->Metric().CellCm;
@@ -214,6 +230,25 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
                     const FString Label = FString::Printf(TEXT("%dx%d board at %dx%d yaw %.0f"), Encounter.Width, Encounter.Height, Size.X, Size.Y, Yaw);
                     TestTrue(*(Label + TEXT(": the default zoom fits the zoom range")), View->FramedFits(Yaw));
                     View->SnapCamera(Yaw, View->FramedDistance(Yaw));
+                    const FTransform Camera = View->CameraTransform();
+                    FString Where;
+                    const bool bInside = CornersInside(Corners, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect, Where);
+                    TestTrue(*(Label + TEXT(": corners inside the safe rect ") + Where), bInside);
+                }
+            }
+            // Orbiting from the default zoom keeps the board fitted at every yaw it passes through (not just a snapped pose).
+            for (const FViewportSize& Size : Viewports)
+            {
+                const FSafeRect Rect = FSafeRect::ForViewport(Size.X, Size.Y);
+                View->SetSafeRect(Rect);
+                View->SnapCamera(-90.0f, View->FramedDistance(-90.0f));
+                for (int32 Quarter = 1; Quarter <= 3; ++Quarter)
+                {
+                    View->Orbit(90.0f);
+                    View->Tick(5.0f);
+                    const float Yaw = -90.0f + 90.0f * Quarter;
+                    const FString Label = FString::Printf(TEXT("%dx%d board orbited to yaw %.0f at %dx%d"), Encounter.Width, Encounter.Height, Yaw, Size.X, Size.Y);
+                    TestEqual(*(Label + TEXT(": the distance follows the fit")), View->CameraDistance(), View->FramedDistance(Yaw), 0.5f);
                     const FTransform Camera = View->CameraTransform();
                     FString Where;
                     const bool bInside = CornersInside(Corners, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect, Where);

@@ -212,6 +212,8 @@ public:
     float FramedDistance(float ForYaw) const;
     /** Whether the default zoom for a yaw really contains the board inside the zoom range (false only for a board too large to fit). */
     bool FramedFits(float ForYaw) const;
+    /** Whether the zoom rests at the default fit for the current yaw. Orbit keeps such a camera fitted; a zoom the player chose is left alone. */
+    bool AtFramedZoom() const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
