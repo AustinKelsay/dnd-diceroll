@@ -57,3 +57,7 @@ These are raw engine files, not `/Game/DnDDiceRoll` packages, so they have no `a
 ## Runtime audio
 
 All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, camp, loot, victory and defeat) are synthesized in C++ by `ExpeditionAudio` and played through runtime `USoundWaveProcedural` objects. No audio files are imported or stored.
+
+## Board overlay material (issue #142)
+
+`/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. The asset itself is created in an Unreal turn and recorded here once saved.
