@@ -33,6 +33,15 @@ using namespace BuildRules;
 constexpr int32 PotionDice = 2;
 constexpr int32 PotionDie = 4;
 constexpr int32 PotionBonus = 2;
+constexpr int32 SacredFlameDie = 8; // SRD Sacred Flame, 1d8 radiant at character levels 1-4
+/** Full saving throw bonus: ability modifier plus proficiency where proficient. */
+int32 SaveBonusOf(const FCombatantState& Unit, EAbility Ability)
+{
+    const FCharacterRules Character = Unit.AdventurerRole != EAdventurerRole::None
+        ? FProficiencyRules::PrebuiltCharacter(Unit.AdventurerRole, Unit.Level)
+        : FProficiencyRules::EnemyCharacter(Unit.Role);
+    return Character.SaveBonus(Ability);
+}
 int32 CriticalThreshold(const FCombatantState& Hero)
 {
     if (const auto* B = FBuildCatalog::Find(Hero.BuildId)) { return B->CriticalThreshold; }
@@ -425,6 +434,26 @@ bool FCombatBattle::SneakAttackApplies(const FCombatantState& Actor, const FComb
         });
 }
 
+FCombatBattle::FAttackSetup FCombatBattle::AttackSetup(const FCombatantState& Actor, ECombatCommandType Action, const FCombatantState& Target) const
+{
+    FAttackSetup Setup;
+    // SRD Cleric ranged Attack is Sacred Flame (DEX save), Compact keeps the attack roll.
+    Setup.bSave = IsSrd() && Action == ECombatCommandType::Attack && Actor.AdventurerRole == EAdventurerRole::Cleric && Actor.Range > 1;
+    if (Setup.bSave)
+    {
+        const FCharacterRules Caster = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Cleric, Actor.Level);
+        Setup.TargetNumber = FSpellcastingRules::SaveDc(Caster.ProficiencyBonus(), Caster.AbilityModifier(EAbility::Wisdom));
+        // Sacred Flame gives no benefit from cover, so the save is the full Dexterity save bonus alone.
+        Setup.Modifier = SaveBonusOf(Target, EAbility::Dexterity);
+        return Setup;
+    }
+    Setup.Modifier = Actor.AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0);
+    Setup.TargetNumber = Target.ArmorClass + (IsSrd() ? CoverAcBonus(Actor.Id, Target.Id) : 0);
+    Setup.bAdvantage = IsSrd() && Target.Life == ECombatLife::Downed;
+    Setup.bAutoCritical = Setup.bAdvantage && GridDistance(Actor.Cell, Target.Cell) <= 1;
+    return Setup;
+}
+
 FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const
 {
     FActionForecast Forecast;
@@ -480,14 +509,26 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
     case ECombatCommandType::PrecisionStrike:
     case ECombatCommandType::Attack:
     {
+        const FAttackSetup Setup = AttackSetup(*Actor, Action, *Target);
+        if (Setup.bSave)
+        {
+            // Saves have no natural 1 or 20 rule; the damage lands when the target fails.
+            Forecast.bSavingThrow = true;
+            Forecast.HitChancePercent = (400 - FCheckRules::SuccessOutOf400(Setup.Modifier, Setup.TargetNumber, ERollMode::Normal) + 2) / 4;
+            Effect(1, SacredFlameDie, 0);
+            break;
+        }
         Forecast.bAttackRoll = true;
         int32 Hits = 0;
         for (int32 Natural = 1; Natural <= 20; ++Natural)
-        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Actor->AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0) >= Target->ArmorClass) ? 1 : 0; }
-        Forecast.HitChancePercent = Hits * 5;
-        Effect(1, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        { Hits += Natural >= CriticalThreshold(*Actor) || (Natural != 1 && Natural + Setup.Modifier >= Setup.TargetNumber) ? 1 : 0; }
+        // Advantage keeps the higher of two d20s, so it misses only when both dice miss.
+        Forecast.HitChancePercent = Setup.bAdvantage ? (400 - (20 - Hits) * (20 - Hits) + 2) / 4 : Hits * 5;
+        // A hit that is always critical doubles the weapon and Sneak Attack dice.
+        const int32 WeaponDice = Setup.bAutoCritical ? 2 : 1;
+        Effect(WeaponDice, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
-        if (Forecast.bSneakAttack) { Forecast.MinAmount += 1; Forecast.MaxAmount += SneakDie; Forecast.Formula += FString::Printf(TEXT(" +1d%d sneak"), SneakDie); }
+        if (Forecast.bSneakAttack) { Forecast.MinAmount += WeaponDice; Forecast.MaxAmount += WeaponDice * SneakDie; Forecast.Formula += FString::Printf(TEXT(" +%dd%d sneak"), WeaponDice, SneakDie); }
         break;
     }
     case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
@@ -660,19 +701,11 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
         const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
-        // SRD Cleric ranged Attack is Sacred Flame (DEX save), Compact keeps the attack roll.
-        const bool bSacredFlame = IsSrd() && Command.Type == ECombatCommandType::Attack
-            && Actor->AdventurerRole == EAdventurerRole::Cleric && Actor->Range > 1;
-        if (bSacredFlame)
+        const FAttackSetup Setup = AttackSetup(*Actor, Command.Type, *Target);
+        if (Setup.bSave)
         {
-            const FCharacterRules Caster = FProficiencyRules::PrebuiltCharacter(EAdventurerRole::Cleric, Actor->Level);
-            const int32 Dc = FSpellcastingRules::SaveDc(Caster.ProficiencyBonus(), Caster.AbilityModifier(EAbility::Wisdom));
-            const FCharacterRules Defender = [&]() {
-                if (Target->AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(Target->AdventurerRole, Target->Level); }
-                FCharacterRules Enemy; Enemy.Scores = AbilityScoresOf(*Target); Enemy.Level = Target->Level; return Enemy;
-            }();
-            const int32 CoverDex = CoverAcBonus(Command.ActorId, Command.TargetId);
-            const int32 DexMod = Defender.AbilityModifier(EAbility::Dexterity) + CoverDex;
+            const int32 Dc = Setup.TargetNumber;
+            const int32 DexMod = Setup.Modifier;
             const FD20Outcome Save = FCheckRules::Resolve(DexMod, Dc, ERollMode::Normal, State.RandomState);
             Result.Type = Command.Type; Result.ActorId = Command.ActorId; Result.TargetId = Command.TargetId;
             Result.NaturalRoll = Save.Kept;
@@ -685,7 +718,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (Result.bHit)
             {
                 DiceLog = &Result.EffectDice;
-                Result.Damage = Roll(8); // Sacred Flame 1d8 radiant (level 1 cantrip)
+                Result.Damage = Roll(SacredFlameDie);
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
@@ -700,12 +733,14 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         else
         {
             Result.NaturalRoll = Roll(20);
-            Result.AttackTotal = Result.NaturalRoll + Actor->AttackBonus + ManeuverBonus;
-            Result.AttackBonus = Actor->AttackBonus + ManeuverBonus;
-            const int32 Cover = IsSrd() ? CoverAcBonus(Command.ActorId, Command.TargetId) : 0;
-            Result.TargetArmorClass = Target->ArmorClass + Cover;
+            // SRD Advantage: roll a second d20 and keep the higher.
+            if (Setup.bAdvantage) { const int32 Second = Roll(20); Result.NaturalRoll = FMath::Max(Result.NaturalRoll, Second); }
+            Result.AttackTotal = Result.NaturalRoll + Setup.Modifier;
+            Result.AttackBonus = Setup.Modifier;
+            Result.TargetArmorClass = Setup.TargetNumber;
             Result.bCritical = Result.NaturalRoll >= CriticalThreshold(*Actor);
             Result.bHit = Result.bCritical || (Result.NaturalRoll != 1 && Result.AttackTotal >= Result.TargetArmorClass);
+            Result.bCritical = Result.bCritical || (Result.bHit && Setup.bAutoCritical);
             if (Result.bHit)
             {
                 DiceLog = &Result.EffectDice;

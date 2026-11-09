@@ -185,6 +185,8 @@ struct DNDDICEROLL_API FActionForecast
 {
     bool bValid = false;
     bool bAttackRoll = false;
+    /** SRD Sacred Flame: the target makes a saving throw, and HitChancePercent is the chance it fails. */
+    bool bSavingThrow = false;
     int32 HitChancePercent = 0;
     bool bHealing = false;
     /** Only the two endpoints can occur (for example Wild Bolt), rather than a dice range. */
@@ -239,6 +241,21 @@ private:
     bool bStarted = false;
     /** Set only while resolving an effect so its dice can be reported. */
     TArray<FDieRoll>* DiceLog = nullptr;
+    /** Attack or PrecisionStrike roll facts, shared by Forecast and resolution so they always agree. */
+    struct FAttackSetup
+    {
+        /** SRD Sacred Flame: the target makes a Dexterity save instead of an attack roll. */
+        bool bSave = false;
+        /** Attack bonus, or the target's Dexterity save bonus. */
+        int32 Modifier = 0;
+        /** Armor class including cover, or the spell save DC. */
+        int32 TargetNumber = 0;
+        /** SRD: attack rolls against an Unconscious (downed) creature have Advantage. */
+        bool bAdvantage = false;
+        /** SRD: a hit on an Unconscious creature from within 5 feet is a critical hit. */
+        bool bAutoCritical = false;
+    };
+    FAttackSetup AttackSetup(const FCombatantState& Actor, ECombatCommandType Action, const FCombatantState& Target) const;
     static bool ValidateEncounter(const FCombatEncounter& Encounter, FString& Error);
     bool IsInside(FIntPoint Cell) const;
     bool IsOpen(FIntPoint Cell, int32 MovingId) const;

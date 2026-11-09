@@ -4,6 +4,7 @@
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/AbilityRules.h"
+#include "Rules/CheckRules.h"
 #include "Rules/ProficiencyRules.h"
 #include "Rules/OpportunityRules.h"
 #include "Persistence/ExpeditionSave.h"
@@ -41,6 +42,16 @@ FCombatSnapshot HeroDownedNext(FCombatBattle& B, int32 Successes, int32 Failures
     auto& Hero = S.Encounter.Combatants[0];
     Hero.Life = ECombatLife::Downed; Hero.HP = 0; Hero.DeathSaveSuccesses = Successes; Hero.DeathSaveFailures = Failures;
     return S;
+}
+/** SRD duel: {1,1} attacks {4,2}, with an optional pillar at {4,1} giving the target half cover. */
+FCombatEncounter CoverDuel(const TCHAR* BuildId, const TCHAR* FoeRole, bool bPillar)
+{
+    FCombatEncounter E; E.Ruleset = ERuleset::SRD;
+    if (bPillar) { E.BlockedCells = {{4, 1}}; }
+    FCombatantState Hero; FBuildCatalog::Create(BuildId, 1, TEXT("Hero"), Hero); Hero.Cell = {1, 1}; Hero.Range = 5;
+    FCombatantState Foe; Foe.Id = 2; Foe.Name = FoeRole; Foe.Role = FoeRole; Foe.Side = ECombatSide::Enemy;
+    Foe.Cell = {4, 2}; Foe.HP = Foe.MaxHP = 40; Foe.ArmorClass = 15;
+    E.Combatants = {Hero, Foe}; return E;
 }
 /** One-row corridor: walking {0,0} to {4,0} leaves the foe's reach when stepping off {2,0}. */
 FCombatEncounter Corridor(bool bAlly)
@@ -157,29 +168,48 @@ bool FReviewGrappleSaveTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewZeroHpDamageTest, "Project.Expedition.Combat.DamageAtZeroKeepsTally", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FReviewZeroHpDamageTest::RunTest(const FString& Parameters)
 {
-    FString Error; bool Hit = false, Crit = false;
-    for (int32 Seed = 1; Seed <= 200 && !(Hit && Crit); ++Seed)
+    // Attacks on an Unconscious creature have Advantage, and a hit from within 5 feet is a critical hit.
+    FString Error; bool Near = false, Far = false;
+    for (int32 Seed = 1; Seed <= 200 && !(Near && Far); ++Seed)
     {
+        const bool bAdjacent = Seed % 2 == 1;
         auto E = ReviewDuo(); FCombatantState Ally;
         FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {1, 2}; E.Combatants.Add(Ally);
+        if (!bAdjacent) { E.Combatants[1].Cell = {4, 1}; E.Combatants[1].Range = 3; }
         FCombatBattle B; if (!B.Start(E, Seed, Error) || !Activate(B, 2)) { return false; }
         auto S = B.Snapshot(); auto& Downed = S.Encounter.Combatants[0];
-        Downed.Life = ECombatLife::Downed; Downed.HP = 0; Downed.MaxHP = 40; Downed.DeathSaveSuccesses = 1; Downed.DeathSaveFailures = 1;
+        Downed.Life = ECombatLife::Downed; Downed.HP = 0; Downed.MaxHP = 40; Downed.DeathSaveSuccesses = 1; Downed.DeathSaveFailures = 0;
         if (!TestTrue(TEXT("Restore downed fixture"), B.Restore(S, Error))) { return false; }
+        FRandomStream Dice(S.RandomState);
+        const int32 First = Dice.RandRange(1, 20);
+        const int32 Second = Dice.RandRange(1, 20);
+        const FActionForecast Preview = B.Forecast(2, ECombatCommandType::Attack, 1);
+        TestEqual(TEXT("Forecast reflects Advantage"), Preview.HitChancePercent, 100);
         const auto R = B.Submit({ECombatCommandType::Attack, 2, {}, 1});
         if (!TestTrue(TEXT("SRD can damage a downed target"), R.bAccepted)) { return false; }
+        TestEqual(TEXT("Advantage keeps the higher of two d20s"), R.NaturalRoll, FMath::Max(First, Second));
         if (!R.bHit) { continue; }
-        Hit |= !R.bCritical; Crit |= R.bCritical;
+        if (bAdjacent) { TestTrue(TEXT("Adjacent hit on an Unconscious creature is critical"), R.bCritical); Near = true; }
+        else { Far |= !R.bCritical; }
+        if (bAdjacent || !R.bCritical) { TestEqual(TEXT("Forecast damage matches the hit"), R.Damage, Preview.MinAmount); }
         TestEqual(TEXT("Keep successes on damage while dying"), B.Find(1)->DeathSaveSuccesses, 1);
-        TestEqual(TEXT("One failure or two on critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 3 : 2);
-        TestTrue(TEXT("Third failure kills"), B.Find(1)->Life == (R.bCritical ? ECombatLife::Dead : ECombatLife::Downed));
+        TestEqual(TEXT("One failure or two on critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 2 : 1);
+        TestTrue(TEXT("Still dying"), B.Find(1)->Life == ECombatLife::Downed);
         // Replaying the same hit against temporary HP cannot add a failure.
         S.Encounter.Combatants[0].TemporaryHP = 10;
         if (!TestTrue(TEXT("Restore temp HP fixture"), B.Restore(S, Error))) { return false; }
         B.Submit({ECombatCommandType::Attack, 2, {}, 1});
-        TestEqual(TEXT("Absorbed damage adds no failure"), B.Find(1)->DeathSaveFailures, 1);
+        TestEqual(TEXT("Absorbed damage adds no failure"), B.Find(1)->DeathSaveFailures, 0);
+        if (R.bCritical)
+        {
+            // The same critical on a creature with one failure is its third.
+            S.Encounter.Combatants[0].TemporaryHP = 0; S.Encounter.Combatants[0].DeathSaveFailures = 1;
+            if (!TestTrue(TEXT("Restore one-failure fixture"), B.Restore(S, Error))) { return false; }
+            B.Submit({ECombatCommandType::Attack, 2, {}, 1});
+            TestTrue(TEXT("Third failure kills"), B.Find(1)->Life == ECombatLife::Dead);
+        }
     }
-    TestTrue(TEXT("Normal and critical exercised"), Hit && Crit);
+    TestTrue(TEXT("Adjacent and ranged hits exercised"), Near && Far);
     return !HasAnyErrors();
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewDistanceTest, "Project.Expedition.Combat.OpportunityGrappleShareDistance", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -287,6 +317,41 @@ bool FReviewStableResetTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Still dying, not dead"), B.Find(1)->Life == ECombatLife::Downed);
     TestEqual(TEXT("Fresh successes"), B.Find(1)->DeathSaveSuccesses, 0);
     TestEqual(TEXT("Fresh failures: one, two on a critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 2 : 1);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewForecastAgreementTest, "Project.Expedition.Combat.SrdForecastMatchesResolution", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewForecastAgreementTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    // Sacred Flame: a Dexterity save with the full save bonus (an archer is proficient) and no cover benefit.
+    for (const bool bPillar : {false, true})
+    {
+        const TCHAR* Role = bPillar ? TEXT("Raider") : TEXT("Archer");
+        FCombatBattle B;
+        if (!TestTrue(TEXT("Sacred Flame duel"), B.Start(CoverDuel(TEXT("cleric.life"), Role, bPillar), 7, Error)) || !TestTrue(TEXT("Cleric active"), Activate(B, 1))) { return false; }
+        const FActionForecast Preview = B.Forecast(1, ECombatCommandType::Attack, 2);
+        const FCombatResult R = B.Submit({ECombatCommandType::Attack, 1, {}, 2});
+        if (!TestTrue(TEXT("Sacred Flame accepted"), R.bAccepted && R.Feedback.Contains(TEXT("Sacred Flame")))) { return false; }
+        TestEqual(TEXT("Full Dexterity save bonus, no cover"), R.AttackBonus, FProficiencyRules::EnemyCharacter(Role).SaveBonus(EAbility::Dexterity));
+        TestTrue(TEXT("Forecast is a save, not an attack roll"), Preview.bValid && Preview.bSavingThrow && !Preview.bAttackRoll);
+        TestEqual(TEXT("Forecast fail chance uses the resolved save"), Preview.HitChancePercent, (400 - FCheckRules::SuccessOutOf400(R.AttackBonus, R.TargetArmorClass, ERollMode::Normal) + 2) / 4);
+        TestTrue(TEXT("Forecast damage is 1d8"), Preview.MinAmount == 1 && Preview.MaxAmount == 8);
+        if (R.bHit) { TestTrue(TEXT("Damage within forecast"), R.Damage >= Preview.MinAmount && R.Damage <= Preview.MaxAmount); }
+    }
+    // Weapon attack: forecast and resolution both count the pillar's half cover.
+    FCombatBattle B;
+    if (!TestTrue(TEXT("Weapon duel"), B.Start(CoverDuel(TEXT("rogue.thief"), TEXT("Raider"), true), 7, Error)) || !TestTrue(TEXT("Rogue active"), Activate(B, 1))) { return false; }
+    const FActionForecast Preview = B.Forecast(1, ECombatCommandType::Attack, 2);
+    const FCombatResult R = B.Submit({ECombatCommandType::Attack, 1, {}, 2});
+    if (!TestTrue(TEXT("Attack accepted"), R.bAccepted)) { return false; }
+    TestEqual(TEXT("Half cover adds 2 AC"), R.TargetArmorClass, 17);
+    const FBuildDefinition* Build = FBuildCatalog::Find(TEXT("rogue.thief"));
+    if (!TestNotNull(TEXT("Rogue build"), Build)) { return false; }
+    int32 Hits = 0;
+    for (int32 Natural = 1; Natural <= 20; ++Natural)
+    { Hits += Natural >= Build->CriticalThreshold || (Natural != 1 && Natural + R.AttackBonus >= R.TargetArmorClass) ? 1 : 0; }
+    TestTrue(TEXT("Forecast is an attack roll"), Preview.bValid && Preview.bAttackRoll && !Preview.bSavingThrow);
+    TestEqual(TEXT("Forecast hit chance uses the covered AC"), Preview.HitChancePercent, Hits * 5);
     return !HasAnyErrors();
 }
 #endif
