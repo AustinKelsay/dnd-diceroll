@@ -68,6 +68,27 @@ bool FSchema4LoadsAsCompactTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5LoadsAsSchema7Test, "Project.Expedition.Persistence.Schema5LoadsAsSchema7",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5LoadsAsSchema7Test::RunTest(const FString& Parameters)
+{
+    FExpeditionRun Run; FString Error, Json;
+    TestTrue(TEXT("Start SRD run"), Run.NewRun(42, Error, TEXT("schema5-migrate"), EFighterSubclass::Champion, ERuleset::SRD));
+    FExpeditionSaveData Data; Data.Current = Run.Snapshot();
+    TestTrue(TEXT("Encode"), FExpeditionSave::Encode(Data, Json, Error));
+    TSharedPtr<FJsonObject> Object;
+    FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
+    Object->SetNumberField(TEXT("Version"), 5);
+    // Version 5 payloads omit SpellSlot*; defaults (0) are filled on Start for SRD casters.
+    FString Schema5; FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Schema5));
+    FExpeditionSaveData Loaded;
+    TestTrue(TEXT("Schema 5 decodes"), FExpeditionSave::Decode(Schema5, Loaded, Error));
+    TestEqual(TEXT("Migrated to 7"), Loaded.Version, 7);
+    TestTrue(TEXT("Ruleset preserved"), Loaded.Current.Progress.Ruleset == ERuleset::SRD);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRulesetPersistsAndDefaultsTest, "Project.Expedition.Persistence.RulesetPersistsAndDefaultsCompact",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRulesetPersistsAndDefaultsTest::RunTest(const FString& Parameters)

@@ -154,6 +154,7 @@ private:
     void SecondRoute();
     void Camp();
     void SkipCamp();
+    void RequestLevelUp();
     void NewRun();
     void Save();
     void Resume();

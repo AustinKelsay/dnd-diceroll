@@ -89,6 +89,7 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::R, &AExpeditionPlayerController::RescueMode);
     Bind(EKeys::P, &AExpeditionPlayerController::PotionMode);
     Bind(EKeys::L, &AExpeditionPlayerController::Loot);
+    Bind(EKeys::U, &AExpeditionPlayerController::RequestLevelUp);
     Bind(EKeys::Z, &AExpeditionPlayerController::FirstRoute);
     Bind(EKeys::X, &AExpeditionPlayerController::SecondRoute);
     Bind(EKeys::C, &AExpeditionPlayerController::Camp);
@@ -435,6 +436,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Claim")) { Loot(); }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
+    else if (Name == TEXT("LevelUp")) { if (AllowsGameplayInput()) { BattleView->ApplyLevelUp(SelectedId); } }
     else if (Name == TEXT("ModeAttack")) { SetMode(ECombatCommandType::Attack); }
     else if (Name == TEXT("ModeRole")) { SetMode(RoleAction()); }
     else if (Name == TEXT("ModeRescue")) { SetMode(ECombatCommandType::Rescue); }
@@ -563,6 +565,7 @@ void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { Ba
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
+void AExpeditionPlayerController::RequestLevelUp() { if (AllowsGameplayInput()) { BattleView->ApplyLevelUp(SelectedId); } }
 void AExpeditionPlayerController::NewRun()
 {
     if (!AllowsGameplayInput()) { return; }

@@ -153,11 +153,12 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
     FExpeditionSaveData Candidate;
     if (Json.IsEmpty() || Json.Len() > MaxSaveCharacters || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) || !Object.IsValid())
     { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
-    // Upgrade only the known v4 contract; malformed documents still fail strict import.
+    // Upgrade only known older contracts; malformed documents still fail strict import.
     const TSharedPtr<FJsonValue>* VersionField = Object->Values.Find(TEXT("Version"));
-    if (VersionField && (*VersionField)->Type == EJson::Number && (*VersionField)->AsNumber() == CompactSaveVersion)
+    const int32 FileVersion = (VersionField && (*VersionField)->Type == EJson::Number) ? static_cast<int32>((*VersionField)->AsNumber()) : 0;
+    if (FileVersion == CompactSaveVersion)
     {
-        Object->SetNumberField(TEXT("Version"), Version);
+        // Real format-4 saves become Compact runs with the SRD-era fields at their defaults (PR #156 review).
         const TSharedPtr<FJsonObject>* Current = nullptr;
         const TSharedPtr<FJsonObject>* Progress = nullptr;
         const TSharedPtr<FJsonObject>* Battle = nullptr;
@@ -187,6 +188,46 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
                 }
             }
         }
+    }
+    // Schema 4/5/6/7 -> current: inject XP/ClassLevels/Pact Magic fields, then bump before strict import.
+    if (FileVersion == 4 || FileVersion == 5 || FileVersion == 6 || FileVersion == 7)
+    {
+        // Inject XP / class-level fields on every combatant when migrating from <=6.
+        auto InjectCombatant = [](const TSharedPtr<FJsonObject>& Unit)
+        {
+            if (!Unit.IsValid()) { return; }
+            if (!Unit->HasField(TEXT("ExperiencePoints"))) { Unit->SetNumberField(TEXT("ExperiencePoints"), 0); }
+            if (!Unit->HasField(TEXT("bLevelUpAvailable"))) { Unit->SetBoolField(TEXT("bLevelUpAvailable"), false); }
+            if (!Unit->HasField(TEXT("ClassLevels")))
+            {
+                TSharedPtr<FJsonObject> Levels = MakeShared<FJsonObject>();
+                for (const TCHAR* Key : { TEXT("Fighter"), TEXT("Rogue"), TEXT("Cleric"), TEXT("Wizard"), TEXT("Barbarian"), TEXT("Monk"), TEXT("Paladin"), TEXT("Ranger"), TEXT("Sorcerer"), TEXT("Warlock"), TEXT("Druid"), TEXT("Bard"), TEXT("Artificer") })
+                {
+                    Levels->SetNumberField(Key, 0);
+                }
+                Unit->SetObjectField(TEXT("ClassLevels"), Levels);
+            }
+            if (!Unit->HasField(TEXT("PactSlots"))) { Unit->SetNumberField(TEXT("PactSlots"), 0); }
+            if (!Unit->HasField(TEXT("PactSlotLevel"))) { Unit->SetNumberField(TEXT("PactSlotLevel"), 0); }
+        };
+        if (TSharedPtr<FJsonObject> Current = Object->GetObjectField(TEXT("Current")))
+        {
+            if (TSharedPtr<FJsonObject> Battle = Current->GetObjectField(TEXT("Battle")))
+            {
+                if (TSharedPtr<FJsonObject> Encounter = Battle->GetObjectField(TEXT("Encounter")))
+                {
+                    const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
+                    if (Encounter->TryGetArrayField(TEXT("Combatants"), Combatants) && Combatants)
+                    {
+                        for (const TSharedPtr<FJsonValue>& Value : *Combatants)
+                        {
+                            if (Value.IsValid() && Value->Type == EJson::Object) { InjectCombatant(Value->AsObject()); }
+                        }
+                    }
+                }
+            }
+        }
+        Object->SetNumberField(TEXT("Version"), Version);
     }
     if (!ImportStruct(FExpeditionSaveData::StaticStruct(), Object, &Candidate))
     { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
@@ -326,6 +367,11 @@ bool FExpeditionSession::Recover(bool bTake, FString& Error)
 {
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
     auto Candidate = Current; return Candidate.Recover(bTake, Error) && Commit(MoveTemp(Candidate), Error);
+}
+bool FExpeditionSession::ApplyLevelUp(int32 AdventurerId, EAdventurerRole ClassToAdvance, FString& Error)
+{
+    if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
+    auto Candidate = Current; return Candidate.ApplyLevelUp(AdventurerId, ClassToAdvance, Error) && Commit(MoveTemp(Candidate), Error);
 }
 FCombatResult FExpeditionSession::Submit(const FCombatCommand& Command)
 {

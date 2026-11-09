@@ -12,6 +12,7 @@
 #include "Presentation/CameraRig.h"
 #include "Presentation/HudCoverage.h"
 #include "Presentation/TargetChipLayout.h"
+#include "Rules/AdvancementRules.h"
 
 namespace
 {
@@ -659,6 +660,13 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     else if (bSelected) { Frame(FLinearColor(0.9f, 0.95f, 1.0f, 0.7f), X, Y, Width, Height, 1.5f); }
     if (Player->MenuFocus() == FName(*FString::Printf(TEXT("Party%d"), Index))) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     Rect(WithAlpha(Color, Life == ECombatLife::Dead ? 0.25f : 0.9f), X, Y, 4, Height);
+    // The reward panel covers the world rig; echo the same short candle pulse on its party card.
+    if (Display && Display->LevelUpGlow > 0.0f)
+    {
+        const float Pulse = Display->LevelUpGlow;
+        Rect(WithAlpha(Display->LevelUpColor, Pulse * 0.32f), X, Y, Width, Height);
+        Frame(WithAlpha(Display->LevelUpColor * 2.0f, Pulse), X - 2, Y - 2, Width + 4, Height + 4, 4.0f);
+    }
     // Role emblem: a medallion with the class initial.
     const FVector2D Portrait(X + 26, Y + 35);
     Circle(Portrait, 16, Life == ECombatLife::Dead ? FLinearColor(0.2f, 0.2f, 0.22f) : Color * 0.45f);
@@ -667,6 +675,10 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Text(FString::FromInt(Index + 1), X + 9, Y + 4, Muted, 0.5f);
     Text(Unit.Name, X + 48, Y + 4, Life == ECombatLife::Dead ? Muted : Color, 0.8f, EAlign::Left, 100);
     Text(FString::Printf(TEXT("Lv%d"), Unit.Level), X + Width - 8, Y + 6, Muted, 0.52f, EAlign::Right);
+    if (View->HasRun() && View->Progress().Ruleset == ERuleset::SRD && Unit.bLevelUpAvailable && View->Progress().Phase != EExpeditionPhase::Combat)
+    {
+        Text(TEXT("LEVEL UP"), X + Width - 36, Y + 6, FLinearColor(1.0f, 0.75f, 0.3f), 0.5f, EAlign::Right);
+    }
     if (Life == ECombatLife::Dead)
     {
         Text(TEXT("Fallen  ·  lost"), X + 48, Y + 21, FLinearColor(0.75f, 0.45f, 0.4f), 0.62f, EAlign::Left, 144);
@@ -1240,6 +1252,18 @@ void AExpeditionHUD::DrawRoutes()
     Panel(W * 0.5f - 370, Top - 84, 740, 76, Gold, 0.95f);
     Text(TEXT("CHOOSE YOUR PATH"), W * 0.5f, Top - 66, Gold, 1.5f, EAlign::Center);
     Text(FString::Printf(TEXT("Encounter %d of %d  ·  Injuries and losses carry forward  ·  No automatic rest"), Run.EncountersCompleted + 1, FExpeditionRun::EncounterCount), W * 0.5f, Top - 30, Muted, 0.76f, EAlign::Center);
+    if (Run.Ruleset == ERuleset::SRD)
+    {
+        const FCombatantState* Pick = Player.IsValid() ? View->Rules().Find(Player->Selection()) : nullptr;
+        bool bNeed = false;
+        for (const FCombatantState& U : View->Rules().Snapshot().Encounter.Combatants)
+        { if (U.Side == ECombatSide::Party && U.bLevelUpAvailable) { bNeed = true; break; } }
+        if (bNeed)
+        {
+            const bool bCan = Pick && Pick->Life == ECombatLife::Conscious && Pick->bLevelUpAvailable;
+            Button(TEXT("LevelUp"), bCan ? FString::Printf(TEXT("Level Up %s"), *Pick->Name) : TEXT("Level Up"), TEXT("U"), W * 0.5f - 120, Top - 120, 240, 40, bCan, false, FLinearColor(1.0f, 0.7f, 0.25f));
+        }
+    }
     for (int32 Index = 0; Index < Run.Offers.Num() && Index < 2; ++Index)
     {
         const FExpeditionRoute& Route = Run.Offers[Index];
@@ -1280,10 +1304,14 @@ void AExpeditionHUD::DrawReward()
 {
     const FExpeditionProgress& Run = View->Progress();
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 720, Height = 240;
+    const float Width = 720, Height = 280;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
     Panel(X, Y, Width, Height, Gold, 0.95f);
-    Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
+    const bool bSrd = Rules.Snapshot().Encounter.Ruleset == ERuleset::SRD;
+    bool bAnyLevelUp = false;
+    for (const FCombatantState& U : Rules.Snapshot().Encounter.Combatants)
+    { if (U.Side == ECombatSide::Party && U.bLevelUpAvailable) { bAnyLevelUp = true; break; } }
+    Text(bSrd ? (bAnyLevelUp ? TEXT("VICTORY — LEVEL UP AVAILABLE") : TEXT("VICTORY — XP EARNED")) : TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
     const int32 Potions = Run.History.IsEmpty() ? 0 : Run.History.Last().Route.RewardPotions;
     const FCombatantState* Selected = Rules.Find(Player->Selection());
     const bool bReady = Selected && Selected->Life == ECombatLife::Conscious;
@@ -1295,6 +1323,11 @@ void AExpeditionHUD::DrawReward()
     if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 84, FLinearColor(0.85f, 0.5f, 0.45f), 0.76f, EAlign::Center); }
     Text(TEXT("Choose who carries it  —  click a survivor's card or press 1-4"), W * 0.5f, Y + 110, Muted, 0.74f, EAlign::Center);
     Button(TEXT("Claim"), bReady ? FString::Printf(TEXT("Give to %s"), *Selected->Name) : TEXT("Select a survivor"), TEXT("L"), W * 0.5f - 130, Y + 170, 260, 52, bReady, false, Gold);
+    if (bSrd && bAnyLevelUp)
+    {
+        const bool bCanLevel = bReady && Selected->bLevelUpAvailable;
+        Button(TEXT("LevelUp"), bCanLevel ? FString::Printf(TEXT("Level Up %s"), *Selected->Name) : TEXT("Level Up"), TEXT("U"), W * 0.5f - 130, Y + 110, 260, 48, bCanLevel, false, FLinearColor(1.0f, 0.7f, 0.25f));
+    }
 }
 
 void AExpeditionHUD::DrawCamp()
@@ -1315,8 +1348,18 @@ void AExpeditionHUD::DrawCamp()
         Status += (Status.IsEmpty() ? TEXT("") : TEXT("    ")) + (Unit.Life == ECombatLife::Dead ? Unit.Name + TEXT(" (fallen)") : FString::Printf(TEXT("%s %d/%d"), *Unit.Name, Unit.HP, Unit.MaxHP));
     }
     Text(Status, W * 0.5f, Row, Parchment, 0.76f, EAlign::Center, Width - 40);
+        const bool bSrdCamp = Rules.Snapshot().Encounter.Ruleset == ERuleset::SRD;
+    const FCombatantState* CampPick = Player.IsValid() ? Rules.Find(Player->Selection()) : nullptr;
+    bool bCampLevel = false;
+    for (const FCombatantState& U : Rules.Snapshot().Encounter.Combatants)
+    { if (U.Side == ECombatSide::Party && U.bLevelUpAvailable) { bCampLevel = true; break; } }
+    if (bSrdCamp && bCampLevel)
+    {
+        const bool bCan = CampPick && CampPick->Life == ECombatLife::Conscious && CampPick->bLevelUpAvailable;
+        Button(TEXT("LevelUp"), bCan ? FString::Printf(TEXT("Level Up %s"), *CampPick->Name) : TEXT("Level Up"), TEXT("U"), W * 0.5f - 120, Y + 160, 240, 44, bCan, false, FLinearColor(1.0f, 0.7f, 0.25f));
+    }
     Button(TEXT("Camp"), TEXT("Rest by the fire"), TEXT("C"), W * 0.5f - 250, Y + 220, 240, 56, true, false, FLinearColor(1.0f, 0.6f, 0.3f));
-    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V  ·  forfeit the rest"), W * 0.5f + 10, Y + 220, 240, 56, true, false, Muted);
+    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V — forfeit the rest"), W * 0.5f + 10, Y + 220, 240, 56, true, false, Muted);
 }
 
 void AExpeditionHUD::DrawEnding()

@@ -21,6 +21,8 @@ struct DNDDICEROLL_API FUnitDisplay
     float Hop = 0.0f;                           // Centimetres.
     float Flash = 0.0f;
     float Glow = 0.0f;
+    float LevelUpGlow = 0.0f;
+    FLinearColor LevelUpColor = FLinearColor::White;
     float Tilt = 0.0f;                          // 0 upright, 1 lying down.
     int32 HP = 0;
     int32 MaxHP = 1;
@@ -121,6 +123,8 @@ public:
     void ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life = 1.6f);
     void ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale = 1.0f, float Life = 1.3f);
     void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8);
+    /** Candlelit level-up flash: Glow+Flash + sparkles in class color. */
+    void PulseLevelUp(int32 UnitId, FLinearColor ClassColor);
 
     float Speed = 1.0f;
     const FUnitDisplay* Unit(int32 Id) const { return Displays.Find(Id); }

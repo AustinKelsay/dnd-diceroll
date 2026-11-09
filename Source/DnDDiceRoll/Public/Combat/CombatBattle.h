@@ -12,7 +12,7 @@ enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
 enum class EBattlePhase : uint8 { Fighting, Victory, Defeat };
 UENUM()
-enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove, Escape };
+enum class ECombatCommandType : uint8 { Move, Attack, EndTurn, SecondWind, CureWounds, MagicMissile, Rescue, Potion, PrecisionStrike, Special1, Special2, Grapple, Shove, Escape, ActionSurge, Dash, Disengage, CastSpell };
 UENUM()
 enum class EAdventurerRole : uint8 { None = 0, Fighter = 1, Rogue = 2, Cleric = 3, Wizard = 4, Barbarian = 5, Monk = 6, Paladin = 7, Ranger = 8, Sorcerer = 9, Warlock = 10, Druid = 11, Bard = 12, Artificer = 13 };
 UENUM()
@@ -20,7 +20,26 @@ enum class EFighterSubclass : uint8 { None, Champion, BattleMaster };
 UENUM()
 enum class ECombatLife : uint8 { Conscious, Downed, Dead };
 
-/** Serializable combat and persistent adventurer values; IDs never change between encounters. */
+/** Persisted multiclass levels (sum = character Level). Zeroed fields mean "legacy: all levels in AdventurerRole". */
+USTRUCT()
+struct DNDDICEROLL_API FCombatClassLevels
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Fighter = 0;
+    UPROPERTY() int32 Rogue = 0;
+    UPROPERTY() int32 Cleric = 0;
+    UPROPERTY() int32 Wizard = 0;
+    UPROPERTY() int32 Barbarian = 0;
+    UPROPERTY() int32 Monk = 0;
+    UPROPERTY() int32 Paladin = 0;
+    UPROPERTY() int32 Ranger = 0;
+    UPROPERTY() int32 Sorcerer = 0;
+    UPROPERTY() int32 Warlock = 0;
+    UPROPERTY() int32 Druid = 0;
+    UPROPERTY() int32 Bard = 0;
+    UPROPERTY() int32 Artificer = 0;
+};
+
 USTRUCT()
 struct DNDDICEROLL_API FCombatantState
 {
@@ -35,10 +54,37 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() ECombatLife Life = ECombatLife::Conscious;
     UPROPERTY() int32 RescueTurnsLeft = 0;
     UPROPERTY() int32 SecondWindUses = 0;
+    /** SRD Fighter L2+: Action Surge uses (short rest). Compact ignores. */
+    UPROPERTY() int32 ActionSurgeUses = 0;
     UPROPERTY() int32 SpellSlots = 0;
+    /** SRD only: remaining slots by spell level (1..3). Compact leaves these at 0 and uses SpellSlots. */
+    UPROPERTY() int32 SpellSlot1 = 0;
+    UPROPERTY() int32 SpellSlot2 = 0;
+    UPROPERTY() int32 SpellSlot3 = 0;
+    /** SRD Warlock Pact Magic: remaining pact slots (separate from SpellSlot1..3). Compact unused. */
+    UPROPERTY() int32 PactSlots = 0;
+    /** SRD Warlock: level of each pact slot (1..3 in engine band). */
+    UPROPERTY() int32 PactSlotLevel = 0;
+    /** SRD lasting AC from Shield / Shield of Faith / similar. Compact unused. */
+    UPROPERTY() int32 SpellArmorBonus = 0;
+    /** SRD Shield (and similar): rounds remaining of SpellArmorBonus from a timed buff. */
+    UPROPERTY() int32 SpellArmorRounds = 0;
+    /** SRD Mage Armor active (AC becomes 13 + DEX when applied). Compact unused. */
+    UPROPERTY() bool bMageArmor = false;
+    /** SRD Shield negates Magic Missile while the buff lasts. */
+    UPROPERTY() bool bNegatesMagicMissile = false;
+    /** SRD: concentrated spell ordinal as int32(ESpell), or INDEX_NONE. */
+    UPROPERTY() int32 ConcentratedSpell = INDEX_NONE;
+    /** SRD: target of ConcentratedSpell (e.g. Shield of Faith beneficiary). */
+    UPROPERTY() int32 ConcentratedTargetId = INDEX_NONE;
     UPROPERTY() int32 Potions = 0;
     UPROPERTY() int32 WeaponRank = 0;
     UPROPERTY() int32 Level = 1;
+    /** SRD: cumulative XP. Compact unused (stays 0). */
+    UPROPERTY() int32 ExperiencePoints = 0;
+    /** SRD: player may open Level Up between battles when PendingLevelUps > 0. Compact unused. */
+    UPROPERTY() bool bLevelUpAvailable = false;
+    UPROPERTY() FCombatClassLevels ClassLevels;
     UPROPERTY() EFighterSubclass FighterSubclass = EFighterSubclass::None;
     UPROPERTY() int32 ManeuverUses = 0;
     UPROPERTY() int32 KitUses = 0;
@@ -106,6 +152,10 @@ struct DNDDICEROLL_API FCombatSnapshot
     UPROPERTY() int32 MovementLeft = 0;
     UPROPERTY() bool bActionAvailable = true;
     UPROPERTY() bool bBonusActionAvailable = true;
+    /** SRD Extra Attack / Multiattack remaining swings this Attack action. Compact unused. */
+    UPROPERTY() int32 AttacksLeft = 0;
+    /** SRD Sneak Attack once-per-turn gate. Compact unused. */
+    UPROPERTY() bool bSneakUsedThisTurn = false;
     UPROPERTY() EBattlePhase Phase = EBattlePhase::Fighting;
 };
 
@@ -117,6 +167,10 @@ struct DNDDICEROLL_API FCombatCommand
     int32 TargetId = INDEX_NONE;
     /** Shove only: 0 = knock prone, 1 = push 5 ft (one cell) away. */
     int32 ShoveChoice = 0;
+    /** CastSpell: ESpell ordinal. */
+    int32 SpellId = 0;
+    /** CastSpell: slot level spent (0 = cantrip). Must be >= spell level for leveled spells. */
+    int32 SlotLevel = 0;
 };
 
 /** One die in an effect roll, in the order it was rolled. */
@@ -238,6 +292,11 @@ public:
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;
+    friend class FSrdRolledEnemyHpAndLevelUpTest;
+    friend class FSrdXpSplitExcludesDownedTest;
+    friend class FSrdPactSlotsSeparateFromMulticlassTest;
+    friend class FSrdLevelUpAvailableFlagTest;
+    friend class FSrdApplyLevelUpBetweenBattlesTest;
     friend class FExpeditionRun;
     FCombatSnapshot State;
     bool bStarted = false;
@@ -276,6 +335,13 @@ private:
     FCombatResult Resolve(const FCombatCommand& Command);
     bool IsSrd() const { return State.Encounter.Ruleset == ERuleset::SRD; }
     int32 CoverAcBonus(int32 ActorId, int32 TargetId) const;
+	int32 AttacksPerActionFor(const FCombatantState& Unit) const;
+	void SpendAttackAction(FCombatantState& Actor);
+    int32 SpellSlotsRemaining(const FCombatantState& Unit, int32 SpellLevel) const;
+    bool SpendSpellSlot(FCombatantState& Unit, int32 SpellLevel);
+    void FillSrdSpellSlots(FCombatantState& Unit);
+    void TickSpellArmor(FCombatantState& Unit);
+    int32 EffectiveArmorClass(const FCombatantState& Unit) const;
     /** Path starts at the mover's cell. Places the mover and returns the cells it actually moved. */
     int32 ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result);
     void DownedTurn(FCombatantState& Unit);

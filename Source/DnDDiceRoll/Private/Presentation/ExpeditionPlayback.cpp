@@ -207,6 +207,17 @@ void FExpeditionPlayback::ShowText(FVector2D Cell, const FString& Text, FLinearC
     Floaters.Add({Text, Color, Cell, -0.12f * Overlap, Life, Scale});
 }
 
+void FExpeditionPlayback::PulseLevelUp(int32 UnitId, FLinearColor ClassColor)
+{
+    if (FUnitDisplay* Unit = Displays.Find(UnitId))
+    {
+        Unit->LevelUpGlow = 1.0f;
+        Unit->LevelUpColor = ClassColor;
+        ShowSparkles(Unit->Position, ClassColor, 14);
+        ShowText(Unit->Position, TEXT("LEVEL UP"), ClassColor, 1.15f, 2.0f);
+    }
+}
+
 void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count)
 {
     for (int32 Index = 0; Index < Count; ++Index)
@@ -605,6 +616,7 @@ void FExpeditionPlayback::Advance(float Seconds)
     {
         FUnitDisplay& Unit = Pair.Value;
         Unit.Flash = FMath::Max(0.0f, Unit.Flash - Seconds * 3.5f);
+        Unit.LevelUpGlow = FMath::Max(0.0f, Unit.LevelUpGlow - Seconds * 0.8f);
         Unit.Glow = FMath::Max(0.0f, Unit.Glow - Seconds * 1.5f);
         Unit.ShownHP = FMath::FInterpTo(Unit.ShownHP, Unit.HP, Seconds, 10.0f);
         Unit.TrailHP = Unit.TrailHP > Unit.ShownHP ? FMath::FInterpTo(Unit.TrailHP, Unit.ShownHP, Seconds, 2.5f) : Unit.ShownHP;

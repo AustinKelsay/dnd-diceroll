@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ActionText.h"
+#include "Rules/AdvancementRules.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/OccluderFade.h"
@@ -1024,8 +1025,9 @@ void AExpeditionBattleView::UpdateRigs()
         {
             FLinearColor Color = Part.Base;
             if (bDead) { const float Grey = Color.GetLuminance(); Color = FMath::Lerp(Color, FLinearColor(Grey, Grey, Grey) * 0.6f, 0.75f); }
-            Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.95f, 0.75f) * 2.0f, Unit->Glow * 0.35f);
+            Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.72f, 0.28f) * 2.6f, Unit->Glow * 0.55f); // candlelight
             Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.9f, 0.9f) * 3.0f, Unit->Flash * 0.85f);
+            Color = FMath::Lerp(Color, Unit->LevelUpColor * 4.0f, Unit->LevelUpGlow * 0.85f);
             Part.SetColor(Color);
         };
         for (FExpeditionPart& Part : Rig.Parts) { Tint(Part); }
@@ -1570,6 +1572,39 @@ void AExpeditionBattleView::Recover(bool bTake)
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
+
+
+void AExpeditionBattleView::ApplyLevelUp(int32 AdventurerId)
+{
+    if (bShowRecords) { return; }
+    FString Error;
+    const FCombatantState* Before = Rules().Find(AdventurerId);
+    if (!Before) { Record({false, TEXT("Select a survivor to level up.")}); return; }
+    const EAdventurerRole ClassToAdvance = Before->AdventurerRole;
+    FClassLevels Levels;
+    Levels.Fighter = Before->ClassLevels.Fighter; Levels.Rogue = Before->ClassLevels.Rogue; Levels.Cleric = Before->ClassLevels.Cleric;
+    Levels.Wizard = Before->ClassLevels.Wizard; Levels.Barbarian = Before->ClassLevels.Barbarian; Levels.Monk = Before->ClassLevels.Monk;
+    Levels.Paladin = Before->ClassLevels.Paladin; Levels.Ranger = Before->ClassLevels.Ranger; Levels.Sorcerer = Before->ClassLevels.Sorcerer;
+    Levels.Warlock = Before->ClassLevels.Warlock; Levels.Druid = Before->ClassLevels.Druid; Levels.Bard = Before->ClassLevels.Bard;
+    Levels.Artificer = Before->ClassLevels.Artificer;
+    if (Levels.CharacterLevel() == 0 && Before->Level > 0) { Levels.Set(ClassToAdvance, Before->Level); }
+    const FClassAuraColor Aura = FAdvancementRules::BlendClassColors(Levels);
+    const FLinearColor Color(Aura.R / 255.0f, Aura.G / 255.0f, Aura.B / 255.0f, 1.0f);
+    if (Session.ApplyLevelUp(AdventurerId, ClassToAdvance, Error))
+    {
+        Show.Finish();
+        Show.Sync(Rules().Snapshot());
+        Show.PulseLevelUp(AdventurerId, Color);
+        if (const FCombatantState* After = Rules().Find(AdventurerId))
+        {
+            Record({true, FString::Printf(TEXT("%s reaches level %d."), *After->Name, After->Level)});
+            Show.ShowBanner(TEXT("LEVEL UP"), FString::Printf(TEXT("%s is now level %d"), *After->Name, After->Level), Color, 2.0f);
+        }
+        PlayCue(EExpeditionCue::Loot);
+    }
+    else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
 
 void AExpeditionBattleView::NewRun(EFighterSubclass Subclass)
 {
