@@ -29,6 +29,19 @@ int32 StateForD20(TFunctionRef<bool(int32)> Accept)
     for (int32 Seed = 1; Seed < 100000; ++Seed) { FRandomStream R(Seed); if (Accept(R.RandRange(1, 20))) { return Seed; } }
     return 0;
 }
+/** ReviewDuo plus a conscious ally, with the hero downed and next in turn order. */
+FCombatSnapshot HeroDownedNext(FCombatBattle& B, int32 Successes, int32 Failures)
+{
+    FString Error; auto E = ReviewDuo(); FCombatantState Ally;
+    FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {1, 2}; E.Combatants.Add(Ally);
+    B.Start(E, 42, Error);
+    auto S = B.Snapshot();
+    S.TurnIndex = (S.TurnOrder.IndexOfByKey(1) + S.TurnOrder.Num() - 1) % S.TurnOrder.Num();
+    S.MovementLeft = 0;
+    auto& Hero = S.Encounter.Combatants[0];
+    Hero.Life = ECombatLife::Downed; Hero.HP = 0; Hero.DeathSaveSuccesses = Successes; Hero.DeathSaveFailures = Failures;
+    return S;
+}
 /** One-row corridor: walking {0,0} to {4,0} leaves the foe's reach when stepping off {2,0}. */
 FCombatEncounter Corridor(bool bAlly)
 {
@@ -234,6 +247,46 @@ bool FReviewOpportunityStopTest::RunTest(const FString& Parameters)
             }
         }
     }
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewNaturalTwentyTurnTest, "Project.Expedition.Combat.NaturalTwentyDeathSaveTakesTurn", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewNaturalTwentyTurnTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    auto S = HeroDownedNext(B, 1, 2);
+    S.RandomState = StateForD20([](int32 Die) { return Die == 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore downed hero: %s"), *Error), B.Restore(S, Error))) { return false; }
+    if (!TestTrue(TEXT("Previous turn ends"), B.Submit({ECombatCommandType::EndTurn, S.TurnOrder[S.TurnIndex]}).bAccepted)) { return false; }
+    TestEqual(TEXT("Revived creature takes this turn"), B.ActiveId(), 1);
+    TestTrue(TEXT("Revived with 1 HP"), B.Find(1)->Life == ECombatLife::Conscious && B.Find(1)->HP == 1);
+    TestEqual(TEXT("Successes cleared"), B.Find(1)->DeathSaveSuccesses, 0);
+    TestEqual(TEXT("Failures cleared"), B.Find(1)->DeathSaveFailures, 0);
+    TestEqual(TEXT("Full movement"), B.Snapshot().MovementLeft, B.Find(1)->Speed);
+    TestTrue(TEXT("Action and bonus action ready"), B.Snapshot().bActionAvailable && B.Snapshot().bBonusActionAvailable);
+    TestTrue(TEXT("Revived creature can act"), B.Submit({ECombatCommandType::EndTurn, 1}).bAccepted);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewStableResetTest, "Project.Expedition.Combat.StableResetsDeathSaves", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewStableResetTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    auto S = HeroDownedNext(B, 2, 2);
+    S.RandomState = StateForD20([](int32 Die) { return Die >= 10 && Die < 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore dying hero: %s"), *Error), B.Restore(S, Error))) { return false; }
+    if (!TestTrue(TEXT("Previous turn ends"), B.Submit({ECombatCommandType::EndTurn, S.TurnOrder[S.TurnIndex]}).bAccepted)) { return false; }
+    TestTrue(TEXT("Stable creature stays downed"), B.Find(1)->Life == ECombatLife::Downed);
+    TestEqual(TEXT("Stable marker"), B.Find(1)->DeathSaveSuccesses, 3);
+    TestEqual(TEXT("Becoming Stable clears failures"), B.Find(1)->DeathSaveFailures, 0);
+    // Damage to the stable creature starts a fresh tally rather than adding to the old failures.
+    auto Stable = B.Snapshot();
+    Stable.TurnIndex = Stable.TurnOrder.IndexOfByKey(2); Stable.MovementLeft = 0;
+    Stable.RandomState = StateForD20([](int32 Die) { return Die > 1 && Die < 20; });
+    if (!TestTrue(FString::Printf(TEXT("Restore stable hero: %s"), *Error), B.Restore(Stable, Error))) { return false; }
+    const FCombatResult R = B.Submit({ECombatCommandType::Attack, 2, {}, 1});
+    if (!TestTrue(TEXT("Foe hits the stable hero"), R.bAccepted && R.bHit)) { return false; }
+    TestTrue(TEXT("Still dying, not dead"), B.Find(1)->Life == ECombatLife::Downed);
+    TestEqual(TEXT("Fresh successes"), B.Find(1)->DeathSaveSuccesses, 0);
+    TestEqual(TEXT("Fresh failures: one, two on a critical"), B.Find(1)->DeathSaveFailures, R.bCritical ? 2 : 1);
     return !HasAnyErrors();
 }
 #endif

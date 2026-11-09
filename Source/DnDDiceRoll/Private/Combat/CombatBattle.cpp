@@ -174,8 +174,9 @@ bool FCombatBattle::Start(const FCombatEncounter& Encounter, int32 Seed, FString
     });
     if (FCombatantState* First = MutableFind(ActiveId()); First->Life == ECombatLife::Downed)
     {
-        if (--First->RescueTurnsLeft == 0) { First->Life = ECombatLife::Dead; }
-        AdvanceTurn();
+        DownedTurn(*First);
+        // SRD: a natural 20 death save revives the creature, which then takes this turn.
+        if (First->Life != ECombatLife::Conscious) { AdvanceTurn(); }
     }
     State.MovementLeft = Find(ActiveId())->Speed;
     return true;
@@ -929,7 +930,8 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage, bool bCri
         if (Real > 0)
         {
             FDeathSaveTally Tally; Tally.Successes = Target.DeathSaveSuccesses; Tally.Failures = Target.DeathSaveFailures;
-            if (Tally.Successes >= 3) { Tally.Successes = 0; }
+            // Damage to a stable creature starts a fresh tally.
+            if (Tally.Successes >= 3) { Tally = FDeathSaveTally(); }
             const EDeathState Outcome = FDeathSaveRules::ApplyDamageAtZero(Tally, Real, bCritical, Target.MaxHP);
             Target.DeathSaveSuccesses = Tally.Successes; Target.DeathSaveFailures = FMath::Min(Tally.Failures, 3);
             if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; }
@@ -1000,7 +1002,8 @@ void FCombatBattle::DownedTurn(FCombatantState& Unit)
     Unit.DeathSaveSuccesses = Tally.Successes; Unit.DeathSaveFailures = Tally.Failures;
     if (Outcome == EDeathState::Dead) { Unit.Life = ECombatLife::Dead; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
     else if (Outcome == EDeathState::Revived) { Unit.Life = ECombatLife::Conscious; Unit.HP = 1; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
-    else if (Outcome == EDeathState::Stable) { Unit.DeathSaveSuccesses = 3; }
+    // Becoming Stable resets both counts; three successes remain the saved stable marker.
+    else if (Outcome == EDeathState::Stable) { Unit.DeathSaveSuccesses = 3; Unit.DeathSaveFailures = 0; }
 }
 
 void FCombatBattle::AdvanceTurn()
@@ -1015,7 +1018,8 @@ void FCombatBattle::AdvanceTurn()
         }
         FCombatantState* Next = MutableFind(ActiveId());
         if (Next->Life == ECombatLife::Downed) { DownedTurn(*Next); }
-        else if (Next->Life == ECombatLife::Conscious)
+        // SRD: a natural 20 death save revives the creature, which then takes this turn as normal.
+        if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
             if (IsSrd())
