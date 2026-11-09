@@ -288,8 +288,10 @@ private:
     /** Translucent unlit "Color" x "Opacity" material for the contextual grid; absent until created in the editor. */
     UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
     BoardOverlay::FMask OverlayState;
-    TArray<FIntPoint> OverlayPath;
-    FIntPoint OverlayOrigin = FIntPoint::ZeroValue;
+    /** The inputs the mask was last built from, and reusable scratch for this frame's victims; an unchanged frame allocates nothing. */
+    FBoardHighlights OverlayInput;
+    TArray<FIntPoint> OverlayVictims;
+    TArray<FIntPoint> OverlayVictimsShown;
     bool bFullGridShown = false;
     bool bOverlayBuilt = false;
     TArray<int32> OverlayCounts;
