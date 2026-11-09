@@ -1,6 +1,7 @@
 #include "Run/ExpeditionRun.h"
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/AbilityRules.h"
 
 namespace
 {
@@ -78,6 +79,7 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
 {
     Error.Reset();
     if (!State.Party.IsEmpty() && State.Phase != EExpeditionPhase::Victory && State.Phase != EExpeditionPhase::Defeat) { Error = TEXT("Finish this expedition before changing its party."); return false; }
+    if (Ruleset != ERuleset::Compact && Ruleset != ERuleset::SRD) { Error = TEXT("Choose a valid ruleset."); return false; }
     if (Selection.Num() != 4) { Error = TEXT("Choose exactly four adventurers."); return false; }
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
@@ -85,6 +87,7 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
     Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
     auto Party = FCombatBattle::TutorialEncounter();
+    Party.Ruleset = Ruleset;
     for (int32 I = 0; I < 4; ++I)
     {
         const auto Cell = Party.Combatants[I].Cell;
@@ -251,7 +254,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     Error.Reset();
     auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
     const auto& P = Snapshot.Progress;
-    if (P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
+    if ((P.Ruleset != ERuleset::Compact && P.Ruleset != ERuleset::SRD) || Snapshot.Battle.Encounter.Ruleset != P.Ruleset ||
+        P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
         P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     for (int32 I = 0; I < 4; ++I)
@@ -354,6 +358,12 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             // occurred; matching the distribution also bounds unidentified deaths.
             if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
             Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
+        }
+        // SRD Start replaces the profile initiative bonus with the DEX modifier.
+        if (Snapshot.Battle.Encounter.Ruleset == ERuleset::SRD)
+        {
+            const FAbilityScores Scores = Base.AdventurerRole != EAdventurerRole::None ? FAbilityRules::PrebuiltScores(Base.AdventurerRole) : FAbilityRules::EnemyScores(Base.Role);
+            Base.InitiativeBonus = FAbilityRules::Modifier(Scores.Dexterity);
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||

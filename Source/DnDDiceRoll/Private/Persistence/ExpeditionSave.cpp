@@ -17,6 +17,7 @@ namespace
 {
 constexpr int32 MaxSaveCharacters = 4 * 1024 * 1024;
 constexpr int32 MaxRecords = 10000;
+constexpr int32 CompactSaveVersion = 4;
 
 // Deliberately limited to the value types in this save contract. No permissive import,
 // missing-field defaults, text-to-number coercion, enum truncation or UObject hydration.
@@ -152,16 +153,38 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
     FExpeditionSaveData Candidate;
     if (Json.IsEmpty() || Json.Len() > MaxSaveCharacters || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) || !Object.IsValid())
     { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
-    // Schema 4 -> 5: inject Compact ruleset (missing on v4 Progress) and bump version before strict import.
+    // Upgrade only the known v4 contract; malformed documents still fail strict import.
     const TSharedPtr<FJsonValue>* VersionField = Object->Values.Find(TEXT("Version"));
-    if (VersionField && (*VersionField)->Type == EJson::Number && static_cast<int32>((*VersionField)->AsNumber()) == 4)
+    if (VersionField && (*VersionField)->Type == EJson::Number && (*VersionField)->AsNumber() == CompactSaveVersion)
     {
         Object->SetNumberField(TEXT("Version"), Version);
-        if (TSharedPtr<FJsonObject> Current = Object->GetObjectField(TEXT("Current")))
+        const TSharedPtr<FJsonObject>* Current = nullptr;
+        const TSharedPtr<FJsonObject>* Progress = nullptr;
+        const TSharedPtr<FJsonObject>* Battle = nullptr;
+        const TSharedPtr<FJsonObject>* Encounter = nullptr;
+        const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
+        if (Object->TryGetObjectField(TEXT("Current"), Current))
         {
-            if (TSharedPtr<FJsonObject> Progress = Current->GetObjectField(TEXT("Progress")))
+            if ((*Current)->TryGetObjectField(TEXT("Progress"), Progress))
+            { (*Progress)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact)); }
+            if ((*Current)->TryGetObjectField(TEXT("Battle"), Battle) && (*Battle)->TryGetObjectField(TEXT("Encounter"), Encounter))
             {
-                if (!Progress->HasField(TEXT("Ruleset"))) { Progress->SetNumberField(TEXT("Ruleset"), static_cast<double>(ERuleset::Compact)); }
+                (*Encounter)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact));
+                (*Encounter)->SetBoolField(TEXT("bAmbush"), false);
+                (*Encounter)->SetArrayField(TEXT("AmbushStealthTotals"), {});
+                if ((*Encounter)->TryGetArrayField(TEXT("Combatants"), Combatants))
+                {
+                    const FCombatantState Defaults;
+                    const auto Fields = ExportStruct(FCombatantState::StaticStruct(), &Defaults);
+                    const TCHAR* Added[] = {TEXT("bReactionAvailable"), TEXT("DeathSaveSuccesses"), TEXT("DeathSaveFailures"),
+                        TEXT("TemporaryHP"), TEXT("bConcentrating"), TEXT("Size"), TEXT("bSurprised"),
+                        TEXT("bDisengaged"), TEXT("bProne"), TEXT("GrapplerId")};
+                    for (const auto& Value : *Combatants)
+                    {
+                        if (!Value || Value->Type != EJson::Object) { continue; }
+                        for (const TCHAR* Field : Added) { Value->AsObject()->SetField(Field, Fields->Values.FindChecked(Field)); }
+                    }
+                }
             }
         }
     }

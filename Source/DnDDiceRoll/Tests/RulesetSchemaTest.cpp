@@ -30,26 +30,41 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema4LoadsAsCompactTest, "Project.Expedition
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSchema4LoadsAsCompactTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run; FString Error, Json;
-    TestTrue(TEXT("Start compact run"), Run.NewRun(42, Error, TEXT("schema4-migrate"), EFighterSubclass::Champion, ERuleset::Compact));
-    FExpeditionSaveData Data; Data.Current = Run.Snapshot();
-    TestTrue(TEXT("Encode schema 5"), FExpeditionSave::Encode(Data, Json, Error));
-    TestEqual(TEXT("Encoder writes version 5"), Data.Version, 5);
-
-    TSharedPtr<FJsonObject> Object;
-    FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
-    Object->SetNumberField(TEXT("Version"), 4);
-    Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->RemoveField(TEXT("Ruleset"));
-    FString Schema4;
-    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Schema4));
-
-    FExpeditionSaveData Loaded;
-    TestTrue(TEXT("Schema 4 decodes"), FExpeditionSave::Decode(Schema4, Loaded, Error));
-    TestEqual(TEXT("Migrated version is 5"), Loaded.Version, 5);
-    TestTrue(TEXT("Schema 4 becomes Compact"), Loaded.Current.Progress.Ruleset == ERuleset::Compact);
-    FExpeditionRun Restored;
-    TestTrue(TEXT("Migrated snapshot restores"), Restored.Restore(Loaded.Current, Error));
-    TestTrue(TEXT("Restored ruleset Compact"), Restored.Progress().Ruleset == ERuleset::Compact);
+    FString Error;
+    const FString Fixtures = FPaths::ProjectDir() / TEXT("Source/DnDDiceRoll/Tests/Fixtures/Schema4");
+    FExpeditionSaveData Expected;
+    if (!TestTrue(TEXT("Read staging expected victory"), FExpeditionSave::Read(Fixtures / TEXT("expected-victory-v4.json"), Expected, Error))) { return false; }
+    FExpeditionSaveData ExpectedMid;
+    if (!TestTrue(TEXT("Read staging expected mid continuation"), FExpeditionSave::Read(Fixtures / TEXT("expected-mid-victory-v4.json"), ExpectedMid, Error))) { return false; }
+    for (const TCHAR* Name : {TEXT("mid-battle-v4.json"), TEXT("between-battles-v4.json")})
+    {
+        const bool bMid = FCString::Strcmp(Name, TEXT("mid-battle-v4.json")) == 0;
+        FExpeditionSaveData Loaded;
+        if (!TestTrue(Name, FExpeditionSave::Read(Fixtures / Name, Loaded, Error))) { return false; }
+        TestEqual(TEXT("Version upgraded"), Loaded.Version, FExpeditionSave::Version);
+        TestTrue(TEXT("Progress and encounter are Compact"), Loaded.Current.Progress.Ruleset == ERuleset::Compact && Loaded.Current.Battle.Encounter.Ruleset == ERuleset::Compact);
+        for (const auto& U : Loaded.Current.Battle.Encounter.Combatants)
+        {
+            TestTrue(TEXT("Combatant defaults"), U.bReactionAvailable && U.DeathSaveSuccesses == 0 && U.DeathSaveFailures == 0 && U.TemporaryHP == 0 &&
+                !U.bConcentrating && U.Size == 2 && !U.bSurprised && !U.bDisengaged && !U.bProne && U.GrapplerId == INDEX_NONE);
+        }
+        TestTrue(TEXT("Encounter defaults"), !Loaded.Current.Battle.Encounter.bAmbush && Loaded.Current.Battle.Encounter.AmbushStealthTotals.IsEmpty());
+        FExpeditionRun Run;
+        if (!TestTrue(TEXT("Restore migrated snapshot"), Run.Restore(Loaded.Current, Error))) { return false; }
+        TestTrue(TEXT("Restore consumes no RNG or state"), SameRun(Loaded.Current, Run.Snapshot()));
+        for (int32 Guard = 0; Guard < 30 && Run.Progress().Phase != EExpeditionPhase::Victory && Run.Progress().Phase != EExpeditionPhase::Defeat; ++Guard)
+        {
+            switch (Run.Progress().Phase)
+            {
+            case EExpeditionPhase::Route: TestTrue(TEXT("Choose"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)); break;
+            case EExpeditionPhase::Combat: TestTrue(TEXT("Finish combat"), FinishCombat(Run)); break;
+            case EExpeditionPhase::Reward: TestTrue(TEXT("Reward"), Run.ClaimReward(1, Error)); break;
+            case EExpeditionPhase::Recovery: TestTrue(TEXT("Recover"), Run.Recover(true, Error)); break;
+            default: return false;
+            }
+        }
+        TestTrue(TEXT("Full resumed snapshot equals staging continuation, including RNG"), SameRun((bMid ? ExpectedMid : Expected).Current, Run.Snapshot()));
+    }
     return !HasAnyErrors();
 }
 
@@ -70,7 +85,7 @@ bool FRulesetPersistsAndDefaultsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("SRD survives roundtrip"), Loaded.Current.Progress.Ruleset == ERuleset::SRD);
 
     TSharedPtr<FJsonObject> Object;
-    FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object);
+    if (!TestTrue(TEXT("SRD JSON parses"), FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) && Object.IsValid())) { return false; }
     Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version + 1);
     FString Future; FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Future));
     FExpeditionSaveData FutureData = Data;
@@ -84,7 +99,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompactSeedRegressionTest, "Project.Expedition
 bool FCompactSeedRegressionTest::RunTest(const FString& Parameters)
 {
     // Compact full-run seed 42 — same policy as FiveVictoriesRecoverArtifact.
-    // Proves Compact path still reaches Victory; fingerprint must stay stable vs staging c28b9cf battle math.
+    // Proves Compact path still reaches Victory; fingerprint must stay stable vs staging d9eac88 battle math.
     FExpeditionRun Run; FString Error;
     TestTrue(TEXT("Compact NewRun"), Run.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact));
     TestTrue(TEXT("Ruleset Compact"), Run.Progress().Ruleset == ERuleset::Compact);
@@ -109,8 +124,8 @@ bool FCompactSeedRegressionTest::RunTest(const FString& Parameters)
     const FString Fingerprint = CompactBattleFingerprint(Run.Snapshot());
     TestFalse(TEXT("Fingerprint produced"), Fingerprint.IsEmpty());
     // Golden Compact fingerprint for seed 42 / FinishCombat / ClaimReward(1) / Recover(true).
-    // Captured on tip sharing Compact battle math with staging c28b9cf (Rules libraries unused in Compact combat).
-    // Re-capture on a c28b9cf worktree if FinishCombat or Compact combat changes.
+    // Captured by executing the same seeded policy on staging d9eac886688dfb487d07a0dd68b9a146e689ffcd.
+    // See Fixtures/Schema4/README.md for the original v4 files and capture harness.
     const FString Golden = TEXT("rng=-958489057|partyHp=82|enemyHp=0|alive=4|phase=4|victories=5|ruleset=0|rounds=4|turn=4");
     TestEqual(TEXT("Compact fingerprint matches staging-shared golden"), Fingerprint, Golden);
     FExpeditionSaveData VictorySave; VictorySave.Current = Run.Snapshot();
