@@ -10,6 +10,8 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Persistence/ExpeditionSave.h"
+#include "RenderingThread.h"
+#include "UObject/GarbageCollection.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
@@ -74,7 +76,14 @@ struct FHarness
     }
     ~FHarness()
     {
-        if (World) { World->DestroyWorld(false); }
+        if (World)
+        {
+            // Free the world's render resources now, not at the next GC: lingering harness worlds
+            // push RHI reserved memory past its budget later in the suite (the same fix as #141's tests).
+            World->DestroyWorld(false);
+            FlushRenderingCommands();
+            CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+        }
         IFileManager::Get().DeleteDirectory(*Directory, false, true);
     }
     /** The checkpoint file's exact bytes; empty when it does not exist. */

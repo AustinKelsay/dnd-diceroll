@@ -244,10 +244,12 @@ class WorkspaceTests(unittest.TestCase):
                     dev.verify_skills()
         self.assertEqual(len(list(self.w.local.glob("skills/*/verified.json"))), 1)
 
-    def fake_automation(self, log_text, code=0, rewrite_config=False):
+    def fake_automation(self, log_text, code=0, rewrite_config=False, crash=None, state="Success"):
         def run(args, log, timeout):
             output = Path(next(str(a).split("=", 1)[1] for a in args if str(a).startswith("-ReportExportPath=")))
-            (output / "index.json").write_text(json.dumps({"tests":[{"state":"Success"}]}), encoding="utf-8-sig")
+            (output / "index.json").write_text(json.dumps({"tests":[{"state":state, "fullTestPath":"Project.A"}]}), encoding="utf-8-sig")
+            if crash:
+                (self.root / "Saved/Crashes" / crash).mkdir(parents=True)
             (output / "automation.log").write_text(log_text)
             if rewrite_config:
                 with (self.root / "Config/DefaultEngine.ini").open("a") as ini: ini.write("[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]\n")
@@ -284,6 +286,23 @@ class WorkspaceTests(unittest.TestCase):
         dev = Dev(self.w, host="linux")
         with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("LogTemp: Warning: something\n")):
             dev.test("Project.", allow_warnings=True)
+
+    def test_automation_reports_a_failed_lifecycle_even_when_tests_fail(self):
+        """#157: a crash at shutdown is a failed lifecycle, and is never hidden behind test results."""
+        self.w.local.mkdir()
+        cases = (({"log_text": "", "crash": "crashinfo-A"}, "Tests passed but the run is a failed lifecycle: new crash report.*crashinfo-A"),
+                 ({"log_text": "", "code": -11, "state": "Fail", "crash": "crashinfo-B"}, "did not pass.*Failed lifecycle: Engine was killed by signal 11; new crash report.*crashinfo-B"),
+                 ({"log_text": "", "code": -6}, "failed lifecycle: Engine was killed by signal 6"))
+        for kwargs, message in cases:
+            dev = Dev(self.w, host="linux")
+            with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation(**kwargs)):
+                with self.assertRaisesRegex(RuntimeError, message): dev.test("Project.")
+        self.assertFalse(list(self.w.local.glob("automation/*/verified.json")))
+        # A crash report left by an earlier run is not this run's crash.
+        dev = Dev(self.w, host="linux")
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("")):
+            dev.test("Project.")
+        self.assertEqual(len(list(self.w.local.glob("automation/*/verified.json"))), 1)
 
     def test_linux_layout_and_unsupported_host(self):
         dev = Dev(self.w, host="linux")
@@ -479,6 +498,16 @@ class GalleryTests(unittest.TestCase):
                 return code
             with patch.object(dev, "run_game", side_effect=run), self.assertRaisesRegex(RuntimeError, message, msg=label):
                 dev.gallery(["board-a"], ["1280x720"], poses=poses)
+
+    def test_gallery_fails_when_a_game_run_leaves_a_crash_report(self):
+        self.fixture()
+        dev = self.ready()
+        def run(args, log, timeout):
+            self.write_run(args)
+            (self.root / "Saved/Crashes/crashinfo-Game").mkdir(parents=True)
+            return 0
+        with patch.object(dev, "run_game", side_effect=run), self.assertRaisesRegex(RuntimeError, "Failed lifecycle for board-a at 1280x720: new crash report.*crashinfo-Game"):
+            dev.gallery(["board-a"], ["1280x720"], poses=self.poses())
 
     def test_verify_capture_requires_every_shot_and_nonempty_pictures(self):
         out = self.root / "out"
