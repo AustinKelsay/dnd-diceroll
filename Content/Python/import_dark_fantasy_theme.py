@@ -347,7 +347,7 @@ def build_occluder_material(material):
     # Interleaved gradient noise of the pixel position: frac(52.98 * frac(dot(pixel, (0.0671, 0.00584)))).
     screen = node(material, unreal.MaterialExpressionScreenPosition, 300, 2200)
     size = node(material, unreal.MaterialExpressionViewProperty, 300, 2350)
-    size.set_editor_property("property", unreal.MaterialExposedViewProperty.MEVP_VIEWPORT_SIZE)
+    size.set_editor_property("property", unreal.MaterialExposedViewProperty.MEVP_VIEW_SIZE)
     pixel = mul(material, screen, size, 500, 2250)
     weights = node(material, unreal.MaterialExpressionConstant2Vector, 500, 2400, r=0.06711056, g=0.00583715)
     spread = unary(material, unreal.MaterialExpressionFrac, binary(material, unreal.MaterialExpressionDotProduct, pixel, weights, 700, 2300), 850, 2300)
