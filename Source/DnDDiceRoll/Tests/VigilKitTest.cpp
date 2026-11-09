@@ -307,7 +307,7 @@ bool FVigilOccluderFadeTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("Something far to the side of the line is opaque"), View->OccluderOpacityAt(Between + FVector(0.0f, 0.0f, 4.0f * Live)), 1.0f, 0.001f);
             TestEqual(TEXT("Something past the focus is opaque"), View->OccluderOpacityAt(LiveFocus + (LiveFocus - LiveEye) * 0.3f), 1.0f, 0.001f);
             // Turning the camera around the board moves the line: the old spot no longer blocks it.
-            View->SnapCamera(90.0f, View->FramedDistance());
+            View->SnapCamera(90.0f, View->FramedDistance(90.0f));
             View->Tick(0.016f);
             TestEqual(TEXT("After the camera moves, the old spot is opaque again"), View->OccluderOpacityAt(Between), 1.0f, 0.001f);
         }
