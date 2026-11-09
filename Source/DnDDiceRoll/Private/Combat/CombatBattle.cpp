@@ -18,7 +18,7 @@ namespace
 {
 int32 GridDistance(FIntPoint A, FIntPoint B)
 {
-    return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
+    return FOpportunityRules::GridDistance(A, B);
 }
 FAbilityScores AbilityScoresOf(const FCombatantState& Unit)
 {
@@ -54,6 +54,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
     {
         return Cell.X >= 0 && Cell.Y >= 0 && Cell.X < Encounter.Width && Cell.Y < Encounter.Height;
     };
+    if (Encounter.Ruleset != ERuleset::Compact && Encounter.Ruleset != ERuleset::SRD) { return Reject(TEXT("Invalid encounter ruleset.")); }
     TSet<FIntPoint> Occupied;
     for (FIntPoint Cell : Encounter.BlockedCells)
     {
@@ -68,6 +69,8 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             static_cast<uint8>(Unit.FighterSubclass) > static_cast<uint8>(EFighterSubclass::BattleMaster) ||
             (Unit.FighterSubclass != EFighterSubclass::BattleMaster && Unit.ManeuverUses != 0) ||
             (Unit.AdventurerRole != EAdventurerRole::Fighter && Unit.FighterSubclass != EFighterSubclass::None) ||
+            Unit.Size < static_cast<int32>(ECreatureSize::Tiny) || Unit.Size > static_cast<int32>(ECreatureSize::Gargantuan) ||
+            Unit.TemporaryHP < 0 || Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 3 ||
             Unit.MaxHP < 1 || Unit.MaxHP > 1000 || Unit.HP < 0 || Unit.HP > Unit.MaxHP ||
             Unit.ArmorClass < 1 || Unit.ArmorClass > 40 || Unit.AttackBonus < -10 || Unit.AttackBonus > 30 ||
             Unit.DamageDie < 1 || Unit.DamageDie > 100 || Unit.DamageBonus < 0 || Unit.DamageBonus > 100 ||
@@ -119,6 +122,9 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             const auto* Target = Encounter.Combatants.FindByPredicate([&](const auto& T) { return T.Id == Unit.GuardTargetId; });
             if (!Target || (Target->Id == Unit.Id && Unit.GuardTurns == 0) || Target->Side != Unit.Side || Target->Life != ECombatLife::Conscious) { return Reject(TEXT("Invalid protected ally.")); }
         }
+        if (Unit.GrapplerId != INDEX_NONE && (Unit.GrapplerId == Unit.Id ||
+            !Encounter.Combatants.ContainsByPredicate([&](const auto& U) { return U.Id == Unit.GrapplerId; })))
+        { return Reject(TEXT("Invalid grappler reference.")); }
         Ids.Add(Unit.Id);
         Occupied.Add(Unit.Cell);
     }
@@ -302,7 +308,7 @@ bool FCombatBattle::HasLineOfSight(FIntPoint From, FIntPoint To) const
 
 bool FCombatBattle::CanTargetFrom(const FCombatantState& Attacker, FIntPoint Origin, const FCombatantState& Target) const
 {
-    return Target.Side != Attacker.Side && Target.HP > 0 && GridDistance(Origin, Target.Cell) <= Attacker.Range &&
+    return Target.Side != Attacker.Side && (Target.HP > 0 || (IsSrd() && Target.Life == ECombatLife::Downed)) && GridDistance(Origin, Target.Cell) <= Attacker.Range &&
         HasLineOfSight(Origin, Target.Cell);
 }
 
@@ -670,7 +676,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
-                ApplyDamage(*Target, Result.Damage);
+                ApplyDamage(*Target, Result.Damage, Result.bCritical);
                 Result.Damage -= Result.DamagePrevented;
             }
             State.bActionAvailable = false;
@@ -700,7 +706,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
-                ApplyDamage(*Target, Result.Damage);
+                ApplyDamage(*Target, Result.Damage, Result.bCritical);
                 Result.Damage -= Result.DamagePrevented;
             }
             State.bActionAvailable = false;
@@ -742,7 +748,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 Result.Damage = Total;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
-                ApplyDamage(*Target, Result.Damage);
+                ApplyDamage(*Target, Result.Damage, Result.bCritical);
                 Result.Damage -= Result.DamagePrevented;
             }
             else
@@ -753,7 +759,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
                 Result.DamagePrevented = FMath::Min(Result.Damage, Protection);
-                ApplyDamage(*Target, Result.Damage);
+                ApplyDamage(*Target, Result.Damage, Result.bCritical);
                 Result.Damage -= Result.DamagePrevented;
             }
             Ability = FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), MissileDarts);
@@ -792,17 +798,24 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (U.AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(U.AdventurerRole, U.Level).SkillBonus(Skill); }
             return FAbilityRules::Modifier(Ability == EAbility::Strength ? AbilityScoresOf(U).Strength : AbilityScoresOf(U).Dexterity);
         };
+        auto SaveBonus = [&](const FCombatantState& U, EAbility Ability)
+        {
+            if (U.AdventurerRole != EAdventurerRole::None) { return FProficiencyRules::PrebuiltCharacter(U.AdventurerRole, U.Level).SaveBonus(Ability); }
+            return FAbilityRules::Modifier(Ability == EAbility::Strength ? AbilityScoresOf(U).Strength : AbilityScoresOf(U).Dexterity);
+        };
+        auto GrappleDc = [&](const FCombatantState& U)
+        { return 8 + FAbilityRules::Modifier(AbilityScoresOf(U).Strength) + FProficiencyRules::ProficiencyBonus(U.Level); };
         Result.Type = Command.Type; Result.ActorId = Command.ActorId; Result.TargetId = Command.TargetId;
         Result.bCritical = false; Result.EffectModifier = 0;
         if (Command.Type == ECombatCommandType::Escape)
         {
             if (!State.bActionAvailable) { return Reject(TEXT("Escape costs your Action.")); }
-            // Escaper chooses Athletics or Acrobatics (use the better); grappler uses Athletics.
+            // SRD 5.2.1: Athletics or Acrobatics check against the grappler's escape DC.
             const int32 EscMod = FMath::Max(SkillOrAbility(*User, ESkill::Athletics, EAbility::Strength), SkillOrAbility(*User, ESkill::Acrobatics, EAbility::Dexterity));
-            const int32 GrpMod = SkillOrAbility(*Target, ESkill::Athletics, EAbility::Strength);
-            const int32 EscDie = Roll(20), GrpDie = Roll(20);
-            const int32 EscTotal = EscDie + EscMod, GrpTotal = GrpDie + GrpMod;
-            const bool bFreed = FCheckRules::ActorWinsContest(EscTotal, GrpTotal);
+            const int32 GrpTotal = GrappleDc(*Target);
+            const int32 EscDie = Roll(20);
+            const int32 EscTotal = EscDie + EscMod;
+            const bool bFreed = EscTotal >= GrpTotal;
             Result.NaturalRoll = EscDie; Result.AttackBonus = EscMod; Result.AttackTotal = EscTotal; Result.TargetArmorClass = GrpTotal;
             Result.bHit = bFreed;
             if (bFreed)
@@ -818,12 +831,12 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         }
         else
         {
-            const int32 AtkMod = SkillOrAbility(*User, ESkill::Athletics, EAbility::Strength);
-            const int32 DefMod = FMath::Max(SkillOrAbility(*Target, ESkill::Athletics, EAbility::Strength), SkillOrAbility(*Target, ESkill::Acrobatics, EAbility::Dexterity));
-            const int32 AtkDie = Roll(20), DefDie = Roll(20);
-            const int32 AtkTotal = AtkDie + AtkMod, DefTotal = DefDie + DefMod;
-            const bool bWon = FCheckRules::ActorWinsContest(AtkTotal, DefTotal);
-            Result.NaturalRoll = AtkDie; Result.AttackBonus = AtkMod; Result.AttackTotal = AtkTotal; Result.TargetArmorClass = DefTotal;
+            const int32 AtkTotal = GrappleDc(*User);
+            const int32 DefMod = FMath::Max(SaveBonus(*Target, EAbility::Strength), SaveBonus(*Target, EAbility::Dexterity));
+            const int32 DefDie = Roll(20);
+            const int32 DefTotal = DefDie + DefMod;
+            const bool bWon = DefTotal < AtkTotal;
+            Result.NaturalRoll = DefDie; Result.AttackBonus = DefMod; Result.AttackTotal = DefTotal; Result.TargetArmorClass = AtkTotal;
             Result.bHit = bWon;
             FString Detail = bWon ? TEXT("SUCCESS") : TEXT("FAIL");
             if (bWon && Command.Type == ECombatCommandType::Grapple)
@@ -853,7 +866,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                         Target->Cell = Dest;
                         Detail = TEXT("PUSHED 5 FT");
                         Result.Effects.Add({Target->Id, EAbilityEffect::Push, 1, Target->Cell});
-                        if (Target->GrapplerId != INDEX_NONE && GridDistance(Target->Cell, Find(Target->GrapplerId)->Cell) > 1)
+                        const FCombatantState* Grappler = Find(Target->GrapplerId);
+                        if (Target->GrapplerId != INDEX_NONE && (!Grappler || GridDistance(Target->Cell, Grappler->Cell) > 1))
                         { Target->GrapplerId = INDEX_NONE; }
                     }
                     else { Detail = TEXT("PUSH BLOCKED"); }
@@ -891,12 +905,25 @@ int32 FCombatBattle::ProtectionFor(const FCombatantState& Target) const
     return Protection;
 }
 
-void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage)
+void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage, bool bCritical)
 {
     const int32 Protection = ProtectionFor(Target);
     const int32 HPBefore = Target.HP;
     int32 Real = FMath::Max(0, Damage - Protection);
     if (IsSrd()) { Real = FDeathSaveRules::AbsorbWithTemporary(Target.TemporaryHP, Real); }
+    if (IsSrd() && HPBefore == 0 && Target.Life == ECombatLife::Downed)
+    {
+        // Damage interrupts stability; no HP damage means no failure (e.g. temp HP).
+        if (Real > 0)
+        {
+            FDeathSaveTally Tally; Tally.Successes = Target.DeathSaveSuccesses; Tally.Failures = Target.DeathSaveFailures;
+            if (Tally.Successes >= 3) { Tally.Successes = 0; }
+            const EDeathState Outcome = FDeathSaveRules::ApplyDamageAtZero(Tally, Real, bCritical, Target.MaxHP);
+            Target.DeathSaveSuccesses = Tally.Successes; Target.DeathSaveFailures = FMath::Min(Tally.Failures, 3);
+            if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; }
+        }
+        return;
+    }
     Target.HP = FMath::Max(0, Target.HP - Real);
     if (IsSrd() && Target.bConcentrating && Target.HP > 0 && Real > 0)
     {
@@ -976,7 +1003,6 @@ void FCombatBattle::AdvanceTurn()
         }
         FCombatantState* Next = MutableFind(ActiveId());
         if (Next->Life == ECombatLife::Downed) { DownedTurn(*Next); }
-        else if (IsSrd() && Next->bSurprised) { Next->bSurprised = false; }
         else if (Next->Life == ECombatLife::Conscious)
         {
             Next->GuardTargetId = INDEX_NONE; Next->GuardAmount = 0; Next->GuardTurns = 0;
@@ -1179,7 +1205,7 @@ void FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArr
         {
             Damage = Roll(Reactor.DamageDie) + Reactor.DamageBonus;
             if (bCrit) { Damage += Roll(Reactor.DamageDie); }
-            ApplyDamage(Mover, Damage);
+            ApplyDamage(Mover, Damage, bCrit);
         }
         Result.Feedback += FString::Printf(TEXT(" | OA %s: d20 %d+%d=%d vs AC %d %s %d"),
             *Reactor.Name, Natural, Reactor.AttackBonus, Total, Mover.ArmorClass, bHit ? TEXT("HIT") : TEXT("MISS"), Damage);

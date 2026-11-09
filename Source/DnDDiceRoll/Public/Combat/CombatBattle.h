@@ -252,7 +252,7 @@ private:
     void CheckOutcome();
     TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
     int32 ProtectionFor(const FCombatantState& Target) const;
-    void ApplyDamage(FCombatantState& Target, int32 Damage);
+    void ApplyDamage(FCombatantState& Target, int32 Damage, bool bCritical = false);
     FCombatantState* MutableFind(int32 Id);
     FCombatResult Resolve(const FCombatCommand& Command);
     bool IsSrd() const { return State.Encounter.Ruleset == ERuleset::SRD; }

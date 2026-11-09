@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 
 enum class ECreatureSize : uint8 { Tiny, Small, Medium, Large, Huge, Gargantuan };
 enum class EShoveChoice : uint8 { KnockProne, PushAway };
 
-/** SRD grapple and shove as Athletics contests. */
+/** Size/movement/shove helpers. Contest probabilities retain the legacy 5.1 model; battle uses 5.2.1 saves/DCs. */
 struct DNDDICEROLL_API FGrappleRules
 {
     /** A creature can grapple or shove a target no more than one size larger. */
@@ -16,7 +16,7 @@ struct DNDDICEROLL_API FGrappleRules
     static int32 GrappledSpeed(int32 SpeedCells);
     /** Dragging a grappled creature costs double movement. */
     static int32 DragCost(int32 Cells);
-    /** Escaping is the grappled creature's contest against the grappler. */
+    /** Legacy 5.1 opposed escape probability; not the 5.2.1 battle escape check. */
     static int32 EscapeOutOf400(int32 EscaperModifier, int32 GrapplerModifier);
     static int32 ShovePushCells(bool bWon, EShoveChoice Choice);
     static bool ShoveKnocksProne(bool bWon, EShoveChoice Choice);

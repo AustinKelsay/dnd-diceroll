@@ -1,8 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 
-/** SRD opportunity attack triggers on the 5-foot grid (diagonals count as 1 cell). No reaction state is stored here. */
+/** SRD opportunity attack triggers on the 5-foot grid (Manhattan distance, shared with battle targeting). No reaction state is stored here. */
 struct DNDDICEROLL_API FOpportunityRules
 {
     static int32 GridDistance(const FIntPoint& A, const FIntPoint& B);

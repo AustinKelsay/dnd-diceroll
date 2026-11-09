@@ -1,8 +1,8 @@
-﻿#include "Rules/OpportunityRules.h"
+#include "Rules/OpportunityRules.h"
 
 int32 FOpportunityRules::GridDistance(const FIntPoint& A, const FIntPoint& B)
 {
-    return FMath::Max(FMath::Abs(A.X - B.X), FMath::Abs(A.Y - B.Y));
+    return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
 }
 
 bool FOpportunityRules::InReach(const FIntPoint& Reactor, int32 ReachCells, const FIntPoint& Cell)
