@@ -1,0 +1,5 @@
+First launch of run4 (1280x720, right after `hyprctl keyword monitor HEADLESS-1,1280x720@60,0x0,1` changed the nested headless output's mode) died during window creation, before any game code:
+[23:07:52] LogCore: === Critical error: === Unhandled Exception: SIGFPE: floating-point exception
+ handle_wl_output_done [SDL_waylandvideo.c:1016]
+ <- wl_display_roundtrip_queue <- Wayland_SyncWindow [SDL_waylandwindow.c:3347] <- FLinuxWindow::ReshapeWindow <- FLinuxWindow::Initialize <- FSlateApplication::AddWindow <- UGameEngine::CreateGameWindow <- FPreLoadScreenManager::Initialize
+The nested headless output advertises physicalWidth/Height 0 (hyprctl monitors: HEADLESS-1 physical 0x0); SDL's wl_output.done handler divides by it. Relaunching the identical command line worked (run4 second launch). The first game.log was overwritten by the relaunch; this file keeps the relevant lines.

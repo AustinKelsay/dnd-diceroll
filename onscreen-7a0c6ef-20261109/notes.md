@@ -1,0 +1,19 @@
+# running notes (1920x1080 run1, Watchtower road seed 20261030, 7 combatants)
+- builder: all 13 classes shown, drawers fit at 1920x1080 (Cleric/Wizard 10 subclasses tight at bottom): 001, 010-class01..12, sheets class-1-4/5-8/9-12  PASS
+- menu panel: I opens (focus Save), Tab->Resume, Down->Records, Esc closes: sheet-menu-nav-1920 PASS
+- hotkeys closed: H/?/T/K work: sheet-hotkeys-closed-1920 PASS ; open: K,T,H,? close panel+act; key 2 leaves panel open; Enter on item: sheet-hotkeys-open-1920 PASS
+- log: fades (051), tab 'Log' visible, hover tab restores (056) PASS
+- hero card hover (057) PASS; acting hero details by keyboard 2,2,2 open/close sheet-key2-toggle PASS
+- kbd path: ribbon+bracket+cost '2' + 'Move 2 squares . 2 left after' (072) PASS
+- ptr path: ribbon corner + bracket visible but cost number hidden behind Move panel/chips (078, c78z) PARTIAL
+- DEFECT-ish: after an arrow key, pointer hover does not take over until a click (Esc/A don't clear) (073-076)
+- Alt hold full grid (080) vs released (081) PASS
+- legend 'Outline Reach: / x Blocked sight ...' floats in mid-board without backing, partly under details card (046, 014) rough edge
+- floor saturated blue on Watchtower road (014) - compare gallery
+- enemy turn: grid fully hidden at rest (091, sheet-enemy-1920) PASS; enemy banner overlaps open hero detail card transiently
+- pointer targeting forecast + bracket + chip (082) PASS
+- #143 16x11 'Stream trail' (Root) 1920: Q/E orbit steps are 45deg; board+full grid within HUD-safe at axis yaws (sheet-b16-grid-yaw4-7-1920) and mid-ease frames (sheet-b16-orbitE-mid-1920) PASS
+- zoom: continuous, 120 units/notch; near/far stops sheet-zoom-stops-1920 PASS; zoom survives 2xE and back (sheet-zoom-survives-orbit-1920) PASS
+- right-drag orbit works (136-139) ; first drag in 131/132 had no effect (lost) PARTIAL
+- Shift+D / Shift+W+D pan bounded (133-135); middle-drag pan works (sheet-middledrag-1920); turn change recentres (143) PASS; plain A selects Attack, camera static (sheet-A-attack-key-1920) PASS
+- NOTE max pan + orbit can leave board mostly in a corner with big black void (139b)

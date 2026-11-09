@@ -1,0 +1,5 @@
+# inside the nested headless Hyprland (WAYLAND_DISPLAY=wayland-2); see nested-compositor/ and report.md
+BIN=<checkout>/Builds/20261109T225039957106Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll
+$BIN -windowed -ResX=<w> -ResY=<h> -ForceRes -corelimit=2 -UserDir=<.local>/onscreen/<run>/runtime -ExpeditionSaveRoot=<.local>/onscreen/<run>/saves -abslog=<.local>/onscreen/<run>/game.log -stdout -FullStdOutLogOutput   [run9 adds -ExpeditionPrimitives]
+# runs: run1 1920x1080 fresh run (Watchtower road, seed 20261030); run2 board-16x11 fixture 1920x1080; run3 board-18x12 1920x1080; run4/run5 board-16x11 1280x720; run6 fresh run 1280x720; run7 board-18x12 1280x720; run8 board-18x12 1600x600; run9 board-16x11 1280x720 -ExpeditionPrimitives
+# fixtures: copied Saved/CaptureFixtures/<name>/current-v1.json into each run's own saves folder.
