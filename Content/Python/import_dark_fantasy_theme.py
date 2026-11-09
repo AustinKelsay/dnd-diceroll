@@ -484,7 +484,8 @@ def build_figure_silhouette_material(material):
     """Post-process material that draws a hidden figure's silhouette in its side's colour (#145 review, tall kit obstacles).
 
     Figures render into custom depth with stencil 1 (party) or 2 (enemy). Where CustomDepth is farther from the camera than SceneDepth by
-    more than `Tolerance` cm the figure is behind some other geometry, and the pixel is mixed toward the side colour by `FillAlpha`.
+    more than `Tolerance` cm the figure is behind some other geometry, and the pixel is mixed toward the side colour with that side's
+    alpha (below).
     Where the figure is the nearest thing (custom depth equals scene depth) or no figure is there (stencil 0) the pixel is unchanged.
 
     Blendable Location is After Tonemapping: the fill is then the exact HUD colour, untouched by auto-exposure, bloom, vignette and
@@ -682,11 +683,12 @@ def lod_slots(mesh):
 
 
 def repair_lod_slots(mesh, name):
-    """Maps every section of every LOD to material slot 0 (the one MI) and drops the slots the LOD imports added.
+    """Maps every section of every LOD to material slot 0 (the one MI). The extra slots the LOD imports added are kept, unused.
 
     Each LOD glb names its own material (LOD1_SM_X ...), so import_lod appends a slot per LOD and its sections point there; only
     LOD0 got the instance, and LOD1 and LOD2 rendered with the default grey. A kit mesh has one atlas and one instance, so every
-    section belongs in slot 0. Idempotent: a mesh whose sections already all use slot 0 with one slot is not touched, so a plain run
+    section belongs in slot 0. Slots are never trimmed: trimming them preceded a startup crash in the first native run (#163), so
+    only the section mapping changes. Idempotent: a mesh whose sections already all use slot 0 is not touched, so a plain run
     repairs wrong existing meshes in place (a modify, not a reimport) and leaves right ones byte-identical.
     """
     before = lod_slots(mesh)
