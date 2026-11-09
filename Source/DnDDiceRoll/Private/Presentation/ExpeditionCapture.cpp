@@ -101,8 +101,8 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             const TSharedPtr<FJsonValue> Distance = (*Entry)->TryGetField(TEXT("distance"));
             FString Word;
             double Number = 0.0;
-            if (Distance.IsValid() && Distance->TryGetString(Word) && Word == TEXT("default")) { Shot.Distance = 0.0f; }
-            else if (Distance.IsValid() && Distance->TryGetString(Word) && Word == TEXT("far")) { Shot.Distance = FarDistance; }
+            if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("default"), ESearchCase::CaseSensitive)) { Shot.Distance = 0.0f; }
+            else if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("far"), ESearchCase::CaseSensitive)) { Shot.Distance = FarDistance; }
             else if (Distance.IsValid() && Distance->Type == EJson::Number && Distance->TryGetNumber(Number) && Number >= MinDistance && Number <= MaxDistance) { Shot.Distance = static_cast<float>(Number); }
             else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\", \"far\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
         }
