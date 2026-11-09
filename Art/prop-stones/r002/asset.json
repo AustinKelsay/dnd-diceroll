@@ -122,7 +122,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
-      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+      "sha256": "55287225acc7b2f5053de5496c8cdbd2f6d9dab7ff9423dc379c871c25a6a268"
     },
     {
       "role": "export",
@@ -132,12 +132,12 @@
     {
       "role": "export",
       "path": "Art/prop-stones/r002/SM_Prop_Stones_LOD1.glb",
-      "sha256": "21fea601131bac6b91b8f1e479966005170769094dfe1d19ac420bc74187ce9f"
+      "sha256": "56d63e0e0294e402eb33bf7fd98360308fdede3ec78be035ca188c6364c2172f"
     },
     {
       "role": "export",
       "path": "Art/prop-stones/r002/SM_Prop_Stones_LOD2.glb",
-      "sha256": "2ef1ca534658249b8869b42a5c21aaa9546818b9c89192fe505088f06ef4d610"
+      "sha256": "09c6be8191efd6b1b7446031cbcf1dfdc59a0744abb65df8c453766d08429e50"
     }
   ],
   "import_policy": {

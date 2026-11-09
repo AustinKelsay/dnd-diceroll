@@ -53,7 +53,7 @@ AExpeditionBattleView* StartVigilBoard(FAutomationTestBase& Test, UWorld* World,
     return View;
 }
 
-struct FSeededOutcome
+struct FVigilSeededOutcome
 {
     FCombatSnapshot Battle;
     FString Checkpoint;
@@ -61,9 +61,9 @@ struct FSeededOutcome
 };
 
 // The same rules-only policy as the board metric test, under a presentation variant: 0 the shipped theme, 1 primitives.
-FSeededOutcome PlayThemed(FAutomationTestBase& Test, UWorld* World, const FString& Directory, int32 Variant)
+FVigilSeededOutcome PlayThemed(FAutomationTestBase& Test, UWorld* World, const FString& Directory, int32 Variant)
 {
-    FSeededOutcome Outcome;
+    FVigilSeededOutcome Outcome;
     AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
     if (!Test.TestNotNull(TEXT("Battle view"), View)) { return Outcome; }
     const FString Path = FPaths::Combine(Directory, FString::FromInt(Variant), TEXT("current.json"));
@@ -287,6 +287,34 @@ bool FVigilOccluderFadeTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("A piece blocking only the unit's line fades"), OccluderFade::Lowest(OnUnitLine, Eye, Target, Unit, Radius), OccluderFade::MinOpacity, 0.0001f);
     TestEqual(TEXT("A piece blocking neither line is opaque"), OccluderFade::Lowest(FVector(-500.0f, -3000.0f, 400.0f), Eye, Target, Unit, Radius), 1.0f, 0.0001f);
 
+    // Board test: a point that covers a board cell fades, a point over ground beside the board does not.
+    {
+        const FVector2D BoardMin(-300.0f, -300.0f), BoardMax(300.0f, 300.0f);
+        const float PlaneZ = 0.0f, Ramp = 75.0f;
+        const FVector Cell(100.0f, 50.0f, PlaneZ);
+        const FVector InFront = Eye + (Cell - Eye) * 0.5f;
+        TestEqual(TEXT("A piece in front of a board cell fades to the minimum"), OccluderFade::Board(InFront, Eye, BoardMin, BoardMax, PlaneZ, Ramp), OccluderFade::MinOpacity, 0.0001f);
+        TestTrue(TEXT("The board fade is dithered, not hidden"), OccluderFade::Board(InFront, Eye, BoardMin, BoardMax, PlaneZ, Ramp) > 0.0f);
+        const FVector Beside(0.0f, 1500.0f, PlaneZ);
+        TestEqual(TEXT("A piece in front of ground beside the board is opaque"), OccluderFade::Board(Eye + (Beside - Eye) * 0.5f, Eye, BoardMin, BoardMax, PlaneZ, Ramp), 1.0f, 0.0001f);
+        const FVector Behind(-1500.0f, 0.0f, PlaneZ);
+        TestEqual(TEXT("A piece in front of ground behind the camera's side of the board is opaque"), OccluderFade::Board(Eye + (Behind - Eye) * 0.5f, Eye, BoardMin, BoardMax, PlaneZ, Ramp), 1.0f, 0.0001f);
+        TestEqual(TEXT("A point on the board plane is not in front of it"), OccluderFade::Board(Cell, Eye, BoardMin, BoardMax, PlaneZ, Ramp), 1.0f, 0.0001f);
+        TestEqual(TEXT("A point below the board plane is opaque"), OccluderFade::Board(Cell - FVector(0.0f, 0.0f, 40.0f), Eye, BoardMin, BoardMax, PlaneZ, Ramp), 1.0f, 0.0001f);
+        TestEqual(TEXT("A point level with or above the camera is opaque"), OccluderFade::Board(Eye + FVector(500.0f, 0.0f, 0.0f), Eye, BoardMin, BoardMax, PlaneZ, Ramp), 1.0f, 0.0001f);
+        const FVector OnEdge(BoardMax.X, 0.0f, PlaneZ);
+        TestEqual(TEXT("A piece in front of the board's edge still fades fully"), OccluderFade::Board(Eye + (OnEdge - Eye) * 0.5f, Eye, BoardMin, BoardMax, PlaneZ, Ramp), OccluderFade::MinOpacity, 0.0001f);
+        float Previous = 0.0f;
+        for (float Past = 0.0f; Past <= 2.0f * Ramp; Past += 5.0f)
+        {
+            const FVector Beyond(BoardMax.X + Past, 0.0f, PlaneZ);
+            const float Opacity = OccluderFade::Board(Eye + (Beyond - Eye) * 0.5f, Eye, BoardMin, BoardMax, PlaneZ, Ramp);
+            TestTrue(TEXT("The board fade eases back to opaque past the rectangle"), Opacity >= Previous - 0.0001f);
+            Previous = Opacity;
+        }
+        TestEqual(TEXT("It is opaque a full ramp past the rectangle"), Previous, 1.0f, 0.0001f);
+    }
+
     // On a real kit board the same rule is fed the live camera, focus and active unit.
     UWorld* World = MakeKitWorld();
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
@@ -306,6 +334,15 @@ bool FVigilOccluderFadeTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("It is dithered, not hidden"), View->OccluderOpacityAt(Between) > 0.0f);
             TestEqual(TEXT("Something far to the side of the line is opaque"), View->OccluderOpacityAt(Between + FVector(0.0f, 0.0f, 4.0f * Live)), 1.0f, 0.001f);
             TestEqual(TEXT("Something past the focus is opaque"), View->OccluderOpacityAt(LiveFocus + (LiveFocus - LiveEye) * 0.3f), 1.0f, 0.001f);
+            // The board test uses the live board rectangle: pieces over a board cell fade, pieces over ground well outside do not.
+            FVector2D BoardMin, BoardMax;
+            float PlaneZ = 0.0f;
+            View->OccluderBoard(BoardMin, BoardMax, PlaneZ);
+            const FVector BoardCentre((BoardMin.X + BoardMax.X) * 0.5f, (BoardMin.Y + BoardMax.Y) * 0.5f, PlaneZ);
+            TestTrue(TEXT("The camera is above the board plane"), LiveEye.Z > PlaneZ);
+            TestEqual(TEXT("Something between the camera and a board cell is faded"), View->OccluderBoardOpacityAt(LiveEye + (BoardCentre - LiveEye) * 0.5f), OccluderFade::MinOpacity, 0.001f);
+            const FVector Outside(BoardMax.X + 20.0f * View->Metric().CellCm, BoardCentre.Y, PlaneZ);
+            TestEqual(TEXT("Something over ground well beside the board is opaque"), View->OccluderBoardOpacityAt(LiveEye + (Outside - LiveEye) * 0.5f), 1.0f, 0.001f);
             // Turning the camera around the board moves the line: the old spot no longer blocks it.
             View->SnapCamera(90.0f, View->FramedDistance(90.0f));
             View->Tick(0.016f);
@@ -326,8 +363,8 @@ bool FVigilThemeKeepsStateTest::RunTest(const FString& Parameters)
     UWorld* World = MakeKitWorld();
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VigilThemeState"), FGuid::NewGuid().ToString());
-    const FSeededOutcome Themed = PlayThemed(*this, World, Directory, 0);
-    const FSeededOutcome Primitive = PlayThemed(*this, World, Directory, 1);
+    const FVigilSeededOutcome Themed = PlayThemed(*this, World, Directory, 0);
+    const FVigilSeededOutcome Primitive = PlayThemed(*this, World, Directory, 1);
     TestTrue(TEXT("The run played commands"), Themed.Commands > 0);
     TestFalse(TEXT("The run wrote a checkpoint"), Themed.Checkpoint.IsEmpty());
     TestEqual(TEXT("Both runs play the same number of commands"), Primitive.Commands, Themed.Commands);

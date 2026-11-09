@@ -109,7 +109,7 @@ The LODs are made by Blender's collapse decimator from the LOD0 glb data (`build
 
 - Nothing was imported or rendered in Unreal. LOD screen sizes are the engine's defaults until tuned in Unreal. Whether the engine reads `COLOR_0.a`, the draw-call and frame cost of a 118k-triangle one-material world, and the real material look are unverified.
 - The world mesh is one 136 x 143 m object (r001's outer architecture is tall, up to 48 m). About 82k of its triangles are flat outer terrace, which could be merged or simplified; there is no culling split or LOD.
-- Occluders are 55 whole components, not instanced pieces. Their pivots are the world origin; dither fade is per piece, so large chained pieces fade together.
+- Occluders are 55 whole components, not instanced pieces. Their pivots are the world origin. The dither is per pixel (a board test, plus the sight lines; see `docs/assets.md`), so a piece fades only where it covers the board. The 0-residual occlusion re-test above covers the world shell at 72 cameras; the in-game camera fit is wider (far yaw 180 on 18 x 12), so confirm in the gate-2 captures that no world-shell geometry blocks the board.
 - Baked light is the r001 light resampled plus ray-cast AO; there is no new direct-light bake and no directional AO term. Stone tops carry one light value per ring vertex, so shadows from the key light must come from the game.
 - Architecture textures are r001's 128-256 px tiles, untouched; the 2048 atlas therefore gives no extra wall detail. Only paving and the terrace gained density.
 - Kit atlases are per asset and duplicated across glbs (r001 convention), 128 to 512 px, with small tiles (62 to 213 texels/m); a shared kit atlas would save memory in Unreal.
@@ -118,4 +118,6 @@ The LODs are made by Blender's collapse decimator from the LOD0 glb data (`build
 - The kit is simple faceted geometry in the PS1 look; no hand-sculpted detail, no bespoke texture painting beyond procedural soft noise. Variants share textures, so they read as one family rather than distinct silhouettes.
 
 - Flagstone patch borders show as straight, slightly wider joints (slivers under 21 cm are dropped there); at the far pose they read as faint crack lines.
+- **Gate 2 (round-1 review, nit):** the straight patch seams are left as they are (changing the paving changes the world glb, its LODs, hashes and the metric gate). Judge them in the gate-2 captures at the far pose; if they read as a grid, a seam-breaking pass (jittered patch borders) is a world re-export.
+- LOD glbs name their mesh, node and material `LOD<n>_<name>` (Interchange's `LODxx_Name`); the file names stay `<name>_LOD<n>.glb`.
 - Light shafts are now pale moonlight blue-white at peak opacity 0.07 (prism) and 0.06 (crossed planes); mist cards are unchanged.

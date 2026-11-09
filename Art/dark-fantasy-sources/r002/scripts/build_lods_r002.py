@@ -7,6 +7,9 @@ glb, and Art/dark-fantasy-sources/r002/lod_metrics.json.  The LOD0 glbs are only
 decimator on the welded mesh with UV-island borders kept as seams; UVs, 16-bit vertex colour (including the glow/opacity alpha)
 and the atlas come through unchanged.  Run validate_lods_r002.py afterwards in a fresh process; then rerun write_records_r002.py.
 Cards (mist, shafts) and scatter under ~1,000 triangles are exempt.
+
+The mesh, node and material inside a LOD glb are named LOD<n>_<name> (the file stays <name>_LOD<n>.glb): Unreal's Interchange reads the glTF node
+name and expects 'LODxx_Name', and warns about 'Name_LOD1'.  relabel_lods_r002.py gives LODs exported before this the same names.
 """
 import hashlib
 import json
@@ -55,8 +58,8 @@ def main():
             # Aim for the fraction; if the silhouette gate fails (small pieces lose thin features at 25 %), keep more triangles in 10 % steps.
             wanted = fraction
             while True:
-                P2, UV2, C2 = D.decimate(f'{name}_LOD{index}', P, UV, C, img, int(round(len(P) * wanted)))
-                path = D.write_lod(f'{name}_LOD{index}', P2, UV2, C2, img, os.path.join(folder, f'{name}_LOD{index}.glb'))
+                P2, UV2, C2 = D.decimate(f'LOD{index}_{name}', P, UV, C, img, int(round(len(P) * wanted)))
+                path = D.write_lod(f'LOD{index}_{name}', P2, UV2, C2, img, os.path.join(folder, f'{name}_LOD{index}.glb'))
                 # What the exporter actually wrote (it drops degenerate triangles) is what counts: read the file back.
                 P2, UV2, C2, _ = D.read_glb(path)
                 ok, fwd, back, move = D.silhouette_ok(P, P2, big, index)

@@ -288,7 +288,7 @@ void AExpeditionBattleView::ClearPresentation()
     ShotMeshes.Reset(); ShotLights.Reset(); SparkMeshes.Reset(); CampParts.Reset(); WaystoneParts.Reset();
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
-    Occluder = FExpeditionPart(); Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
+    Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; ObstaclePieces = 0; ArchPieces = 0;
 }
 
@@ -1686,6 +1686,28 @@ float AExpeditionBattleView::OccluderOpacityAt(const FVector& WorldPoint) const
     return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells);
 }
 
+void AExpeditionBattleView::OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const
+{
+    const FCombatEncounter& Board = Rules().Snapshot().Encounter;
+    const float Margin = OccluderFade::BoardMarginCells;
+    const FTransform ActorSpace = GetActorTransform();
+    const FVector Low = ActorSpace.TransformPosition(BoardPosition(FVector2D(-0.5f - Margin, -0.5f - Margin)));
+    const FVector High = ActorSpace.TransformPosition(BoardPosition(FVector2D(Board.Width - 0.5f + Margin, Board.Height - 0.5f + Margin)));
+    // The axis-aligned bounds of the two corners, so a view actor turned a quarter circle still gives a min and a max.
+    Min = FVector2D(FMath::Min(Low.X, High.X), FMath::Min(Low.Y, High.Y));
+    Max = FVector2D(FMath::Max(Low.X, High.X), FMath::Max(Low.Y, High.Y));
+    PlaneZ = static_cast<float>(ActorSpace.TransformPosition(BoardPosition(FVector2D::ZeroVector)).Z);
+}
+
+float AExpeditionBattleView::OccluderBoardOpacityAt(const FVector& WorldPoint) const
+{
+    if (!HasOccluder()) { return 1.0f; }
+    FVector2D Min, Max;
+    float PlaneZ = 0.0f;
+    OccluderBoard(Min, Max, PlaneZ);
+    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderFade::BoardRampCells);
+}
+
 void AExpeditionBattleView::UpdateOccluder()
 {
     if (!Occluder.Material) { return; }
@@ -1697,6 +1719,18 @@ void AExpeditionBattleView::UpdateOccluder()
     Occluder.Material->SetVectorParameterValue(TEXT("SightUnit"), Point(UnitPoint));
     Occluder.Material->SetScalarParameterValue(TEXT("FadeRadius"), BoardMetric.CellCm * OccluderFade::RadiusCells);
     Occluder.Material->SetScalarParameterValue(TEXT("FadeMin"), OccluderFade::MinOpacity);
+    // The board rectangle only changes with the board, its metric or the view actor's transform: push it when it does.
+    FVector2D Min, Max;
+    float PlaneZ = 0.0f;
+    OccluderBoard(Min, Max, PlaneZ);
+    const FVector4 Rect(Min.X, Min.Y, Max.X, Max.Y);
+    if (!bOccluderBoardSent || !Rect.Equals(OccluderBoardSent, 0.01) || !FMath::IsNearlyEqual(PlaneZ, OccluderPlaneSent, 0.01f))
+    {
+        Occluder.Material->SetVectorParameterValue(TEXT("BoardRect"), FLinearColor(static_cast<float>(Min.X), static_cast<float>(Min.Y), static_cast<float>(Max.X), static_cast<float>(Max.Y)));
+        Occluder.Material->SetScalarParameterValue(TEXT("BoardZ"), PlaneZ);
+        Occluder.Material->SetScalarParameterValue(TEXT("BoardRamp"), BoardMetric.CellCm * OccluderFade::BoardRampCells);
+        OccluderBoardSent = Rect; OccluderPlaneSent = PlaneZ; bOccluderBoardSent = true;
+    }
 }
 
 void AExpeditionBattleView::BuildOverview()

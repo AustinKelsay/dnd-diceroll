@@ -225,10 +225,14 @@ public:
     /** True when the board has the near-architecture occluder. */
     bool HasOccluder() const;
     /**
-     * Opacity (OccluderFade::MinOpacity to 1) the occluder has at a world-space point right now: the lower of the fade for
-     * the camera-to-focus and the camera-to-active-unit sight lines. 1 when the board has no occluder.
+     * Opacity (OccluderFade::MinOpacity to 1) the sight-line part of the occluder fade has at a world-space point right
+     * now: the lower of the fade for the camera-to-focus and the camera-to-active-unit sight lines. 1 when the board has no occluder.
      */
     float OccluderOpacityAt(const FVector& WorldPoint) const;
+    /** The same for the board part: the point covers the board when the camera's ray through it lands on the grown board rectangle. */
+    float OccluderBoardOpacityAt(const FVector& WorldPoint) const;
+    /** What the shader is given: the board rectangle grown by OccluderFade::BoardMarginCells (world XY, min and max) and the board-top height. */
+    void OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const;
     /** World points the occluder protects: the camera, the camera focus and the active unit's chest. */
     void OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const;
     /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
@@ -327,6 +331,10 @@ private:
     UPROPERTY() TArray<FExpeditionPart> Scenery;
     /** Vigil kit (#145): the dithered occluder, and a record of what was placed. */
     UPROPERTY() FExpeditionPart Occluder;
+    /** The board rectangle last pushed to the occluder material (min X, min Y, max X, max Y) and plane Z; pushed only when it changes. */
+    FVector4 OccluderBoardSent = FVector4(0.0, 0.0, 0.0, 0.0);
+    float OccluderPlaneSent = 0.0f;
+    bool bOccluderBoardSent = false;
     bool bVigilKit = false;
     TArray<FPlacedDressing> Dressing;
     TMap<FIntPoint, int32> VariantsByCell;

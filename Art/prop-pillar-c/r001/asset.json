@@ -121,7 +121,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
-      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+      "sha256": "55287225acc7b2f5053de5496c8cdbd2f6d9dab7ff9423dc379c871c25a6a268"
     },
     {
       "role": "export",
@@ -131,7 +131,7 @@
     {
       "role": "export",
       "path": "Art/prop-pillar-c/r001/SM_Prop_Pillar_C_LOD1.glb",
-      "sha256": "ca1b4358701d835052570d9593edd615fe37b4d0940e87cec4266a699cc0fbf8"
+      "sha256": "a61c03f21b255f15a1f33e25b100de33c0344d382f61f20127dbcac23fc5c010"
     },
     {
       "role": "export",

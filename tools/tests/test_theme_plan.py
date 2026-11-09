@@ -81,7 +81,14 @@ class ThemePlanTests(unittest.TestCase):
 
     def test_script_replaces_only_through_the_guarded_paths(self):
         text = SCRIPT.read_text()
-        self.assertEqual(text.count("library.delete_asset("), 2)  # mesh and texture of a requested replacement, in one function
+        # A replacement reimports in place (object identity and references survive); deleting an asset would null references.
+        self.assertEqual(text.count("library.delete_asset("), 0)
+        self.assertIn("reimport_in_place(", text)
+        self.assertIn('set_editor_property("replace_existing", True)', text)
+        self.assertIn("remove_staging(", text)
+        # Deleting a staging folder that no longer exists logs "Could not find directory": every delete is behind an existence check.
+        self.assertEqual(text.count("library.delete_directory("), 2)
+        self.assertEqual(text.count("library.does_directory_exist(staging)"), 2)
         self.assertIn("Refusing to overwrite", text)
         self.assertIn("only_if_is_dirty=True", text)
         self.assertIn("Unable to save", text)

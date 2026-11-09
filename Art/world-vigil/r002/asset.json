@@ -148,7 +148,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
-      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+      "sha256": "55287225acc7b2f5053de5496c8cdbd2f6d9dab7ff9423dc379c871c25a6a268"
     },
     {
       "role": "export",
@@ -158,12 +158,12 @@
     {
       "role": "export",
       "path": "Art/world-vigil/r002/SM_World_Vigil_LOD1.glb",
-      "sha256": "50fd8865186b8cdee16b814ebe68175be14434455d16e914f622fb1a3824ed7b"
+      "sha256": "0dafc33d64111b7e1188244afae3d6fbe675226154659acd1e8407fff3c8d2b7"
     },
     {
       "role": "export",
       "path": "Art/world-vigil/r002/SM_World_Vigil_LOD2.glb",
-      "sha256": "82c9bca34aae0c600781d760983f471cfcfc788b55004cba05dcb2a32c9cc6ff"
+      "sha256": "524efe2d554729da8d22a238d5dc15552253d43305b6bd051830c48ed79d0931"
     }
   ],
   "import_policy": {

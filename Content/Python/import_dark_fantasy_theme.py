@@ -223,6 +223,13 @@ def master_material():
     return material
 
 
+def remove_staging(staging):
+    """Deletes a staging folder if it is still there. Moving the last asset out already unregisters an emptied folder, and deleting
+    a directory that does not exist logs 'Could not find directory ..., deleting '' instead'."""
+    if library.does_directory_exist(staging):
+        library.delete_directory(staging)
+
+
 def import_mesh(asset_id, name, folder):
     package = THEME + "/" + folder + "/" + name
     if library.does_asset_exist(package):
@@ -252,7 +259,7 @@ def import_mesh(asset_id, name, folder):
         if not library.rename_asset(textures[0].get_path_name(), target):
             raise RuntimeError("Unable to move texture to " + target)
         texture = unreal.load_asset(target)
-    library.delete_directory(staging)
+    remove_staging(staging)
     return unreal.load_asset(package), texture
 
 
@@ -316,11 +323,73 @@ def sight_fade(material, world_position, eye, target_name, radius, fade_min, x, 
     return result
 
 
-def build_occluder_material(material):
-    """Dithered opacity mask for the near architecture (#145): base look of the world, faded around the sight lines.
+def board_fade(material, world_position, eye, fade_min, x, y):
+    """Opacity (FadeMin .. 1) of a pixel for the board test: does it cover the board? Mirrors OccluderFade::Board in C++.
 
-    Parameters set at run time by AExpeditionBattleView::UpdateOccluder: SightEye, SightFocus, SightUnit (world cm),
-    FadeRadius (cm) and FadeMin, plus CameraFade (the master's camera clip, #143). Defaults leave every pixel opaque away from the camera. The mask compares the faded opacity with an
+    The ray from the camera through the pixel is intersected with the board-top plane (BoardZ). When the hit point lies in
+    the board rectangle (BoardRect = min X, min Y, max X, max Y, already grown by the margin) and the pixel is closer to the
+    camera than the hit (t > 1), it is faded; outside the rectangle it eases back to opaque over BoardRamp cm. A pixel at or
+    above the camera's height, or at or below the plane, is opaque. The default rectangle is empty and so far away that everything stays opaque.
+    """
+    def pick(source, r, g, b, a, px, py):
+        mask = node(material, unreal.MaterialExpressionComponentMask, px, py, r=r, g=g, b=b, a=a)
+        mel.connect_material_expressions(source, "", mask, "")
+        return mask
+
+    rect = vector(material, "BoardRect", unreal.LinearColor(1e7, 1e7, -1e7, -1e7), x, y)
+    plane = scalar(material, "BoardZ", 0.0, x, y + 150)
+    ramp_cm = scalar(material, "BoardRamp", 75.0, x, y + 250)
+    ray = binary(material, unreal.MaterialExpressionSubtract, world_position, eye, x + 150, y + 350)
+    ray_z = pick(ray, False, False, True, False, x + 300, y + 350)
+    eye_z = pick(eye, False, False, True, False, x + 300, y + 450)
+    # 1 when the ray points down (Ray.Z < 0), else 0; the divisor is clamped so a level ray never divides by zero.
+    downward = unary(material, unreal.MaterialExpressionCeil,
+                     unary(material, unreal.MaterialExpressionSaturate,
+                           binary(material, unreal.MaterialExpressionMultiply, ray_z, None, x + 450, y + 350, const_b=-1.0), x + 600, y + 350),
+                     x + 750, y + 350)
+    safe_z = binary(material, unreal.MaterialExpressionMin, ray_z, None, x + 450, y + 450, const_b=-0.001)
+    t = binary(material, unreal.MaterialExpressionDivide, binary(material, unreal.MaterialExpressionSubtract, plane, eye_z, x + 450, y + 550), safe_z, x + 750, y + 500)
+    # 1 when the pixel is before the plane hit (t > 1), else 0.
+    before = unary(material, unreal.MaterialExpressionCeil,
+                   unary(material, unreal.MaterialExpressionSaturate,
+                         binary(material, unreal.MaterialExpressionSubtract, t, None, x + 900, y + 500, const_b=1.0), x + 1050, y + 500),
+                   x + 1200, y + 500)
+    valid = binary(material, unreal.MaterialExpressionMultiply, downward, before, x + 1350, y + 420)
+    hit = binary(material, unreal.MaterialExpressionAdd, eye, binary(material, unreal.MaterialExpressionMultiply, ray, t, x + 900, y + 650), x + 1050, y + 650)
+    hit_xy = pick(hit, True, True, False, False, x + 1200, y + 650)
+    low = pick(rect, True, True, False, False, x + 300, y)
+    high = pick(rect, False, False, True, True, x + 300, y + 100)
+    outside_low = binary(material, unreal.MaterialExpressionSubtract, low, hit_xy, x + 1350, y + 0)
+    outside_high = binary(material, unreal.MaterialExpressionSubtract, hit_xy, high, x + 1350, y + 150)
+    outside_xy = binary(material, unreal.MaterialExpressionMax, outside_low, outside_high, x + 1500, y + 80)
+    outside = binary(material, unreal.MaterialExpressionMax, pick(outside_xy, True, False, False, False, x + 1650, y + 40),
+                     pick(outside_xy, False, True, False, False, x + 1650, y + 140), x + 1800, y + 80)
+    ease = unary(material, unreal.MaterialExpressionSaturate, binary(material, unreal.MaterialExpressionDivide, outside, ramp_cm, x + 1950, y + 80), x + 2100, y + 80)
+    opacity = node(material, unreal.MaterialExpressionLinearInterpolate, x + 2250, y + 80, const_b=1.0)
+    mel.connect_material_expressions(fade_min, "", opacity, "A")
+    mel.connect_material_expressions(ease, "", opacity, "Alpha")
+    result = node(material, unreal.MaterialExpressionLinearInterpolate, x + 2400, y + 300, const_a=1.0)
+    mel.connect_material_expressions(opacity, "", result, "B")
+    mel.connect_material_expressions(valid, "", result, "Alpha")
+    return result
+
+
+OCCLUDER_SCALARS = {"Glow", "Roughness", "CameraFade", "FadeRadius", "FadeMin", "BoardZ", "BoardRamp"}
+OCCLUDER_VECTORS = {"Color", "SightEye", "SightFocus", "SightUnit", "BoardRect"}
+
+
+def occluder_is_current(material):
+    names = lambda values: {str(v) for v in values}
+    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and OCCLUDER_SCALARS <= names(mel.get_scalar_parameter_names(material))
+            and OCCLUDER_VECTORS <= names(mel.get_vector_parameter_names(material)))
+
+
+def build_occluder_material(material):
+    """Dithered opacity mask for the near architecture (#145): base look of the world, faded where it covers the board.
+
+    Parameters set at run time by AExpeditionBattleView::UpdateOccluder: BoardRect (world XY min and max, grown by half a cell),
+    BoardZ and BoardRamp (cm) for the board test, SightEye, SightFocus, SightUnit (world cm), FadeRadius (cm) and FadeMin for
+    the sight-line test, plus CameraFade (the master's camera clip, #143). Defaults leave every pixel opaque away from the camera. The mask compares the faded opacity with an
     interleaved-gradient noise of the pixel position, so the cut-out is a dither, never a hard edge or a hide.
     """
     material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
@@ -347,7 +416,10 @@ def build_occluder_material(material):
     fade_min = scalar(material, "FadeMin", 0.15, -1100, 1500)
     focus = sight_fade(material, world_position, eye, "SightFocus", radius, fade_min, -800, 1000)
     unit = sight_fade(material, world_position, eye, "SightUnit", radius, fade_min, -800, 1800)
-    faded = binary(material, unreal.MaterialExpressionMin, focus, unit, 1300, 1400)
+    sight = binary(material, unreal.MaterialExpressionMin, focus, unit, 1300, 1400)
+    # The board test is the main fade; the sight lines stay for a figure at the board's far edge (see OccluderFade.h).
+    board = board_fade(material, world_position, eye, fade_min, -800, 2600)
+    faded = binary(material, unreal.MaterialExpressionMin, sight, board, 1400, 1500)
     # Interleaved gradient noise of the pixel position: frac(52.98 * frac(dot(pixel, (0.0671, 0.00584)))).
     screen = node(material, unreal.MaterialExpressionScreenPosition, 300, 2200)
     size = node(material, unreal.MaterialExpressionViewProperty, 300, 2350)
@@ -385,12 +457,20 @@ def build_card_material(material):
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
 
 
-def ensure_material(name, build):
-    """Creates a material once; an existing asset is reported and never rebuilt or overwritten."""
+def ensure_material(name, build, is_current=None):
+    """Creates a material once. An existing asset is kept; when `is_current` says its graph lacks this script's parameters
+    it is rebuilt in place, so the asset, its path and every instance of it survive."""
     path = THEME + "/Materials/" + name
     if library.does_asset_exist(path):
-        unreal.log("THEME_MATERIAL_KEPT " + path)
-        return unreal.load_asset(path)
+        material = unreal.load_asset(path)
+        if is_current is None or is_current(material):
+            unreal.log("THEME_MATERIAL_KEPT " + path)
+            return material
+        mel.delete_all_material_expressions(material)
+        build(material)
+        mel.recompile_material(material)
+        unreal.log("THEME_MATERIAL_REBUILT " + path)
+        return material
     material = tools.create_asset(name, THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
     build(material)
     mel.recompile_material(material)
@@ -507,22 +587,80 @@ def import_kit_asset(asset_id, revision, name, folder, replace):
         raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py")
     package = theme_plan.package_path(folder, name)
     target_texture = THEME + "/Textures/T_" + name[3:]
-    mesh, texture, staging = stage_import(source, name)
     if library.does_asset_exist(package):
         if not replace:
             raise RuntimeError("Refusing to overwrite " + package)
-        if not library.delete_asset(package):
-            raise RuntimeError("Unable to remove the replaced mesh " + package)
-        if library.does_asset_exist(target_texture) and not library.delete_asset(target_texture):
-            raise RuntimeError("Unable to remove the replaced texture " + target_texture)
-    elif library.does_asset_exist(target_texture):
+        return reimport_in_place(source, package, target_texture, name)
+    if library.does_asset_exist(target_texture):
         raise RuntimeError("A texture already exists at " + target_texture + " but the mesh does not; remove it deliberately")
+    mesh, texture, staging = stage_import(source, name)
     if not library.rename_asset(mesh.get_path_name(), package):
         raise RuntimeError("Unable to move mesh to " + package)
     if not library.rename_asset(texture.get_path_name(), target_texture):
         raise RuntimeError("Unable to move texture to " + target_texture)
-    library.delete_directory(staging)
+    remove_staging(staging)
     return unreal.load_asset(package), unreal.load_asset(target_texture)
+
+
+def import_over(filename, package, name):
+    """Imports `filename` over the existing asset at `package` and returns that same object.
+
+    destination_path is the asset's own folder and destination_name its name, with replace_existing=True. Interchange then turns the
+    import into a reimport of the asset already there (UInterchangeManager::ImportAssetAsync, bConvertToReimport): the UObject, its
+    package and every reference to it survive, which a delete-and-recreate (ForceDeleteObjects nulls references in loaded assets) does
+    not. In a reimport only the factory node that matches the existing object is applied (FTaskImportObject_GameThread skips the rest),
+    so a mesh file reimports the mesh alone and nothing else is created. Anything else that comes back is an error.
+    """
+    before = unreal.load_asset(package)
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", filename)
+    task.set_editor_property("destination_path", package.rsplit("/", 1)[0])
+    task.set_editor_property("destination_name", name)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", False)
+    tools.import_asset_tasks([task])
+    paths = [str(path) for path in task.get_editor_property("imported_object_paths")]
+    after = unreal.load_asset(package)
+    if after is None or after != before:
+        raise RuntimeError("Reimporting {} did not keep the asset at {} (got {})".format(filename, package, after))
+    strays = [path for path in paths if path.split(".")[0] != package]
+    if strays:
+        raise RuntimeError("Reimporting {} over {} also created {}; remove them and fix the import".format(filename, package, strays))
+    return after
+
+
+def reimport_in_place(source, package, target_texture, name):
+    """Replaces a revised r001 package by reimporting its r002 export in place: the mesh from the glb, the atlas from the PNG
+    embedded in it (the glb's own texture node is not applied by a reimport). Both keep their object identity."""
+    mesh = import_over(source, package, name)
+    header, binary = theme_plan.read_glb(source)
+    images = header.get("images", [])
+    if len(images) != 1 or "bufferView" not in images[0]:
+        raise RuntimeError(source + " must embed exactly one atlas image")
+    view = header["bufferViews"][images[0]["bufferView"]]
+    start = view.get("byteOffset", 0)
+    scratch = os.path.join(ROOT, "Saved", "ThemeImport")
+    os.makedirs(scratch, exist_ok=True)
+    atlas = os.path.join(scratch, "T_" + name[3:] + ".png")
+    with open(atlas, "wb") as handle:
+        handle.write(binary[start:start + view["byteLength"]])
+    if library.does_asset_exist(target_texture):
+        texture = import_over(atlas, target_texture, "T_" + name[3:])
+    else:
+        folder = target_texture.rsplit("/", 1)[0]
+        task = unreal.AssetImportTask()
+        task.set_editor_property("filename", atlas)
+        task.set_editor_property("destination_path", folder)
+        task.set_editor_property("destination_name", "T_" + name[3:])
+        task.set_editor_property("automated", True)
+        task.set_editor_property("replace_existing", True)
+        task.set_editor_property("save", False)
+        tools.import_asset_tasks([task])
+        texture = unreal.load_asset(target_texture)
+        if texture is None:
+            raise RuntimeError("Unable to import the atlas to " + target_texture)
+    return mesh, texture
 
 
 def set_texture(texture, revision):
@@ -610,7 +748,7 @@ def main():
     fix_r001_nanite = os.environ.get(theme_plan.NANITE_FIX_ENV) == "1"
     unreal.log("THEME_PLAN replace={} fix_r001_nanite={}".format(sorted(replacements) or "none", fix_r001_nanite))
     master = master_material()
-    occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material)
+    occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()
