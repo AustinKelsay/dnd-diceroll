@@ -58,3 +58,9 @@ _Avoid_: cost pill in player-facing text
 _Avoid_: usage pill in player-facing text
 
 **Blocker**: One exact reason an action is unavailable now (`Action already used`, `Need 1 Slot, have 0`, `Needs Rage active`, `Out of range (6)`). The tooltip lists them in a fixed order; a rejected command is explained by the first.
+
+**Ruleset**: The rules interpretation selected when an expedition starts, persisted for the whole run and its encounters.
+
+**Compact**: The default authored tactical ruleset with compact class kits and historical seeded behavior; format 4 saves resume in this mode.
+
+**SRD mode**: Opt-in battle rules based on SRD 5.2.1, including death saves, Initiative Disadvantage for surprise and saving-throw-based Grapple/Shove; not a claim of complete tabletop coverage.

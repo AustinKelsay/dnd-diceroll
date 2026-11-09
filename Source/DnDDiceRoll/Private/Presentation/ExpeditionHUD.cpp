@@ -1015,10 +1015,10 @@ void AExpeditionHUD::DrawForecast()
         const FActionForecast Forecast = Rules.Forecast(Player->Actor(), Player->Action(), TargetId);
         if (!Target || !Forecast.bValid) { return; }
         Lines.Add({FString::Printf(TEXT("%s  ·  AC %d  ·  HP %d/%d"), *Target->Name, Target->ArmorClass, Target->HP, Target->MaxHP), ExpeditionStyle::UnitColor(*Target)});
-        if (Forecast.bAttackRoll)
+        if (Forecast.bAttackRoll || Forecast.bSavingThrow)
         {
             const FLinearColor Chance = Forecast.HitChancePercent >= 65 ? Safe : Forecast.HitChancePercent >= 40 ? Gold : Danger;
-            Lines.Add({FString::Printf(TEXT("%d%% to hit"), Forecast.HitChancePercent), Chance});
+            Lines.Add({Forecast.bSavingThrow ? FString::Printf(TEXT("%d%% fails the save"), Forecast.HitChancePercent) : FString::Printf(TEXT("%d%% to hit"), Forecast.HitChancePercent), Chance});
         }
         else if (!Forecast.bHealing && Forecast.MaxAmount > 0) { Lines.Add({TEXT("Never misses"), Safe}); }
         Lines.Add({ExpeditionStyle::ForecastAmount(Forecast), Parchment});

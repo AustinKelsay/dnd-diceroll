@@ -58,7 +58,7 @@ Every command acts for the active adventurer (gold ring and initiative token); c
 
 On startup, N chooses a fresh expedition and O resumes the current checkpoint. An unfinished saved expedition must be resumed rather than replaced; N directs you to O. If the previous save is unreadable or incompatible, explicit N preserves the original separately and starts fresh, with visible feedback. Startup itself does not overwrite a run. During play, every accepted action, enemy turn, route/reward/recovery and ending is checkpointed before it appears. K explicitly confirms a save. O always resumes the latest committed state, including movement, spent Action/Bonus Action, injuries, rescue deadlines, permanent deaths, selected routes/history and random streams. Repeated load cannot reroll a resolved action or revive a committed death. A failed checkpoint rejects the candidate action and retains the previous live/disk state; an enemy checkpoint failure pauses enemy progression until a successful K or O. Error feedback explains the failure. Save/resume rebuilds the board and resets targeting/selection; camera framing resets.
 
-H opens/closes ending records; Page Up / Page Down inspect older/newer pages. This pauses enemy presentation while inspecting them. Each completed expedition records its identity, seed, outcome, victories and survivors exactly once. Reloading or saving the same ending adds no duplicate. Fresh runs with the same seed retain separate records. Records grant no health, resources, equipment or other power. N at an ending starts fresh. Invalid/incompatible/incomplete saves fail without partial installation. Local single-player storage uses schema version 4 and an atomic file replacement; there is no stale-save fallback, cloud sync, multiwriter or power-loss guarantee. Developer storage details are in [architecture](architecture.md).
+H opens/closes ending records; Page Up / Page Down inspect older/newer pages. This pauses enemy presentation while inspecting them. Each completed expedition records its identity, seed, outcome, victories and survivors exactly once. Reloading or saving the same ending adds no duplicate. Fresh runs with the same seed retain separate records. Records grant no health, resources, equipment or other power. N at an ending starts fresh. Invalid/incompatible/incomplete saves fail without partial installation. Local single-player storage uses save format 5 (format 4 checkpoints upgrade to Compact on load) and an atomic file replacement; there is no stale-save fallback, cloud sync, multiwriter or power-loss guarantee. Developer storage details are in [architecture](architecture.md).
 
 ## Issue #28: milestone levels and Fighter prototypes
 
@@ -70,7 +70,7 @@ The Canvas party cards show level and Fighter specialization; reward status repo
 
 ## Issue #39: catalog conversion
 
-Current immutable numeric profiles and abilities are catalog-backed. Stable build IDs are `fighter.champion`, `fighter.battle-master`, `rogue.base`, `cleric.base`, and `wizard.base`; the last three retain existing base gameplay without new subclass features. Instance names/IDs are separate from class/build. Schema 4 stores the catalog revision and selected identities and rejects earlier schemas; explicit startup NewRun preserves incompatible bytes using the existing recovery flow. The issue #28 schema discussion above is historical. Second Wind remains **1d10+1 per use**, Cure Wounds 2d8+3, Magic Missile 3d4+3, and leveling adds only basic damage with no refill.
+Current immutable numeric profiles and abilities are catalog-backed. Stable build IDs are `fighter.champion`, `fighter.battle-master`, `rogue.base`, `cleric.base`, and `wizard.base`; the last three retain existing base gameplay without new subclass features. Instance names/IDs are separate from class/build. The save stores the catalog revision and selected identities (introduced in schema 4, now format 5) and rejects schemas 1–3; explicit startup NewRun preserves incompatible bytes using the existing recovery flow. The issue #28 schema discussion above is historical. Second Wind remains **1d10+1 per use**, Cure Wounds 2d8+3, Magic Missile 3d4+3, and leveling adds only basic damage with no refill.
 
 ## Issue #40: selected parties and Barbarian controls
 
@@ -80,13 +80,13 @@ F selects the acting hero's first catalog special and M its second, falling back
 
 ## Issue #43: divine, nature and support kits
 
-The current catalog has66 approved subclasses across12 classes, with no interim bases. Life replaces the familiar Cleric base and exposes Cure Wounds and Sanctuary as its two authored actions. Cure Wounds retains2d8+3 but shares the two-use Kit budget with Sanctuary and also spends one Slot. Camp restores one capped Kit use and one capped Life Slot; other new kits have only Kit uses. The [support kit contract](runs/full-roster/09-support-kits.md) defines all19 additions, conscious-target healing, exact owner-bound effects and omissions. Catalog revision5 retains unpublished schema4 and incompatible-checkpoint preservation. Earlier delivery sections above are historical.
+The current catalog has66 approved subclasses across12 classes, with no interim bases. Life replaces the familiar Cleric base and exposes Cure Wounds and Sanctuary as its two authored actions. Cure Wounds retains2d8+3 but shares the two-use Kit budget with Sanctuary and also spends one Slot. Camp restores one capped Kit use and one capped Life Slot; other new kits have only Kit uses. The [support kit contract](runs/full-roster/09-support-kits.md) defines all19 additions, conscious-target healing, exact owner-bound effects and omissions. That delivery used catalog revision5 and unpublished schema4 and incompatible-checkpoint preservation. Earlier delivery sections above are historical.
 
-Issue #44 adds the four Tasha's Artificer specializations through original compact adaptations: Alchemist healing/safe area, Armorer self defense/melee push, Artillerist ranged push/ally protection, Battle Smith adjacent ally guard/bonus reach strike. Each has two shared Kit uses (camp +1 capped2), no Slots, and two authored actions. Cannon/defender effects belong to their owner with no separate actors or turns. Exact profiles, targets, budgets, durations and omissions are in [the Artificer contract](runs/full-roster/11-artificer-kits.md). Catalog revision6/schema4 are the current source contract; final #45 acceptance remains pending.
+Issue #44 adds the four Tasha's Artificer specializations through original compact adaptations: Alchemist healing/safe area, Armorer self defense/melee push, Artillerist ranged push/ally protection, Battle Smith adjacent ally guard/bonus reach strike. Each has two shared Kit uses (camp +1 capped2), no Slots, and two authored actions. Cannon/defender effects belong to their owner with no separate actors or turns. Exact profiles, targets, budgets, durations and omissions are in [the Artificer contract](runs/full-roster/11-artificer-kits.md). Catalog revision6/schema4 were that delivery’s source contract; final #45 acceptance remains pending.
 
 ## Final compact roster source contract (#45)
 
-The current catalog contains exactly70 approved subclasses across13 classes (40 from2014 PHB,30 from Tasha). Historical interim/base and compatibility descriptions above are superseded by the [final source contract](runs/full-roster/13-final-roster.md). Evocation now authors Magic Missile as its first action: Action, one Kit plus one Slot, guaranteed3d4+3 at range6 with sight. Its only other special is Sculpted Burst: Bonus, one Kit, safe-area3 at range4 with sight. Special1 is unavailable for this build. Camp recovers one Kit and one Slot within their caps; leveling, route and Resume do not refill. Catalog revision7/schema4 retains strict incompatible-file preservation. Other69 kits keep their batch contracts. Root final acceptance remains pending.
+The current catalog contains exactly70 approved subclasses across13 classes (40 from2014 PHB,30 from Tasha). Historical interim/base and compatibility descriptions above are superseded by the [final source contract](runs/full-roster/13-final-roster.md). Evocation now authors Magic Missile as its first action: Action, one Kit plus one Slot, guaranteed3d4+3 at range6 with sight. Its only other special is Sculpted Burst: Bonus, one Kit, safe-area3 at range4 with sight. Special1 is unavailable for this build. Camp recovers one Kit and one Slot within their caps; leveling, route and Resume do not refill. Catalog revision7/schema5 retains strict incompatible-file preservation and upgrades format 4 saves to Compact. Other69 kits keep their batch contracts. Root final acceptance remains pending.
 
 ## SRD rules libraries (PR 1: #53-#56, #68-#70)
 
@@ -123,6 +123,187 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 ## Issue #58: action cost and usage tags
 
 Presentation only: no rule, RNG, save or catalog-revision change. Each action-dock button carries a cost tag on its top edge (`Action`, `Bonus`, `Move N`; the Attack / Move button shows `Action · Move N`; End Turn has none) and a usage line under its name (`At will`, `1 Kit · 2/3`, `1 Kit · 1/1 + 1 Slot · 2/2`, `1 Potion · 1/9`, `Needs Rage`, `Not while raging`). Both are inside the existing button rectangle, so the persistent HUD budget is unchanged. Hovering a button, or choosing its mode by key (A, F, M, R, P), shows its tooltip: the headline with its cost (`Magic Missile · Action`), what each spent resource holds and what camp gives back (`1 Slot · 2/2 · Camp restores 1`, `Not refilled by camp` for Potions), the catalog's effect-only text, and, for an unavailable action, its exact blockers in order (`Action already used`, `Need 1 Slot, have 0`, `Needs Rage active`, `Out of range (6)`). Hovering shows the tooltip even for an unavailable button. The tooltip by key stays until the turn changes, a pointer click, a command or the aim preview; under Help, Records, the return question or a playback no tag or tooltip is drawn. Every word of cost, usage and blockers comes from `FActionFactsQuery` through the `ExpeditionStyle` text helpers (`ActionText.h`); `DescribeAction`, the catalog descriptions and the HUD hold effect, target and range text only. The Move number is the snapshot's `MovementLeft`, shown by the budget chip too.
+
+
+## SRD rules libraries (PR 2 start: #64-#65 movement)
+
+Pure libraries only; battle does not call them yet, so Compact stays seed-identical.
+
+### Issues #64 and #65: falling, prone, forced movement and difficult terrain
+
+`FDiceRules` rolls N dice of S faces against a seeded `FRandomStream`, the same stream combat uses. `FMovementRules` covers SRD prone (stand costs half speed rounded up; crawl costs double; melee attacks within 5 ft have advantage, ranged or farther melee have disadvantage), forced movement that stops at the last free cell, and difficult terrain at double cost per cell.
+
+**Falling (house rule vs SRD 5.2.1):** this project locks "first 15 ft free, then 1d6 per full 10 ft (round down), max 20d6." Raw SRD 5.2.1 deals 1d6 per 10 ft from the first foot, still capped at 20d6. `FallingDice` / `FallDamage` / `LandsProne` implement the locked house rule. Taking any falling damage leaves the creature prone.
+
+
+### Issue #59: opportunity attack triggers
+
+`FOpportunityRules` measures Manhattan distance on the 5-foot grid, the battle's own cardinal measure (a diagonal is two steps). A step provokes when it leaves a reactor's reach voluntarily, without Disengage, while the reactor still has its reaction; forced movement never provokes. `FirstProvokingCell` returns the path index being left at the first such step (one opportunity per reactor per turn by design of the caller).
+
+
+### Issue #60: standard actions
+
+`FStandardActionRules` covers Dash, Disengage, Dodge, Help and Hide as pure queries. Rogues at level 2+ (Cunning Action) may take Dash, Disengage or Hide as a bonus action when the Action is already spent. Each Dash adds the creature's speed again. Dodge: attackers it can see have disadvantage; it has advantage on Dexterity saves. Disengage: leaving reach does not provoke.
+
+
+### Issue #62: two-weapon fighting
+
+`FTwoWeaponRules` sits on `FWeaponRules::CanTwoWeaponFight` (SRD 5.2.1 Light: melee or ranged Light weapons in each hand). The off-hand attack needs the Attack action this turn and an unused bonus action. Off-hand damage drops a positive ability modifier unless the creature has the Two-Weapon Fighting style; a negative modifier still applies.
+
+
+### Issue #66: grapple and shove
+
+`FGrappleRules` sizes allow a target at most one size larger. Contests are exact over 400 d20 pairs (ties keep the status quo). Grappled speed is 0; dragging costs double movement. A won shove either knocks prone or pushes 1 cell (5 ft).
+
+
+### Issue #67: death saves and temporary hit points
+
+`FDeathSaveRules` follows SRD 5.2.1: 10+ succeeds, a natural 1 is two failures, a natural 20 regains 1 HP and clears the tally. Three successes stabilize; three failures kill. Damage at 0 HP adds one failure (two on a critical); damage of at least max HP at 0 kills outright. Massive damage compares leftover damage after reaching 0 to the hit point maximum. Temporary hit points soak first and do not stack (keep the larger). Medicine DC 10 stabilizes.
+
+
+### Issue #63: cover
+
+`FCoverRules` is pure SRD cover bonuses: half +2 AC and Dex saves, three-quarters +5, total blocks targeting (no AC bonus). Terrain line-of-sight stays in battle. **House rules kept:** a creature at least one size larger than the attacker grants half cover when it interposes; Intelligence 6 or less ignores cover when choosing attacks. Raw SRD 5.2.1 has neither automatic size-based cover nor an INT ignore threshold.
+
+
+### Issue #71: spell facts and slots
+
+`FSpellRules` holds SRD spell facts (name, level, school, casting time, range, components, duration, concentration) and the full-caster slot table by character level. Pure data and lookups; battle casting comes later.
+
+
+### Issue #72: cantrip scaling
+
+`FCantripRules` returns slot cost 0 for cantrips and SRD cantrip damage-die scaling by character level (2 dice at 5, 3 at 11, 4 at 17).
+
+
+### Issue #73: spell attack, save DC and save spells
+
+`FSpellcastingRules` computes spell save DC (8 + proficiency + ability) and spell attack bonus (proficiency + ability), and resolves save-spell outcomes from a seeded check.
+
+
+### Issue #74: concentration
+
+`FConcentrationRules` uses the SRD 5.2.1 Constitution save DC max(10, damage/2), **capped at 30**, when concentrating; failure ends the effect. `RequiresConcentration` reads `FSpellFacts::bConcentration` (Shield of Faith sets it; Shield does not).
+
+
+### Issue #75: area-of-effect templates
+
+`FAreaRules` stamps SRD cone, cube, line and sphere templates onto the square 5-foot grid for preview and resolution. Pure geometry; battle wiring later.
+
+
+### Issue #76: short and long rests, hit dice
+
+`FRestRules` covers short-rest hit-die healing and long-rest full HP / hit-die recovery per SRD 5.2.1.
+
+
+### Issue #77: class feature scaling tables
+
+`FClassFeatureRules` holds level-scaled tables (Second Wind, Action Surge uses, Sneak Attack dice, etc.) as pure lookups.
+
+
+### Issue #78: superiority dice
+
+`FSuperiorityRules` holds Battle Master superiority die size and count by level as pure tables.
+
+
+### Issue #80: stealth, hidden attacker and surprise
+
+`FStealthRules` covers Hide checks vs passive Perception, advantage for a hidden attacker, and surprise. **SRD 5.2.1 Surprise (revised):** a surprised creature has Disadvantage on Initiative and still takes its turn; there is no skipped first turn (that was SRD 5.1 / 2014).
+
+
+### Issue #81: locks and traps
+
+`FLockTrapRules` covers thieves' tools DCs for locks and trap disarm attempts as pure check helpers.
+
+
+### Issue #84: coins and prices
+
+`FCoinRules` converts CP/SP/EP/GP/PP and prices goods in a common copper total.
+
+
+### Issue #85: exploration hazards
+
+`FHazardRules` resolves Athletics/Acrobatics/Survival/Investigation route hazards as seeded checks.
+
+
+### Issue #86: passive scores, Help and group checks
+
+`FGroupCheckRules` computes passive scores (10 + modifier), Help granting advantage, and majority-pass group checks.
+
+
+### Issue #87: optional Inspiration
+
+`FInspirationRules` tracks the optional Inspiration flag: gain at most one, spend for advantage on one check/save/attack.
+
+
+### Issue #88: light, vision and darkvision
+
+`FLightRules` covers bright/dim/dark bands and darkvision turning darkness into dim within its range.
+
+
+### Issue #91: Performance
+
+`FPerformanceRules` maps Performance check totals to audience outcomes and attitude steps.
+
+
+### Issue #82: social influence
+
+`FSocialRules` maps Persuasion, Deception and Intimidation outcomes to NPC attitude steps.
+
+
+### Issue #89: carrying capacity and optional encumbrance
+
+`FEncumbranceRules` uses STR x 15 lb carrying capacity and the optional encumbrance speed penalties.
+
+
+### Issue #90: Sleight of Hand pickpocket
+
+`FSleightRules` resolves pickpocket contests vs passive Perception / contested Perception.
+
+
+### Issue #92: Animal Handling, mounts and beasts
+
+`FBeastRules` covers calming/redirecting beasts and basic mount control checks.
+
+
+### Issue #93: knowledge and Wisdom checks
+
+`FLoreRules` covers Arcana, History, Nature, Religion, Insight and Perception outside combat as DC bands.
+
+
+### Issue #94: tools and kits
+
+`FToolRules` covers tool proficiency on checks and healer's kit / herbalism kit uses.
+
+### Issues #116 / #117 (lean, libraries only)
+
+Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean #116/#117 finish expands the near-term Cleric/Wizard table through level 2 (Ray of Frost, Shocking Grasp, Light, Inflict Wounds, Bane, Sanctuary, Feather Fall, Detect Magic, Sleep, Misty Step, Spiritual Weapon, Scorching Ray, Hold Person, Aid) with `FlatBonus` (Magic Missile +1, Aid +5) and `bRitual` (Detect Magic). Notable **5.2.1 vs 5.1** catalog corrections: Inflict Wounds is a Constitution save for 2d10 (was melee attack 3d10); Sleep is concentration with a Wisdom save at 60 ft (was HP pool, no save, 90 ft); Spiritual Weapon **requires concentration** (was free). Healing Word and Cure Wounds remain Abjuration 2d4/2d8. Tag-completeness loop still required. Full SRD JSON generator and half/pact/multiclass slot tables remain follow-ups.
+
+### PR 3: Ruleset switch and save schema 5
+
+`ERuleset` (`Compact` default, or `SRD`) is chosen at `FExpeditionRun::NewRun` and stored on `FExpeditionProgress`. Save version is **5**. Schema **4** files load by adding `Ruleset=Compact` to the run and encounter plus Compact defaults for every new combatant/encounter field, then bumping to 5 before the strict importer runs. Real staging format 4 fixtures (mid-battle and between battles) must load and resume identically. Schema 3 and older, and future versions, remain unreadable; `FExpeditionSession::NewRun` still preserves an unreadable checkpoint beside the path. Compact combat is unchanged: a seeded full-run fingerprint regression guards seed-identity; its golden value was captured by running the same seeded policy on staging `d9eac88`.
+
+
+### PR 4: Battle rules in SRD mode
+
+`FCombatEncounter::Ruleset` (default Compact) gates combat wiring. Compact paths are unchanged (seed-identical golden fingerprint). In **SRD** mode only:
+- Initiative is DEX modifier only (Compact Rogue keeps catalog +1).
+- Magic Missile applies resistance/immunity **per dart**.
+- Cleric ranged Attack becomes **Sacred Flame** (DEX save with the target's full save bonus and no benefit from cover, 1d8 radiant). Its forecast is the chance the save fails.
+- Cover AC bonus from intervening terrain and from creatures at least one size larger (house rule); enemy AI with INT `<=` 6 ignores cover (house rule). Attack forecasts count the same cover.
+- Opportunity attacks on leaving reach; Grapple/Shove saving throws (5.2.1); death saves (replacing the three-turn rescue clock); concentration saves on damage; ambush surprise = Initiative Disadvantage (SRD 5.2.1).
+
+
+Grapple sets `GrapplerId` (speed 0 until a successful Escape check); Shove choice 0 knocks Prone, choice 1 pushes 5 ft (1 cell). Sacred Flame results fill NaturalRoll/AttackTotal/AttackBonus/TargetArmorClass(DC)/EffectDice.
+Prone: stand-up costs half speed (move to own cell); crawling and prone attack modifiers are deferred.
+
+## Opt-in SRD battle rules (#95, PR #156)
+
+Compact remains the default, including its historical rescue countdown and seeded combat policy. Save format 5 persists the ruleset; real format 4 checkpoints upgrade to Compact with default reaction, death-save, temporary-HP, concentration, size, surprise, disengagement, prone and grapple values. Restore validates enums, ranges, grappler references and matching encounter/run rulesets without spending RNG.
+
+SRD mode follows 5.2.1: surprise imposes Initiative Disadvantage, never a skipped first turn. Grapple and Shove require a Strength or Dexterity saving throw (better bonus) against DC 8 + attacker's Strength modifier + proficiency bonus. Escape spends an Action on Athletics or Acrobatics against the grappler's same DC; equality succeeds. Damage while at zero HP adds one death-save failure, two on a critical hit, rather than clearing previous saves; temporary HP absorbs damage first. Damage interrupts stability. Basic attacks may target a downed opposing creature in SRD mode. Opportunity attacks, Grapple and Shove all use the battle's cardinal/Manhattan distance on the square grid; a diagonal is two cells, not one. Existing standalone contest probability helpers are legacy 5.1 calculations, not the SRD battle resolver.
+
+Opportunity attacks resolve in path order, right before the step that leaves a reactor's reach; reactors provoked by the same step roll in combatant order, each rolling its d20, then its damage die and any critical die. The damage dice are reported with the move. A mover that an opportunity attack downs or kills stops in the cell it was leaving and pays only for the cells it moved; the battle outcome is checked and the turn passes to the next conscious combatant. Attacks against a downed (Unconscious) creature have Advantage, and a hit from within 5 feet is a critical hit, adding two failures. A natural 20 death save restores 1 HP and the creature takes that same turn. Becoming Stable resets both counts, with three successes kept as the Stable marker; damage to a stable creature starts a fresh tally. The dead keep no counts. Restore rejects death-save states the battle cannot produce: three failures while Downed, failures alongside the Stable marker, a rescue countdown, or counts on a creature that is not Downed.
 
 ## Issue #146: compact HUD and open start screen
 

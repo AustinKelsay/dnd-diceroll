@@ -155,7 +155,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     Highlights.bFullGrid = (bGridHeld || bGridPreview) && !OverlayOpen();
     HoverUnitId = HoverTargetId = INDEX_NONE;
     Path.Reset();
-    FIntPoint Hover;
+    FIntPoint Hover = FIntPoint::ZeroValue;
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
     const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);

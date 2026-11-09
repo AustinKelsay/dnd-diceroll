@@ -69,7 +69,7 @@ bool FBuildCatalogTest::RunTest(const FString& Parameters)
     Bad = Run.Snapshot(); Bad.Battle.Encounter.Combatants[0].ClassId = TEXT("wizard");
     TestFalse(TEXT("Mismatched class rejected"), Restored.Restore(Bad, Error));
     FExpeditionSaveData Data; Data.Current = Run.Snapshot(); FString Json;
-    TestEqual(TEXT("Reflected schema default"), Data.Version, 4);
+    TestEqual(TEXT("Reflected schema default"), Data.Version, FExpeditionSave::Version);
     TestTrue(TEXT("Encode catalog state"), FExpeditionSave::Encode(Data, Json, Error));
     FExpeditionSaveData Decoded;
     TestTrue(TEXT("Decode catalog state"), FExpeditionSave::Decode(Json, Decoded, Error));
