@@ -46,6 +46,15 @@ Code is the reference for PR B; these are the places it differs from section 2's
 - Formatters live in `Presentation/ActionText.{h,cpp}` in the `ExpeditionStyle` namespace (a new file pair, so the HUD and `ExpeditionPlayback` are untouched): `CostName` (the shared Move / Action / Bonus action table), `ResourceName`, `CostPillText`, `UsagePillText`, `CampRecoveryText`, `BlockerText`, `TooltipHeadline`. Nothing calls them yet.
 - Tests are `Project.Expedition.Combat.ActionFacts{MatchLegality,MatchSubmit,Reasons,ReadOnly,CoverEveryAbility}` and `ActionText{EveryEnumerator,Phrases,EveryKit}`.
 
+### As built in PR B (differences from section 5)
+
+- Tags: the cost pill sits on each button's top edge with the key hint at its right, the usage line sits under the name; the Attack / Move button's cost pill is `Action · Move N` (`AttackMovePillText`, N from `MovementLeft`). Text scale is 0.6 in a 104x42 button; two-resource usage text (`1 Kit · 1/1 + 1 Slot · 2/2`) shrinks to fit rather than widening the button.
+- Added to `ActionText`: `MoveBudgetText` (shared with the budget chip), `AttackMovePillText`, `UsageLines` (tooltip usage with camp recovery). The bezel chips use `CostName`/`MoveBudgetText`.
+- Tooltips show on hover even when the button is disabled (the old hover required an enabled button). By key, `AExpeditionPlayerController::ModeTipActive` keeps the chosen mode's tooltip up until a turn change, a pointer click, a command, End Turn or the aim preview. The Attack / Move tooltip lists the blockers of both Attack and Move, only when neither is possible.
+- Descriptions keep target, range and sight text (`Enemy range 3 + sight`): the facts carry those values but PR A has no wording helper for them. Cost, resource, camp and stance wording is gone from `DescribeAction`, `FAbilityFacts::Description` and the dock, so `Forecast.Formula` and the combat log lines built from descriptions lose it too.
+- Capture: poses gain a `tooltip` mode with an `action` (`attack`, `special1`, `special2`, `rescue`, `potion`); fixtures `kit-barbarian-battle`, `kit-wizard-battle`, `kit-wizard-action-spent`. Capture mode still submits nothing.
+- Tests: `Presentation.ActionTagsFromFacts` (all 70 kits, four sizes), `ActionTagsHiddenUnderOverlays`, `ActionTagsHiddenDuringPlayback`, `ActionTooltipsMatchHoverAndKeys` (hover through `PreviewPointer`, keys through the real input path), `DescriptionsHaveNoCostWords`, `DockTextComesFromFacts`; `CompactHudBudgetAndBounds` is unchanged.
+
 ## 3. Fit with #156 (SRD ruleset), read-only
 
 I read the PR head `5a3fb1c`. It adds `ERuleset { Compact, SRD }` on the encounter, `FStandardActionRules::Cost(...)` (Action vs Bonus), `FOpportunityRules`, per-unit `bReactionAvailable`, `bConcentrating`, `bProne`, `GrapplerId`, new commands `Grapple`, `Shove`, `Escape`, and SRD-only rejections in `Resolve`. It touches no `Presentation/` or `Party/` file and rewrites about 400 lines of `CombatBattle.cpp`.
