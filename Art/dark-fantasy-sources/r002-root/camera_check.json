@@ -1,13 +1,13 @@
 {
- "world_triangles": 183165,
- "occluder_triangles": 8512,
- "world_max_height_inside_footprint_m": 0.033,
+ "world_triangles": 183211,
+ "occluder_triangles": 8848,
+ "world_max_height_inside_footprint_m": 0.052,
  "occluders_max_height_inside_footprint_m": 0.0,
  "hull_planes": 724,
  "world_points_inside_sight_volume_margin_0p5m": 0,
- "occluders_points_inside_sight_volume_margin_0p5m": 8960,
+ "occluders_points_inside_sight_volume_margin_0p5m": 10448,
  "world_triangle_hull_overlaps": 0,
- "occluder_triangle_hull_overlaps": 261,
+ "occluder_triangle_hull_overlaps": 357,
  "eye_positions": 22824,
  "eyes_closer_than_1p5m": 0,
  "eyes_behind_a_surface": 0,
@@ -18,7 +18,7 @@
   "total_rays": 62208,
   "blocked_by_world_alone": 0,
   "blocked_by_world_with_occluders": 0,
-  "blocked_by_occluders": 49
+  "blocked_by_occluders": 31
  },
  "rays_envelope_sweep": {
   "cameras": 848,

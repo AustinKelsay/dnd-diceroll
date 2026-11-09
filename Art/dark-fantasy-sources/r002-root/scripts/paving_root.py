@@ -50,9 +50,15 @@ def clip_poly(poly, n, d):
     return out
 
 
-PATCH_U = 5.5          # source units (6 m): flagstone laying patches, each with its own random orientation
+PATCH_U = 5.5          # (kept for reference) the #145 patch size; Root uses variable Voronoi patches, see PATCH_SIZE_U
 JOINT_U = .06          # joint width, source units (4.5 cm)
 SIDE_LIM = (.47, 1.20)  # stone long side limits, source units (35-90 cm)
+# Root revision (#149 review): variable, wavy, interlocking patches with earth and moss between stone islands
+PATCH_SIZE_U = (3.0, 7.5)   # patch "radius" range, source units (2.3-5.6 m); Poisson-disc seeds, so Voronoi patches of different sizes
+EARTH_P = .17               # share of patches left as bare earth / moss / root (no stones)
+INTERLOCK_U = 1.3           # amplitude of the noise that warps the patch boundaries (stones of two patches interlock)
+FEATHER_U = .9             # stones nearer than this to a patch boundary (source units) are thinned out ...
+FEATHER_DROP = .42          # ... with up to this probability, so earth / moss fills the seams
 
 
 def _ccw(poly):
@@ -90,35 +96,49 @@ def min_area_rect(poly):
     return best
 
 
+def _poisson_seeds(rx, ry):
+    """Dart-throwing seeds whose spacing follows a slowly varying size field: patches of different sizes, not a grid."""
+    cand = rng.uniform((-rx, -ry), (rx, ry), size=(9000, 2))
+    seeds, radii = [], []
+    for c in cand:
+        r = PATCH_SIZE_U[0] + (PATCH_SIZE_U[1] - PATCH_SIZE_U[0]) * float(smoothstep(.30, .70, fbm(c[0] * .45 + 11, c[1] * .45 - 5, 41)))
+        if all(np.linalg.norm(c - s) >= .95 * (r + rr) / 2 for s, rr in zip(seeds, radii)):
+            seeds.append(c)
+            radii.append(r)
+    return np.array(seeds), np.array(radii)
+
+
+def _sep(A, B):
+    """Largest gap along an edge-normal axis between two convex polygons (>= g: the polygons are at least g apart)."""
+    best = -9.0
+    for P_, Q_ in ((A, B), (B, A)):
+        e = np.roll(P_, -1, axis=0) - P_
+        nrm = np.stack([e[:, 1], -e[:, 0]], 1)
+        nrm /= np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-12)
+        pa, qa = P_ @ nrm.T, Q_ @ nrm.T
+        gap = np.maximum(qa.min(0) - pa.max(0), pa.min(0) - qa.max(0))
+        best = max(best, float(gap.max()))
+    return best
+
+
 def flagstone_cells():
-    """Irregular flagstones.  The ground is split into ~6 m patches (Voronoi regions of jittered seeds); inside each patch the
-    stones are laid in courses of random height with random stone lengths and random bond offsets, the whole patch rotated by its
-    own random angle, so no global lattice (square or hex) and no alignment with the 150 cm cells.  Corners are perturbed and
-    often chamfered (4-6 sides), then stones are clipped to the patch and the ground rectangle and shrunk by half a joint."""
-    seeds = []
-    for x in np.arange(-MX - PATCH_U, MX + PATCH_U + 1e-6, PATCH_U):
-        for y in np.arange(-MY - PATCH_U, MY + PATCH_U + 1e-6, PATCH_U):
-            seeds.append((x + rng.uniform(-.3, .3) * PATCH_U + (y // PATCH_U % 2) * .25 * PATCH_U, y + rng.uniform(-.3, .3) * PATCH_U))
-    seeds = np.array(seeds)
-    cells = []
+    """Irregular flagstones in wavy, interlocking Voronoi patches.  Seeds are Poisson-disc points with a varying spacing, so the patches
+    differ in size and shape.  A share of them (EARTH_P) stays bare; each other patch is laid in courses of random height with
+    random stone lengths and bond offsets, rotated by its own angle (never near the cell axes).  A stone belongs to the patch that
+    owns its centre in a noise-warped Voronoi diagram, so the borders wave and two patches interlock instead of meeting in a straight
+    line; stones near a border are thinned out at random (earth and moss fill the seams) and any stone overlapping an accepted one is
+    dropped.  Corners are perturbed and often chamfered (4-6 sides); stones are clipped to the ground rectangle and shrunk by half a joint."""
+    seeds, radii = _poisson_seeds(MX + PATCH_SIZE_U[1], MY + PATCH_SIZE_U[1])
+    earth = rng.random(len(seeds)) < EARTH_P
+    warp = lambda c: c + INTERLOCK_U * np.array((float(fbm(c[0] * .55 + 3, c[1] * .55 - 17, 23)) - .5, float(fbm(c[0] * .55 - 29, c[1] * .55 + 5, 27)) - .5)) * 2
+    cand = []
     for pi, sd in enumerate(seeds):
-        if abs(sd[0]) > MX + PATCH_U * .9 or abs(sd[1]) > MY + PATCH_U * .9:
+        if earth[pi] or abs(sd[0]) > MX + PATCH_SIZE_U[1] * .6 or abs(sd[1]) > MY + PATCH_SIZE_U[1] * .6:
             continue
-        # patch region: clip a big square by bisectors with the neighbours
-        region = [sd + np.array(v) for v in ((-PATCH_U * 1.5,) * 2, (PATCH_U * 1.5, -PATCH_U * 1.5), (PATCH_U * 1.5,) * 2, (-PATCH_U * 1.5, PATCH_U * 1.5))]
-        d_all = np.linalg.norm(seeds - sd, axis=1)
-        for j in np.argsort(d_all)[1:12]:
-            n = (seeds[j] - sd) / d_all[j]
-            region = [q + sd for q in clip_poly([q - sd for q in region], n, d_all[j] / 2)]
-            if len(region) < 3:
-                break
-        if len(region) < 3:
-            continue
-        region = np.array(region)
         th = math.radians(rng.uniform(12, 78) + 90 * rng.integers(0, 4))     # never near the cell axes
         ca, sa = math.cos(th), math.sin(th)
         Rm = np.array(((ca, -sa), (sa, ca)))
-        reach = float(np.max(np.linalg.norm(region - sd, axis=1))) + 1.0
+        reach = radii[pi] * 1.5 + INTERLOCK_U + 1.0
         y = -reach
         slope_b = rng.uniform(-.05, .05)
         while y < reach:
@@ -146,18 +166,19 @@ def flagstone_cells():
                         continue
                     poly = poly[:k] + [b_ + (a_ - b_) / la * t1 * 1.4, b_ + (c_ - b_) / lc * t2 * 1.4] + poly[k + 1:]
                 x += l
-                world = [Rm @ q + sd for q in poly]
-                cen = np.mean(world, axis=0)
-                if np.linalg.norm(cen - sd) > reach:
+                world = np.array([Rm @ q + sd for q in poly])
+                cen = world.mean(0)
+                if abs(cen[0]) > MX or abs(cen[1]) > MY:
                     continue
-                for n, d0 in [((seeds[j] - sd) / d_all[j], d_all[j] / 2) for j in np.argsort(d_all)[1:12]]:
-                    world = [q + sd for q in clip_poly([q - sd for q in world], n, d0)]
-                    if len(world) < 3:
-                        break
-                if len(world) < 3:
+                d = np.linalg.norm(seeds - warp(cen)[None], axis=1)
+                order = np.argsort(d)
+                if order[0] != pi:                                                       # owned by another patch (stone or earth)
                     continue
+                margin = d[order[1]] - d[order[0]]
+                if rng.random() < FEATHER_DROP * (1 - float(smoothstep(0, FEATHER_U, margin))):
+                    continue                                                             # thinned at the seam: earth or moss shows
                 for n, d0 in ((np.array((1., 0)), MX), (np.array((-1., 0)), MX), (np.array((0, 1.)), MY), (np.array((0, -1.)), MY)):
-                    world = clip_poly(world, n, d0)
+                    world = clip_poly(list(world), n, d0)
                     if len(world) < 3:
                         break
                 if len(world) < 3:
@@ -166,11 +187,32 @@ def flagstone_cells():
                 if pg is None or len(pg) < 4:
                     continue
                 area = .5 * abs(np.dot(pg[:, 0], np.roll(pg[:, 1], -1)) - np.dot(pg[:, 1], np.roll(pg[:, 0], -1)))
-                if area < .04 or min_area_rect(pg)[2] < .20:                       # drop slivers (< 27 cm wide) cut by patch borders
+                if area < .04 or min_area_rect(pg)[2] < .20:
                     continue
-                cells.append((pg.mean(0), pg, area))
+                cand.append((pg.mean(0), pg, area, pi))
             y += h
             slope_b = slope_t
+    # overlap resolution in random order: the first stone claims the spot, a stone closer than 70 % of a joint to an accepted one is dropped
+    grid, cells = {}, []
+    for k in rng.permutation(len(cand)):
+        c, pg, area, pid = cand[k]
+        gx, gy = int(c[0] // 2.5), int(c[1] // 2.5)
+        ok = True
+        for ix in (gx - 1, gx, gx + 1):
+            for iy in (gy - 1, gy, gy + 1):
+                for (c2, pg2, _a, pid2) in grid.get((ix, iy), ()):
+                    if pid2 != pid and np.linalg.norm(c - c2) < 1.6 and _sep(pg, pg2) < JOINT_U * .7:      # only stones of different patches can collide
+                        ok = False
+                        break
+                if not ok:
+                    break
+            if not ok:
+                break
+        if ok:
+            grid.setdefault((gx, gy), []).append((c, pg, area, pid))
+            cells.append((c, pg, area))
+    STATS['patches'] = dict(total=int(len(seeds)), bare_earth=int(earth.sum()), stone=int((~earth).sum()), radius_m_min_max=[round(float(radii.min()) * SCALE, 2), round(float(radii.max()) * SCALE, 2)],
+                            candidate_stones=len(cand), stones_after_overlap=len(cells))
     return cells
 
 
@@ -210,7 +252,7 @@ def build_paving(light_at, bvh):
         heights.append(h)
         k = rng.random()
         mat = 'paveM' if moss > .85 else ('paveA' if k < .4 else 'paveB' if k < .75 else 'paveC')
-        bright = rng.uniform(.88, 1.1)
+        bright = rng.uniform(.93, 1.07)
         off = rng.uniform(-.05, .05, 2)
 
         def uv(q, z=0.0, c=c, off=off):
@@ -265,7 +307,7 @@ def build_paving(light_at, bvh):
     pts = np.array([(c[0] * SCALE, c[1] * SCALE, 0.0) for c in stone_c])
     ao = ambient(bvh, pts, np.tile((0, 0, 1.0), (len(pts), 1)), n=10)
     per_tri = np.concatenate([np.full(len(p['P']), a) for p, a in zip(parts, ao)])
-    stones['C'] = stones['C'] * (.45 + .55 * per_tri)[:, None, None]
+    stones['C'] = stones['C'] * (.65 + .35 * per_tri)[:, None, None]
     diam, ranges, shorts, nverts = map(np.array, (diam, ranges, shorts, nverts))
     asp = ranges / shorts
     pc = lambda v, qs=(5, 50, 95): [round(float(np.percentile(v, q)), 1) for q in qs]
@@ -286,4 +328,10 @@ def build_paving(light_at, bvh):
     STATS['edge_length_share_within_3deg_of_cell_axes'] = round(float(wgt[near_axis].sum()), 3)
     STATS['stone_top_height_range_cm'] = [round(float(min(heights)) * SCALE * 100, 2), round(float(max(heights)) * SCALE * 100, 2)]
     STATS['stone_tris'] = int(len(stones['P']))
+    # share of the 27 x 18 m footprint covered by stone tops (projected area of up-facing stone triangles); the rest is joints, earth, moss, roots
+    nz_ = tri_normals(stones['P'])[:, 2]
+    c_ = stones['P'].mean(1)
+    ar_ = np.linalg.norm(np.cross(stones['P'][:, 1] - stones['P'][:, 0], stones['P'][:, 2] - stones['P'][:, 0]), axis=1) / 2 * nz_
+    inside_ = (np.abs(c_[:, 0]) < 13.5 / SCALE) & (np.abs(c_[:, 1]) < 9.0 / SCALE) & (nz_ > .3)
+    STATS['footprint_share_stone_tops'] = round(float(ar_[inside_].sum() / (27.0 / SCALE) / (18.0 / SCALE)), 3)
     return stones

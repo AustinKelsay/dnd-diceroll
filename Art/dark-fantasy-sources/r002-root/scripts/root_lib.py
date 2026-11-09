@@ -39,13 +39,13 @@ def floor_tile(n=512, size_m=2.0, seed=71):
     """Forest floor: earth, moss and leaf litter, 512 px = 2 m (256 texels/m), seamless."""
     r = np.random.default_rng(seed)
     big, mid, fine = tile_noise(n, 3, seed), tile_noise(n, 9, seed + 1), tile_noise(n, 28, seed + 2)
-    soil = np.array((.24, .18, .12)) * (.72 + .5 * big[..., None]) * (.88 + .24 * mid[..., None])
+    soil = np.array((.25, .21, .14)) * (.72 + .5 * big[..., None]) * (.88 + .24 * mid[..., None])
     moss_m = smoothstep(.48, .66, .6 * big + .4 * tile_noise(n, 6, seed + 3))
-    moss = np.array((.15, .26, .10)) * (.7 + .6 * mid[..., None]) * (.9 + .2 * fine[..., None])
+    moss = np.array((.18, .31, .12)) * (.7 + .6 * mid[..., None]) * (.9 + .2 * fine[..., None])
     img = soil * (1 - moss_m[..., None]) + moss * moss_m[..., None]
     t = _rgba(img)
     px = n / size_m
-    leaf_cols = [(.34, .24, .11), (.38, .27, .12), (.26, .19, .09), (.22, .22, .09), (.44, .32, .13), (.18, .26, .09), (.20, .16, .09), (.16, .20, .08)]
+    leaf_cols = [(.27, .20, .10), (.30, .23, .11), (.22, .17, .09), (.20, .22, .09), (.34, .27, .12), (.17, .25, .09), (.18, .15, .08), (.15, .20, .08)]
     for _ in range(380):
         cx, cy = int(r.integers(0, n)), int(r.integers(0, n))
         s = r.uniform(.025, .06) * px
@@ -96,8 +96,8 @@ def pave_tile(seed, base, crack, n=256):
     r = np.random.default_rng(seed)
     n1, n2, n3 = tile_noise(n, 5, seed), tile_noise(n, 14, seed + 9), tile_noise(n, 3, seed + 3)
     b = np.array(base)
-    t = _rgba(b * (.80 + .30 * n1[..., None] + .14 * n2[..., None] - .06))
-    t[..., :3] *= (1 - .20 * smoothstep(.62, .85, n3))[..., None]
+    t = _rgba(b * (.88 + .17 * n1[..., None] + .08 * n2[..., None] - .03))        # r002 revision: lower contrast
+    t[..., :3] *= (1 - .12 * smoothstep(.62, .85, n3))[..., None]
     for _ in range(crack):
         x0, y0 = r.integers(40, n - 40, 2)
         ang = r.uniform(0, math.tau)
@@ -155,10 +155,10 @@ def root_textures():
     t['heart'] = heart_tile()
     t['cap'] = cap_tile()
     t['fern'] = fern_tile()
-    t['paveA'] = pave_tile(21, (.50, .45, .37), 2)
-    t['paveB'] = pave_tile(31, (.55, .49, .41), 3)
-    t['paveC'] = pave_tile(41, (.45, .44, .38), 1)
-    p = pave_tile(51, (.48, .45, .38), 2)
+    t['paveA'] = pave_tile(21, (.31, .33, .28), 2)          # mossy grey-green earthy stone (was warm beige, value ~.46)
+    t['paveB'] = pave_tile(31, (.34, .35, .29), 3)
+    t['paveC'] = pave_tile(41, (.29, .31, .27), 1)
+    p = pave_tile(51, (.29, .32, .26), 2)
     moss = .75 * smoothstep(.40, .75, tile_noise(256, 3, 52) * .7 + tile_noise(256, 7, 53) * .3)
     p[..., :3] = p[..., :3] * (1 - moss[..., None]) + np.array((.22, .36, .15)) * (.7 + .5 * tile_noise(256, 12, 54))[..., None] * moss[..., None]
     t['paveM'] = p
@@ -238,9 +238,9 @@ def root_path(rng, start, heading, length, r0, ground, n=9, wander=.5, hug=.55, 
     return pts, rad, a
 
 
-def root_system(sp, rng, start, heading, length, r0, ground, depth=2, sides=6, tile=1.2, wander=.5, hug=.55, n=9, mat='bark', stop=None):
+def root_system(sp, rng, start, heading, length, r0, ground, depth=2, sides=6, tile=1.2, wander=.5, hug=.55, n=9, mat='bark', stop=None, taper=.9):
     """A branching root: main tube plus forks."""
-    pts, rad, a = root_path(rng, start, heading, length, r0, ground, n=n, wander=wander, hug=hug, stop=stop)
+    pts, rad, a = root_path(rng, start, heading, length, r0, ground, n=n, wander=wander, hug=hug, taper=taper, stop=stop)
     if len(pts) < 3:
         return pts, rad
     tube_path(sp, mat, pts, rad, sides, tile, cap=(False, True))
@@ -249,7 +249,7 @@ def root_system(sp, rng, start, heading, length, r0, ground, depth=2, sides=6, t
             if rng.random() < .8:
                 local = math.atan2(pts[k + 1][1] - pts[k][1], pts[k + 1][0] - pts[k][0])
                 root_system(sp, rng, (pts[k][0], pts[k][1]), local + rng.choice((-1, 1)) * rng.uniform(.5, 1.1),
-                            length * rng.uniform(.35, .55), rad[k] * .75, ground, depth - 1, sides, tile, wander, hug, max(5, n - 3), mat, stop)
+                            length * rng.uniform(.35, .55), rad[k] * .75, ground, depth - 1, sides, tile, wander, hug, max(5, n - 3), mat, stop, taper)
     return pts, rad
 
 

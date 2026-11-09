@@ -102,7 +102,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/root_lib.py",
-      "sha256": "6974f7d811890cc0d34ccb458b2764ea8d484f16bd99062bdaa01b1aba093542"
+      "sha256": "f08ac3ff77bbaebb086cf579665e3045dfb38002c42e7db3706c2a5bc3b52fbe"
     },
     {
       "role": "source",
@@ -117,7 +117,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/build_lods_root_r002.py",
-      "sha256": "afd865a6e93f1336ca6b688e82acddf0e7f6715cb404b05cda737de74af1e73e"
+      "sha256": "eec645a28b26105c36335ac29345baf9f30c0b2ae3c3cc01a04eb0e1d9e18bf7"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/relabel_lods_root_r002.py",
+      "sha256": "cb7bd953f5b755248d064841ef7974d10877b7f585fc5e2b4c0c55a67a17c012"
     },
     {
       "role": "export",
@@ -127,12 +132,12 @@
     {
       "role": "export",
       "path": "Art/prop-root-arch-2cell/r001/SM_Prop_Root_Arch2Cell_LOD1.glb",
-      "sha256": "575f4b684a626ba8931837c2c5b116b66d25d78365b0eb3263c786dda9a1c533"
+      "sha256": "0e46c16095b46bcf20efdb5ff7c563b155e795b982ef99bf22d025a5a5343866"
     },
     {
       "role": "export",
       "path": "Art/prop-root-arch-2cell/r001/SM_Prop_Root_Arch2Cell_LOD2.glb",
-      "sha256": "b951bc1c53ea5a4449cb6c6e59b498b63a4d8986275fc20b8456f52f6bbc69d5"
+      "sha256": "5cb232c1847d061a8d13e9880615f37c80d7d2f3e774b6591b9a231ebeb704d2"
     }
   ],
   "import_policy": {

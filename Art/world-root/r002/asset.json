@@ -18,8 +18,8 @@
       "material": "one baseColor atlas 2048x2048 plus COLOR_0 RGBA (A = glow mask on fungus caps and sap veins, 0 elsewhere)",
       "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
       "pivot": "origin = board centre at floor level, geometry in place (not per-cell)",
-      "triangles": 183165,
-      "stones": 2101,
+      "triangles": 183211,
+      "stones": 1249,
       "clear_volume_rule": "Camera clear volume (camera_volume.py): SIGHT VOLUME = convex hull of the footprint (+ half-cell margin, lifted 12 cm) and every camera eye of the #143 pose law (framed 1400-4600, zoom 900-6400, pitch 35/45/60, 36 yaws) plus the lead envelope (reach 55 m, height 66 m); the world shell keeps 1.0 m outside it except ground within 12 cm of the floor; meshes that enter it are the occluders. EYE SPACE = every eye, 1.5 m sphere: no mesh contains or approaches an eye.",
       "camera_check": {
         "eyes": 22824,
@@ -30,7 +30,7 @@
           "total_rays": 62208,
           "blocked_by_world_alone": 0,
           "blocked_by_world_with_occluders": 0,
-          "blocked_by_occluders": 49
+          "blocked_by_occluders": 31
         },
         "rays_envelope_sweep": {
           "cameras": 848,
@@ -38,74 +38,72 @@
           "total_rays": 45792,
           "blocked_by_world": 0
         },
-        "highest_point_inside_footprint_m": 0.033,
+        "highest_point_inside_footprint_m": 0.052,
         "world_points_inside_sight_volume": 0
       },
       "stone_equiv_diameter_cm_p5_p50_p95": [
-        33.0,
-        61.4,
-        82.0
+        42.5,
+        64.7,
+        82.6
       ],
       "stone_long_side_cm_p5_p50_p95_max": [
-        42.9,
-        75.2,
-        92.7,
-        108.3
+        45.9,
+        80.5,
+        93.7,
+        104.0
       ],
       "stone_aspect_p5_p50_p95_max": [
         1.06,
-        1.47,
-        2.47,
-        5.67
+        1.5,
+        2.3,
+        2.91
       ],
       "stone_vertex_count_histogram": {
-        "4": 1204,
-        "5": 655,
-        "6": 196,
-        "7": 26,
-        "8": 1
+        "4": 862,
+        "5": 295,
+        "6": 90
       },
       "edge_orientation_resultants_R2_R4_R6": [
-        0.027,
-        0.277,
-        0.019
+        0.035,
+        0.167,
+        0.029
       ],
-      "edge_length_share_within_3deg_of_cell_axes": 0.016,
+      "edge_length_share_within_3deg_of_cell_axes": 0.007,
       "atlas_fill": 0.27,
       "paired_asset": "world-root-occluders",
       "derived_from": "world-root r001 (same package, reimport; layout and geometry are new)",
       "lods": {
-        "lod0_triangles": 183165,
+        "lod0_triangles": 183211,
         "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
         "lods": [
           {
             "lod": 1,
-            "triangles": 91582,
+            "triangles": 91604,
             "fraction": 0.5,
             "file": "Art/world-root/r002/SM_World_Root_LOD1.glb",
             "deviation_m_p50_p95_max": [
               0.0,
-              0.0002,
-              0.0047
+              0.0,
+              0.0003
             ],
             "appearance_rgb_mean_p95": [
-              0.0071,
-              0.043
+              0.0068,
+              0.0442
             ]
           },
           {
             "lod": 2,
-            "triangles": 67042,
-            "fraction": 0.366,
+            "triangles": 73281,
+            "fraction": 0.4,
             "file": "Art/world-root/r002/SM_World_Root_LOD2.glb",
             "deviation_m_p50_p95_max": [
               0.0,
-              0.0066,
-              0.0229
+              0.0039,
+              0.0154
             ],
             "appearance_rgb_mean_p95": [
-              0.0127,
-              0.0661
+              0.0092,
+              0.0501
             ]
           }
         ]
@@ -146,17 +144,17 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/paving_root.py",
-      "sha256": "15acba6c7815e4c7af0a261f71effa670fadc40adbe0f29bb55f9d2b31c65cf5"
+      "sha256": "792da2f716d21984e184686367a7445220b62f56420c8a52a8dea20f17977251"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/root_lib.py",
-      "sha256": "6974f7d811890cc0d34ccb458b2764ea8d484f16bd99062bdaa01b1aba093542"
+      "sha256": "f08ac3ff77bbaebb086cf579665e3045dfb38002c42e7db3706c2a5bc3b52fbe"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/build_root_r002.py",
-      "sha256": "908e329eb9d3d2488e3d19dc1d538af04cf3ac38e3d5622dc37a5052f188a9aa"
+      "sha256": "f6cf32bf640ec4fceb4468fb4c190dc5b59f0c201b9b70fc9331698f96391ebe"
     },
     {
       "role": "source",
@@ -171,22 +169,27 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-root/scripts/build_lods_root_r002.py",
-      "sha256": "afd865a6e93f1336ca6b688e82acddf0e7f6715cb404b05cda737de74af1e73e"
+      "sha256": "eec645a28b26105c36335ac29345baf9f30c0b2ae3c3cc01a04eb0e1d9e18bf7"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/relabel_lods_root_r002.py",
+      "sha256": "cb7bd953f5b755248d064841ef7974d10877b7f585fc5e2b4c0c55a67a17c012"
     },
     {
       "role": "export",
       "path": "Art/world-root/r002/SM_World_Root.glb",
-      "sha256": "c043e2486fd543f3bbbe6ead56ec2876d68608f37a657275cb7eb739a4995042"
+      "sha256": "4b5b1748fc12020d38fe6c075140d1710ac0d3820b0e3fb9c28a1c830f3a0d8c"
     },
     {
       "role": "export",
       "path": "Art/world-root/r002/SM_World_Root_LOD1.glb",
-      "sha256": "d7d2f6029ef475c7b6efa2dbfb1f55de79024dbf8aabcfd8d9392c8666650303"
+      "sha256": "7d6a4728f97be8a49d68b3ea564c272bdd4a31e3d260820d80952dbe900d571c"
     },
     {
       "role": "export",
       "path": "Art/world-root/r002/SM_World_Root_LOD2.glb",
-      "sha256": "55bdbcfdfe35b98dea62ca996f0123429d0e701d49e643fb9c46ea7893bdc298"
+      "sha256": "093a07a621ff91bf7b7c2fa2bd16952ca944124f2b625580aed6c027a51d0c67"
     }
   ],
   "import_policy": {

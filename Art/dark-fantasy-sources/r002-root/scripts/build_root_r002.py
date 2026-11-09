@@ -99,7 +99,7 @@ def light_field(x, y):
     dr = rect_dr(x, y)
     clearing = np.exp(-dr / 14.0)
     dap = smoothstep(.45, .74, fbm(x * .8 + 13, y * .8 - 7, 21))
-    v = .62 + .28 * clearing + .38 * dap * (.45 + .55 * clearing)
+    v = .64 + .26 * clearing + .26 * dap * (.45 + .55 * clearing)
     warm = np.array((1.0, .95, .80))
     cool = np.array((.80, .92, .86))
     t = np.clip(dap * (.5 + clearing), 0, 1)[..., None]
@@ -169,7 +169,7 @@ def build_ground():
     def lim(mid):
         d = rect_dr(mid[..., 0], mid[..., 1])
         k = 1.42                                           # right-triangle hypotenuse = 1.42 x leg: legs end up at the nominal spacing
-        return k * np.where(d < .01, 3.0, np.where(d < 11.0, .75, np.where(d < 30.0, 1.5, np.where(d < 60.0, 3.0, 8.0))))
+        return k * np.where(d < 11.0, .75, np.where(d < 30.0, 1.5, np.where(d < 60.0, 3.0, 8.0)))
     s = subdivide(s, lim)
     P = s['P'].copy()
     P[..., 2] = BASE_Z + relief(P[..., 0].ravel(), P[..., 1].ravel()).reshape(P.shape[:2])
@@ -187,11 +187,11 @@ def build_ground():
     s['UV'] = uv
     # colour: light field x moss / earth / leaf tint
     xs, ys = P[..., 0], P[..., 1]
-    moss = smoothstep(.50, .68, .6 * fbm(xs * .45 + 7, ys * .45 - 3, 5) + .4 * vnoise(xs * .9, ys * .9, 1.0, 9))
+    moss = smoothstep(.42, .62, .6 * fbm(xs * .45 + 7, ys * .45 - 3, 5) + .4 * vnoise(xs * .9, ys * .9, 1.0, 9))
     leaf = smoothstep(.55, .75, fbm(xs * .6 + 31, ys * .6 + 17, 13))
-    tint = (np.array((1.12, .98, .84)) * (1 - moss[..., None]) + np.array((.84, 1.16, .74)) * moss[..., None])
-    tint = tint * (1 - .5 * leaf[..., None]) + np.array((1.22, .96, .66)) * .5 * leaf[..., None]
-    shade = np.where(dr < 0.2, .78, 1.0)[..., None] * (1 - .25 * leaf[..., None] * (dr < 0.2)[..., None])      # under the stones: grout stays dark, not orange
+    tint = (np.array((1.06, .98, .86)) * (1 - moss[..., None]) + np.array((.80, 1.18, .72)) * moss[..., None])
+    tint = tint * (1 - .4 * leaf[..., None]) + np.array((1.10, .96, .74)) * .4 * leaf[..., None]
+    shade = np.where(dr < 0.2, .92, 1.0)[..., None] * (1 - .15 * leaf[..., None] * (dr < 0.2)[..., None])      # under the stones: grout stays dark, not orange
     s['C'] = light_field(xs, ys) * tint * shade
     STATS['base_tris'] = int(len(s['P']))
     return stones, s
@@ -277,6 +277,21 @@ def root_snake(x, y, ang, length, r0, name, depth=2):
     finish_piece(s, name, 'world')
 
 
+def flat_root(x, y, ang, length, r0, name):
+    """A root that creeps into the paved footprint, flattened to a 6 cm ribbon (it breaks up the paving and stays under the 10 cm limit)."""
+    sp = Soup()
+    RL.root_system(sp, rng, (x, y), ang, length, r0, lambda a, b_: 0.0, depth=1, sides=6, tile=2.4, wander=.5, hug=0.0, n=9, taper=.55)
+    if not sp.P:
+        return
+    s = sp.soup()
+    s['P'][..., 2] *= .26
+    s = shade_vertical(s, -.05, .2, lo=.62, hi=.85)
+    N = tri_normals(s['P'])
+    m = smoothstep(.4, .9, N[:, 2])[:, None] * (.3 + .4 * smoothstep(.40, .68, fbm(s['P'][..., 0].mean(1) * .9 + 2, s['P'][..., 1].mean(1) * .9, 7)))[:, None]
+    s['C'] = s['C'] * (1 + m[..., None] * (np.array((.72, 1.05, .6)) - 1))
+    finish_piece(s, name, 'world')
+
+
 def fungus_on(x, y, z, name, n=4, scale=1.0, glow=True):
     sp = Soup()
     RL.fungus_cluster(sp, rng, (x, y, z), n=n, scale=scale, glow=glow)
@@ -351,6 +366,16 @@ def great_tree(x, y, name, height, r_base, tilt=(0, 0), veins=True, canopy=True,
 # ------------------------------------------------------------------ layout
 def layout():
     # ---- the near clearing edge: low roots wrapping the paving, boulders, fungus (below the sight volume by construction)
+    # flat roots creeping from the clearing edge into the paving (<= 6 cm high: inside the footprint rule)
+    for i in range(12):
+        side = rng.integers(0, 4)
+        t = rng.uniform(-1, 1)
+        if side < 2:
+            x, y = (MX + rng.uniform(.5, 2.5)) * (1 if side == 0 else -1), t * MY
+        else:
+            x, y = t * MX, (MY + rng.uniform(.5, 2.5)) * (1 if side == 2 else -1)
+        ang = math.atan2(-y, -x) + rng.uniform(-.7, .7)
+        flat_root(x, y, ang, rng.uniform(5.0, 10.0), rng.uniform(.20, .28), f'flatroot{i}')
     for i in range(72):
         a = rng.uniform(0, math.tau)
         # start on the clearing's rectangle boundary region, wander out
@@ -503,7 +528,7 @@ def main():
     # ground AO in the clearing ring around stones/roots
     near_base = rect_dr(base['P'].mean(1)[:, 0], base['P'].mean(1)[:, 1]) < 12.0
     b_n, b_f = L.sub(base, near_base), L.sub(base, ~near_base)
-    b_n, nb = bake_ao(b_n, bvh_all, strength=.5, dist=2.0, n=8)
+    b_n, nb = bake_ao(b_n, bvh_all, strength=.35, dist=2.0, n=8)
     ao_total += nb
     base = L.cat(b_n, b_f)
     STATS['ao_samples'] = ao_total
@@ -543,7 +568,7 @@ def main():
         A = A_
     world, occl = outs
     used_px = sum((w + 2 * PAD) * (h + 2 * PAD) for (_, _, w, h) in place_.values())
-    STATS['atlas'] = dict(size=ATLAS, regions=len(place_), pad_px=PAD, fill_fraction=round(used_px / ATLAS / ATLAS, 3), regions_px={k: [v[2], v[3]] for k, v in place_.items()})
+    STATS['atlas'] = dict(size=ATLAS, regions=len(place_), pad_px=PAD, fill_fraction=round(used_px / ATLAS / ATLAS, 3), regions_px={k: [v[2], v[3]] for k, v in place_.items()}, regions_xywh={k: [int(v[0]), int(v[1]), int(v[2]), int(v[3])] for k, v in place_.items()})
     STATS['floor_texels_per_m'] = 512 / FLOOR_TILE_M
     STATS['paving_texels_per_m'] = 256
     bpy.ops.wm.read_factory_settings(use_empty=True)

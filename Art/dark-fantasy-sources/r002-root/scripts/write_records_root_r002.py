@@ -70,7 +70,7 @@ def add_lods(rec, lod_metrics):
     rec['recipe']['parameters']['lods'] = dict(lod0_triangles=entry['lod0_triangles'], tool='Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned',
                                                lods=[dict(lod=r['lod'], triangles=r['triangles'], fraction=r['fraction'], file=r['file'], deviation_m_p50_p95_max=r['deviation_m_p50_p95_max'],
                                                           appearance_rgb_mean_p95=[r['appearance']['rgb_mean'], r['appearance']['rgb_p95']]) for r in entry['lods']])
-    for extra in ('lod_r002.py', 'build_lods_root_r002.py'):
+    for extra in ('lod_r002.py', 'build_lods_root_r002.py', 'relabel_lods_root_r002.py'):
         rec['files'].insert(len([f for f in rec['files'] if f['role'] == 'source']), dict(role='source', path=f'Art/dark-fantasy-sources/r002-root/scripts/{extra}', sha256=sha(f'Art/dark-fantasy-sources/r002-root/scripts/{extra}')))
     for r in entry['lods']:
         rec['files'].append(dict(role='export', path=r['file'], sha256=sha(r['file'])))

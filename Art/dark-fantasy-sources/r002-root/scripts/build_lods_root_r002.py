@@ -3,7 +3,8 @@
   blender -b --python Art/dark-fantasy-sources/r002-root/scripts/build_lods_root_r002.py        (Blender 5.2.3 LTS, as phase 1)
 
 For every mesh in LOD_SET writes <name>_LOD1.glb (about 50 % of the triangles) and <name>_LOD2.glb (about 25 %) beside its LOD0
-glb, and Art/dark-fantasy-sources/r002-root/lod_metrics.json.  The LOD0 glbs are only read.  Decimation is Blender's collapse
+glb, and Art/dark-fantasy-sources/r002-root/lod_metrics.json.  The LOD0 glbs are only read.  The mesh, node and material inside a LOD glb are named LOD<n>_<name> (the file stays <name>_LOD<n>.glb), the pattern Unreal's Interchange expects;
+relabel_lods_root_r002.py strips any Blender '.001' duplicate suffix.  Decimation is Blender's collapse
 decimator on the welded mesh with UV-island borders kept as seams; UVs, 16-bit vertex colour (including the glow/opacity alpha)
 and the atlas come through unchanged.  Run validate_lods_r002.py afterwards in a fresh process; then rerun write_records_r002.py.
 Cards (mist, shafts) and scatter under ~1,000 triangles are exempt.
@@ -55,11 +56,14 @@ def main():
             # Aim for the fraction; if the silhouette gate fails (small pieces lose thin features at 25 %), keep more triangles in 10 % steps.
             wanted = fraction
             while True:
-                P2, UV2, C2 = D.decimate(f'{name}_LOD{index}', P, UV, C, img, int(round(len(P) * wanted)))
-                path = D.write_lod(f'{name}_LOD{index}', P2, UV2, C2, img, os.path.join(folder, f'{name}_LOD{index}.glb'))
+                P2, UV2, C2 = D.decimate(f'LOD{index}_{name}', P, UV, C, img, int(round(len(P) * wanted)))
+                path = D.write_lod(f'LOD{index}_{name}', P2, UV2, C2, img, os.path.join(folder, f'{name}_LOD{index}.glb'))
                 # What the exporter actually wrote (it drops degenerate triangles) is what counts: read the file back.
                 P2, UV2, C2, _ = D.read_glb(path)
                 ok, fwd, back, move = D.silhouette_ok(P, P2, big, index)
+                if ok and asset_id == 'world-root':        # the footprint-edge region (footprint + 1 m) must stay within 3 cm of LOD0, as validate_lods_root_r002.py requires
+                    sel = np.nonzero(((np.abs(P2[:, :, 0]) < 14.5) & (np.abs(P2[:, :, 1]) < 10.0)).any(1))[0]
+                    ok = D.deviation(P, P2[sel], samples=60000)[2] <= 0.03
                 if ok or wanted >= 0.40:
                     break
                 print(f'  {name} LOD{index} at {len(P2)} triangles fails the silhouette gate (distance {fwd:.3f}/{back:.3f} m, box {move:.3f} m); keeping more')

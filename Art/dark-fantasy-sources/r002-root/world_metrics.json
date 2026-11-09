@@ -1,94 +1,110 @@
 {
  "pieces_dropped_for_footprint": [],
  "pieces_dropped_for_sight_volume": [
-  "root17",
-  "root20",
-  "root44",
-  "tree2_canopy",
-  "tree20_canopy"
+  "root0",
+  "root3",
+  "root4",
+  "root14",
+  "root19",
+  "root21",
+  "root63",
+  "root69",
+  "tree1_canopy",
+  "tree11_canopy"
  ],
- "stones": 2101,
- "stones_measured_interior": 2082,
+ "patches": {
+  "total": 164,
+  "bare_earth": 24,
+  "stone": 140,
+  "radius_m_min_max": [
+   2.25,
+   5.62
+  ],
+  "candidate_stones": 1753,
+  "stones_after_overlap": 1517
+ },
+ "stones": 1249,
+ "stones_measured_interior": 1247,
  "stone_equiv_diameter_cm_p5_p50_p95": [
-  33.0,
-  61.4,
-  82.0
+  42.5,
+  64.7,
+  82.6
  ],
  "stone_long_side_cm_p5_p50_p95_max": [
-  42.9,
-  75.2,
-  92.7,
-  108.3
+  45.9,
+  80.5,
+  93.7,
+  104.0
  ],
  "stone_short_side_cm_p5_p50_p95": [
-  25.6,
-  46.9,
-  66.7
+  34.4,
+  47.7,
+  66.4
  ],
  "stone_aspect_long_over_short_p5_p50_p95_max": [
   1.06,
-  1.47,
-  2.47,
-  5.67
+  1.5,
+  2.3,
+  2.91
  ],
  "stone_vertex_count_histogram": {
-  "4": 1204,
-  "5": 655,
-  "6": 196,
-  "7": 26,
-  "8": 1
+  "4": 862,
+  "5": 295,
+  "6": 90
  },
  "edge_orientation_histogram_10deg_bins_length_share": [
   0.012,
-  0.051,
-  0.042,
-  0.062,
-  0.073,
+  0.061,
   0.08,
+  0.051,
+  0.052,
+  0.07,
+  0.064,
+  0.082,
+  0.01,
+  0.008,
+  0.091,
   0.077,
-  0.067,
-  0.017,
-  0.019,
-  0.044,
-  0.037,
+  0.06,
+  0.033,
+  0.093,
   0.081,
-  0.087,
-  0.077,
-  0.075,
-  0.077,
-  0.021
+  0.061,
+  0.013
  ],
  "edge_orientation_resultants_R2_R4_R6": [
-  0.027,
-  0.277,
-  0.019
+  0.035,
+  0.167,
+  0.029
  ],
- "edge_length_share_within_3deg_of_cell_axes": 0.016,
+ "edge_length_share_within_3deg_of_cell_axes": 0.007,
  "stone_top_height_range_cm": [
   -2.7,
   2.7
  ],
- "stone_tris": 28623,
- "base_tris": 13604,
- "ao_samples": 78251,
+ "stone_tris": 16416,
+ "footprint_share_stone_tops": 0.531,
+ "base_tris": 15752,
+ "ao_samples": 85553,
  "source_tris_by_group": {
-  "root": 8940,
-  "boulder": 4400,
-  "edgeboulder": 240,
-  "stump": 8590,
+  "flatroot": 3270,
+  "root": 7445,
+  "boulder": 5280,
+  "edgeboulder": 640,
+  "stump": 8315,
   "log": 5100,
-  "fung_st": 2310,
-  "fung": 3366,
-  "fern": 5166,
-  "tree": 12800,
-  "tree_canopy": 7200,
+  "fung_st": 3003,
+  "fung": 2772,
+  "fern": 5130,
+  "tree": 14540,
+  "tree_canopy": 6800,
   "rootoftheworld": 1082,
   "rootoftheworld_canopy": 320,
   "arch": 5400
  },
  "pieces": {
-  "total": 378,
-  "world": 366,
+  "total": 395,
+  "world": 378,
   "occluders": 7,
   "occluder_names": [
    "arch0",
@@ -96,7 +112,7 @@
    "arch3",
    "arch4",
    "arch5",
-   "arch7",
+   "arch6",
    "arch8"
   ]
  },
@@ -114,11 +130,11 @@
     512,
     512
    ],
-   "paveB": [
+   "paveA": [
     256,
     256
    ],
-   "paveA": [
+   "paveB": [
     256,
     256
    ],
@@ -162,60 +178,146 @@
     8,
     8
    ]
+  },
+  "regions_xywh": {
+   "floor": [
+    16,
+    16,
+    512,
+    512
+   ],
+   "bark": [
+    560,
+    16,
+    512,
+    512
+   ],
+   "paveA": [
+    1104,
+    16,
+    256,
+    256
+   ],
+   "paveB": [
+    1392,
+    16,
+    256,
+    256
+   ],
+   "paveC": [
+    1680,
+    16,
+    256,
+    256
+   ],
+   "paveM": [
+    1104,
+    304,
+    256,
+    256
+   ],
+   "stone": [
+    1392,
+    304,
+    256,
+    256
+   ],
+   "leaf": [
+    1680,
+    304,
+    256,
+    256
+   ],
+   "heart": [
+    16,
+    560,
+    128,
+    128
+   ],
+   "cap": [
+    1968,
+    16,
+    64,
+    64
+   ],
+   "fern": [
+    1968,
+    112,
+    8,
+    32
+   ],
+   "stem": [
+    2008,
+    112,
+    8,
+    8
+   ],
+   "glowcap": [
+    2008,
+    152,
+    8,
+    8
+   ],
+   "veins": [
+    1968,
+    176,
+    8,
+    8
+   ]
   }
  },
  "floor_texels_per_m": 256.0,
  "paving_texels_per_m": 256,
  "world": {
-  "triangles": 183165,
-  "glow_tris": 2030,
+  "triangles": 183211,
+  "glow_tris": 2709,
   "by_material": {
-   "paveB": 9420,
-   "paveA": 11232,
-   "paveC": 6978,
-   "paveM": 993,
-   "floor": 44344,
-   "bark": 66756,
-   "stone": 10562,
-   "heart": 360,
-   "cap": 1025,
-   "fern": 5166,
-   "leaf": 18862,
-   "stem": 1376,
-   "glowcap": 3275,
-   "veins": 2816
+   "paveA": 6222,
+   "paveB": 5478,
+   "paveC": 3981,
+   "paveM": 735,
+   "floor": 49004,
+   "bark": 69888,
+   "stone": 13900,
+   "heart": 352,
+   "cap": 825,
+   "fern": 5130,
+   "leaf": 18170,
+   "stem": 1400,
+   "glowcap": 3550,
+   "veins": 4576
   },
   "edge_len_m_floor_within_8m_median_p90_max": [
-   0.542,
-   1.0,
-   2.828
+   0.512,
+   0.843,
+   1.001
   ],
   "edge_len_m_stone_tops_median_p90": [
-   0.346,
-   0.675
+   0.383,
+   0.75
   ],
   "edge_len_m_dressing_above_20cm_within_14m_median_p90_max": [
    0.305,
-   0.889,
-   3.41
+   0.831,
+   3.189
   ],
   "glb": {
-   "triangles": 183165,
-   "vertices": 460860,
+   "triangles": 183211,
+   "vertices": 446422,
    "bbox_min_m": [
+    -98.1353,
     -96,
-    -96,
-    -0.3436
+    -0.2611
    ],
    "bbox_max_m": [
-    96,
-    111.0505,
-    109.2574
+    96.8151,
+    112.3602,
+    112.221
    ],
    "size_m": [
-    192,
-    207.0505,
-    109.601
+    194.9504,
+    208.3602,
+    112.4821
    ],
    "image_px": [
     2048,
@@ -233,15 +335,15 @@
     ]
    ],
    "materials": 1,
-   "bytes": 21409912,
+   "bytes": 20780852,
    "extensions": []
   }
  },
  "occluders": {
-  "triangles": 8512,
+  "triangles": 8848,
   "glow_tris": 0,
   "by_material": {
-   "bark": 8512
+   "bark": 8848
   },
   "edge_len_m_floor_within_8m_median_p90_max": [
    0.0,
@@ -253,27 +355,27 @@
    0.0
   ],
   "edge_len_m_dressing_above_20cm_within_14m_median_p90_max": [
-   0.494,
-   1.292,
-   2.706
+   0.512,
+   1.23,
+   2.621
   ],
   "glb": {
-   "triangles": 8512,
-   "vertices": 22313,
+   "triangles": 8848,
+   "vertices": 22916,
    "bbox_min_m": [
-    -25.9487,
-    -23.9809,
-    -0.0247
+    -28.7335,
+    -24.8417,
+    -0.0707
    ],
    "bbox_max_m": [
-    24.8434,
-    25.5014,
-    11.3757
+    25.9929,
+    21.6877,
+    11.2691
    ],
    "size_m": [
-    50.792,
-    49.4823,
-    11.4004
+    54.7264,
+    46.5294,
+    11.3398
    ],
    "image_px": [
     2048,
@@ -291,7 +393,7 @@
     ]
    ],
    "materials": 1,
-   "bytes": 1721176,
+   "bytes": 1695188,
    "extensions": []
   }
  },
