@@ -1,0 +1,32 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Combat/CombatBattle.h"
+
+/**
+ * The nine clips of the shared humanoid skeleton (#147), by role. A pose is presentation only: playback chooses it
+ * from committed results and never reads it back, and every figure converges on Rest(Life) once playback settles.
+ */
+enum class EUnitPose : uint8 { Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover };
+
+namespace ExpeditionPose
+{
+constexpr int32 Count = 9;
+
+/** The clip name in the animation set and in the Blender export ("Idle", "Walk", ...). */
+DNDDICEROLL_API const TCHAR* ClipName(EUnitPose Pose);
+/** Idle and Walk repeat; every other clip plays once and holds its last frame. */
+DNDDICEROLL_API bool IsLooping(EUnitPose Pose);
+/** The pose the committed state implies once nothing is playing: Death when dead, Downed when downed, otherwise Idle. */
+DNDDICEROLL_API EUnitPose Rest(ECombatLife Life);
+/** The actor's clip for a committed command. A ranged attack is one aimed more than one cell away. */
+DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged);
+/** The actor's clip for one effect of a Special1 or Special2 command. */
+DNDDICEROLL_API EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged);
+/** The target's clip when damage lands and it stays on its feet. */
+DNDDICEROLL_API EUnitPose ForDamage();
+/** The clip for a unit newly downed (false) or killed (true). */
+DNDDICEROLL_API EUnitPose ForFall(bool bDead);
+/** The clip for a downed unit that is healed or rescued. */
+DNDDICEROLL_API EUnitPose ForRecovery();
+}

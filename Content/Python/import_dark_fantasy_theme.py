@@ -5,6 +5,11 @@ Run headless with the editor closed:
 Existing theme meshes and textures are preserved; a revised export is reimported at its
 recorded package through the editor (asset production). The master material (rebuilt in place, so its
 asset and instances stay), material instances, texture settings and the data asset are refreshed on every run.
+
+Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
+skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). Existing rig assets are
+never overwritten: set THEME_RIG_REIMPORT to a comma-separated allow-list (mesh names such as SK_Hero_Fighter,
+SKEL_Humanoid, animations) to delete and reimport exactly those.
 """
 import json
 import os
@@ -102,6 +107,8 @@ def master_material():
         mel.delete_all_material_expressions(material)
     else:
         material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
+    # Skinned meshes need their own shader permutation (#147); without the flag a skeletal mesh draws the default material.
+    material.set_editor_property("used_with_skeletal_mesh", True)
     white = unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture")
     tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -100, parameter_name="Tex", texture=white)
     vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
@@ -218,14 +225,15 @@ def import_mesh(asset_id, name, folder):
     return unreal.load_asset(package), texture
 
 
-def apply_material(mesh, texture, asset_id, name, look, master):
+def material_instance(mesh_name, instance_name, texture_name, texture, asset_id, look, master):
+    """Creates or refreshes one MI_* child of the master for a mesh and returns it (shared by static and skeletal meshes)."""
     roughness, rim, fill, glow, self_lit = look
-    path = THEME + "/Materials/MI_" + name[3:]
+    path = THEME + "/Materials/" + instance_name
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
-        "MI_" + name[3:], THEME + "/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+        instance_name, THEME + "/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
     mel.set_material_instance_parent(instance, master)
     if texture is None:
-        existing = THEME + "/Textures/T_" + name[3:]
+        existing = THEME + "/Textures/" + texture_name
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
     if texture is not None:
         # Trilinear filtering with anisotropy 8 (r.MaxAnisotropy in DefaultEngine.ini); uncompressed colour.
@@ -236,19 +244,24 @@ def apply_material(mesh, texture, asset_id, name, look, master):
         texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
         texture.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
         mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
-    # The glow mask guard: without a varying vertex alpha (every r001 export today) glow stays 0.
-    masked = has_alpha_mask(asset_id, name)
+    # The glow mask guard: without a varying vertex alpha (every static r001 export today) glow stays 0.
+    masked = has_alpha_mask(asset_id, mesh_name)
     mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow if masked else 0.0)
     mel.set_material_instance_scalar_parameter_value(instance, "SelfLit", self_lit)
     mel.set_material_instance_scalar_parameter_value(instance, "Rim", rim)
     mel.set_material_instance_scalar_parameter_value(instance, "Fill", fill)
     mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
     mel.update_material_instance(instance)
+    unreal.log("THEME_MATERIAL {} glow={} mask={}".format(mesh_name, glow if masked else 0.0, masked))
+    return instance
+
+
+def apply_material(mesh, texture, asset_id, name, look, master):
+    instance = material_instance(name, "MI_" + name[3:], "T_" + name[3:], texture, asset_id, look, master)
     # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
         if mesh.get_material(index) != instance:
             mesh.set_material(index, instance)
-    unreal.log("THEME_MATERIAL {} glow={} mask={}".format(name, glow if masked else 0.0, masked))
 
 
 def theme_asset():
@@ -257,6 +270,255 @@ def theme_asset():
     factory = unreal.DataAssetFactory()
     factory.set_editor_property("data_asset_class", unreal.DiceRollTheme)
     return tools.create_asset("DA_DiceRollTheme", THEME, unreal.DiceRollTheme, factory)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Rigged characters (#147). Art/rig-pilot/r001 holds the sources; each character record is Art/<asset-id>/r001/.
+# One skeleton (SKEL_Humanoid, from the fighter's import) serves all three characters; the nine clips are imported once,
+# from the fighter's LOD0 glb (every clip is shared across characters). Nothing existing is overwritten.
+
+RIG_FOLDER = THEME + "/Characters"
+SKELETON = RIG_FOLDER + "/SKEL_Humanoid"
+CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
+# asset id, mesh name, data-asset property, look (roughness, rim, fill, glow, self_lit): characters get Rim and Fill 1.
+RIG = [
+    ("sk-hero-fighter", "SK_Hero_Fighter", "fighter_rig", (0.55, 1.0, 1.0, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.0, 1.0, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.0, 1.0, 1.0, 0.0)),
+]
+# Explicit allow-list of rig assets to delete and reimport: mesh names, SKEL_Humanoid, animations. Empty by default.
+REIMPORT = {token.strip() for token in os.environ.get("THEME_RIG_REIMPORT", "").split(",") if token.strip()}
+
+
+def clip_path(clip):
+    return RIG_FOLDER + "/Animations/A_Humanoid_" + clip
+
+
+def rig_log(kind, path, status):
+    unreal.log("THEME_RIG_ASSET {} {} {}".format(kind, path, status))
+
+
+def delete_for_reimport(path, token):
+    if token in REIMPORT and library.does_asset_exist(path):
+        if not library.delete_asset(path):
+            raise RuntimeError("Unable to delete " + path + " for reimport")
+        rig_log("deleted", path, "allow-listed")
+
+
+def check_allow_list():
+    known = {name for _, name, _, _ in RIG} | {"SKEL_Humanoid", "animations"}
+    if REIMPORT - known:
+        raise RuntimeError("THEME_RIG_REIMPORT names unknown assets: " + ", ".join(sorted(REIMPORT - known)))
+    # Everything on the shared skeleton must be rebuilt with it, or the survivors would point at a deleted asset.
+    if "SKEL_Humanoid" in REIMPORT and not known <= REIMPORT:
+        raise RuntimeError("Reimporting SKEL_Humanoid needs every rig asset allow-listed: " + ", ".join(sorted(known)))
+
+
+def source_glb(asset_id, name):
+    return os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
+
+
+def import_glb(source, staging, skeleton):
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", source)
+    task.set_editor_property("destination_path", staging)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", False)
+    if skeleton is not None:
+        # Ask the glTF (Interchange) pipeline to reuse the shared skeleton. If this build does not take the option, the
+        # check after the import repairs the assignment or raises.
+        try:
+            pipeline = unreal.InterchangeGenericAssetsPipeline()
+            pipeline.common_skeletal_meshes_and_animations_properties.set_editor_property("skeleton", skeleton)
+            task.set_editor_property("options", pipeline)
+        except Exception as error:  # noqa: BLE001 - API surface differs between engine builds
+            unreal.log_warning("THEME_RIG_SKELETON_OPTION unavailable: {}".format(error))
+    tools.import_asset_tasks([task])
+    return [unreal.load_asset(path) for path in task.get_editor_property("imported_object_paths")]
+
+
+def clip_of(asset):
+    name = asset.get_name().lower().replace("|", "_")
+    for clip in CLIPS:
+        if name == clip.lower() or name.endswith("_" + clip.lower()):
+            return clip
+    return None
+
+
+def disable_nanite(mesh):
+    """The glTF importer enables Nanite silently; characters are skinned and low-poly, so switch it off explicitly."""
+    try:
+        settings = mesh.get_editor_property("nanite_settings")
+    except Exception:  # noqa: BLE001
+        unreal.log_warning("THEME_RIG_NANITE {} has no nanite_settings property in this build; check it in the editor".format(mesh.get_name()))
+        return
+    if settings.get_editor_property("enabled"):
+        settings.set_editor_property("enabled", False)
+        mesh.set_editor_property("nanite_settings", settings)
+    if mesh.get_editor_property("nanite_settings").get_editor_property("enabled"):
+        raise RuntimeError("Unable to turn Nanite off for " + mesh.get_name())
+
+
+def import_lods(mesh, asset_id, name):
+    subsystem = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
+    for lod, suffix in ((1, "_LOD1"), (2, "_LOD2")):
+        source = os.path.join(ROOT, "Art", asset_id, "r001", name + suffix + ".glb")
+        if not os.path.isfile(source):
+            raise RuntimeError("Missing LOD export " + source)
+        if subsystem.import_lod(mesh, lod, source) < 0:
+            raise RuntimeError("Unable to import " + source + " as LOD" + str(lod) + " of " + name)
+    if subsystem.get_lod_count(mesh) != 3:
+        raise RuntimeError("{} has {} LODs after import, expected 3".format(name, subsystem.get_lod_count(mesh)))
+
+
+def import_rig_mesh(asset_id, name, shared, first):
+    """Imports one character into staging and moves its assets to their final packages.
+
+    The first (fighter) import also yields the shared skeleton and the nine clips. Returns (mesh, texture, staging); the
+    caller applies the material and then removes staging, because the imported mesh still points at staging materials.
+    """
+    source = source_glb(asset_id, name)
+    if not os.path.isfile(source):
+        unreal.log_warning("THEME_MISSING_EXPORT " + source)
+        return None, None, None
+    if not first and shared is None:
+        raise RuntimeError("Cannot import " + name + ": " + SKELETON + " does not exist yet")
+    staging = THEME + "/_Import/" + name
+    imported = import_glb(source, staging, None if first else shared)
+    meshes = [asset for asset in imported if isinstance(asset, unreal.SkeletalMesh)]
+    textures = [asset for asset in imported if isinstance(asset, unreal.Texture2D)]
+    if len(meshes) != 1:
+        raise RuntimeError("Expected one skeletal mesh from " + source + ", got " + str(len(meshes)))
+    mesh = meshes[0]
+    if first:
+        skeletons = [asset for asset in imported if isinstance(asset, unreal.Skeleton)]
+        if len(skeletons) != 1:
+            raise RuntimeError("Expected one skeleton from " + source + ", got " + str(len(skeletons)))
+        found = {}
+        for asset in imported:
+            if isinstance(asset, unreal.AnimSequence) and clip_of(asset):
+                found.setdefault(clip_of(asset), []).append(asset)
+        if sorted(found) != sorted(CLIPS) or any(len(group) != 1 for group in found.values()):
+            raise RuntimeError("Expected exactly the nine clips {} from {}, got {}".format(
+                CLIPS, source, {clip: [a.get_name() for a in group] for clip, group in found.items()}))
+        if not library.rename_asset(skeletons[0].get_path_name(), SKELETON):
+            raise RuntimeError("Unable to move skeleton to " + SKELETON)
+        for clip in CLIPS:
+            if not library.rename_asset(found[clip][0].get_path_name(), clip_path(clip)):
+                raise RuntimeError("Unable to move clip to " + clip_path(clip))
+    skeleton = unreal.load_asset(SKELETON)
+    if mesh.get_editor_property("skeleton") != skeleton:
+        try:
+            mesh.set_editor_property("skeleton", skeleton)
+        except Exception as error:  # noqa: BLE001
+            raise RuntimeError("{} is not on {}: {}".format(name, SKELETON, error))
+        if mesh.get_editor_property("skeleton") != skeleton:
+            raise RuntimeError(name + " is not on " + SKELETON)
+    try:
+        mesh.set_editor_property("physics_asset", None)  # not required; an importer-made one lives in staging
+    except Exception:  # noqa: BLE001
+        pass
+    disable_nanite(mesh)
+    import_lods(mesh, asset_id, name)
+    package = RIG_FOLDER + "/" + name
+    if not library.rename_asset(mesh.get_path_name(), package):
+        raise RuntimeError("Unable to move mesh to " + package)
+    texture = None
+    if textures:
+        target = THEME + "/Textures/T_" + name
+        if not library.rename_asset(textures[0].get_path_name(), target):
+            raise RuntimeError("Unable to move texture to " + target)
+        texture = unreal.load_asset(target)
+    return unreal.load_asset(package), texture, staging
+
+
+def apply_rig_material(mesh, texture, asset_id, name, look, master):
+    instance = material_instance(name, "MI_" + name, "T_" + name, texture, asset_id, look, master)
+    slots = list(mesh.get_editor_property("materials"))
+    changed = False
+    for slot in slots:
+        if slot.get_editor_property("material_interface") != instance:
+            slot.set_editor_property("material_interface", instance)
+            changed = True
+    if changed:
+        mesh.set_editor_property("materials", slots)
+
+
+def path_of(asset):
+    if asset is None:
+        return None
+    return asset.get_path_name() if hasattr(asset, "get_path_name") else str(asset)
+
+
+def rig_definition(theme, prop, name):
+    """The data-asset entry for a character, or None when it already matches (so an unchanged theme is not dirtied)."""
+    current = theme.get_editor_property(prop)
+    mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
+    clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
+    animations = current.get_editor_property("animations")
+    if path_of(current.get_editor_property("mesh")) == path_of(mesh) and all(
+            path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items()):
+        return None
+    definition = unreal.DiceRollCharacter()
+    definition.set_editor_property("mesh", mesh)
+    definition.set_editor_property("yaw_offset", current.get_editor_property("yaw_offset"))
+    animation_set = unreal.DiceRollAnimSet()
+    for clip, asset in clips.items():
+        animation_set.set_editor_property(clip.lower(), asset)
+    definition.set_editor_property("animations", animation_set)
+    return definition
+
+
+def import_rig(master, theme):
+    if not os.path.isdir(os.path.join(ROOT, "Art", "rig-pilot")):
+        unreal.log_warning("THEME_RIG_SKIPPED Art/rig-pilot is not in this checkout")
+        return 0
+    check_allow_list()
+    names = [name for _, name, _, _ in RIG]
+    for name in names:
+        delete_for_reimport(RIG_FOLDER + "/" + name, name)
+        if name in REIMPORT:
+            delete_for_reimport(THEME + "/Textures/T_" + name, name)
+    delete_for_reimport(SKELETON, "SKEL_Humanoid")
+    for clip in CLIPS:
+        delete_for_reimport(clip_path(clip), "animations")
+    # The skeleton, the clips and the fighter come from one import, so they exist together or not at all.
+    bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in CLIPS]
+    present = [library.does_asset_exist(path) for path in bundle]
+    if any(present) and not all(present):
+        raise RuntimeError("Incomplete rig bundle, missing: {}. Add them (and the rest of the bundle) to THEME_RIG_REIMPORT to rebuild.".format(
+            [path for path, here in zip(bundle, present) if not here]))
+    found = 0
+    for asset_id, name, prop, look in RIG:
+        package = RIG_FOLDER + "/" + name
+        staging = None
+        if library.does_asset_exist(package):
+            mesh, texture = unreal.load_asset(package), None
+            rig_log("mesh", package, "kept")
+        else:
+            mesh, texture, staging = import_rig_mesh(asset_id, name, unreal.load_asset(SKELETON) if library.does_asset_exist(SKELETON) else None, not all(present) and name == names[0])
+            if mesh is None:
+                continue
+            rig_log("mesh", package, "imported")
+            if name == names[0]:
+                rig_log("skeleton", SKELETON, "imported")
+                for clip in CLIPS:
+                    rig_log("clip", clip_path(clip), "imported")
+        apply_rig_material(mesh, texture, asset_id, name, look, master)
+        if staging:
+            library.delete_directory(staging)
+        definition = rig_definition(theme, prop, name)
+        if definition is not None:
+            theme.set_editor_property(prop, definition)
+            rig_log("theme", prop, "assigned")
+        found += 1
+    for clip in CLIPS:
+        if all(present):
+            rig_log("clip", clip_path(clip), "kept")
+    if all(present):
+        rig_log("skeleton", SKELETON, "kept")
+    return found
 
 
 master = master_material()
@@ -270,7 +532,9 @@ for asset_id, name, folder, prop, *look in ASSETS:
     apply_material(mesh, texture, asset_id, name, look, master)
     theme.set_editor_property(prop, mesh)
     found += 1
+rigged = import_rig(master, theme)
 # Save only what this run changed: unchanged meshes and textures keep their exact bytes.
 if not library.save_directory(THEME, only_if_is_dirty=True, recursive=True):
     raise RuntimeError("Unable to save " + THEME)
 unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes".format(found, len(ASSETS)))
+unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))

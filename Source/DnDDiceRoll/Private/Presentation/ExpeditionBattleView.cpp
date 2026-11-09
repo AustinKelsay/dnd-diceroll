@@ -10,8 +10,12 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Animation/AnimSequence.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "Components/PostProcessComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Light.h"
 #include "Engine/World.h"
@@ -243,6 +247,8 @@ void AExpeditionBattleView::BeginPlay()
     {
         if (ULightComponent* Component = Light->GetLightComponent()) { Component->SetMobility(EComponentMobility::Movable); }
     }
+    // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
     if (!FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")) && !ThemeAsset.IsNull())
     {
@@ -352,6 +358,38 @@ void AExpeditionBattleView::SetBoardMetric(const FBoardMetric& Value)
 {
     BoardMetric = FBoardMetric(Value.CellCm, Value.FigureCm);
     RebuildBoard();
+}
+
+void AExpeditionBattleView::UseStaticFigures()
+{
+    bSkeletalFigures = false;
+    RebuildBoard();
+}
+
+int32 AExpeditionBattleView::SkeletalFigureCount() const
+{
+    int32 Count = 0;
+    for (const FExpeditionUnitRig& Rig : Rigs) { Count += Rig.Skin ? 1 : 0; }
+    return Count;
+}
+
+FUnitAnimationState AExpeditionBattleView::UnitAnimation(int32 UnitId) const
+{
+    FUnitAnimationState State;
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId || !Rig.Skin) { continue; }
+        State.bSkeletal = true;
+        State.Pose = Rig.Pose;
+        State.Time = Rig.PoseTime;
+        const UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+        State.Length = Clip ? Clip->GetPlayLength() : 0.0f;
+        const UAnimSingleNodeInstance* Node = Rig.Skin->GetSingleNodeInstance();
+        const UAnimationAsset* Shown = Node ? Node->GetAnimationAsset() : nullptr;
+        State.Clip = Shown ? Shown->GetName() : FString();
+        break;
+    }
+    return State;
 }
 
 void AExpeditionBattleView::UsePrimitives()
@@ -688,6 +726,11 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     // It lies on the board plane, in actor space, so it stays flat when the figure falls; UpdateRigs places it.
     Rig.Ring = MakeRing(RootComponent, FVector::ZeroVector, Team * 1.15f);
     if (Rig.Ring.Mesh) { Rig.Ring.Mesh->SetRelativeScale3D(FVector(BoardMetric.FootprintDiameter() / 100.0f)); }
+    if (BuildSkeletalFigure(Rig, Body, Unit))
+    {
+        Rigs.Add(Rig);
+        return;
+    }
     if (UStaticMesh* Figure = UnitMesh(Unit))
     {
         // The figure itself is untinted.
@@ -850,13 +893,23 @@ void AExpeditionBattleView::UpdateRigs()
         const FUnitDisplay* Unit = Show.Unit(Rig.Id);
         if (!Unit || !Rig.Root) { continue; }
         const float Breath = Unit->Life == ECombatLife::Conscious ? FMath::Sin(Clock * 2.2f + Rig.Phase) : 0.0f;
-        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop));
         const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Unit->Facing.Y, Unit->Facing.X));
         const FQuat Turn(FVector::UpVector, FMath::DegreesToRadians(Facing));
-        const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
-        Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
-        // Bodies still occupy their cells, so keep fallen rigs visible on the board.
-        Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
+        if (Rig.Skin)
+        {
+            // A rigged figure stands on its cell and the clips do the rest: no hop, breathing squash or tilt.
+            Rig.Root->SetRelativeLocationAndRotation(BoardPosition(Unit->Position + Unit->Lean), Turn);
+            Rig.Root->SetRelativeScale3D(FVector(BoardMetric.Scale()));
+            UpdateAnimation(Rig, *Unit);
+        }
+        else
+        {
+            const FVector Location = BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop));
+            const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
+            Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
+            // Bodies still occupy their cells, so keep fallen rigs visible on the board.
+            Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
+        }
         const bool bDead = Unit->Life == ECombatLife::Dead;
         auto Tint = [&](FExpeditionPart& Part)
         {
@@ -875,6 +928,110 @@ void AExpeditionBattleView::UpdateRigs()
             Tint(Rig.Ring);
         }
     }
+}
+
+const FDiceRollCharacter* AExpeditionBattleView::UnitRigged(const FCombatantState& Unit) const
+{
+    if (!Theme || !bSkeletalFigures) { return nullptr; }
+    if (Unit.Side == ECombatSide::Party)
+    {
+        switch (Unit.AdventurerRole)
+        {
+        case EAdventurerRole::Fighter: return &Theme->FighterRig;
+        case EAdventurerRole::Wizard: return &Theme->WizardRig;
+        default: return nullptr;
+        }
+    }
+    // The same roster rule as UnitMesh: ranged foes are archers, the rest are raiders or scouts.
+    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? &Theme->RaiderRig : nullptr;
+}
+
+bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit)
+{
+    const FDiceRollCharacter* Definition = UnitRigged(Unit);
+    USkeletalMesh* Mesh = nullptr;
+    TArray<UAnimSequence*> Clips;
+    // An incomplete definition (no mesh, or any clip missing) is not used at all: the static figure takes over.
+    if (!Definition || !Definition->Load(Mesh, Clips) || !Mesh || Mesh->GetMaterials().IsEmpty()) { return false; }
+    USkeletalMeshComponent* Skin = NewObject<USkeletalMeshComponent>(this);
+    AddInstanceComponent(Skin);
+    Spawned.Add(Skin);
+    Skin->SetupAttachment(Body);
+    Skin->SetMobility(EComponentMobility::Movable);
+    Skin->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Skin->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+    Skin->SetSkeletalMesh(Mesh);
+    // The mesh origin is at the feet. Fit it to the metric's figure height (the rig root already carries the cell scale),
+    // exactly as static figures are fitted.
+    const float MeshHeight = static_cast<float>(Mesh->GetBounds().GetBox().Max.Z);
+    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.0f;
+    Skin->SetRelativeScale3D(FVector(Fit));
+    Skin->SetRelativeRotation(FRotator(0.0f, Definition->YawOffset, 0.0f));
+    // One tintable instance per slot, like static figures: Flash and Glow reach the figure through "Color".
+    const TArray<FSkeletalMaterial>& Slots = Mesh->GetMaterials();
+    for (int32 Slot = 0; Slot < Slots.Num(); ++Slot)
+    {
+        if (!Slots[Slot].MaterialInterface) { continue; }
+        FExpeditionPart Look;
+        Look.Material = UMaterialInstanceDynamic::Create(Slots[Slot].MaterialInterface, this);
+        Look.Base = FLinearColor::White;
+        Skin->SetMaterial(Slot, Look.Material);
+        Look.SetColor(Look.Base);
+        Rig.Parts.Add(Look);
+    }
+    Skin->RegisterComponent();
+    Rig.Skin = Skin;
+    for (UAnimSequence* Clip : Clips) { Rig.Clips.Add(Clip); }
+    Rig.Pose = EUnitPose::Idle;
+    Rig.PoseSerial = -1;
+    Rig.Stamp = Clock;
+    // The first UpdateRigs shows the display's pose (Rest on a fresh board); show Idle now so the component never has none.
+    ShowPose(Rig, EUnitPose::Idle, true);
+    return true;
+}
+
+void AExpeditionBattleView::ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bool bSnap)
+{
+    UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Pose)) ? Rig.Clips[static_cast<int32>(Pose)].Get() : nullptr;
+    if (!Rig.Skin || !Clip) { return; }
+    const float Length = Clip->GetPlayLength();
+    Rig.Pose = Pose;
+    Rig.bIdleAfter = false;
+    // The component holds the clip but never advances it: the view sets the time every frame (UpdateAnimation).
+    Rig.Skin->PlayAnimation(Clip, ExpeditionPose::IsLooping(Pose));
+    Rig.Skin->Stop();
+    if (!bSnap) { Rig.PoseTime = 0.0f; }
+    else if (ExpeditionPose::IsLooping(Pose)) { Rig.PoseTime = Length * (Rig.Phase / (2.0f * PI)); }
+    else { Rig.PoseTime = Length; } // Converged on a held pose: Downed and Death show their last frame at once.
+    Rig.Skin->SetPosition(Rig.PoseTime, false);
+}
+
+void AExpeditionBattleView::UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit)
+{
+    const float Delta = FMath::Max(0.0f, Clock - Rig.Stamp) * Show.Speed;
+    Rig.Stamp = Clock;
+    if (Unit.PoseSerial != Rig.PoseSerial)
+    {
+        Rig.PoseSerial = Unit.PoseSerial;
+        Rig.bIdleAfter = false;
+        const UAnimSequence* Playing = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+        const bool bOneShotPlaying = !ExpeditionPose::IsLooping(Rig.Pose) && Playing && Rig.PoseTime < Playing->GetPlayLength();
+        // Playback settling back to Idle lets a one-shot clip (a swing, a flinch, a recovery) play out; converging on
+        // the committed state (reset, resume, skip, Finish) shows the final pose at once.
+        if (!Unit.bPoseSnap && Unit.Pose == EUnitPose::Idle && bOneShotPlaying) { Rig.bIdleAfter = true; }
+        else { ShowPose(Rig, Unit.Pose, Unit.bPoseSnap); return; }
+    }
+    const UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+    if (!Clip) { return; }
+    const float Length = Clip->GetPlayLength();
+    Rig.PoseTime += Delta;
+    if (ExpeditionPose::IsLooping(Rig.Pose)) { Rig.PoseTime = Length > 0.0f ? FMath::Fmod(Rig.PoseTime, Length) : 0.0f; }
+    else if (Rig.PoseTime >= Length)
+    {
+        Rig.PoseTime = Length;
+        if (Rig.bIdleAfter) { ShowPose(Rig, EUnitPose::Idle, false); return; }
+    }
+    Rig.Skin->SetPosition(Rig.PoseTime, false);
 }
 
 void AExpeditionBattleView::UpdateTiles()

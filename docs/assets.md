@@ -48,7 +48,17 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 ## Rigged character pilot (issue #147)
 
-`Art/rig-pilot/r001/` holds the Blender half of the rigged pilot: the shared 25-bone skeleton contract (`README.md`), the recipes (`scripts/`), checks (`metrics/`) and contact sheets (`previews/`). The fighter, wizard and raider have records at `Art/sk-hero-fighter/r001/`, `Art/sk-hero-wizard/r001/` and `Art/sk-foe-raider/r001/` (skeletal glb with nine clips, plus LOD1 and LOD2 glbs). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository. Nothing is imported into Unreal yet, so the records' validation stays pending.
+`Art/rig-pilot/r001/` holds the Blender half of the rigged pilot: the shared 25-bone skeleton contract (`README.md`), the recipes (`scripts/`), checks (`metrics/`) and contact sheets (`previews/`). The fighter, wizard and raider have records at `Art/sk-hero-fighter/r001/`, `Art/sk-hero-wizard/r001/` and `Art/sk-foe-raider/r001/` (skeletal glb with nine clips, plus LOD1 and LOD2 glbs). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository.
+
+**Import (phase 2, source ready; the Unreal run is recorded below once done):** `Content/Python/import_dark_fantasy_theme.py` imports the pilot in the same headless run as the static theme. It creates, under `/Game/DnDDiceRoll/Theme`:
+- `Characters/SKEL_Humanoid`, the one skeleton, from the fighter's import;
+- `Characters/SK_Hero_Fighter`, `SK_Hero_Wizard` and `SK_Foe_Raider`, each with LOD1 and LOD2 from the `_LOD1`/`_LOD2` glbs (`SkeletalMeshEditorSubsystem.import_lod`) and Nanite explicitly off;
+- `Characters/Animations/A_Humanoid_<Clip>` for Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death and Recover, imported once from the fighter's LOD0 glb because every clip is shared across characters;
+- `Materials/MI_SK_<name>` (an `MI_*` of `M_DiceRollTheme`: Rim 1, Fill 1, Glow only because `has_alpha_mask` sees a real vertex-alpha mask in these exports) and `Textures/T_SK_<name>` (trilinear, as the static set). The `SK_` prefix keeps them apart from the static `MI_Hero_Fighter` and `T_Hero_Fighter`.
+
+`M_DiceRollTheme` gains `used_with_skeletal_mesh` (skinned meshes need their own shader permutation), and `DA_DiceRollTheme` gains `FighterRig`, `WizardRig` and `RaiderRig` (`FDiceRollCharacter`: mesh, the nine clips, a yaw offset). No physics asset or collision (presentation only). The run saves only dirty packages and raises when a save fails; it logs one `THEME_RIG_ASSET <kind> <path> <imported|kept|deleted|assigned>` line per asset and ends with `THEME_RIG_COMPLETE`.
+
+**Never overwritten:** an existing rig asset is kept (its material and the data asset are still refreshed). To rebuild assets, name them in `THEME_RIG_REIMPORT` (comma separated: `SK_Hero_Wizard`, `SK_Foe_Raider`, `SK_Hero_Fighter`, `SKEL_Humanoid`, `animations`); the fighter, skeleton and clips are one bundle and are rebuilt together with every other rig asset, and a partial bundle is refused. Validation of the three asset records stays pending until the Unreal run and captures are recorded.
 
 ## Game splash (issue #131)
 
