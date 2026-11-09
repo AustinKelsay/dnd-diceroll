@@ -9,7 +9,8 @@
  * Developer tool, not a behavior test: writes real checkpoints at each expedition phase
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
- * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12), each with a
+ * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, and the action dock's
+ * kit-barbarian-battle, kit-wizard-battle, kit-wizard-action-spent), each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -91,6 +92,55 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindBoard(TEXT("board-16x11"), 16, 11);
     FindBoard(TEXT("board-18x12"), 18, 12);
+    // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, optionally after it
+    // spent its Action with legal commands (capture mode itself still only resumes and looks).
+    auto FindActing = [&](const TCHAR* Name, const TArray<FString>& Builds, const FString& Acting, bool bSpendAction)
+    {
+        for (int32 Seed = 1; Seed < 400; ++Seed)
+        {
+            TArray<FPartyBuildSelection> Party;
+            for (int32 Index = 0; Index < Builds.Num(); ++Index)
+            {
+                FPartyBuildSelection Slot;
+                Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+                Party.Add(Slot);
+            }
+            FString Error;
+            FExpeditionRun Run;
+            if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("capture-kit-%d"), Seed)) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party || Active->BuildId != Acting) { continue; }
+            const int32 Id = Active->Id;
+            if (bSpendAction)
+            {
+                // Close in until an attack is legal (at most three moves), then attack: the Action is spent, the Bonus action is not.
+                for (int32 Step = 0; Step < 4 && Run.Battle().Snapshot().bActionAvailable; ++Step)
+                {
+                    const TArray<int32> Targets = Run.Battle().LegalTargets(Id);
+                    if (!Targets.IsEmpty()) { Run.Submit({ECombatCommandType::Attack, Id, {}, Targets[0]}); break; }
+                    FIntPoint Best = Run.Battle().Find(Id)->Cell;
+                    int32 BestSteps = MAX_int32;
+                    for (const FIntPoint& Cell : Run.Battle().LegalMoves(Id))
+                    {
+                        for (const FCombatantState& Enemy : Run.Battle().Snapshot().Encounter.Combatants)
+                        {
+                            const int32 Steps = ExpeditionTestSupport::Distance(Cell, Enemy.Cell);
+                            if (Enemy.Side == ECombatSide::Enemy && Enemy.HP > 0 && Steps < BestSteps) { BestSteps = Steps; Best = Cell; }
+                        }
+                    }
+                    if (BestSteps == MAX_int32 || !Run.Submit({ECombatCommandType::Move, Id, Best}).bAccepted) { break; }
+                }
+                if (Run.Battle().Snapshot().bActionAvailable || Run.Battle().ActiveId() != Id) { continue; }
+            }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 400 gives %s the first turn%s"), *Acting, bSpendAction ? TEXT(" with its Action spent") : TEXT("")));
+    };
+    FindActing(TEXT("kit-barbarian-battle"), {TEXT("barbarian.berserker"), TEXT("wizard.evocation"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("barbarian.berserker"), false);
+    FindActing(TEXT("kit-wizard-battle"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"), false);
+    FindActing(TEXT("kit-wizard-action-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"), true);
     bool bVictoryWritten = false;
     for (int32 Seed = 1; Seed < 60 && !bVictoryWritten; ++Seed)
     {

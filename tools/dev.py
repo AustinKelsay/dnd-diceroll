@@ -82,7 +82,8 @@ CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relau
 GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "default-seed-route")
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
-CAPTURE_MODES = ("battle", "targeting", "overview", "start")
+CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip")
+CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 3200)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -133,7 +134,9 @@ def load_poses(path):
         names.add(name)
         if shot.get("mode") not in CAPTURE_MODES:
             raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
-        if shot["mode"] in ("battle", "targeting"):
+        if shot["mode"] == "tooltip" and shot.get("action") not in CAPTURE_ACTIONS:
+            raise ValueError(f"{name} needs an \"action\" of {', '.join(CAPTURE_ACTIONS)}")
+        if shot["mode"] in ("battle", "targeting", "tooltip"):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:
                 raise ValueError(f"{name} needs a \"yaw\" from -360 to 360")
