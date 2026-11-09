@@ -93,6 +93,7 @@ const TArray<FScenario>& Scenarios()
         {TEXT("everyone healthy"), [](FCombatEncounter& E) { for (const int32 Id : {10, 11}) { FCombatantState* U = Unit(E, Id); U->HP = U->MaxHP; } }, nullptr},
         {TEXT("downed ally"), [](FCombatEncounter& E) { FCombatantState* A = Unit(E, 11); A->Life = ECombatLife::Downed; A->HP = 0; A->RescueTurnsLeft = 2; }, nullptr},
         {TEXT("foes and ally far away"), [](FCombatEncounter& E) { Unit(E, 20)->Cell = {7, 7}; Unit(E, 21)->Cell = {7, 6}; Unit(E, 11)->Cell = {5, 5}; }, nullptr},
+        {TEXT("downed ally far away"), [](FCombatEncounter& E) { FCombatantState* A = Unit(E, 11); A->Life = ECombatLife::Downed; A->HP = 0; A->RescueTurnsLeft = 2; A->Cell = {5, 5}; }, nullptr},
         {TEXT("sight blocked"), [](FCombatEncounter& E) { E.BlockedCells = {{2, 1}}; Unit(E, 20)->Cell = {3, 1}; Unit(E, 21)->Cell = {4, 1}; }, nullptr},
         {TEXT("boxed in"), [](FCombatEncounter& E) { E.BlockedCells = {{0, 1}, {1, 0}}; }, nullptr},
         {TEXT("action spent"), nullptr, [](FCombatBattle& B) { B.Submit({EC::Attack, 10, {}, 20}); }},
@@ -241,6 +242,9 @@ bool FActionFactsMatchLegalityTest::RunTest(const FString& Parameters)
                         if (F.Blockers.Num() > 1 && B.Reason < EActionBlocker::ActionSpent) { Checks.Fail(Context(), TEXT("a turn-level blocker is not alone")); }
                         if (B.Reason >= EActionBlocker::Count) { Checks.Fail(Context(), TEXT("a blocker is out of range")); }
                     }
+                    // The generic fallback reason only stands when nobody of the right kind exists, which no scene does for the hero.
+                    if (Actor == 10 && F.Blockers.Num() == 1 && F.Blockers[0].Reason == EActionBlocker::NoEligibleTarget)
+                    { Checks.Fail(Context(), TEXT("the only reason is the generic fallback, so the ladder missed the real cause")); }
                     (F.bAvailable ? Available : Blocked) += 1;
                 }
             }
@@ -333,7 +337,8 @@ bool FActionFactsReasonsTest::RunTest(const FString& Parameters)
         // Budgets.
         {TEXT("fighter.champion"), TEXT("action spent"), 10, EC::Attack, TEXT("ActionSpent")},
         {TEXT("fighter.champion"), TEXT("action spent"), 10, EC::Potion, TEXT("ActionSpent")},
-        {TEXT("fighter.champion"), TEXT("bonus spent"), 10, EC::SecondWind, TEXT("BonusSpent")},
+        // Spending the bonus action on Second Wind also healed the hero, so no wounded target is left: both are reported.
+        {TEXT("fighter.champion"), TEXT("bonus spent"), 10, EC::SecondWind, TEXT("BonusSpent,NoWoundedTarget")},
         {TEXT("fighter.champion"), TEXT("all movement spent"), 10, EC::Move, TEXT("NoMovementLeft")},
         {TEXT("fighter.champion"), TEXT("boxed in"), 10, EC::Move, TEXT("NoOpenCell")},
         // Resources, with exact held and needed counts.
@@ -353,7 +358,9 @@ bool FActionFactsReasonsTest::RunTest(const FString& Parameters)
         {TEXT("fighter.champion"), TEXT("everyone healthy"), 10, EC::SecondWind, TEXT("NoWoundedTarget")},
         {TEXT("fighter.champion"), TEXT("fresh"), 10, EC::Rescue, TEXT("NoDownedTarget")},
         {TEXT("fighter.champion"), TEXT("foes and ally far away"), 10, EC::Attack, TEXT("OutOfRange(1)")},
-        {TEXT("fighter.champion"), TEXT("foes and ally far away"), 10, EC::Potion, TEXT("OutOfRange(1)")},
+        // A potion may be drunk by its user, so a far-away ally never makes it out of range.
+        {TEXT("fighter.champion"), TEXT("foes and ally far away"), 10, EC::Potion, TEXT("")},
+        {TEXT("fighter.champion"), TEXT("downed ally far away"), 10, EC::Rescue, TEXT("OutOfRange(1)")},
         {TEXT("wizard.evocation"), TEXT("sight blocked"), 10, EC::MagicMissile, TEXT("SightBlocked")},
         // Who may act and what the kit owns stand alone.
         {TEXT("fighter.champion"), TEXT("fresh"), 11, EC::Attack, TEXT("NotYourTurn")},
