@@ -417,7 +417,8 @@ def import_glb(source, staging, skeleton):
 def clip_of(asset):
     name = asset.get_name().lower().replace("|", "_")
     for clip in CLIPS:
-        if name == clip.lower() or name.endswith("_" + clip.lower()):
+        # Interchange names clips <mesh><Clip> (SK_Hero_FighterIdle), no separator; no clip name ends another.
+        if name == clip.lower() or name.endswith(clip.lower()):
             return clip
     return None
 
