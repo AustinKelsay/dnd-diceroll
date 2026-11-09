@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
@@ -59,6 +60,31 @@ FPalette PaletteFor(EBoardTheme Theme)
             {0.52f, 0.52f, 0.5f}, {0.38f, 0.39f, 0.38f}, {0.55f, 0.72f, 0.9f}, {1.0f, 0.95f, 0.85f}, 7.5f, -45.0f, -30.0f, 0.02f};
     }
 }
+
+// Per-biome grade for the themed battle look (#143). Exposure is held in a tight band around a
+// biome-typical scene luminance instead of adapting; the older bias values still apply on top.
+struct FGrade
+{
+    float Vignette, Bloom, FogDensity, Luminance;
+};
+
+FGrade GradeFor(EBoardTheme Theme)
+{
+    switch (Theme)
+    {
+    case EBoardTheme::Ruins: return {0.20f, 0.22f, 0.014f, 0.16f};
+    case EBoardTheme::Vault: return {0.25f, 0.28f, 0.020f, 0.09f};
+    default: return {0.15f, 0.15f, 0.010f, 0.26f};
+    }
+}
+// Exposure band half-width as a luminance ratio (about half a stop either way).
+constexpr float ExposureBand = 1.41f;
+// Theme cameras and shadows. The sun's shadow distance covers the farthest zoom, in reference cm.
+constexpr float OverviewFieldOfView = 50.0f;
+constexpr float SunShadowReach = 7000.0f;
+constexpr int32 MaxShadowedLocalLights = 2;
+// Fog begins past the board as seen from the default zoom, in reference cm.
+constexpr float FogStartReference = 3600.0f;
 
 // The dark-fantasy worlds carry their own baked light; the sun only adds direction and the
 // fog sells depth. Ruins and the vault share the Drowned Vigil world with different grades.
@@ -200,7 +226,8 @@ UPointLightComponent* AExpeditionBattleView::MakeLight(USceneComponent* Parent, 
     Light->SetLightColor(Color);
     Light->SetIntensityUnits(ELightUnits::Candelas);
     Light->SetIntensity(Intensity);
-    Light->SetAttenuationRadius(Radius);
+    // Radii are authored in reference cm like every other length; stretch them with the board.
+    Light->SetAttenuationRadius(Radius * SceneScale());
     Light->SetCastShadows(false);
     Light->RegisterComponent();
     return Light;
@@ -288,28 +315,63 @@ void AExpeditionBattleView::RebuildBoard()
         for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     }
     BuildEffects(Encounter);
+    SelectShadowLights();
     BuildOverlay();
     Show.Reset(Rules().Snapshot());
     // Frame the whole board at the start. The offsets count cells beyond the original 8 x 7 board;
     // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
     if (bOverview) { TargetYaw = -90.0f; }
-    TargetDistance = FramedDistance();
+    TargetDistance = FramedDistance(TargetYaw);
+    bFramed = !bOverview;
+    PanOffset = FVector2D::ZeroVector;
+    LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
 }
 
 float AExpeditionBattleView::FramedDistance() const
 {
+    if (bOverview) { return 300.0f; }
+    // The distance at which the board's corners fit the screen area the HUD leaves free (see CameraRig.h); it anchors the pitch ramp.
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    return bOverview ? 300.0f : 1720.0f + FMath::Max(0, FMath::Max(Encounter.Width - 8, Encounter.Height - 7)) * 70.0f;
+    if (FramedCache.Width != Encounter.Width || FramedCache.Height != Encounter.Height || FramedCache.CellCm != BoardMetric.CellCm || !(FramedCache.Rect == Safe))
+    {
+        const ExpeditionCameraRig::FFit Home = ExpeditionCameraRig::FitDistance(Encounter.Width, Encounter.Height, BoardMetric, ExpeditionCameraRig::HomeYaw, 0.0f, Safe);
+        FramedCache.Width = Encounter.Width; FramedCache.Height = Encounter.Height; FramedCache.CellCm = BoardMetric.CellCm; FramedCache.Rect = Safe;
+        FramedCache.Anchor = FMath::Clamp(Home.Distance, ExpeditionCameraRig::MinFramed, ExpeditionCameraRig::MaxFramed);
+    }
+    return FramedCache.Anchor;
+}
+
+float AExpeditionBattleView::FramedDistance(float ForYaw) const
+{
+    if (bOverview) { return 300.0f; }
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    const float Anchor = FramedDistance();
+    return FMath::Clamp(ExpeditionCameraRig::FitDistance(Encounter.Width, Encounter.Height, BoardMetric, ForYaw, Anchor, Safe).Distance,
+        ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance);
+}
+
+bool AExpeditionBattleView::FramedFits(float ForYaw) const
+{
+    if (bOverview) { return true; }
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    return ExpeditionCameraRig::FitBoard(Encounter.Width, Encounter.Height, BoardMetric, ForYaw, Safe).bFits;
+}
+
+bool AExpeditionBattleView::AtFramedZoom() const
+{
+    return !bOverview && HasRun() && FMath::IsNearlyEqual(TargetDistance, FramedDistance(TargetYaw), 1.0f);
 }
 
 void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
 {
     if (bOverview) { return; }
     TargetYaw = Yaw = InYaw;
-    TargetDistance = Distance = FMath::Clamp(InDistance, 900.0f, 3200.0f);
+    TargetDistance = Distance = FMath::Clamp(InDistance, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance);
+    PanOffset = FVector2D::ZeroVector;
     bCameraPlaced = false;
+    bFramed = AtFramedZoom();
     UpdateCamera(0.0f);
 }
 
@@ -349,14 +411,25 @@ void AExpeditionBattleView::ApplyTheme()
             Light->SetLightColor(Palette.Sun);
             Light->SetIntensity(Palette.SunIntensity);
             Sun->SetActorRotation(FRotator(Palette.SunPitch, Palette.SunYaw, 0.0f));
+            // The key light casts cascaded shadows on the battle board; the tabletop keeps what the map gave it.
+            if (!StarterSunShadows.IsSet()) { StarterSunShadows = Light->CastShadows; }
+            Light->SetCastShadows(bOverview ? StarterSunShadows.GetValue() : true);
+            if (UDirectionalLightComponent* Key = Cast<UDirectionalLightComponent>(Light); Key && !bOverview)
+            {
+                Key->DynamicShadowDistanceMovableLight = SunShadowReach * BoardMetric.Scale();
+                Key->DynamicShadowCascades = 4;
+                Key->CascadeDistributionExponent = 3.0f;
+            }
         }
     }
     // Fog is tuned in reference cm; stretch it with the board so the look matches at any cell size.
     const float FogScale = bOverview ? 1.0f : BoardMetric.Scale();
-    Fog->SetFogDensity(Palette.FogDensity / FogScale);
+    const FGrade Biome = GradeFor(BoardTheme);
+    const bool bBattleLook = Theme && !bOverview;
+    Fog->SetFogDensity((bBattleLook ? Biome.FogDensity : Palette.FogDensity) / FogScale);
     Fog->SetFogHeightFalloff(0.08f);
     Fog->SetFogInscatteringColor(Palette.Fog);
-    Fog->SetStartDistance(1400.0f * FogScale);
+    Fog->SetStartDistance((bBattleLook ? FogStartReference : 1400.0f) * FogScale);
     Fog->SetWorldLocation(FVector(0, 0, -200));
     FPostProcessSettings& Settings = Grade->Settings;
     Settings.bOverride_VignetteIntensity = true;
@@ -378,6 +451,23 @@ void AExpeditionBattleView::ApplyTheme()
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
         Settings.BloomIntensity = 0.45f;
+    }
+    if (bBattleLook)
+    {
+        Settings.VignetteIntensity = Biome.Vignette;
+        Settings.BloomIntensity = Biome.Bloom;
+        // Fixed exposure: a tight luminance band, so the grade does not breathe as the camera moves.
+        Settings.bOverride_AutoExposureMinBrightness = true;
+        Settings.bOverride_AutoExposureMaxBrightness = true;
+        Settings.AutoExposureMinBrightness = Biome.Luminance / ExposureBand;
+        Settings.AutoExposureMaxBrightness = Biome.Luminance * ExposureBand;
+        // No grain, motion blur or depth of field.
+        Settings.bOverride_FilmGrainIntensity = true;
+        Settings.FilmGrainIntensity = 0.0f;
+        Settings.bOverride_MotionBlurAmount = true;
+        Settings.MotionBlurAmount = 0.0f;
+        Settings.bOverride_DepthOfFieldFocalDistance = true;
+        Settings.DepthOfFieldFocalDistance = 0.0f;
     }
 }
 
@@ -764,6 +854,9 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
     CampParts.Add(MakePart(Cone, nullptr, Camp + FVector(3, 2, 22), FVector(0.18f, 0.18f, 0.3f), FLinearColor(1.0f, 0.85f, 0.3f) * 6.0f));
     CampLight = MakeLight(nullptr, Camp + FVector(0, 0, 60), FLinearColor(1.0f, 0.55f, 0.25f), 0.0f, 1400.0f);
     for (FExpeditionPart& Part : CampParts) { Part.Mesh->SetVisibility(false); }
+    // Markers, shots, sparks and the camp are overlays and effects: they never cast shadows.
+    for (TArray<FExpeditionPart>* Group : {&Markers, &ShotMeshes, &SparkMeshes, &CampParts})
+    { for (FExpeditionPart& Part : *Group) { Part.Mesh->SetCastShadow(false); } }
     // The Waystone floats above its pedestal in the vault until the finale is won.
     if (BoardTheme == EBoardTheme::Vault)
     {
@@ -949,42 +1042,178 @@ void AExpeditionBattleView::UpdateEffects()
     }
 }
 
+FVector AExpeditionBattleView::BaseFocus() const
+{
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    FVector Base = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
+    // Lean the view toward whoever is acting so long boards keep the action framed.
+    const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
+    if (FocusId != INDEX_NONE && Show.Unit(FocusId))
+    {
+        const FVector Centre = Base;
+        Base = FMath::Lerp(Base, UnitPosition(FocusId, -BoardMetric.BoardTop()), 0.4f);
+        // At the default zoom the lean may only use the slack that keeps the board's corners inside the safe rect.
+        if (!bOverview)
+        {
+            // The pose actually rendered this frame (mid-orbit the target yaw and distance are not on screen yet).
+            const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+            const FVector2D Leaned = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Base), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+            Base.X = Leaned.X; Base.Y = Leaned.Y;
+        }
+    }
+    return Base;
+}
+
+float AExpeditionBattleView::CameraPitch() const
+{
+    return bOverview ? FMath::RadiansToDegrees(FMath::Atan2(0.62f, 1.5f)) : ExpeditionCameraRig::PitchFor(TargetDistance, FramedDistance());
+}
+
+void AExpeditionBattleView::SetSafeRect(const ExpeditionCameraRig::FSafeRect& Value)
+{
+    if (Value == Safe) { return; }
+    // A camera resting at the default zoom follows the new fit; a zoom the player (or a pose) chose stays.
+    const bool bDefaultZoom = AtFramedZoom();
+    Safe = Value;
+    if (bDefaultZoom) { TargetDistance = FramedDistance(TargetYaw); bFramed = true; }
+}
+
 void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    FVector Desired = bOverview ? FVector(0.0f, 30.0f, OverviewHeight + 22.0f) : BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
-    // Lean the view toward whoever is acting so long boards keep the action framed.
-    const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
-    if (!bOverview && FocusId != INDEX_NONE && Show.Unit(FocusId)) { Desired = FMath::Lerp(Desired, UnitPosition(FocusId, -BoardMetric.BoardTop()), 0.4f); }
-    if (!bCameraPlaced || DeltaSeconds <= 0.0f)
+    Camera->FieldOfView = bOverview ? OverviewFieldOfView : ExpeditionCameraRig::FieldOfView;
+    // Yaw and distance first: the lean and the fit below belong to the pose rendered this frame, not to the targets.
+    const bool bSnap = !bCameraPlaced || DeltaSeconds <= 0.0f;
+    if (bSnap)
     {
-        Focus = Desired; Yaw = TargetYaw; Distance = TargetDistance; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
+        Yaw = TargetYaw; Distance = TargetDistance;
+    }
+    else
+    {
+        Yaw = FMath::FInterpTo(Yaw, TargetYaw, DeltaSeconds, 8.0f);
+        Distance = FMath::FInterpTo(Distance, TargetDistance, DeltaSeconds, 6.0f);
+        if (bFramed && !bOverview && !FMath::IsNearlyEqual(Yaw, TargetYaw, 0.01f))
+        {
+            // Easing yaw and distance independently dips below the fit in between (a long board end-on needs far more than
+            // side-on), so the rendered distance never falls under the fit for the rendered yaw. This is one FitDistance solve
+            // (a 25-unit outward scan plus at most 24 bisections, each four projections: roughly 10^4 flops) per frame, only while a
+            // framed camera is still turning; once the yaw settles the target distance (already the fit) applies without a solve.
+            Distance = FMath::Max(Distance, FramedDistance(Yaw));
+        }
+    }
+    FVector Desired = FVector(0.0f, 30.0f, OverviewHeight + 22.0f);
+    if (!bOverview)
+    {
+        // A new acting unit hands the view back to the auto focus; manual pan stays within the board plus a margin.
+        const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
+        if (FocusId != LastFocusId) { PanOffset = FVector2D::ZeroVector; LastFocusId = FocusId; }
+        const FVector Base = BaseFocus();
+        const FVector2D Clamped = ExpeditionCameraRig::ClampFocus(FVector2D(Base) + PanOffset, Encounter.Width, Encounter.Height, BoardMetric.CellCm);
+        PanOffset = Clamped - FVector2D(Base);
+        Desired = FVector(Clamped.X, Clamped.Y, Base.Z);
+    }
+    FocusTarget = Desired;
+    if (bSnap)
+    {
+        Focus = Desired; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
     }
     else
     {
         Focus = FMath::VInterpTo(Focus, Desired, DeltaSeconds, 2.5f);
-        Yaw = FMath::FInterpTo(Yaw, TargetYaw, DeltaSeconds, 8.0f);
-        Distance = FMath::FInterpTo(Distance, TargetDistance, DeltaSeconds, 6.0f);
+        if (bFramed && !bOverview && PanOffset.IsNearlyZero())
+        {
+            // The eased focus lags the lean, which was limited for an earlier yaw; hold it to what this pose can show.
+            const FVector Centre = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
+            const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+            const FVector2D Held = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+            Focus.X = Held.X; Focus.Y = Held.Y;
+        }
     }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
     const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f * SceneScale() : FVector::ZeroVector;
     const float Radians = FMath::DegreesToRadians(Yaw);
-    // Battles look steeply down at the board; the tabletop gets a low, seated view.
-    const float Reach = bOverview ? 1.5f : 0.62f, Rise = bOverview ? 0.62f : 1.0f;
+    // The tabletop gets a low, seated view. Battles tie pitch to zoom: low and close, steep and far.
     // Distances are reference units; the board camera scales them with the cell (the tabletop is unscaled).
     const float Span = Distance * SceneScale();
-    const FVector Offset(FMath::Cos(Radians) * Span * Reach, FMath::Sin(Radians) * Span * Reach, Span * Rise);
-    // Pan the view left of the focus so the board sits clear of the party cards on the left.
-    const FVector ScreenLeft(-FMath::Sin(Radians), FMath::Cos(Radians), 0.0f);
-    const float Pan = bOverview ? 0.0f : 0.09f;
-    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + ScreenLeft * Span * Pan + Shake);
+    FVector Offset(FMath::Cos(Radians) * Span * 1.5f, FMath::Sin(Radians) * Span * 1.5f, Span * 0.62f);
+    // Battles slide the view so the focus lands in the middle of the screen area the HUD leaves free.
+    FVector Framing = FVector::ZeroVector;
+    if (!bOverview)
+    {
+        const ExpeditionCameraRig::FArm Arm = ExpeditionCameraRig::Arm(Yaw, Distance, ExpeditionCameraRig::PitchFor(Distance, FramedDistance()), SceneScale(), Safe);
+        Offset = Arm.Offset;
+        Framing = Arm.Framing;
+    }
+    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + Framing + Shake);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
 }
 
-// The tabletop is a fixed, composed view; orbit and zoom belong to battles.
-void AExpeditionBattleView::Orbit(float Degrees) { if (!bOverview) { TargetYaw += Degrees; } }
-void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount, 900.0f, 3200.0f); }
+// The tabletop is a fixed, composed view; orbit, zoom and pan belong to battles.
+// A camera resting at the default zoom keeps the board fitted to the HUD-safe rect as the yaw changes (the fit differs per
+// yaw: a long board needs far more distance end-on than side-on); the distance and its pitch then ease to the new fit.
+// A zoom the player chose (nearer or farther than the fit) is kept.
+void AExpeditionBattleView::Orbit(float Degrees)
+{
+    if (bOverview) { return; }
+    // Mid-orbit the target is still the fit for the previous target yaw, so a consecutive orbit stays framed.
+    bFramed = AtFramedZoom();
+    TargetYaw += Degrees;
+    if (bFramed) { TargetDistance = FramedDistance(TargetYaw); }
+}
+void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } bFramed = false; TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance); }
+
+void AExpeditionBattleView::Pan(float Right, float Away)
+{
+    if (bOverview) { return; }
+    const float Radians = FMath::DegreesToRadians(TargetYaw);
+    // The camera sits at (cos, sin) from the focus, so away from it is (-cos, -sin) and screen right is (sin, -cos).
+    const FVector2D Step = (FVector2D(FMath::Sin(Radians), -FMath::Cos(Radians)) * Right + FVector2D(-FMath::Cos(Radians), -FMath::Sin(Radians)) * Away) * SceneScale();
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    const FVector Base = BaseFocus();
+    const FVector2D Clamped = ExpeditionCameraRig::ClampFocus(FVector2D(Base) + PanOffset + Step, Encounter.Width, Encounter.Height, BoardMetric.CellCm);
+    PanOffset = Clamped - FVector2D(Base);
+}
+
+int32 AExpeditionBattleView::ShadowCastingLights() const
+{
+    int32 Count = 0;
+    for (TActorIterator<ADirectionalLight> Sun(GetWorld()); Sun; ++Sun)
+    { if (ULightComponent* Light = Sun->GetLightComponent()) { Count += Light->CastShadows ? 1 : 0; } }
+    for (const UActorComponent* Component : Spawned)
+    { if (const ULightComponent* Light = Cast<ULightComponent>(Component)) { Count += Light->CastShadows ? 1 : 0; } }
+    return Count;
+}
+
+TArray<FVector> AExpeditionBattleView::ShadowedLightPositions() const
+{
+    TArray<FVector> Positions;
+    for (const UActorComponent* Component : Spawned)
+    { if (const ULightComponent* Light = Cast<ULightComponent>(Component)) { if (Light->CastShadows) { Positions.Add(Light->GetComponentLocation()); } } }
+    return Positions;
+}
+
+float AExpeditionBattleView::FlameLightRadius() const
+{
+    for (const UPointLightComponent* Light : Flames) { if (Light) { return Light->AttenuationRadius; } }
+    return 0.0f;
+}
+
+void AExpeditionBattleView::SelectShadowLights()
+{
+    if (bOverview) { return; }
+    // The flame lights nearest the board centre cast shadows; ties go to the earlier light. Everything else stays unshadowed.
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    const FVector Centre = GetActorTransform().TransformPosition(BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f)));
+    TArray<TPair<float, int32>> Order;
+    for (int32 Index = 0; Index < Flames.Num(); ++Index)
+    {
+        if (!Flames[Index]) { continue; }
+        Order.Add(TPair<float, int32>(FVector::DistSquared2D(Flames[Index]->GetComponentLocation(), Centre), Index));
+    }
+    Order.Sort([](const TPair<float, int32>& A, const TPair<float, int32>& B) { return A.Key < B.Key || (A.Key == B.Key && A.Value < B.Value); });
+    for (int32 Rank = 0; Rank < Order.Num(); ++Rank) { Flames[Order[Rank].Value]->SetCastShadows(Rank < MaxShadowedLocalLights); }
+}
 
 bool AExpeditionBattleView::CursorCell(APlayerController* Controller, FIntPoint& Cell) const
 {
@@ -1352,6 +1581,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         {
             Scenery.Add(MakePart(Flame, nullptr, At + FVector(0, 0, BowlTop - 4.0f), FVector::OneVector, FLinearColor::White));
             AddSway(Scenery.Last().Mesh, 0.0f, 0.16f);
+            Scenery.Last().Mesh->SetCastShadow(false);
         }
         Flames.Add(MakeLight(nullptr, At + FVector(0, 0, BowlTop + 70.0f), FLinearColor(1.0f, 0.55f, 0.25f), 40.0f, 900.0f));
         FlameStrength.SetNum(Flames.Num());

@@ -11,7 +11,7 @@ enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip };
 /** Which dock action a Tooltip shot chooses, as its key does: A, F, M, R, P. */
 enum class ECaptureAction : uint8 { Attack, Special1, Special2, Rescue, Potion };
 
-/** One fixed pose from the poses file. A Distance of zero means the board's framed default. */
+/** One fixed pose from the poses file. A Distance of zero means the board's framed default; FarDistance (negative) means the far zoom stop for the yaw. */
 struct DNDDICEROLL_API FCaptureShot
 {
     FString Name;
@@ -37,7 +37,9 @@ namespace ExpeditionCapture
 /** The camera distance range a battle allows, in reference units (cm for the 110 cm r001 cell; the camera
  * scales them by the board metric). Poses outside it are rejected. */
 constexpr float MinDistance = 900.0f;
-constexpr float MaxDistance = 3200.0f;
+constexpr float MaxDistance = 6400.0f;
+/** Distance sentinel for "far": the zoom stop where the pitch ramp ends (ExpeditionCameraRig::FarStop of the framed distance). */
+constexpr float FarDistance = -1.0f;
 constexpr int32 MaxSettleFrames = 1200;
 
 /** True when the command line asks for a capture run. A capture run binds no player input, so a

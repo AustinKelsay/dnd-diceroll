@@ -18,7 +18,7 @@
       "name": "battle-yawm90-far",
       "mode": "battle",
       "yaw": -90,
-      "distance": 3000
+      "distance": "far"
     },
     {
       "name": "battle-yaw000-near",
@@ -36,7 +36,7 @@
       "name": "battle-yaw000-far",
       "mode": "battle",
       "yaw": 0,
-      "distance": 3000
+      "distance": "far"
     },
     {
       "name": "battle-yaw090-near",
@@ -54,7 +54,7 @@
       "name": "battle-yaw090-far",
       "mode": "battle",
       "yaw": 90,
-      "distance": 3000
+      "distance": "far"
     },
     {
       "name": "battle-yaw180-near",
@@ -72,7 +72,7 @@
       "name": "battle-yaw180-far",
       "mode": "battle",
       "yaw": 180,
-      "distance": 3000
+      "distance": "far"
     },
     {
       "name": "targeting-yawm90-default",

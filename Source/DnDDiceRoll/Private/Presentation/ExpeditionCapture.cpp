@@ -14,6 +14,10 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "UnrealClient.h"
+#if WITH_EDITOR
+#include "AssetCompilingManager.h"
+#include "ShaderCompiler.h"
+#endif
 
 namespace
 {
@@ -137,9 +141,10 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             const TSharedPtr<FJsonValue> Distance = (*Entry)->TryGetField(TEXT("distance"));
             FString Word;
             double Number = 0.0;
-            if (Distance.IsValid() && Distance->TryGetString(Word) && Word == TEXT("default")) { Shot.Distance = 0.0f; }
+            if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("default"), ESearchCase::CaseSensitive)) { Shot.Distance = 0.0f; }
+            else if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("far"), ESearchCase::CaseSensitive)) { Shot.Distance = FarDistance; }
             else if (Distance.IsValid() && Distance->Type == EJson::Number && Distance->TryGetNumber(Number) && Number >= MinDistance && Number <= MaxDistance) { Shot.Distance = static_cast<float>(Number); }
-            else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
+            else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\", \"far\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
         }
         Out.Shots.Add(Shot);
     }
@@ -218,7 +223,10 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Tooltip:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
-        Board->SnapCamera(Shot.Yaw, Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance());
+        // Default frames the board at that yaw; far is the end of the pitch ramp (FarStop of the home fit), never nearer than the default at that yaw, which can exceed it on a wide board.
+        const float Framed = Board->FramedDistance(Shot.Yaw);
+        const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? FMath::Max(ExpeditionCameraRig::FarStop(Board->FramedDistance()), Framed) : Shot.Distance > 0.0f ? Shot.Distance : Framed;
+        Board->SnapCamera(Shot.Yaw, Wanted);
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         if (Shot.Mode == ECaptureMode::Tooltip)
         {
@@ -323,6 +331,17 @@ void FExpeditionCaptureDirector::Tick()
     }
     case EStage::Settling:
         if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
+#if WITH_EDITOR
+        // Shaders or textures still compiling would be captured as placeholders (a changed material needs new
+        // shader permutations): finish them, then settle a few frames more so the shot uses the real ones.
+        if ((GShaderCompilingManager && GShaderCompilingManager->IsCompiling()) || FAssetCompilingManager::Get().GetNumRemainingAssets() > 0)
+        {
+            if (GShaderCompilingManager) { GShaderCompilingManager->FinishAllCompilation(); }
+            FAssetCompilingManager::Get().FinishAllCompilation();
+            StageFrames = FMath::Max(0, Poses.SettleFrames - 10);
+            return;
+        }
+#endif
         {
             Pending.File = Pending.Shot.Name + TEXT(".png");
             const FString Path = FPaths::Combine(OutputDir, Pending.File);

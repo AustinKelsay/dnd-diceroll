@@ -423,12 +423,14 @@ class GalleryTests(unittest.TestCase):
 
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
+        self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 23)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
                {"version": 1, "shots": ["x"]}, {"version": 1, "shots": [{"mode": "start"}]}, {"version": 1, "shots": [{"name": "a b", "mode": "start"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "orbit"}]}, {"version": 1, "shots": [{"name": "a", "mode": "battle", "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": 100}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": "near"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": "Far"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 500, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "start"}, {"name": "a", "mode": "start"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "tooltip", "yaw": 0, "distance": 1300}]},
