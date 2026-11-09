@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Combat/ActionFacts.h"
 #include "Combat/CombatBattle.h"
 #include "GameFramework/HUD.h"
 #include "ExpeditionHUD.generated.h"
@@ -16,6 +17,12 @@ struct FActionTagRequest
     FName ButtonId;
     FString Cost;
     FString Usage;
+    FString Label;
+    /** The text scales the dock drew with, after fitting the button. Never below the dock's minimums; bClipped says the text was cut instead. */
+    float CostScale = 0.0f;
+    float UsageScale = 0.0f;
+    float LabelScale = 0.0f;
+    bool bClipped = false;
     /** The button's rectangle in viewport pixels. */
     FBox2D Box = FBox2D(ForceInit);
 };
@@ -42,6 +49,9 @@ class DNDDICEROLL_API AExpeditionHUD : public AHUD
 {
     GENERATED_BODY()
 public:
+    /** Smallest text scales the action dock uses; longer text is cut with an ellipsis rather than shrunk further (#58). */
+    static constexpr float MinDockTagScale = 0.58f;
+    static constexpr float MinDockLabelScale = 0.62f;
     virtual void DrawHUD() override;
     bool ButtonAt(FVector2D ScreenPosition, FName& Id) const;
     /** Panels that should swallow clicks instead of passing them to the board. */
@@ -69,6 +79,10 @@ public:
     const TArray<FActionTagRequest>& ActionTagsRequested() const { return TagsRequested; }
     /** The action tooltip the last DrawHUD asked to draw (hover, or the mode chosen by key), or null. */
     const FActionTooltipRequest* ActionTooltipRequested() const { return bTooltipRequested ? &TooltipRequested : nullptr; }
+    /** How many times the dock rebuilt its facts and text: once per change of combat state, not once per frame. */
+    int32 DockRebuilds() const { return DockRebuildCount; }
+    /** The lines the build picker's details panel asked to draw for the shown build's abilities, from facts: name, then its cost and usage. */
+    const TArray<FString>& BuildPickerLinesRequested() const { return PickerLines; }
     /** Test support: act as if the pointer were at this viewport position; a negative position returns to the physical pointer. */
     void PreviewPointer(FVector2D ViewportPosition) { PointerPreview = ViewportPosition; }
     /** Whether the last draw requested keyboard inspection brackets, before projection. */
@@ -78,6 +92,27 @@ public:
 private:
     int32 DetailUnitId = INDEX_NONE;
     TArray<FActionTagRequest> TagsRequested;
+    TArray<FString> PickerLines;
+    /** One dock button as the facts describe it, kept until the combat state changes. */
+    struct FDockEntry
+    {
+        FActionFacts Facts;
+        FName ButtonId;
+        FString Label, Key, Cost, Usage, Effect;
+        FLinearColor Accent = FLinearColor::White;
+        bool bEnabled = false;
+        /** The Attack / Move button: its tooltip also explains Move. */
+        bool bAttackMove = false;
+    };
+    TArray<FDockEntry> DockEntries;
+    FActionFacts DockMove;
+    FCombatSnapshot DockSnapshot;
+    bool bDockValid = false;
+    int32 DockRebuildCount = 0;
+    void RebuildDock(const FCombatBattle& Rules, const FCombatantState& Hero);
+    /** The scale text needs to fit MaxWidth, never below Min; bClipped is set when even Min does not fit. */
+    float FitScale(const FString& Value, float Base, float Min, float MaxWidth, bool& bClipped) const;
+    FString Ellipsize(const FString& Value, float Scale, float MaxWidth) const;
     FActionTooltipRequest TooltipRequested;
     bool bTooltipRequested = false;
     FVector2D PointerPreview = FVector2D(-1, -1);
@@ -117,7 +152,7 @@ private:
     bool Hovered(float X, float Y, float Width, float Height) const;
     bool Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled = true, bool bSelected = false, FLinearColor Accent = FLinearColor(0.95f, 0.78f, 0.4f), float LabelScale = 0.92f);
     /** One dock button: label, cost pill on the top edge, usage line below, key hint. Hover counts even when the action is unavailable. */
-    bool DockButton(FName Id, const FString& Label, const FString& Key, const FString& Cost, const FString& Usage, float X, float Y, bool bEnabled, bool bSelected, FLinearColor Accent);
+    bool DockButton(const FDockEntry& Entry, bool bTags, float X, float Y, bool bSelected, FActionTagRequest& Tag);
     void DrawActionTooltip(const FActionTooltipRequest& Request, FLinearColor Accent, float DockY);
     void Persist(float X, float Y, float Width, float Height) { Persistent.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height))); }
     float StatusStripWidth() const;

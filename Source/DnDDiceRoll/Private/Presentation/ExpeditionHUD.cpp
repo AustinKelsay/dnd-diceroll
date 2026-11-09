@@ -262,6 +262,7 @@ void AExpeditionHUD::DrawHUD()
     ReachRequested = 0;
     DetailUnitId = INDEX_NONE;
     TagsRequested.Reset();
+    PickerLines.Reset();
     bTooltipRequested = false;
     bCursorRequested = false;
     bTransientButtons = false;
@@ -790,26 +791,109 @@ namespace
 // Compact action dock: a thin bezel for the turn's budgets above one row of buttons. Each button carries
 // a cost pill on its top edge and a usage line under its name, both inside the button (#58).
 constexpr float DockButtonWidth = 104, DockButtonHeight = 42, DockGap = 4, DockBezel = 20, DockPad = 8, DockFoot = 4, DockMargin = 8;
-constexpr float PillScale = 0.6f, UsageScale = 0.6f, DockLabelScale = 0.74f;
+constexpr float TagScale = 0.62f, DockLabelScale = 0.74f;
+// Text on an unavailable button: lighter than before so it reads on the dark button, yet cool grey against the warm text of an available one.
+const FLinearColor DisabledLabel(0.66f, 0.69f, 0.74f);
+const FLinearColor DisabledTag(0.58f, 0.61f, 0.66f);
+const FLinearColor UsageColor(0.82f, 0.76f, 0.64f);
 }
 
-bool AExpeditionHUD::DockButton(FName Id, const FString& Label, const FString& Key, const FString& Cost, const FString& Usage, float X, float Y, bool bEnabled, bool bSelected, FLinearColor Accent)
+float AExpeditionHUD::FitScale(const FString& Value, float Base, float Min, float MaxWidth, bool& bClipped) const
+{
+    const float Natural = Measure(Value, Base).X;
+    if (Natural <= MaxWidth) { return Base; }
+    const float Needed = Base * MaxWidth / Natural;
+    if (Needed >= Min) { return Needed; }
+    bClipped = true;
+    return Min;
+}
+
+FString AExpeditionHUD::Ellipsize(const FString& Value, float Scale, float MaxWidth) const
+{
+    if (Measure(Value, Scale).X <= MaxWidth) { return Value; }
+    for (int32 Keep = Value.Len() - 1; Keep > 0; --Keep)
+    {
+        const FString Cut = Value.Left(Keep).TrimEnd() + TEXT("...");
+        if (Measure(Cut, Scale).X <= MaxWidth) { return Cut; }
+    }
+    return FString();
+}
+
+void AExpeditionHUD::RebuildDock(const FCombatBattle& Rules, const FCombatantState& Hero)
+{
+    ++DockRebuildCount;
+    DockEntries.Reset();
+    const int32 Id = Hero.Id;
+    const FCombatSnapshot& Snapshot = Rules.Snapshot();
+    const auto Abilities = FBuildCatalog::Abilities(Hero);
+    DockMove = FActionFactsQuery::For(Rules, Id, ECombatCommandType::Move);
+    // The bar is the facts' own list; Move shares the Attack button.
+    TArray<ECombatCommandType> Bar = FActionFactsQuery::BarFor(Rules, Id);
+    Bar.Remove(ECombatCommandType::Move);
+    int32 Special = 0;
+    for (const ECombatCommandType Command : Bar)
+    {
+        FDockEntry Entry;
+        Entry.Facts = FActionFactsQuery::For(Rules, Id, Command);
+        Entry.ButtonId = TEXT("EndTurn");
+        Entry.Label = ExpeditionStyle::ActionName(Command);
+        Entry.Key = TEXT("Space");
+        Entry.Accent = Gold;
+        Entry.bEnabled = Entry.Facts.bAvailable;
+        Entry.Cost = ExpeditionStyle::CostPillText(Entry.Facts);
+        Entry.Usage = ExpeditionStyle::UsageTagText(Entry.Facts);
+        if (Command == ECombatCommandType::Attack)
+        {
+            Entry.ButtonId = TEXT("ModeAttack"); Entry.Label = TEXT("Attack / Move"); Entry.Key = TEXT("A"); Entry.Accent = FLinearColor(0.95f, 0.78f, 0.4f);
+            Entry.bEnabled = Entry.Facts.bAvailable || DockMove.bAvailable;
+            Entry.Cost = ExpeditionStyle::AttackMovePillText(Entry.Facts, DockMove, Snapshot.MovementLeft);
+            Entry.Effect = FCombatBattle::DescribeAction(Command);
+            Entry.bAttackMove = true;
+        }
+        else if (Command == ECombatCommandType::Rescue) { Entry.ButtonId = TEXT("ModeRescue"); Entry.Key = TEXT("R"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
+        else if (Command == ECombatCommandType::Potion) { Entry.ButtonId = TEXT("ModePotion"); Entry.Label = TEXT("Potion"); Entry.Key = TEXT("P"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
+        else if (Command != ECombatCommandType::EndTurn)
+        {
+            Entry.ButtonId = Special == 0 ? TEXT("ModeRole") : TEXT("Maneuver"); Entry.Key = Special == 0 ? TEXT("F") : TEXT("M"); Entry.Accent = Sky; ++Special;
+            const FAbilityFacts* Ability = Abilities.FindByPredicate([Command](const FAbilityFacts& A) { return A.Command == Command; });
+            Entry.Label = Ability ? Ability->Name : Entry.Facts.Name;
+            Entry.Effect = Ability ? Ability->Description : FCombatBattle::DescribeAction(Command);
+        }
+        DockEntries.Add(MoveTemp(Entry));
+    }
+}
+
+bool AExpeditionHUD::DockButton(const FDockEntry& Entry, bool bTags, float X, float Y, bool bSelected, FActionTagRequest& Tag)
 {
     const float Width = DockButtonWidth, Height = DockButtonHeight;
+    const bool bEnabled = Entry.bEnabled;
     const bool bHover = Hovered(X, Y, Width, Height);
-    Button(Id, FString(), FString(), X, Y, Width, Height, bEnabled, bSelected, Accent, DockLabelScale);
-    const FLinearColor LabelColor = bEnabled ? (bSelected ? Accent : Parchment) : FLinearColor(0.45f, 0.48f, 0.52f);
-    const FLinearColor Quiet = bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f);
+    // An unavailable button never takes the selected fill: its selection is a neutral frame, so it cannot pass for an available one.
+    Button(Entry.ButtonId, FString(), FString(), X, Y, Width, Height, bEnabled, bSelected && bEnabled, Entry.Accent, DockLabelScale);
+    if (bSelected && !bEnabled) { Frame(FLinearColor(0.78f, 0.8f, 0.84f, 0.9f), X, Y, Width, Height, 2.0f); }
+    const FLinearColor LabelColor = bEnabled ? (bSelected ? Entry.Accent : Parchment) : DisabledLabel;
+    const FLinearColor TagColor = bEnabled ? UsageColor : DisabledTag;
+    const FString Cost = bTags ? Entry.Cost : FString();
+    const FString Usage = bTags ? Entry.Usage : FString();
+    const float PillMax = Width - 20, TextMax = Width - 10;
+    bool bClipped = false;
+    const float CostScale = FitScale(Cost, TagScale, MinDockTagScale, PillMax - 8, bClipped);
+    const float UsageScale = FitScale(Usage, TagScale, MinDockTagScale, TextMax, bClipped);
+    const float LabelScale = FitScale(Entry.Label, DockLabelScale, MinDockLabelScale, TextMax, bClipped);
     if (!Cost.IsEmpty())
     {
-        const float PillWidth = FMath::Min(Measure(Cost, PillScale).X + 8, Width - 28);
-        Rect(WithAlpha(Accent, bEnabled ? 0.26f : 0.09f), X + 4, Y + 3, PillWidth, 11);
-        Text(Cost, X + 4 + PillWidth * 0.5f, Y + 3.5f, bEnabled ? Accent : Quiet, PillScale, EAlign::Center, PillWidth - 4);
+        const FString Shown = Ellipsize(Cost, CostScale, PillMax - 8);
+        const float PillWidth = Measure(Shown, CostScale).X + 8;
+        Rect(WithAlpha(bEnabled ? Entry.Accent : FLinearColor(0.6f, 0.62f, 0.66f), bEnabled ? 0.26f : 0.16f), X + 4, Y + 3, PillWidth, 11);
+        Text(Shown, X + 4 + PillWidth * 0.5f, Y + 3.5f, bEnabled ? Entry.Accent : DisabledTag, CostScale, EAlign::Center);
     }
-    Text(Key, X + Width - 5, Y + 3.5f, Quiet, PillScale, EAlign::Right, 24);
-    const bool bTags = !Cost.IsEmpty() || !Usage.IsEmpty();
-    Text(Label, X + Width * 0.5f, bTags ? Y + 15 : Y + 14, LabelColor, DockLabelScale, EAlign::Center, Width - 10);
-    Text(Usage, X + Width * 0.5f, Y + 29, Quiet, UsageScale, EAlign::Center, Width - 8);
+    Text(Entry.Key, X + Width - 5, Y + 3.5f, TagColor, TagScale, EAlign::Right);
+    const bool bHasTags = !Cost.IsEmpty() || !Usage.IsEmpty();
+    Text(Ellipsize(Entry.Label, LabelScale, TextMax), X + Width * 0.5f, bHasTags ? Y + 15 : Y + 14, LabelColor, LabelScale, EAlign::Center);
+    Text(Ellipsize(Usage, UsageScale, TextMax), X + Width * 0.5f, Y + 29, TagColor, UsageScale, EAlign::Center);
+    Tag.Command = Entry.Facts.Command; Tag.ButtonId = Entry.ButtonId; Tag.Cost = Cost; Tag.Usage = Usage; Tag.Label = Entry.Label;
+    Tag.CostScale = Cost.IsEmpty() ? 0.0f : CostScale; Tag.UsageScale = Usage.IsEmpty() ? 0.0f : UsageScale; Tag.LabelScale = LabelScale; Tag.bClipped = bClipped;
+    Tag.Box = FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S);
     return bHover;
 }
 
@@ -818,7 +902,7 @@ void AExpeditionHUD::DrawActionTooltip(const FActionTooltipRequest& Request, FLi
     constexpr float TipScale = 0.66f, LineHeight = 16.0f, TipWidth = 360.0f;
     TArray<TPair<FString, FLinearColor>> Lines;
     Lines.Add({Request.Headline, Accent});
-    for (const FString& Line : Request.Usage) { Lines.Add({Line, Muted}); }
+    for (const FString& Line : Request.Usage) { Lines.Add({Line, UsageColor}); }
     for (const FString& Line : Wrap(Request.Effect, TipWidth - 24, TipScale)) { Lines.Add({Line, Parchment}); }
     for (const FString& Reason : Request.Reasons) { Lines.Add({Reason, Danger}); }
     const float Height = 14 + Lines.Num() * LineHeight;
@@ -849,12 +933,14 @@ void AExpeditionHUD::DrawActionBar()
         Text(FString::Printf(TEXT("%s is deciding%s"), *Active->Name, *FString::ChrN(Dots, TEXT('.'))), W * 0.5f, H - DockMargin - 26, Danger, 0.85f, EAlign::Center, 244);
         return;
     }
-    const int32 Id = Active->Id;
-    const auto Abilities = FBuildCatalog::Abilities(*Active);
-    // The bar is the facts' own list; Move shares the Attack button.
-    TArray<ECombatCommandType> Bar = FActionFactsQuery::BarFor(Rules, Id);
-    Bar.Remove(ECombatCommandType::Move);
-    const int32 Count = Bar.Num();
+    // The facts and their words depend only on the combat state, so they are rebuilt when it changes, not every frame.
+    if (!bDockValid || !FCombatSnapshot::StaticStruct()->CompareScriptStruct(&DockSnapshot, &Snapshot, 0))
+    {
+        RebuildDock(Rules, *Active);
+        DockSnapshot = Snapshot;
+        bDockValid = true;
+    }
+    const int32 Count = DockEntries.Num();
     const float RowWidth = Count * (DockButtonWidth + DockGap) - DockGap;
     const float DockWidth = RowWidth + 2 * DockPad;
     const float DockX = W * 0.5f - DockWidth * 0.5f;
@@ -879,70 +965,31 @@ void AExpeditionHUD::DrawActionBar()
     const ECombatCommandType Mode = Player->Action();
     // Tags and tooltips belong to a turn the player can act in: not under Help, Records, the return question or a playback.
     const bool bShowTags = Player->ShowsTargeting();
-    const FActionFacts MoveFacts = FActionFactsQuery::For(Rules, Id, ECombatCommandType::Move);
-    struct FTip { FActionFacts Facts; FString Effect; FLinearColor Accent; bool bBoth = false; };
-    TOptional<FTip> HoverTip, ModeTip;
-    int32 Column = 0, Special = 0;
-    for (const ECombatCommandType Command : Bar)
+    const FDockEntry* HoverEntry = nullptr;
+    const FDockEntry* ModeEntry = nullptr;
+    for (int32 Column = 0; Column < Count; ++Column)
     {
-        const FActionFacts Facts = FActionFactsQuery::For(Rules, Id, Command);
-        const float ButtonX = Left + Column * Step;
-        FName ButtonId = TEXT("EndTurn");
-        FString Label = ExpeditionStyle::ActionName(Command), Key = TEXT("Space"), Effect;
-        FLinearColor Accent = Gold;
-        bool bEnabled = Facts.bAvailable;
-        FString Cost = ExpeditionStyle::CostPillText(Facts);
-        if (Command == ECombatCommandType::Attack)
-        {
-            ButtonId = TEXT("ModeAttack"); Label = TEXT("Attack / Move"); Key = TEXT("A"); Accent = FLinearColor(0.95f, 0.78f, 0.4f);
-            bEnabled = Facts.bAvailable || MoveFacts.bAvailable;
-            Cost = ExpeditionStyle::AttackMovePillText(Facts, MoveFacts, Snapshot.MovementLeft);
-            Effect = FCombatBattle::DescribeAction(Command);
-        }
-        else if (Command == ECombatCommandType::Rescue) { ButtonId = TEXT("ModeRescue"); Key = TEXT("R"); Accent = Safe; Effect = FCombatBattle::DescribeAction(Command); }
-        else if (Command == ECombatCommandType::Potion) { ButtonId = TEXT("ModePotion"); Label = TEXT("Potion"); Key = TEXT("P"); Accent = Safe; Effect = FCombatBattle::DescribeAction(Command); }
-        else if (Command != ECombatCommandType::EndTurn)
-        {
-            ButtonId = Special == 0 ? TEXT("ModeRole") : TEXT("Maneuver"); Key = Special == 0 ? TEXT("F") : TEXT("M"); Accent = Sky; ++Special;
-            const FAbilityFacts* Ability = Abilities.FindByPredicate([Command](const FAbilityFacts& A) { return A.Command == Command; });
-            Label = Ability ? Ability->Name : Facts.Name;
-            Effect = Ability ? Ability->Description : FCombatBattle::DescribeAction(Command);
-        }
-        const FString Usage = ExpeditionStyle::UsagePillText(Facts);
-        const bool bHover = DockButton(ButtonId, Label, Key, bShowTags ? Cost : FString(), bShowTags ? Usage : FString(), ButtonX, Y, bEnabled, Mode == Command && Command != ECombatCommandType::EndTurn, Accent);
-        if (bShowTags)
-        {
-            FActionTagRequest Tag;
-            Tag.Command = Command; Tag.ButtonId = ButtonId; Tag.Cost = Cost; Tag.Usage = Usage;
-            Tag.Box = FBox2D(FVector2D(ButtonX, Y) * S, FVector2D(ButtonX + DockButtonWidth, Y + DockButtonHeight) * S);
-            TagsRequested.Add(Tag);
-            if (Command != ECombatCommandType::EndTurn)
-            {
-                const FTip Tip{Facts, Effect, Accent, Command == ECombatCommandType::Attack};
-                if (bHover) { HoverTip = Tip; }
-                if (Player->ModeTipActive() && Mode == Command) { ModeTip = Tip; }
-            }
-        }
-        ++Column;
+        const FDockEntry& Entry = DockEntries[Column];
+        FActionTagRequest Tag;
+        const bool bHover = DockButton(Entry, bShowTags, Left + Column * Step, Y, Mode == Entry.Facts.Command && Entry.Facts.Command != ECombatCommandType::EndTurn, Tag);
+        if (!bShowTags) { continue; }
+        TagsRequested.Add(Tag);
+        if (Entry.Facts.Command == ECombatCommandType::EndTurn) { continue; }
+        if (bHover) { HoverEntry = &Entry; }
+        if (Player->ModeTipActive() && Mode == Entry.Facts.Command) { ModeEntry = &Entry; }
     }
     // Hover wins over the mode chosen by key; both read the same facts, so they show the same words.
-    const TOptional<FTip>& Shown = HoverTip.IsSet() ? HoverTip : ModeTip;
-    if (Shown.IsSet())
+    const FDockEntry* Shown = HoverEntry ? HoverEntry : ModeEntry;
+    if (Shown)
     {
-        const FActionFacts& Facts = Shown->Facts;
+        const ExpeditionStyle::FActionTooltipText Words = ExpeditionStyle::TooltipText(Shown->Facts, Shown->bAttackMove ? &DockMove : nullptr);
         FActionTooltipRequest& Request = TooltipRequested;
         Request = FActionTooltipRequest();
-        Request.Command = Facts.Command;
-        Request.Headline = ExpeditionStyle::TooltipHeadline(Facts);
-        Request.Usage = ExpeditionStyle::UsageLines(Facts);
+        Request.Command = Shown->Facts.Command;
+        Request.Headline = Words.Headline;
+        Request.Usage = Words.Usage;
         Request.Effect = Shown->Effect;
-        // The Attack / Move button is unavailable only when neither is possible; both lists then explain it.
-        const bool bBlocked = !Facts.bAvailable && (!Shown->bBoth || !MoveFacts.bAvailable);
-        if (bBlocked)
-        {
-            for (const FActionBlocker& Blocker : Facts.Blockers) { Request.Reasons.AddUnique(ExpeditionStyle::BlockerText(Blocker)); }
-            if (Shown->bBoth) { for (const FActionBlocker& Blocker : MoveFacts.Blockers) { Request.Reasons.AddUnique(ExpeditionStyle::BlockerText(Blocker)); } }
-        }
+        Request.Reasons = Words.Reasons;
         bTooltipRequested = true;
         DrawActionTooltip(Request, Shown->Accent, DockY);
     }
@@ -1133,7 +1180,10 @@ void AExpeditionHUD::DrawTitle()
     const float InnerX = RightX + 14, InnerWidth = RightWidth - 28;
     const auto* Build = FBuildCatalog::Find(Hero.BuildId);
     float DetailsEnd = DrawerY + 66;
-    for (const auto& Ability : FBuildCatalog::Abilities(Hero)) { DetailsEnd += 22 + Wrap(Ability.Description, InnerWidth, 0.72f).Num() * 18.0f + 8; }
+    // Each ability: its name, what it costs and needs (from the facts, no battle required), then what it does.
+    auto AbilitySummary = [&Hero](const FAbilityFacts& Ability) { return ExpeditionStyle::AbilitySummaryText(FActionFactsQuery::ForBuild(Hero, Ability.Command)); };
+    for (const auto& Ability : FBuildCatalog::Abilities(Hero))
+    { DetailsEnd += 22 + (Wrap(AbilitySummary(Ability), InnerWidth, 0.72f).Num() + Wrap(Ability.Description, InnerWidth, 0.72f).Num()) * 18.0f + 8; }
     if (Build->SneakDie) { DetailsEnd += 20; }
     if (Build->CriticalThreshold == 19) { DetailsEnd += 20; }
     Panel(RightX, DrawerY, RightWidth, DetailsEnd - DrawerY + 6, Gold, 0.94f);
@@ -1143,6 +1193,9 @@ void AExpeditionHUD::DrawTitle()
     for (const auto& Ability : FBuildCatalog::Abilities(Hero))
     {
         Text(Ability.Name, InnerX, Row, Gold, 0.85f); Row += 22;
+        const FString Summary = AbilitySummary(Ability);
+        PickerLines.Add(Ability.Name); PickerLines.Add(Summary);
+        for (const auto& Line : Wrap(Summary, InnerWidth, 0.72f)) { Text(Line, InnerX, Row, UsageColor, 0.72f); Row += 18; }
         for (const auto& Line : Wrap(Ability.Description, InnerWidth, 0.72f)) { Text(Line, InnerX, Row, Parchment, 0.72f); Row += 18; }
         Row += 8;
     }
