@@ -559,7 +559,7 @@ bool FActionDockSrdTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
     Game.Frame();
     Game.Press(EKeys::O);
-    if (!TestTrue(TEXT("The SRD party resumes in combat"), Game.View->HasRun() && Game.View->InCombat() && Game.View->Rules().IsSrd())) { return false; }
+    if (!TestTrue(TEXT("The SRD party resumes in combat"), Game.View->HasRun() && Game.View->InCombat() && Game.View->Rules().Snapshot().Encounter.Ruleset == ERuleset::SRD)) { return false; }
     Game.Settle();
     FParity Parity;
     int32 Heroes = 0;
