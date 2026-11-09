@@ -48,3 +48,9 @@ _Avoid_: pawn when discussing game rules
 **Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it.
 
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.
+
+**Ruleset**: The rules interpretation selected when an expedition starts, persisted for the whole run and its encounters.
+
+**Compact**: The default authored tactical ruleset with compact class kits and historical seeded behavior; format 4 saves resume in this mode.
+
+**SRD mode**: Opt-in battle rules based on SRD 5.2.1, including death saves, Initiative Disadvantage for surprise and saving-throw-based Grapple/Shove; not a claim of complete tabletop coverage.
