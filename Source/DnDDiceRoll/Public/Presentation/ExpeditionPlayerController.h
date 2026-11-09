@@ -25,6 +25,11 @@ public:
     bool HoverCell(FIntPoint& Cell) const;
     bool KeyboardCell(FIntPoint& Cell) const;
     ECombatCommandType Action() const { return SelectedAction; }
+    /**
+     * True while the action chosen with its key keeps its tooltip up, so the keyboard shows what hover shows (#58).
+     * Cleared by a turn change, a pointer click, acting, ending the turn and the aim preview.
+     */
+    bool ModeTipActive() const { return bModeTip; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
     /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
@@ -76,6 +81,8 @@ public:
     void UpdateMenuFocus();
     /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
     void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
+    /** Capture and test support: choose a mode as its key does, so its tooltip shows. */
+    void PreviewMode(ECombatCommandType Action);
     /** Capture and test support: show the full grid as if the hold key were down. */
     void PreviewFullGrid(bool bShow);
     /** True while the hold-for-full-grid key (Alt) is down or a preview asks for it. */
@@ -100,6 +107,7 @@ private:
     FActionReach ReachCells;
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
+    bool bModeTip = false;
     bool bShowHelp = false;
     bool bShowMenu = false;
     bool bConfirmReturn = false;
@@ -182,6 +190,8 @@ private:
     void BeginDrag();
     void EndDrag();
     void SetMode(ECombatCommandType Action);
+    /** A mode key: selects the mode and keeps its tooltip up. */
+    void KeyMode(ECombatCommandType Action);
     bool AllowsGameplayInput() const;
     bool CanSelectSubclass() const;
 };
