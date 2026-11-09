@@ -256,10 +256,15 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
     if (Result.Type == ECombatCommandType::Special1 || Result.Type == ECombatCommandType::Special2)
     {
         const FCombatantState* SpecialActor = ExpeditionStyle::FindUnit(After, Result.ActorId);
+        bool bSpell = false;
+        if (SpecialActor)
+        {
+            for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*SpecialActor)) { if (Ability.Command == Result.Type) { bSpell = Ability.bSpell; } }
+        }
         for (const auto& Effect : Result.Effects)
         {
             const bool bFar = SpecialActor && FMath::Abs(SpecialActor->Cell.X - Effect.Cell.X) + FMath::Abs(SpecialActor->Cell.Y - Effect.Cell.Y) > 1;
-            const EUnitPose ActorPose = ExpeditionPose::ForEffect(Effect.Effect, bFar);
+            const EUnitPose ActorPose = ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
             Add(0.45f, [this, Effect, Result, ActorPose]()
             {
                 auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }

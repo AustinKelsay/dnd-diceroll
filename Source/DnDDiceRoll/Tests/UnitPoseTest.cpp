@@ -7,6 +7,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Party/BuildCatalog.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionBattleView.h"
@@ -341,6 +342,46 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
             TestTrue(Label + TEXT(": the ally recovers"), Seen.Saw(Scene.Ally, EUnitPose::Recover));
         });
     }
+    {
+        // A spell whose normalized effect is Area (Sculpted Burst, the evocation wizard's Special2) casts; a weapon ability
+        // with the same command (the berserker's Frenzy, a Strike) still swings or shoots.
+        const FAbilityFacts* Burst = nullptr;
+        const FBuildDefinition* Evocation = FBuildCatalog::Find(TEXT("wizard.evocation"));
+        if (Evocation) { Burst = Evocation->Abilities.FindByPredicate([](const FAbilityFacts& A) { return A.Command == ECombatCommandType::Special2; }); }
+        if (!TestTrue(TEXT("The catalog has Sculpted Burst"), Burst && Burst->Name == TEXT("Sculpted Burst") && Burst->Effect == EAbilityEffect::Area)) { return false; }
+        TestTrue(TEXT("Sculpted Burst is a spell"), Burst->bSpell);
+        const FBuildDefinition* Berserker = FBuildCatalog::Find(TEXT("barbarian.berserker"));
+        const FAbilityFacts* Frenzy = Berserker ? Berserker->Abilities.FindByPredicate([](const FAbilityFacts& A) { return A.Command == ECombatCommandType::Special2; }) : nullptr;
+        if (TestNotNull(TEXT("The catalog has Frenzy"), Frenzy)) { TestFalse(TEXT("Frenzy is a weapon ability"), Frenzy->bSpell); }
+        ExpectPose(*this, TEXT("a spell Area effect up close"), ExpeditionPose::ForEffect(EAbilityEffect::Area, false, true), EUnitPose::Cast);
+        ExpectPose(*this, TEXT("a weapon Area effect at range"), ExpeditionPose::ForEffect(EAbilityEffect::Area, true, false), EUnitPose::Ranged);
+        ExpectPose(*this, TEXT("a spell swap still has no clip"), ExpeditionPose::ForEffect(EAbilityEffect::Swap, false, true), EUnitPose::Idle);
+
+        FPoseScene Scene;
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 7))) { return false; }
+        FCombatantState* Hero = Scene.Unit(Scene.Before, Scene.Hero);
+        FCombatantState Wizard;
+        if (!TestTrue(TEXT("The hero becomes the evocation wizard"), FBuildCatalog::Create(TEXT("wizard.evocation"), Scene.Hero, Hero->Name, Wizard))) { return false; }
+        Wizard.Cell = Hero->Cell; Wizard.Side = Hero->Side; Wizard.MaxHP = Wizard.HP = Hero->MaxHP;
+        *Hero = Wizard;
+        Scene.After = Scene.Before;
+        Scene.Unit(Scene.After, Scene.Foe)->HP = Scene.Unit(Scene.Before, Scene.Foe)->HP - 3;
+        FCombatResult Special = MakeResult(ECombatCommandType::Special2, Scene.Hero, Scene.Foe);
+        Special.bHit = true;
+        Special.Damage = 3;
+        FTargetEffect Effect;
+        Effect.TargetId = Scene.Foe;
+        Effect.Effect = EAbilityEffect::Area;
+        Effect.Amount = 3;
+        Effect.Cell = Scene.Unit(Scene.After, Scene.Foe)->Cell;
+        Special.Effects.Add(Effect);
+        RunScene(*this, TEXT("Sculpted Burst"), Scene, Special, [&](const FString& Label, const FSeen& Seen)
+        {
+            TestTrue(Label + TEXT(": the wizard casts"), Seen.Saw(Scene.Hero, EUnitPose::Cast));
+            TestFalse(Label + TEXT(": not a weapon clip"), Seen.Saw(Scene.Hero, EUnitPose::Ranged) || Seen.Saw(Scene.Hero, EUnitPose::Melee));
+            TestTrue(Label + TEXT(": the target flinches"), Seen.Saw(Scene.Foe, EUnitPose::Hit));
+        });
+    }
     return !HasAnyErrors();
 }
 
@@ -464,6 +505,14 @@ int32 ExpectFiguresConverged(FAutomationTestBase& Test, const AExpeditionBattleV
     return Rigged;
 }
 
+// A rigged figure that is Downed or Dead in the committed state: its held end pose is the interesting thing to resume.
+bool HasFallenRig(const AExpeditionBattleView& View)
+{
+    for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants)
+    { if (Unit.Life != ECombatLife::Conscious && View.UnitAnimation(Unit.Id).bSkeletal) { return true; } }
+    return false;
+}
+
 enum class EView : uint8 { Rigged, Static, Primitive };
 
 // Each view lives in its own transient world and is released with it: destroying an actor in a context-less test
@@ -543,6 +592,7 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
     }
 
     // Playback drives the rig; at every speed, and when skipped mid-animation, the figures converge on the committed state.
+    int32 FallenResumed = 0;
     for (const EEnd End : {EEnd::Normal, EEnd::Fast, EEnd::Instant, EEnd::SkipMid})
     {
         const FString Label = FString::Printf(TEXT("ending %d"), static_cast<int32>(End));
@@ -558,6 +608,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         for (int32 Frame = 0; Frame < 3000 && View->InCombat(); ++Frame)
         {
             View->Tick(0.05f);
+            // Stop mid-encounter once a rigged figure has fallen, so Resume below has a held Downed or Death pose to restore.
+            if (!View->IsPresenting() && Moving > 0 && (End != EEnd::SkipMid || Skips > 0) && HasFallenRig(*View)) { break; }
             const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
             if (View->IsPresenting())
             {
@@ -579,18 +631,46 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         if (End == EEnd::SkipMid) { TestTrue(*(Label + TEXT(": the skip was exercised")), Skips > 0); }
-        // Fresh-process Resume of this state: the figures stand or lie as the checkpoint says, at the end of their clips.
+        // Resume of this state: a fresh world and a fresh view read the checkpoint file from disk through the normal Resume
+        // path, the same code a new process runs (it is not a separate process). The figures must stand or lie as the
+        // checkpoint says, at the end of their clips.
         View->Save();
+        TestTrue(*(Label + TEXT(": the checkpoint file was written")), IFileManager::Get().FileExists(*Path));
+        const int32 OriginalRigs = View->SkeletalFigureCount();
+        FExpeditionSnapshot Original;
+        Original.Progress = View->Progress();
+        Original.Battle = View->Rules().Snapshot();
+        const bool bFallen = HasFallenRig(*View);
         AExpeditionBattleView* Resumed = MakeView(World, Path, EView::Rigged);
         if (TestNotNull(TEXT("Resumed view"), Resumed))
         {
             Resumed->Resume();
             Resumed->Tick(0.016f);
-            ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
+            TestTrue(*(Label + TEXT(": the resumed view restored a run")), Resumed->HasRun() && (Resumed->InCombat() || Resumed->Progress().Phase != EExpeditionPhase::Combat));
+            if (Resumed->HasRun())
+            {
+                FExpeditionSnapshot Restored;
+                Restored.Progress = Resumed->Progress();
+                Restored.Battle = Resumed->Rules().Snapshot();
+                TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
+            }
+            int32 ExpectedRigs = 0;
+            for (const FCombatantState& Unit : Resumed->Rules().Snapshot().Encounter.Combatants) { ExpectedRigs += ExpectsRig(Unit) ? 1 : 0; }
+            const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
+            TestTrue(*(Label + TEXT(": the resumed view has rigged figures")), Inspected > 0);
+            TestEqual(*(Label + TEXT(": the resumed rig count matches the original view")), Inspected, OriginalRigs);
+            if (Resumed->InCombat()) { TestEqual(*(Label + TEXT(": the resumed rig count matches the rigged units")), Inspected, ExpectedRigs); }
+            if (bFallen)
+            {
+                ++FallenResumed;
+                TestTrue(*(Label + TEXT(": a fallen rigged figure was resumed")), HasFallenRig(*Resumed));
+            }
             ReleaseView(Resumed);
         }
         ReleaseView(View);
     }
+    // The encounter may not drop a rigged unit at every ending; report how many resumed with one held (Downed or Death).
+    AddInfo(FString::Printf(TEXT("%d of 4 endings resumed with a fallen rigged figure"), FallenResumed));
     ReleaseRigWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();

@@ -8,8 +8,8 @@ asset and instances stay), material instances, texture settings and the data ass
 
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
 skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). Existing rig assets are
-never overwritten: set THEME_RIG_REIMPORT to a comma-separated allow-list (mesh names such as SK_Hero_Fighter,
-SKEL_Humanoid, animations) to delete and reimport exactly those.
+never overwritten and this script never deletes them (a force delete nulls references other assets hold). A
+THEME_RIG_REIMPORT request is validated and then refused: delete the rig assets deliberately in the editor, rerun.
 """
 import json
 import os
@@ -363,7 +363,7 @@ RIG = [
     ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.0, 1.0, 1.0, 0.0)),
     ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.0, 1.0, 1.0, 0.0)),
 ]
-# Explicit allow-list of rig assets to delete and reimport: mesh names, SKEL_Humanoid, animations. Empty by default.
+# Replacement is refused (see refuse_reimport): the allow-list is only validated so the refusal can name the problem.
 REIMPORT = {token.strip() for token in os.environ.get("THEME_RIG_REIMPORT", "").split(",") if token.strip()}
 
 
@@ -380,20 +380,25 @@ def lod_count(mesh):
     return unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem).get_lod_count(mesh)
 
 
-def delete_for_reimport(path, token):
-    if token in REIMPORT and library.does_asset_exist(path):
-        if not library.delete_asset(path):
-            raise RuntimeError("Unable to delete " + path + " for reimport")
-        rig_log("deleted", path, "allow-listed")
-
-
 def check_allow_list():
     known = {name for _, name, _, _ in RIG} | {"SKEL_Humanoid", "animations"}
     if REIMPORT - known:
         raise RuntimeError("THEME_RIG_REIMPORT names unknown assets: " + ", ".join(sorted(REIMPORT - known)))
-    # Everything on the shared skeleton must be rebuilt with it, or the survivors would point at a deleted asset.
-    if "SKEL_Humanoid" in REIMPORT and not known <= REIMPORT:
-        raise RuntimeError("Reimporting SKEL_Humanoid needs every rig asset allow-listed: " + ", ".join(sorted(known)))
+    # Everything on the shared skeleton belongs to one bundle, so a partial request is rejected before anything else.
+    if REIMPORT and not known <= REIMPORT:
+        raise RuntimeError("THEME_RIG_REIMPORT must name the whole rig bundle: " + ", ".join(sorted(known)))
+    for asset_id, name, _, _ in RIG:
+        for suffix in ("", "_LOD1", "_LOD2"):
+            if not os.path.isfile(source_glb(asset_id, name + suffix)):
+                raise RuntimeError("THEME_RIG_REIMPORT: missing source " + source_glb(asset_id, name + suffix))
+
+
+def refuse_reimport():
+    """No side effects. In-place skeletal replacement (Interchange reimport with the shared-skeleton override pipeline
+    and two LOD imports) cannot be made reliable from source alone, and delete_asset would null every reference held by
+    other loaded assets (the theme data asset, maps, other meshes), which recreating the package does not restore."""
+    raise RuntimeError("THEME_RIG_REIMPORT plan is valid, but this script never deletes or replaces rig assets: delete the "
+                       "rig assets deliberately in the editor (fix up references), then rerun without THEME_RIG_REIMPORT.")
 
 
 def source_glb(asset_id, name):
@@ -569,19 +574,14 @@ def import_rig(master, theme):
         unreal.log_warning("THEME_RIG_SKIPPED Art/rig-pilot is not in this checkout")
         return 0
     check_allow_list()
+    if REIMPORT:
+        refuse_reimport()
     names = [name for _, name, _, _ in RIG]
-    for name in names:
-        delete_for_reimport(RIG_FOLDER + "/" + name, name)
-        if name in REIMPORT:
-            delete_for_reimport(THEME + "/Textures/T_" + name, name)
-    delete_for_reimport(SKELETON, "SKEL_Humanoid")
-    for clip in CLIPS:
-        delete_for_reimport(clip_path(clip), "animations")
     # The skeleton, the clips and the fighter come from one import, so they exist together or not at all.
     bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in CLIPS]
     present = [library.does_asset_exist(path) for path in bundle]
     if any(present) and not all(present):
-        raise RuntimeError("Incomplete rig bundle, missing: {}. Add them (and the rest of the bundle) to THEME_RIG_REIMPORT to rebuild.".format(
+        raise RuntimeError("Incomplete rig bundle, missing: {}. Delete the survivors deliberately in the editor and rerun.".format(
             [path for path, here in zip(bundle, present) if not here]))
     found = 0
     for asset_id, name, prop, look in RIG:
@@ -591,7 +591,7 @@ def import_rig(master, theme):
             mesh, texture = unreal.load_asset(package), None
             lods = lod_count(mesh)
             if lods != 3:
-                raise RuntimeError("{} has {} LODs, expected 3; add it to THEME_RIG_REIMPORT to rebuild".format(package, lods))
+                raise RuntimeError("{} has {} LODs, expected 3; delete it deliberately in the editor and rerun".format(package, lods))
             rig_log("mesh", package, "kept", lods)
         else:
             mesh, texture, staging, lods = import_rig_mesh(asset_id, name, unreal.load_asset(SKELETON) if library.does_asset_exist(SKELETON) else None, not all(present) and name == names[0])

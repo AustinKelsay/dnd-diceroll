@@ -21,8 +21,9 @@ DNDDICEROLL_API bool IsLooping(EUnitPose Pose);
 DNDDICEROLL_API EUnitPose Rest(ECombatLife Life);
 /** The actor's clip for a committed command. A ranged attack is one aimed more than one cell away. */
 DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged);
-/** The actor's clip for one effect of a Special1 or Special2 command. */
-DNDDICEROLL_API EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged);
+/** The actor's clip for one effect of a Special1 or Special2 command. A spell (the ability's bSpell fact) casts, whatever its
+ * normalized effect, so a damaging spell is not mistaken for a weapon attack; swaps and mitigation still have no clip. */
+DNDDICEROLL_API EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell = false);
 /** The target's clip when damage lands and it stays on its feet. */
 DNDDICEROLL_API EUnitPose ForDamage();
 /** The clip for a unit newly downed (false) or killed (true). */

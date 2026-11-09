@@ -40,8 +40,9 @@ EUnitPose ForCommand(ECombatCommandType Type, bool bRanged)
     }
 }
 
-EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged)
+EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell)
 {
+    if (bSpell && Effect != EAbilityEffect::Swap && Effect != EAbilityEffect::Mitigation) { return EUnitPose::Cast; }
     switch (Effect)
     {
     case EAbilityEffect::Strike:
