@@ -325,6 +325,7 @@ void AExpeditionBattleView::RebuildBoard()
     // the 70-per-cell pullback (formerly 90) keeps units readable on 16-18 wide boards.
     if (bOverview) { TargetYaw = -90.0f; }
     TargetDistance = FramedDistance(TargetYaw);
+    bFramed = !bOverview;
     PanOffset = FVector2D::ZeroVector;
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
@@ -373,6 +374,7 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     TargetDistance = Distance = FMath::Clamp(InDistance, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance);
     PanOffset = FVector2D::ZeroVector;
     bCameraPlaced = false;
+    bFramed = AtFramedZoom();
     UpdateCamera(0.0f);
 }
 
@@ -1112,8 +1114,9 @@ FVector AExpeditionBattleView::BaseFocus() const
         // At the default zoom the lean may only use the slack that keeps the board's corners inside the safe rect.
         if (!bOverview)
         {
-            const float Pitch = ExpeditionCameraRig::PitchFor(TargetDistance, FramedDistance());
-            const FVector2D Leaned = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Base), Encounter.Width, Encounter.Height, BoardMetric, TargetYaw, TargetDistance, Pitch, Safe);
+            // The pose actually rendered this frame (mid-orbit the target yaw and distance are not on screen yet).
+            const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+            const FVector2D Leaned = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Base), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
             Base.X = Leaned.X; Base.Y = Leaned.Y;
         }
     }
@@ -1131,13 +1134,32 @@ void AExpeditionBattleView::SetSafeRect(const ExpeditionCameraRig::FSafeRect& Va
     // A camera resting at the default zoom follows the new fit; a zoom the player (or a pose) chose stays.
     const bool bDefaultZoom = AtFramedZoom();
     Safe = Value;
-    if (bDefaultZoom) { TargetDistance = FramedDistance(TargetYaw); }
+    if (bDefaultZoom) { TargetDistance = FramedDistance(TargetYaw); bFramed = true; }
 }
 
 void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     Camera->FieldOfView = bOverview ? OverviewFieldOfView : ExpeditionCameraRig::FieldOfView;
+    // Yaw and distance first: the lean and the fit below belong to the pose rendered this frame, not to the targets.
+    const bool bSnap = !bCameraPlaced || DeltaSeconds <= 0.0f;
+    if (bSnap)
+    {
+        Yaw = TargetYaw; Distance = TargetDistance;
+    }
+    else
+    {
+        Yaw = FMath::FInterpTo(Yaw, TargetYaw, DeltaSeconds, 8.0f);
+        Distance = FMath::FInterpTo(Distance, TargetDistance, DeltaSeconds, 6.0f);
+        if (bFramed && !bOverview && !FMath::IsNearlyEqual(Yaw, TargetYaw, 0.01f))
+        {
+            // Easing yaw and distance independently dips below the fit in between (a long board end-on needs far more than
+            // side-on), so the rendered distance never falls under the fit for the rendered yaw. This is one FitDistance solve
+            // (a 25-unit outward scan plus at most 24 bisections, each four projections: roughly 10^4 flops) per frame, only while a
+            // framed camera is still turning; once the yaw settles the target distance (already the fit) applies without a solve.
+            Distance = FMath::Max(Distance, FramedDistance(Yaw));
+        }
+    }
     FVector Desired = FVector(0.0f, 30.0f, OverviewHeight + 22.0f);
     if (!bOverview)
     {
@@ -1150,15 +1172,21 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         Desired = FVector(Clamped.X, Clamped.Y, Base.Z);
     }
     FocusTarget = Desired;
-    if (!bCameraPlaced || DeltaSeconds <= 0.0f)
+    if (bSnap)
     {
-        Focus = Desired; Yaw = TargetYaw; Distance = TargetDistance; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
+        Focus = Desired; bCameraPlaced = DeltaSeconds > 0.0f || bCameraPlaced;
     }
     else
     {
         Focus = FMath::VInterpTo(Focus, Desired, DeltaSeconds, 2.5f);
-        Yaw = FMath::FInterpTo(Yaw, TargetYaw, DeltaSeconds, 8.0f);
-        Distance = FMath::FInterpTo(Distance, TargetDistance, DeltaSeconds, 6.0f);
+        if (bFramed && !bOverview && PanOffset.IsNearlyZero())
+        {
+            // The eased focus lags the lean, which was limited for an earlier yaw; hold it to what this pose can show.
+            const FVector Centre = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
+            const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+            const FVector2D Held = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+            Focus.X = Held.X; Focus.Y = Held.Y;
+        }
     }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
     const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f * SceneScale() : FVector::ZeroVector;
@@ -1187,11 +1215,12 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 void AExpeditionBattleView::Orbit(float Degrees)
 {
     if (bOverview) { return; }
-    const bool bFramed = AtFramedZoom();
+    // Mid-orbit the target is still the fit for the previous target yaw, so a consecutive orbit stays framed.
+    bFramed = AtFramedZoom();
     TargetYaw += Degrees;
     if (bFramed) { TargetDistance = FramedDistance(TargetYaw); }
 }
-void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance); }
+void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } bFramed = false; TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance); }
 
 void AExpeditionBattleView::Pan(float Right, float Away)
 {

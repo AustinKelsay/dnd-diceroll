@@ -229,16 +229,19 @@ namespace ExpeditionCameraRig
      * Moves a focus from the board centre toward Target only as far as keeps the board corners inside the unshrunk safe
      * rect. When the board does not fit at this zoom (zoomed in) the lean is free.
      */
+    /** The lean stops just inside the free area, so a bisection ending on the edge never rounds a corner out of it. */
+    constexpr float LeanFill = 0.99f;
+
     inline FVector2D LimitLean(const FVector2D& Centre, const FVector2D& Target, int32 Width, int32 Height, const FBoardMetric& Metric,
         float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
     {
-        if (!BoardInside(Width, Height, Metric, Centre, Yaw, Distance, Pitch, Safe, 1.0f)) { return Target; }
-        if (BoardInside(Width, Height, Metric, Target, Yaw, Distance, Pitch, Safe, 1.0f)) { return Target; }
+        if (!BoardInside(Width, Height, Metric, Centre, Yaw, Distance, Pitch, Safe, 1.0f)) { return Target; } // the board cannot fit: free lean
+        if (BoardInside(Width, Height, Metric, Target, Yaw, Distance, Pitch, Safe, LeanFill)) { return Target; }
         float Low = 0.0f, High = 1.0f;
         for (int32 Iteration = 0; Iteration < 16; ++Iteration)
         {
             const float Mid = 0.5f * (Low + High);
-            (BoardInside(Width, Height, Metric, Centre + (Target - Centre) * Mid, Yaw, Distance, Pitch, Safe, 1.0f) ? Low : High) = Mid;
+            (BoardInside(Width, Height, Metric, Centre + (Target - Centre) * Mid, Yaw, Distance, Pitch, Safe, LeanFill) ? Low : High) = Mid;
         }
         return Centre + (Target - Centre) * Low;
     }
