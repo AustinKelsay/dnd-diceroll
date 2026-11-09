@@ -473,7 +473,7 @@ def build_card_material(material):
 
 FIGURE_SILHOUETTE_MATERIAL = "M_FigureSilhouette"
 # Bump when build_figure_silhouette_material changes.
-FIGURE_SILHOUETTE_REVISION = "figure-silhouette-2"
+FIGURE_SILHOUETTE_REVISION = "figure-silhouette-3"
 
 
 def figure_silhouette_is_current(material):
@@ -483,7 +483,7 @@ def figure_silhouette_is_current(material):
 def build_figure_silhouette_material(material):
     """Post-process material that draws a hidden figure's silhouette in its side's colour (#145 review, tall kit obstacles).
 
-    Figures render into custom depth with stencil 1 (party) or 2 (enemy). Where CustomDepth is nearer to the camera than SceneDepth by
+    Figures render into custom depth with stencil 1 (party) or 2 (enemy). Where CustomDepth is farther from the camera than SceneDepth by
     more than `Tolerance` cm the figure is behind some other geometry, and the pixel is mixed toward the side colour by `FillAlpha`.
     Where the figure is the nearest thing (custom depth equals scene depth) or no figure is there (stencil 0) the pixel is unchanged.
 
@@ -515,7 +515,8 @@ def build_figure_silhouette_material(material):
 
     tolerance = scalar(material, "Tolerance", 3.0, -1150, 560)
     slope = scalar(material, "Slope", 0.5, -1150, 640)
-    gap = binary(material, unreal.MaterialExpressionSubtract, scene_depth, custom_depth, -900, 100)
+    # A hidden figure is FARTHER than the geometry covering it: its custom depth exceeds the scene depth there.
+    gap = binary(material, unreal.MaterialExpressionSubtract, custom_depth, scene_depth, -900, 100)
     over = binary(material, unreal.MaterialExpressionSubtract, gap, tolerance, -700, 100)
     hidden = unary(material, unreal.MaterialExpressionSaturate, binary(material, unreal.MaterialExpressionMultiply, over, slope, -500, 100), -300, 100)
     # Stencil 0 is "no figure"; 1 is party, 2 is enemy.
