@@ -93,7 +93,8 @@ namespace ExpeditionCameraRig
     };
 
     /** The distance at which the pitch ramp ends at FarPitch for a framed distance. */
-    inline float FarStop(float Framed) { return FMath::Max(FarDistance, Framed * FarStopRatio); }
+    // Clamped to the zoom range: at MaxFramed, 1.4x would land past MaxDistance.
+    inline float FarStop(float Framed) { return FMath::Min(FMath::Max(FarDistance, Framed * FarStopRatio), MaxDistance); }
 
     /** Camera pitch in degrees for a zoom distance; Framed is the board's default distance. Non-decreasing in Distance. */
     inline float PitchFor(float Distance, float Framed)
