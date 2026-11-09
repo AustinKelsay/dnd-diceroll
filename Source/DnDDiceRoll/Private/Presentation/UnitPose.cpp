@@ -25,8 +25,14 @@ EUnitPose Rest(ECombatLife Life)
     return Life == ECombatLife::Dead ? EUnitPose::Death : Life == ECombatLife::Downed ? EUnitPose::Downed : EUnitPose::Idle;
 }
 
-EUnitPose ForCommand(ECombatCommandType Type, bool bRanged)
+bool IsSpellAttack(ECombatCommandType Type, EAdventurerRole Role, bool bRanged)
 {
+    return Type == ECombatCommandType::Attack && (Role == EAdventurerRole::Wizard || (Role == EAdventurerRole::Cleric && bRanged));
+}
+
+EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool bSpellAttack)
+{
+    if (bSpellAttack && Type == ECombatCommandType::Attack) { return EUnitPose::Cast; }
     switch (Type)
     {
     case ECombatCommandType::Move: return EUnitPose::Walk;

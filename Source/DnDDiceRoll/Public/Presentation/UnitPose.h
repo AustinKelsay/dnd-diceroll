@@ -19,8 +19,13 @@ DNDDICEROLL_API const TCHAR* ClipName(EUnitPose Pose);
 DNDDICEROLL_API bool IsLooping(EUnitPose Pose);
 /** The pose the committed state implies once nothing is playing: Death when dead, Downed when downed, otherwise Idle. */
 DNDDICEROLL_API EUnitPose Rest(ECombatLife Life);
-/** The actor's clip for a committed command. A ranged attack is one aimed more than one cell away. */
-DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged);
+/** The actor's clip for a committed command. A ranged attack is one aimed more than one cell away. A spell attack (see
+ * IsSpellAttack) casts at any distance instead of swinging or shooting. */
+DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool bSpellAttack = false);
+/** Presentation: whether a basic Attack is a spell, from the rules reference's fixed profiles. The wizard's basic attack is
+ * Fire Bolt at any distance; the cleric's ranged attack is Sacred Flame (a save in SRD, an attack roll in Compact; a spell in
+ * both). Other roles' basic attacks are weapon attacks, and only Attack is affected (Precision Strike is a weapon maneuver). */
+DNDDICEROLL_API bool IsSpellAttack(ECombatCommandType Type, EAdventurerRole Role, bool bRanged);
 /** The actor's clip for one effect of a Special1 or Special2 command. A spell (the ability's bSpell fact) casts, whatever its
  * normalized effect, so a damaging spell is not mistaken for a weapon attack; swaps and mitigation still have no clip. */
 DNDDICEROLL_API EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell = false);

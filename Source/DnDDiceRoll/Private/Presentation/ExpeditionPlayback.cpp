@@ -355,7 +355,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const bool bRanged = FMath::Abs(Actor->Cell.X - Target->Cell.X) + FMath::Abs(Actor->Cell.Y - Target->Cell.Y) > 1;
     const FString ActorName = Actor->Name, TargetName = Target->Name;
     const EAdventurerRole Role = Actor->AdventurerRole;
-    const EUnitPose ActorPose = ExpeditionPose::ForCommand(Result.Type, bRanged);
+    const EUnitPose ActorPose = ExpeditionPose::ForCommand(Result.Type, bRanged, ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged));
     const bool bArrow = Role == EAdventurerRole::Rogue || (Actor->Side == ECombatSide::Enemy && bRanged);
 
     // Wind up while the d20 (or spell dice) tumble.

@@ -574,8 +574,6 @@ def import_rig(master, theme):
         unreal.log_warning("THEME_RIG_SKIPPED Art/rig-pilot is not in this checkout")
         return 0
     check_allow_list()
-    if REIMPORT:
-        refuse_reimport()
     names = [name for _, name, _, _ in RIG]
     # The skeleton, the clips and the fighter come from one import, so they exist together or not at all.
     bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in CLIPS]
@@ -618,6 +616,10 @@ def import_rig(master, theme):
     return found
 
 
+# A rig replacement request is validated and refused before anything is touched: no master rebuild, no settings, no imports.
+if REIMPORT:
+    check_allow_list()
+    refuse_reimport()
 master = master_material()
 ensure_skeletal_usage(master)
 theme = theme_asset()
