@@ -4,7 +4,7 @@
 - **Owner, branch, baseline, dependencies:** Austin (owner). Lead: Claude Opus 5.5; implementation: Claude Sonnet 5.5 subagents in isolated worktrees. One branch per ticket from `staging`; P0 `feature/139-capture-harness` and spike `spike/140-look-dev` from staging `d5a954e`. #141, #142, #146 and #151 also wait on #50 (PR #137).
 - **Granted authority (2026-11-08):** Austin approved the council plan and its recommendations: a presentation-only lighter grid first, then bigger arenas in #151 after #112/#95 agree; a rigged-cast pilot, then all 13 classes; a dedicated Vault finale world; start P0/P1 now; fresh independent seats for Standards/Spec review. Ultra turn granted 2026-11-08 for builds, automation and short game runs (`--cores 2`, one job at a time; ask before packaging).
 - **Decisions still with the owner:** gate 1 after #140 (camera, filtering, lighting, cell size, skeleton); gate 2 after #148 (vertical slice and performance); a spot check per #150 cast batch; #151 timing with #112 slice 4 and the #95 owner.
-- **Current slice/status and next action:** #139 is implemented and in review; the #140 Blender half is done, and its Unreal A/B captures come next.
+- **Current slice/status and next action:** #139 is implemented and in review; the #140 Blender half is done, and its Unreal A/B captures come next. #145 phase 2 (`feature/145-vigil-world-kit`): source half written and unbuilt (reviewed reimport path, theme data, occluder dither fade, kit placement, tests, docs); the lead builds, runs the import commandlet, runs `Project.Expedition.` and captures it next.
 - **Editor owner and last observed state:** no editor running at the start (2026-11-08); P0 uses `-game` runs only, no editor/MCP.
 
 ## Slice ledger

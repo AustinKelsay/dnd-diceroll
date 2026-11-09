@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Camera/CameraComponent.h"
@@ -287,6 +288,8 @@ void AExpeditionBattleView::ClearPresentation()
     ShotMeshes.Reset(); ShotLights.Reset(); SparkMeshes.Reset(); CampParts.Reset(); WaystoneParts.Reset();
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
+    Occluder = FExpeditionPart(); Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
+    bVigilKit = false; ObstaclePieces = 0; ArchPieces = 0;
 }
 
 void AExpeditionBattleView::RebuildBoard()
@@ -323,7 +326,7 @@ void AExpeditionBattleView::RebuildBoard()
     PanOffset = FVector2D::ZeroVector;
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
-    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f); UpdateOccluder();
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -1377,7 +1380,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
-    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder();
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
@@ -1445,7 +1448,21 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f)));
-    Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White));
+    // The r002 kit is authored at the true 150 cm cell, so under the root the metric scales it is placed at 1 / scale.
+    // The r001 art (110 cm) keeps the root's scale. Only Vigil boards use the r002 world; every board uses the r002 obstacles.
+    const bool bMetric = Theme->bMetricKit;
+    const bool bVigil = bMetric && !bForest;
+    const FVector MetricScale(1.0f / SceneScale());
+    Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), bVigil ? MetricScale : FVector::OneVector, FLinearColor::White));
+    bVigilKit = bVigil;
+    if (bVigil)
+    {
+        if (UStaticMesh* Near = ThemeMesh(Theme->VigilOccluders))
+        {
+            Occluder = MakeOwnMaterialPart(Near, FVector(Center.X, Center.Y, Ground), MetricScale, FRotator::ZeroRotator);
+            Scenery.Add(Occluder);
+        }
+    }
     // The world's ground covers the 18 x 12 footprint, the largest generated board. A custom larger board gets one subtle
     // plain plane just under the surface (never a checkerboard).
     if (Encounter.Width > 18 || Encounter.Height > 12)
@@ -1455,14 +1472,20 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     }
     FRandomStream Random(Seed);
     const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
-    UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
-    for (const FIntPoint& Cell : Encounter.BlockedCells)
+    // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
+    // consumed by the r001 path, so the kit never changes what the fallback draws.
+    if (!(bMetric && BuildKitObstacles(Encounter, Kind, Seed, bVigil)))
     {
-        if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
-        const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
-        Scenery.Add(MakePart(Obstacle, nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), FVector::OneVector,
-            FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
+        UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
+        for (const FIntPoint& Cell : Encounter.BlockedCells)
+        {
+            if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
+            const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
+            Scenery.Add(MakePart(Obstacle, nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), bMetric ? MetricScale : FVector::OneVector,
+                FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
+        }
     }
+    if (bVigil) { BuildKitDressing(Encounter, Seed); }
     // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
@@ -1503,6 +1526,129 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         }
     }
     return true;
+}
+
+FExpeditionPart AExpeditionBattleView::MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation)
+{
+    FExpeditionPart Part = MakePart(Mesh, nullptr, Location, Scale, FLinearColor::White, Rotation);
+    if (UMaterialInterface* Own = Mesh ? Mesh->GetMaterial(0) : nullptr)
+    {
+        // The mesh's own material (dithered mask or translucent card) with an instance for per-part parameters.
+        Part.Material = UMaterialInstanceDynamic::Create(Own, this);
+        Part.Mesh->SetMaterial(0, Part.Material);
+    }
+    return Part;
+}
+
+bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches)
+{
+    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Recipe == 1 ? Theme->PillarVariants : Recipe == 2 ? Theme->WallVariants : Theme->StonesVariants;
+    TArray<UStaticMesh*> Variants;
+    bool bAny = false;
+    for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Variants.Add(ThemeMesh(Entry)); bAny = bAny || Variants.Last() != nullptr; }
+    if (!bAny) { return false; }
+    const FVector MetricScale(1.0f / SceneScale());
+    TSet<FIntPoint> Covered;
+    if (UStaticMesh* Arch = bArches ? ThemeMesh(Theme->ArchTwoCell) : nullptr)
+    {
+        for (const VigilKit::FArch& Pair : VigilKit::ArchPairs(Encounter.BlockedCells))
+        {
+            Scenery.Add(MakePart(Arch, nullptr, SceneBoard(Pair.Midpoint()), MetricScale, FLinearColor::White, FRotator(0.0f, Pair.Yaw(), 0.0f)));
+            Covered.Add(Pair.A); Covered.Add(Pair.B);
+            VariantsByCell.Add(Pair.A, -1); VariantsByCell.Add(Pair.B, -1);
+            const FVector Spot = GetActorTransform().InverseTransformPosition(Scenery.Last().Mesh->GetComponentLocation());
+            SpotsByCell.Add(Pair.A, Spot); SpotsByCell.Add(Pair.B, Spot);
+            ++ArchPieces; ++ObstaclePieces;
+        }
+    }
+    for (const FIntPoint& Cell : Encounter.BlockedCells)
+    {
+        if (Covered.Contains(Cell)) { continue; }
+        // The chosen variant, or the next one that loaded.
+        const int32 Wanted = VigilKit::VariantIndex(Seed, Recipe, Cell, Variants.Num());
+        int32 Index = INDEX_NONE;
+        for (int32 Step = 0; Step < Variants.Num() && Index == INDEX_NONE; ++Step)
+        { if (Variants[(Wanted + Step) % Variants.Num()]) { Index = (Wanted + Step) % Variants.Num(); } }
+        if (Index == INDEX_NONE) { continue; }
+        const float Turn = 90.0f * static_cast<float>(VigilKit::Hash(Seed, 2, Cell) % 4u) + (Recipe == 0 ? (VigilKit::Unit(Seed, 3, Cell) - 0.5f) * 40.0f : 0.0f);
+        const float Tint = 0.85f + 0.15f * VigilKit::Unit(Seed, 4, Cell);
+        Scenery.Add(MakePart(Variants[Index], nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), MetricScale, FLinearColor::White * Tint, FRotator(0.0f, Turn, 0.0f)));
+        VariantsByCell.Add(Cell, Index);
+        SpotsByCell.Add(Cell, GetActorTransform().InverseTransformPosition(Scenery.Last().Mesh->GetComponentLocation()));
+        ++ObstaclePieces;
+    }
+    return true;
+}
+
+void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed)
+{
+    auto Load = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
+    {
+        TArray<UStaticMesh*> Meshes;
+        for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Meshes.Add(ThemeMesh(Entry)); }
+        return Meshes;
+    };
+    const TArray<UStaticMesh*> Scatter = Load(Theme->Scatter), Mist = Load(Theme->MistCards), Shafts = Load(Theme->LightShafts);
+    VigilKit::FDressingKinds Kinds;
+    Kinds.Scatter = Scatter.Num(); Kinds.Mist = Mist.Num(); Kinds.Shaft = Shafts.Num();
+    const FVector MetricScale(1.0f / SceneScale());
+    for (const VigilKit::FDressing& Plan : VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds))
+    {
+        const TArray<UStaticMesh*>& Set = Plan.Kind == VigilKit::EDressingKind::Scatter ? Scatter : Plan.Kind == VigilKit::EDressingKind::Mist ? Mist : Shafts;
+        UStaticMesh* Mesh = Set.IsValidIndex(Plan.Variant) ? Set[Plan.Variant] : nullptr;
+        if (!Mesh) { continue; }
+        const FVector Local = SceneBoard(Plan.Position());
+        const FRotator Turn(0.0f, Plan.Yaw, 0.0f);
+        FExpeditionPart Part;
+        if (Plan.Kind == VigilKit::EDressingKind::Scatter) { Part = MakePart(Mesh, nullptr, Local, MetricScale, FLinearColor::White, Turn); }
+        else
+        {
+            // Translucent cards keep their own material and cast no shadow.
+            Part = MakeOwnMaterialPart(Mesh, Local, MetricScale, Turn);
+            Part.Mesh->SetCastShadow(false);
+        }
+        Scenery.Add(Part);
+        FPlacedDressing Placed;
+        Placed.Plan = Plan;
+        Placed.Position = GetActorTransform().InverseTransformPosition(Part.Mesh->GetComponentLocation());
+        Dressing.Add(Placed);
+    }
+}
+
+bool AExpeditionBattleView::HasOccluder() const { return IsValid(Occluder.Mesh); }
+
+void AExpeditionBattleView::OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const
+{
+    const FTransform ActorSpace = GetActorTransform();
+    Eye = Camera->GetComponentLocation();
+    FocusPoint = ActorSpace.TransformPosition(Focus);
+    UnitPoint = FocusPoint;
+    if (InCombat())
+    {
+        const int32 Id = Rules().ActiveId();
+        if (Rules().Find(Id) && Show.Unit(Id)) { UnitPoint = ActorSpace.TransformPosition(UnitPosition(Id, BoardMetric.Figure(0.6f))); }
+    }
+}
+
+float AExpeditionBattleView::OccluderOpacityAt(const FVector& WorldPoint) const
+{
+    if (!HasOccluder()) { return 1.0f; }
+    FVector Eye, FocusPoint, UnitPoint;
+    OccluderSight(Eye, FocusPoint, UnitPoint);
+    return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells);
+}
+
+void AExpeditionBattleView::UpdateOccluder()
+{
+    if (!Occluder.Material) { return; }
+    FVector Eye, FocusPoint, UnitPoint;
+    OccluderSight(Eye, FocusPoint, UnitPoint);
+    auto Point = [](const FVector& Value) { return FLinearColor(static_cast<float>(Value.X), static_cast<float>(Value.Y), static_cast<float>(Value.Z), 0.0f); };
+    Occluder.Material->SetVectorParameterValue(TEXT("SightEye"), Point(Eye));
+    Occluder.Material->SetVectorParameterValue(TEXT("SightFocus"), Point(FocusPoint));
+    Occluder.Material->SetVectorParameterValue(TEXT("SightUnit"), Point(UnitPoint));
+    Occluder.Material->SetScalarParameterValue(TEXT("FadeRadius"), BoardMetric.CellCm * OccluderFade::RadiusCells);
+    Occluder.Material->SetScalarParameterValue(TEXT("FadeMin"), OccluderFade::MinOpacity);
 }
 
 void AExpeditionBattleView::BuildOverview()

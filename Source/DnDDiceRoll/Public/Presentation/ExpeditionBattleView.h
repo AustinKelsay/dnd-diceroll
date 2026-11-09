@@ -6,6 +6,7 @@
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
+#include "Presentation/VigilKit.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
@@ -73,6 +74,13 @@ struct FExpeditionSway
     float Phase = 0.0f;
     float Degrees = 0.0f;
     float Flicker = 0.0f;
+};
+
+/** A scatter, mist or light-shaft piece the Vigil kit placed (#145): its plan and where it stands in the view actor's space (cm). */
+struct FPlacedDressing
+{
+    VigilKit::FDressing Plan;
+    FVector Position = FVector::ZeroVector;
 };
 
 /** What the controller wants emphasised on the board this frame. */
@@ -196,6 +204,26 @@ public:
     int32 OverlayBars(BoardOverlay::EStyle Style) const;
     /** True while the full-grid lines are drawn. */
     bool ShowingFullGrid() const { return bFullGridShown; }
+    /** True when this board is built from the Drowned Vigil world kit r002 (a Vigil board of a theme whose kit is switched on). */
+    bool UsesVigilKit() const { return bVigilKit; }
+    /** What the kit dressed this board with: scatter, mist and shaft pieces actually placed, with their cells and view-space positions. */
+    const TArray<FPlacedDressing>& PlacedDressing() const { return Dressing; }
+    /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
+    int32 PlacedObstacles() const { return ObstaclePieces; }
+    int32 PlacedArches() const { return ArchPieces; }
+    /** Per blocked cell, the variant index its obstacle used (kit boards only; -1 for a cell under an arch). */
+    const TMap<FIntPoint, int32>& ObstacleVariants() const { return VariantsByCell; }
+    /** Where each kit obstacle piece stands in the view actor's space: per blocked cell, or the shared-edge midpoint for both cells of an arch. */
+    const TMap<FIntPoint, FVector>& ObstacleSpots() const { return SpotsByCell; }
+    /** True when the board has the near-architecture occluder. */
+    bool HasOccluder() const;
+    /**
+     * Opacity (OccluderFade::MinOpacity to 1) the occluder has at a world-space point right now: the lower of the fade for
+     * the camera-to-focus and the camera-to-active-unit sight lines. 1 when the board has no occluder.
+     */
+    float OccluderOpacityAt(const FVector& WorldPoint) const;
+    /** World points the occluder protects: the camera, the camera focus and the active unit's chest. */
+    void OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const;
     /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
     int32 TileCount() const { return Tiles.Num(); }
     /** World diameter in cm of the footprint ring under a combatant, read from the ring's geometry; zero if it has none. */
@@ -286,6 +314,14 @@ private:
     TArray<int32> OverlayCounts;
     UPROPERTY() TArray<FExpeditionUnitRig> Rigs;
     UPROPERTY() TArray<FExpeditionPart> Scenery;
+    /** Vigil kit (#145): the dithered occluder, and a record of what was placed. */
+    UPROPERTY() FExpeditionPart Occluder;
+    bool bVigilKit = false;
+    TArray<FPlacedDressing> Dressing;
+    TMap<FIntPoint, int32> VariantsByCell;
+    TMap<FIntPoint, FVector> SpotsByCell;
+    int32 ObstaclePieces = 0;
+    int32 ArchPieces = 0;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> Flames;
     /** Per-flame base candela for themed lights; zero keeps the primitive torch strength. */
     TArray<float> FlameStrength;
@@ -318,6 +354,14 @@ private:
     UStaticMesh* UnitMesh(const FCombatantState& Unit) const;
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs. Metric-authored, so placed unscaled. False when the theme has no variant to place. */
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches);
+    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing). */
+    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed);
+    /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
+    FExpeditionPart MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation);
+    /** Pushes the sight lines to the occluder material. */
+    void UpdateOccluder();
     void BuildOverview();
     void AddSway(USceneComponent* Component, float Degrees, float Flicker);
     void UpdateSway();
