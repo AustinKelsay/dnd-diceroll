@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/TargetChipLayout.h"
 
 namespace
@@ -262,6 +263,8 @@ void AExpeditionHUD::DrawHUD()
     S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
+    // The camera fits the board into the area this layout leaves free.
+    if (AExpeditionBattleView* Board = Player->GetBattleView()) { Board->SetSafeRect(ExpeditionCameraRig::FSafeRect::ForViewport(Canvas->SizeX, Canvas->SizeY)); }
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
     // A capture run ignores the physical pointer so hover never changes a shot.
@@ -341,7 +344,22 @@ void AExpeditionHUD::DrawWorldOverlays()
             }
             Previous = Point; bHasPrevious = true;
         }
-        if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, bGroundGrid ? Previous.Y - 30 : Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
+        if (bHasPrevious)
+        {
+            const FString Cost = FString::FromInt(Path.Num());
+            if (bGroundGrid)
+            {
+                // No light endpoint disc under the number here, so it gets its own dark plate with a trail-coloured edge
+                // and light text: readable on any themed ground.
+                const FVector2D Size = Measure(Cost, 0.8f);
+                const float PlateW = FMath::Max(Size.X + 14.0f, Size.Y + 6.0f), PlateH = Size.Y + 6.0f;
+                const float PlateX = Previous.X - PlateW * 0.5f, PlateY = Previous.Y - 30.0f - 3.0f;
+                Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.82f), PlateX, PlateY, PlateW, PlateH);
+                Frame(WithAlpha(Sky, 0.9f), PlateX, PlateY, PlateW, PlateH, 1.5f);
+                Text(Cost, Previous.X, Previous.Y - 30.0f, Parchment, 0.8f, EAlign::Center);
+            }
+            else { Text(Cost, Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
+        }
     }
 
     // Inspection stays available during enemy turns and playback, just like arrow input.

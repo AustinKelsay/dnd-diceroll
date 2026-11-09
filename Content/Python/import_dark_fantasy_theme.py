@@ -463,13 +463,15 @@ def import_kit_asset(asset_id, revision, name, folder, replace):
 
 
 def set_texture(texture, revision):
-    # Trilinear with anisotropy 8 (r.MaxAnisotropy in DefaultEngine.ini) and generated mips, never nearest.
-    texture.set_editor_property("filter", unreal.TextureFilter.TF_TRILINEAR)
+    # Trilinear + anisotropic 8 (gate 1). TF_TRILINEAR maps straight to a plain trilinear sampler, which never uses
+    # r.MaxAnisotropy; TF_DEFAULT defers to the texture group, and Config/DefaultDeviceProfiles.ini makes TEXTUREGROUP_World
+    # MinMagFilter=aniso + MipFilter=linear, the anisotropic-linear sampler. Mips stop shimmer at distance.
     # r001 stays uncompressed (as imported in #38/#143); r002 uses the default sRGB compression its records state.
-    texture.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_DEFAULT if revision >= 2 else unreal.TextureCompressionSettings.TC_EDITOR_ICON)
-    texture.set_editor_property("srgb", True)
-    texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
-    texture.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
+    compression = unreal.TextureCompressionSettings.TC_DEFAULT if revision >= 2 else unreal.TextureCompressionSettings.TC_EDITOR_ICON
+    for prop, value in (("filter", unreal.TextureFilter.TF_DEFAULT), ("compression_settings", compression), ("srgb", True),
+                        ("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD), ("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)):
+        if texture.get_editor_property(prop) != value:
+            texture.set_editor_property(prop, value)
 
 
 def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan.LIT, revision=1, source=None):

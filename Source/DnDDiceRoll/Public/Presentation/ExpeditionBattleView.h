@@ -179,15 +179,22 @@ public:
     const ExpeditionCameraRig::FSafeRect& SafeRect() const { return Safe; }
     /** Shadow-casting lights: the directional key plus the local lights chosen by SelectShadowLights. */
     int32 ShadowCastingLights() const;
+    /** World positions of the shadow-casting local lights, in build order: a stable identity for the chosen set. */
+    TArray<FVector> ShadowedLightPositions() const;
     /** The attenuation radius of the first flame light, in world cm; zero when there is none. */
     float FlameLightRadius() const;
     float CameraYaw() const { return TargetYaw; }
     /**
      * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
-     * the board metric's scale, so framing and the zoom clamp (900 to 3200) look the same at any cell size.
-     * Where the camera frames the whole board by default (the distance a fresh board starts at).
+     * the board metric's scale, so framing and the zoom clamp (900 to 6400) look the same at any cell size.
+     * Where the camera frames the whole board by default: the nearest zoom at which the board's four corners sit
+     * inside the HUD-safe rect from the home yaw (-90), at 45 degrees. This is the pitch anchor.
      */
     float FramedDistance() const;
+    /** The default zoom for a board seen from another yaw: its corners fit the safe rect there too (clamped to the zoom range). */
+    float FramedDistance(float ForYaw) const;
+    /** Whether the default zoom for a yaw really contains the board inside the zoom range (false only for a board too large to fit). */
+    bool FramedFits(float ForYaw) const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
@@ -287,6 +294,8 @@ private:
     /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
     TOptional<bool> StarterSunShadows;
     ExpeditionCameraRig::FSafeRect Safe;
+    /** The home-yaw fit, kept until the board, metric or safe rect changes. */
+    mutable ExpeditionCameraRig::FFramedCache FramedCache;
     float ShakeAmount = 0.0f;
     bool bCameraPlaced = false;
 
@@ -307,8 +316,10 @@ private:
     /** Translucent unlit "Color" x "Opacity" material for the contextual grid; absent until created in the editor. */
     UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
     BoardOverlay::FMask OverlayState;
-    TArray<FIntPoint> OverlayPath;
-    FIntPoint OverlayOrigin = FIntPoint::ZeroValue;
+    /** The inputs the mask was last built from, and reusable scratch for this frame's victims; an unchanged frame allocates nothing. */
+    FBoardHighlights OverlayInput;
+    TArray<FIntPoint> OverlayVictims;
+    TArray<FIntPoint> OverlayVictimsShown;
     bool bFullGridShown = false;
     bool bOverlayBuilt = false;
     TArray<int32> OverlayCounts;

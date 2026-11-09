@@ -21,7 +21,7 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 **Import:** `Content/Python/import_dark_fantasy_theme.py` imports the exports. It:
 - creates `M_DiceRollTheme`, and rebuilds its graph in place on every run (the asset and its instances survive); see "Theme material" below;
 - gives each mesh its own `MI_*` instance;
-- sets textures to trilinear filtering (anisotropy 8 through `r.MaxAnisotropy=8` in `Config/DefaultEngine.ini`), uncompressed and sRGB. Gate 1 found nearest, trilinear and sharp texels nearly identical at 256 texels/m;
+- sets textures to `TF_DEFAULT` in `TEXTUREGROUP_World`, uncompressed and sRGB. Gate 1 chose trilinear + anisotropic 8 (nearest, trilinear and sharp texels looked nearly identical at 256 texels/m). `TF_TRILINEAR` maps straight to a plain trilinear sampler, and Vulkan enables anisotropy only for anisotropic sampler filters, so `r.MaxAnisotropy=8` (`Config/DefaultEngine.ini`) would do nothing for it. `TF_DEFAULT` defers to the texture group; the engine's World group is aniso with point mips (an anisotropic-point sampler), so `Config/DefaultDeviceProfiles.ini` replaces that one group entry with aniso + linear mips, the anisotropic-linear sampler. This is a Config change (a new file) and needs coordinator approval. The filter fix reimport is expected to change only the 21 `T_*` textures (their `filter` property);
 - fills `DA_DiceRollTheme`, a `UDiceRollTheme` data asset.
 
 **Theme material (#143):** `M_DiceRollTheme` computes `base = Tex × vertex colour × Color` and adds three emissive terms, each driven by a per-instance parameter:
@@ -30,6 +30,8 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 - `Rim` × a cool Fresnel rim (exponent 3), so dark figures read against dark ground.
 
 `Roughness` sets the surface: characters and metal 0.5 to 0.65, stone, cloth and ground 0.9 to 0.95. Characters get `Rim` and `Fill` 1; worlds and tiles get none; props a trace of `Fill`. `SelfLit` is a constant emissive share kept only for the flame (a light source) and the tabletop overview, which stays as it was.
+
+**Accepted exception to gate 1's mask-only glow (decided by the lead, 2026-11-09):** the battle flame's `SelfLit` (1.4) and the tabletop overview's self-light stay. The r001 flame has no glow mask and is itself a light source. The exception lasts until r002 art with real glow masks lands (#145, #147), when both move onto `Glow` and `SelfLit` goes away.
 
 **Vertex-alpha guard:** glTF `COLOR_0` is optional, and Unreal reads a missing vertex alpha as 1, which would make a whole mesh glow. At import the script reads each export's accessors and enables `Glow` only when `COLOR_0` is RGBA with a varying alpha. No r001 export has one (most have no `COLOR_0`; the tabletop and the two worlds have a constant alpha of 1), so every r001 instance imports with `Glow` 0 until a revised export paints a mask. The log lists `THEME_MATERIAL <mesh> glow=<n> mask=<bool>` per mesh.
 
@@ -81,4 +83,4 @@ All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, 
 
 ## Board overlay material (issue #142)
 
-`/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only file added and nothing else changed. A rerun leaves an existing asset alone.
+`/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only added Unreal asset; the hash diff showed nothing else changed apart from three ignored `Content/Python/unreal_starter/__pycache__/*.pyc` files, which were removed. A rerun leaves an existing asset alone.
