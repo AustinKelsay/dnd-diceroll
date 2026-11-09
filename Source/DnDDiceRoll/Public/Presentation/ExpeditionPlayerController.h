@@ -66,6 +66,10 @@ public:
     void UpdateMenuFocus();
     /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
     void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
+    /** Capture and test support: show the full grid as if the hold key were down. */
+    void PreviewFullGrid(bool bShow);
+    /** True while the hold-for-full-grid key (Alt) is down or a preview asks for it. */
+    bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
 private:
@@ -91,6 +95,8 @@ private:
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
     EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
     bool bDragging = false;
+    bool bGridHeld = false;
+    bool bGridPreview = false;
     float DragX = 0.0f;
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
@@ -154,6 +160,8 @@ private:
     void Speed();
     void ToggleHelp();
     void CloseOverlays();
+    void GridDown();
+    void GridUp();
     void BeginDrag();
     void EndDrag();
     void SetMode(ECombatCommandType Action);

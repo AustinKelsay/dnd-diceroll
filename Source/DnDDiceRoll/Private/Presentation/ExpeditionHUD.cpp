@@ -320,7 +320,11 @@ void AExpeditionHUD::DrawWorldOverlays()
     const bool bCombat = View->InCombat() && !Player->OverlayOpen();
     const int32 Active = bCombat ? Rules.ActiveId() : INDEX_NONE;
 
-    // Path preview: a dotted trail from the adventurer to the hovered cell.
+    // Boards with the contextual grid (#142) draw reach, path, blocked sight and victims on the ground itself;
+    // the HUD then keeps only what needs text. Primitive boards keep the dotted trail and markers below.
+    const bool bGroundGrid = View->DrawsContextualGrid();
+
+    // Path preview: a dotted trail from the adventurer to the hovered cell (the path length is always labelled).
     const TArray<FIntPoint>& Path = Player->PreviewPath();
     if (Player->ShowsTargeting() && !Path.IsEmpty())
     {
@@ -330,11 +334,29 @@ void AExpeditionHUD::DrawWorldOverlays()
         {
             FVector2D Point;
             if (!Project(View->BoardPosition(FVector2D(Path[Index].X, Path[Index].Y), View->Metric().Scaled(4.0f)), Point)) { continue; }
-            if (bHasPrevious) { Line(Previous, Point, FLinearColor(0.5f, 0.95f, 1.0f, 0.9f), 3.0f); }
-            Circle(Point, Index == Path.Num() - 1 ? 9.0f : 4.0f, FLinearColor(0.55f, 0.95f, 1.0f, 0.95f));
+            if (!bGroundGrid)
+            {
+                if (bHasPrevious) { Line(Previous, Point, FLinearColor(0.5f, 0.95f, 1.0f, 0.9f), 3.0f); }
+                Circle(Point, Index == Path.Num() - 1 ? 9.0f : 4.0f, FLinearColor(0.55f, 0.95f, 1.0f, 0.95f));
+            }
             Previous = Point; bHasPrevious = true;
         }
-        if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
+        if (bHasPrevious)
+        {
+            const FString Cost = FString::FromInt(Path.Num());
+            if (bGroundGrid)
+            {
+                // No light endpoint disc under the number here, so it gets its own dark plate with a trail-coloured edge
+                // and light text: readable on any themed ground.
+                const FVector2D Size = Measure(Cost, 0.8f);
+                const float PlateW = FMath::Max(Size.X + 14.0f, Size.Y + 6.0f), PlateH = Size.Y + 6.0f;
+                const float PlateX = Previous.X - PlateW * 0.5f, PlateY = Previous.Y - 30.0f - 3.0f;
+                Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.82f), PlateX, PlateY, PlateW, PlateH);
+                Frame(WithAlpha(Sky, 0.9f), PlateX, PlateY, PlateW, PlateH, 1.5f);
+                Text(Cost, Previous.X, Previous.Y - 30.0f, Parchment, 0.8f, EAlign::Center);
+            }
+            else { Text(Cost, Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
+        }
     }
 
     // Inspection stays available during enemy turns and playback, just like arrow input.
@@ -364,13 +386,15 @@ void AExpeditionHUD::DrawWorldOverlays()
     // Geometry is independent of target eligibility and available budgets.
     if (Player->ShowsTargeting())
     {
-        Text(TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
+        Text(bGroundGrid ? TEXT("Outline Reach  /  x Blocked sight  /  Ring Legal target  /  AREA Victim")
+            : TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
         const auto& Reach = Player->Reach();
         auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
         {
             for (const auto Cell : Cells)
             {
                 ++ReachRequested;
+                if (bGroundGrid) { continue; }
                 FVector2D P;
                 if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), View->Metric().Scaled(5.0f)), P)) { continue; }
                 const auto Color = bBlocked ? Danger : Sky;
@@ -1031,7 +1055,7 @@ void AExpeditionHUD::DrawRecords()
 
 void AExpeditionHUD::DrawHelp()
 {
-    const float Width = 700, Height = 400;
+    const float Width = 700, Height = View->InCombat() ? 430.0f : 400.0f;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Sky, 0.98f);
@@ -1060,13 +1084,13 @@ void AExpeditionHUD::DrawHelp()
         return;
     }
     const TCHAR* Left[] = {
-        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
+        TEXT("Click a highlighted cell to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
-        TEXT("Arrows + Enter  Keyboard cursor")};
+        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu")};
+        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu"), TEXT("Esc  Close Help or Records")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
