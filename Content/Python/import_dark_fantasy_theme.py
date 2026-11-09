@@ -257,7 +257,11 @@ def import_mesh(asset_id, name, folder):
 
 
 KIT_TAG_VALUE = "vigil-kit-r002"
+# A headless commandlet does not load the static mesh editor module, so its subsystem would be None.
+unreal.load_module("StaticMeshEditor")
 mesh_tools = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
+if mesh_tools is None:
+    raise RuntimeError("StaticMeshEditorSubsystem is unavailable even after loading the StaticMeshEditor module")
 
 
 def node(material, kind, x, y, **props):
