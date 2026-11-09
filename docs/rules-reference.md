@@ -119,7 +119,6 @@ Proficiency bonus is 2 + (level - 1) / 4. All 18 SRD skills map to their abiliti
 ### Issue #70: armor, shields and Dexterity caps
 
 `FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Worn armor without training gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. An untrained shield gives no AC bonus and imposes none of those armor penalties. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred. SRD 5.2.1 Weapon Mastery properties are intentionally left out of this library for now.
-`FArmorRules` holds the SRD armor table (padded through plate, plus the shield). AC = base + DEX modifier for light or no armor, + DEX up to +2 for medium, base only for heavy; a shield adds +2. Heavy armor with a Strength requirement costs 10 ft of speed below that score; armor marked for it gives Stealth disadvantage. Proficiency: Fighter all armor and shields, Cleric light/medium/shields, Rogue light, Wizard none. Armor or a shield without proficiency gives disadvantage on STR/DEX checks, saves and attacks and prevents spellcasting. Equipping armor and weapons per adventurer needs persisted equipment (save schema change), so battle wiring is deferred. SRD 5.2.1 Weapon Mastery properties are intentionally left out of this library for now.
 
 
 ## SRD rules libraries (PR 2 start: #64-#65 movement)
@@ -135,7 +134,7 @@ Pure libraries only; battle does not call them yet, so Compact stays seed-identi
 
 ### Issue #59: opportunity attack triggers
 
-`FOpportunityRules` measures Chebyshev distance on the 5-foot grid (diagonals count as 1). A step provokes when it leaves a reactor's reach voluntarily, without Disengage, while the reactor still has its reaction; forced movement never provokes. `FirstProvokingCell` returns the path index being left at the first such step (one opportunity per reactor per turn by design of the caller).
+`FOpportunityRules` measures Manhattan distance on the 5-foot grid, the battle's own cardinal measure (a diagonal is two steps). A step provokes when it leaves a reactor's reach voluntarily, without Disengage, while the reactor still has its reaction; forced movement never provokes. `FirstProvokingCell` returns the path index being left at the first such step (one opportunity per reactor per turn by design of the caller).
 
 
 ### Issue #60: standard actions
@@ -286,8 +285,8 @@ Catalog still lives in `FSpellRules` facts (not a separate generator yet). Lean 
 `FCombatEncounter::Ruleset` (default Compact) gates combat wiring. Compact paths are unchanged (seed-identical golden fingerprint). In **SRD** mode only:
 - Initiative is DEX modifier only (Compact Rogue keeps catalog +1).
 - Magic Missile applies resistance/immunity **per dart**.
-- Cleric ranged Attack becomes **Sacred Flame** (DEX save, 1d8 radiant).
-- Cover AC bonus from intervening terrain and from creatures at least one size larger (house rule); enemy AI with INT `<=` 6 ignores cover (house rule).
+- Cleric ranged Attack becomes **Sacred Flame** (DEX save with the target's full save bonus and no benefit from cover, 1d8 radiant). Its forecast is the chance the save fails.
+- Cover AC bonus from intervening terrain and from creatures at least one size larger (house rule); enemy AI with INT `<=` 6 ignores cover (house rule). Attack forecasts count the same cover.
 - Opportunity attacks on leaving reach; Grapple/Shove saving throws (5.2.1); death saves (replacing the three-turn rescue clock); concentration saves on damage; ambush surprise = Initiative Disadvantage (SRD 5.2.1).
 
 
@@ -299,3 +298,5 @@ Prone: stand-up costs half speed (move to own cell); crawling and prone attack m
 Compact remains the default, including its historical rescue countdown and seeded combat policy. Save format 5 persists the ruleset; real format 4 checkpoints upgrade to Compact with default reaction, death-save, temporary-HP, concentration, size, surprise, disengagement, prone and grapple values. Restore validates enums, ranges, grappler references and matching encounter/run rulesets without spending RNG.
 
 SRD mode follows 5.2.1: surprise imposes Initiative Disadvantage, never a skipped first turn. Grapple and Shove require a Strength or Dexterity saving throw (better bonus) against DC 8 + attacker's Strength modifier + proficiency bonus. Escape spends an Action on Athletics or Acrobatics against the grappler's same DC; equality succeeds. Damage while at zero HP adds one death-save failure, two on a critical hit, rather than clearing previous saves; temporary HP absorbs damage first. Damage interrupts stability. Basic attacks may target a downed opposing creature in SRD mode. Opportunity attacks, Grapple and Shove all use the battle's cardinal/Manhattan distance on the square grid; a diagonal is two cells, not one. Existing standalone contest probability helpers are legacy 5.1 calculations, not the SRD battle resolver.
+
+Opportunity attacks resolve in path order, right before the step that leaves a reactor's reach; reactors provoked by the same step roll in combatant order, each rolling its d20, then its damage die and any critical die. The damage dice are reported with the move. A mover that an opportunity attack downs or kills stops in the cell it was leaving and pays only for the cells it moved; the battle outcome is checked and the turn passes to the next conscious combatant. Attacks against a downed (Unconscious) creature have Advantage, and a hit from within 5 feet is a critical hit, adding two failures. A natural 20 death save restores 1 HP and the creature takes that same turn. Becoming Stable resets both counts, with three successes kept as the Stable marker; damage to a stable creature starts a fresh tally. The dead keep no counts. Restore rejects death-save states the battle cannot produce: three failures while Downed, failures alongside the Stable marker, a rescue countdown, or counts on a creature that is not Downed.
