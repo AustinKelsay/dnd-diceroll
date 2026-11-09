@@ -1640,6 +1640,12 @@ float AExpeditionBattleView::FootprintRingDiameterCm(int32 UnitId) const
     return 0.0f;
 }
 
+USceneComponent* AExpeditionBattleView::UnitRigRoot(int32 UnitId) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs) { if (Rig.Id == UnitId) { return Rig.Root; } }
+    return nullptr;
+}
+
 int32 AExpeditionBattleView::OverlayBars(BoardOverlay::EStyle Style) const
 {
     return OverlayCounts.IsValidIndex(static_cast<int32>(Style)) ? OverlayCounts[static_cast<int32>(Style)] : 0;

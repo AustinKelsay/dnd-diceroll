@@ -33,6 +33,8 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Vertex-alpha guard:** glTF `COLOR_0` is optional, and Unreal reads a missing vertex alpha as 1, which would make a whole mesh glow. At import the script reads each export's accessors and enables `Glow` only when `COLOR_0` is RGBA with a varying alpha. No r001 export has one (most have no `COLOR_0`; the tabletop and the two worlds have a constant alpha of 1), so every r001 instance imports with `Glow` 0 until a revised export paints a mask. The log lists `THEME_MATERIAL <mesh> glow=<n> mask=<bool>` per mesh.
 
+**Reimport (#143, 2026-11-09):** one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) exited 0 with `THEME_IMPORT_COMPLETE 21/21` and no warnings. The script saves only dirty packages and assigns a mesh material only when it differs, so the run changed exactly `M_DiceRollTheme`, the 21 `MI_*` instances and the 21 `T_*` textures (filtering and mips). Hashes of `Config/` and `Content/` taken before and after showed no mesh, `DA_DiceRollTheme` or other file changed. It imported nothing new: every source is still a self-authored r001 export, so no licence changes.
+
 **Contents:**
 
 | Group | Assets |
@@ -69,4 +71,4 @@ All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, 
 
 ## Board overlay material (issue #142)
 
-`/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. The asset itself is created in an Unreal turn and recorded here once saved.
+`/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only file added and nothing else changed. A rerun leaves an existing asset alone.

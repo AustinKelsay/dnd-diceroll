@@ -43,7 +43,8 @@ def main():
     mel.connect_material_property(mask, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
     mel.recompile_material(material)
-    library.save_asset(PACKAGE)
+    if not library.save_asset(PACKAGE, only_if_is_dirty=False):
+        raise RuntimeError("Unable to save " + PACKAGE)
     unreal.log("Created " + PACKAGE)
 
 
