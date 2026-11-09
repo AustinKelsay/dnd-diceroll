@@ -39,7 +39,7 @@ python3 tools/contribute.py preflight
 
 Inspect existing hooks before LFS installation; preserve custom hooks and the LFS pre-push invocation. Resolve a hook conflict deliberately. The checks never install or replace hooks. On an unsupported host, `check` remains available; `preflight` reports that editor state cannot be verified.
 
-On Ultra, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. Several agents share Ultra, so ask for a turn to run Unreal first (see "Shared machine" in [development](docs/development.md)); one editor owner at a time.
+On Ultra, finish the first Unreal baseline using `build`, `bootstrap`, and `test`, then `editor`, `status`, `smoke`, and an inspected `capture`. Save deliberately and `close` normally. Packaging is needed when the work claims packaged behavior. Several agents share Ultra, so wrap every build, test and package job in the machine lock (see "Shared machine" in [development](docs/development.md)); one editor owner at a time.
 
 ## The contribution agreement
 

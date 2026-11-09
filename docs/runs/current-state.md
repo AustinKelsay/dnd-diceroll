@@ -4,7 +4,7 @@ Updated 2026-11-03 for [factory follow-through #122](https://github.com/AustinKe
 
 ## Validated host
 
-On 2026-11-07 the owner moved all Unreal development and verification to **PlebDev Ultra** (Linux) ([#125](https://github.com/AustinKelsay/dnd-diceroll/issues/125)). The MacBook is no longer a build or test host. Earlier records below that cite Mac evidence describe that moment. Several agents share Ultra; ask for a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)).
+On 2026-11-07 the owner moved all Unreal development and verification to **PlebDev Ultra** (Linux) ([#125](https://github.com/AustinKelsay/dnd-diceroll/issues/125)). The MacBook is no longer a build or test host. Earlier records below that cite Mac evidence describe that moment. Several agents share Ultra. Since 2026-11-09 they take turns through a machine lock instead of asking a coordinator: every build, test, and package job is wrapped in `flock` on Ultra's shared lock file (see "Shared machine" in [development](../development.md)).
 
 ## Integrated
 
