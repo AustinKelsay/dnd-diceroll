@@ -31,7 +31,7 @@ git switch -c feature/<issue>-<slug>
 
 For an existing feature branch, stay on that branch and explicitly merge `origin/staging` after inspection instead of switching away and losing context. Use merge for published branches; do not rewrite another contributor's history. Resolve text conflicts with the affected contract in view. Stop on binary conflicts and coordinate an Unreal resolution. Then hydrate LFS assets and repeat relevant verification. A changed source tree requires fresh build evidence before editor launch.
 
-Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and get a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
+Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and wrap every build, test, and package job in the machine lock (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
 
 Completion: the intended baseline is available, current work is preserved, the branch is intentional, and editor ownership is clear.
 
