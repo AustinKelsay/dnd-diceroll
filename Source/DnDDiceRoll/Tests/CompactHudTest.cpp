@@ -286,10 +286,10 @@ bool FCompactHudMenuTest::RunTest(const FString& Parameters)
         if (!TestTrue(TEXT("I opens the Menu in combat"), Game.Player->ShowingMenu())) { break; }
         TestEqual(TEXT("The combat Menu focuses Save"), Game.Player->MenuFocus(), FName(TEXT("Save")));
         TestTrue(TEXT("The combat Menu lists every control"), HasAll(Game));
-        const double Open = Game.Hud->PersistentCoverage();
-        AddInfo(FString::Printf(TEXT("Persistent combat HUD at %dx%d: %.2f%% closed, %.2f%% with the Menu open"), Size.X, Size.Y, Closed * 100.0, Open * 100.0));
+        const double OpenCoverage = Game.Hud->PersistentCoverage();
+        AddInfo(FString::Printf(TEXT("Persistent combat HUD at %dx%d: %.2f%% closed, %.2f%% with the Menu open"), Size.X, Size.Y, Closed * 100.0, OpenCoverage * 100.0));
         TestTrue(FString::Printf(TEXT("The Menu button keeps persistent coverage within %.0f%% at %dx%d"), PersistentBudget * 100.0, Size.X, Size.Y), Closed > 0.0 && Closed <= PersistentBudget);
-        TestTrue(TEXT("An open Menu is transient and adds nothing to persistent coverage"), Open <= Closed + 1e-6);
+        TestTrue(TEXT("An open Menu is transient and adds nothing to persistent coverage"), OpenCoverage <= Closed + 1e-6);
         CheckInside(*this, Game, TEXT("Open menu in combat"));
         Game.Press(EKeys::Escape);
         TestFalse(TEXT("Esc closes the combat Menu"), Game.Player->ShowingMenu());
