@@ -339,6 +339,22 @@ bool FReviewForecastAgreementTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Forecast damage is 1d8"), Preview.MinAmount == 1 && Preview.MaxAmount == 8);
         if (R.bHit) { TestTrue(TEXT("Damage within forecast"), R.Damage >= Preview.MinAmount && R.Damage <= Preview.MaxAmount); }
     }
+    // An enemy's save proficiency follows its own level, not the level 1 default.
+    {
+        FCombatEncounter Veteran = CoverDuel(TEXT("cleric.life"), TEXT("Archer"), false);
+        Veteran.Combatants[1].Level = 5;
+        FCharacterRules Expected = FProficiencyRules::EnemyCharacter(TEXT("Archer"));
+        const int32 LevelOneBonus = Expected.SaveBonus(EAbility::Dexterity);
+        Expected.Level = 5;
+        FCombatBattle Duel;
+        if (!TestTrue(TEXT("Veteran duel"), Duel.Start(Veteran, 7, Error)) || !TestTrue(TEXT("Cleric active against veteran"), Activate(Duel, 1))) { return false; }
+        const FActionForecast VeteranPreview = Duel.Forecast(1, ECombatCommandType::Attack, 2);
+        const FCombatResult VeteranResult = Duel.Submit({ECombatCommandType::Attack, 1, {}, 2});
+        if (!TestTrue(TEXT("Sacred Flame accepted against veteran"), VeteranResult.bAccepted)) { return false; }
+        TestTrue(TEXT("Level 5 raises the proficient save"), Expected.SaveBonus(EAbility::Dexterity) > LevelOneBonus);
+        TestEqual(TEXT("Save bonus uses the enemy's level"), VeteranResult.AttackBonus, Expected.SaveBonus(EAbility::Dexterity));
+        TestEqual(TEXT("Forecast uses the enemy's level"), VeteranPreview.HitChancePercent, (400 - FCheckRules::SuccessOutOf400(VeteranResult.AttackBonus, VeteranResult.TargetArmorClass, ERollMode::Normal) + 2) / 4);
+    }
     // Weapon attack: forecast and resolution both count the pillar's half cover.
     FCombatBattle B;
     if (!TestTrue(TEXT("Weapon duel"), B.Start(CoverDuel(TEXT("rogue.thief"), TEXT("Raider"), true), 7, Error)) || !TestTrue(TEXT("Rogue active"), Activate(B, 1))) { return false; }

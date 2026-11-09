@@ -37,9 +37,11 @@ constexpr int32 SacredFlameDie = 8; // SRD Sacred Flame, 1d8 radiant at characte
 /** Full saving throw bonus: ability modifier plus proficiency where proficient. */
 int32 SaveBonusOf(const FCombatantState& Unit, EAbility Ability)
 {
-    const FCharacterRules Character = Unit.AdventurerRole != EAdventurerRole::None
+    FCharacterRules Character = Unit.AdventurerRole != EAdventurerRole::None
         ? FProficiencyRules::PrebuiltCharacter(Unit.AdventurerRole, Unit.Level)
         : FProficiencyRules::EnemyCharacter(Unit.Role);
+    // Enemy rules are built at level 1; proficiency follows the combatant's own level.
+    Character.Level = Unit.Level;
     return Character.SaveBonus(Ability);
 }
 int32 CriticalThreshold(const FCombatantState& Hero)
