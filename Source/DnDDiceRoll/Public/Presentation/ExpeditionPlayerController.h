@@ -7,6 +7,7 @@
 #include "ExpeditionPlayerController.generated.h"
 
 class AExpeditionBattleView;
+class FExpeditionCaptureDirector;
 
 /** Turns mouse, keyboard and HUD buttons into view commands. Holds selection only. */
 UCLASS()
@@ -39,6 +40,11 @@ public:
     bool ReturnPending() const { return bReturnPending; }
     /** Help, Records or the return question covers the screen and owns input. */
     bool OverlayOpen() const;
+    /**
+     * The one gate for targeting feedback (reach markers, target chips, highlights): a party
+     * member has the turn in a fight, no overlay covers the board and no playback is running.
+     */
+    bool ShowsTargeting() const;
     /** Unit under the cursor, if any. */
     int32 HoveredUnit() const { return HoverUnitId; }
     /** Legal target under the cursor for the selected action. */
@@ -46,6 +52,8 @@ public:
     const TArray<FIntPoint>& PreviewPath() const { return Path; }
     /** Legal targets for the selected action this frame. */
     const TArray<int32>& Targets() const { return TargetIds; }
+    /** Where the selected action can reach this frame; empty unless ShowsTargeting(). */
+    const FActionReach& Reach() const { return ReachCells; }
     /** True when the board should show where the keyboard cursor is. */
     bool UsingKeyboardCursor() const { return bKeyboardCursor; }
     FIntPoint KeyboardCursorCell() const { return GridCursor; }
@@ -56,7 +64,19 @@ public:
     FName MenuFocus() const { return Focus.Id; }
     /** Refresh after the HUD registers this frame's visible, enabled controls. */
     void UpdateMenuFocus();
+    /** Capture support: Attack mode, with the keyboard cursor on a cell (or cleared), so reach and target feedback show. */
+    void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
+    /** Capture and test support: show the full grid as if the hold key were down. */
+    void PreviewFullGrid(bool bShow);
+    /** True while the hold-for-full-grid key (Alt) is down or a preview asks for it. */
+    bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
+    /** True in a capture run: no input is bound and the physical pointer is ignored. */
+    bool IsCapturing() const { return bCapturing; }
 private:
+    /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
+    bool PointerPosition(float& X, float& Y) const;
+    bool bCapturing = false;
+    TSharedPtr<FExpeditionCaptureDirector> Capture;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
@@ -66,6 +86,7 @@ private:
     int32 HoverTargetId = INDEX_NONE;
     TArray<FIntPoint> Path;
     TArray<int32> TargetIds;
+    FActionReach ReachCells;
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bShowHelp = false;
@@ -74,7 +95,11 @@ private:
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
     EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
     bool bDragging = false;
+    bool bGridHeld = false;
+    bool bGridPreview = false;
     float DragX = 0.0f;
+    bool bPanning = false;
+    float PanX = 0.0f, PanY = 0.0f;
     TArray<FPartyBuildSelection> Party;
     int32 Slot = 0;
     bool bNextParty = false;
@@ -137,8 +162,14 @@ private:
     void Speed();
     void ToggleHelp();
     void CloseOverlays();
+    void GridDown();
+    void GridUp();
     void BeginDrag();
     void EndDrag();
+    void BeginPan();
+    void EndPan();
+    /** The A key: attack mode, except while Shift pans the camera. */
+    void AttackKey();
     void SetMode(ECombatCommandType Action);
     bool AllowsGameplayInput() const;
     bool CanSelectSubclass() const;

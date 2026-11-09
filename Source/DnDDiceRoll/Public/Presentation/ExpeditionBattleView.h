@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
+#include "Presentation/BoardMetric.h"
+#include "Presentation/CameraRig.h"
+#include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -10,6 +13,7 @@
 class UAudioComponent;
 class UCameraComponent;
 class UExponentialHeightFogComponent;
+class UInstancedStaticMeshComponent;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UPointLightComponent;
@@ -46,6 +50,8 @@ struct FExpeditionUnitRig
     float Phase = 0.0f;
     UPROPERTY() TObjectPtr<USceneComponent> Root;
     UPROPERTY() TArray<FExpeditionPart> Parts;
+    /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
+    UPROPERTY() FExpeditionPart Ring;
 };
 
 USTRUCT()
@@ -72,6 +78,7 @@ struct FExpeditionSway
 /** What the controller wants emphasised on the board this frame. */
 struct FBoardHighlights
 {
+    FActionReach Reach;
     TArray<FIntPoint> Moves;
     TArray<FIntPoint> Path;
     TArray<int32> Targets;
@@ -80,6 +87,13 @@ struct FBoardHighlights
     bool bHasHover = false;
     FIntPoint Hover = FIntPoint::ZeroValue;
     bool bFriendlyTargets = false;
+    /** Combatants the hovered action would strike (area victims), from the forecast. */
+    TArray<int32> Victims;
+    /** Where the previewed path starts (the actor's cell). */
+    bool bHasOrigin = false;
+    FIntPoint Origin = FIntPoint::ZeroValue;
+    /** The hold-for-full-grid accessibility key is down: faint lines over the whole board. Presentation only. */
+    bool bFullGrid = false;
 };
 
 /**
@@ -143,12 +157,66 @@ public:
     // Camera and board geometry.
     void Orbit(float Degrees);
     void Zoom(float Amount);
+    /**
+     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The focus is
+     * clamped to the board plus a margin, and returns to the active unit when the turn changes.
+     */
+    void Pan(float Right, float Away);
+    /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
+    FVector CameraFocus() const { return FocusTarget; }
+    /** The camera pitch below horizontal, in degrees, for the current zoom. */
+    float CameraPitch() const;
+    /** The screen area the HUD leaves free; the board is fitted and centred in it. */
+    void SetSafeRect(const ExpeditionCameraRig::FSafeRect& Value);
+    const ExpeditionCameraRig::FSafeRect& SafeRect() const { return Safe; }
+    /** Shadow-casting lights: the directional key plus the local lights chosen by SelectShadowLights. */
+    int32 ShadowCastingLights() const;
+    /** The attenuation radius of the first flame light, in world cm; zero when there is none. */
+    float FlameLightRadius() const;
     float CameraYaw() const { return TargetYaw; }
+    /**
+     * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
+     * the board metric's scale, so framing and the zoom clamp (900 to 3200) look the same at any cell size.
+     * Where the camera frames the whole board by default (the distance a fresh board starts at).
+     */
+    float FramedDistance() const;
+    float CameraDistance() const { return TargetDistance; }
+    /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
+    void SnapCamera(float InYaw, float InDistance);
+    /** Capture support: settle the camera on its current targets at once. */
+    void SnapCameraToTargets() { bCameraPlaced = false; }
+    FTransform CameraTransform() const;
+    float CameraFieldOfView() const;
+    bool UsesTheme() const { return Theme != nullptr; }
+    /** True when this board draws the contextual grid (themed battle boards); primitive boards tint cube tiles instead. */
+    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty(); }
+    /** The per-cell state the contextual grid was last built from (also kept on primitive boards, where only the tiles show it). */
+    const BoardOverlay::FMask& OverlayMask() const { return OverlayState; }
+    /** Bars drawn for a style in the last overlay update; zero when the board has no contextual grid. */
+    int32 OverlayBars(BoardOverlay::EStyle Style) const;
+    /** True while the full-grid lines are drawn. */
+    bool ShowingFullGrid() const { return bFullGridShown; }
+    /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
+    int32 TileCount() const { return Tiles.Num(); }
+    /** World diameter in cm of the footprint ring under a combatant, read from the ring's geometry; zero if it has none. */
+    float FootprintRingDiameterCm(int32 UnitId) const;
+    /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
+    void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
+    /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
+    void PrepareExposureForCapture();
+    /** The one board metric: cell size, board top, pointer plane and figure height. Every cell-to-world conversion uses it. */
+    const FBoardMetric& Metric() const { return BoardMetric; }
+    /** Replaces the metric and rebuilds the board at the new scale (tests and tools; the theme normally supplies it). */
+    void SetBoardMetric(const FBoardMetric& Value);
+    /** Switches to the engine-primitive presentation (what -ExpeditionPrimitives does at startup) and rebuilds. */
+    void UsePrimitives();
     FVector CellPosition(FIntPoint Cell) const;
     FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
     /** Where a combatant currently appears, including playback motion. */
     FVector UnitPosition(int32 Id, float Height = 0.0f) const;
     bool CursorCell(APlayerController* Controller, FIntPoint& Cell) const;
+    /** The cell a world-space ray crosses on the pointer plane; false when it misses the board. CursorCell is this plus the pointer. */
+    bool CellAtRay(const FVector& Origin, const FVector& Direction, FIntPoint& Cell) const;
 
 private:
     FExpeditionSession Session;
@@ -166,11 +234,13 @@ private:
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
+    bool bHoldEnemyTurns = false;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
     UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
     UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
     UPROPERTY() TArray<FExpeditionSway> Swaying;
@@ -180,6 +250,13 @@ private:
     float Distance = 1600.0f;
     float TargetDistance = 1600.0f;
     FVector Focus = FVector::ZeroVector;
+    /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
+    FVector FocusTarget = FVector::ZeroVector;
+    FVector2D PanOffset = FVector2D::ZeroVector;
+    int32 LastFocusId = INDEX_NONE;
+    /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
+    TOptional<bool> StarterSunShadows;
+    ExpeditionCameraRig::FSafeRect Safe;
     float ShakeAmount = 0.0f;
     bool bCameraPlaced = false;
 
@@ -195,6 +272,16 @@ private:
     /** Every runtime component this view created; destroyed together on rebuild. */
     UPROPERTY() TArray<TObjectPtr<UActorComponent>> Spawned;
     UPROPERTY() TArray<FExpeditionTile> Tiles;
+    /** One bar set per BoardOverlay::EStyle, built for themed battle boards only. */
+    UPROPERTY() TArray<FExpeditionPart> OverlaySets;
+    /** Translucent unlit "Color" x "Opacity" material for the contextual grid; absent until created in the editor. */
+    UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
+    BoardOverlay::FMask OverlayState;
+    TArray<FIntPoint> OverlayPath;
+    FIntPoint OverlayOrigin = FIntPoint::ZeroValue;
+    bool bFullGridShown = false;
+    bool bOverlayBuilt = false;
+    TArray<int32> OverlayCounts;
     UPROPERTY() TArray<FExpeditionUnitRig> Rigs;
     UPROPERTY() TArray<FExpeditionPart> Scenery;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> Flames;
@@ -215,6 +302,10 @@ private:
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);
+    /** Scenery lives under a root scaled by the metric (reference units); the overview table is unscaled. */
+    float SceneScale() const { return bOverview ? 1.0f : BoardMetric.Scale(); }
+    /** Scenery-local position of a board point: reference cm, because the scenery root is scaled. */
+    FVector SceneBoard(FVector2D Cell, float ReferenceHeight = 0.0f) const { return BoardMetric.ReferencePosition(Cell, ReferenceHeight); }
     void ClearPresentation();
     void RebuildBoard();
     void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
@@ -232,9 +323,18 @@ private:
     void ApplyTheme();
     void UpdateRigs();
     void UpdateTiles();
+    void BuildOverlay();
+    void UpdateOverlay();
+    /** A hollow ring of thin bars, 100 cm across at unit scale; the component scale sets the diameter. */
+    FExpeditionPart MakeRing(USceneComponent* Parent, FVector Location, FLinearColor Color);
+    UInstancedStaticMeshComponent* MakeBarSet(FExpeditionPart& Part, USceneComponent* Parent, FLinearColor Color, float Opacity);
     void UpdateMarkers();
     void UpdateEffects();
     void UpdateCamera(float DeltaSeconds);
+    /** The unpanned focus: the board centre leaned toward the acting unit (view space). */
+    FVector BaseFocus() const;
+    /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
+    void SelectShadowLights();
     void Record(const FCombatResult& Result);
     void Present(const TArray<FCombatResult>& Results);
     void ExpireVoices();

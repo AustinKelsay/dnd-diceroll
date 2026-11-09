@@ -7,10 +7,10 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/TargetChipLayout.h"
 
 namespace
 {
-constexpr float DesignWidth = 1280.0f;
 // Dark-fantasy palette: warm near-black panels, parchment text and darkened gilt.
 const FLinearColor Ink(0.009f, 0.007f, 0.006f);
 const FLinearColor Parchment(0.93f, 0.86f, 0.72f);
@@ -71,6 +71,7 @@ void AExpeditionHUD::Frame(FLinearColor Color, float X, float Y, float Width, fl
 
 void AExpeditionHUD::Panel(float X, float Y, float Width, float Height, FLinearColor Accent, float Opacity, bool bBlock)
 {
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     Rect(FLinearColor(0, 0, 0, 0.35f * Opacity), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, Opacity), X, Y, Width, Height);
     Rect(FLinearColor(1, 1, 1, 0.035f * Opacity), X, Y, Width, Height * 0.45f);
@@ -181,6 +182,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
     if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f, EAlign::Center, Width - 10); }
     Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled});
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
 
@@ -250,15 +252,20 @@ void AExpeditionHUD::DrawHUD()
     Super::DrawHUD();
     Buttons.Reset();
     Blockers.Reset();
+    ChipExclusions.Reset();
+    ChipsRequested = 0;
+    ReachRequested = 0;
+    bCursorRequested = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
-    S = FMath::Max(0.5f, FMath::Min(Canvas->SizeX / DesignWidth, Canvas->SizeY / 720.0f));
+    S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
-    Mouse = Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
+    // A capture run ignores the physical pointer so hover never changes a shot.
+    Mouse = !Player->IsCapturing() && Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
 
     // The tabletop overview has no board: unit bars and labels belong to battles only.
     if (View->HasRun() && !View->ShowingOverview()) { DrawWorldOverlays(); }
@@ -289,6 +296,7 @@ void AExpeditionHUD::DrawHUD()
         else { DrawDice(); }
     }
     if (View->InCombat()) { DrawBanner(); }
+    DrawTargetChips(); // All foreground panel bounds are known now, including the hover forecast.
     if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
     {
         float FeedbackY=H-64;
@@ -309,32 +317,42 @@ void AExpeditionHUD::DrawWorldOverlays()
 {
     const FCombatBattle& Rules = View->Rules();
     const FExpeditionPlayback& Show = View->Playback();
-    const bool bCombat = View->InCombat();
+    const bool bCombat = View->InCombat() && !Player->OverlayOpen();
     const int32 Active = bCombat ? Rules.ActiveId() : INDEX_NONE;
 
-    // Path preview: a dotted trail from the adventurer to the hovered cell.
+    // Boards with the contextual grid (#142) draw reach, path, blocked sight and victims on the ground itself;
+    // the HUD then keeps only what needs text. Primitive boards keep the dotted trail and markers below.
+    const bool bGroundGrid = View->DrawsContextualGrid();
+
+    // Path preview: a dotted trail from the adventurer to the hovered cell (the path length is always labelled).
     const TArray<FIntPoint>& Path = Player->PreviewPath();
-    if (bCombat && !Path.IsEmpty() && !View->IsPresenting())
+    if (Player->ShowsTargeting() && !Path.IsEmpty())
     {
         FVector2D Previous;
-        bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), 4.0f), Previous);
+        bool bHasPrevious = Project(View->UnitPosition(Player->Actor(), View->Metric().Scaled(4.0f)), Previous);
         for (int32 Index = 0; Index < Path.Num(); ++Index)
         {
             FVector2D Point;
-            if (!Project(View->BoardPosition(FVector2D(Path[Index].X, Path[Index].Y), 4.0f), Point)) { continue; }
-            if (bHasPrevious) { Line(Previous, Point, FLinearColor(0.5f, 0.95f, 1.0f, 0.9f), 3.0f); }
-            Circle(Point, Index == Path.Num() - 1 ? 9.0f : 4.0f, FLinearColor(0.55f, 0.95f, 1.0f, 0.95f));
+            if (!Project(View->BoardPosition(FVector2D(Path[Index].X, Path[Index].Y), View->Metric().Scaled(4.0f)), Point)) { continue; }
+            if (!bGroundGrid)
+            {
+                if (bHasPrevious) { Line(Previous, Point, FLinearColor(0.5f, 0.95f, 1.0f, 0.9f), 3.0f); }
+                Circle(Point, Index == Path.Num() - 1 ? 9.0f : 4.0f, FLinearColor(0.55f, 0.95f, 1.0f, 0.95f));
+            }
             Previous = Point; bHasPrevious = true;
         }
-        if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
+        if (bHasPrevious) { Text(FString::FromInt(Path.Num()), Previous.X, bGroundGrid ? Previous.Y - 30 : Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
     }
 
-    // Keyboard cursor: bright corner brackets around the cell.
+    // Inspection stays available during enemy turns and playback, just like arrow input.
     if (bCombat && Player->UsingKeyboardCursor())
     {
+        bCursorRequested = true;
         const FIntPoint Cell = Player->KeyboardCursorCell();
-        const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), 2.0f);
-        const FVector Offsets[] = {{-52, -52, 0}, {52, -52, 0}, {52, 52, 0}, {-52, 52, 0}};
+        const FBoardMetric& Metric = View->Metric();
+        const FVector Center = View->BoardPosition(FVector2D(Cell.X, Cell.Y), Metric.Scaled(2.0f));
+        const float Half = Metric.CellCm * 0.47f;
+        const FVector Offsets[] = {{-Half, -Half, 0}, {Half, -Half, 0}, {Half, Half, 0}, {-Half, Half, 0}};
         FVector2D Corners[4];
         bool bVisible = true;
         for (int32 Index = 0; Index < 4; ++Index) { bVisible &= Project(Center + Offsets[Index], Corners[Index]); }
@@ -350,19 +368,33 @@ void AExpeditionHUD::DrawWorldOverlays()
         }
     }
 
-    // Legal targets get a pulsing marker above their heads.
-    if (bCombat && !View->IsPresenting())
+    // Geometry is independent of target eligibility and available budgets.
+    if (Player->ShowsTargeting())
     {
-        const bool bFriendly = ExpeditionStyle::IsFriendlyAction(Player->Action(), Rules.Find(Player->Actor()));
-        for (int32 Id : Player->Targets())
+        Text(bGroundGrid ? TEXT("Outline Reach  /  x Blocked sight  /  Ring Legal target  /  AREA Victim")
+            : TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
+        const auto& Reach = Player->Reach();
+        auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
         {
-            FVector2D Point;
-            if (!Project(View->UnitPosition(Id, 185.0f), Point)) { continue; }
-            const bool bHover = Id == Player->HoveredTarget();
-            const float Bob = 4.0f * FMath::Sin(Clock * 5.0f);
-            const FLinearColor Color = bFriendly ? Safe : Danger;
-            Polygon(FVector2D(Point.X, Point.Y + Bob), bHover ? 12.0f : 9.0f, 3, PI / 2, FLinearColor(0, 0, 0, 0.5f));
-            Polygon(FVector2D(Point.X, Point.Y + Bob - 1), bHover ? 10.0f : 7.5f, 3, PI / 2, Color);
+            for (const auto Cell : Cells)
+            {
+                ++ReachRequested;
+                if (bGroundGrid) { continue; }
+                FVector2D P;
+                if (!Project(View->BoardPosition(FVector2D(Cell.X, Cell.Y), View->Metric().Scaled(5.0f)), P)) { continue; }
+                const auto Color = bBlocked ? Danger : Sky;
+                if (bBlocked) { Line(P-FVector2D(4,4), P+FVector2D(4,4), Color, 1); Line(P+FVector2D(-4,4), P+FVector2D(4,-4), Color, 1); }
+                else { Circle(P, 4, Color); }
+            }
+        };
+        DrawCells(Reach.Visible, false); DrawCells(Reach.Obstructed, true);
+        const auto Preview = Rules.Forecast(Player->Actor(), Player->Action(), Player->HoveredTarget());
+        for (const auto& Effect : Preview.Effects)
+        {
+            if (Effect.Effect != EAbilityEffect::Strike) { continue; }
+            FVector2D P;
+            if (Project(View->UnitPosition(Effect.TargetId, View->Metric().Figure(1.1f)), P))
+            { Frame(Gold, P.X-20, P.Y-12, 40, 24, 2); Text(TEXT("AREA"), P.X, P.Y-8, Gold, 0.65f, EAlign::Center); }
         }
     }
 
@@ -371,7 +403,7 @@ void AExpeditionHUD::DrawWorldOverlays()
         const FUnitDisplay* Display = Show.Unit(Unit.Id);
         if (!Display) { continue; }
         FVector2D Point;
-        if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? 70.0f : 122.0f), Point)) { continue; }
+        if (!Project(View->UnitPosition(Unit.Id, Display->Tilt > 0.5f ? View->Metric().Figure(0.4f) : View->Metric().Figure(0.9f)), Point)) { continue; }
         const bool bFocus = Unit.Id == Active || Unit.Id == Player->HoveredUnit() || Unit.Id == Player->HoveredTarget() || Unit.Id == Player->Selection();
         if (Display->Life == ECombatLife::Dead)
         {
@@ -404,7 +436,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     {
         if (Floater.Age < 0) { continue; }
         FVector2D Point;
-        if (!Project(View->BoardPosition(Floater.Cell, 105.0f + Floater.Age * 55.0f), Point)) { continue; }
+        if (!Project(View->BoardPosition(Floater.Cell, View->Metric().Scaled(105.0f + Floater.Age * 55.0f)), Point)) { continue; }
         const float Life = Floater.Age / Floater.Life;
         const float Alpha = Life < 0.7f ? 1.0f : 1.0f - (Life - 0.7f) / 0.3f;
         const float Pop = 1.0f + 0.6f * FMath::Max(0.0f, 1.0f - Floater.Age / 0.14f);
@@ -414,6 +446,56 @@ void AExpeditionHUD::DrawWorldOverlays()
 
 // ---------------------------------------------------------------------------------------
 // Persistent frame: location, initiative, system buttons, party, log.
+
+void AExpeditionHUD::DrawTargetChips()
+{
+    if (!Player->ShowsTargeting()) { return; }
+    const auto& Rules = View->Rules();
+    std::vector<ExpeditionLayout::Rect> Occupied;
+    for (const auto& Box : ChipExclusions)
+    { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
+    struct FDrawChip { ExpeditionLayout::Chip Geometry; FString Label; float Width; };
+    TArray<FDrawChip> Chips;
+    const ExpeditionLayout::Rect Bounds = ExpeditionLayout::ChipBounds(W, H);
+    constexpr float LabelScale = 0.72f;
+    // Text() shrinks a label that exceeds its panel, so fit the name here and keep the forecast at full size.
+    const float LabelFit = float(ExpeditionLayout::ChipMaxWidth - ExpeditionLayout::ChipTextPadding);
+    auto MeasureLabel = [this](const FString& Value) { return Measure(Value, LabelScale).X; };
+    int32 Overflow = 0;
+    for (const int32 Id : Player->Targets())
+    {
+        ++ChipsRequested;
+        FVector2D Anchor;
+        if (!Project(View->UnitPosition(Id, View->Metric().Figure(1.3f)), Anchor)) { ++Overflow; continue; }
+        const FCombatantState* Unit = Rules.Find(Id);
+        const FString Label = ExpeditionStyle::ChipLabel(Unit ? Unit->Name : FString(),
+            ExpeditionStyle::TargetChip(Rules, Player->Actor(), Player->Action(), Id), LabelFit, MeasureLabel);
+        const float Width = FMath::Min(float(ExpeditionLayout::ChipMaxWidth), Measure(Label, LabelScale).X + float(ExpeditionLayout::ChipTextPadding));
+        ExpeditionLayout::Chip Chip;
+        if (!ExpeditionLayout::PlaceChip({Anchor.X, Anchor.Y}, Width, ExpeditionLayout::ChipHeight, Bounds, Occupied, Chip)) { ++Overflow; continue; }
+        Occupied.push_back(Chip.Panel);
+        Chips.Add({Chip, Label, Width});
+    }
+    // Every leader sees every chip, including ones drawn later. Draw all clipped
+    // segments before chip text so connector order cannot obscure a label.
+    ExpeditionLayout::ExcludeHUDFrame({0, 0, W, H}, Bounds, Occupied);
+    for (const auto& Draw : Chips)
+    {
+        const auto& Chip = Draw.Geometry;
+        const ExpeditionLayout::Point Edge = {std::clamp(Chip.Anchor.X, Chip.Panel.Left, Chip.Panel.Right),
+            std::clamp(Chip.Anchor.Y, Chip.Panel.Top, Chip.Panel.Bottom)};
+        for (const auto& Segment : ExpeditionLayout::VisibleLeader(Chip.Anchor, Edge, Occupied))
+        { Line(FVector2D(Segment.From.X, Segment.From.Y), FVector2D(Segment.To.X, Segment.To.Y), Gold, 1); }
+    }
+    for (const auto& Draw : Chips)
+    {
+        const auto& PanelBounds = Draw.Geometry.Panel;
+        Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, ExpeditionLayout::ChipHeight, Gold, 0.96f, false);
+        Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, LabelScale, EAlign::Center, Draw.Width - 12);
+    }
+    if (Overflow > 0)
+    { Text(FString::Printf(TEXT("%d more targets: use arrows to inspect"), Overflow), W * 0.5f, H - 116, Gold, 0.7f, EAlign::Center); }
+}
 
 void AExpeditionHUD::DrawTopBar()
 {
@@ -704,6 +786,7 @@ void AExpeditionHUD::DrawDice()
     if (Alpha <= 0.01f) { return; }
     const float Width = 440, Height = 128;
     const float X = W - 12 - Width, Y = 54;
+    ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     Rect(FLinearColor(0, 0, 0, 0.25f * Alpha), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.86f * Alpha), X, Y, Width, Height);
     Rect(WithAlpha(Gold, 0.7f * Alpha), X, Y, Width, 2);
@@ -751,6 +834,7 @@ void AExpeditionHUD::DrawBanner()
     const float Alpha = FMath::Min(In, Out);
     const float Slide = (1.0f - In) * -60.0f + (1.0f - Out) * 60.0f;
     const float Y = H * 0.24f;
+    ChipExclusions.Add(FBox2D(FVector2D(0, Y), FVector2D(W, Y + 82)));
     Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), 0, Y, W, 82);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 + Slide, Y, 440, 2);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 - Slide, Y + 80, 440, 2);
@@ -956,7 +1040,7 @@ void AExpeditionHUD::DrawRecords()
 
 void AExpeditionHUD::DrawHelp()
 {
-    const float Width = 700, Height = 400;
+    const float Width = 700, Height = View->InCombat() ? 430.0f : 400.0f;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Sky, 0.98f);
@@ -985,13 +1069,13 @@ void AExpeditionHUD::DrawHelp()
         return;
     }
     const TCHAR* Left[] = {
-        TEXT("Click a glowing tile to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
+        TEXT("Click a highlighted cell to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
-        TEXT("Arrows + Enter  Keyboard cursor")};
+        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu")};
+        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu"), TEXT("Esc  Close Help or Records")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);

@@ -1,5 +1,9 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionCapture.h"
+#include "Misc/CommandLine.h"
+#include "GameFramework/InputSettings.h"
+#include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
@@ -14,6 +18,19 @@ void AExpeditionPlayerController::BeginPlay()
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
+    Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
+    if (Capture.IsValid())
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        // No console either: typed commands could change rendering between shots.
+        if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport()) { Viewport->ViewportConsole = nullptr; }
+        // The viewport handles F11 and Alt+Enter before any player input; switch both off for this
+        // process only (in memory, never saved to config) so a shot cannot change window mode.
+        UInputSettings* Settings = GetMutableDefault<UInputSettings>();
+        Settings->bF11TogglesFullscreen = false;
+        Settings->bAltEnterTogglesFullscreen = false;
+    }
     bShowMouseCursor = true;
     FInputModeGameOnly Mode;
     Mode.SetConsumeCaptureMouseDown(false);
@@ -28,11 +45,21 @@ void AExpeditionPlayerController::BeginPlay()
 void AExpeditionPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
+    // A capture run only looks: with no bindings, no key or click can submit a command or save,
+    // and the engine's debug shortcuts (F1 wireframe, F2 unlit, ...) cannot change later shots.
+    if (ExpeditionCapture::Requested(FCommandLine::Get()))
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        return;
+    }
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Released, this, &AExpeditionPlayerController::EndPan);
     Bind(EKeys::SpaceBar, &AExpeditionPlayerController::EndTurn);
     Bind(EKeys::Q, &AExpeditionPlayerController::RotateLeft);
     Bind(EKeys::E, &AExpeditionPlayerController::RotateRight);
@@ -47,7 +74,14 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
     Bind(EKeys::G, &AExpeditionPlayerController::Preset);
-    Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
+    // Hold Alt for the faint full grid (#142). Not a letter: Shift+W/A/S/D pan the camera, and Shift-Tab moves menu focus.
+    // Alt only sets a flag, so Alt+Enter still reaches the viewport's fullscreen toggle and no button reads Alt.
+    for (const FKey& Key : {EKeys::LeftAlt, EKeys::RightAlt})
+    {
+        InputComponent->BindKey(Key, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
+        InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
+    }
+    Bind(EKeys::A, &AExpeditionPlayerController::AttackKey);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
     Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
@@ -106,15 +140,32 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         }
     }
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
         DragX = MouseX;
     }
+    if (bPanning && bHasMouse)
+    {
+        // Drag the board under the pointer: about the visible width per screen width, in reference cm per pixel.
+        const float PerPixel = BattleView->CameraDistance() * 0.0005f;
+        BattleView->Pan(-(MouseX - PanX) * PerPixel, (MouseY - PanY) * PerPixel);
+        PanX = MouseX; PanY = MouseY;
+    }
+    // Shift + W/A/S/D pans the focus (plain A is the attack mode); the view clamps it to the board.
+    if (AllowsGameplayInput() && (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)))
+    {
+        const float Step = BattleView->CameraDistance() * 0.6f * DeltaTime;
+        const float Right = (IsInputKeyDown(EKeys::D) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::A) ? 1.0f : 0.0f);
+        const float Away = (IsInputKeyDown(EKeys::W) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::S) ? 1.0f : 0.0f);
+        if (Right != 0.0f || Away != 0.0f) { BattleView->Pan(Right * Step, Away * Step); }
+    }
 
     FBoardHighlights Highlights;
     Highlights.SelectedId = SelectedId;
+    // The full grid is presentation only; an open overlay owns the screen, so it hides the grid too.
+    Highlights.bFullGrid = (bGridHeld || bGridPreview) && !OverlayOpen();
     HoverUnitId = HoverTargetId = INDEX_NONE;
     Path.Reset();
     FIntPoint Hover;
@@ -129,24 +180,45 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         { if (Unit.Cell == Hover && !(Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { HoverUnitId = Unit.Id; } }
     }
     const int32 ActorId = Actor();
-    if (BattleView->InCombat() && !BattleView->IsPresenting() && ActorId == ActiveId)
+    ReachCells = FActionReach();
+    if (ShowsTargeting())
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
+        ReachCells = Rules.ActionReach(ActorId, SelectedAction);
+        Highlights.Reach = ReachCells;
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
+        if (const FCombatantState* Actor = Rules.Find(ActorId)) { Highlights.bHasOrigin = true; Highlights.Origin = Actor->Cell; }
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }
             if (Highlights.Targets.Contains(HoverUnitId)) { HoverTargetId = HoverUnitId; Highlights.HoverTargetId = HoverUnitId; }
         }
+        // Area victims: the same forecast the HUD labels, so the board frames exactly the labelled units.
+        for (const FTargetEffect& Effect : Rules.Forecast(ActorId, SelectedAction, HoverTargetId).Effects)
+        { if (Effect.Effect == EAbilityEffect::Strike) { Highlights.Victims.AddUnique(Effect.TargetId); } }
     }
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
+    if (Capture.IsValid()) { Capture->Tick(); }
+}
+
+bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
+{
+    return !bCapturing && GetMousePosition(X, Y);
+}
+
+void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
+{
+    SelectedAction = ECombatCommandType::Attack;
+    bKeyboardCursor = bAim;
+    if (bAim) { GridCursor = Cell; }
 }
 
 bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
+    if (bCapturing) { return false; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
 
@@ -250,7 +322,7 @@ void AExpeditionPlayerController::Click()
 {
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
@@ -394,6 +466,12 @@ bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
     return IsValid(BattleView) && !OverlayOpen();
 }
+bool AExpeditionPlayerController::ShowsTargeting() const
+{
+    return IsValid(BattleView) && AllowsGameplayInput() && BattleView->InCombat() && !BattleView->IsPresenting() &&
+        Actor() == BattleView->Rules().ActiveId();
+}
+
 bool AExpeditionPlayerController::OverlayOpen() const
 {
     return bShowHelp || bConfirmReturn || (IsValid(BattleView) && BattleView->ShowingRecords());
@@ -407,6 +485,11 @@ void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[
 void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
 void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(SpecialAction(1)); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
+void AExpeditionPlayerController::AttackKey()
+{
+    if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
+    AttackMode();
+}
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
 void AExpeditionPlayerController::RoleMode() { SetMode(RoleAction()); }
@@ -463,7 +546,7 @@ void AExpeditionPlayerController::ResolvePendingReturn()
         bReturnPending = false;
         SaveOverlayFocus();
         bConfirmReturn = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
         BattleView->PlayCue(EExpeditionCue::Click);
         return;
     }
@@ -491,7 +574,7 @@ void AExpeditionPlayerController::History()
     if (bOpening && !bShowHelp) { SaveOverlayFocus(); }
     bShowHelp = false;
     BattleView->ToggleRecords();
-    if (bOpening) { bDragging = false; } else { RestoreOverlayFocus(); }
+    if (bOpening) { bDragging = false; bPanning = false; } else { RestoreOverlayFocus(); }
 }
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
@@ -532,7 +615,7 @@ void AExpeditionPlayerController::ToggleHelp()
         // Help over Records keeps the focus saved when Records opened.
         if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SaveOverlayFocus(); }
         bShowHelp = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
     }
     else { bShowHelp = false; RestoreOverlayFocus(); }
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
@@ -554,10 +637,19 @@ void AExpeditionPlayerController::BeginDrag()
 {
     if (!AllowsGameplayInput()) { return; }
     float MouseX = 0, MouseY = 0;
-    bDragging = GetMousePosition(MouseX, MouseY);
+    bDragging = PointerPosition(MouseX, MouseY);
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+void AExpeditionPlayerController::BeginPan()
+{
+    if (!AllowsGameplayInput()) { return; }
+    bPanning = PointerPosition(PanX, PanY);
+}
+void AExpeditionPlayerController::EndPan() { bPanning = false; }
+void AExpeditionPlayerController::GridDown() { bGridHeld = true; }
+void AExpeditionPlayerController::GridUp() { bGridHeld = false; }
+void AExpeditionPlayerController::PreviewFullGrid(bool bShow) { bGridPreview = bShow; }
 
 bool AExpeditionPlayerController::ShowingBuilder() const
 {

@@ -74,7 +74,111 @@ OFF_ULTRA = ("Not on PlebDev Ultra: Unreal results from this machine do not coun
              "Unreal work on Ultra before merge (CONTRIBUTING.md).")
 
 # --cores reaches these commands; others refuse it so a cap is never silently dropped.
-CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package")
+CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package", "gallery")
+
+
+# Capture gallery: fixtures written by `test --filter Project.Tools.CaptureFixtures`, rendered by the
+# game's own capture mode (-ExpeditionCapture). Pose rules mirror ExpeditionCapture::ParsePoses.
+GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "default-seed-route")
+GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
+GALLERY_POSES = Path("tools/capture/poses.json")
+CAPTURE_MODES = ("battle", "targeting", "overview", "start")
+# Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
+CAMERA_DISTANCE = (900, 3200)
+FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
+FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
+
+
+def parse_resolution(text):
+    match = re.fullmatch(r"(\d{3,5})x(\d{3,5})", str(text))
+    if not match:
+        raise ValueError(f"Resolution {text!r} must look like 1920x1080")
+    width, height = int(match.group(1)), int(match.group(2))
+    if not (640 <= width <= 7680 and 360 <= height <= 4320):
+        raise ValueError(f"Resolution {text} is outside 640x360 to 7680x4320")
+    return width, height
+
+
+def resolution_argument(text):
+    try:
+        parse_resolution(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+    return text
+
+
+def load_poses(path):
+    """Validate a poses file the way the game does and return its shots."""
+    try:
+        data = json.loads(Path(path).read_text())
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"Cannot read poses {path}: {exc}") from None
+    if not isinstance(data, dict) or data.get("version") != 1 or isinstance(data.get("version"), bool):
+        raise ValueError(f"Poses {path} needs an object with \"version\": 1")
+    settle = data.get("settleFrames", 60)
+    if isinstance(settle, bool) or not isinstance(settle, int) or not 1 <= settle <= 1200:
+        raise ValueError("\"settleFrames\" must be a whole number from 1 to 1200")
+    shots = data.get("shots")
+    if not isinstance(shots, list) or not shots:
+        raise ValueError("Poses need a non-empty \"shots\" list")
+    names = set()
+    for index, shot in enumerate(shots):
+        if not isinstance(shot, dict):
+            raise ValueError(f"Shot {index} is not an object")
+        name = shot.get("name")
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name):
+            raise ValueError(f"Shot {index} needs a \"name\" of letters, digits, '-' and '_' (up to 64)")
+        if name in names:
+            raise ValueError(f"Shot name {name!r} is used twice")
+        names.add(name)
+        if shot.get("mode") not in CAPTURE_MODES:
+            raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
+        if shot["mode"] in ("battle", "targeting"):
+            yaw, distance = shot.get("yaw"), shot.get("distance")
+            if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:
+                raise ValueError(f"{name} needs a \"yaw\" from -360 to 360")
+            ok = distance == "default" or (isinstance(distance, (int, float)) and not isinstance(distance, bool) and CAMERA_DISTANCE[0] <= distance <= CAMERA_DISTANCE[1])
+            if not ok:
+                raise ValueError(f"{name} needs a \"distance\" of \"default\" or a number from {CAMERA_DISTANCE[0]} to {CAMERA_DISTANCE[1]}")
+    return shots
+
+
+def png_size(path):
+    data = Path(path).read_bytes()[:24]
+    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"{path} is not a PNG")
+    return struct.unpack(">II", data[16:24])
+
+
+def verify_capture(manifest_path, shots, resolution, directory):
+    """Check one game run's manifest and PNGs against the poses and requested size; return the manifest."""
+    if not manifest_path.is_file():
+        raise RuntimeError(f"The game wrote no manifest ({manifest_path}); inspect its log")
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") != "ok":
+        raise RuntimeError(f"Capture failed in the game: {manifest.get('error', manifest.get('status'))}")
+    wanted = [shot["name"] for shot in shots]
+    found = {shot.get("name"): shot for shot in manifest.get("shots", [])}
+    missing = [name for name in wanted if name not in found]
+    if missing:
+        raise RuntimeError(f"Manifest lacks shot(s) {missing}")
+    captured = 0
+    for name in wanted:
+        entry = found[name]
+        if entry.get("status") == "skipped":
+            continue
+        picture = directory / str(entry.get("file", ""))
+        if entry.get("status") != "captured" or not picture.is_file() or picture.stat().st_size == 0:
+            raise RuntimeError(f"Shot {name} has no picture ({picture})")
+        size = png_size(picture)
+        if size != resolution:
+            raise RuntimeError(f"Shot {name} is {size[0]}x{size[1]}, not the requested {resolution[0]}x{resolution[1]}")
+        if "camera" not in entry:
+            raise RuntimeError(f"Shot {name} has no camera transform")
+        captured += 1
+    if not captured:
+        raise RuntimeError("Every shot was skipped; the fixture does not suit these poses")
+    return manifest
 
 
 def current_host():
@@ -607,6 +711,77 @@ class Dev:
             raise RuntimeError(f"{len(events['warnings'])} warning line(s); the gate is zero. First: {events['warnings'][0]} Inspect {log}")
         print(f"Automation passed: {report}; warning lines: {len(events['warnings'])}; evidence: {output}")
 
+    def run_game(self, args, log, timeout):
+        """Run one owned game process. On timeout it gets one SIGTERM (a normal exit request); it is never killed."""
+        with log.open("ab") as stream:
+            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT)
+            try:
+                return process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
+                raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
+
+    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300):
+        fixtures = list(dict.fromkeys(fixtures or GALLERY_FIXTURES))
+        resolutions = list(dict.fromkeys(resolutions or GALLERY_RESOLUTIONS))
+        sizes = {text: parse_resolution(text) for text in resolutions}
+        for name in fixtures:
+            if not FIXTURE_PATTERN.fullmatch(name):
+                raise ValueError(f"Fixture {name!r} must be lowercase letters, digits and hyphens")
+        poses_path = Path(poses or GALLERY_POSES)
+        poses_path = (poses_path if poses_path.is_absolute() else self.w.root / poses_path).resolve()
+        shots = load_poses(poses_path)
+        if timeout < 30:
+            raise ValueError("--timeout must be at least 30 seconds")
+        fixture_root = self.w.root / "Saved" / "CaptureFixtures"
+        for name in fixtures:
+            if not (fixture_root / name / "current-v1.json").is_file():
+                raise RuntimeError(f"Fixture {name} is missing from {fixture_root}; {FIXTURE_HINT}")
+        self.require_engine()
+        self.require_closed()
+        receipt = self.w.local / "build.json"
+        if not receipt.is_file() or json.loads(receipt.read_text()) != self.build_identity():
+            raise RuntimeError("Build evidence is missing or stale; run build first")
+        output = self.w.local / "gallery" / stamp()
+        output.mkdir(parents=True)
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        runs = []
+        with self.config_guard():
+            for name in fixtures:
+                sidecar = fixture_root / name / "fixture.json"
+                info = json.loads(sidecar.read_text()) if sidecar.is_file() else {}
+                for text in resolutions:
+                    width, height = sizes[text]
+                    target = output / name / text
+                    save = output / "save" / name / text
+                    target.mkdir(parents=True)
+                    save.mkdir(parents=True)
+                    # The game only reads a copy; the real fixture and any real save stay untouched.
+                    shutil.copy2(fixture_root / name / "current-v1.json", save / "current-v1.json")
+                    log = target / "game.log"
+                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
+                               "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
+                               f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
+                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *self.native_limits()]
+                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}")
+                    code = self.run_game(command, target / "console.log", timeout)
+                    if code != 0:
+                        raise RuntimeError(f"Game exited {code} for {name} at {text}; inspect {log}")
+                    manifest = verify_capture(target / "manifest.json", shots, (width, height), target)
+                    runs.append({"fixture": name, "seed": manifest.get("seed", info.get("seed")), "board": [manifest.get("boardWidth"), manifest.get("boardHeight")],
+                                 "fixture_info": info, "resolution": text, "primitives": primitives, "themed": manifest.get("themed"),
+                                 "directory": str(target.relative_to(output)), "shots": manifest["shots"]})
+        write_json(output / "index.json", {"commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
+                                          "poses": str(poses_path), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
+        pictures = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "captured")
+        skipped = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "skipped")
+        print(f"Gallery: {len(runs)} run(s), {pictures} picture(s), {skipped} skipped as not applicable; index: {output / 'index.json'}")
+
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
         found = [p for p in output.glob(self.layout["packaged"].format(target=target)) if p.is_file() and os.access(p, os.X_OK)]
@@ -708,6 +883,12 @@ def main():
     test = commands.add_parser("test")
     test.add_argument("--filter", default=None)
     test.add_argument("--allow-warnings", action="store_true", help="Report warning lines without failing (the merge gate is zero)")
+    gallery = commands.add_parser("gallery", help="Render the fixed-pose capture gallery under .local/gallery/")
+    gallery.add_argument("--fixture", action="append", help="Fixture folder under Saved/CaptureFixtures (repeatable); default: " + ", ".join(GALLERY_FIXTURES))
+    gallery.add_argument("--res", action="append", type=resolution_argument, help="Window size WIDTHxHEIGHT (repeatable); default: " + ", ".join(GALLERY_RESOLUTIONS))
+    gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
+    gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
+    gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
     scaffold = commands.add_parser("new-class")
     scaffold.add_argument("kind", choices=BASES)
     scaffold.add_argument("name", help="PascalCase class name without Unreal's A/U prefix")
@@ -730,6 +911,8 @@ def main():
             dev.schemas(args.toolset)
         elif args.command == "test":
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
+        elif args.command == "gallery":
+            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)
         elif args.command == "new-class":
             for path in new_class(dev.w, args.kind, args.name):
                 print(path)
