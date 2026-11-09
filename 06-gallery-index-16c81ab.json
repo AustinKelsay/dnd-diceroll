@@ -1,0 +1,2983 @@
+{
+  "commit": "16c81ab70e33d1da15c7375e97150d5cb77d0f96",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/feature-143-camera-lighting/tools/capture/poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -973.5689495469319,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608846,
+              "y": -2581.0917633968165,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1250.3105316549968,
+              "y": -1708.3053104337775,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2728.568940877042,
+              "y": 856.3012724252314,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4336.091749008064,
+              "y": 987.1336142908403,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3463.3052956875954,
+              "y": 995.3106431342476,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 898.6986482118618,
+              "y": 2473.568940253779,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 767.8662360792043,
+              "y": 4081.091742665938,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 759.6892453865021,
+              "y": 3208.30528898804,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -718.5689396305163,
+              "y": 643.6985768955819,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2326.091736323812,
+              "y": 512.8660944958764,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1453.3052822884847,
+              "y": 504.68914195387924,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608848,
+              "y": -2581.0917633968165,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -973.5689495469319,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1280x720",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-battle/1280x720",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -973.5689495469319,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608846,
+              "y": -2581.0917633968165,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1250.3105316549968,
+              "y": -1708.3053104337775,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2728.568940877042,
+              "y": 856.3012724252314,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4336.091749008064,
+              "y": 987.1336142908403,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3463.3052956875954,
+              "y": 995.3106431342476,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 898.6986482118618,
+              "y": 2473.568940253779,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 767.8662360792043,
+              "y": 4081.091742665938,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 759.6892453865021,
+              "y": 3208.30528898804,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -718.5689396305163,
+              "y": 643.6985768955819,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2326.091736323812,
+              "y": 512.8660944958764,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1453.3052822884847,
+              "y": 504.68914195387924,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608848,
+              "y": -2581.0917633968165,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -973.5689495469319,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "default-seed-enemy-turn",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-enemy-turn/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1411.3011975326722,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1542.133469131233,
+              "y": -2641.091764290886,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1550.3105361253452,
+              "y": -1768.3053113278472,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 3028.5689453473906,
+              "y": 796.3012715311618,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4636.091753478412,
+              "y": 927.1336133967707,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3763.3053001579437,
+              "y": 935.3106422401779,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1198.6986526822102,
+              "y": 2413.5689393597095,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1067.8662405495527,
+              "y": 4021.0917417718683,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1059.6892498568504,
+              "y": 3148.3052880939704,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -418.56893516016794,
+              "y": 583.6985760015123,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2026.0917318534634,
+              "y": 452.8660936018067,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1153.3052778181363,
+              "y": 444.6891410598096,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "an enemy holds the turn"
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "an enemy holds the turn"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "default-seed-enemy-turn",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1280x720",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-enemy-turn/1280x720",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1411.3011975326722,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1542.133469131233,
+              "y": -2641.091764290886,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1550.3105361253452,
+              "y": -1768.3053113278472,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 3028.5689453473906,
+              "y": 796.3012715311618,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4636.091753478412,
+              "y": 927.1336133967707,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3763.3053001579437,
+              "y": 935.3106422401779,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1198.6986526822102,
+              "y": 2413.5689393597095,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1067.8662405495527,
+              "y": 4021.0917417718683,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1059.6892498568504,
+              "y": 3148.3052880939704,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -418.56893516016794,
+              "y": 583.6985760015123,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2026.0917318534634,
+              "y": 452.8660936018067,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1153.3052778181363,
+              "y": 444.6891410598096,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "an enemy holds the turn"
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "an enemy holds the turn"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "board-16x11",
+      "seed": 3,
+      "board": [
+        16,
+        11
+      ],
+      "fixture_info": {
+        "seed": 3,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 16,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "themed": true,
+      "directory": "board-16x11/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1021.3011939563936,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 1130.6609615584082,
+              "y": -2339.460541617427,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552197,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1160.3105325490665,
+              "y": -1768.3053113278472,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2638.568941771112,
+              "y": 796.3012715311618,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 3944.460528167268,
+              "y": 905.6610962155082,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3373.305296581665,
+              "y": 935.3106422401779,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 808.6986491059315,
+              "y": 2413.5689393597095,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 699.3387673392529,
+              "y": 3719.460520975596,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 669.6892462805718,
+              "y": 3148.3052880939704,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -808.5689387364466,
+              "y": 583.6985760015123,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": -2114.4605155720637,
+              "y": 474.33863715250203,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956132081399e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1543.305281394415,
+              "y": 444.6891410598096,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 1130.6609615584084,
+              "y": -2339.460541617427,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552197,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1021.3011939563936,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "board-16x11",
+      "seed": 3,
+      "board": [
+        16,
+        11
+      ],
+      "fixture_info": {
+        "seed": 3,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 16,
+        "boardHeight": 11
+      },
+      "resolution": "1280x720",
+      "primitives": false,
+      "themed": true,
+      "directory": "board-16x11/1280x720",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1021.3011939563936,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 1130.6609615584082,
+              "y": -2339.460541617427,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552197,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1160.3105325490665,
+              "y": -1768.3053113278472,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2638.568941771112,
+              "y": 796.3012715311618,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 3944.460528167268,
+              "y": 905.6610962155082,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3373.305296581665,
+              "y": 935.3106422401779,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 808.6986491059315,
+              "y": 2413.5689393597095,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 699.3387673392529,
+              "y": 3719.460520975596,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 669.6892462805718,
+              "y": 3148.3052880939704,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -808.5689387364466,
+              "y": 583.6985760015123,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": -2114.4605155720637,
+              "y": 474.33863715250203,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956132081399e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1543.305281394415,
+              "y": 444.6891410598096,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.404052734375,
+          "camera": {
+            "location": {
+              "x": 1130.6609615584084,
+              "y": -2339.460541617427,
+              "z": 2955.935953078488
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552197,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1021.3011939563936,
+              "y": -1033.5689504410016,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "board-18x12",
+      "seed": 3,
+      "board": [
+        18,
+        12
+      ],
+      "fixture_info": {
+        "seed": 3,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 12
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "themed": true,
+      "directory": "board-18x12/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -928.5689499939667,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608846,
+              "y": -2536.0917638438514,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1250.3105316549968,
+              "y": -1663.3053108808124,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2728.568940877042,
+              "y": 901.3012719781966,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4336.091749008064,
+              "y": 1032.1336138438055,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3463.3052956875954,
+              "y": 1040.3106426872127,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 898.6986482118618,
+              "y": 2518.5689398067443,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 767.8662360792043,
+              "y": 4126.091742218903,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 759.6892453865021,
+              "y": 3253.305288541005,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -718.5689396305163,
+              "y": 688.6985764485471,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2326.091736323812,
+              "y": 557.8660940488415,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1453.3052822884847,
+              "y": 549.6891415068444,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608848,
+              "y": -2536.0917638438514,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -928.5689499939667,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "board-18x12",
+      "seed": 3,
+      "board": [
+        18,
+        12
+      ],
+      "fixture_info": {
+        "seed": 3,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 12
+      },
+      "resolution": "1280x720",
+      "primitives": false,
+      "themed": true,
+      "directory": "board-18x12/1280x720",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -928.5689499939667,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608846,
+              "y": -2536.0917638438514,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 1250.3105316549968,
+              "y": -1663.3053108808124,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934003,
+              "yaw": 89.99999749552194,
+              "roll": 6.361109937766027e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2728.568940877042,
+              "y": 901.3012719781966,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 4336.091749008064,
+              "y": 1032.1336138438055,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.00000000000001,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 3463.3052956875954,
+              "y": 1040.3106426872127,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934009,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 898.6986482118618,
+              "y": 2518.5689398067443,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 767.8662360792043,
+              "y": 4126.091742218903,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -45.000000000000014,
+              "yaw": -89.99999749552195,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": 759.6892453865021,
+              "y": 3253.305288541005,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.00000298934005,
+              "yaw": -89.99999749552194,
+              "roll": -6.36110993776603e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -718.5689396305163,
+              "y": 688.6985764485471,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": -2326.091736323812,
+              "y": 557.8660940488415,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999988,
+              "yaw": 5.008956029422996e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 3000,
+          "camera": {
+            "location": {
+              "x": -1453.3052822884847,
+              "y": 549.6891415068444,
+              "z": 4139.635411658162
+            },
+            "rotation": {
+              "pitch": -60.000002989340025,
+              "yaw": 5.0089561119604316e-06,
+              "roll": 7.583033964355024e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2900,
+          "camera": {
+            "location": {
+              "x": 1242.1334646608848,
+              "y": -2536.0917638438514,
+              "z": 3250.2466258748727
+            },
+            "rotation": {
+              "pitch": -44.99999999999999,
+              "yaw": 89.99999749552198,
+              "roll": -4.497983566394945e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 1111.3011930623238,
+              "y": -928.5689499939667,
+              "z": 1175.5720887840557
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "default-seed-route",
+      "seed": 20261030,
+      "board": [
+        0,
+        0
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": -1,
+        "phase": "route",
+        "boardWidth": 0,
+        "boardHeight": 0
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-route/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "captured",
+          "file": "overview.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "default-seed-route",
+      "seed": 20261030,
+      "board": [
+        0,
+        0
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": -1,
+        "phase": "route",
+        "boardWidth": 0,
+        "boardHeight": 0
+      },
+      "resolution": "1280x720",
+      "primitives": false,
+      "themed": true,
+      "directory": "default-seed-route/1280x720",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "status": "skipped",
+          "reason": "the checkpoint is not in an encounter"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "captured",
+          "file": "overview.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    }
+  ]
+}
