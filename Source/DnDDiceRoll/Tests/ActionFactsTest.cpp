@@ -242,8 +242,10 @@ bool FActionFactsMatchLegalityTest::RunTest(const FString& Parameters)
                         if (F.Blockers.Num() > 1 && B.Reason < EActionBlocker::ActionSpent) { Checks.Fail(Context(), TEXT("a turn-level blocker is not alone")); }
                         if (B.Reason >= EActionBlocker::Count) { Checks.Fail(Context(), TEXT("a blocker is out of range")); }
                     }
-                    // The generic fallback reason only stands when nobody of the right kind exists, which no scene does for the hero.
-                    if (Actor == 10 && F.Blockers.Num() == 1 && F.Blockers[0].Reason == EActionBlocker::NoEligibleTarget)
+                    // The generic fallback reason only stands when nobody of the right kind exists. For the hero that happens only
+                    // when the one ally is downed (an ability that needs a conscious friend); any other scene has a real cause to report.
+                    const bool bAllyDowned = FString(Scene.Name).StartsWith(TEXT("downed ally"));
+                    if (Actor == 10 && !bAllyDowned && F.Blockers.Num() == 1 && F.Blockers[0].Reason == EActionBlocker::NoEligibleTarget)
                     { Checks.Fail(Context(), TEXT("the only reason is the generic fallback, so the ladder missed the real cause")); }
                     (F.bAvailable ? Available : Blocked) += 1;
                 }
