@@ -148,30 +148,25 @@ bool FBoardMetricSourceTest::RunTest(const FString& Parameters)
                     View->UnitPosition(Unit.Id).Equals(View->BoardPosition(FVector2D(Unit.Cell.X, Unit.Cell.Y)), 0.5f));
             }
             // Rig roots stand on their cells; the highest part of each standing figure is the metric's figure height.
-            TArray<USceneComponent*> Components;
-            View->GetComponents(Components);
             int32 Measured = 0;
             for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
             {
                 if (Unit.Life != ECombatLife::Conscious) { continue; }
-                const FVector Cell = View->CellPosition(Unit.Cell);
-                for (USceneComponent* Component : Components)
+                USceneComponent* RigRoot = View->UnitRigRoot(Unit.Id);
+                if (!RigRoot) { continue; }
+                TestTrue(FString::Printf(TEXT("%s: %s's rig root is on its cell"), *Mode, *Unit.Name),
+                    FVector2D(RigRoot->GetRelativeLocation()).Equals(FVector2D(View->CellPosition(Unit.Cell)), 0.1f));
+                TArray<USceneComponent*> Children;
+                RigRoot->GetChildrenComponents(true, Children);
+                double Highest = View->Metric().BoardTop();
+                for (USceneComponent* Child : Children)
                 {
-                    if (Component->GetAttachParent() != View->GetRootComponent() || Component->GetFName() == TEXT("Scenery") ||
-                        Component->GetNumChildrenComponents() < 2 || !FVector2D(Component->GetRelativeLocation()).Equals(FVector2D(Cell), 0.1f)) { continue; }
-                    TArray<USceneComponent*> Children;
-                    Component->GetChildrenComponents(true, Children);
-                    double Highest = View->Metric().BoardTop();
-                    for (USceneComponent* Child : Children)
-                    {
-                        const UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child);
-                        if (Primitive && Primitive->IsVisible()) { Highest = FMath::Max(Highest, Primitive->Bounds.GetBox().Max.Z); }
-                    }
-                    const double Height = Highest - View->Metric().BoardTop();
-                    TestTrue(FString::Printf(TEXT("%s: %s stands about 180 cm (measured %.1f)"), *Mode, *Unit.Name, Height), Height >= 170.0f && Height <= 192.0f);
-                    ++Measured;
-                    break;
+                    const UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child);
+                    if (Primitive && Primitive->IsVisible()) { Highest = FMath::Max(Highest, Primitive->Bounds.GetBox().Max.Z); }
                 }
+                const double Height = Highest - View->Metric().BoardTop();
+                TestTrue(FString::Printf(TEXT("%s: %s stands about 180 cm (measured %.1f)"), *Mode, *Unit.Name, Height), Height >= 170.0f && Height <= 192.0f);
+                ++Measured;
             }
             TestTrue(*(Mode + TEXT(": at least one figure was measured")), Measured > 0);
         }
