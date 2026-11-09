@@ -355,7 +355,6 @@ void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 void AExpeditionPlayerController::Click()
 {
     if (!IsValid(BattleView)) { return; }
-    bModeTip = false;
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
@@ -439,18 +438,17 @@ int32 AExpeditionPlayerController::Actor() const
 void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
 {
     if (!AllowsGameplayInput()) { return; }
-    bModeTip = false;
     const int32 ActorId = Actor();
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
         if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
-        else { BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); }
+        else { Acted(BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id})); }
         return;
     }
-    if (SelectedAction == ECombatCommandType::Attack) { BattleView->Execute({ECombatCommandType::Move, ActorId, Cell}); }
-    else { BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE}); }
+    if (SelectedAction == ECombatCommandType::Attack) { Acted(BattleView->Execute({ECombatCommandType::Move, ActorId, Cell})); }
+    else { Acted(BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE})); }
 }
 
 ECombatCommandType AExpeditionPlayerController::RoleAction() const
@@ -501,6 +499,11 @@ void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
     SelectedAction = Action;
     bModeTip = false;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
+}
+void AExpeditionPlayerController::Acted(bool bAccepted)
+{
+    // A rejected command leaves the mode and its tooltip up: the tooltip is where the reason is.
+    if (bAccepted) { bModeTip = false; }
 }
 void AExpeditionPlayerController::KeyMode(ECombatCommandType Action)
 {

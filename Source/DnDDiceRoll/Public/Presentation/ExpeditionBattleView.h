@@ -113,7 +113,11 @@ public:
     const FCombatBattle& Rules() const { return Session.Run().Battle(); }
     const FExpeditionProgress& Progress() const { return Session.Run().Progress(); }
     const TArray<FString>& Messages() const { return Feedback; }
-    void Execute(const FCombatCommand& Command);
+    /**
+     * Submits a party command and plays it. Returns whether the rules accepted it. A rejection is explained in the log by
+     * the first blocker of the action's facts (ExpeditionStyle::BlockerText) when they have one, else by the rules' own text.
+     */
+    bool Execute(const FCombatCommand& Command);
     void ChooseRoute(int32 Index);
     void ClaimReward(int32 RecipientId);
     void Recover(bool bTake);

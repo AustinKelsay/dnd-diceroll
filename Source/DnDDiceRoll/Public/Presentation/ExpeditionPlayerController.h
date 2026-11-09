@@ -27,7 +27,8 @@ public:
     ECombatCommandType Action() const { return SelectedAction; }
     /**
      * True while the action chosen with its key keeps its tooltip up, so the keyboard shows what hover shows (#58).
-     * Cleared by a turn change, a pointer click, acting, ending the turn and the aim preview.
+     * Cleared by a turn change, an accepted command, ending the turn, choosing a mode with the pointer and the aim preview;
+     * a rejected command leaves it up, since the tooltip holds the reason.
      */
     bool ModeTipActive() const { return bModeTip; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
@@ -192,6 +193,7 @@ private:
     void SetMode(ECombatCommandType Action);
     /** A mode key: selects the mode and keeps its tooltip up. */
     void KeyMode(ECombatCommandType Action);
+    void Acted(bool bAccepted);
     bool AllowsGameplayInput() const;
     bool CanSelectSubclass() const;
 };
