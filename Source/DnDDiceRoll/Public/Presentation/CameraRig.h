@@ -235,7 +235,7 @@ namespace ExpeditionCameraRig
     inline FVector2D LimitLean(const FVector2D& Centre, const FVector2D& Target, int32 Width, int32 Height, const FBoardMetric& Metric,
         float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
     {
-        if (!BoardInside(Width, Height, Metric, Centre, Yaw, Distance, Pitch, Safe, LeanFill)) { return Target; }
+        if (!BoardInside(Width, Height, Metric, Centre, Yaw, Distance, Pitch, Safe, 1.0f)) { return Target; } // the board cannot fit: free lean
         if (BoardInside(Width, Height, Metric, Target, Yaw, Distance, Pitch, Safe, LeanFill)) { return Target; }
         float Low = 0.0f, High = 1.0f;
         for (int32 Iteration = 0; Iteration < 16; ++Iteration)
