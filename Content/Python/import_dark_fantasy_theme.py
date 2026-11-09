@@ -88,14 +88,14 @@ def add(material, a, b, x, y):
     return node
 
 
-MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness"}
+MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness", "CameraFade"}
 MASTER_VECTORS = {"Color", "FillSky", "FillGround", "RimColor"}
 MASTER_TEXTURES = {"Tex"}
 
 
 def master_is_current(material):
     names = lambda values: {str(v) for v in values}
-    return (MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
+    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
             and MASTER_VECTORS <= names(mel.get_vector_parameter_names(material))
             and MASTER_TEXTURES <= names(mel.get_texture_parameter_names(material)))
 
@@ -169,6 +169,29 @@ def master_material():
 
     emissive = add(material, add(material, glow_term, fill_term, 100, 600), rim_term, 250, 700)
     roughness = scalar(material, "Roughness", 0.85, 100, 500)
+
+    # Camera fade: scenery closer to the camera than CameraFade x the camera's height is clipped, so a
+    # diorama that surrounds the board (r001 Root) never swallows the camera when the HUD-safe fit pulls it
+    # back. The radius scales with zoom; the board and figures are always farther away. In shadow passes the
+    # camera is the light, so clipped scenery keeps its shadows.
+    material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+    world_pos = expression(material, unreal.MaterialExpressionWorldPosition, -700, 1550)
+    camera_pos = expression(material, unreal.MaterialExpressionCameraPositionWS, -700, 1650)
+    distance = expression(material, unreal.MaterialExpressionDistance, -500, 1600)
+    mel.connect_material_expressions(world_pos, "", distance, "A")
+    mel.connect_material_expressions(camera_pos, "", distance, "B")
+    camera_z = expression(material, unreal.MaterialExpressionComponentMask, -500, 1700, r=False, g=False, b=True, a=False)
+    mel.connect_material_expressions(camera_pos, "", camera_z, "")
+    fade = scalar(material, "CameraFade", 0.5, -500, 1800)
+    radius = mul(material, camera_z, fade, -300, 1750)
+    beyond = expression(material, unreal.MaterialExpressionSubtract, -150, 1650)
+    mel.connect_material_expressions(distance, "", beyond, "A")
+    mel.connect_material_expressions(radius, "", beyond, "B")
+    edge = expression(material, unreal.MaterialExpressionMultiply, 0, 1650, const_b=0.02)
+    mel.connect_material_expressions(beyond, "", edge, "A")
+    opacity = expression(material, unreal.MaterialExpressionSaturate, 150, 1650)
+    mel.connect_material_expressions(edge, "", opacity, "")
+    mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY_MASK)
     spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
