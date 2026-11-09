@@ -88,16 +88,14 @@ def add(material, a, b, x, y):
     return node
 
 
-MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness", "CameraFade"}
-MASTER_VECTORS = {"Color", "FillSky", "FillGround", "RimColor"}
-MASTER_TEXTURES = {"Tex"}
+# Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
+# revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
+MASTER_GRAPH_REVISION = "dice-theme-4"
+MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
 def master_is_current(material):
-    names = lambda values: {str(v) for v in values}
-    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
-            and MASTER_VECTORS <= names(mel.get_vector_parameter_names(material))
-            and MASTER_TEXTURES <= names(mel.get_texture_parameter_names(material)))
+    return unreal.EditorAssetLibrary.get_metadata_tag(material, MASTER_REVISION_TAG) == MASTER_GRAPH_REVISION
 
 
 def set_if_different(obj, prop, value):
@@ -116,12 +114,13 @@ def master_material():
              + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
              + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
     roughness = Roughness (per instance)
+    opacity mask = ShadowPassSwitch(Default: camera clip, Shadow: 1)   the camera clip never removes shadows
     """
     if library.does_asset_exist(MASTER):
         material = unreal.load_asset(MASTER)
-        # Leave an existing graph alone when it already exposes this graph's parameters, so a rerun never
+        # Leave an existing graph alone when it carries this graph revision, so a rerun never
         # re-saves the master (and every instance) for nothing. Set DND_THEME_REBUILD_MASTER=1 to rebuild it
-        # on purpose after changing the graph below.
+        # on purpose; otherwise it is rebuilt only when its stored graph revision differs from MASTER_GRAPH_REVISION.
         if os.environ.get("DND_THEME_REBUILD_MASTER") != "1" and master_is_current(material):
             unreal.log("THEME_MASTER kept (graph current)")
             return material
@@ -172,8 +171,9 @@ def master_material():
 
     # Camera fade: scenery closer to the camera than CameraFade x the camera's height is clipped, so a
     # diorama that surrounds the board (r001 Root) never swallows the camera when the HUD-safe fit pulls it
-    # back. The radius scales with zoom; the board and figures are always farther away. In shadow passes the
-    # camera is the light, so clipped scenery keeps its shadows.
+    # back. The radius scales with zoom; the board and figures are always farther away. A shadow depth pass keeps
+    # the player camera's origin (CameraPositionWS is not the light), so the clip would also remove shadows;
+    # a ShadowPassSwitch sends a constant 1 to the shadow pass, so clipped scenery still casts its shadow.
     material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
     world_pos = expression(material, unreal.MaterialExpressionWorldPosition, -700, 1550)
     camera_pos = expression(material, unreal.MaterialExpressionCameraPositionWS, -700, 1650)
@@ -191,13 +191,19 @@ def master_material():
     mel.connect_material_expressions(beyond, "", edge, "A")
     opacity = expression(material, unreal.MaterialExpressionSaturate, 150, 1650)
     mel.connect_material_expressions(edge, "", opacity, "")
-    mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    shadow_one = expression(material, unreal.MaterialExpressionConstant, 150, 1750, r=1.0)
+    mask = expression(material, unreal.MaterialExpressionShadowReplace, 300, 1650)
+    mel.connect_material_expressions(opacity, "", mask, "Default")
+    mel.connect_material_expressions(shadow_one, "", mask, "Shadow")
+    mel.connect_material_property(mask, "", unreal.MaterialProperty.MP_OPACITY_MASK)
     spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
     mel.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
     mel.recompile_material(material)
+    unreal.EditorAssetLibrary.set_metadata_tag(material, MASTER_REVISION_TAG, MASTER_GRAPH_REVISION)
+    material.modify()
     return material
 
 
