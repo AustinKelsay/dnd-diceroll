@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "Components/LightComponent.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/World.h"
 #include "HAL/FileManager.h"
@@ -54,8 +55,8 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
     }
     // Pan clamp: far outside the board lands on the board box grown by the margin.
     const FVector2D Far = ClampFocus(FVector2D(1.0e6f, -1.0e6f), 16, 11, 150.0f);
-    TestEqual(TEXT("Pan clamps X to the board plus margin"), Far.X, 15 * 150.0f + PanMarginCells * 150.0f);
-    TestEqual(TEXT("Pan clamps Y to the board plus margin"), Far.Y, -PanMarginCells * 150.0f);
+    TestEqual(TEXT("Pan clamps X to the board plus margin"), static_cast<float>(Far.X), 15 * 150.0f + PanMarginCells * 150.0f);
+    TestEqual(TEXT("Pan clamps Y to the board plus margin"), static_cast<float>(Far.Y), -PanMarginCells * 150.0f);
     TestTrue(TEXT("A focus inside the board is untouched"), ClampFocus(FVector2D(300.0f, 600.0f), 16, 11, 150.0f).Equals(FVector2D(300.0f, 600.0f)));
     // The fit grows with the board and stays in reference units (the metric scale cancels out).
     const FSafeRect Safe;
@@ -85,7 +86,7 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
         {
             View->SnapCamera(-90.0f, Stop.Key);
             TestEqual(FString::Printf(TEXT("Rig pitch at %.0f"), Stop.Key), View->CameraPitch(), Stop.Value, 0.01f);
-            TestEqual(FString::Printf(TEXT("Camera looks down %.0f degrees at %.0f"), Stop.Value, Stop.Key), -View->CameraTransform().Rotator().Pitch, Stop.Value, 0.05f);
+            TestEqual(FString::Printf(TEXT("Camera looks down %.0f degrees at %.0f"), Stop.Value, Stop.Key), static_cast<float>(-View->CameraTransform().Rotator().Pitch), Stop.Value, 0.05f);
         }
         float LastPitch = 0.0f;
         for (float Distance = MinDistance; Distance <= MaxDistance; Distance += 100.0f)
@@ -98,7 +99,7 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
         View->SnapCamera(-90.0f, Framed);
         View->Orbit(45.0f);
         View->Tick(2.0f);
-        TestEqual(TEXT("Orbit leaves the pitch alone"), -View->CameraTransform().Rotator().Pitch, 45.0f, 0.1f);
+        TestEqual(TEXT("Orbit leaves the pitch alone"), static_cast<float>(-View->CameraTransform().Rotator().Pitch), 45.0f, 0.1f);
         // Pan stays inside the board plus margin whatever the yaw, and a snap clears it.
         const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
         const float Cell = View->Metric().CellCm;

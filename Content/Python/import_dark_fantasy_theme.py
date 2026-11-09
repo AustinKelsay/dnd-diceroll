@@ -244,8 +244,10 @@ def apply_material(mesh, texture, asset_id, name, look, master):
     mel.set_material_instance_scalar_parameter_value(instance, "Fill", fill)
     mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
     mel.update_material_instance(instance)
+    # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
-        mesh.set_material(index, instance)
+        if mesh.get_material(index) != instance:
+            mesh.set_material(index, instance)
     unreal.log("THEME_MATERIAL {} glow={} mask={}".format(name, glow if masked else 0.0, masked))
 
 
@@ -268,6 +270,7 @@ for asset_id, name, folder, prop, *look in ASSETS:
     apply_material(mesh, texture, asset_id, name, look, master)
     theme.set_editor_property(prop, mesh)
     found += 1
-if not library.save_directory(THEME, only_if_is_dirty=False, recursive=True):
+# Save only what this run changed: unchanged meshes and textures keep their exact bytes.
+if not library.save_directory(THEME, only_if_is_dirty=True, recursive=True):
     raise RuntimeError("Unable to save " + THEME)
 unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes".format(found, len(ASSETS)))
