@@ -2,6 +2,7 @@ import ast
 import json
 from pathlib import Path
 import py_compile
+import re
 import sys
 import tempfile
 import unittest
@@ -169,7 +170,10 @@ class ThemePlanTests(unittest.TestCase):
         self.assertIn("repair_lod_slots(", text)
         self.assertIn("set_lod_material_slot(", text)
         self.assertIn("M_FigureSilhouette", text)
-        self.assertIn("figure-silhouette-2", text)
+        # The silhouette material carries a graph revision that ensure_material checks.
+        revision = re.search(r'^FIGURE_SILHOUETTE_REVISION = "(figure-silhouette-\d+)"$', text, re.M)
+        self.assertIsNotNone(revision)
+        self.assertIn("figure_silhouette_is_current, FIGURE_SILHOUETTE_REVISION)", text)
         overlay = (ROOT / "Content" / "Python" / "create_board_overlay_material.py").read_text()
         self.assertIn('set_editor_property("disable_depth_test", True)', overlay)
         self.assertIn('GRAPH_REVISION = "board-overlay-2"', overlay)
