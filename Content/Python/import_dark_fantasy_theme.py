@@ -105,6 +105,52 @@ def add(material, a, b, x, y):
     return node
 
 
+MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness", "CameraFade"}
+MASTER_VECTORS = {"Color", "FillSky", "FillGround", "RimColor"}
+MASTER_TEXTURES = {"Tex"}
+
+
+def master_is_current(material):
+    names = lambda values: {str(v) for v in values}
+    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
+            and MASTER_VECTORS <= names(mel.get_vector_parameter_names(material))
+            and MASTER_TEXTURES <= names(mel.get_texture_parameter_names(material)))
+
+
+def set_if_different(obj, prop, value):
+    """Sets an editor property only when it differs, so unchanged assets are never dirtied."""
+    if obj.get_editor_property(prop) != value:
+        obj.set_editor_property(prop, value)
+        return True
+    return False
+
+
+def camera_clip(material, x, y):
+    """Opacity mask (0 .. 1) that clips scenery closer to the camera than CameraFade x the camera's height (#143).
+
+    A diorama that surrounds the board (r001 Root) would swallow the camera when the HUD-safe fit pulls it back; the radius
+    scales with zoom and the board and figures are always farther away. In shadow passes the camera is the light, so clipped
+    scenery keeps its shadows. Shared by M_DiceRollTheme and M_DiceRollOccluder (which multiplies it with its sight-line dither).
+    """
+    world_pos = expression(material, unreal.MaterialExpressionWorldPosition, x, y)
+    camera_pos = expression(material, unreal.MaterialExpressionCameraPositionWS, x, y + 100)
+    distance = expression(material, unreal.MaterialExpressionDistance, x + 200, y + 50)
+    mel.connect_material_expressions(world_pos, "", distance, "A")
+    mel.connect_material_expressions(camera_pos, "", distance, "B")
+    camera_z = expression(material, unreal.MaterialExpressionComponentMask, x + 200, y + 150, r=False, g=False, b=True, a=False)
+    mel.connect_material_expressions(camera_pos, "", camera_z, "")
+    fade = scalar(material, "CameraFade", 0.5, x + 200, y + 250)
+    radius = mul(material, camera_z, fade, x + 400, y + 200)
+    beyond = expression(material, unreal.MaterialExpressionSubtract, x + 550, y + 100)
+    mel.connect_material_expressions(distance, "", beyond, "A")
+    mel.connect_material_expressions(radius, "", beyond, "B")
+    edge = expression(material, unreal.MaterialExpressionMultiply, x + 700, y + 100, const_b=0.02)
+    mel.connect_material_expressions(beyond, "", edge, "A")
+    opacity = expression(material, unreal.MaterialExpressionSaturate, x + 850, y + 100)
+    mel.connect_material_expressions(edge, "", opacity, "")
+    return opacity
+
+
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
@@ -116,7 +162,14 @@ def master_material():
     """
     if library.does_asset_exist(MASTER):
         material = unreal.load_asset(MASTER)
+        # Leave an existing graph alone when it already exposes this graph's parameters, so a rerun never
+        # re-saves the master (and every instance) for nothing. Set DND_THEME_REBUILD_MASTER=1 to rebuild it
+        # on purpose after changing the graph below.
+        if os.environ.get("DND_THEME_REBUILD_MASTER") != "1" and master_is_current(material):
+            unreal.log("THEME_MASTER kept (graph current)")
+            return material
         mel.delete_all_material_expressions(material)
+        unreal.log("THEME_MASTER rebuilt")
     else:
         material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
     white = unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture")
@@ -159,6 +212,8 @@ def master_material():
 
     emissive = add(material, add(material, glow_term, fill_term, 100, 600), rim_term, 250, 700)
     roughness = scalar(material, "Roughness", 0.85, 100, 500)
+    material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+    mel.connect_material_property(camera_clip(material, -700, 1550), "", unreal.MaterialProperty.MP_OPACITY_MASK)
     spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
@@ -261,7 +316,7 @@ def build_occluder_material(material):
     """Dithered opacity mask for the near architecture (#145): base look of the world, faded around the sight lines.
 
     Parameters set at run time by AExpeditionBattleView::UpdateOccluder: SightEye, SightFocus, SightUnit (world cm),
-    FadeRadius (cm) and FadeMin. Defaults leave every pixel opaque. The mask compares the faded opacity with an
+    FadeRadius (cm) and FadeMin, plus CameraFade (the master's camera clip, #143). Defaults leave every pixel opaque away from the camera. The mask compares the faded opacity with an
     interleaved-gradient noise of the pixel position, so the cut-out is a dither, never a hard edge or a hide.
     """
     material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
@@ -301,7 +356,10 @@ def build_occluder_material(material):
                  binary(material, unreal.MaterialExpressionAdd,
                         binary(material, unreal.MaterialExpressionMultiply, binary(material, unreal.MaterialExpressionSubtract, faded, noise, 1450, 2000), None, 1600, 2000, const_b=1000.0),
                         None, 1750, 2000, const_b=0.5), 1900, 2000)
-    mel.connect_material_property(keep, "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    # Both fades apply, neither overrides the other: a pixel is kept only if the sight-line dither keeps it AND it is outside
+    # the camera clip (#143), so geometry around the camera never swallows it and what blocks the view dithers.
+    clipped = binary(material, unreal.MaterialExpressionMin, keep, camera_clip(material, 300, 2600), 2100, 2000)
+    mel.connect_material_property(clipped, "", unreal.MaterialProperty.MP_OPACITY_MASK)
 
 
 def build_card_material(material):
@@ -479,25 +537,32 @@ def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan
     path = THEME + "/Materials/MI_" + name[3:]
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
         "MI_" + name[3:], THEME + "/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
-    mel.set_material_instance_parent(instance, parents[kind])
+    changed = False
+    if instance.get_editor_property("parent") != parents[kind]:
+        mel.set_material_instance_parent(instance, parents[kind])
+        changed = True
     if texture is None:
         existing = THEME + "/Textures/T_" + name[3:]
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
     if texture is not None:
         set_texture(texture, revision)
-        mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
+        if mel.get_material_instance_texture_parameter_value(instance, "Tex") != texture:
+            mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
+            changed = True
     # The glow mask guard: without a varying vertex alpha glow stays 0.
     masked = theme_plan.has_alpha_mask(source or r001_source(asset_id, name))
     if kind == theme_plan.LIT:
-        mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow if masked else 0.0)
-        mel.set_material_instance_scalar_parameter_value(instance, "SelfLit", self_lit)
-        mel.set_material_instance_scalar_parameter_value(instance, "Rim", rim)
-        mel.set_material_instance_scalar_parameter_value(instance, "Fill", fill)
-        mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
+        scalars = (("Glow", glow if masked else 0.0), ("SelfLit", self_lit), ("Rim", rim), ("Fill", fill), ("Roughness", roughness))
     elif kind == theme_plan.OCCLUDER:
-        mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow if masked else 0.0)
-        mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
-    mel.update_material_instance(instance)
+        scalars = (("Glow", glow if masked else 0.0), ("Roughness", roughness))
+    else:
+        scalars = ()
+    for parameter, value in scalars:
+        if abs(mel.get_material_instance_scalar_parameter_value(instance, parameter) - value) > 1e-6:
+            mel.set_material_instance_scalar_parameter_value(instance, parameter, value)
+            changed = True
+    if changed:
+        mel.update_material_instance(instance)
     # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
         if mesh.get_material(index) != instance:
@@ -531,7 +596,7 @@ def set_list(theme, prop, items):
     current = [name(item) for item in theme.get_editor_property(prop)]
     wanted = [name(item) for item in items]
     if current != wanted:
-        theme.set_editor_property(prop, items)
+        set_if_different(theme, prop, items)
 
 
 def main():
@@ -544,7 +609,7 @@ def main():
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()
-    theme.set_editor_property("tint_material", master)
+    set_if_different(theme, "tint_material", master)
 
     # The kit's true-metric world and props replace their r001 packages together or not at all: the board scales r001 art
     # and places r002 art unscaled, so a mix would draw one of them at the wrong size.
@@ -564,11 +629,11 @@ def main():
         package = theme_plan.package_path(folder, name)
         if kit_tagged(mesh):
             # Already replaced by r002: its look is applied below, never reset from the r001 export.
-            theme.set_editor_property(prop, mesh)
+            set_if_different(theme, prop, mesh)
             found += 1
             continue
         apply_material(mesh, texture, asset_id, name, look, parents)
-        theme.set_editor_property(prop, mesh)
+        set_if_different(theme, prop, mesh)
         if nanite_enabled(mesh):
             if fix_r001_nanite:
                 force_nanite_off(mesh)
@@ -605,7 +670,7 @@ def main():
         apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
         asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
         if index is None:
-            theme.set_editor_property(prop, mesh)
+            set_if_different(theme, prop, mesh)
         else:
             slots[prop][index] = mesh
         kit_loaded += 1
@@ -613,7 +678,7 @@ def main():
         set_list(theme, prop, items)
     metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2]))) for row in theme_plan.R002 if row[0] in theme_plan.METRIC_GATE)
     if bool(theme.get_editor_property("metric_kit")) != metric:
-        theme.set_editor_property("metric_kit", metric)
+        set_if_different(theme, "metric_kit", metric)
 
     # Save only what this run changed: unchanged meshes and textures keep their exact bytes.
     if not library.save_directory(THEME, only_if_is_dirty=True, recursive=True):
