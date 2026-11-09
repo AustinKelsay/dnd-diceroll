@@ -15,15 +15,15 @@ USTRUCT(BlueprintType)
 struct DNDDICEROLL_API FDiceRollAnimSet
 {
     GENERATED_BODY()
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Idle;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Walk;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Melee;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Ranged;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Cast;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Hit;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Downed;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Death;
-    UPROPERTY(EditDefaultsOnly, Category = "Animation") TSoftObjectPtr<UAnimSequence> Recover;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Idle;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Walk;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Melee;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Ranged;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Cast;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Hit;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Downed;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Death;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Recover;
 
     const TSoftObjectPtr<UAnimSequence>& For(EUnitPose Pose) const;
 };
@@ -36,10 +36,10 @@ USTRUCT(BlueprintType)
 struct DNDDICEROLL_API FDiceRollCharacter
 {
     GENERATED_BODY()
-    UPROPERTY(EditDefaultsOnly, Category = "Character") TSoftObjectPtr<USkeletalMesh> Mesh;
-    UPROPERTY(EditDefaultsOnly, Category = "Character") FDiceRollAnimSet Animations;
+    UPROPERTY(EditAnywhere, Category = "Character") TSoftObjectPtr<USkeletalMesh> Mesh;
+    UPROPERTY(EditAnywhere, Category = "Character") FDiceRollAnimSet Animations;
     /** Extra yaw in degrees if the import faces the wrong way (the r001 exports face +X). */
-    UPROPERTY(EditDefaultsOnly, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
+    UPROPERTY(EditAnywhere, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
 
     /** Loads the mesh and all nine clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
