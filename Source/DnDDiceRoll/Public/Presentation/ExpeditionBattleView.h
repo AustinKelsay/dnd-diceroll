@@ -183,6 +183,8 @@ public:
     int32 TileCount() const { return Tiles.Num(); }
     /** World diameter in cm of the footprint ring under a combatant, read from the ring's geometry; zero if it has none. */
     float FootprintRingDiameterCm(int32 UnitId) const;
+    /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
+    USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
     void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
     /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
