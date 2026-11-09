@@ -196,6 +196,15 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
         auto InjectCombatant = [](const TSharedPtr<FJsonObject>& Unit)
         {
             if (!Unit.IsValid()) { return; }
+            // Fields added by the class slice with neutral defaults (a real format-4 save has none of them).
+            {
+                static const FCombatantState Defaults;
+                static const TSharedRef<FJsonObject> Fields = ExportStruct(FCombatantState::StaticStruct(), &Defaults);
+                const TCHAR* Added[] = {TEXT("ActionSurgeUses"), TEXT("SpellSlot1"), TEXT("SpellSlot2"), TEXT("SpellSlot3"),
+                    TEXT("SpellArmorBonus"), TEXT("SpellArmorRounds"), TEXT("bMageArmor"), TEXT("bNegatesMagicMissile"),
+                    TEXT("ConcentratedSpell"), TEXT("ConcentratedTargetId")};
+                for (const TCHAR* Field : Added) { if (!Unit->HasField(Field)) { Unit->SetField(Field, Fields->Values.FindChecked(Field)); } }
+            }
             if (!Unit->HasField(TEXT("ExperiencePoints"))) { Unit->SetNumberField(TEXT("ExperiencePoints"), 0); }
             if (!Unit->HasField(TEXT("bLevelUpAvailable"))) { Unit->SetBoolField(TEXT("bLevelUpAvailable"), false); }
             if (!Unit->HasField(TEXT("ClassLevels")))
@@ -214,6 +223,11 @@ bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FSt
         {
             if (TSharedPtr<FJsonObject> Battle = Current->GetObjectField(TEXT("Battle")))
             {
+                {
+                    static const FCombatSnapshot Defaults;
+                    static const TSharedRef<FJsonObject> Fields = ExportStruct(FCombatSnapshot::StaticStruct(), &Defaults);
+                    for (const TCHAR* Field : {TEXT("AttacksLeft"), TEXT("bSneakUsedThisTurn")}) { if (!Battle->HasField(Field)) { Battle->SetField(Field, Fields->Values.FindChecked(Field)); } }
+                }
                 if (TSharedPtr<FJsonObject> Encounter = Battle->GetObjectField(TEXT("Encounter")))
                 {
                     const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
