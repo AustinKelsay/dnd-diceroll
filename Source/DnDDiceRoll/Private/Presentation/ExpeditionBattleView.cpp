@@ -1036,8 +1036,9 @@ bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
     {
         // The facts name what stops the action as a whole; the rules' own text stays for a target-specific failure they cannot explain.
         // Nothing changed, so the facts read the state the rejection was decided on.
+        // A command the facts do not describe (cost None: the SRD-only Grapple, Shove and Escape, or one the kit lacks) keeps the rules' text.
         const FActionFacts Facts = FActionFactsQuery::For(Rules(), Command.ActorId, Command.Type);
-        if (!Facts.Blockers.IsEmpty()) { Result.Feedback = ExpeditionStyle::BlockerText(Facts.Blockers[0]); }
+        if (Facts.Cost != EActionCostKind::None && !Facts.Blockers.IsEmpty()) { Result.Feedback = ExpeditionStyle::BlockerText(Facts.Blockers[0]); }
     }
     Record(Result);
     // An accepted order completes whatever is still being shown (already resolved), then plays.

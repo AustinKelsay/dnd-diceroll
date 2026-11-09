@@ -16,7 +16,7 @@ using EC = ECombatCommandType;
 const FIntPoint Viewports[] = {FIntPoint(1280, 720), FIntPoint(1920, 1080), FIntPoint(2560, 1080), FIntPoint(1024, 576)};
 
 /** A checkpoint at the first route's encounter for a party of the given builds (slots 1-4, in order). */
-bool PartyCheckpoint(const TArray<FString>& Builds, int32 Seed, FExpeditionSaveData& Data)
+bool PartyCheckpoint(const TArray<FString>& Builds, int32 Seed, FExpeditionSaveData& Data, ERuleset Ruleset = ERuleset::Compact)
 {
     TArray<FPartyBuildSelection> Party;
     for (int32 Index = 0; Index < Builds.Num(); ++Index)
@@ -29,7 +29,7 @@ bool PartyCheckpoint(const TArray<FString>& Builds, int32 Seed, FExpeditionSaveD
     }
     FString Error;
     FExpeditionRun Run;
-    if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("action-tags-%d"), Seed))) { return false; }
+    if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("action-tags-%d"), Seed), Ruleset)) { return false; }
     if (Run.Progress().Offers.IsEmpty() || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { return false; }
     Data.Current = Run.Snapshot();
     return true;
@@ -543,6 +543,68 @@ bool FRejectedCommandTest::RunTest(const FString& Parameters)
 }
 
 /** What the build picker should say for a kit: each ability's name, then its cost and usage from the facts without a battle. */
+/**
+ * An SRD run uses the same dock. The fact query knows only the Compact commands, so Grapple, Shove and Escape have no
+ * button and no facts (SRD facts belong to the rules work); everything the dock does draw must still come from the facts,
+ * and a rejected SRD-only command must keep the rules' own text rather than a wrong fact reason.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionDockSrdTest, "Project.Expedition.Presentation.ActionDockDegradesInSrdMode",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FActionDockSrdTest::RunTest(const FString& Parameters)
+{
+    using namespace ActionTagsTest;
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("An SRD party checkpoint"), PartyCheckpoint({TEXT("fighter.battle-master"), TEXT("wizard.evocation"), TEXT("cleric.life"), TEXT("barbarian.berserker")}, 51, Data, ERuleset::SRD))) { return false; }
+    ExpeditionInputHarness::FHarness Game(*this, TEXT("ActionDockSrd"), &Data);
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::O);
+    if (!TestTrue(TEXT("The SRD party resumes in combat"), Game.View->HasRun() && Game.View->InCombat() && Game.View->Rules().IsSrd())) { return false; }
+    Game.Settle();
+    FParity Parity;
+    int32 Heroes = 0;
+    for (int32 Turn = 0; Turn < 6 && Game.View->InCombat(); ++Turn)
+    {
+        Game.PartyTurn();
+        if (!Game.View->InCombat()) { break; }
+        const FCombatBattle& Rules = Game.View->Rules();
+        const int32 Id = Rules.ActiveId();
+        TestTrue(TEXT("The SRD dock draws tags that follow the facts"), CheckTags(*this, Game, TEXT("SRD")) > 0);
+        CheckTooltips(*this, Game, TEXT("SRD"), Parity);
+        // No dock button stands for the SRD-only commands.
+        for (const FActionTagRequest& Tag : Game.Hud->ActionTagsRequested())
+        { TestFalse(TEXT("No dock button is a Grapple, Shove or Escape"), Tag.Command == EC::Grapple || Tag.Command == EC::Shove || Tag.Command == EC::Escape); }
+        // The facts for them degrade to "not in this kit", with no cost and no text that pretends otherwise.
+        for (const EC Command : {EC::Grapple, EC::Shove, EC::Escape})
+        {
+            const FActionFacts Facts = FActionFactsQuery::For(Rules, Id, Command);
+            TestFalse(TEXT("An SRD-only command is not reported available"), Facts.bAvailable);
+            TestTrue(TEXT("It has no cost and no resources"), Facts.Cost == EActionCostKind::None && Facts.Resources.IsEmpty());
+            TestTrue(TEXT("It reports one blocker, with text"), Facts.Blockers.Num() == 1 && Facts.Blockers[0].Reason == EActionBlocker::NotInKit && !ExpeditionStyle::BlockerText(Facts.Blockers[0]).IsEmpty());
+            TestTrue(TEXT("Its tags are empty"), ExpeditionStyle::CostPillText(Facts).IsEmpty() && ExpeditionStyle::UsageTagText(Facts).IsEmpty());
+        }
+        // A rejected Grapple keeps the rules' own message.
+        const FCombatantState* Foe = nullptr;
+        for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy && Unit.HP > 0) { Foe = &Unit; break; } }
+        if (Foe && ExpeditionTestSupport::Distance(Rules.Find(Id)->Cell, Foe->Cell) > 1)
+        {
+            const FExpeditionSnapshot Before = Game.Live();
+            TestFalse(TEXT("A Grapple at range is rejected"), Game.View->Execute({EC::Grapple, Id, {}, Foe->Id}));
+            if (!Game.View->Messages().IsEmpty())
+            {
+                const FString Message = Game.View->Messages().Last();
+                TestTrue(TEXT("The log keeps the rules' text"), Message.StartsWith(TEXT("Cannot act: ")) && !Message.Contains(TEXT("Not in this kit")));
+                AddInfo(TEXT("SRD Grapple rejection reads: ") + Message);
+            }
+            TestTrue(TEXT("The rejection changed nothing"), ExpeditionTestSupport::SameRun(Before, Game.Live()));
+        }
+        ++Heroes;
+        Game.Press(EKeys::SpaceBar);
+    }
+    TestTrue(TEXT("Several SRD heroes were checked"), Heroes >= 3);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBuildPickerFactsTest, "Project.Expedition.Presentation.BuildPickerShowsAbilityCosts",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FBuildPickerFactsTest::RunTest(const FString& Parameters)
