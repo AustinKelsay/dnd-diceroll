@@ -811,7 +811,7 @@ namespace RigPoseTest
 // ends its turns, so the enemies down someone. Returns that unit's id, or INDEX_NONE if the encounter ended first.
 int32 PlayUntilFallen(FExpeditionRun& Run, bool bFight, TFunctionRef<bool(const FCombatantState&)> Find)
 {
-    auto Fallen = [&Run, &Find]()
+    auto Fallen = [&Run, &Find]() -> int32
     {
         if (Run.Progress().Phase != EExpeditionPhase::Combat) { return INDEX_NONE; }
         for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { if (Find(Unit)) { return Unit.Id; } }
