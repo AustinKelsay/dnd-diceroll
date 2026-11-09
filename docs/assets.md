@@ -44,7 +44,7 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 **Camera clip (#143 review, 2026-11-09):** the master became Masked, with a `CameraFade` clip (see "Theme material"). One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings). The hash diff showed exactly `M_DiceRollTheme.uasset` changed: the instances and textures were untouched.
 
-**Shadow-pass switch (#143 review round 2, 2026-11-09):** the opacity mask now goes through `ShadowPassSwitch` and the master carries graph revision `dice-theme-4`; the expected change set of the rebuild run is exactly `M_DiceRollTheme.uasset`. Pending a native rebuild run.
+**Shadow-pass switch (#143 review round 2, 2026-11-09):** the opacity mask now goes through `ShadowPassSwitch` (Default: the camera clip; Shadow: 1), so clipped scenery keeps its shadows. The master carries graph revision `dice-theme-4`. One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings), and the hash diff showed exactly `M_DiceRollTheme.uasset` changed. An immediate rerun logged `THEME_MASTER kept` and changed nothing.
 
 **Contents:**
 
