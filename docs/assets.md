@@ -99,3 +99,17 @@ All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, 
 ## Board overlay material (issue #142)
 
 `/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only added Unreal asset; the hash diff showed nothing else changed apart from three ignored `Content/Python/unreal_starter/__pycache__/*.pyc` files, which were removed. A rerun leaves an existing asset alone.
+
+**Rigged pilot import (#147, 2026-11-09):** headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`, with a hash diff of `Config/` and `Content/` around each run.
+- **Fixes found along the way:** three attempts stopped on the script's own errors, and two of them left partial imports, which were deleted. The fixes:
+  - load the SkeletalMeshEditor module, which a commandlet doesn't load;
+  - match Interchange's clip names (`SK_Hero_FighterIdle`, no separator);
+  - make the rig structs editable on instances;
+  - reuse the shared skeleton through `InterchangeManager.import_asset` with an override pipeline, since an `AssetImportTask` ignores it and `SkeletalMesh.skeleton` is read-only.
+
+  Each fix was confirmed by a headless probe that saved nothing. An API check of the script's calls came back clean.
+- **Final run:** exit 0, `THEME_RIG_COMPLETE 3/3 characters, 9 clips`.
+  - **Added exactly:** `SKEL_Humanoid`, `SK_Hero_Fighter`, `SK_Hero_Wizard`, `SK_Foe_Raider` (each 3 LODs, on the shared skeleton), nine `A_Humanoid_*`, three `MI_SK_*` and three `T_SK_*`.
+  - **Changed exactly:** `M_DiceRollTheme` (`used_with_skeletal_mesh`) and `DA_DiceRollTheme`.
+  - Every other asset was unchanged. No physics asset is kept.
+  - **Warnings:** Interchange's "skinned mesh is not root" (the exports parent the mesh under the armature), the LOD naming pattern, and a staging-folder notice. All are known and harmless.
