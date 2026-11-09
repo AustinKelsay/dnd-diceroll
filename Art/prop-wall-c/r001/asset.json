@@ -33,7 +33,43 @@
         1.05
       ],
       "atlas_px": 512,
-      "sampling": "Linear, 8 px wrapped padding per atlas region"
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "lods": {
+        "lod0_triangles": 484,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 242,
+            "fraction": 0.5,
+            "file": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0079,
+              0.0327
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 146,
+            "fraction": 0.3017,
+            "file": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0401,
+              0.0735
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0215,
+              0.0979
+            ]
+          }
+        ]
+      }
     },
     "model_revision": "not applicable (procedural Blender scripts)"
   },
@@ -78,9 +114,29 @@
       "sha256": "68a37cef0f7ea9147a13d0903d4724474e0b43eb9c72a521e4ce3265a343d4b1"
     },
     {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/lod_r002.py",
+      "sha256": "5ba8084f17b66b456fa71f3b12f48ee813d21faced97a7c972413004da4c2765"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
+      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+    },
+    {
       "role": "export",
       "path": "Art/prop-wall-c/r001/SM_Prop_Wall_C.glb",
       "sha256": "072507c4fd17280bf6453593db406421bde7b80d8528ba54bd5b0a178d10d891"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD1.glb",
+      "sha256": "97afd663fd2f6e7fef8d37d2c30246b61b7a2a91be59c82e9405f1e6afe46389"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD2.glb",
+      "sha256": "fc0c9a508b02b23855b2a0ee443851dd7fd600d17f45ddaa71c7cf686eece666"
     }
   ],
   "import_policy": {
@@ -92,7 +148,7 @@
       "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
       "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
       "nanite": "off, set explicitly on import",
-      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
       "collision": "none (presentation only; blocking comes from gameplay data)",
       "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
       "axes": "metres, +X forward, Z up (glTF Y-up export)"

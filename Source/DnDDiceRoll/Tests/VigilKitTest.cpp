@@ -144,6 +144,9 @@ bool FVigilVariantChoiceTest::RunTest(const FString& Parameters)
             // Every blocked cell is covered by exactly one piece, and every piece sits on its cell through the metric.
             const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
             const FBoardMetric& Metric = View->Metric();
+            const int32 Recipe = View->Progress().History.IsEmpty() ? 0 : View->Progress().History.Last().Route.Recipe;
+            if (!VigilKit::ArchesFor(Recipe)) { TestEqual(TEXT("A stones board places no arches"), View->PlacedArches(), 0); }
+            else { TestTrue(TEXT("Arches only stand over adjacent blocked pairs"), View->PlacedArches() <= VigilKit::ArchPairs(Encounter.BlockedCells).Num()); }
             for (const FIntPoint& Cell : Encounter.BlockedCells)
             {
                 const FVector* Spot = View->ObstacleSpots().Find(Cell);
@@ -188,6 +191,9 @@ bool FVigilArchPairsTest::RunTest(const FString& Parameters)
     for (int32 Index = 0; Index < FMath::Min(Again.Num(), Arches.Num()); ++Index)
     { TestTrue(TEXT("Same arches in the same order"), Again[Index].A == Arches[Index].A && Again[Index].B == Arches[Index].B); }
     TestTrue(TEXT("No blocked cells make no arches"), VigilKit::ArchPairs({}).IsEmpty());
+    TestTrue(TEXT("Pillar and wall recipes take arches"), VigilKit::ArchesFor(1) && VigilKit::ArchesFor(2));
+    TestFalse(TEXT("The stones recipe takes none"), VigilKit::ArchesFor(0));
+    TestFalse(TEXT("An unknown recipe takes none"), VigilKit::ArchesFor(3) || VigilKit::ArchesFor(-1));
     return !HasAnyErrors();
 }
 

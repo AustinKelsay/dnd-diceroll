@@ -40,7 +40,7 @@ class ThemePlanTests(unittest.TestCase):
             self.assertEqual(record["asset_id"], asset_id)
             self.assertEqual(record["revision"], revision)
             self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
-            export = [entry for entry in record["files"] if entry["role"] == "export"]
+            export = [entry for entry in record["files"] if entry["role"] == "export" and "_LOD" not in entry["path"]]
             self.assertEqual(len(export), 1)
             source = theme_plan.export_path(asset_id, revision, name)
             self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
@@ -96,8 +96,29 @@ class ThemePlanTests(unittest.TestCase):
         self.assertTrue(theme_plan.has_alpha_mask(theme_plan.export_path("fx-mist-card", 1, "SM_Fx_MistCard")), "mist opacity varies")
         self.assertFalse(theme_plan.has_alpha_mask("/nonexistent.glb"))
 
-    def test_lod_discovery(self):
-        self.assertEqual(theme_plan.lod_exports("world-vigil", 2, "SM_World_Vigil"), [], "r002 authors no LOD exports")
+    def test_lods_follow_the_policy(self):
+        """Explicit LOD1 and LOD2 for the world, occluders, obstacle variants, arch and the one scatter over 1k triangles; cards and small scatter exempt."""
+        with_lods = {"world-vigil", "world-vigil-occluders", "prop-arch-2cell", "scatter-roots"}
+        with_lods |= {"prop-%s%s" % (kind, suffix) for kind in ("pillar", "wall", "stones") for suffix in ("", "-b", "-c")}
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.R002:
+            files = theme_plan.lod_exports(asset_id, revision, name)
+            recorded = theme_plan.record_lods(asset_id, revision)
+            self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in with_lods else [], asset_id)
+            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            triangles = theme_plan.triangle_count(theme_plan.export_path(asset_id, revision, name))
+            self.assertEqual(asset_id in with_lods, triangles > 1000 or asset_id.startswith("prop-"), asset_id)
+            previous = triangles
+            for (lod, path, digest), file in zip(recorded, files):
+                self.assertEqual(theme_plan.sha256_file(file), digest, path)
+                count = theme_plan.triangle_count(file)
+                self.assertLess(count, previous, path)
+                self.assertGreaterEqual(count / triangles, 0.24 if lod == 2 else 0.48, path)
+                self.assertLessEqual(count / triangles, 0.40 if lod == 2 else 0.52, path)
+                previous = count
+
+    def test_arches_are_for_pillars_and_walls_only(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
+        self.assertIn("return Recipe == 1 || Recipe == 2;", header)
 
 
 if __name__ == "__main__":

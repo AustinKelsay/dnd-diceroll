@@ -33,7 +33,43 @@
         3.4
       ],
       "atlas_px": 512,
-      "sampling": "Linear, 8 px wrapped padding per atlas region"
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "lods": {
+        "lod0_triangles": 788,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 394,
+            "fraction": 0.5,
+            "file": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0121,
+              0.0681
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 197,
+            "fraction": 0.25,
+            "file": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0136,
+              0.0458
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0203,
+              0.0997
+            ]
+          }
+        ]
+      }
     },
     "model_revision": "not applicable (procedural Blender scripts)"
   },
@@ -78,9 +114,29 @@
       "sha256": "68a37cef0f7ea9147a13d0903d4724474e0b43eb9c72a521e4ce3265a343d4b1"
     },
     {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/lod_r002.py",
+      "sha256": "5ba8084f17b66b456fa71f3b12f48ee813d21faced97a7c972413004da4c2765"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
+      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+    },
+    {
       "role": "export",
       "path": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B.glb",
       "sha256": "5b5c225dda25bd5001087265188ce9e8ccbf5c1ec8e61889121cf7d1245f873a"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD1.glb",
+      "sha256": "cceb89e122630310aace8246d3e82b8395dcf033ab5b12fd68d53f6560ea568f"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD2.glb",
+      "sha256": "68b8da300f181e5bd1179f80924d4fa83870dc95e1920fc466ffa3b80440a451"
     }
   ],
   "import_policy": {
@@ -92,7 +148,7 @@
       "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
       "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
       "nanite": "off, set explicitly on import",
-      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
       "collision": "none (presentation only; blocking comes from gameplay data)",
       "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
       "axes": "metres, +X forward, Z up (glTF Y-up export)"

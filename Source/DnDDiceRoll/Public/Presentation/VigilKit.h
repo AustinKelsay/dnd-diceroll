@@ -45,6 +45,9 @@ struct FArch
     float Yaw() const { return bAlongX ? 90.0f : 0.0f; }
 };
 
+/** Arches belong to the architectural recipes only: pillars (1) and walls (2). Adjacent blocked stones (0) get no arch. */
+inline bool ArchesFor(int32 Recipe) { return Recipe == 1 || Recipe == 2; }
+
 /**
  * Greedy, order-independent pairing of adjacent blocked cells: scan in row-major order and pair each free cell with its
  * free +X neighbour, else its free +Y neighbour. Every blocked cell is in at most one arch.

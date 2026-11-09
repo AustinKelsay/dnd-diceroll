@@ -108,6 +108,18 @@ def lod_exports(asset_id, revision, name):
     return [found[key] for key in sorted(found)]
 
 
+def record_lods(asset_id, revision):
+    """The LOD exports (index, repository path, sha256) an asset record lists, in LOD order; empty for the exempt (cards, small scatter)."""
+    with open(os.path.join(ROOT, "Art", asset_id, "r%03d" % revision, "asset.json")) as handle:
+        record = json.load(handle)
+    found = []
+    for entry in record["files"]:
+        match = re.search(r"_LOD(\d+)\.glb$", entry["path"])
+        if entry["role"] == "export" and match:
+            found.append((int(match.group(1)), entry["path"], entry["sha256"]))
+    return sorted(found)
+
+
 def read_glb(path):
     with open(path, "rb") as handle:
         data = handle.read()

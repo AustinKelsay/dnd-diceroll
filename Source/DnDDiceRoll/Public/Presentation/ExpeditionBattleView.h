@@ -354,7 +354,7 @@ private:
     UStaticMesh* UnitMesh(const FCombatantState& Unit) const;
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
-    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs. Metric-authored, so placed unscaled. False when the theme has no variant to place. */
+    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (Vigil boards, pillar and wall recipes). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
     bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches);
     /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing). */
     void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed);

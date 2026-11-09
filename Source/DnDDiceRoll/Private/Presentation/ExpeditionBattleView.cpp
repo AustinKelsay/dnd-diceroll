@@ -1474,7 +1474,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
     // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
     // consumed by the r001 path, so the kit never changes what the fallback draws.
-    if (!(bMetric && BuildKitObstacles(Encounter, Kind, Seed, bVigil)))
+    if (!(bMetric && BuildKitObstacles(Encounter, Kind, Seed, bVigil && VigilKit::ArchesFor(Kind))))
     {
         UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
         for (const FIntPoint& Cell : Encounter.BlockedCells)

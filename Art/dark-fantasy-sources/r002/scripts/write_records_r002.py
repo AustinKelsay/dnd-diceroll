@@ -33,7 +33,7 @@ POLICY = dict(
         texture_filter='trilinear with anisotropic 8, mips generated, never nearest',
         texture_compression='default (sRGB, mips); no nearest or editor-icon compression',
         nanite='off, set explicitly on import',
-        lods='explicit LODs required on every themed mesh (#105); none authored in r002',
+        lods='explicit LODs for meshes over ~1k triangles (#105); cards, light shafts and small scatter exempt',
         collision='none (presentation only; blocking comes from gameplay data)',
         vertex_colour='COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)',
         axes='metres, +X forward, Z up (glTF Y-up export)'))
@@ -53,6 +53,27 @@ def record(asset, rev, package, glb, scripts, method, params, prev_note=None, al
         tools=dict(blender='5.2.3 LTS', imagemagick='7 (previews only)'),
         files=src_files(scripts) + [dict(role='export', path=glb, sha256=sha(glb))],
         import_policy=pol, validation=dict(state='pending', evidence=[]))
+
+
+LOD_EXEMPT = 'exempt: under ~1k triangles or a translucent card (no LOD exports)'
+
+
+def add_lods(rec, lod_metrics):
+    """Attach the LOD exports (role export, hashed) and their triangle counts, or record the exemption."""
+    name = os.path.splitext(os.path.basename(next(f['path'] for f in rec['files'] if f['role'] == 'export')))[0]
+    entry = lod_metrics.get(name)
+    if entry is None:
+        rec['import_policy']['settings']['lods'] = LOD_EXEMPT
+        rec['recipe']['parameters']['lods'] = 'none (exempt)'
+        return
+    rec['import_policy']['settings']['lods'] = 'explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export'
+    rec['recipe']['parameters']['lods'] = dict(lod0_triangles=entry['lod0_triangles'], tool='Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned',
+                                               lods=[dict(lod=r['lod'], triangles=r['triangles'], fraction=r['fraction'], file=r['file'], deviation_m_p50_p95_max=r['deviation_m_p50_p95_max'],
+                                                          appearance_rgb_mean_p95=[r['appearance']['rgb_mean'], r['appearance']['rgb_p95']]) for r in entry['lods']])
+    for extra in ('lod_r002.py', 'build_lods_r002.py'):
+        rec['files'].insert(len([f for f in rec['files'] if f['role'] == 'source']), dict(role='source', path=f'Art/dark-fantasy-sources/r002/scripts/{extra}', sha256=sha(f'Art/dark-fantasy-sources/r002/scripts/{extra}')))
+    for r in entry['lods']:
+        rec['files'].append(dict(role='export', path=r['file'], sha256=sha(r['file'])))
 
 
 def write(rec):
@@ -111,6 +132,9 @@ def main():
         if rev == 2:
             rec['recipe']['parameters']['derived_from'] = f'{aid} r001 (same package, reimport at true metric for a 150 cm cell; variant A of its kit)'
         out.append(rec)
+    lod_metrics = json.load(open(os.path.join(SRC, 'lod_metrics.json'))) if os.path.exists(os.path.join(SRC, 'lod_metrics.json')) else {}
+    for rec in out:
+        add_lods(rec, lod_metrics)
     for rec in out:
         print('wrote', os.path.relpath(write(rec), ROOT))
 

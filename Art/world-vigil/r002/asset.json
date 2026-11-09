@@ -60,7 +60,43 @@
       },
       "atlas_fill": 0.324,
       "paired_asset": "world-vigil-occluders",
-      "derived_from": "world-vigil r001 (same package, reimport)"
+      "derived_from": "world-vigil r001 (same package, reimport)",
+      "lods": {
+        "lod0_triangles": 130502,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 65251,
+            "fraction": 0.5,
+            "file": "Art/world-vigil/r002/SM_World_Vigil_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0012
+            ],
+            "appearance_rgb_mean_p95": [
+              0.008,
+              0.0567
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 32625,
+            "fraction": 0.25,
+            "file": "Art/world-vigil/r002/SM_World_Vigil_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0058,
+              0.0096
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0061,
+              0.0274
+            ]
+          }
+        ]
+      }
     },
     "model_revision": "not applicable (procedural Blender scripts)"
   },
@@ -105,9 +141,29 @@
       "sha256": "6d4f885fc65e79925544655b1ac0b59e56e4e953c998b9bb84e3367dbfd509f4"
     },
     {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/lod_r002.py",
+      "sha256": "5ba8084f17b66b456fa71f3b12f48ee813d21faced97a7c972413004da4c2765"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
+      "sha256": "e5210b5a69f428aad5d30f8cb3573f2de3a22f56124051d48d10f4ac54874ea1"
+    },
+    {
       "role": "export",
       "path": "Art/world-vigil/r002/SM_World_Vigil.glb",
       "sha256": "eaddb88d46d81b4f51a93950bb63dc78c66d2c9e9e000c846d6ea12842d6672a"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil/r002/SM_World_Vigil_LOD1.glb",
+      "sha256": "50fd8865186b8cdee16b814ebe68175be14434455d16e914f622fb1a3824ed7b"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil/r002/SM_World_Vigil_LOD2.glb",
+      "sha256": "82c9bca34aae0c600781d760983f471cfcfc788b55004cba05dcb2a32c9cc6ff"
     }
   ],
   "import_policy": {
@@ -119,7 +175,7 @@
       "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
       "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
       "nanite": "off, set explicitly on import",
-      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
       "collision": "none (presentation only; blocking comes from gameplay data)",
       "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
       "axes": "metres, +X forward, Z up (glTF Y-up export)"

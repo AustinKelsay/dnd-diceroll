@@ -33,7 +33,8 @@
         0.46
       ],
       "atlas_px": 256,
-      "sampling": "Linear, 8 px wrapped padding per atlas region"
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "lods": "none (exempt)"
     },
     "model_revision": "not applicable (procedural Blender scripts)"
   },
@@ -92,7 +93,7 @@
       "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
       "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
       "nanite": "off, set explicitly on import",
-      "lods": "explicit LODs required on every themed mesh (#105); none authored in r002",
+      "lods": "exempt: under ~1k triangles or a translucent card (no LOD exports)",
       "collision": "none (presentation only; blocking comes from gameplay data)",
       "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
       "axes": "metres, +X forward, Z up (glTF Y-up export)"

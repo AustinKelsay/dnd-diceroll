@@ -10,8 +10,8 @@ Drowned Vigil world kit r002 (issue #145 phase 2) -- the reviewed reimport path,
   - The four revised r001 packages (world-vigil, prop-pillar, prop-wall, prop-stones) are replaced ONLY when the run is
     told so: DND_THEME_REIMPORT=world-vigil,prop-pillar,prop-wall,prop-stones (or `all`). Any other id is an error.
     Replacing is all or nothing for those four, because the board scales r001 art and places r002 art at true metric.
-  - Every r002 mesh gets Nanite switched OFF, no collision, its explicit LODs (<name>_LOD1.glb ... beside the export,
-    none are authored today) and trilinear textures. Existing r001 meshes are only reported, unless
+  - Every r002 mesh gets Nanite switched OFF, no collision, its explicit LODs (<name>_LOD1.glb and _LOD2.glb beside the
+    export, for meshes over ~1k triangles; cards, shafts and small scatter are exempt and have none) and trilinear textures. Existing r001 meshes are only reported, unless
     DND_THEME_FIX_R001_NANITE=1 asks for their Nanite flag to be switched off too (that changes their bytes).
   - Two materials are created (never overwritten): M_DiceRollOccluder (dithered opacity mask for the near architecture)
     and M_DiceRollCard (translucent, for mist and light shafts).
@@ -386,14 +386,28 @@ def collision_shapes(mesh):
 
 
 def import_lods(mesh, asset_id, revision, name):
-    """Imports explicit LODs (<name>_LOD1.glb ...) beside the export. There are none authored in r002 today."""
+    """Imports the explicit LODs (<name>_LOD1.glb, <name>_LOD2.glb) beside the export. The asset record decides which are expected:
+    meshes over ~1k triangles have two, cards, shafts and small scatter none. The files must match the record's hashes and the
+    mesh must end with exactly 1 + that many LODs."""
+    expected = theme_plan.record_lods(asset_id, revision)
     exports = theme_plan.lod_exports(asset_id, revision, name)
-    for index, path in enumerate(exports, start=1):
+    if [os.path.relpath(path, ROOT).replace(os.sep, "/") for path in exports] != [entry[1] for entry in expected]:
+        raise RuntimeError("LOD exports beside {} do not match its asset record: {} vs {}".format(name, exports, expected))
+    for (index, _, digest), path in zip(expected, exports):
+        if theme_plan.sha256_file(path) != digest:
+            raise RuntimeError("LOD{} of {} differs from its asset record; rerun write_records_r002.py".format(index, name))
         result = mesh_tools.import_lod(mesh, index, path)
         if result < 0:
             raise RuntimeError("Unable to import LOD {} of {} from {}".format(index, name, path))
         unreal.log("THEME_LOD {} lod={} tris={} source_sha256={}".format(name, index, theme_plan.triangle_count(path), theme_plan.sha256_file(path)))
+    check_lod_count(mesh, asset_id, revision)
     return len(exports)
+
+
+def check_lod_count(mesh, asset_id, revision):
+    wanted = 1 + len(theme_plan.record_lods(asset_id, revision))
+    if mesh_tools.get_lod_count(mesh) != wanted:
+        raise RuntimeError("{} has {} LODs, its asset record expects {}".format(mesh.get_path_name(), mesh_tools.get_lod_count(mesh), wanted))
 
 
 def stage_import(source, name):
@@ -585,6 +599,7 @@ def main():
             library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, KIT_TAG_VALUE)
             mesh.mark_package_dirty()
         force_nanite_off(mesh)
+        check_lod_count(mesh, asset_id, revision)
         apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
         asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
         if index is None:
