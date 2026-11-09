@@ -567,20 +567,32 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             if (IsSrd() && Moving->bProne) { return Reject(TEXT("Prone: stand up (move to your cell) before crawling elsewhere.")); }
             Result.Path = PathTo(Command.ActorId, Command.Destination);
             if (Result.Path.IsEmpty()) { return Reject(TEXT("Cell is occupied, blocked, or beyond remaining movement.")); }
-            const int32 Cost = Result.Path.Num();
+            int32 Cost = Result.Path.Num();
             TArray<FIntPoint> FullPath;
             FullPath.Add(Moving->Cell);
             FullPath.Append(Result.Path);
             Moving->Cell = Command.Destination;
+            if (IsSrd())
+            {
+                // A mover an opportunity attack drops stops in the cell it was leaving and pays only for the cells it moved.
+                Cost = ResolveOpportunityAttacks(*Moving, FullPath, Result);
+                Result.Path.SetNum(Cost);
+            }
             State.MovementLeft -= Cost;
-            Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft);
-            if (IsSrd()) { ResolveOpportunityAttacks(*Moving, FullPath, Result); }
+            Result.Feedback = FString::Printf(TEXT("%s moves %d cells (%d left)."), *Actor->Name, Cost, State.MovementLeft) + Result.Feedback;
             // Leaving reach of your own grapple victim ends it.
             if (IsSrd())
             {
                 for (FCombatantState& Other : State.Encounter.Combatants)
                 {
                     if (Other.GrapplerId == Moving->Id && GridDistance(Other.Cell, Moving->Cell) > 1) { Other.GrapplerId = INDEX_NONE; }
+                }
+                // A downed or dead mover cannot finish its turn. Pass the turn on even when the battle
+                // just ended, so the active combatant is conscious as Restore requires.
+                if (Moving->Life != ECombatLife::Conscious)
+                {
+                    CheckOutcome();
+                    AdvanceTurn();
                 }
             }
         }
@@ -1062,7 +1074,8 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
     }
     const TArray<int32> Targets = LegalTargets(Id);
     if (!Targets.IsEmpty()) { Results.Add(Submit({ECombatCommandType::Attack, Id, {}, Targets[0]})); }
-    if (State.Phase == EBattlePhase::Fighting) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
+    // An SRD opportunity attack can end the mover's turn early.
+    if (State.Phase == EBattlePhase::Fighting && ActiveId() == Id) { Results.Add(Submit({ECombatCommandType::EndTurn, Id})); }
     return Results;
 }
 
@@ -1186,29 +1199,38 @@ int32 FCombatBattle::CoverAcBonus(int32 ActorId, int32 TargetId) const
     return Best;
 }
 
-void FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result)
+int32 FCombatBattle::ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result)
 {
-    if (!IsSrd() || Path.Num() < 2) { return; }
-    for (FCombatantState& Reactor : State.Encounter.Combatants)
+    // Path[0] is the start cell. Reactions resolve in path order, right before the step that leaves
+    // the reactor's reach; reactors provoked by the same step roll in combatant order. Each rolls
+    // its d20, then its damage die and any critical die.
+    const int32 Reach = 1; // melee reach for OA; ranged opportunity deferred
+    for (int32 Step = 1; Step < Path.Num(); ++Step)
     {
-        if (Reactor.Id == Mover.Id || Reactor.Side == Mover.Side || Reactor.Life != ECombatLife::Conscious || !Reactor.bReactionAvailable) { continue; }
-        const int32 Reach = 1; // melee reach for OA; ranged opportunity deferred
-        const int32 Provoking = FOpportunityRules::FirstProvokingCell(Path, Reactor.Cell, Reach, Mover.bDisengaged, Reactor.bReactionAvailable);
-        if (Provoking == INDEX_NONE) { continue; }
-        Reactor.bReactionAvailable = false;
-        const int32 Natural = Roll(20);
-        const int32 Total = Natural + Reactor.AttackBonus;
-        const bool bCrit = Natural >= CriticalThreshold(Reactor);
-        const bool bHit = bCrit || (Natural != 1 && Total >= Mover.ArmorClass);
-        int32 Damage = 0;
-        if (bHit)
+        for (FCombatantState& Reactor : State.Encounter.Combatants)
         {
-            Damage = Roll(Reactor.DamageDie) + Reactor.DamageBonus;
-            if (bCrit) { Damage += Roll(Reactor.DamageDie); }
-            ApplyDamage(Mover, Damage, bCrit);
+            if (Reactor.Id == Mover.Id || Reactor.Side == Mover.Side || Reactor.Life != ECombatLife::Conscious ||
+                !FOpportunityRules::StepProvokes(Reactor.Cell, Reach, Path[Step - 1], Path[Step], Mover.bDisengaged, false, Reactor.bReactionAvailable)) { continue; }
+            Mover.Cell = Path[Step - 1];
+            Reactor.bReactionAvailable = false;
+            const int32 Natural = Roll(20);
+            const int32 Total = Natural + Reactor.AttackBonus;
+            const bool bCrit = Natural >= CriticalThreshold(Reactor);
+            const bool bHit = bCrit || (Natural != 1 && Total >= Mover.ArmorClass);
+            int32 Damage = 0;
+            if (bHit)
+            {
+                DiceLog = &Result.EffectDice;
+                Damage = Roll(Reactor.DamageDie) + Reactor.DamageBonus;
+                if (bCrit) { Damage += Roll(Reactor.DamageDie); }
+                DiceLog = nullptr;
+                ApplyDamage(Mover, Damage, bCrit);
+            }
+            Result.Feedback += FString::Printf(TEXT(" | OA %s: d20 %d+%d=%d vs AC %d %s %d"),
+                *Reactor.Name, Natural, Reactor.AttackBonus, Total, Mover.ArmorClass, bHit ? TEXT("HIT") : TEXT("MISS"), Damage);
+            if (Mover.Life != ECombatLife::Conscious) { return Step - 1; }
         }
-        Result.Feedback += FString::Printf(TEXT(" | OA %s: d20 %d+%d=%d vs AC %d %s %d"),
-            *Reactor.Name, Natural, Reactor.AttackBonus, Total, Mover.ArmorClass, bHit ? TEXT("HIT") : TEXT("MISS"), Damage);
-        if (Mover.Life != ECombatLife::Conscious) { break; }
     }
+    Mover.Cell = Path.Last();
+    return Path.Num() - 1;
 }

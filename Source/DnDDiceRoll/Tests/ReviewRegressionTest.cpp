@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "Templates/Function.h"
 #include "Combat/CombatBattle.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/AbilityRules.h"
@@ -21,6 +22,24 @@ bool Activate(FCombatBattle& B, int32 Id)
 {
     for (int32 I = 0; I < 4 && B.ActiveId() != Id; ++I) { if (!B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}).bAccepted) { return false; } }
     return B.ActiveId() == Id;
+}
+/** A random state whose next d20 satisfies Accept, so a test can pick the roll it needs. */
+int32 StateForD20(TFunctionRef<bool(int32)> Accept)
+{
+    for (int32 Seed = 1; Seed < 100000; ++Seed) { FRandomStream R(Seed); if (Accept(R.RandRange(1, 20))) { return Seed; } }
+    return 0;
+}
+/** One-row corridor: walking {0,0} to {4,0} leaves the foe's reach when stepping off {2,0}. */
+FCombatEncounter Corridor(bool bAlly)
+{
+    FCombatEncounter E; E.Ruleset = ERuleset::SRD; E.Width = 6; E.Height = 2;
+    FCombatantState Hero; FBuildCatalog::Create(TEXT("fighter.champion"), 1, TEXT("Arden"), Hero);
+    Hero.Cell = {0, 0}; Hero.MaxHP = 20; Hero.HP = 1; Hero.ArmorClass = 12; Hero.Speed = 6;
+    FCombatantState Foe; Foe.Id = 2; Foe.Name = TEXT("Raider"); Foe.Role = TEXT("Raider"); Foe.Side = ECombatSide::Enemy;
+    Foe.Cell = {2, 1}; Foe.HP = Foe.MaxHP = 40; Foe.AttackBonus = 30; Foe.DamageDie = 4; Foe.DamageBonus = 0;
+    E.Combatants = {Hero, Foe};
+    if (bAlly) { FCombatantState Ally; FBuildCatalog::Create(TEXT("rogue.thief"), 3, TEXT("Nix"), Ally); Ally.Cell = {5, 1}; E.Combatants.Add(Ally); }
+    return E;
 }
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewSavedFieldsTest, "Project.Expedition.Persistence.ReviewSavedFieldValidation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -160,6 +179,61 @@ bool FReviewDistanceTest::RunTest(const FString& Parameters)
     const auto R = B.Submit({ECombatCommandType::Move, 1, {0, 1}});
     TestTrue(TEXT("Move accepted"), R.bAccepted);
     TestTrue(TEXT("No phantom diagonal opportunity attack"), B.Find(2)->bReactionAvailable);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewOpportunityStopTest, "Project.Expedition.Combat.OpportunityAttackStopsDroppedMover", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewOpportunityStopTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    for (const bool bAlly : {true, false})
+    {
+        for (const int32 Natural : {1, 12, 20})
+        {
+            FCombatBattle B;
+            if (!TestTrue(TEXT("Corridor starts"), B.Start(Corridor(bAlly), 42, Error)) || !TestTrue(TEXT("Hero active"), Activate(B, 1))) { return false; }
+            auto S = B.Snapshot();
+            S.RandomState = StateForD20([Natural](int32 Die) { return Die == Natural; });
+            if (!TestTrue(TEXT("Restore chosen dice"), B.Restore(S, Error))) { return false; }
+            FRandomStream Dice(S.RandomState);
+            TestEqual(TEXT("Chosen attack roll"), Dice.RandRange(1, 20), Natural);
+            const int32 DamageDie = Dice.RandRange(1, 4);
+            const int32 CriticalDie = Dice.RandRange(1, 4);
+            const FCombatResult R = B.Submit({ECombatCommandType::Move, 1, {4, 0}});
+            if (!TestTrue(TEXT("Move accepted"), R.bAccepted)) { return false; }
+            const bool bDropped = Natural != 1;
+            const int32 Moved = bDropped ? 2 : 4;
+            TestEqual(TEXT("Mover stops in the cell it was leaving"), B.Find(1)->Cell, bDropped ? FIntPoint(2, 0) : FIntPoint(4, 0));
+            TestEqual(TEXT("Path holds only the cells moved"), R.Path.Num(), Moved);
+            if (!R.Path.IsEmpty()) { TestEqual(TEXT("Path ends at the mover"), R.Path.Last(), B.Find(1)->Cell); }
+            TestTrue(TEXT("Pays only for the cells moved"), R.Feedback.StartsWith(FString::Printf(TEXT("Arden moves %d cells (%d left)."), Moved, S.MovementLeft - Moved)));
+            TestEqual(TEXT("Damage dice logged"), R.EffectDice.Num(), Natural == 1 ? 0 : Natural == 20 ? 2 : 1);
+            if (R.EffectDice.Num() >= 1) { TestEqual(TEXT("Damage die first"), R.EffectDice[0].Value, DamageDie); TestEqual(TEXT("Weapon die sides"), R.EffectDice[0].Sides, 4); }
+            if (R.EffectDice.Num() >= 2) { TestEqual(TEXT("Critical die second"), R.EffectDice[1].Value, CriticalDie); }
+            const FCombatantState* Active = B.Find(B.ActiveId());
+            if (!TestNotNull(TEXT("Active combatant"), Active)) { return false; }
+            TestTrue(TEXT("Active combatant is conscious"), Active->Life == ECombatLife::Conscious);
+            FCombatBattle Copy;
+            TestTrue(FString::Printf(TEXT("Snapshot restores: %s"), *Error), Copy.Restore(B.Snapshot(), Error));
+            if (!bDropped)
+            {
+                TestEqual(TEXT("Missed mover keeps its turn"), B.ActiveId(), 1);
+                TestEqual(TEXT("Full move paid"), B.Snapshot().MovementLeft, S.MovementLeft - 4);
+                TestFalse(TEXT("Reaction spent"), B.Find(2)->bReactionAvailable);
+            }
+            else if (bAlly)
+            {
+                TestTrue(TEXT("Mover downed"), B.Find(1)->Life == ECombatLife::Downed && R.Downed.Contains(1));
+                TestTrue(TEXT("Battle continues"), B.Snapshot().Phase == EBattlePhase::Fighting);
+                TestTrue(TEXT("Turn passed on"), B.ActiveId() != 1);
+                TestTrue(TEXT("Next combatant can act"), B.Submit({ECombatCommandType::EndTurn, B.ActiveId()}).bAccepted);
+            }
+            else
+            {
+                TestTrue(TEXT("Last hero down is a defeat"), B.Snapshot().Phase == EBattlePhase::Defeat);
+                TestTrue(TEXT("Unrescued hero dies at defeat"), B.Find(1)->Life == ECombatLife::Dead && R.Died.Contains(1));
+            }
+        }
+    }
     return !HasAnyErrors();
 }
 #endif

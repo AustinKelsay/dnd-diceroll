@@ -257,6 +257,7 @@ private:
     FCombatResult Resolve(const FCombatCommand& Command);
     bool IsSrd() const { return State.Encounter.Ruleset == ERuleset::SRD; }
     int32 CoverAcBonus(int32 ActorId, int32 TargetId) const;
-    void ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result);
+    /** Path starts at the mover's cell. Places the mover and returns the cells it actually moved. */
+    int32 ResolveOpportunityAttacks(FCombatantState& Mover, const TArray<FIntPoint>& Path, FCombatResult& Result);
     void DownedTurn(FCombatantState& Unit);
 };
