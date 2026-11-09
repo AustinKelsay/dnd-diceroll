@@ -21,8 +21,17 @@ DNDDICEROLL_API FString CostPillText(const FActionFacts& Facts);
  * "At will" when nothing is spent, plus the Rage stance ("Needs Rage", "Not while raging"). Empty for End Turn.
  */
 DNDDICEROLL_API FString UsagePillText(const FActionFacts& Facts);
+/** The movement budget as the chips and the Move pill show it: "Move 6". */
+DNDDICEROLL_API FString MoveBudgetText(int32 MovementLeft);
+/** The cost pill of the combined Attack / Move button: both costs with the movement left ("Action · Move 6"). */
+DNDDICEROLL_API FString AttackMovePillText(const FActionFacts& Attack, const FActionFacts& Move, int32 MovementLeft);
 /** What camp gives back for one resource: "Camp restores 1", "Camp restores all", or "Not refilled by camp". Empty when unknown. */
 DNDDICEROLL_API FString CampRecoveryText(const FActionResourceCost& Cost);
+/**
+ * The tooltip's usage lines: one per resource with what camp gives back ("1 Kit · 2/3 · Camp restores 1"), then the
+ * Rage stance, or "At will" when nothing is spent. Empty for a command with no cost.
+ */
+DNDDICEROLL_API TArray<FString> UsageLines(const FActionFacts& Facts);
 /** One reason an action is unavailable, as a short sentence fragment ("Action already used", "Need 1 Slot, have 0"). */
 DNDDICEROLL_API FString BlockerText(const FActionBlocker& Blocker);
 /** The tooltip headline: the command's name and its cost ("Magic Missile · Action"). */

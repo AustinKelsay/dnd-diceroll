@@ -42,15 +42,33 @@ FString CostPillText(const FActionFacts& Facts)
     return FString();
 }
 
+namespace
+{
+FString ResourcePart(const FActionResourceCost& Cost)
+{
+    FString Part = FString::Printf(TEXT("%d %s"), Cost.Amount, *ExpeditionStyle::ResourceName(Cost.Resource));
+    Part += Cost.Cap > 0 ? FString::Printf(TEXT(" · %d/%d"), Cost.Held, Cost.Cap) : FString::Printf(TEXT(" · %d"), Cost.Held);
+    return Part;
+}
+}
+
+FString MoveBudgetText(int32 MovementLeft)
+{
+    return FString::Printf(TEXT("%s %d"), *CostName(EActionCostKind::Movement), MovementLeft);
+}
+
+FString AttackMovePillText(const FActionFacts& Attack, const FActionFacts& Move, int32 MovementLeft)
+{
+    return CostPillText(Attack) + TEXT(" · ") + CostPillText(Move) + FString::Printf(TEXT(" %d"), MovementLeft);
+}
+
 FString UsagePillText(const FActionFacts& Facts)
 {
     if (Facts.Cost == EActionCostKind::None) { return FString(); }
     TArray<FString> Parts;
     for (const FActionResourceCost& Cost : Facts.Resources)
     {
-        FString Part = FString::Printf(TEXT("%d %s"), Cost.Amount, *ResourceName(Cost.Resource));
-        Part += Cost.Cap > 0 ? FString::Printf(TEXT(" · %d/%d"), Cost.Held, Cost.Cap) : FString::Printf(TEXT(" · %d"), Cost.Held);
-        Parts.Add(Part);
+        Parts.Add(ResourcePart(Cost));
     }
     FString Text = Parts.IsEmpty() ? FString() : FString::Join(Parts, TEXT(" + "));
     if (Facts.bRequiresRage) { Text += Text.IsEmpty() ? TEXT("Needs Rage") : TEXT(" | Needs Rage"); }
@@ -64,6 +82,21 @@ FString CampRecoveryText(const FActionResourceCost& Cost)
     if (Cost.CampRecovery < 0) { return FString(); }
     if (Cost.Cap > 0 && Cost.CampRecovery >= Cost.Cap) { return TEXT("Camp restores all"); }
     return FString::Printf(TEXT("Camp restores %d"), Cost.CampRecovery);
+}
+
+TArray<FString> UsageLines(const FActionFacts& Facts)
+{
+    TArray<FString> Lines;
+    if (Facts.Cost == EActionCostKind::None) { return Lines; }
+    for (const FActionResourceCost& Cost : Facts.Resources)
+    {
+        const FString Camp = CampRecoveryText(Cost);
+        Lines.Add(Camp.IsEmpty() ? ResourcePart(Cost) : ResourcePart(Cost) + TEXT(" · ") + Camp);
+    }
+    if (Facts.bRequiresRage) { Lines.Add(TEXT("Needs Rage")); }
+    if (Facts.bForbidsRage) { Lines.Add(TEXT("Not while raging")); }
+    if (Lines.IsEmpty()) { Lines.Add(TEXT("At will")); }
+    return Lines;
 }
 
 FString BlockerText(const FActionBlocker& Blocker)
