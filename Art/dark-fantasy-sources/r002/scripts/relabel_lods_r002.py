@@ -18,7 +18,7 @@ import struct
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
 METRICS = os.path.join(ROOT, 'Art', 'dark-fantasy-sources', 'r002', 'lod_metrics.json')
-OLD = re.compile(r'^(M_)?(.+)_LOD(\d+)$')
+OLD = re.compile(r'^(M_)?(.+)_LOD(\d+)(?:\.\d{3})?$')  # Blender may add a .001 duplicate suffix
 
 
 def renamed(value):

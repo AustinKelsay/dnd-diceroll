@@ -342,9 +342,9 @@ def board_fade(material, world_position, eye, fade_min, x, y):
     camera than the hit (t > 1), it is faded; outside the rectangle it eases back to opaque over BoardRamp cm. A pixel at or
     above the camera's height, or at or below the plane, is opaque. The default rectangle is empty and so far away that everything stays opaque.
     """
-    def pick(source, r, g, b, a, px, py):
+    def pick(source, r, g, b, a, px, py, output=""):
         mask = node(material, unreal.MaterialExpressionComponentMask, px, py, r=r, g=g, b=b, a=a)
-        mel.connect_material_expressions(source, "", mask, "")
+        mel.connect_material_expressions(source, output, mask, "")
         return mask
 
     rect = vector(material, "BoardRect", unreal.LinearColor(1e7, 1e7, -1e7, -1e7), x, y)
@@ -368,8 +368,9 @@ def board_fade(material, world_position, eye, fade_min, x, y):
     valid = binary(material, unreal.MaterialExpressionMultiply, downward, before, x + 1350, y + 420)
     hit = binary(material, unreal.MaterialExpressionAdd, eye, binary(material, unreal.MaterialExpressionMultiply, ray, t, x + 900, y + 650), x + 1050, y + 650)
     hit_xy = pick(hit, True, True, False, False, x + 1200, y + 650)
-    low = pick(rect, True, True, False, False, x + 300, y)
-    high = pick(rect, False, False, True, True, x + 300, y + 100)
+    # A vector parameter's default output is RGB; BoardRect packs four numbers, so read its RGBA output.
+    low = pick(rect, True, True, False, False, x + 300, y, "RGBA")
+    high = pick(rect, False, False, True, True, x + 300, y + 100, "RGBA")
     outside_low = binary(material, unreal.MaterialExpressionSubtract, low, hit_xy, x + 1350, y + 0)
     outside_high = binary(material, unreal.MaterialExpressionSubtract, hit_xy, high, x + 1350, y + 150)
     outside_xy = binary(material, unreal.MaterialExpressionMax, outside_low, outside_high, x + 1500, y + 80)
@@ -389,10 +390,12 @@ OCCLUDER_SCALARS = {"Glow", "Roughness", "CameraFade", "FadeRadius", "FadeMin", 
 OCCLUDER_VECTORS = {"Color", "SightEye", "SightFocus", "SightUnit", "BoardRect"}
 
 
+# Bump when build_occluder_material changes; the stored tag decides whether an existing asset is rebuilt.
+OCCLUDER_GRAPH_REVISION = "dice-occluder-3"
+
+
 def occluder_is_current(material):
-    names = lambda values: {str(v) for v in values}
-    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and OCCLUDER_SCALARS <= names(mel.get_scalar_parameter_names(material))
-            and OCCLUDER_VECTORS <= names(mel.get_vector_parameter_names(material)))
+    return library.get_metadata_tag(material, MASTER_REVISION_TAG) == OCCLUDER_GRAPH_REVISION
 
 
 def build_occluder_material(material):
@@ -468,7 +471,7 @@ def build_card_material(material):
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
 
 
-def ensure_material(name, build, is_current=None):
+def ensure_material(name, build, is_current=None, revision=None):
     """Creates a material once. An existing asset is kept; when `is_current` says its graph lacks this script's parameters
     it is rebuilt in place, so the asset, its path and every instance of it survive."""
     path = THEME + "/Materials/" + name
@@ -480,11 +483,16 @@ def ensure_material(name, build, is_current=None):
         mel.delete_all_material_expressions(material)
         build(material)
         mel.recompile_material(material)
+        if revision:
+            library.set_metadata_tag(material, MASTER_REVISION_TAG, revision)
+            material.modify()
         unreal.log("THEME_MATERIAL_REBUILT " + path)
         return material
     material = tools.create_asset(name, THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
     build(material)
     mel.recompile_material(material)
+    if revision:
+        library.set_metadata_tag(material, MASTER_REVISION_TAG, revision)
     unreal.log("THEME_MATERIAL_CREATED " + path)
     return material
 
@@ -759,7 +767,7 @@ def main():
     fix_r001_nanite = os.environ.get(theme_plan.NANITE_FIX_ENV) == "1"
     unreal.log("THEME_PLAN replace={} fix_r001_nanite={}".format(sorted(replacements) or "none", fix_r001_nanite))
     master = master_material()
-    occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current)
+    occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current, OCCLUDER_GRAPH_REVISION)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()

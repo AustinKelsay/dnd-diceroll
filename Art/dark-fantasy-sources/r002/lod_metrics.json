@@ -222,8 +222,8 @@
         "triangles": 139,
         "fraction": 0.2989,
         "file": "Art/prop-pillar-c/r001/SM_Prop_Pillar_C_LOD2.glb",
-        "sha256": "0aaa7e20273a6f42b712a25a48cae62ee7cba49e0a409ae5d4f5cbaece975597",
-        "bytes": 153264,
+        "sha256": "573defa30cab52f7ebde04f52f8172e561d4a104578db8e48d0ff65f115f13d7",
+        "bytes": 153252,
         "deviation_m_p50_p95_max": [
           0.0,
           0.0406,
@@ -270,8 +270,8 @@
         "triangles": 214,
         "fraction": 0.2737,
         "file": "Art/prop-wall/r002/SM_Prop_Wall_LOD2.glb",
-        "sha256": "bb7997dd84f4f9295ac6768d1e502783f2443e4270c5afef0607cd302250d0fa",
-        "bytes": 134744,
+        "sha256": "549786976857eff6fa10bc9a122fa76ef2ecb4bda12da6139432ac530951fe10",
+        "bytes": 134732,
         "deviation_m_p50_p95_max": [
           0.0,
           0.0151,
@@ -366,8 +366,8 @@
         "triangles": 146,
         "fraction": 0.3017,
         "file": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD2.glb",
-        "sha256": "fc0c9a508b02b23855b2a0ee443851dd7fd600d17f45ddaa71c7cf686eece666",
-        "bytes": 131648,
+        "sha256": "7f0026fb058e8777043a2bc880fe32e203a2cab8de4fe99c24ac4c8c64e96912",
+        "bytes": 131636,
         "deviation_m_p50_p95_max": [
           0.0,
           0.0401,
@@ -510,8 +510,8 @@
         "triangles": 178,
         "fraction": 0.273,
         "file": "Art/prop-stones-c/r001/SM_Prop_Stones_C_LOD2.glb",
-        "sha256": "8af58f8c44d1e9aa08875c6003452d333ce132c8a066f3318191fb77e6719a46",
-        "bytes": 52252,
+        "sha256": "04a34a37636ce0ddf00393c0938e7a4219d744aa9573cb37a40f09fab2f9a318",
+        "bytes": 52240,
         "deviation_m_p50_p95_max": [
           0.0047,
           0.0355,
