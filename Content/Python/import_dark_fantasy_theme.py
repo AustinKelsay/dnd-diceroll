@@ -228,9 +228,11 @@ def apply_material(mesh, texture, asset_id, name, look, master):
         existing = THEME + "/Textures/T_" + name[3:]
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
     if texture is not None:
-        # Trilinear filtering with anisotropy 8 (r.MaxAnisotropy in DefaultEngine.ini); uncompressed colour.
+        # Trilinear + anisotropic 8 (gate 1); uncompressed colour. TF_TRILINEAR would map straight to a plain trilinear
+        # sampler, which never uses r.MaxAnisotropy. TF_DEFAULT defers to the texture group, and Config/DefaultDeviceProfiles.ini
+        # makes TEXTUREGROUP_World MinMagFilter=aniso + MipFilter=linear, which is the anisotropic-linear sampler.
         # At 256 texels/m nearest, trilinear and sharp texels looked alike (gate 1), and mips stop shimmer at distance.
-        texture.set_editor_property("filter", unreal.TextureFilter.TF_TRILINEAR)
+        texture.set_editor_property("filter", unreal.TextureFilter.TF_DEFAULT)
         texture.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
         texture.set_editor_property("srgb", True)
         texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)

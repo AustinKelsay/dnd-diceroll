@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/TargetChipLayout.h"
 
 namespace
@@ -262,6 +263,8 @@ void AExpeditionHUD::DrawHUD()
     S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
+    // The camera fits the board into the area this layout leaves free.
+    if (AExpeditionBattleView* Board = Player->GetBattleView()) { Board->SetSafeRect(ExpeditionCameraRig::FSafeRect::ForViewport(Canvas->SizeX, Canvas->SizeY)); }
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
     // A capture run ignores the physical pointer so hover never changes a shot.
