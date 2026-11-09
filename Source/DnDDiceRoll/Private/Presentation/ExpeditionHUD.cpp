@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/HudCoverage.h"
 #include "Presentation/TargetChipLayout.h"
 
 namespace
@@ -165,7 +166,7 @@ bool AExpeditionHUD::Hovered(float X, float Y, float Width, float Height) const
     return Mouse.X >= X && Mouse.X < X + Width && Mouse.Y >= Y && Mouse.Y < Y + Height;
 }
 
-bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled, bool bSelected, FLinearColor Accent)
+bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, float X, float Y, float Width, float Height, bool bEnabled, bool bSelected, FLinearColor Accent, float LabelScale)
 {
     const bool bHover = bEnabled && Hovered(X, Y, Width, Height);
     const float Lift = 0.0f;
@@ -178,10 +179,11 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     Frame(WithAlpha(Accent, bSelected ? 0.95f : bHover ? 0.7f : bEnabled ? 0.35f : 0.12f), X, Y + Lift, Width, Height, bSelected ? 2.0f : 1.0f);
     if (bFocused) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     const FLinearColor LabelColor = bEnabled ? (bSelected ? Accent : Parchment) : FLinearColor(0.45f, 0.48f, 0.52f);
-    const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 : Y + Lift + Height * 0.5f - 19;
-    Text(Label, X + Width * 0.5f, LabelY, LabelColor, 0.92f, EAlign::Center, Width - 12);
-    if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f, EAlign::Center, Width - 10); }
-    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled});
+    const float Ratio = LabelScale / 0.92f;
+    const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 * Ratio : Y + Lift + Height * 0.5f - 19 * Ratio;
+    Text(Label, X + Width * 0.5f, LabelY, LabelColor, LabelScale, EAlign::Center, Width - 12);
+    if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2 * Ratio, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f * Ratio, EAlign::Center, Width - 10); }
+    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled, bTransientButtons});
     ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
@@ -252,10 +254,13 @@ void AExpeditionHUD::DrawHUD()
     Super::DrawHUD();
     Buttons.Reset();
     Blockers.Reset();
+    Persistent.Reset();
     ChipExclusions.Reset();
     ChipsRequested = 0;
     ReachRequested = 0;
+    DetailUnitId = INDEX_NONE;
     bCursorRequested = false;
+    bTransientButtons = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
@@ -277,7 +282,6 @@ void AExpeditionHUD::DrawHUD()
         if (View->InCombat()) { DrawLog(); }
         if (View->InCombat())
         {
-            DrawInitiative();
             DrawDice();
             DrawActionBar();
             DrawForecast();
@@ -304,6 +308,7 @@ void AExpeditionHUD::DrawHUD()
     }
     // Overlays own every click: buttons hidden beneath them must not fire.
     if (Player->OverlayOpen()) { Buttons.Reset(); }
+    if (Player->ShowingMenu()) { Buttons.Reset(); DrawMenuPanel(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
     if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
@@ -515,31 +520,64 @@ void AExpeditionHUD::DrawTargetChips()
 void AExpeditionHUD::DrawTopBar()
 {
     if (Player->ShowingBuilder() || (View->HasRun() && (View->Progress().Phase == EExpeditionPhase::Victory || View->Progress().Phase == EExpeditionPhase::Defeat))) { return; }
+    constexpr float Top = 8, StripHeight = 38, ButtonHeight = 28;
     if (View->HasRun())
     {
+        // One strip: where we are, the round and seed, and (in combat) the initiative order.
         const FExpeditionProgress& Run = View->Progress();
-        Panel(12, 12, 250, 74);
-        Text(FString::Printf(TEXT("dnd-diceroll  ·  SEED %d"), Run.Seed), 24, 20, Gold, 0.72f, EAlign::Left, 226);
-        Text(View->LocationName(), 24, 36, Parchment, 1.08f, EAlign::Left, 226);
-        const FString Status = View->InCombat() ? FString::Printf(TEXT("Encounter %d of %d  ·  Round %d"), Run.History.Num(), FExpeditionRun::EncounterCount, View->Rules().Snapshot().Round) : PhaseLine(Run);
-        Text(Status, 24, 62, Muted, 0.72f);
+        const float Width = StatusStripWidth();
+        Panel(8, Top, Width, StripHeight, Gold, 0.86f);
+        Persist(8, Top, Width, StripHeight);
+        Text(View->LocationName(), 18, Top + 4, Parchment, 0.82f, EAlign::Left, 170);
+        const FString Status = View->InCombat() ? FString::Printf(TEXT("Enc %d of %d  ·  Round %d"), Run.History.Num(), FExpeditionRun::EncounterCount, View->Rules().Snapshot().Round) : PhaseLine(Run);
+        Text(FString::Printf(TEXT("%s  ·  Seed %d"), *Status, Run.Seed), 18, Top + 22, Muted, 0.54f, EAlign::Left, View->InCombat() ? 170.0f : 240.0f);
+        if (View->InCombat()) { DrawInitiative(); }
     }
-    const float Top = 14, Size = 30, Gap = 6;
-    float X = W - 12;
-    auto System = [&](FName Id, const FString& Label, float Width, bool bEnabled = true, bool bSelected = false)
-    {
-        X -= Width;
-        Button(Id, Label, FString(), X, Top, Width, Size, bEnabled, bSelected, Sky);
-        X -= Gap;
-    };
-    System(TEXT("Help"), TEXT("? Help"), 74);
+    // One Menu button holds the secondary controls (#146). Its panel lists them while it is open.
+    const bool bWaiting = Player->ReturnPending();
+    const float MenuWidth = bWaiting ? 112.0f : 76.0f;
+    const FString Label = bWaiting ? TEXT("I  Menu: waiting") : TEXT("I  Menu");
+    const float Total = MenuWidth + 12.0f;
+    Panel(W - 8 - Total, Top, Total, StripHeight, Sky, 0.86f);
+    Persist(W - 8 - Total, Top, Total, StripHeight);
+    Button(TEXT("MenuToggle"), Label, FString(), W - 8 - 6 - MenuWidth, Top + (StripHeight - ButtonHeight) * 0.5f, MenuWidth, ButtonHeight, true, bWaiting || Player->ShowingMenu(), Sky, 0.8f);
+}
+
+void AExpeditionHUD::DrawMenuPanel()
+{
+    // The open Menu is a transient layer: a light scrim, the toggle (to close) and one row per control.
+    // Every drawn button is registered with its drawn rectangle; the controls beneath are not live.
+    constexpr float Top = 8, StripHeight = 38, ButtonHeight = 28, RowHeight = 34, RowGap = 6, PanelWidth = 232, Pad = 12;
+    Rect(FLinearColor(0, 0, 0, 0.35f), 0, 0, W, H);
+    bTransientButtons = true;
+    const bool bWaiting = Player->ReturnPending();
+    const float ToggleWidth = bWaiting ? 112.0f : 76.0f;
+    Button(TEXT("MenuToggle"), bWaiting ? TEXT("I  Menu: waiting") : TEXT("I  Menu"), FString(), W - 8 - 6 - ToggleWidth, Top + (StripHeight - ButtonHeight) * 0.5f, ToggleWidth, ButtonHeight, true, true, Sky, 0.8f);
+    struct FRow { FName Id; FString Label; bool bEnabled; };
     const FString Speed = View->Speed() == EPlaybackSpeed::Normal ? TEXT("1x") : View->Speed() == EPlaybackSpeed::Fast ? TEXT("2x") : TEXT("Instant");
-    if (View->InCombat()) { System(TEXT("Speed"), TEXT("T  Speed ") + Speed, 128); }
-    System(TEXT("Records"), TEXT("H  Records"), 104);
-    System(TEXT("Resume"), TEXT("O  Resume"), 98);
-    System(TEXT("Save"), TEXT("K  Save"), 82, View->HasRun());
-    // A pending return (waiting for the enemy or playback) shows as a selected Menu button.
-    if (View->CanReturnToMenu()) { System(TEXT("Menu"), Player->ReturnPending() ? TEXT("Menu: waiting") : TEXT("Bksp  Menu"), 104, true, Player->ReturnPending()); }
+    TArray<FRow> Rows;
+    Rows.Add({TEXT("Save"), TEXT("K  Save"), View->HasRun()});
+    Rows.Add({TEXT("Resume"), TEXT("O  Resume"), true});
+    Rows.Add({TEXT("Records"), TEXT("H  Records"), true});
+    Rows.Add({TEXT("Speed"), TEXT("T  Speed ") + Speed, true});
+    Rows.Add({TEXT("Help"), TEXT("?  Help"), true});
+    Rows.Add({TEXT("Menu"), bWaiting ? TEXT("Bksp  Return: waiting") : TEXT("Bksp  Return to start"), View->CanReturnToMenu()});
+    const float Height = Pad * 2 + Rows.Num() * RowHeight + (Rows.Num() - 1) * RowGap;
+    const float X = W - 8 - PanelWidth, Y = Top + StripHeight + 6;
+    Panel(X, Y, PanelWidth, Height, Sky, 0.98f);
+    float RowY = Y + Pad;
+    for (const FRow& Row : Rows)
+    {
+        Button(Row.Id, Row.Label, FString(), X + Pad, RowY, PanelWidth - Pad * 2, RowHeight, Row.bEnabled, false, Sky, 0.8f);
+        RowY += RowHeight + RowGap;
+    }
+    bTransientButtons = false;
+}
+
+float AExpeditionHUD::StatusStripWidth() const
+{
+    if (!View->InCombat()) { return 270.0f; }
+    return 188.0f + FMath::Max(1, View->Rules().Snapshot().TurnOrder.Num()) * 26.0f + 10.0f;
 }
 
 void AExpeditionHUD::DrawInitiative()
@@ -548,12 +586,9 @@ void AExpeditionHUD::DrawInitiative()
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const int32 Count = Snapshot.TurnOrder.Num();
     if (Count == 0) { return; }
-    const float Spacing = 44.0f;
-    const float Width = Count * Spacing + 96;
-    const float Left = 274.0f;
-    Panel(Left, 12, Width, 56, Gold, 0.82f);
-    Text(TEXT("ROUND"), Left + 14, 20, Muted, 0.62f);
-    Text(FString::FromInt(Snapshot.Round), Left + 30, 34, Gold, 1.15f, EAlign::Center);
+    constexpr float Spacing = 26.0f, Top = 8, StripHeight = 38;
+    const float Left = 8.0f + 188.0f;
+    Rect(WithAlpha(Gold, 0.25f), Left - 6, Top + 6, 1, StripHeight - 12);
     // While results play, the strip follows whoever is shown acting, not the committed turn.
     const int32 Focus = View->Playback().FocusId();
     const int32 Active = View->IsPresenting() && Focus != INDEX_NONE ? Focus : Rules.ActiveId();
@@ -563,26 +598,31 @@ void AExpeditionHUD::DrawInitiative()
         if (!Unit) { continue; }
         const FUnitDisplay* Display = View->Playback().Unit(Unit->Id);
         const ECombatLife Life = Display ? Display->Life : Unit->Life;
-        const FVector2D Center(Left + 74 + Index * Spacing, 40);
+        const FVector2D Center(Left + 12 + Index * Spacing, Top + StripHeight * 0.5f);
         const bool bActive = Unit->Id == Active;
-        const float Radius = bActive ? 19.0f : 15.0f;
+        const float Radius = bActive ? 13.0f : 10.5f;
         const FLinearColor Color = Life == ECombatLife::Dead ? FLinearColor(0.3f, 0.3f, 0.32f) : ExpeditionStyle::UnitColor(*Unit);
-        if (bActive) { Circle(Center, Radius + 3 + FMath::Sin(Clock * 5.0f), Gold); }
+        if (bActive) { Circle(Center, Radius + 2 + FMath::Sin(Clock * 5.0f) * 0.8f, Gold); }
         Circle(Center, Radius, Color * 0.5f);
-        Circle(Center, Radius - 2.5f, Color * (Unit->Side == ECombatSide::Party ? 0.85f : 0.65f));
-        if (Life == ECombatLife::Downed) { Circle(Center, Radius - 2.5f, FLinearColor(1.0f, 0.55f, 0.2f, 0.55f)); }
-        Text(Initials(*Unit), Center.X, Center.Y - 10, Ink, 0.85f, EAlign::Center);
+        Circle(Center, Radius - 2.0f, Color * (Unit->Side == ECombatSide::Party ? 0.85f : 0.65f));
+        if (Life == ECombatLife::Downed) { Circle(Center, Radius - 2.0f, FLinearColor(1.0f, 0.55f, 0.2f, 0.55f)); }
+        Text(Initials(*Unit), Center.X, Center.Y - 7, Ink, 0.6f, EAlign::Center);
         if (Life == ECombatLife::Dead)
         {
-            Line(Center - FVector2D(10, 10), Center + FVector2D(10, 10), Danger, 2.5f);
-            Line(Center + FVector2D(-10, 10), Center + FVector2D(10, -10), Danger, 2.5f);
+            Line(Center - FVector2D(7, 7), Center + FVector2D(7, 7), Danger, 2.0f);
+            Line(Center + FVector2D(-7, 7), Center + FVector2D(7, -7), Danger, 2.0f);
         }
-        if (FVector2D::Distance(Mouse, Center) < Radius)
+        if (FVector2D::Distance(Mouse, Center) < Radius + 1)
         {
-            Panel(Center.X - 80, 74, 160, 26, Gold, 0.95f, false);
-            Text(FString::Printf(TEXT("%s  ·  initiative %d"), *Unit->Name, Unit->Initiative), Center.X, 79, Parchment, 0.7f, EAlign::Center, 150);
+            Panel(Center.X - 80, Top + StripHeight + 6, 160, 26, Gold, 0.95f, false);
+            Text(FString::Printf(TEXT("%s  ·  initiative %d"), *Unit->Name, Unit->Initiative), Center.X, Top + StripHeight + 11, Parchment, 0.7f, EAlign::Center, 150);
         }
     }
+}
+
+namespace
+{
+constexpr float PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
 }
 
 void AExpeditionHUD::DrawParty()
@@ -591,7 +631,7 @@ void AExpeditionHUD::DrawParty()
     for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
-        DrawPartyCard(Unit, Index, 96 + Index * 116.0f);
+        DrawPartyCard(Unit, Index, PartyCardTop + Index * PartyCardPitch);
         ++Index;
     }
 }
@@ -603,140 +643,224 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     const bool bActive = View->InCombat() && View->Rules().ActiveId() == Unit.Id;
     const bool bSelected = Player->Selection() == Unit.Id;
     const FLinearColor Color = ExpeditionStyle::UnitColor(Unit);
-    const float X = 12, Width = 250, Height = 112;
+    const float X = PartyCardX, Width = PartyCardWidth, Height = PartyCardHeight;
     const bool bHover = Hovered(X, Y, Width, Height);
     Panel(X, Y, Width, Height, bActive ? Gold : Color, bSelected || bHover ? 0.97f : 0.86f);
+    Persist(X, Y, Width, Height);
     if (bActive) { Frame(WithAlpha(Gold, 0.6f + 0.3f * FMath::Sin(Clock * 4.0f)), X, Y, Width, Height, 2.0f); }
     else if (bSelected) { Frame(FLinearColor(0.9f, 0.95f, 1.0f, 0.7f), X, Y, Width, Height, 1.5f); }
     if (Player->MenuFocus() == FName(*FString::Printf(TEXT("Party%d"), Index))) { Frame(Parchment, X - 3, Y - 3, Width + 6, Height + 6, 2); }
     Rect(WithAlpha(Color, Life == ECombatLife::Dead ? 0.25f : 0.9f), X, Y, 4, Height);
-    // Portrait medallion.
-    const FVector2D Portrait(X + 34, Y + 34);
-    Circle(Portrait, 22, Life == ECombatLife::Dead ? FLinearColor(0.2f, 0.2f, 0.22f) : Color * 0.45f);
-    Circle(Portrait, 19, Life == ECombatLife::Dead ? FLinearColor(0.32f, 0.32f, 0.34f) : Color * 0.9f);
-    Text(Unit.Role.Left(1), Portrait.X, Portrait.Y - 13, Ink, 1.1f, EAlign::Center);
-    Text(FString::FromInt(Index + 1), X + 12, Y + 8, Muted, 0.6f);
-    Text(Unit.Name, X + 64, Y + 8, Life == ECombatLife::Dead ? Muted : Color, 0.98f);
-    Text(FString::Printf(TEXT("Lv%d %s"), Unit.Level, *FBuildCatalog::DisplayName(Unit)), X + 64, Y + 22, Muted, 0.52f, EAlign::Left, 176);
+    // Role emblem: a medallion with the class initial.
+    const FVector2D Portrait(X + 26, Y + 35);
+    Circle(Portrait, 16, Life == ECombatLife::Dead ? FLinearColor(0.2f, 0.2f, 0.22f) : Color * 0.45f);
+    Circle(Portrait, 13.5f, Life == ECombatLife::Dead ? FLinearColor(0.32f, 0.32f, 0.34f) : Color * 0.9f);
+    Text(Unit.Role.Left(1), Portrait.X, Portrait.Y - 9, Ink, 0.85f, EAlign::Center);
+    Text(FString::FromInt(Index + 1), X + 9, Y + 4, Muted, 0.5f);
+    Text(Unit.Name, X + 48, Y + 4, Life == ECombatLife::Dead ? Muted : Color, 0.8f, EAlign::Left, 100);
+    Text(FString::Printf(TEXT("Lv%d"), Unit.Level), X + Width - 8, Y + 6, Muted, 0.52f, EAlign::Right);
     if (Life == ECombatLife::Dead)
     {
-        Text(TEXT("Fallen  ·  lost for this expedition"), X + 64, Y + 34, FLinearColor(0.75f, 0.45f, 0.4f), 0.72f);
+        Text(TEXT("Fallen  ·  lost"), X + 48, Y + 21, FLinearColor(0.75f, 0.45f, 0.4f), 0.62f, EAlign::Left, 144);
     }
     else if (Life == ECombatLife::Downed)
     {
-        Text(FString::Printf(TEXT("DOWNED  ·  %d turns to rescue"), Unit.RescueTurnsLeft), X + 64, Y + 32, FLinearColor(1.0f, 0.6f, 0.3f), 0.74f);
+        Text(FString::Printf(TEXT("DOWNED  ·  %d turns to rescue"), Unit.RescueTurnsLeft), X + 48, Y + 21, FLinearColor(1.0f, 0.6f, 0.3f), 0.62f, EAlign::Left, 144);
     }
     else
     {
         const float Shown = Display ? Display->ShownHP : Unit.HP;
         const float Trail = Display ? Display->TrailHP : Unit.HP;
         const int32 HP = Display ? Display->HP : Unit.HP;
-        Bar(X + 64, Y + 34, 128, 9, Shown / FMath::Max(1, Unit.MaxHP), Trail / FMath::Max(1, Unit.MaxHP), HealthColor(Shown / FMath::Max(1, Unit.MaxHP)));
-        Text(FString::Printf(TEXT("%d/%d"), HP, Unit.MaxHP), X + Width - 12, Y + 30, Parchment, 0.72f, EAlign::Right);
+        Bar(X + 48, Y + 23, 100, 8, Shown / FMath::Max(1, Unit.MaxHP), Trail / FMath::Max(1, Unit.MaxHP), HealthColor(Shown / FMath::Max(1, Unit.MaxHP)));
+        Text(FString::Printf(TEXT("%d/%d"), HP, Unit.MaxHP), X + Width - 8, Y + 20, Parchment, 0.62f, EAlign::Right);
     }
-    // Resources as pips: the things that actually run out.
-    const float Row = Y + 56;
+    // Resources as pips: the things that actually run out. Full wording shows in the hover detail.
+    const auto* Build = FBuildCatalog::Find(Unit.BuildId);
+    float PipX = X + 48;
+    const float PipY = Y + 37;
+    auto Group = [&](const TCHAR* Tag, int32 Have, int32 Cap, FLinearColor Tint)
+    {
+        if (Cap <= 0) { return; }
+        Text(Tag, PipX, PipY - 5, Tint, 0.5f);
+        PipX += 9;
+        if (Cap > 6)
+        {
+            const FString Count = FString::Printf(TEXT("%d/%d"), Have, Cap);
+            Text(Count, PipX, PipY - 5, Parchment, 0.5f);
+            PipX += Measure(Count, 0.5f).X + 6;
+            return;
+        }
+        for (int32 Pip = 0; Pip < Cap; ++Pip) { Circle(FVector2D(PipX + 3 + Pip * 7.5f, PipY + 1), 2.8f, Pip < Have ? Tint : FLinearColor(0.3f, 0.3f, 0.33f)); }
+        PipX += Cap * 7.5f + 5;
+    };
+    if (Build && Life != ECombatLife::Dead)
+    {
+        Group(TEXT("K"), Unit.KitUses, Build->KitCap, Gold);
+        Group(TEXT("W"), Unit.SecondWindUses, Build->WindCap, Safe);
+        Group(TEXT("S"), Unit.SpellSlots, Build->SlotCap, Sky);
+        Group(TEXT("M"), Unit.ManeuverUses, Build->ManeuverCap, Gold);
+        Group(TEXT("R"), Unit.RageUses, Build->RageCap, Danger);
+    }
+    FString Gear = FString::Printf(TEXT("Potion %d  ·  Gear +%d"), Unit.Potions, Unit.WeaponRank);
+    if (Unit.RageTurns > 0) { Gear += TEXT("  ·  Raging"); }
+    if (Unit.GuardTargetId != INDEX_NONE) { Gear += TEXT("  ·  Guarding"); }
+    Text(Gear, X + 48, Y + 50, Muted, 0.5f, EAlign::Left, Width - 54);
+    Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
+    // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
+    // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
+    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + 8, Y); }
+}
+
+void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float Y)
+{
+    const float Width = 320;
+    DetailUnitId = Unit.Id;
+    TArray<TPair<FString, FLinearColor>> Lines;
+    Lines.Add({FString::Printf(TEXT("%s  ·  Lv%d %s"), *Unit.Name, Unit.Level, *FBuildCatalog::DisplayName(Unit)), ExpeditionStyle::UnitColor(Unit)});
+    if (Unit.Life == ECombatLife::Dead) { Lines.Add({TEXT("Fallen  ·  lost for this expedition"), FLinearColor(0.75f, 0.45f, 0.4f)}); }
+    else if (Unit.Life == ECombatLife::Downed) { Lines.Add({FString::Printf(TEXT("DOWNED  ·  %d turns to rescue"), Unit.RescueTurnsLeft), FLinearColor(1.0f, 0.6f, 0.3f)}); }
+    else { Lines.Add({FString::Printf(TEXT("HP %d/%d  ·  AC %d  ·  reach %d"), Unit.HP, Unit.MaxHP, Unit.ArmorClass, Unit.Range), Parchment}); }
     TArray<FString> Parts;
     FBuildCatalog::Status(Unit).ParseIntoArray(Parts, TEXT(" / "));
     FString Resources;
-    TArray<FString> StatusLines;
     for (const auto& Part : Parts)
     {
         if (Part.StartsWith(TEXT("Protection")))
         {
             const auto* Target = View->Rules().Find(Unit.GuardTargetId);
             const FString Label = Target ? FString::Printf(TEXT("%s [%d]"), *Target->Name, Target->Id) : TEXT("unavailable target");
-            StatusLines.Append(Wrap(FString::Printf(TEXT("Protect %s: -%d damage until next own turn"), *Label, Unit.GuardAmount > 0 ? Unit.GuardAmount : 3), Width - 24, 0.65f));
+            Lines.Add({FString::Printf(TEXT("Protect %s: -%d damage until next own turn"), *Label, Unit.GuardAmount > 0 ? Unit.GuardAmount : 3), Sky});
         }
         else { Resources += (Resources.IsEmpty() ? TEXT("") : TEXT(" / ")) + Part; }
     }
-    Resources += FString::Printf(TEXT(" / Potion %d / Gear +%d"), Unit.Potions, Unit.WeaponRank);
-    auto ResourceLines = Wrap(Resources, Width - 24, 0.65f);
-    ResourceLines.Append(StatusLines);
-    for (int32 I = 0; I < ResourceLines.Num(); ++I) { Text(ResourceLines[I], X + 12, Row - 6 + I * 13, Parchment, 0.65f); }
-    Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
+    Resources += FString::Printf(TEXT("%sPotion %d / Gear +%d"), Resources.IsEmpty() ? TEXT("") : TEXT(" / "), Unit.Potions, Unit.WeaponRank);
+    Lines.Add({Resources, Parchment});
+    TArray<TPair<FString, FLinearColor>> Wrapped;
+    for (const auto& Entry : Lines) { for (const auto& Line : Wrap(Entry.Key, Width - 24, 0.68f)) { Wrapped.Add({Line, Entry.Value}); } }
+    const float Height = 14 + Wrapped.Num() * 17.0f;
+    X = FMath::Min(X, W - Width - 8);
+    Y = FMath::Min(Y, H - Height - 90);
+    Panel(X, Y, Width, Height, Wrapped[0].Value, 0.97f, false);
+    for (int32 Index = 0; Index < Wrapped.Num(); ++Index) { Text(Wrapped[Index].Key, X + 12, Y + 7 + Index * 17.0f, Wrapped[Index].Value, 0.68f); }
 }
 
 void AExpeditionHUD::DrawLog()
 {
     const TArray<FString>& Messages = View->Messages();
     if (Messages.IsEmpty()) { return; }
+    // The log fades after LingerSeconds without a new entry and returns on a new entry or hover.
+    constexpr float LingerSeconds = 4.0f, FadeSeconds = 0.6f;
+    const FString& Last = Messages.Last();
+    if (Messages.Num() != LogCount || Last != LogLast) { LogCount = Messages.Num(); LogLast = Last; LogChangedAt = Clock; }
     TArray<FString> Lines;
     for (int32 Index = FMath::Max(0, Messages.Num() - 2); Index < Messages.Num(); ++Index)
-    { Lines.Append(Wrap(Messages[Index], 416, 0.7f)); }
-    const float Height = 16 + Lines.Num() * 18.0f;
-    const float Top = H - 128 - Height;
-    Panel(274, Top, 436, Height, Muted, 0.86f, false);
+    { Lines.Append(Wrap(Messages[Index], 260, 0.66f)); }
+    if (Lines.Num() > 4) { Lines.RemoveAt(0, Lines.Num() - 4); }
+    const float Height = 14 + Lines.Num() * 16.0f;
+    constexpr float Width = 280, X = 8;
+    const float Top = H - 8 - Height;
+    const bool bHover = Hovered(X, Top, Width, Height) || Hovered(X, H - 26, 56, 18);
+    // A capture never fades the log, so a gallery shot always shows it.
+    const float Idle = Clock - LogChangedAt - LingerSeconds;
+    const float Alpha = Player->IsCapturing() || bHover ? 1.0f : FMath::Clamp(1.0f - Idle / FadeSeconds, 0.0f, 1.0f);
+    if (Alpha <= 0.01f)
+    {
+        // A small tab keeps the log discoverable; hovering it brings the log back.
+        Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.6f), X, H - 26, 56, 18);
+        Text(TEXT("Log"), X + 28, H - 24, Muted, 0.6f, EAlign::Center);
+        Persist(X, H - 26, 56, 18);
+        return;
+    }
+    Panel(X, Top, Width, Height, WithAlpha(Muted, Alpha), 0.86f * Alpha, false);
+    Persist(X, Top, Width, Height);
     for (int32 Index = 0; Index < Lines.Num(); ++Index)
-    { Text(Lines[Index], 284, Top + 8 + Index * 18.0f, Parchment, 0.7f); }
+    { Text(Lines[Index], X + 10, Top + 7 + Index * 16.0f, WithAlpha(Parchment, Alpha), 0.66f); }
 }
 
 // ---------------------------------------------------------------------------------------
 // Combat controls
+
+namespace
+{
+// Compact action dock: a thin bezel for the turn's budgets above one row of buttons.
+// Room is kept in each button's lower band for #58's cost/usage tags.
+constexpr float DockButtonWidth = 104, DockButtonHeight = 42, DockGap = 4, DockBezel = 20, DockPad = 8, DockFoot = 4, DockMargin = 8;
+}
 
 void AExpeditionHUD::DrawActionBar()
 {
     const FCombatBattle& Rules = View->Rules();
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
-    const float Y = H - 82;
+    const float DockHeight = DockBezel + DockButtonHeight + DockFoot;
+    const float DockY = H - DockMargin - DockHeight;
     if (View->IsPresenting())
     {
-        Button(TEXT("Skip"), TEXT("Skip  >>"), TEXT("Tab"), W * 0.5f - 60, Y + 10, 120, 44, true, false, Sky);
+        Button(TEXT("Skip"), TEXT("Skip  >>"), TEXT("Tab"), W * 0.5f - 52, H - DockMargin - DockButtonHeight, 104, DockButtonHeight, true, false, Sky);
         return;
     }
     if (!Active || Snapshot.Phase != EBattlePhase::Fighting) { return; }
     if (Active->Side == ECombatSide::Enemy)
     {
-        Panel(W * 0.5f - 150, Y + 14, 300, 38, Danger, 0.85f);
+        Panel(W * 0.5f - 130, H - DockMargin - 34, 260, 34, Danger, 0.85f);
+        Persist(W * 0.5f - 130, H - DockMargin - 34, 260, 34);
         const int32 Dots = 1 + static_cast<int32>(Clock * 3.0f) % 3;
-        Text(FString::Printf(TEXT("%s is deciding%s"), *Active->Name, *FString::ChrN(Dots, TEXT('.'))), W * 0.5f, Y + 23, Danger, 0.85f, EAlign::Center);
+        Text(FString::Printf(TEXT("%s is deciding%s"), *Active->Name, *FString::ChrN(Dots, TEXT('.'))), W * 0.5f, H - DockMargin - 26, Danger, 0.85f, EAlign::Center, 244);
         return;
     }
     const int32 Id = Active->Id;
-    Text(FString::Printf(TEXT("%s's turn"), *Active->Name), W * 0.5f + 190, Y - 26, ExpeditionStyle::UnitColor(*Active), 0.78f);
-    // Budget chips.
-    const float Chips = Y - 26;
+    const auto Abilities = FBuildCatalog::Abilities(*Active);
+    const int32 Count = 4 + Abilities.Num();
+    const float RowWidth = Count * (DockButtonWidth + DockGap) - DockGap;
+    const float DockWidth = RowWidth + 2 * DockPad;
+    const float DockX = W * 0.5f - DockWidth * 0.5f;
+    Panel(DockX, DockY, DockWidth, DockHeight, ExpeditionStyle::UnitColor(*Active), 0.9f);
+    Persist(DockX, DockY, DockWidth, DockHeight);
+    // Thin top bezel: the turn's budget chips on the left, whose turn it is on the right.
     auto Chip = [&](const FString& Label, bool bReady, float X)
     {
-        Circle(FVector2D(X, Chips + 9), 5, bReady ? Safe : FLinearColor(0.35f, 0.35f, 0.38f));
-        Text(Label, X + 10, Chips, bReady ? Parchment : Muted, 0.7f);
+        Circle(FVector2D(X, DockY + 11), 4, bReady ? Safe : FLinearColor(0.35f, 0.35f, 0.38f));
+        Text(Label, X + 9, DockY + 5, bReady ? Parchment : Muted, 0.62f);
     };
-    const float ChipLeft = W * 0.5f - 160;
-    Chip(FString::Printf(TEXT("Move %d"), Snapshot.MovementLeft), Snapshot.MovementLeft > 0, ChipLeft);
-    Chip(TEXT("Action"), Snapshot.bActionAvailable, ChipLeft + 110);
-    Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable, ChipLeft + 200);
+    Chip(FString::Printf(TEXT("Move %d"), Snapshot.MovementLeft), Snapshot.MovementLeft > 0, DockX + 16);
+    Chip(TEXT("Action"), Snapshot.bActionAvailable, DockX + 90);
+    Chip(TEXT("Bonus action"), Snapshot.bBonusActionAvailable, DockX + 152);
+    Text(FString::Printf(TEXT("%s's turn"), *Active->Name), DockX + DockWidth - 12, DockY + 5, ExpeditionStyle::UnitColor(*Active), 0.66f, EAlign::Right, 150);
+    if (const auto* Kit = FBuildCatalog::Find(Active->BuildId); Kit && Kit->SneakDie)
+    { Text(TEXT("Sneak Attack: with adjacent ally"), DockX + (250 + DockWidth - 100) * 0.5f, DockY + 5, Safe, 0.6f, EAlign::Center, DockWidth - 350); }
 
-    const auto Abilities = FBuildCatalog::Abilities(*Active);
-    const float Width = 128, Gap = 6, Height = 54;
-    const float Left = W * 0.5f - ((4 + Abilities.Num()) * (Width + Gap) - Gap) * 0.5f;
+    const float Y = DockY + DockBezel;
+    const float Left = DockX + DockPad;
+    const float Step = DockButtonWidth + DockGap;
     const ECombatCommandType Mode = Player->Action();
     auto Ready = [&](ECombatCommandType Action) { return !Rules.LegalTargets(Id, Action).IsEmpty(); };
+    auto Dock = [&](FName ButtonId, const FString& Label, const FString& Sub, int32 Column, bool bEnabled, bool bSelected, FLinearColor Accent)
+    { return Button(ButtonId, Label, Sub, Left + Column * Step, Y, DockButtonWidth, DockButtonHeight, bEnabled, bSelected, Accent, 0.78f); };
     TArray<TPair<ECombatCommandType, bool>> Hover;
-    Hover.Add({ECombatCommandType::Attack, Button(TEXT("ModeAttack"), TEXT("Attack / Move"), FString::Printf(TEXT("A / d%d%+d"), Active->DamageDie, FBuildCatalog::AttackModifier(*Active)), Left, Y, Width, Height,
-        Ready(ECombatCommandType::Attack) || !Rules.LegalMoves(Id).IsEmpty(), Mode == ECombatCommandType::Attack)});
+    Hover.Add({ECombatCommandType::Attack, Dock(TEXT("ModeAttack"), TEXT("Attack / Move"), FString::Printf(TEXT("A / d%d%+d"), Active->DamageDie, FBuildCatalog::AttackModifier(*Active)), 0,
+        Ready(ECombatCommandType::Attack) || !Rules.LegalMoves(Id).IsEmpty(), Mode == ECombatCommandType::Attack, FLinearColor(0.95f, 0.78f, 0.4f))});
     int32 Column = 1;
     for (const auto& Ability : Abilities)
     {
-        const FString Cost = FString::Printf(TEXT("%s %s / %d %s%s"), Column == 1 ? TEXT("F") : TEXT("M"), Ability.bBonus ? TEXT("Bonus") : TEXT("Action"), Ability.ResourceCost, *Ability.ResourceName, Ability.bResourceAvailable ? TEXT("") : TEXT(" unavailable"));
-        Hover.Add({Ability.Command, Button(Column == 1 ? TEXT("ModeRole") : TEXT("Maneuver"), Ability.Name, Cost, Left + Column * (Width + Gap), Y, Width, Height, Ready(Ability.Command), Mode == Ability.Command, Sky)});
+        const FString Cost = FString::Printf(TEXT("%s %s / %d %s%s"), Column == 1 ? TEXT("F") : TEXT("M"), Ability.bBonus ? TEXT("Bonus") : TEXT("Action"), Ability.ResourceCost, *Ability.ResourceName, Ability.bResourceAvailable ? TEXT("") : TEXT(" none"));
+        Hover.Add({Ability.Command, Dock(Column == 1 ? TEXT("ModeRole") : TEXT("Maneuver"), Ability.Name, Cost, Column, Ready(Ability.Command), Mode == Ability.Command, Sky)});
         ++Column;
     }
-    Hover.Add({ECombatCommandType::Rescue, Button(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R / adjacent downed ally"), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
-    Hover.Add({ECombatCommandType::Potion, Button(TEXT("ModePotion"), TEXT("Potion"), FString::Printf(TEXT("P / %d left"), Active->Potions), Left + Column++ * (Width + Gap), Y, Width, Height, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
-    Button(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Left + Column * (Width + Gap), Y, Width, Height, true, false, Gold);
-    if (const auto* Build = FBuildCatalog::Find(Active->BuildId); Build && Build->SneakDie) { Text(TEXT("Sneak Attack: automatic with adjacent ally"), W * 0.5f, Y - 52, Safe, 0.7f, EAlign::Center); }
+    Hover.Add({ECombatCommandType::Rescue, Dock(TEXT("ModeRescue"), TEXT("Rescue"), TEXT("R / adjacent ally"), Column++, Ready(ECombatCommandType::Rescue), Mode == ECombatCommandType::Rescue, Safe)});
+    Hover.Add({ECombatCommandType::Potion, Dock(TEXT("ModePotion"), TEXT("Potion"), FString::Printf(TEXT("P / %d left"), Active->Potions), Column++, Ready(ECombatCommandType::Potion), Mode == ECombatCommandType::Potion, Safe)});
+    Dock(TEXT("EndTurn"), TEXT("End Turn"), TEXT("Space"), Column, true, false, Gold);
     for (const auto& Pair : Hover)
     {
         if (!Pair.Value) { continue; }
         FString Help = FCombatBattle::DescribeAction(Pair.Key);
         for (const auto& A : Abilities) { if (A.Command == Pair.Key) { Help = A.Name + TEXT(": ") + A.Description; } }
         const float TipWidth = FMath::Min(640.0f, Measure(Help, 0.72f).X + 24);
-        Panel(W * 0.5f - TipWidth * 0.5f, Y - 66, TipWidth, 30, Sky, 0.95f, false);
-        Text(Help, W * 0.5f, Y - 60, Parchment, 0.72f, EAlign::Center, TipWidth - 16);
+        Panel(W * 0.5f - TipWidth * 0.5f, DockY - 36, TipWidth, 30, Sky, 0.95f, false);
+        Text(Help, W * 0.5f, DockY - 30, Parchment, 0.72f, EAlign::Center, TipWidth - 16);
     }
-    Text(TEXT("Right-drag or Q/E: rotate  ·  Wheel: zoom  ·  Tab: skip  ·  T: speed  ·  ?: help"), W * 0.5f, H - 20, WithAlpha(Muted, 0.8f), 0.6f, EAlign::Center);
 }
+
 
 void AExpeditionHUD::DrawForecast()
 {
@@ -862,58 +986,106 @@ void AExpeditionHUD::DrawBanner()
 
 void AExpeditionHUD::DrawTitle()
 {
-    const float X = (W - 1200) / 2, Y = (H - 660) / 2;
-    Panel(X, Y, 1200, 660, Gold, 0.98f);
-    Text(TEXT("dnd-diceroll"), X + 24, Y + 12, Gold, 1.6f);
-    if (View->HasRun()) { Button(TEXT("Close"), TEXT("Back to result"), TEXT("Esc"), X + 972, Y + 14, 200, 48); }
-    Text(TEXT("Four heroes / five battles / levels 1-5 / compact tabletop kits"), X + 24, Y + 49, Muted, 0.85f);
+    // Two side drawers leave the candlelit tabletop visible between them (#146).
+    // Left: party slots, class and subclass. Right: build details and the actions.
+    // Buttons register in the original order (Close, slots, class/subclass, then actions) so Tab keeps its sequence.
+    constexpr float Margin = 12, LeftWidth = 300, RightWidth = 380;
+    const float DrawerY = Margin, DrawerHeight = H - 2 * Margin;
+    const float LeftX = Margin, RightX = W - Margin - RightWidth;
+    Panel(LeftX, DrawerY, LeftWidth, DrawerHeight, Gold, 0.94f);
+    Text(TEXT("dnd-diceroll"), LeftX + 14, DrawerY + 8, Gold, 1.25f);
+    if (View->HasRun()) { Button(TEXT("Close"), TEXT("Back to result"), TEXT("Esc"), LeftX + LeftWidth - 138, DrawerY + 8, 126, 40, true, false, Sky, 0.8f); }
+    Text(TEXT("Four heroes / five battles / levels 1-5"), LeftX + 14, DrawerY + 42, Muted, 0.62f, EAlign::Left, LeftWidth - 28);
+    const float SlotY = DrawerY + 62;
     for (int32 I = 0; I < Player->NextParty().Num(); ++I)
     {
         const auto& P = Player->NextParty()[I];
         FCombatantState Hero; FBuildCatalog::Create(P.BuildId, P.Id, P.Name, Hero);
-        Button(FName(*FString::Printf(TEXT("Party%d"), I)), FString::Printf(TEXT("%d  %s"), I+1, *P.Name), FBuildCatalog::DisplayName(Hero), X+24+I*290, Y+82, 280, 64, true, Player->BuilderSlot()==I, Sky);
+        Button(FName(*FString::Printf(TEXT("Party%d"), I)), FString::Printf(TEXT("%d  %s"), I + 1, *P.Name), FBuildCatalog::DisplayName(Hero), LeftX + 12, SlotY + I * 50, LeftWidth - 24, 44, true, Player->BuilderSlot() == I, Sky, 0.85f);
     }
     const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
     FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
-    Text(TEXT("CLASS"), X+24, Y+160, Gold, 0.85f);
+    const float ClassLabelY = SlotY + 4 * 50 + 4;
+    Text(TEXT("CLASS"), LeftX + 14, ClassLabelY, Gold, 0.8f);
     TArray<FString> Classes;
-    int32 ClassIndex=0, BuildIndex=0;
+    int32 ClassIndex = 0, BuildIndex = 0;
+    const float ClassY = ClassLabelY + 22;
+    TSet<FString> Distinct;
+    for (const auto& B : FBuildCatalog::All()) { Distinct.Add(B.Profile.ClassId); }
+    const float ClassRows = FMath::CeilToFloat(Distinct.Num() / 2.0f);
+    const float SubclassLabelY = ClassY + ClassRows * 34 + 6;
+    // Long subclass lists (ten for cleric and wizard) switch to two columns and shorter rows, so
+    // every choice stays inside the drawer and Tab never reaches a control drawn off screen.
+    int32 BuildCount = 0;
+    for (const auto& B : FBuildCatalog::All()) { BuildCount += B.Profile.ClassId == Hero.ClassId ? 1 : 0; }
+    const float ListTop = SubclassLabelY + 22, ListBottom = DrawerY + DrawerHeight - 10;
+    const int32 BuildColumns = ListTop + BuildCount * 28 <= ListBottom ? 1 : 2;
+    const int32 BuildRows = FMath::Max(1, FMath::DivideAndRoundUp(BuildCount, BuildColumns));
+    const float BuildRow = FMath::Min(28.0f, (ListBottom - ListTop) / BuildRows);
+    const float BuildWidth = (LeftWidth - 24 - (BuildColumns - 1) * 6) / BuildColumns;
     for (const auto& B : FBuildCatalog::All())
     {
         if (!Classes.Contains(B.Profile.ClassId))
         {
             Classes.Add(B.Profile.ClassId);
-            Button(FName(*(TEXT("Class:")+B.Profile.ClassId)), B.Profile.Role, TEXT(""), X+24+(ClassIndex%2)*140, Y+190+(ClassIndex/2)*40, 132, 34, true, B.Profile.ClassId==Hero.ClassId);
+            Button(FName(*(TEXT("Class:") + B.Profile.ClassId)), B.Profile.Role, TEXT(""), LeftX + 12 + (ClassIndex % 2) * 140, ClassY + (ClassIndex / 2) * 34, 134, 30, true, B.Profile.ClassId == Hero.ClassId, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
             ++ClassIndex;
         }
         if (B.Profile.ClassId == Hero.ClassId)
         {
-            const FString Label=FBuildCatalog::DisplayName(B.Profile).RightChop(B.Profile.Role.Len()+3);
-            Button(FName(*(TEXT("Build:")+B.Id)), Label, TEXT(""), X+320, Y+190+BuildIndex*29, 280, 26, true, B.Id==Hero.BuildId, Sky);
+            const FString Label = FBuildCatalog::DisplayName(B.Profile).RightChop(B.Profile.Role.Len() + 3);
+            Button(FName(*(TEXT("Build:") + B.Id)), Label, TEXT(""), LeftX + 12 + (BuildIndex % BuildColumns) * (BuildWidth + 6), ListTop + (BuildIndex / BuildColumns) * BuildRow,
+                BuildWidth, BuildRow - 3, true, B.Id == Hero.BuildId, Sky, BuildColumns == 1 ? 0.8f : 0.7f);
             ++BuildIndex;
         }
     }
-    Text(TEXT("SUBCLASS"), X+320, Y+160, Gold, 0.85f);
-    Text(FBuildCatalog::DisplayName(Hero), X+628, Y+160, Parchment, 1.0f);
-    Text(FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range), X+628, Y+190, Muted, 0.85f);
-    float Row=Y+228;
+    Text(TEXT("SUBCLASS"), LeftX + 14, SubclassLabelY, Gold, 0.8f);
+
+    // The right side is two panels sized to their content, details on top and actions at the
+    // foot, so the tabletop shows between them instead of behind an empty drawer.
+    const float InnerX = RightX + 14, InnerWidth = RightWidth - 28;
+    const auto* Build = FBuildCatalog::Find(Hero.BuildId);
+    float DetailsEnd = DrawerY + 66;
+    for (const auto& Ability : FBuildCatalog::Abilities(Hero)) { DetailsEnd += 22 + Wrap(Ability.Description, InnerWidth, 0.72f).Num() * 18.0f + 8; }
+    if (Build->SneakDie) { DetailsEnd += 20; }
+    if (Build->CriticalThreshold == 19) { DetailsEnd += 20; }
+    Panel(RightX, DrawerY, RightWidth, DetailsEnd - DrawerY + 6, Gold, 0.94f);
+    Text(FBuildCatalog::DisplayName(Hero), InnerX, DrawerY + 12, Parchment, 1.0f, EAlign::Left, InnerWidth);
+    Text(FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range), InnerX, DrawerY + 38, Muted, 0.8f);
+    float Row = DrawerY + 66;
     for (const auto& Ability : FBuildCatalog::Abilities(Hero))
     {
-        Text(Ability.Name, X+628, Row, Gold, 0.9f); Row+=25;
-        for (const auto& Line : Wrap(Ability.Description, 540, 0.8f)) { Text(Line, X+628, Row, Parchment, 0.8f); Row+=21; }
-        Row+=12;
+        Text(Ability.Name, InnerX, Row, Gold, 0.85f); Row += 22;
+        for (const auto& Line : Wrap(Ability.Description, InnerWidth, 0.72f)) { Text(Line, InnerX, Row, Parchment, 0.72f); Row += 18; }
+        Row += 8;
     }
-    const auto* Build=FBuildCatalog::Find(Hero.BuildId);
-    if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), X+628, Row, Safe, 0.8f); }
-    if (Build->CriticalThreshold==19) { Text(TEXT("Passive: critical hits on 19-20"), X+628, Row, Safe, 0.8f); }
-    Text(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), X+24, Y+496, Muted, 0.8f);
-    Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), X+24, Y+534, 250, 52);
-    Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), X+286, Y+534, 250, 52);
-    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), X+548, Y+534, 200, 52);
-    Button(TEXT("Records"), TEXT("Records"), TEXT("H"), X+760, Y+534, 200, 52);
-    Button(TEXT("Help"), TEXT("Help"), TEXT("?"), X+972, Y+534, 200, 52);
-    if (!View->Messages().IsEmpty()) { float MsgY=Y+600; for (const auto& Line : Wrap(View->Messages().Last(), 1152, 0.8f)) { Text(Line, X+24, MsgY, Parchment, 0.8f); MsgY+=21; } }
+    if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), InnerX, Row, Safe, 0.75f); Row += 20; }
+    if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), InnerX, Row, Safe, 0.75f); }
+    // Actions sit at the foot of the drawer.
+    const float Bottom = DrawerY + DrawerHeight - 12;
+    const float SmallY = Bottom - 40, BigY = SmallY - 6 - 48;
+    const float Half = (InnerWidth - 6) * 0.5f, Third = (InnerWidth - 12) / 3.0f;
+    const TArray<FString> Hint = Wrap(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), InnerWidth, 0.6f);
+    const float ActionsTop = BigY - 8 - Hint.Num() * 15.0f - 10;
+    Panel(RightX, ActionsTop, RightWidth, Bottom + 12 - ActionsTop, Gold, 0.94f);
+    Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), InnerX, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
+    Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), InnerX + Half + 6, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
+    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), InnerX, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    Button(TEXT("Records"), TEXT("Records"), TEXT("H"), InnerX + Third + 6, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    Button(TEXT("Help"), TEXT("Help"), TEXT("?"), InnerX + 2 * (Third + 6), SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    float HintY = BigY - 8 - Hint.Num() * 15.0f;
+    for (const auto& Line : Hint) { Text(Line, InnerX, HintY, Muted, 0.6f); HintY += 15; }
+    if (!View->Messages().IsEmpty())
+    {
+        // Feedback sits between the drawers, over the tabletop.
+        const float MessageX = LeftX + LeftWidth + 16, MessageWidth = RightX - 16 - MessageX;
+        const TArray<FString> Lines = Wrap(View->Messages().Last(), MessageWidth - 24, 0.8f);
+        const float Height = 14 + Lines.Num() * 21.0f;
+        Panel(MessageX, H - Margin - Height, MessageWidth, Height, Muted, 0.9f, false);
+        for (int32 Index = 0; Index < Lines.Num(); ++Index) { Text(Lines[Index], MessageX + 12, H - Margin - Height + 7 + Index * 21.0f, Parchment, 0.8f); }
+    }
 }
+
 
 void AExpeditionHUD::DrawRoutes()
 {
@@ -1075,7 +1247,7 @@ void AExpeditionHUD::DrawHelp()
             TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
             TEXT("Gear caps at rank 3. Potions remain useful at the gear cap."),
             TEXT("C takes the one recovery opportunity; V forfeits it."),
-            TEXT("Backspace or Menu returns to the start screen; O resumes from there."),
+            TEXT("Backspace or Menu > Return to start leaves; O resumes from there."),
             TEXT("Deaths are permanent. Recovery never resurrects fallen heroes."),
             TEXT("The ending keeps a record; choose next party to begin again.")};
         float Row=Y+70;
@@ -1090,13 +1262,15 @@ void AExpeditionHUD::DrawHelp()
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Records  ·  ?  Help  ·  Bksp  Menu"), TEXT("Esc  Close Help or Records")};
+        TEXT("H  Records  ·  ?  Help  ·  I  Menu"), TEXT("Esc  Close Help, Records or the Menu")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
         Text(Right[Index], X + Width * 0.5f + 12, Y + 66 + Index * 28.0f, Parchment, 0.8f);
     }
     Text(TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
+    float NoteY = Y + Height - 58;
+    for (const auto& Line : Wrap(TEXT("Hover a hero card for full status. The combat log fades after a few seconds; hover the bottom-left corner to bring it back."), Width - 200, 0.62f)) { Text(Line, X + 32, NoteY, Muted, 0.62f); NoteY += 15; }
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
@@ -1117,6 +1291,22 @@ void AExpeditionHUD::DrawReturnConfirm()
     Button(TEXT("ReturnConfirm"), TEXT("Return to menu"), TEXT("Enter"), X + 24, Y + Height - 70, 270, 50, true, false, Gold);
     Button(TEXT("KeepPlaying"), TEXT("Keep playing"), TEXT("Esc"), X + Width - 294, Y + Height - 70, 270, 50, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+TArray<FBox2D> AExpeditionHUD::ButtonRects() const
+{
+    TArray<FBox2D> Result;
+    for (const FButtonArea& Area : Buttons) { Result.Add(Area.Box); }
+    return Result;
+}
+
+double AExpeditionHUD::PersistentCoverage() const
+{
+    std::vector<ExpeditionLayout::Rect> Boxes;
+    for (const FBox2D& Box : Persistent) { Boxes.push_back({Box.Min.X * S, Box.Min.Y * S, Box.Max.X * S, Box.Max.Y * S}); }
+    for (const FButtonArea& Area : Buttons) { if (!Area.bTransient) { Boxes.push_back({Area.Box.Min.X, Area.Box.Min.Y, Area.Box.Max.X, Area.Box.Max.Y}); } }
+    const double Width = W * S, Height = H * S;
+    return Width > 0 && Height > 0 ? ExpeditionLayout::UnionArea(Boxes, {0, 0, Width, Height}) / (Width * Height) : 0.0;
 }
 
 TArray<FName> AExpeditionHUD::MenuButtons() const
