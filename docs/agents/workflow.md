@@ -31,7 +31,7 @@ git switch -c feature/<issue>-<slug>
 
 For an existing feature branch, stay on that branch and explicitly merge `origin/staging` after inspection instead of switching away and losing context. Use merge for published branches; do not rewrite another contributor's history. Resolve text conflicts with the affected contract in view. Stop on binary conflicts and coordinate an Unreal resolution. Then hydrate LFS assets and repeat relevant verification. A changed source tree requires fresh build evidence before editor launch.
 
-Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and get a turn to run Unreal before build, test, editor, or package jobs (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
+Each simultaneous writer uses a separate checkout. On Ultra, clones/worktrees still share the MCP port and the machine: keep one editor at a time, transfer ownership intentionally, and wrap every build, test, and package job in the machine lock (see "Shared machine" in [development](../development.md)). Do not edit the four tracked endpoint settings just to run another feature. The per-checkout operation lock only covers helper calls; it is not a session lease or a cross-machine claim lock.
 
 Completion: the intended baseline is available, current work is preserved, the branch is intentional, and editor ownership is clear.
 
@@ -90,4 +90,4 @@ The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c]
 
 Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
 
-No personal filesystem path, T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.
+No personal filesystem path (except Ultra's documented shared-lock convention), T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.
