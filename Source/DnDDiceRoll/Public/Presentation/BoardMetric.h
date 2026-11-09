@@ -21,6 +21,8 @@ struct FBoardMetric
     /** Default: a true 5 ft cell, and a figure about 6 ft tall. */
     static constexpr float DefaultCellCm = 150.0f;
     static constexpr float DefaultFigureCm = 180.0f;
+    /** Diameter of a figure's footprint ring on the default 150 cm cell (#142); other cells scale it. */
+    static constexpr float FootprintRingCm = 56.0f;
 
     float CellCm = DefaultCellCm;
     float FigureCm = DefaultFigureCm;
@@ -36,6 +38,8 @@ struct FBoardMetric
     float BoardTop() const { return Scaled(ReferenceBoardTop); }
     /** The plane the pointer is intersected with. */
     float CursorPlane() const { return Scaled(ReferenceCursorPlane); }
+    /** The footprint ring diameter in world cm: 56 cm at the default cell, scaled by the ratio of this cell to 150 cm. */
+    float FootprintDiameter() const { return FootprintRingCm * CellCm / DefaultCellCm; }
     /** A height as a fraction of the figure height above the board (1 is the top of the head). */
     float Figure(float Fraction) const { return FigureCm * Fraction; }
 
