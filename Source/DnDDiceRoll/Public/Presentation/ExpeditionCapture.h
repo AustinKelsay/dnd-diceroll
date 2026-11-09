@@ -30,7 +30,7 @@ namespace ExpeditionCapture
 /** The camera distance range a battle allows, in reference units (cm for the 110 cm r001 cell; the camera
  * scales them by the board metric). Poses outside it are rejected. */
 constexpr float MinDistance = 900.0f;
-constexpr float MaxDistance = 3200.0f;
+constexpr float MaxDistance = 6400.0f;
 constexpr int32 MaxSettleFrames = 1200;
 
 /** True when the command line asks for a capture run. A capture run binds no player input, so a
