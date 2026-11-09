@@ -88,6 +88,26 @@ def add(material, a, b, x, y):
     return node
 
 
+MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness", "CameraFade"}
+MASTER_VECTORS = {"Color", "FillSky", "FillGround", "RimColor"}
+MASTER_TEXTURES = {"Tex"}
+
+
+def master_is_current(material):
+    names = lambda values: {str(v) for v in values}
+    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
+            and MASTER_VECTORS <= names(mel.get_vector_parameter_names(material))
+            and MASTER_TEXTURES <= names(mel.get_texture_parameter_names(material)))
+
+
+def set_if_different(obj, prop, value):
+    """Sets an editor property only when it differs, so unchanged assets are never dirtied."""
+    if obj.get_editor_property(prop) != value:
+        obj.set_editor_property(prop, value)
+        return True
+    return False
+
+
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
@@ -99,7 +119,14 @@ def master_material():
     """
     if library.does_asset_exist(MASTER):
         material = unreal.load_asset(MASTER)
+        # Leave an existing graph alone when it already exposes this graph's parameters, so a rerun never
+        # re-saves the master (and every instance) for nothing. Set DND_THEME_REBUILD_MASTER=1 to rebuild it
+        # on purpose after changing the graph below.
+        if os.environ.get("DND_THEME_REBUILD_MASTER") != "1" and master_is_current(material):
+            unreal.log("THEME_MASTER kept (graph current)")
+            return material
         mel.delete_all_material_expressions(material)
+        unreal.log("THEME_MASTER rebuilt")
     else:
         material = tools.create_asset("M_DiceRollTheme", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
     white = unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture")
@@ -142,6 +169,29 @@ def master_material():
 
     emissive = add(material, add(material, glow_term, fill_term, 100, 600), rim_term, 250, 700)
     roughness = scalar(material, "Roughness", 0.85, 100, 500)
+
+    # Camera fade: scenery closer to the camera than CameraFade x the camera's height is clipped, so a
+    # diorama that surrounds the board (r001 Root) never swallows the camera when the HUD-safe fit pulls it
+    # back. The radius scales with zoom; the board and figures are always farther away. In shadow passes the
+    # camera is the light, so clipped scenery keeps its shadows.
+    material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+    world_pos = expression(material, unreal.MaterialExpressionWorldPosition, -700, 1550)
+    camera_pos = expression(material, unreal.MaterialExpressionCameraPositionWS, -700, 1650)
+    distance = expression(material, unreal.MaterialExpressionDistance, -500, 1600)
+    mel.connect_material_expressions(world_pos, "", distance, "A")
+    mel.connect_material_expressions(camera_pos, "", distance, "B")
+    camera_z = expression(material, unreal.MaterialExpressionComponentMask, -500, 1700, r=False, g=False, b=True, a=False)
+    mel.connect_material_expressions(camera_pos, "", camera_z, "")
+    fade = scalar(material, "CameraFade", 0.5, -500, 1800)
+    radius = mul(material, camera_z, fade, -300, 1750)
+    beyond = expression(material, unreal.MaterialExpressionSubtract, -150, 1650)
+    mel.connect_material_expressions(distance, "", beyond, "A")
+    mel.connect_material_expressions(radius, "", beyond, "B")
+    edge = expression(material, unreal.MaterialExpressionMultiply, 0, 1650, const_b=0.02)
+    mel.connect_material_expressions(beyond, "", edge, "A")
+    opacity = expression(material, unreal.MaterialExpressionSaturate, 150, 1650)
+    mel.connect_material_expressions(edge, "", opacity, "")
+    mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY_MASK)
     spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
@@ -223,7 +273,10 @@ def apply_material(mesh, texture, asset_id, name, look, master):
     path = THEME + "/Materials/MI_" + name[3:]
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
         "MI_" + name[3:], THEME + "/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
-    mel.set_material_instance_parent(instance, master)
+    changed = False
+    if instance.get_editor_property("parent") != master:
+        mel.set_material_instance_parent(instance, master)
+        changed = True
     if texture is None:
         existing = THEME + "/Textures/T_" + name[3:]
         texture = unreal.load_asset(existing) if library.does_asset_exist(existing) else None
@@ -232,20 +285,23 @@ def apply_material(mesh, texture, asset_id, name, look, master):
         # sampler, which never uses r.MaxAnisotropy. TF_DEFAULT defers to the texture group, and Config/DefaultDeviceProfiles.ini
         # makes TEXTUREGROUP_World MinMagFilter=aniso + MipFilter=linear, which is the anisotropic-linear sampler.
         # At 256 texels/m nearest, trilinear and sharp texels looked alike (gate 1), and mips stop shimmer at distance.
-        texture.set_editor_property("filter", unreal.TextureFilter.TF_DEFAULT)
-        texture.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
-        texture.set_editor_property("srgb", True)
-        texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
-        texture.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
-        mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
+        # Each setting is written only when it differs, so a rerun leaves unchanged textures byte-identical.
+        set_if_different(texture, "filter", unreal.TextureFilter.TF_DEFAULT)
+        set_if_different(texture, "compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
+        set_if_different(texture, "srgb", True)
+        set_if_different(texture, "lod_group", unreal.TextureGroup.TEXTUREGROUP_WORLD)
+        set_if_different(texture, "mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
+        if mel.get_material_instance_texture_parameter_value(instance, "Tex") != texture:
+            mel.set_material_instance_texture_parameter_value(instance, "Tex", texture)
+            changed = True
     # The glow mask guard: without a varying vertex alpha (every r001 export today) glow stays 0.
     masked = has_alpha_mask(asset_id, name)
-    mel.set_material_instance_scalar_parameter_value(instance, "Glow", glow if masked else 0.0)
-    mel.set_material_instance_scalar_parameter_value(instance, "SelfLit", self_lit)
-    mel.set_material_instance_scalar_parameter_value(instance, "Rim", rim)
-    mel.set_material_instance_scalar_parameter_value(instance, "Fill", fill)
-    mel.set_material_instance_scalar_parameter_value(instance, "Roughness", roughness)
-    mel.update_material_instance(instance)
+    for parameter, value in (("Glow", glow if masked else 0.0), ("SelfLit", self_lit), ("Rim", rim), ("Fill", fill), ("Roughness", roughness)):
+        if abs(mel.get_material_instance_scalar_parameter_value(instance, parameter) - value) > 1e-6:
+            mel.set_material_instance_scalar_parameter_value(instance, parameter, value)
+            changed = True
+    if changed:
+        mel.update_material_instance(instance)
     # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
         if mesh.get_material(index) != instance:
@@ -263,14 +319,14 @@ def theme_asset():
 
 master = master_material()
 theme = theme_asset()
-theme.set_editor_property("tint_material", master)
+set_if_different(theme, "tint_material", master)
 found = 0
 for asset_id, name, folder, prop, *look in ASSETS:
     mesh, texture = import_mesh(asset_id, name, folder)
     if mesh is None:
         continue
     apply_material(mesh, texture, asset_id, name, look, master)
-    theme.set_editor_property(prop, mesh)
+    set_if_different(theme, prop, mesh)
     found += 1
 # Save only what this run changed: unchanged meshes and textures keep their exact bytes.
 if not library.save_directory(THEME, only_if_is_dirty=True, recursive=True):
