@@ -294,8 +294,13 @@ def clip_path(clip):
     return RIG_FOLDER + "/Animations/A_Humanoid_" + clip
 
 
-def rig_log(kind, path, status):
-    unreal.log("THEME_RIG_ASSET {} {} {}".format(kind, path, status))
+def rig_log(kind, path, status, lods=None):
+    suffix = "" if lods is None else " lods={}".format(lods)
+    unreal.log("THEME_RIG_ASSET {} {} {}{}".format(kind, path, status, suffix))
+
+
+def lod_count(mesh):
+    return unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem).get_lod_count(mesh)
 
 
 def delete_for_reimport(path, token):
@@ -361,6 +366,11 @@ def disable_nanite(mesh):
 
 
 def import_lods(mesh, asset_id, name):
+    """Imports LOD1 and LOD2 and returns the LOD count, which must be 3.
+
+    On the Interchange (glb) path import_lod returns as soon as the import is scheduled, so a failed LOD import does
+    not return -1: the LOD count read back afterwards is the real check. Both checks are kept.
+    """
     subsystem = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
     for lod, suffix in ((1, "_LOD1"), (2, "_LOD2")):
         source = os.path.join(ROOT, "Art", asset_id, "r001", name + suffix + ".glb")
@@ -368,8 +378,11 @@ def import_lods(mesh, asset_id, name):
             raise RuntimeError("Missing LOD export " + source)
         if subsystem.import_lod(mesh, lod, source) < 0:
             raise RuntimeError("Unable to import " + source + " as LOD" + str(lod) + " of " + name)
-    if subsystem.get_lod_count(mesh) != 3:
-        raise RuntimeError("{} has {} LODs after import, expected 3".format(name, subsystem.get_lod_count(mesh)))
+    count = lod_count(mesh)
+    if count != 3:
+        raise RuntimeError("{} has {} LODs after importing LOD1 and LOD2, expected 3 (an Interchange LOD import can fail "
+                           "after being scheduled; check the import log for {}_LOD1.glb and {}_LOD2.glb)".format(name, count, name, name))
+    return count
 
 
 def import_rig_mesh(asset_id, name, shared, first):
@@ -381,7 +394,7 @@ def import_rig_mesh(asset_id, name, shared, first):
     source = source_glb(asset_id, name)
     if not os.path.isfile(source):
         unreal.log_warning("THEME_MISSING_EXPORT " + source)
-        return None, None, None
+        return None, None, None, None
     if not first and shared is None:
         raise RuntimeError("Cannot import " + name + ": " + SKELETON + " does not exist yet")
     staging = THEME + "/_Import/" + name
@@ -420,7 +433,7 @@ def import_rig_mesh(asset_id, name, shared, first):
     except Exception:  # noqa: BLE001
         pass
     disable_nanite(mesh)
-    import_lods(mesh, asset_id, name)
+    lods = import_lods(mesh, asset_id, name)
     package = RIG_FOLDER + "/" + name
     if not library.rename_asset(mesh.get_path_name(), package):
         raise RuntimeError("Unable to move mesh to " + package)
@@ -430,7 +443,7 @@ def import_rig_mesh(asset_id, name, shared, first):
         if not library.rename_asset(textures[0].get_path_name(), target):
             raise RuntimeError("Unable to move texture to " + target)
         texture = unreal.load_asset(target)
-    return unreal.load_asset(package), texture, staging
+    return unreal.load_asset(package), texture, staging, lods
 
 
 def apply_rig_material(mesh, texture, asset_id, name, look, master):
@@ -495,12 +508,15 @@ def import_rig(master, theme):
         staging = None
         if library.does_asset_exist(package):
             mesh, texture = unreal.load_asset(package), None
-            rig_log("mesh", package, "kept")
+            lods = lod_count(mesh)
+            if lods != 3:
+                raise RuntimeError("{} has {} LODs, expected 3; add it to THEME_RIG_REIMPORT to rebuild".format(package, lods))
+            rig_log("mesh", package, "kept", lods)
         else:
-            mesh, texture, staging = import_rig_mesh(asset_id, name, unreal.load_asset(SKELETON) if library.does_asset_exist(SKELETON) else None, not all(present) and name == names[0])
+            mesh, texture, staging, lods = import_rig_mesh(asset_id, name, unreal.load_asset(SKELETON) if library.does_asset_exist(SKELETON) else None, not all(present) and name == names[0])
             if mesh is None:
                 continue
-            rig_log("mesh", package, "imported")
+            rig_log("mesh", package, "imported", lods)
             if name == names[0]:
                 rig_log("skeleton", SKELETON, "imported")
                 for clip in CLIPS:

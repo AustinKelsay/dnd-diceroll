@@ -58,7 +58,11 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 
 `M_DiceRollTheme` gains `used_with_skeletal_mesh` (skinned meshes need their own shader permutation), and `DA_DiceRollTheme` gains `FighterRig`, `WizardRig` and `RaiderRig` (`FDiceRollCharacter`: mesh, the nine clips, a yaw offset). No physics asset or collision (presentation only). The run saves only dirty packages and raises when a save fails; it logs one `THEME_RIG_ASSET <kind> <path> <imported|kept|deleted|assigned>` line per asset and ends with `THEME_RIG_COMPLETE`.
 
-**Never overwritten:** an existing rig asset is kept (its material and the data asset are still refreshed). To rebuild assets, name them in `THEME_RIG_REIMPORT` (comma separated: `SK_Hero_Wizard`, `SK_Foe_Raider`, `SK_Hero_Fighter`, `SKEL_Humanoid`, `animations`); the fighter, skeleton and clips are one bundle and are rebuilt together with every other rig asset, and a partial bundle is refused. Validation of the three asset records stays pending until the Unreal run and captures are recorded.
+**Never overwritten:** an existing rig asset is kept (its material and the data asset are still refreshed). To rebuild assets, name them in `THEME_RIG_REIMPORT` (comma separated: `SK_Hero_Wizard`, `SK_Foe_Raider`, `SK_Hero_Fighter`, `SKEL_Humanoid`, `animations`); the fighter, skeleton and clips are one bundle and are rebuilt together with every other rig asset, and a partial bundle is refused. LOD imports go through Interchange, which reports success once the import is scheduled, so the script reads the LOD count back and raises unless each mesh has 3; the `THEME_RIG_ASSET mesh` line carries `lods=<n>`.
+
+**Pilot decisions (2026-11-09):** the three characters share one set of nine clips, including one Cast clip (revisited in #150); palette zones are skipped for the pilot; a unit hit and downed in the same step goes straight to its fall clip with no Hit first.
+
+Validation of the three asset records stays pending until the Unreal run and captures are recorded.
 
 ## Game splash (issue #131)
 
