@@ -58,6 +58,8 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Released, this, &AExpeditionPlayerController::EndPan);
     Bind(EKeys::SpaceBar, &AExpeditionPlayerController::EndTurn);
     Bind(EKeys::Q, &AExpeditionPlayerController::RotateLeft);
     Bind(EKeys::E, &AExpeditionPlayerController::RotateRight);
@@ -79,7 +81,7 @@ void AExpeditionPlayerController::SetupInputComponent()
         InputComponent->BindKey(Key, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
         InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
     }
-    Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
+    Bind(EKeys::A, &AExpeditionPlayerController::AttackKey);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
     Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
@@ -146,6 +148,21 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
         DragX = MouseX;
+    }
+    if (bPanning && bHasMouse)
+    {
+        // Drag the board under the pointer: about the visible width per screen width, in reference cm per pixel.
+        const float PerPixel = BattleView->CameraDistance() * 0.0005f;
+        BattleView->Pan(-(MouseX - PanX) * PerPixel, (MouseY - PanY) * PerPixel);
+        PanX = MouseX; PanY = MouseY;
+    }
+    // Shift + W/A/S/D pans the focus (plain A is the attack mode); the view clamps it to the board.
+    if (AllowsGameplayInput() && (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)))
+    {
+        const float Step = BattleView->CameraDistance() * 0.6f * DeltaTime;
+        const float Right = (IsInputKeyDown(EKeys::D) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::A) ? 1.0f : 0.0f);
+        const float Away = (IsInputKeyDown(EKeys::W) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::S) ? 1.0f : 0.0f);
+        if (Right != 0.0f || Away != 0.0f) { BattleView->Pan(Right * Step, Away * Step); }
     }
 
     FBoardHighlights Highlights;
@@ -515,6 +532,11 @@ void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[
 void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
 void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(SpecialAction(1)); } }
 void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
+void AExpeditionPlayerController::AttackKey()
+{
+    if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
+    AttackMode();
+}
 void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
 void AExpeditionPlayerController::RoleMode() { SetMode(RoleAction()); }
@@ -574,7 +596,7 @@ void AExpeditionPlayerController::ResolvePendingReturn()
         CloseMenu(); // The Menu may have been opened while the return waited.
         SaveOverlayFocus();
         bConfirmReturn = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
         BattleView->PlayCue(EExpeditionCue::Click);
         return;
     }
@@ -603,7 +625,7 @@ void AExpeditionPlayerController::History()
     if (bOpening && !bShowHelp) { SaveOverlayFocus(); }
     bShowHelp = false;
     BattleView->ToggleRecords();
-    if (bOpening) { bDragging = false; } else { RestoreOverlayFocus(); }
+    if (bOpening) { bDragging = false; bPanning = false; } else { RestoreOverlayFocus(); }
 }
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
@@ -637,7 +659,7 @@ void AExpeditionPlayerController::ToggleHelp()
         // Help over Records keeps the focus saved when Records opened.
         if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SaveOverlayFocus(); }
         bShowHelp = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
     }
     else { bShowHelp = false; RestoreOverlayFocus(); }
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
@@ -664,6 +686,12 @@ void AExpeditionPlayerController::BeginDrag()
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+void AExpeditionPlayerController::BeginPan()
+{
+    if (!AllowsGameplayInput()) { return; }
+    bPanning = PointerPosition(PanX, PanY);
+}
+void AExpeditionPlayerController::EndPan() { bPanning = false; }
 void AExpeditionPlayerController::GridDown() { bGridHeld = true; }
 void AExpeditionPlayerController::GridUp() { bGridHeld = false; }
 void AExpeditionPlayerController::PreviewFullGrid(bool bShow) { bGridPreview = bShow; }

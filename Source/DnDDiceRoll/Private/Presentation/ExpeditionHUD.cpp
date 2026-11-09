@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 #include "GlobalRenderResources.h"
 #include "Party/BuildCatalog.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/HudCoverage.h"
 #include "Presentation/TargetChipLayout.h"
 
@@ -267,6 +268,8 @@ void AExpeditionHUD::DrawHUD()
     S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
+    // The camera fits the board into the area this layout leaves free.
+    if (AExpeditionBattleView* Board = Player->GetBattleView()) { Board->SetSafeRect(ExpeditionCameraRig::FSafeRect::ForViewport(Canvas->SizeX, Canvas->SizeY)); }
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
     // A capture run ignores the physical pointer so hover never changes a shot.
@@ -756,10 +759,12 @@ void AExpeditionHUD::DrawLog()
     TArray<FString> Lines;
     for (int32 Index = FMath::Max(0, Messages.Num() - 2); Index < Messages.Num(); ++Index)
     { Lines.Append(Wrap(Messages[Index], 260, 0.66f)); }
-    if (Lines.Num() > 4) { Lines.RemoveAt(0, Lines.Num() - 4); }
-    const float Height = 14 + Lines.Num() * 16.0f;
-    constexpr float Width = 280, X = 8;
-    const float Top = H - 8 - Height;
+    if (Lines.Num() > ExpeditionLayout::LogMaxLines) { Lines.RemoveAt(0, Lines.Num() - ExpeditionLayout::LogMaxLines); }
+    // The footprint comes from ExpeditionLayout::LogRect, which the camera's board bounds also use.
+    const ExpeditionLayout::Rect LogBox = ExpeditionLayout::LogRect(W, H, Lines.Num());
+    const float Height = static_cast<float>(LogBox.Bottom - LogBox.Top);
+    const float Width = static_cast<float>(LogBox.Right - LogBox.Left), X = static_cast<float>(LogBox.Left);
+    const float Top = static_cast<float>(LogBox.Top);
     const bool bHover = Hovered(X, Top, Width, Height) || Hovered(X, H - 26, 56, 18);
     // A capture never fades the log, so a gallery shot always shows it.
     const float Idle = Clock - LogChangedAt - LingerSeconds;
