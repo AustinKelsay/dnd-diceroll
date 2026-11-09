@@ -359,6 +359,11 @@ bool AExpeditionBattleView::FramedFits(float ForYaw) const
     return ExpeditionCameraRig::FitBoard(Encounter.Width, Encounter.Height, BoardMetric, ForYaw, Safe).bFits;
 }
 
+bool AExpeditionBattleView::AtFramedZoom() const
+{
+    return !bOverview && HasRun() && FMath::IsNearlyEqual(TargetDistance, FramedDistance(TargetYaw), 1.0f);
+}
+
 void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
 {
     if (bOverview) { return; }
@@ -1066,7 +1071,7 @@ void AExpeditionBattleView::SetSafeRect(const ExpeditionCameraRig::FSafeRect& Va
 {
     if (Value == Safe) { return; }
     // A camera resting at the default zoom follows the new fit; a zoom the player (or a pose) chose stays.
-    const bool bDefaultZoom = !bOverview && HasRun() && FMath::IsNearlyEqual(TargetDistance, FramedDistance(TargetYaw), 1.0f);
+    const bool bDefaultZoom = AtFramedZoom();
     Safe = Value;
     if (bDefaultZoom) { TargetDistance = FramedDistance(TargetYaw); }
 }
@@ -1118,7 +1123,16 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 }
 
 // The tabletop is a fixed, composed view; orbit, zoom and pan belong to battles.
-void AExpeditionBattleView::Orbit(float Degrees) { if (!bOverview) { TargetYaw += Degrees; } }
+// A camera resting at the default zoom keeps the board fitted to the HUD-safe rect as the yaw changes (the fit differs per
+// yaw: a long board needs far more distance end-on than side-on); the distance and its pitch then ease to the new fit.
+// A zoom the player chose (nearer or farther than the fit) is kept.
+void AExpeditionBattleView::Orbit(float Degrees)
+{
+    if (bOverview) { return; }
+    const bool bFramed = AtFramedZoom();
+    TargetYaw += Degrees;
+    if (bFramed) { TargetDistance = FramedDistance(TargetYaw); }
+}
 void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance); }
 
 void AExpeditionBattleView::Pan(float Right, float Away)

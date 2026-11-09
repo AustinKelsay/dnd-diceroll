@@ -19,7 +19,7 @@ The game's art set lives under `/Game/DnDDiceRoll/Theme`.
 Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, with its glTF export beside it.
 
 **Import:** `Content/Python/import_dark_fantasy_theme.py` imports the exports. It:
-- creates `M_DiceRollTheme`, and rebuilds its graph in place on every run (the asset and its instances survive); see "Theme material" below;
+- creates `M_DiceRollTheme`, and keeps an existing master unless its stored graph revision (`MASTER_GRAPH_REVISION`, the metadata tag `DiceRollGraphRevision`) differs from the script's, and then rebuilds the graph in place (the asset and its instances survive). Set `DND_THEME_REBUILD_MASTER=1` to force a rebuild; bump the revision whenever the graph changes. See "Theme material" below;
 - gives each mesh its own `MI_*` instance;
 - sets textures to `TF_DEFAULT` in `TEXTUREGROUP_World`, uncompressed and sRGB. Gate 1 chose trilinear + anisotropic 8 (nearest, trilinear and sharp texels looked nearly identical at 256 texels/m). `TF_TRILINEAR` maps straight to a plain trilinear sampler, and Vulkan enables anisotropy only for anisotropic sampler filters, so `r.MaxAnisotropy=8` (`Config/DefaultEngine.ini`) would do nothing for it. `TF_DEFAULT` defers to the texture group; the engine's World group is aniso with point mips (an anisotropic-point sampler), so `Config/DefaultDeviceProfiles.ini` replaces that one group entry with aniso + linear mips, the anisotropic-linear sampler. This is a Config change (a new file) and needs coordinator approval. The filter fix reimport is expected to change only the 21 `T_*` textures (their `filter` property);
 - fills `DA_DiceRollTheme`, a `UDiceRollTheme` data asset.
@@ -29,7 +29,7 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 - `Fill` × a hemisphere fill (sky above, ground below, from the world normal) × the base colour, so shadowed sides keep their form.
 - `Rim` × a cool Fresnel rim (exponent 3), so dark figures read against dark ground.
 
-`Roughness` sets the surface: characters and metal 0.5 to 0.65, stone, cloth and ground 0.9 to 0.95. Characters get `Rim` and `Fill` 1; worlds and tiles get none; props a trace of `Fill`. `SelfLit` is a constant emissive share kept only for the flame (a light source) and the tabletop overview, which stays as it was.
+`Roughness` sets the surface: characters and metal 0.5 to 0.65, stone, cloth and ground 0.9 to 0.95. Characters get `Rim` and `Fill` 1; worlds and tiles get none; props a trace of `Fill`. The master is Masked: a `CameraFade` clip drops scenery nearer to the camera than `CameraFade` × the camera's height, so a diorama around the board never swallows the camera. The clip goes through a `ShadowPassSwitch` (Default: the clip, Shadow: 1), because a shadow depth pass keeps the player camera's origin and the clip would otherwise remove shadows too. `SelfLit` is a constant emissive share kept only for the flame (a light source) and the tabletop overview, which stays as it was.
 
 **Accepted exception to gate 1's mask-only glow (decided by the lead, 2026-11-09):** the battle flame's `SelfLit` (1.4) and the tabletop overview's self-light stay. The r001 flame has no glow mask and is itself a light source. The exception lasts until r002 art with real glow masks lands (#145, #147), when both move onto `Glow` and `SelfLit` goes away.
 
@@ -43,6 +43,8 @@ Each runtime mesh has a versioned record at `Art/<asset-id>/r001/asset.json`, wi
 - **Immediate rerun:** changed nothing.
 
 **Camera clip (#143 review, 2026-11-09):** the master became Masked, with a `CameraFade` clip (see "Theme material"). One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings). The hash diff showed exactly `M_DiceRollTheme.uasset` changed: the instances and textures were untouched.
+
+**Shadow-pass switch (#143 review round 2, 2026-11-09):** the opacity mask now goes through `ShadowPassSwitch` (Default: the camera clip; Shadow: 1), so clipped scenery keeps its shadows. The master carries graph revision `dice-theme-4`. One headless run rebuilt it (`THEME_MASTER rebuilt`, exit 0, no warnings), and the hash diff showed exactly `M_DiceRollTheme.uasset` changed. An immediate rerun logged `THEME_MASTER kept` and changed nothing.
 
 **Camera clip and the occluder (#143 and #145, decision):** `M_DiceRollTheme` is masked and clips scenery closer to the camera than `CameraFade` (0.5) x the camera's height, so a diorama around the board never swallows the camera. That clip is shared code (`camera_clip()` in the import script).
 - **Occluder fade (round-1 review):** the primary fade is a board test. The ray from the camera through each occluder pixel is intersected with the board-top plane; if the hit lies in the board rectangle grown by half a cell and the pixel is closer to the camera than the hit, the pixel dithers to the 15 % floor, easing back to opaque over half a cell outside the rectangle (`OccluderFade::Board` mirrors the material). The view pushes the rectangle and plane height once, and again only if they change. The camera-to-focus and camera-to-active-unit cylinders are kept because a figure at the board's far edge, seen over its shoulders, is covered by pixels whose ray lands past the rectangle, which the board test cannot see.

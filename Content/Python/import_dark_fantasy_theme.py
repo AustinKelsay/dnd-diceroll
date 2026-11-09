@@ -105,16 +105,14 @@ def add(material, a, b, x, y):
     return node
 
 
-MASTER_SCALARS = {"Glow", "SelfLit", "Fill", "Rim", "Roughness", "CameraFade"}
-MASTER_VECTORS = {"Color", "FillSky", "FillGround", "RimColor"}
-MASTER_TEXTURES = {"Tex"}
+# Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
+# revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
+MASTER_GRAPH_REVISION = "dice-theme-4"
+MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
 def master_is_current(material):
-    names = lambda values: {str(v) for v in values}
-    return (material.get_editor_property("blend_mode") == unreal.BlendMode.BLEND_MASKED and MASTER_SCALARS <= names(mel.get_scalar_parameter_names(material))
-            and MASTER_VECTORS <= names(mel.get_vector_parameter_names(material))
-            and MASTER_TEXTURES <= names(mel.get_texture_parameter_names(material)))
+    return unreal.EditorAssetLibrary.get_metadata_tag(material, MASTER_REVISION_TAG) == MASTER_GRAPH_REVISION
 
 
 def set_if_different(obj, prop, value):
@@ -151,6 +149,16 @@ def camera_clip(material, x, y):
     return opacity
 
 
+def shadow_safe(material, mask, x, y):
+    """ShadowPassSwitch: the camera-dependent mask in the main pass, opaque (1) in shadow passes, so scenery clipped or
+    dithered near the camera still casts its shadow (a shadow depth pass keeps the player camera's origin)."""
+    one = expression(material, unreal.MaterialExpressionConstant, x - 150, y + 100, r=1.0)
+    switch = expression(material, unreal.MaterialExpressionShadowReplace, x, y)
+    mel.connect_material_expressions(mask, "", switch, "Default")
+    mel.connect_material_expressions(one, "", switch, "Shadow")
+    return switch
+
+
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
@@ -159,12 +167,13 @@ def master_material():
              + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
              + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
     roughness = Roughness (per instance)
+    opacity mask = ShadowPassSwitch(Default: camera clip, Shadow: 1)   the camera clip never removes shadows
     """
     if library.does_asset_exist(MASTER):
         material = unreal.load_asset(MASTER)
-        # Leave an existing graph alone when it already exposes this graph's parameters, so a rerun never
+        # Leave an existing graph alone when it carries this graph revision, so a rerun never
         # re-saves the master (and every instance) for nothing. Set DND_THEME_REBUILD_MASTER=1 to rebuild it
-        # on purpose after changing the graph below.
+        # on purpose; otherwise it is rebuilt only when its stored graph revision differs from MASTER_GRAPH_REVISION.
         if os.environ.get("DND_THEME_REBUILD_MASTER") != "1" and master_is_current(material):
             unreal.log("THEME_MASTER kept (graph current)")
             return material
@@ -213,13 +222,15 @@ def master_material():
     emissive = add(material, add(material, glow_term, fill_term, 100, 600), rim_term, 250, 700)
     roughness = scalar(material, "Roughness", 0.85, 100, 500)
     material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
-    mel.connect_material_property(camera_clip(material, -700, 1550), "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    mel.connect_material_property(shadow_safe(material, camera_clip(material, -700, 1550), 300, 1650), "", unreal.MaterialProperty.MP_OPACITY_MASK)
     spec = expression(material, unreal.MaterialExpressionConstant, 100, 600, r=0.2)
     mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
     mel.connect_material_property(spec, "", unreal.MaterialProperty.MP_SPECULAR)
     mel.recompile_material(material)
+    unreal.EditorAssetLibrary.set_metadata_tag(material, MASTER_REVISION_TAG, MASTER_GRAPH_REVISION)
+    material.modify()
     return material
 
 
@@ -435,7 +446,7 @@ def build_occluder_material(material):
     # Both fades apply, neither overrides the other: a pixel is kept only if the sight-line dither keeps it AND it is outside
     # the camera clip (#143), so geometry around the camera never swallows it and what blocks the view dithers.
     clipped = binary(material, unreal.MaterialExpressionMin, keep, camera_clip(material, 300, 2600), 2100, 2000)
-    mel.connect_material_property(clipped, "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    mel.connect_material_property(shadow_safe(material, clipped, 2300, 2000), "", unreal.MaterialProperty.MP_OPACITY_MASK)
 
 
 def build_card_material(material):
