@@ -473,7 +473,7 @@ def build_card_material(material):
 
 FIGURE_SILHOUETTE_MATERIAL = "M_FigureSilhouette"
 # Bump when build_figure_silhouette_material changes.
-FIGURE_SILHOUETTE_REVISION = "figure-silhouette-1"
+FIGURE_SILHOUETTE_REVISION = "figure-silhouette-2"
 
 
 def figure_silhouette_is_current(material):
@@ -490,6 +490,10 @@ def build_figure_silhouette_material(material):
     Blendable Location is After Tonemapping: the fill is then the exact HUD colour, untouched by auto-exposure, bloom, vignette and
     the grade (before the tonemapper it would also need the pre-exposure scale). Inputs and output are in display (sRGB) space there,
     so the linear HUD palette (`PartyColor` = Sky 0.4/0.85/1.0, `EnemyColor` = Danger 1.0/0.4/0.3) is encoded with pow(c, 1/2.2).
+    Side reads without colour: party (stencil 1) is a solid, brighter fill (PartyAlpha 0.7, lifted toward white by PartyLift);
+    enemy (stencil 2) is diagonal hatching, screen-space stripes of (x + y) with a StripePx period of 6 px at 1080p scaled by the
+    view height, alternating EnemyStripeAlpha (0.7) with a faint EnemyGapAlpha (0.15). In greyscale a solid blob and a striped
+    one differ by pattern and by luminance.
     Needs r.CustomDepth=3 (Config/DefaultEngine.ini); the stencil read is zero otherwise and the material then does nothing.
     """
     material.set_editor_property("material_domain", unreal.MaterialDomain.MD_POST_PROCESS)
@@ -511,7 +515,6 @@ def build_figure_silhouette_material(material):
 
     tolerance = scalar(material, "Tolerance", 3.0, -1150, 560)
     slope = scalar(material, "Slope", 0.5, -1150, 640)
-    fill_alpha = scalar(material, "FillAlpha", 0.55, -1150, 720)
     gap = binary(material, unreal.MaterialExpressionSubtract, scene_depth, custom_depth, -900, 100)
     over = binary(material, unreal.MaterialExpressionSubtract, gap, tolerance, -700, 100)
     hidden = unary(material, unreal.MaterialExpressionSaturate, binary(material, unreal.MaterialExpressionMultiply, over, slope, -500, 100), -300, 100)
@@ -527,11 +530,43 @@ def build_figure_silhouette_material(material):
 
     party = encoded("PartyColor", unreal.LinearColor(0.4, 0.85, 1.0, 1), 900)
     enemy = encoded("EnemyColor", unreal.LinearColor(1.0, 0.4, 0.3, 1), 1050)
+    lift = scalar(material, "PartyLift", 0.2, -750, 800)
+    bright = node(material, unreal.MaterialExpressionLinearInterpolate, -600, 900, const_b=1.0)
+    mel.connect_material_expressions(party, "", bright, "A")
+    mel.connect_material_expressions(lift, "", bright, "Alpha")
     side = node(material, unreal.MaterialExpressionLinearInterpolate, -450, 950)
-    mel.connect_material_expressions(party, "", side, "A")
+    mel.connect_material_expressions(bright, "", side, "A")
     mel.connect_material_expressions(enemy, "", side, "B")
     mel.connect_material_expressions(is_enemy, "", side, "Alpha")
-    alpha = binary(material, unreal.MaterialExpressionMultiply, binary(material, unreal.MaterialExpressionMultiply, hidden, is_figure, -100, 300), fill_alpha, 100, 300)
+    # Hatch: stripes along (x + y) in pixels. ViewportUV x ViewSize gives pixels; the period is StripePx at 1080p, so it scales with the view height.
+    uv = node(material, unreal.MaterialExpressionScreenPosition, -1400, 1300)
+    size = node(material, unreal.MaterialExpressionViewSize, -1400, 1450)
+    pixels = binary(material, unreal.MaterialExpressionMultiply, uv, size, -1150, 1350, a_out="ViewportUV")
+
+    def channel(source, r, g, x, y):
+        mask = node(material, unreal.MaterialExpressionComponentMask, x, y, r=r, g=g, b=False, a=False)
+        mel.connect_material_expressions(source, "", mask, "")
+        return mask
+
+    x_plus_y = binary(material, unreal.MaterialExpressionAdd, channel(pixels, True, False, -950, 1300), channel(pixels, False, True, -950, 1400), -750, 1350)
+    stripe_px = scalar(material, "StripePx", 6.0, -1150, 1550)
+    height_scale = binary(material, unreal.MaterialExpressionDivide, channel(size, False, True, -1150, 1650), None, -950, 1600, const_b=1080.0)
+    period = binary(material, unreal.MaterialExpressionMultiply, stripe_px, height_scale, -550, 1500)
+    phase = unary(material, unreal.MaterialExpressionFrac, binary(material, unreal.MaterialExpressionDivide, x_plus_y, period, -350, 1400), -150, 1400)
+    stripe = unary(material, unreal.MaterialExpressionCeil, unary(material, unreal.MaterialExpressionSaturate,
+                   binary(material, unreal.MaterialExpressionSubtract, phase, None, -50, 1400, const_b=0.5), 100, 1400), 250, 1400)
+    party_alpha = scalar(material, "PartyAlpha", 0.7, -450, 1150)
+    gap_alpha = scalar(material, "EnemyGapAlpha", 0.15, -450, 1250)
+    stripe_alpha = scalar(material, "EnemyStripeAlpha", 0.7, -450, 1350)
+    enemy_alpha = node(material, unreal.MaterialExpressionLinearInterpolate, 400, 1300)
+    mel.connect_material_expressions(gap_alpha, "", enemy_alpha, "A")
+    mel.connect_material_expressions(stripe_alpha, "", enemy_alpha, "B")
+    mel.connect_material_expressions(stripe, "", enemy_alpha, "Alpha")
+    side_alpha = node(material, unreal.MaterialExpressionLinearInterpolate, 550, 1200)
+    mel.connect_material_expressions(party_alpha, "", side_alpha, "A")
+    mel.connect_material_expressions(enemy_alpha, "", side_alpha, "B")
+    mel.connect_material_expressions(is_enemy, "", side_alpha, "Alpha")
+    alpha = binary(material, unreal.MaterialExpressionMultiply, binary(material, unreal.MaterialExpressionMultiply, hidden, is_figure, -100, 300), side_alpha, 100, 300)
     result = node(material, unreal.MaterialExpressionLinearInterpolate, 300, 500)
     mel.connect_material_expressions(rgb(material, input_color, "", -100, 700), "", result, "A")
     mel.connect_material_expressions(side, "", result, "B")

@@ -5,13 +5,20 @@ Run headless with the editor closed:
 
 Creates /Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay: translucent, unlit, two-sided, emissive "Color" and
 opacity "Opacity". The battle view loads it by that path for the reach contour, corner ticks, path ribbon, brackets,
-full-grid lines and footprint rings. An existing asset is left alone (reported, never overwritten); without the
-asset the view still draws, with dimmed opaque lines in place of translucent ones.
+full-grid lines and footprint rings. Without the asset the view still draws, with dimmed opaque lines in place of
+translucent ones.
+
+Graph revision (metadata tag DiceRollGraphRevision, as the theme materials): an existing asset whose tag equals
+GRAPH_REVISION is left alone; any other (or none) is rebuilt IN PLACE, so the asset, its path and every instance survive.
+board-overlay-2 draws with the depth test off, so the reach contour, path ribbon, brackets, blocked crosses and footprint
+rings stay visible through tall architecture (pillars, arches). The bars are thin, so drawing over figures is acceptable.
 """
 import unreal
 
 THEME = "/Game/DnDDiceRoll/Theme"
 PACKAGE = THEME + "/Materials/M_BoardOverlay"
+REVISION_TAG = "DiceRollGraphRevision"
+GRAPH_REVISION = "board-overlay-2"
 
 tools = unreal.AssetToolsHelpers.get_asset_tools()
 library = unreal.EditorAssetLibrary
@@ -25,14 +32,13 @@ def expression(material, kind, x, y, **props):
     return node
 
 
-def main():
-    if library.does_asset_exist(PACKAGE):
-        unreal.log("M_BoardOverlay exists; left unchanged. Delete it deliberately to recreate it.")
-        return
-    material = tools.create_asset("M_BoardOverlay", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
+def build(material):
     material.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
     material.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
     material.set_editor_property("two_sided", True)
+    # Draw over opaque pixels even when behind them (UMaterial::bDisableDepthTest, translucency only): architecture in front
+    # of the board no longer hides the overlay.
+    material.set_editor_property("disable_depth_test", True)
     # The bars and rings are instanced static meshes; cooked builds need the usage flag set up front.
     material.set_editor_property("used_with_instanced_static_meshes", True)
     color = expression(material, unreal.MaterialExpressionVectorParameter, -500, 0, parameter_name="Color",
@@ -43,6 +49,25 @@ def main():
     mel.connect_material_property(mask, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
     mel.recompile_material(material)
+
+
+def main():
+    if library.does_asset_exist(PACKAGE):
+        material = unreal.load_asset(PACKAGE)
+        if library.get_metadata_tag(material, REVISION_TAG) == GRAPH_REVISION:
+            unreal.log("M_BoardOverlay is current ({}); left unchanged.".format(GRAPH_REVISION))
+            return
+        mel.delete_all_material_expressions(material)
+        build(material)
+        library.set_metadata_tag(material, REVISION_TAG, GRAPH_REVISION)
+        material.modify()
+        if not library.save_asset(PACKAGE, only_if_is_dirty=False):
+            raise RuntimeError("Unable to save " + PACKAGE)
+        unreal.log("Rebuilt {} in place as {}".format(PACKAGE, GRAPH_REVISION))
+        return
+    material = tools.create_asset("M_BoardOverlay", THEME + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
+    build(material)
+    library.set_metadata_tag(material, REVISION_TAG, GRAPH_REVISION)
     if not library.save_asset(PACKAGE, only_if_is_dirty=False):
         raise RuntimeError("Unable to save " + PACKAGE)
     unreal.log("Created " + PACKAGE)

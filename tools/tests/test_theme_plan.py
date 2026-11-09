@@ -169,6 +169,10 @@ class ThemePlanTests(unittest.TestCase):
         self.assertIn("repair_lod_slots(", text)
         self.assertIn("set_lod_material_slot(", text)
         self.assertIn("M_FigureSilhouette", text)
+        self.assertIn("figure-silhouette-2", text)
+        overlay = (ROOT / "Content" / "Python" / "create_board_overlay_material.py").read_text()
+        self.assertIn('set_editor_property("disable_depth_test", True)', overlay)
+        self.assertIn('GRAPH_REVISION = "board-overlay-2"', overlay)
 
     def test_arches_are_for_pillars_and_walls_only(self):
         header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
