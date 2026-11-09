@@ -698,15 +698,9 @@ def repair_lod_slots(mesh, name):
     after = lod_slots(mesh)
     if any(slot != 0 for sections in after for slot in sections):
         raise RuntimeError("{} still has LOD sections outside material slot 0: {}".format(name, after))
+    # The extra material slots are left in place. Writing static_materials directly drops slots that the built
+    # render data still references (the game then crashed in mesh draw-command setup); unused slots are harmless.
     trimmed = False
-    materials = list(mesh.get_editor_property("static_materials"))
-    if len(materials) > 1:
-        # No section uses the extra slots any more (checked above), so dropping them cannot change what any LOD draws.
-        try:
-            mesh.set_editor_property("static_materials", materials[:1])
-            trimmed = len(list(mesh.get_editor_property("static_materials"))) == 1
-        except Exception as error:  # the repair stands without the trim; the lead sees the slot count in the log
-            unreal.log_warning("THEME_LOD_SLOTS_TRIM_FAILED {} {}".format(name, error))
     if fixed or trimmed:
         mesh.modify()
     unreal.log("THEME_LOD_SLOTS {} before={} after={} sections_fixed={} slots={} trimmed={}".format(
