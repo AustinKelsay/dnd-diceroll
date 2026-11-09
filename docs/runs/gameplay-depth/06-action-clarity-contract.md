@@ -35,6 +35,17 @@ One const query, in new files so it never conflicts with in-flight edits to `Com
 
 Presentation helpers, in `ExpeditionStyle`, read facts only: `CostPillText`, `UsagePillText`, `BlockerText`, a tooltip headline, and one name table for `Move / Action / Bonus action` shared with the turn-budget chips. Each uses an exhaustive `switch` over the enums, and a test walks every enumerator to prove it has text.
 
+### As built in PR A (differences from the sketch above)
+
+Code is the reference for PR B; these are the places it differs from section 2's wording.
+
+- Fields are `Cost` (`EActionCostKind`) and `Resources`, an array of `{Resource, Amount, Held, Cap, CampRecovery}`, because a spell can spend a Kit and a Slot together. There is no single `ResourceId`. `bRequiresRage`/`bForbidsRage` are as sketched. Target facts are `Target` (`None, Self, Enemy, Ally, Friendly, DownedAlly`; Friendly includes the actor), `bNeedsWounded`, `Range`, `bNeedsSight`.
+- Two blockers were added to the fixed order: `NotInKit` (the command is not in the actor's kit; stands alone with the turn-level ones) and `NoOpenCell` (Move with movement left but every neighbour blocked). `NoEligibleTarget` is also the reason when the only candidate is a downed ally for an ability that needs a conscious friend. A blocker is `{Reason, Resource, Held, Needed, Range}`; unused values are zero.
+- `FActionFactsQuery::BarFor(battle, actor)` lists the bar's commands in order (Attack, Move, catalog abilities, Rescue, Potion, End Turn) so the HUD does not keep its own list.
+- Movement facts carry no distance: the `Move N` figure is the snapshot's `MovementLeft`, which the budget chip already shows. `CostPillText` for Movement is `Move`; PB may append the count.
+- Formatters live in `Presentation/ActionText.{h,cpp}` in the `ExpeditionStyle` namespace (a new file pair, so the HUD and `ExpeditionPlayback` are untouched): `CostName` (the shared Move / Action / Bonus action table), `ResourceName`, `CostPillText`, `UsagePillText`, `CampRecoveryText`, `BlockerText`, `TooltipHeadline`. Nothing calls them yet.
+- Tests are `Project.Expedition.Combat.ActionFacts{MatchLegality,MatchSubmit,Reasons,ReadOnly,CoverEveryAbility}` and `ActionText{EveryEnumerator,Phrases,EveryKit}`.
+
 ## 3. Fit with #156 (SRD ruleset), read-only
 
 I read the PR head `5a3fb1c`. It adds `ERuleset { Compact, SRD }` on the encounter, `FStandardActionRules::Cost(...)` (Action vs Bonus), `FOpportunityRules`, per-unit `bReactionAvailable`, `bConcentrating`, `bProne`, `GrapplerId`, new commands `Grapple`, `Shove`, `Escape`, and SRD-only rejections in `Resolve`. It touches no `Presentation/` or `Party/` file and rewrites about 400 lines of `CombatBattle.cpp`.
