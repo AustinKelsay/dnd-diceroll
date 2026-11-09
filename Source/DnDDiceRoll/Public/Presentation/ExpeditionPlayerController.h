@@ -68,7 +68,7 @@ public:
     void PreviewAim(bool bAim, FIntPoint Cell = FIntPoint::ZeroValue);
     /** Capture and test support: show the full grid as if the hold key were down. */
     void PreviewFullGrid(bool bShow);
-    /** True while the hold-for-full-grid key (D) is down or a preview asks for it. */
+    /** True while the hold-for-full-grid key (Alt) is down or a preview asks for it. */
     bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }

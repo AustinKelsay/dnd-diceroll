@@ -72,9 +72,13 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
     Bind(EKeys::G, &AExpeditionPlayerController::Preset);
-    // Hold D for the faint full grid (#142). Not Shift: Shift-Tab already moves menu focus backwards.
-    InputComponent->BindKey(EKeys::D, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
-    InputComponent->BindKey(EKeys::D, IE_Released, this, &AExpeditionPlayerController::GridUp);
+    // Hold Alt for the faint full grid (#142). Not a letter: Shift+W/A/S/D pan the camera, and Shift-Tab moves menu focus.
+    // Alt only sets a flag, so Alt+Enter still reaches the viewport's fullscreen toggle and no button reads Alt.
+    for (const FKey& Key : {EKeys::LeftAlt, EKeys::RightAlt})
+    {
+        InputComponent->BindKey(Key, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
+        InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
+    }
     Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);

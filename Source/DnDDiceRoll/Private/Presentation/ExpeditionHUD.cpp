@@ -1071,7 +1071,7 @@ void AExpeditionHUD::DrawHelp()
     const TCHAR* Left[] = {
         TEXT("Click a highlighted cell to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
-        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold D  Show the whole grid")};
+        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),

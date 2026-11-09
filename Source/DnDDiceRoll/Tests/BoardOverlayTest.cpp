@@ -218,9 +218,9 @@ bool FFullGridKeyTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("The grid is hidden at rest"), Game.View->ShowingFullGrid());
     TestEqual(TEXT("No grid lines at rest"), Game.View->OverlayBars(EStyle::Grid), 0);
 
-    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::D, IE_Pressed, 1.0f));
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftAlt, IE_Pressed, 1.0f));
     Game.Frame();
-    TestTrue(TEXT("Holding D shows the full grid"), Game.View->ShowingFullGrid() && Game.Player->ShowsFullGrid());
+    TestTrue(TEXT("Holding Left Alt shows the full grid"), Game.View->ShowingFullGrid() && Game.Player->ShowsFullGrid());
     if (Game.View->DrawsContextualGrid())
     { TestEqual(TEXT("One line per cell edge across the board"), Game.View->OverlayBars(EStyle::Grid), (Encounter.Width + 1) + (Encounter.Height + 1)); }
     TestTrue(TEXT("Holding the key changes no rules state"), ExpeditionTestSupport::SameRun(Before, Game.Live()));
@@ -233,9 +233,9 @@ bool FFullGridKeyTest::RunTest(const FString& Parameters)
     Game.Frame();
     TestTrue(TEXT("The grid returns while the key is still down"), Game.View->ShowingFullGrid());
 
-    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::D, IE_Released, 0.0f));
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftAlt, IE_Released, 0.0f));
     Game.Frame();
-    TestFalse(TEXT("Releasing D hides the grid again"), Game.View->ShowingFullGrid());
+    TestFalse(TEXT("Releasing Left Alt hides the grid again"), Game.View->ShowingFullGrid());
     TestEqual(TEXT("The grid lines are gone"), Game.View->OverlayBars(EStyle::Grid), 0);
     TestTrue(TEXT("The round trip changes no rules state"), ExpeditionTestSupport::SameRun(Before, Game.Live()));
     TestTrue(TEXT("The round trip writes no checkpoint"), CheckpointBefore == Game.CheckpointBytes());
