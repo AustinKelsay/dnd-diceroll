@@ -64,7 +64,7 @@ Several agents use Ultra at once, and only one Unreal job may run at a time. A m
 
    The lock is held for that one job and released when it exits, so jobs from different checkouts interleave one at a time. `-w 7200` waits up to two hours for the lock; if it times out, report it rather than running without the lock.
 2. Keep each locked job short (about ten minutes or less where practical) so other agents are not starved; split long soaks or galleries into several locked runs.
-3. Do not hold the lock while you play a packaged game or work in an interactive editor. Only one editor may own this project's MCP port (18765) at a time, so before `editor`, check for running `UnrealEditor` processes and a listener on that port, and close any editor you started with `close` and check that it exited.
+3. Hold the lock for the whole time any Unreal process of yours is running, including a packaged game you are playing on screen and an interactive editor. Ultra has about 15 GB of memory, and two Unreal processes running at once have crashed a locked job's renderer under memory pressure. Keep such sessions to about 30 minutes, then close the game or editor and release the lock before re-acquiring it, so other agents' jobs can run. One way is to launch the session from a script under `flock` that waits for the process to exit. Only one editor may own this project's MCP port (18765) at a time, so before `editor`, check for running `UnrealEditor` processes and a listener on that port, and close any editor you started with `close` and check that it exited.
 4. Run jobs from your own checkout.
 
 Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
