@@ -207,6 +207,7 @@ bool FReviewZeroHpDamageTest::RunTest(const FString& Parameters)
             if (!TestTrue(TEXT("Restore one-failure fixture"), B.Restore(S, Error))) { return false; }
             B.Submit({ECombatCommandType::Attack, 2, {}, 1});
             TestTrue(TEXT("Third failure kills"), B.Find(1)->Life == ECombatLife::Dead);
+            TestEqual(TEXT("The dead keep no death-save counts"), B.Find(1)->DeathSaveSuccesses + B.Find(1)->DeathSaveFailures, 0);
         }
     }
     TestTrue(TEXT("Adjacent and ranged hits exercised"), Near && Far);
@@ -352,6 +353,39 @@ bool FReviewForecastAgreementTest::RunTest(const FString& Parameters)
     { Hits += Natural >= Build->CriticalThreshold || (Natural != 1 && Natural + R.AttackBonus >= R.TargetArmorClass) ? 1 : 0; }
     TestTrue(TEXT("Forecast is an attack roll"), Preview.bValid && Preview.bAttackRoll && !Preview.bSavingThrow);
     TestEqual(TEXT("Forecast hit chance uses the covered AC"), Preview.HitChancePercent, Hits * 5);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewDeathSaveRestoreTest, "Project.Expedition.Persistence.RestoreRejectsImpossibleDeathSaves", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FReviewDeathSaveRestoreTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    const FCombatSnapshot Good = HeroDownedNext(B, 0, 0);
+    // States the battle can reach load: dying, stable, and dead without counts.
+    for (int32 Case = 0; Case < 3; ++Case)
+    {
+        auto Reachable = Good; auto& Hero = Reachable.Encounter.Combatants[0];
+        if (Case == 0) { Hero.DeathSaveSuccesses = 2; Hero.DeathSaveFailures = 2; }
+        if (Case == 1) { Hero.DeathSaveSuccesses = 3; }
+        if (Case == 2) { Hero.Life = ECombatLife::Dead; }
+        TestTrue(FString::Printf(TEXT("Restore reachable state %d: %s"), Case, *Error), B.Restore(Reachable, Error));
+    }
+    if (!TestTrue(TEXT("Restore dying fixture"), B.Restore(Good, Error))) { return false; }
+    for (int32 Case = 0; Case < 7; ++Case)
+    {
+        auto Bad = Good; auto& Hero = Bad.Encounter.Combatants[0];
+        switch (Case)
+        {
+        case 0: Hero.DeathSaveFailures = 3; break;                              // three failures is death
+        case 1: Hero.DeathSaveSuccesses = 3; Hero.DeathSaveFailures = 1; break; // Stable clears failures
+        case 2: Hero.RescueTurnsLeft = 2; break;                                // no SRD rescue countdown
+        case 3: Hero.Life = ECombatLife::Dead; Hero.DeathSaveFailures = 3; break;
+        case 4: Bad.Encounter.Combatants[2].DeathSaveSuccesses = 1; break;      // conscious ally
+        case 5: Bad.Encounter.Combatants[2].DeathSaveFailures = 1; break;
+        case 6: Bad.Encounter.Combatants[1].DeathSaveSuccesses = 2; break;      // conscious foe
+        }
+        TestFalse(FString::Printf(TEXT("Reject impossible death saves %d"), Case), B.Restore(Bad, Error));
+        TestTrue(TEXT("Atomic restore"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Good, &B.Snapshot(), 0));
+    }
     return !HasAnyErrors();
 }
 #endif

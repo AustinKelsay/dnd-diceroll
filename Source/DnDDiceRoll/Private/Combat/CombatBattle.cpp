@@ -90,8 +90,11 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             (Unit.Life == ECombatLife::Conscious ? Unit.HP <= 0 || Unit.RescueTurnsLeft != 0 : Unit.HP != 0) ||
             (Unit.Life == ECombatLife::Downed && (Unit.Side != ECombatSide::Party ||
                 (Encounter.Ruleset == ERuleset::SRD
-                    ? (Unit.RescueTurnsLeft < 0 || Unit.RescueTurnsLeft > 3 || Unit.DeathSaveSuccesses < 0 || Unit.DeathSaveSuccesses > 3 || Unit.DeathSaveFailures < 0 || Unit.DeathSaveFailures > 3)
+                    // SRD has no rescue countdown. Dying holds 0-2 of each count; Stable is 3 successes and no failures.
+                    ? (Unit.RescueTurnsLeft != 0 || Unit.DeathSaveFailures > 2 || (Unit.DeathSaveSuccesses == 3 && Unit.DeathSaveFailures != 0))
                     : (Unit.RescueTurnsLeft < 1 || Unit.RescueTurnsLeft > 3)))) ||
+            // SRD death-save counts exist only while Downed.
+            (Encounter.Ruleset == ERuleset::SRD && Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
             Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
@@ -969,7 +972,7 @@ void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage, bool bCri
             if (Tally.Successes >= 3) { Tally = FDeathSaveTally(); }
             const EDeathState Outcome = FDeathSaveRules::ApplyDamageAtZero(Tally, Real, bCritical, Target.MaxHP);
             Target.DeathSaveSuccesses = Tally.Successes; Target.DeathSaveFailures = FMath::Min(Tally.Failures, 3);
-            if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; }
+            if (Outcome == EDeathState::Dead) { Target.Life = ECombatLife::Dead; Target.DeathSaveSuccesses = 0; Target.DeathSaveFailures = 0; }
         }
         return;
     }
