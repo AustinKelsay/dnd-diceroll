@@ -21,6 +21,8 @@ struct DNDDICEROLL_API FCaptureShot
     float Distance = 0.0f;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
+    /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
+    FString Build;
 };
 
 struct DNDDICEROLL_API FCapturePoses

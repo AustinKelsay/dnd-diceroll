@@ -128,6 +128,16 @@
     {
       "name": "start-screen",
       "mode": "start"
+    },
+    {
+      "name": "build-barbarian-berserker",
+      "mode": "start",
+      "build": "barbarian.berserker"
+    },
+    {
+      "name": "build-wizard-evocation",
+      "mode": "start",
+      "build": "wizard.evocation"
     }
   ]
 }

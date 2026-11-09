@@ -134,6 +134,8 @@ def load_poses(path):
         names.add(name)
         if shot.get("mode") not in CAPTURE_MODES:
             raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
+        if "build" in shot and (shot["mode"] != "start" or not isinstance(shot["build"], str) or not re.fullmatch(r"[a-z0-9.-]{1,64}", shot["build"])):
+            raise ValueError(f"{name} may give a \"build\" of lowercase letters, digits, '.' and '-' on a start shot only")
         if shot["mode"] == "tooltip" and shot.get("action") not in CAPTURE_ACTIONS:
             raise ValueError(f"{name} needs an \"action\" of {', '.join(CAPTURE_ACTIONS)}")
         if shot["mode"] in ("battle", "targeting", "tooltip"):
