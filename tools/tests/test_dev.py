@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -338,10 +338,10 @@ class WorkspaceTests(unittest.TestCase):
         binary.parent.mkdir(parents=True)
         (archive / "Linux/CustomGame.sh").write_text("#!/bin/sh\n")
         binary.write_text("")
-        with patch("dev.os.access", return_value=False):
+        with patch("dev.os.access", return_value=False) if sys.platform == "win32" else nullcontext():
             with self.assertRaises(RuntimeError): dev.packaged_binary(archive)  # POSIX execute permission is mocked on Windows
         binary.chmod(0o755)
-        with patch("dev.os.access", return_value=True):
+        with patch("dev.os.access", return_value=True) if sys.platform == "win32" else nullcontext():
             self.assertEqual(dev.packaged_binary(archive), binary)
 
     def test_smoke_preserves_start_failure_when_cleanup_fails(self):

@@ -19,7 +19,7 @@ class WindowsHostTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="win helper ")
         self.addCleanup(self.temp.cleanup)
-        root = Path(self.temp.name)
+        root = Path(self.temp.name).resolve()
         self.w = SimpleNamespace(root=root, local=root / '.local', project=root / 'Game.uproject',
                                  versions={'mcp_url':'http://127.0.0.1:18765/mcp'},
                                  settings={'game_target':'Game'})
@@ -132,6 +132,7 @@ class WindowsHostTests(unittest.TestCase):
 
     def test_game_timeout_requests_normal_close_never_terminate(self):
         process=Mock(pid=12)
+        process.poll.return_value = None
         process.wait.side_effect=[subprocess.TimeoutExpired('game',30),0]
         with patch('dev.subprocess.Popen',return_value=process), patch('windows_host.normal_quit') as quit:
             with self.assertRaisesRegex(RuntimeError,'timed out'):
@@ -152,6 +153,7 @@ class WindowsHostTests(unittest.TestCase):
             self.assertNotIn('\"' + key + '=', command)
         self.assertIn('-EditorLayoutIni=\"', command)
         self.assertTrue(command.startswith('\"' + str(self.d.cmd) + '\" '))
+        self.assertEqual(win.unreal_command(['Game.exe', '-nullrhi', '-NoLiveCoding', '-empty=']), 'Game.exe -nullrhi -NoLiveCoding -empty=\"\"')
         for bad in ('-script=a"b', '-script=a\nb'):
             with self.assertRaises(ValueError): win.unreal_command([self.d.cmd, bad])
         # The packaged executable is not named UnrealEditor, but needs the same parser.
@@ -235,6 +237,7 @@ class WindowsHostTests(unittest.TestCase):
     def test_game_timeout_preserves_context_when_close_fails_or_is_ignored(self):
         for decline in (True, False):
             process = Mock(pid=12)
+            process.poll.return_value = None
             process.wait.side_effect = subprocess.TimeoutExpired('game',30)
             with patch('dev.subprocess.Popen', return_value=process), \
                  patch('windows_host.normal_quit', side_effect=RuntimeError('declined') if decline else None) as quit:
@@ -290,6 +293,39 @@ class WindowsHostTests(unittest.TestCase):
         for host in ('linux','mac'):
             other = dev.Dev(self.w, host=host)
             self.assertEqual(other.gallery_flags(), other.layout['headless'])
+
+
+    def test_debuggame_editor_is_scanned_and_refused(self):
+        row = {'ProcessId':12, 'ExecutablePath':str(self.d.editor.with_name('UnrealEditor-Win64-DebugGame.exe')),
+               'CommandLine':'UnrealEditor-Win64-DebugGame.exe "' + str(self.w.project) + '"'}
+        with patch('windows_host.json_rows', return_value=[row]) as rows:
+            with self.assertRaisesRegex(RuntimeError, 'project is open'): self.d.require_closed()
+        self.assertIn("Name LIKE 'UnrealEditor%'", rows.call_args.args[0])
+
+    def test_powershell_timeout_is_a_refusal_not_a_traceback(self):
+        with patch('windows_host.subprocess.run', side_effect=subprocess.TimeoutExpired('powershell',30)):
+            with self.assertRaisesRegex(RuntimeError, 'host inspection failed'): win.powershell('fixed script')
+
+    def test_dxdiag_never_reuses_old_xml_and_reports_parse_or_timeout_failure(self):
+        old = self.w.root/'dxdiag.xml'
+        old.write_text('old report')
+        def probe(args, **kwargs): Path(args[-1]).write_text('<bad')
+        with patch('windows_host.subprocess.run', side_effect=probe):
+            with self.assertRaisesRegex(RuntimeError, 'malformed'): win.dx12_report(old)
+        self.assertEqual(old.read_text(), 'old report')
+        with patch('windows_host.subprocess.run', return_value=Mock()):
+            with self.assertRaises(FileNotFoundError): win.dx12_report(old)
+        with patch('windows_host.subprocess.run', side_effect=subprocess.TimeoutExpired('dxdiag',90)):
+            with self.assertRaisesRegex(RuntimeError, 'probe failed'): win.dx12_report(old)
+
+    def test_game_timeout_race_reports_an_exited_process_without_requesting_quit(self):
+        process = Mock(pid=12)
+        process.poll.return_value = 0
+        process.wait.side_effect = subprocess.TimeoutExpired('game',30)
+        with patch('dev.subprocess.Popen', return_value=process), patch('windows_host.normal_quit') as quit:
+            with self.assertRaisesRegex(RuntimeError, 'exited before the close request'):
+                self.d.run_game(['game.exe'], self.w.root/'game.log',30)
+        quit.assert_not_called(); process.terminate.assert_not_called()
 
 
 if __name__ == '__main__': unittest.main()

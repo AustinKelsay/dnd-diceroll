@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import uuid
 import xml.etree.ElementTree as ET
 
 
@@ -13,9 +14,12 @@ BELOW_NORMAL = 0x00004000
 
 def powershell(script):
     # Scripts are fixed strings, with numeric PIDs/ports only, not shell/user input.
-    return subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + script],
-                          check=True, capture_output=True, text=True, encoding="utf-8", timeout=30,
-                          creationflags=BELOW_NORMAL).stdout.strip()
+    try:
+        return subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + script],
+                              check=True, capture_output=True, text=True, encoding="utf-8", timeout=30,
+                              creationflags=BELOW_NORMAL).stdout.strip()
+    except subprocess.SubprocessError as error:
+        raise RuntimeError(f"Windows host inspection failed: {error}") from error
 
 
 def json_rows(script):
@@ -26,7 +30,7 @@ def json_rows(script):
 
 def editor_processes(project):
     from workspace import project_argument
-    rows = json_rows("Get-CimInstance Win32_Process -Filter \"Name='UnrealEditor.exe' OR Name='UnrealEditor-Cmd.exe'\" "
+    rows = json_rows("Get-CimInstance Win32_Process -Filter \"Name LIKE 'UnrealEditor%'\" "
                      "-ErrorAction Stop | Select-Object ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress")
     found = []
     for row in rows:
@@ -118,13 +122,22 @@ def batch_command(args):
 def dx12_report(path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["dxdiag.exe", "/whql:off", "/x", str(path)], check=True, timeout=90,
-                   creationflags=BELOW_NORMAL)
-    return parse_dxdiag(path.read_text(encoding="utf-8-sig"))
+    # Keep old evidence; a unique new path cannot accidentally reuse a stale report.
+    path = path.with_name(f"{path.stem}-{uuid.uuid4().hex}{path.suffix}")
+    try:
+        subprocess.run(["dxdiag.exe", "/whql:off", "/x", str(path)], check=True, timeout=90,
+                       creationflags=BELOW_NORMAL)
+    except subprocess.SubprocessError as error:
+        raise RuntimeError(f"DxDiag probe failed: {error}") from error
+    report = parse_dxdiag(path.read_text(encoding="utf-8-sig"))
+    return {**report, "report": str(path)}
 
 
 def parse_dxdiag(text):
-    root = ET.fromstring(text)
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as error:
+        raise RuntimeError(f"DxDiag report is malformed: {error}") from error
     directx = root.findtext("SystemInformation/DirectXVersion", "")
     displays = []
     for device in root.findall("DisplayDevices/DisplayDevice"):
@@ -139,12 +152,12 @@ def parse_dxdiag(text):
 
 
 def unreal_command(args):
-    """Unreal reads the raw Windows command line: quote values, not whole -key=value tokens."""
+    """Emit explicit value quotes, compatible with UE Windows CommandLineToArgvW rebuild."""
     tokens = []
     for arg in map(str, args):
         if any(char in arg for char in '\r\n"'):
             raise ValueError("Unreal arguments contain unsupported quotes/newlines")
-        key, separator, value = arg.partition("=") if arg.startswith("-") else ("", "", arg)
+        key, separator, value = arg.partition("=") if arg.startswith("-") and "=" in arg else ("", "", arg)
         quoted = '"' + value + '"' if not value or any(c.isspace() for c in value) else value
         tokens.append(key + separator + quoted)
     return " ".join(tokens)

@@ -823,10 +823,13 @@ class Dev:
                 return process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 if self.host == "windows":
+                    if process.poll() is not None:
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and exited before the close request. Inspect {log}") from None
                     try:
                         windows_host.normal_quit(process.pid)
                     except (OSError, RuntimeError, subprocess.SubprocessError) as error:
-                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s; normal window-close request failed: {error}; left running. Inspect {log}") from error
+                        state = "left running" if process.poll() is None else "already exited"
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s; normal window-close request failed: {error}; {state}. Inspect {log}") from error
                 else:
                     process.terminate()
                 try:
@@ -1304,7 +1307,8 @@ class Dev:
                         try:
                             windows_host.normal_quit(process.pid)
                         except (OSError, RuntimeError, subprocess.SubprocessError) as error:
-                            message = f"Packaged game PID {process.pid} normal window-close request failed: {error}; left running"
+                            state = "left running" if process.poll() is None else "already exited"
+                            message = f"Packaged game PID {process.pid} normal window-close request failed: {error}; {state}"
                             if original:
                                 message += f". Earlier failure: {original}"
                             raise RuntimeError(message) from original
