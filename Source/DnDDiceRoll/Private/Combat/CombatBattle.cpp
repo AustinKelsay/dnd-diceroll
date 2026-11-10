@@ -951,12 +951,25 @@ FCombatantState* FCombatBattle::MutableFind(int32 Id)
     return State.Encounter.Combatants.FindByPredicate([Id](const FCombatantState& Unit) { return Unit.Id == Id; });
 }
 
-int32 FCombatBattle::ProtectionFor(const FCombatantState& Target) const
+int32 FCombatBattle::ProtectionFor(const FCombatantState& Target, int32* OutSourceId) const
 {
     int32 Protection = Target.RageTurns > 0 ? 1 : 0;
+    int32 Source = Protection > 0 ? Target.Id : INDEX_NONE;
     for (const auto& U : State.Encounter.Combatants)
-    { if (U.GuardTargetId == Target.Id) { Protection = FMath::Max(Protection, U.GuardAmount > 0 ? U.GuardAmount : 3); } }
+    {
+        if (U.GuardTargetId != Target.Id) { continue; }
+        const int32 Amount = U.GuardAmount > 0 ? U.GuardAmount : 3;
+        if (Amount > Protection) { Protection = Amount; Source = U.Id; }
+    }
+    if (OutSourceId) { *OutSourceId = Source; }
     return Protection;
+}
+
+FProtectionFacts FCombatBattle::Protection(int32 TargetId) const
+{
+    FProtectionFacts Facts;
+    if (const FCombatantState* Target = Find(TargetId)) { Facts.Amount = ProtectionFor(*Target, &Facts.SourceId); }
+    return Facts;
 }
 
 void FCombatBattle::ApplyDamage(FCombatantState& Target, int32 Damage, bool bCritical)
