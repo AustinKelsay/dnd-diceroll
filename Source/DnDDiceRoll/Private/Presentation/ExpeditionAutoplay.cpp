@@ -827,7 +827,7 @@ void FExpeditionAutoplayDirector::TickResume()
         EndTransition();
         if (Board->Progress().Seed != Script.Seed || Board->Progress().Phase != EExpeditionPhase::Reward)
         { Fail(FString::Printf(TEXT("The checkpoint resumed at seed %d in phase %d, not the reward of seed %d"), Board->Progress().Seed, static_cast<int32>(Board->Progress().Phase), Script.Seed)); return; }
-        Mark(TEXT("BEAT"), TEXT("resume"));
+        Mark(TEXT("BEAT"), TEXT("resume"), FString());
         Enter(EStage::Claiming);
         return;
     case EStage::Claiming:
@@ -835,7 +835,7 @@ void FExpeditionAutoplayDirector::TickResume()
         BeginTransition(TEXT("reward->route"));
         Player->HandleButton(TEXT("Claim"));
         if (Board->Progress().Phase != EExpeditionPhase::Recovery) { Fail(TEXT("The reward was not claimed")); return; }
-        Mark(TEXT("BEAT"), TEXT("claim"));
+        Mark(TEXT("BEAT"), TEXT("claim"), FString());
         Enter(EStage::Camping);
         return;
     case EStage::Camping:
@@ -844,7 +844,7 @@ void FExpeditionAutoplayDirector::TickResume()
             if (StageFrames < Script.ThinkFrames) { return; }
             Player->HandleButton(TEXT("Camp"));
             if (Board->Progress().Phase != EExpeditionPhase::Route) { Fail(TEXT("Camp was refused")); return; }
-            Mark(TEXT("BEAT"), TEXT("camp"));
+            Mark(TEXT("BEAT"), TEXT("camp"), FString());
             bPrepared = true;
             return;
         }
