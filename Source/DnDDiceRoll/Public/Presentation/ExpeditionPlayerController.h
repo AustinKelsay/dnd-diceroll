@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/CombatHints.h"
 #include "Run/ExpeditionRun.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
@@ -90,6 +91,17 @@ public:
     bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
+    /**
+     * The hint drawn this frame (#158), or Count. A hint is non-modal and takes no focus; it shows only on the party's
+     * turn at rest, never under Help, Records, the return question, the Menu, a playback or an enemy turn.
+     */
+    ECombatHint VisibleHint() const;
+    FHintContent VisibleHintContent() const { return HintState.Content(); }
+    const FCombatHints& Hints() const { return HintState; }
+    /** Capture and test support: raise exactly this hint if it applies to the acting hero now; Why says what is missing. */
+    bool PreviewHint(ECombatHint Hint, FString& Why);
+    /** Capture support: put the previewed hint away (a capture run never arms hints on its own). */
+    void ClearHintPreview() { HintState.Disarm(); }
 private:
     /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
     bool PointerPosition(float& X, float& Y) const;
@@ -109,6 +121,19 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bModeTip = false;
+    /** Contextual hints (#158): presentation only, in memory, never in the checkpoint. */
+    FCombatHints HintState;
+    FCombatSnapshot HintSnapshot;
+    FHintObservation HintFacts;
+    int32 HintActor = INDEX_NONE;
+    bool bHintFactsValid = false;
+    void ObserveHints();
+    FHintObservation BuildHintObservation(const FCombatBattle& Rules, int32 ActorId) const;
+    /** The D key: puts a visible hint away; a no-op when none is up, and never a gameplay key. */
+    void DismissHintKey();
+    void DismissHint();
+    void SkipHints();
+    void ReplayHints();
     bool bShowHelp = false;
     bool bShowMenu = false;
     bool bConfirmReturn = false;
