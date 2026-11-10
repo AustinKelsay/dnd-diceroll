@@ -39,8 +39,8 @@ Lever 2 (Compact melee speed 5) was **not applied**: the contract allows it only
 | --- | --- | --- | --- | --- |
 | T1 | Rotation win rate 55–90%; every representative party at least 35% | 100%; all 100% | **86.7% (85.5–87.9%)**; lowest party `support-poor` 84.4% | met, but near the top of the band |
 | T2 | At least 15% of victories lose a hero | 0.6% | **16.1%** | met, narrowly |
-| T3 | Fights 4–5 mean low point below 60%; a quarter of fight-5 fights below half | 73–82%; 0% below half | **24–50%; 74% (Guarded) and 92% (Dangerous) of fight-5 fights below half** | met |
-| T4 | Dangerous costs at least 1.5x Guarded HP and loses more often | 2–4x; no losses | **2.3–5.9x; Dangerous defeats higher at every stage** | met |
+| T3 | Fights 4–5 mean low point below 60%; a quarter of fight-5 fights below half | 73–82%; 0% (Guarded) and 2% (Dangerous) of fight-5 fights below half | **24–50%; 74% (Guarded) and 92% (Dangerous) of fight-5 fights below half** | met |
+| T4 | Dangerous costs at least 1.5x Guarded HP and loses more often | 1.7–3.7x; no losses | **2.3–5.9x; Dangerous defeats higher at every stage** | met |
 | T5 | The finale has the highest defeat share | none | **0.1%, 0.1%, 0.3%, 5.2%, 7.7%** by fight | met |
 | T6 | Melee parties within 20 points of the ranged party; melee damage gap no wider than 33% | all 100%; gap 33% | **melee 90.6%, Fighter duplicates 100%, ranged 87.5%; gap 18%** | met |
 | T7 | Specials through fight 5 (reported only) | 4.9 / 3.7 / 0.9 / 0.4 / 0.25 per fight | 6.3 / 3.8 / 0.8 / 0.5 / 0.2 | not addressed (deferred, contract section 3) |
@@ -110,10 +110,11 @@ Hero death rate by slot: slot 1 22.7%, slot 2 16.3%, slot 3 15.2%, slot 4 14.5% 
 
 ## Compatibility
 
-- **Catalog revision 7 → 8.** A checkpoint saved under revision 7 (Compact or SRD) is refused with "This expedition was saved under rules revision 7; this build plays revision 8, so it cannot be resumed." The file stays on disk, and New Run moves it aside as before.
-- **Format-4 fixtures:** they are revision 7, so they are now proven refused by name and left byte-identical. The 4→5 upgrade is proven on current runs written as format 4, which decode, restore and continue identically.
+- **Catalog revisions 7 and 8.** New runs are created under revision 8 and get the tuned Compact enemies. A run keeps its revision for its whole lifetime, so a revision 7 run (any existing checkpoint, including format 4 saves) keeps resuming with the revision 7 enemies, for already-spawned and future encounters alike.
+- **Unknown revisions** are refused with a message naming the revision and the supported range, and preserved on New Run as before.
+- **Format-4 fixtures:** they still load as Compact and resume exactly as staging continued them (`Schema4LoadsAsCompact`, unchanged). The 4→5 upgrade is also proven on current runs written as format 4 (`Schema4UpgradeRoundTripsCurrentRuns`).
 - Schema 5 is unchanged.
-- **SRD:** an SRD seed-42 golden, captured with the same test on revision 7 code, still holds (`Project.Expedition.Run.SrdSeedUnchangedByCompactTuning`).
+- **SRD:** SRD runs use the revision 7 numbers at both revisions. An SRD seed-42 golden, captured with the same test on revision 7 code, still holds (`SrdSeedUnchangedByCompactTuning`), and a revision 7 SRD checkpoint resumes and plays identically (`SrdRevision7Resumes`).
 
 ## Follow-ups (not in this PR)
 

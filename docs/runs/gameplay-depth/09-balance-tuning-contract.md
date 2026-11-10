@@ -15,7 +15,7 @@ Each target is drawn from the [game brief](../../game-brief.md) and the baseline
 | T1 | **The run can be lost, and a sensible party usually wins**: rotation win rate in 55–90%; every representative party at least 35% | Brief: "finish or lose the expedition", "a party wipe ends the expedition"; baseline 100% | win rate with 95% Wilson interval |
 | T2 | **Losses without ending the run**: at least 15% of victories lose at least one hero | Brief: "dead adventurers remain lost; survivors continue", "a smaller surviving party can continue"; baseline under 1% | share of won runs with deaths |
 | T3 | **Attrition across the run**: in fights 4 and 5 the mean party low point is below 60% of party HP, and at least a quarter of fight-5 fights go below 50% | Brief: health and resources persist, one recovery; baseline 73–82% and worst 41% | lowest party HP per fight |
-| T4 | **The route choice matters**: a Dangerous fight costs at least 1.5 times the HP of a Guarded fight at the same stage, and loses more often | Brief: route choices "with partial risk/reward information"; baseline 2–4x HP but no losses | HP lost and defeats by stage and route |
+| T4 | **The route choice matters**: a Dangerous fight costs at least 1.5 times the HP of a Guarded fight at the same stage, and loses more often | Brief: route choices "with partial risk/reward information"; baseline 1.7–3.7x HP but no losses | HP lost and defeats by stage and route |
 | T5 | **The finale is the climax**: fight 5 has the highest defeat share of the five stages (both routes together) | Brief: "five combat encounters including that finale" | defeats by stage |
 | T6 | **Melee is not dominated**: the all-melee and Fighter-duplicate parties within 20 points of the ranged party's win rate; the melee damage-share gap no wider than the baseline's 33% | #112 "subclass usefulness"; baseline melee 7.0 vs 10.5 damage per fight | party win rates, damage share |
 | T7 | **Specials matter through fight 5**: reported, not targeted here (section 4) | baseline 0.25 specials per fight in fight 5 | specials per fight by stage |
@@ -39,11 +39,15 @@ Considered and **not changed in this PR**, with the reason:
 
 Not changed: the save schema (5); the 70 kits' identities, abilities, costs and texts; two specials per hero; five encounters; levels 1–5; the artifact-only fifth victory; the route structure, rewards, camp and its text; enemy behaviour (`PlayEnemyTurn`); every SRD-mode number; `Presentation/`, capture, camera and world code; `Config/` and `Content/`.
 
-**Versioning:** Compact enemy stats are part of the rules interpretation that a checkpoint is restored against (restore regenerates the encounter and compares every enemy stat). The tuning therefore bumps `FBuildCatalog::Revision` from 7 to 8, the existing explicit mechanism. A checkpoint from revision 7 is refused with a message that names both revisions, and it stays on disk (the session's existing "unreadable save" preservation). Schema 5 is unchanged.
+**Versioning** (revised after review round 1: existing saves must keep resuming, per the [#95 decision](https://github.com/AustinKelsay/dnd-diceroll/issues/95#issuecomment-6609461075) that schema 4 saves load as Compact):
+- Compact enemy stats are part of the rules interpretation a checkpoint is restored against (restore regenerates the encounter and compares every enemy stat), so new runs are created under `FBuildCatalog::Revision` 8.
+- Restore supports revisions 7 and 8 explicitly. A run keeps its revision for its whole lifetime: a revision 7 run (including format 4 saves) keeps revision 7 enemy generation and validation for already-spawned and future encounters alike, through a revision-aware stats function.
+- Unknown revisions are refused by name and preserved on disk as before.
+- Schema 5 is unchanged.
 
 **Tests whose expectations change**, each updated deliberately with the reason in the test:
 - `Project.Expedition.Run.CompactSeedIdenticalFingerprint`: the seed-42 Compact golden fingerprint is recaptured under revision 8. The test still proves seed identity (twin runs) and Victory encoding.
-- `Project.Expedition.Persistence.Schema4LoadsAsCompact`: the format-4 fixtures (revision 7) can no longer resume. They stay byte-identical and are now proven to be refused explicitly. The 4-to-5 upgrade itself stays covered by a new round trip: a revision-8 run is written as format 4 (the upgrade's added fields removed), then decoded, upgraded and restored to the identical run.
+- `Project.Expedition.Persistence.Schema4LoadsAsCompact` stays exactly as on staging: both revision 7 fixtures load as Compact and resume identically. A new round trip, `Schema4UpgradeRoundTripsCurrentRuns`, writes a revision 8 run as format 4 and proves it decodes, restores and continues identically. A new `SrdRevision7Resumes` covers a revision 7 SRD checkpoint.
 - Any test that asserts the catalog revision, or that the old enemy stats or full-run outcomes hold, keeps its intent with the new value.
 
 **Slice 4 (encounter identity)** comes next and will re-tune enemies per encounter (roles, compositions, finale). This PR sets a measured pressure level and leaves the harness for slice 4 to rerun; slice 4 may replace these stats as long as it reports the same before/after tables.
@@ -63,9 +67,9 @@ Before: the committed baseline (`bd02ede`, policy 1). After: the same 99 parties
   All within the bounds of section 3. `EnemyStats` in `Run/ExpeditionRun.cpp` holds both rulesets' tables; SRD keeps revision 7.
 - **Lever 2 not applied:** T6 passes after lever 1 (melee party 90.6%, Fighter duplicates 100%, ranged 87.5%; melee damage gap 18%).
 - **Targets:** T1–T6 and T8 met (T1 and T2 narrowly), T7 reported as deferred. Rotation win rate 86.7% (85.5–87.9%), 16.1% of victories lose a hero, finale defeat share 7.7%.
-- **Versioning:** `FBuildCatalog::Revision` 8. `FExpeditionRun::Restore` refuses another revision with a message naming both. `NewRunPreservesUnreadableCheckpoint` now also proves an older-revision file is preserved on New Run.
+- **Versioning:** new runs use `FBuildCatalog::Revision` 8, and restore accepts `MinimumRevision` 7 to 8. `EnemyStats(Ruleset, Revision, …)` has explicit Compact and SRD cases and fails for unsupported values. Revision 7 Compact runs keep revision 7 enemies for life. `FExpeditionRun::Restore` refuses other revisions by name, and `NewRunPreservesUnreadableCheckpoint` proves an unsupported future revision is preserved on New Run.
 - **Tests:**
   - new: `Run.CompactEnemyTuning` (stats per fight and route, counts and roles, named refusal) and `Run.SrdSeedUnchangedByCompactTuning` (SRD golden captured on revision 7 code);
-  - recaptured: the Compact fingerprint golden;
-  - `Schema4LoadsAsCompact` rewritten as section 4 describes;
+  - recaptured: the Compact fingerprint golden (seed 42 is a new, revision 8 run);
+  - `Schema4LoadsAsCompact` unchanged from staging; new `Schema4UpgradeRoundTripsCurrentRuns` and `SrdRevision7Resumes`; `CompactEnemyTuning` also pins revision 7 enemies for a restored revision 7 run;
   - full-run tests whose subject is a completed run take the first winning seed from 42 on (`ExpeditionTestSupport::FirstSeedWhere`, asserted to exist).
