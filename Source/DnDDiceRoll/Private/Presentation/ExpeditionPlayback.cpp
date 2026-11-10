@@ -215,6 +215,63 @@ void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32
     }
 }
 
+TArray<FPlaybackProjectile> FExpeditionPlayback::MagicMissileBolts(FVector2D From, FVector2D To)
+{
+    TArray<FPlaybackProjectile> Bolts;
+    for (int32 Index = 0; Index < 3; ++Index)
+    {
+        Bolts.Add({From, To, -MissileStagger * Index, MissileFlight, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.55f, 0.3f, 1.0f), false});
+    }
+    return Bolts;
+}
+
+FPlaybackProjectile FExpeditionPlayback::RangedBolt(FVector2D From, FVector2D To, EAdventurerRole Role, bool bArrow)
+{
+    const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
+        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) : FLinearColor(0.85f, 0.75f, 0.6f);
+    return {From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow};
+}
+
+void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+{
+    FUnitDisplay* Target = Displays.Find(TargetId);
+    if (!Target) { return; }
+    const bool bHit = Moment == EImpactMoment::Landing;
+    bHeldFlash = bHit;
+    if (bHit)
+    {
+        Target->Flash = 1.0f;
+        if (Target->Life == ECombatLife::Conscious) { SetPose(*Target, ExpeditionPose::ForDamage()); }
+        ShowText(Target->Position, TEXT("-7"), Blood, 1.25f);
+    }
+    // The bolts AddAttack throws, aged as production would have them: Flight half way along the first bolt's path, a landing just before the
+    // bolt in question arrives (the last bolt for the hit, the impact step begins while it is still arriving). Bolts that production would already have removed are gone.
+    HeldShots.Reset();
+    const FVector2D To = Target->Position;
+    if (Effect == EImpactPreview::Missile) { HeldShots = MagicMissileBolts(From, To); }
+    else if (Effect != EImpactPreview::Hit) { HeldShots.Add(RangedBolt(From, To, Effect == EImpactPreview::Fire ? EAdventurerRole::Wizard : EAdventurerRole::Cleric, false)); }
+    const float Duration = HeldShots.IsEmpty() ? 0.0f : HeldShots[0].Duration;
+    const int32 Landing = Moment == EImpactMoment::FirstLanding ? 0 : Moment == EImpactMoment::SecondLanding ? 1 : Effect == EImpactPreview::Missile ? 2 : 0;
+    // Seconds since the first bolt left.
+    const float Time = Moment == EImpactMoment::Flight ? 0.5f * Duration : 0.92f * Duration + MissileStagger * (Effect == EImpactPreview::Missile ? Landing : 0);
+    for (FPlaybackProjectile& Shot : HeldShots) { Shot.Age += Time; }
+    HeldShots.RemoveAll([](const FPlaybackProjectile& Shot) { return Shot.Age > Shot.Duration; });
+    Shots = HeldShots;
+}
+
+void FExpeditionPlayback::HoldImpact(int32 UnitId)
+{
+    if (FUnitDisplay* Display = Displays.Find(UnitId); Display && bHeldFlash) { Display->Flash = 1.0f; }
+    if (!HeldShots.IsEmpty()) { Shots = HeldShots; }
+}
+
+void FExpeditionPlayback::ReleaseImpact(int32 TargetId)
+{
+    bHeldFlash = false;
+    if (!HeldShots.IsEmpty()) { HeldShots.Reset(); Shots.Reset(); }
+    if (FUnitDisplay* Target = Displays.Find(TargetId)) { Converge(*Target, false); }
+}
+
 void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After)
 {
     if (!Results.ContainsByPredicate([](const auto& R) { return R.bAccepted; })) { return; }
@@ -406,10 +463,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
         {
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             Cue(EExpeditionCue::Spell);
-            for (int32 Index = 0; Index < 3; ++Index)
-            {
-                Shots.Add({From, To, -0.09f * Index, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false});
-            }
+            Shots.Append(MagicMissileBolts(From, To));
         });
     }
     else if (bRanged)
@@ -418,9 +472,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
         {
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
-            const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
-                Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.9f, 0.5f) : FLinearColor(0.85f, 0.75f, 0.6f);
-            Shots.Add({From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow});
+            Shots.Add(RangedBolt(From, To, Role, bArrow));
         });
     }
     else

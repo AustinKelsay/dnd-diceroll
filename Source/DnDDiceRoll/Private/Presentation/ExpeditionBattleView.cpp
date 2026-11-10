@@ -4,6 +4,7 @@
 #include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/HitFlash.h"
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
@@ -181,6 +182,21 @@ void FExpeditionPart::SetColor(const FLinearColor& Color)
         Material->SetVectorParameterValue(TEXT("Color"), Color);
         Shown = Color;
     }
+}
+
+void FExpeditionPart::SetFlash(float Flash)
+{
+    if (!Material || RimState == ERim::Absent) { return; }
+    if (RimState == ERim::Unread)
+    {
+        const bool bFound = Material->GetScalarParameterValue(FHashedMaterialParameterInfo(TEXT("Rim")), BaseRim)
+            && Material->GetVectorParameterValue(FHashedMaterialParameterInfo(TEXT("RimColor")), BaseRimColor);
+        RimState = bFound ? ERim::Present : ERim::Absent;
+        if (!bFound) { return; }
+    }
+    if (FMath::IsNearlyEqual(ShownFlash, Flash, 0.002f)) { return; }
+    ShownFlash = Flash;
+    Material->SetVectorParameterValue(TEXT("RimColor"), ExpeditionFlash::RimColor(BaseRimColor, BaseRim, Flash));
 }
 
 AExpeditionBattleView::AExpeditionBattleView()
@@ -816,6 +832,19 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     bCameraPlaced = false;
     bFramed = AtFramedZoom();
     UpdateCamera(0.0f);
+}
+
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+{
+    ImpactTargetId = TargetId;
+    Show.PreviewImpact(TargetId, Effect, From, Moment);
+}
+
+void AExpeditionBattleView::ClearImpactPreview()
+{
+    if (ImpactTargetId == INDEX_NONE) { return; }
+    Show.ReleaseImpact(ImpactTargetId);
+    ImpactTargetId = INDEX_NONE;
 }
 
 FTransform AExpeditionBattleView::CameraTransform() const { return Camera->GetComponentTransform(); }
@@ -1480,29 +1509,29 @@ void AExpeditionBattleView::UpdateRigs()
             Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
         }
         const bool bDead = Unit->Life == ECombatLife::Dead;
-        auto Shown = [&](FLinearColor Color)
+        // The figure (static parts and every skin material slot alike) takes the bounded flash and glow of ExpeditionFlash (#189); the
+        // footprint ring takes the glow only, so a hit never turns the ring white against the floor it marks.
+        auto Shown = [&](FLinearColor Color, float Flash)
         {
             if (bDead) { const float Grey = Color.GetLuminance(); Color = FMath::Lerp(Color, FLinearColor(Grey, Grey, Grey) * 0.6f, 0.75f); }
-            Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.95f, 0.75f) * 2.0f, Unit->Glow * 0.35f);
-            Color = FMath::Lerp(Color, FLinearColor(1.0f, 0.9f, 0.9f) * 3.0f, Unit->Flash * 0.85f);
-            return Color;
+            return ExpeditionFlash::Tint(Color, Unit->Glow, Flash);
         };
-        auto Tint = [&](FExpeditionPart& Part) { Part.SetColor(Shown(Part.Base)); };
-        for (FExpeditionPart& Part : Rig.Parts) { Tint(Part); }
+        auto Tint = [&](FExpeditionPart& Part, float Flash) { Part.SetColor(Shown(Part.Base, Flash)); };
+        for (FExpeditionPart& Part : Rig.Parts) { Tint(Part, Unit->Flash); Part.SetFlash(Unit->Flash); }
         // Figures behind scenery show a side-coloured silhouette (M_FigureSilhouette reads the custom depth and stencil). The dead
         // lie on the board as bodies and drop out; the downed still matter (they can be saved), so they keep it.
         if (Rig.bSilhouette != !bDead) { SetFigureSilhouette(Rig, !bDead); }
         if (Rig.Ring.RingSlot != INDEX_NONE)
         {
             // Flat on the board under the figure, in actor space, not hopping or tilting with it.
-            SetRing(Rig.Ring.RingSlot, true, BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(0.8f)), BoardMetric.FootprintDiameter() / 100.0f, Shown(Rig.Ring.Base));
+            SetRing(Rig.Ring.RingSlot, true, BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(0.8f)), BoardMetric.FootprintDiameter() / 100.0f, Shown(Rig.Ring.Base, 0.0f));
         }
         else if (Rig.Ring.Mesh)
         {
             // Flat on the board under the figure, not hopping or tilting with it.
             Rig.Ring.Mesh->SetRelativeLocation(BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(0.8f)));
             Rig.Ring.Mesh->SetRelativeScale3D(FVector(BoardMetric.FootprintDiameter() / 100.0f));
-            Tint(Rig.Ring);
+            Tint(Rig.Ring, 0.0f);
         }
     }
 }
@@ -1681,6 +1710,8 @@ void AExpeditionBattleView::UpdateMarkers()
 void AExpeditionBattleView::UpdateEffects()
 {
     const TArray<FPlaybackProjectile>& Shots = Show.Projectiles();
+    int32 Bolts = 0;
+    for (const FPlaybackProjectile& Shot : Shots) { Bolts += !Shot.bArrow && Shot.Age >= 0.0f ? 1 : 0; }
     for (int32 Index = 0; Index < ShotSlots.Num(); ++Index)
     {
         FExpeditionSlot& Slot = ShotSlots[Index];
@@ -1695,11 +1726,11 @@ void AExpeditionBattleView::UpdateEffects()
         const float Curve = FMath::Sin(Alpha * PI);
         // Positive arcs lob upward; negative arcs curve sideways.
         const FVector Position = FMath::Lerp(From, To, Alpha) + (Shot.Arc >= 0 ? FVector(0, 0, Shot.Arc * Curve) : Side * Shot.Arc * Curve);
-        SetSlot(Slot, true, Position, (To - From).Rotation(), Shot.bArrow ? FVector(0.5f, 0.05f, 0.05f) : FVector(Shot.Size),
-            Shot.bArrow ? Shot.Color : Shot.Color * 6.0f);
+        SetSlot(Slot, true, Position, (To - From).Rotation(), Shot.bArrow ? FVector(0.5f, 0.05f, 0.05f) : FVector(Shot.Size * ExpeditionFlash::BoltScale),
+            Shot.bArrow ? Shot.Color : Shot.Color * ExpeditionFlash::BoltEmissive);
         // The light follows the shot (it was a child of the shot's own component when pieces were loose).
         ShotLights[Index]->SetRelativeLocation(Position);
-        if (!Shot.bArrow) { ShotLights[Index]->SetLightColor(Shot.Color); ShotLights[Index]->SetIntensity(180.0f); }
+        if (!Shot.bArrow) { ShotLights[Index]->SetLightColor(Shot.Color); ShotLights[Index]->SetIntensity(ExpeditionFlash::BoltLight(Bolts, Alpha)); }
     }
     const TArray<FPlaybackSparkle>& Sparks = Show.Sparkles();
     for (int32 Index = 0; Index < SparkSlots.Num(); ++Index)
@@ -1711,7 +1742,7 @@ void AExpeditionBattleView::UpdateEffects()
         const float Alpha = Spark.Age / Spark.Life;
         const float Angle = Spark.Angle + Alpha * 3.0f;
         SetSlot(Slot, true, SceneBoard(Spark.Cell, 20.0f + Alpha * 100.0f) + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0) * (28.0f + Alpha * 10.0f),
-            FRotator::ZeroRotator, FVector(0.08f * (1.0f - Alpha * 0.7f)), Spark.Color * 5.0f);
+            FRotator::ZeroRotator, FVector(0.08f * (1.0f - Alpha * 0.7f)), Spark.Color * ExpeditionFlash::SparkEmissive);
     }
     // Torches and the campfire flicker; the camp appears only at the recovery choice.
     for (int32 Index = 0; Index < Flames.Num(); ++Index)
@@ -2252,6 +2283,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
+    if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
@@ -2743,6 +2775,26 @@ float AExpeditionBattleView::FootprintRingDiameterCm(int32 UnitId) const
         if (Rig.Ring.Mesh) { return Rig.Ring.Mesh->GetRelativeScale3D().X * 100.0f; }
     }
     return 0.0f;
+}
+
+bool AExpeditionBattleView::UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId) { continue; }
+        OutParts.Reset();
+        for (const FExpeditionPart& Part : Rig.Parts) { OutParts.Add(Part.Shown); }
+        OutRing = RingStates.IsValidIndex(Rig.Ring.RingSlot) ? RingStates[Rig.Ring.RingSlot].Colour : Rig.Ring.Shown;
+        return true;
+    }
+    return false;
+}
+
+TArray<float> AExpeditionBattleView::BoltLightIntensities() const
+{
+    TArray<float> Result;
+    for (const UPointLightComponent* Light : ShotLights) { Result.Add(Light ? Light->Intensity : 0.0f); }
+    return Result;
 }
 
 USceneComponent* AExpeditionBattleView::UnitRigRoot(int32 UnitId) const

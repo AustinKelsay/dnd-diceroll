@@ -424,7 +424,12 @@ class GalleryTests(unittest.TestCase):
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
-        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 31)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 41)
+        self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
+                                                    {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
+                                                    {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
+                                                    {"name": "first", "mode": "impact", "effect": "missile", "phase": "landing-first", "yaw": 0, "distance": "default"},
+                                                    {"name": "second", "mode": "impact", "effect": "missile", "phase": "landing-second", "yaw": 0, "distance": "default"}]))), 5)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
                {"version": 1, "shots": ["x"]}, {"version": 1, "shots": [{"mode": "start"}]}, {"version": 1, "shots": [{"name": "a b", "mode": "start"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "orbit"}]}, {"version": 1, "shots": [{"name": "a", "mode": "battle", "distance": 1300}]},
@@ -440,6 +445,16 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "move", "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "start", "build": "Wizard"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "later", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-first", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-second", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "settleFrames": 3, "shots": [{"name": "a", "mode": "impact", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "yaw": 0}]},
                {"version": 1, "settleFrames": 0, "shots": self.SHOTS}]
         for data in bad:
             path = self.root / "bad.json"

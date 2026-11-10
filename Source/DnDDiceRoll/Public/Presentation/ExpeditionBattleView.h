@@ -47,6 +47,16 @@ struct FExpeditionPart
     /** Footprint rings and markers drawn from the shared ring bank (#144) have no component of their own: the bank slot. */
     int32 RingSlot = INDEX_NONE;
     void SetColor(const FLinearColor& Color);
+    /**
+     * A hit's flash on the figure's rim (#189): the material's "RimColor" turns toward a warm white (ExpeditionFlash::RimColor). Materials without
+     * "Rim" and "RimColor" (the engine primitives) are left alone. The first call remembers the look the material had.
+     */
+    void SetFlash(float Flash);
+    /** The rim look the material had before any flash, read on the first SetFlash. */
+    float BaseRim = 0.0f;
+    FLinearColor BaseRimColor = FLinearColor::White;
+    float ShownFlash = 0.0f;
+    enum class ERim : uint8 { Unread, Present, Absent } RimState = ERim::Unread;
 };
 
 /**
@@ -329,6 +339,13 @@ public:
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
+    /**
+     * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
+     * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
+     */
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
+    void ClearImpactPreview();
+    int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */
     void SnapCameraToTargets() { bCameraPlaced = false; }
     FTransform CameraTransform() const;
@@ -390,6 +407,13 @@ public:
     int32 FigureStencil(int32 UnitId) const;
     /** Whether the silhouette post-process material is in the grade's blendables (it is optional; absent when the asset does not exist). */
     bool HasSilhouetteBlendable() const;
+    /**
+     * Test-only (#189): the tint last pushed to each of a combatant's figure parts (for a rigged figure, one per skin material slot) and to its
+     * footprint ring, as the materials hold it. False when the combatant has no figure. A ring-bank ring reports the bank's colour for its slot.
+     */
+    bool UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const;
+    /** Test-only (#189): the intensity (candelas) each spell bolt's point light was last set to, in bolt order (zero for an idle light or an arrow). */
+    TArray<float> BoltLightIntensities() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
@@ -454,6 +478,8 @@ private:
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
+    int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
     bool bSkeletalFigures = true;
 

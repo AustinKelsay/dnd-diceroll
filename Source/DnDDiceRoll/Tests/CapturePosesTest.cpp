@@ -46,6 +46,29 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("A hint shot carries a camera"), Hinted.Shots[0].bHasCamera && Hinted.Shots[0].Mode == ECaptureMode::Hint);
         }
     }
+    // An impact shot (#189) carries a camera, defaults to a hit held four frames, and can name a spell effect and its own frame count.
+    {
+        FCapturePoses Impacts;
+        TestTrue(TEXT("Impact shots parse"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"settleFrames\":30,\"shots\":[{\"name\":\"i\",\"mode\":\"impact\",\"yaw\":0,\"distance\":\"default\"},"
+            "{\"name\":\"j\",\"mode\":\"impact\",\"effect\":\"fire\",\"frames\":9,\"yaw\":90,\"distance\":1300},"
+            "{\"name\":\"k\",\"mode\":\"impact\",\"effect\":\"missile\",\"phase\":\"flight\",\"yaw\":0,\"distance\":\"default\"},"
+            "{\"name\":\"l\",\"mode\":\"impact\",\"effect\":\"missile\",\"phase\":\"landing-first\",\"yaw\":0,\"distance\":\"default\"},"
+            "{\"name\":\"n\",\"mode\":\"impact\",\"effect\":\"missile\",\"phase\":\"landing-second\",\"yaw\":0,\"distance\":\"default\"}]}"), Impacts, Error));
+        if (Impacts.Shots.Num() == 5)
+        {
+            TestEqual(TEXT("Impact mode"), Impacts.Shots[0].Mode, ECaptureMode::Impact);
+            TestTrue(TEXT("An impact shot carries a camera"), Impacts.Shots[0].bHasCamera);
+            TestEqual(TEXT("A hit is the default effect"), Impacts.Shots[0].Effect, EImpactPreview::Hit);
+            TestEqual(TEXT("Default impact frames"), Impacts.Shots[0].Frames, DefaultImpactFrames);
+            TestEqual(TEXT("A spell effect is named"), Impacts.Shots[1].Effect, EImpactPreview::Fire);
+            TestEqual(TEXT("Impact frames are read"), Impacts.Shots[1].Frames, 9);
+            TestEqual(TEXT("A bolt lands by default"), Impacts.Shots[1].Moment, EImpactMoment::Landing);
+            TestTrue(TEXT("A flight phase is read"), Impacts.Shots[2].Moment == EImpactMoment::Flight && Impacts.Shots[2].Effect == EImpactPreview::Missile);
+            TestEqual(TEXT("A first landing is read"), Impacts.Shots[3].Moment, EImpactMoment::FirstLanding);
+            TestEqual(TEXT("A second landing is read"), Impacts.Shots[4].Moment, EImpactMoment::SecondLanding);
+            TestEqual(TEXT("Mode name"), FString(ExpeditionCapture::ModeName(ECaptureMode::Impact)), FString(TEXT("impact")));
+        }
+    }
     // Capture runs bind no player input; only a real -ExpeditionCapture= value turns that on.
     TestTrue(TEXT("Capture is requested by a poses path"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionCapture=/tmp/poses.json -ExpeditionSaveRoot=/tmp/s")));
     TestFalse(TEXT("A normal run is not a capture run"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionSaveRoot=/tmp/s")));
@@ -81,6 +104,15 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"tooltip\",\"action\":\"jump\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"hint\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"hint\",\"hint\":\"tips\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"yaw\":0}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"effect\":\"burn\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":0,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":61,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"later\",\"effect\":\"spell\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"flight\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-first\",\"effect\":\"spell\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-second\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"settleFrames\":3,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":4,\"yaw\":0,\"distance\":1300}]}"),
     };
     for (const TCHAR* Text : Bad)
     {

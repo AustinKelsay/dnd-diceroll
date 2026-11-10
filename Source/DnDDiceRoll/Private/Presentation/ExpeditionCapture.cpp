@@ -14,6 +14,9 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
+#include "SceneView.h"
 #include "UnrealClient.h"
 #if WITH_EDITOR
 #include "AssetCompilingManager.h"
@@ -66,6 +69,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Overview: return TEXT("overview");
     case ECaptureMode::Tooltip: return TEXT("tooltip");
     case ECaptureMode::Hint: return TEXT("hint");
+    case ECaptureMode::Impact: return TEXT("impact");
     case ECaptureMode::Roll: return TEXT("roll");
     case ECaptureMode::Start: return TEXT("start");
     }
@@ -83,6 +87,30 @@ const TCHAR* ExpeditionCapture::ActionName(ECaptureAction Action)
     case ECaptureAction::Attack: return TEXT("attack");
     }
     return TEXT("attack");
+}
+
+const TCHAR* ExpeditionCapture::EffectName(EImpactPreview Effect)
+{
+    switch (Effect)
+    {
+    case EImpactPreview::Spell: return TEXT("spell");
+    case EImpactPreview::Fire: return TEXT("fire");
+    case EImpactPreview::Missile: return TEXT("missile");
+    case EImpactPreview::Hit: return TEXT("hit");
+    }
+    return TEXT("hit");
+}
+
+const TCHAR* ExpeditionCapture::PhaseName(EImpactMoment Moment)
+{
+    switch (Moment)
+    {
+    case EImpactMoment::Flight: return TEXT("flight");
+    case EImpactMoment::FirstLanding: return TEXT("landing-first");
+    case EImpactMoment::SecondLanding: return TEXT("landing-second");
+    case EImpactMoment::Landing: return TEXT("landing");
+    }
+    return TEXT("landing");
 }
 
 const TCHAR* ExpeditionCapture::HintName(ECaptureHint Hint)
@@ -137,8 +165,42 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         }
         else if (Mode == TEXT("tooltip")) { Shot.Mode = ECaptureMode::Tooltip; }
         else if (Mode == TEXT("hint")) { Shot.Mode = ECaptureMode::Hint; }
+        else if (Mode == TEXT("impact")) { Shot.Mode = ECaptureMode::Impact; }
         else if (Mode == TEXT("roll")) { Shot.Mode = ECaptureMode::Roll; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint)"), *Shot.Name, *Mode); return false; }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll)"), *Shot.Name, *Mode); return false; }
+        if (Shot.Mode == ECaptureMode::Impact)
+        {
+            if ((*Entry)->HasField(TEXT("effect")))
+            {
+                FString Effect;
+                if (!(*Entry)->TryGetStringField(TEXT("effect"), Effect)) { Effect = TEXT("?"); }
+                if (Effect == TEXT("hit")) { Shot.Effect = EImpactPreview::Hit; }
+                else if (Effect == TEXT("spell")) { Shot.Effect = EImpactPreview::Spell; }
+                else if (Effect == TEXT("fire")) { Shot.Effect = EImpactPreview::Fire; }
+                else if (Effect == TEXT("missile")) { Shot.Effect = EImpactPreview::Missile; }
+                else { Error = Shot.Name + TEXT(" needs an \"effect\" of \"hit\", \"spell\", \"fire\" or \"missile\""); return false; }
+            }
+            if ((*Entry)->HasField(TEXT("phase")))
+            {
+                FString Phase;
+                if (!(*Entry)->TryGetStringField(TEXT("phase"), Phase)) { Phase = TEXT("?"); }
+                if (Phase == TEXT("landing")) { Shot.Moment = EImpactMoment::Landing; }
+                else if (Phase == TEXT("flight")) { Shot.Moment = EImpactMoment::Flight; }
+                else if (Phase == TEXT("landing-first")) { Shot.Moment = EImpactMoment::FirstLanding; }
+                else if (Phase == TEXT("landing-second")) { Shot.Moment = EImpactMoment::SecondLanding; }
+                else { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\", \"flight\", \"landing-first\" or \"landing-second\""); return false; }
+                if (Shot.Moment != EImpactMoment::Landing && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" has a bolt phase but no bolt (\"effect\" spell, fire or missile)"); return false; }
+                if ((Shot.Moment == EImpactMoment::FirstLanding || Shot.Moment == EImpactMoment::SecondLanding) && Shot.Effect != EImpactPreview::Missile)
+                { Error = Shot.Name + TEXT(" lands a first or second bolt, which only \"effect\" missile has"); return false; }
+            }
+            if ((*Entry)->HasField(TEXT("frames")))
+            {
+                double Frames = 0.0;
+                if (!Number(*Entry, TEXT("frames"), Frames) || Frames != FMath::FloorToDouble(Frames) || Frames < 1.0 || Frames > MaxImpactFrames)
+                { Error = FString::Printf(TEXT("%s needs \"frames\" as a whole number from 1 to %d"), *Shot.Name, MaxImpactFrames); return false; }
+                Shot.Frames = static_cast<int32>(Frames);
+            }
+        }
         if (Shot.Mode == ECaptureMode::Hint)
         {
             FString Hint;
@@ -160,7 +222,7 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Action == TEXT("potion")) { Shot.Action = ECaptureAction::Potion; }
             else { Error = FString::Printf(TEXT("%s has unknown action \"%s\" (attack, special1, special2, rescue, potion)"), *Shot.Name, *Action); return false; }
         }
-        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Roll)
+        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Impact || Shot.Mode == ECaptureMode::Roll)
         {
             Shot.bHasCamera = true;
             double Yaw = 0.0;
@@ -174,6 +236,8 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Distance.IsValid() && Distance->Type == EJson::Number && Distance->TryGetNumber(Number) && Number >= MinDistance && Number <= MaxDistance) { Shot.Distance = static_cast<float>(Number); }
             else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\", \"far\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
         }
+        if (Shot.Mode == ECaptureMode::Impact && Shot.Frames > Out.SettleFrames)
+        { Error = FString::Printf(TEXT("%s has \"frames\" %d beyond settleFrames %d"), *Shot.Name, Shot.Frames, Out.SettleFrames); return false; }
         Out.Shots.Add(Shot);
     }
     return true;
@@ -243,6 +307,63 @@ bool FExpeditionCaptureDirector::Idle() const
     return !bBanner && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty();
 }
 
+bool FExpeditionCaptureDirector::ProjectBox(FVector2D Cell, float HeightCm, float HalfCm, FIntRect& Out) const
+{
+    const AExpeditionBattleView* Board = View.Get();
+    const AExpeditionPlayerController* Player = Controller.Get();
+    ULocalPlayer* Local = Player ? Player->GetLocalPlayer() : nullptr;
+    if (!Board || !Local || !Local->ViewportClient || !Local->ViewportClient->Viewport) { return false; }
+    FSceneViewProjectionData Data;
+    if (!Local->GetProjectionData(Local->ViewportClient->Viewport, Data)) { return false; }
+    const FMatrix ViewProjection = Data.ComputeViewProjectionMatrix();
+    const FIntRect ViewRect = Data.GetConstrainedViewRect();
+    const FBoardMetric& Metric = Board->Metric();
+    const FVector Centre = Board->BoardPosition(Cell, Metric.Scaled(HeightCm));
+    const float Half = Metric.Scaled(HalfCm);
+    FVector2D Low(TNumericLimits<double>::Max(), TNumericLimits<double>::Max());
+    FVector2D High(-TNumericLimits<double>::Max(), -TNumericLimits<double>::Max());
+    for (int32 Corner = 0; Corner < 8; ++Corner)
+    {
+        const FVector Point = Centre + FVector((Corner & 1) ? Half : -Half, (Corner & 2) ? Half : -Half, (Corner & 4) ? Half : -Half);
+        FVector2D Pixel;
+        if (!FSceneView::ProjectWorldToScreen(Board->GetActorTransform().TransformPosition(Point), ViewRect, ViewProjection, Pixel)) { return false; }
+        Low = FVector2D(FMath::Min(Low.X, Pixel.X), FMath::Min(Low.Y, Pixel.Y));
+        High = FVector2D(FMath::Max(High.X, Pixel.X), FMath::Max(High.Y, Pixel.Y));
+    }
+    Out = FIntRect(FMath::Max(ViewRect.Min.X, FMath::FloorToInt(Low.X)), FMath::Max(ViewRect.Min.Y, FMath::FloorToInt(Low.Y)),
+        FMath::Min(ViewRect.Max.X, FMath::CeilToInt(High.X)), FMath::Min(ViewRect.Max.Y, FMath::CeilToInt(High.Y)));
+    return Out.Width() > 0 && Out.Height() > 0;
+}
+
+bool FExpeditionCaptureDirector::ProjectFootprint(int32 UnitId, FIntRect& Out) const
+{
+    const AExpeditionBattleView* Board = View.Get();
+    const AExpeditionPlayerController* Player = Controller.Get();
+    ULocalPlayer* Local = Player ? Player->GetLocalPlayer() : nullptr;
+    if (!Board || !Local || !Local->ViewportClient || !Local->ViewportClient->Viewport) { return false; }
+    const FUnitDisplay* Unit = Board->Playback().Unit(UnitId);
+    FSceneViewProjectionData Data;
+    if (!Unit || !Local->GetProjectionData(Local->ViewportClient->Viewport, Data)) { return false; }
+    const FMatrix ViewProjection = Data.ComputeViewProjectionMatrix();
+    const FIntRect ViewRect = Data.GetConstrainedViewRect();
+    const FBoardMetric& Metric = Board->Metric();
+    const float Half = 0.5f * Metric.FootprintDiameter();
+    const FVector Feet = Board->BoardPosition(Unit->Position + Unit->Lean, 0.0f);
+    FVector2D Low(TNumericLimits<double>::Max(), TNumericLimits<double>::Max());
+    FVector2D High(-TNumericLimits<double>::Max(), -TNumericLimits<double>::Max());
+    for (int32 Corner = 0; Corner < 8; ++Corner)
+    {
+        const FVector Point = Feet + FVector((Corner & 1) ? Half : -Half, (Corner & 2) ? Half : -Half, (Corner & 4) ? Metric.FigureCm : 0.0f);
+        FVector2D Pixel;
+        if (!FSceneView::ProjectWorldToScreen(Board->GetActorTransform().TransformPosition(Point), ViewRect, ViewProjection, Pixel)) { return false; }
+        Low = FVector2D(FMath::Min(Low.X, Pixel.X), FMath::Min(Low.Y, Pixel.Y));
+        High = FVector2D(FMath::Max(High.X, Pixel.X), FMath::Max(High.Y, Pixel.Y));
+    }
+    Out = FIntRect(FMath::Max(ViewRect.Min.X, FMath::FloorToInt(Low.X)), FMath::Max(ViewRect.Min.Y, FMath::FloorToInt(Low.Y)),
+        FMath::Min(ViewRect.Max.X, FMath::CeilToInt(High.X)), FMath::Min(ViewRect.Max.Y, FMath::CeilToInt(High.Y)));
+    return Out.Width() > 0 && Out.Height() > 0;
+}
+
 void FExpeditionCaptureDirector::Fail(const FString& Message)
 {
     bFailed = true;
@@ -267,6 +388,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     if (!Board || !Player) { Skip = TEXT("view or controller is gone"); return false; }
     Player->PreviewAim(false);
     Player->ClearHintPreview();
+    Board->ClearImpactPreview();
     Board->ClearRollPreview();
     switch (Shot.Mode)
     {
@@ -274,6 +396,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Targeting:
     case ECaptureMode::Tooltip:
     case ECaptureMode::Hint:
+    case ECaptureMode::Impact:
     case ECaptureMode::Roll:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
@@ -281,6 +404,25 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? Board->FarFramedDistance(Shot.Yaw) : Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance(Shot.Yaw);
         Board->SnapCamera(Shot.Yaw, Wanted);
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
+        if (Shot.Mode == ECaptureMode::Impact)
+        {
+            // The struck unit is the standing opponent nearest to whoever holds the turn. The hit itself is fired later, a fixed number of frames before the screenshot (Tick).
+            const FCombatantState* Holder = Board->Rules().Find(Board->Rules().ActiveId());
+            if (!Holder) { Skip = TEXT("nobody holds the turn"); return false; }
+            const FCombatantState* Struck = nullptr;
+            int32 Nearest = MAX_int32;
+            for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
+            {
+                const int32 Distance = FMath::Abs(Unit.Cell.X - Holder->Cell.X) + FMath::Abs(Unit.Cell.Y - Holder->Cell.Y);
+                if (Unit.Side != Holder->Side && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
+            }
+            if (!Struck) { Skip = TEXT("no standing opponent to strike"); return false; }
+            Pending.TargetId = Struck->Id;
+            Pending.TargetName = Struck->Name;
+            Pending.TargetCell = Struck->Cell;
+            Pending.ImpactFrom = FVector2D(Holder->Cell.X, Holder->Cell.Y);
+            return true;
+        }
         if (Shot.Mode == ECaptureMode::Roll)
         {
             // The card an attack shows (#190): the acting hero against the nearest standing enemy, a d20 and a damage die landed, from
@@ -425,7 +567,17 @@ void FExpeditionCaptureDirector::Tick()
         return;
     }
     case EStage::Settling:
-        if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
+        if (Pending.Shot.Mode == ECaptureMode::Impact)
+        {
+            // The hit lands Frames frames before the screenshot, once the pose has settled; its flash is held at the peak from then on (#189).
+            if (!Pending.bImpactFired && StageFrames >= Poses.SettleFrames - Pending.Shot.Frames)
+            {
+                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment);
+                Pending.bImpactFired = true;
+            }
+            if (StageFrames < Poses.SettleFrames) { return; }
+        }
+        else if (StageFrames < Poses.SettleFrames || !Idle()) { if (StageFrames > Poses.SettleFrames + IdleTimeoutFrames) { Fail(TEXT("Playback never went idle while settling")); } return; }
 #if WITH_EDITOR
         // Shaders or textures still compiling would be captured as placeholders (a changed material needs new
         // shader permutations): finish them, then settle a few frames more so the shot uses the real ones.
@@ -449,6 +601,15 @@ void FExpeditionCaptureDirector::Tick()
             Pending.Location = Camera.GetLocation();
             Pending.Rotation = Camera.Rotator();
             Pending.Fov = Board->CameraFieldOfView();
+            if (Pending.Shot.Mode == ECaptureMode::Impact)
+            {
+                Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint);
+                if (Pending.Shot.Moment == EImpactMoment::Flight)
+                {
+                    // Half way along the path, at the bolt's height (about 55 plus the arc's 20 at the midpoint for a lobbed bolt).
+                    Pending.bHasBolt = ProjectBox(0.5f * (Pending.ImpactFrom + FVector2D(Pending.TargetCell.X, Pending.TargetCell.Y)), 75.0f, 45.0f, Pending.Bolt);
+                }
+            }
             FScreenshotRequest::RequestScreenshot(Path, true, false);
             Stage = EStage::Saving;
             StageFrames = 0;
@@ -497,6 +658,34 @@ void FExpeditionCaptureDirector::WriteManifest() const
         Shot->SetStringField(TEXT("mode"), ExpeditionCapture::ModeName(Result.Shot.Mode));
         if (Result.Shot.Mode == ECaptureMode::Tooltip) { Shot->SetStringField(TEXT("action"), ExpeditionCapture::ActionName(Result.Shot.Action)); }
         if (Result.Shot.Mode == ECaptureMode::Hint) { Shot->SetStringField(TEXT("hint"), ExpeditionCapture::HintName(Result.Shot.Hint)); }
+        if (Result.Shot.Mode == ECaptureMode::Impact && Result.Status != TEXT("skipped"))
+        {
+            Shot->SetStringField(TEXT("effect"), ExpeditionCapture::EffectName(Result.Shot.Effect));
+            Shot->SetNumberField(TEXT("frames"), Result.Shot.Frames);
+            Shot->SetStringField(TEXT("phase"), ExpeditionCapture::PhaseName(Result.Shot.Moment));
+            // The struck combatant and its footprint box in screenshot pixels, for tools/impact_flash.py (#189).
+            TSharedRef<FJsonObject> Target = MakeShared<FJsonObject>();
+            Target->SetNumberField(TEXT("id"), Result.TargetId);
+            Target->SetStringField(TEXT("name"), Result.TargetName);
+            Target->SetNumberField(TEXT("cellX"), Result.TargetCell.X);
+            Target->SetNumberField(TEXT("cellY"), Result.TargetCell.Y);
+            if (Result.bHasFootprint)
+            {
+                TSharedRef<FJsonObject> Box = MakeShared<FJsonObject>();
+                Box->SetNumberField(TEXT("x0"), Result.Footprint.Min.X); Box->SetNumberField(TEXT("y0"), Result.Footprint.Min.Y);
+                Box->SetNumberField(TEXT("x1"), Result.Footprint.Max.X); Box->SetNumberField(TEXT("y1"), Result.Footprint.Max.Y);
+                Target->SetObjectField(TEXT("footprint"), Box);
+            }
+            if (Result.bHasBolt)
+            {
+                // An in-flight shot's bolt box, measured with the target's (tools/impact_flash.py).
+                TSharedRef<FJsonObject> Bolt = MakeShared<FJsonObject>();
+                Bolt->SetNumberField(TEXT("x0"), Result.Bolt.Min.X); Bolt->SetNumberField(TEXT("y0"), Result.Bolt.Min.Y);
+                Bolt->SetNumberField(TEXT("x1"), Result.Bolt.Max.X); Bolt->SetNumberField(TEXT("y1"), Result.Bolt.Max.Y);
+                Target->SetObjectField(TEXT("bolt"), Bolt);
+            }
+            Shot->SetObjectField(TEXT("target"), Target);
+        }
         if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
         Shot->SetStringField(TEXT("status"), Result.Status);
         if (Result.Status == TEXT("skipped")) { Shot->SetStringField(TEXT("reason"), Result.Reason); }
