@@ -1,0 +1,18 @@
+[2026.11.10-03.10.11:291][204]LogAutomationController: Display: Test Started. Name={HintsEndTurnWhenNothingElseIsLeft} Path={Project.Expedition.Presentation.HintsEndTurnWhenNothingElseIsLeft}
+[2026.11.10-03.10.11:499][206]LogAutomationController: Display: Test Completed. Result={Success} Name={HintsEndTurnWhenNothingElseIsLeft} Path={Project.Expedition.Presentation.HintsEndTurnWhenNothingElseIsLeft}
+[2026.11.10-03.10.11:499][206]LogAutomationController: Display: Test Started. Name={HintsFitTheHud} Path={Project.Expedition.Presentation.HintsFitTheHud}
+[2026.11.10-03.10.11:620][209]LogAutomationController: Display: Test Completed. Result={Success} Name={HintsFitTheHud} Path={Project.Expedition.Presentation.HintsFitTheHud}
+[2026.11.10-03.10.11:624][209]LogAutomationController: Display: Test Started. Name={HintsFollowFirstRun} Path={Project.Expedition.Presentation.HintsFollowFirstRun}
+[2026.11.10-03.10.11:886][211]LogAutomationController: Display: Test Completed. Result={Success} Name={HintsFollowFirstRun} Path={Project.Expedition.Presentation.HintsFollowFirstRun}
+[2026.11.10-03.10.11:886][211]LogAutomationController: Display: Test Started. Name={HintsNeverLeakInput} Path={Project.Expedition.Presentation.HintsNeverLeakInput}
+[2026.11.10-03.10.11:981][213]LogAutomationController: Display: Test Completed. Result={Success} Name={HintsNeverLeakInput} Path={Project.Expedition.Presentation.HintsNeverLeakInput}
+[2026.11.10-03.10.11:982][213]LogAutomationController: Display: Test Started. Name={HintsSkipAndReplay} Path={Project.Expedition.Presentation.HintsSkipAndReplay}
+[2026.11.10-03.10.12:061][215]LogAutomationController: Display: Test Completed. Result={Success} Name={HintsSkipAndReplay} Path={Project.Expedition.Presentation.HintsSkipAndReplay}
+[2026.11.10-03.10.12:061][215]LogAutomationController: Display: Test Started. Name={HintsSkipThenNewRunGivesHintsAgain} Path={Project.Expedition.Presentation.HintsSkipThenNewRunGivesHintsAgain}
+[2026.11.10-03.10.12:316][217]LogAutomationController: Error: Test Completed. Result={Fail} Name={HintsSkipThenNewRunGivesHintsAgain} Path={Project.Expedition.Presentation.HintsSkipThenNewRunGivesHintsAgain}
+[2026.11.10-03.10.12:316][217]LogAutomationController: Error: Expected 'New Run resets the tips-off switch' to be false. [/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-6049143c-a04e09c4bbcad5da/Source/DnDDiceRoll/Tests/CombatHintsTest.cpp(651)]
+[2026.11.10-03.10.12:317][217]LogAutomationController: Display: Test Started. Name={HintsSpendingAPotionRaisesTheResourceHint} Path={Project.Expedition.Presentation.HintsSpendingAPotionRaisesTheResourceHint}
+[2026.11.10-03.10.12:402][220]LogAutomationController: Error: Test Completed. Result={Fail} Name={HintsSpendingAPotionRaisesTheResourceHint} Path={Project.Expedition.Presentation.HintsSpendingAPotionRaisesTheResourceHint}
+[2026.11.10-03.10.12:405][220]LogAutomationController: Display: Test Started. Name={HintsWordingFromFacts} Path={Project.Expedition.Presentation.HintsWordingFromFacts}
+[2026.11.10-03.10.12:427][223]LogAutomationController: Error: Test Completed. Result={Fail} Name={HintsWordingFromFacts} Path={Project.Expedition.Presentation.HintsWordingFromFacts}
+[2026.11.10-03.10.12:427][223]LogAutomationController: Error: Expected 'A New Run resets the tips-off switch with the shown flags' to be false. [/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-6049143c-a04e09c4bbcad5da/Source/DnDDiceRoll/Tests/CombatHintsTest.cpp(785)]
