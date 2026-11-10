@@ -379,8 +379,6 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
         View->DispatchBeginPlay();
         View->Resume();
         View->Tick(0.1f);
-        TArray<USceneComponent*> Components;
-        View->GetComponents(Components);
         int32 Corpses = 0;
         for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
         {
@@ -388,13 +386,11 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
             ++Corpses;
             const FVector Cell = View->CellPosition(Unit.Cell);
             bool bVisibleBody = false;
-            for (USceneComponent* Component : Components)
+            if (USceneComponent* RigRoot = View->UnitRigRoot(Unit.Id);
+                RigRoot && FVector2D(RigRoot->GetRelativeLocation()).Equals(FVector2D(Cell), 0.1f))
             {
-                // Unit rigs: primitive figures have many parts; themed figures have base, ring and mesh.
-                if (Component->GetAttachParent() != View->GetRootComponent() || Component->GetNumChildrenComponents() < 3 ||
-                    !FVector2D(Component->GetRelativeLocation()).Equals(FVector2D(Cell), 0.1f)) { continue; }
                 TArray<USceneComponent*> Children;
-                Component->GetChildrenComponents(true, Children);
+                RigRoot->GetChildrenComponents(true, Children);
                 for (USceneComponent* Child : Children)
                 {
                     const UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child);
@@ -402,6 +398,7 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
                 }
             }
             TestTrue(FString::Printf(TEXT("Occupied corpse cell for %s has a visible body above the board"), *Unit.Name), bVisibleBody);
+            TestEqual(FString::Printf(TEXT("The dead %s no longer draws a silhouette"), *Unit.Name), View->FigureStencil(Unit.Id), 0);
         }
         TestTrue(TEXT("Fixture contains slain enemies"), Corpses > 0);
     }

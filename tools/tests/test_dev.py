@@ -1,6 +1,8 @@
+import argparse
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -12,7 +14,8 @@ from workspace import Workspace, automation_result, entered_world, log_events, p
 from mcp_client import MCP, decode_response
 from scaffold import new_class
 import dev as dev_module
-from dev import Dev, build_warnings, core_count
+import struct
+from dev import Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
 
 
 class Response(io.BytesIO):
@@ -241,10 +244,12 @@ class WorkspaceTests(unittest.TestCase):
                     dev.verify_skills()
         self.assertEqual(len(list(self.w.local.glob("skills/*/verified.json"))), 1)
 
-    def fake_automation(self, log_text, code=0, rewrite_config=False):
+    def fake_automation(self, log_text, code=0, rewrite_config=False, crash=None, state="Success"):
         def run(args, log, timeout):
             output = Path(next(str(a).split("=", 1)[1] for a in args if str(a).startswith("-ReportExportPath=")))
-            (output / "index.json").write_text(json.dumps({"tests":[{"state":"Success"}]}), encoding="utf-8-sig")
+            (output / "index.json").write_text(json.dumps({"tests":[{"state":state, "fullTestPath":"Project.A"}]}), encoding="utf-8-sig")
+            if crash:
+                (self.root / "Saved/Crashes" / crash).mkdir(parents=True)
             (output / "automation.log").write_text(log_text)
             if rewrite_config:
                 with (self.root / "Config/DefaultEngine.ini").open("a") as ini: ini.write("[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]\n")
@@ -281,6 +286,23 @@ class WorkspaceTests(unittest.TestCase):
         dev = Dev(self.w, host="linux")
         with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("LogTemp: Warning: something\n")):
             dev.test("Project.", allow_warnings=True)
+
+    def test_automation_reports_a_failed_lifecycle_even_when_tests_fail(self):
+        """#157: a crash at shutdown is a failed lifecycle, and is never hidden behind test results."""
+        self.w.local.mkdir()
+        cases = (({"log_text": "", "crash": "crashinfo-A"}, "Tests passed but the run is a failed lifecycle: new crash report.*crashinfo-A"),
+                 ({"log_text": "", "code": -11, "state": "Fail", "crash": "crashinfo-B"}, "did not pass.*Failed lifecycle: Engine was killed by signal 11; new crash report.*crashinfo-B"),
+                 ({"log_text": "", "code": -6}, "failed lifecycle: Engine was killed by signal 6"))
+        for kwargs, message in cases:
+            dev = Dev(self.w, host="linux")
+            with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation(**kwargs)):
+                with self.assertRaisesRegex(RuntimeError, message): dev.test("Project.")
+        self.assertFalse(list(self.w.local.glob("automation/*/verified.json")))
+        # A crash report left by an earlier run is not this run's crash.
+        dev = Dev(self.w, host="linux")
+        with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_bounded", side_effect=self.fake_automation("")):
+            dev.test("Project.")
+        self.assertEqual(len(list(self.w.local.glob("automation/*/verified.json"))), 1)
 
     def test_linux_layout_and_unsupported_host(self):
         dev = Dev(self.w, host="linux")
@@ -343,6 +365,204 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(report["failure"], "start timed out")
         self.assertEqual(report["pie_state"], "unknown")
         self.assertFalse((self.w.local / "smoke-result.json").exists())
+
+
+def fake_png(width, height):
+    return b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">II", width, height) + b"\x08\x06\x00\x00\x00"
+
+
+class GalleryTests(unittest.TestCase):
+    setUp = WorkspaceTests.setUp  # Same throwaway workspace.
+
+    SHOTS = [{"name": "battle-a", "mode": "battle", "yaw": -90, "distance": "default"},
+             {"name": "table", "mode": "overview"}, {"name": "menu", "mode": "start"}]
+
+    def poses(self, shots=None, name="poses.json", **extra):
+        path = self.root / name
+        path.write_text(json.dumps({"version": 1, "shots": self.SHOTS if shots is None else shots, **extra}))
+        return path
+
+    def fixture(self, name="board-a"):
+        folder = self.root / "Saved/CaptureFixtures" / name
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "current-v1.json").write_text("{}")
+        (folder / "fixture.json").write_text('{"seed": 7}')
+
+    def ready(self):
+        dev = Dev(self.w, host="linux", cores=2)
+        self.w.local.mkdir(exist_ok=True)
+        identity = {"fake": "identity"}
+        (self.w.local / "build.json").write_text(json.dumps(identity))
+        patches = [patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "build_identity", return_value=identity),
+                   patch.object(dev, "execute", return_value=Mock(stdout="abc123\n"))]
+        for item in patches:
+            item.start()
+            self.addCleanup(item.stop)
+        return dev
+
+    @staticmethod
+    def write_run(args, skip=(), size=None, status="ok"):
+        out = Path(next(a for a in args if str(a).startswith("-ExpeditionCaptureOut=")).split("=", 1)[1])
+        width = int(next(a for a in args if str(a).startswith("-ResX=")).split("=")[1])
+        height = int(next(a for a in args if str(a).startswith("-ResY=")).split("=")[1])
+        shots = []
+        for shot in GalleryTests.SHOTS:
+            if shot["name"] in skip:
+                shots.append({"name": shot["name"], "status": "skipped", "reason": "not here"})
+                continue
+            (out / f"{shot['name']}.png").write_bytes(fake_png(*(size or (width, height))))
+            shots.append({"name": shot["name"], "status": "captured", "file": f"{shot['name']}.png", "camera": {}})
+        (out / "manifest.json").write_text(json.dumps({"status": status, "seed": 7, "boardWidth": 16, "boardHeight": 11, "themed": True, "shots": shots}))
+        return 0
+
+    def test_resolution_parsing(self):
+        self.assertEqual(parse_resolution("1920x1080"), (1920, 1080))
+        for bad in ("1920", "1920X1080", "0x0", "100x100", "9000x9000", "1920x1080x2", "-1920x1080", "axb"):
+            with self.assertRaises(ValueError, msg=bad): parse_resolution(bad)
+        with self.assertRaises(argparse.ArgumentTypeError): resolution_argument("big")
+
+    def test_poses_validation(self):
+        self.assertEqual(len(load_poses(self.poses())), 3)
+        self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 41)
+        self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
+                                                    {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
+                                                    {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
+                                                    {"name": "first", "mode": "impact", "effect": "missile", "phase": "landing-first", "yaw": 0, "distance": "default"},
+                                                    {"name": "second", "mode": "impact", "effect": "missile", "phase": "landing-second", "yaw": 0, "distance": "default"}]))), 5)
+        bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
+               {"version": 1, "shots": ["x"]}, {"version": 1, "shots": [{"mode": "start"}]}, {"version": 1, "shots": [{"name": "a b", "mode": "start"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "orbit"}]}, {"version": 1, "shots": [{"name": "a", "mode": "battle", "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": 100}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": "near"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 0, "distance": "Far"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "yaw": 500, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "start"}, {"name": "a", "mode": "start"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "tooltip", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "tooltip", "action": "jump", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "hint", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "tips", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "move", "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "start", "build": "Wizard"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "later", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-first", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-second", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "settleFrames": 3, "shots": [{"name": "a", "mode": "impact", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "yaw": 0}]},
+               {"version": 1, "settleFrames": 0, "shots": self.SHOTS}]
+        for data in bad:
+            path = self.root / "bad.json"
+            path.write_text(json.dumps(data))
+            with self.assertRaises(ValueError, msg=str(data)): load_poses(path)
+        (self.root / "bad.json").write_text("not json")
+        with self.assertRaises(ValueError): load_poses(self.root / "bad.json")
+        with self.assertRaises(ValueError): load_poses(self.root / "missing.json")
+
+    def test_gallery_refusals_name_the_remedy(self):
+        dev = self.ready()
+        poses = self.poses()
+        with self.assertRaisesRegex(RuntimeError, "Fixture board-a is missing.*CaptureFixtures"): dev.gallery(["board-a"], ["1280x720"], poses=poses)
+        self.fixture()
+        with self.assertRaisesRegex(ValueError, "Resolution"): dev.gallery(["board-a"], ["wide"], poses=poses)
+        with self.assertRaisesRegex(ValueError, "Fixture"): dev.gallery(["../board"], ["1280x720"], poses=poses)
+        with self.assertRaisesRegex(ValueError, "Poses"): dev.gallery(["board-a"], ["1280x720"], poses=self.poses(shots=[], name="empty.json"))
+        with self.assertRaisesRegex(ValueError, "timeout"): dev.gallery(["board-a"], ["1280x720"], poses=poses, timeout=5)
+        (self.w.local / "build.json").write_text('{"stale": true}')
+        with self.assertRaisesRegex(RuntimeError, "Build evidence"): dev.gallery(["board-a"], ["1280x720"], poses=poses)
+
+    def test_gallery_refuses_while_the_editor_is_open(self):
+        self.fixture()
+        dev = Dev(self.w, host="linux")
+        with patch.object(dev, "require_engine"), patch.object(dev, "processes", return_value=[{"pid": 5}]), patch.object(dev, "run_game") as run:
+            with self.assertRaisesRegex(RuntimeError, "open in editor PID"): dev.gallery(["board-a"], ["1280x720"], poses=self.poses())
+            run.assert_not_called()
+
+    def test_gallery_runs_each_fixture_on_a_copy_and_writes_an_index(self):
+        dev = self.ready()
+        self.fixture()
+        self.fixture("board-b")
+        calls = []
+        def run(args, log, timeout):
+            calls.append([str(a) for a in args])
+            return self.write_run(args, skip=("table",))
+        with patch.object(dev, "run_game", side_effect=run):
+            dev.gallery(["board-a", "board-b"], ["1280x720", "1920x1080"], primitives=True, poses=self.poses())
+        self.assertEqual(len(calls), 4)
+        first = calls[0]
+        self.assertIn("-game", first)
+        self.assertIn("-RenderOffscreen", first)
+        self.assertIn("-ForceRes", first)
+        self.assertIn("-ResX=1280", first)
+        self.assertIn("-ExpeditionPrimitives", first)
+        self.assertIn("-corelimit=2", first)
+        save = next(a for a in first if a.startswith("-ExpeditionSaveRoot=")).split("=", 1)[1]
+        self.assertTrue(save.startswith(str(self.w.local / "gallery")))
+        self.assertNotIn("Saved/CaptureFixtures", save)
+        index = json.loads(next((self.w.local / "gallery").glob("*/index.json")).read_text())
+        self.assertEqual(index["commit"], "abc123")
+        self.assertEqual([r["resolution"] for r in index["runs"]], ["1280x720", "1920x1080", "1280x720", "1920x1080"])
+        self.assertTrue(all(r["primitives"] and r["seed"] == 7 for r in index["runs"]))
+        self.assertEqual(sum(s["status"] == "skipped" for s in index["runs"][0]["shots"]), 1)
+        self.assertEqual((self.root / "Saved/CaptureFixtures/board-a/current-v1.json").read_text(), "{}")
+
+    def test_gallery_fails_on_bad_game_output(self):
+        self.fixture()
+        poses = self.poses()
+        for label, kwargs, code, message in (("exit code", {}, 3, "exited 3"), ("size", {"size": (640, 360)}, 0, "640x360, not the requested 1280x720"),
+                                             ("game failure", {"status": "failed"}, 0, "Capture failed"), ("all skipped", {"skip": ("battle-a", "table", "menu")}, 0, "Every shot was skipped")):
+            dev = self.ready()
+            def run(args, log, timeout, kwargs=kwargs, code=code):
+                self.write_run(args, **kwargs)
+                return code
+            with patch.object(dev, "run_game", side_effect=run), self.assertRaisesRegex(RuntimeError, message, msg=label):
+                dev.gallery(["board-a"], ["1280x720"], poses=poses)
+
+    def test_gallery_fails_when_a_game_run_leaves_a_crash_report(self):
+        self.fixture()
+        dev = self.ready()
+        def run(args, log, timeout):
+            self.write_run(args)
+            (self.root / "Saved/Crashes/crashinfo-Game").mkdir(parents=True)
+            return 0
+        with patch.object(dev, "run_game", side_effect=run), self.assertRaisesRegex(RuntimeError, "Failed lifecycle for board-a at 1280x720: new crash report.*crashinfo-Game"):
+            dev.gallery(["board-a"], ["1280x720"], poses=self.poses())
+
+    def test_verify_capture_requires_every_shot_and_nonempty_pictures(self):
+        out = self.root / "out"
+        out.mkdir()
+        manifest = out / "manifest.json"
+        with self.assertRaisesRegex(RuntimeError, "no manifest"): verify_capture(manifest, self.SHOTS, (1280, 720), out)
+        manifest.write_text(json.dumps({"status": "ok", "shots": [{"name": "battle-a", "status": "captured", "file": "battle-a.png", "camera": {}}]}))
+        with self.assertRaisesRegex(RuntimeError, "lacks shot"): verify_capture(manifest, self.SHOTS, (1280, 720), out)
+        manifest.write_text(json.dumps({"status": "ok", "shots": [{"name": s["name"], "status": "captured", "file": s["name"] + ".png", "camera": {}} for s in self.SHOTS]}))
+        with self.assertRaisesRegex(RuntimeError, "no picture"): verify_capture(manifest, self.SHOTS, (1280, 720), out)
+        for shot in self.SHOTS: (out / (shot["name"] + ".png")).write_bytes(b"")
+        with self.assertRaisesRegex(RuntimeError, "no picture"): verify_capture(manifest, self.SHOTS, (1280, 720), out)
+        (out / "battle-a.png").write_bytes(b"not a png at all, but long enough to read")
+        with self.assertRaisesRegex(ValueError, "not a PNG"): verify_capture(manifest, self.SHOTS, (1280, 720), out)
+
+    def test_game_run_gets_one_sigterm_on_timeout_and_is_never_killed(self):
+        dev = Dev(self.w, host="linux")
+        process = Mock(pid=77)
+        process.wait.side_effect = [subprocess.TimeoutExpired("game", 1), subprocess.TimeoutExpired("game", 30)]
+        with patch.object(dev_module.subprocess, "Popen", return_value=process):
+            with self.assertRaisesRegex(RuntimeError, "ignored one SIGTERM; left running"): dev.run_game(["/bin/game"], self.root / "game.log", 1)
+        process.terminate.assert_called_once()
+        process.kill.assert_not_called()
+        process.wait.side_effect = [subprocess.TimeoutExpired("game", 1), 0]
+        with patch.object(dev_module.subprocess, "Popen", return_value=process):
+            with self.assertRaisesRegex(RuntimeError, "timed out after 1s"): dev.run_game(["/bin/game"], self.root / "game.log", 1)
+
+    def test_gallery_takes_cores_and_the_operation_lock_like_other_commands(self):
+        self.assertIn("gallery", dev_module.CORE_COMMANDS)
+        source = Path(dev_module.__file__).read_text()
+        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)', source)
 
 
 class EvidenceTests(unittest.TestCase):

@@ -1,10 +1,19 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Combat/ActionFacts.h"
+#include "Presentation/ExpeditionCapture.h"
+#include "Presentation/CameraRig.h"
+#include "Presentation/ExpeditionAutoplay.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Misc/CommandLine.h"
+#include "GameFramework/InputSettings.h"
+#include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
+#include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
 
 void AExpeditionPlayerController::BeginPlay()
@@ -14,6 +23,21 @@ void AExpeditionPlayerController::BeginPlay()
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
+    Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
+    // Autoplay plays real commands, so it never runs together with a capture (which only looks).
+    if (!Capture.IsValid()) { Autoplay = FExpeditionAutoplayDirector::TryCreate(this, BattleView); }
+    if (Capture.IsValid())
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        // No console either: typed commands could change rendering between shots.
+        if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport()) { Viewport->ViewportConsole = nullptr; }
+        // The viewport handles F11 and Alt+Enter before any player input; switch both off for this
+        // process only (in memory, never saved to config) so a shot cannot change window mode.
+        UInputSettings* Settings = GetMutableDefault<UInputSettings>();
+        Settings->bF11TogglesFullscreen = false;
+        Settings->bAltEnterTogglesFullscreen = false;
+    }
     bShowMouseCursor = true;
     FInputModeGameOnly Mode;
     Mode.SetConsumeCaptureMouseDown(false);
@@ -28,11 +52,21 @@ void AExpeditionPlayerController::BeginPlay()
 void AExpeditionPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
+    // A capture run only looks: with no bindings, no key or click can submit a command or save,
+    // and the engine's debug shortcuts (F1 wireframe, F2 unlit, ...) cannot change later shots.
+    if (ExpeditionCapture::Requested(FCommandLine::Get()))
+    {
+        bCapturing = true;
+        if (PlayerInput) { PlayerInput->DebugExecBindings.Reset(); }
+        return;
+    }
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
+    InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Released, this, &AExpeditionPlayerController::EndPan);
     Bind(EKeys::SpaceBar, &AExpeditionPlayerController::EndTurn);
     Bind(EKeys::Q, &AExpeditionPlayerController::RotateLeft);
     Bind(EKeys::E, &AExpeditionPlayerController::RotateRight);
@@ -47,7 +81,16 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Left, &AExpeditionPlayerController::CursorLeft);
     Bind(EKeys::Right, &AExpeditionPlayerController::CursorRight);
     Bind(EKeys::G, &AExpeditionPlayerController::Preset);
-    Bind(EKeys::A, &AExpeditionPlayerController::AttackMode);
+    // Hold Alt for the faint full grid (#142). Not a letter: Shift+W/A/S/D pan the camera, and Shift-Tab moves menu focus.
+    // Alt only sets a flag, so Alt+Enter still reaches the viewport's fullscreen toggle and no button reads Alt.
+    for (const FKey& Key : {EKeys::LeftAlt, EKeys::RightAlt})
+    {
+        InputComponent->BindKey(Key, IE_Pressed, this, &AExpeditionPlayerController::GridDown);
+        InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
+    }
+    Bind(EKeys::A, &AExpeditionPlayerController::AttackKey);
+    // D puts a visible hint away (#158). Not a gameplay key: Shift+D pans the camera, and that stays the camera's.
+    Bind(EKeys::D, &AExpeditionPlayerController::DismissHintKey);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
     Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
@@ -70,6 +113,8 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::T, &AExpeditionPlayerController::Speed);
     // Not F1: development builds reserve F1-F4 for engine view modes (F1 is wireframe).
     Bind(EKeys::Slash, &AExpeditionPlayerController::ToggleHelp);
+    // Menu (#146): I is free of every other binding. Esc closes it; every item keeps its own hotkey.
+    Bind(EKeys::I, &AExpeditionPlayerController::ToggleMenu);
     Bind(EKeys::Escape, &AExpeditionPlayerController::CloseOverlays);
     // Return to menu (#132). Not Esc: Esc closes what is open and must never leave a run.
     Bind(EKeys::BackSpace, &AExpeditionPlayerController::RequestReturnToMenu);
@@ -83,8 +128,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (LastRevision != BattleView->PresentationRevision())
     {
         LastRevision = BattleView->PresentationRevision(); LastActiveId = INDEX_NONE;
-        SelectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack;
-        SelectPartyIndex(0); GridCursor = {1, 1};
+        SelectedId = INDEX_NONE; InspectedId = INDEX_NONE; bKeyboardCursor = false; SelectedAction = ECombatCommandType::Attack; bModeTip = false;
+        SelectPartyIndex(0, false); GridCursor = {1, 1};
     }
     ResolvePendingReturn();
     const int32 ActiveId = Rules.ActiveId();
@@ -93,7 +138,9 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         const FCombatantState* Active = Rules.Find(ActiveId);
         if (Active && Active->Side == ECombatSide::Party) { SelectedId = ActiveId; GridCursor = Active->Cell; }
         LastActiveId = ActiveId;
+        InspectedId = INDEX_NONE;
         SelectedAction = ECombatCommandType::Attack;
+        bModeTip = false;
     }
     // Loot goes to a living survivor; keep the selection on one.
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward)
@@ -105,22 +152,58 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
             { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { SelectedId = Unit.Id; break; } }
         }
     }
+    ObserveHints();
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
+    // Pointer motion hands the board back from the keyboard cursor, so the pointed cell is previewed before a click can act on it (#171).
+    if (bHasMouse)
+    {
+        const FVector2D Pointer(MouseX, MouseY);
+        if (!bPointerSeen) { bPointerSeen = true; PointerAnchor = Pointer; }
+        else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
+    }
+    else { bPointerSeen = false; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
         DragX = MouseX;
     }
+    if (bPanning && bHasMouse)
+    {
+        // Drag the board under the pointer: about the visible width per screen width, in reference cm per pixel.
+        const float PerPixel = BattleView->CameraDistance() * 0.0005f;
+        BattleView->Pan(-(MouseX - PanX) * PerPixel, (MouseY - PanY) * PerPixel);
+        PanX = MouseX; PanY = MouseY;
+    }
+    // Shift + W/A/S/D pans the focus (plain A is the attack mode); the view clamps it to the board.
+    if (AllowsGameplayInput() && (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)))
+    {
+        const float Step = BattleView->CameraDistance() * 0.6f * DeltaTime;
+        const float Right = (IsInputKeyDown(EKeys::D) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::A) ? 1.0f : 0.0f);
+        const float Away = (IsInputKeyDown(EKeys::W) ? 1.0f : 0.0f) - (IsInputKeyDown(EKeys::S) ? 1.0f : 0.0f);
+        if (Right != 0.0f || Away != 0.0f) { BattleView->Pan(Right * Step, Away * Step); }
+    }
 
     FBoardHighlights Highlights;
     Highlights.SelectedId = SelectedId;
+    // The full grid is presentation only; an open overlay owns the screen, so it hides the grid too.
+    Highlights.bFullGrid = (bGridHeld || bGridPreview) && !OverlayOpen();
     HoverUnitId = HoverTargetId = INDEX_NONE;
     Path.Reset();
-    FIntPoint Hover;
+    FIntPoint Hover = FIntPoint::ZeroValue;
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
     const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);
+    // A click acts only on what this frame shows under the pointer, and only while targeting is visible: during playback,
+    // an enemy turn or an overlay no target is drawn, so nothing there may be committed unseen.
+    bPointerPreviewed = bHover && !bKeyboardCursor && ShowsTargeting();
+    PointerPreview = Hover;
+    PreviewStamp = TargetingStamp();
+    bPreviewPoseValid = ProjectionPose(PreviewPose);
+    // The same for the keyboard cursor: Enter acts only on a cell the last frame drew marked while targeting was visible.
+    bKeyboardPreviewed = bKeyboardCursor && ShowsTargeting();
+    KeyboardPreview = GridCursor;
+    KeyboardStamp = PreviewStamp;
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -129,24 +212,249 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         { if (Unit.Cell == Hover && !(Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { HoverUnitId = Unit.Id; } }
     }
     const int32 ActorId = Actor();
-    if (BattleView->InCombat() && !BattleView->IsPresenting() && ActorId == ActiveId)
+    ReachCells = FActionReach();
+    if (ShowsTargeting())
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
+        // Reach describes an action the hero can still take: once the Action, the Bonus action or a resource it costs is spent, the
+        // contour would suggest otherwise (#171). Out of range, no target or no sight keep it, since the outline is what explains those.
+        const FActionFacts Facts = FActionFactsQuery::For(Rules, ActorId, SelectedAction);
+        if (!Facts.Blocks(EActionBlocker::ActionSpent) && !Facts.Blocks(EActionBlocker::BonusSpent) && !Facts.Blocks(EActionBlocker::ResourceShort))
+        {
+            ReachCells = Rules.ActionReach(ActorId, SelectedAction);
+            Highlights.Reach = ReachCells;
+        }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
+        if (const FCombatantState* Actor = Rules.Find(ActorId)) { Highlights.bHasOrigin = true; Highlights.Origin = Actor->Cell; }
         if (bHover)
         {
             if (Highlights.Moves.Contains(Hover)) { Path = Rules.PathTo(ActorId, Hover); Highlights.Path = Path; }
             if (Highlights.Targets.Contains(HoverUnitId)) { HoverTargetId = HoverUnitId; Highlights.HoverTargetId = HoverUnitId; }
         }
+        // Area victims: the same forecast the HUD labels, so the board frames exactly the labelled units.
+        for (const FTargetEffect& Effect : Rules.Forecast(ActorId, SelectedAction, HoverTargetId).Effects)
+        { if (Effect.Effect == EAbilityEffect::Strike) { Highlights.Victims.AddUnique(Effect.TargetId); } }
     }
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
+    if (Capture.IsValid()) { Capture->Tick(); }
+    if (Autoplay.IsValid()) { Autoplay->Tick(); }
+}
+
+FHintObservation AExpeditionPlayerController::BuildHintObservation(const FCombatBattle& Rules, int32 ActorId) const
+{
+    FHintObservation Now;
+    // The hints read the same facts the dock draws: a resource cue, and whether anything but End Turn is available.
+    Now.bOnlyEndTurn = true;
+    for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Rules, ActorId))
+    {
+        const FActionFacts Facts = FActionFactsQuery::For(Rules, ActorId, Command);
+        if (Command != ECombatCommandType::EndTurn && Facts.bAvailable) { Now.bOnlyEndTurn = false; }
+        for (const FActionResourceCost& Cost : Facts.Resources)
+        {
+            // Potion bottles have a pack cap, not a starting count: only running short is a cue for them.
+            const bool bSpent = Cost.Resource != EActionResource::Potion && Cost.Cap > 0 && Cost.Held < Cost.Cap;
+            if (!Now.bResourceCue && (bSpent || Cost.Held < Cost.Amount)) { Now.bResourceCue = true; Now.Resource = Cost; }
+        }
+    }
+    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Downed || Unit.RescueTurnsLeft <= 0) { continue; }
+        if (!Now.bDowned || Unit.RescueTurnsLeft < Now.RescueTurnsLeft) { Now.bDowned = true; Now.DownedName = Unit.Name; Now.RescueTurnsLeft = Unit.RescueTurnsLeft; }
+    }
+    return Now;
+}
+
+void AExpeditionPlayerController::TrackHintSpending(const FCombatBattle& Rules)
+{
+    // Successive snapshots: any resource a party member holds less of than a moment ago was spent, a Potion included.
+    TMap<int32, int32> Next;
+    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side != ECombatSide::Party) { continue; }
+        for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Rules, Unit.Id))
+        {
+            for (const FActionResourceCost& Cost : FActionFactsQuery::For(Rules, Unit.Id, Command).Resources)
+            {
+                const int32 Key = Unit.Id * 8 + int32(Cost.Resource);
+                if (const int32* Before = HintHeld.Find(Key); Before && *Before > Cost.Held) { bHintSpentSeen = true; HintSpent = Cost; }
+                Next.Add(Key, Cost.Held);
+            }
+        }
+    }
+    HintHeld = MoveTemp(Next);
+}
+
+void AExpeditionPlayerController::ObserveHints()
+{
+    FHintObservation Now;
+    const bool bAtRest = IsValid(BattleView) && ShowsTargeting() && !ShowingMenu();
+    if (IsValid(BattleView) && BattleView->InCombat())
+    {
+        const FCombatBattle& Rules = BattleView->Rules();
+        const int32 ActorId = Actor();
+        // The facts depend only on the combat state, so they are rebuilt when it changes, not every frame.
+        if (!bHintFactsValid || HintActor != ActorId || !FCombatSnapshot::StaticStruct()->CompareScriptStruct(&HintSnapshot, &Rules.Snapshot(), 0))
+        {
+            HintFacts = BuildHintObservation(Rules, ActorId);
+            TrackHintSpending(Rules);
+            HintSnapshot = Rules.Snapshot();
+            HintActor = ActorId;
+            bHintFactsValid = true;
+        }
+        Now = HintFacts;
+        if (bHintSpentSeen && !Now.bResourceCue) { Now.bResourceCue = true; Now.Resource = HintSpent; }
+    }
+    Now.bAtRest = bAtRest;
+    HintState.Observe(Now);
+}
+
+ECombatHint AExpeditionPlayerController::VisibleHint() const
+{
+    // Re-checked here: the state was observed at the start of the frame, and a key or click may land after an overlay opened.
+    // The roll card owns the left margin the hint sits in until it has gone: the hint waits, and its keys do nothing meanwhile (#190).
+    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() && !BattleView->RollCardUp() ? HintState.Visible() : ECombatHint::Count;
+}
+
+bool AExpeditionPlayerController::PreviewHint(ECombatHint Hint, FString& Why)
+{
+    if (!IsValid(BattleView) || !ShowsTargeting()) { Why = TEXT("the party does not have a turn at rest"); return false; }
+    FHintObservation Now = BuildHintObservation(BattleView->Rules(), Actor());
+    Now.bAtRest = true;
+    if (!HintState.Show(Hint, Now))
+    {
+        switch (Hint)
+        {
+        case ECombatHint::ScarceResources: Why = TEXT("no resource is spent or short"); break;
+        case ECombatHint::DownedRescue: Why = TEXT("no party member is Downed"); break;
+        case ECombatHint::EndingTurn: Why = TEXT("the active hero still has an action besides End Turn"); break;
+        case ECombatHint::MoveSelectConfirm: case ECombatHint::Count: Why = TEXT("the hint does not apply"); break;
+        }
+        return false;
+    }
+    bHintFactsValid = false;
+    return true;
+}
+
+void AExpeditionPlayerController::DismissHintKey()
+{
+    // Shift+D pans the camera; a plain D is only ever the hint's key.
+    if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
+    DismissHint();
+}
+void AExpeditionPlayerController::DismissHint()
+{
+    if (VisibleHint() == ECombatHint::Count) { return; }
+    HintState.Dismiss();
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::SkipHints()
+{
+    if (VisibleHint() == ECombatHint::Count) { return; }
+    HintState.SkipTips();
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::ReplayHints()
+{
+    // Only Help's button reaches this; it re-arms the hints and closes Help. No game state changes.
+    if (!bShowHelp) { return; }
+    HintState.Replay();
+    bHintFactsValid = false;
+    bShowHelp = false;
+    RestoreOverlayFocus();
+    if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
+}
+
+bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
+{
+    if (bCapturing) { return false; }
+    if (bSimulatedPointer) { X = SimulatedPointer.X; Y = SimulatedPointer.Y; return true; }
+    return GetMousePosition(X, Y);
+}
+
+bool AExpeditionPlayerController::ProjectionPose(FTransform& Pose) const
+{
+    if (PlayerCameraManager) { const FMinimalViewInfo& View = PlayerCameraManager->GetCameraCacheView(); Pose = FTransform(View.Rotation, View.Location); return true; }
+    if (!IsValid(BattleView)) { return false; }
+    Pose = BattleView->CameraTransform();
+    return true;
+}
+
+void AExpeditionPlayerController::SimulatePointerThroughCamera(FVector2D ViewportPosition, FIntPoint ViewportSize)
+{
+    bSimulatedPointer = true; bSimulatedCamera = true;
+    SimulatedPointer = ViewportPosition; SimulatedViewport = ViewportSize;
+}
+
+void AExpeditionPlayerController::SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell)
+{
+    bSimulatedPointer = true; bSimulatedCamera = false;
+    SimulatedPointer = ViewportPosition;
+    SimulatedCell = Cell;
+}
+
+uint32 AExpeditionPlayerController::TargetingStamp() const
+{
+    // Everything a previewed target depends on: the mode, who acts and the whole battle state. A change of any of it voids the preview.
+    uint32 Stamp = HashCombine(GetTypeHash(int32(SelectedAction)), GetTypeHash(Actor()));
+    if (!IsValid(BattleView)) { return Stamp; }
+    const FCombatSnapshot& Snapshot = BattleView->Rules().Snapshot();
+    Stamp = HashCombine(Stamp, GetTypeHash(BattleView->PresentationRevision()));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.RandomState));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.TurnIndex));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.Round));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.MovementLeft));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(Snapshot.bActionAvailable) | uint32(Snapshot.bBonusActionAvailable) << 1));
+    for (const FCombatantState& Unit : Snapshot.Encounter.Combatants)
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Id));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Cell));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.HP));
+        Stamp = HashCombine(Stamp, GetTypeHash(int32(Unit.Life)));
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PreviewedPointerCell(FIntPoint& Cell) const
+{
+    if (!bPointerPreviewed || !ShowsTargeting() || PreviewStamp != TargetingStamp()) { return false; }
+    Cell = PointerPreview; return true;
+}
+
+bool AExpeditionPlayerController::KeyboardPreviewValid() const
+{
+    return bKeyboardCursor && bKeyboardPreviewed && ShowsTargeting() && KeyboardPreview == GridCursor && KeyboardStamp == TargetingStamp();
+}
+
+void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
+{
+    SelectedAction = ECombatCommandType::Attack;
+    bModeTip = false;
+    bKeyboardCursor = bAim;
+    if (bAim) { GridCursor = Cell; }
+}
+
+void AExpeditionPlayerController::PreviewMode(ECombatCommandType Action)
+{
+    KeyMode(Action);
 }
 
 bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
+    if (bCapturing) { return false; }
+    if (bSimulatedPointer && bSimulatedCamera)
+    {
+        if (!IsValid(BattleView) || SimulatedViewport.X <= 0 || SimulatedViewport.Y <= 0) { return false; }
+        const FTransform Pose = BattleView->CameraTransform();
+        // Unreal keeps the vertical field of view of a 16:9 view at any viewport (CameraRig.h).
+        const double HalfHeight = ExpeditionCameraRig::HalfTanY(), HalfWidth = ExpeditionCameraRig::HalfTanX(float(SimulatedViewport.X) / float(SimulatedViewport.Y));
+        const double X = SimulatedPointer.X / SimulatedViewport.X * 2.0 - 1.0, Y = 1.0 - SimulatedPointer.Y / SimulatedViewport.Y * 2.0;
+        const FVector Direction = (Pose.GetRotation().GetForwardVector() + Pose.GetRotation().GetRightVector() * (X * HalfWidth) + Pose.GetRotation().GetUpVector() * (Y * HalfHeight)).GetSafeNormal();
+        return BattleView->CellAtRay(Pose.GetLocation(), Direction, Cell);
+    }
+    if (bSimulatedPointer) { Cell = SimulatedCell; return true; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
 
@@ -173,19 +481,51 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
         GridCursor.X = FMath::Clamp(GridCursor.X + Step.X, 0, Encounter.Width - 1);
         GridCursor.Y = FMath::Clamp(GridCursor.Y + Step.Y, 0, Encounter.Height - 1);
     }
-    bKeyboardCursor = true;
+    UseKeyboardCursor();
 }
-void AExpeditionPlayerController::CursorUp() { MoveCursor({0, 1}); }
-void AExpeditionPlayerController::CursorDown() { MoveCursor({0, -1}); }
+void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
+void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
 void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
 void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
 uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
     const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | Phase << 4;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | Phase << 5;
 }
 void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
+bool AExpeditionPlayerController::MenuAvailable() const
+{
+    return IsValid(BattleView) && !ShowingBuilder() && BattleView->HasRun() &&
+        BattleView->Progress().Phase != EExpeditionPhase::Victory && BattleView->Progress().Phase != EExpeditionPhase::Defeat;
+}
+void AExpeditionPlayerController::ToggleMenu()
+{
+    if (!IsValid(BattleView)) { return; }
+    if (bShowMenu) { CloseMenu(); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    // Overlays own the screen and the return question owns input; the start screen and endings have no Menu.
+    if (OverlayOpen() || !MenuAvailable()) { return; }
+    SaveOverlayFocus();
+    bShowMenu = true;
+    bDragging = false;
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::CloseMenu()
+{
+    if (!bShowMenu) { return; }
+    // The flag drops first so the screen key matches the screen the saved focus belongs to.
+    bShowMenu = false;
+    RestoreOverlayFocus();
+}
+void AExpeditionPlayerController::CycleMenuFocus(int32 Direction)
+{
+    const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
+    const auto Items = Hud ? Hud->MenuButtons() : TArray<FName>();
+    if (Items.IsEmpty()) { return; }
+    const int32 Index = Items.IndexOfByKey(Focus.Id);
+    Focus.Id = Index == INDEX_NONE ? Items[Direction > 0 ? 0 : Items.Num() - 1] : Items[(Index + Items.Num() + Direction) % Items.Num()];
+    Focus.bTabChosen = true;
+}
 void AExpeditionPlayerController::RestoreOverlayFocus()
 {
     Focus = IsValid(BattleView) && SavedFocus.Screen == MenuScreenKey() ? SavedFocus : FMenuFocus();
@@ -193,10 +533,12 @@ void AExpeditionPlayerController::RestoreOverlayFocus()
 void AExpeditionPlayerController::UpdateMenuFocus()
 {
     if (!IsValid(BattleView)) { return; }
+    // The endings and the start screen have no Menu: a stale open flag must not reappear later.
+    if (bShowMenu && !MenuAvailable()) { bShowMenu = false; }
     // A new screen (phase, builder or overlay) never inherits the previous screen's focus.
     const uint32 Screen = MenuScreenKey();
     if (Focus.Screen != Screen) { Focus = {NAME_None, Screen, false}; }
-    if (BattleView->InCombat() && AllowsGameplayInput()) { Focus.Id = NAME_None; return; }
+    if (BattleView->InCombat() && AllowsGameplayInput() && !ShowingMenu()) { Focus.Id = NAME_None; return; }
     const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
     const auto Items = Hud ? Hud->MenuButtons() : TArray<FName>();
     if (Focus.bTabChosen && Items.Contains(Focus.Id)) { return; }
@@ -206,6 +548,7 @@ void AExpeditionPlayerController::UpdateMenuFocus()
     FName Preferred = TEXT("Builder");
     if (bConfirmReturn) { Preferred = TEXT("ReturnConfirm"); }
     else if (OverlayOpen()) { Preferred = TEXT("Close"); }
+    else if (ShowingMenu()) { Preferred = TEXT("Save"); }
     // With an unfinished checkpoint New Run would be refused, so the start screen's primary choice is Resume.
     else if (ShowingBuilder()) { Preferred = !BattleView->HasRun() && BattleView->HasUnfinishedCheckpoint() ? TEXT("Resume") : TEXT("New"); }
     else
@@ -225,24 +568,36 @@ void AExpeditionPlayerController::UpdateMenuFocus()
 void AExpeditionPlayerController::ConfirmCell()
 {
     if (!IsValid(BattleView)) { return; }
-    if (!BattleView->InCombat() || !AllowsGameplayInput())
+    if (!BattleView->InCombat() || !AllowsGameplayInput() || ShowingMenu())
     {
         const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
-    bKeyboardCursor = true;
+    // Enter acts on the cell the keyboard cursor marks, so it must be showing: with it hidden (the pointer took over, or it
+    // was never shown) the first Enter only brings it back on its cell, and a following Enter acts (#171).
+    if (!bKeyboardCursor) { UseKeyboardCursor(); return; }
+    // ... and it must have been drawn on this cell, for this mode and state, with targeting visible: during playback, an enemy
+    // turn or an overlay nothing is marked as a target, and a cursor moved or a state changed since the last frame waits for the
+    // next one to show it. One Enter acts whenever the cursor is showing as it will act.
+    if (!KeyboardPreviewValid()) { return; }
     ActAtCell(GridCursor);
 }
 
-void AExpeditionPlayerController::SelectPartyIndex(int32 Index)
+void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 {
     if (!AllowsGameplayInput()) { return; }
     if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return; }
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
-        if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index) { SelectedId = Unit.Id; return; }
+        if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index)
+        {
+            // Choosing the selected hero again toggles their full status (the acting hero is selected by default).
+            if (bInspect) { InspectedId = SelectedId == Unit.Id && InspectedId != Unit.Id ? Unit.Id : INDEX_NONE; }
+            SelectedId = Unit.Id;
+            return;
+        }
     }
 }
 
@@ -250,17 +605,39 @@ void AExpeditionPlayerController::Click()
 {
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
-    const bool bHasMouse = GetMousePosition(MouseX, MouseY);
+    const bool bHasMouse = PointerPosition(MouseX, MouseY);
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
         if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button)) { HandleButton(Button); return; }
+        // A click beside the open Menu closes it and goes no further.
+        if (ShowingMenu()) { CloseMenu(); return; }
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
     }
     if (OverlayOpen()) { return; }
-    bKeyboardCursor = false;
-    FIntPoint Cell;
-    if (HoverCell(Cell)) { ActAtCell(Cell); }
+    // The keyboard cursor owns the board until the pointer moves. A click that finds it still there only
+    // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
+    if (bKeyboardCursor) { bKeyboardCursor = false; return; }
+    FIntPoint Cell, Under;
+    if (PreviewedPointerCell(Cell))
+    {
+        // The camera eases on its own: the cell under a resting pointer can change after the preview was drawn. Act only if it is
+        // still the cell that was shown; otherwise the next frame previews the new one first.
+        // The camera also moves under a resting pointer (Q/E, pan, zoom, the focus easing to a new unit): the preview was found with
+        // the pose of the frame it was drawn in, so a camera that has moved since voids it, and the next frame previews afresh.
+        FTransform Pose;
+        const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+            FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+            FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        return;
+    }
+    // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
+    if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
+    {
+        for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
+    }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
@@ -274,7 +651,11 @@ void AExpeditionPlayerController::HandleButton(FName Id)
         else if (Name == TEXT("KeepPlaying")) { CloseOverlays(); }
         return;
     }
+    if (Name == TEXT("ReplayTips")) { ReplayHints(); return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
+    // The hint's own buttons: they act on the hint and nothing else, and only while it is visible.
+    if (Name == TEXT("HintGotIt")) { DismissHint(); return; }
+    if (Name == TEXT("HintSkip")) { SkipHints(); return; }
     if (Name == TEXT("Builder") && BattleView->HasRun() && (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)) { bNextParty = true; return; }
     if (Name.StartsWith(TEXT("Class:")))
     {
@@ -295,9 +676,10 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     if (Name.StartsWith(TEXT("Party"))) { SelectPartyIndex(FCString::Atoi(*Name.RightChop(5))); BattleView->PlayCue(EExpeditionCue::Click); return; }
     if (Name == TEXT("Champion")) { Champion(); }
     else if (Name == TEXT("BattleMaster")) { BattleMaster(); }
-    else if (Name == TEXT("Maneuver")) { ManeuverMode(); }
+    else if (Name == TEXT("Maneuver")) { SetMode(SpecialAction(1)); }
     else if (Name == TEXT("Save")) { Save(); }
     else if (Name == TEXT("Resume")) { Resume(); }
+    else if (Name == TEXT("MenuToggle")) { ToggleMenu(); }
     else if (Name == TEXT("Menu")) { RequestReturnToMenu(); }
     else if (Name == TEXT("Records")) { History(); }
     else if (Name == TEXT("Speed")) { Speed(); }
@@ -309,10 +691,10 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Claim")) { Loot(); }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
-    else if (Name == TEXT("ModeAttack")) { AttackMode(); }
-    else if (Name == TEXT("ModeRole")) { RoleMode(); }
-    else if (Name == TEXT("ModeRescue")) { RescueMode(); }
-    else if (Name == TEXT("ModePotion")) { PotionMode(); }
+    else if (Name == TEXT("ModeAttack")) { SetMode(ECombatCommandType::Attack); }
+    else if (Name == TEXT("ModeRole")) { SetMode(RoleAction()); }
+    else if (Name == TEXT("ModeRescue")) { SetMode(ECombatCommandType::Rescue); }
+    else if (Name == TEXT("ModePotion")) { SetMode(ECombatCommandType::Potion); }
     else if (Name == TEXT("EndTurn")) { EndTurn(); }
     else if (Name == TEXT("Older")) { OlderRecords(); }
     else if (Name == TEXT("Newer")) { NewerRecords(); }
@@ -326,20 +708,29 @@ int32 AExpeditionPlayerController::Actor() const
     return BattleView->InCombat() && Active && Active->Side == ECombatSide::Party ? Active->Id : SelectedId;
 }
 
-void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
+bool AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
 {
-    if (!AllowsGameplayInput()) { return; }
+    if (!AllowsGameplayInput()) { return false; }
     const int32 ActorId = Actor();
+    bool bAccepted = false;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
         if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
-        else { BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); }
-        return;
+        else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); Acted(bAccepted); }
+        return bAccepted;
     }
-    if (SelectedAction == ECombatCommandType::Attack) { BattleView->Execute({ECombatCommandType::Move, ActorId, Cell}); }
-    else { BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE}); }
+    if (SelectedAction == ECombatCommandType::Attack) { bAccepted = BattleView->Execute({ECombatCommandType::Move, ActorId, Cell}); }
+    else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE}); }
+    Acted(bAccepted);
+    return bAccepted;
+}
+
+TSharedPtr<FExpeditionAutoplayDirector> AExpeditionPlayerController::StartAutoplay(const ExpeditionAutoplay::FAutoplayScript& Script, bool bResume, bool bExitOnFinish)
+{
+    Autoplay = FExpeditionAutoplayDirector::Create(this, BattleView, Script, bResume, bExitOnFinish);
+    return Autoplay;
 }
 
 ECombatCommandType AExpeditionPlayerController::RoleAction() const
@@ -388,12 +779,29 @@ void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 {
     if (!AllowsGameplayInput()) { return; }
     SelectedAction = Action;
+    bModeTip = false;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
+}
+void AExpeditionPlayerController::Acted(bool bAccepted)
+{
+    // A rejected command leaves the mode and its tooltip up: the tooltip is where the reason is.
+    if (bAccepted) { bModeTip = false; }
+}
+void AExpeditionPlayerController::KeyMode(ECombatCommandType Action)
+{
+    SetMode(Action);
+    bModeTip = AllowsGameplayInput();
 }
 bool AExpeditionPlayerController::AllowsGameplayInput() const
 {
     return IsValid(BattleView) && !OverlayOpen();
 }
+bool AExpeditionPlayerController::ShowsTargeting() const
+{
+    return IsValid(BattleView) && AllowsGameplayInput() && BattleView->InCombat() && !BattleView->IsPresenting() &&
+        Actor() == BattleView->Rules().ActiveId();
+}
+
 bool AExpeditionPlayerController::OverlayOpen() const
 {
     return bShowHelp || bConfirmReturn || (IsValid(BattleView) && BattleView->ShowingRecords());
@@ -405,11 +813,16 @@ bool AExpeditionPlayerController::CanSelectSubclass() const
 }
 void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
 void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
-void AExpeditionPlayerController::ManeuverMode() { if (AllowsGameplayInput()) { SetMode(SpecialAction(1)); } }
-void AExpeditionPlayerController::AttackMode() { SetMode(ECombatCommandType::Attack); }
-void AExpeditionPlayerController::RescueMode() { SetMode(ECombatCommandType::Rescue); }
-void AExpeditionPlayerController::PotionMode() { SetMode(ECombatCommandType::Potion); }
-void AExpeditionPlayerController::RoleMode() { SetMode(RoleAction()); }
+void AExpeditionPlayerController::ManeuverMode() { KeyMode(SpecialAction(1)); }
+void AExpeditionPlayerController::AttackMode() { KeyMode(ECombatCommandType::Attack); }
+void AExpeditionPlayerController::AttackKey()
+{
+    if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
+    AttackMode();
+}
+void AExpeditionPlayerController::RescueMode() { KeyMode(ECombatCommandType::Rescue); }
+void AExpeditionPlayerController::PotionMode() { KeyMode(ECombatCommandType::Potion); }
+void AExpeditionPlayerController::RoleMode() { KeyMode(RoleAction()); }
 void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
 void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
@@ -423,19 +836,29 @@ void AExpeditionPlayerController::NewRun()
         bNextParty = true;
         return;
     }
+    const int32 Before = BattleView->PresentationRevision();
     BattleView->NewRun(Party);
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; bReturnPending = false; }
+    // A fresh run is a first-time run: re-arm the hints, including after Skip tips.
+    if (Before != BattleView->PresentationRevision() && BattleView->HasRun()) { HintState.Arm(); ResetHintSpending(); bHintFactsValid = false; }
 }
-void AExpeditionPlayerController::Save() { if (AllowsGameplayInput()) { BattleView->Save(); } }
+void AExpeditionPlayerController::Save() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume()
 {
+    CloseMenu();
     if (!AllowsGameplayInput()) { return; }
     const int32 Before = BattleView->PresentationRevision();
     BattleView->Resume();
-    if (Before != BattleView->PresentationRevision()) { bNextParty = false; bReturnPending = false; Focus = FMenuFocus(); }
+    if (Before != BattleView->PresentationRevision())
+    {
+        bNextParty = false; bReturnPending = false; Focus = FMenuFocus();
+        // A returning player is not a first-time player: Resume does not arm hints (Replay tips in Help does).
+        HintState.Disarm(); ResetHintSpending(); bHintFactsValid = false;
+    }
 }
 void AExpeditionPlayerController::RequestReturnToMenu()
 {
+    CloseMenu();
     if (!AllowsGameplayInput() || !BattleView->CanReturnToMenu()) { return; }
     if (bReturnPending) { bReturnPending = false; BattleView->PlayCue(EExpeditionCue::Click); return; }
     bReturnPending = true;
@@ -461,9 +884,10 @@ void AExpeditionPlayerController::ResolvePendingReturn()
         if ((!Active || Active->Side != ECombatSide::Party) && !BattleView->CheckpointBlocked()) { return; }
         // Mid-encounter a half-entered move would be dropped, so ask first, like an overlay.
         bReturnPending = false;
+        CloseMenu(); // The Menu may have been opened while the return waited.
         SaveOverlayFocus();
         bConfirmReturn = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
         BattleView->PlayCue(EExpeditionCue::Click);
         return;
     }
@@ -486,16 +910,17 @@ void AExpeditionPlayerController::LeaveExpedition()
 void AExpeditionPlayerController::History()
 {
     if (!IsValid(BattleView) || bConfirmReturn) { return; }
+    CloseMenu();
     const bool bOpening = !BattleView->ShowingRecords();
     // Records over Help keeps the focus saved when Help opened.
     if (bOpening && !bShowHelp) { SaveOverlayFocus(); }
     bShowHelp = false;
     BattleView->ToggleRecords();
-    if (bOpening) { bDragging = false; } else { RestoreOverlayFocus(); }
+    if (bOpening) { bDragging = false; bPanning = false; } else { RestoreOverlayFocus(); }
 }
 void AExpeditionPlayerController::OlderRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(1); } }
 void AExpeditionPlayerController::NewerRecords() { if (IsValid(BattleView)) { BattleView->PageRecords(-1); } }
-void AExpeditionPlayerController::EndTurn() { if (AllowsGameplayInput()) { BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
+void AExpeditionPlayerController::EndTurn() { if (AllowsGameplayInput()) { bModeTip = false; BattleView->Execute({ECombatCommandType::EndTurn, Actor()}); } }
 void AExpeditionPlayerController::RotateLeft() { if (AllowsGameplayInput()) { BattleView->Orbit(-45); } }
 void AExpeditionPlayerController::RotateRight() { if (AllowsGameplayInput()) { BattleView->Orbit(45); } }
 void AExpeditionPlayerController::ZoomIn() { if (AllowsGameplayInput()) { BattleView->Zoom(-120); } }
@@ -507,38 +932,32 @@ void AExpeditionPlayerController::SelectFour() { SelectPartyIndex(3); }
 void AExpeditionPlayerController::Skip()
 {
     if (!IsValid(BattleView)) { return; }
-    if (AllowsGameplayInput() && BattleView->IsPresenting()) { BattleView->SkipPresentation(); return; }
-    if (!BattleView->InCombat() || !AllowsGameplayInput())
+    if (AllowsGameplayInput() && !ShowingMenu() && BattleView->IsPresenting()) { BattleView->SkipPresentation(); return; }
+    if (!BattleView->InCombat() || !AllowsGameplayInput() || ShowingMenu())
     {
-        const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
-        const auto Items = Hud ? Hud->MenuButtons() : TArray<FName>();
-        const int32 Direction = IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift) ? -1 : 1;
-        if (!Items.IsEmpty())
-        {
-            const int32 Index = Items.IndexOfByKey(Focus.Id);
-            Focus.Id = Index == INDEX_NONE ? Items[Direction > 0 ? 0 : Items.Num() - 1] : Items[(Index + Items.Num() + Direction) % Items.Num()];
-            Focus.bTabChosen = true;
-        }
+        CycleMenuFocus(IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift) ? -1 : 1);
         return;
     }
     BattleView->SkipPresentation();
 }
-void AExpeditionPlayerController::Speed() { if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
+void AExpeditionPlayerController::Speed() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
 void AExpeditionPlayerController::ToggleHelp()
 {
     if (bConfirmReturn) { return; }
+    CloseMenu();
     if (!bShowHelp)
     {
         // Help over Records keeps the focus saved when Records opened.
         if (IsValid(BattleView) && BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } else { SaveOverlayFocus(); }
         bShowHelp = true;
-        bDragging = false;
+        bDragging = false; bPanning = false;
     }
     else { bShowHelp = false; RestoreOverlayFocus(); }
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
 }
 void AExpeditionPlayerController::CloseOverlays()
 {
+    if (bShowMenu) { CloseMenu(); return; }
     if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
@@ -554,10 +973,19 @@ void AExpeditionPlayerController::BeginDrag()
 {
     if (!AllowsGameplayInput()) { return; }
     float MouseX = 0, MouseY = 0;
-    bDragging = GetMousePosition(MouseX, MouseY);
+    bDragging = PointerPosition(MouseX, MouseY);
     DragX = MouseX;
 }
 void AExpeditionPlayerController::EndDrag() { bDragging = false; }
+void AExpeditionPlayerController::BeginPan()
+{
+    if (!AllowsGameplayInput()) { return; }
+    bPanning = PointerPosition(PanX, PanY);
+}
+void AExpeditionPlayerController::EndPan() { bPanning = false; }
+void AExpeditionPlayerController::GridDown() { bGridHeld = true; }
+void AExpeditionPlayerController::GridUp() { bGridHeld = false; }
+void AExpeditionPlayerController::PreviewFullGrid(bool bShow) { bGridPreview = bShow; }
 
 bool AExpeditionPlayerController::ShowingBuilder() const
 {

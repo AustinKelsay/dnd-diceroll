@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "battle-yawm90-near",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yawm90-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yawm90-far",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far"
+    },
+    {
+      "name": "battle-yaw000-near",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw000-far",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far"
+    },
+    {
+      "name": "battle-yaw090-near",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw090-far",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far"
+    },
+    {
+      "name": "battle-yaw180-near",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yaw180-default",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw180-far",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "far"
+    },
+    {
+      "name": "targeting-yawm90-default",
+      "mode": "targeting",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "targeting-yawm90-near",
+      "mode": "targeting",
+      "yaw": -90,
+      "distance": 1300
+    },
+    {
+      "name": "roll-yawm90-default",
+      "mode": "roll",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw000-default",
+      "mode": "roll",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw090-default",
+      "mode": "roll",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw180-default",
+      "mode": "roll",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "impact-yaw000-default",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-yaw000-near",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "impact-spell-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-spell-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "fire",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-landing1-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-first",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-landing2-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-second",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-attack",
+      "mode": "tooltip",
+      "action": "attack",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-special1",
+      "mode": "tooltip",
+      "action": "special1",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-special2",
+      "mode": "tooltip",
+      "action": "special2",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-rescue",
+      "mode": "tooltip",
+      "action": "rescue",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-potion",
+      "mode": "tooltip",
+      "action": "potion",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-move",
+      "mode": "hint",
+      "hint": "move",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-resources",
+      "mode": "hint",
+      "hint": "resources",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-rescue",
+      "mode": "hint",
+      "hint": "rescue",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-endturn",
+      "mode": "hint",
+      "hint": "endturn",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "overview",
+      "mode": "overview"
+    },
+    {
+      "name": "start-screen",
+      "mode": "start"
+    },
+    {
+      "name": "build-barbarian-berserker",
+      "mode": "start",
+      "build": "barbarian.berserker"
+    },
+    {
+      "name": "build-wizard-evocation",
+      "mode": "start",
+      "build": "wizard.evocation"
+    }
+  ]
+}

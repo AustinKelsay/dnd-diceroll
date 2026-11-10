@@ -1,6 +1,7 @@
 #include "Run/ExpeditionRun.h"
 #include "Party/PartyContinuity.h"
 #include "Party/BuildCatalog.h"
+#include "Rules/AbilityRules.h"
 
 namespace
 {
@@ -50,6 +51,38 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
     }
 }
 
+// Enemy stats for one generated fight, by ruleset and by the catalog revision the run was created under (#184,
+// docs/runs/gameplay-depth/10-balance-tuning-report.md). Revision 7 numbers: every SRD run, and Compact runs created
+// before revision 8, for their whole lifetime. Revision 8 Compact numbers: Compact runs created since. False for an
+// unsupported ruleset or revision, so generation and restore fail instead of guessing.
+struct FEnemyStats { int32 HP = 0, ArmorClass = 0, AttackBonus = 0, DamageDie = 0, DamageBonus = 0; };
+bool EnemyStats(ERuleset Ruleset, int32 Revision, bool bDangerous, int32 Stage, FEnemyStats& Stats)
+{
+    if (Revision < FBuildCatalog::MinimumRevision || Revision > FBuildCatalog::Revision) { return false; }
+    bool bTuned = false;
+    switch (Ruleset)
+    {
+    case ERuleset::Compact: bTuned = Revision >= 8; break;
+    case ERuleset::SRD: bTuned = false; break;
+    default: return false;
+    }
+    if (!bTuned)
+    {
+        Stats.HP = (bDangerous ? 12 : 10) + Stage * 2;
+        Stats.ArmorClass = bDangerous ? 12 : 11;
+        Stats.AttackBonus = 2;
+        Stats.DamageDie = bDangerous ? 6 : 4;
+        Stats.DamageBonus = 1;
+        return true;
+    }
+    Stats.HP = (bDangerous ? 24 : 20) + Stage * 4;
+    Stats.ArmorClass = bDangerous ? 13 : 12;
+    Stats.AttackBonus = FMath::Min(5, 4 + Stage / 2);
+    Stats.DamageDie = bDangerous ? 8 : 6;
+    Stats.DamageBonus = 3 + Stage / 3;
+    return true;
+}
+
 int32 CountSurvivors(const FCombatBattle& Battle)
 {
     int32 Count = 0;
@@ -59,7 +92,7 @@ int32 CountSurvivors(const FCombatBattle& Battle)
 }
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass)
+bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity, EFighterSubclass Subclass, ERuleset Ruleset)
 {
     if (Subclass != EFighterSubclass::Champion && Subclass != EFighterSubclass::BattleMaster) { Error = TEXT("Choose a Fighter subclass."); return false; }
     TArray<FPartyBuildSelection> Selection;
@@ -71,19 +104,22 @@ bool FExpeditionRun::NewRun(int32 Seed, FString& Error, const FString& Identity,
         if (I == 0) { Slot.BuildId = Subclass == EFighterSubclass::BattleMaster ? TEXT("fighter.battle-master") : TEXT("fighter.champion"); }
         Selection.Add(Slot);
     }
-    return NewRun(Seed, Selection, Error, Identity);
+    return NewRun(Seed, Selection, Error, Identity, Ruleset);
 }
 
-bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity)
+bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Selection, FString& Error, const FString& Identity, ERuleset Ruleset)
 {
     Error.Reset();
     if (!State.Party.IsEmpty() && State.Phase != EExpeditionPhase::Victory && State.Phase != EExpeditionPhase::Defeat) { Error = TEXT("Finish this expedition before changing its party."); return false; }
+    if (Ruleset != ERuleset::Compact && Ruleset != ERuleset::SRD) { Error = TEXT("Choose a valid ruleset."); return false; }
     if (Selection.Num() != 4) { Error = TEXT("Choose exactly four adventurers."); return false; }
     FExpeditionRun Candidate;
     Candidate.State.Seed = Seed;
+    Candidate.State.Ruleset = Ruleset;
     Candidate.State.RunId = Identity.IsEmpty() ? FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens) : Identity;
     Candidate.State.GenerationRandomState = Seed;
     auto Party = FCombatBattle::TutorialEncounter();
+    Party.Ruleset = Ruleset;
     for (int32 I = 0; I < 4; ++I)
     {
         const auto Cell = Party.Combatants[I].Cell;
@@ -145,6 +181,7 @@ bool FExpeditionRun::ChooseRoute(int32 RouteId, FString& Error)
 FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
 {
     FCombatEncounter Layout = FCombatBattle::TutorialEncounter();
+    Layout.Ruleset = State.Ruleset;
     Layout.Width = Route.Width;
     Layout.Height = Route.Height;
     // Central obstacle clusters leave an open perimeter, spawn columns and lanes
@@ -169,11 +206,14 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         Enemy.Cell = {Recipe.EnemyColumn, Recipe.FirstEnemyRow + Index * 2};
         // Three enemies use rows 3/5/7 or 4/6/8; every grid is at least eleven rows tall.
         Enemy.Range = bArcher ? 4 : 1;
-        Enemy.HP = Enemy.MaxHP = (Route.bDangerous ? 12 : 10) + State.EncountersCompleted * 2;
-        Enemy.ArmorClass = Route.bDangerous ? 12 : 11;
-        Enemy.AttackBonus = 2;
-        Enemy.DamageDie = Route.bDangerous ? 6 : 4;
-        Enemy.DamageBonus = 1;
+        FEnemyStats Stats;
+        // An unsupported ruleset or revision yields an encounter without enemies, which Start and Restore reject.
+        if (!EnemyStats(State.Ruleset, State.CatalogRevision, Route.bDangerous, State.EncountersCompleted, Stats)) { Layout.Combatants.SetNum(4); return Layout; }
+        Enemy.HP = Enemy.MaxHP = Stats.HP;
+        Enemy.ArmorClass = Stats.ArmorClass;
+        Enemy.AttackBonus = Stats.AttackBonus;
+        Enemy.DamageDie = Stats.DamageDie;
+        Enemy.DamageBonus = Stats.DamageBonus;
         Enemy.InitiativeBonus = 1;
         Layout.Combatants.Add(Enemy);
     }
@@ -249,7 +289,15 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     Error.Reset();
     auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
     const auto& P = Snapshot.Progress;
-    if (P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
+    if (P.CatalogRevision < FBuildCatalog::MinimumRevision || P.CatalogRevision > FBuildCatalog::Revision)
+    {
+        // An unknown rules interpretation is refused by name rather than reinterpreted; the file itself stays on disk.
+        Error = FString::Printf(TEXT("This expedition was saved under rules revision %d; this build plays revisions %d to %d, so it cannot be resumed."),
+            P.CatalogRevision, FBuildCatalog::MinimumRevision, FBuildCatalog::Revision);
+        return false;
+    }
+    if ((P.Ruleset != ERuleset::Compact && P.Ruleset != ERuleset::SRD) || Snapshot.Battle.Encounter.Ruleset != P.Ruleset ||
+        P.Party.Num() != 4 || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
         P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     for (int32 I = 0; I < 4; ++I)
@@ -352,6 +400,12 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             // occurred; matching the distribution also bounds unidentified deaths.
             if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
             Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
+        }
+        // SRD Start replaces the profile initiative bonus with the DEX modifier.
+        if (Snapshot.Battle.Encounter.Ruleset == ERuleset::SRD)
+        {
+            const FAbilityScores Scores = Base.AdventurerRole != EAdventurerRole::None ? FAbilityRules::PrebuiltScores(Base.AdventurerRole) : FAbilityRules::EnemyScores(Base.Role);
+            Base.InitiativeBonus = FAbilityRules::Modifier(Scores.Dexterity);
         }
         if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
             U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||

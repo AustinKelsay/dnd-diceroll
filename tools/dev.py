@@ -23,6 +23,7 @@ import time
 import urllib.parse
 
 from mcp_client import MCP
+import perf as perf_tools
 from scaffold import BASES, new_class
 from workspace import Workspace, automation_result, entered_world, log_events, project_argument, read_ini, require_clean, source_digest, validate_bootstrap, validate_runtime
 
@@ -74,7 +75,140 @@ OFF_ULTRA = ("Not on PlebDev Ultra: Unreal results from this machine do not coun
              "Unreal work on Ultra before merge (CONTRIBUTING.md).")
 
 # --cores reaches these commands; others refuse it so a cap is never silently dropped.
-CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package")
+CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package", "gallery", "perf")
+
+
+# Capture gallery: fixtures written by `test --filter Project.Tools.CaptureFixtures`, rendered by the
+# game's own capture mode (-ExpeditionCapture). Pose rules mirror ExpeditionCapture::ParsePoses.
+GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "board-vigil-pillars", "board-vigil-walls", "board-root-r002", "default-seed-route")
+GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
+GALLERY_POSES = Path("tools/capture/poses.json")
+CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", "roll", "impact")
+CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
+CAPTURE_HINTS = ("move", "resources", "rescue", "endturn")
+CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile")
+CAPTURE_PHASES = ("landing", "flight", "landing-first", "landing-second")
+# Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
+CAMERA_DISTANCE = (900, 6400)
+FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
+FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
+
+# Performance gate (#148): the game's autoplay mode plays one seeded fight (-ExpeditionAutoplay), the CSV profiler records it.
+PERF_SCRIPT = Path("tools/autoplay/watchtower-road.json")
+PERF_FRAMES = (1000, 2000000)
+PERF_PASSES = ("warmup", "measured", "resume", "report")
+
+
+def parse_resolution(text):
+    match = re.fullmatch(r"(\d{3,5})x(\d{3,5})", str(text))
+    if not match:
+        raise ValueError(f"Resolution {text!r} must look like 1920x1080")
+    width, height = int(match.group(1)), int(match.group(2))
+    if not (640 <= width <= 7680 and 360 <= height <= 4320):
+        raise ValueError(f"Resolution {text} is outside 640x360 to 7680x4320")
+    return width, height
+
+
+def resolution_argument(text):
+    try:
+        parse_resolution(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+    return text
+
+
+def load_poses(path):
+    """Validate a poses file the way the game does and return its shots."""
+    try:
+        data = json.loads(Path(path).read_text())
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"Cannot read poses {path}: {exc}") from None
+    if not isinstance(data, dict) or data.get("version") != 1 or isinstance(data.get("version"), bool):
+        raise ValueError(f"Poses {path} needs an object with \"version\": 1")
+    settle = data.get("settleFrames", 60)
+    if isinstance(settle, bool) or not isinstance(settle, int) or not 1 <= settle <= 1200:
+        raise ValueError("\"settleFrames\" must be a whole number from 1 to 1200")
+    shots = data.get("shots")
+    if not isinstance(shots, list) or not shots:
+        raise ValueError("Poses need a non-empty \"shots\" list")
+    names = set()
+    for index, shot in enumerate(shots):
+        if not isinstance(shot, dict):
+            raise ValueError(f"Shot {index} is not an object")
+        name = shot.get("name")
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", name):
+            raise ValueError(f"Shot {index} needs a \"name\" of letters, digits, '-' and '_' (up to 64)")
+        if name in names:
+            raise ValueError(f"Shot name {name!r} is used twice")
+        names.add(name)
+        if shot.get("mode") not in CAPTURE_MODES:
+            raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
+        if "build" in shot and (shot["mode"] != "start" or not isinstance(shot["build"], str) or not re.fullmatch(r"[a-z0-9.-]{1,64}", shot["build"])):
+            raise ValueError(f"{name} may give a \"build\" of lowercase letters, digits, '.' and '-' on a start shot only")
+        if shot["mode"] == "tooltip" and shot.get("action") not in CAPTURE_ACTIONS:
+            raise ValueError(f"{name} needs an \"action\" of {', '.join(CAPTURE_ACTIONS)}")
+        if shot["mode"] == "hint" and shot.get("hint") not in CAPTURE_HINTS:
+            raise ValueError(f"{name} needs a \"hint\" of {', '.join(CAPTURE_HINTS)}")
+        if shot["mode"] == "impact":
+            if "effect" in shot and shot["effect"] not in CAPTURE_EFFECTS:
+                raise ValueError(f"{name} needs an \"effect\" of {', '.join(CAPTURE_EFFECTS)}")
+            if "phase" in shot and shot["phase"] not in CAPTURE_PHASES:
+                raise ValueError(f"{name} needs a \"phase\" of {', '.join(CAPTURE_PHASES)}")
+            if shot.get("phase", "landing") != "landing" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire or missile)")
+            if shot.get("phase") in ("landing-first", "landing-second") and shot.get("effect") != "missile":
+                raise ValueError(f"{name} lands a first or second bolt, which only \"effect\" missile has")
+            frames = shot.get("frames", 4)
+            if isinstance(frames, bool) or not isinstance(frames, int) or not 1 <= frames <= min(60, settle):
+                raise ValueError(f"{name} needs \"frames\" as a whole number from 1 to 60, within settleFrames")
+        elif "effect" in shot or "frames" in shot or "phase" in shot:
+            raise ValueError(f"{name} may give \"effect\", \"phase\" or \"frames\" on an impact shot only")
+        if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact"):
+            yaw, distance = shot.get("yaw"), shot.get("distance")
+            if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:
+                raise ValueError(f"{name} needs a \"yaw\" from -360 to 360")
+            ok = distance in ("default", "far") or (isinstance(distance, (int, float)) and not isinstance(distance, bool) and CAMERA_DISTANCE[0] <= distance <= CAMERA_DISTANCE[1])
+            if not ok:
+                raise ValueError(f"{name} needs a \"distance\" of \"default\", \"far\" or a number from {CAMERA_DISTANCE[0]} to {CAMERA_DISTANCE[1]}")
+    return shots
+
+
+def png_size(path):
+    data = Path(path).read_bytes()[:24]
+    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"{path} is not a PNG")
+    return struct.unpack(">II", data[16:24])
+
+
+def verify_capture(manifest_path, shots, resolution, directory):
+    """Check one game run's manifest and PNGs against the poses and requested size; return the manifest."""
+    if not manifest_path.is_file():
+        raise RuntimeError(f"The game wrote no manifest ({manifest_path}); inspect its log")
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") != "ok":
+        raise RuntimeError(f"Capture failed in the game: {manifest.get('error', manifest.get('status'))}")
+    wanted = [shot["name"] for shot in shots]
+    found = {shot.get("name"): shot for shot in manifest.get("shots", [])}
+    missing = [name for name in wanted if name not in found]
+    if missing:
+        raise RuntimeError(f"Manifest lacks shot(s) {missing}")
+    captured = 0
+    for name in wanted:
+        entry = found[name]
+        if entry.get("status") == "skipped":
+            continue
+        picture = directory / str(entry.get("file", ""))
+        if entry.get("status") != "captured" or not picture.is_file() or picture.stat().st_size == 0:
+            raise RuntimeError(f"Shot {name} has no picture ({picture})")
+        size = png_size(picture)
+        if size != resolution:
+            raise RuntimeError(f"Shot {name} is {size[0]}x{size[1]}, not the requested {resolution[0]}x{resolution[1]}")
+        if "camera" not in entry:
+            raise RuntimeError(f"Shot {name} has no camera transform")
+        captured += 1
+    if not captured:
+        raise RuntimeError("Every shot was skipped; the fixture does not suit these poses")
+    return manifest
 
 
 def current_host():
@@ -591,21 +725,453 @@ class Dev:
         output = self.w.local / "automation" / stamp()
         output.mkdir(parents=True)
         log = output / "automation.log"
+        crashes_before = crash_folders(self.w.root)
         with self.config_guard():
             code = self.run_bounded(self.automation_command(pattern, output, log), output / "console.log", timeout=300)
+        # Check the process lifecycle first, so a crash is reported even when tests also fail (#157).
+        lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root)
+        failed_lifecycle = f" Failed lifecycle: {'; '.join(lifecycle)}." if lifecycle else ""
         report_path = output / "index.json"
         if not report_path.is_file():
-            raise RuntimeError(f"Automation produced no test report (possibly zero matched tests); inspect {log}")
-        report = automation_result(json.loads(report_path.read_text(encoding="utf-8-sig")))
+            raise RuntimeError(f"Automation produced no test report (possibly zero matched tests); inspect {log}.{failed_lifecycle}")
+        try:
+            report = automation_result(json.loads(report_path.read_text(encoding="utf-8-sig")))
+        except RuntimeError as error:
+            raise RuntimeError(f"{error}.{failed_lifecycle} Inspect {log}") from None
         events = log_events(log.read_text(errors="replace"))
         if events["errors"]:
-            raise RuntimeError(f"Automation logged errors: {events['errors']}")
-        if code != 0:
-            raise RuntimeError(f"Engine exited {code} after the tests; inspect {log}")
+            raise RuntimeError(f"Automation logged errors: {events['errors']}.{failed_lifecycle}")
+        if lifecycle:
+            raise RuntimeError(f"Tests passed but the run is a failed lifecycle: {'; '.join(lifecycle)} after the tests; inspect {log}")
         write_json(output / "verified.json", {**report, "filter": pattern, "project": str(self.w.project), "exit_code": code, "warnings": events["warnings"]})
         if events["warnings"] and not allow_warnings:
             raise RuntimeError(f"{len(events['warnings'])} warning line(s); the gate is zero. First: {events['warnings'][0]} Inspect {log}")
         print(f"Automation passed: {report}; warning lines: {len(events['warnings'])}; evidence: {output}")
+
+    def run_game(self, args, log, timeout):
+        """Run one owned game process. On timeout it gets one SIGTERM (a normal exit request); it is never killed."""
+        with log.open("ab") as stream:
+            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT)
+            try:
+                return process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
+                raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
+
+    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300):
+        fixtures = list(dict.fromkeys(fixtures or GALLERY_FIXTURES))
+        resolutions = list(dict.fromkeys(resolutions or GALLERY_RESOLUTIONS))
+        sizes = {text: parse_resolution(text) for text in resolutions}
+        for name in fixtures:
+            if not FIXTURE_PATTERN.fullmatch(name):
+                raise ValueError(f"Fixture {name!r} must be lowercase letters, digits and hyphens")
+        poses_path = Path(poses or GALLERY_POSES)
+        poses_path = (poses_path if poses_path.is_absolute() else self.w.root / poses_path).resolve()
+        shots = load_poses(poses_path)
+        if timeout < 30:
+            raise ValueError("--timeout must be at least 30 seconds")
+        fixture_root = self.w.root / "Saved" / "CaptureFixtures"
+        for name in fixtures:
+            if not (fixture_root / name / "current-v1.json").is_file():
+                raise RuntimeError(f"Fixture {name} is missing from {fixture_root}; {FIXTURE_HINT}")
+        self.require_engine()
+        self.require_closed()
+        receipt = self.w.local / "build.json"
+        if not receipt.is_file() or json.loads(receipt.read_text()) != self.build_identity():
+            raise RuntimeError("Build evidence is missing or stale; run build first")
+        output = self.w.local / "gallery" / stamp()
+        output.mkdir(parents=True)
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        runs = []
+        with self.config_guard():
+            for name in fixtures:
+                sidecar = fixture_root / name / "fixture.json"
+                info = json.loads(sidecar.read_text()) if sidecar.is_file() else {}
+                for text in resolutions:
+                    width, height = sizes[text]
+                    target = output / name / text
+                    save = output / "save" / name / text
+                    target.mkdir(parents=True)
+                    save.mkdir(parents=True)
+                    # The game only reads a copy; the real fixture and any real save stay untouched.
+                    shutil.copy2(fixture_root / name / "current-v1.json", save / "current-v1.json")
+                    log = target / "game.log"
+                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
+                               "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
+                               f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
+                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *self.native_limits()]
+                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}")
+                    crashes_before = crash_folders(self.w.root)
+                    code = self.run_game(command, target / "console.log", timeout)
+                    lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root, who="Game")
+                    if lifecycle:
+                        raise RuntimeError(f"Failed lifecycle for {name} at {text}: {'; '.join(lifecycle)}; inspect {log}")
+                    manifest = verify_capture(target / "manifest.json", shots, (width, height), target)
+                    runs.append({"fixture": name, "seed": manifest.get("seed", info.get("seed")), "board": [manifest.get("boardWidth"), manifest.get("boardHeight")],
+                                 "fixture_info": info, "resolution": text, "primitives": primitives, "themed": manifest.get("themed"),
+                                 "directory": str(target.relative_to(output)), "shots": manifest["shots"]})
+        write_json(output / "index.json", {"commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
+                                          "poses": str(poses_path), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
+        pictures = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "captured")
+        skipped = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "skipped")
+        print(f"Gallery: {len(runs)} run(s), {pictures} picture(s), {skipped} skipped as not applicable; index: {output / 'index.json'}")
+
+    def perf_binary(self, package=None):
+        """(game binary, package folder) to measure: the given folder, else the newest Builds/<stamp> whose package run finished (verified.json)."""
+        if package:
+            folder = Path(package).expanduser()
+            folder = (folder if folder.is_absolute() else self.w.root / folder).resolve()
+            if not folder.is_dir():
+                raise RuntimeError(f"--package {folder} is not a folder")
+            return self.packaged_binary(folder), folder
+        builds = self.w.root / "Builds"
+        finished = sorted(p for p in builds.glob("*") if (p / "verified.json").is_file()) if builds.is_dir() else []
+        if not finished:
+            raise RuntimeError("No finished package under Builds/; run `package` first, or pass --package DIR (or --editor for a dry run)")
+        return self.packaged_binary(finished[-1]), finished[-1]
+
+    def perf_command(self, binary, editor, script, size, frames, log, save, resume, vsync, sound, offscreen):
+        width, height = size
+        command = [binary, *([self.w.project, "-game"] if editor else []), "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}",
+                   "-unattended", "-nosplash", f"-abslog={log}", f"-csvCaptureFrames={frames}", "-csvGpuStats",
+                   f"-ExpeditionSaveRoot={save}", f"-ExpeditionAutoplay={script}"]
+        if resume:
+            command.append("-ExpeditionAutoplayResume")
+        if not vsync:
+            command.append("-novsync")
+        if not sound:
+            command.append("-nosound")
+        if offscreen:
+            command += self.layout["headless"]
+        return [*command, *self.native_limits()]
+
+    PERF_EXIT_WAIT = 60  # seconds between reports while a timed-out game is still exiting
+
+    def perf_run(self, args, log, timeout, cwd):
+        """Run one game process, sampling its resident memory.
+
+        Whatever ends the wait early (the timeout, Ctrl-C, a sampler failure) the game gets one SIGTERM (a normal exit
+        request), is never killed, and this returns or raises only after it has exited, so the caller's lock is held."""
+        with log.open("ab") as stream:
+            process = subprocess.Popen([str(a) for a in args], cwd=cwd, stdout=stream, stderr=subprocess.STDOUT)
+            code = None
+            reason = "could not be sampled"
+            try:
+                try:
+                    pid = perf_tools.resolve_game_pid(process.pid, Path(str(args[0])).name)
+                    with perf_tools.RssSampler(pid) as sampler:
+                        code = process.wait(timeout=timeout)
+                    return code, sampler.summary()
+                except subprocess.TimeoutExpired:
+                    reason = f"timed out after {timeout}s"
+                except KeyboardInterrupt:
+                    reason = "was interrupted"
+            finally:
+                if code is None:
+                    ignored = self.perf_stop(process, reason, log)
+            raise RuntimeError(f"Game PID {process.pid} {reason} and exited{' after ignoring SIGTERM for a while' if ignored else ''}; inspect {log}")
+
+    def perf_stop(self, process, reason, log):
+        """Send a still-running game one SIGTERM and wait until it has exited. True if it outlived at least one wait."""
+        try:
+            process.terminate()
+        except (OSError, KeyboardInterrupt):
+            pass  # never resend: a game that missed the request still ends on its own autoplay time limits
+        return self.perf_await_exit(process, reason, log)
+
+    def perf_await_exit(self, process, reason, log):
+        """Block until a game that was sent SIGTERM has exited. True if it outlived at least one wait.
+
+        Never return while the game still runs: the caller's machine lock must stay held until it has exited. A closed
+        output stream or a further Ctrl-C does not end the wait, and the game is never sent a second signal."""
+        ignored = False
+        while True:
+            try:
+                process.wait(timeout=self.PERF_EXIT_WAIT)
+                return ignored
+            except subprocess.TimeoutExpired:
+                ignored = True
+                message = f"Game PID {process.pid} {reason} and has not exited after SIGTERM; still waiting (the lock stays held). Inspect {log}"
+            except KeyboardInterrupt:
+                message = f"Game PID {process.pid} is still exiting; the interrupt is ignored until it has (the lock stays held)."
+            try:
+                print(message, flush=True)
+            except (OSError, ValueError, KeyboardInterrupt):
+                pass  # a closed output or a Ctrl-C mid-print must not end the wait
+
+    def perf_crash_dirs(self, binary):
+        """Folders whose Saved/Crashes a run may write to: this checkout, the packaged game's user directory and its staged folder."""
+        roots = [self.w.root, Path.home() / ".config" / "Epic" / self.w.settings["game_target"]]
+        if len(binary.parents) > 2 and binary.parent.name == "Linux":
+            roots.append(binary.parents[2])
+        return roots
+
+    def perf_context(self, package, editor, script, resolution, frames, timeout, offscreen, vsync, sound):
+        """Validate the arguments and resolve what a pass launches. Shared by every pass of a run."""
+        size = parse_resolution(resolution)
+        if editor and package:
+            raise ValueError("--editor and --package are exclusive")
+        if not PERF_FRAMES[0] <= frames <= PERF_FRAMES[1]:
+            raise ValueError(f"--csv-frames must be {PERF_FRAMES[0]} to {PERF_FRAMES[1]}")
+        if timeout < 60:
+            raise ValueError("--timeout must be at least 60 seconds")
+        script_path = Path(script or PERF_SCRIPT)
+        script_path = (script_path if script_path.is_absolute() else self.w.root / script_path).resolve()
+        if not script_path.is_file():
+            raise RuntimeError(f"Autoplay script {script_path} does not exist")
+        try:
+            scripted = json.loads(script_path.read_text())
+            if scripted.get("version") != 1 or len(scripted.get("party", [])) != 4:
+                raise ValueError("needs \"version\": 1 and four party builds")
+        except ValueError as exc:
+            raise RuntimeError(f"Autoplay script {script_path} is invalid: {exc}") from None
+        self.require_engine()
+        self.require_closed()
+        if editor:
+            receipt = self.w.local / "build.json"
+            if not receipt.is_file() or json.loads(receipt.read_text()) != self.build_identity():
+                raise RuntimeError("Build evidence is missing or stale; run build first")
+            binary, cwd, folder = self.editor, self.w.root, None
+        else:
+            binary, folder = self.perf_binary(package)
+            cwd = binary.parent
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        # Fingerprints, so every pass of a run measures the same bytes, not merely the same paths.
+        package_commit = None
+        if folder and (Path(folder) / "verified.json").is_file():
+            package_commit = json.loads((Path(folder) / "verified.json").read_text()).get("commit")
+        return {"size": size, "editor": editor, "script": script_path, "binary": binary, "cwd": cwd, "folder": folder, "frames": frames, "timeout": timeout,
+                "offscreen": offscreen, "vsync": vsync, "sound": sound, "commit": head, "dirty": dirty,
+                "binary_sha256": file_sha256(binary), "script_sha256": file_sha256(script_path), "package_commit": package_commit,
+                "directories": perf_tools.csv_directories(self.w.settings["game_target"], package=folder, project_root=self.w.root)}
+
+    @staticmethod
+    def perf_identity(record):
+        """What every pass of one run must agree on: the build under test and how it was launched."""
+        return {key: record.get(key) for key in ("commit", "dirty", "binary", "binary_sha256", "mode", "script", "script_sha256", "package_commit", "cores", "flags")}
+
+    def perf_mismatch(self, base, other, label):
+        """Problems when `other` (a pass.json or the current context record) was made from a different build or with different flags."""
+        left, right = self.perf_identity(base), self.perf_identity(other)
+        return [f"{label}: {key} differs ({left[key]!r} in {base.get('name', 'the earlier pass')} vs {right[key]!r})" for key in left if left[key] != right[key]]
+
+    @staticmethod
+    def perf_startup_sigfpe(code, log, console):
+        """The game died of SIGFPE in SDL's Wayland output handler before autoplay began (a known headless-output quirk)."""
+        if code not in (-8, 136):
+            return False
+        text = ""
+        for path in (log, console):
+            if path.is_file():
+                text += path.read_text(errors="replace")
+        return "handle_wl_output_done" in text and "AUTOPLAY_BEGIN" not in text
+
+    def perf_run_folder(self, stamp_name, create):
+        """The run folder under .local/perf/: new (create) or named by --run."""
+        root = self.w.local / "perf"
+        if create:
+            folder = root / stamp()
+            folder.mkdir(parents=True)
+            print(f"PERF_RUN {folder.name}")
+            return folder
+        if not stamp_name or not re.fullmatch(r"[A-Za-z0-9]+", stamp_name):
+            raise ValueError("--run takes the stamp a first pass printed (PERF_RUN <stamp>)")
+        folder = root / stamp_name
+        if not folder.is_dir():
+            raise RuntimeError(f"No perf run {stamp_name} under {root}; start one with `perf --pass warmup` or `perf --pass measured`")
+        return folder
+
+    def perf_pass(self, ctx, output, name, pad):
+        """Run one game pass in the run folder and write <pass>/pass.json. Returns that record."""
+        resuming = name == "resume"
+        folder = output / name
+        record_path = folder / "pass.json"
+        if folder.exists():
+            raise RuntimeError(f"The {name} pass already ran in {output.name}; start a new run")
+        mode = "editor (-game): a dry run, not the gate" if ctx["editor"] else "packaged Development"
+        flags = {"vsync": ctx["vsync"], "sound": ctx["sound"], "offscreen": ctx["offscreen"], "csv_frames": ctx["frames"], "resolution": f"{ctx['size'][0]}x{ctx['size'][1]}"}
+        current = {"name": name, "commit": ctx["commit"], "dirty": ctx["dirty"], "binary": str(ctx["binary"]), "binary_sha256": ctx["binary_sha256"],
+                   "mode": mode, "script": str(ctx["script"]), "script_sha256": ctx["script_sha256"], "package_commit": ctx["package_commit"],
+                   "cores": self.cores, "flags": flags}
+        save = folder / "save"
+        if resuming:
+            measured = output / "measured" / "pass.json"
+            if not measured.is_file() or not (output / "measured" / "save").is_dir():
+                raise RuntimeError(f"The measured pass has not run in {output.name}; run `perf --pass measured --run {output.name}` first")
+            problems = self.perf_mismatch(json.loads(measured.read_text()), current, "resume")
+            if problems:
+                raise RuntimeError("The resume pass must use the build and flags of the measured pass: " + "; ".join(problems))
+        folder.mkdir()
+        if resuming:
+            # The fresh process resumes the checkpoint the measured pass left; a copy keeps that evidence unchanged.
+            shutil.copytree(output / "measured" / "save", save)
+        else:
+            save.mkdir()
+        log = folder / "game.log"
+        crash_roots = self.perf_crash_dirs(ctx["binary"])
+        def crash_reports():
+            return {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)}
+
+        crashes_before = crash_reports()
+        started = time.time()
+        size = ctx["size"]
+        print(f"Perf pass {name}: {'resuming the checkpoint' if resuming else 'playing the fight'} at {size[0]}x{size[1]}")
+        retried = None
+        with self.config_guard():
+            for attempt in (1, 2):
+                code, memory = self.perf_run(self.perf_command(ctx["binary"], ctx["editor"], ctx["script"], size, ctx["frames"], log, save, resuming, ctx["vsync"], ctx["sound"], ctx["offscreen"]),
+                                             folder / "console.log", ctx["timeout"], ctx["cwd"])
+                if attempt == 2 or not self.perf_startup_sigfpe(code, log, folder / "console.log"):
+                    break
+                # A headless Wayland output reports 0 mm physical size and SDL can divide by it at startup (SIGFPE in
+                # handle_wl_output_done); an identical relaunch works. Keep the failed attempt's logs and relaunch once.
+                # The failed attempt's crash report is evidence of the known quirk, not of this pass: record it, and
+                # judge only what the relaunch leaves.
+                first_crashes = sorted(crash_reports() - crashes_before)
+                crashes_before = crash_reports()
+                retried = {"reason": "startup SIGFPE in SDL handle_wl_output_done (headless output); relaunched once",
+                           "exit_code": code, "crash_reports": first_crashes}
+                print(f"Perf pass {name}: {retried['reason']}")
+                for kept_log in (log, folder / "console.log"):
+                    if kept_log.is_file():
+                        kept_log.rename(kept_log.with_name(kept_log.stem + "-attempt1" + kept_log.suffix))
+                shutil.rmtree(save, ignore_errors=True)
+                if resuming:
+                    shutil.copytree(output / "measured" / "save", save)
+                else:
+                    save.mkdir()
+                started = time.time()
+        ended = time.time()
+        crashes = crash_reports() - crashes_before
+        problems = lifecycle_problems(code, set(), self.w.root, who="Game")
+        if crashes:
+            problems.append("new crash report(s): " + ", ".join(sorted(crashes)))
+        text = log.read_text(errors="replace") if log.is_file() else ""
+        if "AUTOPLAY_FAIL" in text or not re.search(r"AUTOPLAY_DONE ok\b", text):
+            problems.append("the game did not log AUTOPLAY_DONE ok" + ("; it logged AUTOPLAY_FAIL" if "AUTOPLAY_FAIL" in text else ""))
+        if "LogExit: Exiting." not in text:
+            problems.append("the game did not log a normal exit")
+        if problems:
+            raise RuntimeError(f"Failed lifecycle for the {name} pass: {'; '.join(problems)}; inspect {log}")
+        record = {**current, "exit_code": code, "log": str(log.relative_to(output)), "csv": None, "rss": memory, "retried": retried,
+                  "started": started, "ended": ended,
+                  "started_at": datetime.fromtimestamp(started, timezone.utc).isoformat(), "ended_at": datetime.fromtimestamp(ended, timezone.utc).isoformat()}
+        if name != "warmup":
+            found = perf_tools.find_csv(text, ctx["directories"], started - 2)
+            if not found:
+                raise RuntimeError(f"The {name} pass left no CSV capture; looked in {[str(d) for d in ctx['directories']]}; inspect {log}")
+            kept = folder / f"{name}.csv"
+            shutil.copy2(found, kept)
+            record["csv"] = str(kept.relative_to(output))
+            record["csv_source"] = str(found)
+            # Fail now, while the machine is ours, if the capture cannot be sliced (no markers, run cut short).
+            perf_tools.analyze_pass(perf_tools.parse_csv(kept.read_text(errors="replace")), pad)
+            record["hardware"] = perf_tools.hardware_summary(run=lambda cmd: subprocess.run(cmd, capture_output=True, text=True, timeout=10, check=True).stdout)
+        write_json(record_path, record)
+        return record
+
+    def perf_report(self, output, pad):
+        """Build report.json and report.md from the passes recorded in a run folder; runs no Unreal."""
+        records = {}
+        for name in ("warmup", "measured", "resume"):
+            path = output / name / "pass.json"
+            if path.is_file():
+                records[name] = json.loads(path.read_text())
+        missing = [name for name in ("measured", "resume") if name not in records]
+        if missing:
+            raise RuntimeError(f"Run {output.name} has no {' or '.join(missing)} pass record; run the missing pass(es) with `perf --pass ... --run {output.name}`")
+        problems = []
+        for name in ("warmup", "resume"):
+            if name in records:
+                problems += self.perf_mismatch(records["measured"], records[name], name)
+        # Warm means the warm-up finished before the measurement began, and the resume follows the measured pass.
+        order = [n for n in ("warmup", "measured", "resume") if n in records]
+        for before, after in zip(order, order[1:]):
+            if records[before]["ended"] > records[after]["started"]:
+                problems.append(f"{after} started before {before} ended (passes must run warm-up, measured, resume, in that order)")
+        if problems:
+            raise RuntimeError("The passes of one run must share a commit, binary and flags and run in order: " + "; ".join(problems))
+        captures, rss = {}, {}
+        for name in ("measured", "resume"):
+            kept = output / records[name]["csv"]
+            captures[name] = perf_tools.analyze_pass(perf_tools.parse_csv(kept.read_text(errors="replace")), pad)
+            rss[name] = records[name]["rss"]
+        gaps, order = [], [n for n in ("warmup", "measured", "resume") if n in records]
+        for before, after in zip(order, order[1:]):
+            gaps.append({"from": before, "to": after, "seconds": round(records[after]["started"] - records[before]["ended"], 1)})
+        measured = records["measured"]
+        # Each measured process needs its own memory evidence: a missing sample in one pass must not be hidden by the other.
+        unsampled = [name for name, m in rss.items() if not m or m.get("max_mb") is None]
+        if unsampled:
+            raise RuntimeError(f"No memory evidence (VmRSS/VmHWM) for the {' and '.join(unsampled)} pass(es) of run {output.name}; rerun them")
+        peaks = [m for m in rss.values() if m.get("max_mb") is not None]
+        combined = {"samples": sum(m["samples"] for m in rss.values()), "interval_s": perf_tools.SAMPLE_SECONDS,
+                    "max_sampled_mb": max((m["max_sampled_mb"] for m in peaks if m.get("max_sampled_mb") is not None), default=None),
+                    "peak_hwm_mb": max((m["peak_hwm_mb"] for m in peaks if m.get("peak_hwm_mb") is not None), default=None),
+                    "max_mb": max((m["max_mb"] for m in peaks), default=None), "per_pass": rss}
+        flags = dict(measured["flags"], warmup="warmup" in records, transition_pad=pad)
+        width, height = (int(v) for v in measured["flags"]["resolution"].split("x"))
+        report = perf_tools.build_report(captures["measured"], captures["resume"], combined, (width, height), extra={
+            "stamp": output.name, "commit": measured["commit"], "dirty": measured["dirty"], "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
+            "mode": measured["mode"], "binary": measured["binary"], "script": measured["script"], "cores": measured["cores"], "flags": flags,
+            "warmup": "warmup" in records, "pass_gaps": gaps, "passes": [records[n] for n in order],
+            "top_gpu_stats": perf_tools.top_gpu_stats(captures["measured"]["steady"]),
+            "hardware": measured.get("hardware") or perf_tools.hardware_summary()})
+        if measured["mode"].startswith("editor"):
+            report["passed"] = False
+            report["failures"].append("Measured in the editor (-game): not a packaged Development build, so it cannot pass the gate")
+        if "warmup" not in records:
+            # #148 asks for a warm package: the first run after packaging pays shader, PSO and file caches.
+            report["passed"] = False
+            report["failures"].append("No warm-up pass: the gate is measured on a warm package (run perf --pass warmup first)")
+        write_json(output / "report.json", report)
+        (output / "report.md").write_text(perf_tools.markdown_report(report))
+        for check in report["checks"]:
+            print(f"  {check['label']}: {perf_tools.number(check['value'])} (limit {check['limit']}) {'ok' if check['passed'] else 'FAIL'}")
+        for item in report["transitions"]:
+            print(f"  transition {item['name']} [{item['pass']}]: worst frame {item['worst_frame_ms']:.1f} ms, {item['duration_ms']:.0f} ms over {item['frames']} frames")
+        for gap in gaps:
+            print(f"  gap {gap['from']} -> {gap['to']}: {gap['seconds']:.0f} s")
+        print(f"Performance gate {'PASSED' if report['passed'] else 'FAILED'}; report: {output / 'report.md'}")
+        for failure in report["failures"]:
+            print(f"  - {failure}")
+        return report
+
+    def perf(self, package=None, editor=False, script=None, resolution="1920x1080", frames=200000, timeout=1800, warmup=True,
+             offscreen=False, vsync=False, sound=True, pad=perf_tools.TRANSITION_PAD, only=None, run=None):
+        """Measure an autoplay fight against the #148 budgets (docs/development.md).
+
+        Without `only` it warms up, measures, resumes in a fresh process and reports in one go. With `only` (warmup, measured,
+        resume or report) it does just that step in the run folder `run`, so each locked job can be short; `warmup` and
+        `measured` start a new run when `run` is omitted. Returns the report, or the pass record for a single pass."""
+        if only is not None and only not in PERF_PASSES:
+            raise ValueError(f"--pass must be one of {', '.join(PERF_PASSES)}")
+        if only is None and run:
+            raise ValueError("--run applies to --pass")
+        if only in ("resume", "report") and not run:
+            raise ValueError(f"--pass {only} needs --run <stamp> (printed as PERF_RUN by the first pass)")
+        if only and not warmup:
+            raise ValueError("--no-warmup applies to a run without --pass")
+        if only == "report":
+            if package or editor or script:
+                raise ValueError("--pass report reads a run folder; it takes no --package, --editor or --script")
+            return self.perf_report(self.perf_run_folder(run, create=False), pad)
+        ctx = self.perf_context(package, editor, script, resolution, frames, timeout, offscreen, vsync, sound)
+        if only:
+            output = self.perf_run_folder(run, create=run is None)
+            if run is None and only == "resume":
+                raise ValueError("--pass resume needs --run")
+            return self.perf_pass(ctx, output, only, pad)
+        output = self.perf_run_folder(None, create=True)
+        for name in (["warmup"] if warmup else []) + ["measured", "resume"]:
+            self.perf_pass(ctx, output, name, pad)
+        return self.perf_report(output, pad)
 
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
@@ -662,9 +1228,38 @@ class Dev:
         exited = "LogExit: Exiting." in text
         if not exited:
             raise RuntimeError(f"Packaged game did not log a normal exit; inspect {launch_log}")
-        write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        write_json(output / "verified.json", {"binary": str(binary), "commit": head, "dirty": dirty, "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
                                               "package_warnings": package_events["warnings"], "package_errors": package_events["errors"]})
         print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: launch {len(events['warnings'])}, package {len(package_events['warnings'])}; package error lines: {len(package_events['errors'])}; evidence: {output}")
+
+def file_sha256(path):
+    """SHA-256 of a file, read in chunks (a packaged binary is large)."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def crash_folders(root):
+    """Names of Unreal crash reports under the project's Saved/Crashes (crashinfo-*)."""
+    folder = Path(root) / "Saved" / "Crashes"
+    return {p.name for p in folder.glob("crashinfo-*") if p.is_dir()} if folder.is_dir() else set()
+
+
+def lifecycle_problems(code, new_crashes, root, who="Engine"):
+    """Why a native run's process lifecycle failed (#157): abnormal exit, signal or a new crash report; empty when clean."""
+    problems = []
+    if code is not None and code < 0:
+        problems.append(f"{who} was killed by signal {-code}")
+    elif code:
+        problems.append(f"{who} exited {code}")
+    if new_crashes:
+        problems.append("new crash report(s): " + ", ".join(str(Path(root) / "Saved" / "Crashes" / name) for name in sorted(new_crashes)))
+    return problems
+
 
 def pid_exists(pid):
     """True until the process is fully gone; an exiting editor can drop out of `ps` matching first."""
@@ -708,6 +1303,26 @@ def main():
     test = commands.add_parser("test")
     test.add_argument("--filter", default=None)
     test.add_argument("--allow-warnings", action="store_true", help="Report warning lines without failing (the merge gate is zero)")
+    gallery = commands.add_parser("gallery", help="Render the fixed-pose capture gallery under .local/gallery/")
+    gallery.add_argument("--fixture", action="append", help="Fixture folder under Saved/CaptureFixtures (repeatable); default: " + ", ".join(GALLERY_FIXTURES))
+    gallery.add_argument("--res", action="append", type=resolution_argument, help="Window size WIDTHxHEIGHT (repeatable); default: " + ", ".join(GALLERY_RESOLUTIONS))
+    gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
+    gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
+    gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
+    perf = commands.add_parser("perf", help="Measure one autoplay fight against the #148 performance budgets; evidence under .local/perf/")
+    perf.add_argument("--package", help="Packaged build folder (default: the newest Builds/<stamp> that finished packaging)")
+    perf.add_argument("--editor", action="store_true", help="Run the editor in -game instead of a package: a quick dry run that cannot pass the gate")
+    perf.add_argument("--script", help="Autoplay script; default " + str(PERF_SCRIPT))
+    perf.add_argument("--res", type=resolution_argument, default="1920x1080", help="Window size WIDTHxHEIGHT; the budgets apply at 1920x1080")
+    perf.add_argument("--csv-frames", type=int, default=200000, help="Upper bound for -csvCaptureFrames (the game ends the capture itself when the run is done)")
+    perf.add_argument("--timeout", type=int, default=1800, help="Seconds allowed for each pass")
+    perf.add_argument("--no-warmup", action="store_true", help="Skip the discarded warm-up pass (a dry run; the gate wants a warm one)")
+    perf.add_argument("--offscreen", action="store_true", help="Add -RenderOffscreen (no window; frames are not presented)")
+    perf.add_argument("--vsync", action="store_true", help="Leave vertical sync on (default: -novsync, so FrameTime is not pinned to the refresh rate)")
+    perf.add_argument("--no-sound", action="store_true", help="Add -nosound (default: sound on, so the synthesized cues are part of the game-thread cost)")
+    perf.add_argument("--pass", dest="only", choices=PERF_PASSES, help="Run one step of a run (each in its own locked job): warmup, measured, resume or report; default: all of them in one go")
+    perf.add_argument("--run", help="The run folder stamp under .local/perf/ (printed as PERF_RUN <stamp> by the first pass); required for resume and report")
+    perf.add_argument("--transition-pad", type=int, default=perf_tools.TRANSITION_PAD, help="Frames after a transition ends that still count as the transition")
     scaffold = commands.add_parser("new-class")
     scaffold.add_argument("kind", choices=BASES)
     scaffold.add_argument("name", help="PascalCase class name without Unreal's A/U prefix")
@@ -730,6 +1345,12 @@ def main():
             dev.schemas(args.toolset)
         elif args.command == "test":
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
+        elif args.command == "gallery":
+            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)
+        elif args.command == "perf":
+            report = dev.perf(args.package, args.editor, args.script, args.res, args.csv_frames, args.timeout, not args.no_warmup,
+                              args.offscreen, args.vsync, not args.no_sound, args.transition_pad, args.only, args.run)
+            return 0 if args.only in PERF_PASSES[:3] or report["passed"] else 1
         elif args.command == "new-class":
             for path in new_class(dev.w, args.kind, args.name):
                 print(path)

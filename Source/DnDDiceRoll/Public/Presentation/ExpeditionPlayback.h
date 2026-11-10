@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/UnitPose.h"
 
 /** Sounds and moments the playback asks the world to express. */
 enum class EExpeditionCue : uint8
@@ -9,6 +10,16 @@ enum class EExpeditionCue : uint8
     DiceRoll, DiceLand, Hit, Critical, Miss, Heal, Step, Click, Downed, Death,
     PartyTurn, EnemyTurn, Victory, Defeat, Spell, Bow, Swing, Camp, Loot, Route
 };
+
+/** What a capture-mode impact preview shows on the struck unit (#189): a plain hit, or a spell bolt (Cleric radiant, Wizard fire, or three Magic Missiles) arriving as well. */
+enum class EImpactPreview : uint8 { Hit, Spell, Fire, Missile };
+
+/**
+ * When a capture-mode impact preview is taken (#189). Landing: the hit itself with its flash (for Magic Missile the final bolt landing, as the
+ * production impact step begins while the last bolt is still arriving). Flight: the bolt half way along its path, no hit. FirstLanding and
+ * SecondLanding: Magic Missile only, the first or second bolt landing while the others are still in flight, before the hit.
+ */
+enum class EImpactMoment : uint8 { Landing, Flight, FirstLanding, SecondLanding };
 
 /** What a combatant looks like right now. Lags behind the rules while results play. */
 struct DNDDICEROLL_API FUnitDisplay
@@ -26,6 +37,12 @@ struct DNDDICEROLL_API FUnitDisplay
     float ShownHP = 0.0f;
     float TrailHP = 0.0f;
     ECombatLife Life = ECombatLife::Conscious;
+    /** The clip the figure should show (#147). Chosen from committed results; never read back by rules. */
+    EUnitPose Pose = EUnitPose::Idle;
+    /** Bumps whenever Pose is set or converged, so a repeated clip restarts and the view notices the change. */
+    int32 PoseSerial = 0;
+    /** True when the pose was reached by convergence on the committed state (reset, resume, skip, Finish): show the clip's end. */
+    bool bPoseSnap = true;
 };
 
 struct DNDDICEROLL_API FFloatingText
@@ -77,6 +94,8 @@ struct DNDDICEROLL_API FDiceTray
     FLinearColor VerdictColor = FLinearColor::White;
     float Age = 0.0f;
     bool bVisible = false;
+    /** Capture and test support: a held tray does not age or expire. */
+    bool bHeld = false;
     static constexpr float TumbleSeconds = 0.6f;
     static constexpr float LingerSeconds = 3.5f;
 };
@@ -114,6 +133,24 @@ public:
     void ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life = 1.6f);
     void ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale = 1.0f, float Life = 1.3f);
     void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8);
+    /**
+     * Capture support (#189): shows a hit on a unit without any rules result, exactly as AddImpact does at its peak (full flash, the
+     * flinch clip when the unit stays up, the damage text), and for a spell the bolts built and staggered exactly as AddAttack throws them, from From
+     * (a cell), aged to Moment. Only Landing shows the hit; the other moments show bolts alone (no flash, flinch or text).
+     * Presentation only: no hit points change. HoldImpact keeps the moment on screen; ReleaseImpact lets it go.
+     */
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
+
+    /** Seconds a Magic Missile bolt takes to arrive, and the delay between its three bolts (production and preview share these). */
+    static constexpr float MissileFlight = 0.38f;
+    static constexpr float MissileStagger = 0.09f;
+    /** The three Magic Missile bolts as AddAttack throws them: the second and third start later (negative Age), and arc to either side. */
+    static TArray<FPlaybackProjectile> MagicMissileBolts(FVector2D From, FVector2D To);
+    /** The bolt of a ranged attack by a role: a rogue's or an enemy archer's arrow, a Cleric's radiant bolt, a Wizard's fire bolt. */
+    static FPlaybackProjectile RangedBolt(FVector2D From, FVector2D To, EAdventurerRole Role, bool bArrow);
+    /** Capture support (#189): pins the previewed unit's flash at its peak (1) and the previewed bolts just before they land; Tick would otherwise age both away. */
+    void HoldImpact(int32 UnitId);
+    void ReleaseImpact(int32 TargetId);
 
     float Speed = 1.0f;
     const FUnitDisplay* Unit(int32 Id) const { return Displays.Find(Id); }
@@ -121,6 +158,9 @@ public:
     const TArray<FPlaybackProjectile>& Projectiles() const { return Shots; }
     const TArray<FPlaybackSparkle>& Sparkles() const { return Glitter; }
     const FDiceTray& Tray() const { return Dice; }
+    /** Capture and test support (#190): show this tray as a landed roll and keep it up until cleared. */
+    void PreviewTray(FDiceTray Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Dice = MoveTemp(Tray); Dice.bVisible = true; Dice.bHeld = true; Dice.Age = Age; }
+    void ClearTrayPreview() { if (Dice.bHeld) { Dice = FDiceTray(); } }
     const FTurnBanner& Banner() const { return TurnBanner; }
     /** The combatant the camera should favour while steps play. */
     int32 FocusId() const { return Focus; }
@@ -140,6 +180,9 @@ private:
     TArray<FFloatingText> Floaters;
     TArray<FPlaybackProjectile> Shots;
     TArray<FPlaybackSparkle> Glitter;
+    /** Capture support (#189): the bolts HoldImpact keeps in flight. */
+    TArray<FPlaybackProjectile> HeldShots;
+    bool bHeldFlash = false;
     FDiceTray Dice;
     FTurnBanner TurnBanner;
     int32 Focus = INDEX_NONE;
@@ -154,6 +197,10 @@ private:
     void AddHealing(const FCombatResult& Result, const FCombatSnapshot& After);
     void AddImpact(const FCombatResult& Result, FVector2D Direction);
     void AddFalls(const FCombatResult& Result, const FCombatSnapshot& After);
+    /** Plays a clip on a figure. Repeating the clip already playing changes nothing. */
+    static void SetPose(FUnitDisplay& Unit, EUnitPose Pose);
+    /** Moves the pose to the one the committed life implies. A snap also finishes a clip still playing. */
+    static void Converge(FUnitDisplay& Unit, bool bSnap);
     void StepRunner(float Seconds);
     void Advance(float Seconds);
 };
@@ -166,6 +213,13 @@ DNDDICEROLL_API FLinearColor UnitColor(const FCombatantState& Unit);
 DNDDICEROLL_API FString ActionName(ECombatCommandType Action);
 /** Actions aimed at allies (healing, rescue) rather than enemies. */
 DNDDICEROLL_API bool IsFriendlyAction(ECombatCommandType Action, const FCombatantState* Actor = nullptr);
+DNDDICEROLL_API FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType Action, int32 TargetId);
+/**
+ * "Name: detail" for a target chip, at most MaxWidth wide by Measure. A long name is cut with "..."
+ * so the forecast qualifier ("can drop", "crit drop") always stays whole; when even the detail alone
+ * does not leave room for a name, the detail stands alone.
+ */
+DNDDICEROLL_API FString ChipLabel(const FString& Name, const FString& Detail, float MaxWidth, TFunctionRef<float(const FString&)> Measure);
 DNDDICEROLL_API FString ForecastAmount(const FActionForecast& Forecast);
 DNDDICEROLL_API const FCombatantState* FindUnit(const FCombatSnapshot& Snapshot, int32 Id);
 }
