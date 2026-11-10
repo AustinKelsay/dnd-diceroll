@@ -348,6 +348,8 @@ public:
     FLinearColor KitTint(const UStaticMesh* Mesh) const;
     /** What the kit dressed this board with: scatter, mist and shaft pieces actually placed, with their cells and view-space positions. */
     const TArray<FPlacedDressing>& PlacedDressing() const { return Dressing; }
+    /** The braziers the themed board placed (#148), in board cells; empty on the primitive look and the tabletop. */
+    const TArray<FVector2D>& PlacedBraziers() const { return BrazierCells; }
     /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
     int32 PlacedObstacles() const { return ObstaclePieces; }
     int32 PlacedArches() const { return ArchPieces; }
@@ -538,6 +540,8 @@ private:
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;
     TArray<FPlacedDressing> Dressing;
+    /** Where the themed board's braziers stand, in board cells (BrazierRing::Plan), in placement order. */
+    TArray<FVector2D> BrazierCells;
     TMap<FIntPoint, int32> VariantsByCell;
     TMap<FIntPoint, FVector> SpotsByCell;
     int32 ObstaclePieces = 0;
@@ -613,7 +617,7 @@ private:
     /** The r002 obstacles of a world kit: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (pillar and wall recipes of a world kit; see VigilKit::ArchesFor). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
     bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
     /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing; the Root kit uses the same plan). */
-    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit);
+    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit, const TArray<FVector2D>& Braziers);
     /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
     FExpeditionPart MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation);
     /** Pushes the sight lines to the occluder material. */

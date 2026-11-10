@@ -4,11 +4,13 @@
 #include "Combat/CombatBattle.h"
 #include "Presentation/CombatHints.h"
 #include "Run/ExpeditionRun.h"
+#include "Presentation/ExpeditionAutoplay.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
 
 class AExpeditionBattleView;
 class FExpeditionCaptureDirector;
+class FExpeditionAutoplayDirector;
 
 /** Turns mouse, keyboard and HUD buttons into view commands. Holds selection only. */
 UCLASS()
@@ -92,6 +94,13 @@ public:
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
     /**
+     * The click path: acts on a cell as a left click does for the selected mode (a move, an attack, an ability or a
+     * rescue on whoever stands there). Returns whether the rules accepted the command. Autoplay (#148) and tests use it.
+     */
+    bool ActAtCell(FIntPoint Cell);
+    /** Starts autoplay in this process (-ExpeditionAutoplay starts it from the command line). Tests pass bExitOnFinish false. */
+    TSharedPtr<FExpeditionAutoplayDirector> StartAutoplay(const ExpeditionAutoplay::FAutoplayScript& Script, bool bResume, bool bExitOnFinish);
+    /**
      * The hint drawn this frame (#158), or Count. A hint is non-modal and takes no focus; it shows only on the party's
      * turn at rest, never under Help, Records, the return question, the Menu, a playback or an enemy turn.
      */
@@ -158,6 +167,7 @@ private:
     /** Shows the keyboard cursor; the pointer is measured afresh from then on, so only later motion hands control back. */
     void UseKeyboardCursor() { bKeyboardCursor = true; bPointerSeen = false; }
     TSharedPtr<FExpeditionCaptureDirector> Capture;
+    TSharedPtr<FExpeditionAutoplayDirector> Autoplay;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
@@ -251,7 +261,6 @@ private:
     void History();
     void OlderRecords();
     void NewerRecords();
-    void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint ScreenOffset);
     void CursorUp();
     void CursorDown();

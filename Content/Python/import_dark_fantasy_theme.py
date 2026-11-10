@@ -55,20 +55,20 @@ DATA = THEME + "/DA_DiceRollTheme"
 
 # Surface looks (#143). Per mesh: asset id, export name, folder, data-asset property, then
 #   roughness  - stone, cloth and ground high; characters and metal lower
-#   rim        - Fresnel rim strength; characters only, so dark figures read against dark ground
-#   fill       - hemisphere fill strength; strong on characters, none or a trace elsewhere
+#   rim        - Fresnel rim strength; characters only (1.6 since #148), so dark figures read against dark ground
+#   fill       - hemisphere fill strength; strong on characters (1.25 since #148), none or a trace elsewhere
 #   glow       - emissive intensity applied to the vertex-alpha mask (flames, runes, glass); used only when the
 #                mesh really has a varying vertex alpha, see has_alpha_mask()
 #   self_lit   - a constant emissive share for objects that are themselves a light source (the flame) and for the
 #                tabletop overview, which stays as it was. Zero everywhere else: there is no blanket glow any more.
 ASSETS = [
-    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.55, 1.0, 1.0, 1.0, 0.0),
-    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.65, 1.0, 1.0, 1.0, 0.0),
-    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.55, 1.6, 1.25, 1.0, 0.0),
+    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.65, 1.6, 1.25, 1.0, 0.0),
+    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.6, 1.6, 1.25, 1.0, 0.0),
     ("world-root", "SM_World_Root", "Worlds", "root_world", 0.9, 0.0, 0.0, 1.0, 0.0),
     ("world-vigil", "SM_World_Vigil", "Worlds", "vigil_world", 0.9, 0.0, 0.0, 1.0, 0.0),
     ("tile-root", "SM_Tile_Root", "Worlds", "root_tile", 0.9, 0.0, 0.0, 1.0, 0.0),
@@ -983,11 +983,11 @@ def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan
 RIG_FOLDER = THEME + "/Characters"
 SKELETON = RIG_FOLDER + "/SKEL_Humanoid"
 CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
-# asset id, mesh name, data-asset property, look (roughness, rim, fill, glow, self_lit): characters get Rim and Fill 1.
+# asset id, mesh name, data-asset property, look (roughness, rim, fill, glow, self_lit): characters get Rim 1.6 and Fill 1.25 (#148).
 RIG = [
-    ("sk-hero-fighter", "SK_Hero_Fighter", "fighter_rig", (0.55, 1.0, 1.0, 1.0, 0.0)),
-    ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.0, 1.0, 1.0, 0.0)),
-    ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.0, 1.0, 1.0, 0.0)),
+    ("sk-hero-fighter", "SK_Hero_Fighter", "fighter_rig", (0.55, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.6, 1.25, 1.0, 0.0)),
 ]
 # Replacement is refused (see refuse_reimport): the allow-list is only validated so the refusal can name the problem.
 REIMPORT = {token.strip() for token in os.environ.get("THEME_RIG_REIMPORT", "").split(",") if token.strip()}
