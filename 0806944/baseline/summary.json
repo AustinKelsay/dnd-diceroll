@@ -1,0 +1,6645 @@
+{
+ "archetypes": {
+  "duplicate": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.010416666666666666,
+   "fights_won": 5.0,
+   "healing_per_run": 17.229166666666668,
+   "high": 1.0,
+   "low": 0.9615230525151842,
+   "n": 96,
+   "potions_per_run": 1.125,
+   "protection_per_run": 1.4166666666666667,
+   "rate": 1.0,
+   "rounds_per_fight": 3.20625,
+   "specials_per_run": 7.229166666666667,
+   "stalls": 0,
+   "taken_per_run": 45.770833333333336,
+   "wins": 96
+  },
+  "melee": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.6875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.96875,
+   "protection_per_run": 2.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.85,
+   "specials_per_run": 12.0625,
+   "stalls": 0,
+   "taken_per_run": 58.21875,
+   "wins": 32
+  },
+  "mixed": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.15625,
+   "high": 1.0,
+   "low": 0.9433739770288436,
+   "n": 64,
+   "potions_per_run": 1.046875,
+   "protection_per_run": 2.328125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.134375,
+   "specials_per_run": 7.671875,
+   "stalls": 0,
+   "taken_per_run": 38.953125,
+   "wins": 64
+  },
+  "ranged": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.8125,
+   "protection_per_run": 0.90625,
+   "rate": 1.0,
+   "rounds_per_fight": 2.63125,
+   "specials_per_run": 11.5625,
+   "stalls": 0,
+   "taken_per_run": 35.84375,
+   "wins": 32
+  },
+  "rotation": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.005902777777777778,
+   "fights_won": 5.0,
+   "healing_per_run": 14.707638888888889,
+   "high": 1.0,
+   "low": 0.998667888000506,
+   "n": 2880,
+   "potions_per_run": 1.8895833333333334,
+   "protection_per_run": 2.437152777777778,
+   "rate": 1.0,
+   "rounds_per_fight": 3.062708333333333,
+   "specials_per_run": 10.105902777777779,
+   "stalls": 0,
+   "taken_per_run": 41.57361111111111,
+   "wins": 2880
+  },
+  "support-heavy": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.28125,
+   "protection_per_run": 1.21875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.125,
+   "specials_per_run": 9.03125,
+   "stalls": 0,
+   "taken_per_run": 41.25,
+   "wins": 32
+  },
+  "support-poor": {
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 16.78125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.40625,
+   "protection_per_run": 0.75,
+   "rate": 1.0,
+   "rounds_per_fight": 2.96875,
+   "specials_per_run": 12.09375,
+   "stalls": 0,
+   "taken_per_run": 45.0625,
+   "wins": 32
+  }
+ },
+ "classes": {
+  "artificer": {
+   "damage_per_fight": 10.1340625,
+   "deadline_deaths": 1,
+   "death_rate": 0.0015625,
+   "downs_per_fight": 0.0015625,
+   "healing_per_fight": 0.604375,
+   "heroes": 640,
+   "high": 1.0,
+   "idle_turn_rate": 0.0033003300330033004,
+   "kills_per_fight": 0.6834375,
+   "low": 0.9940333150265532,
+   "n": 640,
+   "party_rounds_per_fight": 3.050625,
+   "protection_per_fight": 0.140625,
+   "rate": 1.0,
+   "taken_per_fight": 1.7271875,
+   "victory_deaths": 0,
+   "wins": 640
+  },
+  "barbarian": {
+   "damage_per_fight": 7.666369047619048,
+   "deadline_deaths": 1,
+   "death_rate": 0.001488095238095238,
+   "downs_per_fight": 0.0005952380952380953,
+   "healing_per_fight": 0.525,
+   "heroes": 672,
+   "high": 1.0,
+   "idle_turn_rate": 0.005732554293903649,
+   "kills_per_fight": 0.5541666666666667,
+   "low": 0.9943158278507865,
+   "n": 672,
+   "party_rounds_per_fight": 3.105952380952381,
+   "protection_per_fight": 0.14077380952380952,
+   "rate": 1.0,
+   "taken_per_fight": 2.4604166666666667,
+   "victory_deaths": 0,
+   "wins": 672
+  },
+  "bard": {
+   "damage_per_fight": 10.5409375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005625,
+   "healing_per_fight": 0.921875,
+   "heroes": 640,
+   "high": 1.0,
+   "idle_turn_rate": 0.005341384115188109,
+   "kills_per_fight": 0.6896875,
+   "low": 0.9940333150265532,
+   "n": 640,
+   "party_rounds_per_fight": 3.0509375,
+   "protection_per_fight": 0.038125,
+   "rate": 1.0,
+   "taken_per_fight": 2.4303125,
+   "victory_deaths": 0,
+   "wins": 640
+  },
+  "cleric": {
+   "damage_per_fight": 9.844607843137254,
+   "deadline_deaths": 4,
+   "death_rate": 0.003676470588235294,
+   "downs_per_fight": 0.004411764705882353,
+   "healing_per_fight": 0.8922794117647059,
+   "heroes": 1632,
+   "high": 1.0,
+   "idle_turn_rate": 0.002988505747126437,
+   "kills_per_fight": 0.6325980392156862,
+   "low": 0.9973970106276988,
+   "n": 1472,
+   "party_rounds_per_fight": 3.0827445652173915,
+   "protection_per_fight": 0.14154411764705882,
+   "rate": 1.0,
+   "taken_per_fight": 2.0677696078431373,
+   "victory_deaths": 2,
+   "wins": 1472
+  },
+  "druid": {
+   "damage_per_fight": 9.676,
+   "deadline_deaths": 0,
+   "death_rate": 0.00125,
+   "downs_per_fight": 0.00225,
+   "healing_per_fight": 0.73925,
+   "heroes": 800,
+   "high": 1.0,
+   "idle_turn_rate": 0.0032875652678398763,
+   "kills_per_fight": 0.6365,
+   "low": 0.9952209490028883,
+   "n": 800,
+   "party_rounds_per_fight": 3.015,
+   "protection_per_fight": 0.10575,
+   "rate": 1.0,
+   "taken_per_fight": 1.91925,
+   "victory_deaths": 1,
+   "wins": 800
+  },
+  "fighter": {
+   "damage_per_fight": 6.63912037037037,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0002314814814814815,
+   "healing_per_fight": 0.600462962962963,
+   "heroes": 864,
+   "high": 1.0,
+   "idle_turn_rate": 0.007737784733089897,
+   "kills_per_fight": 0.43449074074074073,
+   "low": 0.9952209490028883,
+   "n": 800,
+   "party_rounds_per_fight": 3.08625,
+   "protection_per_fight": 0.15555555555555556,
+   "rate": 1.0,
+   "taken_per_fight": 2.066666666666667,
+   "victory_deaths": 0,
+   "wins": 800
+  },
+  "monk": {
+   "damage_per_fight": 7.025480769230769,
+   "deadline_deaths": 0,
+   "death_rate": 0.002403846153846154,
+   "downs_per_fight": 0.007692307692307693,
+   "healing_per_fight": 1.0451923076923078,
+   "heroes": 832,
+   "high": 1.0,
+   "idle_turn_rate": 0.00948880150453069,
+   "kills_per_fight": 0.47884615384615387,
+   "low": 0.9952209490028883,
+   "n": 800,
+   "party_rounds_per_fight": 3.1585,
+   "protection_per_fight": 0.19399038461538462,
+   "rate": 1.0,
+   "taken_per_fight": 2.9353365384615384,
+   "victory_deaths": 2,
+   "wins": 800
+  },
+  "paladin": {
+   "damage_per_fight": 6.915625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.4954326923076923,
+   "heroes": 832,
+   "high": 1.0,
+   "idle_turn_rate": 0.005285791076867945,
+   "kills_per_fight": 0.48173076923076924,
+   "low": 0.9952209490028883,
+   "n": 800,
+   "party_rounds_per_fight": 3.13525,
+   "protection_per_fight": 0.10120192307692308,
+   "rate": 1.0,
+   "taken_per_fight": 1.7213942307692307,
+   "victory_deaths": 0,
+   "wins": 800
+  },
+  "ranger": {
+   "damage_per_fight": 11.293154761904763,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0005952380952380953,
+   "healing_per_fight": 0.544345238095238,
+   "heroes": 672,
+   "high": 1.0,
+   "idle_turn_rate": 0.0004657119571544999,
+   "kills_per_fight": 0.7589285714285714,
+   "low": 0.9940333150265532,
+   "n": 640,
+   "party_rounds_per_fight": 2.919375,
+   "protection_per_fight": 0.06458333333333334,
+   "rate": 1.0,
+   "taken_per_fight": 1.5538690476190475,
+   "victory_deaths": 0,
+   "wins": 640
+  },
+  "rogue": {
+   "damage_per_fight": 10.593930970581422,
+   "deadline_deaths": 3,
+   "death_rate": 0.005787037037037037,
+   "downs_per_fight": 0.00996062080148251,
+   "healing_per_fight": 0.9485753995830438,
+   "heroes": 864,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.0062154108131119625,
+   "kills_per_fight": 0.7007180912670836,
+   "low": 0.9955733857422827,
+   "n": 864,
+   "party_rounds_per_fight": 3.017824074074074,
+   "protection_per_fight": 0.11790595320824647,
+   "rate": 1.0,
+   "taken_per_fight": 2.629603891591383,
+   "victory_deaths": 2,
+   "wins": 864
+  },
+  "sorcerer": {
+   "damage_per_fight": 10.0246875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0015625,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 0.88375,
+   "heroes": 640,
+   "high": 1.0,
+   "idle_turn_rate": 0.00023312740412635504,
+   "kills_per_fight": 0.644375,
+   "low": 0.993721250728947,
+   "n": 608,
+   "party_rounds_per_fight": 3.081578947368421,
+   "protection_per_fight": 0.1921875,
+   "rate": 1.0,
+   "taken_per_fight": 1.9328125,
+   "victory_deaths": 1,
+   "wins": 608
+  },
+  "warlock": {
+   "damage_per_fight": 11.24951923076923,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0033653846153846156,
+   "healing_per_fight": 0.6225961538461539,
+   "heroes": 832,
+   "high": 1.0,
+   "idle_turn_rate": 0.0005374899220639613,
+   "kills_per_fight": 0.725,
+   "low": 0.9950228129709515,
+   "n": 768,
+   "party_rounds_per_fight": 3.0893229166666667,
+   "protection_per_fight": 0.08677884615384615,
+   "rate": 1.0,
+   "taken_per_fight": 1.8326923076923076,
+   "victory_deaths": 0,
+   "wins": 768
+  },
+  "wizard": {
+   "damage_per_fight": 10.876625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.003125,
+   "healing_per_fight": 0.640875,
+   "heroes": 1600,
+   "high": 1.0,
+   "idle_turn_rate": 0.0005662514156285391,
+   "kills_per_fight": 0.68875,
+   "low": 0.9975051979372425,
+   "n": 1536,
+   "party_rounds_per_fight": 3.037890625,
+   "protection_per_fight": 0.09925,
+   "rate": 1.0,
+   "taken_per_fight": 1.866125,
+   "victory_deaths": 0,
+   "wins": 1536
+  }
+ },
+ "deaths": {
+  "causes": {
+   "deadline": 10,
+   "victory": 9
+  },
+  "count": 19,
+  "list": [
+   {
+    "build": "cleric.life",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "dup-cleric",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.order",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot1-07",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.thief",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot1-09",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "barbarian.berserker",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot1-17",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.peace",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-02",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "monk.astral-self",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-04",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.war",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-06",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.tempest",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-10",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "monk.open-hand",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-12",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.light",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot2-14",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.thief",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot3-03",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "artificer.artillerist",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot3-05",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.soulknife",
+    "death_cause": "victory",
+    "death_stage": "2",
+    "outcome": "Victory",
+    "party": "rot3-07",
+    "seed": "20261131",
+    "slot": "2"
+   },
+   {
+    "build": "druid.moon",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot3-10",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.arcane-trickster",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot4-01",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.soulknife",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot4-13",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "sorcerer.draconic-bloodline",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot4-16",
+    "seed": "20261139",
+    "slot": "1"
+   },
+   {
+    "build": "cleric.trickery",
+    "death_cause": "deadline",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "rot5-06",
+    "seed": "20261136",
+    "slot": "1"
+   },
+   {
+    "build": "rogue.assassin",
+    "death_cause": "victory",
+    "death_stage": "5",
+    "outcome": "Victory",
+    "party": "support-poor",
+    "seed": "20261136",
+    "slot": "1"
+   }
+  ]
+ },
+ "encounters": {
+  "1-dangerous": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.010732323232323232,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.08624738291214851,
+   "hp_low_fraction": 0.9022927420048383,
+   "hp_low_min": 0.65625,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.1420454545454546,
+   "route": "dangerous",
+   "stage": 1,
+   "wins": 1584
+  },
+  "1-guarded": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.0,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.030764883573743573,
+   "hp_low_fraction": 0.9681875029521282,
+   "hp_low_min": 0.8,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 2.172979797979798,
+   "route": "guarded",
+   "stage": 1,
+   "wins": 1584
+  },
+  "2-dangerous": {
+   "conscious_start": 4.0,
+   "deaths": 0.0006313131313131314,
+   "downs": 0.0012626262626262627,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.09262226364884636,
+   "hp_low_fraction": 0.8941117040563773,
+   "hp_low_min": 0.696078431372549,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.4577020202020203,
+   "route": "dangerous",
+   "stage": 2,
+   "wins": 1584
+  },
+  "2-guarded": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.0,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.03466351837488524,
+   "hp_low_fraction": 0.9584931529554772,
+   "hp_low_min": 0.7888888888888889,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 2.5353535353535355,
+   "route": "guarded",
+   "stage": 2,
+   "wins": 1584
+  },
+  "3-dangerous": {
+   "conscious_start": 3.999368686868687,
+   "deaths": 0.0,
+   "downs": 0.018308080808080808,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.08292447033719037,
+   "hp_low_fraction": 0.8307219192266763,
+   "hp_low_min": 0.5729166666666666,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.6414141414141414,
+   "route": "dangerous",
+   "stage": 3,
+   "wins": 1584
+  },
+  "3-guarded": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.0,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.049394304834742525,
+   "hp_low_fraction": 0.872576676523968,
+   "hp_low_min": 0.6224489795918368,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.27209595959596,
+   "route": "guarded",
+   "stage": 3,
+   "wins": 1584
+  },
+  "4-dangerous": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.04040404040404041,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.086094952563164,
+   "hp_low_fraction": 0.7549777578616474,
+   "hp_low_min": 0.45555555555555555,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.8188131313131315,
+   "route": "dangerous",
+   "stage": 4,
+   "wins": 1584
+  },
+  "4-guarded": {
+   "conscious_start": 3.999368686868687,
+   "deaths": 0.0,
+   "downs": 0.0006313131313131314,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.02355020613267597,
+   "hp_low_fraction": 0.8238489225650988,
+   "hp_low_min": 0.5760869565217391,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 2.5448232323232323,
+   "route": "guarded",
+   "stage": 4,
+   "wins": 1584
+  },
+  "5-dangerous": {
+   "conscious_start": 3.999368686868687,
+   "deaths": 0.011363636363636364,
+   "downs": 0.06628787878787878,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.047199985934996136,
+   "hp_low_fraction": 0.7308259687221046,
+   "hp_low_min": 0.41346153846153844,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 3.5542929292929295,
+   "route": "dangerous",
+   "stage": 5,
+   "wins": 1584
+  },
+  "5-guarded": {
+   "conscious_start": 4.0,
+   "deaths": 0.0,
+   "downs": 0.0,
+   "high": 0.9999999999999999,
+   "hp_lost_fraction": 0.019754604349591084,
+   "hp_low_fraction": 0.7712308060251598,
+   "hp_low_min": 0.55,
+   "low": 0.9975806150940999,
+   "n": 1584,
+   "rate": 1.0,
+   "rounds": 2.5782828282828283,
+   "route": "guarded",
+   "stage": 5,
+   "wins": 1584
+  }
+ },
+ "gates": {
+  "illegal_proposals": 0,
+  "passive_ends": 0,
+  "policy_errors": 0
+ },
+ "groups": [
+  "Fixed",
+  "Rotation1",
+  "Rotation2",
+  "Rotation3",
+  "Rotation4",
+  "Rotation5"
+ ],
+ "kits": {
+  "artificer.alchemist": {
+   "class": "artificer",
+   "damage_per_fight": 10.1025,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.6725,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.002977667493796526,
+   "kills_per_fight": 0.7075,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.19375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.89125,
+   "potions_left_at_victory": 2.33125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.2421836228287841,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.0471311475409836,
+     "uses": 23,
+     "uses_per_run": 0.14375
+    },
+    {
+     "available_rate": 0.4114143920595533,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.4873341375150784,
+     "uses": 404,
+     "uses_per_run": 2.525
+    }
+   ],
+   "taken_per_fight": 1.875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "artificer.armorer": {
+   "class": "artificer",
+   "damage_per_fight": 9.2525,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.66,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0036798528058877645,
+   "kills_per_fight": 0.63,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.1325,
+   "potions_left_at_victory": 2.21875,
+   "protection_per_fight": 0.42875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.22171113155473782,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9605809128630706,
+     "uses": 463,
+     "uses_per_run": 2.89375
+    },
+    {
+     "available_rate": 0.02391904323827047,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.28846153846153844,
+     "uses": 15,
+     "uses_per_run": 0.09375
+    }
+   ],
+   "taken_per_fight": 1.43875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "artificer.artillerist": {
+   "class": "artificer",
+   "damage_per_fight": 10.00125,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.65875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0046168051708217915,
+   "kills_per_fight": 0.63875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.13,
+   "potions_left_at_victory": 2.2264150943396226,
+   "protection_per_fight": 0.095,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.11449676823638043,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6733870967741935,
+     "uses": 167,
+     "uses_per_run": 1.04375
+    },
+    {
+     "available_rate": 0.1615881809787627,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8885714285714286,
+     "uses": 311,
+     "uses_per_run": 1.94375
+    }
+   ],
+   "taken_per_fight": 1.77,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "artificer.battle-smith": {
+   "class": "artificer",
+   "damage_per_fight": 11.18,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.42625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0018788163457022077,
+   "kills_per_fight": 0.7575,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.50625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.04875,
+   "potions_left_at_victory": 2.3625,
+   "protection_per_fight": 0.03875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.4372945044621888,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.045112781954887216,
+     "uses": 42,
+     "uses_per_run": 0.2625
+    },
+    {
+     "available_rate": 0.12635039924847347,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 269,
+     "uses_per_run": 1.68125
+    }
+   ],
+   "taken_per_fight": 1.825,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "barbarian.beast": {
+   "class": "barbarian",
+   "damage_per_fight": 7.807291666666667,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.5885416666666666,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.007785130400934216,
+   "kills_per_fight": 0.5510416666666667,
+   "left_at_victory": {
+    "rage": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.080208333333333,
+   "potions_left_at_victory": 2.2864583333333335,
+   "protection_per_fight": 0.11354166666666667,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.24133904242896068,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9225806451612903,
+     "uses": 572,
+     "uses_per_run": 2.9791666666666665
+    },
+    {
+     "available_rate": 0.20825223822499025,
+     "command": "Special2",
+     "top_blocker": "StanceRequired",
+     "use_when_available": 0.5794392523364486,
+     "uses": 310,
+     "uses_per_run": 1.6145833333333333
+    }
+   ],
+   "taken_per_fight": 2.278125,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "barbarian.berserker": {
+   "class": "barbarian",
+   "damage_per_fight": 8.07375,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.4825,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0036529680365296802,
+   "kills_per_fight": 0.61875,
+   "left_at_victory": {
+    "rage": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.11625,
+   "potions_left_at_victory": 2.257861635220126,
+   "protection_per_fight": 0.1475,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23378995433789954,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.93359375,
+     "uses": 478,
+     "uses_per_run": 2.9875
+    },
+    {
+     "available_rate": 0.10684931506849316,
+     "command": "Special2",
+     "top_blocker": "StanceRequired",
+     "use_when_available": 1.0,
+     "uses": 234,
+     "uses_per_run": 1.4625
+    }
+   ],
+   "taken_per_fight": 2.9025,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "barbarian.totem-warrior": {
+   "class": "barbarian",
+   "damage_per_fight": 6.7,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.53375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0027384755819260614,
+   "kills_per_fight": 0.4775,
+   "left_at_victory": {
+    "rage": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.16875,
+   "potions_left_at_victory": 2.33125,
+   "protection_per_fight": 0.20875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23824737562756731,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9137931034482759,
+     "uses": 477,
+     "uses_per_run": 2.98125
+    },
+    {
+     "available_rate": 0.3254221816522136,
+     "command": "Special2",
+     "top_blocker": "StanceRequired",
+     "use_when_available": 0.34221598877980364,
+     "uses": 244,
+     "uses_per_run": 1.525
+    }
+   ],
+   "taken_per_fight": 2.60875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "barbarian.wild-magic": {
+   "class": "barbarian",
+   "damage_per_fight": 8.05625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.4825,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.008486562942008486,
+   "kills_per_fight": 0.57,
+   "left_at_victory": {
+    "rage": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.06375,
+   "potions_left_at_victory": 2.4,
+   "protection_per_fight": 0.09875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23715228665723714,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9502982107355865,
+     "uses": 478,
+     "uses_per_run": 2.9875
+    },
+    {
+     "available_rate": 0.2413955681282414,
+     "command": "Special2",
+     "top_blocker": "StanceRequired",
+     "use_when_available": 0.68359375,
+     "uses": 350,
+     "uses_per_run": 2.1875
+    }
+   ],
+   "taken_per_fight": 2.08875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "bard.creation": {
+   "class": "bard",
+   "damage_per_fight": 10.51125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0075,
+   "healing_per_fight": 0.8775,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005901044030866999,
+   "kills_per_fight": 0.6125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.20625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.11625,
+   "potions_left_at_victory": 2.0125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.8365864729913755,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.02170374389582203,
+     "uses": 40,
+     "uses_per_run": 0.25
+    },
+    {
+     "available_rate": 0.20018157058556513,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.3900226757369615,
+     "uses": 172,
+     "uses_per_run": 1.075
+    }
+   ],
+   "taken_per_fight": 2.555,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "bard.eloquence": {
+   "class": "bard",
+   "damage_per_fight": 11.32125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00625,
+   "healing_per_fight": 0.7725,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005749880210828941,
+   "kills_per_fight": 0.75875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.95,
+   "potions_left_at_victory": 2.1375,
+   "protection_per_fight": 0.03,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23814087206516532,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.1488933601609658,
+     "uses": 74,
+     "uses_per_run": 0.4625
+    },
+    {
+     "available_rate": 0.19166267369429804,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 400,
+     "uses_per_run": 2.5
+    }
+   ],
+   "taken_per_fight": 2.20625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "bard.lore": {
+   "class": "bard",
+   "damage_per_fight": 10.945,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 1.0575,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005877034358047016,
+   "kills_per_fight": 0.80875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.21875
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.1125,
+   "potions_left_at_victory": 1.98125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.4217902350813743,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.43837084673097537,
+     "uses": 409,
+     "uses_per_run": 2.55625
+    },
+    {
+     "available_rate": 0.21292947558770345,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.044585987261146494,
+     "uses": 21,
+     "uses_per_run": 0.13125
+    }
+   ],
+   "taken_per_fight": 2.55125,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "bard.valor": {
+   "class": "bard",
+   "damage_per_fight": 9.38625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.98,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0037914691943127963,
+   "kills_per_fight": 0.57875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.025,
+   "potions_left_at_victory": 2.00625,
+   "protection_per_fight": 0.1225,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.14502369668246445,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8888888888888888,
+     "uses": 272,
+     "uses_per_run": 1.7
+    },
+    {
+     "available_rate": 0.11469194312796209,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8223140495867769,
+     "uses": 199,
+     "uses_per_run": 1.24375
+    }
+   ],
+   "taken_per_fight": 2.40875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.knowledge": {
+   "class": "cleric",
+   "damage_per_fight": 10.30375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.98875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.004207573632538569,
+   "kills_per_fight": 0.69375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.05125,
+   "potions_left_at_victory": 1.8875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.2884525479195886,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.008103727714748784,
+     "uses": 5,
+     "uses_per_run": 0.03125
+    },
+    {
+     "available_rate": 0.24918186068256196,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8686679174484052,
+     "uses": 463,
+     "uses_per_run": 2.89375
+    }
+   ],
+   "taken_per_fight": 2.3675,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.life": {
+   "class": "cleric",
+   "damage_per_fight": 9.235416666666667,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.009375,
+   "healing_per_fight": 1.1135416666666667,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.0040290088638195,
+   "kills_per_fight": 0.5552083333333333,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.59375
+    },
+    "slot": {
+     "cap": 2,
+     "mean": 1.59375
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.009375,
+   "potions_left_at_victory": 2.5833333333333335,
+   "protection_per_fight": 0.16458333333333333,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.4492344883158743,
+     "command": "CureWounds",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.0726457399103139,
+     "uses": 81,
+     "uses_per_run": 0.421875
+    },
+    {
+     "available_rate": 0.7711522965350524,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.19540229885057472,
+     "uses": 374,
+     "uses_per_run": 1.9479166666666667
+    }
+   ],
+   "taken_per_fight": 2.040625,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "cleric.light": {
+   "class": "cleric",
+   "damage_per_fight": 8.9325,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.6275,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.003859141341051616,
+   "kills_per_fight": 0.5425,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0525,
+   "potions_left_at_victory": 2.238993710691824,
+   "protection_per_fight": 0.27375,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.09599614085865894,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6180904522613065,
+     "uses": 123,
+     "uses_per_run": 0.76875
+    },
+    {
+     "available_rate": 0.21369995176073323,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.7832957110609481,
+     "uses": 347,
+     "uses_per_run": 2.16875
+    }
+   ],
+   "taken_per_fight": 1.7975,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.nature": {
+   "class": "cleric",
+   "damage_per_fight": 9.79625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.805,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0037647058823529413,
+   "kills_per_fight": 0.68,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.85625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0675,
+   "potions_left_at_victory": 2.2625,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.5788235294117647,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.17642276422764228,
+     "uses": 217,
+     "uses_per_run": 1.35625
+    },
+    {
+     "available_rate": 0.23105882352941176,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.054989816700611,
+     "uses": 27,
+     "uses_per_run": 0.16875
+    }
+   ],
+   "taken_per_fight": 2.095,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.order": {
+   "class": "cleric",
+   "damage_per_fight": 9.5175,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00625,
+   "healing_per_fight": 0.91375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0032603632976245926,
+   "kills_per_fight": 0.60375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0975,
+   "potions_left_at_victory": 1.9937106918238994,
+   "protection_per_fight": 0.32,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.2072659524918491,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.0,
+     "uses": 0,
+     "uses_per_run": 0.0
+    },
+    {
+     "available_rate": 0.23055426176059618,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9676767676767677,
+     "uses": 479,
+     "uses_per_run": 2.99375
+    }
+   ],
+   "taken_per_fight": 2.31875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.peace": {
+   "class": "cleric",
+   "damage_per_fight": 9.2625,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00625,
+   "healing_per_fight": 1.42375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0037243947858473,
+   "kills_per_fight": 0.56875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.4968553459119496
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.1075,
+   "potions_left_at_victory": 2.2767295597484276,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.5796089385474861,
+     "command": "Special1",
+     "top_blocker": "NoWoundedTarget",
+     "use_when_available": 0.06666666666666667,
+     "uses": 83,
+     "uses_per_run": 0.51875
+    },
+    {
+     "available_rate": 0.8738361266294227,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.0010655301012253596,
+     "uses": 2,
+     "uses_per_run": 0.0125
+    }
+   ],
+   "taken_per_fight": 2.09625,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "cleric.tempest": {
+   "class": "cleric",
+   "damage_per_fight": 11.57,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.6625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0009004952723998199,
+   "kills_per_fight": 0.79,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.4528301886792453
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.16,
+   "potions_left_at_victory": 2.1949685534591197,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.05132823052678973,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 114,
+     "uses_per_run": 0.7125
+    },
+    {
+     "available_rate": 0.5258892390814949,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.18664383561643835,
+     "uses": 218,
+     "uses_per_run": 1.3625
+    }
+   ],
+   "taken_per_fight": 1.9175,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.trickery": {
+   "class": "cleric",
+   "damage_per_fight": 9.57375,
+   "deadline_deaths": 1,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.645,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.004239284032030146,
+   "kills_per_fight": 0.63,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0275,
+   "potions_left_at_victory": 2.1761006289308176,
+   "protection_per_fight": 0.5025,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.24258125294394725,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.912621359223301,
+     "uses": 470,
+     "uses_per_run": 2.9375
+    },
+    {
+     "available_rate": 0.2312764955252002,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.004073319755600814,
+     "uses": 2,
+     "uses_per_run": 0.0125
+    }
+   ],
+   "taken_per_fight": 1.69375,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.twilight": {
+   "class": "cleric",
+   "damage_per_fight": 10.45125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.7775,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0018331805682859762,
+   "kills_per_fight": 0.65125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.25
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.12,
+   "potions_left_at_victory": 2.05,
+   "protection_per_fight": 0.105,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.5604949587534372,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.11283728536385937,
+     "uses": 138,
+     "uses_per_run": 0.8625
+    },
+    {
+     "available_rate": 0.10494958753437214,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 229,
+     "uses_per_run": 1.43125
+    }
+   ],
+   "taken_per_fight": 2.475,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "cleric.war": {
+   "class": "cleric",
+   "damage_per_fight": 9.925,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.92125,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.62625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.6540880503144654
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0775,
+   "potions_left_at_victory": 2.0754716981132075,
+   "protection_per_fight": 0.045,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.06066350710900474,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 128,
+     "uses_per_run": 0.8
+    },
+    {
+     "available_rate": 0.681042654028436,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.08977035490605428,
+     "uses": 129,
+     "uses_per_run": 0.80625
+    }
+   ],
+   "taken_per_fight": 1.88125,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "druid.land": {
+   "class": "druid",
+   "damage_per_fight": 9.4,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.6675,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.00341130604288499,
+   "kills_per_fight": 0.61,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0125,
+   "potions_left_at_victory": 2.21875,
+   "protection_per_fight": 0.0975,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.14083820662768032,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.3494809688581315,
+     "uses": 101,
+     "uses_per_run": 0.63125
+    },
+    {
+     "available_rate": 0.20175438596491227,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8840579710144928,
+     "uses": 366,
+     "uses_per_run": 2.2875
+    }
+   ],
+   "taken_per_fight": 2.08375,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "druid.moon": {
+   "class": "druid",
+   "damage_per_fight": 9.5575,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.5725,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.003825920612147298,
+   "kills_per_fight": 0.5775,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0275,
+   "potions_left_at_victory": 2.289308176100629,
+   "protection_per_fight": 0.43125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.2223816355810617,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9720430107526882,
+     "uses": 452,
+     "uses_per_run": 2.825
+    },
+    {
+     "available_rate": 0.03778096604495457,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.31645569620253167,
+     "uses": 25,
+     "uses_per_run": 0.15625
+    }
+   ],
+   "taken_per_fight": 1.4875,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "druid.spores": {
+   "class": "druid",
+   "damage_per_fight": 9.30375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 0.8625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.002407318247472316,
+   "kills_per_fight": 0.6075,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.15
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.05125,
+   "potions_left_at_victory": 2.39375,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.07655272026961964,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.7421383647798742,
+     "uses": 118,
+     "uses_per_run": 0.7375
+    },
+    {
+     "available_rate": 0.32209918151179584,
+     "command": "Special2",
+     "top_blocker": "NoWoundedTarget",
+     "use_when_available": 0.06726457399103139,
+     "uses": 45,
+     "uses_per_run": 0.28125
+    }
+   ],
+   "taken_per_fight": 2.01875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "druid.stars": {
+   "class": "druid",
+   "damage_per_fight": 10.81875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.895,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.003341288782816229,
+   "kills_per_fight": 0.80375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.10625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.00125,
+   "potions_left_at_victory": 2.15625,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.39809069212410503,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.5215827338129496,
+     "uses": 435,
+     "uses_per_run": 2.71875
+    },
+    {
+     "available_rate": 0.22720763723150358,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.03991596638655462,
+     "uses": 19,
+     "uses_per_run": 0.11875
+    }
+   ],
+   "taken_per_fight": 2.0975,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "druid.wildfire": {
+   "class": "druid",
+   "damage_per_fight": 9.3,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.69875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.003453379378391712,
+   "kills_per_fight": 0.58375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.1875
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.9825,
+   "potions_left_at_victory": 2.25625,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.44647261963492846,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.3911602209944751,
+     "uses": 354,
+     "uses_per_run": 2.2125
+    },
+    {
+     "available_rate": 0.49679329057720767,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.01787487586891758,
+     "uses": 18,
+     "uses_per_run": 0.1125
+    }
+   ],
+   "taken_per_fight": 1.90875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "fighter.battle-master": {
+   "class": "fighter",
+   "damage_per_fight": 7.2,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.825,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0069124423963133645,
+   "kills_per_fight": 0.475,
+   "left_at_victory": {
+    "maneuver": {
+     "cap": 2,
+     "mean": 0.0125
+    },
+    "wind": {
+     "cap": 2,
+     "mean": 1.7
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.13,
+   "potions_left_at_victory": 2.4125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.4824884792626728,
+     "command": "SecondWind",
+     "top_blocker": "NoWoundedTarget",
+     "use_when_available": 0.04775549188156638,
+     "uses": 50,
+     "uses_per_run": 0.3125
+    },
+    {
+     "available_rate": 0.14700460829493087,
+     "command": "PrecisionStrike",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9968652037617555,
+     "uses": 318,
+     "uses_per_run": 1.9875
+    }
+   ],
+   "taken_per_fight": 2.30875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "fighter.champion": {
+   "class": "fighter",
+   "damage_per_fight": 6.491666666666666,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0010416666666666667,
+   "healing_per_fight": 0.6989583333333333,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.008422664624808576,
+   "kills_per_fight": 0.4427083333333333,
+   "left_at_victory": {
+    "wind": {
+     "cap": 2,
+     "mean": 1.703125
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.142708333333333,
+   "potions_left_at_victory": 2.421875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.4850689127105666,
+     "command": "SecondWind",
+     "top_blocker": "NoWoundedTarget",
+     "use_when_available": 0.04656669297553275,
+     "uses": 59,
+     "uses_per_run": 0.3072916666666667
+    }
+   ],
+   "taken_per_fight": 2.459375,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "fighter.eldritch-knight": {
+   "class": "fighter",
+   "damage_per_fight": 6.225,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.559375,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.011093502377179081,
+   "kills_per_fight": 0.415625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.0635416666666666,
+   "potions_left_at_victory": 2.2760416666666665,
+   "protection_per_fight": 0.3625,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.21553090332805072,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8363970588235294,
+     "uses": 455,
+     "uses_per_run": 2.3697916666666665
+    },
+    {
+     "available_rate": 0.08914421553090333,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.48,
+     "uses": 108,
+     "uses_per_run": 0.5625
+    }
+   ],
+   "taken_per_fight": 1.8739583333333334,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "fighter.psi-warrior": {
+   "class": "fighter",
+   "damage_per_fight": 6.66125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.49625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0070921985815602835,
+   "kills_per_fight": 0.415,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.08375,
+   "potions_left_at_victory": 2.35,
+   "protection_per_fight": 0.175,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.1867612293144208,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9088607594936708,
+     "uses": 359,
+     "uses_per_run": 2.24375
+    },
+    {
+     "available_rate": 0.08037825059101655,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6882352941176471,
+     "uses": 117,
+     "uses_per_run": 0.73125
+    }
+   ],
+   "taken_per_fight": 2.0225,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "fighter.rune-knight": {
+   "class": "fighter",
+   "damage_per_fight": 6.73,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.41125,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.004324843825084094,
+   "kills_per_fight": 0.42625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.00625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.03375,
+   "potions_left_at_victory": 2.40625,
+   "protection_per_fight": 0.23,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.30370014416146085,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.5221518987341772,
+     "uses": 330,
+     "uses_per_run": 2.0625
+    },
+    {
+     "available_rate": 0.11388755406054782,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6033755274261603,
+     "uses": 143,
+     "uses_per_run": 0.89375
+    }
+   ],
+   "taken_per_fight": 1.62875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "monk.astral-self": {
+   "class": "monk",
+   "damage_per_fight": 6.60625,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.9,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.011984021304926764,
+   "kills_per_fight": 0.44125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.16625,
+   "potions_left_at_victory": 2.050314465408805,
+   "protection_per_fight": 0.4125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.04971149578339991,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.17857142857142858,
+     "uses": 20,
+     "uses_per_run": 0.125
+    },
+    {
+     "available_rate": 0.22458943630714603,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8972332015810277,
+     "uses": 454,
+     "uses_per_run": 2.8375
+    }
+   ],
+   "taken_per_fight": 2.54625,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "monk.four-elements": {
+   "class": "monk",
+   "damage_per_fight": 8.0175,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.01125,
+   "healing_per_fight": 1.10375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.00788091068301226,
+   "kills_per_fight": 0.5175,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.01875
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.20625,
+   "potions_left_at_victory": 1.8625,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.2626970227670753,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.75,
+     "uses": 450,
+     "uses_per_run": 2.8125
+    },
+    {
+     "available_rate": 0.20052539404553416,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.010917030567685589,
+     "uses": 5,
+     "uses_per_run": 0.03125
+    }
+   ],
+   "taken_per_fight": 3.25125,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "monk.mercy": {
+   "class": "monk",
+   "damage_per_fight": 6.99875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00625,
+   "healing_per_fight": 1.31625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.009138381201044387,
+   "kills_per_fight": 0.53,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.29375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.20875,
+   "potions_left_at_victory": 1.79375,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.11270670147954744,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.05019305019305019,
+     "uses": 13,
+     "uses_per_run": 0.08125
+    },
+    {
+     "available_rate": 0.32811140121845084,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.5092838196286472,
+     "uses": 384,
+     "uses_per_run": 2.4
+    }
+   ],
+   "taken_per_fight": 3.3025,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "monk.open-hand": {
+   "class": "monk",
+   "damage_per_fight": 6.88375,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.01375,
+   "healing_per_fight": 1.175,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.012195121951219513,
+   "kills_per_fight": 0.49875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.15375,
+   "potions_left_at_victory": 1.8238993710691824,
+   "protection_per_fight": 0.33,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.0957542908762421,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 212,
+     "uses_per_run": 1.325
+    },
+    {
+     "available_rate": 0.24164408310749774,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.48411214953271026,
+     "uses": 259,
+     "uses_per_run": 1.61875
+    }
+   ],
+   "taken_per_fight": 3.05,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "monk.shadow": {
+   "class": "monk",
+   "damage_per_fight": 6.688541666666667,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.004166666666666667,
+   "healing_per_fight": 0.7833333333333333,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.006795016987542469,
+   "kills_per_fight": 0.41875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.4427083333333333
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.0885416666666665,
+   "potions_left_at_victory": 2.1822916666666665,
+   "protection_per_fight": 0.221875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.6677991694979237,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.013001695873374788,
+     "uses": 23,
+     "uses_per_run": 0.11979166666666667
+    },
+    {
+     "available_rate": 0.5681389203473008,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.23056478405315614,
+     "uses": 347,
+     "uses_per_run": 1.8072916666666667
+    }
+   ],
+   "taken_per_fight": 2.5947916666666666,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "paladin.ancients": {
+   "class": "paladin",
+   "damage_per_fight": 6.61,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.41875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0060324825986078886,
+   "kills_per_fight": 0.4425,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.175,
+   "potions_left_at_victory": 2.4,
+   "protection_per_fight": 0.07125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.07749419953596287,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6347305389221557,
+     "uses": 106,
+     "uses_per_run": 0.6625
+    },
+    {
+     "available_rate": 0.19489559164733178,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8642857142857143,
+     "uses": 363,
+     "uses_per_run": 2.26875
+    }
+   ],
+   "taken_per_fight": 1.88625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "paladin.devotion": {
+   "class": "paladin",
+   "damage_per_fight": 6.61125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.505,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005200945626477541,
+   "kills_per_fight": 0.44625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.99375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0875,
+   "potions_left_at_victory": 2.4625,
+   "protection_per_fight": 0.30875,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.8411347517730496,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.12703766160764474,
+     "uses": 226,
+     "uses_per_run": 1.4125
+    },
+    {
+     "available_rate": 0.20141843971631207,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.04460093896713615,
+     "uses": 19,
+     "uses_per_run": 0.11875
+    }
+   ],
+   "taken_per_fight": 1.7575,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "paladin.glory": {
+   "class": "paladin",
+   "damage_per_fight": 5.932291666666667,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.55625,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.008012209080503624,
+   "kills_per_fight": 0.4395833333333333,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.7552083333333333
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.207291666666667,
+   "potions_left_at_victory": 2.46875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.8561617703166731,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.011586452762923352,
+     "uses": 26,
+     "uses_per_run": 0.13541666666666666
+    },
+    {
+     "available_rate": 0.22701259061426937,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.04201680672268908,
+     "uses": 25,
+     "uses_per_run": 0.13020833333333334
+    }
+   ],
+   "taken_per_fight": 1.846875,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "paladin.vengeance": {
+   "class": "paladin",
+   "damage_per_fight": 8.82375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.48875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.004310344827586207,
+   "kills_per_fight": 0.665,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.00625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.01125,
+   "potions_left_at_victory": 2.35,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.20450191570881227,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9976580796252927,
+     "uses": 426,
+     "uses_per_run": 2.6625
+    },
+    {
+     "available_rate": 0.3625478927203065,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.005284015852047556,
+     "uses": 4,
+     "uses_per_run": 0.025
+    }
+   ],
+   "taken_per_fight": 1.63625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "paladin.watchers": {
+   "class": "paladin",
+   "damage_per_fight": 6.7975,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.49625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0022904260192395786,
+   "kills_per_fight": 0.42375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.1875,
+   "potions_left_at_victory": 2.4125,
+   "protection_per_fight": 0.14625,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.05313788364635822,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.31896551724137934,
+     "uses": 37,
+     "uses_per_run": 0.23125
+    },
+    {
+     "available_rate": 0.21759047182775995,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9178947368421052,
+     "uses": 436,
+     "uses_per_run": 2.725
+    }
+   ],
+   "taken_per_fight": 1.455,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "ranger.beast-master": {
+   "class": "ranger",
+   "damage_per_fight": 10.7025,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.45375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0014492753623188406,
+   "kills_per_fight": 0.69875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.93875,
+   "potions_left_at_victory": 2.36875,
+   "protection_per_fight": 0.27125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.057004830917874394,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.06779661016949153,
+     "uses": 8,
+     "uses_per_run": 0.05
+    },
+    {
+     "available_rate": 0.24396135265700483,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.904950495049505,
+     "uses": 457,
+     "uses_per_run": 2.85625
+    }
+   ],
+   "taken_per_fight": 1.505,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "ranger.fey-wanderer": {
+   "class": "ranger",
+   "damage_per_fight": 11.61,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.5925,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.775,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.01875,
+   "potions_left_at_victory": 2.26875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.28015016424213984,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.005025125628140704,
+     "uses": 3,
+     "uses_per_run": 0.01875
+    },
+    {
+     "available_rate": 0.25152510558423274,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8656716417910447,
+     "uses": 464,
+     "uses_per_run": 2.9
+    }
+   ],
+   "taken_per_fight": 1.63875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "ranger.hunter": {
+   "class": "ranger",
+   "damage_per_fight": 12.0875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.39875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.85,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.8125,
+   "potions_left_at_victory": 2.44375,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.21979695431472082,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.09006928406466513,
+     "uses": 39,
+     "uses_per_run": 0.24375
+    },
+    {
+     "available_rate": 0.21979695431472082,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 433,
+     "uses_per_run": 2.70625
+    }
+   ],
+   "taken_per_fight": 1.33,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "ranger.swarmkeeper": {
+   "class": "ranger",
+   "damage_per_fight": 10.859375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.7010416666666667,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.00041356492969396195,
+   "kills_per_fight": 0.7197916666666667,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.078125
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 2.8739583333333334,
+   "potions_left_at_victory": 2.2135416666666665,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.09429280397022333,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 228,
+     "uses_per_run": 1.1875
+    },
+    {
+     "available_rate": 0.3490488006617039,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.37796208530805686,
+     "uses": 319,
+     "uses_per_run": 1.6614583333333333
+    }
+   ],
+   "taken_per_fight": 1.7104166666666667,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "rogue.arcane-trickster": {
+   "class": "rogue",
+   "damage_per_fight": 9.41875,
+   "deadline_deaths": 1,
+   "death_rate": 0.005208333333333333,
+   "downs_per_fight": 0.008333333333333333,
+   "healing_per_fight": 0.7354166666666667,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.009642426677380474,
+   "kills_per_fight": 0.6020833333333333,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 2.896875,
+   "potions_left_at_victory": 2.1780104712041886,
+   "protection_per_fight": 0.428125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.24186420249096022,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9019933554817275,
+     "uses": 543,
+     "uses_per_run": 2.828125
+    },
+    {
+     "available_rate": 0.11209321012454801,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.08243727598566308,
+     "uses": 23,
+     "uses_per_run": 0.11979166666666667
+    }
+   ],
+   "taken_per_fight": 2.2177083333333334,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "rogue.assassin": {
+   "class": "rogue",
+   "damage_per_fight": 10.58375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00875,
+   "healing_per_fight": 1.09375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005025125628140704,
+   "kills_per_fight": 0.66375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.1625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.05625,
+   "potions_left_at_victory": 1.90625,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.0968478757423481,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.8066037735849056,
+     "uses": 171,
+     "uses_per_run": 1.06875
+    },
+    {
+     "available_rate": 0.5344906349931475,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.002564102564102564,
+     "uses": 3,
+     "uses_per_run": 0.01875
+    }
+   ],
+   "taken_per_fight": 2.56625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "rogue.phantom": {
+   "class": "rogue",
+   "damage_per_fight": 10.62375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 0.85375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.005412719891745603,
+   "kills_per_fight": 0.70625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.0625,
+   "potions_left_at_victory": 2.08125,
+   "protection_per_fight": 0.1225,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.12359043752819125,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.11313868613138686,
+     "uses": 31,
+     "uses_per_run": 0.19375
+    },
+    {
+     "available_rate": 0.2223725755525485,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9026369168356998,
+     "uses": 445,
+     "uses_per_run": 2.78125
+    }
+   ],
+   "taken_per_fight": 2.69625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "rogue.soulknife": {
+   "class": "rogue",
+   "damage_per_fight": 11.861024033437827,
+   "deadline_deaths": 1,
+   "death_rate": 0.010416666666666666,
+   "downs_per_fight": 0.01044932079414838,
+   "healing_per_fight": 0.9049111807732497,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.004163512490537472,
+   "kills_per_fight": 0.8620689655172413,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.033333333333333,
+   "potions_left_at_victory": 2.0631578947368423,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.21196063588190764,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9946428571428572,
+     "uses": 557,
+     "uses_per_run": 2.9010416666666665
+    },
+    {
+     "available_rate": 0.25397426192278577,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.00894187779433681,
+     "uses": 6,
+     "uses_per_run": 0.03125
+    }
+   ],
+   "taken_per_fight": 2.6091954022988504,
+   "victory_deaths": 1,
+   "wins": 192
+  },
+  "rogue.thief": {
+   "class": "rogue",
+   "damage_per_fight": 10.46875,
+   "deadline_deaths": 1,
+   "death_rate": 0.0125,
+   "downs_per_fight": 0.0175,
+   "healing_per_fight": 1.20625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.006793478260869565,
+   "kills_per_fight": 0.6575,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.6962025316455696
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.06125,
+   "potions_left_at_victory": 1.9240506329113924,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.9103260869565217,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.014427860696517412,
+     "uses": 29,
+     "uses_per_run": 0.18125
+    },
+    {
+     "available_rate": 0.2477355072463768,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.04021937842778794,
+     "uses": 22,
+     "uses_per_run": 0.1375
+    }
+   ],
+   "taken_per_fight": 3.145,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "sorcerer.aberrant-mind": {
+   "class": "sorcerer",
+   "damage_per_fight": 10.05125,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00875,
+   "healing_per_fight": 0.735,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.64375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.09125,
+   "potions_left_at_victory": 2.14375,
+   "protection_per_fight": 0.17,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.09967396367023754,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.7523364485981309,
+     "uses": 161,
+     "uses_per_run": 1.00625
+    },
+    {
+     "available_rate": 0.16348393106660455,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.905982905982906,
+     "uses": 318,
+     "uses_per_run": 1.9875
+    }
+   ],
+   "taken_per_fight": 2.05625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "sorcerer.clockwork-soul": {
+   "class": "sorcerer",
+   "damage_per_fight": 9.6225,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 1.155,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0004572473708276177,
+   "kills_per_fight": 0.6125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.6125
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.15,
+   "potions_left_at_victory": 2.275,
+   "protection_per_fight": 0.30625,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.7960676726108825,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.1803561171740379,
+     "uses": 314,
+     "uses_per_run": 1.9625
+    },
+    {
+     "available_rate": 0.5162322816643804,
+     "command": "Special2",
+     "top_blocker": "NoWoundedTarget",
+     "use_when_available": 0.05934455270150576,
+     "uses": 67,
+     "uses_per_run": 0.41875
+    }
+   ],
+   "taken_per_fight": 1.69625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "sorcerer.draconic-bloodline": {
+   "class": "sorcerer",
+   "damage_per_fight": 10.19125,
+   "deadline_deaths": 0,
+   "death_rate": 0.00625,
+   "downs_per_fight": 0.0075,
+   "healing_per_fight": 0.65625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.00046598322460391424,
+   "kills_per_fight": 0.66,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.07125,
+   "potions_left_at_victory": 2.2264150943396226,
+   "protection_per_fight": 0.2925,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.03681267474370923,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.379746835443038,
+     "uses": 30,
+     "uses_per_run": 0.1875
+    },
+    {
+     "available_rate": 0.21714818266542404,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9527896995708155,
+     "uses": 444,
+     "uses_per_run": 2.775
+    }
+   ],
+   "taken_per_fight": 1.63375,
+   "victory_deaths": 1,
+   "wins": 160
+  },
+  "sorcerer.wild-magic": {
+   "class": "sorcerer",
+   "damage_per_fight": 10.23375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.98875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.66125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.04375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.99625,
+   "potions_left_at_victory": 1.925,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.25107193901858027,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.8709677419354839,
+     "uses": 459,
+     "uses_per_run": 2.86875
+    },
+    {
+     "available_rate": 0.28823249166269654,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.009917355371900827,
+     "uses": 6,
+     "uses_per_run": 0.0375
+    }
+   ],
+   "taken_per_fight": 2.345,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "warlock.archfey": {
+   "class": "warlock",
+   "damage_per_fight": 11.19375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.44,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.735,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.98125,
+   "potions_left_at_victory": 2.35,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.14631782945736435,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.9966887417218543,
+     "uses": 301,
+     "uses_per_run": 1.88125
+    },
+    {
+     "available_rate": 0.6356589147286822,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.01600609756097561,
+     "uses": 21,
+     "uses_per_run": 0.13125
+    }
+   ],
+   "taken_per_fight": 1.77875,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "warlock.fathomless": {
+   "class": "warlock",
+   "damage_per_fight": 10.31625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 0.615,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.00046425255338904364,
+   "kills_per_fight": 0.6375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.09125,
+   "potions_left_at_victory": 2.20625,
+   "protection_per_fight": 0.30125,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.04317548746518106,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.34408602150537637,
+     "uses": 32,
+     "uses_per_run": 0.2
+    },
+    {
+     "available_rate": 0.2135561745589601,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9717391304347827,
+     "uses": 447,
+     "uses_per_run": 2.79375
+    }
+   ],
+   "taken_per_fight": 1.82625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "warlock.fiend": {
+   "class": "warlock",
+   "damage_per_fight": 11.595,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.70625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0004640371229698376,
+   "kills_per_fight": 0.755,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.025
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.10375,
+   "potions_left_at_victory": 2.2125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.3183294663573086,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6720116618075802,
+     "uses": 461,
+     "uses_per_run": 2.88125
+    },
+    {
+     "available_rate": 0.06125290023201856,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.05303030303030303,
+     "uses": 7,
+     "uses_per_run": 0.04375
+    }
+   ],
+   "taken_per_fight": 1.61375,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "warlock.genie": {
+   "class": "warlock",
+   "damage_per_fight": 10.815,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.65,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.68,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.8625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.1475,
+   "potions_left_at_victory": 2.2375,
+   "protection_per_fight": 0.1075,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.7548620533695161,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.015578190533253445,
+     "uses": 26,
+     "uses_per_run": 0.1625
+    },
+    {
+     "available_rate": 0.8299412030755314,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.10626702997275204,
+     "uses": 195,
+     "uses_per_run": 1.21875
+    }
+   ],
+   "taken_per_fight": 1.9225,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "warlock.great-old-one": {
+   "class": "warlock",
+   "damage_per_fight": 12.147916666666667,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005208333333333333,
+   "healing_per_fight": 0.6885416666666667,
+   "heroes": 192,
+   "high": 0.9999999999999999,
+   "idle_turn_rate": 0.0015509887553315238,
+   "kills_per_fight": 0.8020833333333334,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9803841471883398,
+   "n": 192,
+   "party_rounds_per_fight": 3.05625,
+   "potions_left_at_victory": 2.1822916666666665,
+   "protection_per_fight": 0.035416666666666666,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.22334238076773943,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.078125,
+     "uses": 45,
+     "uses_per_run": 0.234375
+    },
+    {
+     "available_rate": 0.2031795269484296,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 524,
+     "uses_per_run": 2.7291666666666665
+    }
+   ],
+   "taken_per_fight": 1.990625,
+   "victory_deaths": 0,
+   "wins": 192
+  },
+  "wizard.abjuration": {
+   "class": "wizard",
+   "damage_per_fight": 10.43875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.62375,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0009212344541685859,
+   "kills_per_fight": 0.62375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.11,
+   "potions_left_at_victory": 2.24375,
+   "protection_per_fight": 0.4175,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.22524182404421925,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9693251533742331,
+     "uses": 474,
+     "uses_per_run": 2.9625
+    },
+    {
+     "available_rate": 0.027637033625057577,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.06666666666666667,
+     "uses": 4,
+     "uses_per_run": 0.025
+    }
+   ],
+   "taken_per_fight": 1.8525,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.bladesinging": {
+   "class": "wizard",
+   "damage_per_fight": 10.32375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.6275,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0014534883720930232,
+   "kills_per_fight": 0.685,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.39375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.99125,
+   "potions_left_at_victory": 2.18125,
+   "protection_per_fight": 0.08,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.061046511627906974,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 126,
+     "uses_per_run": 0.7875
+    },
+    {
+     "available_rate": 0.7272286821705426,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.13057961359093936,
+     "uses": 196,
+     "uses_per_run": 1.225
+    }
+   ],
+   "taken_per_fight": 1.85,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.conjuration": {
+   "class": "wizard",
+   "damage_per_fight": 10.34375,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.565,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.69375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.9875
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.9725,
+   "potions_left_at_victory": 2.26875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.7956730769230769,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.02054380664652568,
+     "uses": 34,
+     "uses_per_run": 0.2125
+    },
+    {
+     "available_rate": 0.2144230769230769,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.4349775784753363,
+     "uses": 194,
+     "uses_per_run": 1.2125
+    }
+   ],
+   "taken_per_fight": 2.025,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.divination": {
+   "class": "wizard",
+   "damage_per_fight": 11.35875,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.005,
+   "healing_per_fight": 0.58875,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.6625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.16375,
+   "potions_left_at_victory": 2.26875,
+   "protection_per_fight": 0.1975,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.10526315789473684,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6452991452991453,
+     "uses": 151,
+     "uses_per_run": 0.94375
+    },
+    {
+     "available_rate": 0.15204678362573099,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.9733727810650887,
+     "uses": 329,
+     "uses_per_run": 2.05625
+    }
+   ],
+   "taken_per_fight": 1.74625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.enchantment": {
+   "class": "wizard",
+   "damage_per_fight": 10.395,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0025,
+   "healing_per_fight": 0.75,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.000968054211035818,
+   "kills_per_fight": 0.65875,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.7625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.00625,
+   "potions_left_at_victory": 2.18125,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.10261374636979671,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 1.0,
+     "uses": 212,
+     "uses_per_run": 1.325
+    },
+    {
+     "available_rate": 0.7391093901258471,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.016371971185330715,
+     "uses": 25,
+     "uses_per_run": 0.15625
+    }
+   ],
+   "taken_per_fight": 1.88375,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.evocation": {
+   "class": "wizard",
+   "damage_per_fight": 12.4225,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.69625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.7825,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    },
+    "slot": {
+     "cap": 2,
+     "mean": 1.4375
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.03375,
+   "potions_left_at_victory": 2.2,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.17186024551463644,
+     "command": "MagicMissile",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6758241758241759,
+     "uses": 246,
+     "uses_per_run": 1.5375
+    },
+    {
+     "available_rate": 0.11048158640226628,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 234,
+     "uses_per_run": 1.4625
+    }
+   ],
+   "taken_per_fight": 1.64375,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.illusion": {
+   "class": "wizard",
+   "damage_per_fight": 10.395,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0,
+   "healing_per_fight": 0.44625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.60375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.10125,
+   "potions_left_at_victory": 2.4125,
+   "protection_per_fight": 0.2975,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23169601482854496,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.956,
+     "uses": 478,
+     "uses_per_run": 2.9875
+    },
+    {
+     "available_rate": 0.21408711770157554,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.0021645021645021645,
+     "uses": 1,
+     "uses_per_run": 0.00625
+    }
+   ],
+   "taken_per_fight": 1.42,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.necromancy": {
+   "class": "wizard",
+   "damage_per_fight": 10.9625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.01,
+   "healing_per_fight": 0.7275,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0004904364884747426,
+   "kills_per_fight": 0.7625,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.05
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.9125,
+   "potions_left_at_victory": 2.1375,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.35605689063266305,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.6308539944903582,
+     "uses": 458,
+     "uses_per_run": 2.8625
+    },
+    {
+     "available_rate": 0.12064737616478666,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.032520325203252036,
+     "uses": 8,
+     "uses_per_run": 0.05
+    }
+   ],
+   "taken_per_fight": 2.36,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.order-of-scribes": {
+   "class": "wizard",
+   "damage_per_fight": 11.53625,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00375,
+   "healing_per_fight": 0.60625,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0019398642095053346,
+   "kills_per_fight": 0.76375,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 0.0
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 2.935,
+   "potions_left_at_victory": 2.26875,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.23035887487875847,
+     "command": "Special1",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 1.0,
+     "uses": 475,
+     "uses_per_run": 2.96875
+    },
+    {
+     "available_rate": 0.22841901066925316,
+     "command": "Special2",
+     "top_blocker": "ResourceShort",
+     "use_when_available": 0.0,
+     "uses": 0,
+     "uses_per_run": 0.0
+    }
+   ],
+   "taken_per_fight": 1.7625,
+   "victory_deaths": 0,
+   "wins": 160
+  },
+  "wizard.transmutation": {
+   "class": "wizard",
+   "damage_per_fight": 10.59,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.00125,
+   "healing_per_fight": 0.7775,
+   "heroes": 160,
+   "high": 1.0,
+   "idle_turn_rate": 0.0,
+   "kills_per_fight": 0.65125,
+   "left_at_victory": {
+    "kit": {
+     "cap": 2,
+     "mean": 1.625
+    }
+   },
+   "low": 0.9765529633499672,
+   "n": 160,
+   "party_rounds_per_fight": 3.12875,
+   "potions_left_at_victory": 2.3,
+   "protection_per_fight": 0.0,
+   "rate": 1.0,
+   "specials": [
+    {
+     "available_rate": 0.882858435097241,
+     "command": "Special1",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.018954918032786885,
+     "uses": 37,
+     "uses_per_run": 0.23125
+    },
+    {
+     "available_rate": 0.24513794663048394,
+     "command": "Special2",
+     "top_blocker": "OutOfRange",
+     "use_when_available": 0.04428044280442804,
+     "uses": 24,
+     "uses_per_run": 0.15
+    }
+   ],
+   "taken_per_fight": 2.1175,
+   "victory_deaths": 0,
+   "wins": 160
+  }
+ },
+ "long_fights": {
+  "count": 389,
+  "fights": [
+   {
+    "outcome": "Victory",
+    "party": "rot4-16",
+    "recipe": "2",
+    "rounds": "9",
+    "route": "dangerous",
+    "seed": "20261139",
+    "stage": "4"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot5-15",
+    "recipe": "2",
+    "rounds": "9",
+    "route": "dangerous",
+    "seed": "20261133",
+    "stage": "4"
+   },
+   {
+    "outcome": "Victory",
+    "party": "dup-cleric",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261133",
+    "stage": "4"
+   },
+   {
+    "outcome": "Victory",
+    "party": "dup-fighter",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261126",
+    "stage": "1"
+   },
+   {
+    "outcome": "Victory",
+    "party": "dup-fighter",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261139",
+    "stage": "3"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot1-02",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261137",
+    "stage": "5"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot1-10",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261139",
+    "stage": "3"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot1-16",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261135",
+    "stage": "5"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot3-04",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261133",
+    "stage": "4"
+   },
+   {
+    "outcome": "Victory",
+    "party": "rot4-10",
+    "recipe": "2",
+    "rounds": "8",
+    "route": "dangerous",
+    "seed": "20261134",
+    "stage": "4"
+   }
+  ],
+  "p99": 6
+ },
+ "outliers": [
+  {
+   "kit": "ranger.hunter",
+   "metric": "party_rounds_per_fight",
+   "value": 2.8125,
+   "z": -3.1763809021863043
+  },
+  {
+   "kit": "artificer.artillerist",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "barbarian.berserker",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.light",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.order",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.peace",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.tempest",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.trickery",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "cleric.war",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "druid.moon",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "monk.astral-self",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "monk.open-hand",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "rogue.soulknife",
+   "metric": "death_rate",
+   "value": 0.010416666666666666,
+   "z": 5.641671643427008
+  },
+  {
+   "kit": "rogue.thief",
+   "metric": "death_rate",
+   "value": 0.0125,
+   "z": 6.77000597211241
+  },
+  {
+   "kit": "sorcerer.draconic-bloodline",
+   "metric": "death_rate",
+   "value": 0.00625,
+   "z": 3.385002986056205
+  },
+  {
+   "kit": "fighter.eldritch-knight",
+   "metric": "damage_per_fight",
+   "value": 6.225,
+   "z": -3.1543658586210372
+  },
+  {
+   "kit": "paladin.glory",
+   "metric": "damage_per_fight",
+   "value": 5.932291666666667,
+   "z": -3.397262056766524
+  },
+  {
+   "kit": "cleric.peace",
+   "metric": "healing_per_fight",
+   "value": 1.42375,
+   "z": 3.665324785050445
+  },
+  {
+   "kit": "monk.mercy",
+   "metric": "healing_per_fight",
+   "value": 1.31625,
+   "z": 3.126567460143443
+  },
+  {
+   "kit": "artificer.armorer",
+   "metric": "protection_per_fight",
+   "value": 0.42875,
+   "z": 4.300785165264742
+  },
+  {
+   "kit": "cleric.order",
+   "metric": "protection_per_fight",
+   "value": 0.32,
+   "z": 3.038834712050467
+  },
+  {
+   "kit": "cleric.trickery",
+   "metric": "protection_per_fight",
+   "value": 0.5025,
+   "z": 5.156590645030744
+  },
+  {
+   "kit": "druid.moon",
+   "metric": "protection_per_fight",
+   "value": 0.43125,
+   "z": 4.329795520511047
+  },
+  {
+   "kit": "fighter.eldritch-knight",
+   "metric": "protection_per_fight",
+   "value": 0.3625,
+   "z": 3.532010751237655
+  },
+  {
+   "kit": "monk.astral-self",
+   "metric": "protection_per_fight",
+   "value": 0.4125,
+   "z": 4.112217856163758
+  },
+  {
+   "kit": "monk.open-hand",
+   "metric": "protection_per_fight",
+   "value": 0.33,
+   "z": 3.1548761330356876
+  },
+  {
+   "kit": "rogue.arcane-trickster",
+   "metric": "protection_per_fight",
+   "value": 0.428125,
+   "z": 4.293532576453165
+  },
+  {
+   "kit": "wizard.abjuration",
+   "metric": "protection_per_fight",
+   "value": 0.4175,
+   "z": 4.170238566656368
+  }
+ ],
+ "overall": {
+  "damage_per_run": 190.0,
+  "deaths_per_run": 0.005997474747474747,
+  "fights_won": 5.0,
+  "healing_per_run": 14.76104797979798,
+  "high": 1.0,
+  "low": 0.998788842418865,
+  "n": 3168,
+  "potions_per_run": 1.8484848484848484,
+  "protection_per_run": 2.3607954545454546,
+  "rate": 1.0,
+  "rounds_per_fight": 3.071780303030303,
+  "specials_per_run": 10.013257575757576,
+  "stalls": 0,
+  "taken_per_run": 41.79008838383838,
+  "wins": 3168
+ },
+ "parties": {
+  "dup-cleric": {
+   "archetype": "duplicate",
+   "builds": "cleric.life;cleric.life;cleric.life;cleric.life",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 22.15625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 0.59375,
+   "protection_per_run": 4.25,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2875,
+   "specials_per_run": 9.3125,
+   "stalls": 0,
+   "taken_per_run": 47.59375,
+   "wins": 32
+  },
+  "dup-fighter": {
+   "archetype": "duplicate",
+   "builds": "fighter.champion;fighter.champion;fighter.champion;fighter.champion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.4375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 0.75,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 3.9875,
+   "specials_per_run": 1.59375,
+   "stalls": 0,
+   "taken_per_run": 54.21875,
+   "wins": 32
+  },
+  "dup-wizard": {
+   "archetype": "duplicate",
+   "builds": "wizard.evocation;wizard.evocation;wizard.evocation;wizard.evocation",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.09375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.03125,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 2.34375,
+   "specials_per_run": 10.78125,
+   "stalls": 0,
+   "taken_per_run": 35.5,
+   "wins": 32
+  },
+  "familiar": {
+   "archetype": "mixed",
+   "builds": "fighter.champion;rogue.thief;cleric.life;wizard.evocation",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.1875,
+   "protection_per_run": 0.65625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.06875,
+   "specials_per_run": 6.0625,
+   "stalls": 0,
+   "taken_per_run": 42.46875,
+   "wins": 32
+  },
+  "melee": {
+   "archetype": "melee",
+   "builds": "barbarian.berserker;fighter.battle-master;paladin.devotion;monk.open-hand",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.6875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.96875,
+   "protection_per_run": 2.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.85,
+   "specials_per_run": 12.0625,
+   "stalls": 0,
+   "taken_per_run": 58.21875,
+   "wins": 32
+  },
+  "mixed": {
+   "archetype": "mixed",
+   "builds": "paladin.watchers;ranger.beast-master;cleric.peace;artificer.artillerist",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 9.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 0.90625,
+   "protection_per_run": 4.0,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2,
+   "specials_per_run": 9.28125,
+   "stalls": 0,
+   "taken_per_run": 35.4375,
+   "wins": 32
+  },
+  "ranged": {
+   "archetype": "ranged",
+   "builds": "ranger.hunter;wizard.evocation;warlock.fiend;sorcerer.draconic-bloodline",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.8125,
+   "protection_per_run": 0.90625,
+   "rate": 1.0,
+   "rounds_per_fight": 2.63125,
+   "specials_per_run": 11.5625,
+   "stalls": 0,
+   "taken_per_run": 35.84375,
+   "wins": 32
+  },
+  "rot1-01": {
+   "archetype": "rotation",
+   "builds": "fighter.champion;rogue.soulknife;paladin.vengeance;warlock.archfey",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.21875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.21875,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9625,
+   "specials_per_run": 7.65625,
+   "stalls": 0,
+   "taken_per_run": 35.78125,
+   "wins": 32
+  },
+  "rot1-02": {
+   "archetype": "rotation",
+   "builds": "wizard.necromancy;cleric.peace;artificer.alchemist;barbarian.wild-magic",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.46875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5,
+   "protection_per_run": 0.4375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.00625,
+   "specials_per_run": 11.8125,
+   "stalls": 0,
+   "taken_per_run": 45.53125,
+   "wins": 32
+  },
+  "rot1-03": {
+   "archetype": "rotation",
+   "builds": "monk.mercy;sorcerer.draconic-bloodline;wizard.divination;cleric.tempest",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 18.6875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.6875,
+   "protection_per_run": 1.90625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.14375,
+   "specials_per_run": 10.34375,
+   "stalls": 0,
+   "taken_per_run": 46.4375,
+   "wins": 32
+  },
+  "rot1-04": {
+   "archetype": "rotation",
+   "builds": "bard.lore;cleric.life;fighter.rune-knight;ranger.hunter",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.34375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.3125,
+   "protection_per_run": 1.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8875,
+   "specials_per_run": 10.84375,
+   "stalls": 0,
+   "taken_per_run": 38.40625,
+   "wins": 32
+  },
+  "rot1-05": {
+   "archetype": "rotation",
+   "builds": "warlock.fathomless;wizard.order-of-scribes;druid.moon;artificer.battle-smith",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.875,
+   "protection_per_run": 4.03125,
+   "rate": 1.0,
+   "rounds_per_fight": 2.875,
+   "specials_per_run": 10.5625,
+   "stalls": 0,
+   "taken_per_run": 37.59375,
+   "wins": 32
+  },
+  "rot1-06": {
+   "archetype": "rotation",
+   "builds": "rogue.phantom;paladin.ancients;sorcerer.clockwork-soul;wizard.illusion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.59375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.125,
+   "protection_per_run": 5.28125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.29375,
+   "specials_per_run": 11.21875,
+   "stalls": 0,
+   "taken_per_run": 43.8125,
+   "wins": 32
+  },
+  "rot1-07": {
+   "archetype": "rotation",
+   "builds": "cleric.order;bard.eloquence;barbarian.beast;monk.four-elements",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 17.5,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.5,
+   "protection_per_run": 1.84375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2625,
+   "specials_per_run": 13.28125,
+   "stalls": 0,
+   "taken_per_run": 48.78125,
+   "wins": 32
+  },
+  "rot1-08": {
+   "archetype": "rotation",
+   "builds": "ranger.swarmkeeper;wizard.conjuration;cleric.nature;druid.wildfire",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.71875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0625,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8625,
+   "specials_per_run": 7.90625,
+   "stalls": 0,
+   "taken_per_run": 41.375,
+   "wins": 32
+  },
+  "rot1-09": {
+   "archetype": "rotation",
+   "builds": "rogue.thief;fighter.psi-warrior;paladin.watchers;warlock.great-old-one",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 17.15625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.3125,
+   "protection_per_run": 2.09375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.25,
+   "specials_per_run": 9.15625,
+   "stalls": 0,
+   "taken_per_run": 46.78125,
+   "wins": 32
+  },
+  "rot1-10": {
+   "archetype": "rotation",
+   "builds": "wizard.bladesinging;druid.land;artificer.artillerist;rogue.arcane-trickster",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.75,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.375,
+   "protection_per_run": 3.34375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.1,
+   "specials_per_run": 11.21875,
+   "stalls": 0,
+   "taken_per_run": 44.5625,
+   "wins": 32
+  },
+  "rot1-11": {
+   "archetype": "rotation",
+   "builds": "paladin.devotion;sorcerer.aberrant-mind;wizard.evocation;cleric.war",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.65625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.90625,
+   "protection_per_run": 1.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.99375,
+   "specials_per_run": 8.75,
+   "stalls": 0,
+   "taken_per_run": 39.8125,
+   "wins": 32
+  },
+  "rot1-12": {
+   "archetype": "rotation",
+   "builds": "bard.creation;barbarian.totem-warrior;monk.shadow;ranger.fey-wanderer",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.34375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.90625,
+   "protection_per_run": 2.6875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.1875,
+   "specials_per_run": 11.4375,
+   "stalls": 0,
+   "taken_per_run": 45.84375,
+   "wins": 32
+  },
+  "rot1-13": {
+   "archetype": "rotation",
+   "builds": "wizard.abjuration;cleric.light;druid.stars;fighter.battle-master",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.9375,
+   "protection_per_run": 2.65625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.0125,
+   "specials_per_run": 10.9375,
+   "stalls": 0,
+   "taken_per_run": 43.28125,
+   "wins": 32
+  },
+  "rot1-14": {
+   "archetype": "rotation",
+   "builds": "fighter.eldritch-knight;paladin.glory;warlock.fiend;wizard.transmutation",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.84375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.65625,
+   "protection_per_run": 2.96875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.325,
+   "specials_per_run": 6.625,
+   "stalls": 0,
+   "taken_per_run": 42.21875,
+   "wins": 32
+  },
+  "rot1-15": {
+   "archetype": "rotation",
+   "builds": "cleric.twilight;artificer.armorer;rogue.assassin;monk.astral-self",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.90625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.53125,
+   "protection_per_run": 3.0625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.25625,
+   "specials_per_run": 9.15625,
+   "stalls": 0,
+   "taken_per_run": 46.0625,
+   "wins": 32
+  },
+  "rot1-16": {
+   "archetype": "rotation",
+   "builds": "sorcerer.wild-magic;wizard.enchantment;cleric.trickery;bard.valor",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.46875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.46875,
+   "protection_per_run": 2.5625,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9375,
+   "specials_per_run": 10.21875,
+   "stalls": 0,
+   "taken_per_run": 41.53125,
+   "wins": 32
+  },
+  "rot1-17": {
+   "archetype": "rotation",
+   "builds": "barbarian.berserker;monk.open-hand;ranger.beast-master;warlock.genie",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 13.28125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.8125,
+   "protection_per_run": 3.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.20625,
+   "specials_per_run": 11.84375,
+   "stalls": 0,
+   "taken_per_run": 44.4375,
+   "wins": 32
+  },
+  "rot1-18": {
+   "archetype": "rotation",
+   "builds": "cleric.knowledge;druid.spores;fighter.champion;rogue.soulknife",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.6875,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 3.09375,
+   "specials_per_run": 6.96875,
+   "stalls": 0,
+   "taken_per_run": 40.9375,
+   "wins": 32
+  },
+  "rot2-01": {
+   "archetype": "rotation",
+   "builds": "cleric.life;monk.shadow;sorcerer.draconic-bloodline;wizard.evocation",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 19.125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.96875,
+   "protection_per_run": 2.875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.1,
+   "specials_per_run": 9.84375,
+   "stalls": 0,
+   "taken_per_run": 43.1875,
+   "wins": 32
+  },
+  "rot2-02": {
+   "archetype": "rotation",
+   "builds": "cleric.peace;artificer.artillerist;rogue.soulknife;paladin.watchers",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 18.21875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.09375,
+   "protection_per_run": 1.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.14375,
+   "specials_per_run": 9.375,
+   "stalls": 0,
+   "taken_per_run": 45.28125,
+   "wins": 32
+  },
+  "rot2-03": {
+   "archetype": "rotation",
+   "builds": "warlock.genie;cleric.nature;bard.valor;barbarian.beast",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.8125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.40625,
+   "protection_per_run": 1.21875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.09375,
+   "specials_per_run": 10.5,
+   "stalls": 0,
+   "taken_per_run": 48.21875,
+   "wins": 32
+  },
+  "rot2-04": {
+   "archetype": "rotation",
+   "builds": "monk.astral-self;sorcerer.clockwork-soul;wizard.transmutation;druid.moon",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 18.625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.15625,
+   "protection_per_run": 5.78125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2125,
+   "specials_per_run": 8.78125,
+   "stalls": 0,
+   "taken_per_run": 45.28125,
+   "wins": 32
+  },
+  "rot2-05": {
+   "archetype": "rotation",
+   "builds": "fighter.battle-master;fighter.rune-knight;ranger.fey-wanderer;wizard.divination",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.5625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.3125,
+   "protection_per_run": 2.21875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.14375,
+   "specials_per_run": 11.4375,
+   "stalls": 0,
+   "taken_per_run": 39.6875,
+   "wins": 32
+  },
+  "rot2-06": {
+   "archetype": "rotation",
+   "builds": "cleric.war;artificer.alchemist;rogue.arcane-trickster;paladin.vengeance",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 16.59375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.15625,
+   "protection_per_run": 1.78125,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9125,
+   "specials_per_run": 10.40625,
+   "stalls": 0,
+   "taken_per_run": 40.65625,
+   "wins": 32
+  },
+  "rot2-07": {
+   "archetype": "rotation",
+   "builds": "warlock.great-old-one;cleric.knowledge;druid.wildfire;barbarian.berserker",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.28125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.15625,
+   "protection_per_run": 0.84375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.925,
+   "specials_per_run": 12.5625,
+   "stalls": 0,
+   "taken_per_run": 43.46875,
+   "wins": 32
+  },
+  "rot2-08": {
+   "archetype": "rotation",
+   "builds": "monk.four-elements;sorcerer.wild-magic;wizard.illusion;cleric.twilight",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 18.5,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.625,
+   "protection_per_run": 2.28125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.09375,
+   "specials_per_run": 10.75,
+   "stalls": 0,
+   "taken_per_run": 43.90625,
+   "wins": 32
+  },
+  "rot2-09": {
+   "archetype": "rotation",
+   "builds": "artificer.battle-smith;fighter.eldritch-knight;ranger.hunter;wizard.abjuration",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 8.375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.1875,
+   "protection_per_run": 2.75,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9,
+   "specials_per_run": 11.09375,
+   "stalls": 0,
+   "taken_per_run": 33.8125,
+   "wins": 32
+  },
+  "rot2-10": {
+   "archetype": "rotation",
+   "builds": "cleric.tempest;bard.creation;barbarian.wild-magic;paladin.devotion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 12.9375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.84375,
+   "protection_per_run": 2.625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2125,
+   "specials_per_run": 10.21875,
+   "stalls": 0,
+   "taken_per_run": 42.0625,
+   "wins": 32
+  },
+  "rot2-11": {
+   "archetype": "rotation",
+   "builds": "warlock.archfey;wizard.bladesinging;druid.spores;rogue.thief",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.15625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5625,
+   "protection_per_run": 0.375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8625,
+   "specials_per_run": 5.53125,
+   "stalls": 0,
+   "taken_per_run": 40.84375,
+   "wins": 32
+  },
+  "rot2-12": {
+   "archetype": "rotation",
+   "builds": "monk.open-hand;ranger.swarmkeeper;wizard.enchantment;cleric.order",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 14.5,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0,
+   "protection_per_run": 3.53125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.0,
+   "specials_per_run": 10.125,
+   "stalls": 0,
+   "taken_per_run": 41.0,
+   "wins": 32
+  },
+  "rot2-13": {
+   "archetype": "rotation",
+   "builds": "artificer.armorer;rogue.phantom;paladin.glory;warlock.fathomless",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.25,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.625,
+   "protection_per_run": 5.1875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.14375,
+   "specials_per_run": 9.25,
+   "stalls": 0,
+   "taken_per_run": 36.53125,
+   "wins": 32
+  },
+  "rot2-14": {
+   "archetype": "rotation",
+   "builds": "cleric.light;bard.lore;barbarian.totem-warrior;monk.mercy",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 15.71875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.03125,
+   "protection_per_run": 4.40625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.30625,
+   "specials_per_run": 13.3125,
+   "stalls": 0,
+   "taken_per_run": 45.1875,
+   "wins": 32
+  },
+  "rot2-15": {
+   "archetype": "rotation",
+   "builds": "sorcerer.aberrant-mind;wizard.necromancy;druid.land;fighter.champion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.03125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0,
+   "protection_per_run": 1.9375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.04375,
+   "specials_per_run": 9.125,
+   "stalls": 0,
+   "taken_per_run": 42.0625,
+   "wins": 32
+  },
+  "rot2-16": {
+   "archetype": "rotation",
+   "builds": "fighter.psi-warrior;ranger.beast-master;wizard.conjuration;cleric.trickery",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.46875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.75,
+   "protection_per_run": 3.5625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.01875,
+   "specials_per_run": 10.375,
+   "stalls": 0,
+   "taken_per_run": 37.78125,
+   "wins": 32
+  },
+  "rot2-17": {
+   "archetype": "rotation",
+   "builds": "bard.eloquence;rogue.assassin;paladin.ancients;warlock.fiend",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.75,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.84375,
+   "protection_per_run": 0.71875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9,
+   "specials_per_run": 10.0,
+   "stalls": 0,
+   "taken_per_run": 38.6875,
+   "wins": 32
+  },
+  "rot2-18": {
+   "archetype": "rotation",
+   "builds": "wizard.order-of-scribes;druid.stars;cleric.life;monk.shadow",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5,
+   "protection_per_run": 1.71875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.96875,
+   "specials_per_run": 10.25,
+   "stalls": 0,
+   "taken_per_run": 42.5625,
+   "wins": 32
+  },
+  "rot3-01": {
+   "archetype": "rotation",
+   "builds": "barbarian.beast;paladin.glory;wizard.divination;druid.land",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.28125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.40625,
+   "protection_per_run": 1.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.24375,
+   "specials_per_run": 11.0,
+   "stalls": 0,
+   "taken_per_run": 44.1875,
+   "wins": 32
+  },
+  "rot3-02": {
+   "archetype": "rotation",
+   "builds": "barbarian.berserker;paladin.ancients;wizard.abjuration;cleric.peace",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.34375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 0.96875,
+   "protection_per_run": 3.53125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2375,
+   "specials_per_run": 11.09375,
+   "stalls": 0,
+   "taken_per_run": 42.875,
+   "wins": 32
+  },
+  "rot3-03": {
+   "archetype": "rotation",
+   "builds": "rogue.thief;monk.astral-self;warlock.fathomless;cleric.war",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 21.84375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 3.03125,
+   "protection_per_run": 3.09375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.33125,
+   "specials_per_run": 7.53125,
+   "stalls": 0,
+   "taken_per_run": 50.25,
+   "wins": 32
+  },
+  "rot3-04": {
+   "archetype": "rotation",
+   "builds": "fighter.champion;monk.four-elements;warlock.fiend;cleric.tempest",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.96875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.875,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 3.26875,
+   "specials_per_run": 8.125,
+   "stalls": 0,
+   "taken_per_run": 46.71875,
+   "wins": 32
+  },
+  "rot3-05": {
+   "archetype": "rotation",
+   "builds": "artificer.artillerist;monk.open-hand;sorcerer.clockwork-soul;cleric.light",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 17.25,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0,
+   "protection_per_run": 3.375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.2125,
+   "specials_per_run": 11.34375,
+   "stalls": 0,
+   "taken_per_run": 42.96875,
+   "wins": 32
+  },
+  "rot3-06": {
+   "archetype": "rotation",
+   "builds": "artificer.alchemist;fighter.psi-warrior;sorcerer.wild-magic;wizard.order-of-scribes",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.9375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.59375,
+   "protection_per_run": 0.78125,
+   "rate": 1.0,
+   "rounds_per_fight": 2.93125,
+   "specials_per_run": 11.59375,
+   "stalls": 0,
+   "taken_per_run": 38.15625,
+   "wins": 32
+  },
+  "rot3-07": {
+   "archetype": "rotation",
+   "builds": "bard.creation;rogue.soulknife;ranger.swarmkeeper;wizard.transmutation",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 15.40625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0625,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 2.89375,
+   "specials_per_run": 7.0625,
+   "stalls": 0,
+   "taken_per_run": 42.90625,
+   "wins": 32
+  },
+  "rot3-08": {
+   "archetype": "rotation",
+   "builds": "bard.lore;rogue.arcane-trickster;ranger.beast-master;wizard.illusion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.78125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.78125,
+   "protection_per_run": 4.09375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8625,
+   "specials_per_run": 11.28125,
+   "stalls": 0,
+   "taken_per_run": 35.3125,
+   "wins": 32
+  },
+  "rot3-09": {
+   "archetype": "rotation",
+   "builds": "druid.stars;barbarian.wild-magic;paladin.watchers;wizard.enchantment",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.9375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.875,
+   "protection_per_run": 1.21875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.1125,
+   "specials_per_run": 11.65625,
+   "stalls": 0,
+   "taken_per_run": 44.78125,
+   "wins": 32
+  },
+  "rot3-10": {
+   "archetype": "rotation",
+   "builds": "druid.moon;barbarian.totem-warrior;paladin.vengeance;wizard.conjuration",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 9.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.3125,
+   "protection_per_run": 5.28125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.06875,
+   "specials_per_run": 11.3125,
+   "stalls": 0,
+   "taken_per_run": 40.8125,
+   "wins": 32
+  },
+  "rot3-11": {
+   "archetype": "rotation",
+   "builds": "cleric.twilight;cleric.life;paladin.devotion;warlock.genie",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 18.25,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.59375,
+   "protection_per_run": 4.03125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.10625,
+   "specials_per_run": 8.03125,
+   "stalls": 0,
+   "taken_per_run": 42.65625,
+   "wins": 32
+  },
+  "rot3-12": {
+   "archetype": "rotation",
+   "builds": "cleric.order;fighter.battle-master;monk.mercy;warlock.great-old-one",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 18.0625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.25,
+   "protection_per_run": 1.15625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.19375,
+   "specials_per_run": 10.75,
+   "stalls": 0,
+   "taken_per_run": 46.90625,
+   "wins": 32
+  },
+  "rot3-13": {
+   "archetype": "rotation",
+   "builds": "cleric.trickery;artificer.battle-smith;monk.shadow;warlock.archfey",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.53125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5,
+   "protection_per_run": 5.125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.03125,
+   "specials_per_run": 8.59375,
+   "stalls": 0,
+   "taken_per_run": 35.90625,
+   "wins": 32
+  },
+  "rot3-14": {
+   "archetype": "rotation",
+   "builds": "cleric.nature;artificer.armorer;fighter.rune-knight;sorcerer.aberrant-mind",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.03125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.59375,
+   "protection_per_run": 3.3125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.0875,
+   "specials_per_run": 10.53125,
+   "stalls": 0,
+   "taken_per_run": 39.09375,
+   "wins": 32
+  },
+  "rot3-15": {
+   "archetype": "rotation",
+   "builds": "cleric.knowledge;bard.eloquence;fighter.eldritch-knight;sorcerer.draconic-bloodline",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.46875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0625,
+   "protection_per_run": 2.46875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8875,
+   "specials_per_run": 11.71875,
+   "stalls": 0,
+   "taken_per_run": 38.3125,
+   "wins": 32
+  },
+  "rot3-16": {
+   "archetype": "rotation",
+   "builds": "wizard.bladesinging;bard.valor;rogue.phantom;ranger.fey-wanderer",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.625,
+   "protection_per_run": 1.9375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.8375,
+   "specials_per_run": 10.90625,
+   "stalls": 0,
+   "taken_per_run": 35.03125,
+   "wins": 32
+  },
+  "rot3-17": {
+   "archetype": "rotation",
+   "builds": "wizard.necromancy;druid.wildfire;rogue.assassin;ranger.hunter",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.59375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.78125,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 2.7625,
+   "specials_per_run": 8.6875,
+   "stalls": 0,
+   "taken_per_run": 37.5625,
+   "wins": 32
+  },
+  "rot3-18": {
+   "archetype": "rotation",
+   "builds": "wizard.evocation;druid.spores;barbarian.beast;paladin.glory",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.90625,
+   "protection_per_run": 0.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.08125,
+   "specials_per_run": 9.375,
+   "stalls": 0,
+   "taken_per_run": 46.25,
+   "wins": 32
+  },
+  "rot4-01": {
+   "archetype": "rotation",
+   "builds": "rogue.arcane-trickster;ranger.swarmkeeper;wizard.order-of-scribes;artificer.alchemist",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 13.4375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.8125,
+   "protection_per_run": 3.5,
+   "rate": 1.0,
+   "rounds_per_fight": 2.78125,
+   "specials_per_run": 11.21875,
+   "stalls": 0,
+   "taken_per_run": 37.5625,
+   "wins": 32
+  },
+  "rot4-02": {
+   "archetype": "rotation",
+   "builds": "monk.open-hand;warlock.fiend;cleric.war;rogue.thief",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.9375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.5,
+   "protection_per_run": 2.40625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.15625,
+   "specials_per_run": 7.8125,
+   "stalls": 0,
+   "taken_per_run": 42.90625,
+   "wins": 32
+  },
+  "rot4-03": {
+   "archetype": "rotation",
+   "builds": "paladin.ancients;wizard.divination;druid.spores;rogue.assassin",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.6875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.34375,
+   "protection_per_run": 1.375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.275,
+   "specials_per_run": 7.65625,
+   "stalls": 0,
+   "taken_per_run": 44.03125,
+   "wins": 32
+  },
+  "rot4-04": {
+   "archetype": "rotation",
+   "builds": "ranger.fey-wanderer;wizard.bladesinging;bard.eloquence;fighter.rune-knight",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0625,
+   "protection_per_run": 1.375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.875,
+   "specials_per_run": 10.53125,
+   "stalls": 0,
+   "taken_per_run": 36.84375,
+   "wins": 32
+  },
+  "rot4-05": {
+   "archetype": "rotation",
+   "builds": "warlock.archfey;cleric.trickery;fighter.battle-master;paladin.devotion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.53125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.375,
+   "protection_per_run": 3.96875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.18125,
+   "specials_per_run": 9.09375,
+   "stalls": 0,
+   "taken_per_run": 38.15625,
+   "wins": 32
+  },
+  "rot4-06": {
+   "archetype": "rotation",
+   "builds": "wizard.conjuration;druid.moon;barbarian.wild-magic;ranger.beast-master",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.90625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.78125,
+   "protection_per_run": 3.75,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9,
+   "specials_per_run": 12.78125,
+   "stalls": 0,
+   "taken_per_run": 37.5,
+   "wins": 32
+  },
+  "rot4-07": {
+   "archetype": "rotation",
+   "builds": "wizard.transmutation;bard.creation;fighter.psi-warrior;sorcerer.clockwork-soul",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.6875,
+   "protection_per_run": 1.9375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.04375,
+   "specials_per_run": 7.15625,
+   "stalls": 0,
+   "taken_per_run": 41.03125,
+   "wins": 32
+  },
+  "rot4-08": {
+   "archetype": "rotation",
+   "builds": "cleric.tempest;fighter.champion;monk.astral-self;wizard.abjuration",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.40625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.6875,
+   "protection_per_run": 4.125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.20625,
+   "specials_per_run": 8.75,
+   "stalls": 0,
+   "taken_per_run": 40.84375,
+   "wins": 32
+  },
+  "rot4-09": {
+   "archetype": "rotation",
+   "builds": "druid.land;barbarian.beast;ranger.hunter;wizard.necromancy",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 10.78125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5625,
+   "protection_per_run": 0.78125,
+   "rate": 1.0,
+   "rounds_per_fight": 2.80625,
+   "specials_per_run": 13.21875,
+   "stalls": 0,
+   "taken_per_run": 37.5625,
+   "wins": 32
+  },
+  "rot4-10": {
+   "archetype": "rotation",
+   "builds": "bard.valor;fighter.eldritch-knight;sorcerer.aberrant-mind;cleric.nature",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.21875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.21875,
+   "protection_per_run": 3.3125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.24375,
+   "specials_per_run": 10.5625,
+   "stalls": 0,
+   "taken_per_run": 44.75,
+   "wins": 32
+  },
+  "rot4-11": {
+   "archetype": "rotation",
+   "builds": "artificer.battle-smith;monk.mercy;warlock.genie;cleric.twilight",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.15625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.21875,
+   "protection_per_run": 1.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.15625,
+   "specials_per_run": 8.53125,
+   "stalls": 0,
+   "taken_per_run": 42.59375,
+   "wins": 32
+  },
+  "rot4-12": {
+   "archetype": "rotation",
+   "builds": "barbarian.totem-warrior;paladin.watchers;wizard.illusion;bard.lore",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.5625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.78125,
+   "protection_per_run": 3.875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.3125,
+   "specials_per_run": 12.53125,
+   "stalls": 0,
+   "taken_per_run": 44.46875,
+   "wins": 32
+  },
+  "rot4-13": {
+   "archetype": "rotation",
+   "builds": "rogue.soulknife;sorcerer.wild-magic;cleric.light;artificer.artillerist",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 18.46875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.6875,
+   "protection_per_run": 1.1875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.025,
+   "specials_per_run": 11.78125,
+   "stalls": 0,
+   "taken_per_run": 46.28125,
+   "wins": 32
+  },
+  "rot4-14": {
+   "archetype": "rotation",
+   "builds": "monk.four-elements;warlock.fathomless;cleric.peace;barbarian.berserker",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.25,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.6875,
+   "protection_per_run": 1.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.1625,
+   "specials_per_run": 11.09375,
+   "stalls": 0,
+   "taken_per_run": 46.0,
+   "wins": 32
+  },
+  "rot4-15": {
+   "archetype": "rotation",
+   "builds": "paladin.glory;wizard.evocation;druid.wildfire;rogue.phantom",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.84375,
+   "protection_per_run": 0.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.16875,
+   "specials_per_run": 8.53125,
+   "stalls": 0,
+   "taken_per_run": 40.90625,
+   "wins": 32
+  },
+  "rot4-16": {
+   "archetype": "rotation",
+   "builds": "sorcerer.draconic-bloodline;cleric.knowledge;artificer.armorer;monk.shadow",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 17.84375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.5625,
+   "protection_per_run": 4.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.23125,
+   "specials_per_run": 10.8125,
+   "stalls": 0,
+   "taken_per_run": 43.8125,
+   "wins": 32
+  },
+  "rot4-17": {
+   "archetype": "rotation",
+   "builds": "warlock.great-old-one;cleric.order;cleric.life;paladin.vengeance",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 18.625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.96875,
+   "protection_per_run": 2.71875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.94375,
+   "specials_per_run": 10.96875,
+   "stalls": 0,
+   "taken_per_run": 40.875,
+   "wins": 32
+  },
+  "rot4-18": {
+   "archetype": "rotation",
+   "builds": "wizard.enchantment;druid.stars;rogue.arcane-trickster;ranger.swarmkeeper",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.5,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5625,
+   "protection_per_run": 1.9375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.7375,
+   "specials_per_run": 10.40625,
+   "stalls": 0,
+   "taken_per_run": 33.4375,
+   "wins": 32
+  },
+  "rot5-01": {
+   "archetype": "rotation",
+   "builds": "fighter.eldritch-knight;warlock.great-old-one;druid.moon;rogue.soulknife",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.125,
+   "protection_per_run": 3.8125,
+   "rate": 1.0,
+   "rounds_per_fight": 3.08125,
+   "specials_per_run": 11.78125,
+   "stalls": 0,
+   "taken_per_run": 40.03125,
+   "wins": 32
+  },
+  "rot5-02": {
+   "archetype": "rotation",
+   "builds": "warlock.fiend;druid.land;rogue.phantom;warlock.archfey",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.0625,
+   "protection_per_run": 1.1875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.86875,
+   "specials_per_run": 10.5,
+   "stalls": 0,
+   "taken_per_run": 40.0625,
+   "wins": 32
+  },
+  "rot5-03": {
+   "archetype": "rotation",
+   "builds": "cleric.twilight;rogue.arcane-trickster;sorcerer.clockwork-soul;cleric.peace",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 16.59375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5625,
+   "protection_per_run": 4.09375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.9875,
+   "specials_per_run": 8.1875,
+   "stalls": 0,
+   "taken_per_run": 40.46875,
+   "wins": 32
+  },
+  "rot5-04": {
+   "archetype": "rotation",
+   "builds": "rogue.assassin;sorcerer.aberrant-mind;cleric.order;barbarian.wild-magic",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 17.6875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.59375,
+   "protection_per_run": 3.9375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.0875,
+   "specials_per_run": 13.03125,
+   "stalls": 0,
+   "taken_per_run": 45.71875,
+   "wins": 32
+  },
+  "rot5-05": {
+   "archetype": "rotation",
+   "builds": "sorcerer.wild-magic;cleric.war;barbarian.beast;sorcerer.draconic-bloodline",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.375,
+   "protection_per_run": 2.0625,
+   "rate": 1.0,
+   "rounds_per_fight": 2.99375,
+   "specials_per_run": 12.15625,
+   "stalls": 0,
+   "taken_per_run": 42.875,
+   "wins": 32
+  },
+  "rot5-06": {
+   "archetype": "rotation",
+   "builds": "cleric.trickery;barbarian.totem-warrior;ranger.swarmkeeper;cleric.tempest",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 10.9375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.5625,
+   "protection_per_run": 4.0625,
+   "rate": 1.0,
+   "rounds_per_fight": 2.96875,
+   "specials_per_run": 12.25,
+   "stalls": 0,
+   "taken_per_run": 39.09375,
+   "wins": 32
+  },
+  "rot5-07": {
+   "archetype": "rotation",
+   "builds": "barbarian.berserker;ranger.fey-wanderer;cleric.nature;cleric.life",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.53125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.28125,
+   "protection_per_run": 1.6875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.05,
+   "specials_per_run": 10.9375,
+   "stalls": 0,
+   "taken_per_run": 41.53125,
+   "wins": 32
+  },
+  "rot5-08": {
+   "archetype": "rotation",
+   "builds": "ranger.beast-master;cleric.light;rogue.thief;ranger.hunter",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 8.78125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.21875,
+   "protection_per_run": 1.875,
+   "rate": 1.0,
+   "rounds_per_fight": 2.70625,
+   "specials_per_run": 8.875,
+   "stalls": 0,
+   "taken_per_run": 30.78125,
+   "wins": 32
+  },
+  "rot5-09": {
+   "archetype": "rotation",
+   "builds": "cleric.knowledge;fighter.battle-master;paladin.watchers;wizard.order-of-scribes",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 13.75,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.4375,
+   "protection_per_run": 0.65625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.11875,
+   "specials_per_run": 11.28125,
+   "stalls": 0,
+   "taken_per_run": 42.78125,
+   "wins": 32
+  },
+  "rot5-10": {
+   "archetype": "rotation",
+   "builds": "fighter.champion;paladin.glory;wizard.bladesinging;artificer.battle-smith",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 0.90625,
+   "protection_per_run": 0.59375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.28125,
+   "specials_per_run": 3.90625,
+   "stalls": 0,
+   "taken_per_run": 41.25,
+   "wins": 32
+  },
+  "rot5-11": {
+   "archetype": "rotation",
+   "builds": "paladin.vengeance;wizard.transmutation;artificer.artillerist;paladin.ancients",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.96875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.78125,
+   "protection_per_run": 0.84375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.16875,
+   "specials_per_run": 9.03125,
+   "stalls": 0,
+   "taken_per_run": 39.9375,
+   "wins": 32
+  },
+  "rot5-12": {
+   "archetype": "rotation",
+   "builds": "wizard.necromancy;artificer.armorer;paladin.devotion;wizard.illusion",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 11.40625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.40625,
+   "protection_per_run": 4.3125,
+   "rate": 1.0,
+   "rounds_per_fight": 2.94375,
+   "specials_per_run": 10.5625,
+   "stalls": 0,
+   "taken_per_run": 36.5625,
+   "wins": 32
+  },
+  "rot5-13": {
+   "archetype": "rotation",
+   "builds": "artificer.alchemist;monk.astral-self;wizard.evocation;bard.eloquence",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.15625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.625,
+   "protection_per_run": 2.375,
+   "rate": 1.0,
+   "rounds_per_fight": 2.825,
+   "specials_per_run": 11.25,
+   "stalls": 0,
+   "taken_per_run": 36.84375,
+   "wins": 32
+  },
+  "rot5-14": {
+   "archetype": "rotation",
+   "builds": "monk.mercy;wizard.enchantment;bard.creation;monk.four-elements",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 20.53125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.84375,
+   "protection_per_run": 0.0,
+   "rate": 1.0,
+   "rounds_per_fight": 3.24375,
+   "specials_per_run": 8.4375,
+   "stalls": 0,
+   "taken_per_run": 49.0625,
+   "wins": 32
+  },
+  "rot5-15": {
+   "archetype": "rotation",
+   "builds": "wizard.divination;bard.valor;monk.shadow;wizard.conjuration",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 15.28125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.25,
+   "protection_per_run": 3.15625,
+   "rate": 1.0,
+   "rounds_per_fight": 3.0125,
+   "specials_per_run": 9.28125,
+   "stalls": 0,
+   "taken_per_run": 39.25,
+   "wins": 32
+  },
+  "rot5-16": {
+   "archetype": "rotation",
+   "builds": "bard.lore;monk.open-hand;wizard.abjuration;druid.wildfire",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 19.84375,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.6875,
+   "protection_per_run": 4.71875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.19375,
+   "specials_per_run": 11.125,
+   "stalls": 0,
+   "taken_per_run": 46.21875,
+   "wins": 32
+  },
+  "rot5-17": {
+   "archetype": "rotation",
+   "builds": "fighter.rune-knight;warlock.genie;druid.stars;fighter.psi-warrior",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 9.5625,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.21875,
+   "protection_per_run": 3.34375,
+   "rate": 1.0,
+   "rounds_per_fight": 3.175,
+   "specials_per_run": 9.96875,
+   "stalls": 0,
+   "taken_per_run": 38.6875,
+   "wins": 32
+  },
+  "rot5-18": {
+   "archetype": "rotation",
+   "builds": "warlock.fathomless;druid.spores;fighter.eldritch-knight;warlock.great-old-one",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 12.0,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.46875,
+   "protection_per_run": 4.25,
+   "rate": 1.0,
+   "rounds_per_fight": 2.94375,
+   "specials_per_run": 10.0625,
+   "stalls": 0,
+   "taken_per_run": 36.8125,
+   "wins": 32
+  },
+  "support-heavy": {
+   "archetype": "support-heavy",
+   "builds": "paladin.devotion;cleric.life;druid.stars;bard.lore",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.0,
+   "fights_won": 5.0,
+   "healing_per_run": 14.1875,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 1.28125,
+   "protection_per_run": 1.21875,
+   "rate": 1.0,
+   "rounds_per_fight": 3.125,
+   "specials_per_run": 9.03125,
+   "stalls": 0,
+   "taken_per_run": 41.25,
+   "wins": 32
+  },
+  "support-poor": {
+   "archetype": "support-poor",
+   "builds": "rogue.assassin;barbarian.beast;sorcerer.wild-magic;ranger.fey-wanderer",
+   "damage_per_run": 190.0,
+   "deaths_per_run": 0.03125,
+   "fights_won": 5.0,
+   "healing_per_run": 16.78125,
+   "high": 1.0,
+   "low": 0.8928172849426366,
+   "n": 32,
+   "potions_per_run": 2.40625,
+   "protection_per_run": 0.75,
+   "rate": 1.0,
+   "rounds_per_fight": 2.96875,
+   "specials_per_run": 12.09375,
+   "stalls": 0,
+   "taken_per_run": 45.0625,
+   "wins": 32
+  }
+ },
+ "policy_version": [
+  1
+ ],
+ "rotation_win_rate": 1.0,
+ "seconds": 20.441857497906312,
+ "signatures": [
+  {
+   "available_rate": 0.2421836228287841,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "artificer.alchemist",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.0471311475409836,
+   "uses": 23,
+   "uses_per_run": 0.14375
+  },
+  {
+   "available_rate": 0.4372945044621888,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "artificer.battle-smith",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.045112781954887216,
+   "uses": 42,
+   "uses_per_run": 0.2625
+  },
+  {
+   "available_rate": 0.8365864729913755,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "bard.creation",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.02170374389582203,
+   "uses": 40,
+   "uses_per_run": 0.25
+  },
+  {
+   "available_rate": 0.21292947558770345,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "bard.lore",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.044585987261146494,
+   "uses": 21,
+   "uses_per_run": 0.13125
+  },
+  {
+   "available_rate": 0.2884525479195886,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "cleric.knowledge",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.008103727714748784,
+   "uses": 5,
+   "uses_per_run": 0.03125
+  },
+  {
+   "available_rate": 0.4492344883158743,
+   "command": "CureWounds",
+   "flag": "rarely used when available",
+   "kit": "cleric.life",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.0726457399103139,
+   "uses": 81,
+   "uses_per_run": 0.421875
+  },
+  {
+   "available_rate": 0.23105882352941176,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "cleric.nature",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.054989816700611,
+   "uses": 27,
+   "uses_per_run": 0.16875
+  },
+  {
+   "available_rate": 0.2072659524918491,
+   "command": "Special1",
+   "flag": "never used",
+   "kit": "cleric.order",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.0,
+   "uses": 0,
+   "uses_per_run": 0.0
+  },
+  {
+   "available_rate": 0.5796089385474861,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "cleric.peace",
+   "top_blocker": "NoWoundedTarget",
+   "use_when_available": 0.06666666666666667,
+   "uses": 83,
+   "uses_per_run": 0.51875
+  },
+  {
+   "available_rate": 0.8738361266294227,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "cleric.peace",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.0010655301012253596,
+   "uses": 2,
+   "uses_per_run": 0.0125
+  },
+  {
+   "available_rate": 0.05132823052678973,
+   "command": "Special1",
+   "flag": "rarely available",
+   "kit": "cleric.tempest",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 1.0,
+   "uses": 114,
+   "uses_per_run": 0.7125
+  },
+  {
+   "available_rate": 0.2312764955252002,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "cleric.trickery",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.004073319755600814,
+   "uses": 2,
+   "uses_per_run": 0.0125
+  },
+  {
+   "available_rate": 0.06066350710900474,
+   "command": "Special1",
+   "flag": "rarely available",
+   "kit": "cleric.war",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 1.0,
+   "uses": 128,
+   "uses_per_run": 0.8
+  },
+  {
+   "available_rate": 0.681042654028436,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "cleric.war",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.08977035490605428,
+   "uses": 129,
+   "uses_per_run": 0.80625
+  },
+  {
+   "available_rate": 0.07655272026961964,
+   "command": "Special1",
+   "flag": "rarely available",
+   "kit": "druid.spores",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.7421383647798742,
+   "uses": 118,
+   "uses_per_run": 0.7375
+  },
+  {
+   "available_rate": 0.32209918151179584,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "druid.spores",
+   "top_blocker": "NoWoundedTarget",
+   "use_when_available": 0.06726457399103139,
+   "uses": 45,
+   "uses_per_run": 0.28125
+  },
+  {
+   "available_rate": 0.22720763723150358,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "druid.stars",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.03991596638655462,
+   "uses": 19,
+   "uses_per_run": 0.11875
+  },
+  {
+   "available_rate": 0.49679329057720767,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "druid.wildfire",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.01787487586891758,
+   "uses": 18,
+   "uses_per_run": 0.1125
+  },
+  {
+   "available_rate": 0.4824884792626728,
+   "command": "SecondWind",
+   "flag": "rarely used when available",
+   "kit": "fighter.battle-master",
+   "top_blocker": "NoWoundedTarget",
+   "use_when_available": 0.04775549188156638,
+   "uses": 50,
+   "uses_per_run": 0.3125
+  },
+  {
+   "available_rate": 0.4850689127105666,
+   "command": "SecondWind",
+   "flag": "rarely used when available",
+   "kit": "fighter.champion",
+   "top_blocker": "NoWoundedTarget",
+   "use_when_available": 0.04656669297553275,
+   "uses": 59,
+   "uses_per_run": 0.3072916666666667
+  },
+  {
+   "available_rate": 0.20052539404553416,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "monk.four-elements",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.010917030567685589,
+   "uses": 5,
+   "uses_per_run": 0.03125
+  },
+  {
+   "available_rate": 0.11270670147954744,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "monk.mercy",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.05019305019305019,
+   "uses": 13,
+   "uses_per_run": 0.08125
+  },
+  {
+   "available_rate": 0.6677991694979237,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "monk.shadow",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.013001695873374788,
+   "uses": 23,
+   "uses_per_run": 0.11979166666666667
+  },
+  {
+   "available_rate": 0.20141843971631207,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "paladin.devotion",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.04460093896713615,
+   "uses": 19,
+   "uses_per_run": 0.11875
+  },
+  {
+   "available_rate": 0.8561617703166731,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "paladin.glory",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.011586452762923352,
+   "uses": 26,
+   "uses_per_run": 0.13541666666666666
+  },
+  {
+   "available_rate": 0.22701259061426937,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "paladin.glory",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.04201680672268908,
+   "uses": 25,
+   "uses_per_run": 0.13020833333333334
+  },
+  {
+   "available_rate": 0.3625478927203065,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "paladin.vengeance",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.005284015852047556,
+   "uses": 4,
+   "uses_per_run": 0.025
+  },
+  {
+   "available_rate": 0.057004830917874394,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "ranger.beast-master",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.06779661016949153,
+   "uses": 8,
+   "uses_per_run": 0.05
+  },
+  {
+   "available_rate": 0.28015016424213984,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "ranger.fey-wanderer",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.005025125628140704,
+   "uses": 3,
+   "uses_per_run": 0.01875
+  },
+  {
+   "available_rate": 0.21979695431472082,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "ranger.hunter",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.09006928406466513,
+   "uses": 39,
+   "uses_per_run": 0.24375
+  },
+  {
+   "available_rate": 0.11209321012454801,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "rogue.arcane-trickster",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.08243727598566308,
+   "uses": 23,
+   "uses_per_run": 0.11979166666666667
+  },
+  {
+   "available_rate": 0.0968478757423481,
+   "command": "Special1",
+   "flag": "rarely available",
+   "kit": "rogue.assassin",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.8066037735849056,
+   "uses": 171,
+   "uses_per_run": 1.06875
+  },
+  {
+   "available_rate": 0.5344906349931475,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "rogue.assassin",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.002564102564102564,
+   "uses": 3,
+   "uses_per_run": 0.01875
+  },
+  {
+   "available_rate": 0.25397426192278577,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "rogue.soulknife",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.00894187779433681,
+   "uses": 6,
+   "uses_per_run": 0.03125
+  },
+  {
+   "available_rate": 0.9103260869565217,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "rogue.thief",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.014427860696517412,
+   "uses": 29,
+   "uses_per_run": 0.18125
+  },
+  {
+   "available_rate": 0.2477355072463768,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "rogue.thief",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.04021937842778794,
+   "uses": 22,
+   "uses_per_run": 0.1375
+  },
+  {
+   "available_rate": 0.5162322816643804,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "sorcerer.clockwork-soul",
+   "top_blocker": "NoWoundedTarget",
+   "use_when_available": 0.05934455270150576,
+   "uses": 67,
+   "uses_per_run": 0.41875
+  },
+  {
+   "available_rate": 0.28823249166269654,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "sorcerer.wild-magic",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.009917355371900827,
+   "uses": 6,
+   "uses_per_run": 0.0375
+  },
+  {
+   "available_rate": 0.6356589147286822,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "warlock.archfey",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.01600609756097561,
+   "uses": 21,
+   "uses_per_run": 0.13125
+  },
+  {
+   "available_rate": 0.06125290023201856,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "warlock.fiend",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.05303030303030303,
+   "uses": 7,
+   "uses_per_run": 0.04375
+  },
+  {
+   "available_rate": 0.7548620533695161,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "warlock.genie",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.015578190533253445,
+   "uses": 26,
+   "uses_per_run": 0.1625
+  },
+  {
+   "available_rate": 0.22334238076773943,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "warlock.great-old-one",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.078125,
+   "uses": 45,
+   "uses_per_run": 0.234375
+  },
+  {
+   "available_rate": 0.027637033625057577,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "wizard.abjuration",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.06666666666666667,
+   "uses": 4,
+   "uses_per_run": 0.025
+  },
+  {
+   "available_rate": 0.061046511627906974,
+   "command": "Special1",
+   "flag": "rarely available",
+   "kit": "wizard.bladesinging",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 1.0,
+   "uses": 126,
+   "uses_per_run": 0.7875
+  },
+  {
+   "available_rate": 0.7956730769230769,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "wizard.conjuration",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.02054380664652568,
+   "uses": 34,
+   "uses_per_run": 0.2125
+  },
+  {
+   "available_rate": 0.7391093901258471,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "wizard.enchantment",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.016371971185330715,
+   "uses": 25,
+   "uses_per_run": 0.15625
+  },
+  {
+   "available_rate": 0.21408711770157554,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "wizard.illusion",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.0021645021645021645,
+   "uses": 1,
+   "uses_per_run": 0.00625
+  },
+  {
+   "available_rate": 0.12064737616478666,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "wizard.necromancy",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.032520325203252036,
+   "uses": 8,
+   "uses_per_run": 0.05
+  },
+  {
+   "available_rate": 0.22841901066925316,
+   "command": "Special2",
+   "flag": "never used",
+   "kit": "wizard.order-of-scribes",
+   "top_blocker": "ResourceShort",
+   "use_when_available": 0.0,
+   "uses": 0,
+   "uses_per_run": 0.0
+  },
+  {
+   "available_rate": 0.882858435097241,
+   "command": "Special1",
+   "flag": "rarely used when available",
+   "kit": "wizard.transmutation",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.018954918032786885,
+   "uses": 37,
+   "uses_per_run": 0.23125
+  },
+  {
+   "available_rate": 0.24513794663048394,
+   "command": "Special2",
+   "flag": "rarely used when available",
+   "kit": "wizard.transmutation",
+   "top_blocker": "OutOfRange",
+   "use_when_available": 0.04428044280442804,
+   "uses": 24,
+   "uses_per_run": 0.15
+  }
+ ],
+ "slots": {
+  "1": {
+   "damage_per_fight": 9.820069444444444,
+   "deadline_deaths": 9,
+   "death_rate": 0.005555555555555556,
+   "downs_per_fight": 0.0075,
+   "healing_per_fight": 0.9163888888888889,
+   "heroes": 2880,
+   "high": 1.0,
+   "idle_turn_rate": 0.00325115838517267,
+   "kills_per_fight": 0.6552777777777777,
+   "low": 0.998667888000506,
+   "n": 2880,
+   "party_rounds_per_fight": 3.062708333333333,
+   "protection_per_fight": 0.13506944444444444,
+   "rate": 1.0,
+   "taken_per_fight": 2.814652777777778,
+   "victory_deaths": 7,
+   "wins": 2880
+  },
+  "2": {
+   "damage_per_fight": 8.55192053900118,
+   "deadline_deaths": 0,
+   "death_rate": 0.00034722222222222224,
+   "downs_per_fight": 0.003959158157949573,
+   "healing_per_fight": 0.864138362158783,
+   "heroes": 2880,
+   "high": 1.0,
+   "idle_turn_rate": 0.005708273050111798,
+   "kills_per_fight": 0.5866499965270543,
+   "low": 0.998667888000506,
+   "n": 2880,
+   "party_rounds_per_fight": 3.062708333333333,
+   "protection_per_fight": 0.12690143779954158,
+   "rate": 1.0,
+   "taken_per_fight": 2.1225949850663333,
+   "victory_deaths": 1,
+   "wins": 2880
+  },
+  "3": {
+   "damage_per_fight": 9.395902777777778,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0009722222222222222,
+   "healing_per_fight": 0.636875,
+   "heroes": 2880,
+   "high": 1.0,
+   "idle_turn_rate": 0.003404012056958736,
+   "kills_per_fight": 0.5927083333333333,
+   "low": 0.998667888000506,
+   "n": 2880,
+   "party_rounds_per_fight": 3.062708333333333,
+   "protection_per_fight": 0.14,
+   "rate": 1.0,
+   "taken_per_fight": 1.5379166666666666,
+   "victory_deaths": 0,
+   "wins": 2880
+  },
+  "4": {
+   "damage_per_fight": 10.233888888888888,
+   "deadline_deaths": 0,
+   "death_rate": 0.0,
+   "downs_per_fight": 0.0016666666666666668,
+   "healing_per_fight": 0.5243055555555556,
+   "heroes": 2880,
+   "high": 1.0,
+   "idle_turn_rate": 0.00276567432880215,
+   "kills_per_fight": 0.6654861111111111,
+   "low": 0.998667888000506,
+   "n": 2880,
+   "party_rounds_per_fight": 3.062708333333333,
+   "protection_per_fight": 0.08548611111111111,
+   "rate": 1.0,
+   "taken_per_fight": 1.84,
+   "victory_deaths": 0,
+   "wins": 2880
+  }
+ },
+ "stalls": []
+}
