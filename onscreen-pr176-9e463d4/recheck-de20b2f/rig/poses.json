@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "settleFrames": 60,
+ "shots": [
+  {
+   "name": "battle-yawm90-default",
+   "mode": "battle",
+   "yaw": -90,
+   "distance": "default"
+  },
+  {
+   "name": "battle-yaw000-default",
+   "mode": "battle",
+   "yaw": 0,
+   "distance": "default"
+  },
+  {
+   "name": "targeting-yawm90-default",
+   "mode": "targeting",
+   "yaw": -90,
+   "distance": "default"
+  }
+ ]
+}
