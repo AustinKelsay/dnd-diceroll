@@ -25,6 +25,20 @@ class WindowsHostTests(unittest.TestCase):
                                  settings={'game_target':'Game'})
         self.d = dev.Dev(self.w, host='windows')
 
+    def test_perf_refuses_windows_before_engine_or_process_launch(self):
+        with patch.object(self.d, "require_engine") as engine, patch("dev.subprocess.Popen") as launch:
+            for kwargs in ({}, {"editor": True}, {"only": "warmup"}, {"only": "measured"}, {"only": "resume", "run": "kept"}):
+                with self.assertRaisesRegex(RuntimeError, "Windows perf launches are unsupported"):
+                    self.d.perf(**kwargs)
+        engine.assert_not_called()
+        launch.assert_not_called()
+
+    def test_perf_existing_report_stays_read_only_on_windows(self):
+        with patch.object(self.d, "perf_run_folder", return_value=self.w.root), patch.object(self.d, "perf_report", return_value={"kept": True}) as report, patch("dev.subprocess.Popen") as launch:
+            self.assertEqual(self.d.perf(only="report", run="kept"), {"kept": True})
+        report.assert_called_once()
+        launch.assert_not_called()
+
     def test_host_and_layout(self):
         with patch('dev.sys.platform', 'win32'), patch('dev.platform.machine', return_value='AMD64'):
             self.assertEqual(dev.current_host(), 'windows')

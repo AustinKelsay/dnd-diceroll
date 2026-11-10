@@ -991,6 +991,8 @@ class Dev:
         return roots
 
     def perf_context(self, package, editor, script, resolution, frames, timeout, offscreen, vsync, sound):
+        if self.host == "windows":
+            raise RuntimeError("Windows perf launches are unsupported: RSS capture and safe shutdown need a port. Use Ultra; --pass report can read existing evidence.")
         """Validate the arguments and resolve what a pass launches. Shared by every pass of a run."""
         size = parse_resolution(resolution)
         if editor and package:
@@ -1251,6 +1253,7 @@ class Dev:
         for name in (["warmup"] if warmup else []) + ["measured", "resume"]:
             self.perf_pass(ctx, output, name, pad)
         return self.perf_report(output, pad)
+
     def gallery_flags(self):
         # Windows capture needs a real renderer/window; null-RHI is only for commandlets.
         return [] if self.host == "windows" else self.layout["headless"]
