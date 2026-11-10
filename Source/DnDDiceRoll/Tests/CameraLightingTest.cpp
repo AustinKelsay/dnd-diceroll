@@ -433,6 +433,7 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             const FSafeRect Rect = View->SafeRect();
             const FTransform Camera = View->CameraTransform();
             const FTransform Actor = View->GetActorTransform();
+            const double PlaneZ = Actor.GetLocation().Z + View->Metric().BoardTop();
             double MinX = TNumericLimits<double>::Max(), MaxX = TNumericLimits<double>::Lowest(), MinY = MinX, MaxY = MaxX;
             const FVector2D Corners[4] = {
                 FVector2D(Rect.Left, Rect.Top), FVector2D(1.0 - Rect.Right, Rect.Top), FVector2D(Rect.Left, 1.0 - Rect.Bottom), FVector2D(1.0 - Rect.Right, 1.0 - Rect.Bottom)};
@@ -440,8 +441,8 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             {
                 FVector2D Ground;
                 if (!TestTrue(*(Label + TEXT(": a safe rect corner has ground under it")),
-                    Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, Actor.GetLocation().Z + View->Metric().BoardTop(), Ground))) { return; }
-                const FVector InView = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, Actor.GetLocation().Z + View->Metric().BoardTop()));
+                    Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(PlaneZ), Ground))) { return; }
+                const FVector InView = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, PlaneZ));
                 MinX = FMath::Min(MinX, InView.X); MaxX = FMath::Max(MaxX, InView.X);
                 MinY = FMath::Min(MinY, InView.Y); MaxY = FMath::Max(MaxY, InView.Y);
             }
