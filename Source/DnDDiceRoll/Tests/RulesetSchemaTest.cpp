@@ -27,27 +27,58 @@ FString CompactBattleFingerprint(const FExpeditionSnapshot& Snapshot)
 }
 }
 
-// The format 4 fixtures were written by staging d9eac88 under catalog revision 7. Until #184 this test resumed them and
-// required staging's own continuation to Victory. Revision 8 retunes Compact enemies, and restore regenerates and
-// compares every enemy, so a revision 7 run cannot continue: the preserved intent is now (1) old files are refused by
-// name and left byte-identical, and (2) the 4 -> 5 upgrade still restores a run exactly and continues it identically,
-// proven on a current run written in format 4 (the fields format 5 added removed).
+// Real format 4 files from staging d9eac88, catalog revision 7. A revision 7 run keeps revision 7 enemies for its whole
+// lifetime (#184), so both still load as Compact and resume exactly as staging continued them.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema4LoadsAsCompactTest, "Project.Expedition.Persistence.Schema4LoadsAsCompact",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSchema4LoadsAsCompactTest::RunTest(const FString& Parameters)
 {
     FString Error;
     const FString Fixtures = FPaths::ProjectDir() / TEXT("Source/DnDDiceRoll/Tests/Fixtures/Schema4");
-    for (const TCHAR* Name : {TEXT("mid-battle-v4.json"), TEXT("between-battles-v4.json"), TEXT("expected-mid-victory-v4.json"), TEXT("expected-victory-v4.json")})
+    FExpeditionSaveData Expected;
+    if (!TestTrue(TEXT("Read staging expected victory"), FExpeditionSave::Read(Fixtures / TEXT("expected-victory-v4.json"), Expected, Error))) { return false; }
+    FExpeditionSaveData ExpectedMid;
+    if (!TestTrue(TEXT("Read staging expected mid continuation"), FExpeditionSave::Read(Fixtures / TEXT("expected-mid-victory-v4.json"), ExpectedMid, Error))) { return false; }
+    for (const TCHAR* Name : {TEXT("mid-battle-v4.json"), TEXT("between-battles-v4.json")})
     {
-        TArray<uint8> Before, After;
-        if (!TestTrue(FString(TEXT("Fixture present: ")) + Name, FFileHelper::LoadFileToArray(Before, *(Fixtures / Name)))) { return false; }
+        const bool bMid = FCString::Strcmp(Name, TEXT("mid-battle-v4.json")) == 0;
         FExpeditionSaveData Loaded;
-        TestFalse(FString(TEXT("Revision 7 checkpoint refused: ")) + Name, FExpeditionSave::Read(Fixtures / Name, Loaded, Error));
-        TestTrue(FString(TEXT("Refusal names both rules revisions: ")) + Error, Error.Contains(TEXT("revision 7")) && Error.Contains(TEXT("revision 8")));
-        FFileHelper::LoadFileToArray(After, *(Fixtures / Name));
-        TestTrue(FString(TEXT("Reading leaves the file byte-identical: ")) + Name, Before == After);
+        if (!TestTrue(Name, FExpeditionSave::Read(Fixtures / Name, Loaded, Error))) { return false; }
+        TestEqual(TEXT("Version upgraded"), Loaded.Version, FExpeditionSave::Version);
+        TestTrue(TEXT("Progress and encounter are Compact"), Loaded.Current.Progress.Ruleset == ERuleset::Compact && Loaded.Current.Battle.Encounter.Ruleset == ERuleset::Compact);
+        for (const auto& U : Loaded.Current.Battle.Encounter.Combatants)
+        {
+            TestTrue(TEXT("Combatant defaults"), U.bReactionAvailable && U.DeathSaveSuccesses == 0 && U.DeathSaveFailures == 0 && U.TemporaryHP == 0 &&
+                !U.bConcentrating && U.Size == 2 && !U.bSurprised && !U.bDisengaged && !U.bProne && U.GrapplerId == INDEX_NONE);
+        }
+        TestTrue(TEXT("Encounter defaults"), !Loaded.Current.Battle.Encounter.bAmbush && Loaded.Current.Battle.Encounter.AmbushStealthTotals.IsEmpty());
+        FExpeditionRun Run;
+        if (!TestTrue(TEXT("Restore migrated snapshot"), Run.Restore(Loaded.Current, Error))) { return false; }
+        TestTrue(TEXT("Restore consumes no RNG or state"), SameRun(Loaded.Current, Run.Snapshot()));
+        for (int32 Guard = 0; Guard < 30 && Run.Progress().Phase != EExpeditionPhase::Victory && Run.Progress().Phase != EExpeditionPhase::Defeat; ++Guard)
+        {
+            switch (Run.Progress().Phase)
+            {
+            case EExpeditionPhase::Route: TestTrue(TEXT("Choose"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)); break;
+            case EExpeditionPhase::Combat: TestTrue(TEXT("Finish combat"), FinishCombat(Run)); break;
+            case EExpeditionPhase::Reward: TestTrue(TEXT("Reward"), Run.ClaimReward(1, Error)); break;
+            case EExpeditionPhase::Recovery: TestTrue(TEXT("Recover"), Run.Recover(true, Error)); break;
+            default: return false;
+            }
+        }
+        TestTrue(TEXT("Full resumed snapshot equals staging continuation, including RNG"), SameRun((bMid ? ExpectedMid : Expected).Current, Run.Snapshot()));
     }
+    return !HasAnyErrors();
+}
+
+// The 4 -> 5 upgrade on current runs (#184): a catalog revision 8 run written as format 4 (the fields format 5 added
+// removed) decodes with the Compact defaults, restores exactly and continues identically. The fixtures above cover
+// real format 4 files, which are revision 7.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema4UpgradeRoundTripTest, "Project.Expedition.Persistence.Schema4UpgradeRoundTripsCurrentRuns",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema4UpgradeRoundTripTest::RunTest(const FString& Parameters)
+{
+    FString Error;
     // A revision 8 run, mid-battle (after enemy turns and one party move) and between battles (reward and camp taken).
     FExpeditionRun Mid; Mid.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact);
     Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error);
@@ -203,6 +234,36 @@ bool FSrdSeedUnchangedTest::RunTest(const FString& Parameters)
     }
     FinishRunScripted(Run);
     TestEqual(TEXT("SRD fingerprint unchanged by the Compact tuning"), CompactBattleFingerprint(Run.Snapshot()), FString(TEXT("rng=-2011953773|partyHp=82|enemyHp=0|alive=4|phase=4|victories=5|ruleset=1|rounds=8|turn=0")));
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdRevision7ResumeTest, "Project.Expedition.Persistence.SrdRevision7Resumes",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSrdRevision7ResumeTest::RunTest(const FString& Parameters)
+{
+    // An SRD checkpoint saved under catalog revision 7 resumes through the session and plays exactly as a revision 8 SRD
+    // run (#184: SRD numbers are the same in both revisions); it keeps its revision.
+    FString Error;
+    FExpeditionRun Original;
+    if (!TestTrue(TEXT("SRD NewRun"), Original.NewRun(42, Error, TEXT("srd-revision-7"), EFighterSubclass::Champion, ERuleset::SRD))) { return false; }
+    TestTrue(TEXT("Route"), Original.ChooseRoute(Original.Progress().Offers[1].Id, Error));
+    while (Original.Battle().Find(Original.Battle().ActiveId())->Side == ECombatSide::Enemy) { Original.PlayEnemyTurn(); }
+    const int32 Mover = Original.Battle().ActiveId();
+    const TArray<FIntPoint> Moves = Original.Battle().LegalMoves(Mover);
+    if (!Moves.IsEmpty()) { Original.Submit({ECombatCommandType::Move, Mover, Moves[0]}); }
+    FExpeditionSaveData Data; Data.Current = Original.Snapshot(); Data.Current.Progress.CatalogRevision = 7;
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/SrdRevision7"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current-v1.json"));
+    if (!TestTrue(TEXT("Write a revision 7 SRD checkpoint: ") + Error, FExpeditionSave::Write(Path, Data, Error))) { return false; }
+    FExpeditionSession Session(Path);
+    if (!TestTrue(TEXT("Resume the revision 7 SRD checkpoint: ") + Error, Session.Resume(Error))) { IFileManager::Get().DeleteDirectory(*Directory, false, true); return false; }
+    TestEqual(TEXT("The run keeps revision 7"), Session.Run().Progress().CatalogRevision, 7);
+    TestTrue(TEXT("Resumed exactly, RNG included"), SameRun(Data.Current, Session.Run().Snapshot()));
+    FExpeditionRun Resumed = Session.Run();
+    FinishRunScripted(Original); FinishRunScripted(Resumed);
+    TestEqual(TEXT("Still revision 7 at the end"), Resumed.Progress().CatalogRevision, 7);
+    FExpeditionSnapshot Compared = Resumed.Snapshot(); Compared.Progress.CatalogRevision = Original.Progress().CatalogRevision;
+    TestTrue(TEXT("Revision 7 and revision 8 SRD runs play identically"), SameRun(Original.Snapshot(), Compared));
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
 #endif

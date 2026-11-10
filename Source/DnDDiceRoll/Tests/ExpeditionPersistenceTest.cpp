@@ -347,9 +347,9 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version + 1); // future schema: unreadable, preserve on NewRun
     FString Incompatible;
     FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Incompatible));
-    // #184: a checkpoint from an older rules revision (current schema) is refused by name and preserved the same way.
+    // #184: a checkpoint from an unsupported rules revision (current schema) is refused by name and preserved the same way.
     Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version);
-    Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->SetNumberField(TEXT("CatalogRevision"), FBuildCatalog::Revision - 1);
+    Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->SetNumberField(TEXT("CatalogRevision"), FBuildCatalog::Revision + 1);
     FString OlderRevision;
     FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&OlderRevision));
     for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible, OlderRevision})
@@ -359,7 +359,7 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
         FFileHelper::SaveStringToFile(Unreadable, *Fixture.Path);
         FExpeditionSession Session(Fixture.Path);
         TestFalse(TEXT("Resume rejects unreadable save"), Session.Resume(Error));
-        if (Unreadable == OlderRevision) { TestTrue(TEXT("Resume names the older rules revision: ") + Error, Error.Contains(TEXT("rules revision"))); }
+        if (Unreadable == OlderRevision) { TestTrue(TEXT("Resume names the unsupported rules revision: ") + Error, Error.Contains(TEXT("rules revision"))); }
         if (!TestTrue(TEXT("Explicit fresh start can recover"), Session.NewRun(43, Error))) { continue; }
         TArray<FString> Preserved;
         IFileManager::Get().FindFiles(Preserved, *(Fixture.Path + TEXT(".unreadable-*")), true, false);

@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Run/ExpeditionRun.h"
+#include "Persistence/ExpeditionSave.h"
 
 #include "ExpeditionTestSupport.h"
 using namespace ExpeditionTestSupport;
@@ -415,13 +416,35 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
             }
         }
     }
-    // A checkpoint from another rules revision is refused by name and changes nothing.
-    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("tuning-fixture"));
-    FExpeditionSnapshot Old = Run.Snapshot(); Old.Progress.CatalogRevision = 7;
+    // A revision 7 Compact run keeps revision 7 enemies for its whole lifetime: the format 4 fixture saved between
+    // battles (after fight 1) generates its next fight with the old stats and keeps its revision.
+    FString Error;
+    FExpeditionSaveData Fixture;
+    if (TestTrue(TEXT("Read the revision 7 fixture"), FExpeditionSave::Read(FPaths::ProjectDir() / TEXT("Source/DnDDiceRoll/Tests/Fixtures/Schema4/between-battles-v4.json"), Fixture, Error)))
+    {
+        FExpeditionRun Old;
+        TestTrue(TEXT("Restore it"), Old.Restore(Fixture.Current, Error));
+        TestEqual(TEXT("It is a revision 7 run"), Old.Progress().CatalogRevision, 7);
+        TestTrue(TEXT("Choose its Dangerous road"), Old.ChooseRoute(Old.Progress().Offers[1].Id, Error));
+        for (const auto& U : Old.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (U.Side != ECombatSide::Enemy) { continue; }
+            TestTrue(TEXT("Revision 7 Dangerous fight 2 enemy stats"), U.MaxHP == 14 && U.ArmorClass == 12 && U.AttackBonus == 2 && U.DamageDie == 6 && U.DamageBonus == 1);
+        }
+        TestEqual(TEXT("Still revision 7"), Old.Progress().CatalogRevision, 7);
+    }
+    // New runs are revision 8; a revision outside 7..8 is refused by name and changes nothing.
+    FExpeditionRun Run; Run.NewRun(42, Error, TEXT("tuning-fixture"));
+    TestEqual(TEXT("New runs use revision 8"), Run.Progress().CatalogRevision, 8);
     const FExpeditionSnapshot Before = Run.Snapshot();
-    TestFalse(TEXT("Revision 7 snapshot refused"), Run.Restore(Old, Error));
-    TestTrue(TEXT("The refusal names both revisions: ") + Error, Error.Contains(TEXT("revision 7")) && Error.Contains(TEXT("revision 8")));
-    TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
+    for (const int32 Revision : {6, 9})
+    {
+        FExpeditionSnapshot Unknown = Run.Snapshot(); Unknown.Progress.CatalogRevision = Revision;
+        TestFalse(FString::Printf(TEXT("Revision %d refused"), Revision), Run.Restore(Unknown, Error));
+        TestTrue(TEXT("The refusal names the revision and the supported ones: ") + Error,
+            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 8")));
+        TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
+    }
     return !HasAnyErrors();
 }
 #endif
