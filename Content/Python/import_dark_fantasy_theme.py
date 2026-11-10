@@ -24,6 +24,9 @@ Root of the World world kit r002 (issue #149 phase 2) goes through the same code
     are tagged DiceRollAssetRevision=root-kit-r002 and UDiceRollTheme::bRootMetricKit is set only when SM_World_Root carries it.
   - INSTANCE_TINTS in theme_plan writes the Color tint of a kit instance (the lever for the paving value); it is written only
     when it differs.
+Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
+colour for sparks, shots and the camp, and the master, occluder, card and effect materials carry the instanced-static-mesh usage flag.
+Nothing else changes: a run on a current theme only sets the missing flags.
 
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
 skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). Existing rig assets are
@@ -124,7 +127,7 @@ def add(material, a, b, x, y):
 
 # Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
 # revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
-MASTER_GRAPH_REVISION = "dice-theme-4"
+MASTER_GRAPH_REVISION = "dice-theme-5"
 MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
@@ -179,7 +182,7 @@ def shadow_safe(material, mask, x, y):
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
-    base     = Tex.rgb x vertexColor.rgb x Color
+    base     = Tex.rgb x vertexColor.rgb x Color x PerInstanceCustomData[0]   (#144: tint of an instanced prop; 1 on every other mesh)
     emissive = base x (vertexColor.a x Glow + SelfLit)           glow only where the vertex alpha says so
              + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
              + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
@@ -203,7 +206,12 @@ def master_material():
     vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
     tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -1100, 400)
     lit = mul(material, tex, rgb(material, vertex, "", -900, 200), -700, 0, "RGB", "")
-    color = mul(material, lit, rgb(material, tint, "", -900, 400), -500, 100)
+    # Instanced props (#144) share one material instance per group and carry their tint in per-instance custom data slot 0.
+    # The node returns its default (1) for every mesh that has no custom data, so meshes, skeletal figures and the tint "Color"
+    # of an ordinary component are unchanged.
+    instance_tint = expression(material, unreal.MaterialExpressionPerInstanceCustomData, -1100, 520, const_default_value=1.0, data_index=0)
+    tinted = mul(material, rgb(material, tint, "", -900, 400), instance_tint, -700, 440)
+    color = mul(material, lit, tinted, -500, 100)
 
     # Glow: vertex alpha is the mask. A mesh without a varying alpha reads as 1 everywhere, so such meshes get Glow 0.
     glow = scalar(material, "Glow", 0.0, -900, 560)
@@ -610,6 +618,42 @@ def build_figure_silhouette_material(material):
     mel.connect_material_expressions(side, "", result, "B")
     mel.connect_material_expressions(alpha, "", result, "Alpha")
     mel.connect_material_property(result, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+
+
+def ensure_instancing_usage(material):
+    """Instanced static meshes (#144) need the usage flag in cooked builds (the editor sets it on first use, but only in memory).
+
+    Written with set_if_different and recompiled only when it changed, so a rerun leaves the material untouched.
+    """
+    if set_if_different(material, "used_with_instanced_static_meshes", True):
+        mel.recompile_material(material)
+        unreal.log("THEME_MATERIAL_USAGE {} used_with_instanced_static_meshes set".format(material.get_name()))
+
+
+EFFECT_MATERIAL = "M_DiceRollEffect"
+# Bump when build_effect_material changes.
+EFFECT_GRAPH_REVISION = "dice-effect-1"
+
+
+def effect_is_current(material):
+    return library.get_metadata_tag(material, MASTER_REVISION_TAG) == EFFECT_GRAPH_REVISION
+
+
+def build_effect_material(material):
+    """Lit, opaque colour for instanced engine shapes (#144): BaseColor = Color x PerInstanceCustomData3Vector[0], roughness Roughness.
+
+    The same look as BasicShapeMaterial (a "Color" base colour and a "Roughness", default 0.5), but the colour of each instance comes
+    from its custom data, so every spark, shot and camp piece of a shape shares one group, one material and one draw. Values above 1
+    (the effects' HDR colours) are clamped into the base colour exactly as they are on BasicShapeMaterial.
+    """
+    material.set_editor_property("used_with_instanced_static_meshes", True)
+    tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -600, 0)
+    instance = expression(material, unreal.MaterialExpressionPerInstanceCustomData3Vector, -600, 200,
+                          const_default_value=unreal.LinearColor(1, 1, 1, 1), data_index=0)
+    color = mul(material, rgb(material, tint, "", -400, 0), instance, -200, 100)
+    roughness = scalar(material, "Roughness", 0.5, -300, 300)
+    mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
 
 
 def ensure_material(name, build, is_current=None, revision=None):
@@ -1299,6 +1343,10 @@ def main():
     ensure_skeletal_usage(master)
     occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current, OCCLUDER_GRAPH_REVISION)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
+    effect_parent = ensure_material(EFFECT_MATERIAL, build_effect_material, effect_is_current, EFFECT_GRAPH_REVISION)
+    # Every material an instanced group draws needs the instancing usage flag (#144); a rerun only sets what is missing.
+    for instanced in (master, occluder_parent, card_parent, effect_parent):
+        ensure_instancing_usage(instanced)
     ensure_material(FIGURE_SILHOUETTE_MATERIAL, build_figure_silhouette_material, figure_silhouette_is_current, FIGURE_SILHOUETTE_REVISION)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()
