@@ -106,7 +106,7 @@ bool Shape(const FCombatantState& Unit, ECombatCommandType Action, bool bSrd, bo
     if (Action == ECombatCommandType::Special1 || Action == ECombatCommandType::Special2 ||
         (Action == ECombatCommandType::CureWounds && !Unit.BuildId.IsEmpty()))
     {
-        const TArray<FAbilityFacts> Abilities = FBuildCatalog::Abilities(Unit, bSrd);
+        const TArray<FAbilityFacts> Abilities = FBuildCatalog::Abilities(Unit);
         const FAbilityFacts* Ability = Abilities.FindByPredicate([Action](const FAbilityFacts& A) { return A.Command == Action; });
         if (!Ability) { return false; }
         Facts.Name = Ability->Name;
@@ -308,7 +308,7 @@ TArray<ECombatCommandType> FActionFactsQuery::BarFor(const FCombatBattle& Battle
     if (const FCombatantState* Unit = Battle.Find(ActorId))
     {
         if ((Battle.Snapshot().Encounter.Ruleset == ERuleset::SRD) && Unit->AdventurerRole == EAdventurerRole::Fighter && FClassFeatureRules::ActionSurgeUses(Unit->Level)>0) { Bar.AddUnique(ECombatCommandType::ActionSurge); }
-        for (const FAbilityFacts& A : FBuildCatalog::Abilities(*Unit,(Battle.Snapshot().Encounter.Ruleset == ERuleset::SRD))) { Bar.AddUnique(A.Command); }
+        for (const FAbilityFacts& A : FBuildCatalog::Abilities(*Unit)) { Bar.AddUnique(A.Command); }
     }
     Bar.Add(ECombatCommandType::Rescue);
     Bar.Add(ECombatCommandType::Potion);
