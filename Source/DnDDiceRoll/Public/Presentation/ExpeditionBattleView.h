@@ -11,6 +11,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
 
+class UAnimSequence;
 class UAudioComponent;
 class UCameraComponent;
 class UExponentialHeightFogComponent;
@@ -20,10 +21,12 @@ class UMaterialInterface;
 class UPointLightComponent;
 class UPostProcessComponent;
 class USceneComponent;
+class USkeletalMeshComponent;
 class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
+struct FDiceRollCharacter;
 
 UENUM()
 enum class EBoardTheme : uint8 { Meadow, Ruins, Vault };
@@ -56,6 +59,28 @@ struct FExpeditionUnitRig
     bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
+    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its nine clips by EUnitPose. */
+    UPROPERTY() TObjectPtr<USkeletalMeshComponent> Skin;
+    UPROPERTY() TArray<TObjectPtr<UAnimSequence>> Clips;
+    /** The clip on the figure and its time. The view advances the time itself (at playback speed), so poses are deterministic. */
+    EUnitPose Pose = EUnitPose::Idle;
+    float PoseTime = 0.0f;
+    float Stamp = 0.0f;
+    int32 PoseSerial = -1;
+    /** A natural return to Idle waits for a one-shot clip that is still playing. */
+    bool bIdleAfter = false;
+};
+
+/** What a figure's animation shows right now (tests and tools). */
+struct FUnitAnimationState
+{
+    bool bSkeletal = false;
+    EUnitPose Pose = EUnitPose::Idle;
+    /** Seconds into the clip, and the clip's length; a one-shot clip that has finished has Time == Length. */
+    float Time = 0.0f;
+    float Length = 0.0f;
+    /** The clip asset's name on the component, empty when it has none. */
+    FString Clip;
 };
 
 USTRUCT()
@@ -265,6 +290,12 @@ public:
     const FBoardMetric& Metric() const { return BoardMetric; }
     /** Replaces the metric and rebuilds the board at the new scale (tests and tools; the theme normally supplies it). */
     void SetBoardMetric(const FBoardMetric& Value);
+    /** Draws the static r001 meshes instead of the rigged characters (what -ExpeditionStaticFigures does at startup) and rebuilds. */
+    void UseStaticFigures();
+    /** How many figures on the board are rigged characters. */
+    int32 SkeletalFigureCount() const;
+    /** The animation shown on a combatant's figure; bSkeletal is false for static and primitive figures. */
+    FUnitAnimationState UnitAnimation(int32 UnitId) const;
     /** Switches to the engine-primitive presentation (what -ExpeditionPrimitives does at startup) and rebuilds. */
     void UsePrimitives();
     FVector CellPosition(FIntPoint Cell) const;
@@ -292,6 +323,8 @@ private:
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
+    bool bSkeletalFigures = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
@@ -391,6 +424,11 @@ private:
     void BuildRig(const FCombatantState& Unit);
     UStaticMesh* ThemeMesh(const TSoftObjectPtr<UStaticMesh>& Entry) const;
     UStaticMesh* UnitMesh(const FCombatantState& Unit) const;
+    /** The theme's rigged character for a combatant, or null (no theme, static figures, or no definition for this unit). */
+    const FDiceRollCharacter* UnitRigged(const FCombatantState& Unit) const;
+    bool BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit);
+    void ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bool bSnap);
+    void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
     /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (Vigil boards, pillar and wall recipes). Metric-authored, so placed unscaled. False when the theme has no variant to place. */

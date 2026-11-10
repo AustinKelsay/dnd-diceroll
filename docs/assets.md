@@ -87,6 +87,24 @@ Import policy (v2), applied by `import_dark_fantasy_theme.py`:
 
 **Fallbacks:** `AExpeditionBattleView` falls back to the engine primitives below when an entry is missing. The `-ExpeditionPrimitives` command-line flag forces that fallback.
 
+## Rigged character pilot (issue #147)
+
+`Art/rig-pilot/r001/` holds the Blender half of the rigged pilot: the shared 25-bone skeleton contract (`README.md`), the recipes (`scripts/`), checks (`metrics/`) and contact sheets (`previews/`). The fighter, wizard and raider have records at `Art/sk-hero-fighter/r001/`, `Art/sk-hero-wizard/r001/` and `Art/sk-foe-raider/r001/` (skeletal glb with nine clips, plus LOD1 and LOD2 glbs). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository.
+
+**Import (phase 2, done: headless import, build, automation and gallery captures are recorded on PR #164; the on-screen pass is pending):** `Content/Python/import_dark_fantasy_theme.py` imports the pilot in the same headless run as the static theme. It creates, under `/Game/DnDDiceRoll/Theme`:
+- `Characters/SKEL_Humanoid`, the one skeleton, from the fighter's import;
+- `Characters/SK_Hero_Fighter`, `SK_Hero_Wizard` and `SK_Foe_Raider`, each with LOD1 and LOD2 from the `_LOD1`/`_LOD2` glbs (`SkeletalMeshEditorSubsystem.import_lod`) and Nanite explicitly off;
+- `Characters/Animations/A_Humanoid_<Clip>` for Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death and Recover, imported once from the fighter's LOD0 glb because every clip is shared across characters;
+- `Materials/MI_SK_<name>` (an `MI_*` of `M_DiceRollTheme`: Rim 1, Fill 1, Glow only because `has_alpha_mask` sees a real vertex-alpha mask in these exports) and `Textures/T_SK_<name>` (trilinear, as the static set). The `SK_` prefix keeps them apart from the static `MI_Hero_Fighter` and `T_Hero_Fighter`.
+
+`M_DiceRollTheme` gains `used_with_skeletal_mesh` (skinned meshes need their own shader permutation; written only when different, with a recompile only then), and `DA_DiceRollTheme` gains `FighterRig`, `WizardRig` and `RaiderRig` (`FDiceRollCharacter`: mesh, the nine clips, a yaw offset). No physics asset or collision (presentation only). The run saves only dirty packages and raises when a save fails; it logs `THEME_RIG_ASSET <kind> <path> <status>` for the skeleton, each `SK_*` mesh (with `lods=<n>`) and each clip (`imported` or `kept`), and for each data-asset property (`assigned`); each rig material instance gets the shared `THEME_MATERIAL` line, and textures get no line of their own. It ends with `THEME_RIG_COMPLETE`.
+
+**Never overwritten, never deleted:** an existing rig asset is kept (its material and the data asset are still refreshed), and the script never deletes or replaces one. A force delete nulls the references other loaded assets hold (the theme data asset, maps, other meshes), and recreating the package does not restore them. In-place replacement (an Interchange reimport that keeps object identity) cannot be made reliable for these assets from source alone, because the shared-skeleton override pipeline and the two LOD imports are separate steps. So `THEME_RIG_REIMPORT` (comma separated: `SK_Hero_Wizard`, `SK_Foe_Raider`, `SK_Hero_Fighter`, `SKEL_Humanoid`, `animations`) only validates the whole plan first, with no side effects (known names, the whole bundle named, every source glb including LOD1 and LOD2 present), and then refuses with "delete the rig assets deliberately in the editor (fix up references), then rerun". A partial bundle left behind (some assets present, some missing) is also refused. LOD imports go through Interchange, which reports success once the import is scheduled, so the script reads the LOD count back and raises unless each mesh has 3; the `THEME_RIG_ASSET mesh` line carries `lods=<n>`.
+
+**Pilot decisions (2026-11-09):** the three characters share one set of nine clips, including one Cast clip (revisited in #150); palette zones are skipped for the pilot; a unit hit and downed in the same step goes straight to its fall clip with no Hit first. Spells cast, whatever their normalized effect: a special with the ability's `bSpell` fact plays Cast, and so does a basic Attack that the rules reference names as a spell (`ExpeditionPose::IsSpellAttack`): the wizard's Fire Bolt at any distance and the cleric's ranged Sacred Flame. Other roles' basic attacks are weapon attacks; the remaining casters' fixed attack profiles are unnamed, so they keep weapon clips until #150 gives them rigs.
+
+The Unreal import, build, automation and gallery captures are done (PR #164). What stays pending is the on-screen pass of the three records.
+
 ## Game splash (issue #131)
 
 `Content/Splash/Splash.bmp` is the splash the packaged Linux game shows while it loads. It is a raw file rather than an Unreal asset: the engine reads `<Project>/Content/Splash/Splash.bmp` directly, and Linux packaging stages that exact file outside the pak (`LinuxPlatform.Automation.cs`). Non-editor builds load it with `SDL_LoadBMP`, so it is an uncompressed 24-bit BMP, 720×370 like the engine's own splash. `Content/Splash/Icon.bmp` (64×64, 24-bit) is the splash window's icon: once a splash exists, the engine also looks up `Splash/Icon` and logs `Game icon not found.` without it. Packaging stages only `Splash.bmp` by itself, so `Config/DefaultGame.ini` adds `+DirectoriesToAlwaysStageAsNonUFS=(Path="Splash")` to ship the folder. Both files are Git LFS tracked (`*.bmp`).
@@ -113,3 +131,17 @@ All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, 
 ## Board overlay material (issue #142)
 
 `/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only added Unreal asset; the hash diff showed nothing else changed apart from three ignored `Content/Python/unreal_starter/__pycache__/*.pyc` files, which were removed. A rerun leaves an existing asset alone.
+
+**Rigged pilot import (#147, 2026-11-09):** headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`, with a hash diff of `Config/` and `Content/` around each run.
+- **Fixes found along the way:** three attempts stopped on the script's own errors, and two of them left partial imports, which were deleted. The fixes:
+  - load the SkeletalMeshEditor module, which a commandlet doesn't load;
+  - match Interchange's clip names (`SK_Hero_FighterIdle`, no separator);
+  - make the rig structs editable on instances;
+  - reuse the shared skeleton through `InterchangeManager.import_asset` with an override pipeline, since an `AssetImportTask` ignores it and `SkeletalMesh.skeleton` is read-only.
+
+  Each fix was confirmed by a headless probe that saved nothing. An API check of the script's calls came back clean.
+- **Final run:** exit 0, `THEME_RIG_COMPLETE 3/3 characters, 9 clips`.
+  - **Added exactly:** `SKEL_Humanoid`, `SK_Hero_Fighter`, `SK_Hero_Wizard`, `SK_Foe_Raider` (each 3 LODs, on the shared skeleton), nine `A_Humanoid_*`, three `MI_SK_*` and three `T_SK_*`.
+  - **Changed exactly:** `M_DiceRollTheme` (`used_with_skeletal_mesh`) and `DA_DiceRollTheme`.
+  - Every other asset was unchanged. No physics asset is kept.
+  - **Warnings:** Interchange's "skinned mesh is not root" (the exports parent the mesh under the armature), the LOD naming pattern, and a staging-folder notice. All are known and harmless.
