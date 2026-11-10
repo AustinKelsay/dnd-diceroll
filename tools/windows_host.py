@@ -65,7 +65,7 @@ def normal_quit(pid):
         raise ValueError("Invalid process PID")
     result = powershell(f"(Get-Process -Id {pid} -ErrorAction Stop).CloseMainWindow()")
     if result.lower() != "true":
-        raise RuntimeError(f"PID {pid} declined a normal window-close request; left running")
+        raise RuntimeError(f"PID {pid} declined a normal window-close request")
 
 
 def pid_alive(pid):

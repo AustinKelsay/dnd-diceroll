@@ -76,7 +76,7 @@ class WindowsHostTests(unittest.TestCase):
         self.assertIn('CloseMainWindow()',ps.call_args.args[0])
         self.assertNotIn('Stop-Process',ps.call_args.args[0])
         with patch('windows_host.powershell',return_value='False'):
-            with self.assertRaisesRegex(RuntimeError,'left running'): win.normal_quit(12)
+            with self.assertRaisesRegex(RuntimeError,'declined'): win.normal_quit(12)
         with self.assertRaises(ValueError): win.normal_quit(0)
 
     def test_windows_pid_query_never_uses_kill(self):

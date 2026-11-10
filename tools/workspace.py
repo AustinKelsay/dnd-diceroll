@@ -69,7 +69,7 @@ def project_argument(command, project, windows=False):
         # A quoted flag value (e.g. -abslog="project") is not a project argument.
         return bool(re.search(r'(?:^|\s)["\']?' + re.escape(path) + r'["\']?(?=$|\s)', command, flags=re.IGNORECASE))
     path = re.escape(path)
-    return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command, flags=re.IGNORECASE if windows else 0))
+    return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command))
 
 
 def source_digest(workspace):
