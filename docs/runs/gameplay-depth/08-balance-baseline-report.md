@@ -4,7 +4,7 @@ Child issue [#179](https://github.com/AustinKelsay/dnd-diceroll/issues/179), par
 
 ## How it was produced
 
-- Source: staging `7f29981` plus this branch's harness (test code only; no rules, RNG, save, catalog, `Config/` or `Content/` change). Compact ruleset, catalog revision 7, policy version 1.
+- Source: this branch's harness (test code only; no rules, RNG, save, catalog, `Config/` or `Content/` change) on staging `7f29981`, then again after merging staging `d73b8ba` (graphics #175 and #176): the two baselines are byte-identical. Compact ruleset, catalog revision 7, policy version 1.
 - Host: PlebDev Ultra, UE 5.8.4, `--cores 2`, under the machine lock.
 - Command: `DND_BALANCE_OUT=.local/balance/<stamp> python3 tools/dev.py --cores 2 test --filter Balance.Baseline.`, then `python3 tools/balance_report.py <folder>`.
 - Size: 99 parties x 32 seeds = **3,168 complete runs**, 15,840 fights, 169,887 hero turns. Harness time 20.4 s; locked wall time 45 s.
