@@ -916,7 +916,9 @@ namespace RigPoseTest
 /** The ordered clips each unit showed while a scene played (a pose is recorded when it changes). */
 using FClipOrder = TMap<int32, TArray<EUnitPose>>;
 
-FClipOrder PlayRecordingOrder(const FPoseScene& Scene, const FCombatResult& Outcome, float Speed)
+// Plays a scene at a speed, recording each unit's clip order; Seconds is the simulated time until playback finished, and
+// bDone is false if it never finished within the frame cap.
+FClipOrder PlayRecordingOrder(const FPoseScene& Scene, const FCombatResult& Outcome, float Speed, float& Seconds, bool& bDone)
 {
     FClipOrder Order;
     FExpeditionPlayback Show;
@@ -934,7 +936,9 @@ FClipOrder PlayRecordingOrder(const FPoseScene& Scene, const FCombatResult& Outc
         }
     };
     Note();
-    for (int32 Frame = 0; Frame < 8000 && Show.IsBusy(); ++Frame) { Show.Tick(0.01f); Note(); }
+    Seconds = 0.0f;
+    for (int32 Frame = 0; Frame < 8000 && Show.IsBusy(); ++Frame) { Show.Tick(0.01f); Seconds += 0.01f; Note(); }
+    bDone = !Show.IsBusy();
     return Order;
 }
 
@@ -1009,8 +1013,14 @@ bool FPlaybackSpeedOrderTest::RunTest(const FString& Parameters)
     }
     for (const FCaseScene& Case : Cases)
     {
-        const FClipOrder Normal = PlayRecordingOrder(Case.Scene, Case.Outcome, 1.0f);
-        const FClipOrder Fast = PlayRecordingOrder(Case.Scene, Case.Outcome, 2.2f);
+        float NormalSeconds = 0.0f, FastSeconds = 0.0f;
+        bool bNormalDone = false, bFastDone = false;
+        const FClipOrder Normal = PlayRecordingOrder(Case.Scene, Case.Outcome, 1.0f, NormalSeconds, bNormalDone);
+        const FClipOrder Fast = PlayRecordingOrder(Case.Scene, Case.Outcome, 2.2f, FastSeconds, bFastDone);
+        TestTrue(FString::Printf(TEXT("%s: playback finishes at both speeds"), *Case.Name), bNormalDone && bFastDone);
+        // Fast speed scales playback time: it finishes in well under the normal time (the speed is 2.2; allow for fixed steps).
+        TestTrue(FString::Printf(TEXT("%s: fast speed finishes sooner (%.2f s against %.2f s)"), *Case.Name, FastSeconds, NormalSeconds),
+            NormalSeconds > 0.0f && FastSeconds <= NormalSeconds / 1.8f);
         bool bAnyClip = false;
         for (const TPair<int32, TArray<EUnitPose>>& Entry : Normal)
         {
