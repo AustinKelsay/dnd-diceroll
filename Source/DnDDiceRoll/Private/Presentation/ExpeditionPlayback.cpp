@@ -595,7 +595,7 @@ void FExpeditionPlayback::Advance(float Seconds)
     Shots.RemoveAll([](const FPlaybackProjectile& Shot) { return Shot.Age > Shot.Duration; });
     for (FPlaybackSparkle& Sparkle : Glitter) { Sparkle.Age += Seconds; }
     Glitter.RemoveAll([](const FPlaybackSparkle& Sparkle) { return Sparkle.Age > Sparkle.Life; });
-    if (Dice.bVisible)
+    if (Dice.bVisible && !Dice.bHeld)
     {
         Dice.Age += Seconds;
         if (Dice.Age > FDiceTray::LingerSeconds + FDiceTray::TumbleSeconds && !IsBusy()) { Dice.bVisible = false; }

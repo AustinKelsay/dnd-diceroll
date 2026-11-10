@@ -261,6 +261,9 @@ public:
 
     // Presentation.
     const FExpeditionPlayback& Playback() const { return Show; }
+    /** Capture and test support (#190): a landed roll card that stays up until cleared. */
+    void PreviewRoll(const FDiceTray& Tray) { Show.PreviewTray(Tray); }
+    void ClearRollPreview() { Show.ClearTrayPreview(); }
     bool IsPresenting() const { return Show.IsBusy(); }
     void SkipPresentation();
     void CycleSpeed();

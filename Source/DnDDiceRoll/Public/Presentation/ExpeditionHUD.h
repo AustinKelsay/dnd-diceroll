@@ -105,6 +105,8 @@ public:
     const TArray<int32>& PartyDetailUnits() const { return DetailUnitIds; }
     /** The targeting legend's backing panel in viewport pixels, or null when the last draw showed none (#171). */
     const FBox2D* LegendRequested() const { return bLegendRequested ? &LegendBox : nullptr; }
+    /** The d20 roll card the last draw showed, in viewport pixels, or null when none was up (#190). */
+    const FBox2D* DiceCardRequested() const { return bDiceRequested ? &DiceBox : nullptr; }
     /** Every full status panel the last draw showed, in viewport pixels (#171). */
     const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
 private:
@@ -113,6 +115,8 @@ private:
     TArray<FBox2D> DetailRects;
     FBox2D LegendBox = FBox2D(ForceInit);
     bool bLegendRequested = false;
+    FBox2D DiceBox = FBox2D(ForceInit);
+    bool bDiceRequested = false;
     /** The path-cost number waits until every panel and chip is placed, then draws over them (#171). */
     bool bPathCostPending = false;
     FVector2D PathCostEnd = FVector2D::ZeroVector;

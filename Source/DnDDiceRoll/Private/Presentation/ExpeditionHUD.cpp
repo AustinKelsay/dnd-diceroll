@@ -265,6 +265,7 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitIds.Reset();
     DetailRects.Reset();
     bLegendRequested = false;
+    bDiceRequested = false;
     bPathCostPending = false;
     ChipPanels.Reset();
     TagsRequested.Reset();
@@ -1128,6 +1129,8 @@ void AExpeditionHUD::DrawDice()
     const float Width = 440, Height = 128;
     const float X = W - 12 - Width, Y = 54;
     ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
+    bDiceRequested = true;
+    DiceBox = FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S);
     Rect(FLinearColor(0, 0, 0, 0.25f * Alpha), X + 3, Y + 4, Width, Height);
     Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.86f * Alpha), X, Y, Width, Height);
     Rect(WithAlpha(Gold, 0.7f * Alpha), X, Y, Width, 2);

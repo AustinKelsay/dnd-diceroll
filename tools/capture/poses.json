@@ -87,6 +87,30 @@
       "distance": 1300
     },
     {
+      "name": "roll-yawm90-default",
+      "mode": "roll",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw000-default",
+      "mode": "roll",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw090-default",
+      "mode": "roll",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw180-default",
+      "mode": "roll",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
       "name": "tooltip-attack",
       "mode": "tooltip",
       "action": "attack",

@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/ExpeditionAutoplay.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
@@ -446,7 +447,8 @@ bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
     {
         if (!IsValid(BattleView) || SimulatedViewport.X <= 0 || SimulatedViewport.Y <= 0) { return false; }
         const FTransform Pose = BattleView->CameraTransform();
-        const double HalfWidth = FMath::Tan(FMath::DegreesToRadians(BattleView->CameraFieldOfView()) * 0.5), HalfHeight = HalfWidth * SimulatedViewport.Y / SimulatedViewport.X;
+        // Unreal keeps the vertical field of view of a 16:9 view at any viewport (CameraRig.h).
+        const double HalfHeight = ExpeditionCameraRig::HalfTanY(), HalfWidth = ExpeditionCameraRig::HalfTanX(float(SimulatedViewport.X) / float(SimulatedViewport.Y));
         const double X = SimulatedPointer.X / SimulatedViewport.X * 2.0 - 1.0, Y = 1.0 - SimulatedPointer.Y / SimulatedViewport.Y * 2.0;
         const FVector Direction = (Pose.GetRotation().GetForwardVector() + Pose.GetRotation().GetRightVector() * (X * HalfWidth) + Pose.GetRotation().GetUpVector() * (Y * HalfHeight)).GetSafeNormal();
         return BattleView->CellAtRay(Pose.GetLocation(), Direction, Cell);
