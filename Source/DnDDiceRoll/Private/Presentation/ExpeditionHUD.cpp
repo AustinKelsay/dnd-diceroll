@@ -664,7 +664,8 @@ void AExpeditionHUD::DrawInitiative()
 
 namespace
 {
-constexpr float PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
+constexpr float PartyCardX = ExpeditionLayout::PartyCardX, PartyCardTop = ExpeditionLayout::PartyCardTop, PartyCardWidth = ExpeditionLayout::PartyCardWidth,
+    PartyCardHeight = ExpeditionLayout::PartyCardHeight, PartyCardPitch = ExpeditionLayout::PartyCardPitch;
 }
 
 void AExpeditionHUD::DrawParty()
@@ -1126,26 +1127,36 @@ void AExpeditionHUD::DrawDice()
     const float End = FDiceTray::TumbleSeconds + FDiceTray::LingerSeconds;
     const float Alpha = FMath::Clamp(1.0f - (Tray.Age - End) / 0.4f, 0.0f, 1.0f) * FMath::Clamp(Tray.Age / 0.12f, 0.0f, 1.0f);
     if (Alpha <= 0.01f) { return; }
-    const float Width = 440, Height = 128;
-    const float X = W - 12 - Width, Y = 54;
+    // The roll card lives in the left margin below the party cards (#190), where the camera never frames the board: it never covers
+    // the attacker, the target or their cells. ExpeditionLayout::RollCardBounds is the one source of that strip.
+    int32 PartyCount = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party) { ++PartyCount; } }
+    const ExpeditionLayout::Rect Strip = ExpeditionLayout::RollCardBounds(W, H, PartyCount);
+    const float Width = static_cast<float>(Strip.Right - Strip.Left), X = static_cast<float>(Strip.Left), Y = static_cast<float>(Strip.Top);
+    constexpr float DetailScale = 0.74f, LineHeight = 17.0f, DetailTop = 132.0f;
+    TArray<FString> DetailLines = Wrap(Tray.Detail, Width - 20.0f, DetailScale);
+    const int32 MaxLines = FMath::Max(1, FMath::FloorToInt((static_cast<float>(Strip.Bottom - Strip.Top) - DetailTop - 8.0f) / LineHeight));
+    if (DetailLines.Num() > MaxLines) { DetailLines.SetNum(MaxLines); }
+    const float Height = DetailTop + DetailLines.Num() * LineHeight + 8.0f;
     ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     bDiceRequested = true;
     DiceBox = FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S);
     Rect(FLinearColor(0, 0, 0, 0.25f * Alpha), X + 3, Y + 4, Width, Height);
-    Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.86f * Alpha), X, Y, Width, Height);
+    Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.9f * Alpha), X, Y, Width, Height);
     Rect(WithAlpha(Gold, 0.7f * Alpha), X, Y, Width, 2);
     const float Middle = X + Width * 0.5f;
-    Text(Tray.Title, Middle, Y + 8, WithAlpha(Gold, Alpha), 0.82f, EAlign::Center, Width - 20);
-    // Dice row.
+    Text(Tray.Title, Middle, Y + 8, WithAlpha(Gold, Alpha), 0.82f, EAlign::Center, Width - 16);
+    // Dice row, squeezed to the card's width when many dice land at once.
     float RowWidth = 0;
     for (const FShownDie& Shown : Tray.Dice) { RowWidth += Shown.Sides == 20 ? 74 : 54; }
-    float Cursor = Middle - RowWidth * 0.5f - (Tray.Verdict.IsEmpty() ? 0 : 60);
+    const float Fit = FMath::Min(1.0f, (Width - 20.0f) / FMath::Max(1.0f, RowWidth));
+    float Cursor = Middle - RowWidth * Fit * 0.5f;
     bool bAllLanded = true;
     for (int32 Index = 0; Index < Tray.Dice.Num(); ++Index)
     {
         const FShownDie& Shown = Tray.Dice[Index];
-        const float Radius = Shown.Sides == 20 ? 30.0f : 21.0f;
-        const float Slot = Shown.Sides == 20 ? 74 : 54;
+        const float Radius = (Shown.Sides == 20 ? 30.0f : 21.0f) * Fit;
+        const float Slot = (Shown.Sides == 20 ? 74 : 54) * Fit;
         const float Time = Tray.Age - Shown.Delay;
         Cursor += Slot;
         if (Time < 0) { bAllLanded = false; continue; }
@@ -1153,7 +1164,8 @@ void AExpeditionHUD::DrawDice()
         const bool bLanded = Time >= FDiceTray::TumbleSeconds;
         bAllLanded &= bLanded;
         const float Ease = (1.0f - Progress) * (1.0f - Progress);
-        const FVector2D Center(Cursor - Slot * 0.5f - 90.0f * Ease, Y + 64 - FMath::Abs(FMath::Sin(Progress * PI * 2.5f)) * 34.0f * (1.0f - Progress));
+        // The dice drop in from above the row and bounce, inside the card.
+        const FVector2D Center(Cursor - Slot * 0.5f, Y + 62 - 44.0f * Ease - FMath::Abs(FMath::Sin(Progress * PI * 2.5f)) * 20.0f * (1.0f - Progress));
         const int32 Value = bLanded ? Shown.Value : 1 + Scramble(static_cast<uint32>(Time * 22.0f) * 31u + Index * 977u) % FMath::Max(1, Shown.Sides);
         const float Punch = bLanded ? 1.0f + 0.3f * FMath::Exp(-(Time - FDiceTray::TumbleSeconds) * 9.0f) : 1.0f;
         FLinearColor Color = Shown.Color;
@@ -1161,12 +1173,14 @@ void AExpeditionHUD::DrawDice()
         if (bLanded && Shown.Sides == 20 && Shown.Value == 1) { Color = FLinearColor(0.75f, 0.35f, 0.32f); }
         Die(Center, Radius * Punch, Shown.Sides, Value, Color, Ease * 9.0f, Alpha, bLanded);
     }
+    // The verdict sits under the dice; its space is kept while they tumble so the card does not change size.
     if (!Tray.Verdict.IsEmpty() && bAllLanded)
     {
         const float Pop = 1.0f + 0.25f * FMath::Exp(-Tray.Age * 2.0f);
-        Text(Tray.Verdict, X + Width - 18, Y + 46, WithAlpha(Tray.VerdictColor, Alpha), 1.3f * Pop, EAlign::Right, 150);
+        Text(Tray.Verdict, Middle, Y + 100.0f - 4.0f * (Pop - 1.0f), WithAlpha(Tray.VerdictColor, Alpha), 1.3f * Pop, EAlign::Center, Width - 16);
     }
-    Text(Tray.Detail, Middle, Y + Height - 26, WithAlpha(Parchment, Alpha), 0.74f, EAlign::Center, Width - 24);
+    for (int32 Index = 0; Index < DetailLines.Num(); ++Index)
+    { Text(DetailLines[Index], Middle, Y + DetailTop + Index * LineHeight, WithAlpha(Parchment, Alpha), DetailScale, EAlign::Center, Width - 16); }
 }
 
 void AExpeditionHUD::DrawBanner()
