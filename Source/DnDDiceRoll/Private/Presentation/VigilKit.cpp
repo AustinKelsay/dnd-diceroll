@@ -91,8 +91,10 @@ TArray<FArch> ArchPairs(const TArray<FIntPoint>& Blocked)
     return Arches;
 }
 
-TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds)
+TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds, const TArray<FVector2D>& Avoid, float AvoidRadius)
 {
+    // How far a scatter piece may wander from its cell centre, in cells (the filter below and Add must agree).
+    constexpr float ScatterWander = 0.2f;
     TArray<FCandidate> Scatter, Mist, Shaft;
     for (int32 Y = -MistMaxRing; Y < Height + MistMaxRing; ++Y)
     {
@@ -100,7 +102,14 @@ TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDre
         {
             const FIntPoint Cell(X, Y);
             const int32 Ring = RingDistance(Cell, Width, Height);
-            if (Ring >= ScatterMinRing && Ring <= ScatterMaxRing) { Scatter.Add({Hash(Seed, 11, Cell), Cell}); }
+            if (Ring >= ScatterMinRing && Ring <= ScatterMaxRing)
+            {
+                // Clearance is measured from where the piece will stand: its cell plus the same deterministic offset Add gives it.
+                const FVector2D Placed(Cell.X + (Unit(Seed, 31, Cell) - 0.5f) * 2.0f * ScatterWander, Cell.Y + (Unit(Seed, 32, Cell) - 0.5f) * 2.0f * ScatterWander);
+                const bool bBlocked = Avoid.ContainsByPredicate([&](const FVector2D& Point)
+                { return FVector2D::DistSquared(Point, Placed) < FMath::Square(static_cast<double>(AvoidRadius)); });
+                if (!bBlocked) { Scatter.Add({Hash(Seed, 11, Cell), Cell}); }
+            }
             if (Ring >= MistMinRing && Ring <= MistMaxRing) { Mist.Add({Hash(Seed, 12, Cell), Cell}); }
             if (Ring >= MistMinRing && Ring <= MistMaxRing && X <= ShaftMaxX) { Shaft.Add({Hash(Seed, 13, Cell), Cell}); }
         }
@@ -121,7 +130,7 @@ TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDre
         Item.Yaw = Unit(Seed, 33, Cell) * 360.0f;
         Result.Add(Item);
     };
-    for (const FIntPoint& Cell : ScatterCells) { Add(EDressingKind::Scatter, Cell, Kinds.Scatter, 0.2f); }
+    for (const FIntPoint& Cell : ScatterCells) { Add(EDressingKind::Scatter, Cell, Kinds.Scatter, ScatterWander); }
     for (const FIntPoint& Cell : MistCells) { Add(EDressingKind::Mist, Cell, Kinds.Mist, 0.25f); }
     for (const FIntPoint& Cell : ShaftCells) { Add(EDressingKind::Shaft, Cell, Kinds.Shaft, 0.0f); }
     return Result;

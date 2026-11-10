@@ -9,6 +9,7 @@
 #include "Misc/Paths.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/BrazierRing.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/OccluderFade.h"
@@ -240,7 +241,9 @@ bool FRootKitPlacementTest::RunTest(const FString& Parameters)
         if (AExpeditionBattleView* View = ResumeBoard(*this, World, Path))
         {
             const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
-            const TArray<VigilKit::FDressing> Plan = VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds);
+            // The scatter keeps clear of the braziers (#148), which the board derives from the same seed.
+            const TArray<VigilKit::FDressing> Plan = VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds,
+                BrazierRing::Cells(BrazierRing::Plan(Encounter.Width, Encounter.Height, Seed)), BrazierRing::ScatterClearCells);
             TestEqual(TEXT("The whole plan is placed"), View->PlacedDressing().Num(), Plan.Num());
             for (int32 Index = 0; Index < FMath::Min(Plan.Num(), View->PlacedDressing().Num()); ++Index)
             {
