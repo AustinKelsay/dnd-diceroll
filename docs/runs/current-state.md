@@ -1,5 +1,13 @@
 # Current state of `staging`
 
+## November 10 incremental release
+
+[Release PR #195](https://github.com/AustinKelsay/dnd-diceroll/pull/195) promotes the completed staging slices through `15e1677b` to `main`, under the owner’s November 10 release instruction ([#194](https://github.com/AustinKelsay/dnd-diceroll/issues/194)). It includes targeting/forecasts, contextual grid, camera/lighting, compact HUD and action clarity/hints, Vigil and Root world improvements, the rigged pilot, Compact balance baseline/tuning, and the roll-card/hit-flash fixes. The older “in review” descriptions below are historical where their PRs have since merged.
+
+Fresh Ultra evidence at runtime candidate `0f3042e`: zero-warning build; full `Project.` **287/287**, zero warnings and clean exit; helpers **170/170**; clean Linux Development package; packaged warm-up, measured fight and fresh-process Resume all exit 0. Performance: p95 frame **3.23 ms**, GPU **2.71 ms**, game thread **1.19 ms**, peak RSS **1236.9 MiB**, passing the tighter post-#148 budgets. [Selected reports and logs](https://github.com/AustinKelsay/dnd-diceroll/tree/c450978/release-20261110) record exact source/package identity and commands. Later release-branch edits only update this note and remove a trailing blank line.
+
+This is an incremental release: #138/#152 and #112 remain unfinished; #149’s remaining Vault/tabletop work, #150’s full cast and #151’s arenas are separate. Open PRs #177 (SRD combat/class features), #185 (Windows helpers) and #193 (Nanite material flag) are excluded. Current Linux default rendering does not certify Nanite/SM6 or another host. Existing Mac #32/#35 risks, Linux failed-automation shutdown #157, mitigated editor capture race #174, physical-input/pan/zoom coverage limits and human balance limits remain tracked. No crash is declared fixed from these finite successful runs.
+
 Updated 2026-11-10 for #58 action clarity, #171 HUD input and the #179 balance baseline and #184 tuning (below); earlier updated 2026-11-03 for [factory follow-through #122](https://github.com/AustinKelsay/dnd-diceroll/issues/122), after [menu release #121](https://github.com/AustinKelsay/dnd-diceroll/pull/121) and the maintainer's rules rollout decision; host sections updated 2026-11-07 for [#125](https://github.com/AustinKelsay/dnd-diceroll/issues/125); refreshed 2026-11-08 after the releases in PRs #127, #130 and #135. This is a snapshot: read current issue/PR discussions and fetch before resuming. Update this note in the PR that changes what a new agent needs to know; historical run records under `docs/runs/` describe their own moment.
 
 ## Validated host
