@@ -85,10 +85,12 @@ class ContributionTests(unittest.TestCase):
 
     def test_repository_rejects_generated_files_and_tokens_without_printing_value(self):
         self.write("Saved/output.log", b"output")
+        self.write("Build/Windows/FileOpenOrder/EditorOpenOrder.log", b"generated")
         self.write("Config/Generated.ini", b"SecurityToken=private-value\n")
-        self.git("add", "Saved", "Config")
+        self.git("add", "Saved", "Config", "Build")
         problems = "\n".join(check_repository(self.root))
         self.assertIn("Saved/output.log", problems)
+        self.assertIn("Build/Windows/FileOpenOrder/EditorOpenOrder.log", problems)
         self.assertIn("Config/Generated.ini", problems)
         self.assertNotIn("private-value", problems)
 

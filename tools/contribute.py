@@ -86,7 +86,7 @@ def check_repository(root):
     problems = []
     for name in files:
         path = Path(name)
-        if GENERATED.intersection(path.parts) or name.startswith(("Build/Mac/", "Build/Linux/", "Build/Win64/")) or path.suffix == ".pyc":
+        if GENERATED.intersection(path.parts) or name.startswith(("Build/Mac/", "Build/Linux/", "Build/Win64/", "Build/Windows/FileOpenOrder/")) or path.suffix == ".pyc":
             problems.append(f"Generated output is tracked: {name}")
         if name.startswith("Config/") and re.search(rb"(?im)^\s*SecurityToken\s*=\s*[^\s\r\n]+", stored(root, name)):
             problems.append(f"Machine-generated SecurityToken is tracked: {name} (value omitted)")
