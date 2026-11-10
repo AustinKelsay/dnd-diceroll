@@ -16,6 +16,7 @@
 #include "UnrealClient.h"
 #if WITH_EDITOR
 #include "AssetCompilingManager.h"
+#include "RenderingThread.h"
 #include "ShaderCompiler.h"
 #endif
 
@@ -157,18 +158,40 @@ bool ExpeditionCapture::Requested(const TCHAR* CommandLine)
     return CommandLine && FParse::Value(CommandLine, TEXT("ExpeditionCapture="), PosesPath) && !PosesPath.IsEmpty();
 }
 
+void FExpeditionCaptureDirector::DrainCompilation()
+{
+#if WITH_EDITOR
+    // Editor builds swap a finished shader map onto its material asynchronously and free the old one before cached mesh draw
+    // commands are rebuilt, so a parallel draw can read freed shader parameter info. Settle every compile first (#174).
+    // Asset compiles can queue shader work, so shaders are finished again after them.
+    if (GShaderCompilingManager) { GShaderCompilingManager->FinishAllCompilation(); }
+    FAssetCompilingManager::Get().FinishAllCompilation();
+    if (GShaderCompilingManager) { GShaderCompilingManager->FinishAllCompilation(); }
+    FlushRenderingCommands();
+#endif
+}
+
 TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::TryCreate(AExpeditionPlayerController* Controller, AExpeditionBattleView* View)
 {
     FString PosesPath;
     if (!FParse::Value(FCommandLine::Get(), TEXT("ExpeditionCapture="), PosesPath)) { return nullptr; }
+    FString OutputDir;
+    if (!FParse::Value(FCommandLine::Get(), TEXT("ExpeditionCaptureOut="), OutputDir) || OutputDir.IsEmpty())
+    { OutputDir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("ExpeditionCapture")); }
+    FString Fixture;
+    FParse::Value(FCommandLine::Get(), TEXT("ExpeditionCaptureFixture="), Fixture);
+    return Create(Controller, View, PosesPath, OutputDir, Fixture);
+}
+
+TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::Create(AExpeditionPlayerController* Controller, AExpeditionBattleView* View, const FString& PosesPath, const FString& OutputDir, const FString& Fixture)
+{
     TSharedPtr<FExpeditionCaptureDirector> Director = MakeShared<FExpeditionCaptureDirector>();
     Director->Controller = Controller;
     Director->View = View;
     Director->PosesPath = PosesPath;
-    if (!FParse::Value(FCommandLine::Get(), TEXT("ExpeditionCaptureOut="), Director->OutputDir) || Director->OutputDir.IsEmpty())
-    { Director->OutputDir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("ExpeditionCapture")); }
-    Director->OutputDir = FPaths::ConvertRelativePathToFull(Director->OutputDir);
-    FParse::Value(FCommandLine::Get(), TEXT("ExpeditionCaptureFixture="), Director->Fixture);
+    Director->OutputDir = FPaths::ConvertRelativePathToFull(OutputDir);
+    Director->Fixture = Fixture;
+    Director->Drain = &FExpeditionCaptureDirector::DrainCompilation;
     View->HoldEnemyTurns(true);
     FString Text;
     FString Error;
@@ -298,6 +321,8 @@ void FExpeditionCaptureDirector::Tick()
     if (Stage == EStage::Done) { return; }
     if (!Board || !Controller.IsValid()) { Fail(TEXT("The battle view disappeared")); return; }
     ++Frames; ++StageFrames;
+    // Before anything is drawn from the start-screen board (#174).
+    if (!bDrainedAtStart) { bDrainedAtStart = true; Drain(); }
     switch (Stage)
     {
     case EStage::Loading:
@@ -305,7 +330,10 @@ void FExpeditionCaptureDirector::Tick()
         {
             // A few frames first so the world, HUD and viewport are fully up.
             if (Frames < 10) { return; }
+            // Resume rebuilds the board and loads new materials; no compile may land while a frame draws them (#174).
+            Drain();
             Board->Resume();
+            Drain();
             if (!Board->HasRun()) { Fail(FString::Printf(TEXT("Resume found no checkpoint: %s"), Board->Messages().IsEmpty() ? TEXT("no message") : *Board->Messages().Last())); return; }
             Board->PrepareExposureForCapture();
             Seed = Board->Progress().Seed;

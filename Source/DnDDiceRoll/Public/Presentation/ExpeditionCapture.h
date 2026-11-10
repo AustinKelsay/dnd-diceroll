@@ -63,8 +63,17 @@ class DNDDICEROLL_API FExpeditionCaptureDirector
 public:
     /** Null unless the command line asks for a capture run. */
     static TSharedPtr<FExpeditionCaptureDirector> TryCreate(AExpeditionPlayerController* Controller, AExpeditionBattleView* View);
+    /** Same as TryCreate with the values already read from the command line (also the seam automation uses). */
+    static TSharedPtr<FExpeditionCaptureDirector> Create(AExpeditionPlayerController* Controller, AExpeditionBattleView* View, const FString& PosesPath, const FString& OutputDir, const FString& Fixture);
     /** Once per rendered frame, from the player controller. */
     void Tick();
+    /**
+     * Editor builds only (#174): finishes every outstanding shader and asset compilation, then flushes the render thread, so a
+     * material's shader map is never replaced while a frame still draws with it. Does nothing in other builds.
+     */
+    static void DrainCompilation();
+    /** Replaces what the director calls to drain compilation (default: DrainCompilation). It runs on the first Tick and on both sides of Resume. */
+    void SetCompilationDrain(TFunction<void()> InDrain) { Drain = MoveTemp(InDrain); }
 
 private:
     enum class EStage : uint8 { Loading, Next, Settling, Saving, Done };
@@ -87,6 +96,8 @@ private:
     int32 Frames = 0;
     int32 StageFrames = 0;
     bool bResumed = false;
+    bool bDrainedAtStart = false;
+    TFunction<void()> Drain;
     bool bFailed = false;
     FString Failure;
     FIntPoint Resolution = FIntPoint::ZeroValue;
