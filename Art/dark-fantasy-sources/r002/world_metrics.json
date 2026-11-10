@@ -1,0 +1,312 @@
+{
+ "cleared_intruding_tris": 1442,
+ "cleared_components_whole": 80,
+ "flagged_components": 55,
+ "occluder_source_tris": 2420,
+ "world_source_tris": 17540,
+ "residual_occluding_components_in_world_mesh": 0,
+ "residual_occluding_rays": 0,
+ "rune_ring": {
+  "centre_m": [
+   -16.5,
+   -9.0
+  ],
+  "z_m": 0.0,
+  "distance_to_footprint_m": 3.0,
+  "outer_radius_m": 1.88
+ },
+ "stones": 1515,
+ "stones_measured_interior": 1374,
+ "stone_equiv_diameter_cm_p5_p50_p95": [
+  36.6,
+  59.9,
+  81.8
+ ],
+ "stone_long_side_cm_p5_p50_p95_max": [
+  43.0,
+  72.6,
+  92.7,
+  107.4
+ ],
+ "stone_short_side_cm_p5_p50_p95": [
+  28.7,
+  47.1,
+  66.0
+ ],
+ "stone_aspect_long_over_short_p5_p50_p95_max": [
+  1.04,
+  1.45,
+  2.35,
+  3.53
+ ],
+ "stone_vertex_count_histogram": {
+  "4": 815,
+  "5": 421,
+  "6": 119,
+  "7": 18,
+  "8": 1
+ },
+ "edge_orientation_histogram_10deg_bins_length_share": [
+  0.021,
+  0.05,
+  0.05,
+  0.052,
+  0.1,
+  0.057,
+  0.127,
+  0.03,
+  0.018,
+  0.021,
+  0.061,
+  0.034,
+  0.061,
+  0.075,
+  0.066,
+  0.127,
+  0.041,
+  0.008
+ ],
+ "edge_orientation_resultants_R2_R4_R6": [
+  0.012,
+  0.299,
+  0.031
+ ],
+ "edge_length_share_within_3deg_of_cell_axes": 0.013,
+ "stone_top_height_range_cm": [
+  -2.7,
+  2.7
+ ],
+ "stone_tris": 34490,
+ "base_tris": 1976,
+ "arch_tris_before_subdivision": {
+  "world": 18284,
+  "occluders": 2710
+ },
+ "ao_samples": 30200,
+ "atlas": {
+  "size": 2048,
+  "regions": 18,
+  "pad_px": 16,
+  "fill_fraction": 0.324,
+  "regions_px": {
+   "paveT": [
+    512,
+    512
+   ],
+   "wall": [
+    256,
+    512
+   ],
+   "paveB": [
+    256,
+    256
+   ],
+   "paveA": [
+    256,
+    256
+   ],
+   "paveC": [
+    256,
+    256
+   ],
+   "paveM": [
+    256,
+    256
+   ],
+   "soil": [
+    256,
+    256
+   ],
+   "moss": [
+    256,
+    256
+   ],
+   "rune": [
+    256,
+    256
+   ],
+   "pier": [
+    128,
+    512
+   ],
+   "iron": [
+    256,
+    256
+   ],
+   "timber": [
+    256,
+    256
+   ],
+   "sstone": [
+    128,
+    128
+   ],
+   "rose": [
+    128,
+    128
+   ],
+   "gold": [
+    64,
+    64
+   ],
+   "lancet": [
+    32,
+    96
+   ],
+   "flame": [
+    8,
+    8
+   ],
+   "banner": [
+    8,
+    8
+   ]
+  }
+ },
+ "terrace_texels_per_m": 256.0,
+ "r001_terrace_texels_per_m": 85.3,
+ "world": {
+  "triangles": 130502,
+  "glow_tris": 309,
+  "by_material": {
+   "paveB": 12095,
+   "paveA": 13650,
+   "paveC": 7090,
+   "paveM": 1655,
+   "soil": 1790,
+   "moss": 186,
+   "sstone": 3614,
+   "rune": 96,
+   "paveT": 81728,
+   "pier": 4174,
+   "wall": 1208,
+   "iron": 1122,
+   "lancet": 752,
+   "gold": 136,
+   "timber": 1128,
+   "flame": 78
+  },
+  "edge_len_m_all_median": 0.514,
+  "edge_len_m_terrace_within_4p5m": [
+   0.393,
+   0.75,
+   1.5
+  ],
+  "edge_len_m_architecture_above_1m_within_10p5m_median_p90_max": [
+   0.469,
+   0.651,
+   0.851
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.336,
+   0.684
+  ],
+  "glb": {
+   "triangles": 130502,
+   "vertices": 190760,
+   "bbox_min_m": [
+    -81,
+    -61.5,
+    -0.0525
+   ],
+   "bbox_max_m": [
+    55.5,
+    81.75,
+    48
+   ],
+   "size_m": [
+    136.5,
+    143.25,
+    48.0525
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 10255612,
+   "extensions": []
+  }
+ },
+ "occluders": {
+  "triangles": 12307,
+  "glow_tris": 145,
+  "by_material": {
+   "pier": 9216,
+   "wall": 1282,
+   "iron": 1432,
+   "rose": 328,
+   "flame": 108,
+   "banner": 27
+  },
+  "edge_len_m_all_median": 0.644,
+  "edge_len_m_terrace_within_4p5m": [
+   0.45,
+   0.638,
+   0.675
+  ],
+  "edge_len_m_architecture_above_1m_within_10p5m_median_p90_max": [
+   0.643,
+   1.688,
+   2.003
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.0,
+   0.0
+  ],
+  "glb": {
+   "triangles": 12307,
+   "vertices": 17044,
+   "bbox_min_m": [
+    -19.275,
+    -37.5726,
+    0
+   ],
+   "bbox_max_m": [
+    19.275,
+    46.5726,
+    20.439
+   ],
+   "size_m": [
+    38.55,
+    84.1452,
+    20.439
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 1814852,
+   "extensions": []
+  }
+ },
+ "architecture_tris_inside_footprint_above_10cm": 0,
+ "footprint_m": [
+  27.0,
+  18.0
+ ],
+ "cell_m": 1.5
+}

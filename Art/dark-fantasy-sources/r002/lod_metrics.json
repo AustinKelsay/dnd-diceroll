@@ -1,0 +1,626 @@
+{
+  "SM_World_Vigil": {
+    "asset_id": "world-vigil",
+    "revision": 2,
+    "lod0_triangles": 130502,
+    "lod0_glow_area_m2": 132.7901,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 65251,
+        "fraction": 0.5,
+        "file": "Art/world-vigil/r002/SM_World_Vigil_LOD1.glb",
+        "sha256": "0dafc33d64111b7e1188244afae3d6fbe675226154659acd1e8407fff3c8d2b7",
+        "bytes": 7251564,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0012
+        ],
+        "appearance": {
+          "rgb_mean": 0.008,
+          "rgb_p95": 0.0567,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 132.7901
+      },
+      {
+        "lod": 2,
+        "triangles": 32625,
+        "fraction": 0.25,
+        "file": "Art/world-vigil/r002/SM_World_Vigil_LOD2.glb",
+        "sha256": "524efe2d554729da8d22a238d5dc15552253d43305b6bd051830c48ed79d0931",
+        "bytes": 4889804,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0058,
+          0.0096
+        ],
+        "appearance": {
+          "rgb_mean": 0.0061,
+          "rgb_p95": 0.0274,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 132.7901
+      }
+    ]
+  },
+  "SM_World_Vigil_Occluders": {
+    "asset_id": "world-vigil-occluders",
+    "revision": 1,
+    "lod0_triangles": 12307,
+    "lod0_glow_area_m2": 133.16318,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 6154,
+        "fraction": 0.5,
+        "file": "Art/world-vigil-occluders/r001/SM_World_Vigil_Occluders_LOD1.glb",
+        "sha256": "c0a401e50f6e8065aadcee79ca2e47b2320a9ecaa02ce19086c1330e48c0e6e5",
+        "bytes": 1529020,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0003
+        ],
+        "appearance": {
+          "rgb_mean": 0.0039,
+          "rgb_p95": 0.0196,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 133.16318
+      },
+      {
+        "lod": 2,
+        "triangles": 3076,
+        "fraction": 0.2499,
+        "file": "Art/world-vigil-occluders/r001/SM_World_Vigil_Occluders_LOD2.glb",
+        "sha256": "e22e352f62a87beee66849f27df19ffc276b7c9139b1bcccbbf1cfe81d1fb510",
+        "bytes": 1342104,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0082,
+          "rgb_p95": 0.0406,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 133.16318
+      }
+    ]
+  },
+  "SM_Prop_Pillar": {
+    "asset_id": "prop-pillar",
+    "revision": 2,
+    "lod0_triangles": 576,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 288,
+        "fraction": 0.5,
+        "file": "Art/prop-pillar/r002/SM_Prop_Pillar_LOD1.glb",
+        "sha256": "09b0a80b060890bb290a357f38e35af2b3ec7fa2035bd2c3b11d5456309cb758",
+        "bytes": 139100,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0103,
+          "rgb_p95": 0.0573,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 143,
+        "fraction": 0.2483,
+        "file": "Art/prop-pillar/r002/SM_Prop_Pillar_LOD2.glb",
+        "sha256": "bea0141ad9cc0ad81ee8f36f37512a3f82c89fa329d550eb3d07c6c439a173e5",
+        "bytes": 126232,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0314,
+          0.0566
+        ],
+        "appearance": {
+          "rgb_mean": 0.0236,
+          "rgb_p95": 0.1141,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Pillar_B": {
+    "asset_id": "prop-pillar-b",
+    "revision": 1,
+    "lod0_triangles": 788,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 394,
+        "fraction": 0.5,
+        "file": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD1.glb",
+        "sha256": "56b6736735d6244463abe93ad1258c673a61b480b0d6bfa952c1591c90f0b288",
+        "bytes": 145508,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0121,
+          "rgb_p95": 0.0681,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 197,
+        "fraction": 0.25,
+        "file": "Art/prop-pillar-b/r001/SM_Prop_Pillar_B_LOD2.glb",
+        "sha256": "4c318fa21ba9ceafcfedfb5a8645bd19590b01b72585187addfa70d17d07cb12",
+        "bytes": 131124,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0136,
+          0.0458
+        ],
+        "appearance": {
+          "rgb_mean": 0.0203,
+          "rgb_p95": 0.0997,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Pillar_C": {
+    "asset_id": "prop-pillar-c",
+    "revision": 1,
+    "lod0_triangles": 465,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 232,
+        "fraction": 0.4989,
+        "file": "Art/prop-pillar-c/r001/SM_Prop_Pillar_C_LOD1.glb",
+        "sha256": "a61c03f21b255f15a1f33e25b100de33c0344d382f61f20127dbcac23fc5c010",
+        "bytes": 162088,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0097,
+          0.0162
+        ],
+        "appearance": {
+          "rgb_mean": 0.012,
+          "rgb_p95": 0.0544,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 139,
+        "fraction": 0.2989,
+        "file": "Art/prop-pillar-c/r001/SM_Prop_Pillar_C_LOD2.glb",
+        "sha256": "573defa30cab52f7ebde04f52f8172e561d4a104578db8e48d0ff65f115f13d7",
+        "bytes": 153252,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0406,
+          0.1349
+        ],
+        "appearance": {
+          "rgb_mean": 0.0243,
+          "rgb_p95": 0.093,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Wall": {
+    "asset_id": "prop-wall",
+    "revision": 2,
+    "lod0_triangles": 782,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 390,
+        "fraction": 0.4987,
+        "file": "Art/prop-wall/r002/SM_Prop_Wall_LOD1.glb",
+        "sha256": "d3494080b26614523f195e407d60e825a70c109bf1f6f1061b490f1ef2bc0add",
+        "bytes": 145028,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0184,
+          "rgb_p95": 0.1165,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 214,
+        "fraction": 0.2737,
+        "file": "Art/prop-wall/r002/SM_Prop_Wall_LOD2.glb",
+        "sha256": "549786976857eff6fa10bc9a122fa76ef2ecb4bda12da6139432ac530951fe10",
+        "bytes": 134732,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0151,
+          0.0294
+        ],
+        "appearance": {
+          "rgb_mean": 0.0309,
+          "rgb_p95": 0.1593,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Wall_B": {
+    "asset_id": "prop-wall-b",
+    "revision": 1,
+    "lod0_triangles": 1062,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 530,
+        "fraction": 0.4991,
+        "file": "Art/prop-wall-b/r001/SM_Prop_Wall_B_LOD1.glb",
+        "sha256": "43bac0c7a1ba99da042fcfdb081439e6b3a67bfafd731a42bdbde4cb525340d4",
+        "bytes": 153920,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0176,
+          "rgb_p95": 0.0878,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 266,
+        "fraction": 0.2505,
+        "file": "Art/prop-wall-b/r001/SM_Prop_Wall_B_LOD2.glb",
+        "sha256": "96908b55ae16f4e6fa6adf4ade0a7196fe696ab8a81745303adab56dfd630ee7",
+        "bytes": 139572,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0118,
+          0.0678
+        ],
+        "appearance": {
+          "rgb_mean": 0.0313,
+          "rgb_p95": 0.1617,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Wall_C": {
+    "asset_id": "prop-wall-c",
+    "revision": 1,
+    "lod0_triangles": 484,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 242,
+        "fraction": 0.5,
+        "file": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD1.glb",
+        "sha256": "87bb413180624f355a5526d521780a9638a3b12115a77279851a40714f5c38ea",
+        "bytes": 142696,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0079,
+          "rgb_p95": 0.0327,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 146,
+        "fraction": 0.3017,
+        "file": "Art/prop-wall-c/r001/SM_Prop_Wall_C_LOD2.glb",
+        "sha256": "7f0026fb058e8777043a2bc880fe32e203a2cab8de4fe99c24ac4c8c64e96912",
+        "bytes": 131636,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0401,
+          0.0735
+        ],
+        "appearance": {
+          "rgb_mean": 0.0215,
+          "rgb_p95": 0.0979,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Stones": {
+    "asset_id": "prop-stones",
+    "revision": 2,
+    "lod0_triangles": 802,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 400,
+        "fraction": 0.4988,
+        "file": "Art/prop-stones/r002/SM_Prop_Stones_LOD1.glb",
+        "sha256": "56d63e0e0294e402eb33bf7fd98360308fdede3ec78be035ca188c6364c2172f",
+        "bytes": 79252,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.004,
+          "rgb_p95": 0.0222,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 200,
+        "fraction": 0.2494,
+        "file": "Art/prop-stones/r002/SM_Prop_Stones_LOD2.glb",
+        "sha256": "09c6be8191efd6b1b7446031cbcf1dfdc59a0744abb65df8c453766d08429e50",
+        "bytes": 54924,
+        "deviation_m_p50_p95_max": [
+          0.0013,
+          0.0307,
+          0.0508
+        ],
+        "appearance": {
+          "rgb_mean": 0.0156,
+          "rgb_p95": 0.0554,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Stones_B": {
+    "asset_id": "prop-stones-b",
+    "revision": 1,
+    "lod0_triangles": 712,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 356,
+        "fraction": 0.5,
+        "file": "Art/prop-stones-b/r001/SM_Prop_Stones_B_LOD1.glb",
+        "sha256": "110885d9c41b6dc06f7df6e79dd304f06e1d166fcb0cef0a1c17c81e51730a0a",
+        "bytes": 72436,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0067,
+          "rgb_p95": 0.0361,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 178,
+        "fraction": 0.25,
+        "file": "Art/prop-stones-b/r001/SM_Prop_Stones_B_LOD2.glb",
+        "sha256": "7722b7a987a4d1dfd8bbbe8635355e1b083a409e401a0e58d24710162a1b1c32",
+        "bytes": 52400,
+        "deviation_m_p50_p95_max": [
+          0.0012,
+          0.0226,
+          0.0341
+        ],
+        "appearance": {
+          "rgb_mean": 0.0183,
+          "rgb_p95": 0.0652,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Stones_C": {
+    "asset_id": "prop-stones-c",
+    "revision": 1,
+    "lod0_triangles": 652,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 326,
+        "fraction": 0.5,
+        "file": "Art/prop-stones-c/r001/SM_Prop_Stones_C_LOD1.glb",
+        "sha256": "d9c8f687997148fe3b437a536575efd7099693fab3973fc7a293b3b798645dbb",
+        "bytes": 70728,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0136,
+          0.021
+        ],
+        "appearance": {
+          "rgb_mean": 0.0063,
+          "rgb_p95": 0.0297,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 178,
+        "fraction": 0.273,
+        "file": "Art/prop-stones-c/r001/SM_Prop_Stones_C_LOD2.glb",
+        "sha256": "04a34a37636ce0ddf00393c0938e7a4219d744aa9573cb37a40f09fab2f9a318",
+        "bytes": 52240,
+        "deviation_m_p50_p95_max": [
+          0.0047,
+          0.0355,
+          0.0652
+        ],
+        "appearance": {
+          "rgb_mean": 0.0162,
+          "rgb_p95": 0.0581,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Arch2Cell": {
+    "asset_id": "prop-arch-2cell",
+    "revision": 1,
+    "lod0_triangles": 3568,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 1783,
+        "fraction": 0.4997,
+        "file": "Art/prop-arch-2cell/r001/SM_Prop_Arch2Cell_LOD1.glb",
+        "sha256": "2d222dc5629e35b8a19324fcc8293bcd501f4b86eb1b9a84f01f55a17ef0164b",
+        "bytes": 264364,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0002
+        ],
+        "appearance": {
+          "rgb_mean": 0.0063,
+          "rgb_p95": 0.0224,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 892,
+        "fraction": 0.25,
+        "file": "Art/prop-arch-2cell/r001/SM_Prop_Arch2Cell_LOD2.glb",
+        "sha256": "04fdc5f1087bc0bd74380cb0f1f7acbe9f7704c4f49073fce45621b5578fc0e3",
+        "bytes": 218772,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0002
+        ],
+        "appearance": {
+          "rgb_mean": 0.0179,
+          "rgb_p95": 0.0892,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Scatter_Roots": {
+    "asset_id": "scatter-roots",
+    "revision": 1,
+    "lod0_triangles": 1160,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 580,
+        "fraction": 0.5,
+        "file": "Art/scatter-roots/r001/SM_Scatter_Roots_LOD1.glb",
+        "sha256": "5177c731b8cb80b465571d2b4a336b38501fc60e97b04cb569a90347c158afd1",
+        "bytes": 79928,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0031,
+          0.0054
+        ],
+        "appearance": {
+          "rgb_mean": 0.0136,
+          "rgb_p95": 0.0642,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 290,
+        "fraction": 0.25,
+        "file": "Art/scatter-roots/r001/SM_Scatter_Roots_LOD2.glb",
+        "sha256": "3cb6c43c252a3452476fbaf680c48a7a2a1de597d512704f88a401738b14e1d0",
+        "bytes": 44500,
+        "deviation_m_p50_p95_max": [
+          0.002,
+          0.0083,
+          0.0137
+        ],
+        "appearance": {
+          "rgb_mean": 0.0299,
+          "rgb_p95": 0.1045,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  }
+}

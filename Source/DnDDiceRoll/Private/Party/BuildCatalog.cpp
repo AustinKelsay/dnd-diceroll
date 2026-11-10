@@ -67,6 +67,12 @@ const TArray<FBuildDefinition>& Definitions()
             B.Id = B.Profile.BuildId = Id; B.Profile.SubclassId = Subclass;
             B.KitCap = B.Profile.KitUses = 2; B.KitRecovery = 1;
             First.Command = ECombatCommandType::Special1; Second.Command = ECombatCommandType::Special2;
+            // Casters' kit abilities are spells; so are the eldritch knight's and arcane trickster's (martial builds with magic).
+            const EAdventurerRole Role = B.Profile.AdventurerRole;
+            const bool bCaster = Role == EAdventurerRole::Cleric || Role == EAdventurerRole::Wizard || Role == EAdventurerRole::Sorcerer ||
+                Role == EAdventurerRole::Warlock || Role == EAdventurerRole::Druid || Role == EAdventurerRole::Bard || Role == EAdventurerRole::Artificer ||
+                FString(Id) == TEXT("fighter.eldritch-knight") || FString(Id) == TEXT("rogue.arcane-trickster");
+            First.bSpell = Second.bSpell = bCaster;
             B.Specials = {First.Command, Second.Command}; B.Abilities = {First, Second};
             if (auto* Existing = Result.FindByPredicate([&](const auto& Entry) { return Entry.Id == B.Id; })) { *Existing = B; } else { Result.Add(B); }
         };

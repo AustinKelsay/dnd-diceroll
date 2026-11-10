@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop-stones",
+  "revision": 2,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Stones",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/145",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender from the owner-approved Vigil look (issue #38) and the #140 gate-1 decisions; textures are r001 swatches (project-owned) or procedural; no third-party or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_kit_r002.py): split menhir pair; conforming subdivision to 45 cm (arch 90 cm), vertex colour = ray-cast ambient occlusion x height gradient x moss tint",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); parent #138",
+    "parameters": {
+      "units": "metres at true scale for a 150 cm cell",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of its 150 cm cell, at floor level",
+      "triangles": 802,
+      "size_m": [
+        1.4494,
+        1.375,
+        1.262
+      ],
+      "bbox_min_m": [
+        -0.7001,
+        -0.6983,
+        0
+      ],
+      "bbox_max_m": [
+        0.7493,
+        0.6767,
+        1.262
+      ],
+      "atlas_px": 256,
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "derived_from": "prop-stones r001 (same package, reimport at true metric for a 150 cm cell; variant A of its kit)",
+      "lods": {
+        "lod0_triangles": 802,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 400,
+            "fraction": 0.4988,
+            "file": "Art/prop-stones/r002/SM_Prop_Stones_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "appearance_rgb_mean_p95": [
+              0.004,
+              0.0222
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 200,
+            "fraction": 0.2494,
+            "file": "Art/prop-stones/r002/SM_Prop_Stones_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0013,
+              0.0307,
+              0.0508
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0156,
+              0.0554
+            ]
+          }
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/vigil.blend",
+      "sha256": "b904e00f6fa898e58e5ce5e6a1dbe01cfb5e95581fc24b1ac7610419c1e25c48"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_kit_r002.py",
+      "sha256": "68a37cef0f7ea9147a13d0903d4724474e0b43eb9c72a521e4ce3265a343d4b1"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/lod_r002.py",
+      "sha256": "5ba8084f17b66b456fa71f3b12f48ee813d21faced97a7c972413004da4c2765"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
+      "sha256": "55287225acc7b2f5053de5496c8cdbd2f6d9dab7ff9423dc379c871c25a6a268"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-stones/r002/SM_Prop_Stones.glb",
+      "sha256": "67029d3492396c52dbb12d42dff30f49ff91b14ff825a26e81643b6f0b2a2d91"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-stones/r002/SM_Prop_Stones_LOD1.glb",
+      "sha256": "56d63e0e0294e402eb33bf7fd98360308fdede3ec78be035ca188c6364c2172f"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-stones/r002/SM_Prop_Stones_LOD2.glb",
+      "sha256": "09c6be8191efd6b1b7446031cbcf1dfdc59a0744abb65df8c453766d08429e50"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#145 phase 2)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

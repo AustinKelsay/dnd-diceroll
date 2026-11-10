@@ -3,6 +3,7 @@
 #include "Presentation/ActionText.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Camera/CameraComponent.h"
@@ -12,8 +13,12 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Animation/AnimSequence.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "Components/PostProcessComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Light.h"
 #include "Engine/World.h"
@@ -136,6 +141,7 @@ FOverlayLook OverlayLook(BoardOverlay::EStyle Style)
     }
 }
 constexpr TCHAR OverlayMaterialPath[] = TEXT("/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay.M_BoardOverlay");
+constexpr TCHAR SilhouetteMaterialPath[] = TEXT("/Game/DnDDiceRoll/Theme/Materials/M_FigureSilhouette.M_FigureSilhouette");
 constexpr int32 RingSegments = 24;
 
 float Hash(int32 A, int32 B, int32 Salt = 0)
@@ -245,6 +251,8 @@ void AExpeditionBattleView::BeginPlay()
     {
         if (ULightComponent* Component = Light->GetLightComponent()) { Component->SetMobility(EComponentMobility::Movable); }
     }
+    // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
     if (!FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")) && !ThemeAsset.IsNull())
     {
@@ -256,6 +264,7 @@ void AExpeditionBattleView::BeginPlay()
     // The translucent material for the contextual grid and (themed) footprint rings is optional; without it they draw as
     // dimmed opaque lines. Created by Content/Python/create_board_overlay_material.py.
     OverlayMaterial = LoadObject<UMaterialInterface>(nullptr, OverlayMaterialPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    AttachSilhouette();
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
@@ -289,6 +298,8 @@ void AExpeditionBattleView::ClearPresentation()
     ShotMeshes.Reset(); ShotLights.Reset(); SparkMeshes.Reset(); CampParts.Reset(); WaystoneParts.Reset();
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
+    Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
+    bVigilKit = false; ObstaclePieces = 0; ArchPieces = 0;
 }
 
 void AExpeditionBattleView::RebuildBoard()
@@ -326,7 +337,7 @@ void AExpeditionBattleView::RebuildBoard()
     PanOffset = FVector2D::ZeroVector;
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
-    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f); UpdateOccluder();
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -382,6 +393,38 @@ void AExpeditionBattleView::SetBoardMetric(const FBoardMetric& Value)
 {
     BoardMetric = FBoardMetric(Value.CellCm, Value.FigureCm);
     RebuildBoard();
+}
+
+void AExpeditionBattleView::UseStaticFigures()
+{
+    bSkeletalFigures = false;
+    RebuildBoard();
+}
+
+int32 AExpeditionBattleView::SkeletalFigureCount() const
+{
+    int32 Count = 0;
+    for (const FExpeditionUnitRig& Rig : Rigs) { Count += Rig.Skin ? 1 : 0; }
+    return Count;
+}
+
+FUnitAnimationState AExpeditionBattleView::UnitAnimation(int32 UnitId) const
+{
+    FUnitAnimationState State;
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId || !Rig.Skin) { continue; }
+        State.bSkeletal = true;
+        State.Pose = Rig.Pose;
+        State.Time = Rig.PoseTime;
+        const UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+        State.Length = Clip ? Clip->GetPlayLength() : 0.0f;
+        const UAnimSingleNodeInstance* Node = Rig.Skin->GetSingleNodeInstance();
+        const UAnimationAsset* Shown = Node ? Node->GetAnimationAsset() : nullptr;
+        State.Clip = Shown ? Shown->GetName() : FString();
+        break;
+    }
+    return State;
 }
 
 void AExpeditionBattleView::UsePrimitives()
@@ -685,10 +728,71 @@ void AExpeditionBattleView::BuildDecor(const FCombatEncounter& Encounter, FRando
     }
 }
 
+void AExpeditionBattleView::AttachSilhouette()
+{
+    if (!SilhouetteMaterial)
+    {
+        // Created by Content/Python/import_dark_fantasy_theme.py; primitives and tests without the asset simply go without.
+        SilhouetteMaterial = LoadObject<UMaterialInterface>(nullptr, SilhouetteMaterialPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    }
+    if (!SilhouetteMaterial || HasSilhouetteBlendable()) { return; }
+    Grade->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.0f, SilhouetteMaterial));
+}
+
+bool AExpeditionBattleView::HasSilhouetteBlendable() const
+{
+    if (!SilhouetteMaterial) { return false; }
+    for (const FWeightedBlendable& Blendable : Grade->Settings.WeightedBlendables.Array)
+    {
+        if (Blendable.Object == SilhouetteMaterial) { return true; }
+    }
+    return false;
+}
+
+void AExpeditionBattleView::SetFigureSilhouette(FExpeditionUnitRig& Rig, bool bOn)
+{
+    Rig.bSilhouette = bOn;
+    const int32 Stencil = Rig.Side == ECombatSide::Enemy ? EnemyStencil : PartyStencil;
+    for (FExpeditionPart& Part : Rig.Parts)
+    {
+        if (!Part.Mesh) { continue; }
+        Part.Mesh->SetRenderCustomDepth(bOn);
+        Part.Mesh->SetCustomDepthStencilValue(Stencil);
+    }
+    // A rigged figure (#147) draws through its skinned mesh.
+    if (Rig.Skin)
+    {
+        Rig.Skin->SetRenderCustomDepth(bOn);
+        Rig.Skin->SetCustomDepthStencilValue(Stencil);
+    }
+}
+
+int32 AExpeditionBattleView::FigureStencil(int32 UnitId) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId) { continue; }
+        int32 Value = 0;
+        bool bAny = false;
+        TArray<const UPrimitiveComponent*, TInlineAllocator<8>> Drawn;
+        for (const FExpeditionPart& Part : Rig.Parts) { if (Part.Mesh) { Drawn.Add(Part.Mesh); } }
+        if (Rig.Skin) { Drawn.Add(Rig.Skin); }
+        for (const UPrimitiveComponent* Mesh : Drawn)
+        {
+            const int32 Own = Mesh->bRenderCustomDepth ? Mesh->CustomDepthStencilValue : 0;
+            if (!bAny) { Value = Own; bAny = true; }
+            else if (Own != Value) { return -1; }
+        }
+        return Value;
+    }
+    return 0;
+}
+
 void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
 {
     FExpeditionUnitRig Rig;
     Rig.Id = Unit.Id;
+    Rig.Side = Unit.Side;
     Rig.Phase = Hash(Unit.Id, 11) * 2.0f * PI;
     USceneComponent* Root = NewObject<USceneComponent>(this);
     AddInstanceComponent(Root);
@@ -727,6 +831,12 @@ void AExpeditionBattleView::BuildRig(const FCombatantState& Unit)
     {
         // Primitive look, unchanged: the opaque side-coloured base disc under the figure.
         BasePart(Cylinder, FVector(0, 0, 2), FVector(0.74f, 0.74f, 0.04f), Shade(Team, 0.45f));
+    }
+    // Rigged character first (#147), then the static r001 mesh, then primitives.
+    if (BuildSkeletalFigure(Rig, Body, Unit))
+    {
+        Rigs.Add(Rig);
+        return;
     }
     if (UStaticMesh* Figure = UnitMesh(Unit))
     {
@@ -892,13 +1002,23 @@ void AExpeditionBattleView::UpdateRigs()
         const FUnitDisplay* Unit = Show.Unit(Rig.Id);
         if (!Unit || !Rig.Root) { continue; }
         const float Breath = Unit->Life == ECombatLife::Conscious ? FMath::Sin(Clock * 2.2f + Rig.Phase) : 0.0f;
-        const FVector Location = BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop));
         const float Facing = FMath::RadiansToDegrees(FMath::Atan2(Unit->Facing.Y, Unit->Facing.X));
         const FQuat Turn(FVector::UpVector, FMath::DegreesToRadians(Facing));
-        const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
-        Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
-        // Bodies still occupy their cells, so keep fallen rigs visible on the board.
-        Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
+        if (Rig.Skin)
+        {
+            // A rigged figure stands on its cell and the clips do the rest: no hop, breathing squash or tilt.
+            Rig.Root->SetRelativeLocationAndRotation(BoardPosition(Unit->Position + Unit->Lean), Turn);
+            Rig.Root->SetRelativeScale3D(FVector(BoardMetric.Scale()));
+            UpdateAnimation(Rig, *Unit);
+        }
+        else
+        {
+            const FVector Location = BoardPosition(Unit->Position + Unit->Lean, BoardMetric.Scaled(Unit->Hop));
+            const FQuat Fall(FVector::ForwardVector, FMath::DegreesToRadians(84.0f * Unit->Tilt));
+            Rig.Root->SetRelativeLocationAndRotation(Location, Turn * Fall);
+            // Bodies still occupy their cells, so keep fallen rigs visible on the board.
+            Rig.Root->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f + Breath * 0.02f) * BoardMetric.Scale());
+        }
         const bool bDead = Unit->Life == ECombatLife::Dead;
         auto Tint = [&](FExpeditionPart& Part)
         {
@@ -909,6 +1029,9 @@ void AExpeditionBattleView::UpdateRigs()
             Part.SetColor(Color);
         };
         for (FExpeditionPart& Part : Rig.Parts) { Tint(Part); }
+        // Figures behind scenery show a side-coloured silhouette (M_FigureSilhouette reads the custom depth and stencil). The dead
+        // lie on the board as bodies and drop out; the downed still matter (they can be saved), so they keep it.
+        if (Rig.bSilhouette != !bDead) { SetFigureSilhouette(Rig, !bDead); }
         if (Rig.Ring.Mesh)
         {
             // Flat on the board under the figure, not hopping or tilting with it.
@@ -917,6 +1040,110 @@ void AExpeditionBattleView::UpdateRigs()
             Tint(Rig.Ring);
         }
     }
+}
+
+const FDiceRollCharacter* AExpeditionBattleView::UnitRigged(const FCombatantState& Unit) const
+{
+    if (!Theme || !bSkeletalFigures) { return nullptr; }
+    if (Unit.Side == ECombatSide::Party)
+    {
+        switch (Unit.AdventurerRole)
+        {
+        case EAdventurerRole::Fighter: return &Theme->FighterRig;
+        case EAdventurerRole::Wizard: return &Theme->WizardRig;
+        default: return nullptr;
+        }
+    }
+    // The same roster rule as UnitMesh: ranged foes are archers, the rest are raiders or scouts.
+    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? &Theme->RaiderRig : nullptr;
+}
+
+bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit)
+{
+    const FDiceRollCharacter* Definition = UnitRigged(Unit);
+    USkeletalMesh* Mesh = nullptr;
+    TArray<UAnimSequence*> Clips;
+    // An incomplete definition (no mesh, or any clip missing) is not used at all: the static figure takes over.
+    if (!Definition || !Definition->Load(Mesh, Clips) || !Mesh || Mesh->GetMaterials().IsEmpty()) { return false; }
+    USkeletalMeshComponent* Skin = NewObject<USkeletalMeshComponent>(this);
+    AddInstanceComponent(Skin);
+    Spawned.Add(Skin);
+    Skin->SetupAttachment(Body);
+    Skin->SetMobility(EComponentMobility::Movable);
+    Skin->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Skin->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+    Skin->SetSkeletalMesh(Mesh);
+    // The mesh origin is at the feet. Fit it to the metric's figure height (the rig root already carries the cell scale),
+    // exactly as static figures are fitted.
+    const float MeshHeight = static_cast<float>(Mesh->GetBounds().GetBox().Max.Z);
+    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.0f;
+    Skin->SetRelativeScale3D(FVector(Fit));
+    Skin->SetRelativeRotation(FRotator(0.0f, Definition->YawOffset, 0.0f));
+    // One tintable instance per slot, like static figures: Flash and Glow reach the figure through "Color".
+    const TArray<FSkeletalMaterial>& Slots = Mesh->GetMaterials();
+    for (int32 Slot = 0; Slot < Slots.Num(); ++Slot)
+    {
+        if (!Slots[Slot].MaterialInterface) { continue; }
+        FExpeditionPart Look;
+        Look.Material = UMaterialInstanceDynamic::Create(Slots[Slot].MaterialInterface, this);
+        Look.Base = FLinearColor::White;
+        Skin->SetMaterial(Slot, Look.Material);
+        Look.SetColor(Look.Base);
+        Rig.Parts.Add(Look);
+    }
+    Skin->RegisterComponent();
+    Rig.Skin = Skin;
+    for (UAnimSequence* Clip : Clips) { Rig.Clips.Add(Clip); }
+    Rig.Pose = EUnitPose::Idle;
+    Rig.PoseSerial = -1;
+    Rig.Stamp = Clock;
+    // The first UpdateRigs shows the display's pose (Rest on a fresh board); show Idle now so the component never has none.
+    ShowPose(Rig, EUnitPose::Idle, true);
+    return true;
+}
+
+void AExpeditionBattleView::ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bool bSnap)
+{
+    UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Pose)) ? Rig.Clips[static_cast<int32>(Pose)].Get() : nullptr;
+    if (!Rig.Skin || !Clip) { return; }
+    const float Length = Clip->GetPlayLength();
+    Rig.Pose = Pose;
+    Rig.bIdleAfter = false;
+    // The component holds the clip but never advances it: the view sets the time every frame (UpdateAnimation).
+    Rig.Skin->PlayAnimation(Clip, ExpeditionPose::IsLooping(Pose));
+    Rig.Skin->Stop();
+    if (!bSnap) { Rig.PoseTime = 0.0f; }
+    else if (ExpeditionPose::IsLooping(Pose)) { Rig.PoseTime = Length * (Rig.Phase / (2.0f * PI)); }
+    else { Rig.PoseTime = Length; } // Converged on a held pose: Downed and Death show their last frame at once.
+    Rig.Skin->SetPosition(Rig.PoseTime, false);
+}
+
+void AExpeditionBattleView::UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit)
+{
+    const float Delta = FMath::Max(0.0f, Clock - Rig.Stamp) * Show.Speed;
+    Rig.Stamp = Clock;
+    if (Unit.PoseSerial != Rig.PoseSerial)
+    {
+        Rig.PoseSerial = Unit.PoseSerial;
+        Rig.bIdleAfter = false;
+        const UAnimSequence* Playing = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+        const bool bOneShotPlaying = !ExpeditionPose::IsLooping(Rig.Pose) && Playing && Rig.PoseTime < Playing->GetPlayLength();
+        // Playback settling back to Idle lets a one-shot clip (a swing, a flinch, a recovery) play out; converging on
+        // the committed state (reset, resume, skip, Finish) shows the final pose at once.
+        if (!Unit.bPoseSnap && Unit.Pose == EUnitPose::Idle && bOneShotPlaying) { Rig.bIdleAfter = true; }
+        else { ShowPose(Rig, Unit.Pose, Unit.bPoseSnap); return; }
+    }
+    const UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Rig.Pose)) ? Rig.Clips[static_cast<int32>(Rig.Pose)].Get() : nullptr;
+    if (!Clip) { return; }
+    const float Length = Clip->GetPlayLength();
+    Rig.PoseTime += Delta;
+    if (ExpeditionPose::IsLooping(Rig.Pose)) { Rig.PoseTime = Length > 0.0f ? FMath::Fmod(Rig.PoseTime, Length) : 0.0f; }
+    else if (Rig.PoseTime >= Length)
+    {
+        Rig.PoseTime = Length;
+        if (Rig.bIdleAfter) { ShowPose(Rig, EUnitPose::Idle, false); return; }
+    }
+    Rig.Skin->SetPosition(Rig.PoseTime, false);
 }
 
 void AExpeditionBattleView::UpdateTiles()
@@ -1479,7 +1706,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
-    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds);
+    UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder();
     ExpireVoices();
     if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
@@ -1547,7 +1774,21 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     Scenery.Add(MakePart(Cube, nullptr, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f)));
-    Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), FVector::OneVector, FLinearColor::White));
+    // The r002 kit is authored at the true 150 cm cell, so under the root the metric scales it is placed at 1 / scale.
+    // The r001 art (110 cm) keeps the root's scale. Only Vigil boards use the r002 world; every board uses the r002 obstacles.
+    const bool bMetric = Theme->bMetricKit;
+    const bool bVigil = bMetric && !bForest;
+    const FVector MetricScale(1.0f / SceneScale());
+    Scenery.Add(MakePart(World, nullptr, FVector(Center.X, Center.Y, Ground), bVigil ? MetricScale : FVector::OneVector, FLinearColor::White));
+    bVigilKit = bVigil;
+    if (bVigil)
+    {
+        if (UStaticMesh* Near = ThemeMesh(Theme->VigilOccluders))
+        {
+            Occluder = MakeOwnMaterialPart(Near, FVector(Center.X, Center.Y, Ground), MetricScale, FRotator::ZeroRotator);
+            Scenery.Add(Occluder);
+        }
+    }
     // The world's ground covers the 18 x 12 footprint, the largest generated board. A custom larger board gets one subtle
     // plain plane just under the surface (never a checkerboard).
     if (Encounter.Width > 18 || Encounter.Height > 12)
@@ -1557,14 +1798,20 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     }
     FRandomStream Random(Seed);
     const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
-    UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
-    for (const FIntPoint& Cell : Encounter.BlockedCells)
+    // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
+    // consumed by the r001 path, so the kit never changes what the fallback draws.
+    if (!(bMetric && BuildKitObstacles(Encounter, Kind, Seed, bVigil && VigilKit::ArchesFor(Kind))))
     {
-        if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
-        const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
-        Scenery.Add(MakePart(Obstacle, nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), FVector::OneVector,
-            FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
+        UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
+        for (const FIntPoint& Cell : Encounter.BlockedCells)
+        {
+            if (!Obstacle) { BuildObstacle(Cell, Kind, Random); continue; }
+            const float Turn = 90.0f * Random.RandRange(0, 3) + (Kind == 0 ? Random.FRandRange(-20.0f, 20.0f) : 0.0f);
+            Scenery.Add(MakePart(Obstacle, nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), bMetric ? MetricScale : FVector::OneVector,
+                FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f)));
+        }
     }
+    if (bVigil) { BuildKitDressing(Encounter, Seed); }
     // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
@@ -1605,6 +1852,163 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         }
     }
     return true;
+}
+
+FExpeditionPart AExpeditionBattleView::MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation)
+{
+    FExpeditionPart Part = MakePart(Mesh, nullptr, Location, Scale, FLinearColor::White, Rotation);
+    if (UMaterialInterface* Own = Mesh ? Mesh->GetMaterial(0) : nullptr)
+    {
+        // The mesh's own material (dithered mask or translucent card) with an instance for per-part parameters.
+        Part.Material = UMaterialInstanceDynamic::Create(Own, this);
+        Part.Mesh->SetMaterial(0, Part.Material);
+    }
+    return Part;
+}
+
+bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches)
+{
+    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Recipe == 1 ? Theme->PillarVariants : Recipe == 2 ? Theme->WallVariants : Theme->StonesVariants;
+    TArray<UStaticMesh*> Variants;
+    bool bAny = false;
+    for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Variants.Add(ThemeMesh(Entry)); bAny = bAny || Variants.Last() != nullptr; }
+    if (!bAny) { return false; }
+    const FVector MetricScale(1.0f / SceneScale());
+    TSet<FIntPoint> Covered;
+    if (UStaticMesh* Arch = bArches ? ThemeMesh(Theme->ArchTwoCell) : nullptr)
+    {
+        for (const VigilKit::FArch& Pair : VigilKit::ArchPairs(Encounter.BlockedCells))
+        {
+            Scenery.Add(MakePart(Arch, nullptr, SceneBoard(Pair.Midpoint()), MetricScale, FLinearColor::White, FRotator(0.0f, Pair.Yaw(), 0.0f)));
+            Covered.Add(Pair.A); Covered.Add(Pair.B);
+            VariantsByCell.Add(Pair.A, -1); VariantsByCell.Add(Pair.B, -1);
+            const FVector Spot = GetActorTransform().InverseTransformPosition(Scenery.Last().Mesh->GetComponentLocation());
+            SpotsByCell.Add(Pair.A, Spot); SpotsByCell.Add(Pair.B, Spot);
+            ++ArchPieces; ++ObstaclePieces;
+        }
+    }
+    for (const FIntPoint& Cell : Encounter.BlockedCells)
+    {
+        if (Covered.Contains(Cell)) { continue; }
+        // The chosen variant, or the next one that loaded.
+        const int32 Wanted = VigilKit::VariantIndex(Seed, Recipe, Cell, Variants.Num());
+        int32 Index = INDEX_NONE;
+        for (int32 Step = 0; Step < Variants.Num() && Index == INDEX_NONE; ++Step)
+        { if (Variants[(Wanted + Step) % Variants.Num()]) { Index = (Wanted + Step) % Variants.Num(); } }
+        if (Index == INDEX_NONE) { continue; }
+        const float Turn = 90.0f * static_cast<float>(VigilKit::Hash(Seed, 2, Cell) % 4u) + (Recipe == 0 ? (VigilKit::Unit(Seed, 3, Cell) - 0.5f) * 40.0f : 0.0f);
+        const float Tint = 0.85f + 0.15f * VigilKit::Unit(Seed, 4, Cell);
+        Scenery.Add(MakePart(Variants[Index], nullptr, SceneBoard(FVector2D(Cell.X, Cell.Y)), MetricScale, FLinearColor::White * Tint, FRotator(0.0f, Turn, 0.0f)));
+        VariantsByCell.Add(Cell, Index);
+        SpotsByCell.Add(Cell, GetActorTransform().InverseTransformPosition(Scenery.Last().Mesh->GetComponentLocation()));
+        ++ObstaclePieces;
+    }
+    return true;
+}
+
+void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed)
+{
+    auto Load = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
+    {
+        TArray<UStaticMesh*> Meshes;
+        for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Meshes.Add(ThemeMesh(Entry)); }
+        return Meshes;
+    };
+    const TArray<UStaticMesh*> Scatter = Load(Theme->Scatter), Mist = Load(Theme->MistCards), Shafts = Load(Theme->LightShafts);
+    VigilKit::FDressingKinds Kinds;
+    Kinds.Scatter = Scatter.Num(); Kinds.Mist = Mist.Num(); Kinds.Shaft = Shafts.Num();
+    const FVector MetricScale(1.0f / SceneScale());
+    for (const VigilKit::FDressing& Plan : VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds))
+    {
+        const TArray<UStaticMesh*>& Set = Plan.Kind == VigilKit::EDressingKind::Scatter ? Scatter : Plan.Kind == VigilKit::EDressingKind::Mist ? Mist : Shafts;
+        UStaticMesh* Mesh = Set.IsValidIndex(Plan.Variant) ? Set[Plan.Variant] : nullptr;
+        if (!Mesh) { continue; }
+        const FVector Local = SceneBoard(Plan.Position());
+        const FRotator Turn(0.0f, Plan.Yaw, 0.0f);
+        FExpeditionPart Part;
+        if (Plan.Kind == VigilKit::EDressingKind::Scatter) { Part = MakePart(Mesh, nullptr, Local, MetricScale, FLinearColor::White, Turn); }
+        else
+        {
+            // Translucent cards keep their own material and cast no shadow.
+            Part = MakeOwnMaterialPart(Mesh, Local, MetricScale, Turn);
+            Part.Mesh->SetCastShadow(false);
+        }
+        Scenery.Add(Part);
+        FPlacedDressing Placed;
+        Placed.Plan = Plan;
+        Placed.Position = GetActorTransform().InverseTransformPosition(Part.Mesh->GetComponentLocation());
+        Dressing.Add(Placed);
+    }
+}
+
+bool AExpeditionBattleView::HasOccluder() const { return IsValid(Occluder.Mesh); }
+
+void AExpeditionBattleView::OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const
+{
+    const FTransform ActorSpace = GetActorTransform();
+    Eye = Camera->GetComponentLocation();
+    FocusPoint = ActorSpace.TransformPosition(Focus);
+    UnitPoint = FocusPoint;
+    if (InCombat())
+    {
+        const int32 Id = Rules().ActiveId();
+        if (Rules().Find(Id) && Show.Unit(Id)) { UnitPoint = ActorSpace.TransformPosition(UnitPosition(Id, BoardMetric.Figure(0.6f))); }
+    }
+}
+
+float AExpeditionBattleView::OccluderOpacityAt(const FVector& WorldPoint) const
+{
+    if (!HasOccluder()) { return 1.0f; }
+    FVector Eye, FocusPoint, UnitPoint;
+    OccluderSight(Eye, FocusPoint, UnitPoint);
+    return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells);
+}
+
+void AExpeditionBattleView::OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const
+{
+    const FCombatEncounter& Board = Rules().Snapshot().Encounter;
+    const float Margin = OccluderFade::BoardMarginCells;
+    const FTransform ActorSpace = GetActorTransform();
+    const FVector Low = ActorSpace.TransformPosition(BoardPosition(FVector2D(-0.5f - Margin, -0.5f - Margin)));
+    const FVector High = ActorSpace.TransformPosition(BoardPosition(FVector2D(Board.Width - 0.5f + Margin, Board.Height - 0.5f + Margin)));
+    // The axis-aligned bounds of the two corners, so a view actor turned a quarter circle still gives a min and a max.
+    Min = FVector2D(FMath::Min(Low.X, High.X), FMath::Min(Low.Y, High.Y));
+    Max = FVector2D(FMath::Max(Low.X, High.X), FMath::Max(Low.Y, High.Y));
+    PlaneZ = static_cast<float>(ActorSpace.TransformPosition(BoardPosition(FVector2D::ZeroVector)).Z);
+}
+
+float AExpeditionBattleView::OccluderBoardOpacityAt(const FVector& WorldPoint) const
+{
+    if (!HasOccluder()) { return 1.0f; }
+    FVector2D Min, Max;
+    float PlaneZ = 0.0f;
+    OccluderBoard(Min, Max, PlaneZ);
+    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderFade::BoardRampCells);
+}
+
+void AExpeditionBattleView::UpdateOccluder()
+{
+    if (!Occluder.Material) { return; }
+    FVector Eye, FocusPoint, UnitPoint;
+    OccluderSight(Eye, FocusPoint, UnitPoint);
+    auto Point = [](const FVector& Value) { return FLinearColor(static_cast<float>(Value.X), static_cast<float>(Value.Y), static_cast<float>(Value.Z), 0.0f); };
+    Occluder.Material->SetVectorParameterValue(TEXT("SightEye"), Point(Eye));
+    Occluder.Material->SetVectorParameterValue(TEXT("SightFocus"), Point(FocusPoint));
+    Occluder.Material->SetVectorParameterValue(TEXT("SightUnit"), Point(UnitPoint));
+    Occluder.Material->SetScalarParameterValue(TEXT("FadeRadius"), BoardMetric.CellCm * OccluderFade::RadiusCells);
+    Occluder.Material->SetScalarParameterValue(TEXT("FadeMin"), OccluderFade::MinOpacity);
+    // The board rectangle only changes with the board, its metric or the view actor's transform: push it when it does.
+    FVector2D Min, Max;
+    float PlaneZ = 0.0f;
+    OccluderBoard(Min, Max, PlaneZ);
+    const FVector4 Rect(Min.X, Min.Y, Max.X, Max.Y);
+    if (!bOccluderBoardSent || !Rect.Equals(OccluderBoardSent, 0.01) || !FMath::IsNearlyEqual(PlaneZ, OccluderPlaneSent, 0.01f))
+    {
+        Occluder.Material->SetVectorParameterValue(TEXT("BoardRect"), FLinearColor(static_cast<float>(Min.X), static_cast<float>(Min.Y), static_cast<float>(Max.X), static_cast<float>(Max.Y)));
+        Occluder.Material->SetScalarParameterValue(TEXT("BoardZ"), PlaneZ);
+        Occluder.Material->SetScalarParameterValue(TEXT("BoardRamp"), BoardMetric.CellCm * OccluderFade::BoardRampCells);
+        OccluderBoardSent = Rect; OccluderPlaneSent = PlaneZ; bOccluderBoardSent = true;
+    }
 }
 
 void AExpeditionBattleView::BuildOverview()

@@ -138,6 +138,8 @@ struct DNDDICEROLL_API FAbilityFacts
     bool bKitResource = false;
     bool bCureDice = false;
     bool bBonus = true;
+    /** Presentation: a magical ability, so the actor casts instead of swinging a weapon, whatever the effect. */
+    bool bSpell = false;
     bool bResourceAvailable = false;
     int32 Range = 0, Amount = 0;
 };

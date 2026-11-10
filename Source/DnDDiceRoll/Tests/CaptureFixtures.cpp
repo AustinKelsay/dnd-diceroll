@@ -11,9 +11,9 @@
  * Developer tool, not a behavior test: writes real checkpoints at each expedition phase
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
- * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, and the action dock's
- * kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, and the hint
- * fixtures end-turn-only-battle and downed-ally-battle), each with a
+ * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
+ * board-vigil-walls, and the action dock's kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent,
+ * sight-blocked-battle, and the hint fixtures end-turn-only-battle and downed-ally-battle), each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -95,6 +95,27 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindBoard(TEXT("board-16x11"), 16, 11);
     FindBoard(TEXT("board-18x12"), 18, 12);
+    // Drowned Vigil boards (the dangerous Watchtower road) with the architectural recipes: ruined pillars (1) and broken wall (2).
+    // The wall recipe is the one whose adjacent blocked cells get the 2-cell arch, so these cover the pillar and wall variants and the arch.
+    auto FindVigilRecipe = [&](const TCHAR* Name, int32 Recipe)
+    {
+        for (int32 Seed = 1; Seed < 2000; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[1];
+            if (!Route.bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 1);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 2000 gives a dangerous route with recipe %d and the party first"), Recipe));
+    };
+    FindVigilRecipe(TEXT("board-vigil-pillars"), 1);
+    FindVigilRecipe(TEXT("board-vigil-walls"), 2);
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)
