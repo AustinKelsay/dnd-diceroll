@@ -145,4 +145,16 @@ inline bool PlaceChip(Point Anchor, double Width, double Height, const Rect& Bou
     }
     return Found;
 }
+
+// The path-cost number's plate (#171). It sits just above the end of the path; when a panel or chip is there it moves
+// to the nearest free spot instead, so the number is never hidden. With no free spot it stays where it would be drawn.
+// The plate is drawn last, over everything, so it also reads when a spot cannot be found.
+inline Rect PathCostPlate(Point End, double Width, double Height, const Rect& Bounds, const std::vector<Rect>& Occupied)
+{
+    constexpr double Lift = 21;
+    const Point Anchor = {End.X, End.Y - Lift};
+    Chip Placed;
+    if (PlaceChip(Anchor, Width, Height, Bounds, Occupied, Placed)) { return Placed.Panel; }
+    return {Anchor.X - Width / 2, Anchor.Y - Height / 2, Anchor.X + Width / 2, Anchor.Y + Height / 2};
+}
 }

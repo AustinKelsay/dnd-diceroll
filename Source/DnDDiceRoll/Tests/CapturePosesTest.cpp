@@ -36,6 +36,16 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("A start shot can name a build"), Poses.Shots[5].Build, FString(TEXT("barbarian.berserker")));
         TestTrue(TEXT("A tooltip shot carries a camera"), Poses.Shots[4].bHasCamera && Poses.Shots[4].Mode == ECaptureMode::Tooltip);
     }
+    // A hint shot (#158) names its hint and carries a camera.
+    {
+        FCapturePoses Hinted;
+        TestTrue(TEXT("A hint shot parses"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"h\",\"mode\":\"hint\",\"hint\":\"endturn\",\"yaw\":0,\"distance\":\"default\"}]}"), Hinted, Error));
+        if (Hinted.Shots.Num() == 1)
+        {
+            TestEqual(TEXT("A hint shot names its hint"), Hinted.Shots[0].Hint, ECaptureHint::EndTurn);
+            TestTrue(TEXT("A hint shot carries a camera"), Hinted.Shots[0].bHasCamera && Hinted.Shots[0].Mode == ECaptureMode::Hint);
+        }
+    }
     // Capture runs bind no player input; only a real -ExpeditionCapture= value turns that on.
     TestTrue(TEXT("Capture is requested by a poses path"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionCapture=/tmp/poses.json -ExpeditionSaveRoot=/tmp/s")));
     TestFalse(TEXT("A normal run is not a capture run"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionSaveRoot=/tmp/s")));
@@ -69,6 +79,8 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"start\",\"build\":\"Wizard\"}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"start\",\"build\":7}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"tooltip\",\"action\":\"jump\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"hint\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"hint\",\"hint\":\"tips\",\"yaw\":0,\"distance\":1300}]}"),
     };
     for (const TCHAR* Text : Bad)
     {

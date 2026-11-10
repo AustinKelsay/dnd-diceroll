@@ -13,8 +13,9 @@
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
  * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
- * recipes, which show the Root of the World kit r002 once it is imported), and the action dock's kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent,
- * sight-blocked-battle), each with a
+ * recipes, which show the Root of the World kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, and the hint fixtures end-turn-only-battle and downed-ally-battle),
+ * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -188,22 +189,56 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             return Run.Submit({ECombatCommandType::Special1, Id, {}, Id}).bAccepted && Run.Battle().Find(Id)->RageTurns > 0;
         });
     // Everything spent: the Wizard closes in, bursts (Bonus, a Kit) and fires a missile (Action, a Kit and a Slot), leaving no Kit.
-    FindActing(TEXT("kit-wizard-all-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"),
-        [&CloseIn](FExpeditionRun& Run, int32 Id)
+    const auto SpendEverything = [&CloseIn](FExpeditionRun& Run, int32 Id)
+    {
+        for (int32 Step = 0; Step < 4; ++Step)
         {
-            for (int32 Step = 0; Step < 4; ++Step)
+            const TArray<int32> Burst = Run.Battle().LegalTargets(Id, ECombatCommandType::Special2);
+            const TArray<int32> Missile = Run.Battle().LegalTargets(Id, ECombatCommandType::MagicMissile);
+            if (!Burst.IsEmpty() && !Missile.IsEmpty())
             {
-                const TArray<int32> Burst = Run.Battle().LegalTargets(Id, ECombatCommandType::Special2);
-                const TArray<int32> Missile = Run.Battle().LegalTargets(Id, ECombatCommandType::MagicMissile);
-                if (!Burst.IsEmpty() && !Missile.IsEmpty())
-                {
-                    return Run.Submit({ECombatCommandType::Special2, Id, {}, Burst[0]}).bAccepted && Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Missile[0]}).bAccepted &&
-                        Run.Battle().Find(Id)->KitUses == 0 && !Run.Battle().Snapshot().bActionAvailable && !Run.Battle().Snapshot().bBonusActionAvailable;
-                }
-                if (!CloseIn(Run, Id)) { return false; }
+                return Run.Submit({ECombatCommandType::Special2, Id, {}, Burst[0]}).bAccepted && Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Missile[0]}).bAccepted &&
+                    Run.Battle().Find(Id)->KitUses == 0 && !Run.Battle().Snapshot().bActionAvailable && !Run.Battle().Snapshot().bBonusActionAvailable;
             }
-            return false;
+            if (!CloseIn(Run, Id)) { return false; }
+        }
+        return false;
+    };
+    FindActing(TEXT("kit-wizard-all-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"), SpendEverything);
+    // Nothing but End Turn (#158): the same Wizard, then every step of movement walked, so no action in the bar is available.
+    FindActing(TEXT("end-turn-only-battle"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"),
+        [&SpendEverything](FExpeditionRun& Run, int32 Id)
+        {
+            if (!SpendEverything(Run, Id)) { return false; }
+            for (int32 Step = 0; Step < 30 && Run.Battle().Snapshot().MovementLeft > 0; ++Step)
+            {
+                const TArray<FIntPoint> Moves = Run.Battle().LegalMoves(Id);
+                if (Moves.IsEmpty() || !Run.Submit({ECombatCommandType::Move, Id, Moves.Last()}).bAccepted) { break; }
+            }
+            for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Run.Battle(), Id))
+            { if (Command != ECombatCommandType::EndTurn && FActionFactsQuery::For(Run.Battle(), Id, Command).bAvailable) { return false; } }
+            return true;
         });
+    // A Downed ally (#158): the default-seed battle with its second hero Downed, put through the snapshot's validation like any restored checkpoint.
+    {
+        FString Error;
+        FExpeditionRun Run;
+        Run.NewRun(DefaultSeed, Error, FString::Printf(TEXT("capture-%d"), DefaultSeed));
+        Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        const int32 ActiveId = Run.Battle().ActiveId();
+        bool bDowned = false;
+        for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+        {
+            if (!bDowned && Unit.Side == ECombatSide::Party && Unit.Id != ActiveId) { Unit.HP = 0; Unit.Life = ECombatLife::Downed; Unit.RescueTurnsLeft = 2; bDowned = true; }
+        }
+        FExpeditionRun Downed;
+        if (TestTrue(TEXT("A Downed ally restores as a valid checkpoint"), bDowned && Downed.Restore(Snapshot, Error)))
+        {
+            Write(TEXT("downed-ally-battle"), Downed);
+            Describe(TEXT("downed-ally-battle"), Downed, DefaultSeed, 0);
+        }
+    }
     // Blocked sight: a first turn where some attack or ability finds every target in range but behind an obstacle.
     {
         bool bFound = false;
