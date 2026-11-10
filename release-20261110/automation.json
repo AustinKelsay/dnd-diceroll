@@ -1,0 +1,6814 @@
+﻿{
+	"devices": [
+		{
+			"deviceName": "plebdev-ultra",
+			"instance": "01A1C5B4C1C67C9D987D8F10C8D37DED",
+			"instanceName": "plebdev-ultra-2339943",
+			"platform": "LinuxEditor",
+			"oSVersion": "Omarchy 7.2.15-1-omarchy",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 4080 SUPER (NVIDIA UNIX Open Kernel Module for x86_64  615.78.08  Release Build  (root@plebdev-ultra))",
+			"cPUModel": "Intel(R) Core(TM) i9-14900K",
+			"rAMInGB": 16,
+			"renderMode": "Vulkan_SM5",
+			"rHI": "Vulkan (SM5)",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.11.10-13.46.14",
+	"succeeded": 287,
+	"succeededWithWarnings": 0,
+	"failed": 0,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 27.163856506347656,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "HarnessWritesNoCheckpoint",
+			"fullTestPath": "Project.Balance.HarnessWritesNoCheckpoint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.024423196911811829,
+			"dateTime": "2026.11.10-13.45.43",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OutputStaysUnderLocal",
+			"fullTestPath": "Project.Balance.OutputStaysUnderLocal",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084383599460124969,
+			"dateTime": "2026.11.10-13.45.43",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PartySetCoversEveryKit",
+			"fullTestPath": "Project.Balance.PartySetCoversEveryKit",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083070173859596252,
+			"dateTime": "2026.11.10-13.45.43",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PolicyNeverPassesALegalAction",
+			"fullTestPath": "Project.Balance.PolicyNeverPassesALegalAction",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.15262222290039062,
+			"dateTime": "2026.11.10-13.45.43",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PolicySubmitsOnlyLegalCommands",
+			"fullTestPath": "Project.Balance.PolicySubmitsOnlyLegalCommands",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.15275713801383972,
+			"dateTime": "2026.11.10-13.45.43",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SameSeedSameResults",
+			"fullTestPath": "Project.Balance.SameSeedSameResults",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.13978078961372375,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LiveRunMatchesDirectCommands",
+			"fullTestPath": "Project.Expedition.Autoplay.LiveRunMatchesDirectCommands",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.62953555583953857,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlanReachesEveryBeat",
+			"fullTestPath": "Project.Expedition.Autoplay.PlanReachesEveryBeat",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.044806122779846191,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 0 (bait 0, advance 1, fall back 0, retreat 1): every beat, 53 command(s), round 8, 4 survivor(s), unit 1 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 1 (bait 1, advance 1, fall back 0, retreat 1): dropped, the party was defeated",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 2 (bait 2, advance 1, fall back 0, retreat 1): every beat, 77 command(s), round 10, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 3 (bait 3, advance 1, fall back 0, retreat 1): every beat, 53 command(s), round 9, 4 survivor(s), unit 4 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 4 (bait 0, advance 0, fall back 0, retreat 1): every beat, 80 command(s), round 11, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 5 (bait 1, advance 0, fall back 0, retreat 1): every beat, 68 command(s), round 9, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 6 (bait 2, advance 0, fall back 0, retreat 1): every beat, 68 command(s), round 9, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 7 (bait 3, advance 0, fall back 0, retreat 1): every beat, 68 command(s), round 9, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 8 (bait 0, advance 1, fall back 1, retreat 1): every beat, 80 command(s), round 12, 4 survivor(s), unit 1 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 9 (bait 1, advance 1, fall back 1, retreat 1): every beat, 99 command(s), round 13, 4 survivor(s), unit 2 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 10 (bait 2, advance 1, fall back 1, retreat 1): every beat, 76 command(s), round 10, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 11 (bait 3, advance 1, fall back 1, retreat 1): every beat, 47 command(s), round 7, 4 survivor(s), unit 4 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 12 (bait 0, advance 0, fall back 1, retreat 1): every beat, 101 command(s), round 15, 4 survivor(s), unit 1 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 13 (bait 1, advance 0, fall back 1, retreat 1): every beat, 159 command(s), round 34, 4 survivor(s), unit 2 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 14 (bait 2, advance 0, fall back 1, retreat 1): every beat, 80 command(s), round 10, 4 survivor(s), unit 3 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "variant 15 (bait 3, advance 0, fall back 1, retreat 1): every beat, 84 command(s), round 13, 3 survivor(s), unit 4 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "seed 20261030, variant 11, 47 commands, round 7, 4 survivor(s), unit 4 downed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.44"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ScriptIsValidated",
+			"fullTestPath": "Project.Expedition.Autoplay.ScriptIsValidated",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083268135786056519,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdDexOnlyInitiative",
+			"fullTestPath": "Project.Expedition.Battle.SrdDexOnlyInitiative",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079610897228121758,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdGrappleShoveAppliesConditions",
+			"fullTestPath": "Project.Expedition.Battle.SrdGrappleShoveAppliesConditions",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0088647231459617615,
+			"dateTime": "2026.11.10-13.45.44",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdIntIgnoresCover",
+			"fullTestPath": "Project.Expedition.Battle.SrdIntIgnoresCover",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082554463297128677,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdMagicMissilePerDartResistance",
+			"fullTestPath": "Project.Expedition.Battle.SrdMagicMissilePerDartResistance",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083105312660336494,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdOpportunityGrappleDeathConcentrationSmoke",
+			"fullTestPath": "Project.Expedition.Battle.SrdOpportunityGrappleDeathConcentrationSmoke",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.007966076023876667,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdSacredFlameDexSave",
+			"fullTestPath": "Project.Expedition.Battle.SrdSacredFlameDexSave",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008154463954269886,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdSacredFlameResultFields",
+			"fullTestPath": "Project.Expedition.Battle.SrdSacredFlameResultFields",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082979919388890266,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdSizeCoverHouseRule",
+			"fullTestPath": "Project.Expedition.Battle.SrdSizeCoverHouseRule",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082970010116696358,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArcaneJsonContinuity",
+			"fullTestPath": "Project.Expedition.Catalog.ArcaneJsonContinuity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.043163053691387177,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.abjuration",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.clockwork-soul",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.genie",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.wild-magic",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArcaneRoster",
+			"fullTestPath": "Project.Expedition.Catalog.ArcaneRoster",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078467829152941704,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArcaneRunProgression",
+			"fullTestPath": "Project.Expedition.Catalog.ArcaneRunProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.010411803610622883,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArcaneWorkedOutcomes",
+			"fullTestPath": "Project.Expedition.Catalog.ArcaneWorkedOutcomes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082792956382036209,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.draconic-bloodline slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.draconic-bloodline slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.wild-magic slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.wild-magic slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.aberrant-mind slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.aberrant-mind slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.clockwork-soul slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "sorcerer.clockwork-soul slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.archfey slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.archfey slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.fiend slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.fiend slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.great-old-one slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.great-old-one slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.fathomless slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.fathomless slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.genie slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "warlock.genie slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.abjuration slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.abjuration slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.conjuration slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.conjuration slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.divination slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.divination slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.enchantment slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.enchantment slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.evocation slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.evocation slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.illusion slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.illusion slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.necromancy slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.necromancy slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.transmutation slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.transmutation slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.bladesinging slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.bladesinging slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.order-of-scribes slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "wizard.order-of-scribes slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerJsonContinuity",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerJsonContinuity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.042061958461999893,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.armorer",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.artillerist",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.battle-smith",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.alchemist",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerProtection",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerProtection",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078940391540527344,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerRandomCheckpointContinuity",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerRandomCheckpointContinuity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082101281732320786,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerRunProgression",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerRunProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.01307812612503767,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerSpentPoolsAcrossProgression",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerSpentPoolsAcrossProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0087232291698455811,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Two Defensive Fields on separate turns",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerStartup",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerStartup",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081999590620398521,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArtificerWorkedOutcomes",
+			"fullTestPath": "Project.Expedition.Catalog.ArtificerWorkedOutcomes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082902386784553528,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.alchemist slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.alchemist slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.armorer slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.armorer slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.artillerist slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.artillerist slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.battle-smith slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "artificer.battle-smith slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Barbarian",
+			"fullTestPath": "Project.Expedition.Catalog.Barbarian",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084904581308364868,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BarbarianPersistence",
+			"fullTestPath": "Project.Expedition.Catalog.BarbarianPersistence",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.024436771869659424,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CappedCampAfterBonusVictory",
+			"fullTestPath": "Project.Expedition.Catalog.CappedCampAfterBonusVictory",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083667011931538582,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CurrentProfiles",
+			"fullTestPath": "Project.Expedition.Catalog.CurrentProfiles",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084621608257293701,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FinalCommands",
+			"fullTestPath": "Project.Expedition.Catalog.FinalCommands",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083030536770820618,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LifeConsciousTargets",
+			"fullTestPath": "Project.Expedition.Catalog.LifeConsciousTargets",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081827593967318535,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LifeSpentPoolsAcrossProgression",
+			"fullTestPath": "Project.Expedition.Catalog.LifeSpentPoolsAcrossProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0086389509961009026,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Cure and Sanctuary",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Two Cures, empty Slots",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialBlockedPush",
+			"fullTestPath": "Project.Expedition.Catalog.MartialBlockedPush",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082984557375311852,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialCombatPoolValidation",
+			"fullTestPath": "Project.Expedition.Catalog.MartialCombatPoolValidation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078388042747974396,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialFighterCriticals",
+			"fullTestPath": "Project.Expedition.Catalog.MartialFighterCriticals",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082977013662457466,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialJsonContinuity",
+			"fullTestPath": "Project.Expedition.Catalog.MartialJsonContinuity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.022289779037237167,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.thief",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "fighter.eldritch-knight",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "ranger.beast-master",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialProtection",
+			"fullTestPath": "Project.Expedition.Catalog.MartialProtection",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082713272422552109,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialRoster",
+			"fullTestPath": "Project.Expedition.Catalog.MartialRoster",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0086342049762606621,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialRunProgression",
+			"fullTestPath": "Project.Expedition.Catalog.MartialRunProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.051850948482751846,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MartialWorkedOutcomes",
+			"fullTestPath": "Project.Expedition.Catalog.MartialWorkedOutcomes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008187062107026577,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.thief",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.assassin",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.arcane-trickster",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.phantom",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rogue.soulknife",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "fighter.eldritch-knight",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "fighter.psi-warrior",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "fighter.rune-knight",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "monk.open-hand",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "monk.shadow",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "monk.four-elements",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "monk.mercy",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "monk.astral-self",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "paladin.devotion",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "paladin.ancients",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "paladin.vengeance",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "paladin.glory",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "paladin.watchers",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "ranger.hunter",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "ranger.beast-master",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "ranger.fey-wanderer",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "ranger.swarmkeeper",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MissileSpentPoolsAndRollback",
+			"fullTestPath": "Project.Expedition.Catalog.MissileSpentPoolsAndRollback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083563085645437241,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SelectedParty",
+			"fullTestPath": "Project.Expedition.Catalog.SelectedParty",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084312595427036285,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SupportJsonContinuity",
+			"fullTestPath": "Project.Expedition.Catalog.SupportJsonContinuity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.042863070964813232,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.order",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.moon",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.creation",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.life",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.45"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SupportRoster",
+			"fullTestPath": "Project.Expedition.Catalog.SupportRoster",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080421827733516693,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SupportRunProgression",
+			"fullTestPath": "Project.Expedition.Catalog.SupportRunProgression",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.026003582403063774,
+			"dateTime": "2026.11.10-13.45.45",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SupportWorkedOutcomes",
+			"fullTestPath": "Project.Expedition.Catalog.SupportWorkedOutcomes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082578863948583603,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.knowledge slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.knowledge slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.life slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.life slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.light slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.light slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.nature slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.nature slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.tempest slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.tempest slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.trickery slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.trickery slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.war slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.war slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.order slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.order slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.peace slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.peace slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.twilight slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "cleric.twilight slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.land slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.land slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.moon slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.moon slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.spores slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.spores slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.stars slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.stars slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.wildfire slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "druid.wildfire slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.lore slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.lore slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.valor slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.valor slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.creation slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.creation slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.eloquence slot 1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "bard.eloquence slot 2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsCoverEveryAbility",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsCoverEveryAbility",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085632028058171272,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsForBuildMatchesFor",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsForBuildMatchesFor",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079315397888422012,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Compared 489 commands",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.46"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsMatchLegality",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsMatchLegality",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.018942996859550476,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsMatchSubmit",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsMatchSubmit",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.035215806216001511,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsPotionCap",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsPotionCap",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0076990118250250816,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsReadOnly",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsReadOnly",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.029443521052598953,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionFactsReasons",
+			"fullTestPath": "Project.Expedition.Combat.ActionFactsReasons",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0076955808326601982,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTextEveryEnumerator",
+			"fullTestPath": "Project.Expedition.Combat.ActionTextEveryEnumerator",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082383602857589722,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTextEveryKit",
+			"fullTestPath": "Project.Expedition.Combat.ActionTextEveryKit",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082373498007655144,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTextPhrases",
+			"fullTestPath": "Project.Expedition.Combat.ActionTextPhrases",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081898579373955727,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AttackRollsAndBudgets",
+			"fullTestPath": "Project.Expedition.Combat.AttackRollsAndBudgets",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085832616314291954,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DamageAtZeroKeepsTally",
+			"fullTestPath": "Project.Expedition.Combat.DamageAtZeroKeepsTally",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0069868909195065498,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "EnemyBoundedAndDeterministic",
+			"fullTestPath": "Project.Expedition.Combat.EnemyBoundedAndDeterministic",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078155286610126495,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "GrappleShoveEscape521DC",
+			"fullTestPath": "Project.Expedition.Combat.GrappleShoveEscape521DC",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008014424704015255,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "GridBoundsAllowLargeEncounters",
+			"fullTestPath": "Project.Expedition.Combat.GridBoundsAllowLargeEncounters",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083908261731266975,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LineOfSightAndFriendlyTargets",
+			"fullTestPath": "Project.Expedition.Combat.LineOfSightAndFriendlyTargets",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081918640062212944,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MovementAndAtomicRejection",
+			"fullTestPath": "Project.Expedition.Combat.MovementAndAtomicRejection",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077387131750583649,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "NaturalTwentyDeathSaveTakesTurn",
+			"fullTestPath": "Project.Expedition.Combat.NaturalTwentyDeathSaveTakesTurn",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083036292344331741,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OpportunityAttackStopsDroppedMover",
+			"fullTestPath": "Project.Expedition.Combat.OpportunityAttackStopsDroppedMover",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080633871257305145,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OpportunityGrappleShareDistance",
+			"fullTestPath": "Project.Expedition.Combat.OpportunityGrappleShareDistance",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0086758583784103394,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PresentationFactsAndForecast",
+			"fullTestPath": "Project.Expedition.Combat.PresentationFactsAndForecast",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084089217707514763,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ProtectionQueryMatchesResolution",
+			"fullTestPath": "Project.Expedition.Combat.ProtectionQueryMatchesResolution",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082580512389540672,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdForecastMatchesResolution",
+			"fullTestPath": "Project.Expedition.Combat.SrdForecastMatchesResolution",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083044068887829781,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StableResetsDeathSaves",
+			"fullTestPath": "Project.Expedition.Combat.StableResetsDeathSaves",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008478841744363308,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SubclassForecastAndBudget",
+			"fullTestPath": "Project.Expedition.Combat.SubclassForecastAndBudget",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0076300241053104401,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SurpriseActsInRoundOne",
+			"fullTestPath": "Project.Expedition.Combat.SurpriseActsInRoundOne",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084288567304611206,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ValidEncounter",
+			"fullTestPath": "Project.Expedition.Combat.ValidEncounter",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082860123366117477,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VictoryDefeatAndInactiveTurns",
+			"fullTestPath": "Project.Expedition.Combat.VictoryDefeatAndInactiveTurns",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084666954353451729,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "EquipmentHasCombatValue",
+			"fullTestPath": "Project.Expedition.Party.EquipmentHasCombatValue",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083783920854330063,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PersistentSurvivorsAndLoot",
+			"fullTestPath": "Project.Expedition.Party.PersistentSurvivorsAndLoot",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0086155813187360764,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RangeSightAndExhaustedResources",
+			"fullTestPath": "Project.Expedition.Party.RangeSightAndExhaustedResources",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083052637055516243,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RescueDeadlineAndPermanentDeath",
+			"fullTestPath": "Project.Expedition.Party.RescueDeadlineAndPermanentDeath",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083326976746320724,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SecondWindBudgetAndAtomicCosts",
+			"fullTestPath": "Project.Expedition.Party.SecondWindBudgetAndAtomicCosts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082876225933432579,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SneakAttackQualification",
+			"fullTestPath": "Project.Expedition.Party.SneakAttackQualification",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084066139534115791,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SpellsHealingInventoryAndRejections",
+			"fullTestPath": "Project.Expedition.Party.SpellsHealingInventoryAndRejections",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083366483449935913,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SpentInventorySurvivesTransition",
+			"fullTestPath": "Project.Expedition.Party.SpentInventorySurvivesTransition",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085289012640714645,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VictoryResolvesDownedAndValidatesContinuation",
+			"fullTestPath": "Project.Expedition.Party.VictoryResolvesDownedAndValidatesContinuation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083722611889243126,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ContinueIdenticallyAcrossEveryPhase",
+			"fullTestPath": "Project.Expedition.Persistence.ContinueIdenticallyAcrossEveryPhase",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.13305447995662689,
+			"dateTime": "2026.11.10-13.45.46",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DiskCheckpointFailureDeathAndEndingRecords",
+			"fullTestPath": "Project.Expedition.Persistence.DiskCheckpointFailureDeathAndEndingRecords",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.11610257625579834,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ExactRestoreWithoutRolls",
+			"fullTestPath": "Project.Expedition.Persistence.ExactRestoreWithoutRolls",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082281623035669327,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FailedMilestoneIsAtomic",
+			"fullTestPath": "Project.Expedition.Persistence.FailedMilestoneIsAtomic",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.016315480694174767,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "InvalidNestedStateRejectedAtomically",
+			"fullTestPath": "Project.Expedition.Persistence.InvalidNestedStateRejectedAtomically",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0071620591916143894,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "MissingTruncatedTypedAndVersionFailures",
+			"fullTestPath": "Project.Expedition.Persistence.MissingTruncatedTypedAndVersionFailures",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0087837660685181618,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "NewRunPreservesUnreadableCheckpoint",
+			"fullTestPath": "Project.Expedition.Persistence.NewRunPreservesUnreadableCheckpoint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079166451469063759,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PermanentLossContinuesThroughCampAndNextEncounter",
+			"fullTestPath": "Project.Expedition.Persistence.PermanentLossContinuesThroughCampAndNextEncounter",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.033232446759939194,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RestoreRejectsImpossibleDeathSaves",
+			"fullTestPath": "Project.Expedition.Persistence.RestoreRejectsImpossibleDeathSaves",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081699639558792114,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReviewSavedFieldValidation",
+			"fullTestPath": "Project.Expedition.Persistence.ReviewSavedFieldValidation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082750245928764343,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RulesetPersistsAndDefaultsCompact",
+			"fullTestPath": "Project.Expedition.Persistence.RulesetPersistsAndDefaultsCompact",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082500958815217018,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Schema4LoadsAsCompact",
+			"fullTestPath": "Project.Expedition.Persistence.Schema4LoadsAsCompact",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0086108287796378136,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Schema4UpgradeRoundTripsCurrentRuns",
+			"fullTestPath": "Project.Expedition.Persistence.Schema4UpgradeRoundTripsCurrentRuns",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.013561440631747246,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdRevision7Resumes",
+			"fullTestPath": "Project.Expedition.Persistence.SrdRevision7Resumes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083872796967625618,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StartupProtectsUnfinishedCheckpoint",
+			"fullTestPath": "Project.Expedition.Persistence.StartupProtectsUnfinishedCheckpoint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008347146213054657,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StrictSerializationRoundtrip",
+			"fullTestPath": "Project.Expedition.Persistence.StrictSerializationRoundtrip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081258779391646385,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SubclassAndMilestoneCheckpoint",
+			"fullTestPath": "Project.Expedition.Persistence.SubclassAndMilestoneCheckpoint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085491267964243889,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AbilityFeedback",
+			"fullTestPath": "Project.Expedition.Presentation.AbilityFeedback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081171672791242599,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionDockDegradesInSrdMode",
+			"fullTestPath": "Project.Expedition.Presentation.ActionDockDegradesInSrdMode",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.29252204298973083,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "SRD Grapple rejection reads: Cannot act: Grapple/Shove need an adjacent conscious foe within size limits.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.47"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "SRD Grapple rejection reads: Cannot act: Grapple/Shove need an adjacent conscious foe within size limits.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.47"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "SRD Grapple rejection reads: Cannot act: Grapple/Shove need an adjacent conscious foe within size limits.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.47"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "SRD Grapple rejection reads: Cannot act: Grapple/Shove need an adjacent conscious foe within size limits.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.47"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "SRD Grapple rejection reads: Cannot act: Grapple/Shove need an adjacent conscious foe within size limits.",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.47"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionDockRebuildsOnlyOnStateChange",
+			"fullTestPath": "Project.Expedition.Presentation.ActionDockRebuildsOnlyOnStateChange",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.062941312789916992,
+			"dateTime": "2026.11.10-13.45.47",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTagsFromFacts",
+			"fullTestPath": "Project.Expedition.Presentation.ActionTagsFromFacts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 1.7902375459671021,
+			"dateTime": "2026.11.10-13.45.48",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Checked 3432 dock buttons across 70 kits at 4 sizes",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.49"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTagsHiddenDuringPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.ActionTagsHiddenDuringPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.050250060856342316,
+			"dateTime": "2026.11.10-13.45.49",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTagsHiddenUnderOverlays",
+			"fullTestPath": "Project.Expedition.Presentation.ActionTagsHiddenUnderOverlays",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.046272587031126022,
+			"dateTime": "2026.11.10-13.45.49",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTextFromFacts",
+			"fullTestPath": "Project.Expedition.Presentation.ActionTextFromFacts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008598601445555687,
+			"dateTime": "2026.11.10-13.45.49",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ActionTooltipsMatchHoverAndKeys",
+			"fullTestPath": "Project.Expedition.Presentation.ActionTooltipsMatchHoverAndKeys",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.85620355606079102,
+			"dateTime": "2026.11.10-13.45.49",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Compared 135 tooltips by hover and by key; 108 unavailable, 44 with the Action spent",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.50"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BattleCameraRig",
+			"fullTestPath": "Project.Expedition.Presentation.BattleCameraRig",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.16327488422393799,
+			"dateTime": "2026.11.10-13.45.50",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BattleLighting",
+			"fullTestPath": "Project.Expedition.Presentation.BattleLighting",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.015299055725336075,
+			"dateTime": "2026.11.10-13.45.50",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BoardMetricLeavesStateUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.BoardMetricLeavesStateUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.17921169102191925,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BoardMetricSingleSource",
+			"fullTestPath": "Project.Expedition.Presentation.BoardMetricSingleSource",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.052018176764249802,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Arden measures 180.0 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Nix measures 182.4 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Sera measures 178.1 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Ivo measures 180.0 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Scout 1 measures 177.8 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "themed: Vault bow measures 183.4 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Arden measures 182.6 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Nix measures 182.3 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Sera measures 178.2 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Ivo measures 177.6 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Scout 1 measures 177.9 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "primitive: Vault bow measures 183.3 cm",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BoardPickingRoundTrip",
+			"fullTestPath": "Project.Expedition.Presentation.BoardPickingRoundTrip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.11439386755228043,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BrazierRingKeepsScatterClear",
+			"fullTestPath": "Project.Expedition.Presentation.BrazierRingKeepsScatterClear",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008284461684525013,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BrazierRingLeavesStateUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.BrazierRingLeavesStateUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.056542422622442245,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BrazierRingOnBoard",
+			"fullTestPath": "Project.Expedition.Presentation.BrazierRingOnBoard",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.045491255819797516,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Dangerous road 18x11: 12 braziers, 17 light components owned, 32 primitive components, 25 instanced groups, 23.33 cd per brazier",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Guarded road 18x11: 12 braziers, 17 light components owned, 28 primitive components, 22 instanced groups, 23.33 cd per brazier",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.51"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BrazierRingPlan",
+			"fullTestPath": "Project.Expedition.Presentation.BrazierRingPlan",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.007123537827283144,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "BuildPickerShowsAbilityCosts",
+			"fullTestPath": "Project.Expedition.Presentation.BuildPickerShowsAbilityCosts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.10717263072729111,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CameraRigMath",
+			"fullTestPath": "Project.Expedition.Presentation.CameraRigMath",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077697960659861565,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CaptureCameraSnaps",
+			"fullTestPath": "Project.Expedition.Presentation.CaptureCameraSnaps",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.010704034939408302,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CaptureCompilationDrain",
+			"fullTestPath": "Project.Expedition.Presentation.CaptureCompilationDrain",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.012332175858318806,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CapturePoses",
+			"fullTestPath": "Project.Expedition.Presentation.CapturePoses",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081782322376966476,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClickActsOnlyOnPreviewedCell",
+			"fullTestPath": "Project.Expedition.Presentation.ClickActsOnlyOnPreviewedCell",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.036785103380680084,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClickAfterOverlayNeedsFreshPreview",
+			"fullTestPath": "Project.Expedition.Presentation.ClickAfterOverlayNeedsFreshPreview",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.039208695292472839,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClickNeedsStillCamera",
+			"fullTestPath": "Project.Expedition.Presentation.ClickNeedsStillCamera",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.35379362106323242,
+			"dateTime": "2026.11.10-13.45.51",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClickNeedsUnchangedProjection",
+			"fullTestPath": "Project.Expedition.Presentation.ClickNeedsUnchangedProjection",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.038470495492219925,
+			"dateTime": "2026.11.10-13.45.52",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CompactHudBudgetAndBounds",
+			"fullTestPath": "Project.Expedition.Presentation.CompactHudBudgetAndBounds",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.16029255092144012,
+			"dateTime": "2026.11.10-13.45.52",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Persistent combat HUD at 1920x1080 covers 16.16% of the screen",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.52"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Persistent combat HUD at 1280x720 covers 16.16% of the screen",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.52"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CompactHudMenu",
+			"fullTestPath": "Project.Expedition.Presentation.CompactHudMenu",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.082521654665470123,
+			"dateTime": "2026.11.10-13.45.52",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Persistent combat HUD at 1920x1080: 16.16% closed, 13.99% with the Menu open",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.52"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Persistent combat HUD at 1280x720: 16.16% closed, 13.99% with the Menu open",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.52"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ContextualGridGeometry",
+			"fullTestPath": "Project.Expedition.Presentation.ContextualGridGeometry",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081671783700585365,
+			"dateTime": "2026.11.10-13.45.52",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ContextualGridMatchesEveryCatalogAction",
+			"fullTestPath": "Project.Expedition.Presentation.ContextualGridMatchesEveryCatalogAction",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.46961691975593567,
+			"dateTime": "2026.11.10-13.45.52",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Checked 60 build and key pairs; 9 area cases, 9 with victims, at most 1 victims",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ContextualGridMatchesRules",
+			"fullTestPath": "Project.Expedition.Presentation.ContextualGridMatchesRules",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.068796843290328979,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DefaultFraming",
+			"fullTestPath": "Project.Expedition.Presentation.DefaultFraming",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.08911779522895813,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DescriptionsHaveNoCostWords",
+			"fullTestPath": "Project.Expedition.Presentation.DescriptionsHaveNoCostWords",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081376237794756889,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Checked 285 description texts",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DockTextComesFromFacts",
+			"fullTestPath": "Project.Expedition.Presentation.DockTextComesFromFacts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081770680844783783,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "EndingAndResumeFocusPrimaryChoice",
+			"fullTestPath": "Project.Expedition.Presentation.EndingAndResumeFocusPrimaryChoice",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.29375526309013367,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "EnterNeedsVisibleKeyboardCursor",
+			"fullTestPath": "Project.Expedition.Presentation.EnterNeedsVisibleKeyboardCursor",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.042020320892333984,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FigureSilhouettes",
+			"fullTestPath": "Project.Expedition.Presentation.FigureSilhouettes",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.010254465043544769,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FootprintRingFollowsMetric",
+			"fullTestPath": "Project.Expedition.Presentation.FootprintRingFollowsMetric",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.039370838552713394,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FourSlotBuilder",
+			"fullTestPath": "Project.Expedition.Presentation.FourSlotBuilder",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.010692546144127846,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FullGridKeyIsPresentationOnly",
+			"fullTestPath": "Project.Expedition.Presentation.FullGridKeyIsPresentationOnly",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.037473268806934357,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsClickAndDKeyAreNeitherPreviewNorConfirm",
+			"fullTestPath": "Project.Expedition.Presentation.HintsClickAndDKeyAreNeitherPreviewNorConfirm",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.048271112143993378,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsEndTurnWhenNothingElseIsLeft",
+			"fullTestPath": "Project.Expedition.Presentation.HintsEndTurnWhenNothingElseIsLeft",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.048021521419286728,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Move hint at 1280x720: the persistent HUD covers 15.67% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Move hint at 1920x1080: the persistent HUD covers 15.67% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Move hint at 2560x1080: the persistent HUD covers 11.75% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Move hint at 1024x576: the persistent HUD covers 15.67% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Resource hint at 1280x720: the persistent HUD covers 15.95% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Resource hint at 1920x1080: the persistent HUD covers 15.95% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Resource hint at 2560x1080: the persistent HUD covers 11.97% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Resource hint at 1024x576: the persistent HUD covers 15.95% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "End Turn hint at 1280x720: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "End Turn hint at 1920x1080: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "End Turn hint at 2560x1080: the persistent HUD covers 11.54% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "End Turn hint at 1024x576: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsFitTheHud",
+			"fullTestPath": "Project.Expedition.Presentation.HintsFitTheHud",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.067556865513324738,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Fresh run, move hint at 1280x720: the persistent HUD covers 16.16% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Fresh run, move hint at 1920x1080: the persistent HUD covers 16.16% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Fresh run, move hint at 2560x1080: the persistent HUD covers 12.12% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Fresh run, move hint at 1024x576: the persistent HUD covers 16.16% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Downed hint at 1280x720: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Downed hint at 1920x1080: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Downed hint at 2560x1080: the persistent HUD covers 11.54% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Downed hint at 1024x576: the persistent HUD covers 15.39% with the hint up",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.53"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsFollowFirstRun",
+			"fullTestPath": "Project.Expedition.Presentation.HintsFollowFirstRun",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.13901132345199585,
+			"dateTime": "2026.11.10-13.45.53",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsNeverLeakInput",
+			"fullTestPath": "Project.Expedition.Presentation.HintsNeverLeakInput",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.10401590913534164,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsSkipAndReplay",
+			"fullTestPath": "Project.Expedition.Presentation.HintsSkipAndReplay",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.074202798306941986,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsSkipThenNewRunGivesHintsAgain",
+			"fullTestPath": "Project.Expedition.Presentation.HintsSkipThenNewRunGivesHintsAgain",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.17459896206855774,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsSpendingAPotionRaisesTheResourceHint",
+			"fullTestPath": "Project.Expedition.Presentation.HintsSpendingAPotionRaisesTheResourceHint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.10238205641508102,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintsWordingFromFacts",
+			"fullTestPath": "Project.Expedition.Presentation.HintsWordingFromFacts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080838166177272797,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HintWaitsForRollCard",
+			"fullTestPath": "Project.Expedition.Presentation.HintWaitsForRollCard",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.2220863401889801,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "After playback: card frames 47, hint frames 193",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.54"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HitFlashBoard",
+			"fullTestPath": "Project.Expedition.Presentation.HitFlashBoard",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0256824791431427,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "6 figures checked, 2 of them rigged",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.54"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HitFlashBoltLights",
+			"fullTestPath": "Project.Expedition.Presentation.HitFlashBoltLights",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.026391347870230675,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HitFlashTint",
+			"fullTestPath": "Project.Expedition.Presentation.HitFlashTint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.007935594767332077,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HitFlashVolley",
+			"fullTestPath": "Project.Expedition.Presentation.HitFlashVolley",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082300473004579544,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "HudCoverageArithmetic",
+			"fullTestPath": "Project.Expedition.Presentation.HudCoverageArithmetic",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081345485523343086,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "InstancedPartsPrimitiveFallbackUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.InstancedPartsPrimitiveFallbackUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.06558111310005188,
+			"dateTime": "2026.11.10-13.45.54",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "InstancedPartsStayUnderBudget",
+			"fullTestPath": "Project.Expedition.Presentation.InstancedPartsStayUnderBudget",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.082740209996700287,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Dangerous road board, instanced: 32 presentation components, 25 groups, 70 owned components, 506 instances; 118 logical parts, 67 scenery props",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Dangerous road board, loose: 131 presentation components",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Dangerous road board, rebuild (median of 3, game thread): loose 3.87 ms, instanced 1.20 ms",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Guarded road board, instanced: 28 presentation components, 22 groups, 64 owned components, 478 instances; 114 logical parts, 63 scenery props",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Guarded road board, loose: 125 presentation components",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Guarded road board, rebuild (median of 3, game thread): loose 3.45 ms, instanced 1.02 ms",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "KeyboardCursorDuringEnemyThink",
+			"fullTestPath": "Project.Expedition.Presentation.KeyboardCursorDuringEnemyThink",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.038582552224397659,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "NextRunSubclassSelection",
+			"fullTestPath": "Project.Expedition.Presentation.NextRunSubclassSelection",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0099747972562909126,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "NoEnterCommitDuringPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.NoEnterCommitDuringPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.040881834924221039,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "NoPointerCommitDuringPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.NoPointerCommitDuringPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.038004375994205475,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OccupiedCorpseCellsStayVisible",
+			"fullTestPath": "Project.Expedition.Presentation.OccupiedCorpseCellsStayVisible",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0098325740545988083,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OrderedSpecialEffects",
+			"fullTestPath": "Project.Expedition.Presentation.OrderedSpecialEffects",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081715993583202362,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OverlaysBlockGameplayShortcuts",
+			"fullTestPath": "Project.Expedition.Presentation.OverlaysBlockGameplayShortcuts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.010179664008319378,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OverviewCameraUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.OverviewCameraUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0095590995624661446,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PartyCardClickKeepsHoverCard",
+			"fullTestPath": "Project.Expedition.Presentation.PartyCardClickKeepsHoverCard",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.042324647307395935,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PathCostPlateStaysClear",
+			"fullTestPath": "Project.Expedition.Presentation.PathCostPlateStaysClear",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083970138803124428,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PhaseChangesFocusPrimaryChoice",
+			"fullTestPath": "Project.Expedition.Presentation.PhaseChangesFocusPrimaryChoice",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.11865100264549255,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlaybackChoosesPoses",
+			"fullTestPath": "Project.Expedition.Presentation.PlaybackChoosesPoses",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081733474507927895,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlaybackConvergesOnCommittedState",
+			"fullTestPath": "Project.Expedition.Presentation.PlaybackConvergesOnCommittedState",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.015460185706615448,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlaybackPosesConverge",
+			"fullTestPath": "Project.Expedition.Presentation.PlaybackPosesConverge",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.011274832300841808,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Real encounters: 80 walks, 6 falls, 18 non-fatal hits, 4 spell attacks",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.55"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PlaybackSpeedKeepsClipOrder",
+			"fullTestPath": "Project.Expedition.Presentation.PlaybackSpeedKeepsClipOrder",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082662543281912804,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PointerAfterKeyboardPreviewsBeforeCommit",
+			"fullTestPath": "Project.Expedition.Presentation.PointerAfterKeyboardPreviewsBeforeCommit",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.055412992835044861,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PreviewVoidedByStateChange",
+			"fullTestPath": "Project.Expedition.Presentation.PreviewVoidedByStateChange",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.035908777266740799,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReachContourHiddenWhenActionSpent",
+			"fullTestPath": "Project.Expedition.Presentation.ReachContourHiddenWhenActionSpent",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.093600578606128693,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RejectedCommandsNameTheirBlocker",
+			"fullTestPath": "Project.Expedition.Presentation.RejectedCommandsNameTheirBlocker",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.052764147520065308,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RejectedInputCannotStallEnemy",
+			"fullTestPath": "Project.Expedition.Presentation.RejectedInputCannotStallEnemy",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.011504385620355606,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuAfterFailedCheckpoint",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuAfterFailedCheckpoint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.065292440354824066,
+			"dateTime": "2026.11.10-13.45.55",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuDroppedWhenBattleEnds",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuDroppedWhenBattleEnds",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 1.1005780696868896,
+			"dateTime": "2026.11.10-13.45.56",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuDroppedWhenDefeated",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuDroppedWhenDefeated",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.17745772004127502,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuFromEachPhase",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuFromEachPhase",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.13296987116336823,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuWaitsForEnemyTurn",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuWaitsForEnemyTurn",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.16308495402336121,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuWaitsForOverlays",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuWaitsForOverlays",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.20595176517963409,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ReturnToMenuWaitsForPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.ReturnToMenuWaitsForPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.10159087181091309,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RiggedFigures",
+			"fullTestPath": "Project.Expedition.Presentation.RiggedFigures",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.52193063497543335,
+			"dateTime": "2026.11.10-13.45.57",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "0 of 4 endings resumed with a fallen rigged figure",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.58"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RiggedFiguresLeaveStateUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.RiggedFiguresLeaveStateUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.2671932578086853,
+			"dateTime": "2026.11.10-13.45.58",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RiggedHeroRecoverPlaysClip",
+			"fullTestPath": "Project.Expedition.Presentation.RiggedHeroRecoverPlaysClip",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.030253449454903603,
+			"dateTime": "2026.11.10-13.45.58",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Rescue: seed 7, hero 4, rescuer 3",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.58"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RiggedResumeHoldsFallenPoses",
+			"fullTestPath": "Project.Expedition.Presentation.RiggedResumeHoldsFallenPoses",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.055692464113235474,
+			"dateTime": "2026.11.10-13.45.58",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "downed hero: seed 7, unit 4",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.58"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "dead raider: seed 7, unit 20",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.58"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RollCardClearOfCombatants",
+			"fullTestPath": "Project.Expedition.Presentation.RollCardClearOfCombatants",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.050742648541927338,
+			"dateTime": "2026.11.10-13.45.58",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RollCardDiceStayInsideCard",
+			"fullTestPath": "Project.Expedition.Presentation.RollCardDiceStayInsideCard",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.46578696370124817,
+			"dateTime": "2026.11.10-13.45.58",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RollCardKeepsStatusPanelsClear",
+			"fullTestPath": "Project.Expedition.Presentation.RollCardKeepsStatusPanelsClear",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.069946430623531342,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Tallest status panel checked: 116 design units",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.45.59"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootKitFallsBackToR001",
+			"fullTestPath": "Project.Expedition.Presentation.RootKitFallsBackToR001",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.053023077547550201,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootKitIsSelectedPerWorld",
+			"fullTestPath": "Project.Expedition.Presentation.RootKitIsSelectedPerWorld",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084810908883810043,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootKitPlacementIsDeterministic",
+			"fullTestPath": "Project.Expedition.Presentation.RootKitPlacementIsDeterministic",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.20657144486904144,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootKitStandsAtTrueMetricAndFigures180",
+			"fullTestPath": "Project.Expedition.Presentation.RootKitStandsAtTrueMetricAndFigures180",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.028851941227912903,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootThemeChoiceLeavesStateUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.RootThemeChoiceLeavesStateUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.15049797296524048,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RootThemeDataIsComplete",
+			"fullTestPath": "Project.Expedition.Presentation.RootThemeDataIsComplete",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080285621806979179,
+			"dateTime": "2026.11.10-13.45.59",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SecondEnterOnlyAfterPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.SecondEnterOnlyAfterPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.67277616262435913,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Second Enter landed during playback in 5 runs and after it in 3",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.10-13.46.00"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SkipBattleEndingPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.SkipBattleEndingPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.054982256144285202,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StartScreenFocusesBeginForUnreadableSave",
+			"fullTestPath": "Project.Expedition.Presentation.StartScreenFocusesBeginForUnreadableSave",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.035259641706943512,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StartScreenFocusesResumeForUnfinishedSave",
+			"fullTestPath": "Project.Expedition.Presentation.StartScreenFocusesResumeForUnfinishedSave",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.048062693327665329,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StartupResumeAndAllHistoryPages",
+			"fullTestPath": "Project.Expedition.Presentation.StartupResumeAndAllHistoryPages",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0093973772600293159,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetChipAvailability",
+			"fullTestPath": "Project.Expedition.Presentation.TargetChipAvailability",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080533241853117943,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetChipLabel",
+			"fullTestPath": "Project.Expedition.Presentation.TargetChipLabel",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078596333041787148,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetChipSemantics",
+			"fullTestPath": "Project.Expedition.Presentation.TargetChipSemantics",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080989450216293335,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetChipsFollowActionAndActor",
+			"fullTestPath": "Project.Expedition.Presentation.TargetChipsFollowActionAndActor",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.050444349646568298,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetingFacts",
+			"fullTestPath": "Project.Expedition.Presentation.TargetingFacts",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080803148448467255,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetingHiddenDuringPlayback",
+			"fullTestPath": "Project.Expedition.Presentation.TargetingHiddenDuringPlayback",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.039129480719566345,
+			"dateTime": "2026.11.10-13.46.00",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetingHiddenUnderOverlays",
+			"fullTestPath": "Project.Expedition.Presentation.TargetingHiddenUnderOverlays",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.044614829123020172,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TargetingLegendIsBackedAndClear",
+			"fullTestPath": "Project.Expedition.Presentation.TargetingLegendIsBackedAndClear",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.03620312362909317,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ThemedBoardHasNoCellTiles",
+			"fullTestPath": "Project.Expedition.Presentation.ThemedBoardHasNoCellTiles",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.042291786521673203,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "UnitPoseChoice",
+			"fullTestPath": "Project.Expedition.Presentation.UnitPoseChoice",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085186446085572243,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VictoryEndingFocusesNextParty",
+			"fullTestPath": "Project.Expedition.Presentation.VictoryEndingFocusesNextParty",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.11023505032062531,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilArchPairs",
+			"fullTestPath": "Project.Expedition.Presentation.VigilArchPairs",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0074752732180058956,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilDressingStaysOffPlayableCells",
+			"fullTestPath": "Project.Expedition.Presentation.VigilDressingStaysOffPlayableCells",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.025996025651693344,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilOccluderFadesWhenBlocking",
+			"fullTestPath": "Project.Expedition.Presentation.VigilOccluderFadesWhenBlocking",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.026157459244132042,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilPrimitiveFallbackStillBuilds",
+			"fullTestPath": "Project.Expedition.Presentation.VigilPrimitiveFallbackStillBuilds",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.048776976764202118,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilThemeChoiceLeavesStateUnchanged",
+			"fullTestPath": "Project.Expedition.Presentation.VigilThemeChoiceLeavesStateUnchanged",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.10867291688919067,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilThemeDataIsComplete",
+			"fullTestPath": "Project.Expedition.Presentation.VigilThemeDataIsComplete",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083215087652206421,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VigilVariantChoiceIsDeterministic",
+			"fullTestPath": "Project.Expedition.Presentation.VigilVariantChoiceIsDeterministic",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.029051963239908218,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AbilityModifiers",
+			"fullTestPath": "Project.Expedition.Rules.AbilityModifiers",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082267224788665771,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AnimalHandling",
+			"fullTestPath": "Project.Expedition.Rules.AnimalHandling",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082413842901587486,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AreaOfEffectTemplates",
+			"fullTestPath": "Project.Expedition.Rules.AreaOfEffectTemplates",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081643704324960709,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArmorClassDexCaps",
+			"fullTestPath": "Project.Expedition.Rules.ArmorClassDexCaps",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079132476821541786,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ArmorProficiencyPenalties",
+			"fullTestPath": "Project.Expedition.Rules.ArmorProficiencyPenalties",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081841526553034782,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AttackChancesAreExact",
+			"fullTestPath": "Project.Expedition.Rules.AttackChancesAreExact",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080315209925174713,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AttackSourcesAndSeededResolution",
+			"fullTestPath": "Project.Expedition.Rules.AttackSourcesAndSeededResolution",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084522673860192299,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CantripScaling",
+			"fullTestPath": "Project.Expedition.Rules.CantripScaling",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082508884370326996,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CheckChancesAreExact",
+			"fullTestPath": "Project.Expedition.Rules.CheckChancesAreExact",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082036815583705902,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CheckResolutionIsSeeded",
+			"fullTestPath": "Project.Expedition.Rules.CheckResolutionIsSeeded",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077696722000837326,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClassFeatureScaling",
+			"fullTestPath": "Project.Expedition.Rules.ClassFeatureScaling",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077850180678069592,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ClassSkillChoicesFollowSrd521",
+			"fullTestPath": "Project.Expedition.Rules.ClassSkillChoicesFollowSrd521",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080483723431825638,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CoinsAndPrices",
+			"fullTestPath": "Project.Expedition.Rules.CoinsAndPrices",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079529536888003349,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Concentration",
+			"fullTestPath": "Project.Expedition.Rules.Concentration",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082136821001768112,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ConcentrationSaveDcCap",
+			"fullTestPath": "Project.Expedition.Rules.ConcentrationSaveDcCap",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078351693227887154,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CoverBonuses",
+			"fullTestPath": "Project.Expedition.Rules.CoverBonuses",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081862527877092361,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DamageResistanceVulnerabilityImmunity",
+			"fullTestPath": "Project.Expedition.Rules.DamageResistanceVulnerabilityImmunity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081694349646568298,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DeathSaves",
+			"fullTestPath": "Project.Expedition.Rules.DeathSaves",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082137221470475197,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Encumbrance",
+			"fullTestPath": "Project.Expedition.Rules.Encumbrance",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085439793765544891,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ExplorationHazards",
+			"fullTestPath": "Project.Expedition.Rules.ExplorationHazards",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078840004280209541,
+			"dateTime": "2026.11.10-13.46.01",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FallingProneAndForcedMovement",
+			"fullTestPath": "Project.Expedition.Rules.FallingProneAndForcedMovement",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080234119668602943,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "GrappleAndShove",
+			"fullTestPath": "Project.Expedition.Rules.GrappleAndShove",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082851042971014977,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Inspiration",
+			"fullTestPath": "Project.Expedition.Rules.Inspiration",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0085848346352577209,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "InvalidProficiencyChoicesRejected",
+			"fullTestPath": "Project.Expedition.Rules.InvalidProficiencyChoicesRejected",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0084502771496772766,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "KnowledgeAndWisdomChecks",
+			"fullTestPath": "Project.Expedition.Rules.KnowledgeAndWisdomChecks",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078460117802023888,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LightAndVision",
+			"fullTestPath": "Project.Expedition.Rules.LightAndVision",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008217652328312397,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LocksAndTraps",
+			"fullTestPath": "Project.Expedition.Rules.LocksAndTraps",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082503249868750572,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OpportunityAttackTriggers",
+			"fullTestPath": "Project.Expedition.Rules.OpportunityAttackTriggers",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081501184031367302,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OpportunityReactionGate",
+			"fullTestPath": "Project.Expedition.Rules.OpportunityReactionGate",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082024522125720978,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PassiveHelpGroupChecks",
+			"fullTestPath": "Project.Expedition.Rules.PassiveHelpGroupChecks",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082786250859498978,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PerformanceSkill",
+			"fullTestPath": "Project.Expedition.Rules.PerformanceSkill",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083489296957850456,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PrebuiltAbilityScores",
+			"fullTestPath": "Project.Expedition.Rules.PrebuiltAbilityScores",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082433726638555527,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PrebuiltProficienciesAcrossLevels",
+			"fullTestPath": "Project.Expedition.Rules.PrebuiltProficienciesAcrossLevels",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077616730704903603,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ProficiencyAndExpertise",
+			"fullTestPath": "Project.Expedition.Rules.ProficiencyAndExpertise",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080039408057928085,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RequiresConcentrationFlag",
+			"fullTestPath": "Project.Expedition.Rules.RequiresConcentrationFlag",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0079283248633146286,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RestAndHitDice",
+			"fullTestPath": "Project.Expedition.Rules.RestAndHitDice",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078795086592435837,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SkillCatalog",
+			"fullTestPath": "Project.Expedition.Rules.SkillCatalog",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083473697304725647,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SleightOfHand",
+			"fullTestPath": "Project.Expedition.Rules.SleightOfHand",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077896332368254662,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SocialInfluence",
+			"fullTestPath": "Project.Expedition.Rules.SocialInfluence",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081254579126834869,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SpellDcAttackAndSaves",
+			"fullTestPath": "Project.Expedition.Rules.SpellDcAttackAndSaves",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082421852275729179,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SpellFactsAndSlots",
+			"fullTestPath": "Project.Expedition.Rules.SpellFactsAndSlots",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083929421380162239,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StandardActions",
+			"fullTestPath": "Project.Expedition.Rules.StandardActions",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083064399659633636,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "StealthAndSurprise",
+			"fullTestPath": "Project.Expedition.Rules.StealthAndSurprise",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082148062065243721,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SuperiorityDice",
+			"fullTestPath": "Project.Expedition.Rules.SuperiorityDice",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083679426461458206,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SurpriseInitiativeDisadvantage",
+			"fullTestPath": "Project.Expedition.Rules.SurpriseInitiativeDisadvantage",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077984398230910301,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ToolsAndKits",
+			"fullTestPath": "Project.Expedition.Rules.ToolsAndKits",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083158481866121292,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TwoWeaponFighting",
+			"fullTestPath": "Project.Expedition.Rules.TwoWeaponFighting",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.007854885421693325,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "WeaponProperties",
+			"fullTestPath": "Project.Expedition.Rules.WeaponProperties",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082287248224020004,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CompactEnemyTuning",
+			"fullTestPath": "Project.Expedition.Run.CompactEnemyTuning",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.022872734814882278,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CompactSeedIdenticalFingerprint",
+			"fullTestPath": "Project.Expedition.Run.CompactSeedIdenticalFingerprint",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008127111941576004,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DeadRosterSurvivesRewardCampAndContinuation",
+			"fullTestPath": "Project.Expedition.Run.DeadRosterSurvivesRewardCampAndContinuation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082566589117050171,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "DeathLevelRespectsEarnedHistory",
+			"fullTestPath": "Project.Expedition.Run.DeathLevelRespectsEarnedHistory",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077100689522922039,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FiveVictoriesRecoverArtifact",
+			"fullTestPath": "Project.Expedition.Run.FiveVictoriesRecoverArtifact",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078565441071987152,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FreshSeededRun",
+			"fullTestPath": "Project.Expedition.Run.FreshSeededRun",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0080272117629647255,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LargeGridsKeepPlayableOpeningGap",
+			"fullTestPath": "Project.Expedition.Run.LargeGridsKeepPlayableOpeningGap",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0082308230921626091,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ManySeedsConnectedActionableAndVaried",
+			"fullTestPath": "Project.Expedition.Run.ManySeedsConnectedActionableAndVaried",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.11030271649360657,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PhasesAtomicityRewardsCampAndHistory",
+			"fullTestPath": "Project.Expedition.Run.PhasesAtomicityRewardsCampAndHistory",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0077224601991474628,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RetainedRouteStartsGeneratedCombat",
+			"fullTestPath": "Project.Expedition.Run.RetainedRouteStartsGeneratedCombat",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078987367451190948,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SkippedRecoveryHasNoRestAndCannotReturn",
+			"fullTestPath": "Project.Expedition.Run.SkippedRecoveryHasNoRestAndCannotReturn",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.008148975670337677,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SrdSeedUnchangedByCompactTuning",
+			"fullTestPath": "Project.Expedition.Run.SrdSeedUnchangedByCompactTuning",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0081357508897781372,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "WipeAndFreshReset",
+			"fullTestPath": "Project.Expedition.Run.WipeAndFreshReset",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0078043560497462749,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PIE",
+			"fullTestPath": "Project.Maps.PIE",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 11.21258544921875,
+			"dateTime": "2026.11.10-13.46.02",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SandboxAssets",
+			"fullTestPath": "Project.Starter.SandboxAssets",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.0083561958745121956,
+			"dateTime": "2026.11.10-13.46.14",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CaptureFixtures",
+			"fullTestPath": "Project.Tools.CaptureFixtures",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1C5B4C1C67C9D987D8F10C8D37DED"
+			],
+			"duration": 0.013696189969778061,
+			"dateTime": "2026.11.10-13.46.14",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}

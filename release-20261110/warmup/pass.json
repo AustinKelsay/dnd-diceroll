@@ -1,0 +1,34 @@
+{
+  "name": "warmup",
+  "commit": "0f3042ebc1e7622b9f8559e9dfdd988667e486ca",
+  "dirty": false,
+  "binary": "/home/plebdev/dnd-diceroll-release-20261110/Builds/20261110T134629451283Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "binary_sha256": "8b922d3aee01fc5db4b76a8ea025f28a6610259edde64298b81ed0e7a71b663c",
+  "mode": "packaged Development",
+  "script": "/home/plebdev/dnd-diceroll-release-20261110/tools/autoplay/watchtower-road.json",
+  "script_sha256": "df75d321868b24fe15f08e53fbb4a6a31b2bab7583d51dd86f34b2cd6c105854",
+  "package_commit": "0f3042ebc1e7622b9f8559e9dfdd988667e486ca",
+  "cores": 2,
+  "flags": {
+    "vsync": false,
+    "sound": true,
+    "offscreen": false,
+    "csv_frames": 200000,
+    "resolution": "1920x1080"
+  },
+  "exit_code": 0,
+  "log": "warmup/game.log",
+  "csv": null,
+  "rss": {
+    "samples": 145,
+    "interval_s": 0.5,
+    "max_sampled_mb": 1263.5,
+    "peak_hwm_mb": 1259.3,
+    "max_mb": 1263.5
+  },
+  "retried": null,
+  "started": 1794318490.2262263,
+  "ended": 1794318562.5130982,
+  "started_at": "2026-11-10T13:48:10.226226+00:00",
+  "ended_at": "2026-11-10T13:49:22.513098+00:00"
+}
