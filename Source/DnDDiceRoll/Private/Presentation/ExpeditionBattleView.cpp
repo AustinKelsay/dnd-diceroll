@@ -1879,6 +1879,14 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
             Focus.X = Held.X; Focus.Y = Held.Y;
         }
     }
+    if (!bOverview && !WholeBoardInView())
+    {
+        // The pan bound belongs to the rendered pose, not only the target: zooming out or orbiting from a pan stop eases through
+        // poses that see more ground than the one the target was clamped for (four unprojections per frame).
+        const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe).Focus;
+        Focus.X = Bounded.X; Focus.Y = Bounded.Y;
+    }
     if (!bOverview && PanOffset.IsNearlyZero())
     {
         // Where the whole board is not in view, the eased focus (and a snap onto a clamped target) never leaves the acting unit outside the safe rect.

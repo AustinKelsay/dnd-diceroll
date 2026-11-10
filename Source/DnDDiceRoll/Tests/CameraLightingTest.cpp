@@ -482,6 +482,21 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             View->SnapCamera(-90.0f, 1300.0f);
             TestTrue(TEXT("A snap clears the pan"), View->CameraFocus().Equals(Before, 0.01));
         }
+        // The bound holds on every rendered frame, not only once settled: zooming out or orbiting from a pan stop eases through poses
+        // that see more ground than the one the pan was clamped for (an 18x12 board at yaw -90 overran by about 50 cm before the fix).
+        const TPair<float, float> Pushes[] = {{900.0f, 0.0f}, {0.0f, 900.0f}, {-900.0f, -700.0f}};
+        for (const TPair<float, float>& Push : Pushes)
+        {
+            const FString At = FString::Printf(TEXT("pan stop (%.0f, %.0f)"), Push.Key, Push.Value);
+            View->SnapCamera(-90.0f, 1300.0f);
+            for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
+            View->Zoom(1000.0f);
+            for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); CheckPanBound(FString::Printf(TEXT("Zooming out from the %s, frame %d"), *At, Frame)); }
+            View->SnapCamera(-90.0f, 1300.0f);
+            for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
+            View->Orbit(90.0f);
+            for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); CheckPanBound(FString::Printf(TEXT("Orbiting from the %s, frame %d"), *At, Frame)); }
+        }
         // A snap is a fixed pose: no pan, no drift.
         View->SnapCamera(90.0f, 1100.0f);
         View->Tick(0.016f);
