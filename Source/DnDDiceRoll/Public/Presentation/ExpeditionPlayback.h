@@ -87,6 +87,8 @@ struct DNDDICEROLL_API FDiceTray
     FLinearColor VerdictColor = FLinearColor::White;
     float Age = 0.0f;
     bool bVisible = false;
+    /** Capture and test support: a held tray does not age or expire. */
+    bool bHeld = false;
     static constexpr float TumbleSeconds = 0.6f;
     static constexpr float LingerSeconds = 3.5f;
 };
@@ -140,6 +142,9 @@ public:
     const TArray<FPlaybackProjectile>& Projectiles() const { return Shots; }
     const TArray<FPlaybackSparkle>& Sparkles() const { return Glitter; }
     const FDiceTray& Tray() const { return Dice; }
+    /** Capture and test support (#190): show this tray as a landed roll and keep it up until cleared. */
+    void PreviewTray(FDiceTray Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Dice = MoveTemp(Tray); Dice.bVisible = true; Dice.bHeld = true; Dice.Age = Age; }
+    void ClearTrayPreview() { if (Dice.bHeld) { Dice = FDiceTray(); } }
     const FTurnBanner& Banner() const { return TurnBanner; }
     /** The combatant the camera should favour while steps play. */
     int32 FocusId() const { return Focus; }

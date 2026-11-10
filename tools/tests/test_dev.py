@@ -424,7 +424,7 @@ class GalleryTests(unittest.TestCase):
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
-        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 32)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 36)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300}]))), 2)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},

@@ -70,6 +70,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Tooltip: return TEXT("tooltip");
     case ECaptureMode::Hint: return TEXT("hint");
     case ECaptureMode::Impact: return TEXT("impact");
+    case ECaptureMode::Roll: return TEXT("roll");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -153,7 +154,8 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         else if (Mode == TEXT("tooltip")) { Shot.Mode = ECaptureMode::Tooltip; }
         else if (Mode == TEXT("hint")) { Shot.Mode = ECaptureMode::Hint; }
         else if (Mode == TEXT("impact")) { Shot.Mode = ECaptureMode::Impact; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("roll")) { Shot.Mode = ECaptureMode::Roll; }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll)"), *Shot.Name, *Mode); return false; }
         if (Shot.Mode == ECaptureMode::Impact)
         {
             if ((*Entry)->HasField(TEXT("effect")))
@@ -195,7 +197,7 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Action == TEXT("potion")) { Shot.Action = ECaptureAction::Potion; }
             else { Error = FString::Printf(TEXT("%s has unknown action \"%s\" (attack, special1, special2, rescue, potion)"), *Shot.Name, *Action); return false; }
         }
-        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Impact)
+        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Impact || Shot.Mode == ECaptureMode::Roll)
         {
             Shot.bHasCamera = true;
             double Yaw = 0.0;
@@ -334,6 +336,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     Player->PreviewAim(false);
     Player->ClearHintPreview();
     Board->ClearImpactPreview();
+    Board->ClearRollPreview();
     switch (Shot.Mode)
     {
     case ECaptureMode::Battle:
@@ -341,6 +344,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Tooltip:
     case ECaptureMode::Hint:
     case ECaptureMode::Impact:
+    case ECaptureMode::Roll:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
         // Default is the play default at that yaw: figure-sized (88 px at 1080), or the whole-board fit where that is closer (#148 gate 2). Far is the end of the pitch ramp (FarStop of the home fit), never nearer than the whole-board fit at that yaw, which can exceed it on a wide board.
@@ -364,6 +368,30 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
             Pending.TargetName = Struck->Name;
             Pending.TargetCell = Struck->Cell;
             Pending.ImpactFrom = FVector2D(Holder->Cell.X, Holder->Cell.Y);
+            return true;
+        }
+        if (Shot.Mode == ECaptureMode::Roll)
+        {
+            // The card an attack shows (#190): the acting hero against the nearest standing enemy, a d20 and a damage die landed, from
+            // the same facts the playback reads. Presentation only: no command is submitted and the battle is untouched.
+            const FCombatantState* Hero = Board->Rules().Find(Board->Rules().ActiveId());
+            if (!Hero || Hero->Side != ECombatSide::Party) { Skip = TEXT("an enemy holds the turn"); return false; }
+            const FCombatantState* Foe = nullptr;
+            int32 Nearest = MAX_int32;
+            for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
+            {
+                const int32 Distance = FMath::Abs(Unit.Cell.X - Hero->Cell.X) + FMath::Abs(Unit.Cell.Y - Hero->Cell.Y);
+                if (Unit.Side == ECombatSide::Enemy && Unit.Life != ECombatLife::Dead && Distance < Nearest) { Nearest = Distance; Foe = &Unit; }
+            }
+            if (!Foe) { Skip = TEXT("no enemy is standing"); return false; }
+            FDiceTray Tray;
+            Tray.Title = FString::Printf(TEXT("%s attacks %s"), *Hero->Name, *Foe->Name);
+            Tray.Dice.Add({20, 17, 0.0f, FLinearColor(0.95f, 0.92f, 0.84f)});
+            Tray.Dice.Add({8, 6, 0.05f, FLinearColor(1.0f, 0.55f, 0.45f)});
+            Tray.Detail = FString::Printf(TEXT("d20 17 + 5 = 22  vs  AC %d   ·   damage 1d8+3 = 9"), Foe->ArmorClass);
+            Tray.Verdict = TEXT("HIT");
+            Tray.VerdictColor = FLinearColor(1.0f, 0.55f, 0.35f);
+            Board->PreviewRoll(Tray);
             return true;
         }
         if (Shot.Mode == ECaptureMode::Hint)

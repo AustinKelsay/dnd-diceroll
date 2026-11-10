@@ -105,6 +105,16 @@ public:
     const TArray<int32>& PartyDetailUnits() const { return DetailUnitIds; }
     /** The targeting legend's backing panel in viewport pixels, or null when the last draw showed none (#171). */
     const FBox2D* LegendRequested() const { return bLegendRequested ? &LegendBox : nullptr; }
+    /** The d20 roll card the last draw showed, in viewport pixels, or null when none was up (#190). */
+    const FBox2D* DiceCardRequested() const { return bDiceRequested ? &DiceBox : nullptr; }
+    /** The dice row's region of the card, and the box around every die drawn this frame (bodies, shadows and glow), in viewport pixels (#190). */
+    const FBox2D& DiceRowRect() const { return DiceRow; }
+    const FBox2D& DiceBounds() const { return DiceDrawn; }
+    /**
+     * Test support (#190): draw every status panel at least this many text lines tall. The tallest real one is five lines (title, health,
+     * a Protect line, and the resources wrapped over two), so a test can ask for six without arranging that exact state.
+     */
+    void PreviewDetailLines(int32 Lines) { MinDetailLines = Lines; }
     /** Every full status panel the last draw showed, in viewport pixels (#171). */
     const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
 private:
@@ -113,6 +123,11 @@ private:
     TArray<FBox2D> DetailRects;
     FBox2D LegendBox = FBox2D(ForceInit);
     bool bLegendRequested = false;
+    FBox2D DiceBox = FBox2D(ForceInit), DiceRow = FBox2D(ForceInit), DiceDrawn = FBox2D(ForceInit);
+    /** The roll card in design units, for the panels that keep clear of it. */
+    FBox2D DiceDesign = FBox2D(ForceInit);
+    bool bDiceRequested = false;
+    int32 MinDetailLines = 0;
     /** The path-cost number waits until every panel and chip is placed, then draws over them (#171). */
     bool bPathCostPending = false;
     FVector2D PathCostEnd = FVector2D::ZeroVector;
