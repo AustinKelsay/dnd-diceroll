@@ -1,0 +1,29 @@
+03:24:30 start Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24 done=0 rev=8
+03:24:30 ROUND 1 | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+03:24:30 Nix attack Raider 2
+03:24:34 Nix end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+03:24:37 Sera attack Raider 2
+03:24:41 Sera end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide16/24 Vault24/24
+03:24:44 Ivo attack Raider 2
+03:24:48 Ivo end turn | Arden30/30 Nix17/22 Sera22/22 Ivo22/22 Raide24/24 Raide7/24 Vault24/24
+03:24:51 Arden move 4,3 -> (6, 4)
+03:24:56 Arden attack Raider 1
+03:25:00 Arden end turn | Arden30/30 Nix17/22 Sera22/22 Ivo22/22 Raide24/24 Raide7/24 Vault24/24
+03:25:02 ROUND 2 | Arden22/30 Nix17/22 Sera22/22 Ivo22/22 Raide24/24 Raide7/24 Vault24/24
+03:25:02 Nix attack Raider 1
+03:25:06 Nix end turn | Arden22/30 Nix17/22 Sera22/22 Ivo22/22 Raide9/24 Raide7/24 Vault24/24
+03:25:09 Sera attack Raider 2
+03:25:13 Sera end turn | Arden22/30 Nix17/22 Sera22/22 Ivo22/22 Raide9/24 Raide3/24 Vault24/24
+03:25:16 Ivo attack Raider 2
+03:25:20 Ivo end turn | Arden12/30 Nix17/22 Sera22/22 Ivo22/22 Raide9/24 Raide0/24L2 Vault24/24
+03:25:23 Arden attack Raider 1
+03:25:26 Arden end turn | Arden12/30 Nix9/22 Sera22/22 Ivo22/22 Raide0/24L2 Raide0/24L2 Vault24/24
+03:25:29 ROUND 3 | Arden12/30 Nix9/22 Sera22/22 Ivo22/22 Raide0/24L2 Raide0/24L2 Vault24/24
+03:25:30 Nix attack Vault bow
+03:25:33 Nix end turn | Arden12/30 Nix9/22 Sera22/22 Ivo22/22 Raide0/24L2 Raide0/24L2 Vault11/24
+03:25:36 Sera Cure Wounds Arden
+03:25:40 Sera end turn | Arden12/30 Nix9/22 Sera22/22 Ivo22/22 Raide0/24L2 Raide0/24L2 Vault11/24
+03:25:43 Ivo move 4,6 -> (7, 6)
+03:25:49 Ivo attack Vault bow
+03:25:52 Ivo end turn | Arden12/30 Nix9/22 Sera22/22 Ivo22/22 Raide0/24L2 Raide0/24L2 Vault11/24
+03:25:55 end elapsed 85s
