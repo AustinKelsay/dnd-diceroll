@@ -87,10 +87,28 @@ public:
     void PreviewPointer(FVector2D ViewportPosition) { PointerPreview = ViewportPosition; }
     /** Whether the last draw requested keyboard inspection brackets, before projection. */
     bool KeyboardCursorRequested() const { return bCursorRequested; }
-    /** The combatant whose full status panel the last draw showed, or INDEX_NONE. */
+    /** The combatant whose full status panel the last draw showed, or INDEX_NONE. With several panels up, the one drawn last. */
     int32 PartyDetailUnit() const { return DetailUnitId; }
+    /** Every combatant whose full status panel the last draw showed, in party order (#171). */
+    const TArray<int32>& PartyDetailUnits() const { return DetailUnitIds; }
+    /** The targeting legend's backing panel in viewport pixels, or null when the last draw showed none (#171). */
+    const FBox2D* LegendRequested() const { return bLegendRequested ? &LegendBox : nullptr; }
+    /** Every full status panel the last draw showed, in viewport pixels (#171). */
+    const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
 private:
     int32 DetailUnitId = INDEX_NONE;
+    TArray<int32> DetailUnitIds;
+    TArray<FBox2D> DetailRects;
+    FBox2D LegendBox = FBox2D(ForceInit);
+    bool bLegendRequested = false;
+    /** The path-cost number waits until every panel and chip is placed, then draws over them (#171). */
+    bool bPathCostPending = false;
+    FVector2D PathCostEnd = FVector2D::ZeroVector;
+    FString PathCostText;
+    /** Where the chips of the last draw sit, design units, so the cost plate can keep clear of them. */
+    TArray<FBox2D> ChipPanels;
+    void DrawLegend(bool bGroundGrid);
+    void DrawPathCost();
     TArray<FActionTagRequest> TagsRequested;
     TArray<FString> PickerLines;
     /** One dock button as the facts describe it, kept until the combat state changes. */

@@ -262,6 +262,11 @@ void AExpeditionHUD::DrawHUD()
     ChipsRequested = 0;
     ReachRequested = 0;
     DetailUnitId = INDEX_NONE;
+    DetailUnitIds.Reset();
+    DetailRects.Reset();
+    bLegendRequested = false;
+    bPathCostPending = false;
+    ChipPanels.Reset();
     TagsRequested.Reset();
     PickerLines.Reset();
     bTooltipRequested = false;
@@ -277,8 +282,8 @@ void AExpeditionHUD::DrawHUD()
     if (AExpeditionBattleView* Board = Player->GetBattleView()) { Board->SetSafeRect(ExpeditionCameraRig::FSafeRect::ForViewport(Canvas->SizeX, Canvas->SizeY)); }
     Clock = GetWorld() ? GetWorld()->GetRealTimeSeconds() : 0.0f;
     float MouseX = -1, MouseY = -1;
-    // A capture run ignores the physical pointer so hover never changes a shot.
-    Mouse = PointerPreview.X >= 0 ? PointerPreview / S : !Player->IsCapturing() && Player->GetMousePosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
+    // A capture run ignores the physical pointer so hover never changes a shot (PointerPosition says so).
+    Mouse = PointerPreview.X >= 0 ? PointerPreview / S : Player->PointerPosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
 
     // The tabletop overview has no board: unit bars and labels belong to battles only.
     if (View->HasRun() && !View->ShowingOverview()) { DrawWorldOverlays(); }
@@ -309,6 +314,7 @@ void AExpeditionHUD::DrawHUD()
     }
     if (View->InCombat()) { DrawBanner(); }
     DrawTargetChips(); // All foreground panel bounds are known now, including the hover forecast.
+    DrawPathCost(); // Over every panel and chip: the number is the point of the path preview.
     if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
     {
         float FeedbackY=H-64;
@@ -354,22 +360,7 @@ void AExpeditionHUD::DrawWorldOverlays()
             }
             Previous = Point; bHasPrevious = true;
         }
-        if (bHasPrevious)
-        {
-            const FString Cost = FString::FromInt(Path.Num());
-            if (bGroundGrid)
-            {
-                // No light endpoint disc under the number here, so it gets its own dark plate with a trail-coloured edge
-                // and light text: readable on any themed ground.
-                const FVector2D Size = Measure(Cost, 0.8f);
-                const float PlateW = FMath::Max(Size.X + 14.0f, Size.Y + 6.0f), PlateH = Size.Y + 6.0f;
-                const float PlateX = Previous.X - PlateW * 0.5f, PlateY = Previous.Y - 30.0f - 3.0f;
-                Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.82f), PlateX, PlateY, PlateW, PlateH);
-                Frame(WithAlpha(Sky, 0.9f), PlateX, PlateY, PlateW, PlateH, 1.5f);
-                Text(Cost, Previous.X, Previous.Y - 30.0f, Parchment, 0.8f, EAlign::Center);
-            }
-            else { Text(Cost, Previous.X, Previous.Y - 9, Ink, 0.8f, EAlign::Center); }
-        }
+        if (bHasPrevious) { bPathCostPending = true; PathCostEnd = Previous; PathCostText = FString::FromInt(Path.Num()); }
     }
 
     // Inspection stays available during enemy turns and playback, just like arrow input.
@@ -475,6 +466,44 @@ void AExpeditionHUD::DrawWorldOverlays()
 // ---------------------------------------------------------------------------------------
 // Persistent frame: location, initiative, system buttons, party, log.
 
+void AExpeditionHUD::DrawLegend(bool bGroundGrid)
+{
+    // A small backed panel in the top band, between the status strip and the Menu button: clear of the party
+    // cards' full-status panels (which start below it) and of the dice tray, and readable on any ground (#171).
+    constexpr float Top = 15, Height = 24, MenuReserve = 124, Gap = 12, TextScale = 0.65f;
+    const FString Legend = bGroundGrid ? TEXT("Outline Reach  /  x Blocked sight  /  Ring Legal target  /  AREA Victim")
+        : TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim");
+    const float Left = 8.0f + StatusStripWidth() + Gap, Right = W - 8.0f - MenuReserve - Gap;
+    const float Available = FMath::Max(0.0f, Right - Left);
+    const float Width = FMath::Min(Available, Measure(Legend, TextScale).X + 20.0f);
+    if (Width < 40.0f) { return; }
+    const float X = Left + (Available - Width) * 0.5f;
+    Panel(X, Top, Width, Height, Sky, 0.82f, false);
+    Text(Legend, X + Width * 0.5f, Top + 5, Parchment, TextScale, EAlign::Center, Width - 12);
+    bLegendRequested = true;
+    LegendBox = FBox2D(FVector2D(X, Top) * S, FVector2D(X + Width, Top + Height) * S);
+}
+
+void AExpeditionHUD::DrawPathCost()
+{
+    if (!bPathCostPending || !Player->ShowsTargeting()) { return; }
+    constexpr float Scale = 0.8f;
+    const FVector2D Size = Measure(PathCostText, Scale);
+    const float PlateW = FMath::Max(Size.X + 14.0f, Size.Y + 6.0f), PlateH = Size.Y + 6.0f;
+    std::vector<ExpeditionLayout::Rect> Occupied;
+    for (const FBox2D& Box : ChipExclusions) { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
+    for (const FBox2D& Box : ChipPanels) { Occupied.push_back({Box.Min.X, Box.Min.Y, Box.Max.X, Box.Max.Y}); }
+    const ExpeditionLayout::Rect Plate = ExpeditionLayout::PathCostPlate({PathCostEnd.X, PathCostEnd.Y}, PlateW, PlateH, {8, 52, W - 8.0, H - 112.0}, Occupied);
+    const float PlateX = static_cast<float>(Plate.Left), PlateY = static_cast<float>(Plate.Top);
+    // A plate that had to move keeps a short line to the cell it counts to.
+    const FVector2D Centre(PlateX + PlateW * 0.5f, PlateY + PlateH * 0.5f);
+    if (FVector2D::Distance(Centre, PathCostEnd) > 34.0f) { Line(Centre, PathCostEnd, WithAlpha(Sky, 0.8f), 1.5f); }
+    // A dark plate with a trail-coloured edge and light text reads on any ground.
+    Rect(FLinearColor(Ink.R, Ink.G, Ink.B, 0.9f), PlateX, PlateY, PlateW, PlateH);
+    Frame(WithAlpha(Sky, 0.9f), PlateX, PlateY, PlateW, PlateH, 1.5f);
+    Text(PathCostText, PlateX + PlateW * 0.5f, PlateY + 3.0f, Parchment, Scale, EAlign::Center);
+}
+
 void AExpeditionHUD::DrawTargetChips()
 {
     if (!Player->ShowsTargeting()) { return; }
@@ -519,6 +548,7 @@ void AExpeditionHUD::DrawTargetChips()
     {
         const auto& PanelBounds = Draw.Geometry.Panel;
         Panel(PanelBounds.Left, PanelBounds.Top, Draw.Width, ExpeditionLayout::ChipHeight, Gold, 0.96f, false);
+        ChipPanels.Add(FBox2D(FVector2D(PanelBounds.Left, PanelBounds.Top), FVector2D(PanelBounds.Left + Draw.Width, PanelBounds.Top + ExpeditionLayout::ChipHeight)));
         Text(Draw.Label, PanelBounds.Left + Draw.Width / 2, PanelBounds.Top + 3, Parchment, LabelScale, EAlign::Center, Draw.Width - 12);
     }
     if (Overflow > 0)
@@ -724,6 +754,7 @@ void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float
 {
     const float Width = 320;
     DetailUnitId = Unit.Id;
+    DetailUnitIds.Add(Unit.Id);
     TArray<TPair<FString, FLinearColor>> Lines;
     Lines.Add({FString::Printf(TEXT("%s  ·  Lv%d %s"), *Unit.Name, Unit.Level, *FBuildCatalog::DisplayName(Unit)), ExpeditionStyle::UnitColor(Unit)});
     if (Unit.Life == ECombatLife::Dead) { Lines.Add({TEXT("Fallen  ·  lost for this expedition"), FLinearColor(0.75f, 0.45f, 0.4f)}); }
@@ -750,6 +781,7 @@ void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float
     X = FMath::Min(X, W - Width - 8);
     Y = FMath::Min(Y, H - Height - 90);
     Panel(X, Y, Width, Height, Wrapped[0].Value, 0.97f, false);
+    DetailRects.Add(FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S));
     for (int32 Index = 0; Index < Wrapped.Num(); ++Index) { Text(Wrapped[Index].Key, X + 12, Y + 7 + Index * 17.0f, Wrapped[Index].Value, 0.68f); }
 }
 

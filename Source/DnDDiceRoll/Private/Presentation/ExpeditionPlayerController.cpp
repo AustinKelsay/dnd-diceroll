@@ -1,5 +1,6 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Combat/ActionFacts.h"
 #include "Presentation/ExpeditionCapture.h"
 #include "Misc/CommandLine.h"
 #include "GameFramework/InputSettings.h"
@@ -176,6 +177,9 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
     const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);
+    // A click acts only on what this frame shows under the pointer.
+    bPointerPreviewed = bHover && !bKeyboardCursor;
+    PointerPreview = Hover;
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -188,6 +192,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (ShowsTargeting())
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
+        // Reach describes an action the hero can still take: once the Action, the Bonus action or a resource it costs is spent, the
+        // contour would suggest otherwise (#171). Out of range, no target or no sight keep it, since the outline is what explains those.
         ReachCells = Rules.ActionReach(ActorId, SelectedAction);
         Highlights.Reach = ReachCells;
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
@@ -209,7 +215,22 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 
 bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
 {
-    return !bCapturing && GetMousePosition(X, Y);
+    if (bCapturing) { return false; }
+    if (bSimulatedPointer) { X = SimulatedPointer.X; Y = SimulatedPointer.Y; return true; }
+    return GetMousePosition(X, Y);
+}
+
+void AExpeditionPlayerController::SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell)
+{
+    bSimulatedPointer = true;
+    SimulatedPointer = ViewportPosition;
+    SimulatedCell = Cell;
+}
+
+bool AExpeditionPlayerController::PreviewedPointerCell(FIntPoint& Cell) const
+{
+    if (!bPointerPreviewed) { return false; }
+    Cell = PointerPreview; return true;
 }
 
 void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
@@ -229,6 +250,7 @@ bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
     if (bCapturing) { return false; }
+    if (bSimulatedPointer) { Cell = SimulatedCell; return true; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
 
@@ -255,7 +277,7 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
         GridCursor.X = FMath::Clamp(GridCursor.X + Step.X, 0, Encounter.Width - 1);
         GridCursor.Y = FMath::Clamp(GridCursor.Y + Step.Y, 0, Encounter.Height - 1);
     }
-    bKeyboardCursor = true;
+    UseKeyboardCursor();
 }
 void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
 void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
@@ -348,7 +370,7 @@ void AExpeditionPlayerController::ConfirmCell()
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
-    bKeyboardCursor = true;
+    UseKeyboardCursor();
     ActAtCell(GridCursor);
 }
 
@@ -383,6 +405,8 @@ void AExpeditionPlayerController::Click()
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
     }
     if (OverlayOpen()) { return; }
+    // The keyboard cursor owns the board until the pointer moves. A click that finds it still there only
+    // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
     bKeyboardCursor = false;
     FIntPoint Cell;
     if (HoverCell(Cell)) { ActAtCell(Cell); }

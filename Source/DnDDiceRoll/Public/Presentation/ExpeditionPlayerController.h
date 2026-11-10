@@ -90,10 +90,31 @@ public:
     bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
-private:
-    /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
+    /** The pointer's viewport position, or false when there is none (and always in a capture run, so a focused window cannot change a shot). */
     bool PointerPosition(float& X, float& Y) const;
+    /**
+     * Test support: the pointer rests at this viewport position, over this board cell, as a real pointer reports.
+     * A transient test world has no viewport to project through, so the cell is given. Moving it again is pointer motion.
+     */
+    void SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell);
+    /** Test support: back to the physical pointer. */
+    void ReleaseSimulatedPointer() { bSimulatedPointer = false; }
+    /** The cell the last frame previewed under the pointer, the only one a click may act on (#171); false while the keyboard cursor, a panel or an overlay owns the board. */
+    bool PreviewedPointerCell(FIntPoint& Cell) const;
+private:
+    /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
+    static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
+    bool bSimulatedPointer = false;
+    FVector2D SimulatedPointer = FVector2D::ZeroVector;
+    FIntPoint SimulatedCell = FIntPoint::ZeroValue;
+    /** Where the pointer was when motion was last counted; motion is measured from here so slow drift still counts. */
+    bool bPointerSeen = false;
+    FVector2D PointerAnchor = FVector2D::ZeroVector;
+    bool bPointerPreviewed = false;
+    FIntPoint PointerPreview = FIntPoint::ZeroValue;
+    /** Shows the keyboard cursor; the pointer is measured afresh from then on, so only later motion hands control back. */
+    void UseKeyboardCursor() { bKeyboardCursor = true; bPointerSeen = false; }
     TSharedPtr<FExpeditionCaptureDirector> Capture;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
