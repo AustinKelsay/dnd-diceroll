@@ -427,6 +427,9 @@ def markdown_report(report):
     if report.get("top_gpu_stats"):
         lines += ["", "## Most expensive GPU passes (steady state, -csvGpuStats)", "", "| Pass | p95 | mean |", "| --- | --- | --- |"]
         lines += [f"| {s['stat']} | {s['p95_ms']:.2f} ms | {s['mean_ms']:.2f} ms |" for s in report["top_gpu_stats"]]
+    if "warmup" in report:
+        gaps = ", ".join(f"{g['from']} to {g['to']}: {g['seconds']:.0f} s" for g in report.get("pass_gaps", [])) or "none"
+        lines += ["", "## Run", "", f"Warm-up pass: {'yes' if report['warmup'] else 'NO (not a warm gate)'}. Idle time between passes (other jobs may have run): {gaps}."]
     if report.get("passes"):
         lines += ["", "## Passes", "", "| Pass | Exit | Log | CSV |", "| --- | --- | --- | --- |"]
         lines += [f"| {p['name']} | {p.get('exit_code')} | {p.get('log')} | {p.get('csv') or 'n/a'} |" for p in report["passes"]]

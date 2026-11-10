@@ -28,7 +28,7 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
 | `test --filter Project.Tools.CaptureFixtures` | Write real expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
 | `gallery [--fixture NAME ...] [--res WxH ...] [--primitives] [--poses PATH]` | Render the fixed-pose capture gallery under `.local/gallery/<timestamp>/` (see Capture gallery) |
-| `perf [--package DIR \| --editor]` | Play one seeded Watchtower road fight with the game's autoplay mode (warm-up, measured pass, fresh-process Resume), sample the CSV profiler and the game's RSS, and check the #148 budgets (see Performance gate) |
+| `perf [--package DIR \| --editor] [--pass P --run X]` | Play one seeded Watchtower road fight with the game's autoplay mode (warm-up, measured pass, fresh-process Resume; or one pass per locked job), sample the CSV profiler and the game's RSS, and check the #148 budgets (see Performance gate) |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
 
@@ -94,14 +94,28 @@ In editor builds capture mode also finishes all shader and asset compilation and
 
 ### Running it
 
+The gate procedure splits the work into separate locked jobs, so other workers' jobs can interleave (Shared machine, item 2):
+
 ```sh
-# 1. Package once per commit (a Development game; see Commands). Hold the machine lock for the whole job.
-flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 package
-# 2. Measure the newest finished package (or --package Builds/<stamp>). About three game runs of a few minutes each.
+L="flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock"
+# 1. Package once per commit (a Development game; see Commands).
+$L python3 tools/dev.py --cores 2 package
+# 2. Warm-up: creates the run folder and prints PERF_RUN <stamp>. Uses the newest finished package, or --package Builds/<stamp>.
+$L python3 tools/dev.py --cores 2 perf --pass warmup
+# 3. Measured pass, then the fresh-process resume, in that run folder (X is the stamp from step 2).
+$L python3 tools/dev.py --cores 2 perf --pass measured --run X
+$L python3 tools/dev.py --cores 2 perf --pass resume --run X
+# 4. The report reads the run folder and runs no Unreal, so it needs no lock.
+python3 tools/dev.py perf --pass report --run X
+```
+
+Other workers' locked jobs may run between the passes, never during one; the report lists the idle time between passes. Give every pass of one run the same `--package`/`--editor`, `--script`, `--res` and flags (and `--cores`): `resume` refuses to start if its build or flags differ from the measured pass, and the report fails if any passes disagree on commit, dirty flag, binary or flags. Each pass writes `<pass>/pass.json` (exit code, log and CSV paths, RSS, commit, dirty flag, binary, flags, start and end time). A failed pass leaves no `pass.json`; start a new run. `--pass warmup` or `--pass measured` without `--run` starts a new run; `resume` and `report` need `--run`, and `resume` needs the measured pass to have run. Without `--pass`, one invocation does all three passes and the report (up to half an hour under one lock; fine for a dry run):
+
+```sh
 flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 perf
 ```
 
-The machine lock covers the whole `perf` run (it launches three game processes one after another, so the job may take up to half an hour; keep to the lock's 30-minute guidance and split with `--no-warmup` only for dry runs). Run it with the window on the real display: `--offscreen` adds `-RenderOffscreen` and presents no frames. `perf` refuses a running editor for this project like `gallery` does. `--editor` runs `UnrealEditor <project> -game` instead of a package (after a `build`) as a quick dry run of the harness; it prints the numbers but never passes.
+Each game pass holds the machine lock for its whole run (a few minutes). Run it with the window on the real display: `--offscreen` adds `-RenderOffscreen` and presents no frames. `perf` refuses a running editor for this project like `gallery` does (the report does not). `--editor` runs `UnrealEditor <project> -game` instead of a package (after a `build`) as a quick dry run of the harness; it prints the numbers but never passes. `--no-warmup` (one-shot only) skips the warm-up for a dry run; a report without a warm-up pass says so.
 
 Three passes run at 1920x1080 (`-windowed -ForceRes`, `-novsync` so FrameTime is not pinned to the refresh rate; `--vsync` keeps it on) with `-csvCaptureFrames=<--csv-frames>` (an upper bound; the game ends the capture itself), `-csvGpuStats`, sound on (the synthesized cues are part of the game-thread cost; `--no-sound`) and `-corelimit=<--cores>`:
 
@@ -131,7 +145,7 @@ AUTOPLAY_CSV path=/home/.../Saved/Profiling/CSV/Profile(...).csv
 
 ### Reading the report
 
-Everything is under `.local/perf/<timestamp>/`: `report.md` (the verdict, a budget table, the steady state, every transition, memory, the most expensive GPU passes, the passes and the host), `report.json` (the same data), and per pass a folder with `game.log`, `console.log`, the CSV copy (`measured.csv`, `resume.csv`) and the save root used. The command exits 1 when a budget or a required transition is missing.
+Everything is under `.local/perf/<timestamp>/`: `report.md` (the verdict, a budget table, the steady state, every transition, memory, the most expensive GPU passes, the warm-up and the gaps between passes, the passes and the host), `report.json` (the same data), and per pass a folder with `pass.json`, `game.log`, `console.log`, the CSV copy (`measured.csv`, `resume.csv`) and the save root used. The command exits 1 when a budget or a required transition is missing.
 
 - **Steady state**: *gate* is every non-transition frame of the measured pass; *fight only* is the frames between `route->battle` and `battle->reward`, the heavy scene; *resume pass* is informational (calm screens, so it would flatter the gate).
 - **Memory**: VmRSS of the game process from `/proc/<pid>/status` every 0.5 s, and the kernel's VmHWM high-water mark; the budget uses the larger of the sampled maximum and VmHWM, over all passes.

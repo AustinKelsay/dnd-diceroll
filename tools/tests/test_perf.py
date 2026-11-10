@@ -1,7 +1,10 @@
 """Offline tests for `tools/dev.py perf` (#148): the CSV analyzer, the RSS sampler, the report and the pass orchestration."""
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import tempfile
@@ -510,6 +513,154 @@ class PerfCommandTests(unittest.TestCase):
         with patch.object(sys, "argv", ["dev.py", "--cores", "2", "perf", "--help"]), patch("sys.stdout"), self.assertRaises(SystemExit) as raised:
             dev_module.main()
         self.assertEqual(raised.exception.code, 0)
+
+    def stamp_of(self, call, *args, **kwargs):
+        """Run a perf call and return (its result, the PERF_RUN stamp it printed)."""
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            result = call(*args, **kwargs)
+        found = re.search(r"PERF_RUN (\w+)", out.getvalue())
+        return result, found.group(1) if found else None
+
+    def test_each_pass_runs_alone_and_the_report_is_built_from_the_run_folder(self):
+        dev = self.prepare()
+        calls = []
+        with patch.object(dev, "perf_run", side_effect=self.fake_game(calls)):
+            record, run = self.stamp_of(dev.perf, only="warmup")
+            self.assertRegex(run, r"^\d{8}T\d+Z$")
+            folder = self.w.local / "perf" / run
+            self.assertEqual([c["name"] for c in calls], ["warmup"])
+            warm = json.loads((folder / "warmup" / "pass.json").read_text())
+            self.assertEqual((record["name"], warm["commit"], warm["dirty"], warm["exit_code"]), ("warmup", "abc123", True, 0))  # the mocked git status prints a line: dirty
+            for key in ("log", "csv", "rss", "binary", "flags", "started_at", "ended_at", "started", "ended", "script", "cores"):
+                self.assertIn(key, warm)
+            self.assertEqual(warm["flags"]["resolution"], "1920x1080")
+            self.assertFalse((folder / "measured").exists())
+            self.assertFalse((folder / "report.json").exists())
+            # The next two jobs name the run; each starts its own game process.
+            _, again = self.stamp_of(dev.perf, only="measured", run=run)
+            self.assertIsNone(again)  # a named run prints no new stamp
+            self.assertTrue((folder / "measured" / "pass.json").is_file())
+            self.assertTrue((folder / "measured" / "measured.csv").is_file())
+            self.assertFalse((folder / "resume").exists())
+            dev.perf(only="resume", run=run)
+        self.assertEqual([c["name"] for c in calls], ["warmup", "measured", "resume"])
+        self.assertEqual(["-ExpeditionAutoplayResume" in c["args"] for c in calls], [False, False, True])
+        self.assertIn("after the fight", (folder / "measured" / "save" / "current-v1.json").read_text())
+        self.assertIn("after the camp", (folder / "resume" / "save" / "current-v1.json").read_text())
+        self.assertFalse((folder / "report.json").exists())
+        # The report runs no Unreal: no engine check, no package lookup, no game.
+        with patch.object(dev, "perf_run", side_effect=AssertionError("no game")), patch.object(dev, "require_engine", side_effect=AssertionError("no engine")), \
+                patch.object(dev, "perf_binary", side_effect=AssertionError("no package")):
+            report = dev.perf(only="report", run=run)
+        self.assertTrue(report["passed"], report["failures"])
+        written = json.loads((folder / "report.json").read_text())
+        self.assertTrue(written["warmup"])
+        self.assertEqual([p["name"] for p in written["passes"]], ["warmup", "measured", "resume"])
+        self.assertEqual([(g["from"], g["to"]) for g in written["pass_gaps"]], [("warmup", "measured"), ("measured", "resume")])
+        self.assertTrue(all(g["seconds"] >= 0 for g in written["pass_gaps"]))
+        self.assertEqual(written["commit"], "abc123")
+        self.assertEqual(written["hardware"], {"cpu": "test"})
+        self.assertGreaterEqual({t["name"] for t in written["transitions"]}, set(perf.REQUIRED_TRANSITIONS))
+        text = (folder / "report.md").read_text()
+        self.assertIn("Warm-up pass: yes", text)
+        self.assertIn("warmup to measured", text)
+
+    def test_the_stepwise_report_equals_the_one_shot_report(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            one_shot = dev.perf()
+            _, run = self.stamp_of(dev.perf, only="warmup")
+            dev.perf(only="measured", run=run)
+            dev.perf(only="resume", run=run)
+            stepwise = dev.perf(only="report", run=run)
+        for key in ("passed", "checks", "steady", "fight", "resume_steady", "transitions", "failures", "rss", "warmup", "commit", "binary", "flags", "resolution"):
+            self.assertEqual(stepwise[key], one_shot[key], key)
+
+    def test_a_measured_pass_without_a_run_starts_one_and_without_warmup_is_noted(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="measured")
+            self.assertTrue((self.w.local / "perf" / run / "measured" / "pass.json").is_file())
+            dev.perf(only="resume", run=run)
+            report = dev.perf(only="report", run=run)
+        self.assertFalse(report["warmup"])
+        self.assertEqual([(g["from"], g["to"]) for g in report["pass_gaps"]], [("measured", "resume")])
+        self.assertIn("NO (not a warm gate)", (self.w.local / "perf" / run / "report.md").read_text())
+
+    def test_pass_error_cases(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="warmup")
+            # Resume before the measured pass has run.
+            with self.assertRaisesRegex(RuntimeError, "measured pass has not run"): dev.perf(only="resume", run=run)
+            self.assertFalse((self.w.local / "perf" / run / "resume").exists())
+            # A report needs both passes.
+            with self.assertRaisesRegex(RuntimeError, "no measured or resume pass record"): dev.perf(only="report", run=run)
+            dev.perf(only="measured", run=run)
+            with self.assertRaisesRegex(RuntimeError, "no resume pass record"): dev.perf(only="report", run=run)
+            # A pass does not run twice in one run folder.
+            with self.assertRaisesRegex(RuntimeError, "already ran"): dev.perf(only="measured", run=run)
+            # Unknown, malformed or missing run stamps and misplaced options.
+            with self.assertRaisesRegex(RuntimeError, "No perf run"): dev.perf(only="report", run="20200101T000000Z")
+            with self.assertRaisesRegex(ValueError, "--run takes the stamp"): dev.perf(only="report", run="../x")
+            with self.assertRaisesRegex(ValueError, "needs --run"): dev.perf(only="resume")
+            with self.assertRaisesRegex(ValueError, "needs --run"): dev.perf(only="report")
+            with self.assertRaisesRegex(ValueError, "applies to --pass"): dev.perf(run=run)
+            with self.assertRaisesRegex(ValueError, "--no-warmup"): dev.perf(only="warmup", warmup=False)
+            with self.assertRaisesRegex(ValueError, "must be one of"): dev.perf(only="everything")
+            with self.assertRaisesRegex(ValueError, "reads a run folder"): dev.perf(only="report", run=run, package="x")
+
+    def test_passes_of_one_run_must_share_commit_binary_and_flags(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="measured")
+            # Another commit between jobs: the resume refuses before launching the game.
+            dev.execute.return_value = Mock(stdout="def456\n")
+            with self.assertRaisesRegex(RuntimeError, r"commit differs.*abc123.*def456"): dev.perf(only="resume", run=run)
+            self.assertFalse((self.w.local / "perf" / run / "resume").exists())
+            dev.execute.return_value = Mock(stdout="abc123\n")
+            # Other flags or another binary are refused too.
+            with self.assertRaisesRegex(RuntimeError, "flags differs"): dev.perf(only="resume", run=run, vsync=True)
+            with self.assertRaisesRegex(RuntimeError, "flags differs"): dev.perf(only="resume", run=run, resolution="1280x720")
+            other = self.root / "Builds/20270101T000000Z/Linux/CustomGame/Binaries/Linux/CustomGame"
+            other.parent.mkdir(parents=True)
+            other.write_text("x")
+            other.chmod(0o755)
+            with self.assertRaisesRegex(RuntimeError, "binary differs"): dev.perf(only="resume", run=run, package=str(self.root / "Builds/20270101T000000Z"))
+            dev.perf(only="resume", run=run)
+            folder = self.w.local / "perf" / run
+            # The report catches records that were made apart or edited.
+            for key, value, message in (("commit", "zzz", "commit differs"), ("binary", "/else/Game", "binary differs"), ("flags", {"vsync": True}, "flags differs"), ("dirty", False, "dirty differs")):
+                record = json.loads((folder / "resume" / "pass.json").read_text())
+                changed = dict(record, **{key: value})
+                (folder / "resume" / "pass.json").write_text(json.dumps(changed))
+                with self.assertRaisesRegex(RuntimeError, message): dev.perf(only="report", run=run)
+                (folder / "resume" / "pass.json").write_text(json.dumps(record))
+            self.assertTrue(dev.perf(only="report", run=run)["passed"])
+
+    def test_a_failed_pass_leaves_no_pass_record_and_the_default_stays_one_invocation(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([], {"measured": {"code": 1}})):
+            _, run = self.stamp_of(dev.perf, only="warmup")
+            with self.assertRaisesRegex(RuntimeError, "exited 1"): dev.perf(only="measured", run=run)
+        self.assertFalse((self.w.local / "perf" / run / "measured" / "pass.json").exists())
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            report = dev.perf()
+        runs = sorted((self.w.local / "perf").iterdir())
+        full = runs[-1]
+        self.assertTrue(all((full / n / "pass.json").is_file() for n in ("warmup", "measured", "resume")))
+        self.assertTrue((full / "report.json").is_file() and report["passed"])
+
+    def test_command_line_wiring_of_the_passes(self):
+        source = Path(dev_module.__file__).read_text()
+        self.assertIn("args.transition_pad, args.only, args.run)", source)
+        self.assertEqual(dev_module.PERF_PASSES, ("warmup", "measured", "resume", "report"))
+        out = io.StringIO()
+        with patch.object(sys, "argv", ["dev.py", "perf", "--help"]), contextlib.redirect_stdout(out), self.assertRaises(SystemExit):
+            dev_module.main()
+        self.assertIn("--pass {warmup,measured,resume,report}", out.getvalue())
+        self.assertIn("--run RUN", out.getvalue())
 
     def test_the_game_is_sampled_and_given_one_sigterm_on_timeout(self):
         dev = Dev(self.w, host="linux")
