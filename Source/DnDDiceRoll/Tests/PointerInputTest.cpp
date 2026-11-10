@@ -467,4 +467,106 @@ bool FEnterNeedsVisibleCursorTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("... and shows the cursor"), Game.Player->UsingKeyboardCursor());
     return !HasAnyErrors();
 }
+
+/**
+ * #171 round 2: Enter commits only a cell the last frame drew marked with targeting visible. During playback nothing is
+ * marked, so Enter there must not commit; a cursor moved since the last frame waits for the next one; with the cursor
+ * showing as it will act, one Enter acts.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEnterDuringPlaybackTest, "Project.Expedition.Presentation.NoEnterCommitDuringPlayback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FEnterDuringPlaybackTest::RunTest(const FString& Parameters)
+{
+    using namespace PointerInputTest;
+    FHarness Game(*this, TEXT("EnterDuringPlayback"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
+    const int32 Actor = Game.Player->Actor();
+    const FIntPoint Start = ActorCell(Game);
+    TArray<FIntPoint> Free = FreeMoves(Game);
+    auto Distance = [&Start](FIntPoint Cell) { return FMath::Max(FMath::Abs(Cell.X - Start.X), FMath::Abs(Cell.Y - Start.Y)); };
+    Free.Sort([&Distance](FIntPoint A, FIntPoint B) { return Distance(A) == Distance(B) ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : Distance(A) < Distance(B); });
+    if (!TestTrue(TEXT("The hero has cells to walk to"), Free.Num() >= 2)) { return false; }
+    const FIntPoint First = Free[0];
+
+    // One Enter acts when the cursor is showing on the cell as it will act.
+    Game.Player->PreviewAim(true, First);
+    Game.Frame();
+    TestTrue(TEXT("The cursor shows on the cell"), Game.Player->UsingKeyboardCursor() && Game.Player->KeyboardCursorCell() == First);
+    Game.Press(EKeys::Enter);
+    if (!TestEqual(TEXT("One Enter moves the hero to the marked cell"), ActorCell(Game), First)) { return false; }
+    if (!TestTrue(TEXT("The move is playing back"), Game.View->IsPresenting())) { return false; }
+
+    // During playback the cursor is moved to another reachable cell (the way back); nothing is marked, so Enter commits nothing.
+    if (!TestTrue(TEXT("The way back is a legal move"), Game.View->Rules().LegalMoves(Actor).Contains(Start))) { return false; }
+    const int32 MovementLeft = Game.View->Rules().Snapshot().MovementLeft;
+    Game.Player->PreviewAim(true, Start);
+    Game.View->Tick(0.01f);
+    Game.Player->PlayerTick(0.01f);
+    if (!TestTrue(TEXT("Playback is still running at Enter"), Game.View->IsPresenting())) { return false; }
+    TestFalse(TEXT("No targeting shows during playback"), Game.Player->ShowsTargeting());
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Enter, IE_Pressed, 1.0f));
+    Game.Player->PlayerTick(0.01f);
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Enter, IE_Released, 0.0f));
+    TestEqual(TEXT("Enter during playback moves nobody"), ActorCell(Game), First);
+    TestEqual(TEXT("... and spends no movement"), Game.View->Rules().Snapshot().MovementLeft, MovementLeft);
+
+    // Once playback is over the cursor is drawn marked; a cursor moved since the last frame is not acted on until drawn.
+    Game.Settle();
+    TestTrue(TEXT("The cursor is drawn again after playback"), Game.Player->UsingKeyboardCursor() && Game.Player->KeyboardCursorCell() == Start);
+    TArray<FIntPoint> More = FreeMoves(Game);
+    More.Remove(Start);
+    Game.Player->PreviewAim(true, Start);
+    Game.Frame();
+    if (!More.IsEmpty())
+    {
+        const FIntPoint Later = More[0];
+        Game.Player->PreviewAim(true, Later);
+        Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Enter, IE_Pressed, 1.0f));
+        Game.Player->PlayerTick(0.01f);
+        Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Enter, IE_Released, 0.0f));
+        TestEqual(TEXT("Enter on a cursor moved since the last frame acts on nothing"), ActorCell(Game), First);
+    }
+    Game.Player->PreviewAim(true, Start);
+    Game.Frame();
+    Game.Press(EKeys::Enter);
+    Game.Settle();
+    TestEqual(TEXT("With the cursor drawn on it, one Enter moves there"), ActorCell(Game), Start);
+    return !HasAnyErrors();
+}
+
+/**
+ * #171 round 2: the camera eases on its own, so the cell under a resting pointer can change after the preview was drawn.
+ * SimulatePointer with the same position and another cell stands for that changed projection.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FProjectionChangeTest, "Project.Expedition.Presentation.ClickNeedsUnchangedProjection",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FProjectionChangeTest::RunTest(const FString& Parameters)
+{
+    using namespace PointerInputTest;
+    FHarness Game(*this, TEXT("ProjectionChange"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
+    const TArray<FIntPoint> Free = FreeMoves(Game);
+    if (!TestTrue(TEXT("The hero has two cells to walk to"), Free.Num() >= 2)) { return false; }
+    const FIntPoint A = Free[0], B = Free.Last();
+    const FIntPoint Start = ActorCell(Game);
+    FIntPoint Previewed;
+
+    Game.Player->SimulatePointer(BoardSpotA, A);
+    Game.Frame();
+    TestTrue(TEXT("A is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == A);
+    // The pointer does not move, but the camera does: cell B is now under it. Combat state is unchanged.
+    Game.Player->SimulatePointer(BoardSpotA, B);
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
+    Game.Player->PlayerTick(0.01f);
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
+    TestEqual(TEXT("A click on the old preview acts on neither cell"), ActorCell(Game), Start);
+    Game.Frame();
+    TestTrue(TEXT("The next frame previews the cell now under the pointer"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == B);
+    Game.Press(EKeys::LeftMouseButton);
+    Game.Settle();
+    TestEqual(TEXT("A click on it then moves there"), ActorCell(Game), B);
+    return !HasAnyErrors();
+}
 #endif
