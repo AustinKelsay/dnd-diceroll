@@ -97,6 +97,8 @@ def parse_markers(frames):
         for event in frame.events:
             if not event.startswith(MARKER):
                 continue
+            # The profiler appends "##<seconds>" to each event it records; the marker is what comes before it.
+            event = event.split("##", 1)[0]
             kind, _, rest = event[len(MARKER):].partition(":")
             if kind == "TRANSITION":
                 name, _, edge = rest.rpartition(":")

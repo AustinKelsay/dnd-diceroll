@@ -81,6 +81,14 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(frames[0].stats["GPU/Basepass"], 3.0)
         self.assertNotIn("[Platform]", " ".join(e for f in frames for e in f.events))
 
+    def test_markers_ignore_the_profilers_time_suffix(self):
+        # The CSV profiler records events as "<text>##<seconds>", several per frame separated by ";".
+        frames = perf.parse_csv(HEADER + '\n"AUTOPLAY_BEGIN:watchtower:fresh##1.5",5,1,1,2,1\n'
+                                + '"AUTOPLAY_TRANSITION:quit:end##69.56;AUTOPLAY_DONE:ok##69.56",5,1,1,2,1\n')
+        markers = perf.parse_markers(frames)
+        self.assertIn((1, "DONE", "ok", ""), markers)
+        self.assertIn((0, "BEGIN", "watchtower", "fresh"), markers)
+
     def test_parse_csv_accepts_a_long_metadata_field(self):
         # A real capture ends with metadata rows whose command-line field exceeds csv's default 128 KiB limit.
         long_row = "[Commandline]," + "x" * 200000
