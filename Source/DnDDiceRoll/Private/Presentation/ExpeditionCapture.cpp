@@ -101,6 +101,18 @@ const TCHAR* ExpeditionCapture::EffectName(EImpactPreview Effect)
     return TEXT("hit");
 }
 
+const TCHAR* ExpeditionCapture::PhaseName(EImpactMoment Moment)
+{
+    switch (Moment)
+    {
+    case EImpactMoment::Flight: return TEXT("flight");
+    case EImpactMoment::FirstLanding: return TEXT("landing-first");
+    case EImpactMoment::SecondLanding: return TEXT("landing-second");
+    case EImpactMoment::Landing: return TEXT("landing");
+    }
+    return TEXT("landing");
+}
+
 const TCHAR* ExpeditionCapture::HintName(ECaptureHint Hint)
 {
     switch (Hint)
@@ -171,10 +183,15 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             if ((*Entry)->HasField(TEXT("phase")))
             {
                 FString Phase;
-                if (!(*Entry)->TryGetStringField(TEXT("phase"), Phase) || (Phase != TEXT("landing") && Phase != TEXT("flight")))
-                { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\" or \"flight\""); return false; }
-                Shot.bInFlight = Phase == TEXT("flight");
-                if (Shot.bInFlight && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" is in flight but has no bolt (\"effect\" spell, fire or missile)"); return false; }
+                if (!(*Entry)->TryGetStringField(TEXT("phase"), Phase)) { Phase = TEXT("?"); }
+                if (Phase == TEXT("landing")) { Shot.Moment = EImpactMoment::Landing; }
+                else if (Phase == TEXT("flight")) { Shot.Moment = EImpactMoment::Flight; }
+                else if (Phase == TEXT("landing-first")) { Shot.Moment = EImpactMoment::FirstLanding; }
+                else if (Phase == TEXT("landing-second")) { Shot.Moment = EImpactMoment::SecondLanding; }
+                else { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\", \"flight\", \"landing-first\" or \"landing-second\""); return false; }
+                if (Shot.Moment != EImpactMoment::Landing && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" has a bolt phase but no bolt (\"effect\" spell, fire or missile)"); return false; }
+                if ((Shot.Moment == EImpactMoment::FirstLanding || Shot.Moment == EImpactMoment::SecondLanding) && Shot.Effect != EImpactPreview::Missile)
+                { Error = Shot.Name + TEXT(" lands a first or second bolt, which only \"effect\" missile has"); return false; }
             }
             if ((*Entry)->HasField(TEXT("frames")))
             {
@@ -555,7 +572,7 @@ void FExpeditionCaptureDirector::Tick()
             // The hit lands Frames frames before the screenshot, once the pose has settled; its flash is held at the peak from then on (#189).
             if (!Pending.bImpactFired && StageFrames >= Poses.SettleFrames - Pending.Shot.Frames)
             {
-                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.bInFlight);
+                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment);
                 Pending.bImpactFired = true;
             }
             if (StageFrames < Poses.SettleFrames) { return; }
@@ -587,7 +604,7 @@ void FExpeditionCaptureDirector::Tick()
             if (Pending.Shot.Mode == ECaptureMode::Impact)
             {
                 Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint);
-                if (Pending.Shot.bInFlight)
+                if (Pending.Shot.Moment == EImpactMoment::Flight)
                 {
                     // Half way along the path, at the bolt's height (about 55 plus the arc's 20 at the midpoint for a lobbed bolt).
                     Pending.bHasBolt = ProjectBox(0.5f * (Pending.ImpactFrom + FVector2D(Pending.TargetCell.X, Pending.TargetCell.Y)), 75.0f, 45.0f, Pending.Bolt);
@@ -645,7 +662,7 @@ void FExpeditionCaptureDirector::WriteManifest() const
         {
             Shot->SetStringField(TEXT("effect"), ExpeditionCapture::EffectName(Result.Shot.Effect));
             Shot->SetNumberField(TEXT("frames"), Result.Shot.Frames);
-            Shot->SetStringField(TEXT("phase"), Result.Shot.bInFlight ? TEXT("flight") : TEXT("landing"));
+            Shot->SetStringField(TEXT("phase"), ExpeditionCapture::PhaseName(Result.Shot.Moment));
             // The struck combatant and its footprint box in screenshot pixels, for tools/impact_flash.py (#189).
             TSharedRef<FJsonObject> Target = MakeShared<FJsonObject>();
             Target->SetNumberField(TEXT("id"), Result.TargetId);

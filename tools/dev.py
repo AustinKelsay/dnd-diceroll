@@ -87,6 +87,7 @@ CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", 
 CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 CAPTURE_HINTS = ("move", "resources", "rescue", "endturn")
 CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile")
+CAPTURE_PHASES = ("landing", "flight", "landing-first", "landing-second")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 6400)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -151,10 +152,12 @@ def load_poses(path):
         if shot["mode"] == "impact":
             if "effect" in shot and shot["effect"] not in CAPTURE_EFFECTS:
                 raise ValueError(f"{name} needs an \"effect\" of {', '.join(CAPTURE_EFFECTS)}")
-            if "phase" in shot and shot["phase"] not in ("landing", "flight"):
-                raise ValueError(f"{name} needs a \"phase\" of landing or flight")
-            if shot.get("phase") == "flight" and shot.get("effect", "hit") == "hit":
-                raise ValueError(f"{name} is in flight but has no bolt (\"effect\" spell, fire or missile)")
+            if "phase" in shot and shot["phase"] not in CAPTURE_PHASES:
+                raise ValueError(f"{name} needs a \"phase\" of {', '.join(CAPTURE_PHASES)}")
+            if shot.get("phase", "landing") != "landing" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire or missile)")
+            if shot.get("phase") in ("landing-first", "landing-second") and shot.get("effect") != "missile":
+                raise ValueError(f"{name} lands a first or second bolt, which only \"effect\" missile has")
             frames = shot.get("frames", 4)
             if isinstance(frames, bool) or not isinstance(frames, int) or not 1 <= frames <= min(60, settle):
                 raise ValueError(f"{name} needs \"frames\" as a whole number from 1 to 60, within settleFrames")

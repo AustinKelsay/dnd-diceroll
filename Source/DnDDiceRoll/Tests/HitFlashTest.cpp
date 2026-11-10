@@ -6,6 +6,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/HitFlash.h"
 
 // Hit and spell flashes (#189): bounded tints for figure parts and skin slots, a bounded rim, and a bolt light that does not clip the floor.
@@ -120,6 +121,103 @@ bool FHitFlashBoardTest::RunTest(const FString& Parameters)
     FlushRenderingCommands();
     CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+// The production wiring of the bolt lights (#189): UpdateEffects must light each live bolt from ExpeditionFlash::BoltLight, in flight and at landing,
+// with a Magic Missile's bolts staggered as AddAttack throws them (one, two and three in flight). Reading the real point lights means a literal 180 cd
+// (or 540 for a volley) put back in UpdateEffects fails here, not only in the helper's own test.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHitFlashBoltLightTest, "Project.Expedition.Presentation.HitFlashBoltLights",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHitFlashBoltLightTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/HitFlashLights"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
+    if (TestNotNull(TEXT("Battle view"), View))
+    {
+        View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+        View->DispatchBeginPlay();
+        View->NewRun();
+        View->ChooseRoute(0);
+        View->HoldEnemyTurns(true);
+        View->Tick(0.016f);
+        int32 TargetId = INDEX_NONE;
+        FVector2D From = FVector2D::ZeroVector;
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious) { TargetId = Unit.Id; From = FVector2D(Unit.Cell.X - 3, Unit.Cell.Y); break; }
+        }
+        if (TestTrue(TEXT("An enemy to strike"), TargetId != INDEX_NONE))
+        {
+            struct FCase { const TCHAR* Name; EImpactPreview Effect; EImpactMoment Moment; int32 Live; };
+            const FCase Cases[] = {
+                {TEXT("fire in flight"), EImpactPreview::Fire, EImpactMoment::Flight, 1},
+                {TEXT("fire landing"), EImpactPreview::Fire, EImpactMoment::Landing, 1},
+                {TEXT("spell in flight"), EImpactPreview::Spell, EImpactMoment::Flight, 1},
+                {TEXT("spell landing"), EImpactPreview::Spell, EImpactMoment::Landing, 1},
+                {TEXT("missile in flight (three bolts)"), EImpactPreview::Missile, EImpactMoment::Flight, 3},
+                {TEXT("missile first landing (three bolts)"), EImpactPreview::Missile, EImpactMoment::FirstLanding, 3},
+                {TEXT("missile second landing (two bolts)"), EImpactPreview::Missile, EImpactMoment::SecondLanding, 2},
+                {TEXT("missile final landing (one bolt)"), EImpactPreview::Missile, EImpactMoment::Landing, 1},
+            };
+            for (const FCase& Case : Cases)
+            {
+                View->ClearImpactPreview();
+                View->PreviewImpact(TargetId, Case.Effect, From, Case.Moment);
+                View->Tick(0.016f);
+                const TArray<FPlaybackProjectile>& Bolts = View->Playback().Projectiles();
+                const TArray<float> Lights = View->BoltLightIntensities();
+                TestEqual(FString::Printf(TEXT("%s: live bolts"), Case.Name), Bolts.Num(), Case.Live);
+                float Total = 0.0f;
+                for (int32 Index = 0; Index < Lights.Num(); ++Index)
+                {
+                    const float Expected = Bolts.IsValidIndex(Index) ? ExpeditionFlash::BoltLight(Bolts.Num(), Bolts[Index].Age / Bolts[Index].Duration) : 0.0f;
+                    TestTrue(FString::Printf(TEXT("%s: light %d is %.2f cd, expected %.2f"), Case.Name, Index, Lights[Index], Expected), FMath::IsNearlyEqual(Lights[Index], Expected, 0.01f));
+                    Total += Lights[Index];
+                }
+                // Whatever the volley, the lights together stay within the flight budget (the old 180 cd per bolt, 540 for Magic Missile, is far above it).
+                TestTrue(FString::Printf(TEXT("%s: %.2f cd in all is within the %.0f cd budget"), Case.Name, Total, ExpeditionFlash::BoltLightCandelas), Total <= ExpeditionFlash::BoltLightCandelas + 0.01f);
+            }
+            // Absolute values for a lone bolt, so a change to the constants and the wiring together is still noticed.
+            View->ClearImpactPreview();
+            View->PreviewImpact(TargetId, EImpactPreview::Fire, From, EImpactMoment::Flight);
+            View->Tick(0.016f);
+            TestTrue(TEXT("A lone bolt in flight carries 50 cd"), FMath::IsNearlyEqual(View->BoltLightIntensities()[0], 50.0f, 0.01f));
+            View->ClearImpactPreview();
+            View->PreviewImpact(TargetId, EImpactPreview::Fire, From, EImpactMoment::Landing);
+            View->Tick(0.016f);
+            TestTrue(TEXT("A lone bolt at its target carries 3.5 cd"), FMath::IsNearlyEqual(View->BoltLightIntensities()[0], 3.5f, 0.01f));
+            View->ClearImpactPreview();
+        }
+    }
+    World->DestroyWorld(false);
+    FlushRenderingCommands();
+    CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+// The preview builds its bolts with the production helper, so the two cannot drift (#189): a volley is three bolts, staggered by MissileStagger.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHitFlashVolleyTest, "Project.Expedition.Presentation.HitFlashVolley",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHitFlashVolleyTest::RunTest(const FString& Parameters)
+{
+    const TArray<FPlaybackProjectile> Volley = FExpeditionPlayback::MagicMissileBolts(FVector2D(1, 1), FVector2D(5, 1));
+    if (!TestEqual(TEXT("Three missiles"), Volley.Num(), 3)) { return false; }
+    for (int32 Index = 0; Index < 3; ++Index)
+    {
+        TestTrue(FString::Printf(TEXT("Missile %d starts %.2f s late"), Index, FExpeditionPlayback::MissileStagger * Index), FMath::IsNearlyEqual(Volley[Index].Age, -FExpeditionPlayback::MissileStagger * Index));
+        TestEqual(TEXT("Every missile takes the same time"), Volley[Index].Duration, FExpeditionPlayback::MissileFlight);
+        TestFalse(TEXT("A missile is not an arrow"), Volley[Index].bArrow);
+    }
+    TestTrue(TEXT("The arcs spread to both sides"), Volley[0].Arc * Volley[2].Arc < 0.0f);
+    const FPlaybackProjectile Bolt = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Cleric, false);
+    TestTrue(TEXT("A Cleric's bolt is gold"), Bolt.Color.R > Bolt.Color.G && Bolt.Color.G > Bolt.Color.B && !Bolt.bArrow);
+    TestTrue(TEXT("A rogue's arrow is an arrow"), FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).bArrow);
     return !HasAnyErrors();
 }
 #endif

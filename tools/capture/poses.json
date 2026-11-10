@@ -168,6 +168,22 @@
       "distance": "default"
     },
     {
+      "name": "impact-missile-landing1-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-first",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-landing2-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-second",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "tooltip-attack",
       "mode": "tooltip",
       "action": "attack",

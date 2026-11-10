@@ -343,7 +343,7 @@ public:
      * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
      * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight = false);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
     void ClearImpactPreview();
     int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */
@@ -412,6 +412,8 @@ public:
      * footprint ring, as the materials hold it. False when the combatant has no figure. A ring-bank ring reports the bank's colour for its slot.
      */
     bool UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const;
+    /** Test-only (#189): the intensity (candelas) each spell bolt's point light was last set to, in bolt order (zero for an idle light or an arrow). */
+    TArray<float> BoltLightIntensities() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */

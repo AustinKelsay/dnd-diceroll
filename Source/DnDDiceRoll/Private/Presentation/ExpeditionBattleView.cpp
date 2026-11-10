@@ -834,10 +834,10 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     UpdateCamera(0.0f);
 }
 
-void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight)
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
 {
     ImpactTargetId = TargetId;
-    Show.PreviewImpact(TargetId, Effect, From, bInFlight);
+    Show.PreviewImpact(TargetId, Effect, From, Moment);
 }
 
 void AExpeditionBattleView::ClearImpactPreview()
@@ -2788,6 +2788,13 @@ bool AExpeditionBattleView::UnitShownColors(int32 UnitId, TArray<FLinearColor>& 
         return true;
     }
     return false;
+}
+
+TArray<float> AExpeditionBattleView::BoltLightIntensities() const
+{
+    TArray<float> Result;
+    for (const UPointLightComponent* Light : ShotLights) { Result.Add(Light ? Light->Intensity : 0.0f); }
+    return Result;
 }
 
 USceneComponent* AExpeditionBattleView::UnitRigRoot(int32 UnitId) const

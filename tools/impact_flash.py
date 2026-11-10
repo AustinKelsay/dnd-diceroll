@@ -5,13 +5,15 @@ Reads the `impact` shots of a capture gallery run (`python3 tools/dev.py gallery
 combatant's projected footprint box from the run's manifest (the game projects the footprint ring's square, from the board top
 to the figure's head, with the camera the screenshot sees) and measures the PNG inside it (an in-flight shot, `"phase": "flight"`, also has a box around its bolt, reported as `<shot>:bolt`):
 
-* peak luminance: the brightest pixel's Rec. 709 luma of the 8-bit sRGB values, 0 to 255
+* peak luma: the brightest pixel's luma, the Rec. 709 weights (0.2126, 0.7152, 0.0722) applied to the 8-bit sRGB code values, 0 to 255
 * white fraction: the share of the box's pixels whose red, green and blue are all at least WHITE_LEVEL
 * clipped fraction: the share of pixels whose luma is at least CLIP_LEVEL (the same threshold on luma)
 
-A shot passes when the peak luminance is below CLIP_LEVEL (254: a pixel at 255 is clipped) and fewer than MAX_WHITE_FRACTION of the box is pure white. The box
+A box passes when the peak luma is below CLIP_LEVEL (254: a pixel at 255 is clipped) and fewer than MAX_WHITE_FRACTION of the box is pure white. The box
 includes a little floor around the figure; the HUD's damage text and bar are drawn inside it and count too, which is deliberate:
-the flash must leave the ring and bar readable. Standard library only (a small PNG decoder), so it runs anywhere the helper does.
+the flash must leave the ring and bar readable. Luma is a clipping proxy, not photometric luminance (the weights act on gamma-encoded code values, not linear light): it says whether pixels reached
+the display's ceiling, not how bright the scene is. It does not replace looking at the image, so every claim made with it should also name what was
+checked by eye (the silhouette, the ring and the bar). Standard library only (a small PNG decoder), so it runs anywhere the helper does.
 
     python3 tools/impact_flash.py .local/gallery/<run>            # every impact shot under a run
     python3 tools/impact_flash.py path/to/manifest.json --shot impact-yaw000-default --json out.json
@@ -96,6 +98,7 @@ def read_png(path, rows=None, columns=None):
 
 
 def luma(r, g, b):
+    """Rec. 709 weights on the 8-bit sRGB code values: a clipping proxy, not photometric luminance."""
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 

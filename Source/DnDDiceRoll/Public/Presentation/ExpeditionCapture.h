@@ -32,8 +32,8 @@ struct DNDDICEROLL_API FCaptureShot
     ECaptureHint Hint = ECaptureHint::Move;
     /** Impact shots only (#189): a plain hit, or a spell bolt (spell: Cleric radiant, fire: Wizard, missile: Magic Missile) landing with the flash. */
     EImpactPreview Effect = EImpactPreview::Hit;
-    /** Impact shots only: the bolt is half way along its path (no hit yet) instead of landing with the flash. */
-    bool bInFlight = false;
+    /** Impact shots only: when the preview is taken: the hit with its flash (default), a bolt half way along its path, or (Magic Missile) the first or second bolt landing. */
+    EImpactMoment Moment = EImpactMoment::Landing;
     /** Impact shots only: rendered frames between the hit and the screenshot (the flash is held at its peak throughout). */
     int32 Frames = DefaultImpactFrames;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
@@ -65,6 +65,7 @@ DNDDICEROLL_API const TCHAR* ModeName(ECaptureMode Mode);
 DNDDICEROLL_API const TCHAR* ActionName(ECaptureAction Action);
 DNDDICEROLL_API const TCHAR* HintName(ECaptureHint Hint);
 DNDDICEROLL_API const TCHAR* EffectName(EImpactPreview Effect);
+DNDDICEROLL_API const TCHAR* PhaseName(EImpactMoment Moment);
 /** Pure: validates a poses document (version 1) and fills Out, or fails with a message naming the problem. */
 DNDDICEROLL_API bool ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error);
 }
