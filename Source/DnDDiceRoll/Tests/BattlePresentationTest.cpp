@@ -398,6 +398,7 @@ bool FCorpseVisibilityTest::RunTest(const FString& Parameters)
                 }
             }
             TestTrue(FString::Printf(TEXT("Occupied corpse cell for %s has a visible body above the board"), *Unit.Name), bVisibleBody);
+            TestEqual(FString::Printf(TEXT("The dead %s no longer draws a silhouette"), *Unit.Name), View->FigureStencil(Unit.Id), 0);
         }
         TestTrue(TEXT("Fixture contains slain enemies"), Corpses > 0);
     }
