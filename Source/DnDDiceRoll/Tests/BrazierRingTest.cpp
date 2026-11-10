@@ -144,7 +144,7 @@ bool FBrazierScatterClearTest::RunTest(const FString& Parameters)
     Kinds.Scatter = 8; Kinds.Mist = 3; Kinds.Shaft = 2;
     for (const FIntPoint Board : {FIntPoint(16, 11), FIntPoint(18, 12)})
     {
-        for (const int32 Seed : {1, 7, 4242, -9})
+        for (const int32 Seed : {1, 3, 7, 4242, -9})
         {
             const TArray<FVector2D> Avoid = BrazierRing::Cells(BrazierRing::Plan(Board.X, Board.Y, Seed));
             const TArray<VigilKit::FDressing> Free = VigilKit::PlanDressing(Board.X, Board.Y, Seed, Kinds);
@@ -163,8 +163,9 @@ bool FBrazierScatterClearTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("Scatter stays two or more rings out"), VigilKit::RingDistance(Item.Cell, Board.X, Board.Y) >= VigilKit::ScatterMinRing);
                 for (const FVector2D& Brazier : Avoid)
                 {
+                    // Measured from where the piece stands (its cell plus its offset): seed 3 on 18 x 12 once placed one 0.96 cells away.
                     TestTrue(TEXT("A scatter piece keeps its distance from every brazier"),
-                        FVector2D::Distance(Brazier, FVector2D(Item.Cell.X, Item.Cell.Y)) >= BrazierRing::ScatterClearCells);
+                        FVector2D::Distance(Brazier, Item.Position()) >= BrazierRing::ScatterClearCells);
                 }
             }
         }
