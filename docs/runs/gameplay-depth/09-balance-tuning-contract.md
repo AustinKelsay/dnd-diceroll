@@ -51,3 +51,21 @@ Not changed: the save schema (5); the 70 kits' identities, abilities, costs and 
 ## 5. Evidence
 
 Before: the committed baseline (`bd02ede`, policy 1). After: the same 99 parties, 32 seeds and policy at the tuned head. Report tables: overall and per party, per class and per kit, per stage and route, deaths and their causes, and every tried lever step. Checks: build with 0 warnings, full `Project.` with 0 warnings, helper tests, `contribute.py check`, `Balance.Baseline.` before and after, and data on an evidence branch. Because gameplay numbers change, the PR lists a short on-screen play check for a human-style run.
+
+## 6. As built
+
+- **Lever 1 kept**, step 3 of four measured steps (the [report](10-balance-tuning-report.md) lists each). Compact enemies at fight s = 0–4:
+  - HP 20 + 4s (Guarded) or 24 + 4s (Dangerous);
+  - armour 12 or 13;
+  - attack +4, +4, +5, +5, +5;
+  - damage d6 (Guarded) or d8 (Dangerous), plus 3, 3, 3, 4, 4.
+
+  All within the bounds of section 3. `EnemyStats` in `Run/ExpeditionRun.cpp` holds both rulesets' tables; SRD keeps revision 7.
+- **Lever 2 not applied:** T6 passes after lever 1 (melee party 90.6%, Fighter duplicates 100%, ranged 87.5%; melee damage gap 18%).
+- **Targets:** T1–T6 and T8 met (T1 and T2 narrowly), T7 reported as deferred. Rotation win rate 86.7% (85.5–87.9%), 16.1% of victories lose a hero, finale defeat share 7.7%.
+- **Versioning:** `FBuildCatalog::Revision` 8. `FExpeditionRun::Restore` refuses another revision with a message naming both. `NewRunPreservesUnreadableCheckpoint` now also proves an older-revision file is preserved on New Run.
+- **Tests:**
+  - new: `Run.CompactEnemyTuning` (stats per fight and route, counts and roles, named refusal) and `Run.SrdSeedUnchangedByCompactTuning` (SRD golden captured on revision 7 code);
+  - recaptured: the Compact fingerprint golden;
+  - `Schema4LoadsAsCompact` rewritten as section 4 describes;
+  - full-run tests whose subject is a completed run take the first winning seed from 42 on (`ExpeditionTestSupport::FirstSeedWhere`, asserted to exist).
