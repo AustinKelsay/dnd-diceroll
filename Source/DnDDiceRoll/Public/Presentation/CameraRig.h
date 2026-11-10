@@ -34,7 +34,9 @@ namespace ExpeditionCameraRig
     /** How far past the board's outer tile edge the visible ground may reach when panning, in cells (was 2 cells past the outer cell centres, #148 gate 2). */
     constexpr float PanMarginCells = 1.5f;
     /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */
-    constexpr float FigureTargetPixels = 72.0f;
+    // 88 px nominal: rendered figures read at about 0.8 of a nominal 180 cm projection (the on-screen pass measured ~50 px
+    // where the nominal height was ~62), so this gives about 72 px on screen at 1080 (#148 gate 2).
+    constexpr float FigureTargetPixels = 88.0f;
     constexpr float FigureTargetViewportHeight = 1080.0f;
     /** The active unit (tile and head) is kept inside the safe rect shrunk to this fraction while the whole board is not in view. */
     constexpr float UnitFill = 0.9f;
@@ -278,7 +280,7 @@ namespace ExpeditionCameraRig
 
     /**
      * The distance at which a standing figure at the focus is FigureTargetPixels tall at FigureTargetViewportHeight pixels
-     * (a fixed fraction of the screen height, so 48 px at 720), with the pitch the zoom ramp gives that distance. The figure
+     * (a fixed fraction of the screen height, so about 59 px at 720), with the pitch the zoom ramp gives that distance. The figure
      * shrinks as the camera pulls back, so this is a bisection; the result is inside the zoom range.
      */
     inline float FigureDistance(const FBoardMetric& Metric, float Anchor, const FSafeRect& Safe)

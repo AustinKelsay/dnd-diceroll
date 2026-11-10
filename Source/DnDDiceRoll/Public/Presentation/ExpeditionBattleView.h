@@ -303,13 +303,13 @@ public:
     float FramedDistance() const;
     /**
      * The default zoom for a board seen from a yaw (#148 gate 2): the closer of the whole-board fit (WholeBoardDistance) and
-     * the distance at which a standing figure at the focus is 72 px tall at 1080 viewport pixels (FigureDistance), clamped to
+     * the distance at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (FigureDistance), clamped to
      * the zoom range. A board that fits at the closer figure distance keeps its whole-board fit.
      */
     float FramedDistance(float ForYaw) const;
     /** The nearest zoom from a yaw at which the board's corners fit the safe rect (clamped to the zoom range); the old default, and where the far pose starts. */
     float WholeBoardDistance(float ForYaw) const;
-    /** The zoom at which a standing figure at the focus is 72 px tall at 1080 viewport pixels (48 px at 720), on the zoom-tied pitch curve. */
+    /** The zoom at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (about 59 px at 720), on the zoom-tied pitch curve. */
     float FigureDistance() const;
     /** The far pose: the end of the pitch ramp (FarStop of the anchor), never nearer than the whole-board fit from that yaw. */
     float FarFramedDistance(float ForYaw) const;

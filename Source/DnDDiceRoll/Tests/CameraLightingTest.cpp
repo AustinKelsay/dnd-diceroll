@@ -268,7 +268,7 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
         const FPanBound Small = ClampPan(FVector2D(1.0e6, 1.0e6), 8, 7, Metric, -90.0f, FarStop(Anchor8), PitchFor(FarStop(Anchor8), Anchor8), Safe);
         TestTrue(TEXT("A small board far away locks both axes at its centre"), Small.bLockedX && Small.bLockedY && Small.Focus.Equals(BoardCentre(8, 7, Metric), 0.01));
     }
-    // The default zoom targets figure size: a standing 180 cm figure at the focus is 72 px tall at 1080 viewport pixels (scaled with height),
+    // The default zoom targets figure size: a standing 180 cm figure at the focus is 88 px tall at 1080 viewport pixels (scaled with height),
     // within 10 %, on the boards the game generates; a board that already fits closer keeps its whole-board fit.
     {
         using namespace CameraLightingTestSupport;
@@ -668,7 +668,7 @@ bool FDefaultFramingTest::RunTest(const FString& Parameters)
                 for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f})
                 {
                     const FString Label = FString::Printf(TEXT("%dx%d at %dx%d yaw %.0f"), Board.X, Board.Y, Size.X, Size.Y, Yaw);
-                    // The default: a standing 180 cm figure at the focus is 72 px tall at 1080 (48 at 720), within 10 %.
+                    // The default: a standing 180 cm figure at the focus is 88 px tall at 1080 (about 59 at 720), within 10 %.
                     View->SnapCamera(Yaw, View->FramedDistance(Yaw));
                     View->Tick(0.016f);
                     const float Pixels = FigurePixelsAtFocus(*View, Rect, Size.Y);
