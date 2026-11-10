@@ -87,6 +87,39 @@
       "distance": 1300
     },
     {
+      "name": "impact-yaw000-default",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-yaw000-near",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "impact-spell-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "tooltip-attack",
       "mode": "tooltip",
       "action": "attack",

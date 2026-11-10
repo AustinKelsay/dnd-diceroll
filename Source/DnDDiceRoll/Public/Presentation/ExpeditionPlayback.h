@@ -11,6 +11,9 @@ enum class EExpeditionCue : uint8
     PartyTurn, EnemyTurn, Victory, Defeat, Spell, Bow, Swing, Camp, Loot, Route
 };
 
+/** What a capture-mode impact preview shows on the struck unit (#189): a plain hit, or a spell bolt (Cleric radiant, Wizard fire, or three Magic Missiles) arriving as well. */
+enum class EImpactPreview : uint8 { Hit, Spell, Fire, Missile };
+
 /** What a combatant looks like right now. Lags behind the rules while results play. */
 struct DNDDICEROLL_API FUnitDisplay
 {
@@ -121,6 +124,15 @@ public:
     void ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life = 1.6f);
     void ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale = 1.0f, float Life = 1.3f);
     void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8);
+    /**
+     * Capture support (#189): shows a hit on a unit without any rules result, exactly as AddImpact does at its peak (full flash, the
+     * flinch clip when the unit stays up, the damage text), and for a spell the bolt as it reaches the target from From (a cell).
+     * Presentation only: no hit points change. HoldImpact keeps the peak on screen; ReleaseImpact lets it go.
+     */
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From);
+    /** Capture support (#189): pins the previewed unit's flash at its peak (1) and the previewed bolts just before they land; Tick would otherwise age both away. */
+    void HoldImpact(int32 UnitId);
+    void ReleaseImpact(int32 TargetId);
 
     float Speed = 1.0f;
     const FUnitDisplay* Unit(int32 Id) const { return Displays.Find(Id); }
@@ -147,6 +159,8 @@ private:
     TArray<FFloatingText> Floaters;
     TArray<FPlaybackProjectile> Shots;
     TArray<FPlaybackSparkle> Glitter;
+    /** Capture support (#189): the bolts HoldImpact keeps in flight. */
+    TArray<FPlaybackProjectile> HeldShots;
     FDiceTray Dice;
     FTurnBanner TurnBanner;
     int32 Focus = INDEX_NONE;

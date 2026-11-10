@@ -215,6 +215,41 @@ void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32
     }
 }
 
+void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From)
+{
+    FUnitDisplay* Target = Displays.Find(TargetId);
+    if (!Target) { return; }
+    Target->Flash = 1.0f;
+    if (Target->Life == ECombatLife::Conscious) { SetPose(*Target, ExpeditionPose::ForDamage()); }
+    ShowText(Target->Position, TEXT("-7"), Blood, 1.25f);
+    // The same bolts AddAttack throws, aged to just before they land (their light and glow are brightest on the target).
+    HeldShots.Reset();
+    const FVector2D To = Target->Position;
+    if (Effect == EImpactPreview::Missile)
+    {
+        for (int32 Index = 0; Index < 3; ++Index) { HeldShots.Add({From, To, 0.0f, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false}); }
+    }
+    else if (Effect != EImpactPreview::Hit)
+    {
+        const FLinearColor Color = Effect == EImpactPreview::Fire ? FLinearColor(1.0f, 0.45f, 0.1f) : FLinearColor(1.0f, 0.9f, 0.5f);
+        HeldShots.Add({From, To, 0.0f, 0.3f, 20.0f, 0.2f, Color, false});
+    }
+    for (FPlaybackProjectile& Shot : HeldShots) { Shot.Age = 0.92f * Shot.Duration; }
+    Shots = HeldShots;
+}
+
+void FExpeditionPlayback::HoldImpact(int32 UnitId)
+{
+    if (FUnitDisplay* Display = Displays.Find(UnitId)) { Display->Flash = 1.0f; }
+    if (!HeldShots.IsEmpty()) { Shots = HeldShots; }
+}
+
+void FExpeditionPlayback::ReleaseImpact(int32 TargetId)
+{
+    if (!HeldShots.IsEmpty()) { HeldShots.Reset(); Shots.Reset(); }
+    if (FUnitDisplay* Target = Displays.Find(TargetId)) { Converge(*Target, false); }
+}
+
 void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After)
 {
     if (!Results.ContainsByPredicate([](const auto& R) { return R.bAccepted; })) { return; }
