@@ -1,0 +1,152 @@
+{
+ "rotation_win": 1.0,
+ "all_win": 1.0,
+ "stalls": 0,
+ "parties": {
+  "familiar": 1.0,
+  "melee": 1.0,
+  "ranged": 1.0,
+  "support-poor": 1.0,
+  "support-heavy": 1.0,
+  "mixed": 1.0,
+  "dup-fighter": 1.0,
+  "dup-cleric": 1.0,
+  "dup-wizard": 1.0
+ },
+ "victories_with_deaths": 0.005997474747474747,
+ "deaths_per_run": 0.005997474747474747,
+ "stage": {
+  "1-dangerous": {
+   "n": 1584,
+   "low_mean": 0.902,
+   "below50": 0.0,
+   "hp_lost": 0.086,
+   "defeat": 0.0
+  },
+  "1-guarded": {
+   "n": 1584,
+   "low_mean": 0.968,
+   "below50": 0.0,
+   "hp_lost": 0.031,
+   "defeat": 0.0
+  },
+  "2-dangerous": {
+   "n": 1584,
+   "low_mean": 0.894,
+   "below50": 0.0,
+   "hp_lost": 0.093,
+   "defeat": 0.0
+  },
+  "2-guarded": {
+   "n": 1584,
+   "low_mean": 0.958,
+   "below50": 0.0,
+   "hp_lost": 0.035,
+   "defeat": 0.0
+  },
+  "3-dangerous": {
+   "n": 1584,
+   "low_mean": 0.831,
+   "below50": 0.0,
+   "hp_lost": 0.083,
+   "defeat": 0.0
+  },
+  "3-guarded": {
+   "n": 1584,
+   "low_mean": 0.873,
+   "below50": 0.0,
+   "hp_lost": 0.049,
+   "defeat": 0.0
+  },
+  "4-dangerous": {
+   "n": 1584,
+   "low_mean": 0.755,
+   "below50": 0.002,
+   "hp_lost": 0.086,
+   "defeat": 0.0
+  },
+  "4-guarded": {
+   "n": 1584,
+   "low_mean": 0.824,
+   "below50": 0.0,
+   "hp_lost": 0.024,
+   "defeat": 0.0
+  },
+  "5-dangerous": {
+   "n": 1584,
+   "low_mean": 0.731,
+   "below50": 0.02,
+   "hp_lost": 0.047,
+   "defeat": 0.0
+  },
+  "5-guarded": {
+   "n": 1584,
+   "low_mean": 0.771,
+   "below50": 0.0,
+   "hp_lost": 0.02,
+   "defeat": 0.0
+  }
+ },
+ "defeats_by_stage": {
+  "1": 0,
+  "2": 0,
+  "3": 0,
+  "4": 0,
+  "5": 0
+ },
+ "defeat_share_by_stage": {
+  "1": 0.0,
+  "2": 0.0,
+  "3": 0.0,
+  "4": 0.0,
+  "5": 0.0
+ },
+ "dangerous_over_guarded_hp": {
+  "1": 2.8,
+  "2": 2.67,
+  "3": 1.68,
+  "4": 3.66,
+  "5": 2.39
+ },
+ "melee_dmg": 7.03,
+ "other_dmg": 10.45,
+ "melee_gap": 0.328,
+ "specials_by_stage": {
+  "1": 4.88,
+  "2": 3.66,
+  "3": 0.86,
+  "4": 0.37,
+  "5": 0.25
+ },
+ "rounds_per_fight": 3.07,
+ "class_death": {
+  "artificer": 0.002,
+  "barbarian": 0.001,
+  "bard": 0.0,
+  "cleric": 0.004,
+  "druid": 0.001,
+  "fighter": 0.0,
+  "monk": 0.002,
+  "paladin": 0.0,
+  "ranger": 0.0,
+  "rogue": 0.006,
+  "sorcerer": 0.002,
+  "warlock": 0.0,
+  "wizard": 0.0
+ },
+ "class_win": {
+  "artificer": 1.0,
+  "barbarian": 1.0,
+  "bard": 1.0,
+  "cleric": 1.0,
+  "druid": 1.0,
+  "fighter": 1.0,
+  "monk": 1.0,
+  "paladin": 1.0,
+  "ranger": 1.0,
+  "rogue": 1.0,
+  "sorcerer": 1.0,
+  "warlock": 1.0,
+  "wizard": 1.0
+ }
+}
