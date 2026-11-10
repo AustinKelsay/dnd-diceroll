@@ -834,6 +834,8 @@ class Dev:
             command += self.layout["headless"]
         return [*command, *self.native_limits()]
 
+    PERF_EXIT_WAIT = 60  # seconds between reports while a timed-out game is still exiting
+
     def perf_run(self, args, log, timeout, cwd):
         """Run one game process, sampling its resident memory. On timeout it gets one SIGTERM (a normal exit request) and is never killed."""
         with log.open("ab") as stream:
@@ -844,11 +846,18 @@ class Dev:
                     code = process.wait(timeout=timeout)
                 except subprocess.TimeoutExpired:
                     process.terminate()
-                    try:
-                        process.wait(timeout=30)
-                    except subprocess.TimeoutExpired:
-                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
-                    raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
+                    # Never return while the game still runs: the caller's machine lock must stay held until it has exited.
+                    # It is asked to exit once and never killed; a stuck game is reported with its PID for manual recovery.
+                    ignored = False
+                    while True:
+                        try:
+                            process.wait(timeout=self.PERF_EXIT_WAIT)
+                            break
+                        except subprocess.TimeoutExpired:
+                            ignored = True
+                            print(f"Game PID {process.pid} timed out after {timeout}s and has not exited after SIGTERM; still waiting (the lock stays held). Inspect {log}", flush=True)
+                    detail = " after ignoring SIGTERM for a while" if ignored else ""
+                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and exited{detail}; inspect {log}") from None
         return code, sampler.summary()
 
     def perf_crash_dirs(self, binary):
@@ -1045,6 +1054,10 @@ class Dev:
         for before, after in zip(order, order[1:]):
             gaps.append({"from": before, "to": after, "seconds": round(records[after]["started"] - records[before]["ended"], 1)})
         measured = records["measured"]
+        # Each measured process needs its own memory evidence: a missing sample in one pass must not be hidden by the other.
+        unsampled = [name for name, m in rss.items() if not m or m.get("max_mb") is None]
+        if unsampled:
+            raise RuntimeError(f"No memory evidence (VmRSS/VmHWM) for the {' and '.join(unsampled)} pass(es) of run {output.name}; rerun them")
         peaks = [m for m in rss.values() if m.get("max_mb") is not None]
         combined = {"samples": sum(m["samples"] for m in rss.values()), "interval_s": perf_tools.SAMPLE_SECONDS,
                     "max_sampled_mb": max((m["max_sampled_mb"] for m in peaks if m.get("max_sampled_mb") is not None), default=None),

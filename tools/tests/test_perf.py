@@ -717,11 +717,45 @@ class PerfCommandTests(unittest.TestCase):
         sampler.summary.return_value = {}
         with tempfile.TemporaryDirectory() as temp, patch.object(dev_module.subprocess, "Popen", return_value=process), \
                 patch.object(perf, "RssSampler", return_value=sampler) as made, patch.object(perf, "resolve_game_pid", return_value=4322):
-            with self.assertRaisesRegex(RuntimeError, "asked to exit"):
+            with self.assertRaisesRegex(RuntimeError, "timed out after 5s and exited; inspect"):
                 dev.perf_run(["/x/CustomGame"], Path(temp) / "game.log", 5, temp)
             made.assert_called_once_with(4322)
         process.terminate.assert_called_once()
         process.kill.assert_not_called()
+
+    def test_a_game_that_ignores_sigterm_keeps_the_helper_waiting_until_it_exits(self):
+        # Returning while the game runs would release the machine lock; the helper waits, reporting the PID, and never kills.
+        dev = Dev(self.w, host="linux")
+        dev.PERF_EXIT_WAIT = 0.01
+        process = Mock(pid=4321)
+        timeout = dev_module.subprocess.TimeoutExpired("game", 1)
+        process.wait.side_effect = [timeout, timeout, timeout, 0]
+        sampler = Mock()
+        sampler.__enter__ = Mock(return_value=sampler)
+        sampler.__exit__ = Mock(return_value=False)
+        sampler.summary.return_value = {}
+        out = io.StringIO()
+        with tempfile.TemporaryDirectory() as temp, patch.object(dev_module.subprocess, "Popen", return_value=process), \
+                patch.object(perf, "RssSampler", return_value=sampler), patch.object(perf, "resolve_game_pid", return_value=4322), contextlib.redirect_stdout(out):
+            with self.assertRaisesRegex(RuntimeError, "exited after ignoring SIGTERM"):
+                dev.perf_run(["/x/CustomGame"], Path(temp) / "game.log", 5, temp)
+        self.assertEqual(process.wait.call_count, 4)
+        self.assertIn("Game PID 4321", out.getvalue())
+        self.assertIn("still waiting", out.getvalue())
+        process.terminate.assert_called_once()
+        process.kill.assert_not_called()
+
+    def test_a_pass_without_memory_evidence_fails_the_report(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="warmup")
+            dev.perf(only="measured", run=run)
+            dev.perf(only="resume", run=run)
+        record_path = self.w.local / "perf" / run / "measured" / "pass.json"
+        record = json.loads(record_path.read_text())
+        record["rss"] = {"samples": 0, "max_mb": None}
+        record_path.write_text(json.dumps(record))
+        with self.assertRaisesRegex(RuntimeError, "No memory evidence .* measured"): dev.perf(only="report", run=run)
 
 
 if __name__ == "__main__":
