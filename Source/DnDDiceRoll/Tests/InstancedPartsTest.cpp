@@ -57,6 +57,21 @@ int32 OwnedComponents(const AExpeditionBattleView& View)
 }
 
 /** Instances summed over every instanced component the view owns. */
+// Median wall time of three board rebuilds (the board metric rebuild runs the same path as every other rebuild), in ms.
+double RebuildMs(AExpeditionBattleView& View)
+{
+    TArray<double, TInlineAllocator<3>> Times;
+    for (int32 Round = 0; Round < 3; ++Round)
+    {
+        const double Start = FPlatformTime::Seconds();
+        View.SetBoardMetric(View.Metric());
+        View.Tick(0.016f);
+        Times.Add((FPlatformTime::Seconds() - Start) * 1000.0);
+    }
+    Times.Sort();
+    return Times[1];
+}
+
 int32 OwnedInstances(const AExpeditionBattleView& View)
 {
     TInlineComponentArray<UInstancedStaticMeshComponent*> Sets;
@@ -130,10 +145,15 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
         TestTrue(FString::Printf(TEXT("%s: loose parts need clearly more components (%d against %d)"), Name, LooseParts, Parts), LooseParts > Parts * 2);
         AddInfo(FString::Printf(TEXT("%s board, loose: %d presentation components"), Name, LooseParts));
         View->SetHighlights(FBoardHighlights());
+        // The rebuild hitch, loose against instanced on the same board and build, both without the full grid (information only:
+        // wall time varies by machine).
+        const double LooseMs = RebuildMs(*View);
         View->SetLooseParts(false);
         View->Tick(0.016f);
         TestEqual(FString::Printf(TEXT("%s: back to the instanced count"), Name), View->PresentationComponentCount(), Parts);
         TestEqual(FString::Printf(TEXT("%s: back to the same instances"), Name), OwnedInstances(*View), Instances);
+        const double InstancedMs = RebuildMs(*View);
+        AddInfo(FString::Printf(TEXT("%s board, rebuild (median of 3, game thread): loose %.2f ms, instanced %.2f ms"), Name, LooseMs, InstancedMs));
 
         // Rebuilding must not leak components or instances: the board metric rebuild runs the same path as every other rebuild.
         for (int32 Round = 0; Round < 3; ++Round)
