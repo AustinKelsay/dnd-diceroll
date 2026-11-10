@@ -1,0 +1,404 @@
+{
+	"version": 1,
+	"status": "ok",
+	"fixture": "board-vigil-pillars",
+	"poses": "/tmp/claude-1000/-home-plebdev-dnd-diceroll-t3/4e530aad-48d5-44e1-9b7c-b51ac273f78f/scratchpad/hatch/fix/poses.json",
+	"settleFrames": 120,
+	"primitives": false,
+	"themed": true,
+	"cellCm": 150,
+	"resolution":
+	{
+		"width": 1920,
+		"height": 1080
+	},
+	"seed": 1,
+	"boardWidth": 17,
+	"boardHeight": 11,
+	"shots": [
+		{
+			"name": "hidden-yaw000-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw000-d1200.png",
+			"yaw": 0,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": 2548.725424479067,
+					"y": 951.27264338835585,
+					"z": 1088.3730020549478
+				},
+				"rotation":
+				{
+					"pitch": -34.999998948667219,
+					"yaw": 180,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw000-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw000-d2000.png",
+			"yaw": 0,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": 3499.7056915762164,
+					"y": 1045.4544005613589,
+					"z": 1962.5425186033863
+				},
+				"rotation":
+				{
+					"pitch": -38.281340235010532,
+					"yaw": 180,
+					"roll": 4.498373522647604e-31
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw045-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw045-d1200.png",
+			"yaw": 45,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1983.5036932408461,
+					"y": 2033.2933868543562,
+					"z": 1088.3730017977343
+				},
+				"rotation":
+				{
+					"pitch": -34.999998519855076,
+					"yaw": -135,
+					"roll": 1.9413701315315295e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw045-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw045-d2000.png",
+			"yaw": 45,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": 2589.3517686157443,
+					"y": 2772.3345852106877,
+					"z": 1962.5425177493416
+				},
+				"rotation":
+				{
+					"pitch": -38.281339312287805,
+					"yaw": -135,
+					"roll": 6.0776619188630691e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw090-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw090-d1200.png",
+			"yaw": 90,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": 818.72728448404268,
+					"y": 2398.7254227741923,
+					"z": 1088.3730020549481
+				},
+				"rotation":
+				{
+					"pitch": -34.999998948667205,
+					"yaw": -89.999997495521981,
+					"roll": 3.8827402834104875e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw090-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw090-d2000.png",
+			"yaw": 90,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": 724.54548574236651,
+					"y": 3349.7056857545253,
+					"z": 1962.5425186033863
+				},
+				"rotation":
+				{
+					"pitch": -38.281340235010475,
+					"yaw": -89.999997495521839,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw135-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw135-d1200.png",
+			"yaw": 135,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": -263.2933895365652,
+					"y": 1833.5036977111945,
+					"z": 1088.3730017977343
+				},
+				"rotation":
+				{
+					"pitch": -34.999998519855069,
+					"yaw": -45.000000000000007,
+					"roll": -1.9413701315315295e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw135-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw135-d2000.png",
+			"yaw": 135,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": -1002.3345878928968,
+					"y": 2439.3517730860926,
+					"z": 1962.5425177493416
+				},
+				"rotation":
+				{
+					"pitch": -38.281339312287798,
+					"yaw": -45.000000000000007,
+					"roll": 2.0258873062876896e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw180-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw180-d1200.png",
+			"yaw": 180,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": -628.72541928117801,
+					"y": 668.72721950899859,
+					"z": 1088.3730020549481
+				},
+				"rotation":
+				{
+					"pitch": -34.999998948667155,
+					"yaw": 5.0089560314545637e-06,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw180-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw180-d2000.png",
+			"yaw": 180,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": -1579.7056781446954,
+					"y": 574.54537919864958,
+					"z": 1962.542518603386
+				},
+				"rotation":
+				{
+					"pitch": -38.281340235010411,
+					"yaw": 5.008956301618819e-06,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw225-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw225-d1200.png",
+			"yaw": -135,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": -63.503700393403506,
+					"y": -413.29338506621684,
+					"z": 1088.3730017977343
+				},
+				"rotation":
+				{
+					"pitch": -34.999998519855069,
+					"yaw": 44.999999999999993,
+					"roll": 3.8827402630630589e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw225-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw225-d2000.png",
+			"yaw": -135,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": -669.35177576830188,
+					"y": -1152.3345834225486,
+					"z": 1962.5425177493416
+				},
+				"rotation":
+				{
+					"pitch": -38.281339312287798,
+					"yaw": 45.000000000000007,
+					"roll": -2.0258873062876896e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw270-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw270-d1200.png",
+			"yaw": -90,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1101.2725694726146,
+					"y": -778.72543333649924,
+					"z": 1088.3730020549481
+				},
+				"rotation":
+				{
+					"pitch": -34.999998948667205,
+					"yaw": 89.999997495521981,
+					"roll": 3.8827402834104875e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw270-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw270-d2000.png",
+			"yaw": -90,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1195.4542850769449,
+					"y": -1729.7057045504641,
+					"z": 1962.5425186033863
+				},
+				"rotation":
+				{
+					"pitch": -38.281340235010475,
+					"yaw": 89.999997495521853,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw315-d1200",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw315-d1200.png",
+			"yaw": -45,
+			"distance": 1200,
+			"camera":
+			{
+				"location":
+				{
+					"x": 2183.2933823840081,
+					"y": -213.50369592305515,
+					"z": 1088.3730017977343
+				},
+				"rotation":
+				{
+					"pitch": -34.999998519855069,
+					"yaw": 135,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "hidden-yaw315-d2000",
+			"mode": "battle",
+			"status": "captured",
+			"file": "hidden-yaw315-d2000.png",
+			"yaw": -45,
+			"distance": 2000,
+			"camera":
+			{
+				"location":
+				{
+					"x": 2922.3345807403393,
+					"y": -819.35177129795352,
+					"z": 1962.5425177493416
+				},
+				"rotation":
+				{
+					"pitch": -38.281339312287798,
+					"yaw": 135,
+					"roll": -2.0258873062876896e-15
+				},
+				"fov": 40
+			}
+		}
+	]
+}
