@@ -47,6 +47,9 @@ constexpr double PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyC
 // card here never covers the active unit, its target or their cells, whichever way the board is turned. The strip is as wide as the margin
 // leaves and as tall as it can be; the card's own height follows its text.
 constexpr double RollCardLeft = 8, RollCardGap = 8;
+// Inside the card (design units from its top): the title above RollCardRowTop, the dice row between RollCardRowTop and RollCardRowBottom
+// (tumbling, landing and glowing dice are kept inside it), the verdict from RollCardVerdictTop and the detail lines from RollCardDetailTop.
+constexpr double RollCardRowTop = 26, RollCardRowBottom = 104, RollCardVerdictTop = 106, RollCardDetailTop = 138;
 inline Rect RollCardBounds(double W, double H, int PartyCount = 4)
 {
     const Rect Log = LogRect(W, H);

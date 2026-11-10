@@ -313,7 +313,8 @@ void AExpeditionPlayerController::ObserveHints()
 ECombatHint AExpeditionPlayerController::VisibleHint() const
 {
     // Re-checked here: the state was observed at the start of the frame, and a key or click may land after an overlay opened.
-    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() ? HintState.Visible() : ECombatHint::Count;
+    // The roll card owns the left margin the hint sits in until it has gone: the hint waits, and its keys do nothing meanwhile (#190).
+    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() && !BattleView->RollCardUp() ? HintState.Visible() : ECombatHint::Count;
 }
 
 bool AExpeditionPlayerController::PreviewHint(ECombatHint Hint, FString& Why)

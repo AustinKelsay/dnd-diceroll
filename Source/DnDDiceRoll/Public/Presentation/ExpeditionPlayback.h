@@ -131,7 +131,7 @@ public:
     const TArray<FPlaybackSparkle>& Sparkles() const { return Glitter; }
     const FDiceTray& Tray() const { return Dice; }
     /** Capture and test support (#190): show this tray as a landed roll and keep it up until cleared. */
-    void PreviewTray(FDiceTray Tray) { Dice = MoveTemp(Tray); Dice.bVisible = true; Dice.bHeld = true; Dice.Age = FDiceTray::TumbleSeconds + 0.5f; }
+    void PreviewTray(FDiceTray Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Dice = MoveTemp(Tray); Dice.bVisible = true; Dice.bHeld = true; Dice.Age = Age; }
     void ClearTrayPreview() { if (Dice.bHeld) { Dice = FDiceTray(); } }
     const FTurnBanner& Banner() const { return TurnBanner; }
     /** The combatant the camera should favour while steps play. */
