@@ -757,6 +757,12 @@ void AExpeditionBattleView::SetFigureSilhouette(FExpeditionUnitRig& Rig, bool bO
         Part.Mesh->SetRenderCustomDepth(bOn);
         Part.Mesh->SetCustomDepthStencilValue(Stencil);
     }
+    // A rigged figure (#147) draws through its skinned mesh.
+    if (Rig.Skin)
+    {
+        Rig.Skin->SetRenderCustomDepth(bOn);
+        Rig.Skin->SetCustomDepthStencilValue(Stencil);
+    }
 }
 
 int32 AExpeditionBattleView::FigureStencil(int32 UnitId) const
@@ -766,10 +772,12 @@ int32 AExpeditionBattleView::FigureStencil(int32 UnitId) const
         if (Rig.Id != UnitId) { continue; }
         int32 Value = 0;
         bool bAny = false;
-        for (const FExpeditionPart& Part : Rig.Parts)
+        TArray<const UPrimitiveComponent*, TInlineAllocator<8>> Drawn;
+        for (const FExpeditionPart& Part : Rig.Parts) { if (Part.Mesh) { Drawn.Add(Part.Mesh); } }
+        if (Rig.Skin) { Drawn.Add(Rig.Skin); }
+        for (const UPrimitiveComponent* Mesh : Drawn)
         {
-            if (!Part.Mesh) { continue; }
-            const int32 Own = Part.Mesh->bRenderCustomDepth ? Part.Mesh->CustomDepthStencilValue : 0;
+            const int32 Own = Mesh->bRenderCustomDepth ? Mesh->CustomDepthStencilValue : 0;
             if (!bAny) { Value = Own; bAny = true; }
             else if (Own != Value) { return -1; }
         }
