@@ -1,0 +1,18 @@
+# PR #172 (#171 HUD input fixes), PARTIAL pass on head `415a86d`: items 6, 7, 8 only
+
+Items 1 to 5 are held for the next head (coordinator's instruction). Packaged `415a86d4ba5f20cca139f22a57316494099af39c` (unchanged when packaged), binary SHA-256 `952641dddc0599e1bb66c9773d421f715cbfd67dd430cc85e6fd12eab62f1e63`, 0 errors/warnings. Nested headless Hyprland, **virtual** input, lock held 02:33Z to about 02:47Z (my game the only Unreal process). **Nested config this time: `input { follow_mouse = 1 }`** (`rig/hyprland.conf`, full file; confirmed with `hyprctl getoption input:follow_mouse` = 1); one run with it set to 0 at runtime. Logs: 0 Error, 0 ensures, 0 LogMaterial, 0 Fatal; only the close SDL_EVENT_QUIT warning; one startup SIGFPE (known rig race), relaunch fine.
+
+| # | Item | Result | What was seen |
+| --- | --- | --- | --- |
+| 6 | Path-cost number readable and clear of the cell panel, incl. edge cells, four yaws | **Pass** (1920x1080); 1280x720 spot check | Four yaws on the 18x12 Watchtower board, cursor moved with the arrows to edge and far cells: the cost sits on its own plate above the target cell and is never under the cell panel, a chip, a party card or the dock. Examples: yaw 0 `400-Down` ("4", panel lower right), yaw 90 `401-Right` ("1"), yaw 180 `402-Left` ("4" with a leader line to a moved plate, panel left of the cell), yaw 270 `403-Down` ("4" at the bottom edge, panel placed beside the dock). 1280x720: `030-cursor-1280` ("3" with a line), `031-after-move-1280` ("1"). **1600x600 not tested.** Not every cell at every yaw was visited (16 shots, `sheet-400`/`sheet-401` are contact sheets). |
+| 7a | Party card hover kept through repeated clicks | **Pass** (1280x720, `follow_mouse = 1`) | Nix acting, details open (`2`): hover Arden's card shows it, click once and keep the pointer still: Arden's card stays and Nix's closes; two more clicks: it stays (`sheet-010-card-clicks-1280`). |
+| 7b | Hover on a fresh launch before any click, `follow_mouse = 1` | **Fail in my rig** | Fresh launch (board-18x12 fixture, resumed with O), pointer moved onto the Quick Exchange button three times without clicking: no tooltip (`001`, `002`). One click on an empty board spot, then hovering again: the tooltip shows (`003`). So `follow_mouse = 1` did **not** make fresh-launch hover work here. I cannot say whether that is the game (first motion before any click) or my virtual pointer client; a real mouse is needed. |
+| 7c | Same with `follow_mouse = 0` | **Observed** | Fresh launch, no prior click, card hover and two clicks on Arden's card: no hover card, no card opened, Nix's card unchanged (`sheet-050-card-fm0-1280`). With 0, the pointer is ignored until a click gives the window focus, as the worker described. Note that 7b shows the same symptom with 1, so the explanation is at most partly right for my rig. |
+| 8a | Attack outline gone once the Action is spent | **Pass** (1280x720) | Nix moved 3 cells then attacked adjacent Raider 2 (8/12): Action chip grey, only a Move 1 outline remains around Nix (`035-action-spent-1280`). Not repeated at 1920x1080. |
+| 8b | Legend backed and clear of party panels and Menu | **Pass** (1280x720, and every 1920x1080 shot) | The legend sits on its own panel in the top band between the strip and the Menu button, clear of the party cards (`020-legend-1280`, `400-Down-1920`). |
+
+## Not done (held or not reached)
+Items 1 to 5; item 6 at 1600x600; item 8 at 1920x1080 for the spent Action; a real-pointer check of 7b.
+
+## Notes
+Defect (rig-dependent): fresh-launch hover needs one click even with `follow_mouse = 1` (7b).
