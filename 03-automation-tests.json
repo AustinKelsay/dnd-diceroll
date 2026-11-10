@@ -1,0 +1,1520 @@
+{
+ "succeeded": 252,
+ "failed": 0,
+ "succeededWithWarnings": 0,
+ "notRun": 0,
+ "tests": [
+  {
+   "name": "Project.Expedition.Battle.SrdDexOnlyInitiative",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdGrappleShoveAppliesConditions",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdIntIgnoresCover",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdMagicMissilePerDartResistance",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdOpportunityGrappleDeathConcentrationSmoke",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdSacredFlameDexSave",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdSacredFlameResultFields",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Battle.SrdSizeCoverHouseRule",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArcaneJsonContinuity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArcaneRoster",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArcaneRunProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArcaneWorkedOutcomes",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerJsonContinuity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerProtection",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerRandomCheckpointContinuity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerRunProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerSpentPoolsAcrossProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerStartup",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.ArtificerWorkedOutcomes",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.Barbarian",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.BarbarianPersistence",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.CappedCampAfterBonusVictory",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.CurrentProfiles",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.FinalCommands",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.LifeConsciousTargets",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.LifeSpentPoolsAcrossProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialBlockedPush",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialCombatPoolValidation",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialFighterCriticals",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialJsonContinuity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialProtection",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialRoster",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialRunProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MartialWorkedOutcomes",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.MissileSpentPoolsAndRollback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.SelectedParty",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.SupportJsonContinuity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.SupportRoster",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.SupportRunProgression",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Catalog.SupportWorkedOutcomes",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsCoverEveryAbility",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsForBuildMatchesFor",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsMatchLegality",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsMatchSubmit",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsPotionCap",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsReadOnly",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionFactsReasons",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionTextEveryEnumerator",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionTextEveryKit",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ActionTextPhrases",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.AttackRollsAndBudgets",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.DamageAtZeroKeepsTally",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.EnemyBoundedAndDeterministic",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.GrappleShoveEscape521DC",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.GridBoundsAllowLargeEncounters",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.LineOfSightAndFriendlyTargets",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.MovementAndAtomicRejection",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.NaturalTwentyDeathSaveTakesTurn",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.OpportunityAttackStopsDroppedMover",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.OpportunityGrappleShareDistance",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.PresentationFactsAndForecast",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.SrdForecastMatchesResolution",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.StableResetsDeathSaves",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.SubclassForecastAndBudget",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.SurpriseActsInRoundOne",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.ValidEncounter",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Combat.VictoryDefeatAndInactiveTurns",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.EquipmentHasCombatValue",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.PersistentSurvivorsAndLoot",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.RangeSightAndExhaustedResources",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.RescueDeadlineAndPermanentDeath",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.SecondWindBudgetAndAtomicCosts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.SneakAttackQualification",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.SpellsHealingInventoryAndRejections",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.SpentInventorySurvivesTransition",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Party.VictoryResolvesDownedAndValidatesContinuation",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.ContinueIdenticallyAcrossEveryPhase",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.DiskCheckpointFailureDeathAndEndingRecords",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.ExactRestoreWithoutRolls",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.FailedMilestoneIsAtomic",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.InvalidNestedStateRejectedAtomically",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.MissingTruncatedTypedAndVersionFailures",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.NewRunPreservesUnreadableCheckpoint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.PermanentLossContinuesThroughCampAndNextEncounter",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.RestoreRejectsImpossibleDeathSaves",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.ReviewSavedFieldValidation",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.RulesetPersistsAndDefaultsCompact",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.Schema4LoadsAsCompact",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.StartupProtectsUnfinishedCheckpoint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.StrictSerializationRoundtrip",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Persistence.SubclassAndMilestoneCheckpoint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.AbilityFeedback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionDockDegradesInSrdMode",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionDockRebuildsOnlyOnStateChange",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionTagsFromFacts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionTagsHiddenDuringPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionTagsHiddenUnderOverlays",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionTextFromFacts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ActionTooltipsMatchHoverAndKeys",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BattleCameraRig",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BattleLighting",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BoardMetricLeavesStateUnchanged",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BoardMetricSingleSource",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BoardPickingRoundTrip",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.BuildPickerShowsAbilityCosts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CameraRigMath",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CaptureCameraSnaps",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CaptureCompilationDrain",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CapturePoses",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ClickActsOnlyOnPreviewedCell",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ClickAfterOverlayNeedsFreshPreview",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ClickNeedsStillCamera",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ClickNeedsUnchangedProjection",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CompactHudBudgetAndBounds",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.CompactHudMenu",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ContextualGridGeometry",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ContextualGridMatchesEveryCatalogAction",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ContextualGridMatchesRules",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.DescriptionsHaveNoCostWords",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.DockTextComesFromFacts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.EndingAndResumeFocusPrimaryChoice",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.EnterNeedsVisibleKeyboardCursor",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.FigureSilhouettes",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.FootprintRingFollowsMetric",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.FourSlotBuilder",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.FullGridKeyIsPresentationOnly",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsClickAndDKeyAreNeitherPreviewNorConfirm",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsEndTurnWhenNothingElseIsLeft",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsFitTheHud",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsFollowFirstRun",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsNeverLeakInput",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsSkipAndReplay",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsSkipThenNewRunGivesHintsAgain",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsSpendingAPotionRaisesTheResourceHint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HintsWordingFromFacts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.HudCoverageArithmetic",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.KeyboardCursorDuringEnemyThink",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.NextRunSubclassSelection",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.NoEnterCommitDuringPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.NoPointerCommitDuringPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.OccupiedCorpseCellsStayVisible",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.OrderedSpecialEffects",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.OverlaysBlockGameplayShortcuts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.OverviewCameraUnchanged",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PartyCardClickKeepsHoverCard",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PathCostPlateStaysClear",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PhaseChangesFocusPrimaryChoice",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PlaybackChoosesPoses",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PlaybackConvergesOnCommittedState",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PlaybackPosesConverge",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PlaybackSpeedKeepsClipOrder",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PointerAfterKeyboardPreviewsBeforeCommit",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.PreviewVoidedByStateChange",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReachContourHiddenWhenActionSpent",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RejectedCommandsNameTheirBlocker",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RejectedInputCannotStallEnemy",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuAfterFailedCheckpoint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuDroppedWhenBattleEnds",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuDroppedWhenDefeated",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuFromEachPhase",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuWaitsForEnemyTurn",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuWaitsForOverlays",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ReturnToMenuWaitsForPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RiggedFigures",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RiggedFiguresLeaveStateUnchanged",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RiggedHeroRecoverPlaysClip",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.RiggedResumeHoldsFallenPoses",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.SecondEnterOnlyAfterPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.SkipBattleEndingPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.StartScreenFocusesBeginForUnreadableSave",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.StartScreenFocusesResumeForUnfinishedSave",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.StartupResumeAndAllHistoryPages",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetChipAvailability",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetChipLabel",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetChipSemantics",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetChipsFollowActionAndActor",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetingFacts",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetingHiddenDuringPlayback",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetingHiddenUnderOverlays",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.TargetingLegendIsBackedAndClear",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.ThemedBoardHasNoCellTiles",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.UnitPoseChoice",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VictoryEndingFocusesNextParty",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilArchPairs",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilDressingStaysOffPlayableCells",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilOccluderFadesWhenBlocking",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilPrimitiveFallbackStillBuilds",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilThemeChoiceLeavesStateUnchanged",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilThemeDataIsComplete",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Presentation.VigilVariantChoiceIsDeterministic",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.AbilityModifiers",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.AnimalHandling",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.AreaOfEffectTemplates",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ArmorClassDexCaps",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ArmorProficiencyPenalties",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.AttackChancesAreExact",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.AttackSourcesAndSeededResolution",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.CantripScaling",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.CheckChancesAreExact",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.CheckResolutionIsSeeded",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ClassFeatureScaling",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ClassSkillChoicesFollowSrd521",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.CoinsAndPrices",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.Concentration",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ConcentrationSaveDcCap",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.CoverBonuses",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.DamageResistanceVulnerabilityImmunity",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.DeathSaves",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.Encumbrance",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ExplorationHazards",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.FallingProneAndForcedMovement",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.GrappleAndShove",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.Inspiration",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.InvalidProficiencyChoicesRejected",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.KnowledgeAndWisdomChecks",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.LightAndVision",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.LocksAndTraps",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.OpportunityAttackTriggers",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.OpportunityReactionGate",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.PassiveHelpGroupChecks",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.PerformanceSkill",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.PrebuiltAbilityScores",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.PrebuiltProficienciesAcrossLevels",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ProficiencyAndExpertise",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.RequiresConcentrationFlag",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.RestAndHitDice",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SkillCatalog",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SleightOfHand",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SocialInfluence",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SpellDcAttackAndSaves",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SpellFactsAndSlots",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.StandardActions",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.StealthAndSurprise",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SuperiorityDice",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.SurpriseInitiativeDisadvantage",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.ToolsAndKits",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.TwoWeaponFighting",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Rules.WeaponProperties",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.CompactSeedIdenticalFingerprint",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.DeadRosterSurvivesRewardCampAndContinuation",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.DeathLevelRespectsEarnedHistory",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.FiveVictoriesRecoverArtifact",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.FreshSeededRun",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.LargeGridsKeepPlayableOpeningGap",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.ManySeedsConnectedActionableAndVaried",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.PhasesAtomicityRewardsCampAndHistory",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.RetainedRouteStartsGeneratedCombat",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.SkippedRecoveryHasNoRestAndCannotReturn",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Expedition.Run.WipeAndFreshReset",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Maps.PIE",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Starter.SandboxAssets",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  },
+  {
+   "name": "Project.Tools.CaptureFixtures",
+   "state": "Success",
+   "warnings": 0,
+   "errors": 0
+  }
+ ]
+}
