@@ -23,6 +23,7 @@ import time
 import urllib.parse
 
 from mcp_client import MCP
+import perf as perf_tools
 from scaffold import BASES, new_class
 from workspace import Workspace, automation_result, entered_world, log_events, project_argument, read_ini, require_clean, source_digest, validate_bootstrap, validate_runtime
 
@@ -74,7 +75,7 @@ OFF_ULTRA = ("Not on PlebDev Ultra: Unreal results from this machine do not coun
              "Unreal work on Ultra before merge (CONTRIBUTING.md).")
 
 # --cores reaches these commands; others refuse it so a cap is never silently dropped.
-CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package", "gallery")
+CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relaunch", "package", "gallery", "perf")
 
 
 # Capture gallery: fixtures written by `test --filter Project.Tools.CaptureFixtures`, rendered by the
@@ -88,6 +89,10 @@ CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 CAMERA_DISTANCE = (900, 6400)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
+
+# Performance gate (#148): the game's autoplay mode plays one seeded fight (-ExpeditionAutoplay), the CSV profiler records it.
+PERF_SCRIPT = Path("tools/autoplay/watchtower-road.json")
+PERF_FRAMES = (1000, 2000000)
 
 
 def parse_resolution(text):
@@ -796,6 +801,162 @@ class Dev:
         skipped = sum(1 for run in runs for shot in run["shots"] if shot.get("status") == "skipped")
         print(f"Gallery: {len(runs)} run(s), {pictures} picture(s), {skipped} skipped as not applicable; index: {output / 'index.json'}")
 
+    def perf_binary(self, package=None):
+        """(game binary, package folder) to measure: the given folder, else the newest Builds/<stamp> whose package run finished (verified.json)."""
+        if package:
+            folder = Path(package).expanduser()
+            folder = (folder if folder.is_absolute() else self.w.root / folder).resolve()
+            if not folder.is_dir():
+                raise RuntimeError(f"--package {folder} is not a folder")
+            return self.packaged_binary(folder), folder
+        builds = self.w.root / "Builds"
+        finished = sorted(p for p in builds.glob("*") if (p / "verified.json").is_file()) if builds.is_dir() else []
+        if not finished:
+            raise RuntimeError("No finished package under Builds/; run `package` first, or pass --package DIR (or --editor for a dry run)")
+        return self.packaged_binary(finished[-1]), finished[-1]
+
+    def perf_command(self, binary, editor, script, size, frames, log, save, resume, vsync, sound, offscreen):
+        width, height = size
+        command = [binary, *([self.w.project, "-game"] if editor else []), "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}",
+                   "-unattended", "-nosplash", f"-abslog={log}", f"-csvCaptureFrames={frames}", "-csvGpuStats",
+                   f"-ExpeditionSaveRoot={save}", f"-ExpeditionAutoplay={script}"]
+        if resume:
+            command.append("-ExpeditionAutoplayResume")
+        if not vsync:
+            command.append("-novsync")
+        if not sound:
+            command.append("-nosound")
+        if offscreen:
+            command += self.layout["headless"]
+        return [*command, *self.native_limits()]
+
+    def perf_run(self, args, log, timeout, cwd):
+        """Run one game process, sampling its resident memory. On timeout it gets one SIGTERM (a normal exit request) and is never killed."""
+        with log.open("ab") as stream:
+            process = subprocess.Popen([str(a) for a in args], cwd=cwd, stdout=stream, stderr=subprocess.STDOUT)
+            pid = perf_tools.resolve_game_pid(process.pid, Path(str(args[0])).name)
+            with perf_tools.RssSampler(pid) as sampler:
+                try:
+                    code = process.wait(timeout=timeout)
+                except subprocess.TimeoutExpired:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
+                    raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
+        return code, sampler.summary()
+
+    def perf_crash_dirs(self, binary):
+        """Folders whose Saved/Crashes a run may write to: this checkout, the packaged game's user directory and its staged folder."""
+        roots = [self.w.root, Path.home() / ".config" / "Epic" / self.w.settings["game_target"]]
+        if len(binary.parents) > 2 and binary.parent.name == "Linux":
+            roots.append(binary.parents[2])
+        return roots
+
+    def perf(self, package=None, editor=False, script=None, resolution="1920x1080", frames=200000, timeout=1800, warmup=True,
+             offscreen=False, vsync=False, sound=True, pad=perf_tools.TRANSITION_PAD):
+        """Warm up, measure one autoplay fight and resume it in a fresh process; check the #148 budgets (docs/development.md)."""
+        size = parse_resolution(resolution)
+        if editor and package:
+            raise ValueError("--editor and --package are exclusive")
+        if not PERF_FRAMES[0] <= frames <= PERF_FRAMES[1]:
+            raise ValueError(f"--csv-frames must be {PERF_FRAMES[0]} to {PERF_FRAMES[1]}")
+        if timeout < 60:
+            raise ValueError("--timeout must be at least 60 seconds")
+        script_path = Path(script or PERF_SCRIPT)
+        script_path = (script_path if script_path.is_absolute() else self.w.root / script_path).resolve()
+        if not script_path.is_file():
+            raise RuntimeError(f"Autoplay script {script_path} does not exist")
+        try:
+            scripted = json.loads(script_path.read_text())
+            if scripted.get("version") != 1 or len(scripted.get("party", [])) != 4:
+                raise ValueError("needs \"version\": 1 and four party builds")
+        except ValueError as exc:
+            raise RuntimeError(f"Autoplay script {script_path} is invalid: {exc}") from None
+        self.require_engine()
+        self.require_closed()
+        if editor:
+            receipt = self.w.local / "build.json"
+            if not receipt.is_file() or json.loads(receipt.read_text()) != self.build_identity():
+                raise RuntimeError("Build evidence is missing or stale; run build first")
+            binary, cwd, folder = self.editor, self.w.root, None
+        else:
+            binary, folder = self.perf_binary(package)
+            cwd = binary.parent
+        output = self.w.local / "perf" / stamp()
+        output.mkdir(parents=True)
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        project = self.w.settings["game_target"]
+        directories = perf_tools.csv_directories(project, package=folder, project_root=self.w.root)
+        plan = [("warmup", False)] if warmup else []
+        plan += [("measured", False), ("resume", True)]
+        passes, captures, rss = [], {}, {}
+        with self.config_guard():
+            for name, resuming in plan:
+                folder = output / name
+                save = folder / "save"
+                folder.mkdir()
+                if resuming:
+                    # The fresh process resumes the checkpoint the measured pass left; a copy keeps that evidence unchanged.
+                    shutil.copytree(output / "measured" / "save", save)
+                else:
+                    save.mkdir()
+                log = folder / "game.log"
+                crash_roots = self.perf_crash_dirs(binary)
+                crashes_before = {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)}
+                started = time.time()
+                print(f"Perf pass {name}: {'resuming the checkpoint' if resuming else 'playing the fight'} at {size[0]}x{size[1]}")
+                code, memory = self.perf_run(self.perf_command(binary, editor, script_path, size, frames, log, save, resuming, vsync, sound, offscreen), folder / "console.log", timeout, cwd)
+                crashes = {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)} - crashes_before
+                problems = lifecycle_problems(code, set(), self.w.root, who="Game")
+                if crashes:
+                    problems.append("new crash report(s): " + ", ".join(sorted(crashes)))
+                text = log.read_text(errors="replace") if log.is_file() else ""
+                if "AUTOPLAY_FAIL" in text or not re.search(r"AUTOPLAY_DONE ok\b", text):
+                    problems.append("the game did not log AUTOPLAY_DONE ok" + ("; it logged AUTOPLAY_FAIL" if "AUTOPLAY_FAIL" in text else ""))
+                if "LogExit: Exiting." not in text:
+                    problems.append("the game did not log a normal exit")
+                if problems:
+                    raise RuntimeError(f"Failed lifecycle for the {name} pass: {'; '.join(problems)}; inspect {log}")
+                record = {"name": name, "exit_code": code, "log": str(log.relative_to(output)), "csv": None, "rss": memory}
+                if name != "warmup":
+                    found = perf_tools.find_csv(text, directories, started - 2)
+                    if not found:
+                        raise RuntimeError(f"The {name} pass left no CSV capture; looked in {[str(d) for d in directories]}; inspect {log}")
+                    kept = folder / f"{name}.csv"
+                    shutil.copy2(found, kept)
+                    record["csv"] = str(kept.relative_to(output))
+                    record["csv_source"] = str(found)
+                    captures[name] = perf_tools.analyze_pass(perf_tools.parse_csv(kept.read_text(errors="replace")), pad)
+                    rss[name] = memory
+                passes.append(record)
+        peaks = [m for m in rss.values() if m.get("max_mb") is not None]
+        combined = {"samples": sum(m["samples"] for m in rss.values()), "interval_s": perf_tools.SAMPLE_SECONDS,
+                    "max_sampled_mb": max((m["max_sampled_mb"] for m in peaks if m.get("max_sampled_mb") is not None), default=None),
+                    "peak_hwm_mb": max((m["peak_hwm_mb"] for m in peaks if m.get("peak_hwm_mb") is not None), default=None),
+                    "max_mb": max((m["max_mb"] for m in peaks), default=None), "per_pass": rss}
+        report = perf_tools.build_report(captures["measured"], captures["resume"], combined, size, extra={
+            "stamp": output.name, "commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
+            "mode": "editor (-game): a dry run, not the gate" if editor else "packaged Development", "binary": str(binary), "script": str(script_path),
+            "cores": self.cores, "flags": {"vsync": vsync, "sound": sound, "offscreen": offscreen, "csv_frames": frames, "warmup": warmup, "transition_pad": pad},
+            "passes": passes, "top_gpu_stats": perf_tools.top_gpu_stats(captures["measured"]["steady"]),
+            "hardware": perf_tools.hardware_summary(run=lambda cmd: subprocess.run(cmd, capture_output=True, text=True, timeout=10, check=True).stdout)})
+        if editor:
+            report["passed"] = False
+            report["failures"].append("Measured in the editor (-game): not a packaged Development build, so it cannot pass the gate")
+        write_json(output / "report.json", report)
+        (output / "report.md").write_text(perf_tools.markdown_report(report))
+        for check in report["checks"]:
+            print(f"  {check['label']}: {perf_tools.number(check['value'])} (limit {check['limit']}) {'ok' if check['passed'] else 'FAIL'}")
+        for item in report["transitions"]:
+            print(f"  transition {item['name']} [{item['pass']}]: worst frame {item['worst_frame_ms']:.1f} ms, {item['duration_ms']:.0f} ms over {item['frames']} frames")
+        print(f"Performance gate {'PASSED' if report['passed'] else 'FAILED'}; report: {output / 'report.md'}")
+        for failure in report["failures"]:
+            print(f"  - {failure}")
+        return report
+
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
         found = [p for p in output.glob(self.layout["packaged"].format(target=target)) if p.is_file() and os.access(p, os.X_OK)]
@@ -921,6 +1082,18 @@ def main():
     gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
     gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
     gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
+    perf = commands.add_parser("perf", help="Measure one autoplay fight against the #148 performance budgets; evidence under .local/perf/")
+    perf.add_argument("--package", help="Packaged build folder (default: the newest Builds/<stamp> that finished packaging)")
+    perf.add_argument("--editor", action="store_true", help="Run the editor in -game instead of a package: a quick dry run that cannot pass the gate")
+    perf.add_argument("--script", help="Autoplay script; default " + str(PERF_SCRIPT))
+    perf.add_argument("--res", type=resolution_argument, default="1920x1080", help="Window size WIDTHxHEIGHT; the budgets apply at 1920x1080")
+    perf.add_argument("--csv-frames", type=int, default=200000, help="Upper bound for -csvCaptureFrames (the game ends the capture itself when the run is done)")
+    perf.add_argument("--timeout", type=int, default=1800, help="Seconds allowed for each pass")
+    perf.add_argument("--no-warmup", action="store_true", help="Skip the discarded warm-up pass (a dry run; the gate wants a warm one)")
+    perf.add_argument("--offscreen", action="store_true", help="Add -RenderOffscreen (no window; frames are not presented)")
+    perf.add_argument("--vsync", action="store_true", help="Leave vertical sync on (default: -novsync, so FrameTime is not pinned to the refresh rate)")
+    perf.add_argument("--no-sound", action="store_true", help="Add -nosound (default: sound on, so the synthesized cues are part of the game-thread cost)")
+    perf.add_argument("--transition-pad", type=int, default=perf_tools.TRANSITION_PAD, help="Frames after a transition ends that still count as the transition")
     scaffold = commands.add_parser("new-class")
     scaffold.add_argument("kind", choices=BASES)
     scaffold.add_argument("name", help="PascalCase class name without Unreal's A/U prefix")
@@ -945,6 +1118,10 @@ def main():
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
         elif args.command == "gallery":
             dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)
+        elif args.command == "perf":
+            report = dev.perf(args.package, args.editor, args.script, args.res, args.csv_frames, args.timeout, not args.no_warmup,
+                              args.offscreen, args.vsync, not args.no_sound, args.transition_pad)
+            return 0 if report["passed"] else 1
         elif args.command == "new-class":
             for path in new_class(dev.w, args.kind, args.name):
                 print(path)
