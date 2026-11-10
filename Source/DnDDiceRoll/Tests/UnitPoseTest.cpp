@@ -911,4 +911,218 @@ bool FRiggedResumeFallenTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+namespace RigPoseTest
+{
+/** The ordered clips each unit showed while a scene played (a pose is recorded when it changes). */
+using FClipOrder = TMap<int32, TArray<EUnitPose>>;
+
+FClipOrder PlayRecordingOrder(const FPoseScene& Scene, const FCombatResult& Outcome, float Speed)
+{
+    FClipOrder Order;
+    FExpeditionPlayback Show;
+    Show.Reset(Scene.Before);
+    Show.Speed = Speed;
+    Show.Enqueue({Outcome}, Scene.After);
+    auto Note = [&Show, &Scene, &Order]()
+    {
+        for (const FCombatantState& Unit : Scene.After.Encounter.Combatants)
+        {
+            const FUnitDisplay* Display = Show.Unit(Unit.Id);
+            if (!Display) { continue; }
+            TArray<EUnitPose>& Seq = Order.FindOrAdd(Unit.Id);
+            if (Seq.IsEmpty() || Seq.Last() != Display->Pose) { Seq.Add(Display->Pose); }
+        }
+    };
+    Note();
+    for (int32 Frame = 0; Frame < 8000 && Show.IsBusy(); ++Frame) { Show.Tick(0.01f); Note(); }
+    return Order;
+}
+
+FString OrderText(const TArray<EUnitPose>& Seq)
+{
+    TArray<FString> Names;
+    for (const EUnitPose Pose : Seq) { Names.Add(ExpeditionPose::ClipName(Pose)); }
+    return FString::Join(Names, TEXT(" > "));
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlaybackSpeedOrderTest, "Project.Expedition.Presentation.PlaybackSpeedKeepsClipOrder",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPlaybackSpeedOrderTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    // Fast speed shows the same clips in the same order as normal speed, only sooner: speed scales time, never the choice.
+    struct FCaseScene { FString Name; FPoseScene Scene; FCombatResult Outcome; };
+    TArray<FCaseScene> Cases;
+    {
+        FCaseScene Case{TEXT("move")};
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Case.Scene, 7))) { return false; }
+        Case.Outcome = MakeResult(ECombatCommandType::Move, Case.Scene.Hero);
+        Case.Outcome.Path = {FIntPoint(2, 3), FIntPoint(3, 3), FIntPoint(4, 3)};
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Hero)->Cell = FIntPoint(4, 3);
+        Cases.Add(Case);
+    }
+    {
+        FCaseScene Case{TEXT("melee hit")};
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Case.Scene, 3))) { return false; }
+        Case.Outcome = MakeResult(ECombatCommandType::Attack, Case.Scene.Hero, Case.Scene.Foe);
+        Case.Outcome.bHit = true;
+        Case.Outcome.Damage = 3;
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Foe)->HP -= 3;
+        Cases.Add(Case);
+    }
+    {
+        FCaseScene Case{TEXT("Fire Bolt kills")};
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Case.Scene, 7))) { return false; }
+        Case.Scene.Unit(Case.Scene.Before, Case.Scene.Hero)->AdventurerRole = EAdventurerRole::Wizard;
+        Case.Scene.After = Case.Scene.Before;
+        Case.Outcome = MakeResult(ECombatCommandType::Attack, Case.Scene.Hero, Case.Scene.Foe);
+        Case.Outcome.bHit = true;
+        Case.Outcome.Damage = 99;
+        Case.Outcome.Died = {Case.Scene.Foe};
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Foe)->HP = 0;
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Foe)->Life = ECombatLife::Dead;
+        Cases.Add(Case);
+    }
+    {
+        FCaseScene Case{TEXT("a hero goes down")};
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Case.Scene, 3))) { return false; }
+        Case.Outcome = MakeResult(ECombatCommandType::Attack, Case.Scene.Foe, Case.Scene.Hero);
+        Case.Outcome.bHit = true;
+        Case.Outcome.Damage = 99;
+        Case.Outcome.Downed = {Case.Scene.Hero};
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Hero)->HP = 0;
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Hero)->Life = ECombatLife::Downed;
+        Cases.Add(Case);
+    }
+    {
+        FCaseScene Case{TEXT("recovery")};
+        if (!TestTrue(TEXT("Scene builds"), MakeScene(Case.Scene, 7))) { return false; }
+        Case.Scene.Unit(Case.Scene.Before, Case.Scene.Ally)->Life = ECombatLife::Downed;
+        Case.Scene.Unit(Case.Scene.Before, Case.Scene.Ally)->HP = 0;
+        Case.Scene.After = Case.Scene.Before;
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Ally)->Life = ECombatLife::Conscious;
+        Case.Scene.Unit(Case.Scene.After, Case.Scene.Ally)->HP = 5;
+        Case.Outcome = MakeResult(ECombatCommandType::CureWounds, Case.Scene.Hero, Case.Scene.Ally);
+        Case.Outcome.Healing = 5;
+        Cases.Add(Case);
+    }
+    for (const FCaseScene& Case : Cases)
+    {
+        const FClipOrder Normal = PlayRecordingOrder(Case.Scene, Case.Outcome, 1.0f);
+        const FClipOrder Fast = PlayRecordingOrder(Case.Scene, Case.Outcome, 2.2f);
+        bool bAnyClip = false;
+        for (const TPair<int32, TArray<EUnitPose>>& Entry : Normal)
+        {
+            const TArray<EUnitPose>* Other = Fast.Find(Entry.Key);
+            bAnyClip |= Entry.Value.Num() > 1;
+            TestTrue(FString::Printf(TEXT("%s: unit %d shows the same clips in the same order at both speeds (normal %s; fast %s)"), *Case.Name, Entry.Key,
+                *OrderText(Entry.Value), Other ? *OrderText(*Other) : TEXT("none")), Other && *Other == Entry.Value);
+        }
+        TestTrue(FString::Printf(TEXT("%s: some unit changed clip"), *Case.Name), bAnyClip);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRiggedRecoverTest, "Project.Expedition.Presentation.RiggedHeroRecoverPlaysClip",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRiggedRecoverTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    // A downed rigged hero rescued by an ally plays Recover on its skinned mesh, then stands at Idle. Real commands on fixed seeds
+    // reach the moment just before an ally's Rescue of a downed rigged hero; that checkpoint resumes in a fresh view, which
+    // executes the Rescue at normal speed.
+    FExpeditionSnapshot Checkpoint;
+    FCombatCommand Rescue;
+    int32 HeroId = INDEX_NONE, Seed = 0;
+    for (const int32 Candidate : {7, 11, 13, 21, 29, 37, 43, 53, 61, 71})
+    {
+        FExpeditionRun Run;
+        FString Error;
+        if (!Run.NewRun(Candidate, Error, TEXT("rig-recover"))) { continue; }
+        const auto* Offer = Run.Progress().Offers.FindByPredicate([](const auto& Route) { return !Route.bDangerous; });
+        if (!Offer || !Run.ChooseRoute(Offer->Id, Error)) { continue; }
+        const int32 Hero = PlayUntilFallen(Run, false, [](const FCombatantState& Unit)
+            { return Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Downed && ExpectsRig(Unit); });
+        if (Hero == INDEX_NONE) { continue; }
+        // Allies walk to the downed hero and rescue it; enemies take their turns.
+        for (int32 Turn = 0; Turn < 200 && Run.Progress().Phase == EExpeditionPhase::Combat && HeroId == INDEX_NONE; ++Turn)
+        {
+            const FCombatBattle& Battle = Run.Battle();
+            const FCombatantState* Down = Battle.Find(Hero);
+            if (!Down || Down->Life != ECombatLife::Downed) { break; }
+            const int32 Id = Battle.ActiveId();
+            const FCombatantState* Active = Battle.Find(Id);
+            if (!Active) { break; }
+            if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
+            if (Active->Life == ECombatLife::Conscious && Id != Hero)
+            {
+                if (Battle.LegalTargets(Id, ECombatCommandType::Rescue).Contains(Hero))
+                {
+                    Checkpoint = Run.Snapshot();
+                    Rescue = {ECombatCommandType::Rescue, Id, {}, Hero};
+                    HeroId = Hero;
+                    Seed = Candidate;
+                    break;
+                }
+                TArray<FIntPoint> Moves = Battle.LegalMoves(Id);
+                const FIntPoint Goal = Down->Cell;
+                Moves.Sort([Goal](FIntPoint A, FIntPoint B) { return ExpeditionTestSupport::Distance(A, Goal) < ExpeditionTestSupport::Distance(B, Goal); });
+                if (!Moves.IsEmpty() && ExpeditionTestSupport::Distance(Moves[0], Goal) < ExpeditionTestSupport::Distance(Active->Cell, Goal))
+                {
+                    Run.Submit({ECombatCommandType::Move, Id, Moves[0]});
+                    if (Run.Battle().LegalTargets(Id, ECombatCommandType::Rescue).Contains(Hero))
+                    {
+                        Checkpoint = Run.Snapshot();
+                        Rescue = {ECombatCommandType::Rescue, Id, {}, Hero};
+                        HeroId = Hero;
+                        Seed = Candidate;
+                        break;
+                    }
+                }
+            }
+            if (Run.Progress().Phase == EExpeditionPhase::Combat && Run.Battle().ActiveId() == Id) { Run.Submit({ECombatCommandType::EndTurn, Id}); }
+        }
+        if (HeroId != INDEX_NONE) { break; }
+    }
+    if (!TestTrue(TEXT("A fixed seed reaches an ally's Rescue of a downed rigged hero"), HeroId != INDEX_NONE)) { return false; }
+    AddInfo(FString::Printf(TEXT("Rescue: seed %d, hero %d, rescuer %d"), Seed, HeroId, Rescue.ActorId));
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/RiggedRecover"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Checkpoint;
+    FString Error;
+    if (!TestTrue(TEXT("The checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); return false; }
+    AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+    if (!TestNotNull(TEXT("Resumed view"), View)) { return false; }
+    View->Resume();
+    View->Tick(0.016f);
+    TestTrue(TEXT("The resumed view is mid-encounter"), View->HasRun() && View->InCombat());
+    TestTrue(TEXT("The downed hero is a rigged figure"), View->UnitAnimation(HeroId).bSkeletal);
+    ExpectPose(*this, TEXT("Before the rescue the hero lies Downed"), View->UnitAnimation(HeroId).Pose, EUnitPose::Downed);
+    View->Execute(Rescue);
+    bool bRecovered = false, bClip = false;
+    for (int32 Frame = 0; Frame < 600 && !bRecovered; ++Frame)
+    {
+        View->Tick(0.02f);
+        const FUnitAnimationState State = View->UnitAnimation(HeroId);
+        if (State.Pose == EUnitPose::Recover)
+        {
+            bRecovered = true;
+            bClip = State.bSkeletal && State.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Recover));
+        }
+    }
+    TestTrue(TEXT("The rescued rigged hero plays Recover"), bRecovered);
+    TestTrue(TEXT("Its skinned mesh has the Recover clip bound"), bClip);
+    const FCombatantState* Hero = View->Rules().Find(HeroId);
+    TestTrue(TEXT("The rescue committed: the hero is conscious"), Hero && Hero->Life == ECombatLife::Conscious);
+    // Once Recover has played out, the hero stands at Idle.
+    for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); }
+    for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); }
+    ExpectPose(*this, TEXT("After Recover the hero stands"), View->UnitAnimation(HeroId).Pose, EUnitPose::Idle);
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
 #endif
