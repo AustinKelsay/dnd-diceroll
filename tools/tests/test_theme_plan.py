@@ -90,8 +90,11 @@ class ThemePlanTests(unittest.TestCase):
         self.assertEqual(theme_plan.requested_replacements(None), set())
         self.assertEqual(theme_plan.requested_replacements(""), set())
         self.assertEqual(theme_plan.requested_replacements("world-vigil, prop-wall"), {"world-vigil", "prop-wall"})
-        self.assertEqual(theme_plan.requested_replacements("all"), set(theme_plan.REPLACEABLE))
-        for bad in ("prop-pillar-b", "hero-fighter", "world-root", "world-vigil,tabletop"):
+        # The Root world joined the allow-list in #149; nothing else did.
+        self.assertEqual(theme_plan.requested_replacements("world-root"), {"world-root"})
+        self.assertEqual(theme_plan.requested_replacements("world-vigil,world-root"), {"world-vigil", "world-root"})
+        self.assertEqual(theme_plan.requested_replacements("all"), set(theme_plan.REPLACEABLE) | set(theme_plan.ROOT_REPLACEABLE))
+        for bad in ("prop-pillar-b", "hero-fighter", "prop-root-pillar", "world-root-occluders", "tile-root", "world-vigil,tabletop"):
             with self.assertRaises(ValueError, msg=bad):
                 theme_plan.requested_replacements(bad)
 
@@ -181,6 +184,145 @@ class ThemePlanTests(unittest.TestCase):
     def test_arches_are_for_pillars_and_walls_only(self):
         header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
         self.assertIn("return Recipe == 1 || Recipe == 2;", header)
+
+
+class RootKitPlanTests(unittest.TestCase):
+    """The Root of the World kit r002 rows (#149): the same checks as the Vigil rows, written to be pointer-safe for LFS."""
+
+    def test_every_root_row_matches_its_asset_record(self):
+        seen = set()
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.ROOT_R002:
+            record = json.loads((ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json").read_text())
+            self.assertEqual(record["asset_id"], asset_id)
+            self.assertEqual(record["revision"], revision)
+            self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
+            export = [entry for entry in record["files"] if entry["role"] == "export" and "_LOD" not in entry["path"]]
+            self.assertEqual(len(export), 1)
+            source = theme_plan.export_path(asset_id, revision, name)
+            self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+            self.assertEqual(record["import_policy"]["settings"]["nanite"], "off, set explicitly on import")
+            self.assertEqual(len(look), 5, asset_id)
+            self.assertNotIn(asset_id, seen)
+            seen.add(asset_id)
+        self.assertEqual(len(theme_plan.ROOT_R002), 25)
+        # No id appears in both kits, and no package is claimed twice.
+        self.assertFalse(seen & {row[0] for row in theme_plan.R002})
+        packages = [theme_plan.package_path(row[3], row[2]) for row in theme_plan.R002 + theme_plan.ROOT_R002]
+        self.assertEqual(len(packages), len(set(packages)))
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
+
+    def test_only_the_root_world_replaces_an_r001_package(self):
+        old = r001_packages()
+        colliding = {row[0] for row in theme_plan.ROOT_R002 if theme_plan.package_path(row[3], row[2]) in old}
+        self.assertEqual(colliding, set(theme_plan.ROOT_REPLACEABLE))
+        self.assertEqual(set(theme_plan.ROOT_METRIC_GATE), set(theme_plan.ROOT_REPLACEABLE))
+        self.assertEqual(set(theme_plan.ROOT_REPLACEABLE), {"world-root"})
+        # The Root obstacles are new packages: the r001 pillar, wall and stones belong to the Vigil.
+        for row in theme_plan.ROOT_R002:
+            if row[0] != "world-root":
+                self.assertEqual(row[1], 1, row[0])
+        # The new texture packages (T_<mesh without SM_>) are new too: only the world's atlas exists.
+        textures = {"T_" + row[2][3:] for row in theme_plan.ROOT_R002 if row[0] not in theme_plan.ROOT_REPLACEABLE}
+        existing = {"T_" + package.rsplit("/", 1)[1][3:] for package in old}
+        self.assertFalse(textures & existing)
+
+    def test_root_array_slots_are_complete_and_properties_exist_in_the_theme(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "DiceRollTheme.h").read_text()
+        slots = {}
+        for row in theme_plan.ROOT_R002:
+            prop, index = row[5], row[6]
+            self.assertIn(pascal(prop), header)
+            if index is not None:
+                self.assertNotIn(index, slots.setdefault(prop, set()))
+                slots[prop].add(index)
+        self.assertEqual({prop: len(found) for prop, found in slots.items()}, theme_plan.ROOT_ARRAY_SIZES)
+        for prop, count in theme_plan.ROOT_ARRAY_SIZES.items():
+            self.assertEqual(slots[prop], set(range(count)))
+        self.assertIn("bRootMetricKit", header)
+        # The script sets the Root flag through the same table-driven path as the Vigil's.
+        text = SCRIPT.read_text()
+        self.assertIn('"flag": "root_metric_kit"', text)
+        self.assertIn("theme_plan.ROOT_R002", text)
+        self.assertIn("import_kit(kit, theme, parents, replacements)", text)
+        # The data-asset order is the record order: variants A, B, C by file name, scatter as the README lists it.
+        self.assertEqual([row[0] for row in theme_plan.ROOT_R002 if row[5] == "root_scatter"], [
+            "scatter-root-" + word for word in ("mushrooms", "leaves", "twigs", "tendrils", "ferns", "pebbles", "glowmoss", "husks")])
+
+    def test_root_lods_follow_the_policy(self):
+        """Explicit LOD1 and LOD2 for the world, occluders, obstacle variants and arch; scatter, mist cards and light shafts exempt."""
+        with_lods = {"world-root", "world-root-occluders", "prop-root-arch-2cell"}
+        with_lods |= {"prop-root-%s%s" % (kind, suffix) for kind in ("pillar", "wall", "stones") for suffix in ("", "-b", "-c")}
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.ROOT_R002:
+            files = theme_plan.lod_exports(asset_id, revision, name)
+            recorded = theme_plan.record_lods(asset_id, revision)
+            self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in with_lods else [], asset_id)
+            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
+                pointers.append(asset_id)
+                continue
+            triangles = theme_plan.triangle_count(theme_plan.export_path(asset_id, revision, name))
+            self.assertEqual(asset_id in with_lods, triangles > 1000 or asset_id.startswith("prop-"), asset_id)
+            previous = triangles
+            for (lod, path, digest), file in zip(recorded, files):
+                self.assertEqual(theme_plan.sha256_file(file), digest, path)
+                count = theme_plan.triangle_count(file)
+                self.assertLess(count, previous, path)
+                # The Root world's LOD2 stops at 40 % (25 % failed the silhouette gate, README); the others follow #145's 25 %.
+                self.assertGreaterEqual(count / triangles, 0.24 if lod == 2 else 0.48, path)
+                self.assertLessEqual(count / triangles, 0.40 if lod == 2 else 0.52, path)
+                previous = count
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped triangle and hash checks of %d): git lfs pull to run them" % len(pointers))
+
+    def test_kinds_and_looks_follow_the_materials(self):
+        kinds = {row[0]: row[4] for row in theme_plan.ROOT_R002}
+        self.assertEqual(kinds["world-root-occluders"], theme_plan.OCCLUDER)
+        for asset_id, kind in kinds.items():
+            if asset_id.startswith("fx-root-"):
+                self.assertEqual(kind, theme_plan.CARD, asset_id)
+            elif asset_id != "world-root-occluders":
+                self.assertEqual(kind, theme_plan.LIT, asset_id)
+        for row in theme_plan.ROOT_R002:
+            roughness, rim, fill, glow, self_lit = row[7]
+            self.assertTrue(0.0 <= roughness <= 1.0 and 0.0 <= fill <= 1.0, row[0])
+            # No rim (characters only) and no blanket self-light: glow only through the vertex-alpha mask.
+            self.assertEqual((rim, self_lit), (0.0, 0.0), row[0])
+            self.assertEqual(glow, 1.0 if row[4] != theme_plan.CARD else 0.0, row[0])
+
+    def test_instance_tints_name_kit_rows_and_stay_neutral_or_darker(self):
+        ids = {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002}
+        for asset_id, tint in theme_plan.INSTANCE_TINTS.items():
+            self.assertIn(asset_id, ids)
+            self.assertEqual(len(tint), 3)
+            self.assertTrue(all(0.0 < channel <= 1.0 for channel in tint), asset_id)
+        # The recorded default: neutral, so a plain run changes no Vigil instance and the lever is explicit for the Root world.
+        self.assertEqual(theme_plan.INSTANCE_TINTS["world-root"], (1.0, 1.0, 1.0))
+        text = SCRIPT.read_text()
+        self.assertIn("tint=theme_plan.INSTANCE_TINTS.get(asset_id)", text)
+        self.assertIn("set_material_instance_vector_parameter_value(instance, \"Color\", wanted)", text)
+
+    def test_kit_tags_are_distinct_and_the_script_writes_the_kits_own(self):
+        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002"))
+        text = SCRIPT.read_text()
+        self.assertIn('library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, kit["tag"])', text)
+        # The r001 pass must not reset a replaced Root world: any kit tag counts.
+        self.assertIn("def kit_tagged(mesh, tag=None):", text)
+
+    def test_root_arches_follow_the_pillar_and_wall_rule_of_the_vigil(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
+        self.assertIn("return Recipe == 1 || Recipe == 2;", header)
+        view = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "ExpeditionBattleView.cpp").read_text()
+        self.assertIn("BuildKitObstacles(Encounter, Kind, Seed, VigilKit::ArchesFor(Kind), Kit)", view)
+        self.assertIn("Theme->KitFor(bForest)", view)
+        # A kit-less Root board keeps today's behaviour: Vigil variants (when on) without arches, then r001.
+        self.assertIn("BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(false))", view)
 
 
 if __name__ == "__main__":
