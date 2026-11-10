@@ -198,6 +198,9 @@ private:
     /** The A key: attack mode, except while Shift pans the camera. */
     void AttackKey();
     void SetMode(ECombatCommandType Action);
+    bool SrdKeyMode(ECombatCommandType Action);
+    void DashMode();
+    void DisengageMode();
     /** A mode key: selects the mode and keeps its tooltip up. */
     void KeyMode(ECombatCommandType Action);
     void Acted(bool bAccepted);

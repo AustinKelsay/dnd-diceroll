@@ -21,6 +21,7 @@ int32 HeldOf(const FCombatantState& Unit, EActionResource Resource)
     case EActionResource::Maneuver: return Unit.ManeuverUses;
     case EActionResource::Rage: return Unit.RageUses;
     case EActionResource::Potion: return Unit.Potions;
+    case EActionResource::Surge: return Unit.ActionSurgeUses;
     case EActionResource::None: return 0;
     }
     return 0;
@@ -43,6 +44,7 @@ FActionResourceCost ResourceCost(const FCombatantState& Unit, const FBuildDefini
         case EActionResource::Maneuver: Cost.Cap = Build->ManeuverCap; Cost.CampRecovery = Build->ManeuverRecovery; break;
         case EActionResource::Rage: Cost.Cap = Build->RageCap; Cost.CampRecovery = Build->RageRecovery; break;
         case EActionResource::None:
+        case EActionResource::Surge:
         case EActionResource::Potion: break;
         }
     }
@@ -72,7 +74,13 @@ bool Shape(const FCombatantState& Unit, ECombatCommandType Action, bool bSrd, bo
 {
     const FBuildDefinition* Build = FBuildCatalog::Find(Unit.BuildId);
     auto Spend = [&](EActionResource Resource, int32 Amount)
-    { if (Amount > 0) { Facts.Resources.Add(ResourceCost(Unit, Build, Resource, Amount)); } };
+    {
+        if (Amount <= 0) { return; }
+        auto Cost = ResourceCost(Unit, Build, Resource, Amount);
+        // Compact catalog caps/recovery do not describe level-scaled SRD pools.
+        if (bSrd && Resource != EActionResource::Potion) { Cost.Cap = INDEX_NONE; Cost.CampRecovery = INDEX_NONE; }
+        Facts.Resources.Add(Cost);
+    };
     auto Aim = [&Facts](EActionTargetKind Kind, int32 Range, bool bSight, bool bWounded)
     { Facts.Target = Kind; Facts.Range = Range; Facts.bNeedsSight = bSight; Facts.bNeedsWounded = bWounded; };
 
@@ -96,9 +104,12 @@ bool Shape(const FCombatantState& Unit, ECombatCommandType Action, bool bSrd, bo
         }
         if (Action == ECombatCommandType::ActionSurge)
         {
-            Facts.Name = TEXT("Action Surge"); Facts.Cost = EActionCostKind::None;
-            Aim(EActionTargetKind::Self, 0, false, false);
-            return Unit.AdventurerRole == EAdventurerRole::Fighter && FClassFeatureRules::ActionSurgeUses(Unit.Level)>0;
+            if (Unit.AdventurerRole != EAdventurerRole::Fighter || FClassFeatureRules::ActionSurgeUses(Unit.Level)<=0) { return false; }
+            Facts.Name = TEXT("Action Surge"); Facts.Cost = EActionCostKind::Free;
+            FActionResourceCost Cost; Cost.Resource = EActionResource::Surge; Cost.Amount = 1;
+            Cost.Held = Unit.ActionSurgeUses; Cost.Cap = FClassFeatureRules::ActionSurgeUses(Unit.Level);
+            Facts.Resources.Add(Cost);
+            Aim(EActionTargetKind::Self, 0, false, false); return true;
         }
     }
 
@@ -268,7 +279,7 @@ FActionFacts FActionFactsQuery::For(const FCombatBattle& Battle, int32 ActorId, 
     }
     for (const FActionResourceCost& Cost : Facts.Resources)
     {
-        if (Cost.Held >= Cost.Amount) { continue; }
+        if (Cost.Held >= Cost.Amount || Cost.Resource == EActionResource::Surge) { continue; }
         FActionBlocker Short;
         Short.Reason = EActionBlocker::ResourceShort;
         Short.Resource = Cost.Resource;
@@ -289,11 +300,11 @@ FActionFacts FActionFactsQuery::For(const FCombatBattle& Battle, int32 ActorId, 
     return Facts;
 }
 
-FActionFacts FActionFactsQuery::ForBuild(const FCombatantState& Unit, ECombatCommandType Action)
+FActionFacts FActionFactsQuery::ForBuild(const FCombatantState& Unit, ECombatCommandType Action, ERuleset Ruleset)
 {
     FActionFacts Facts;
     Facts.Command = Action;
-    if (!Shape(Unit, Action, Facts)) { return FActionFacts(); }
+    if (!Shape(Unit, Action, Ruleset == ERuleset::SRD, false, Facts)) { FActionFacts Missing; Missing.Command = Action; return Missing; }
     return Facts;
 }
 

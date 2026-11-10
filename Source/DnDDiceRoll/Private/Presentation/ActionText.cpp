@@ -11,6 +11,7 @@ FString CostName(EActionCostKind Cost)
     case EActionCostKind::BonusAction: return TEXT("Bonus action");
     case EActionCostKind::Movement: return TEXT("Move");
     case EActionCostKind::Reaction: return TEXT("Reaction");
+    case EActionCostKind::Free: return TEXT("Free");
     case EActionCostKind::None: return TEXT("No cost");
     }
     return FString();
@@ -26,6 +27,7 @@ FString ResourceName(EActionResource Resource)
     case EActionResource::Maneuver: return TEXT("Maneuver");
     case EActionResource::Rage: return TEXT("Rage");
     case EActionResource::Potion: return TEXT("Potion");
+    case EActionResource::Surge: return TEXT("Surge");
     case EActionResource::None: return TEXT("No resource");
     }
     return FString();
@@ -39,6 +41,7 @@ FString CostPillText(const FActionFacts& Facts)
     case EActionCostKind::BonusAction: return TEXT("Bonus");
     case EActionCostKind::Movement: return TEXT("Move");
     case EActionCostKind::Reaction: return TEXT("Reaction");
+    case EActionCostKind::Free: return TEXT("Free");
     case EActionCostKind::None: return FString();
     }
     return FString();

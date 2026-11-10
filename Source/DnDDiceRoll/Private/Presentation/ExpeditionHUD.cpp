@@ -869,6 +869,22 @@ void AExpeditionHUD::RebuildDock(const FCombatBattle& Rules, const FCombatantSta
         }
         else if (Command == ECombatCommandType::Rescue) { Entry.ButtonId = TEXT("ModeRescue"); Entry.Key = TEXT("R"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
         else if (Command == ECombatCommandType::Potion) { Entry.ButtonId = TEXT("ModePotion"); Entry.Label = TEXT("Potion"); Entry.Key = TEXT("P"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
+        else if (Command == ECombatCommandType::Dash || Command == ECombatCommandType::Disengage ||
+            Command == ECombatCommandType::Grapple || Command == ECombatCommandType::Shove ||
+            Command == ECombatCommandType::Escape || Command == ECombatCommandType::ActionSurge)
+        {
+            Entry.Label = Entry.Facts.Name; Entry.Accent = Sky; Entry.Effect = FCombatBattle::DescribeAction(Command);
+            switch (Command)
+            {
+            case ECombatCommandType::Dash: Entry.ButtonId = TEXT("ModeDash"); Entry.Key = TEXT("D"); break;
+            case ECombatCommandType::Disengage: Entry.ButtonId = TEXT("ModeDisengage"); Entry.Key = TEXT("W"); break;
+            case ECombatCommandType::Grapple: Entry.ButtonId = TEXT("ModeGrapple"); Entry.Key = TEXT("G"); break;
+            case ECombatCommandType::Shove: Entry.ButtonId = TEXT("ModeShove"); Entry.Key = TEXT("B"); break;
+            case ECombatCommandType::Escape: Entry.ButtonId = TEXT("ModeEscape"); Entry.Key = TEXT("J"); break;
+            case ECombatCommandType::ActionSurge: Entry.ButtonId = TEXT("ModeSurge"); Entry.Key = TEXT("C"); break;
+            default: break;
+            }
+        }
         else if (Command != ECombatCommandType::EndTurn)
         {
             Entry.ButtonId = Special == 0 ? TEXT("ModeRole") : TEXT("Maneuver"); Entry.Key = Special == 0 ? TEXT("F") : TEXT("M"); Entry.Accent = Sky; ++Special;
@@ -934,8 +950,6 @@ void AExpeditionHUD::DrawActionBar()
     const FCombatBattle& Rules = View->Rules();
     const FCombatSnapshot& Snapshot = Rules.Snapshot();
     const FCombatantState* Active = Rules.Find(Rules.ActiveId());
-    const float DockHeight = DockBezel + DockButtonHeight + DockFoot;
-    const float DockY = H - DockMargin - DockHeight;
     if (View->IsPresenting())
     {
         Button(TEXT("Skip"), TEXT("Skip  >>"), TEXT("Tab"), W * 0.5f - 52, H - DockMargin - DockButtonHeight, 104, DockButtonHeight, true, false, Sky);
@@ -958,7 +972,11 @@ void AExpeditionHUD::DrawActionBar()
         bDockValid = true;
     }
     const int32 Count = DockEntries.Num();
-    const float RowWidth = Count * (DockButtonWidth + DockGap) - DockGap;
+    const int32 Fit = FMath::Max(1, FMath::FloorToInt((W - 2*DockMargin - 2*DockPad + DockGap) / (DockButtonWidth + DockGap)));
+    const int32 Rows = FMath::DivideAndRoundUp(Count, Fit), Columns = FMath::DivideAndRoundUp(Count, Rows);
+    const float DockHeight = DockBezel + Rows*DockButtonHeight + (Rows-1)*DockGap + DockFoot;
+    const float DockY = H - DockMargin - DockHeight;
+    const float RowWidth = Columns * (DockButtonWidth + DockGap) - DockGap;
     const float DockWidth = RowWidth + 2 * DockPad;
     const float DockX = W * 0.5f - DockWidth * 0.5f;
     Panel(DockX, DockY, DockWidth, DockHeight, ExpeditionStyle::UnitColor(*Active), 0.9f);
@@ -988,7 +1006,7 @@ void AExpeditionHUD::DrawActionBar()
     {
         const FDockEntry& Entry = DockEntries[Column];
         FActionTagRequest Tag;
-        const bool bHover = DockButton(Entry, bShowTags, Left + Column * Step, Y, Mode == Entry.Facts.Command && Entry.Facts.Command != ECombatCommandType::EndTurn, Tag);
+        const bool bHover = DockButton(Entry, bShowTags, Left + (Column % Columns) * Step, Y + (Column / Columns) * (DockButtonHeight + DockGap), Mode == Entry.Facts.Command && Entry.Facts.Command != ECombatCommandType::EndTurn, Tag);
         if (!bShowTags) { continue; }
         TagsRequested.Add(Tag);
         if (Entry.Facts.Command == ECombatCommandType::EndTurn) { continue; }

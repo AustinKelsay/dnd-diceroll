@@ -11,8 +11,8 @@
  * Names avoid the SRD ruleset's EActionCost (PR #95) so both can exist in one build. SRD mode extends
  * these enums additively (a Reaction cost, blockers such as ReactionSpent or Grappled); Compact never emits them.
  */
-enum class EActionCostKind : uint8 { Action, BonusAction, Movement, None, Reaction };
-enum class EActionResource : uint8 { None, Kit, Slot, Wind, Maneuver, Rage, Potion };
+enum class EActionCostKind : uint8 { Action, BonusAction, Movement, None, Reaction, Free };
+enum class EActionResource : uint8 { None, Kit, Slot, Wind, Maneuver, Rage, Potion, Surge };
 /** Ally means a party member other than the actor; Friendly includes the actor. Healing also sets bNeedsWounded. */
 enum class EActionTargetKind : uint8 { None, Self, Enemy, Ally, Friendly, DownedAlly };
 /** Fixed order: this is the order blockers are reported in. The first four stand alone. */
@@ -82,7 +82,7 @@ struct DNDDICEROLL_API FActionFactsQuery
      * stance and target shape. It runs the same shape code as For, so the two agree on a fresh battle; bAvailable
      * and Blockers stay empty because availability needs a battle. Cost stays None for a command the kit lacks.
      */
-    static FActionFacts ForBuild(const FCombatantState& Unit, ECombatCommandType Action);
+    static FActionFacts ForBuild(const FCombatantState& Unit, ECombatCommandType Action, ERuleset Ruleset = ERuleset::Compact);
     /** The commands an adventurer's action bar offers, in bar order: attack, move, catalog abilities, rescue, potion, end turn. */
     static TArray<ECombatCommandType> BarFor(const FCombatBattle& Battle, int32 ActorId);
 };

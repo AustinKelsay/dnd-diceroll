@@ -184,3 +184,8 @@ mover dropped before its first step, an enemy mover, a downed creature first in
 initiative (including same-turn natural-20 recovery), a heal/Restore round trip,
 and grapple/shove Extra Attack budgets. The first four turn-level blockers remain
 standalone; the appended SRD reasons preserve fixed enum precedence.
+
+### SRD dock integration after #167
+- The live dock consumes BarFor/For and #167 CostPillText/UsageTagText/TooltipText for SRD too. Grapple/Shove/Escape and Dash/Disengage have unique controls, never aliases of a kit ability. D/W select Dash/Disengage (Shift still pans); G/B/J select Grapple/Shove/Escape; C selects Action Surge on an SRD party turn. Builder/recovery meanings remain elsewhere.
+- Free is an additive presentation cost distinct from None/unknown; Action Surge reports its actual Surge counter, never At will. SRD pool cap/recovery is unknown rather than a misleading Compact kit cap. ForBuild accepts an explicit ruleset and keeps unknown command identity.
+- Tags/tooltips, real key and button mapping, bounds/minimum scale, rejected-target immutability and Compact geometry regressions are covered by ActionDockSrdFactsAreInteractive and the existing #167 suite. Long bars wrap into balanced rows without shrinking buttons.

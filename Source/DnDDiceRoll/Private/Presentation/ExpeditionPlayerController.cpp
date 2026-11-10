@@ -82,6 +82,8 @@ void AExpeditionPlayerController::SetupInputComponent()
         InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
     }
     Bind(EKeys::A, &AExpeditionPlayerController::AttackKey);
+    Bind(EKeys::D, &AExpeditionPlayerController::DashMode);
+    Bind(EKeys::W, &AExpeditionPlayerController::DisengageMode);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
     Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
@@ -437,6 +439,12 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
     else if (Name == TEXT("LevelUp")) { if (AllowsGameplayInput()) { BattleView->ApplyLevelUp(SelectedId); } }
+    else if (Name == TEXT("ModeDash")) { SetMode(ECombatCommandType::Dash); }
+    else if (Name == TEXT("ModeDisengage")) { SetMode(ECombatCommandType::Disengage); }
+    else if (Name == TEXT("ModeGrapple")) { SetMode(ECombatCommandType::Grapple); }
+    else if (Name == TEXT("ModeShove")) { SetMode(ECombatCommandType::Shove); }
+    else if (Name == TEXT("ModeEscape")) { SetMode(ECombatCommandType::Escape); }
+    else if (Name == TEXT("ModeSurge")) { SetMode(ECombatCommandType::ActionSurge); }
     else if (Name == TEXT("ModeAttack")) { SetMode(ECombatCommandType::Attack); }
     else if (Name == TEXT("ModeRole")) { SetMode(RoleAction()); }
     else if (Name == TEXT("ModeRescue")) { SetMode(ECombatCommandType::Rescue); }
@@ -486,6 +494,7 @@ EFighterSubclass AExpeditionPlayerController::StartupSubclass() const
 }
 void AExpeditionPlayerController::Preset()
 {
+    if (SrdKeyMode(ECombatCommandType::Grapple)) { return; }
     if (IsValid(BattleView) && !CanSelectSubclass()) { return; }
     Party.Reset();
     const TCHAR* Names[] = {TEXT("Arden"), TEXT("Nix"), TEXT("Sera"), TEXT("Ivo")};
@@ -548,8 +557,17 @@ bool AExpeditionPlayerController::CanSelectSubclass() const
     if (!AllowsGameplayInput()) { return false; }
     return ShowingBuilder();
 }
-void AExpeditionPlayerController::Champion() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
-void AExpeditionPlayerController::BattleMaster() { if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
+void AExpeditionPlayerController::Champion() { if (SrdKeyMode(ECombatCommandType::Escape)) { return; } if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.champion"); } }
+void AExpeditionPlayerController::BattleMaster() { if (SrdKeyMode(ECombatCommandType::Shove)) { return; } if (CanSelectSubclass()) { Party[0].BuildId = TEXT("fighter.battle-master"); } }
+bool AExpeditionPlayerController::SrdKeyMode(ECombatCommandType Action)
+{
+    if (!ShowsTargeting() || BattleView->Rules().Snapshot().Encounter.Ruleset != ERuleset::SRD) { return false; }
+    KeyMode(Action); return true;
+}
+void AExpeditionPlayerController::DashMode()
+{ if (!IsInputKeyDown(EKeys::LeftShift) && !IsInputKeyDown(EKeys::RightShift)) { SrdKeyMode(ECombatCommandType::Dash); } }
+void AExpeditionPlayerController::DisengageMode()
+{ if (!IsInputKeyDown(EKeys::LeftShift) && !IsInputKeyDown(EKeys::RightShift)) { SrdKeyMode(ECombatCommandType::Disengage); } }
 void AExpeditionPlayerController::ManeuverMode() { KeyMode(SpecialAction(1)); }
 void AExpeditionPlayerController::AttackMode() { KeyMode(ECombatCommandType::Attack); }
 void AExpeditionPlayerController::AttackKey()
@@ -563,7 +581,7 @@ void AExpeditionPlayerController::RoleMode() { KeyMode(RoleAction()); }
 void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
 void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
-void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }
+void AExpeditionPlayerController::Camp() { if (SrdKeyMode(ECombatCommandType::ActionSurge)) { return; } if (AllowsGameplayInput()) { BattleView->Recover(true); } }
 void AExpeditionPlayerController::SkipCamp() { if (AllowsGameplayInput()) { BattleView->Recover(false); } }
 void AExpeditionPlayerController::RequestLevelUp() { if (AllowsGameplayInput()) { BattleView->ApplyLevelUp(SelectedId); } }
 void AExpeditionPlayerController::NewRun()

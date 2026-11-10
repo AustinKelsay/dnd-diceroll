@@ -260,11 +260,17 @@ FString FCombatBattle::DescribeAction(ECombatCommandType Action)
     case ECombatCommandType::SecondWind:
         return FString::Printf(TEXT("Self; heal d%d+%d"), WindDie, FighterLevel);
     case ECombatCommandType::ActionSurge:
-        return TEXT("Restore your Action (Fighter 2+)");
+        return TEXT("Restore the main turn budget (Fighter 2+)");
     case ECombatCommandType::Dash:
         return TEXT("Gain Speed again this turn");
     case ECombatCommandType::Disengage:
         return TEXT("Leave reach without opportunity attacks");
+    case ECombatCommandType::Grapple:
+        return TEXT("Adjacent foe; a failed Strength or Dexterity save lets you hold them");
+    case ECombatCommandType::Shove:
+        return TEXT("Adjacent foe; a failed Strength or Dexterity save knocks them prone");
+    case ECombatCommandType::Escape:
+        return TEXT("Escape your holder with Athletics or Acrobatics");
     case ECombatCommandType::CureWounds:
         return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, CureDice, CureDie, HealingModifier);
     case ECombatCommandType::MagicMissile:
