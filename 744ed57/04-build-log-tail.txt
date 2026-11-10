@@ -1,0 +1,25 @@
+  clang version 20.1.8 (github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261) Target: x86_64-unknown-linux-gnu Thread model: posix InstalledDir: /home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin
+Using Clang archiver (/home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu/bin/llvm-ar)
+  LLVM (http://llvm.org/):   LLVM version 20.1.8   Optimized build.
+Using toolchain located at '/home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v26_clang-20.1.8-rockylinux8/x86_64-unknown-linux-gnu'
+Using bundled libc++ standard C++ library.
+Compressing debug files
+===== End Toolchain Information =====
+Using Unreal Build Accelerator local executor to run 7 action(s)
+  CPU 24 physical cores, 32 logical cores
+  Memory 8.64 GB physical, 41.18 GB/38.42 GB committed
+  UBA Storage capacity 40 GB
+[1/7] Compile SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h
+[2/7] Compile Module.DnDDiceRoll.2.cpp
+[3/7] Compile Module.DnDDiceRoll.1.cpp
+[4/7] Compile Module.DnDDiceRoll.4.cpp
+[5/7] Compile Module.DnDDiceRoll.3.cpp
+[6/7] Link libUnrealEditor-DnDDiceRoll.so
+[7/7] WriteMetadata DnDDiceRollEditor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 35.33 seconds
+Output binary: /home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Binaries/Linux/UnrealEditor
+
+Result: Succeeded
+Total execution time: 39.95 seconds
+Trace written to file /home/plebdev/.config/Epic/UnrealBuildTool/Trace.uba with size 7.2kb
