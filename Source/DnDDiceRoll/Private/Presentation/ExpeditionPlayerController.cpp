@@ -146,6 +146,14 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     }
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
+    // Pointer motion hands the board back from the keyboard cursor, so the pointed cell is previewed before a click can act on it (#171).
+    if (bHasMouse)
+    {
+        const FVector2D Pointer(MouseX, MouseY);
+        if (!bPointerSeen) { bPointerSeen = true; PointerAnchor = Pointer; }
+        else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
+    }
+    else { bPointerSeen = false; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -194,8 +202,12 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
         // Reach describes an action the hero can still take: once the Action, the Bonus action or a resource it costs is spent, the
         // contour would suggest otherwise (#171). Out of range, no target or no sight keep it, since the outline is what explains those.
-        ReachCells = Rules.ActionReach(ActorId, SelectedAction);
-        Highlights.Reach = ReachCells;
+        const FActionFacts Facts = FActionFactsQuery::For(Rules, ActorId, SelectedAction);
+        if (!Facts.Blocks(EActionBlocker::ActionSpent) && !Facts.Blocks(EActionBlocker::BonusSpent) && !Facts.Blocks(EActionBlocker::ResourceShort))
+        {
+            ReachCells = Rules.ActionReach(ActorId, SelectedAction);
+            Highlights.Reach = ReachCells;
+        }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
         if (const FCombatantState* Actor = Rules.Find(ActorId)) { Highlights.bHasOrigin = true; Highlights.Origin = Actor->Cell; }
@@ -407,9 +419,9 @@ void AExpeditionPlayerController::Click()
     if (OverlayOpen()) { return; }
     // The keyboard cursor owns the board until the pointer moves. A click that finds it still there only
     // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
-    bKeyboardCursor = false;
+    if (bKeyboardCursor) { bKeyboardCursor = false; return; }
     FIntPoint Cell;
-    if (HoverCell(Cell)) { ActAtCell(Cell); }
+    if (PreviewedPointerCell(Cell)) { ActAtCell(Cell); }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)

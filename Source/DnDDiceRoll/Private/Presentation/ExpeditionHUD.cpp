@@ -390,8 +390,7 @@ void AExpeditionHUD::DrawWorldOverlays()
     // Geometry is independent of target eligibility and available budgets.
     if (Player->ShowsTargeting())
     {
-        Text(bGroundGrid ? TEXT("Outline Reach  /  x Blocked sight  /  Ring Legal target  /  AREA Victim")
-            : TEXT("o Reach  /  x Blocked sight  /  # Legal target  /  AREA Victim"), W*0.5f, 133, Parchment, 0.65f, EAlign::Center);
+        DrawLegend(bGroundGrid);
         const auto& Reach = Player->Reach();
         auto DrawCells = [&](const TArray<FIntPoint>& Cells, bool bBlocked)
         {
