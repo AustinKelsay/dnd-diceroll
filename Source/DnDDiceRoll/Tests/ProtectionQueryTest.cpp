@@ -13,8 +13,20 @@ bool FProtectionQueryTest::RunTest(const FString& Parameters)
     auto Enemy = []()
     {
         FCombatantState E; E.Id = 20; E.Name = E.Role = TEXT("Enemy"); E.Side = ECombatSide::Enemy; E.InitiativeBonus = -10;
-        E.AttackBonus = 30; E.DamageDie = 1; E.DamageBonus = 4; // every hit is exactly 5 before protection
+        E.AttackBonus = 30; E.DamageDie = 1; E.DamageBonus = 4; // a non-critical hit deals exactly 1 + 4 = 5 before protection
         return E;
+    };
+    constexpr int32 RawHit = 5;
+    // The HP the target actually lost, from the snapshots on either side of the hit, against raw damage minus the query.
+    auto CheckHit = [this](FCombatBattle& Battle, int32 AttackerId, int32 TargetId, int32 Expected, const TCHAR* What)
+    {
+        const FProtectionFacts Queried = Battle.Protection(TargetId);
+        TestEqual(FString(What) + TEXT(": queried amount"), Queried.Amount, Expected);
+        const int32 Before = Battle.Find(TargetId)->HP;
+        const FCombatResult Hit = Battle.Submit({ECombatCommandType::Attack, AttackerId, {}, TargetId});
+        if (!TestTrue(FString(What) + TEXT(": fixture lands a non-critical hit"), Hit.bAccepted && Hit.bHit && !Hit.bCritical)) { return; }
+        TestEqual(FString(What) + TEXT(": HP lost is raw damage minus the queried protection"), Before - Battle.Find(TargetId)->HP, FMath::Max(0, RawHit - Queried.Amount));
+        TestEqual(FString(What) + TEXT(": the result reports the same prevention"), Hit.DamagePrevented, FMath::Min(RawHit, Queried.Amount));
     };
     {
         // Two wards of 3 on one hero: the strongest applies (not the sum), and the first in roster order supplies it.
@@ -35,9 +47,7 @@ bool FProtectionQueryTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("The query changes nothing and rolls nothing"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before, &Battle.Snapshot(), 0));
         TestEqual(TEXT("Strongest ward, not the sum"), Ward.Amount, 3);
         TestEqual(TEXT("First ward owner in roster order supplies it"), Ward.SourceId, 1);
-        const FCombatResult Hit = Battle.Submit({ECombatCommandType::Attack, 20, {}, 1});
-        TestTrue(TEXT("Fixture hit lands"), Hit.bHit);
-        TestEqual(TEXT("Resolution prevents exactly the queried amount"), Hit.DamagePrevented, FMath::Min(Hit.Damage + Hit.DamagePrevented, Ward.Amount));
+        CheckHit(Battle, 20, 1, 3, TEXT("Two wards"));
     }
     {
         // Rage alone gives 1 from the hero itself; a Rage-gated Shelter (no Kit amount) falls back to 3 from its owner.
@@ -57,10 +67,28 @@ bool FProtectionQueryTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Shelter without a Kit amount gives 3"), Shelter.Amount, 3);
         TestEqual(TEXT("The barbarian supplies the shelter"), Shelter.SourceId, 1);
         Battle.Submit({ECombatCommandType::EndTurn, 1}); Battle.Submit({ECombatCommandType::EndTurn, 2});
-        const FCombatResult Hit = Battle.Submit({ECombatCommandType::Attack, 20, {}, 2});
-        TestTrue(TEXT("Fixture hit lands"), Hit.bHit);
-        TestEqual(TEXT("Resolution prevents exactly the queried shelter"), Hit.DamagePrevented, FMath::Min(Hit.Damage + Hit.DamagePrevented, Shelter.Amount));
+        CheckHit(Battle, 20, 2, 3, TEXT("Shelter"));
         TestEqual(TEXT("Unknown combatant has no protection"), Battle.Protection(99).Amount, 0);
+    }
+    {
+        // Rage only: the raging hero is hit and loses 1 less; an unprotected hero loses the full hit.
+        FCombatantState Berserker, Ally;
+        FBuildCatalog::Create(TEXT("barbarian.berserker"), 1, TEXT("Berserker"), Berserker);
+        FBuildCatalog::Create(TEXT("fighter.champion"), 2, TEXT("Ally"), Ally);
+        Berserker.Cell = {1, 1}; Berserker.InitiativeBonus = 30; Ally.Cell = {3, 2}; Ally.InitiativeBonus = 10;
+        FCombatantState Foe = Enemy(); Foe.Cell = {2, 1}; // beside the Berserker
+        FCombatantState Second = Enemy(); Second.Id = 21; Second.Cell = {3, 1}; Second.InitiativeBonus = -30; // beside the Ally, acts last
+        FCombatEncounter Encounter; Encounter.Combatants = {Berserker, Ally, Foe, Second};
+        FCombatBattle Battle;
+        if (!TestTrue(TEXT("Start rage-only scenario"), Battle.Start(Encounter, 42, Error))) { return false; }
+        TestEqual(TEXT("No protection before Rage"), Battle.Protection(1).Amount, 0);
+        TestTrue(TEXT("Rage"), Battle.Submit({ECombatCommandType::Special1, 1, {}, 1}).bAccepted);
+        TestEqual(TEXT("Rage supplies its own protection"), Battle.Protection(1).SourceId, 1);
+        Battle.Submit({ECombatCommandType::EndTurn, 1}); Battle.Submit({ECombatCommandType::EndTurn, 2});
+        CheckHit(Battle, 20, 1, 1, TEXT("Rage only"));
+        Battle.Submit({ECombatCommandType::EndTurn, 20});
+        TestEqual(TEXT("The second enemy acts next"), Battle.ActiveId(), 21);
+        CheckHit(Battle, 21, 2, 0, TEXT("Unprotected"));
     }
     return !HasAnyErrors();
 }
