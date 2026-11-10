@@ -1,6 +1,8 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Combat/ActionFacts.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
@@ -149,6 +151,14 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     ObserveHints();
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
+    // Pointer motion hands the board back from the keyboard cursor, so the pointed cell is previewed before a click can act on it (#171).
+    if (bHasMouse)
+    {
+        const FVector2D Pointer(MouseX, MouseY);
+        if (!bPointerSeen) { bPointerSeen = true; PointerAnchor = Pointer; }
+        else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
+    }
+    else { bPointerSeen = false; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -180,6 +190,16 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
     const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);
+    // A click acts only on what this frame shows under the pointer, and only while targeting is visible: during playback,
+    // an enemy turn or an overlay no target is drawn, so nothing there may be committed unseen.
+    bPointerPreviewed = bHover && !bKeyboardCursor && ShowsTargeting();
+    PointerPreview = Hover;
+    PreviewStamp = TargetingStamp();
+    bPreviewPoseValid = ProjectionPose(PreviewPose);
+    // The same for the keyboard cursor: Enter acts only on a cell the last frame drew marked while targeting was visible.
+    bKeyboardPreviewed = bKeyboardCursor && ShowsTargeting();
+    KeyboardPreview = GridCursor;
+    KeyboardStamp = PreviewStamp;
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -192,8 +212,14 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     if (ShowsTargeting())
     {
         if (SelectedAction == ECombatCommandType::Attack) { Highlights.Moves = Rules.LegalMoves(ActorId); }
-        ReachCells = Rules.ActionReach(ActorId, SelectedAction);
-        Highlights.Reach = ReachCells;
+        // Reach describes an action the hero can still take: once the Action, the Bonus action or a resource it costs is spent, the
+        // contour would suggest otherwise (#171). Out of range, no target or no sight keep it, since the outline is what explains those.
+        const FActionFacts Facts = FActionFactsQuery::For(Rules, ActorId, SelectedAction);
+        if (!Facts.Blocks(EActionBlocker::ActionSpent) && !Facts.Blocks(EActionBlocker::BonusSpent) && !Facts.Blocks(EActionBlocker::ResourceShort))
+        {
+            ReachCells = Rules.ActionReach(ActorId, SelectedAction);
+            Highlights.Reach = ReachCells;
+        }
         Highlights.Targets = Rules.LegalTargets(ActorId, SelectedAction);
         Highlights.bFriendlyTargets = ExpeditionStyle::IsFriendlyAction(SelectedAction, Rules.Find(ActorId));
         if (const FCombatantState* Actor = Rules.Find(ActorId)) { Highlights.bHasOrigin = true; Highlights.Origin = Actor->Cell; }
@@ -336,7 +362,63 @@ void AExpeditionPlayerController::ReplayHints()
 
 bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
 {
-    return !bCapturing && GetMousePosition(X, Y);
+    if (bCapturing) { return false; }
+    if (bSimulatedPointer) { X = SimulatedPointer.X; Y = SimulatedPointer.Y; return true; }
+    return GetMousePosition(X, Y);
+}
+
+bool AExpeditionPlayerController::ProjectionPose(FTransform& Pose) const
+{
+    if (PlayerCameraManager) { const FMinimalViewInfo& View = PlayerCameraManager->GetCameraCacheView(); Pose = FTransform(View.Rotation, View.Location); return true; }
+    if (!IsValid(BattleView)) { return false; }
+    Pose = BattleView->CameraTransform();
+    return true;
+}
+
+void AExpeditionPlayerController::SimulatePointerThroughCamera(FVector2D ViewportPosition, FIntPoint ViewportSize)
+{
+    bSimulatedPointer = true; bSimulatedCamera = true;
+    SimulatedPointer = ViewportPosition; SimulatedViewport = ViewportSize;
+}
+
+void AExpeditionPlayerController::SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell)
+{
+    bSimulatedPointer = true; bSimulatedCamera = false;
+    SimulatedPointer = ViewportPosition;
+    SimulatedCell = Cell;
+}
+
+uint32 AExpeditionPlayerController::TargetingStamp() const
+{
+    // Everything a previewed target depends on: the mode, who acts and the whole battle state. A change of any of it voids the preview.
+    uint32 Stamp = HashCombine(GetTypeHash(int32(SelectedAction)), GetTypeHash(Actor()));
+    if (!IsValid(BattleView)) { return Stamp; }
+    const FCombatSnapshot& Snapshot = BattleView->Rules().Snapshot();
+    Stamp = HashCombine(Stamp, GetTypeHash(BattleView->PresentationRevision()));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.RandomState));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.TurnIndex));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.Round));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.MovementLeft));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(Snapshot.bActionAvailable) | uint32(Snapshot.bBonusActionAvailable) << 1));
+    for (const FCombatantState& Unit : Snapshot.Encounter.Combatants)
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Id));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Cell));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.HP));
+        Stamp = HashCombine(Stamp, GetTypeHash(int32(Unit.Life)));
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PreviewedPointerCell(FIntPoint& Cell) const
+{
+    if (!bPointerPreviewed || !ShowsTargeting() || PreviewStamp != TargetingStamp()) { return false; }
+    Cell = PointerPreview; return true;
+}
+
+bool AExpeditionPlayerController::KeyboardPreviewValid() const
+{
+    return bKeyboardCursor && bKeyboardPreviewed && ShowsTargeting() && KeyboardPreview == GridCursor && KeyboardStamp == TargetingStamp();
 }
 
 void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
@@ -356,6 +438,16 @@ bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
     if (bCapturing) { return false; }
+    if (bSimulatedPointer && bSimulatedCamera)
+    {
+        if (!IsValid(BattleView) || SimulatedViewport.X <= 0 || SimulatedViewport.Y <= 0) { return false; }
+        const FTransform Pose = BattleView->CameraTransform();
+        const double HalfWidth = FMath::Tan(FMath::DegreesToRadians(BattleView->CameraFieldOfView()) * 0.5), HalfHeight = HalfWidth * SimulatedViewport.Y / SimulatedViewport.X;
+        const double X = SimulatedPointer.X / SimulatedViewport.X * 2.0 - 1.0, Y = 1.0 - SimulatedPointer.Y / SimulatedViewport.Y * 2.0;
+        const FVector Direction = (Pose.GetRotation().GetForwardVector() + Pose.GetRotation().GetRightVector() * (X * HalfWidth) + Pose.GetRotation().GetUpVector() * (Y * HalfHeight)).GetSafeNormal();
+        return BattleView->CellAtRay(Pose.GetLocation(), Direction, Cell);
+    }
+    if (bSimulatedPointer) { Cell = SimulatedCell; return true; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
 
@@ -382,7 +474,7 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
         GridCursor.X = FMath::Clamp(GridCursor.X + Step.X, 0, Encounter.Width - 1);
         GridCursor.Y = FMath::Clamp(GridCursor.Y + Step.Y, 0, Encounter.Height - 1);
     }
-    bKeyboardCursor = true;
+    UseKeyboardCursor();
 }
 void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
 void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
@@ -475,7 +567,13 @@ void AExpeditionPlayerController::ConfirmCell()
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
-    bKeyboardCursor = true;
+    // Enter acts on the cell the keyboard cursor marks, so it must be showing: with it hidden (the pointer took over, or it
+    // was never shown) the first Enter only brings it back on its cell, and a following Enter acts (#171).
+    if (!bKeyboardCursor) { UseKeyboardCursor(); return; }
+    // ... and it must have been drawn on this cell, for this mode and state, with targeting visible: during playback, an enemy
+    // turn or an overlay nothing is marked as a target, and a cursor moved or a state changed since the last frame waits for the
+    // next one to show it. One Enter acts whenever the cursor is showing as it will act.
+    if (!KeyboardPreviewValid()) { return; }
     ActAtCell(GridCursor);
 }
 
@@ -510,9 +608,29 @@ void AExpeditionPlayerController::Click()
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
     }
     if (OverlayOpen()) { return; }
-    bKeyboardCursor = false;
-    FIntPoint Cell;
-    if (HoverCell(Cell)) { ActAtCell(Cell); }
+    // The keyboard cursor owns the board until the pointer moves. A click that finds it still there only
+    // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
+    if (bKeyboardCursor) { bKeyboardCursor = false; return; }
+    FIntPoint Cell, Under;
+    if (PreviewedPointerCell(Cell))
+    {
+        // The camera eases on its own: the cell under a resting pointer can change after the preview was drawn. Act only if it is
+        // still the cell that was shown; otherwise the next frame previews the new one first.
+        // The camera also moves under a resting pointer (Q/E, pan, zoom, the focus easing to a new unit): the preview was found with
+        // the pose of the frame it was drawn in, so a camera that has moved since voids it, and the next frame previews afresh.
+        FTransform Pose;
+        const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+            FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+            FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        return;
+    }
+    // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
+    if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
+    {
+        for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
+    }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
