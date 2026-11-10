@@ -11,12 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import balance_report
 
 RUN_FIELDS = ("party,archetype,builds,seed,route_pattern,outcome,stall_reason,encounters_won,rounds,deaths,survivors,damage,damage_taken,"
-              "healing,protection,specials_used,potions_used,commands,policy_errors,illegal_proposals,passive_ends").split(",")
+              "healing,protection,specials_used,potions_used,commands,policy_errors,illegal_proposals,passive_ends,protection_mismatches").split(",")
 ENCOUNTER_FIELDS = ("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,"
                     "damage_taken,healing,protection,downs,deaths,revives,specials_used").split(",")
 HERO_FIELDS = ("party,archetype,seed,outcome,slot,build,class,survived,death_stage,death_cause,level,turns,idle_turns,damage,kills,healing,"
-               "protection,damage_taken,downs,revives,potions_used,s1_command,s1_available_turns,s1_uses,s1_top_blocker,s1_top_blocker_turns,"
-               "s2_command,s2_available_turns,s2_uses,s2_top_blocker,s2_top_blocker_turns,kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,"
+               "protection,damage_taken,downs,revives,potions_used,s1_command,s1_available_turns,s1_uses,s1_blockers,"
+               "s2_command,s2_available_turns,s2_uses,s2_blockers,kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,"
                "maneuver_left,maneuver_cap,rage_left,rage_cap,potions_left").split(",")
 
 
@@ -25,14 +25,17 @@ def write(path, fields, rows):
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         for row in rows:
-            writer.writerow({field: row.get(field, 0) for field in fields})
+            writer.writerow({field: row.get(field, "" if field.endswith("_blockers") else 0) for field in fields})
 
 
 class BalanceReportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # A stand-in checkout: results must live under its .local/.
+        self.local = Path(self.temp.name) / ".local"
+        self.root = self.local / "balance" / "run"
+        self.root.mkdir(parents=True)
 
     def group(self, name, runs):
         """runs: list of (party, seed, outcome, fights, hero kits with (survived, damage))."""
@@ -53,8 +56,8 @@ class BalanceReportTests(unittest.TestCase):
                 hero_rows.append({"party": party, "archetype": "rotation", "seed": seed, "outcome": outcome, "slot": slot, "build": kit,
                                   "class": kit.split(".")[0], "survived": 1 if alive else 0, "death_stage": 0 if alive else fights,
                                   "death_cause": "" if alive else "wipe", "turns": 10, "damage": damage, "s1_command": "Special1",
-                                  "s1_available_turns": 5, "s1_uses": 1 if kit != "monk.idle" else 0, "s1_top_blocker": "ResourceShort",
-                                  "s1_top_blocker_turns": 5, "s2_command": "", "kit_left": 1, "kit_cap": 2, "slot_cap": 0, "wind_cap": 0,
+                                  "s1_available_turns": 5, "s1_uses": 1 if kit != "monk.idle" else 0, "s1_blockers": "ResourceShort:5",
+                                  "s2_command": "", "kit_left": 1, "kit_cap": 2, "slot_cap": 0, "wind_cap": 0,
                                   "maneuver_cap": 0, "rage_cap": 0, "potions_left": 2})
         write(folder / "runs.csv", RUN_FIELDS, run_rows)
         write(folder / "encounters.csv", ENCOUNTER_FIELDS, encounter_rows)
@@ -108,20 +111,52 @@ class BalanceReportTests(unittest.TestCase):
         self.group("A", [("p1", 1, "Victory", 5, [("fighter.champion", True, 40)] * 4)])
         out = io.StringIO()
         with redirect_stdout(out):
-            self.assertEqual(balance_report.main([str(self.root)]), 0)
+            self.assertEqual(balance_report.main([str(self.root)], local_root=self.local), 0)
         self.assertIn("1 runs", out.getvalue())
         self.assertIn("# Balance baseline summary", (self.root / "summary.md").read_text(encoding="utf-8"))
         self.assertEqual(json.loads((self.root / "summary.json").read_text(encoding="utf-8"))["overall"]["wins"], 1)
 
+    def test_blockers_sum_across_runs_before_ranking(self):
+        # Summing only each row's top would give ResourceShort 20 against OutOfRange 6; the full counts give 20 against 22.
+        heroes = [("cleric.war", True, 10)] * 4
+        self.group("A", [("p1", seed, "Victory", 5, heroes) for seed in (1, 2)])
+        with (self.root / "A" / "heroes.csv").open(encoding="utf-8") as stream:
+            rows = list(csv.DictReader(stream))
+        for row in rows:
+            row["s1_blockers"] = {"1": "ResourceShort:5;OutOfRange:4", "2": "ResourceShort:5;OutOfRange:4", "3": "OutOfRange:3"}.get(row["slot"], "")
+            row["s1_uses"] = "0"
+        write(self.root / "A" / "heroes.csv", HERO_FIELDS, rows)
+        special = balance_report.summarize(balance_report.load(self.root))["kits"]["cleric.war"]["specials"][0]
+        self.assertEqual(special["blockers"], {"OutOfRange": 22, "ResourceShort": 20})
+        self.assertEqual(special["top_blocker"], "OutOfRange")
+        self.assertEqual(balance_report.parse_blockers(""), {})
+        with self.assertRaises(ValueError):
+            balance_report.parse_blockers("ResourceShort")
+
+    def test_refuses_folders_outside_local(self):
+        self.group("A", [("p1", 1, "Victory", 5, [("fighter.champion", True, 40)] * 4)])
+        outside = Path(self.temp.name) / "elsewhere"
+        outside.mkdir()
+        for folder in (str(outside), str(self.local), str(self.local / ".." / "elsewhere"), "../escape", "Saved/balance"):
+            err = io.StringIO()
+            with redirect_stderr(err):
+                self.assertEqual(balance_report.main([folder], local_root=self.local), 2, folder)
+            self.assertIn("must be inside", err.getvalue())
+        self.assertFalse((outside / "summary.md").exists())
+        # A relative folder is taken from the checkout root (the parent of .local/).
+        self.assertEqual(balance_report.resolve_folder(".local/balance/run", self.local), self.root.resolve())
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(balance_report.main([".local/balance/run"], local_root=self.local), 0)
+
     def test_refuses_empty_or_incomplete_folder(self):
         err = io.StringIO()
         with redirect_stderr(err):
-            self.assertEqual(balance_report.main([str(self.root)]), 2)
+            self.assertEqual(balance_report.main([str(self.root)], local_root=self.local), 2)
         self.assertIn("No balance groups", err.getvalue())
         (self.root / "X").mkdir()
         (self.root / "X" / "group.json").write_text("{}", encoding="utf-8")
         with redirect_stderr(err):
-            self.assertEqual(balance_report.main([str(self.root)]), 2)
+            self.assertEqual(balance_report.main([str(self.root)], local_root=self.local), 2)
         self.assertIn("missing runs.csv", err.getvalue())
 
 

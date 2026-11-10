@@ -19,6 +19,8 @@ RESOURCES = ("kit", "slot", "wind", "maneuver", "rage")
 OUTLIER_Z = 3.0
 WIN_RATE_GAP = 0.15
 RARE = 0.10
+# Results and summaries live only under the checkout's ignored .local/ folder.
+LOCAL_ROOT = Path(__file__).resolve().parents[1] / ".local"
 
 
 def wilson(successes, trials, z=1.96):
@@ -112,7 +114,7 @@ def summarize(data):
 
     summary = {"groups": [g["group"] for g in data["groups"]], "policy_version": sorted({g.get("policy_version") for g in data["groups"]}),
                "seconds": sum(g.get("seconds", 0) for g in data["groups"]), "overall": run_block(runs)}
-    summary["gates"] = {key: sum(number(r, key) for r in runs) for key in ("policy_errors", "illegal_proposals", "passive_ends")}
+    summary["gates"] = {key: sum(number(r, key) for r in runs) for key in ("policy_errors", "illegal_proposals", "passive_ends", "protection_mismatches")}
     summary["parties"] = {party: dict(run_block(rows), archetype=rows[0]["archetype"], builds=rows[0]["builds"])
                           for party, rows in group_by(runs, "party").items()}
     summary["archetypes"] = {name: run_block(rows) for name, rows in group_by(runs, "archetype").items()}
@@ -167,13 +169,14 @@ def summarize(data):
                 continue
             available = sum(number(h, f"s{k}_available_turns") for h in rows)
             uses = sum(number(h, f"s{k}_uses") for h in rows)
+            # Sum every run's full blocker counts before choosing the dominant one.
             blockers = Counter()
             for h in rows:
-                if h[f"s{k}_top_blocker"]:
-                    blockers[h[f"s{k}_top_blocker"]] += number(h, f"s{k}_top_blocker_turns")
+                blockers.update(parse_blockers(h[f"s{k}_blockers"]))
+            ranked = sorted(blockers.items(), key=lambda item: (-item[1], item[0]))
             specials.append({"command": command, "available_rate": available / turns, "uses_per_run": uses / len(rows),
                              "use_when_available": uses / available if available else 0.0, "uses": uses,
-                             "top_blocker": blockers.most_common(1)[0][0] if blockers else ""})
+                             "top_blocker": ranked[0][0] if ranked else "", "blockers": dict(ranked)})
         block["specials"] = specials
         winners = [h for h in rows if h["outcome"] == "Victory" and h["survived"] == "1"]
         block["left_at_victory"] = {res: {"mean": mean([number(h, f"{res}_left") for h in winners]), "cap": number(rows[0], f"{res}_cap")}
@@ -183,13 +186,24 @@ def summarize(data):
     summary["kits"] = kits
     summary["outliers"] = outliers(kits, rotation_rate)
     summary["signatures"] = signatures(kits)
-    summary["encounters"] = encounter_blocks(data["encounters"], fights)
+    summary["encounters"] = encounter_blocks(data["encounters"])
     summary["stalls"] = [{"party": r["party"], "seed": r["seed"], "reason": r["stall_reason"]} for r in runs if r["outcome"] == "Stall"]
     summary["long_fights"] = long_fights(data["encounters"])
     deaths = sorted((h for h in data["heroes"] if h["survived"] == "0"), key=lambda h: (h["party"], int(h["seed"]), int(h["slot"])))
     summary["deaths"] = {"count": len(deaths), "causes": dict(Counter(h["death_cause"] for h in deaths)),
                          "list": [{k: h[k] for k in ("party", "seed", "slot", "build", "death_stage", "death_cause", "outcome")} for h in deaths[:40]]}
     return summary
+
+
+def parse_blockers(text):
+    """'ResourceShort:12;OutOfRange:3' -> Counter; empty text -> empty Counter."""
+    counts = Counter()
+    for part in filter(None, text.split(";")):
+        name, _, count = part.partition(":")
+        if not name or not count.isdigit():
+            raise ValueError(f"Bad blocker count {part!r}")
+        counts[name] += int(count)
+    return counts
 
 
 def group_by(rows, key):
@@ -226,7 +240,7 @@ def signatures(kits):
     return flags
 
 
-def encounter_blocks(rows, fights):
+def encounter_blocks(rows):
     blocks = {}
     for (stage, route), group in sorted(group_by_pair(rows, "stage", "route").items()):
         finished = [r for r in group if r["outcome"] in ("Victory", "Defeat")]
@@ -274,7 +288,7 @@ def markdown(summary):
     o = summary["overall"]
     lines += [f"Groups: {', '.join(summary['groups'])}. Policy version {summary['policy_version']}. {o['n']} runs in {summary['seconds']:.1f} s.", "",
               f"Overall win rate {interval(o)}; {o['stalls']} stalls; {o['fights_won']:.2f} fights won per run; {o['rounds_per_fight']:.1f} rounds per fight; {o['deaths_per_run']:.2f} deaths per run.", "",
-              f"Gates: policy errors {summary['gates']['policy_errors']}, illegal proposals {summary['gates']['illegal_proposals']}, passive ends {summary['gates']['passive_ends']}.", ""]
+              f"Gates: policy errors {summary['gates']['policy_errors']}, illegal proposals {summary['gates']['illegal_proposals']}, passive ends {summary['gates']['passive_ends']}, protection mismatches {summary['gates']['protection_mismatches']}.", ""]
     lines += ["## Parties", "", "| Party | Archetype | Win rate (95% CI) | Fights won | Rounds/fight | Deaths/run | Damage | Taken | Healing | Protection | Specials | Potions |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for name, p in summary["parties"].items():
         if p["archetype"] == "rotation":
@@ -323,16 +337,26 @@ def markdown(summary):
     return "\n".join(lines) + "\n"
 
 
-def main(argv=None):
+def resolve_folder(folder, local_root=LOCAL_ROOT):
+    """The result folder, relative paths taken from the checkout root; it must lie inside the checkout's .local/."""
+    local = Path(local_root).resolve()
+    path = Path(folder)
+    path = (path if path.is_absolute() else local.parent / path).resolve()
+    if path == local or not path.is_relative_to(local):
+        raise ValueError(f"Result folder must be inside {local}/, not {path}")
+    return path
+
+
+def main(argv=None, local_root=LOCAL_ROOT):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("folder", help="Result folder, e.g. .local/balance/<stamp>")
+    parser.add_argument("folder", help="Result folder inside .local/, e.g. .local/balance/<stamp> (relative to the checkout root)")
     args = parser.parse_args(argv)
     try:
-        summary = summarize(load(args.folder))
+        folder = resolve_folder(args.folder, local_root)
+        summary = summarize(load(folder))
     except (ValueError, OSError, KeyError) as error:
         print(f"balance_report: {error}", file=sys.stderr)
         return 2
-    folder = Path(args.folder)
     (folder / "summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     (folder / "summary.md").write_text(markdown(summary), encoding="utf-8")
     o = summary["overall"]
