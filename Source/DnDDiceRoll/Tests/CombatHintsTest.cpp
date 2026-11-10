@@ -446,7 +446,7 @@ bool FHintsSkipAndReplayTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("A fresh run reaches the party's first turn"), ToFirstTurn(Game))) { return false; }
     TestEqual(TEXT("The move hint is up"), Visible(Game), ECombatHint::MoveSelectConfirm);
     // The callout's buttons are real controls with the labels the player sees.
-    FVector2D GotItAt, SkipAt;
+    FVector2D GotItAt = FVector2D::ZeroVector, SkipAt = FVector2D::ZeroVector;
     if (!TestTrue(TEXT("Got it is a button"), FindButton(Game, GotIt, GotItAt)) || !TestTrue(TEXT("Skip tips is a button"), FindButton(Game, Skip, SkipAt))) { return false; }
     TestTrue(TEXT("The hint's buttons are not a Tab stop"), !Game.Hud->MenuButtons().Contains(GotIt) && !Game.Hud->MenuButtons().Contains(Skip));
     // Got it puts away this one; the next hint still comes.
@@ -516,7 +516,7 @@ bool FHintsNeverLeakInputTest::RunTest(const FString& Parameters)
     // Everything inside the callout belongs to the HUD: a click there never reaches the board.
     for (double Y = Box.Min.Y + 1; Y < Box.Max.Y; Y += 6)
     { for (double X = Box.Min.X + 1; X < Box.Max.X; X += 6) { TestTrue(TEXT("The callout swallows clicks over its whole area"), Game.Hud->CoversBoard(FVector2D(X, Y))); } }
-    FVector2D GotItAt, SkipAt;
+    FVector2D GotItAt = FVector2D::ZeroVector, SkipAt = FVector2D::ZeroVector;
     if (!TestTrue(TEXT("Got it and Skip tips are buttons"), FindButton(Game, GotIt, GotItAt) && FindButton(Game, Skip, SkipAt))) { return false; }
     TestEqual(TEXT("Combat holds no menu focus: the hint adds no focus"), Game.Player->MenuFocus(), FName(NAME_None));
     Game.Press(EKeys::Tab);
@@ -624,7 +624,7 @@ bool FHintsPointerRulesTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("A fresh run reaches the party's first turn"), ToFirstTurn(Game))) { return false; }
     const FIntPoint Behind = FreeStep(Game), Start = Game.View->Rules().Find(Game.Player->Actor())->Cell;
     if (!TestTrue(TEXT("The hero has a cell a leaked click would move them to"), Behind != Start)) { return false; }
-    FVector2D GotItAt, SkipAt;
+    FVector2D GotItAt = FVector2D::ZeroVector, SkipAt = FVector2D::ZeroVector;
     if (!TestTrue(TEXT("The callout has its buttons"), FindButton(Game, GotIt, GotItAt) && FindButton(Game, Skip, SkipAt))) { return false; }
     const FHintRequest* Drawn = Game.Hud->HintRequested();
     const FVector2D Panel((Drawn->Box.Min.X + Drawn->Box.Max.X) * 0.5, Drawn->Box.Min.Y + 8);
