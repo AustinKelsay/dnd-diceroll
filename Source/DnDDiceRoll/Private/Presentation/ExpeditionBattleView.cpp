@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ActionText.h"
+#include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/OccluderFade.h"
@@ -102,7 +103,7 @@ constexpr float ExposureBand = 1.41f;
 // Theme cameras and shadows. The sun's shadow distance covers the farthest zoom, in reference cm.
 constexpr float OverviewFieldOfView = 50.0f;
 constexpr float SunShadowReach = 7000.0f;
-constexpr int32 MaxShadowedLocalLights = 2;
+constexpr int32 MaxShadowedLocalLights = BrazierRing::MaxShadowed;
 // Fog begins past the board as seen from the default zoom, in reference cm.
 constexpr float FogStartReference = 3600.0f;
 
@@ -707,7 +708,7 @@ void AExpeditionBattleView::ClearPresentation()
     LogicalParts = 0; LogicalProps = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
-    Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
+    Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; bRootKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
 }
 
@@ -2273,26 +2274,30 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
                 FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f));
         }
     }
-    if (bWorldKit) { BuildKitDressing(Encounter, Seed, Kit); }
-    // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
+    // Braziers ring the board perimeter (#148): one every four cells along each edge, outside the playable edge, so the count
+    // follows the board and not the world. The kit's scatter keeps clear of them. Banners mark the far edge; flames flicker,
+    // banners sway.
+    const TArray<BrazierRing::FBrazier> Ring = BrazierRing::Plan(Encounter.Width, Encounter.Height, Seed);
+    if (bWorldKit) { BuildKitDressing(Encounter, Seed, Kit, BrazierRing::Cells(Ring)); }
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
     UStaticMesh* Banner = ThemeMesh(Theme->Banner);
     const float W = Encounter.Width, H = Encounter.Height;
     const float BowlTop = Brazier ? Brazier->GetBounds().GetBox().Max.Z : 90.0f;
-    const FVector2D Braziers[] = {{-1.3f, -1.3f}, {W + 0.3f, -1.3f}, {-1.3f, H + 0.3f}, {W + 0.3f, H + 0.3f},
-        {(W - 1) * 0.5f, H + 0.5f}, {-1.5f, (H - 1) * 0.5f}, {W + 0.5f, (H - 1) * 0.5f}};
-    for (const FVector2D& Spot : Braziers)
+    // The braziers share the light the seven of #143 gave a board, so the overall level stays; the view shadows the two nearest the centre.
+    const float Strength = BrazierRing::Intensity(Ring.Num());
+    for (const BrazierRing::FBrazier& Spot : Ring)
     {
-        const FVector At = SceneBoard(Spot);
+        const FVector At = SceneBoard(Spot.Cell);
+        BrazierCells.Add(Spot.Cell);
         if (Brazier) { PlaceProp(Brazier, At, FVector::OneVector, FLinearColor::White); }
         if (Flame)
         {
             AddSway(PlaceProp(Flame, At + FVector(0, 0, BowlTop - 4.0f), FVector::OneVector, FLinearColor::White, FRotator::ZeroRotator, false), 0.0f, 0.16f);
         }
-        Flames.Add(MakeLight(nullptr, At + FVector(0, 0, BowlTop + 70.0f), FLinearColor(1.0f, 0.55f, 0.25f), 40.0f, 900.0f));
+        Flames.Add(MakeLight(nullptr, At + FVector(0, 0, BowlTop + 70.0f), FLinearColor(1.0f, 0.55f, 0.25f), Strength, BrazierRing::LightRadius));
         FlameStrength.SetNum(Flames.Num());
-        FlameStrength.Last() = 40.0f;
+        FlameStrength.Last() = Strength;
     }
     // Iron cages hang on chains from the cathedral's unseen vault and swing slowly.
     if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest)
@@ -2364,7 +2369,7 @@ bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter,
     return true;
 }
 
-void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit)
+void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit, const TArray<FVector2D>& Braziers)
 {
     auto Load = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
     {
@@ -2376,7 +2381,7 @@ void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, 
     VigilKit::FDressingKinds Kinds;
     Kinds.Scatter = Scatter.Num(); Kinds.Mist = Mist.Num(); Kinds.Shaft = Shafts.Num();
     const FVector MetricScale(1.0f / SceneScale());
-    for (const VigilKit::FDressing& Plan : VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds))
+    for (const VigilKit::FDressing& Plan : VigilKit::PlanDressing(Encounter.Width, Encounter.Height, Seed, Kinds, Braziers, BrazierRing::ScatterClearCells))
     {
         const TArray<UStaticMesh*>& Set = Plan.Kind == VigilKit::EDressingKind::Scatter ? Scatter : Plan.Kind == VigilKit::EDressingKind::Mist ? Mist : Shafts;
         UStaticMesh* Mesh = Set.IsValidIndex(Plan.Variant) ? Set[Plan.Variant] : nullptr;
