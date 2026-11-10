@@ -903,6 +903,17 @@ class Dev:
         left, right = self.perf_identity(base), self.perf_identity(other)
         return [f"{label}: {key} differs ({left[key]!r} in {base.get('name', 'the earlier pass')} vs {right[key]!r})" for key in left if left[key] != right[key]]
 
+    @staticmethod
+    def perf_startup_sigfpe(code, log, console):
+        """The game died of SIGFPE in SDL's Wayland output handler before autoplay began (a known headless-output quirk)."""
+        if code not in (-8, 136):
+            return False
+        text = ""
+        for path in (log, console):
+            if path.is_file():
+                text += path.read_text(errors="replace")
+        return "handle_wl_output_done" in text and "AUTOPLAY_BEGIN" not in text
+
     def perf_run_folder(self, stamp_name, create):
         """The run folder under .local/perf/: new (create) or named by --run."""
         root = self.w.local / "perf"
@@ -949,9 +960,26 @@ class Dev:
         started = time.time()
         size = ctx["size"]
         print(f"Perf pass {name}: {'resuming the checkpoint' if resuming else 'playing the fight'} at {size[0]}x{size[1]}")
+        retried = None
         with self.config_guard():
-            code, memory = self.perf_run(self.perf_command(ctx["binary"], ctx["editor"], ctx["script"], size, ctx["frames"], log, save, resuming, ctx["vsync"], ctx["sound"], ctx["offscreen"]),
-                                         folder / "console.log", ctx["timeout"], ctx["cwd"])
+            for attempt in (1, 2):
+                code, memory = self.perf_run(self.perf_command(ctx["binary"], ctx["editor"], ctx["script"], size, ctx["frames"], log, save, resuming, ctx["vsync"], ctx["sound"], ctx["offscreen"]),
+                                             folder / "console.log", ctx["timeout"], ctx["cwd"])
+                if attempt == 2 or not self.perf_startup_sigfpe(code, log, folder / "console.log"):
+                    break
+                # A headless Wayland output reports 0 mm physical size and SDL can divide by it at startup (SIGFPE in
+                # handle_wl_output_done); an identical relaunch works. Keep the failed attempt's logs and relaunch once.
+                retried = "startup SIGFPE in SDL handle_wl_output_done (headless output); relaunched once"
+                print(f"Perf pass {name}: {retried}")
+                for kept_log in (log, folder / "console.log"):
+                    if kept_log.is_file():
+                        kept_log.rename(kept_log.with_name(kept_log.stem + "-attempt1" + kept_log.suffix))
+                shutil.rmtree(save, ignore_errors=True)
+                if resuming:
+                    shutil.copytree(output / "measured" / "save", save)
+                else:
+                    save.mkdir()
+                started = time.time()
         ended = time.time()
         crashes = {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)} - crashes_before
         problems = lifecycle_problems(code, set(), self.w.root, who="Game")
@@ -964,7 +992,7 @@ class Dev:
             problems.append("the game did not log a normal exit")
         if problems:
             raise RuntimeError(f"Failed lifecycle for the {name} pass: {'; '.join(problems)}; inspect {log}")
-        record = {**current, "exit_code": code, "log": str(log.relative_to(output)), "csv": None, "rss": memory,
+        record = {**current, "exit_code": code, "log": str(log.relative_to(output)), "csv": None, "rss": memory, "retried": retried,
                   "started": started, "ended": ended,
                   "started_at": datetime.fromtimestamp(started, timezone.utc).isoformat(), "ended_at": datetime.fromtimestamp(ended, timezone.utc).isoformat()}
         if name != "warmup":

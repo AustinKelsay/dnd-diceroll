@@ -92,6 +92,19 @@ class CaptureTests(unittest.TestCase):
         self.assertIn((1, "DONE", "ok", ""), markers)
         self.assertIn((0, "BEGIN", "watchtower", "fresh"), markers)
 
+    def test_startup_sigfpe_on_a_headless_output_is_recognised(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        folder = Path(temp.name)
+        log, console = folder / "game.log", folder / "console.log"
+        console.write_text("Signal 8 caught.\n#3 handle_wl_output_done (libSDL3)\n")
+        log.write_text("LogInit: Initializing SDL.\n")
+        self.assertTrue(Dev.perf_startup_sigfpe(-8, log, console))
+        self.assertTrue(Dev.perf_startup_sigfpe(136, log, console))
+        self.assertFalse(Dev.perf_startup_sigfpe(1, log, console))
+        log.write_text("AUTOPLAY_BEGIN watchtower fresh\n")
+        self.assertFalse(Dev.perf_startup_sigfpe(-8, log, console))
+
     def test_parse_csv_accepts_a_long_metadata_field(self):
         # A real capture ends with metadata rows whose command-line field exceeds csv's default 128 KiB limit.
         long_row = "[Commandline]," + "x" * 200000
