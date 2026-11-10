@@ -90,12 +90,13 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/InstancedParts"), FGuid::NewGuid().ToString());
     int32 Checked = 0;
-    // A Vigil board (a dangerous road: the r002 kit when switched on) and the forest board of the first road.
+    // The first road's two boards: the dangerous road (three enemies) and the guarded road (two). Each board gets its own save
+    // directory: a second NewRun over the first board's unfinished checkpoint would be refused (it must be resumed instead).
     for (const bool bDangerous : {true, false})
     {
-        const TCHAR* Name = bDangerous ? TEXT("Vigil") : TEXT("Forest");
-        AExpeditionBattleView* View = StartPartsBoard(World, Directory, bDangerous);
-        if (!View) { AddInfo(FString::Printf(TEXT("No %s road is on offer in this run; its board was skipped."), Name)); continue; }
+        const TCHAR* Name = bDangerous ? TEXT("Dangerous road") : TEXT("Guarded road");
+        AExpeditionBattleView* View = StartPartsBoard(World, FPaths::Combine(Directory, bDangerous ? TEXT("dangerous") : TEXT("guarded")), bDangerous);
+        if (!TestNotNull(FString::Printf(TEXT("%s: the first stage offers this road and its board starts"), Name), View)) { continue; }
         if (!View->UsesTheme()) { AddInfo(TEXT("The shipped theme is not available here; the instanced-parts checks were skipped.")); break; }
         // The themed look needs M_DiceRollEffect and the board overlay material with graph board-overlay-3: both are created by the
         // headless theme import (Content/Python/import_dark_fantasy_theme.py and create_board_overlay_material.py).
@@ -165,7 +166,7 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
             TestEqual(FString::Printf(TEXT("%s: rebuild %d keeps the logical parts"), Name, Round), View->LogicalPartCount(), Logical);
         }
     }
-    if (Checked == 0) { AddInfo(TEXT("No themed board was checked.")); }
+    if (Checked == 0) { AddInfo(TEXT("No themed board was checked (the shipped theme is not available here).")); }
     DestroyPartsWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
