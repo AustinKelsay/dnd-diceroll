@@ -637,7 +637,10 @@ class PerfCommandTests(unittest.TestCase):
                 (folder / "resume" / "pass.json").write_text(json.dumps(changed))
                 with self.assertRaisesRegex(RuntimeError, message): dev.perf(only="report", run=run)
                 (folder / "resume" / "pass.json").write_text(json.dumps(record))
-            self.assertTrue(dev.perf(only="report", run=run)["passed"])
+            # This run skipped the warm-up, so the budgets are met but the gate is not: it wants a warm package.
+            report = dev.perf(only="report", run=run)
+            self.assertFalse(report["passed"])
+            self.assertTrue(any("warm-up" in failure for failure in report["failures"]))
 
     def test_a_failed_pass_leaves_no_pass_record_and_the_default_stays_one_invocation(self):
         dev = self.prepare()

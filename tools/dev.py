@@ -1022,6 +1022,10 @@ class Dev:
         if measured["mode"].startswith("editor"):
             report["passed"] = False
             report["failures"].append("Measured in the editor (-game): not a packaged Development build, so it cannot pass the gate")
+        if "warmup" not in records:
+            # #148 asks for a warm package: the first run after packaging pays shader, PSO and file caches.
+            report["passed"] = False
+            report["failures"].append("No warm-up pass: the gate is measured on a warm package (run perf --pass warmup first)")
         write_json(output / "report.json", report)
         (output / "report.md").write_text(perf_tools.markdown_report(report))
         for check in report["checks"]:
