@@ -190,6 +190,10 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     bPointerPreviewed = bHover && !bKeyboardCursor && ShowsTargeting();
     PointerPreview = Hover;
     PreviewStamp = TargetingStamp();
+    // The same for the keyboard cursor: Enter acts only on a cell the last frame drew marked while targeting was visible.
+    bKeyboardPreviewed = bKeyboardCursor && ShowsTargeting();
+    KeyboardPreview = GridCursor;
+    KeyboardStamp = PreviewStamp;
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -267,6 +271,11 @@ bool AExpeditionPlayerController::PreviewedPointerCell(FIntPoint& Cell) const
 {
     if (!bPointerPreviewed || !ShowsTargeting() || PreviewStamp != TargetingStamp()) { return false; }
     Cell = PointerPreview; return true;
+}
+
+bool AExpeditionPlayerController::KeyboardPreviewValid() const
+{
+    return bKeyboardCursor && bKeyboardPreviewed && ShowsTargeting() && KeyboardPreview == GridCursor && KeyboardStamp == TargetingStamp();
 }
 
 void AExpeditionPlayerController::PreviewAim(bool bAim, FIntPoint Cell)
@@ -409,6 +418,10 @@ void AExpeditionPlayerController::ConfirmCell()
     // Enter acts on the cell the keyboard cursor marks, so it must be showing: with it hidden (the pointer took over, or it
     // was never shown) the first Enter only brings it back on its cell, and a following Enter acts (#171).
     if (!bKeyboardCursor) { UseKeyboardCursor(); return; }
+    // ... and it must have been drawn on this cell, for this mode and state, with targeting visible: during playback, an enemy
+    // turn or an overlay nothing is marked as a target, and a cursor moved or a state changed since the last frame waits for the
+    // next one to show it. One Enter acts whenever the cursor is showing as it will act.
+    if (!KeyboardPreviewValid()) { return; }
     ActAtCell(GridCursor);
 }
 
@@ -446,8 +459,14 @@ void AExpeditionPlayerController::Click()
     // The keyboard cursor owns the board until the pointer moves. A click that finds it still there only
     // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
     if (bKeyboardCursor) { bKeyboardCursor = false; return; }
-    FIntPoint Cell;
-    if (PreviewedPointerCell(Cell)) { ActAtCell(Cell); return; }
+    FIntPoint Cell, Under;
+    if (PreviewedPointerCell(Cell))
+    {
+        // The camera eases on its own: the cell under a resting pointer can change after the preview was drawn. Act only if it is
+        // still the cell that was shown; otherwise the next frame previews the new one first.
+        if (HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        return;
+    }
     // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
     if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
     {

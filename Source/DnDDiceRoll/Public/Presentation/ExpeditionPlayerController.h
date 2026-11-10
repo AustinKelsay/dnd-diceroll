@@ -119,6 +119,12 @@ private:
     FIntPoint PointerPreview = FIntPoint::ZeroValue;
     /** What the preview was drawn for; a change before the click voids it. */
     uint32 PreviewStamp = 0;
+    /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
+    bool bKeyboardPreviewed = false;
+    FIntPoint KeyboardPreview = FIntPoint::ZeroValue;
+    uint32 KeyboardStamp = 0;
+    /** True while the keyboard cursor is showing on its current cell for the current state with targeting visible: the only time Enter may act. */
+    bool KeyboardPreviewValid() const;
     uint32 TargetingStamp() const;
     /** Shows the keyboard cursor; the pointer is measured afresh from then on, so only later motion hands control back. */
     void UseKeyboardCursor() { bKeyboardCursor = true; bPointerSeen = false; }
