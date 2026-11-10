@@ -14,17 +14,10 @@ bool FHintObservation::Holds(ECombatHint Hint) const
     return false;
 }
 
-bool FHintObservation::operator==(const FHintObservation& Other) const
-{
-    return bAtRest == Other.bAtRest && bResourceCue == Other.bResourceCue && bDowned == Other.bDowned && bOnlyEndTurn == Other.bOnlyEndTurn &&
-        Resource.Resource == Other.Resource.Resource && Resource.Amount == Other.Resource.Amount && Resource.Held == Other.Resource.Held &&
-        Resource.Cap == Other.Resource.Cap && Resource.CampRecovery == Other.Resource.CampRecovery &&
-        DownedName == Other.DownedName && RescueTurnsLeft == Other.RescueTurnsLeft;
-}
-
 void FCombatHints::Arm()
 {
     bArmed = true;
+    bTipsOff = false;
     for (bool& Flag : Shown) { Flag = false; }
     Active = ECombatHint::Count;
     bVisible = false;
@@ -39,7 +32,6 @@ void FCombatHints::Disarm()
 
 void FCombatHints::Replay()
 {
-    bTipsOff = false;
     Arm();
 }
 
@@ -85,7 +77,6 @@ void FCombatHints::Observe(const FHintObservation& Now)
 bool FCombatHints::Show(ECombatHint Hint, const FHintObservation& Now)
 {
     Arm();
-    bTipsOff = false;
     Last = Now;
     if (Hint == ECombatHint::Count || !Now.Holds(Hint)) { return false; }
     Active = Hint;

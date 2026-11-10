@@ -127,6 +127,13 @@ private:
     FHintObservation HintFacts;
     int32 HintActor = INDEX_NONE;
     bool bHintFactsValid = false;
+    /** What each party member held of each resource in the last observed snapshot (key: unit id * 8 + resource), to see a resource being spent. */
+    TMap<int32, int32> HintHeld;
+    /** A resource was spent this run, whatever its cap (a Potion has none to fall below); kept until the next New Run or Resume. */
+    bool bHintSpentSeen = false;
+    FActionResourceCost HintSpent;
+    void TrackHintSpending(const FCombatBattle& Rules);
+    void ResetHintSpending() { HintHeld.Reset(); bHintSpentSeen = false; HintSpent = FActionResourceCost(); }
     void ObserveHints();
     FHintObservation BuildHintObservation(const FCombatBattle& Rules, int32 ActorId) const;
     /** The D key: puts a visible hint away; a no-op when none is up, and never a gameplay key. */

@@ -38,7 +38,6 @@ struct DNDDICEROLL_API FHintObservation
     bool bOnlyEndTurn = false;
 
     bool Holds(ECombatHint Hint) const;
-    bool operator==(const FHintObservation& Other) const;
 };
 
 /** The words of one callout: a title and wrapped-by-the-HUD lines, all from the facts' formatters. */
@@ -49,20 +48,20 @@ struct DNDDICEROLL_API FHintContent
 };
 
 /**
- * Which hint is up, which have been shown, and the session's "tips off" switch.
- * New Run arms (shown flags cleared); Resume does not arm; Skip tips turns tips off for the session (a New Run keeps
- * them off); Replay tips arms and turns tips back on. Only one hint is up at a time, lowest first.
+ * Which hint is up, which have been shown, and the session's "tips off" switch. All of it is in memory, never saved.
+ * New Run arms: the shown flags and the tips-off switch are both reset. Resume does not arm. Skip tips turns tips off
+ * until the next New Run or Replay tips. Only one hint is up at a time, lowest first.
  */
 class DNDDICEROLL_API FCombatHints
 {
 public:
-    /** New Run: clears what was shown and arms. Tips stay off if the player skipped them this session. */
+    /** New Run: clears what was shown and the tips-off switch, and arms. */
     void Arm();
     /** Resume: a returning player is not a first-time player, so nothing is shown until Replay tips. */
     void Disarm();
-    /** Replay tips: arm and turn tips on. */
+    /** Replay tips (Help): the same reset as a New Run, wherever the run stands. */
     void Replay();
-    /** Skip tips: no further hints this session (until Replay tips). */
+    /** Skip tips: no further hints until a New Run or Replay tips. */
     void SkipTips();
     /** Got it / D: put the visible hint away. It counts as shown. */
     void Dismiss();

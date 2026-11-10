@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
 #include "Combat/ActionFacts.h"
+#include "Party/BuildCatalog.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/CombatHints.h"
 #include "Presentation/HudCoverage.h"
@@ -606,6 +607,140 @@ bool FHintsFitTheHudTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHintsSkipThenNewRunTest, "Project.Expedition.Presentation.HintsSkipThenNewRunGivesHintsAgain",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHintsSkipThenNewRunTest::RunTest(const FString& Parameters)
+{
+    using namespace CombatHintsTest;
+    // Skip tips is for the session (never saved), but a New Run resets it with the shown flags (#158).
+    FString Error;
+    FExpeditionRun Lost;
+    Lost.NewRun(3, Error, TEXT("hints-skip"));
+    Lost.ChooseRoute(Lost.Progress().Offers[1].Id, Error);
+    ExpeditionTestSupport::FinishCombat(Lost, false);
+    if (!TestEqual(TEXT("A passive party is defeated"), Lost.Progress().Phase, EExpeditionPhase::Defeat)) { return false; }
+    FExpeditionSaveData Saved;
+    Saved.Current = Lost.Snapshot();
+    Saved.Records.Add(FExpeditionSave::Ending(Lost));
+    FHarness Game(*this, TEXT("HintsSkipNewRun"), &Saved);
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::O);
+    Game.Press(EKeys::N);
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("New Run starts an expedition"), Game.View->HasRun() && Game.View->Progress().Phase == EExpeditionPhase::Route)) { return false; }
+    Game.Settle();
+    Game.Press(EKeys::Enter);
+    Game.PartyTurn();
+    if (!TestEqual(TEXT("The first run shows the move hint"), Visible(Game), ECombatHint::MoveSelectConfirm)) { return false; }
+    Game.Player->HandleButton(Skip);
+    Game.Frame();
+    TestTrue(TEXT("Skip tips turns tips off"), Game.Player->Hints().TipsOff());
+    // Finish the run (a party that only ends turns is defeated), then start another.
+    for (int32 Turn = 0; Turn < 400 && Game.View->InCombat(); ++Turn)
+    {
+        if (Game.Player->ShowsTargeting()) { Game.Press(EKeys::SpaceBar); } else { Game.Frame(0.25f); Game.View->SkipPresentation(); }
+        TestEqual(TEXT("No hint appears while tips are off"), Visible(Game), ECombatHint::Count);
+    }
+    Game.Settle();
+    if (!TestTrue(TEXT("The passive run ends"), Game.View->HasRun() && (Game.View->Progress().Phase == EExpeditionPhase::Defeat || Game.View->Progress().Phase == EExpeditionPhase::Reward))) { return false; }
+    if (Game.View->Progress().Phase != EExpeditionPhase::Defeat) { AddInfo(TEXT("The battle was won; the run is not defeated, so New Run cannot start here.")); return !HasAnyErrors(); }
+    Game.Press(EKeys::N);
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("The next New Run starts"), Game.View->HasRun() && Game.View->Progress().Phase == EExpeditionPhase::Route)) { return false; }
+    TestFalse(TEXT("New Run resets the tips-off switch"), Game.Player->Hints().TipsOff());
+    Game.Settle();
+    Game.Press(EKeys::Enter);
+    Game.PartyTurn();
+    TestEqual(TEXT("The new run's first party turn gives the move hint again"), Visible(Game), ECombatHint::MoveSelectConfirm);
+    return !HasAnyErrors();
+}
+
+/**
+ * A resource is spent, not only below its cap: a hero with two Potions drinks one (2 to 1), every other resource full,
+ * and the resource hint shows. The state is a real run (a won battle, a reward claimed) restored with full resources
+ * and wounded heroes, then driven through Replay tips and the keyboard.
+ */
+namespace CombatHintsTest
+{
+bool TwoPotionCheckpoint(FAutomationTestBase& Test, FExpeditionSaveData& Saved, int32& RecipientId)
+{
+    for (int32 Seed = 1; Seed < 60; ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Run;
+        if (!Run.NewRun(Seed, Error, TEXT("hints-potion")) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+        if (!ExpeditionTestSupport::FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { continue; }
+        int32 Survivor = INDEX_NONE;
+        for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+        { if (Survivor == INDEX_NONE && Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Survivor = Unit.Id; } }
+        if (Survivor == INDEX_NONE || !Run.ClaimReward(Survivor, Error) || !Run.Recover(false, Error) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+        if (!Active || Active->Side != ECombatSide::Party) { continue; }
+        bool bTwo = false;
+        for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Conscious) { continue; }
+            if (const auto* Build = FBuildCatalog::Find(Unit.BuildId))
+            { Unit.KitUses = Build->KitCap; Unit.SecondWindUses = Build->WindCap; Unit.SpellSlots = Build->SlotCap; Unit.ManeuverUses = Build->ManeuverCap; Unit.RageUses = Build->RageCap; }
+            Unit.HP = FMath::Max(1, Unit.MaxHP - 3);
+            bTwo |= Unit.Id == Survivor && Unit.Potions >= 2;
+        }
+        if (!bTwo) { continue; }
+        FExpeditionRun Restored;
+        if (!Restored.Restore(Snapshot, Error)) { Test.AddError(TEXT("The two-potion checkpoint does not restore: ") + Error); return false; }
+        Saved.Current = Restored.Snapshot();
+        RecipientId = Survivor;
+        return true;
+    }
+    return false;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHintsPotionTest, "Project.Expedition.Presentation.HintsSpendingAPotionRaisesTheResourceHint",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHintsPotionTest::RunTest(const FString& Parameters)
+{
+    using namespace CombatHintsTest;
+    FExpeditionSaveData Saved;
+    int32 Recipient = INDEX_NONE;
+    if (!TestTrue(TEXT("A run exists where a hero holds two Potions in a fresh battle"), TwoPotionCheckpoint(*this, Saved, Recipient))) { return false; }
+    FHarness Game(*this, TEXT("HintsPotion"), &Saved);
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::O);
+    Game.PartyTurn();
+    if (!TestTrue(TEXT("The party has the turn"), Game.Player->ShowsTargeting())) { return false; }
+    ReplayFromHelp(Game);
+    TestEqual(TEXT("Replay shows the move hint"), Visible(Game), ECombatHint::MoveSelectConfirm);
+    Game.Press(EKeys::D);
+    for (int32 Index = 0; Index < 3; ++Index) { Game.Frame(); }
+    TestEqual(TEXT("With every resource full and two Potions nothing else is raised"), Visible(Game), ECombatHint::Count);
+    // Let the turns pass (Space) until the hero with the Potions acts.
+    for (int32 Turn = 0; Turn < 8 && Game.View->InCombat() && Game.Player->Actor() != Recipient; ++Turn) { Game.Press(EKeys::SpaceBar); Game.PartyTurn(); }
+    if (!TestTrue(TEXT("The hero with the Potions has the turn"), Game.View->InCombat() && Game.Player->ShowsTargeting() && Game.Player->Actor() == Recipient)) { return false; }
+    TestEqual(TEXT("Still nothing: no resource is spent"), Visible(Game), ECombatHint::Count);
+    const FCombatBattle& Rules = Game.View->Rules();
+    const TArray<int32> Targets = Rules.LegalTargets(Recipient, ECombatCommandType::Potion);
+    if (!TestTrue(TEXT("A wounded hero can be given a Potion"), !Targets.IsEmpty())) { return false; }
+    const FCombatantState* Target = Rules.Find(Targets[0]);
+    const int32 Before = Rules.Find(Recipient)->Potions;
+    TestTrue(TEXT("The hero holds at least two Potions"), Before >= 2);
+    Game.Player->PreviewAim(true, Target->Cell);
+    Game.Press(EKeys::P);
+    Game.Press(EKeys::Enter);
+    Game.Settle();
+    TestEqual(TEXT("One Potion was drunk"), Game.View->Rules().Find(Recipient)->Potions, Before - 1);
+    TestEqual(TEXT("Spending a Potion raises the resource hint"), Visible(Game), ECombatHint::ScarceResources);
+    if (const FHintRequest* Drawn = Game.Hud->HintRequested())
+    {
+        const FString Words = FString::Join(Drawn->Lines, TEXT(" "));
+        TestTrue(TEXT("It names the Potion and that camp does not refill it, from the facts"), Words.Contains(TEXT("Potion")) && Words.Contains(ExpeditionStyle::CampRecoveryText(FActionResourceCost{EActionResource::Potion, 1, 1, 9, 0})));
+    }
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHintsWordingTest, "Project.Expedition.Presentation.HintsWordingFromFacts",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FHintsWordingTest::RunTest(const FString& Parameters)
@@ -645,10 +780,12 @@ bool FHintsWordingTest::RunTest(const FString& Parameters)
     Hints.SkipTips();
     Hints.Observe(Everything);
     TestEqual(TEXT("Skip tips shows nothing"), Hints.Visible(), ECombatHint::Count);
+    TestTrue(TEXT("Skip tips turned them off"), Hints.TipsOff());
     Hints.Arm();
-    TestTrue(TEXT("A New Run keeps tips off for the session"), Hints.TipsOff());
+    TestFalse(TEXT("A New Run resets the tips-off switch with the shown flags"), Hints.TipsOff());
     Hints.Observe(Everything);
-    TestEqual(TEXT("so nothing is shown"), Hints.Visible(), ECombatHint::Count);
+    TestEqual(TEXT("so the first hint is shown again"), Hints.Visible(), ECombatHint::MoveSelectConfirm);
+    Hints.SkipTips();
     Hints.Replay();
     Hints.Observe(Everything);
     TestEqual(TEXT("Replay tips turns them on"), Hints.Visible(), ECombatHint::MoveSelectConfirm);

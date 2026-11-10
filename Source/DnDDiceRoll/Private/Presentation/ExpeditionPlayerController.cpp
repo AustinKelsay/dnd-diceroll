@@ -235,11 +235,31 @@ FHintObservation AExpeditionPlayerController::BuildHintObservation(const FCombat
     return Now;
 }
 
+void AExpeditionPlayerController::TrackHintSpending(const FCombatBattle& Rules)
+{
+    // Successive snapshots: any resource a party member holds less of than a moment ago was spent, a Potion included.
+    TMap<int32, int32> Next;
+    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side != ECombatSide::Party) { continue; }
+        for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Rules, Unit.Id))
+        {
+            for (const FActionResourceCost& Cost : FActionFactsQuery::For(Rules, Unit.Id, Command).Resources)
+            {
+                const int32 Key = Unit.Id * 8 + int32(Cost.Resource);
+                if (const int32* Before = HintHeld.Find(Key); Before && *Before > Cost.Held) { bHintSpentSeen = true; HintSpent = Cost; }
+                Next.Add(Key, Cost.Held);
+            }
+        }
+    }
+    HintHeld = MoveTemp(Next);
+}
+
 void AExpeditionPlayerController::ObserveHints()
 {
     FHintObservation Now;
-    Now.bAtRest = IsValid(BattleView) && ShowsTargeting() && !ShowingMenu();
-    if (Now.bAtRest && HintState.Wants())
+    const bool bAtRest = IsValid(BattleView) && ShowsTargeting() && !ShowingMenu();
+    if (IsValid(BattleView) && BattleView->InCombat())
     {
         const FCombatBattle& Rules = BattleView->Rules();
         const int32 ActorId = Actor();
@@ -247,14 +267,15 @@ void AExpeditionPlayerController::ObserveHints()
         if (!bHintFactsValid || HintActor != ActorId || !FCombatSnapshot::StaticStruct()->CompareScriptStruct(&HintSnapshot, &Rules.Snapshot(), 0))
         {
             HintFacts = BuildHintObservation(Rules, ActorId);
+            TrackHintSpending(Rules);
             HintSnapshot = Rules.Snapshot();
             HintActor = ActorId;
             bHintFactsValid = true;
         }
-        const bool bAtRest = Now.bAtRest;
         Now = HintFacts;
-        Now.bAtRest = bAtRest;
+        if (bHintSpentSeen && !Now.bResourceCue) { Now.bResourceCue = true; Now.Resource = HintSpent; }
     }
+    Now.bAtRest = bAtRest;
     HintState.Observe(Now);
 }
 
@@ -276,7 +297,7 @@ bool AExpeditionPlayerController::PreviewHint(ECombatHint Hint, FString& Why)
         case ECombatHint::ScarceResources: Why = TEXT("no resource is spent or short"); break;
         case ECombatHint::DownedRescue: Why = TEXT("no party member is Downed"); break;
         case ECombatHint::EndingTurn: Why = TEXT("the active hero still has an action besides End Turn"); break;
-        default: Why = TEXT("the hint does not apply"); break;
+        case ECombatHint::MoveSelectConfirm: case ECombatHint::Count: Why = TEXT("the hint does not apply"); break;
         }
         return false;
     }
@@ -684,8 +705,8 @@ void AExpeditionPlayerController::NewRun()
     const int32 Before = BattleView->PresentationRevision();
     BattleView->NewRun(Party);
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; bReturnPending = false; }
-    // A fresh run is a first-time run: re-arm the hints (tips the player skipped this session stay off).
-    if (Before != BattleView->PresentationRevision() && BattleView->HasRun()) { HintState.Arm(); bHintFactsValid = false; }
+    // A fresh run is a first-time run: re-arm the hints, including after Skip tips.
+    if (Before != BattleView->PresentationRevision() && BattleView->HasRun()) { HintState.Arm(); ResetHintSpending(); bHintFactsValid = false; }
 }
 void AExpeditionPlayerController::Save() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume()
@@ -698,7 +719,7 @@ void AExpeditionPlayerController::Resume()
     {
         bNextParty = false; bReturnPending = false; Focus = FMenuFocus();
         // A returning player is not a first-time player: Resume does not arm hints (Replay tips in Help does).
-        HintState.Disarm(); bHintFactsValid = false;
+        HintState.Disarm(); ResetHintSpending(); bHintFactsValid = false;
     }
 }
 void AExpeditionPlayerController::RequestReturnToMenu()
