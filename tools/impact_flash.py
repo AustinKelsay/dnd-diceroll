@@ -3,7 +3,7 @@
 
 Reads the `impact` shots of a capture gallery run (`python3 tools/dev.py gallery`): for each one it takes the struck
 combatant's projected footprint box from the run's manifest (the game projects the footprint ring's square, from the board top
-to the figure's head, with the camera the screenshot sees) and measures the PNG inside it:
+to the figure's head, with the camera the screenshot sees) and measures the PNG inside it (an in-flight shot, `"phase": "flight"`, also has a box around its bolt, reported as `<shot>:bolt`):
 
 * peak luminance: the brightest pixel's Rec. 709 luma of the 8-bit sRGB values, 0 to 255
 * white fraction: the share of the box's pixels whose red, green and blue are all at least WHITE_LEVEL
@@ -132,29 +132,34 @@ def measure_box(image, channels, box):
     }
 
 
-def verdict(stats):
-    """True when the box is neither clipped nor blown out."""
-    return stats["peakLuma"] < CLIP_LEVEL and stats["whiteFraction"] < MAX_WHITE_FRACTION
+def verdict(stats, max_peak=CLIP_LEVEL, max_white=MAX_WHITE_FRACTION):
+    """True when the box is neither clipped nor blown out: peak luma below max_peak and under max_white of the pixels pure white."""
+    return stats["peakLuma"] < max_peak and stats["whiteFraction"] < max_white
 
 
-def measure_shot(directory, resolution, shot):
-    """Measure one manifest shot entry; returns a result dict, or None when it is not a captured impact shot with a footprint."""
+def measure_shot(directory, resolution, shot, limits=None):
+    """Measure one manifest shot entry: the struck unit's footprint box and, for an in-flight shot, the box around its bolt (named
+    "<shot>:bolt"). Returns a list of result dicts, empty when it is not a captured impact shot with a box."""
     if shot.get("mode") != "impact" or shot.get("status") != "captured":
-        return None
-    footprint = shot.get("target", {}).get("footprint")
-    if not footprint:
-        return None
-    box = (footprint["x0"], footprint["y0"], footprint["x1"], footprint["y1"])
-    width, height, channels, image = read_png(directory / shot["file"], rows=box[3], columns=box[2])
-    if resolution and (width, height) != tuple(resolution):
-        raise ValueError(f"{shot['file']} is {width}x{height}, the manifest says {resolution[0]}x{resolution[1]}")
-    stats = measure_box(image, channels, box)
-    stats.update({"shot": shot["name"], "target": shot["target"].get("name"), "cell": [shot["target"].get("cellX"), shot["target"].get("cellY")],
-                  "box": list(box), "size": [width, height], "pass": verdict(stats)})
-    return stats
+        return []
+    target = shot.get("target", {})
+    boxes = [(shot["name"], target.get("footprint")), (shot["name"] + ":bolt", target.get("bolt"))]
+    results = []
+    for name, box in boxes:
+        if not box:
+            continue
+        rect = (box["x0"], box["y0"], box["x1"], box["y1"])
+        width, height, channels, image = read_png(directory / shot["file"], rows=rect[3], columns=rect[2])
+        if resolution and (width, height) != tuple(resolution):
+            raise ValueError(f"{shot['file']} is {width}x{height}, the manifest says {resolution[0]}x{resolution[1]}")
+        stats = measure_box(image, channels, rect)
+        stats.update({"shot": name, "target": target.get("name"), "cell": [target.get("cellX"), target.get("cellY")],
+                      "box": list(rect), "size": [width, height], "pass": verdict(stats, **(limits or {}))})
+        results.append(stats)
+    return results
 
 
-def measure_manifest(manifest_path, names=None):
+def measure_manifest(manifest_path, names=None, limits=None):
     manifest_path = Path(manifest_path)
     manifest = json.loads(manifest_path.read_text())
     size = manifest.get("resolution") or {}
@@ -163,8 +168,7 @@ def measure_manifest(manifest_path, names=None):
     for shot in manifest.get("shots", []):
         if names and shot.get("name") not in names:
             continue
-        result = measure_shot(manifest_path.parent, resolution, shot)
-        if result:
+        for result in measure_shot(manifest_path.parent, resolution, shot, limits):
             result["manifest"] = str(manifest_path)
             result["fixture"] = manifest.get("fixture", "")
             results.append(result)
@@ -188,7 +192,7 @@ def find_manifests(path):
 
 
 def format_row(result):
-    return (f"{result['fixture'] or '-':24} {result['size'][0]}x{result['size'][1]:<5} {result['shot']:30} peak {result['peakLuma']:6.1f}"
+    return (f"{result['fixture'] or '-':24} {result['size'][0]}x{result['size'][1]:<5} {result['shot']:36} peak {result['peakLuma']:6.1f}"
             f"  p99 {result['p99Luma']:6.1f}  mean {result['meanLuma']:6.1f}  white {result['whiteFraction'] * 100:5.2f}%"
             f"  clipped {result['clippedFraction'] * 100:5.2f}%  {'ok' if result['pass'] else 'BLOWN OUT'}")
 
@@ -197,11 +201,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("path", help="a gallery run folder (every manifest.json below it) or one manifest.json")
     parser.add_argument("--shot", action="append", help="measure only this shot name (repeatable)")
+    parser.add_argument("--max-peak", type=float, default=CLIP_LEVEL, help=f"pass only below this peak luma (default {CLIP_LEVEL:g}; use 250 for a margin)")
+    parser.add_argument("--max-white", type=float, default=MAX_WHITE_FRACTION, help=f"pass only below this pure-white fraction (default {MAX_WHITE_FRACTION:g}; use 0.01 for a margin)")
     parser.add_argument("--json", metavar="FILE", help="also write every measurement to FILE")
     args = parser.parse_args(argv)
     results, unmeasured = [], []
     for manifest in find_manifests(args.path):
-        results.extend(measure_manifest(manifest, set(args.shot or [])))
+        results.extend(measure_manifest(manifest, set(args.shot or []), {"max_peak": args.max_peak, "max_white": args.max_white}))
         unmeasured.extend(unmeasured_shots(manifest, set(args.shot or [])))
     if not results:
         print("No impact shots with a footprint box were found.", file=sys.stderr)
@@ -213,7 +219,7 @@ def main(argv=None):
     if args.json:
         Path(args.json).write_text(json.dumps({"whiteLevel": WHITE_LEVEL, "clipLevel": CLIP_LEVEL, "maxWhiteFraction": MAX_WHITE_FRACTION, "shots": results}, indent=2) + "\n")
     failed = [result for result in results if not result["pass"]]
-    print(f"{len(results) - len(failed)} of {len(results)} impact shots stay below clipping with under {MAX_WHITE_FRACTION * 100:.0f}% pure white")
+    print(f"{len(results) - len(failed)} of {len(results)} impact boxes stay below peak {args.max_peak:g} with under {args.max_white * 100:g}% pure white")
     return 1 if failed else 0
 
 

@@ -54,10 +54,20 @@ bool FHitFlashTintTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("A full flash turns the rim warm"), RimColor(BaseRim, Rim, 1.0f).R > RimColor(BaseRim, Rim, 1.0f).B);
     }
 
-    // The bolt light: a lone bolt keeps the budget, and many bolts together carry less than it.
-    TestEqual(TEXT("A lone bolt carries the budget"), BoltLight(1), BoltLightCandelas);
-    TestTrue(TEXT("Three bolts carry less than one"), 3.0f * BoltLight(3) < BoltLightCandelas);
-    TestTrue(TEXT("The budget is far under the old 180 cd"), BoltLightCandelas < 30.0f);
+    // The bolt light: full in flight, faded to a small landing value at the target, shared between a Magic Missile's bolts.
+    TestEqual(TEXT("A lone bolt mid-flight carries the flight light"), BoltLight(1, 0.5f), BoltLightCandelas);
+    TestEqual(TEXT("A lone bolt at its target carries the landing light"), BoltLight(1, 1.0f), BoltLandingCandelas);
+    TestEqual(TEXT("Just before it lands it is still at the landing light"), BoltLight(1, 0.92f), BoltLandingCandelas);
+    float Last = BoltLight(1, 0.0f);
+    for (int32 Step = 1; Step <= 20; ++Step)
+    {
+        const float Now = BoltLight(1, Step / 20.0f);
+        TestTrue(TEXT("The light never rises on the way to the target"), Now <= Last + 0.0001f);
+        Last = Now;
+    }
+    TestTrue(TEXT("Three bolts carry less than one"), 3.0f * BoltLight(3, 0.5f) < BoltLight(1, 0.5f));
+    TestTrue(TEXT("The flight light is far under the old 180 cd"), BoltLightCandelas < 60.0f);
+    TestTrue(TEXT("The landing light is a small share of the flight light"), BoltLandingCandelas < 0.25f * BoltLightCandelas);
     TestTrue(TEXT("Bolt and spark colour multiples are not HDR"), BoltEmissive <= 1.0f && SparkEmissive <= 1.0f);
     return !HasAnyErrors();
 }

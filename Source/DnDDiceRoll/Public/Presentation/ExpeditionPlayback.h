@@ -128,10 +128,10 @@ public:
     void ShowSparkles(FVector2D Cell, FLinearColor Color, int32 Count = 8);
     /**
      * Capture support (#189): shows a hit on a unit without any rules result, exactly as AddImpact does at its peak (full flash, the
-     * flinch clip when the unit stays up, the damage text), and for a spell the bolt as it reaches the target from From (a cell).
+     * flinch clip when the unit stays up, the damage text), and for a spell the bolt as it reaches the target from From (a cell), or with bInFlight the bolt half way along its path with no hit yet (no flash, flinch or text).
      * Presentation only: no hit points change. HoldImpact keeps the peak on screen; ReleaseImpact lets it go.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight = false);
     /** Capture support (#189): pins the previewed unit's flash at its peak (1) and the previewed bolts just before they land; Tick would otherwise age both away. */
     void HoldImpact(int32 UnitId);
     void ReleaseImpact(int32 TargetId);
@@ -166,6 +166,7 @@ private:
     TArray<FPlaybackSparkle> Glitter;
     /** Capture support (#189): the bolts HoldImpact keeps in flight. */
     TArray<FPlaybackProjectile> HeldShots;
+    bool bHeldFlash = false;
     FDiceTray Dice;
     FTurnBanner TurnBanner;
     int32 Focus = INDEX_NONE;

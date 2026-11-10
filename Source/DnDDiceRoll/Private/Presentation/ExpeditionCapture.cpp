@@ -168,6 +168,14 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
                 else if (Effect == TEXT("missile")) { Shot.Effect = EImpactPreview::Missile; }
                 else { Error = Shot.Name + TEXT(" needs an \"effect\" of \"hit\", \"spell\", \"fire\" or \"missile\""); return false; }
             }
+            if ((*Entry)->HasField(TEXT("phase")))
+            {
+                FString Phase;
+                if (!(*Entry)->TryGetStringField(TEXT("phase"), Phase) || (Phase != TEXT("landing") && Phase != TEXT("flight")))
+                { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\" or \"flight\""); return false; }
+                Shot.bInFlight = Phase == TEXT("flight");
+                if (Shot.bInFlight && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" is in flight but has no bolt (\"effect\" spell, fire or missile)"); return false; }
+            }
             if ((*Entry)->HasField(TEXT("frames")))
             {
                 double Frames = 0.0;
@@ -280,6 +288,34 @@ bool FExpeditionCaptureDirector::Idle() const
     const FExpeditionPlayback& Show = Board->Playback();
     const bool bBanner = !Show.Banner().Title.IsEmpty() && Show.Banner().Age <= Show.Banner().Life;
     return !bBanner && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty();
+}
+
+bool FExpeditionCaptureDirector::ProjectBox(FVector2D Cell, float HeightCm, float HalfCm, FIntRect& Out) const
+{
+    const AExpeditionBattleView* Board = View.Get();
+    const AExpeditionPlayerController* Player = Controller.Get();
+    ULocalPlayer* Local = Player ? Player->GetLocalPlayer() : nullptr;
+    if (!Board || !Local || !Local->ViewportClient || !Local->ViewportClient->Viewport) { return false; }
+    FSceneViewProjectionData Data;
+    if (!Local->GetProjectionData(Local->ViewportClient->Viewport, Data)) { return false; }
+    const FMatrix ViewProjection = Data.ComputeViewProjectionMatrix();
+    const FIntRect ViewRect = Data.GetConstrainedViewRect();
+    const FBoardMetric& Metric = Board->Metric();
+    const FVector Centre = Board->BoardPosition(Cell, Metric.Scaled(HeightCm));
+    const float Half = Metric.Scaled(HalfCm);
+    FVector2D Low(TNumericLimits<double>::Max(), TNumericLimits<double>::Max());
+    FVector2D High(-TNumericLimits<double>::Max(), -TNumericLimits<double>::Max());
+    for (int32 Corner = 0; Corner < 8; ++Corner)
+    {
+        const FVector Point = Centre + FVector((Corner & 1) ? Half : -Half, (Corner & 2) ? Half : -Half, (Corner & 4) ? Half : -Half);
+        FVector2D Pixel;
+        if (!FSceneView::ProjectWorldToScreen(Board->GetActorTransform().TransformPosition(Point), ViewRect, ViewProjection, Pixel)) { return false; }
+        Low = FVector2D(FMath::Min(Low.X, Pixel.X), FMath::Min(Low.Y, Pixel.Y));
+        High = FVector2D(FMath::Max(High.X, Pixel.X), FMath::Max(High.Y, Pixel.Y));
+    }
+    Out = FIntRect(FMath::Max(ViewRect.Min.X, FMath::FloorToInt(Low.X)), FMath::Max(ViewRect.Min.Y, FMath::FloorToInt(Low.Y)),
+        FMath::Min(ViewRect.Max.X, FMath::CeilToInt(High.X)), FMath::Min(ViewRect.Max.Y, FMath::CeilToInt(High.Y)));
+    return Out.Width() > 0 && Out.Height() > 0;
 }
 
 bool FExpeditionCaptureDirector::ProjectFootprint(int32 UnitId, FIntRect& Out) const
@@ -519,7 +555,7 @@ void FExpeditionCaptureDirector::Tick()
             // The hit lands Frames frames before the screenshot, once the pose has settled; its flash is held at the peak from then on (#189).
             if (!Pending.bImpactFired && StageFrames >= Poses.SettleFrames - Pending.Shot.Frames)
             {
-                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom);
+                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.bInFlight);
                 Pending.bImpactFired = true;
             }
             if (StageFrames < Poses.SettleFrames) { return; }
@@ -548,7 +584,15 @@ void FExpeditionCaptureDirector::Tick()
             Pending.Location = Camera.GetLocation();
             Pending.Rotation = Camera.Rotator();
             Pending.Fov = Board->CameraFieldOfView();
-            if (Pending.Shot.Mode == ECaptureMode::Impact) { Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint); }
+            if (Pending.Shot.Mode == ECaptureMode::Impact)
+            {
+                Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint);
+                if (Pending.Shot.bInFlight)
+                {
+                    // Half way along the path, at the bolt's height (about 55 plus the arc's 20 at the midpoint for a lobbed bolt).
+                    Pending.bHasBolt = ProjectBox(0.5f * (Pending.ImpactFrom + FVector2D(Pending.TargetCell.X, Pending.TargetCell.Y)), 75.0f, 45.0f, Pending.Bolt);
+                }
+            }
             FScreenshotRequest::RequestScreenshot(Path, true, false);
             Stage = EStage::Saving;
             StageFrames = 0;
@@ -601,6 +645,7 @@ void FExpeditionCaptureDirector::WriteManifest() const
         {
             Shot->SetStringField(TEXT("effect"), ExpeditionCapture::EffectName(Result.Shot.Effect));
             Shot->SetNumberField(TEXT("frames"), Result.Shot.Frames);
+            Shot->SetStringField(TEXT("phase"), Result.Shot.bInFlight ? TEXT("flight") : TEXT("landing"));
             // The struck combatant and its footprint box in screenshot pixels, for tools/impact_flash.py (#189).
             TSharedRef<FJsonObject> Target = MakeShared<FJsonObject>();
             Target->SetNumberField(TEXT("id"), Result.TargetId);
@@ -613,6 +658,14 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 Box->SetNumberField(TEXT("x0"), Result.Footprint.Min.X); Box->SetNumberField(TEXT("y0"), Result.Footprint.Min.Y);
                 Box->SetNumberField(TEXT("x1"), Result.Footprint.Max.X); Box->SetNumberField(TEXT("y1"), Result.Footprint.Max.Y);
                 Target->SetObjectField(TEXT("footprint"), Box);
+            }
+            if (Result.bHasBolt)
+            {
+                // An in-flight shot's bolt box, measured with the target's (tools/impact_flash.py).
+                TSharedRef<FJsonObject> Bolt = MakeShared<FJsonObject>();
+                Bolt->SetNumberField(TEXT("x0"), Result.Bolt.Min.X); Bolt->SetNumberField(TEXT("y0"), Result.Bolt.Min.Y);
+                Bolt->SetNumberField(TEXT("x1"), Result.Bolt.Max.X); Bolt->SetNumberField(TEXT("y1"), Result.Bolt.Max.Y);
+                Target->SetObjectField(TEXT("bolt"), Bolt);
             }
             Shot->SetObjectField(TEXT("target"), Target);
         }

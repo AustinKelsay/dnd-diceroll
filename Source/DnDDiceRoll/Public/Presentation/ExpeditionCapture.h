@@ -32,6 +32,8 @@ struct DNDDICEROLL_API FCaptureShot
     ECaptureHint Hint = ECaptureHint::Move;
     /** Impact shots only (#189): a plain hit, or a spell bolt (spell: Cleric radiant, fire: Wizard, missile: Magic Missile) landing with the flash. */
     EImpactPreview Effect = EImpactPreview::Hit;
+    /** Impact shots only: the bolt is half way along its path (no hit yet) instead of landing with the flash. */
+    bool bInFlight = false;
     /** Impact shots only: rendered frames between the hit and the screenshot (the flash is held at its peak throughout). */
     int32 Frames = DefaultImpactFrames;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
@@ -108,6 +110,8 @@ private:
         bool bHasFootprint = false;
         FIntRect Footprint;
         FVector2D ImpactFrom = FVector2D::ZeroVector;
+        bool bHasBolt = false;
+        FIntRect Bolt;
         bool bImpactFired = false;
     };
 
@@ -134,6 +138,8 @@ private:
     bool Idle() const;
     /** The struck unit's footprint box (the footprint ring's square, from the board top to the figure's head) projected with the camera the screenshot sees. */
     bool ProjectFootprint(int32 UnitId, FIntRect& Out) const;
+    /** The screenshot box around a point on the board at a height (reference cm), for the bolt of an in-flight impact shot. */
+    bool ProjectBox(FVector2D Cell, float HeightCm, float HalfCm, FIntRect& Out) const;
     bool Apply(const FCaptureShot& Shot, FString& Skip);
     void Fail(const FString& Message);
     void Finish();

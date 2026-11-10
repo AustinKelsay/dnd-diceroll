@@ -144,6 +144,30 @@
       "distance": "default"
     },
     {
+      "name": "impact-spell-flight-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-flight-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-flight-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "tooltip-attack",
       "mode": "tooltip",
       "action": "attack",

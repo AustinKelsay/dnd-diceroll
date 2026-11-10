@@ -343,7 +343,7 @@ public:
      * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
      * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight = false);
     void ClearImpactPreview();
     int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */

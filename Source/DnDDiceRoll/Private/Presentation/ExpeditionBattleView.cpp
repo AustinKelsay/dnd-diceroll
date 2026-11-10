@@ -834,10 +834,10 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     UpdateCamera(0.0f);
 }
 
-void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From)
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight)
 {
     ImpactTargetId = TargetId;
-    Show.PreviewImpact(TargetId, Effect, From);
+    Show.PreviewImpact(TargetId, Effect, From, bInFlight);
 }
 
 void AExpeditionBattleView::ClearImpactPreview()
@@ -1726,11 +1726,11 @@ void AExpeditionBattleView::UpdateEffects()
         const float Curve = FMath::Sin(Alpha * PI);
         // Positive arcs lob upward; negative arcs curve sideways.
         const FVector Position = FMath::Lerp(From, To, Alpha) + (Shot.Arc >= 0 ? FVector(0, 0, Shot.Arc * Curve) : Side * Shot.Arc * Curve);
-        SetSlot(Slot, true, Position, (To - From).Rotation(), Shot.bArrow ? FVector(0.5f, 0.05f, 0.05f) : FVector(Shot.Size),
+        SetSlot(Slot, true, Position, (To - From).Rotation(), Shot.bArrow ? FVector(0.5f, 0.05f, 0.05f) : FVector(Shot.Size * ExpeditionFlash::BoltScale),
             Shot.bArrow ? Shot.Color : Shot.Color * ExpeditionFlash::BoltEmissive);
         // The light follows the shot (it was a child of the shot's own component when pieces were loose).
         ShotLights[Index]->SetRelativeLocation(Position);
-        if (!Shot.bArrow) { ShotLights[Index]->SetLightColor(Shot.Color); ShotLights[Index]->SetIntensity(ExpeditionFlash::BoltLight(Bolts)); }
+        if (!Shot.bArrow) { ShotLights[Index]->SetLightColor(Shot.Color); ShotLights[Index]->SetIntensity(ExpeditionFlash::BoltLight(Bolts, Alpha)); }
     }
     const TArray<FPlaybackSparkle>& Sparks = Show.Sparkles();
     for (int32 Index = 0; Index < SparkSlots.Num(); ++Index)

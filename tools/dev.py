@@ -151,11 +151,15 @@ def load_poses(path):
         if shot["mode"] == "impact":
             if "effect" in shot and shot["effect"] not in CAPTURE_EFFECTS:
                 raise ValueError(f"{name} needs an \"effect\" of {', '.join(CAPTURE_EFFECTS)}")
+            if "phase" in shot and shot["phase"] not in ("landing", "flight"):
+                raise ValueError(f"{name} needs a \"phase\" of landing or flight")
+            if shot.get("phase") == "flight" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} is in flight but has no bolt (\"effect\" spell, fire or missile)")
             frames = shot.get("frames", 4)
             if isinstance(frames, bool) or not isinstance(frames, int) or not 1 <= frames <= min(60, settle):
                 raise ValueError(f"{name} needs \"frames\" as a whole number from 1 to 60, within settleFrames")
-        elif "effect" in shot or "frames" in shot:
-            raise ValueError(f"{name} may give \"effect\" or \"frames\" on an impact shot only")
+        elif "effect" in shot or "frames" in shot or "phase" in shot:
+            raise ValueError(f"{name} may give \"effect\", \"phase\" or \"frames\" on an impact shot only")
         if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact"):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:

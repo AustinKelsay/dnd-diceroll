@@ -121,10 +121,12 @@ class ImpactFlashTest(unittest.TestCase):
         path.write_text(json.dumps({"version": 1, "status": "ok", "fixture": "board-a", "resolution": {"width": width, "height": height}, "shots": shots}))
         return path
 
-    def impact(self, name, file, box, status="captured"):
+    def impact(self, name, file, box, status="captured", bolt=None):
         shot = {"name": name, "mode": "impact", "status": status, "file": file, "target": {"id": 3, "name": "Raider", "cellX": 4, "cellY": 5}}
         if box:
             shot["target"]["footprint"] = dict(zip(("x0", "y0", "x1", "y1"), box))
+        if bolt:
+            shot["target"]["bolt"] = dict(zip(("x0", "y0", "x1", "y1"), bolt))
         return shot
 
     def test_manifest_walk_measures_only_captured_impact_shots_with_a_box(self):
@@ -147,6 +149,15 @@ class ImpactFlashTest(unittest.TestCase):
         self.assertEqual(results[1]["cell"], [4, 5])
         self.assertEqual([r["shot"] for r in impact_flash.measure_manifest(path, {"hit-calm"})], ["hit-calm"])
 
+    def test_an_in_flight_shot_also_measures_its_bolt(self):
+        pixels = [[(255, 255, 255, 255) if x >= 12 else (90, 60, 50, 255) for x in range(20)] for _ in range(12)]
+        self.write("flight.png", pixels)
+        path = self.manifest([self.impact("bolt-flight", "flight.png", (0, 0, 10, 10), bolt=(12, 2, 19, 9))])
+        results = impact_flash.measure_manifest(path)
+        self.assertEqual([r["shot"] for r in results], ["bolt-flight", "bolt-flight:bolt"])
+        self.assertTrue(results[0]["pass"])
+        self.assertFalse(results[1]["pass"])
+
     def test_unmeasured_shots_are_named(self):
         path = self.manifest([self.impact("near", "calm.png", None), self.impact("far", "calm.png", (0, 0, 5, 5)), self.impact("skipped", "calm.png", None, status="skipped")])
         self.assertEqual(impact_flash.unmeasured_shots(path), ["board-a 20x12 near"])
@@ -157,6 +168,15 @@ class ImpactFlashTest(unittest.TestCase):
         path = self.manifest([self.impact("hit", "calm.png", (0, 0, 5, 5))], width=40, height=12)
         with self.assertRaisesRegex(ValueError, "20x12"):
             impact_flash.measure_manifest(path)
+
+    def test_a_stricter_margin_can_fail_what_the_default_passes(self):
+        self.write("warm.png", [[(255, 255, 255, 255)] * 20 for _ in range(12)])
+        path = self.manifest([self.impact("hit", "warm.png", (0, 0, 10, 10))])
+        self.assertFalse(impact_flash.measure_manifest(path)[0]["pass"])
+        self.write("warm.png", [[(200, 200, 190, 255)] * 10 + [(252, 240, 200, 255)] * 10 for _ in range(12)])
+        path = self.manifest([self.impact("hit", "warm.png", (5, 0, 15, 10))])
+        self.assertTrue(impact_flash.measure_manifest(path)[0]["pass"])
+        self.assertFalse(impact_flash.measure_manifest(path, limits={"max_peak": 230.0, "max_white": 0.01})[0]["pass"])
 
     def test_command_line_exit_codes(self):
         self.write("blown.png", [[(255, 255, 255, 255)] * 20 for _ in range(12)])

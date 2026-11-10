@@ -215,37 +215,42 @@ void FExpeditionPlayback::ShowSparkles(FVector2D Cell, FLinearColor Color, int32
     }
 }
 
-void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From)
+void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, bool bInFlight)
 {
     FUnitDisplay* Target = Displays.Find(TargetId);
     if (!Target) { return; }
-    Target->Flash = 1.0f;
-    if (Target->Life == ECombatLife::Conscious) { SetPose(*Target, ExpeditionPose::ForDamage()); }
-    ShowText(Target->Position, TEXT("-7"), Blood, 1.25f);
-    // The same bolts AddAttack throws, aged to just before they land (their light and glow are brightest on the target).
+    bHeldFlash = !bInFlight;
+    if (!bInFlight)
+    {
+        Target->Flash = 1.0f;
+        if (Target->Life == ECombatLife::Conscious) { SetPose(*Target, ExpeditionPose::ForDamage()); }
+        ShowText(Target->Position, TEXT("-7"), Blood, 1.25f);
+    }
+    // The same bolts AddAttack throws, aged to just before they land (their light is brightest on the target) or to mid-path.
     HeldShots.Reset();
     const FVector2D To = Target->Position;
     if (Effect == EImpactPreview::Missile)
     {
-        for (int32 Index = 0; Index < 3; ++Index) { HeldShots.Add({From, To, 0.0f, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false}); }
+        for (int32 Index = 0; Index < 3; ++Index) { HeldShots.Add({From, To, 0.0f, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.55f, 0.3f, 1.0f), false}); }
     }
     else if (Effect != EImpactPreview::Hit)
     {
-        const FLinearColor Color = Effect == EImpactPreview::Fire ? FLinearColor(1.0f, 0.45f, 0.1f) : FLinearColor(1.0f, 0.9f, 0.5f);
+        const FLinearColor Color = Effect == EImpactPreview::Fire ? FLinearColor(1.0f, 0.45f, 0.1f) : FLinearColor(1.0f, 0.68f, 0.2f);
         HeldShots.Add({From, To, 0.0f, 0.3f, 20.0f, 0.2f, Color, false});
     }
-    for (FPlaybackProjectile& Shot : HeldShots) { Shot.Age = 0.92f * Shot.Duration; }
+    for (FPlaybackProjectile& Shot : HeldShots) { Shot.Age = (bInFlight ? 0.5f : 0.92f) * Shot.Duration; }
     Shots = HeldShots;
 }
 
 void FExpeditionPlayback::HoldImpact(int32 UnitId)
 {
-    if (FUnitDisplay* Display = Displays.Find(UnitId)) { Display->Flash = 1.0f; }
+    if (FUnitDisplay* Display = Displays.Find(UnitId); Display && bHeldFlash) { Display->Flash = 1.0f; }
     if (!HeldShots.IsEmpty()) { Shots = HeldShots; }
 }
 
 void FExpeditionPlayback::ReleaseImpact(int32 TargetId)
 {
+    bHeldFlash = false;
     if (!HeldShots.IsEmpty()) { HeldShots.Reset(); Shots.Reset(); }
     if (FUnitDisplay* Target = Displays.Find(TargetId)) { Converge(*Target, false); }
 }
@@ -443,7 +448,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
             Cue(EExpeditionCue::Spell);
             for (int32 Index = 0; Index < 3; ++Index)
             {
-                Shots.Add({From, To, -0.09f * Index, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.6f, 0.45f, 1.0f), false});
+                Shots.Add({From, To, -0.09f * Index, 0.38f, (Index - 1) * -70.0f, 0.13f, FLinearColor(0.55f, 0.3f, 1.0f), false});
             }
         });
     }
@@ -454,7 +459,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
             const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
-                Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.9f, 0.5f) : FLinearColor(0.85f, 0.75f, 0.6f);
+                Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) : FLinearColor(0.85f, 0.75f, 0.6f);
             Shots.Add({From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow});
         });
     }

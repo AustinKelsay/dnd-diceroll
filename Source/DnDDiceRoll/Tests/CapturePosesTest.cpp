@@ -50,8 +50,9 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
     {
         FCapturePoses Impacts;
         TestTrue(TEXT("Impact shots parse"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"settleFrames\":30,\"shots\":[{\"name\":\"i\",\"mode\":\"impact\",\"yaw\":0,\"distance\":\"default\"},"
-            "{\"name\":\"j\",\"mode\":\"impact\",\"effect\":\"fire\",\"frames\":9,\"yaw\":90,\"distance\":1300}]}"), Impacts, Error));
-        if (Impacts.Shots.Num() == 2)
+            "{\"name\":\"j\",\"mode\":\"impact\",\"effect\":\"fire\",\"frames\":9,\"yaw\":90,\"distance\":1300},"
+            "{\"name\":\"k\",\"mode\":\"impact\",\"effect\":\"missile\",\"phase\":\"flight\",\"yaw\":0,\"distance\":\"default\"}]}"), Impacts, Error));
+        if (Impacts.Shots.Num() == 3)
         {
             TestEqual(TEXT("Impact mode"), Impacts.Shots[0].Mode, ECaptureMode::Impact);
             TestTrue(TEXT("An impact shot carries a camera"), Impacts.Shots[0].bHasCamera);
@@ -59,6 +60,8 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("Default impact frames"), Impacts.Shots[0].Frames, DefaultImpactFrames);
             TestEqual(TEXT("A spell effect is named"), Impacts.Shots[1].Effect, EImpactPreview::Fire);
             TestEqual(TEXT("Impact frames are read"), Impacts.Shots[1].Frames, 9);
+            TestFalse(TEXT("A bolt lands by default"), Impacts.Shots[1].bInFlight);
+            TestTrue(TEXT("A flight phase is read"), Impacts.Shots[2].bInFlight && Impacts.Shots[2].Effect == EImpactPreview::Missile);
             TestEqual(TEXT("Mode name"), FString(ExpeditionCapture::ModeName(ECaptureMode::Impact)), FString(TEXT("impact")));
         }
     }
@@ -101,6 +104,8 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"effect\":\"burn\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":0,\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":61,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"later\",\"effect\":\"spell\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"flight\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"settleFrames\":3,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":4,\"yaw\":0,\"distance\":1300}]}"),
     };
     for (const TCHAR* Text : Bad)

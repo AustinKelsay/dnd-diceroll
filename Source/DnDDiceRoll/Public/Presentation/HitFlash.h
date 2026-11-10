@@ -19,19 +19,34 @@ constexpr float Ceiling = 1.5f;
 constexpr float HitWeight = 0.6f;
 /** How far a full glow (a caster, an ability) pulls a part toward the glow colour. */
 constexpr float GlowWeight = 0.35f;
-/** The point light that rides a lone spell bolt, in candelas (each bolt used to carry 180, so Magic Missile's three carried 540). It lights the floor and the target from half a metre up. */
-constexpr float BoltLightCandelas = 6.0f;
-/** The multiple of a bolt's colour (it was 6) and of a sparkle's (it was 5). The effect material clamps it into a base colour, so it only darkens or tints; it is kept at or below 1. */
-constexpr float BoltEmissive = 0.35f;
+/**
+ * The point light that rides a lone spell bolt, in candelas (each bolt used to carry 180, so Magic Missile's three carried 540). In flight it lights
+ * the floor along the path; BoltLandingCandelas is what is left as the bolt reaches its target, so the figure it strikes (whose cowl and rim are the
+ * brightest pixels in a hit) never clips: see BoltLight.
+ */
+constexpr float BoltLightCandelas = 50.0f;
+constexpr float BoltLandingCandelas = 3.5f;
+/** The bolt's path fraction over which the light fades from its flight value to its landing value. */
+constexpr float BoltFadeStart = 0.55f;
+constexpr float BoltFadeEnd = 0.9f;
+/** The multiple of a bolt's colour (it was 6) and of a sparkle's (it was 5). The effect material clamps it into a base colour, so above 1 it only desaturates the bolt toward white; 1 keeps the full saturated colour. */
+constexpr float BoltEmissive = 1.0f;
 constexpr float SparkEmissive = 1.0f;
+/** How much larger than authored a spell bolt is drawn (a lone bolt was 20 cm across, a speck at default zoom). */
+constexpr float BoltScale = 1.6f;
+
+/**
+ * One bolt's light when Bolts of them are in flight, Alpha (0 to 1) of the way along their path. Bolts light one another's meshes from a few
+ * centimetres, so each light is the budget over Bolts squared: a Magic Missile's three together carry a third of one spell bolt's light.
+ */
+inline float BoltLight(int32 Bolts, float Alpha)
+{
+    const float Count = static_cast<float>(FMath::Max(1, Bolts));
+    const float Fade = FMath::SmoothStep(BoltFadeStart, BoltFadeEnd, FMath::Clamp(Alpha, 0.0f, 1.0f));
+    return FMath::Lerp(BoltLightCandelas, BoltLandingCandelas, Fade) / (Count * Count);
+}
 
 /** The hot rim a hit lights on a figure's edge: the master material's "RimColor" (a cool blue) turns toward this warm white, never past Ceiling once multiplied by "Rim". */
-/**
- * One bolt's light when Bolts of them are in flight. Bolts light one another's meshes from a few centimetres, so each light is the budget
- * over Bolts squared: a Magic Missile's three together carry a third of one spell bolt's light.
- */
-inline float BoltLight(int32 Bolts) { const float Count = static_cast<float>(FMath::Max(1, Bolts)); return BoltLightCandelas / (Count * Count); }
-
 inline FLinearColor RimHitColor() { return FLinearColor(1.0f, 0.85f, 0.7f); }
 
 inline FLinearColor HitColor() { return FLinearColor(1.0f, 0.85f, 0.75f) * Ceiling; }
