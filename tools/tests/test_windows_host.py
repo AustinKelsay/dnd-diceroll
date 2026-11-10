@@ -26,6 +26,7 @@ class WindowsHostTests(unittest.TestCase):
         self.d = dev.Dev(self.w, host='windows')
 
     def test_perf_refuses_windows_before_engine_or_process_launch(self):
+        self.assertTrue(self.d.perf_context.__doc__.startswith("Validate the arguments"))
         with patch.object(self.d, "require_engine") as engine, patch("dev.subprocess.Popen") as launch:
             for kwargs in ({}, {"editor": True}, {"only": "warmup"}, {"only": "measured"}, {"only": "resume", "run": "kept"}):
                 with self.assertRaisesRegex(RuntimeError, "Windows perf launches are unsupported"):
@@ -33,7 +34,7 @@ class WindowsHostTests(unittest.TestCase):
         engine.assert_not_called()
         launch.assert_not_called()
 
-    def test_perf_existing_report_stays_read_only_on_windows(self):
+    def test_perf_existing_report_starts_no_process_on_windows(self):
         with patch.object(self.d, "perf_run_folder", return_value=self.w.root), patch.object(self.d, "perf_report", return_value={"kept": True}) as report, patch("dev.subprocess.Popen") as launch:
             self.assertEqual(self.d.perf(only="report", run="kept"), {"kept": True})
         report.assert_called_once()

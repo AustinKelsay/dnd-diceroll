@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, call as mock_call, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import dev as dev_module
@@ -109,7 +109,7 @@ class CaptureTests(unittest.TestCase):
         with patch.object(perf.csv, "field_size_limit", side_effect=[OverflowError, 0]) as limit:
             frames = perf.parse_csv(HEADER + '\n,5,1,1,2,1\n')
         self.assertEqual(len(frames), 1)
-        self.assertEqual(limit.call_args_list, [call(sys.maxsize), call((1 << 31) - 1)])
+        self.assertEqual(limit.call_args_list, [mock_call(sys.maxsize), mock_call((1 << 31) - 1)])
 
     def test_csv_field_limit_keeps_native_maximum_when_supported(self):
         with patch.object(perf.csv, "field_size_limit") as limit:
