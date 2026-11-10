@@ -148,3 +148,39 @@ Rules authoritative in C++; queries consume no RNG; rejected commands and failed
 - **Decided:** "tips off" is session-only (see section 8).
 - **Decided:** the hint dismiss key is **D** (section 8). If a later slice binds D, move the hint key and Help text together.
 - Open: Landon: tell him #58 is narrowed to Compact facts, that SRD cost and blocker values extend `ActionFacts` additively, and that #156 needs no change for this to land.
+
+
+## SRD 5.2.1 extension (#95 PR2/PR3; additive to #166)
+
+Compact keeps its command order, costs, blockers, strings and seeded results. SRD adds
+`Reaction` to `EActionCostKind`; `ReactionSpent`, `Prone`, `Grappled`,
+`Incapacitated`, `NotGrappled`, `NoClassCharge`, `Lethargy` and `SlotSpellSpent`
+are appended blocker kinds. Every enumerator has formatter text. A condition is
+emitted only when an authoritative rule actually prevents that command; being
+concentrated is NOT a universal spellcasting blocker in SRD 5.2.1.
+
+`FActionFactsQuery::For` describes Dash, Disengage, Grapple, Shove, Escape and Action
+Surge. Availability comes from the existing legal queries; facts queries are const
+and never draw dice. Grapple/Shove target conscious adjacent hostile creatures
+within the size limit, need no sight test, and each replace one unarmed strike
+within the Attack action (including Extra Attack). Escape targets the recorded
+conscious grappler and costs an Action. No target, no grappler, spent budget and
+zero class charges must have explicit truthful blockers. Move while grappled is
+blocked; prone Move offers only standing at the actor's own cell when the actor
+can pay the same half-speed cost the resolver uses. Grappled zero speed cannot
+pay for standing.
+
+The SRD bar includes the playable new commands. Their names, cost pills, usage and
+reasons come from facts plus `ExpeditionStyle` formatters, never a parallel dock
+rules table. PR #167's dock tags are the presentation dependency: reconcile its
+consumer with this additive producer before opening either stacked PR. Reaction
+is a cost vocabulary for automatic opportunity attacks / spell-specific facts;
+this slice does not invent a manual reaction button or pretend an unparameterized
+`CastSpell` query knows a spell's casting time/target. PR3 must supply spell-specific
+slot/reaction/condition gating when it presents an individual spell.
+
+PR2 regressions include several reactors on one move with exact dice order, a
+mover dropped before its first step, an enemy mover, a downed creature first in
+initiative (including same-turn natural-20 recovery), a heal/Restore round trip,
+and grapple/shove Extra Attack budgets. The first four turn-level blockers remain
+standalone; the appended SRD reasons preserve fixed enum precedence.

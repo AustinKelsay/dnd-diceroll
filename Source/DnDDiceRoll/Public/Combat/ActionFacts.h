@@ -11,7 +11,7 @@
  * Names avoid the SRD ruleset's EActionCost (PR #95) so both can exist in one build. SRD mode extends
  * these enums additively (a Reaction cost, blockers such as ReactionSpent or Grappled); Compact never emits them.
  */
-enum class EActionCostKind : uint8 { Action, BonusAction, Movement, None };
+enum class EActionCostKind : uint8 { Action, BonusAction, Movement, None, Reaction };
 enum class EActionResource : uint8 { None, Kit, Slot, Wind, Maneuver, Rage, Potion };
 /** Ally means a party member other than the actor; Friendly includes the actor. Healing also sets bNeedsWounded. */
 enum class EActionTargetKind : uint8 { None, Self, Enemy, Ally, Friendly, DownedAlly };
@@ -22,6 +22,8 @@ enum class EActionBlocker : uint8
     ActionSpent, BonusSpent, NoMovementLeft, NoOpenCell,
     ResourceShort, StanceRequired, StanceBlocks,
     NoWoundedTarget, NoDownedTarget, OutOfRange, SightBlocked, NoEligibleTarget,
+    ReactionSpent, Prone, Grappled, Incapacitated, NotGrappled, NoClassCharge,
+    Lethargy, SlotSpellSpent,
     Count
 };
 

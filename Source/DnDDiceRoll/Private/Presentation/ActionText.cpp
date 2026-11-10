@@ -10,6 +10,7 @@ FString CostName(EActionCostKind Cost)
     case EActionCostKind::Action: return TEXT("Action");
     case EActionCostKind::BonusAction: return TEXT("Bonus action");
     case EActionCostKind::Movement: return TEXT("Move");
+    case EActionCostKind::Reaction: return TEXT("Reaction");
     case EActionCostKind::None: return TEXT("No cost");
     }
     return FString();
@@ -37,6 +38,7 @@ FString CostPillText(const FActionFacts& Facts)
     case EActionCostKind::Action: return TEXT("Action");
     case EActionCostKind::BonusAction: return TEXT("Bonus");
     case EActionCostKind::Movement: return TEXT("Move");
+    case EActionCostKind::Reaction: return TEXT("Reaction");
     case EActionCostKind::None: return FString();
     }
     return FString();
@@ -159,6 +161,14 @@ FString BlockerText(const FActionBlocker& Blocker)
     case EActionBlocker::OutOfRange: return FString::Printf(TEXT("Out of range (%d)"), Blocker.Range);
     case EActionBlocker::SightBlocked: return TEXT("Sight is blocked");
     case EActionBlocker::NoEligibleTarget: return TEXT("No eligible target");
+    case EActionBlocker::ReactionSpent: return TEXT("Reaction already used");
+    case EActionBlocker::Prone: return TEXT("Stand up first");
+    case EActionBlocker::Grappled: return TEXT("Grappled: speed is zero");
+    case EActionBlocker::Incapacitated: return TEXT("Incapacitated");
+    case EActionBlocker::NotGrappled: return TEXT("Not grappled");
+    case EActionBlocker::NoClassCharge: return TEXT("No class-feature use left");
+    case EActionBlocker::Lethargy: return TEXT("Haste lethargy: cannot act or move");
+    case EActionBlocker::SlotSpellSpent: return TEXT("Already spent a spell slot this turn");
     case EActionBlocker::Count: break;
     }
     return FString();

@@ -322,6 +322,16 @@ TArray<FIntPoint> FCombatBattle::LegalMoves(int32 Id) const
 {
     TArray<FIntPoint> Result;
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id) { return Result; }
+    if (IsSrd())
+    {
+        const FCombatantState* Unit = Find(Id);
+        if (!Unit || Unit->Life != ECombatLife::Conscious || Unit->GrapplerId != INDEX_NONE) { return Result; }
+        if (Unit->bProne)
+        {
+            if (State.MovementLeft >= FMovementRules::StandUpCost(Unit->Speed)) { Result.Add(Unit->Cell); }
+            return Result;
+        }
+    }
     for (const auto& Entry : Distances(Id))
     {
         if (Entry.Value > 0 && Entry.Value <= State.MovementLeft) { Result.Add(Entry.Key); }
@@ -413,18 +423,9 @@ TArray<int32> FCombatBattle::LegalTargets(int32 Id, ECombatCommandType Action) c
         if (bBonus || bAction) { Result.Add(Id); }
         return Result;
     }
-    // SRD Extra Attack / Multiattack: further swings after the Attack action was spent.
-    if (IsSrd() && (Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike)
-        && !State.bActionAvailable && State.AttacksLeft > 0)
-    {
-        for (const FCombatantState& Target : State.Encounter.Combatants)
-        {
-            if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { break; }
-            if (CanTargetFrom(*Unit, Unit->Cell, Target)) { Result.Add(Target.Id); }
-        }
-        return Result;
-    }
-    if (!State.bActionAvailable) { return Result; }
+    const bool bAttackCommand = Action == ECombatCommandType::Attack || Action == ECombatCommandType::PrecisionStrike ||
+        Action == ECombatCommandType::Grapple || Action == ECombatCommandType::Shove;
+    if (!State.bActionAvailable && !(IsSrd() && bAttackCommand && State.AttacksLeft > 0)) { return Result; }
     if (Action == ECombatCommandType::PrecisionStrike && (!FBuildCatalog::HasSpecial(*Unit, Action) || Unit->ManeuverUses <= 0)) { return Result; }
     if (Action == ECombatCommandType::CureWounds && (!FBuildCatalog::HasSpecial(*Unit, Action) || (IsSrd() ? Unit->SpellSlot1 <= 0 : Unit->SpellSlots <= 0))) { return Result; }
     if (Action == ECombatCommandType::MagicMissile && (!FBuildCatalog::HasSpecial(*Unit, Action) || (IsSrd() ? Unit->SpellSlot1 <= 0 : Unit->SpellSlots <= 0))) { return Result; }
@@ -789,6 +790,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     if (!Actor || Actor->Life != ECombatLife::Conscious || ActiveId() != Command.ActorId) { return Reject(TEXT("Only the active combatant can act.")); }
     if (Command.Type == ECombatCommandType::Move)
     {
+        if (IsSrd() && Actor->GrapplerId != INDEX_NONE) { return Reject(TEXT("Grappled: speed is zero.")); }
         FCombatantState* Moving = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.ActorId; });
         // SRD: stand up from prone (half speed) by Moving to your own cell.
         if (IsSrd() && Moving->bProne && Command.Destination == Moving->Cell)
@@ -1379,7 +1381,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                     else { Detail = TEXT("PUSH BLOCKED"); }
                 }
             }
-            State.bActionAvailable = false;
+            SpendAttackAction(*User);
             Result.Feedback = FString::Printf(TEXT("%s %s %s: %d vs %d | %s"),
                 *User->Name, Command.Type == ECombatCommandType::Grapple ? TEXT("grapples") : TEXT("shoves"), *Target->Name,
                 AtkTotal, DefTotal, *Detail);

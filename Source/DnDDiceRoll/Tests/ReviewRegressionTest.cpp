@@ -2,6 +2,8 @@
 #include "Misc/AutomationTest.h"
 #include "Templates/Function.h"
 #include "Combat/CombatBattle.h"
+#include "Combat/ActionFacts.h"
+#include "Presentation/ActionText.h"
 #include "Party/BuildCatalog.h"
 #include "Rules/AbilityRules.h"
 #include "Rules/CheckRules.h"
@@ -404,4 +406,120 @@ bool FReviewDeathSaveRestoreTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewSeveralReactorsTest,"Project.Expedition.Combat.SeveralReactorsOnOneMove",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewSeveralReactorsTest::RunTest(const FString& Parameters)
+{
+    FString Error; auto E=ReviewDuo(); E.Width=6; E.Height=4; E.Combatants[0].HP=E.Combatants[0].MaxHP=100;
+    E.Combatants[1].Cell={1,0}; E.Combatants[1].DamageDie=1;
+    auto Second=E.Combatants[1]; Second.Id=4; Second.Cell={1,2}; E.Combatants.Add(Second);
+    FCombatBattle B; if (!B.Start(E,42,Error) || !Activate(B,1)) { AddError(Error); return false; }
+    auto S=B.Snapshot(); S.RandomState=StateForD20([](int32 D){return D>1 && D<20;}); if (!B.Restore(S,Error)) { AddError(Error); return false; }
+    FRandomStream Dice(S.RandomState); const int32 First=Dice.RandRange(1,20); Dice.RandRange(1,1); const int32 Next=Dice.RandRange(1,20); if (Next!=1) { Dice.RandRange(1,1); if (Next==20) { Dice.RandRange(1,1); } }
+    const auto Result=B.Submit({ECombatCommandType::Move,1,{4,1}});
+    TestTrue(TEXT("Move accepted"),Result.bAccepted); TestEqual(TEXT("Full destination reached"),B.Find(1)->Cell,FIntPoint(4,1));
+    TestFalse(TEXT("First reactor spent"),B.Find(2)->bReactionAvailable); TestFalse(TEXT("Second reactor spent"),B.Find(4)->bReactionAvailable);
+    TestEqual(TEXT("Path-order dice draws are exact"),B.Snapshot().RandomState,Dice.GetCurrentSeed());
+    TestTrue(TEXT("Both reactor messages retained"),Result.Feedback.Contains(FString::Printf(TEXT("d20 %d+"),First)) && Result.Feedback.Contains(FString::Printf(TEXT("d20 %d+"),Next)));
+    FCombatBattle Copy; TestTrue(TEXT("Multi-reactor checkpoint restores"),Copy.Restore(B.Snapshot(),Error)); return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewFirstStepEnemyMoverTest,"Project.Expedition.Combat.FirstStepDropAndEnemyMover",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewFirstStepEnemyMoverTest::RunTest(const FString& Parameters)
+{
+    for (const bool EnemyMover:{false,true})
+    {
+        FString Error; auto E=ReviewDuo(); E.Width=6; E.Height=4;
+        E.Combatants[0].HP=1; E.Combatants[0].Speed=6; E.Combatants[0].Side=EnemyMover?ECombatSide::Enemy:ECombatSide::Party;
+        if (EnemyMover) { E.Combatants[0].AdventurerRole=EAdventurerRole::None; E.Combatants[0].BuildId.Reset(); E.Combatants[0].FighterSubclass=EFighterSubclass::None; }
+        E.Combatants[1].Cell={1,0}; E.Combatants[1].Side=EnemyMover?ECombatSide::Party:ECombatSide::Enemy; E.Combatants[1].DamageBonus=20;
+        auto Second=E.Combatants[1]; Second.Id=4; Second.Cell={1,2}; E.Combatants.Add(Second);
+        // Keep another hero conscious so dropping a hero does not immediately turn into defeat.
+        FCombatantState Other; FBuildCatalog::Create(TEXT("rogue.thief"),3,TEXT("Other"),Other); Other.Cell={5,3}; E.Combatants.Add(Other);
+        FCombatBattle B; if (!B.Start(E,42,Error)) { AddError(Error); return false; }
+        auto S=B.Snapshot(); S.TurnIndex=S.TurnOrder.IndexOfByKey(1); S.MovementLeft=6; S.RandomState=StateForD20([](int32 D){return D>1 && D<20;});
+        if (!B.Restore(S,Error)) { AddError(Error); return false; }
+        const auto Result=B.Submit({ECombatCommandType::Move,1,{4,1}});
+        TestTrue(TEXT("Move accepted before reaction"),Result.bAccepted); TestEqual(TEXT("First-step drop never leaves origin"),B.Find(1)->Cell,FIntPoint(1,1));
+        TestEqual(TEXT("No untraveled path or cost"),Result.Path.Num(),0); TestTrue(TEXT("Second same-step reactor is not spent after drop"),B.Find(4)->bReactionAvailable);
+        TestTrue(TEXT("Mover is out"),B.Find(1)->Life!=ECombatLife::Conscious); const auto* Active=B.Find(B.ActiveId()); TestTrue(TEXT("Conscious active actor or terminal battle after drop"),B.Snapshot().Phase!=EBattlePhase::Fighting || (Active && Active->Life==ECombatLife::Conscious));
+        FCombatBattle Copy; TestTrue(TEXT("Dropped mover state restores"),Copy.Restore(B.Snapshot(),Error));
+    }
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewDownedFirstTest,"Project.Expedition.Combat.DownedCreatureFirstInInitiative",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewDownedFirstTest::RunTest(const FString& Parameters)
+{
+    bool FirstDown=false,Revived=false;
+    for (int32 Seed=1;Seed<500 && !(FirstDown && Revived);++Seed)
+    {
+        FString Error; FCombatBattle B; auto E=ReviewDuo(); FCombatantState Other;
+        FBuildCatalog::Create(TEXT("rogue.thief"),3,TEXT("Other"),Other); Other.Cell={1,2}; E.Combatants.Add(Other);
+        E.Combatants[0].HP=0; E.Combatants[0].Life=ECombatLife::Downed;
+        FRandomStream Dice(Seed); const int32 Hero=Dice.RandRange(1,20), Foe=Dice.RandRange(1,20), Ally=Dice.RandRange(1,20);
+        if (Hero<Foe || Hero<Ally+3) { continue; } // A conservative filter; verify the actual initiative order below.
+        if (!B.Start(E,Seed,Error)) { AddError(Error); return false; }
+        if (B.Snapshot().TurnOrder[0]!=1) { continue; }
+        FirstDown=true; const auto* Active=B.Find(B.ActiveId());
+        TestTrue(TEXT("First downed turn leaves a conscious active actor"),Active && Active->Life==ECombatLife::Conscious);
+        if (B.ActiveId()==1) { Revived=true; TestEqual(TEXT("Natural20 starts that same turn at one HP"),B.Find(1)->HP,1); }
+        FCombatBattle Copy; TestTrue(TEXT("Opening death-save checkpoint restores"),Copy.Restore(B.Snapshot(),Error));
+    }
+    TestTrue(TEXT("Downed first initiative and natural20 exercised"),FirstDown && Revived); return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewHealRestoreTest,"Project.Expedition.Combat.HealThenRestoreClearsDeathSaves",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewHealRestoreTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B; auto S=HeroDownedNext(B,2,2); S.TurnIndex=S.TurnOrder.IndexOfByKey(3); S.bActionAvailable=true;
+    if (!B.Restore(S,Error)) { AddError(Error); return false; }
+    const auto Result=B.Submit({ECombatCommandType::Potion,3,{},1});
+    TestTrue(TEXT("Actual potion heals dying ally"),Result.bAccepted && B.Find(1)->HP>0 && B.Find(1)->Life==ECombatLife::Conscious);
+    TestEqual(TEXT("Healing clears old success/failure counters"),B.Find(1)->DeathSaveSuccesses+B.Find(1)->DeathSaveFailures,0);
+    FCombatBattle Copy; TestTrue(TEXT("Healed creature restores without bogus death-save state"),Copy.Restore(B.Snapshot(),Error));
+    TestTrue(TEXT("Battle byte-equal after healing round trip"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&B.Snapshot(), &Copy.Snapshot(), 0)); return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewSrdActionFactsTest,"Project.Expedition.ActionFacts.SrdActionsUseAuthoritativeQueries",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewSrdActionFactsTest::RunTest(const FString& Parameters)
+{
+    FString Error; FCombatBattle B;
+    if (!B.Start(ReviewDuo(),42,Error) || !Activate(B,1)) { AddError(Error); return false; }
+    FActionFacts Reaction; Reaction.Cost=EActionCostKind::Reaction;
+    TestEqual(TEXT("Reaction cost has dock text"),ExpeditionStyle::CostPillText(Reaction),FString(TEXT("Reaction")));
+    const auto Before=B.Snapshot();
+    for (auto Command:{ECombatCommandType::Dash,ECombatCommandType::Disengage,ECombatCommandType::Grapple,ECombatCommandType::Shove,ECombatCommandType::Escape,ECombatCommandType::ActionSurge})
+    {
+        const auto F=FActionFactsQuery::For(B,1,Command);
+        TestEqual(TEXT("Facts availability equals legal query"),F.bAvailable,!B.LegalTargets(1,Command).IsEmpty());
+        TestEqual(TEXT("Blockers exactly describe unavailability"),F.Blockers.IsEmpty(),F.bAvailable);
+        TestFalse(TEXT("New action has dock text from facts"),ExpeditionStyle::TooltipHeadline(F).IsEmpty());
+        if (Command!=ECombatCommandType::ActionSurge) { TestTrue(TEXT("SRD dock enumerates playable new command"),FActionFactsQuery::BarFor(B,1).Contains(Command)); }
+    }
+    TestTrue(TEXT("Facts consume no randomness or state"),FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Before,&B.Snapshot(),0));
+    auto Grappled=Before; Grappled.Encounter.Combatants[0].GrapplerId=2; Grappled.Encounter.Combatants[0].bProne=true;
+    if (!B.Restore(Grappled,Error)) { AddError(Error); return false; }
+    TestTrue(TEXT("Escape becomes available only with an actual grappler"),FActionFactsQuery::For(B,1,ECombatCommandType::Escape).bAvailable);
+    const auto Move=FActionFactsQuery::For(B,1,ECombatCommandType::Move);
+    TestTrue(TEXT("Grappled move reports the actual blocker"),!Move.bAvailable && Move.Blocks(EActionBlocker::Grappled));
+    TestTrue(TEXT("Grappled prone creature cannot stand with zero speed"),!B.Submit({ECombatCommandType::Move,1,B.Find(1)->Cell}).bAccepted);
+    auto Prone=Before; Prone.Encounter.Combatants[0].bProne=true;
+    if (!B.Restore(Prone,Error)) { AddError(Error); return false; }
+    TestTrue(TEXT("Prone move query offers only standing at own cell"),B.LegalMoves(1)==TArray<FIntPoint>({B.Find(1)->Cell}));
+    TestTrue(TEXT("Stand-up facts agree with the actual legal move"),FActionFactsQuery::For(B,1,ECombatCommandType::Move).bAvailable);
+    TestTrue(TEXT("Legal standing resolves"),B.Submit({ECombatCommandType::Move,1,B.Find(1)->Cell}).bAccepted);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReviewUnarmedExtraAttackFactsTest,"Project.Expedition.ActionFacts.UnarmedStrikesShareExtraAttackBudget",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter)
+bool FReviewUnarmedExtraAttackFactsTest::RunTest(const FString& Parameters)
+{
+    FString Error; auto E=ReviewDuo(); E.Combatants[0].Level=5;
+    FCombatBattle B; if (!B.Start(E,42,Error) || !Activate(B,1)) { AddError(Error); return false; }
+    TestTrue(TEXT("Grapple consumes one attack"),B.Submit({ECombatCommandType::Grapple,1,{},2}).bAccepted);
+    TestEqual(TEXT("Extra Attack remains after grapple"),B.Snapshot().AttacksLeft,1);
+    const auto Facts=FActionFactsQuery::For(B,1,ECombatCommandType::Shove);
+    TestTrue(TEXT("Facts agree that a second unarmed strike is legal"),Facts.bAvailable && Facts.Blockers.IsEmpty());
+    TestTrue(TEXT("Shove consumes remaining attack"),B.Submit({ECombatCommandType::Shove,1,{},2}).bAccepted);
+    TestEqual(TEXT("Attack budget exhausted"),B.Snapshot().AttacksLeft,0);
+    TestFalse(TEXT("No third unarmed strike"),FActionFactsQuery::For(B,1,ECombatCommandType::Grapple).bAvailable);
+    return !HasAnyErrors();
+}
+
 #endif
