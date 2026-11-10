@@ -46,6 +46,28 @@ struct DNDDICEROLL_API FDiceRollCharacter
 };
 
 /**
+ * What one world draws its kit with (#145 Drowned Vigil, #149 Root of the World): read-only views of the theme's own
+ * properties, so they stay valid while the theme does. A world with no kit switched on has bMetric false and the view
+ * ignores everything else; every entry is optional and falls back individually.
+ */
+struct FDiceRollWorldKit
+{
+    /** The world and its kit are authored at the true 150 cm cell and are placed unscaled. */
+    bool bMetric = false;
+    const TSoftObjectPtr<UStaticMesh>* Occluders = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Pillars = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Walls = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Stones = nullptr;
+    const TSoftObjectPtr<UStaticMesh>* Arch = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Scatter = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Mist = nullptr;
+    const TArray<TSoftObjectPtr<UStaticMesh>>* Shafts = nullptr;
+
+    /** The obstacle variants of a recipe: 1 pillar, 2 wall, anything else stones. */
+    const TArray<TSoftObjectPtr<UStaticMesh>>& Variants(int32 Recipe) const { return Recipe == 1 ? *Pillars : Recipe == 2 ? *Walls : *Stones; }
+};
+
+/**
  * The dark-fantasy art set the battle view draws with. Every entry is optional: a missing
  * mesh falls back to the engine-primitive presentation, so rules and automation never
  * depend on art. Meshes use one tintable material whose base is TintMaterial.
@@ -118,6 +140,31 @@ public:
     /** Translucent mist cards (upright, leaning, flat) and light shafts (prism, crossed planes). */
     UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> MistCards;
     UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> LightShafts;
+
+    /**
+     * The Root of the World world kit r002 (#149), the forest equivalent of the Vigil kit above and built the same way:
+     * authored at the true 150 cm cell, placed unscaled. The Root world keeps the RootWorld entry (its r002 export replaces
+     * the r001 mesh at the same package), so the import script sets bRootMetricKit only when that mesh carries the r002 tag;
+     * until then Root boards draw the r001 world scaled, and the rest of this group is ignored. Root obstacles are new
+     * packages because the r001 pillar, wall and stones are shared with the Vigil. Every entry falls back individually.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") bool bRootMetricKit = false;
+    /** Near architecture (arching roots) split from the world; same origin as RootWorld. Dither-fades when it blocks the camera. */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TSoftObjectPtr<UStaticMesh> RootOccluders;
+    /** Three variants (A, B, C) per obstacle recipe: spires and stumps (pillar), root curtains and logs (wall), boulders (stones). */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootPillarVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootWallVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootStonesVariants;
+    /** Spans two adjacent blocked cells; pivot at the midpoint of their shared edge, long axis Y. */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TSoftObjectPtr<UStaticMesh> RootArchTwoCell;
+    /** Non-blocking floor dressing (mushrooms, leaves, twigs, tendrils, ferns, pebbles, glow moss, husks), outside the board. */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootScatter;
+    /** Translucent mist cards (upright, leaning, flat) and light shafts (prism, crossed planes). */
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootMistCards;
+    UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootLightShafts;
+
+    /** The kit a board draws with: the Root kit on a forest (Meadow) board, the Vigil kit on every other. */
+    FDiceRollWorldKit KitFor(bool bForest) const;
 
     /** Loads an entry; null when it is unset or missing. */
     static UStaticMesh* Load(const TSoftObjectPtr<UStaticMesh>& Mesh);

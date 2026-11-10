@@ -8,6 +8,28 @@ UStaticMesh* UDiceRollTheme::Load(const TSoftObjectPtr<UStaticMesh>& Mesh)
     return Mesh.IsNull() ? nullptr : Mesh.LoadSynchronous();
 }
 
+FDiceRollWorldKit UDiceRollTheme::KitFor(bool bForest) const
+{
+    FDiceRollWorldKit Kit;
+    if (bForest)
+    {
+        Kit.bMetric = bRootMetricKit;
+        Kit.Occluders = &RootOccluders;
+        Kit.Pillars = &RootPillarVariants; Kit.Walls = &RootWallVariants; Kit.Stones = &RootStonesVariants;
+        Kit.Arch = &RootArchTwoCell;
+        Kit.Scatter = &RootScatter; Kit.Mist = &RootMistCards; Kit.Shafts = &RootLightShafts;
+    }
+    else
+    {
+        Kit.bMetric = bMetricKit;
+        Kit.Occluders = &VigilOccluders;
+        Kit.Pillars = &PillarVariants; Kit.Walls = &WallVariants; Kit.Stones = &StonesVariants;
+        Kit.Arch = &ArchTwoCell;
+        Kit.Scatter = &Scatter; Kit.Mist = &MistCards; Kit.Shafts = &LightShafts;
+    }
+    return Kit;
+}
+
 const TSoftObjectPtr<UAnimSequence>& FDiceRollAnimSet::For(EUnitPose Pose) const
 {
     switch (Pose)

@@ -1,12 +1,13 @@
 """Pure-Python half of the theme import (no `unreal` import, so unit tests can run it): what the Drowned Vigil
-world kit r002 imports, which existing assets a run may replace, and how to read an export.
+world kit r002 and the Root of the World kit r002 import, which existing assets a run may replace, and how to read an export.
 
-Used by import_dark_fantasy_theme.py (issue #145 phase 2). The rules:
-  - Every r002 asset has a table row. A row whose package already exists is SKIPPED, never overwritten.
-  - Only the ids in REPLACEABLE (the four revised r001 packages) may be replaced, and only when the run is told so
-    explicitly with the environment variable DND_THEME_REIMPORT=<id>[,<id>...] (or `all`, meaning exactly REPLACEABLE).
-    An id outside REPLACEABLE is an error, not a silent no-op.
-  - Nothing here touches r001 assets.
+Used by import_dark_fantasy_theme.py (issue #145 phase 2 for the Vigil, #149 phase 2 for the Root). The rules:
+  - Every r002 asset has a table row (R002 for the Vigil, ROOT_R002 for the Root). A row whose package already exists is
+    SKIPPED, never overwritten.
+  - Only the ids in REPLACEABLE (the four revised Vigil r001 packages) and ROOT_REPLACEABLE (the Root world) may be replaced, and
+    only when the run is told so explicitly with the environment variable DND_THEME_REIMPORT=<id>[,<id>...] (or `all`, meaning
+    exactly every replaceable id). An id outside those lists is an error, not a silent no-op.
+  - Nothing here touches other r001 assets.
 """
 import hashlib
 import json
@@ -57,6 +58,57 @@ R002 = [
     ("fx-light-shaft-b", 1, "SM_Fx_LightShaft_B", "Fx", CARD, "light_shafts", 1, CARDLOOK),
 ]
 
+# The Root of the World kit r002 (#149). Same columns and checks as the Vigil rows. Only the world revises an r001 package
+# (SM_World_Root, kept at the same path); everything else is a new id with a new package, because the r001 pillar, wall and
+# stones packages are shared with the Vigil and are revised there. The three obstacle recipes are the Root's spires and stumps
+# (pillar), root curtains and logs (wall) and boulders (stones).
+ROOT_STONE = (0.92, 0.0, 0.05, 1.0, 0.0)
+ROOT_PILLAR = (0.92, 0.0, 0.05, 1.0, 0.0)
+ROOT_WALL = (0.92, 0.0, 0.05, 1.0, 0.0)
+ROOT_R002 = [
+    ("world-root", 2, "SM_World_Root", "Worlds", LIT, "root_world", None, GROUND),
+    ("world-root-occluders", 1, "SM_World_Root_Occluders", "Worlds", OCCLUDER, "root_occluders", None, GROUND),
+    ("prop-root-pillar", 1, "SM_Prop_Root_Pillar", "Props", LIT, "root_pillar_variants", 0, ROOT_PILLAR),
+    ("prop-root-pillar-b", 1, "SM_Prop_Root_Pillar_B", "Props", LIT, "root_pillar_variants", 1, ROOT_PILLAR),
+    ("prop-root-pillar-c", 1, "SM_Prop_Root_Pillar_C", "Props", LIT, "root_pillar_variants", 2, ROOT_PILLAR),
+    ("prop-root-wall", 1, "SM_Prop_Root_Wall", "Props", LIT, "root_wall_variants", 0, ROOT_WALL),
+    ("prop-root-wall-b", 1, "SM_Prop_Root_Wall_B", "Props", LIT, "root_wall_variants", 1, ROOT_WALL),
+    ("prop-root-wall-c", 1, "SM_Prop_Root_Wall_C", "Props", LIT, "root_wall_variants", 2, ROOT_WALL),
+    ("prop-root-stones", 1, "SM_Prop_Root_Stones", "Props", LIT, "root_stones_variants", 0, ROOT_STONE),
+    ("prop-root-stones-b", 1, "SM_Prop_Root_Stones_B", "Props", LIT, "root_stones_variants", 1, ROOT_STONE),
+    ("prop-root-stones-c", 1, "SM_Prop_Root_Stones_C", "Props", LIT, "root_stones_variants", 2, ROOT_STONE),
+    ("prop-root-arch-2cell", 1, "SM_Prop_Root_Arch2Cell", "Props", LIT, "root_arch_two_cell", None, ROOT_WALL),
+    ("scatter-root-mushrooms", 1, "SM_Scatter_Root_Mushrooms", "Scatter", LIT, "root_scatter", 0, (0.7, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-leaves", 1, "SM_Scatter_Root_Leaves", "Scatter", LIT, "root_scatter", 1, (0.95, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-twigs", 1, "SM_Scatter_Root_Twigs", "Scatter", LIT, "root_scatter", 2, (0.95, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-tendrils", 1, "SM_Scatter_Root_Tendrils", "Scatter", LIT, "root_scatter", 3, (0.9, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-ferns", 1, "SM_Scatter_Root_Ferns", "Scatter", LIT, "root_scatter", 4, (0.95, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-pebbles", 1, "SM_Scatter_Root_Pebbles", "Scatter", LIT, "root_scatter", 5, (0.9, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-root-glowmoss", 1, "SM_Scatter_Root_GlowMoss", "Scatter", LIT, "root_scatter", 6, (1.0, 0.0, 0.0, 1.0, 0.0)),
+    ("scatter-root-husks", 1, "SM_Scatter_Root_Husks", "Scatter", LIT, "root_scatter", 7, (0.9, 0.0, 0.05, 1.0, 0.0)),
+    ("fx-root-mist-card", 1, "SM_Fx_Root_MistCard", "Fx", CARD, "root_mist_cards", 0, CARDLOOK),
+    ("fx-root-mist-card-b", 1, "SM_Fx_Root_MistCard_B", "Fx", CARD, "root_mist_cards", 1, CARDLOOK),
+    ("fx-root-mist-card-c", 1, "SM_Fx_Root_MistCard_C", "Fx", CARD, "root_mist_cards", 2, CARDLOOK),
+    ("fx-root-light-shaft", 1, "SM_Fx_Root_LightShaft", "Fx", CARD, "root_light_shafts", 0, CARDLOOK),
+    ("fx-root-light-shaft-b", 1, "SM_Fx_Root_LightShaft_B", "Fx", CARD, "root_light_shafts", 1, CARDLOOK),
+]
+ROOT_REPLACEABLE = {"world-root": "r002 world at true metric"}
+# The Root kit is switched on (UDiceRollTheme::bRootMetricKit) only when every one of these carries the root-kit-r002 tag.
+ROOT_METRIC_GATE = ("world-root",)
+ROOT_ARRAY_SIZES = {"root_pillar_variants": 3, "root_wall_variants": 3, "root_stones_variants": 3, "root_scatter": 8, "root_mist_cards": 3, "root_light_shafts": 2}
+
+# Per-instance `Color` tint (linear RGB) written on a kit mesh's MI_*; the lever for "the stone competes with the figures".
+# UDiceRollTheme's view multiplies it into the colour the part draws with (InstanceTint in ExpeditionBattleView.cpp), so
+# lowering a number here and rerunning the plain import changes only that MI. 1.0 is neutral: the paving was already
+# recalibrated in Blender (mean luminance 0.199, 27 % below the first pass), so the starting value leaves it as exported.
+# Note the tint multiplies the whole mesh including the glow mask's fungus caps and sap veins.
+INSTANCE_TINTS = {"world-root": (1.0, 1.0, 1.0), "world-root-occluders": (1.0, 1.0, 1.0)}
+
+# The kit tags the import script writes on a replaced or created mesh (DiceRollAssetRevision).
+VIGIL_TAG = "vigil-kit-r002"
+ROOT_TAG = "root-kit-r002"
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG)
+
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.
 REPLACEABLE = {
@@ -65,7 +117,7 @@ REPLACEABLE = {
     "prop-wall": "variant A rebuilt at the 150 cm cell",
     "prop-stones": "variant A rebuilt at the 150 cm cell",
 }
-# The kit is switched on (UDiceRollTheme::bMetricKit) only when every one of these carries the r002 tag.
+# The Vigil kit is switched on (UDiceRollTheme::bMetricKit) only when every one of these carries the r002 tag.
 METRIC_GATE = ("world-vigil", "prop-pillar", "prop-wall", "prop-stones")
 ARRAY_SIZES = {"pillar_variants": 3, "wall_variants": 3, "stones_variants": 3, "scatter": 8, "mist_cards": 3, "light_shafts": 2}
 
@@ -82,17 +134,20 @@ def sha256_file(path):
     return digest.hexdigest()
 
 
+ALL_REPLACEABLE = {**REPLACEABLE, **ROOT_REPLACEABLE}
+
+
 def requested_replacements(value):
-    """The set of asset ids a run may replace, from DND_THEME_REIMPORT. Raises on an id outside REPLACEABLE."""
+    """The set of asset ids a run may replace, from DND_THEME_REIMPORT. Raises on an id outside REPLACEABLE or ROOT_REPLACEABLE."""
     value = (value or "").strip()
     if not value:
         return set()
     if value.lower() == "all":
-        return set(REPLACEABLE)
+        return set(ALL_REPLACEABLE)
     ids = {part.strip() for part in re.split(r"[,\s]+", value) if part.strip()}
-    unknown = sorted(ids - set(REPLACEABLE))
+    unknown = sorted(ids - set(ALL_REPLACEABLE))
     if unknown:
-        raise ValueError("Not replaceable (allow-list is %s): %s" % (", ".join(sorted(REPLACEABLE)), ", ".join(unknown)))
+        raise ValueError("Not replaceable (allow-list is %s): %s" % (", ".join(sorted(ALL_REPLACEABLE)), ", ".join(unknown)))
     return ids
 
 
