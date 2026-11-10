@@ -12,13 +12,16 @@ Graph revision (metadata tag DiceRollGraphRevision, as the theme materials): an 
 GRAPH_REVISION is left alone; any other (or none) is rebuilt IN PLACE, so the asset, its path and every instance survive.
 board-overlay-2 draws with the depth test off, so the reach contour, path ribbon, brackets, blocked crosses and footprint
 rings stay visible through tall architecture (pillars, arches). The bars are thin, so drawing over figures is acceptable.
+board-overlay-3 (#144) multiplies the emissive colour by PerInstanceCustomData3Vector slot 0 (default 1, 1, 1): the footprint rings and
+markers of a battle board share one instanced component and carry each ring's colour per instance. The overlay's own bar sets have no custom
+data, so they read the default and draw exactly as before.
 """
 import unreal
 
 THEME = "/Game/DnDDiceRoll/Theme"
 PACKAGE = THEME + "/Materials/M_BoardOverlay"
 REVISION_TAG = "DiceRollGraphRevision"
-GRAPH_REVISION = "board-overlay-2"
+GRAPH_REVISION = "board-overlay-3"
 
 tools = unreal.AssetToolsHelpers.get_asset_tools()
 library = unreal.EditorAssetLibrary
@@ -46,7 +49,12 @@ def build(material):
     opacity = expression(material, unreal.MaterialExpressionScalarParameter, -500, 250, parameter_name="Opacity", default_value=1.0)
     mask = expression(material, unreal.MaterialExpressionComponentMask, -250, 0, r=True, g=True, b=True, a=False)
     mel.connect_material_expressions(color, "", mask, "")
-    mel.connect_material_property(mask, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    instance_color = expression(material, unreal.MaterialExpressionPerInstanceCustomData3Vector, -500, 120,
+                                const_default_value=unreal.LinearColor(1, 1, 1, 1), data_index=0)
+    tinted = expression(material, unreal.MaterialExpressionMultiply, -50, 0)
+    mel.connect_material_expressions(mask, "", tinted, "A")
+    mel.connect_material_expressions(instance_color, "", tinted, "B")
+    mel.connect_material_property(tinted, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
     mel.recompile_material(material)
 

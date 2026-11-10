@@ -176,7 +176,24 @@ class ThemePlanTests(unittest.TestCase):
         self.assertIn("figure_silhouette_is_current, FIGURE_SILHOUETTE_REVISION)", text)
         overlay = (ROOT / "Content" / "Python" / "create_board_overlay_material.py").read_text()
         self.assertIn('set_editor_property("disable_depth_test", True)', overlay)
-        self.assertIn('GRAPH_REVISION = "board-overlay-2"', overlay)
+        # board-overlay-3 (#144) adds the per-instance ring colour on top of the depth-test change.
+        self.assertIn('GRAPH_REVISION = "board-overlay-3"', overlay)
+        self.assertIn("MaterialExpressionPerInstanceCustomData3Vector", overlay)
+
+    def test_instanced_part_materials_follow_the_revision_pattern(self):
+        text = SCRIPT.read_text()
+        # The master tint is per-instance custom data behind a bumped graph revision (#144).
+        self.assertIn('MASTER_GRAPH_REVISION = "dice-theme-5"', text)
+        self.assertIn("MaterialExpressionPerInstanceCustomData,", text)
+        # The effect material is created once through ensure_material with its own revision; a rerun keeps a current one.
+        self.assertRegex(text, r'(?m)^EFFECT_GRAPH_REVISION = "dice-effect-\d+"$')
+        self.assertIn("ensure_material(EFFECT_MATERIAL, build_effect_material, effect_is_current, EFFECT_GRAPH_REVISION)", text)
+        # The instancing usage flag is written only when different, on every material an instanced group draws.
+        self.assertIn('set_if_different(material, "used_with_instanced_static_meshes", True)', text)
+        self.assertIn("for instanced in (master, occluder_parent, card_parent, effect_parent):", text)
+        # The runtime loads the effect material by the name the script creates.
+        view = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "ExpeditionBattleView.cpp").read_text()
+        self.assertIn("Materials/M_DiceRollEffect.M_DiceRollEffect", view)
 
     def test_arches_are_for_pillars_and_walls_only(self):
         header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
