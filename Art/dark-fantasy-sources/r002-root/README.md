@@ -129,7 +129,9 @@ The world's LOD2 stops at 40 % because 25 % failed the 5 cm silhouette gate and 
 
 ## Known limits, to judge in Unreal
 
-- Nothing was imported or rendered in Unreal. LOD screen sizes, whether `COLOR_0.a` is read, the cost of a 183k-triangle one-material world (21 MB glb; #145's is 130k / 10 MB) and the real material look are unverified. About 40 % of the triangles are tile-cut bark, so a larger bark tile or fewer roots would cut it.
+**Unreal verification (PR #176, 2026-11-10):** the kit is imported and placed. The headless import added exactly the 72 kit packages, the `world-root` replacement changed exactly four files, and a rerun changed nothing. Automation passed 231/231, and galleries `board-root-r002` and `board-root-pillars` were captured. LOD counts read back as planned. In game the stone does not compete with the figures, so the instance tint stays neutral. The coordinator's on-screen pass is pending. The notes below are the Blender-phase record.
+
+- At the Blender phase, nothing was imported or rendered in Unreal. LOD screen sizes, whether `COLOR_0.a` is read, the cost of a 183k-triangle one-material world (21 MB glb; #145's is 130k / 10 MB) and the real material look are unverified. About 40 % of the triangles are tile-cut bark, so a larger bark tile or fewer roots would cut it.
 - The world shell is 192 x 207 m (a bowl rising to 9 m at the ground edge, trunks to 110 m for the great tree); a dark underlay and fog are expected beyond it. The tall masses sit outside r = 56.5 m, so they are rarely in frame from the battle camera: the visible Root is mostly the clearing, its roots, stumps, arches and fungus.
 - The 4 m patch borders of #145 are gone (wavy, interlocking, thinned seams); the stone islands are separated by earth, so at far zoom the clearing reads as islands rather than blocks. The approach (`PATCH_SIZE_U`, `EARTH_P`, `INTERLOCK_U`, `FEATHER_U/DROP` in `paving_root.py`) is reusable for the Vigil.
 - Kit atlases are per asset and duplicated across glbs (r001 convention). Variants share textures, so they read as one family.

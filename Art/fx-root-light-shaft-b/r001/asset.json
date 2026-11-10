@@ -98,6 +98,10 @@
   },
   "validation": {
     "state": "pending",
-    "evidence": []
+    "evidence": [
+      "PR #176 (#149 phase 2) at 97670aa: headless theme import with hash diffs of Config/ and Content/ (plain run added this package; the world-root replace and an unchanged rerun verified)",
+      "PR #176 at 97670aa: Project.Expedition 231/231 (six Root kit tests on the replaced kit) and galleries board-root-r002 and board-root-pillars",
+      "Pending: the coordinator's on-screen pass on PR #176"
+    ]
   }
 }

@@ -28,6 +28,18 @@
  */
 namespace
 {
+/** A transient, GC-collectable copy of the shipped theme for a fallback case. DuplicateObject keeps the source's RF_Standalone
+ * (and RF_Public), so a plain copy would survive CollectGarbage after the strong pointer releases it and pile up across runs. */
+UDiceRollTheme* TransientThemeCopy(const UDiceRollTheme* Shipped)
+{
+    UDiceRollTheme* Copy = Shipped ? DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()) : nullptr;
+    if (Copy)
+    {
+        Copy->ClearFlags(RF_Standalone | RF_Public);
+        Copy->SetFlags(RF_Transient);
+    }
+    return Copy;
+}
 UWorld* MakeRootWorld()
 {
     const UWorld::InitializationValues Values = UWorld::InitializationValues()
@@ -131,7 +143,7 @@ FRootSeededOutcome PlayRoot(FAutomationTestBase& Test, UWorld* World, const FStr
     {
         if (const UDiceRollTheme* Shipped = ShippedTheme())
         {
-            Off.Reset(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            Off.Reset(TransientThemeCopy(Shipped));
             Off->bRootMetricKit = false;
             View->UseTheme(Off.Get());
         }
@@ -298,7 +310,7 @@ bool FRootKitFallbackTest::RunTest(const FString& Parameters)
         }
 
         // The kit switched off (the plain import before the world is replaced): the r001 world, scaled by the board metric.
-        TStrongObjectPtr<UDiceRollTheme> Off(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+        TStrongObjectPtr<UDiceRollTheme> Off(TransientThemeCopy(Shipped));
         Off->bRootMetricKit = false;
         View->UseTheme(Off.Get());
         View->Tick(0.016f);
@@ -322,30 +334,31 @@ bool FRootKitFallbackTest::RunTest(const FString& Parameters)
         if (bOn)
         {
             // Each missing piece falls back on its own. No occluder: the world and obstacles remain.
-            TStrongObjectPtr<UDiceRollTheme> NoOccluder(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            TStrongObjectPtr<UDiceRollTheme> NoOccluder(TransientThemeCopy(Shipped));
             NoOccluder->RootOccluders.Reset();
             View->UseTheme(NoOccluder.Get());
             TestTrue(TEXT("Without an occluder the kit is still on"), View->UsesRootKit() && !View->HasOccluder() && View->PlacedObstacles() > 0);
             // No dressing at all.
-            TStrongObjectPtr<UDiceRollTheme> NoDressing(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            TStrongObjectPtr<UDiceRollTheme> NoDressing(TransientThemeCopy(Shipped));
             NoDressing->RootScatter.Reset(); NoDressing->RootMistCards.Reset(); NoDressing->RootLightShafts.Reset();
             View->UseTheme(NoDressing.Get());
             TestTrue(TEXT("Without dressing meshes none is placed, and the obstacles remain"), View->UsesRootKit() && View->PlacedDressing().IsEmpty() && View->PlacedObstacles() > 0);
             // No arch mesh: the adjacent pair is two ordinary pieces, each blocked cell still covered.
-            TStrongObjectPtr<UDiceRollTheme> NoArch(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            TStrongObjectPtr<UDiceRollTheme> NoArch(TransientThemeCopy(Shipped));
             NoArch->RootArchTwoCell.Reset();
             View->UseTheme(NoArch.Get());
             TestEqual(TEXT("Without the arch mesh no arch is placed"), View->PlacedArches(), 0);
             for (const FIntPoint& Cell : Encounter.BlockedCells) { TestTrue(TEXT("Every blocked cell still has its blocker without arches"), View->ObstacleSpots().Contains(Cell)); }
             // No Root obstacle variants at all: every cell still has a blocker (r001 art or primitives), and the world stays at the true metric.
-            TStrongObjectPtr<UDiceRollTheme> NoVariants(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            TStrongObjectPtr<UDiceRollTheme> NoVariants(TransientThemeCopy(Shipped));
             NoVariants->RootPillarVariants.Reset(); NoVariants->RootWallVariants.Reset(); NoVariants->RootStonesVariants.Reset();
             View->UseTheme(NoVariants.Get());
             TestTrue(TEXT("Without obstacle variants the kit world is still placed"), View->UsesRootKit());
             TestEqual(TEXT("It stays at the true metric"), View->WorldMeshScale(), 1.0f, 0.001f);
             TestEqual(TEXT("No Root arch stands without Root variants"), View->PlacedArches(), 0);
+            for (const FIntPoint& Cell : Encounter.BlockedCells) { TestTrue(TEXT("Every blocked cell still has its blocker without Root variants"), View->ObstacleSpots().Contains(Cell)); }
             // A single variant that loads covers every cell: the choice falls to the next one that loaded.
-            TStrongObjectPtr<UDiceRollTheme> OneVariant(DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()));
+            TStrongObjectPtr<UDiceRollTheme> OneVariant(TransientThemeCopy(Shipped));
             if (OneVariant->RootWallVariants.Num() == 3)
             {
                 OneVariant->RootWallVariants[0].Reset(); OneVariant->RootWallVariants[1].Reset();
