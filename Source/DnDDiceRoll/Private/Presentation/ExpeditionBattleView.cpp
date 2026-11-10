@@ -572,6 +572,8 @@ void AExpeditionBattleView::BeginPlay()
     }
     // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
+    // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
     if (!FParse::Param(FCommandLine::Get(), TEXT("ExpeditionPrimitives")) && !ThemeAsset.IsNull())
     {
