@@ -277,6 +277,8 @@ int32 AExpeditionBattleView::GroupFor(UStaticMesh* Mesh, UMaterialInterface* Mat
     // The count must be set before the first instance: each instance then carries that many floats.
     Set->SetNumCustomDataFloats(CustomFloats);
     MatchLooseLod(Set, Mesh);
+    // Previous transforms give moving instances motion vectors, as loose components have (see MoveInstances).
+    Set->SetHasPerInstancePrevTransforms(true);
     if (Material) { Set->SetMaterial(0, Material); }
     Set->RegisterComponent();
     FExpeditionGroup Group;
@@ -321,8 +323,29 @@ void AExpeditionBattleView::UpdateInstance(const FExpeditionInstance& Instance, 
     if (!Instance.IsValid() || !Groups.IsValidIndex(Instance.Group)) { return; }
     FExpeditionGroup& Group = Groups[Instance.Group];
     if (!Group.Component) { return; }
-    Group.Component->UpdateInstanceTransform(Instance.Index, Local, false, false, true);
+    MoveInstances(Instance.Group, Instance.Index, MakeArrayView(&Local, 1), true);
     if (Group.CustomFloats > 0 && Data.Num() > 0) { Group.Component->SetCustomData(Instance.Index, Data, false); }
+    Group.bDirty = true;
+}
+
+void AExpeditionBattleView::MoveInstances(int32 GroupIndex, int32 Start, TConstArrayView<FTransform> Transforms, bool bMotion)
+{
+    if (!Groups.IsValidIndex(GroupIndex) || Transforms.IsEmpty()) { return; }
+    FExpeditionGroup& Group = Groups[GroupIndex];
+    UInstancedStaticMeshComponent* Set = Group.Component;
+    if (!Set) { return; }
+    // With per-instance previous transforms on, every move must pass them: the plain overloads leave them stale, which would draw a
+    // constant false velocity. Continuous motion keeps last frame's transform as the previous one; a jump has none.
+    MoveNew.Reset(); MovePrev.Reset();
+    MoveNew.Append(Transforms.GetData(), Transforms.Num());
+    for (int32 Offset = 0; Offset < Transforms.Num(); ++Offset)
+    {
+        FTransform Previous = Transforms[Offset];
+        if (bMotion) { Set->GetInstanceTransform(Start + Offset, Previous, false); }
+        MovePrev.Add(Previous);
+        if (bMotion) { Group.Moved.Add(Start + Offset); }
+    }
+    Set->BatchUpdateInstancesTransforms(Start, MoveNew, MovePrev, false, false, false);
     Group.bDirty = true;
 }
 
@@ -330,6 +353,24 @@ void AExpeditionBattleView::FlushGroups()
 {
     for (FExpeditionGroup& Group : Groups)
     {
+        // An instance that moved last frame but not this one has stopped: its previous transform becomes its current one, so it
+        // stops drawing a velocity.
+        if (Group.Component)
+        {
+            for (const int32 Index : Group.MovedLast)
+            {
+                if (Group.Moved.Contains(Index)) { continue; }
+                FTransform Current;
+                if (Group.Component->GetInstanceTransform(Index, Current, false))
+                {
+                    MoveNew.Reset(); MovePrev.Reset(); MoveNew.Add(Current); MovePrev.Add(Current);
+                    Group.Component->BatchUpdateInstancesTransforms(Index, MoveNew, MovePrev, false, false, false);
+                    Group.bDirty = true;
+                }
+            }
+        }
+        Swap(Group.MovedLast, Group.Moved);
+        Group.Moved.Reset();
         if (!Group.bDirty) { continue; }
         Group.bDirty = false;
         // Tells the render thread once, at the end of the frame, however many instances moved.
@@ -521,7 +562,8 @@ void AExpeditionBattleView::SetRing(int32 Slot, bool bVisible, const FVector& Ce
                     FVector(Side * 1.1f / 100.0f, 0.05f, 0.012f) * Scale)
                 : FTransform(FRotator::ZeroRotator, State.bPlaced ? State.Centre : Centre, FVector::ZeroVector));
         }
-        RingBank->BatchUpdateInstancesTransforms(Start, TArrayView<const FTransform>(Bars.GetData(), Bars.Num()), false, false, true);
+        // A ring that follows a walking figure moves continuously; showing, hiding or first placing it is a jump.
+        MoveInstances(RingGroup, Start, TConstArrayView<FTransform>(Bars.GetData(), Bars.Num()), State.bPlaced && State.bVisible && bVisible);
     }
     if (bTinted)
     {
@@ -551,11 +593,17 @@ void AExpeditionBattleView::SetOverlayBars(const TArray<FTransform>& Bars, const
     }
     if (Count > 0)
     {
-        RingBank->BatchUpdateInstancesTransforms(OverlayBase, TArrayView<const FTransform>(Bars.GetData(), Count), false, false, true);
+        // Grid bars are rebuilt for new geometry, never moved: no velocity.
+        MoveInstances(RingGroup, OverlayBase, TConstArrayView<FTransform>(Bars.GetData(), Count), false);
         RingBank->SetCustomData(OverlayBase, OverlayBase + Count - 1, TConstArrayView<float>(Data.GetData(), Data.Num()), false);
     }
     const int32 Left = RingBank->GetInstanceCount() - OverlayBase - Count;
-    if (Left > 0) { RingBank->BatchUpdateInstancesTransform(OverlayBase + Count, Left, FTransform(FRotator::ZeroRotator, FVector::ZeroVector, FVector::ZeroVector), false, false, true); }
+    if (Left > 0)
+    {
+        TArray<FTransform> Collapsed;
+        Collapsed.Init(FTransform(FRotator::ZeroRotator, FVector::ZeroVector, FVector::ZeroVector), Left);
+        MoveInstances(RingGroup, OverlayBase + Count, Collapsed, false);
+    }
     if (Groups.IsValidIndex(RingGroup)) { Groups[RingGroup].bDirty = true; }
 }
 
@@ -2683,11 +2731,18 @@ void AExpeditionBattleView::UpdateOverlay()
     }
     if (OverlayBase != INDEX_NONE)
     {
-        // One component for every style (#144): the bars in style order, each with its style's rgb and opacity as custom data.
+        // One component for every style (#144), each bar with its style's rgb and opacity as custom data. The overlay draws without a
+        // depth test, so overlapping translucent bars blend in submission order: the faint grid and ticks go first, the reach contour
+        // under the move contour (as the separate per-style components drew it), then the blocked crosses, path and markers.
+        using BoardOverlay::EStyle;
+        static const EStyle DrawOrder[] = {EStyle::Grid, EStyle::Tick, EStyle::ReachContour, EStyle::MoveContour, EStyle::Blocked,
+            EStyle::Ribbon, EStyle::PathBracket, EStyle::HoverBracket, EStyle::Victim};
+        static_assert(UE_ARRAY_COUNT(DrawOrder) == static_cast<int32>(EStyle::Count), "every overlay style has a draw position");
         TArray<FTransform> Flat;
         TArray<float> Data;
-        for (int32 Index = 0; Index < ByStyle.Num(); ++Index)
+        for (const EStyle Style : DrawOrder)
         {
+            const int32 Index = static_cast<int32>(Style);
             const FOverlayLook Look = OverlayLook(static_cast<BoardOverlay::EStyle>(Index));
             for (const FTransform& Bar : ByStyle[Index])
             {

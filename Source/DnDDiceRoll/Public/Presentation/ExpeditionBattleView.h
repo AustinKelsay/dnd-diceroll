@@ -67,6 +67,10 @@ struct FExpeditionGroup
     FLinearColor Colour = FLinearColor::White;
     /** Instances changed since the last flush; the render thread is told once per frame. */
     bool bDirty = false;
+    /** Instances moved continuously this frame and last frame. Their previous transforms give the renderer motion vectors (TSR
+     * reprojects them like moving loose components); an instance that stops moving has its previous transform reset at flush. */
+    TArray<int32> Moved;
+    TArray<int32> MovedLast;
 };
 
 /** Where an instance lives: its group and its index in the group's component. */
@@ -553,6 +557,11 @@ private:
     FExpeditionInstance PlaceInstance(int32 Group, const FTransform& Local, TConstArrayView<float> Data);
     /** Rewrites an instance's transform and custom data; marks the group for the end-of-frame flush. */
     void UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data);
+    /** Moves instances of a group. bMotion: continuous movement, so the previous transform is the current one (a motion vector);
+     * otherwise a jump (show, hide, reuse), so previous = new and no velocity is drawn. */
+    void MoveInstances(int32 GroupIndex, int32 Start, TConstArrayView<FTransform> Transforms, bool bMotion);
+    /** Reused buffers for MoveInstances, so a frame of sway allocates nothing once warm. */
+    TArray<FTransform> MoveNew, MovePrev;
     void FlushGroups();
     /**
      * A static themed prop at a scenery-local transform. Instanced into the (mesh, material) group when the board is instanced, a
