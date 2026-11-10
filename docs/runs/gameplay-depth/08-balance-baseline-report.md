@@ -4,12 +4,13 @@ Child issue [#179](https://github.com/AustinKelsay/dnd-diceroll/issues/179), par
 
 ## How it was produced
 
-- Source: this branch's harness (test code only; no rules, RNG, save, catalog, `Config/` or `Content/` change) on staging `7f29981`, then again after merging staging `d73b8ba` (graphics #175 and #176): the two baselines are byte-identical. Compact ruleset, catalog revision 7, policy version 1.
+- Source: this branch's harness (test code only; no rules, RNG, save, catalog, `Config/` or `Content/` change) on staging `7f29981`, then again after merging staging `d73b8ba` (graphics #175 and #176), and again after the review fixes (the harness now reads protection and move costs from the game's own queries): every run, encounter and hero result is byte-identical across all three; only the blocker export changed format. Compact ruleset, catalog revision 7, policy version 1.
 - Host: PlebDev Ultra, UE 5.8.4, `--cores 2`, under the machine lock.
 - Command: `DND_BALANCE_OUT=.local/balance/<stamp> python3 tools/dev.py --cores 2 test --filter Balance.Baseline.`, then `python3 tools/balance_report.py <folder>`.
 - Size: 99 parties x 32 seeds = **3,168 complete runs**, 15,840 fights, 169,887 hero turns. Harness time 20.4 s; locked wall time 45 s.
 - Determinism: two separate engine processes produced byte-identical `runs.csv`, `encounters.csv` and `heroes.csv`; `Project.Balance.SameSeedSameResults` also checks it in-process, final snapshot included.
-- Gates: 0 policy errors, 0 illegal proposals, 0 passive ends, 0 stalls.
+- Gates: 0 policy errors, 0 illegal proposals, 0 passive ends, 0 stalls, 0 protection mismatches (every enemy hit's committed prevention equals `FCombatBattle::Protection` before the hit).
+- Data: the full `runs`, `encounters` and `heroes` CSVs of this baseline are on the PR's evidence branch, so every table here can be recomputed with `tools/balance_report.py`.
 
 Read every number as "what this one simple policy does". Automated results do not prove human difficulty or fun.
 
@@ -17,7 +18,7 @@ Read every number as "what this one simple policy does". Automated results do no
 
 1. **The run is not threatening.** All 3,168 runs won all five fights (95% Wilson interval for the whole set: 99.9–100%). A fight takes 3.1 rounds on average and never more than 9. The party loses 2–9% of its HP per fight, and the closest call in any of the 15,840 fights left the party at 41% of its HP. 0.006 deaths per run.
 2. **Win rate cannot rank parties or kits at this difficulty.** Every archetype, class and kit is at 100%. The usable signals are speed (rounds per fight), damage taken, the share of damage dealt, special availability and use, and resources left over.
-3. **Specials disappear in the second half.** Specials used per fight by stage: **4.9, 3.7, 0.9, 0.4, 0.25**. 78% of Kit heroes end the run with an empty Kit, and every Barbarian ends with no Rage (2.98 Rages per run against a cap of 2 plus 1 at camp). The finale is fought almost entirely with basic attacks.
+3. **Under this greedy policy, specials disappear in the second half.** Specials used per fight by stage: **4.9, 3.7, 0.9, 0.4, 0.25**. 78% of Kit heroes end the run with an empty Kit, and every Barbarian ends with no Rage (2.98 Rages per run against a cap of 2 plus 1 at camp). The finale is fought almost entirely with basic attacks. The resource limits are fixed by the catalog; how early they run out depends on the policy (section "Policy artifacts versus likely balance problems").
 4. **One special usually takes the whole shared pool.** In 46 of 70 kits, one of the two specials accounts for at least 80% of uses. The two specials share two Kit uses, so the second one is rarely seen.
 5. **Melee does less of the work.** Melee classes (Fighter, Barbarian, Monk, Paladin) deal 7.0 damage per fight against 10.5 for the others. All-melee parties are the slowest (3.9–4.0 rounds per fight against 2.3–2.6 for ranged parties). The 5–7 cell opening gap costs melee heroes a turn of walking.
 6. **Slot 1 takes the hits.** Enemies attack the first legal target in roster order, so slot 1 takes 2.8 HP per fight against 1.5–2.1 for the others, and 18 of the 19 deaths were slot 1.
@@ -90,7 +91,7 @@ By slot (rotation):
 
 ## Specials and resources
 
-Each row's "available" is the share of the hero's turns on which `FActionFactsQuery` reported the special available at some point; the blocker is the most common first reason on the other turns. The full per-kit table is in the appendix.
+Each row's "available" is the share of the hero's turns on which `FActionFactsQuery` reported the special available at some point; the blocker is the most common first reason on the other turns, counting every first-step blocker of every run (the per-run counts are summed before the dominant one is chosen; `summary.json` keeps the full counts). The full per-kit table is in the appendix.
 
 - **Kit exhaustion dominates.** For most kits the top blocker is `ResourceShort`: two Kit uses plus one at camp, three for five fights, and the policy spends them as soon as they help. Kits that end with Kit left are those whose specials are rarely worth using under this policy (exchanges, heals, protection when nobody is low or threatened): rogue.thief 1.7 of 2, paladin.glory 1.8, wizard.transmutation 1.6, cleric.peace 1.5.
 - **Barbarians:** Rage is used 2.98 times per run; the second special needs Rage, so after the third Rage (usually fight 3) it is blocked by `StanceRequired` for the rest of the run.
@@ -117,10 +118,10 @@ Likely **policy artifacts** (do not tune on these alone):
 - Rescue-failure deaths: the policy does not hold the last kill to save a Downed ally.
 - One special taking the whole pool is partly the policy's greedy spending. But with three Kit uses for five fights even a careful player sees each special about once or twice per run.
 
-Likely **real balance or design problems** (the policy cannot cause them):
+Likely **real balance or design problems** (the policy cannot cause the limit itself, though it shapes when the limit is felt):
 - Enemy pressure is far too low for a five-fight run with attrition: 100% wins, 2–9% HP lost per fight, closest call 41%. Enemies: 10–20 HP, AC 11–12, +2 to hit, d4+1 or d6+1, against heroes with 22–34 HP, AC 13–16, +5 to hit and d6+3 (casters d10).
-- Resource scarcity across the run: three Kit uses (or Rages) for five fights, shared by both specials, so subclass identity fades by fight 3.
-- The Barbarian's second special depends on a Rage that runs out by about fight 3.
+- **Fixed resource limits** (catalog facts, independent of the policy): a Kit hero has at most three uses (two, plus one at camp) for five fights, shared by both specials, so at most 0.6 special uses per fight on average however they are spread. A Barbarian has at most three Rages, each lasting two of its own turns, so its Rage-gated special is usable on at most six turns per run (about 15 rounds).
+- **Exhaustion timing** (policy-dependent): the greedy policy spends those uses as soon as they help, so they are gone by fight 3 and one special usually takes the whole pool. A player who saves uses would see specials later in the run, but no more of them, and the second special would still compete for the same three uses.
 - The melee walking tax, and slot 1 taking most of the hits (the enemies' first-in-roster target choice).
 - Bodies permanently blocking one-cell gaps on the broken-wall recipe.
 
@@ -128,7 +129,7 @@ Likely **real balance or design problems** (the policy cannot cause them):
 
 In priority order. Each needs before/after harness evidence and public regressions.
 
-1. **Enemy pressure** (the precondition for every other measurement): scale enemy HP, to-hit or damage, or count, by stage and route, until the baseline policy loses some runs, Dangerous fights cost noticeably more than Guarded ones, and the finale is the hardest fight. A useful target band: about 70–90% wins for the rotation, with visible downs from fight 3. Coordinate with slice 4 (encounter identity), which owns compositions; the numbers can move first.
+1. **Enemy pressure** (the precondition for every other measurement): scale enemy HP, to-hit or damage, or count, by stage and route, until the baseline policy loses some runs, Dangerous fights cost noticeably more than Guarded ones, and the finale is the hardest fight. This report sets no target: any win-rate band is an unvalidated design proposal that the tuning contract must state and justify (#112 warns against invented universal targets). All this baseline shows is that the current 100%, with a 41% closest call, is outside any range in which the harness can rank kits. Coordinate with slice 4 (encounter identity), which owns compositions; the numbers can move first.
 2. **Special economy across five fights:** more Kit (and Rage) per run, per-fight recovery, or cheaper second specials, so both specials appear in later fights. Measure specials per fight by stage and the share of the second special.
 3. **Barbarian Rage gating:** let the Rage-gated special work without Rage, or give more Rage, so the kit does not go blank after fight 3.
 4. **Melee walking tax:** a smaller opening gap or more speed for melee roles. Weigh against slice 4's 5–7 cell gap decision.
@@ -184,7 +185,7 @@ Re-run this baseline after each change: same seeds, same policy version, and a `
 | fighter.rune-knight | 3.03 | 6.7 | 0.41 | 0.23 | 30% / 2.06 / ResourceShort | 11% / 0.89 / ResourceShort | kit 0.0 (2), potions 2.4 |
 | monk.astral-self | 3.17 | 6.6 | 0.90 | 0.41 | 5% / 0.12 / ResourceShort | 22% / 2.84 / ResourceShort | kit 0.0 (2), potions 2.1 |
 | monk.four-elements | 3.21 | 8.0 | 1.10 | 0.00 | 26% / 2.81 / ResourceShort | 20% / 0.03 / ResourceShort | kit 0.0 (2), potions 1.9 |
-| monk.mercy | 3.21 | 7.0 | 1.32 | 0.00 | 11% / 0.08 / ResourceShort | 33% / 2.40 / OutOfRange | kit 0.3 (2), potions 1.8 |
+| monk.mercy | 3.21 | 7.0 | 1.32 | 0.00 | 11% / 0.08 / OutOfRange | 33% / 2.40 / OutOfRange | kit 0.3 (2), potions 1.8 |
 | monk.open-hand | 3.15 | 6.9 | 1.18 | 0.33 | 10% / 1.32 / ResourceShort | 24% / 1.62 / ResourceShort | kit 0.0 (2), potions 1.8 |
 | monk.shadow | 3.09 | 6.7 | 0.78 | 0.22 | 67% / 0.12 / ResourceShort | 57% / 1.81 / ResourceShort | kit 0.4 (2), potions 2.2 |
 | paladin.ancients | 3.17 | 6.6 | 0.42 | 0.07 | 8% / 0.66 / ResourceShort | 19% / 2.27 / ResourceShort | kit 0.0 (2), potions 2.4 |

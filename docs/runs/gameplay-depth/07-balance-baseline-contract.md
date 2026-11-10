@@ -13,7 +13,7 @@ Out of scope: SRD mode (#95), any rules, RNG, save, catalog, `Config/` or `Conte
 ## 2. Public seams the harness uses
 
 - `FExpeditionRun` only: `NewRun(Seed, Party, Error, Identity, ERuleset::Compact)`, `ChooseRoute`, `Submit`, `PlayEnemyTurn`, `ClaimReward`, `Recover`, and the const queries `Progress()`, `Battle()`, `Snapshot()`.
-- Combat queries through `Run.Battle()`: `ActiveId`, `Find`, `LegalMoves`, `LegalTargets`, `PathTo`, `Forecast`, `Snapshot`.
+- Combat queries through `Run.Battle()`: `ActiveId`, `Find`, `LegalMoves`, `LegalTargets`, `PathTo` (the movement cost of every legal destination the policy compares), `Forecast`, `Snapshot`, and `Protection` (added for review: the const public form of the reduction resolution applies, with its source; no behavior change). The policy never re-derives a rule: its only own computations are the approach-distance heuristics of rules 3 and 9.
 - `FActionFactsQuery::For` / `BarFor` (#58): which kit specials are available on each turn, and the exact blocker when not.
 - `FBuildCatalog::All` / `Find` for the party set and resource caps.
 
@@ -33,7 +33,7 @@ On each party turn the policy repeats one decision step until it chooses End Tur
 2. **Revive.** A Downed ally is adjacent: Potion on them if legal (heals 2d4+2), otherwise Rescue (1 HP). Uses the Action.
 3. **Reach a Downed ally.** The Action is unspent and a Downed ally is not adjacent: move to the nearest legal cell (fewest steps, then cell order) from which a look-ahead shows Rescue or Potion legal on them. If none is reachable this turn, the **designated rescuer** (the conscious ally with the shortest walking distance to a free cell beside the most urgent Downed hero, fewest rescue turns left first; units block; ties to the lowest ID) steps to the legal cell that brings it closest, and may still attack afterwards.
 4. **Heal.** A healing command (Second Wind, Cure Wounds, a kit Healing special, Potion) is legal on a low hero: heal the hero with the lowest HP fraction (then lowest ID), with Bonus Action heals first, then the larger expected heal, Potion last on ties.
-5. **Bonus protection.** A Bonus Action Protect special is legal on a threatened hero who is not already protected by at least that amount: protect the one with the lowest HP fraction.
+5. **Bonus protection.** A Bonus Action Protect special is legal on a threatened hero who is not already protected by at least that amount (per `FCombatBattle::Protection`): protect the one with the lowest HP fraction.
 6. **Exchange.** A Swap special is legal on a low ally adjacent to an enemy, and the actor is not low and has at least 25 points more HP fraction: swap with the lowest such ally.
 7. **Damage special.** For each legal damaging special (Strike, Surge, Push, Area, Magic Missile, Precision Strike) take its best target: a guaranteed drop (`Min >= HP`) first, then the highest expected damage, then lowest HP, then lowest ID.
    - A Bonus Action special is used whenever it has a target.
@@ -85,8 +85,8 @@ Per **hero per run**: build, class, slot, survived, the stage and cause of death
 Definitions:
 - **Damage dealt** is enemy HP removed by the hero's own command (snapshot difference, so protection and the zero floor are already applied). **Kills** are enemies whose life became Dead during it.
 - **Healing** is party HP restored by the hero's command (a Rescue counts its 1 HP; overheal does not exist because healing is capped by missing HP).
-- **Protection** is `DamagePrevented` on enemy attacks, credited to whoever supplied the protection that applied: the guard with the largest amount (then roster order), otherwise the target's own Rage.
-- **Available** means `FActionFactsQuery::For(...).bAvailable` at any decision step of that turn. The blocker recorded for an unavailable turn is the first blocker at the turn's first step.
+- **Protection** is `DamagePrevented` on enemy attacks, credited to the `SourceId` of `FCombatBattle::Protection` taken as the enemy turn began: the guard with the largest amount (then roster order), otherwise the target's own Rage. Every hit is also checked against that query: a committed `DamagePrevented` other than `min(raw damage, Amount)` is a protection mismatch (gate zero).
+- **Available** means `FActionFactsQuery::For(...).bAvailable` at any decision step of that turn. The blocker recorded for an unavailable turn is the first blocker at the turn's first step. Every blocker's turn count is exported per hero per run (`ResourceShort:12;OutOfRange:3`), and the report sums them before choosing a dominant blocker.
 
 ## 6. Where results go and how to run it
 
@@ -102,7 +102,7 @@ flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2
 python3 tools/balance_report.py "$DND_BALANCE_OUT"
 ```
 
-Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `group.json` (party list, seeds, policy version, run count, elapsed time). Without `DND_BALANCE_OUT` the folder is `.local/balance/<UTC stamp>/`. `tools/balance_report.py` (standard library only) merges every group under the folder into `summary.json` and `summary.md`. `.local/` is ignored; the committed baseline report quotes the summary.
+Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `group.json` (party list, seeds, policy version, run count, elapsed time). Without `DND_BALANCE_OUT` the folder is `.local/balance/<UTC stamp>/`. **Both the harness and `tools/balance_report.py` refuse any folder outside the checkout's `.local/`** (relative paths are taken from the checkout root and `..` is collapsed first; a symlink inside `.local/` is not followed). `tools/balance_report.py` (standard library only) merges every group under the folder into `summary.json` and `summary.md`. `.local/` is ignored; the committed baseline report quotes the summary.
 
 **Runtime budget:** the whole baseline in at most 240 s of test time at `--cores 2` (the helper's test process limit is 300 s), and well under ten minutes of locked wall time. If it does not fit, groups run as separate locked jobs into the same `DND_BALANCE_OUT`. The `Project.Balance.` tests stay under 10 s together. **Measured:** 3,168 runs in 20.4 s of harness time, 45 s of locked wall time including editor start and exit; `Project.Balance.` about 0.4 s.
 
@@ -110,6 +110,7 @@ Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `
 
 - **Stall:** a fight reaching round 60 without an outcome, or a party turn reaching 16 steps. The run stops and is reported as `Stall` with its party and seed. Target: zero.
 - **Policy error:** a command the run rejected, or a proposal that was not in the legal lists. Gate: zero.
+- **Protection mismatch:** see section 5. Gate: zero.
 - **Passive end:** the policy ended a turn with its Action unspent while an Attack was legal, or while it had movement left and a legal move closer to an enemy by rule 9's distance (the same function decides both). Gate: zero (this is the "never stalls while a legal action exists" check).
 - **Idle turns** (only End Turn) are reported per kit, not gated.
 - **Outlier kit:** on a per-kit metric (win rate of the parties containing it, damage per fight present, healing, protection, death rate), a robust z-score `|x - median| / (1.4826 x MAD)` of at least 3 across the 70 kits, or a win rate at least 15 points from the rotation mean whose 95% Wilson interval excludes it.
@@ -123,8 +124,11 @@ Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `
 3. `SameSeedSameResults`: two parties x two seeds, played twice: identical result rows and identical final `FExpeditionSnapshot`; two different seeds differ.
 4. `HarnessWritesNoCheckpoint`: the default checkpoint path is unchanged after harness runs.
 5. `PartySetCoversEveryKit`: every party uses valid catalog builds; the rotation covers all 70 kits at least five times and all 13 classes in each pass; the representative archetypes are present.
+6. `OutputStaysUnderLocal`: the results root is accepted inside `.local/` and refused for `../`, absolute paths elsewhere, `.local/..`, `.local` itself and look-alike prefixes.
 
-Helper tests cover `tools/balance_report.py` (merge, rates, Wilson interval, robust z, outlier and signature flags, refusal of an empty folder).
+Also `Project.Expedition.Combat.ProtectionQueryMatchesResolution`: the new query equals the committed prevention and names its source for two wards, Rage and a Rage-gated Shelter, and changes no state.
+
+Helper tests cover `tools/balance_report.py` (merge, rates, Wilson interval, robust z, outlier and signature flags, refusal of an empty folder, blocker counts summed before ranking, refusal of folders outside `.local/`).
 
 ## 9. Delivery
 
