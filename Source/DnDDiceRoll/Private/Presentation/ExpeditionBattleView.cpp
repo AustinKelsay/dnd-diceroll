@@ -676,7 +676,7 @@ void AExpeditionBattleView::BeginPlay()
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
-    Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
+    Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
     RebuildBoard();
@@ -767,13 +767,32 @@ float AExpeditionBattleView::FramedDistance() const
     return FramedCache.Anchor;
 }
 
-float AExpeditionBattleView::FramedDistance(float ForYaw) const
+float AExpeditionBattleView::WholeBoardDistance(float ForYaw) const
 {
     if (bOverview) { return 300.0f; }
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     const float Anchor = FramedDistance();
     return FMath::Clamp(ExpeditionCameraRig::FitDistance(Encounter.Width, Encounter.Height, BoardMetric, ForYaw, Anchor, Safe).Distance,
         ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance);
+}
+
+float AExpeditionBattleView::FigureDistance() const
+{
+    if (bOverview) { return 300.0f; }
+    return ExpeditionCameraRig::FigureDistance(BoardMetric, FramedDistance(), Safe);
+}
+
+float AExpeditionBattleView::FramedDistance(float ForYaw) const
+{
+    if (bOverview) { return 300.0f; }
+    // #148 gate 2: the default zoom is figure-sized when the whole board does not fit at that size; boards that fit closer keep their fit.
+    return ExpeditionCameraRig::DefaultDistance(WholeBoardDistance(ForYaw), FigureDistance());
+}
+
+float AExpeditionBattleView::FarFramedDistance(float ForYaw) const
+{
+    if (bOverview) { return 300.0f; }
+    return FMath::Max(ExpeditionCameraRig::FarStop(FramedDistance()), WholeBoardDistance(ForYaw));
 }
 
 bool AExpeditionBattleView::FramedFits(float ForYaw) const
@@ -1726,26 +1745,73 @@ void AExpeditionBattleView::UpdateEffects()
     }
 }
 
+int32 AExpeditionBattleView::CameraFocusId() const
+{
+    return IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
+}
+
+bool AExpeditionBattleView::WholeBoardInView() const
+{
+    if (bOverview) { return true; }
+    // The pose actually rendered this frame (mid-orbit the target yaw and distance are not on screen yet).
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+    return ExpeditionCameraRig::BoardInside(Encounter.Width, Encounter.Height, BoardMetric,
+        ExpeditionCameraRig::BoardCentre(Encounter.Width, Encounter.Height, BoardMetric), Yaw, Distance, Pitch, Safe, 1.0f);
+}
+
 FVector AExpeditionBattleView::BaseFocus() const
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     FVector Base = BoardPosition(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f), -BoardMetric.BoardTop());
     // Lean the view toward whoever is acting so long boards keep the action framed.
-    const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
+    const int32 FocusId = CameraFocusId();
     if (FocusId != INDEX_NONE && Show.Unit(FocusId))
     {
         const FVector Centre = Base;
-        Base = FMath::Lerp(Base, UnitPosition(FocusId, -BoardMetric.BoardTop()), 0.4f);
-        // At the default zoom the lean may only use the slack that keeps the board's corners inside the safe rect.
+        const FVector UnitAt = UnitPosition(FocusId, -BoardMetric.BoardTop());
+        Base = FMath::Lerp(Base, UnitAt, 0.4f);
         if (!bOverview)
         {
-            // The pose actually rendered this frame (mid-orbit the target yaw and distance are not on screen yet).
-            const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-            const FVector2D Leaned = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Base), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
-            Base.X = Leaned.X; Base.Y = Leaned.Y;
+            if (WholeBoardInView())
+            {
+                // The whole board is in view: the lean may only use the slack that keeps the board's corners inside the safe rect.
+                const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+                const FVector2D Leaned = ExpeditionCameraRig::LimitLean(FVector2D(Centre), FVector2D(Base), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+                Base.X = Leaned.X; Base.Y = Leaned.Y;
+            }
+            else
+            {
+                // The board does not fit at this zoom (#148 gate 2): centre on the acting unit; the pan bound and the unit hold keep the rest sane.
+                Base.X = UnitAt.X; Base.Y = UnitAt.Y;
+            }
         }
     }
     return Base;
+}
+
+FVector2D AExpeditionBattleView::LimitPan(const FVector2D& Base, FVector2D& Offset) const
+{
+    if (WholeBoardInView()) { Offset = FVector2D::ZeroVector; return Base; } // nothing to pan to
+    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
+    const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+    const ExpeditionCameraRig::FPanBound Bound = ExpeditionCameraRig::ClampPan(Base + Offset, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+    if (!Offset.IsNearlyZero())
+    {
+        // The player's pan stays at the bound instead of winding up past it; a locked axis keeps no pan.
+        Offset = Bound.Focus - Base;
+        if (Bound.bLockedX) { Offset.X = 0.0; }
+        if (Bound.bLockedY) { Offset.Y = 0.0; }
+    }
+    return Bound.Focus;
+}
+
+FVector2D AExpeditionBattleView::HoldUnit(const FVector2D& Wanted) const
+{
+    const int32 FocusId = CameraFocusId();
+    if (bOverview || FocusId == INDEX_NONE || !Show.Unit(FocusId) || WholeBoardInView()) { return Wanted; }
+    const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+    return ExpeditionCameraRig::KeepUnitInside(Wanted, FVector2D(UnitPosition(FocusId, -BoardMetric.BoardTop())), BoardMetric, Yaw, Distance, Pitch, Safe);
 }
 
 float AExpeditionBattleView::CameraPitch() const
@@ -1788,13 +1854,14 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     FVector Desired = FVector(0.0f, 30.0f, OverviewHeight + 22.0f);
     if (!bOverview)
     {
-        // A new acting unit hands the view back to the auto focus; manual pan stays within the board plus a margin.
-        const int32 FocusId = IsPresenting() && Show.FocusId() != INDEX_NONE ? Show.FocusId() : InCombat() ? Rules().ActiveId() : INDEX_NONE;
+        // A new acting unit hands the view back to the auto focus; manual pan never shows more than the bound past the board.
+        const int32 FocusId = CameraFocusId();
         if (FocusId != LastFocusId) { PanOffset = FVector2D::ZeroVector; LastFocusId = FocusId; }
         const FVector Base = BaseFocus();
-        const FVector2D Clamped = ExpeditionCameraRig::ClampFocus(FVector2D(Base) + PanOffset, Encounter.Width, Encounter.Height, BoardMetric.CellCm);
-        PanOffset = Clamped - FVector2D(Base);
-        Desired = FVector(Clamped.X, Clamped.Y, Base.Z);
+        FVector2D Limited = LimitPan(FVector2D(Base), PanOffset);
+        // Unpanned, the acting unit stays in view even where the pan bound or a locked axis would take the focus elsewhere.
+        if (PanOffset.IsNearlyZero()) { Limited = HoldUnit(Limited); }
+        Desired = FVector(Limited.X, Limited.Y, Base.Z);
     }
     FocusTarget = Desired;
     if (bSnap)
@@ -1813,6 +1880,20 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
             Focus.X = Held.X; Focus.Y = Held.Y;
         }
     }
+    if (!bOverview && !WholeBoardInView())
+    {
+        // The pan bound belongs to the rendered pose, not only the target: zooming out or orbiting from a pan stop eases through
+        // poses that see more ground than the one the target was clamped for (four unprojections per frame).
+        const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe).Focus;
+        Focus.X = Bounded.X; Focus.Y = Bounded.Y;
+    }
+    if (!bOverview && PanOffset.IsNearlyZero())
+    {
+        // Where the whole board is not in view, the eased focus (and a snap onto a clamped target) never leaves the acting unit outside the safe rect.
+        const FVector2D Held = HoldUnit(FVector2D(Focus));
+        Focus.X = Held.X; Focus.Y = Held.Y;
+    }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
     const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f * SceneScale() : FVector::ZeroVector;
     const float Radians = FMath::DegreesToRadians(Yaw);
@@ -1828,7 +1909,17 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         Offset = Arm.Offset;
         Framing = Arm.Framing;
     }
-    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + Framing + Shake);
+    FVector Eye = GetActorTransform().TransformPosition(Focus) + Offset + Framing + Shake;
+    if (!bOverview && !Shake.IsNearlyZero() && !WholeBoardInView())
+    {
+        // A shake moves the view too: the shaken pose keeps the pan bound (level, so it does not widen the view), and unpanned the
+        // acting unit still wins.
+        const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+        if (PanOffset.IsNearlyZero()) { Shaken = HoldUnit(Shaken); }
+        Eye = GetActorTransform().TransformPosition(FVector(Shaken.X, Shaken.Y, Focus.Z)) + Offset + Framing;
+    }
+    Camera->SetWorldLocation(Eye);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
 }
@@ -1853,10 +1944,10 @@ void AExpeditionBattleView::Pan(float Right, float Away)
     const float Radians = FMath::DegreesToRadians(TargetYaw);
     // The camera sits at (cos, sin) from the focus, so away from it is (-cos, -sin) and screen right is (sin, -cos).
     const FVector2D Step = (FVector2D(FMath::Sin(Radians), -FMath::Cos(Radians)) * Right + FVector2D(-FMath::Cos(Radians), -FMath::Sin(Radians)) * Away) * SceneScale();
-    const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     const FVector Base = BaseFocus();
-    const FVector2D Clamped = ExpeditionCameraRig::ClampFocus(FVector2D(Base) + PanOffset + Step, Encounter.Width, Encounter.Height, BoardMetric.CellCm);
-    PanOffset = Clamped - FVector2D(Base);
+    FVector2D Offset = PanOffset + Step;
+    LimitPan(FVector2D(Base), Offset);
+    PanOffset = Offset;
 }
 
 int32 AExpeditionBattleView::ShadowCastingLights() const
