@@ -569,4 +569,199 @@ bool FProjectionChangeTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("A click on it then moves there"), ActorCell(Game), B);
     return !HasAnyErrors();
 }
+
+namespace PointerInputTest
+{
+/** One game frame at 30 fps with a key pressed, then released, as a player's tap. */
+void Tap(FHarness& Game, FKey Key)
+{
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(Key, IE_Pressed, 1.0f));
+    Game.Frame(1.0f / 30.0f);
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(Key, IE_Released, 0.0f));
+}
+bool PoseMoved(const FTransform& A, const FTransform& B)
+{
+    return FVector::Dist(A.GetLocation(), B.GetLocation()) > 0.5f || FMath::RadiansToDegrees(A.GetRotation().AngularDistance(B.GetRotation())) > 0.02f;
+}
+/** The cell under a viewport pixel through the real camera, or false. */
+bool CellAt(FHarness& Game, FVector2D Pixel, FIntPoint& Cell)
+{
+    Game.Player->SimulatePointerThroughCamera(Pixel, Game.Target.Size);
+    return Game.Player->HoverCell(Cell);
+}
+}
+
+/**
+ * #171 round 3: the camera eases on its own under a resting pointer. This drives the real camera (Q through the controller,
+ * then ticks of the easing) and the real projection through it: no click may commit while the camera is still moving, and
+ * never on a cell that is not the one under the pointer; once it has settled and the new cell is previewed, a click acts.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraEaseClickTest, "Project.Expedition.Presentation.ClickNeedsStillCamera",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCameraEaseClickTest::RunTest(const FString& Parameters)
+{
+    using namespace PointerInputTest;
+    FHarness Game(*this, TEXT("CameraEaseClick"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
+    for (int32 Index = 0; Index < 90; ++Index) { Game.Frame(1.0f / 30.0f); }
+    const FIntPoint Start = ActorCell(Game);
+    const TArray<FIntPoint> Free = FreeMoves(Game);
+    auto IsFree = [&Free](FIntPoint Cell) { return Free.Contains(Cell); };
+
+    // Find a pixel over a free reachable cell A that, after a quarter turn, lies over another free reachable cell B.
+    TArray<TPair<FVector2D, FIntPoint>> Candidates;
+    for (float Y = 160; Y < 560; Y += 12) for (float X = 300; X < 1200; X += 12)
+    {
+        FIntPoint Cell;
+        if (CellAt(Game, FVector2D(X, Y), Cell) && IsFree(Cell) && !Game.Hud->CoversBoard(FVector2D(X, Y))) { Candidates.Add({FVector2D(X, Y), Cell}); }
+    }
+    if (!TestFalse(TEXT("Some pixels lie over free reachable cells"), Candidates.IsEmpty())) { return false; }
+    Tap(Game, EKeys::Q);
+    for (int32 Index = 0; Index < 150; ++Index) { Game.Frame(1.0f / 30.0f); }
+    FVector2D Pixel = FVector2D::ZeroVector;
+    FIntPoint A, B;
+    bool bFound = false;
+    for (const TPair<FVector2D, FIntPoint>& Candidate : Candidates)
+    {
+        FIntPoint After;
+        if (CellAt(Game, Candidate.Key, After) && IsFree(After) && After != Candidate.Value && !Game.Hud->CoversBoard(Candidate.Key)) { Pixel = Candidate.Key; A = Candidate.Value; B = After; bFound = true; break; }
+    }
+    Tap(Game, EKeys::E);
+    for (int32 Index = 0; Index < 150; ++Index) { Game.Frame(1.0f / 30.0f); }
+    if (!TestTrue(TEXT("A pixel changes from one free reachable cell to another across a quarter turn"), bFound)) { return false; }
+    FIntPoint Here;
+    if (!TestTrue(TEXT("The camera is back where it started"), CellAt(Game, Pixel, Here) && Here == A)) { return false; }
+
+    // The pointer rests on A and A is previewed.
+    Game.Frame(1.0f / 30.0f);
+    FIntPoint Previewed;
+    TestTrue(TEXT("A is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == A);
+    Tap(Game, EKeys::Q);
+    int32 EasingFrames = 0, Commits = 0;
+    FTransform Before = Game.View->CameraTransform();
+    for (int32 Frame = 0; Frame < 120 && !Commits; ++Frame)
+    {
+        // A click arrives with this frame's input, before the camera moves on.
+        const FTransform Now = Game.View->CameraTransform();
+        const bool bMoving = PoseMoved(Before, Now);
+        FIntPoint Under;
+        const bool bOver = CellAt(Game, Pixel, Under);
+        Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
+        Game.Frame(1.0f / 30.0f);
+        Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
+        if (bMoving) { ++EasingFrames; }
+        if (ActorCell(Game) != Start)
+        {
+            ++Commits;
+            TestFalse(FString::Printf(TEXT("Frame %d: no click commits while the camera is still moving"), Frame), bMoving);
+            TestTrue(TEXT("A commit only goes to the cell that was under the pointer"), bOver && ActorCell(Game) == Under);
+            TestNotEqual(TEXT("... never to the cell previewed before the camera moved"), ActorCell(Game), A);
+        }
+        Before = Now;
+    }
+    TestTrue(TEXT("The camera really did ease under the resting pointer"), EasingFrames >= 3);
+    Game.Settle();
+    if (Commits == 0)
+    {
+        for (int32 Index = 0; Index < 6; ++Index) { Game.Frame(1.0f / 30.0f); }
+        TestTrue(TEXT("Once settled, the cell now under the pointer is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == B);
+        Game.Press(EKeys::LeftMouseButton);
+        Game.Settle();
+        TestEqual(TEXT("... and a click then moves there"), ActorCell(Game), B);
+    }
+    return !HasAnyErrors();
+}
+
+/**
+ * #171 round 3: after a committed move, a second Enter (with an arrow in between) never commits while the first move is
+ * still playing back; it commits only after playback ends, when it is a legitimate second move. Real arrow keys, 30 fps ticks.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSecondEnterTimingTest, "Project.Expedition.Presentation.SecondEnterOnlyAfterPlayback",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSecondEnterTimingTest::RunTest(const FString& Parameters)
+{
+    using namespace PointerInputTest;
+    int32 DuringPlayback = 0, AfterPlayback = 0;
+    for (const int32 Gap : {2, 4, 6, 8, 12, 18, 30, 60})
+    {
+        FHarness Game(*this, TEXT("SecondEnter"));
+        if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+        if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
+        for (int32 Index = 0; Index < 60; ++Index) { Game.Frame(1.0f / 30.0f); }
+        const FIntPoint Start = ActorCell(Game);
+        TArray<FIntPoint> Free = FreeMoves(Game);
+        auto Distance = [&Start](FIntPoint Cell) { return FMath::Max(FMath::Abs(Cell.X - Start.X), FMath::Abs(Cell.Y - Start.Y)); };
+        Free.Sort([&Distance](FIntPoint A, FIntPoint B) { return Distance(A) == Distance(B) ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : Distance(A) < Distance(B); });
+        // Three squares away so the playback is a real walk.
+        FIntPoint First = Free.Last();
+        for (const FIntPoint Cell : Free) { if (Distance(Cell) == 3) { First = Cell; break; } }
+        const FString Where = FString::Printf(TEXT("gap %d frames"), Gap);
+        Game.Player->PreviewAim(true, First);
+        Game.Frame(1.0f / 30.0f);
+        Tap(Game, EKeys::Enter);
+        if (!TestEqual(Where + TEXT(": the first Enter moves to the cursor cell"), ActorCell(Game), First)) { return false; }
+        const bool bPlaying = Game.View->IsPresenting();
+        TestTrue(Where + TEXT(": the move plays back"), bPlaying);
+        // The gap, then a real arrow and the second Enter.
+        for (int32 Index = 0; Index < Gap; ++Index) { Game.Frame(1.0f / 30.0f); }
+        Tap(Game, EKeys::Left);
+        const bool bPresentingAtEnter = Game.View->IsPresenting();
+        const FIntPoint Cursor = Game.Player->KeyboardCursorCell();
+        const int32 MovementLeft = Game.View->Rules().Snapshot().MovementLeft;
+        Tap(Game, EKeys::Enter);
+        const bool bMoved = Game.View->Rules().Snapshot().MovementLeft != MovementLeft;
+        if (bPresentingAtEnter)
+        {
+            ++DuringPlayback;
+            TestFalse(Where + TEXT(": a second Enter during playback commits nothing"), bMoved);
+            TestEqual(Where + TEXT(": ... the hero stays"), ActorCell(Game), First);
+        }
+        else
+        {
+            ++AfterPlayback;
+            if (bMoved) { TestEqual(Where + TEXT(": a second Enter after playback acts on the cursor cell"), ActorCell(Game), Cursor); }
+        }
+    }
+    AddInfo(FString::Printf(TEXT("Second Enter landed during playback in %d runs and after it in %d"), DuringPlayback, AfterPlayback));
+    TestTrue(TEXT("Some second Enter landed inside the playback"), DuringPlayback > 0);
+    return !HasAnyErrors();
+}
+
+/** Closing an overlay does not restore a preview by itself: a click in the same frame does nothing, the next frame previews, then a click acts. */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverlayCloseClickTest, "Project.Expedition.Presentation.ClickAfterOverlayNeedsFreshPreview",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FOverlayCloseClickTest::RunTest(const FString& Parameters)
+{
+    using namespace PointerInputTest;
+    FHarness Game(*this, TEXT("OverlayCloseClick"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
+    const TArray<FIntPoint> Free = FreeMoves(Game);
+    if (!TestFalse(TEXT("The hero has a cell to walk to"), Free.IsEmpty())) { return false; }
+    const FIntPoint Target = Free[0], Start = ActorCell(Game);
+    Game.Player->SimulatePointer(BoardSpotA, Target);
+    Game.Frame();
+    FIntPoint Previewed;
+    TestTrue(TEXT("The cell is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == Target);
+    Game.Press(EKeys::Slash);
+    TestTrue(TEXT("Help is open"), Game.Player->OverlayOpen());
+    Game.Frame();
+    TestFalse(TEXT("No preview while Help is open"), Game.Player->PreviewedPointerCell(Previewed));
+    // Esc and a click arrive in the same frame, in either order.
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Escape, IE_Pressed, 1.0f));
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
+    Game.Frame(1.0f / 30.0f);
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Escape, IE_Released, 0.0f));
+    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
+    TestFalse(TEXT("Help is closed"), Game.Player->OverlayOpen());
+    TestEqual(TEXT("The click in the closing frame moves nobody"), ActorCell(Game), Start);
+    // The HUD's panel rectangles are those of the frame drawn with Help open, so the pointer still reads as over a panel for one frame.
+    Game.Frame(1.0f / 30.0f);
+    TestTrue(TEXT("The cell is previewed again within a frame or two"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == Target);
+    Game.Press(EKeys::LeftMouseButton);
+    Game.Settle();
+    TestEqual(TEXT("A click then moves there"), ActorCell(Game), Target);
+    return !HasAnyErrors();
+}
 #endif

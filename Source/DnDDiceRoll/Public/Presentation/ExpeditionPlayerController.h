@@ -97,6 +97,12 @@ public:
      * A transient test world has no viewport to project through, so the cell is given. Moving it again is pointer motion.
      */
     void SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell);
+    /**
+     * Test support: the pointer rests at this viewport pixel of a viewport of this size, and the cell under it is found by
+     * casting a ray through the battle view's real camera (its eased transform and field of view), so orbiting, panning and
+     * zooming through the controller move the cell under a resting pointer the way they do on screen.
+     */
+    void SimulatePointerThroughCamera(FVector2D ViewportPosition, FIntPoint ViewportSize);
     /** Test support: back to the physical pointer. */
     void ReleaseSimulatedPointer() { bSimulatedPointer = false; }
     /**
@@ -110,6 +116,8 @@ private:
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
     bool bSimulatedPointer = false;
+    bool bSimulatedCamera = false;
+    FIntPoint SimulatedViewport = FIntPoint::ZeroValue;
     FVector2D SimulatedPointer = FVector2D::ZeroVector;
     FIntPoint SimulatedCell = FIntPoint::ZeroValue;
     /** Where the pointer was when motion was last counted; motion is measured from here so slow drift still counts. */
@@ -119,6 +127,15 @@ private:
     FIntPoint PointerPreview = FIntPoint::ZeroValue;
     /** What the preview was drawn for; a change before the click voids it. */
     uint32 PreviewStamp = 0;
+    /**
+     * The camera the pointer is projected through (the player camera's cache, else the view's own camera). The hover cell is found
+     * with the pose of one frame and the camera eases on its own, so a preview is trusted only while the pose has not moved since.
+     */
+    bool ProjectionPose(FTransform& Pose) const;
+    bool bPreviewPoseValid = false;
+    FTransform PreviewPose;
+    /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
+    static constexpr float PoseSlopCm = 0.5f, PoseSlopDegrees = 0.02f;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;
     FIntPoint KeyboardPreview = FIntPoint::ZeroValue;

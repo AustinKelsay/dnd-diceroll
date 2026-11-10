@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
@@ -190,6 +191,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     bPointerPreviewed = bHover && !bKeyboardCursor && ShowsTargeting();
     PointerPreview = Hover;
     PreviewStamp = TargetingStamp();
+    bPreviewPoseValid = ProjectionPose(PreviewPose);
     // The same for the keyboard cursor: Enter acts only on a cell the last frame drew marked while targeting was visible.
     bKeyboardPreviewed = bKeyboardCursor && ShowsTargeting();
     KeyboardPreview = GridCursor;
@@ -238,9 +240,23 @@ bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
     return GetMousePosition(X, Y);
 }
 
+bool AExpeditionPlayerController::ProjectionPose(FTransform& Pose) const
+{
+    if (PlayerCameraManager) { const FMinimalViewInfo& View = PlayerCameraManager->GetCameraCacheView(); Pose = FTransform(View.Rotation, View.Location); return true; }
+    if (!IsValid(BattleView)) { return false; }
+    Pose = BattleView->CameraTransform();
+    return true;
+}
+
+void AExpeditionPlayerController::SimulatePointerThroughCamera(FVector2D ViewportPosition, FIntPoint ViewportSize)
+{
+    bSimulatedPointer = true; bSimulatedCamera = true;
+    SimulatedPointer = ViewportPosition; SimulatedViewport = ViewportSize;
+}
+
 void AExpeditionPlayerController::SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell)
 {
-    bSimulatedPointer = true;
+    bSimulatedPointer = true; bSimulatedCamera = false;
     SimulatedPointer = ViewportPosition;
     SimulatedCell = Cell;
 }
@@ -295,6 +311,15 @@ bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
 {
     if (KeyboardCell(Cell)) { return true; }
     if (bCapturing) { return false; }
+    if (bSimulatedPointer && bSimulatedCamera)
+    {
+        if (!IsValid(BattleView) || SimulatedViewport.X <= 0 || SimulatedViewport.Y <= 0) { return false; }
+        const FTransform Pose = BattleView->CameraTransform();
+        const double HalfWidth = FMath::Tan(FMath::DegreesToRadians(BattleView->CameraFieldOfView()) * 0.5), HalfHeight = HalfWidth * SimulatedViewport.Y / SimulatedViewport.X;
+        const double X = SimulatedPointer.X / SimulatedViewport.X * 2.0 - 1.0, Y = 1.0 - SimulatedPointer.Y / SimulatedViewport.Y * 2.0;
+        const FVector Direction = (Pose.GetRotation().GetForwardVector() + Pose.GetRotation().GetRightVector() * (X * HalfWidth) + Pose.GetRotation().GetUpVector() * (Y * HalfHeight)).GetSafeNormal();
+        return BattleView->CellAtRay(Pose.GetLocation(), Direction, Cell);
+    }
     if (bSimulatedPointer) { Cell = SimulatedCell; return true; }
     return IsValid(BattleView) && BattleView->CursorCell(const_cast<AExpeditionPlayerController*>(this), Cell);
 }
@@ -464,7 +489,13 @@ void AExpeditionPlayerController::Click()
     {
         // The camera eases on its own: the cell under a resting pointer can change after the preview was drawn. Act only if it is
         // still the cell that was shown; otherwise the next frame previews the new one first.
-        if (HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        // The camera also moves under a resting pointer (Q/E, pan, zoom, the focus easing to a new unit): the preview was found with
+        // the pose of the frame it was drawn in, so a camera that has moved since voids it, and the next frame previews afresh.
+        FTransform Pose;
+        const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+            FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+            FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
         return;
     }
     // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
