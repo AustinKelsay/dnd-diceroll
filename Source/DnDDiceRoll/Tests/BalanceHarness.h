@@ -20,6 +20,10 @@ inline constexpr int32 RotationPasses = 5;
 inline constexpr int32 MaxRounds = 60;
 /** A party turn that takes this many decision steps is a stall. */
 inline constexpr int32 MaxSteps = 16;
+/** At most this many look-ahead moves per decision (rules 3 and 9). */
+inline constexpr int32 MaxLookAheads = 16;
+/** Guard on harness loop iterations per run; only a harness bug could reach it. */
+inline constexpr int32 RunStepGuard = 100000;
 /** Bump when a policy rule changes, so result folders say which policy produced them. */
 inline constexpr int32 PolicyVersion = 1;
 
@@ -86,6 +90,8 @@ struct FRunStats
     int32 IllegalProposals = 0;
     /** End Turn with the Action unspent while an Attack, or a move closer to an enemy, was legal (gate zero). */
     int32 PassiveEnds = 0;
+    /** Enemy hits whose committed prevention differs from FCombatBattle::Protection before the turn (gate zero). */
+    int32 ProtectionMismatches = 0;
     TArray<FHeroStats> Heroes;
     TArray<FEncounterStats> Encounters;
 };
@@ -110,8 +116,13 @@ FString RunsCsv(const TArray<FRunStats>& Runs);
 FString EncountersCsv(const TArray<FRunStats>& Runs);
 FString HeroesCsv(const TArray<FRunStats>& Runs);
 
-/** Folder for a group: DND_BALANCE_OUT (relative to the project) or .local/balance/<UTC stamp>, then the group name. */
-FString GroupFolder(const FString& Group);
+/**
+ * The results root: DND_BALANCE_OUT (relative to the project) or .local/balance/<UTC stamp>. It must lie inside the
+ * checkout's .local/ after collapsing "..": anything else is refused with an error and an empty root.
+ */
+bool ResolveOutputRoot(const FString& Requested, FString& OutRoot, FString& Error);
+/** ResolveOutputRoot of DND_BALANCE_OUT, then the group name; empty (with Error) when refused. */
+FString GroupFolder(const FString& Group, FString& Error);
 bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error);
 }
 #endif

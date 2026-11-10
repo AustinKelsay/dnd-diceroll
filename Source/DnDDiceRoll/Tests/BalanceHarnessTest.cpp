@@ -45,6 +45,7 @@ bool FBalancePolicyLegalTest::RunTest(const FString& Parameters)
         const FString Where = FString::Printf(TEXT("%s seed %d"), *Run.PartyId, Run.Seed);
         TestEqual(Where + TEXT(": every proposal was in LegalTargets/LegalMoves"), Run.IllegalProposals, 0);
         TestEqual(Where + TEXT(": the run accepted every submitted command"), Run.PolicyErrors, 0);
+        TestEqual(Where + TEXT(": every committed prevention equals FCombatBattle::Protection"), Run.ProtectionMismatches, 0);
         Commands += Run.Commands; Specials += Run.SpecialsUsed;
     }
     TestTrue(TEXT("The sample submitted real commands"), Commands > 200);
@@ -172,6 +173,28 @@ bool FBalanceCoverageTest::RunTest(const FString& Parameters)
     }
     for (const TCHAR* Archetype : {TEXT("melee"), TEXT("ranged"), TEXT("support-poor"), TEXT("mixed"), TEXT("duplicate")})
     { TestTrue(FString(TEXT("Representative set has a ")) + Archetype + TEXT(" party"), Archetypes.Contains(Archetype)); }
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceOutputTest, "Project.Balance.OutputStaysUnderLocal",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceOutputTest::RunTest(const FString& Parameters)
+{
+    using BalanceHarness::ResolveOutputRoot;
+    FString Local = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".local")));
+    FPaths::NormalizeDirectoryName(Local);
+    FString Root, Error;
+    TestTrue(TEXT("Default root is accepted"), ResolveOutputRoot(FString(), Root, Error));
+    TestTrue(TEXT("Default root is .local/balance/<stamp>"), Root.StartsWith(Local + TEXT("/balance/")));
+    TestTrue(TEXT("Relative root inside .local/ is accepted"), ResolveOutputRoot(TEXT(".local/balance/check"), Root, Error));
+    TestEqual(TEXT("Relative root resolves against the project"), Root, Local + TEXT("/balance/check"));
+    TestTrue(TEXT("Absolute root inside .local/ is accepted"), ResolveOutputRoot(Local + TEXT("/balance/abs"), Root, Error));
+    for (const FString& Outside : {FString(TEXT("../outside")), FString(TEXT("/tmp/balance")), FString(TEXT(".local/../Saved/balance")),
+        FString(TEXT(".local")), FString(TEXT(".localx/balance")), FString(TEXT("Saved/balance"))})
+    {
+        Error.Reset();
+        TestFalse(TEXT("Refused outside .local/: ") + Outside, ResolveOutputRoot(Outside, Root, Error));
+        TestTrue(TEXT("Refusal leaves no root and says why: ") + Outside, Root.IsEmpty() && Error.Contains(TEXT(".local")));
+    }
     return !HasAnyErrors();
 }
 #endif

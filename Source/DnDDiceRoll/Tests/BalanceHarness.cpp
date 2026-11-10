@@ -70,41 +70,24 @@ FField EnemyField(const FCombatSnapshot& S, const FCombatantState& Self, bool bU
     return Spread(S, Sources, Self.Id, bUnits);
 }
 
-/** Walking steps from the actor over open cells, matching how the rules count movement (other units block). */
-FField StepsFrom(const FCombatSnapshot& S, const FCombatantState& Me)
+/** A legal destination's movement cost from the rules' own path query, memoized for one decision. */
+class FMoveCosts
 {
-    FField Field;
-    Field.Width = S.Encounter.Width; Field.Height = S.Encounter.Height;
-    Field.Steps.Init(MAX_int32, Field.Width * Field.Height);
-    Field.Steps[Me.Cell.Y * Field.Width + Me.Cell.X] = 0;
-    TArray<FIntPoint> Queue = {Me.Cell};
-    const FIntPoint Offsets[] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-    for (int32 Index = 0; Index < Queue.Num(); ++Index)
+public:
+    FMoveCosts(const FCombatBattle& InBattle, int32 InId) : Battle(InBattle), Id(InId) {}
+    int32 At(FIntPoint Cell) const
     {
-        const FIntPoint Cell = Queue[Index];
-        const int32 Next = Field.At(Cell) + 1;
-        for (const FIntPoint Offset : Offsets)
-        {
-            const FIntPoint To = Cell + Offset;
-            if (To.X < 0 || To.Y < 0 || To.X >= Field.Width || To.Y >= Field.Height || S.Encounter.BlockedCells.Contains(To) || Field.At(To) != MAX_int32) { continue; }
-            if (S.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& U) { return U.Id != Me.Id && U.Cell == To; })) { continue; }
-            Field.Steps[To.Y * Field.Width + To.X] = Next;
-            Queue.Add(To);
-        }
+        if (const int32* Known = Cache.Find(Cell)) { return *Known; }
+        const int32 Cost = Battle.PathTo(Id, Cell).Num();
+        return Cache.Add(Cell, Cost > 0 ? Cost : MAX_int32);
     }
-    return Field;
-}
+private:
+    const FCombatBattle& Battle;
+    int32 Id;
+    mutable TMap<FIntPoint, int32> Cache;
+};
 
 bool CellBefore(FIntPoint A, FIntPoint B) { return A.Y == B.Y ? A.X < B.X : A.Y < B.Y; }
-
-/** Protection that already applies to a target: the strongest guard on it, or 1 for its own Rage. */
-int32 ExistingProtection(const FCombatSnapshot& S, const FCombatantState& T)
-{
-    int32 Amount = T.RageTurns > 0 ? 1 : 0;
-    for (const auto& U : S.Encounter.Combatants)
-    { if (U.GuardTargetId == T.Id) { Amount = FMath::Max(Amount, U.GuardAmount > 0 ? U.GuardAmount : 3); } }
-    return Amount;
-}
 
 bool Threatened(const FCombatSnapshot& S, const FCombatantState& T)
 {
@@ -146,7 +129,7 @@ bool AfterMove(const FExpeditionRun& Run, int32 Id, FIntPoint Cell, FCondition&&
 
 /** The approach move: the legal cell closest to an enemy by the unit-aware distance, or by terrain alone when
  * the units block every route. Only a cell closer than the hero's own counts. Shared by the policy and PassiveEnd. */
-const FIntPoint* ApproachMove(const FCombatSnapshot& S, const FCombatantState& Me, const TArray<FIntPoint>& Moves, const FField& Steps)
+const FIntPoint* ApproachMove(const FCombatSnapshot& S, const FCombatantState& Me, const TArray<FIntPoint>& Moves, const FMoveCosts& Steps)
 {
     for (const bool bUnits : {true, false})
     {
@@ -208,11 +191,11 @@ FChoice Decide(const FExpeditionRun& Run, int32 Id)
     const TArray<FIntPoint> Moves = B.LegalMoves(Id);
     if (S.bActionAvailable && !Downed.IsEmpty() && !Moves.IsEmpty())
     {
-        const FField Steps = StepsFrom(S, Me);
+        const FMoveCosts Steps(B, Id);
         TArray<FIntPoint> Cells = Moves.FilterByPredicate([&](FIntPoint C)
         { return Downed.ContainsByPredicate([C](const FCombatantState* Ally) { return Manhattan(C, Ally->Cell) == 1; }); });
         Cells.Sort([&Steps](FIntPoint A, FIntPoint C) { return Steps.At(A) == Steps.At(C) ? CellBefore(A, C) : Steps.At(A) < Steps.At(C); });
-        for (int32 I = 0; I < Cells.Num() && I < 16; ++I)
+        for (int32 I = 0; I < Cells.Num() && I < MaxLookAheads; ++I)
         {
             const bool bReaches = AfterMove(Run, Id, Cells[I], [&](const FCombatBattle& After)
             {
@@ -296,7 +279,7 @@ FChoice Decide(const FExpeditionRun& Run, int32 Id)
             for (int32 TargetId : B.LegalTargets(Id, A.Command))
             {
                 const auto& T = Unit(TargetId);
-                if (!Threatened(S, T) || ExistingProtection(S, T) >= Amount) { continue; }
+                if (!Threatened(S, T) || B.Protection(T.Id).Amount >= Amount) { continue; }
                 if (!Best || Fraction(T) < Fraction(*Best) || (Fraction(T) == Fraction(*Best) && T.Id < Best->Id)) { Best = &T; Command = A.Command; }
             }
         }
@@ -364,7 +347,7 @@ FChoice Decide(const FExpeditionRun& Run, int32 Id)
     // 9. Move: to a cell with a legal attack, otherwise closer to the enemy.
     if (S.bActionAvailable && !Moves.IsEmpty())
     {
-        const FField Steps = StepsFrom(S, Me);
+        const FMoveCosts Steps(B, Id);
         const bool bRanged = Me.Range >= 2;
         TArray<FIntPoint> Cells = Moves.FilterByPredicate([&](FIntPoint C) { return NearestEnemy(S, Me, C) <= Me.Range; });
         Cells.Sort([&](FIntPoint A, FIntPoint C)
@@ -374,7 +357,7 @@ FChoice Decide(const FExpeditionRun& Run, int32 Id)
             if (Steps.At(A) != Steps.At(C)) { return Steps.At(A) < Steps.At(C); }
             return CellBefore(A, C);
         });
-        for (int32 I = 0; I < Cells.Num() && I < 16; ++I)
+        for (int32 I = 0; I < Cells.Num() && I < MaxLookAheads; ++I)
         {
             if (AfterMove(Run, Id, Cells[I], [Id](const FCombatBattle& After) { return !After.LegalTargets(Id, ECmd::Attack).IsEmpty(); }))
             { return MakeMove(Id, Cells[I]); }
@@ -393,7 +376,7 @@ bool PassiveEnd(const FCombatBattle& B, int32 Id)
     const FCombatantState* Me = B.Find(Id);
     if (!Me || !S.bActionAvailable) { return false; }
     if (!B.LegalTargets(Id, ECmd::Attack).IsEmpty()) { return true; }
-    return ApproachMove(S, *Me, B.LegalMoves(Id), StepsFrom(S, *Me)) != nullptr;
+    return ApproachMove(S, *Me, B.LegalMoves(Id), FMoveCosts(B, Id)) != nullptr;
 }
 
 bool Legal(const FCombatBattle& B, const FCombatCommand& C)
@@ -464,22 +447,18 @@ struct FTracker
         Lives(Before, After, Phase);
     }
 
-    void EnemyTurn(const TArray<FCombatResult>& Results, const FCombatSnapshot& Before, const FCombatSnapshot& After, EBattlePhase Phase)
+    /** BeforeBattle is the battle as the enemy turn began; protection cannot change between its move and its attack. */
+    void EnemyTurn(const TArray<FCombatResult>& Results, const FCombatBattle& BeforeBattle, const FCombatSnapshot& After, EBattlePhase Phase)
     {
+        const FCombatSnapshot& Before = BeforeBattle.Snapshot();
         for (const auto& Result : Results)
         {
-            if (!Result.bAccepted || Result.DamagePrevented <= 0) { continue; }
-            const FCombatantState* Target = Before.Encounter.Combatants.FindByPredicate([&](const FCombatantState& U) { return U.Id == Result.TargetId; });
-            if (!Target) { continue; }
-            // Credit whoever supplied the protection that applied: the strongest guard, else the target's own Rage.
-            int32 Source = Target->RageTurns > 0 ? Target->Id : INDEX_NONE;
-            int32 Strongest = Target->RageTurns > 0 ? 1 : 0;
-            for (const auto& U : Before.Encounter.Combatants)
-            {
-                const int32 Amount = U.GuardAmount > 0 ? U.GuardAmount : 3;
-                if (U.GuardTargetId == Target->Id && Amount >= Strongest && (Source == INDEX_NONE || Source == Target->Id || Amount > Strongest)) { Source = U.Id; Strongest = Amount; }
-            }
-            if (FHeroStats* Giver = Hero(Source)) { Giver->Protection += Result.DamagePrevented; }
+            if (!Result.bAccepted || Result.Type != ECmd::Attack || !Result.bHit) { continue; }
+            // The game's own protection query: what applied, and who supplied it (the strongest guard, else the target's Rage).
+            const FProtectionFacts Applied = BeforeBattle.Protection(Result.TargetId);
+            if (Result.DamagePrevented != FMath::Min(Result.Damage + Result.DamagePrevented, Applied.Amount)) { ++Run.ProtectionMismatches; }
+            if (Result.DamagePrevented <= 0) { continue; }
+            if (FHeroStats* Giver = Hero(Applied.SourceId)) { Giver->Protection += Result.DamagePrevented; }
             Encounter().Protection += Result.DamagePrevented; Run.Protection += Result.DamagePrevented;
         }
         for (int32 I = 0; I < After.Encounter.Combatants.Num() && I < Before.Encounter.Combatants.Num(); ++I)
@@ -631,7 +610,7 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     }
     FString Stall;
     // Each loop iteration advances the run; the bound only guards against a harness bug.
-    for (int32 Guard = 0; Guard < 100000 && Stall.IsEmpty(); ++Guard)
+    for (int32 Guard = 0; Guard < RunStepGuard && Stall.IsEmpty(); ++Guard)
     {
         const EExpeditionPhase Phase = Run.Progress().Phase;
         if (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat) { break; }
@@ -661,7 +640,7 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
             if (Trace && Battle.Snapshot().TurnIndex == 0) { *Trace += Board(Battle.Snapshot()); }
             if (Active->Side == ECombatSide::Enemy)
             {
-                const FCombatSnapshot Before = Battle.Snapshot();
+                const FCombatBattle Before = Battle;
                 const TArray<FCombatResult> Results = Run.PlayEnemyTurn();
                 if (Results.IsEmpty()) { Stall = TEXT("enemy turn did nothing"); break; }
                 Tracker.EnemyTurn(Results, Before, Run.Battle().Snapshot(), Run.Battle().Snapshot().Phase);
@@ -825,12 +804,12 @@ const TCHAR* BlockerName(EActionBlocker Blocker)
 
 FString RunsCsv(const TArray<FRunStats>& Runs)
 {
-    FString Out = TEXT("party,archetype,builds,seed,route_pattern,outcome,stall_reason,encounters_won,rounds,deaths,survivors,damage,damage_taken,healing,protection,specials_used,potions_used,commands,policy_errors,illegal_proposals,passive_ends\n");
+    FString Out = TEXT("party,archetype,builds,seed,route_pattern,outcome,stall_reason,encounters_won,rounds,deaths,survivors,damage,damage_taken,healing,protection,specials_used,potions_used,commands,policy_errors,illegal_proposals,passive_ends,protection_mismatches\n");
     for (const auto& R : Runs)
     {
-        Out += FString::Printf(TEXT("%s,%s,%s,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, *R.Archetype, *Join(R.Builds, TEXT(";")),
+        Out += FString::Printf(TEXT("%s,%s,%s,%d,%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, *R.Archetype, *Join(R.Builds, TEXT(";")),
             R.Seed, R.RoutePattern, *R.Outcome, *R.StallReason.Replace(TEXT(","), TEXT(" ")), R.EncountersWon, R.Rounds, R.Deaths, R.Survivors, R.Damage, R.DamageTaken,
-            R.Healing, R.Protection, R.SpecialsUsed, R.PotionsUsed, R.Commands, R.PolicyErrors, R.IllegalProposals, R.PassiveEnds);
+            R.Healing, R.Protection, R.SpecialsUsed, R.PotionsUsed, R.Commands, R.PolicyErrors, R.IllegalProposals, R.PassiveEnds, R.ProtectionMismatches);
     }
     return Out;
 }
@@ -853,7 +832,7 @@ FString EncountersCsv(const TArray<FRunStats>& Runs)
 FString HeroesCsv(const TArray<FRunStats>& Runs)
 {
     FString Out = TEXT("party,archetype,seed,outcome,slot,build,class,survived,death_stage,death_cause,level,turns,idle_turns,damage,kills,healing,protection,damage_taken,downs,revives,potions_used");
-    for (int32 K = 1; K <= 2; ++K) { Out += FString::Printf(TEXT(",s%d_command,s%d_available_turns,s%d_uses,s%d_top_blocker,s%d_top_blocker_turns"), K, K, K, K, K); }
+    for (int32 K = 1; K <= 2; ++K) { Out += FString::Printf(TEXT(",s%d_command,s%d_available_turns,s%d_uses,s%d_blockers"), K, K, K, K); }
     Out += TEXT(",kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,maneuver_left,maneuver_cap,rage_left,rage_cap,potions_left\n");
     for (const auto& R : Runs)
     {
@@ -863,12 +842,13 @@ FString HeroesCsv(const TArray<FRunStats>& Runs)
                 H.bSurvived ? 1 : 0, H.DeathStage, *H.DeathCause, H.Level, H.Turns, H.IdleTurns, H.Damage, H.Kills, H.Healing, H.Protection, H.DamageTaken, H.Downs, H.Revives, H.PotionsUsed);
             for (int32 K = 0; K < 2; ++K)
             {
-                if (!H.Specials.IsValidIndex(K)) { Out += TEXT(",,0,0,,0"); continue; }
+                if (!H.Specials.IsValidIndex(K)) { Out += TEXT(",,0,0,"); continue; }
                 const auto& Special = H.Specials[K];
-                int32 Top = INDEX_NONE;
-                for (int32 B = 0; B < static_cast<int32>(EActionBlocker::Count); ++B) { if (Special.Blockers[B] > 0 && (Top == INDEX_NONE || Special.Blockers[B] > Special.Blockers[Top])) { Top = B; } }
-                Out += FString::Printf(TEXT(",%s,%d,%d,%s,%d"), CommandName(Special.Command), Special.AvailableTurns, Special.Uses,
-                    Top == INDEX_NONE ? TEXT("") : BlockerName(static_cast<EActionBlocker>(Top)), Top == INDEX_NONE ? 0 : Special.Blockers[Top]);
+                // Every first-step blocker with its turn count, in blocker order ("ResourceShort:12;OutOfRange:3"), so totals sum across runs.
+                TArray<FString> Counts;
+                for (int32 B = 0; B < static_cast<int32>(EActionBlocker::Count); ++B)
+                { if (Special.Blockers[B] > 0) { Counts.Add(FString::Printf(TEXT("%s:%d"), BlockerName(static_cast<EActionBlocker>(B)), Special.Blockers[B])); } }
+                Out += FString::Printf(TEXT(",%s,%d,%d,%s"), CommandName(Special.Command), Special.AvailableTurns, Special.Uses, *FString::Join(Counts, TEXT(";")));
             }
             Out += FString::Printf(TEXT(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), H.KitLeft, H.KitCap, H.SlotLeft, H.SlotCap, H.WindLeft, H.WindCap,
                 H.ManeuverLeft, H.ManeuverCap, H.RageLeft, H.RageCap, H.PotionsLeft);
@@ -877,17 +857,41 @@ FString HeroesCsv(const TArray<FRunStats>& Runs)
     return Out;
 }
 
-FString GroupFolder(const FString& Group)
+bool ResolveOutputRoot(const FString& Requested, FString& OutRoot, FString& Error)
 {
     static const FString Stamp = FDateTime::UtcNow().ToString(TEXT("%Y%m%dT%H%M%SZ"));
-    FString Root = FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_OUT"));
-    if (Root.IsEmpty()) { Root = FPaths::Combine(TEXT(".local"), TEXT("balance"), Stamp); }
+    auto Clean = [](FString Path)
+    {
+        Path = FPaths::ConvertRelativePathToFull(Path);
+        FPaths::NormalizeDirectoryName(Path);
+        FPaths::CollapseRelativeDirectories(Path);
+        return Path;
+    };
+    const FString Local = Clean(FPaths::Combine(FPaths::ProjectDir(), TEXT(".local")));
+    FString Root = Requested.IsEmpty() ? FPaths::Combine(TEXT(".local"), TEXT("balance"), Stamp) : Requested;
     if (FPaths::IsRelative(Root)) { Root = FPaths::Combine(FPaths::ProjectDir(), Root); }
-    return FPaths::ConvertRelativePathToFull(FPaths::Combine(Root, Group));
+    Root = Clean(Root);
+    // Lexical check after collapsing ".." (a symlink inside .local/ is not followed).
+    if (Root.Contains(TEXT("..")) || !Root.StartsWith(Local + TEXT("/")))
+    {
+        Error = FString::Printf(TEXT("Balance output must be inside %s/, not %s"), *Local, *Root);
+        OutRoot.Reset();
+        return false;
+    }
+    OutRoot = Root;
+    return true;
+}
+
+FString GroupFolder(const FString& Group, FString& Error)
+{
+    FString Root;
+    if (!ResolveOutputRoot(FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_OUT")), Root, Error)) { return FString(); }
+    return FPaths::Combine(Root, Group);
 }
 
 bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error)
 {
+    if (Folder.IsEmpty()) { if (Error.IsEmpty()) { Error = TEXT("No output folder"); } return false; }
     if (!IFileManager::Get().MakeDirectory(*Folder, true)) { Error = TEXT("Cannot create ") + Folder; return false; }
     const TSharedRef<FJsonObject> Meta = MakeShared<FJsonObject>();
     Meta->SetStringField(TEXT("group"), Group);
