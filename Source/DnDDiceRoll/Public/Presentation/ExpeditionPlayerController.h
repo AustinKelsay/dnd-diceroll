@@ -100,6 +100,7 @@ public:
     bool ActAtCell(FIntPoint Cell);
     /** Starts autoplay in this process (-ExpeditionAutoplay starts it from the command line). Tests pass bExitOnFinish false. */
     TSharedPtr<FExpeditionAutoplayDirector> StartAutoplay(const ExpeditionAutoplay::FAutoplayScript& Script, bool bResume, bool bExitOnFinish);
+    /**
      * The hint drawn this frame (#158), or Count. A hint is non-modal and takes no focus; it shows only on the party's
      * turn at rest, never under Help, Records, the return question, the Menu, a playback or an enemy turn.
      */
