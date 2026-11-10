@@ -87,12 +87,57 @@
       "distance": 1300
     },
     {
+      "name": "tooltip-attack",
+      "mode": "tooltip",
+      "action": "attack",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-special1",
+      "mode": "tooltip",
+      "action": "special1",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-special2",
+      "mode": "tooltip",
+      "action": "special2",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-rescue",
+      "mode": "tooltip",
+      "action": "rescue",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "tooltip-potion",
+      "mode": "tooltip",
+      "action": "potion",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "overview",
       "mode": "overview"
     },
     {
       "name": "start-screen",
       "mode": "start"
+    },
+    {
+      "name": "build-barbarian-berserker",
+      "mode": "start",
+      "build": "barbarian.berserker"
+    },
+    {
+      "name": "build-wizard-evocation",
+      "mode": "start",
+      "build": "wizard.evocation"
     }
   ]
 }

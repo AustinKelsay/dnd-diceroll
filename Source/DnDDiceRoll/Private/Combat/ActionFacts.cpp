@@ -241,6 +241,14 @@ FActionFacts FActionFactsQuery::For(const FCombatBattle& Battle, int32 ActorId, 
     return Facts;
 }
 
+FActionFacts FActionFactsQuery::ForBuild(const FCombatantState& Unit, ECombatCommandType Action)
+{
+    FActionFacts Facts;
+    Facts.Command = Action;
+    if (!Shape(Unit, Action, Facts)) { return FActionFacts(); }
+    return Facts;
+}
+
 TArray<ECombatCommandType> FActionFactsQuery::BarFor(const FCombatBattle& Battle, int32 ActorId)
 {
     TArray<ECombatCommandType> Bar = {ECombatCommandType::Attack, ECombatCommandType::Move};

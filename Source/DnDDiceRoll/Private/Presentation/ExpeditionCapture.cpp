@@ -32,6 +32,14 @@ bool ValidName(const FString& Name)
     return true;
 }
 
+bool ValidBuild(const FString& Id)
+{
+    if (Id.IsEmpty() || Id.Len() > 64) { return false; }
+    for (const TCHAR Character : Id)
+    { if (!(Character >= TEXT('a') && Character <= TEXT('z')) && !FChar::IsDigit(Character) && Character != TEXT('-') && Character != TEXT('.')) { return false; } }
+    return true;
+}
+
 // TryGetNumberField also accepts numeric strings; poses must hold real numbers.
 bool Number(const TSharedPtr<FJsonObject>& Object, const TCHAR* Field, double& Value)
 {
@@ -54,8 +62,23 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Battle: return TEXT("battle");
     case ECaptureMode::Targeting: return TEXT("targeting");
     case ECaptureMode::Overview: return TEXT("overview");
-    default: return TEXT("start");
+    case ECaptureMode::Tooltip: return TEXT("tooltip");
+    case ECaptureMode::Start: return TEXT("start");
     }
+    return TEXT("start");
+}
+
+const TCHAR* ExpeditionCapture::ActionName(ECaptureAction Action)
+{
+    switch (Action)
+    {
+    case ECaptureAction::Special1: return TEXT("special1");
+    case ECaptureAction::Special2: return TEXT("special2");
+    case ECaptureAction::Rescue: return TEXT("rescue");
+    case ECaptureAction::Potion: return TEXT("potion");
+    case ECaptureAction::Attack: return TEXT("attack");
+    }
+    return TEXT("attack");
 }
 
 bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error)
@@ -90,9 +113,26 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         if (Mode == TEXT("battle")) { Shot.Mode = ECaptureMode::Battle; }
         else if (Mode == TEXT("targeting")) { Shot.Mode = ECaptureMode::Targeting; }
         else if (Mode == TEXT("overview")) { Shot.Mode = ECaptureMode::Overview; }
-        else if (Mode == TEXT("start")) { Shot.Mode = ECaptureMode::Start; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start)"), *Shot.Name, *Mode); return false; }
-        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting)
+        else if (Mode == TEXT("start"))
+        {
+            Shot.Mode = ECaptureMode::Start;
+            if ((*Entry)->HasField(TEXT("build")) && ((*Entry)->TryGetField(TEXT("build"))->Type != EJson::String || !(*Entry)->TryGetStringField(TEXT("build"), Shot.Build) || !ValidBuild(Shot.Build)))
+            { Error = Shot.Name + TEXT(" needs a \"build\" of lowercase letters, digits, '.' and '-' (up to 64)"); return false; }
+        }
+        else if (Mode == TEXT("tooltip")) { Shot.Mode = ECaptureMode::Tooltip; }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip)"), *Shot.Name, *Mode); return false; }
+        if (Shot.Mode == ECaptureMode::Tooltip)
+        {
+            FString Action;
+            if (!(*Entry)->TryGetStringField(TEXT("action"), Action)) { Error = Shot.Name + TEXT(" needs an \"action\" (attack, special1, special2, rescue, potion)"); return false; }
+            if (Action == TEXT("attack")) { Shot.Action = ECaptureAction::Attack; }
+            else if (Action == TEXT("special1")) { Shot.Action = ECaptureAction::Special1; }
+            else if (Action == TEXT("special2")) { Shot.Action = ECaptureAction::Special2; }
+            else if (Action == TEXT("rescue")) { Shot.Action = ECaptureAction::Rescue; }
+            else if (Action == TEXT("potion")) { Shot.Action = ECaptureAction::Potion; }
+            else { Error = FString::Printf(TEXT("%s has unknown action \"%s\" (attack, special1, special2, rescue, potion)"), *Shot.Name, *Action); return false; }
+        }
+        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip)
         {
             Shot.bHasCamera = true;
             double Yaw = 0.0;
@@ -180,6 +220,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     {
     case ECaptureMode::Battle:
     case ECaptureMode::Targeting:
+    case ECaptureMode::Tooltip:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
         // Default frames the board at that yaw; far is the end of the pitch ramp (FarStop of the home fit), never nearer than the default at that yaw, which can exceed it on a wide board.
@@ -187,6 +228,23 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? FMath::Max(ExpeditionCameraRig::FarStop(Board->FramedDistance()), Framed) : Shot.Distance > 0.0f ? Shot.Distance : Framed;
         Board->SnapCamera(Shot.Yaw, Wanted);
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
+        if (Shot.Mode == ECaptureMode::Tooltip)
+        {
+            const FCombatantState* Hero = Board->Rules().Find(Board->Rules().ActiveId());
+            if (!Hero || Hero->Side != ECombatSide::Party) { Skip = TEXT("an enemy holds the turn"); return false; }
+            ECombatCommandType Action = ECombatCommandType::Attack;
+            switch (Shot.Action)
+            {
+            case ECaptureAction::Special1: Action = Player->SpecialAction(0); break;
+            case ECaptureAction::Special2: Action = Player->SpecialAction(1); break;
+            case ECaptureAction::Rescue: Action = ECombatCommandType::Rescue; break;
+            case ECaptureAction::Potion: Action = ECombatCommandType::Potion; break;
+            case ECaptureAction::Attack: Action = ECombatCommandType::Attack; break;
+            }
+            if (Shot.Action != ECaptureAction::Attack && Action == ECombatCommandType::Attack) { Skip = TEXT("the active hero has no such action"); return false; }
+            Player->PreviewMode(Action);
+            return true;
+        }
         const int32 ActorId = Board->Rules().ActiveId();
         const FCombatantState* Active = Board->Rules().Find(ActorId);
         if (!Active || Active->Side != ECombatSide::Party) { Skip = TEXT("an enemy holds the turn"); return false; }
@@ -220,15 +278,18 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         if (!Board->ShowingOverview()) { Skip = TEXT("the checkpoint is not at the route table"); return false; }
         Board->SnapCameraToTargets();
         return true;
-    default:
+    case ECaptureMode::Start:
         if (Board->HasRun())
         {
             if (!Board->CanReturnToMenu()) { Skip = TEXT("the run cannot be put away"); return false; }
             Board->ReturnToMenu();
         }
+        if (!Shot.Build.IsEmpty() && !Player->SelectBuild(Shot.Build)) { Skip = FString::Printf(TEXT("the build picker cannot select %s"), *Shot.Build); return false; }
         Board->SnapCameraToTargets();
         return true;
     }
+    Skip = TEXT("unknown capture mode");
+    return false;
 }
 
 void FExpeditionCaptureDirector::Tick()
@@ -339,6 +400,8 @@ void FExpeditionCaptureDirector::WriteManifest() const
         TSharedRef<FJsonObject> Shot = MakeShared<FJsonObject>();
         Shot->SetStringField(TEXT("name"), Result.Shot.Name);
         Shot->SetStringField(TEXT("mode"), ExpeditionCapture::ModeName(Result.Shot.Mode));
+        if (Result.Shot.Mode == ECaptureMode::Tooltip) { Shot->SetStringField(TEXT("action"), ExpeditionCapture::ActionName(Result.Shot.Action)); }
+        if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
         Shot->SetStringField(TEXT("status"), Result.Status);
         if (Result.Status == TEXT("skipped")) { Shot->SetStringField(TEXT("reason"), Result.Reason); }
         else
