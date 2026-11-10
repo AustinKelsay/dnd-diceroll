@@ -349,14 +349,14 @@ bool FPlaybackPointerTest::RunTest(const FString& Parameters)
 
     // Hover another cell for one frame during playback (no preview is drawn: targeting is hidden), then click it.
     Game.Player->SimulatePointer(BoardSpotB, Second);
-    Game.View->Tick(0.0f);
-    Game.Player->PlayerTick(0.0f);
+    Game.View->Tick(0.01f);
+    Game.Player->PlayerTick(0.01f);
     if (!TestTrue(TEXT("Playback is still running at the click"), Game.View->IsPresenting())) { return false; }
     TestFalse(TEXT("No targeting shows during playback"), Game.Player->ShowsTargeting());
     FIntPoint Previewed;
     TestFalse(TEXT("No cell is previewed during playback"), Game.Player->PreviewedPointerCell(Previewed));
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
-    Game.Player->PlayerTick(0.0f);
+    Game.Player->PlayerTick(0.01f);
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
     TestEqual(TEXT("The click during playback moves nobody"), ActorCell(Game), First);
     TestEqual(TEXT("... and spends no movement"), Game.View->Rules().Snapshot().MovementLeft, MovementLeft);
@@ -373,7 +373,7 @@ bool FPlaybackPointerTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
-/** A preview belongs to the state it was drawn for: a change of battle state, actor or mode before the click voids it. */
+/** A preview belongs to the state it was drawn for: a change of battle state or mode before the click voids it. */
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPreviewInvalidatedTest, "Project.Expedition.Presentation.PreviewVoidedByStateChange",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPreviewInvalidatedTest::RunTest(const FString& Parameters)
@@ -383,10 +383,13 @@ bool FPreviewInvalidatedTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
     if (!TestTrue(TEXT("The party has the first turn"), FirstPartyTurn(Game))) { return false; }
     const int32 Actor = Game.Player->Actor();
-    const TArray<FIntPoint> Free = FreeMoves(Game);
-    if (!TestTrue(TEXT("The hero has two cells to walk to"), Free.Num() >= 2)) { return false; }
-    const FIntPoint Pointed = Free[0], Elsewhere = Free.Last();
     const FIntPoint Start = ActorCell(Game);
+    TArray<FIntPoint> Free = FreeMoves(Game);
+    auto Distance = [&Start](FIntPoint Cell) { return FMath::Max(FMath::Abs(Cell.X - Start.X), FMath::Abs(Cell.Y - Start.Y)); };
+    Free.Sort([&Distance](FIntPoint A, FIntPoint B) { return Distance(A) == Distance(B) ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : Distance(A) < Distance(B); });
+    if (!TestTrue(TEXT("The hero has two cells to walk to"), Free.Num() >= 2)) { return false; }
+    // The pointer rests on the hero's own cell; after the hero steps away that cell is a legal move back.
+    const FIntPoint Elsewhere = Free[0], Pointed = Start;
     FIntPoint Previewed;
 
     // The battle state changes between the preview and the click (a command from elsewhere).
@@ -395,26 +398,25 @@ bool FPreviewInvalidatedTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The cell is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == Pointed);
     Game.View->Execute({ECombatCommandType::Move, Actor, Elsewhere});
     Game.View->SkipPresentation();
+    if (!TestTrue(TEXT("The pointed cell is still a legal move, so only the stale preview stops the click"), Game.View->Rules().LegalMoves(Actor).Contains(Pointed))) { return false; }
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
-    Game.Player->PlayerTick(0.0f);
+    Game.Player->PlayerTick(0.01f);
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
     TestEqual(TEXT("A click on a preview from before the state changed moves nobody"), ActorCell(Game), Elsewhere);
-    TestNotEqual(TEXT("... and the start cell was left by the command, not the click"), Start, Elsewhere);
 
-    // The mode changes between the preview and the click.
+    // The mode changes between the preview and the click: nothing is attempted (a rejected command would be logged).
+    Game.Settle();
+    Game.Player->SimulatePointer(BoardSpotB, Pointed);
     Game.Frame();
-    const FIntPoint Here = ActorCell(Game);
-    TArray<FIntPoint> More = FreeMoves(Game);
-    if (More.IsEmpty()) { return !HasAnyErrors(); }
-    Game.Player->SimulatePointer(BoardSpotB, More[0]);
-    Game.Frame();
-    TestTrue(TEXT("The new cell is previewed"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == More[0]);
-    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::F, IE_Pressed, 1.0f));
+    TestTrue(TEXT("The cell is previewed again"), Game.Player->PreviewedPointerCell(Previewed) && Previewed == Pointed);
+    const FString LastMessage = Game.View->Messages().IsEmpty() ? FString() : Game.View->Messages().Last();
+    Game.Player->PreviewMode(ECombatCommandType::Rescue);
+    TestFalse(TEXT("A changed mode voids the preview"), Game.Player->PreviewedPointerCell(Previewed));
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f));
-    Game.Player->PlayerTick(0.0f);
-    Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::F, IE_Released, 0.0f));
+    Game.Player->PlayerTick(0.01f);
     Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f));
-    TestEqual(TEXT("A click in the same frame as a mode key does not move"), ActorCell(Game), Here);
+    TestEqual(TEXT("A click after a mode change moves nobody"), ActorCell(Game), Elsewhere);
+    TestEqual(TEXT("... and attempts no command"), Game.View->Messages().IsEmpty() ? FString() : Game.View->Messages().Last(), LastMessage);
     return !HasAnyErrors();
 }
 

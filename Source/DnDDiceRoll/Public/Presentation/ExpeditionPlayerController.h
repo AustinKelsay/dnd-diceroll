@@ -99,7 +99,11 @@ public:
     void SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell);
     /** Test support: back to the physical pointer. */
     void ReleaseSimulatedPointer() { bSimulatedPointer = false; }
-    /** The cell the last frame previewed under the pointer, the only one a click may act on (#171); false while the keyboard cursor, a panel or an overlay owns the board. */
+    /**
+     * The cell the last frame previewed under the pointer, the only one a click may act on (#171). False unless targeting is
+     * visible now (no keyboard cursor, panel, overlay or playback owns the board) and the battle state, actor and mode are
+     * still the ones the preview was drawn for.
+     */
     bool PreviewedPointerCell(FIntPoint& Cell) const;
 private:
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
@@ -113,6 +117,9 @@ private:
     FVector2D PointerAnchor = FVector2D::ZeroVector;
     bool bPointerPreviewed = false;
     FIntPoint PointerPreview = FIntPoint::ZeroValue;
+    /** What the preview was drawn for; a change before the click voids it. */
+    uint32 PreviewStamp = 0;
+    uint32 TargetingStamp() const;
     /** Shows the keyboard cursor; the pointer is measured afresh from then on, so only later motion hands control back. */
     void UseKeyboardCursor() { bKeyboardCursor = true; bPointerSeen = false; }
     TSharedPtr<FExpeditionCaptureDirector> Capture;

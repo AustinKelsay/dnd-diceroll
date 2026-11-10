@@ -185,9 +185,11 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
     const bool bOverPanel = !bKeyboardCursor && bHasMouse && Hud && Hud->CoversBoard(FVector2D(MouseX, MouseY));
     const bool bHover = !bOverPanel && AllowsGameplayInput() && HoverCell(Hover);
-    // A click acts only on what this frame shows under the pointer.
-    bPointerPreviewed = bHover && !bKeyboardCursor;
+    // A click acts only on what this frame shows under the pointer, and only while targeting is visible: during playback,
+    // an enemy turn or an overlay no target is drawn, so nothing there may be committed unseen.
+    bPointerPreviewed = bHover && !bKeyboardCursor && ShowsTargeting();
     PointerPreview = Hover;
+    PreviewStamp = TargetingStamp();
     if (bHover)
     {
         Highlights.bHasHover = true;
@@ -239,9 +241,31 @@ void AExpeditionPlayerController::SimulatePointer(FVector2D ViewportPosition, FI
     SimulatedCell = Cell;
 }
 
+uint32 AExpeditionPlayerController::TargetingStamp() const
+{
+    // Everything a previewed target depends on: the mode, who acts and the whole battle state. A change of any of it voids the preview.
+    uint32 Stamp = HashCombine(GetTypeHash(int32(SelectedAction)), GetTypeHash(Actor()));
+    if (!IsValid(BattleView)) { return Stamp; }
+    const FCombatSnapshot& Snapshot = BattleView->Rules().Snapshot();
+    Stamp = HashCombine(Stamp, GetTypeHash(BattleView->PresentationRevision()));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.RandomState));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.TurnIndex));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.Round));
+    Stamp = HashCombine(Stamp, GetTypeHash(Snapshot.MovementLeft));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(Snapshot.bActionAvailable) | uint32(Snapshot.bBonusActionAvailable) << 1));
+    for (const FCombatantState& Unit : Snapshot.Encounter.Combatants)
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Id));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.Cell));
+        Stamp = HashCombine(Stamp, GetTypeHash(Unit.HP));
+        Stamp = HashCombine(Stamp, GetTypeHash(int32(Unit.Life)));
+    }
+    return Stamp;
+}
+
 bool AExpeditionPlayerController::PreviewedPointerCell(FIntPoint& Cell) const
 {
-    if (!bPointerPreviewed) { return false; }
+    if (!bPointerPreviewed || !ShowsTargeting() || PreviewStamp != TargetingStamp()) { return false; }
     Cell = PointerPreview; return true;
 }
 
@@ -382,7 +406,9 @@ void AExpeditionPlayerController::ConfirmCell()
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
-    UseKeyboardCursor();
+    // Enter acts on the cell the keyboard cursor marks, so it must be showing: with it hidden (the pointer took over, or it
+    // was never shown) the first Enter only brings it back on its cell, and a following Enter acts (#171).
+    if (!bKeyboardCursor) { UseKeyboardCursor(); return; }
     ActAtCell(GridCursor);
 }
 
@@ -421,7 +447,13 @@ void AExpeditionPlayerController::Click()
     // hands the board back: the pointed cell was never previewed, so nothing may act on it yet (#171).
     if (bKeyboardCursor) { bKeyboardCursor = false; return; }
     FIntPoint Cell;
-    if (PreviewedPointerCell(Cell)) { ActAtCell(Cell); }
+    if (PreviewedPointerCell(Cell)) { ActAtCell(Cell); return; }
+    // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
+    if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
+    {
+        for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
+    }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
