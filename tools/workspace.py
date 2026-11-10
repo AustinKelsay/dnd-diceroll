@@ -60,10 +60,14 @@ class Workspace:
         return read_ini(self.root / "Config/DefaultEngine.ini")["/Script/EngineSettings.GameMapsSettings"]["GameDefaultMap"]
 
 
-def project_argument(command, project):
+def project_argument(command, project, windows=False):
     """ps joins argv without quoting; require a complete path at argument boundaries."""
-    path = re.escape(str(Path(project).resolve()))
-    return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command))
+    path = str(Path(project).resolve())
+    if windows:
+        command = command.replace("\\", "/")
+        path = path.replace("\\", "/")
+    path = re.escape(path)
+    return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command, flags=re.IGNORECASE if windows else 0))
 
 
 def source_digest(workspace):
