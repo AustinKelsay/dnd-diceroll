@@ -11,6 +11,7 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
+#include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
 
 void AExpeditionPlayerController::BeginPlay()
@@ -84,6 +85,8 @@ void AExpeditionPlayerController::SetupInputComponent()
         InputComponent->BindKey(Key, IE_Released, this, &AExpeditionPlayerController::GridUp);
     }
     Bind(EKeys::A, &AExpeditionPlayerController::AttackKey);
+    // D puts a visible hint away (#158). Not a gameplay key: Shift+D pans the camera, and that stays the camera's.
+    Bind(EKeys::D, &AExpeditionPlayerController::DismissHintKey);
     Bind(EKeys::B, &AExpeditionPlayerController::BattleMaster);
     Bind(EKeys::J, &AExpeditionPlayerController::Champion);
     Bind(EKeys::M, &AExpeditionPlayerController::ManeuverMode);
@@ -145,6 +148,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
             { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { SelectedId = Unit.Id; break; } }
         }
     }
+    ObserveHints();
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
     // Pointer motion hands the board back from the keyboard cursor, so the pointed cell is previewed before a click can act on it (#171).
@@ -231,6 +235,129 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
     if (Capture.IsValid()) { Capture->Tick(); }
+}
+
+FHintObservation AExpeditionPlayerController::BuildHintObservation(const FCombatBattle& Rules, int32 ActorId) const
+{
+    FHintObservation Now;
+    // The hints read the same facts the dock draws: a resource cue, and whether anything but End Turn is available.
+    Now.bOnlyEndTurn = true;
+    for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Rules, ActorId))
+    {
+        const FActionFacts Facts = FActionFactsQuery::For(Rules, ActorId, Command);
+        if (Command != ECombatCommandType::EndTurn && Facts.bAvailable) { Now.bOnlyEndTurn = false; }
+        for (const FActionResourceCost& Cost : Facts.Resources)
+        {
+            // Potion bottles have a pack cap, not a starting count: only running short is a cue for them.
+            const bool bSpent = Cost.Resource != EActionResource::Potion && Cost.Cap > 0 && Cost.Held < Cost.Cap;
+            if (!Now.bResourceCue && (bSpent || Cost.Held < Cost.Amount)) { Now.bResourceCue = true; Now.Resource = Cost; }
+        }
+    }
+    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side != ECombatSide::Party || Unit.Life != ECombatLife::Downed || Unit.RescueTurnsLeft <= 0) { continue; }
+        if (!Now.bDowned || Unit.RescueTurnsLeft < Now.RescueTurnsLeft) { Now.bDowned = true; Now.DownedName = Unit.Name; Now.RescueTurnsLeft = Unit.RescueTurnsLeft; }
+    }
+    return Now;
+}
+
+void AExpeditionPlayerController::TrackHintSpending(const FCombatBattle& Rules)
+{
+    // Successive snapshots: any resource a party member holds less of than a moment ago was spent, a Potion included.
+    TMap<int32, int32> Next;
+    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    {
+        if (Unit.Side != ECombatSide::Party) { continue; }
+        for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Rules, Unit.Id))
+        {
+            for (const FActionResourceCost& Cost : FActionFactsQuery::For(Rules, Unit.Id, Command).Resources)
+            {
+                const int32 Key = Unit.Id * 8 + int32(Cost.Resource);
+                if (const int32* Before = HintHeld.Find(Key); Before && *Before > Cost.Held) { bHintSpentSeen = true; HintSpent = Cost; }
+                Next.Add(Key, Cost.Held);
+            }
+        }
+    }
+    HintHeld = MoveTemp(Next);
+}
+
+void AExpeditionPlayerController::ObserveHints()
+{
+    FHintObservation Now;
+    const bool bAtRest = IsValid(BattleView) && ShowsTargeting() && !ShowingMenu();
+    if (IsValid(BattleView) && BattleView->InCombat())
+    {
+        const FCombatBattle& Rules = BattleView->Rules();
+        const int32 ActorId = Actor();
+        // The facts depend only on the combat state, so they are rebuilt when it changes, not every frame.
+        if (!bHintFactsValid || HintActor != ActorId || !FCombatSnapshot::StaticStruct()->CompareScriptStruct(&HintSnapshot, &Rules.Snapshot(), 0))
+        {
+            HintFacts = BuildHintObservation(Rules, ActorId);
+            TrackHintSpending(Rules);
+            HintSnapshot = Rules.Snapshot();
+            HintActor = ActorId;
+            bHintFactsValid = true;
+        }
+        Now = HintFacts;
+        if (bHintSpentSeen && !Now.bResourceCue) { Now.bResourceCue = true; Now.Resource = HintSpent; }
+    }
+    Now.bAtRest = bAtRest;
+    HintState.Observe(Now);
+}
+
+ECombatHint AExpeditionPlayerController::VisibleHint() const
+{
+    // Re-checked here: the state was observed at the start of the frame, and a key or click may land after an overlay opened.
+    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() ? HintState.Visible() : ECombatHint::Count;
+}
+
+bool AExpeditionPlayerController::PreviewHint(ECombatHint Hint, FString& Why)
+{
+    if (!IsValid(BattleView) || !ShowsTargeting()) { Why = TEXT("the party does not have a turn at rest"); return false; }
+    FHintObservation Now = BuildHintObservation(BattleView->Rules(), Actor());
+    Now.bAtRest = true;
+    if (!HintState.Show(Hint, Now))
+    {
+        switch (Hint)
+        {
+        case ECombatHint::ScarceResources: Why = TEXT("no resource is spent or short"); break;
+        case ECombatHint::DownedRescue: Why = TEXT("no party member is Downed"); break;
+        case ECombatHint::EndingTurn: Why = TEXT("the active hero still has an action besides End Turn"); break;
+        case ECombatHint::MoveSelectConfirm: case ECombatHint::Count: Why = TEXT("the hint does not apply"); break;
+        }
+        return false;
+    }
+    bHintFactsValid = false;
+    return true;
+}
+
+void AExpeditionPlayerController::DismissHintKey()
+{
+    // Shift+D pans the camera; a plain D is only ever the hint's key.
+    if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
+    DismissHint();
+}
+void AExpeditionPlayerController::DismissHint()
+{
+    if (VisibleHint() == ECombatHint::Count) { return; }
+    HintState.Dismiss();
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::SkipHints()
+{
+    if (VisibleHint() == ECombatHint::Count) { return; }
+    HintState.SkipTips();
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::ReplayHints()
+{
+    // Only Help's button reaches this; it re-arms the hints and closes Help. No game state changes.
+    if (!bShowHelp) { return; }
+    HintState.Replay();
+    bHintFactsValid = false;
+    bShowHelp = false;
+    RestoreOverlayFocus();
+    if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
 }
 
 bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
@@ -517,7 +644,11 @@ void AExpeditionPlayerController::HandleButton(FName Id)
         else if (Name == TEXT("KeepPlaying")) { CloseOverlays(); }
         return;
     }
+    if (Name == TEXT("ReplayTips")) { ReplayHints(); return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
+    // The hint's own buttons: they act on the hint and nothing else, and only while it is visible.
+    if (Name == TEXT("HintGotIt")) { DismissHint(); return; }
+    if (Name == TEXT("HintSkip")) { SkipHints(); return; }
     if (Name == TEXT("Builder") && BattleView->HasRun() && (BattleView->Progress().Phase == EExpeditionPhase::Victory || BattleView->Progress().Phase == EExpeditionPhase::Defeat)) { bNextParty = true; return; }
     if (Name.StartsWith(TEXT("Class:")))
     {
@@ -689,8 +820,11 @@ void AExpeditionPlayerController::NewRun()
         bNextParty = true;
         return;
     }
+    const int32 Before = BattleView->PresentationRevision();
     BattleView->NewRun(Party);
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Route) { bNextParty = false; bReturnPending = false; }
+    // A fresh run is a first-time run: re-arm the hints, including after Skip tips.
+    if (Before != BattleView->PresentationRevision() && BattleView->HasRun()) { HintState.Arm(); ResetHintSpending(); bHintFactsValid = false; }
 }
 void AExpeditionPlayerController::Save() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->Save(); } }
 void AExpeditionPlayerController::Resume()
@@ -699,7 +833,12 @@ void AExpeditionPlayerController::Resume()
     if (!AllowsGameplayInput()) { return; }
     const int32 Before = BattleView->PresentationRevision();
     BattleView->Resume();
-    if (Before != BattleView->PresentationRevision()) { bNextParty = false; bReturnPending = false; Focus = FMenuFocus(); }
+    if (Before != BattleView->PresentationRevision())
+    {
+        bNextParty = false; bReturnPending = false; Focus = FMenuFocus();
+        // A returning player is not a first-time player: Resume does not arm hints (Replay tips in Help does).
+        HintState.Disarm(); ResetHintSpending(); bHintFactsValid = false;
+    }
 }
 void AExpeditionPlayerController::RequestReturnToMenu()
 {

@@ -186,7 +186,7 @@ bool AExpeditionHUD::Button(FName Id, const FString& Label, const FString& Sub, 
     const float LabelY = Sub.IsEmpty() ? Y + Lift + Height * 0.5f - 10 * Ratio : Y + Lift + Height * 0.5f - 19 * Ratio;
     Text(Label, X + Width * 0.5f, LabelY, LabelColor, LabelScale, EAlign::Center, Width - 12);
     if (!Sub.IsEmpty()) { Text(Sub, X + Width * 0.5f, Y + Lift + Height * 0.5f + 2 * Ratio, bEnabled ? Muted : FLinearColor(0.38f, 0.4f, 0.44f), 0.68f * Ratio, EAlign::Center, Width - 10); }
-    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled, bTransientButtons});
+    Buttons.Add({Id, FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), bEnabled, bTransientButtons, bFocusless});
     ChipExclusions.Add(FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)));
     return bHover;
 }
@@ -270,8 +270,10 @@ void AExpeditionHUD::DrawHUD()
     TagsRequested.Reset();
     PickerLines.Reset();
     bTooltipRequested = false;
+    bHintRequested = false;
     bCursorRequested = false;
     bTransientButtons = false;
+    bFocusless = false;
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
@@ -291,6 +293,8 @@ void AExpeditionHUD::DrawHUD()
     if (!View->HasRun()) { DrawTitle(); }
     else
     {
+        // The hint comes first: a card's hover detail and the target chips are placed over and around it.
+        if (View->InCombat()) { DrawHint(); }
         if (View->InCombat() || View->Progress().Phase == EExpeditionPhase::Route || View->Progress().Phase == EExpeditionPhase::Reward || View->Progress().Phase == EExpeditionPhase::Recovery) { DrawParty(); }
         if (View->InCombat()) { DrawLog(); }
         if (View->InCombat())
@@ -747,6 +751,34 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
     // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
     if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + 8, Y); }
+}
+
+void AExpeditionHUD::DrawHint()
+{
+    const ECombatHint Hint = Player->VisibleHint();
+    if (Hint == ECombatHint::Count) { return; }
+    const FHintContent Content = Player->VisibleHintContent();
+    // The free column under the party cards and above the log: never over the board's play area, the dock or the chips.
+    constexpr float X = PartyCardX, Width = PartyCardWidth, Pad = 10, TitleScale = 0.74f, LineScale = 0.6f, LineHeight = 13, ButtonHeight = 22, Gap = 6;
+    const float Top = PartyCardTop + 4 * PartyCardPitch + 4;
+    TArray<FString> Lines;
+    for (const FString& Line : Content.Lines) { Lines.Append(Wrap(Line, Width - 2 * Pad, LineScale)); }
+    const float Height = Pad + 15 + Lines.Num() * LineHeight + Gap + ButtonHeight + Pad - 2;
+    Panel(X, Top, Width, Height, Sky, 0.95f);
+    Persist(X, Top, Width, Height);
+    Text(Content.Title, X + Pad, Top + Pad - 2, Sky, TitleScale, EAlign::Left, Width - 2 * Pad);
+    for (int32 Index = 0; Index < Lines.Num(); ++Index) { Text(Lines[Index], X + Pad, Top + Pad + 15 + Index * LineHeight, Parchment, LineScale); }
+    const float ButtonY = Top + Height - Pad + 2 - ButtonHeight;
+    const float ButtonWidth = (Width - 2 * Pad - Gap) * 0.5f;
+    bFocusless = true;
+    Button(TEXT("HintGotIt"), FString::Printf(TEXT("%s  Got it"), *ExpeditionStyle::HintDismissKey()), FString(), X + Pad, ButtonY, ButtonWidth, ButtonHeight, true, false, Sky, 0.62f);
+    Button(TEXT("HintSkip"), TEXT("Skip tips"), FString(), X + Pad + ButtonWidth + Gap, ButtonY, ButtonWidth, ButtonHeight, true, false, Muted, 0.62f);
+    bFocusless = false;
+    bHintRequested = true;
+    HintDrawn.Hint = Hint;
+    HintDrawn.Title = Content.Title;
+    HintDrawn.Lines = Lines;
+    HintDrawn.Box = FBox2D(FVector2D(X, Top) * S, FVector2D(X + Width, Top + Height) * S);
 }
 
 void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float Y)
@@ -1403,7 +1435,7 @@ void AExpeditionHUD::DrawRecords()
 
 void AExpeditionHUD::DrawHelp()
 {
-    const float Width = 700, Height = View->InCombat() ? 430.0f : 400.0f;
+    const float Width = 700, Height = View->InCombat() ? 462.0f : 400.0f;
     const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
     Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
     Panel(X, Y, Width, Height, Sky, 0.98f);
@@ -1429,16 +1461,17 @@ void AExpeditionHUD::DrawHelp()
         float Row=Y+70;
         for (const auto& Line : Lines) { for (const auto& Part : Wrap(Line,Width-64,0.9f)) { Text(Part,X+32,Row,Parchment,0.9f); Row+=27; } }
         Button(TEXT("Close"),TEXT("Back"),TEXT("Esc / ?"),X+Width-154,Y+Height-60,130,44);
+        Button(TEXT("ReplayTips"), TEXT("Replay tips"), FString(), X+Width-154-154, Y+Height-60, 140, 44, true, false, Gold);
         return;
     }
     const TCHAR* Left[] = {
         TEXT("Click a highlighted cell to move"), TEXT("Click a marked enemy to attack"), TEXT("A  Attack / move mode"), TEXT("F / M  First / second catalog special"),
         TEXT("R  Rescue a downed ally"), TEXT("P  Drink or give a potion"), TEXT("Space  End turn"), TEXT("1-4  Select adventurer"),
-        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid")};
+        TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid"), TEXT("D  Dismiss the tip on screen")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
         TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
-        TEXT("H  Records  ·  ?  Help  ·  I  Menu"), TEXT("Esc  Close Help, Records or the Menu")};
+        TEXT("H  Records  ·  ?  Help  ·  I  Menu"), TEXT("Esc  Close Help, Records or the Menu"), TEXT("Replay tips  Show the four tips again")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {
         Text(Left[Index], X + 32, Y + 66 + Index * 28.0f, Parchment, 0.8f);
@@ -1446,8 +1479,9 @@ void AExpeditionHUD::DrawHelp()
     }
     Text(TEXT("Downed allies die after 3 of their turns unless rescued. Rescue before the last enemy falls."), W * 0.5f, Y + Height - 82, Gold, 0.72f, EAlign::Center, Width - 40);
     float NoteY = Y + Height - 58;
-    for (const auto& Line : Wrap(TEXT("Hover a hero card for full status. The combat log fades after a few seconds; hover the bottom-left corner to bring it back."), Width - 200, 0.62f)) { Text(Line, X + 32, NoteY, Muted, 0.62f); NoteY += 15; }
+    for (const auto& Line : Wrap(TEXT("Hover a hero card for full status. The combat log fades after a few seconds; hover the bottom-left corner to bring it back."), Width - 360, 0.62f)) { Text(Line, X + 32, NoteY, Muted, 0.62f); NoteY += 15; }
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
+    Button(TEXT("ReplayTips"), TEXT("Replay tips"), FString(), X + Width - 154 - 154, Y + Height - 60, 140, 44, true, false, Gold);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
 
@@ -1488,6 +1522,7 @@ double AExpeditionHUD::PersistentCoverage() const
 TArray<FName> AExpeditionHUD::MenuButtons() const
 {
     TArray<FName> Result;
-    for (const auto& Button : Buttons) { if (Button.bEnabled) { Result.AddUnique(Button.Id); } }
+    // A hint's buttons are clickable but never a Tab stop or a default focus.
+    for (const auto& Button : Buttons) { if (Button.bEnabled && !Button.bFocusless) { Result.AddUnique(Button.Id); } }
     return Result;
 }

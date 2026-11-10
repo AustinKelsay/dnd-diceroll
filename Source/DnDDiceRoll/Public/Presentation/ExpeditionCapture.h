@@ -5,8 +5,11 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle, Targeting and Tooltip need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip };
+/** What a capture shot shows. Battle, Targeting, Tooltip and Hint need an encounter; Overview needs the tabletop; Start leaves the run. */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint };
+
+/** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
+enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };
 
 /** Which dock action a Tooltip shot chooses, as its key does: A, F, M, R, P. */
 enum class ECaptureAction : uint8 { Attack, Special1, Special2, Rescue, Potion };
@@ -21,6 +24,8 @@ struct DNDDICEROLL_API FCaptureShot
     float Distance = 0.0f;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
+    /** Hint shots only. */
+    ECaptureHint Hint = ECaptureHint::Move;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
 };
@@ -48,6 +53,7 @@ DNDDICEROLL_API bool Requested(const TCHAR* CommandLine);
 
 DNDDICEROLL_API const TCHAR* ModeName(ECaptureMode Mode);
 DNDDICEROLL_API const TCHAR* ActionName(ECaptureAction Action);
+DNDDICEROLL_API const TCHAR* HintName(ECaptureHint Hint);
 /** Pure: validates a poses document (version 1) and fills Out, or fails with a message naming the problem. */
 DNDDICEROLL_API bool ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error);
 }
