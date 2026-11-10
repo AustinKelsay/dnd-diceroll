@@ -49,6 +49,16 @@ _Avoid_: pawn when discussing game rules
 
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.
 
+**Action facts**: What an action costs, what it spends, which stance it needs, whom it can target and, in a battle, whether it is available and exactly why not. One read-only query (`FActionFactsQuery`) answers it; the HUD formats these facts and never decides them.
+
+**Cost tag**: The short label on the top edge of an action-dock button saying what the action spends of the turn: `Action`, `Bonus`, or `Move N` (the Attack / Move button shows `Action · Move N`). End Turn has none.
+_Avoid_: cost pill in player-facing text
+
+**Usage tag**: The line under an action-dock button's name saying what the action uses up: `At will`, a named resource with what is held and its cap (`Kit 2/3`, `Slot 1/2`, `Potion 1/9`), or the Rage stance it needs (`Needs Rage`). The tooltip adds camp recovery and any further detail.
+_Avoid_: usage pill in player-facing text
+
+**Blocker**: One exact reason an action is unavailable now (`Action already used`, `Need 1 Slot, have 0`, `Needs Rage active`, `Out of range (6)`). The tooltip lists them in a fixed order; a rejected command is explained by the first.
+
 **Ruleset**: The rules interpretation selected when an expedition starts, persisted for the whole run and its encounters.
 
 **Compact**: The default authored tactical ruleset with compact class kits and historical seeded behavior; format 4 saves resume in this mode.

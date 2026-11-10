@@ -224,22 +224,23 @@ int32 FCombatBattle::RollDice(int32 Count, int32 Sides)
 
 FString FCombatBattle::DescribeAction(ECombatCommandType Action)
 {
+    // What the action does. What it costs and spends comes from FActionFactsQuery (#58), never from here.
     switch (Action)
     {
     case ECombatCommandType::PrecisionStrike:
-        return TEXT("PRECISION STRIKE | Action + 1 use | attack with +2 hit and +2 damage; no camp refill");
+        return TEXT("Enemy in reach; an attack with +2 to hit and +2 damage");
     case ECombatCommandType::SecondWind:
-        return FString::Printf(TEXT("SECOND WIND | Bonus + 1 use | self | d%d+%d healing | target self"), WindDie, FighterLevel);
+        return FString::Printf(TEXT("Self; heal d%d+%d"), WindDie, FighterLevel);
     case ECombatCommandType::CureWounds:
-        return FString::Printf(TEXT("CURE WOUNDS | Action + 1 slot | ally/self, %d cell | %dd%d+%d healing"), TouchRange, CureDice, CureDie, HealingModifier);
+        return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, CureDice, CureDie, HealingModifier);
     case ECombatCommandType::MagicMissile:
-        return FString::Printf(TEXT("MAGIC MISSILE | Action + 1 slot | enemy, %d cells + sight | %dd%d+%d auto-hit"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
+        return FString::Printf(TEXT("Enemy, %d cells + sight; %dd%d+%d, never misses"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
     case ECombatCommandType::Rescue:
-        return FString::Printf(TEXT("RESCUE | Action, no item | downed ally, %d cell | restore 1 HP"), TouchRange);
+        return FString::Printf(TEXT("Downed ally, %d cell; restore 1 HP"), TouchRange);
     case ECombatCommandType::Potion:
-        return FString::Printf(TEXT("POTION | Action + 1 bottle | ally/self, %d cell | %dd%d+%d healing"), TouchRange, PotionDice, PotionDie, PotionBonus);
+        return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, PotionDice, PotionDie, PotionBonus);
     default:
-        return FString::Printf(TEXT("ATTACK / MOVE | Attack costs Action | Rogue: +d%d with conscious ally by target; Wizard: Fire Bolt"), SneakDie);
+        return FString::Printf(TEXT("Attack an enemy in reach, or move to a marked tile. Rogue: +d%d with a conscious ally by the target; Wizard: Fire Bolt"), SneakDie);
     }
 }
 

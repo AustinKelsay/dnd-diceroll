@@ -75,6 +75,12 @@ struct DNDDICEROLL_API FActionFacts
 struct DNDDICEROLL_API FActionFactsQuery
 {
     static FActionFacts For(const FCombatBattle& Battle, int32 ActorId, ECombatCommandType Action);
+    /**
+     * What a command costs and needs for this adventurer, with no battle: cost, resources (held, cap, camp recovery),
+     * stance and target shape. It runs the same shape code as For, so the two agree on a fresh battle; bAvailable
+     * and Blockers stay empty because availability needs a battle. Cost stays None for a command the kit lacks.
+     */
+    static FActionFacts ForBuild(const FCombatantState& Unit, ECombatCommandType Action);
     /** The commands an adventurer's action bar offers, in bar order: attack, move, catalog abilities, rescue, potion, end turn. */
     static TArray<ECombatCommandType> BarFor(const FCombatBattle& Battle, int32 ActorId);
 };
