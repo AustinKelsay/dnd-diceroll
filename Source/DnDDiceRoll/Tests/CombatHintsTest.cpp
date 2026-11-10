@@ -13,6 +13,8 @@
 namespace CombatHintsTest
 {
 using ExpeditionInputHarness::FHarness;
+/** A viewport position over the open board (no panel there at 1280x720). */
+const FVector2D BoardSpot(700, 300);
 const FName GotIt(TEXT("HintGotIt"));
 const FName Skip(TEXT("HintSkip"));
 const FName Replay(TEXT("ReplayTips"));
@@ -103,6 +105,31 @@ bool FindButton(const FHarness& Game, FName Wanted, FVector2D& Centre)
         { if (ButtonAt(Game, FVector2D(X, Y)) == Wanted) { Centre = FVector2D(X + 2, Y + 2); return true; } }
     }
     return false;
+}
+
+/** An empty cell the acting hero can walk to: where a click that leaked through the callout would move them. */
+FIntPoint FreeStep(const FHarness& Game)
+{
+    const FCombatBattle& Rules = Game.View->Rules();
+    for (const FIntPoint Cell : Rules.LegalMoves(Game.Player->Actor()))
+    {
+        bool bTaken = false;
+        for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { bTaken |= Unit.Cell == Cell && Unit.Life != ECombatLife::Dead; }
+        if (!bTaken) { return Cell; }
+    }
+    return Rules.Find(Game.Player->Actor())->Cell;
+}
+
+/**
+ * A real pointer click through the controller's Click(): the pointer comes to Point (with a free board cell behind it, as a
+ * pointer over the callout has) and the left button goes down. The simulated pointer is released afterwards.
+ */
+void ClickAt(FHarness& Game, FVector2D Point)
+{
+    Game.Player->SimulatePointer(Point, FreeStep(Game));
+    Game.Frame();
+    Game.Press(EKeys::LeftMouseButton);
+    Game.Player->ReleaseSimulatedPointer();
 }
 
 struct FRunState
@@ -425,8 +452,7 @@ bool FHintsSkipAndReplayTest::RunTest(const FString& Parameters)
     // Got it puts away this one; the next hint still comes.
     {
         const FRunState Before = Capture(Game);
-        Game.Player->HandleButton(ButtonAt(Game, GotItAt));
-        Game.Frame();
+        ClickAt(Game, GotItAt);
         TestEqual(TEXT("Got it puts the hint away"), Visible(Game), ECombatHint::Count);
         TestFalse(TEXT("Got it does not turn tips off"), Game.Player->Hints().TipsOff());
         ExpectSame(*this, TEXT("Got it"), Before, Capture(Game));
@@ -437,8 +463,7 @@ bool FHintsSkipAndReplayTest::RunTest(const FString& Parameters)
     {
         if (!TestTrue(TEXT("Skip tips is a button on this hint too"), FindButton(Game, Skip, SkipAt))) { return false; }
         const FRunState Before = Capture(Game);
-        Game.Player->HandleButton(ButtonAt(Game, SkipAt));
-        Game.Frame();
+        ClickAt(Game, SkipAt);
         TestEqual(TEXT("Skip tips puts it away"), Visible(Game), ECombatHint::Count);
         TestTrue(TEXT("and turns tips off"), Game.Player->Hints().TipsOff());
         ExpectSame(*this, TEXT("Skip tips"), Before, Capture(Game));
@@ -537,6 +562,8 @@ bool FHintsNeverLeakInputTest::RunTest(const FString& Parameters)
         Game.Press(EKeys::D);
         Game.Player->HandleButton(GotIt);
         Game.Player->HandleButton(Skip);
+        // The same click where the buttons were, through the pointer path (the Menu is left out: a click beside it closes it).
+        if (Overlay.Open != EKeys::I) { ClickAt(Game, GotItAt); ClickAt(Game, SkipAt); }
         TestEqual(Name + TEXT(": the hint is still held"), Game.Player->Hints().Held(), ECombatHint::MoveSelectConfirm);
         TestFalse(Name + TEXT(": Skip tips did not take effect"), Game.Player->Hints().TipsOff());
         for (int32 Index = 0; Index < 3; ++Index) { Game.Frame(); }
@@ -555,8 +582,8 @@ bool FHintsNeverLeakInputTest::RunTest(const FString& Parameters)
         Game.Frame();
         TestTrue(TEXT("A hover over the callout is not over a board cell"), Game.Hud->CoversBoard(GotItAt));
         Game.Hud->PreviewPointer(FVector2D(-1, -1));
-        Game.Player->HandleButton(GotIt);
-        TestEqual(TEXT("Got it puts the hint away"), Visible(Game), ECombatHint::Count);
+        ClickAt(Game, GotItAt);
+        TestEqual(TEXT("A real click on Got it puts the hint away"), Visible(Game), ECombatHint::Count);
         ExpectSame(*this, TEXT("Got it"), Before, Capture(Game));
     }
 
@@ -573,11 +600,85 @@ bool FHintsNeverLeakInputTest::RunTest(const FString& Parameters)
         TestNull(TEXT("and none is drawn"), Game.Hud->HintRequested());
         Game.Player->HandleButton(GotIt);
         Game.Player->HandleButton(Skip);
+        ClickAt(Game, GotItAt);
+        ClickAt(Game, SkipAt);
         TestFalse(TEXT("The buttons are dead then"), Game.Player->Hints().TipsOff());
         Game.Frame(0.25f);
         Game.View->SkipPresentation();
     }
     TestTrue(TEXT("Playback or an enemy turn was observed"), bSawPlaybackOrEnemy);
+    return !HasAnyErrors();
+}
+
+/**
+ * Under #172's input rules a click on the callout and the D key are neither a pointer preview nor a keyboard confirmation:
+ * the panel swallows the click before the preview or the keyboard-cursor handoff is touched, and D only puts the hint away.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHintsPointerRulesTest, "Project.Expedition.Presentation.HintsClickAndDKeyAreNeitherPreviewNorConfirm",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHintsPointerRulesTest::RunTest(const FString& Parameters)
+{
+    using namespace CombatHintsTest;
+    FHarness Game(*this, TEXT("HintsPointerRules"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    if (!TestTrue(TEXT("A fresh run reaches the party's first turn"), ToFirstTurn(Game))) { return false; }
+    const FIntPoint Behind = FreeStep(Game), Start = Game.View->Rules().Find(Game.Player->Actor())->Cell;
+    if (!TestTrue(TEXT("The hero has a cell a leaked click would move them to"), Behind != Start)) { return false; }
+    FVector2D GotItAt, SkipAt;
+    if (!TestTrue(TEXT("The callout has its buttons"), FindButton(Game, GotIt, GotItAt) && FindButton(Game, Skip, SkipAt))) { return false; }
+    const FHintRequest* Drawn = Game.Hud->HintRequested();
+    const FVector2D Panel((Drawn->Box.Min.X + Drawn->Box.Max.X) * 0.5, Drawn->Box.Min.Y + 8);
+    TestFalse(TEXT("The point on the panel is no button"), !ButtonAt(Game, Panel).IsNone());
+    FIntPoint Previewed;
+
+    // 1. The pointer rests on the callout's panel, a free cell behind it: nothing is previewed, and a click on the panel does nothing.
+    {
+        Game.Player->SimulatePointer(Panel, Behind);
+        for (int32 Index = 0; Index < 3; ++Index) { Game.Frame(); }
+        TestFalse(TEXT("A pointer over the callout previews no board cell"), Game.Player->PreviewedPointerCell(Previewed));
+        TestTrue(TEXT("The callout stays up under the pointer"), Visible(Game) == ECombatHint::MoveSelectConfirm);
+        const FRunState Before = Capture(Game);
+        Game.Press(EKeys::LeftMouseButton);
+        Game.Press(EKeys::LeftMouseButton);
+        ExpectSame(*this, TEXT("Clicks on the panel"), Before, Capture(Game));
+        TestEqual(TEXT("The hero stays where they were"), Game.View->Rules().Find(Game.Player->Actor())->Cell, Start);
+        TestFalse(TEXT("A click on the panel previews nothing"), Game.Player->PreviewedPointerCell(Previewed));
+        TestEqual(TEXT("A click on the panel leaves the hint up"), Visible(Game), ECombatHint::MoveSelectConfirm);
+    }
+
+    // 2. Keyboard cursor showing, the pointer resting on Got it: a click on the button dismisses the hint and nothing else.
+    // It does not spend the "first click only hides the cursor" rule, and it is not a confirmation.
+    {
+        Game.Player->SimulatePointer(GotItAt, Behind);
+        Game.Frame();
+        Game.Press(EKeys::Left);
+        TestTrue(TEXT("The arrow shows the keyboard cursor"), Game.Player->UsingKeyboardCursor());
+        const FIntPoint Cursor = Game.Player->KeyboardCursorCell();
+        Game.Press(EKeys::LeftMouseButton);
+        TestEqual(TEXT("Got it by the pointer puts the hint away"), Visible(Game), ECombatHint::Count);
+        TestTrue(TEXT("The click did not hand the board back from the keyboard cursor"), Game.Player->UsingKeyboardCursor() && Game.Player->KeyboardCursorCell() == Cursor);
+        TestEqual(TEXT("It acted on nothing"), Game.View->Rules().Find(Game.Player->Actor())->Cell, Start);
+        TestFalse(TEXT("It previewed nothing"), Game.Player->PreviewedPointerCell(Previewed));
+    }
+
+    // 3. The pointer takes the board (cursor hidden), the callout is back: D only puts the hint away. It does not show the
+    // keyboard cursor, so the first Enter afterwards still only shows it and a second one is needed to act.
+    ReplayFromHelp(Game);
+    TestEqual(TEXT("Replay tips raises the hint again"), Visible(Game), ECombatHint::MoveSelectConfirm);
+    {
+        Game.Player->SimulatePointer(BoardSpot, Behind);
+        Game.Frame();
+        TestFalse(TEXT("Pointer motion hid the keyboard cursor"), Game.Player->UsingKeyboardCursor());
+        const FRunState Before = Capture(Game);
+        Game.Press(EKeys::D);
+        TestEqual(TEXT("D puts the hint away"), Visible(Game), ECombatHint::Count);
+        TestFalse(TEXT("D did not show the keyboard cursor"), Game.Player->UsingKeyboardCursor());
+        ExpectSame(*this, TEXT("D with the pointer on the board"), Before, Capture(Game));
+        Game.Press(EKeys::Enter);
+        TestTrue(TEXT("The first Enter only shows the keyboard cursor"), Game.Player->UsingKeyboardCursor());
+        TestEqual(TEXT("... and acts on nothing"), Game.View->Rules().Find(Game.Player->Actor())->Cell, Start);
+    }
+    Game.Player->ReleaseSimulatedPointer();
     return !HasAnyErrors();
 }
 
@@ -633,8 +734,9 @@ bool FHintsSkipThenNewRunTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::Enter);
     Game.PartyTurn();
     if (!TestEqual(TEXT("The first run shows the move hint"), Visible(Game), ECombatHint::MoveSelectConfirm)) { return false; }
-    Game.Player->HandleButton(Skip);
-    Game.Frame();
+    FVector2D SkipAt;
+    if (!TestTrue(TEXT("Skip tips is a button"), FindButton(Game, Skip, SkipAt))) { return false; }
+    ClickAt(Game, SkipAt);
     TestTrue(TEXT("Skip tips turns tips off"), Game.Player->Hints().TipsOff());
     // Finish the run (a party that only ends turns is defeated), then start another.
     for (int32 Turn = 0; Turn < 400 && Game.View->InCombat(); ++Turn)
