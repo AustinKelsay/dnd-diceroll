@@ -117,7 +117,7 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
         const int32 Dressing = View->PlacedDressing().Num();
         AddInfo(FString::Printf(TEXT("%s board, instanced: %d presentation components, %d groups, %d owned components, %d instances; %d logical parts, %d scenery props"),
             Name, Parts, Groups, Owned, Instances, Logical, Props));
-        TestTrue(FString::Printf(TEXT("%s: fewer than %d presentation components in total per themed rebuild (got %d)"), Name, ComponentBudget, Parts), Parts < ComponentBudget);
+        TestTrue(FString::Printf(TEXT("%s: fewer than %d drawing components in total per themed rebuild, grid, rings and figures included (got %d)"), Name, ComponentBudget, Parts), Parts < ComponentBudget);
         TestTrue(FString::Printf(TEXT("%s: the board has parts and props"), Name), Logical > 0 && Props > 0);
         TestTrue(FString::Printf(TEXT("%s: the dressing and obstacles are in the props"), Name),
             Props >= View->PlacedObstacles() + View->PlacedDressing().Num());

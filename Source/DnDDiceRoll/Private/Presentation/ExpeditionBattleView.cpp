@@ -227,6 +227,20 @@ FExpeditionPart AExpeditionBattleView::MakePart(UStaticMesh* Mesh, USceneCompone
 // ---------------------------------------------------------------------------------------
 // Instanced groups (#144). One component per (mesh, material); tint and colour ride in per-instance custom data.
 
+namespace
+{
+// GPU LOD selection sizes each instance by its mesh's bounding-box extent, where a loose component uses its bounding sphere,
+// so instances would pick higher-detail LODs than the loose parts they replace. Scaling the instance LOD distance by
+// sphere radius / box extent makes both choose the same LOD at the same distance.
+void MatchLooseLod(UInstancedStaticMeshComponent* Set, const UStaticMesh* Mesh)
+{
+    if (!Set || !Mesh) { return; }
+    const FBoxSphereBounds Bounds = Mesh->GetBounds();
+    const double Box = Bounds.BoxExtent.Size();
+    if (Box > UE_KINDA_SMALL_NUMBER && Bounds.SphereRadius > 0.0) { Set->SetLODDistanceScale(static_cast<float>(Bounds.SphereRadius / Box)); }
+}
+}
+
 int32 AExpeditionBattleView::GroupFor(UStaticMesh* Mesh, UMaterialInterface* Material, bool bCastShadow, int32 CustomFloats, USceneComponent* Parent)
 {
     USceneComponent* Attach = Parent ? Parent : SceneryRoot.Get();
@@ -247,6 +261,7 @@ int32 AExpeditionBattleView::GroupFor(UStaticMesh* Mesh, UMaterialInterface* Mat
     Set->SetCastShadow(bCastShadow);
     // The count must be set before the first instance: each instance then carries that many floats.
     Set->SetNumCustomDataFloats(CustomFloats);
+    MatchLooseLod(Set, Mesh);
     if (Material) { Set->SetMaterial(0, Material); }
     Set->RegisterComponent();
     FExpeditionGroup Group;
