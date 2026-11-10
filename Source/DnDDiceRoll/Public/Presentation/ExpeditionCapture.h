@@ -6,7 +6,7 @@ class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
 /** What a capture shot shows. Battle, Targeting, Tooltip and Hint need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint };
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll };
 
 /** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
 enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };

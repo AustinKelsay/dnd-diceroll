@@ -834,6 +834,8 @@ bool FHintsPotionTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::Enter);
     Game.Settle();
     TestEqual(TEXT("One Potion was drunk"), Game.View->Rules().Find(Recipient)->Potions, Before - 1);
+    // The roll card (the Potion's dice) shares the left margin with the hint, so the hint waits until the card has gone (#190).
+    for (int32 Index = 0; Index < 200 && Game.View->RollCardUp(); ++Index) { Game.Frame(0.05f); }
     TestEqual(TEXT("Spending a Potion raises the resource hint"), Visible(Game), ECombatHint::ScarceResources);
     if (const FHintRequest* Drawn = Game.Hud->HintRequested())
     {

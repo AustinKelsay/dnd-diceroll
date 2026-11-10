@@ -261,6 +261,11 @@ public:
 
     // Presentation.
     const FExpeditionPlayback& Playback() const { return Show; }
+    /** Capture and test support (#190): a landed roll card that stays up until cleared. */
+    void PreviewRoll(const FDiceTray& Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Show.PreviewTray(Tray, Age); }
+    /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
+    bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
+    void ClearRollPreview() { Show.ClearTrayPreview(); }
     bool IsPresenting() const { return Show.IsBusy(); }
     void SkipPresentation();
     void CycleSpeed();
