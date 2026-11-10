@@ -808,7 +808,8 @@ bool FFigureKindKeepsStateTest::RunTest(const FString& Parameters)
 namespace RigPoseTest
 {
 // Plays real rules commands until a unit Find picks has fallen while the encounter goes on. bFight false: the party only
-// ends its turns, so the enemies down someone. Returns that unit's id, or INDEX_NONE if the encounter ended first.
+// ends its turns, so the enemies down someone. bFight true: the party attacks, choosing targets Find would accept first, so
+// that unit falls before the last enemy ends the encounter. Returns that unit's id, or INDEX_NONE if the encounter ended first.
 int32 PlayUntilFallen(FExpeditionRun& Run, bool bFight, TFunctionRef<bool(const FCombatantState&)> Find)
 {
     auto Fallen = [&Run, &Find]() -> int32
@@ -829,7 +830,15 @@ int32 PlayUntilFallen(FExpeditionRun& Run, bool bFight, TFunctionRef<bool(const 
             if (bFight)
             {
                 TArray<int32> Targets = Battle.LegalTargets(Id);
-                if (!Targets.IsEmpty()) { Run.Submit({ECombatCommandType::Attack, Id, {}, Targets[0]}); }
+                const int32* Preferred = Targets.FindByPredicate([&Battle, &Find](int32 Target)
+                {
+                    const FCombatantState* Unit = Battle.Find(Target);
+                    if (!Unit) { return false; }
+                    FCombatantState Fallen = *Unit; // Would Find accept this target once it falls?
+                    Fallen.Life = ECombatLife::Dead;
+                    return Find(Fallen);
+                });
+                if (!Targets.IsEmpty()) { Run.Submit({ECombatCommandType::Attack, Id, {}, Preferred ? *Preferred : Targets[0]}); }
                 else if (const TArray<FIntPoint> Moves = Battle.LegalMoves(Id); !Moves.IsEmpty()) { Run.Submit({ECombatCommandType::Move, Id, Moves.Last()}); }
             }
             if (Run.Progress().Phase == EExpeditionPhase::Combat && Run.Battle().ActiveId() == Id) { Run.Submit({ECombatCommandType::EndTurn, Id}); }
@@ -849,16 +858,20 @@ bool FRiggedResumeFallenTest::RunTest(const FString& Parameters)
     // Resume path in a fresh world and view: the fallen figure lies at the end of its Downed or Death clip at once.
     // The states come from real commands on fixed seeds, so the precondition is checked, never assumed.
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/RiggedResumeFallen"), FGuid::NewGuid().ToString());
-    struct FCase { const TCHAR* Name; bool bFight; ECombatSide Side; ECombatLife Life; EUnitPose Pose; };
-    for (const FCase& Case : {FCase{TEXT("downed hero"), false, ECombatSide::Party, ECombatLife::Downed, EUnitPose::Downed},
-                              FCase{TEXT("dead raider"), true, ECombatSide::Enemy, ECombatLife::Dead, EUnitPose::Death}})
+    // Raiders (the rigged enemy) guard only the dangerous route; the guarded route's enemies are scouts.
+    struct FCase { const TCHAR* Name; bool bFight; bool bDangerous; ECombatSide Side; ECombatLife Life; EUnitPose Pose; };
+    for (const FCase& Case : {FCase{TEXT("downed hero"), false, false, ECombatSide::Party, ECombatLife::Downed, EUnitPose::Downed},
+                              FCase{TEXT("dead raider"), true, true, ECombatSide::Enemy, ECombatLife::Dead, EUnitPose::Death}})
     {
         FExpeditionSnapshot Checkpoint;
         int32 FallenId = INDEX_NONE, Seed = 0;
         for (const int32 Candidate : {7, 11, 13, 21, 29, 37, 43, 53})
         {
             FExpeditionRun Attempt;
-            if (!StartRigRun(Attempt, Candidate, TEXT("rig-resume-fallen"))) { continue; }
+            FString Error;
+            if (!Attempt.NewRun(Candidate, Error, TEXT("rig-resume-fallen"))) { continue; }
+            const auto* Offer = Attempt.Progress().Offers.FindByPredicate([&Case](const auto& Route) { return Route.bDangerous == Case.bDangerous; });
+            if (!Offer || !Attempt.ChooseRoute(Offer->Id, Error)) { continue; }
             FallenId = PlayUntilFallen(Attempt, Case.bFight, [&Case](const FCombatantState& Unit)
                 { return Unit.Side == Case.Side && Unit.Life == Case.Life && ExpectsRig(Unit); });
             if (FallenId != INDEX_NONE) { Checkpoint = Attempt.Snapshot(); Seed = Candidate; break; }
