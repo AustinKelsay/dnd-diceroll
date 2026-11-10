@@ -1,0 +1,91 @@
+02:17:05 start Arden26/30 Nix22/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28 done=1 rev=8
+02:17:05 ROUND 1 | Arden26/30 Nix22/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28
+02:17:06 Ivo move 4,6 -> (6, 5)
+02:17:10   move not accepted
+02:17:13 Nix move 4,4 -> (8, 4)
+02:17:18 Nix end turn | Arden26/30 Nix22/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28
+02:17:21 Sera move 4,5 -> (6, 5)
+02:17:26 Sera end turn | Arden26/30 Nix22/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28
+02:17:31 Arden move 4,3 -> (6, 3)
+02:17:35   move not accepted
+02:17:37 ROUND 2 | Arden26/30 Nix1/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28
+02:17:38 Ivo move 4,6 -> (5, 4)
+02:17:44 Ivo attack Raider 1
+02:17:47 Ivo end turn | Arden26/30 Nix1/22 Sera22/22 Ivo22/22 Raide28/28 Raide28/28 Vault28/28
+02:17:50 Nix attack Raider 1
+02:17:54 Nix end turn | Arden26/30 Nix1/22 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:17:57 Sera Cure Wounds Nix
+02:18:01 Sera end turn | Arden26/30 Nix1/22 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:06 Arden move 4,3 -> (6, 3)
+02:18:10 Arden end turn | Arden26/30 Nix0/22L1 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:13 ROUND 3 | Arden26/30 Nix0/22L1 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:14 Ivo attack Raider 1
+02:18:17 Ivo end turn | Arden26/30 Nix0/22L1 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:20 Sera move 6,5 -> (6, 4)
+02:18:26 Sera attack Raider 1
+02:18:29 Sera end turn | Arden26/30 Nix0/22L1 Sera22/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:32 Arden end turn | Arden26/30 Nix0/22L1 Sera12/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:34 ROUND 4 | Arden26/30 Nix0/22L1 Sera8/22 Ivo22/22 Raide23/28 Raide28/28 Vault28/28
+02:18:35 Ivo attack Raider 2
+02:18:39 Ivo end turn | Arden26/30 Nix0/22L1 Sera8/22 Ivo22/22 Raide23/28 Raide19/28 Vault28/28
+02:18:42 Sera attack Raider 2
+02:18:45 Sera end turn | Arden26/30 Nix0/22L1 Sera8/22 Ivo22/22 Raide23/28 Raide19/28 Vault28/28
+02:18:50 Arden attack Raider 1
+02:18:54 Arden end turn | Arden17/30 Nix0/22L1 Sera3/22 Ivo22/22 Raide17/28 Raide19/28 Vault28/28
+02:18:56 ROUND 5 | Arden17/30 Nix0/22L1 Sera0/22L1 Ivo22/22 Raide17/28 Raide19/28 Vault28/28
+02:18:57 Ivo Rescue Sera
+02:19:00 Ivo end turn | Arden17/30 Nix0/22L1 Sera1/22 Ivo22/22 Raide17/28 Raide19/28 Vault28/28
+02:19:03 Sera attack Raider 2
+02:19:07 Sera end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide17/28 Raide11/28 Vault28/28
+02:19:12 Arden attack Raider 1
+02:19:16 Arden end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:18 ROUND 6 | Arden17/30 Nix0/22L2 Sera0/22L1 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:18 Ivo Rescue Sera
+02:19:22 Ivo end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:25 Sera attack Raider 2
+02:19:29 Sera end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:34 Arden Rescue Sera
+02:19:37 Arden end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:40 ROUND 7 | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide11/28 Vault28/28
+02:19:40 Ivo attack Raider 2
+02:19:44 Ivo end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide5/28 Vault28/28
+02:19:47 Sera attack Raider 2
+02:19:51 Sera end turn | Arden17/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide9/28 Raide0/28L2 Vault28/28
+02:19:54 Arden attack Raider 1
+02:19:57 Arden end turn | Arden10/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide1/28 Raide0/28L2 Vault28/28
+02:20:00 ROUND 8 | Arden10/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide1/28 Raide0/28L2 Vault28/28
+02:20:00 Ivo attack Raider 1
+02:20:04 Ivo end turn | Arden10/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:07 Sera Cure Wounds Arden
+02:20:11 Sera end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:13 Arden end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:16 ROUND 9 | Arden20/30 Nix0/22L2 Sera0/22L1 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:16 Ivo Rescue Sera
+02:20:20 Ivo end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:23 Sera attack Vault bow
+02:20:27 Sera end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:29 Arden end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:32 ROUND 10 | Arden20/30 Nix0/22L2 Sera0/22L1 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:32 Ivo Rescue Sera
+02:20:36 Ivo end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault28/28
+02:20:39 Sera attack Vault bow
+02:20:43 Sera end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault20/28
+02:20:46 Arden end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault20/28
+02:20:48 ROUND 11 | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault20/28
+02:20:49 Ivo attack Vault bow
+02:20:53 Ivo end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault15/28
+02:20:56 Sera attack Vault bow
+02:20:59 Sera end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault15/28
+02:21:02 Arden end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault15/28
+02:21:05 ROUND 12 | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault15/28
+02:21:05 Ivo attack Vault bow
+02:21:09 Ivo end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault11/28
+02:21:12 Sera attack Vault bow
+02:21:16 Sera end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault4/28
+02:21:19 Arden end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault4/28
+02:21:21 ROUND 13 | Arden20/30 Nix0/22L2 Sera0/22L1 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault4/28
+02:21:22 Ivo Rescue Sera
+02:21:25 Ivo end turn | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault4/28
+02:21:28 Sera attack Vault bow
+02:21:32 STOP phase=2 done=2 | Arden20/30 Nix0/22L2 Sera1/22 Ivo22/22 Raide0/28L2 Raide0/28L2 Vault0/28L2
+02:21:32 end elapsed 267s

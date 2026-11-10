@@ -1,0 +1,7 @@
+rev 7 phase 1 done 0
+Arden     Fighter  side 0 HP {'HP': 30, 'MaxHP': 30} AC 16 atk 5 d 6 + 3 rng 1 cell (4, 3)
+Nix       Rogue    side 0 HP {'HP': 20, 'MaxHP': 22} AC 13 atk 5 d 6 + 3 rng 3 cell (4, 4)
+Sera      Cleric   side 0 HP {'HP': 22, 'MaxHP': 22} AC 13 atk 5 d 6 + 3 rng 3 cell (5, 5)
+Ivo       Wizard   side 0 HP {'HP': 22, 'MaxHP': 22} AC 13 atk 5 d 10 + 0 rng 4 cell (4, 6)
+Scout 1   Raider   side 1 HP {'HP': 10, 'MaxHP': 10} AC 11 atk 2 d 4 + 1 rng 1 cell (5, 4)
+Vault bow Archer   side 1 HP {'HP': 10, 'MaxHP': 10} AC 11 atk 2 d 4 + 1 rng 4 cell (8, 6)

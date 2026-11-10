@@ -1,0 +1,23 @@
+02:26:09 start Arden30/30 Nix20/22 Sera22/22 Ivo22/22 Scout10/10 Vault10/10 done=0 rev=7
+02:26:09 ROUND 2 | Arden30/30 Nix20/22 Sera22/22 Ivo22/22 Scout10/10 Vault10/10
+02:26:10 Arden move 4,3 -> (5, 3)
+02:26:15 Arden attack Scout 1
+02:26:18 Arden end turn | Arden30/30 Nix20/22 Sera22/22 Ivo22/22 Scout5/10 Vault10/10
+02:26:21 Nix attack Scout 1
+02:26:25 Nix end turn | Arden30/30 Nix20/22 Sera22/22 Ivo22/22 Scout0/10L2 Vault10/10
+02:26:27 ROUND 3 | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault10/10
+02:26:28 Sera move 5,5 -> (6, 5)
+02:26:33 Sera attack Vault bow
+02:26:37 Sera end turn | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault10/10
+02:26:40 Ivo attack Vault bow
+02:26:44 Ivo end turn | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault8/10
+02:26:47 Arden move 5,3 -> (8, 4)
+02:26:52 Arden end turn | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault8/10
+02:26:55 Nix move 4,4 -> (7, 4)
+02:27:00   move not accepted
+02:27:02 ROUND 4 | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault8/10
+02:27:02 Sera attack Vault bow
+02:27:06 Sera end turn | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault8/10
+02:27:09 Ivo attack Vault bow
+02:27:13 STOP phase=2 done=1 | Arden30/30 Nix20/22 Sera22/22 Ivo17/22 Scout0/10L2 Vault0/10L2
+02:27:13 end elapsed 64s
