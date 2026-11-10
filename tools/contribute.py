@@ -129,7 +129,7 @@ def editor_problems(root):
     # Import the Unreal inspector only here; `check` stays host-neutral.
     from dev import Dev, current_host
     if current_host() is None:
-        return ["Editor state is unverified: local Unreal inspection supports Linux x86_64 (validated) and Apple Silicon macOS."]
+        return ["Editor state is unverified: local Unreal inspection supports Linux x86_64 (validated), Apple Silicon macOS and Windows x64 (advisory)."]
     from workspace import Workspace
     inspector = Dev(Workspace.discover(root))
     inspector.require_closed()

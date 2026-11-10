@@ -56,7 +56,7 @@ HOSTS = {
                 "build": "Build/BatchFiles/Build.bat", "uat": "Build/BatchFiles/RunUAT.bat",
                 "proxy": "Bin/Win64/unreal_mcp_proxy.exe", "process_token": "UnrealEditor.exe",
                 "headless": ["-nullrhi"],
-                "automation": lambda prefix: [f"-ExecCmds=Automation RunTests {prefix}; Quit", "-nullrhi"],
+                "automation": lambda prefix: [f"-ExecCmds=Automation RunTests {prefix};SoftQuit", "-nullrhi"],
                 "packaged": "**/Binaries/Win64/{target}.exe", "tools": ["git", "powershell.exe", "dxdiag.exe"],
                 "quit": "quit_by_window", "save_dialog": False, "version_tools": []},
     "mac": {"label": "darwin/arm64", "platform": "Mac",
@@ -313,15 +313,17 @@ class Dev:
             kwargs.setdefault("creationflags", windows_host.BELOW_NORMAL)
         return subprocess.run(self.native_command(args), cwd=self.w.root, check=True, **kwargs)
 
-    def native_command(self, args):
+    def native_command(self, args, unreal=False):
         args = [str(arg) for arg in args]
         if self.host != "windows":
             return args
         if Path(args[0]).name.lower() in ("unrealeditor.exe", "unrealeditor-cmd.exe"):
+            # Fresh per-run INIs avoid UE 5.8 stale-layout warnings; never overwrite a user layout.
             layouts = self.w.local / "layouts"
             layouts.mkdir(parents=True, exist_ok=True)
             args += ["-NoLiveCoding", f"-EditorLayoutIni={layouts / (stamp() + '.ini')}"]
-        return windows_host.batch_command(args)
+            unreal = True
+        return windows_host.unreal_command(args) if unreal else windows_host.batch_command(args)
 
     def native_options(self):
         return {"creationflags": windows_host.BELOW_NORMAL} if self.host == "windows" else {}
@@ -559,8 +561,8 @@ class Dev:
 
     def run_logged(self, args, log):
         """Stream a child's output to the console and a log file; return its exit code."""
-        with log.open("w") as stream:
-            process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", **self.native_options())
+        with log.open("w", encoding="utf-8" if self.host == "windows" else None) as stream:
+            process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", encoding="utf-8" if self.host == "windows" else None, **self.native_options())
             for line in process.stdout:
                 sys.stdout.write(line)
                 stream.write(line)
@@ -814,20 +816,24 @@ class Dev:
         print(f"Automation passed: {report}; warning lines: {len(events['warnings'])}; evidence: {output}")
 
     def run_game(self, args, log, timeout):
-        """Run one owned game process. On timeout it gets one SIGTERM (a normal exit request); it is never killed."""
+        """Run one owned game process; request one normal host-specific exit on timeout, never kill."""
         with log.open("ab") as stream:
             process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
             try:
                 return process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 if self.host == "windows":
-                    windows_host.normal_quit(process.pid)
+                    try:
+                        windows_host.normal_quit(process.pid)
+                    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s; normal window-close request failed: {error}; left running. Inspect {log}") from error
                 else:
                     process.terminate()
                 try:
                     process.wait(timeout=30)
                 except subprocess.TimeoutExpired:
-                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
+                    request = "window-close request" if self.host == "windows" else "SIGTERM"
+                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one {request}; left running. Inspect {log}") from None
                 raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
 
     def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, static_figures=False, no_palettes=False, no_accents=False):
@@ -869,7 +875,7 @@ class Dev:
                     # The game only reads a copy; the real fixture and any real save stay untouched.
                     shutil.copy2(fixture_root / name / "current-v1.json", save / "current-v1.json")
                     log = target / "game.log"
-                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
+                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.gallery_flags(),
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
                                f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []),
@@ -1242,6 +1248,9 @@ class Dev:
         for name in (["warmup"] if warmup else []) + ["measured", "resume"]:
             self.perf_pass(ctx, output, name, pad)
         return self.perf_report(output, pad)
+    def gallery_flags(self):
+        # Windows capture needs a real renderer/window; null-RHI is only for commandlets.
+        return [] if self.host == "windows" else self.layout["headless"]
 
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
@@ -1264,13 +1273,13 @@ class Dev:
         output = self.w.root / "Builds" / stamp()
         output.mkdir(parents=True)
         log = output / "package.log"
-        with self.config_guard(), log.open("w") as stream:
+        with self.config_guard(), log.open("w", encoding="utf-8" if self.host == "windows" else None) as stream:
             self.execute([self.engine / self.layout.get("uat", "Build/BatchFiles/RunUAT.sh"), "BuildCookRun", f"-project={self.w.project}", f"-platform={self.platform}", "-clientconfig=Development", f"-target={self.w.settings['game_target']}", "-build", "-cook", "-stage", "-pak", "-package", "-archive", f"-archivedirectory={output}", "-unattended", "-nop4", "-utf8output", *self.package_limits()], stdout=stream, stderr=subprocess.STDOUT)
         package_events = log_events(log.read_text(errors="replace"))
         binary = self.packaged_binary(output)
         launch_log = output / "launch.log"
         with launch_log.open("w") as stream:
-            process = subprocess.Popen(self.native_command([str(binary), "-unattended", *self.package_launch_flags(output), "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()]), cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
+            process = subprocess.Popen(self.native_command([str(binary), "-unattended", *self.package_launch_flags(output), "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()], unreal=True), cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
             try:
                 deadline = time.monotonic() + 90
                 loaded = False
@@ -1292,13 +1301,20 @@ class Dev:
                 original = sys.exc_info()[1]
                 if process.poll() is None:
                     if self.host == "windows":
-                        windows_host.normal_quit(process.pid)
+                        try:
+                            windows_host.normal_quit(process.pid)
+                        except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                            message = f"Packaged game PID {process.pid} normal window-close request failed: {error}; left running"
+                            if original:
+                                message += f". Earlier failure: {original}"
+                            raise RuntimeError(message) from original
                     else:
                         process.terminate()
                     try:
                         process.wait(timeout=30)
                     except subprocess.TimeoutExpired:
-                        message = f"Packaged game PID {process.pid} did not exit after one SIGTERM; left running"
+                        request = "window-close request" if self.host == "windows" else "SIGTERM"
+                        message = f"Packaged game PID {process.pid} did not exit after one {request}; left running"
                         if original:
                             message += f". Earlier failure: {original}"
                         raise RuntimeError(message) from original

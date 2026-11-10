@@ -13,8 +13,8 @@ BELOW_NORMAL = 0x00004000
 
 def powershell(script):
     # Scripts are fixed strings, with numeric PIDs/ports only, not shell/user input.
-    return subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
-                          check=True, capture_output=True, text=True, timeout=30,
+    return subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + script],
+                          check=True, capture_output=True, text=True, encoding="utf-8", timeout=30,
                           creationflags=BELOW_NORMAL).stdout.strip()
 
 
@@ -35,6 +35,10 @@ def editor_processes(project):
             raise RuntimeError("Cannot inspect an Unreal process command/executable; ownership is unknown")
         if project_argument(command, project, windows=True):
             found.append({"pid": int(row["ProcessId"]), "command": command, "executable": executable})
+        else:
+            # CIM cannot prove the cwd/aliases of an unmatched command line. Do not
+            # mistake another or unrecognized Unreal process for a closed host.
+            raise RuntimeError(f"Unreal PID {row['ProcessId']} ownership is unknown; coordinate editor ownership before using this helper")
     return found
 
 
@@ -132,3 +136,15 @@ def parse_dxdiag(text):
         raise RuntimeError("DxDiag does not report DirectX 12 with a feature-level-12 adapter")
     return {"directx": directx, "adapters": displays,
             "note": "SM6/Nanite still requires a rendered runtime log, not this capability probe"}
+
+
+def unreal_command(args):
+    """Unreal reads the raw Windows command line: quote values, not whole -key=value tokens."""
+    tokens = []
+    for arg in map(str, args):
+        if any(char in arg for char in '\r\n"'):
+            raise ValueError("Unreal arguments contain unsupported quotes/newlines")
+        key, separator, value = arg.partition("=") if arg.startswith("-") else ("", "", arg)
+        quoted = '"' + value + '"' if not value or any(c.isspace() for c in value) else value
+        tokens.append(key + separator + quoted)
+    return " ".join(tokens)
