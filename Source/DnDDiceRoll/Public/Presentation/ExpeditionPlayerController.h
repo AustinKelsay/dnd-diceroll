@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/CombatHints.h"
 #include "Run/ExpeditionRun.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
@@ -90,10 +91,72 @@ public:
     bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
-private:
-    /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
+    /**
+     * The hint drawn this frame (#158), or Count. A hint is non-modal and takes no focus; it shows only on the party's
+     * turn at rest, never under Help, Records, the return question, the Menu, a playback or an enemy turn.
+     */
+    ECombatHint VisibleHint() const;
+    FHintContent VisibleHintContent() const { return HintState.Content(); }
+    const FCombatHints& Hints() const { return HintState; }
+    /** Capture and test support: raise exactly this hint if it applies to the acting hero now; Why says what is missing. */
+    bool PreviewHint(ECombatHint Hint, FString& Why);
+    /** Capture support: put the previewed hint away (a capture run never arms hints on its own). */
+    void ClearHintPreview() { HintState.Disarm(); }
+    /** The pointer's viewport position, or false when there is none (and always in a capture run, so a focused window cannot change a shot). */
     bool PointerPosition(float& X, float& Y) const;
+    /**
+     * Test support: the pointer rests at this viewport position, over this board cell, as a real pointer reports.
+     * A transient test world has no viewport to project through, so the cell is given. Moving it again is pointer motion.
+     */
+    void SimulatePointer(FVector2D ViewportPosition, FIntPoint Cell);
+    /**
+     * Test support: the pointer rests at this viewport pixel of a viewport of this size, and the cell under it is found by
+     * casting a ray through the battle view's real camera (its eased transform and field of view), so orbiting, panning and
+     * zooming through the controller move the cell under a resting pointer the way they do on screen.
+     */
+    void SimulatePointerThroughCamera(FVector2D ViewportPosition, FIntPoint ViewportSize);
+    /** Test support: back to the physical pointer. */
+    void ReleaseSimulatedPointer() { bSimulatedPointer = false; }
+    /**
+     * The cell the last frame previewed under the pointer, the only one a click may act on (#171). False unless targeting is
+     * visible now (no keyboard cursor, panel, overlay or playback owns the board) and the battle state, actor and mode are
+     * still the ones the preview was drawn for.
+     */
+    bool PreviewedPointerCell(FIntPoint& Cell) const;
+private:
+    /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
+    static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
+    bool bSimulatedPointer = false;
+    bool bSimulatedCamera = false;
+    FIntPoint SimulatedViewport = FIntPoint::ZeroValue;
+    FVector2D SimulatedPointer = FVector2D::ZeroVector;
+    FIntPoint SimulatedCell = FIntPoint::ZeroValue;
+    /** Where the pointer was when motion was last counted; motion is measured from here so slow drift still counts. */
+    bool bPointerSeen = false;
+    FVector2D PointerAnchor = FVector2D::ZeroVector;
+    bool bPointerPreviewed = false;
+    FIntPoint PointerPreview = FIntPoint::ZeroValue;
+    /** What the preview was drawn for; a change before the click voids it. */
+    uint32 PreviewStamp = 0;
+    /**
+     * The camera the pointer is projected through (the player camera's cache, else the view's own camera). The hover cell is found
+     * with the pose of one frame and the camera eases on its own, so a preview is trusted only while the pose has not moved since.
+     */
+    bool ProjectionPose(FTransform& Pose) const;
+    bool bPreviewPoseValid = false;
+    FTransform PreviewPose;
+    /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
+    static constexpr float PoseSlopCm = 0.5f, PoseSlopDegrees = 0.02f;
+    /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
+    bool bKeyboardPreviewed = false;
+    FIntPoint KeyboardPreview = FIntPoint::ZeroValue;
+    uint32 KeyboardStamp = 0;
+    /** True while the keyboard cursor is showing on its current cell for the current state with targeting visible: the only time Enter may act. */
+    bool KeyboardPreviewValid() const;
+    uint32 TargetingStamp() const;
+    /** Shows the keyboard cursor; the pointer is measured afresh from then on, so only later motion hands control back. */
+    void UseKeyboardCursor() { bKeyboardCursor = true; bPointerSeen = false; }
     TSharedPtr<FExpeditionCaptureDirector> Capture;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
@@ -109,6 +172,26 @@ private:
     FIntPoint GridCursor = FIntPoint::ZeroValue;
     bool bKeyboardCursor = false;
     bool bModeTip = false;
+    /** Contextual hints (#158): presentation only, in memory, never in the checkpoint. */
+    FCombatHints HintState;
+    FCombatSnapshot HintSnapshot;
+    FHintObservation HintFacts;
+    int32 HintActor = INDEX_NONE;
+    bool bHintFactsValid = false;
+    /** What each party member held of each resource in the last observed snapshot (key: unit id * 8 + resource), to see a resource being spent. */
+    TMap<int32, int32> HintHeld;
+    /** A resource was spent this run, whatever its cap (a Potion has none to fall below); kept until the next New Run or Resume. */
+    bool bHintSpentSeen = false;
+    FActionResourceCost HintSpent;
+    void TrackHintSpending(const FCombatBattle& Rules);
+    void ResetHintSpending() { HintHeld.Reset(); bHintSpentSeen = false; HintSpent = FActionResourceCost(); }
+    void ObserveHints();
+    FHintObservation BuildHintObservation(const FCombatBattle& Rules, int32 ActorId) const;
+    /** The D key: puts a visible hint away; a no-op when none is up, and never a gameplay key. */
+    void DismissHintKey();
+    void DismissHint();
+    void SkipHints();
+    void ReplayHints();
     bool bShowHelp = false;
     bool bShowMenu = false;
     bool bConfirmReturn = false;

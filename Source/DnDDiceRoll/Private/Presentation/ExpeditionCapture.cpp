@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionCapture.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "Presentation/CombatHints.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
@@ -64,6 +65,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Targeting: return TEXT("targeting");
     case ECaptureMode::Overview: return TEXT("overview");
     case ECaptureMode::Tooltip: return TEXT("tooltip");
+    case ECaptureMode::Hint: return TEXT("hint");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -80,6 +82,18 @@ const TCHAR* ExpeditionCapture::ActionName(ECaptureAction Action)
     case ECaptureAction::Attack: return TEXT("attack");
     }
     return TEXT("attack");
+}
+
+const TCHAR* ExpeditionCapture::HintName(ECaptureHint Hint)
+{
+    switch (Hint)
+    {
+    case ECaptureHint::Resources: return TEXT("resources");
+    case ECaptureHint::Rescue: return TEXT("rescue");
+    case ECaptureHint::EndTurn: return TEXT("endturn");
+    case ECaptureHint::Move: return TEXT("move");
+    }
+    return TEXT("move");
 }
 
 bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error)
@@ -121,7 +135,18 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             { Error = Shot.Name + TEXT(" needs a \"build\" of lowercase letters, digits, '.' and '-' (up to 64)"); return false; }
         }
         else if (Mode == TEXT("tooltip")) { Shot.Mode = ECaptureMode::Tooltip; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("hint")) { Shot.Mode = ECaptureMode::Hint; }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint)"), *Shot.Name, *Mode); return false; }
+        if (Shot.Mode == ECaptureMode::Hint)
+        {
+            FString Hint;
+            if (!(*Entry)->TryGetStringField(TEXT("hint"), Hint)) { Error = Shot.Name + TEXT(" needs a \"hint\" (move, resources, rescue, endturn)"); return false; }
+            if (Hint == TEXT("move")) { Shot.Hint = ECaptureHint::Move; }
+            else if (Hint == TEXT("resources")) { Shot.Hint = ECaptureHint::Resources; }
+            else if (Hint == TEXT("rescue")) { Shot.Hint = ECaptureHint::Rescue; }
+            else if (Hint == TEXT("endturn")) { Shot.Hint = ECaptureHint::EndTurn; }
+            else { Error = FString::Printf(TEXT("%s has unknown hint \"%s\" (move, resources, rescue, endturn)"), *Shot.Name, *Hint); return false; }
+        }
         if (Shot.Mode == ECaptureMode::Tooltip)
         {
             FString Action;
@@ -133,7 +158,7 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Action == TEXT("potion")) { Shot.Action = ECaptureAction::Potion; }
             else { Error = FString::Printf(TEXT("%s has unknown action \"%s\" (attack, special1, special2, rescue, potion)"), *Shot.Name, *Action); return false; }
         }
-        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip)
+        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint)
         {
             Shot.bHasCamera = true;
             double Yaw = 0.0;
@@ -239,11 +264,13 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     AExpeditionPlayerController* Player = Controller.Get();
     if (!Board || !Player) { Skip = TEXT("view or controller is gone"); return false; }
     Player->PreviewAim(false);
+    Player->ClearHintPreview();
     switch (Shot.Mode)
     {
     case ECaptureMode::Battle:
     case ECaptureMode::Targeting:
     case ECaptureMode::Tooltip:
+    case ECaptureMode::Hint:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
         // Default frames the board at that yaw; far is the end of the pitch ramp (FarStop of the home fit), never nearer than the default at that yaw, which can exceed it on a wide board.
@@ -251,6 +278,19 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? FMath::Max(ExpeditionCameraRig::FarStop(Board->FramedDistance()), Framed) : Shot.Distance > 0.0f ? Shot.Distance : Framed;
         Board->SnapCamera(Shot.Yaw, Wanted);
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
+        if (Shot.Mode == ECaptureMode::Hint)
+        {
+            // The hint is raised exactly as play raises it, from the same facts, so a fixture that does not show its cause skips.
+            ECombatHint Hint = ECombatHint::MoveSelectConfirm;
+            switch (Shot.Hint)
+            {
+            case ECaptureHint::Resources: Hint = ECombatHint::ScarceResources; break;
+            case ECaptureHint::Rescue: Hint = ECombatHint::DownedRescue; break;
+            case ECaptureHint::EndTurn: Hint = ECombatHint::EndingTurn; break;
+            case ECaptureHint::Move: break;
+            }
+            return Player->PreviewHint(Hint, Skip);
+        }
         if (Shot.Mode == ECaptureMode::Tooltip)
         {
             const FCombatantState* Hero = Board->Rules().Find(Board->Rules().ActiveId());
@@ -429,6 +469,7 @@ void FExpeditionCaptureDirector::WriteManifest() const
         Shot->SetStringField(TEXT("name"), Result.Shot.Name);
         Shot->SetStringField(TEXT("mode"), ExpeditionCapture::ModeName(Result.Shot.Mode));
         if (Result.Shot.Mode == ECaptureMode::Tooltip) { Shot->SetStringField(TEXT("action"), ExpeditionCapture::ActionName(Result.Shot.Action)); }
+        if (Result.Shot.Mode == ECaptureMode::Hint) { Shot->SetStringField(TEXT("hint"), ExpeditionCapture::HintName(Result.Shot.Hint)); }
         if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
         Shot->SetStringField(TEXT("status"), Result.Status);
         if (Result.Status == TEXT("skipped")) { Shot->SetStringField(TEXT("reason"), Result.Reason); }

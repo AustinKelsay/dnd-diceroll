@@ -122,6 +122,34 @@
       "distance": "default"
     },
     {
+      "name": "hint-move",
+      "mode": "hint",
+      "hint": "move",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-resources",
+      "mode": "hint",
+      "hint": "resources",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-rescue",
+      "mode": "hint",
+      "hint": "rescue",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "hint-endturn",
+      "mode": "hint",
+      "hint": "endturn",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "overview",
       "mode": "overview"
     },
