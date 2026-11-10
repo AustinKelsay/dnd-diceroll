@@ -59,6 +59,9 @@ _Avoid_: usage pill in player-facing text
 
 **Blocker**: One exact reason an action is unavailable now (`Action already used`, `Need 1 Slot, have 0`, `Needs Rage active`, `Out of range (6)`). The tooltip lists them in a fixed order; a rejected command is explained by the first.
 
+**Combat hint**: One of four first-run callouts under the party cards (move/select/confirm, scarce resources, Downed and Rescue, ending a turn). Each shows at most once per run, only on the party's turn at rest, and is put away with D or Got it. Skip tips turns them off for the session; Help's Replay tips brings them back. Resume does not arm them. Presentation state only, never saved.
+_Avoid_: tutorial, popup
+
 **Ruleset**: The rules interpretation selected when an expedition starts, persisted for the whole run and its encounters.
 
 **Compact**: The default authored tactical ruleset with compact class kits and historical seeded behavior; format 4 saves resume in this mode.
