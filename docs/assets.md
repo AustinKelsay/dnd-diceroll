@@ -147,7 +147,7 @@ Material parameters only: **no mesh, texture, master graph or `Art/` change, and
 
 Expect `THEME_MASTER kept`, and an immediate rerun that changes nothing. `tools/tests/test_character_look.py` pins the new values, the unchanged other columns and the other rows, and this change set. The lead records the run result here after the native run.
 
-**Run record (pending, lead):**
+**Run record (2026-11-10, lead, headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`, with a hash diff of `Config/` and `Content/`):** exit 0, no warnings, `THEME_MASTER kept`. The run changed exactly the ten character `MI_*` above, and nothing else. An immediate rerun changed nothing.
 
 ## Instanced presentation parts (issue #144)
 
