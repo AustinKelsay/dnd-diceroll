@@ -924,7 +924,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             SpendAttackAction(*MutableFind(Command.ActorId));
             CheckOutcome();
             Result.Feedback = FString::Printf(TEXT("%s Sacred Flame > %s: %s %d + %d = %d vs DC %d | %s | %d radiant. HP %d/%d"),
-                *Actor->Name, *Target->Name, FAbilityRules::AbilityAbbreviation(SaveAbility), Save.Kept, SaveMod, Save.Total, Dc,
+                *Actor->Name, *Target->Name, FAbilityRules::AbilityAbbreviation(EAbility::Dexterity), Save.Kept, SaveMod, Save.Total, Dc,
                 Save.bSuccess ? TEXT("SAVED") : TEXT("FAIL"), Result.Damage, Target->HP, Target->MaxHP);
         }
         else
