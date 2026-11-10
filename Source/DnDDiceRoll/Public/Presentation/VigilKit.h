@@ -87,8 +87,8 @@ struct FDressingKinds
  * cards 3 to 5 outside it, ShaftCount light shafts on the -X side. No two share a cell, and nothing is ever on or beside
  * a playable cell. Deterministic in (Width, Height, Seed, Kinds).
  *
- * Scatter cells whose centre lies within AvoidRadius cells of any point in Avoid (the braziers of #148, in board cells) are not
- * candidates, so a piece of rubble never lands inside a brazier; the next-lowest scoring cells take their place and the count is
+ * Scatter cells whose piece would stand (its final jittered position, not the cell centre) within AvoidRadius cells of any point
+ * in Avoid (the braziers of #148, in board cells) are not candidates, so a piece of rubble never lands inside a brazier; the next-lowest scoring cells take their place and the count is
  * unchanged. The default (nothing to avoid) is the plan #145 shipped.
  */
 DNDDICEROLL_API TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds,

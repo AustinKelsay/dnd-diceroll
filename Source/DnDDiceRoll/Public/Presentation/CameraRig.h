@@ -31,8 +31,15 @@ namespace ExpeditionCameraRig
     constexpr float HomeYaw = -90.0f;
     /** Length of the camera arm per unit of distance: the vector the r001 camera used (0.62 reach, 1.0 rise). */
     constexpr float ArmLength = 1.1768f;
-    /** How far past the outer cell centres the pan focus may travel, in cells. */
-    constexpr float PanMarginCells = 2.0f;
+    /** How far past the board's outer tile edge the visible ground may reach when panning, in cells (was 2 cells past the outer cell centres, #148 gate 2). */
+    constexpr float PanMarginCells = 1.5f;
+    /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */
+    // 88 px nominal: rendered figures read at about 0.8 of a nominal 180 cm projection (the on-screen pass measured ~50 px
+    // where the nominal height was ~62), so this gives about 72 px on screen at 1080 (#148 gate 2).
+    constexpr float FigureTargetPixels = 88.0f;
+    constexpr float FigureTargetViewportHeight = 1080.0f;
+    /** The active unit (tile and head) is kept inside the safe rect shrunk to this fraction while the whole board is not in view. */
+    constexpr float UnitFill = 0.9f;
 
     /** Half the tangent of the vertical / horizontal view angle at a viewport aspect (width / height). */
     inline float HalfTanY() { return FMath::Tan(FMath::DegreesToRadians(FieldOfView * 0.5f)) / ReferenceAspect; }
@@ -145,6 +152,19 @@ namespace ExpeditionCameraRig
         return true;
     }
 
+    /** The ground point (view space XY on the plane PlaneZ) under a screen position (0..1 from the top left); false when the ray misses the plane. Inverse of Project on that plane. */
+    inline bool Unproject(const FVector2D& Screen, const FVector& Eye, const FVector& Forward, float Aspect, float PlaneZ, FVector2D& Ground)
+    {
+        const FVector Right = FVector::CrossProduct(FVector::UpVector, Forward).GetSafeNormal();
+        const FVector Up = FVector::CrossProduct(Forward, Right);
+        const FVector Ray = Forward + Right * ((Screen.X - 0.5) * 2.0 * HalfTanX(Aspect)) - Up * ((Screen.Y - 0.5) * 2.0 * HalfTanY());
+        if (Ray.Z > -1.0e-3) { return false; }
+        const double T = (PlaneZ - Eye.Z) / Ray.Z;
+        if (T <= 0.0) { return false; }
+        Ground = FVector2D(Eye.X + Ray.X * T, Eye.Y + Ray.Y * T);
+        return true;
+    }
+
     /** The four board corners (outer tile edges, view space, at the board top) as seen from a focus on the ground. */
     inline bool BoardInside(int32 Width, int32 Height, const FBoardMetric& Metric, const FVector2D& FocusXY,
         float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float InFill)
@@ -246,11 +266,157 @@ namespace ExpeditionCameraRig
         return Centre + (Target - Centre) * Low;
     }
 
-    /** Clamps a focus point (view-space cm) to the board's cell-centre box grown by the pan margin. */
-    inline FVector2D ClampFocus(FVector2D Focus, int32 Width, int32 Height, float CellCm)
+    /** The fraction of the screen height a standing figure (feet on the board top, FigureCm tall) at the focus covers, from a camera at Distance and Pitch. Yaw does not matter for a vertical line through the focus. */
+    inline float FigureScreenHeight(float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe)
     {
-        const float Margin = PanMarginCells * CellCm;
-        return FVector2D(FMath::Clamp(Focus.X, -Margin, (Width - 1) * CellCm + Margin),
-                         FMath::Clamp(Focus.Y, -Margin, (Height - 1) * CellCm + Margin));
+        const FArm Pose = Arm(0.0f, Distance, Pitch, Metric.Scale(), Safe);
+        const FVector Eye = Pose.Offset + Pose.Framing; // the focus is the origin
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        FVector2D Feet, Head;
+        if (!Project(FVector(0.0, 0.0, Metric.BoardTop()), Eye, Forward, Safe.Aspect, Feet) ||
+            !Project(FVector(0.0, 0.0, Metric.BoardTop() + Metric.FigureCm), Eye, Forward, Safe.Aspect, Head)) { return 0.0f; }
+        return static_cast<float>(Feet.Y - Head.Y);
+    }
+
+    /**
+     * The distance at which a standing figure at the focus is FigureTargetPixels tall at FigureTargetViewportHeight pixels
+     * (a fixed fraction of the screen height, so about 59 px at 720), with the pitch the zoom ramp gives that distance. The figure
+     * shrinks as the camera pulls back, so this is a bisection; the result is inside the zoom range.
+     */
+    inline float FigureDistance(const FBoardMetric& Metric, float Anchor, const FSafeRect& Safe)
+    {
+        const float Wanted = FigureTargetPixels / FigureTargetViewportHeight;
+        auto Height = [&](float D) { return FigureScreenHeight(D, PitchFor(D, Anchor), Metric, Safe); };
+        if (Height(MinDistance) <= Wanted) { return MinDistance; }
+        if (Height(MaxDistance) >= Wanted) { return MaxDistance; }
+        float Low = MinDistance, High = MaxDistance; // Height(Low) > Wanted > Height(High)
+        for (int32 Iteration = 0; Iteration < 40; ++Iteration)
+        {
+            const float Mid = 0.5f * (Low + High);
+            (Height(Mid) > Wanted ? Low : High) = Mid;
+        }
+        return 0.5f * (Low + High);
+    }
+
+    /** The default zoom: the closer of the whole-board fit and the figure-sized distance, inside the zoom range. */
+    inline float DefaultDistance(float WholeBoard, float Figure)
+    { return FMath::Clamp(FMath::Min(WholeBoard, Figure), MinDistance, MaxDistance); }
+
+    /**
+     * The ground (view-space cm, on the board-top plane) under the four corners of the safe rect shrunk to InFill, as offsets
+     * from the focus. Translating the camera translates these rigidly, so they bound what the camera shows for any focus.
+     */
+    inline bool VisibleGround(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, FVector2D (&Out)[4], float InFill = 1.0f)
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        const FVector Eye = Pose.Offset + Pose.Framing;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        const FVector2D Centre = FVector2D(0.5, 0.5) + Safe.CentreOffset();
+        const double HalfW = Safe.Width() * 0.5 * InFill, HalfH = Safe.Height() * 0.5 * InFill;
+        int32 Index = 0;
+        for (const double SignX : {-1.0, 1.0})
+        {
+            for (const double SignY : {-1.0, 1.0})
+            {
+                if (!Unproject(FVector2D(Centre.X + SignX * HalfW, Centre.Y + SignY * HalfH), Eye, Forward, Safe.Aspect, Metric.BoardTop(), Out[Index++])) { return false; }
+            }
+        }
+        return true;
+    }
+
+    /** A pan-clamped focus, and whether each board axis was locked (the view centred on the board) because the view is wider than the bound. */
+    struct FPanBound
+    {
+        FVector2D Focus = FVector2D::ZeroVector;
+        bool bLockedX = false;
+        bool bLockedY = false;
+    };
+
+    /**
+     * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within PanMarginCells of the
+     * board's outer tile edge on every side. Per board axis: when the board plus its margins is smaller than the view the
+     * axis is locked with the view's bounding box centred on the board (the pan has nothing to reach); otherwise the focus is
+     * clamped to the interval that keeps the view inside. The locked focus is the midpoint of that (empty) interval, the point
+     * it shrinks to, so a zoom or orbit across the threshold moves the focus continuously. The bound is on the view's bounding
+     * box, so it never shows more than asked at any yaw.
+     */
+    inline FPanBound ClampPan(const FVector2D& Wanted, int32 Width, int32 Height, const FBoardMetric& Metric,
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
+    {
+        const double C = Metric.CellCm;
+        const double Margin = (0.5 + PanMarginCells) * C;
+        const double LowerX = -Margin, UpperX = (Width - 1) * C + Margin;
+        const double LowerY = -Margin, UpperY = (Height - 1) * C + Margin;
+        FPanBound Result;
+        Result.Focus = Wanted;
+        FVector2D Ground[4];
+        if (!VisibleGround(Yaw, Distance, Pitch, Metric, Safe, Ground))
+        {
+            // No ground under a corner (not reachable with the battle pitches): keep the focus itself inside the bound.
+            Result.Focus = FVector2D(FMath::Clamp(Wanted.X, LowerX, UpperX), FMath::Clamp(Wanted.Y, LowerY, UpperY));
+            return Result;
+        }
+        double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+        for (const FVector2D& Point : Ground)
+        {
+            MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X);
+            MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y);
+        }
+        const double LowX = LowerX - MinX, HighX = UpperX - MaxX;
+        const double LowY = LowerY - MinY, HighY = UpperY - MaxY;
+        Result.bLockedX = LowX > HighX;
+        Result.bLockedY = LowY > HighY;
+        Result.Focus.X = Result.bLockedX ? 0.5 * (LowX + HighX) : FMath::Clamp(Wanted.X, LowX, HighX);
+        Result.Focus.Y = Result.bLockedY ? 0.5 * (LowY + HighY) : FMath::Clamp(Wanted.Y, LowY, HighY);
+        return Result;
+    }
+
+    /**
+     * The focus a camera shake may move the view to without breaking the pan bound: Focus plus the shake's horizontal part,
+     * clamped like a pan. The height part is dropped while the bound applies, because a rising camera widens the view.
+     */
+    inline FVector2D ShakenFocus(const FVector2D& Focus, const FVector& Shake, int32 Width, int32 Height, const FBoardMetric& Metric,
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
+    {
+        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe).Focus;
+    }
+
+    /** Whether a unit's tile (corners at the board top) and head project inside the safe rect shrunk to InFill, from a focus on the ground. */
+    inline bool UnitInside(const FVector2D& Unit, const FBoardMetric& Metric, const FVector2D& FocusXY,
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float InFill)
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        const FVector Eye = FVector(FocusXY.X, FocusXY.Y, 0.0) + Pose.Offset + Pose.Framing;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        const double Half = 0.5 * Metric.CellCm, Z = Metric.BoardTop();
+        const FVector Points[5] = {
+            FVector(Unit.X - Half, Unit.Y - Half, Z), FVector(Unit.X + Half, Unit.Y - Half, Z),
+            FVector(Unit.X - Half, Unit.Y + Half, Z), FVector(Unit.X + Half, Unit.Y + Half, Z),
+            FVector(Unit.X, Unit.Y, Z + Metric.FigureCm)};
+        for (const FVector& Point : Points)
+        {
+            FVector2D Screen;
+            if (!Project(Point, Eye, Forward, Safe.Aspect, Screen) || !Safe.Holds(Screen, InFill)) { return false; }
+        }
+        return true;
+    }
+
+    /**
+     * Moves Focus toward Unit only as far as brings the unit inside the safe rect (shrunk to InFill). The set of foci that show
+     * the unit is convex, so the bisection along the segment is exact; a unit that cannot be shown even centred returns Unit.
+     */
+    inline FVector2D KeepUnitInside(const FVector2D& Focus, const FVector2D& Unit, const FBoardMetric& Metric,
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float InFill = UnitFill)
+    {
+        auto Inside = [&](const FVector2D& At) { return UnitInside(Unit, Metric, At, Yaw, Distance, Pitch, Safe, InFill); };
+        if (Inside(Focus)) { return Focus; }
+        if (!Inside(Unit)) { return Unit; }
+        float Low = 0.0f, High = 1.0f; // Low is outside, High is inside
+        for (int32 Iteration = 0; Iteration < 16; ++Iteration)
+        {
+            const float Mid = 0.5f * (Low + High);
+            (Inside(Focus + (Unit - Focus) * Mid) ? High : Low) = Mid;
+        }
+        return Focus + (Unit - Focus) * High;
     }
 }

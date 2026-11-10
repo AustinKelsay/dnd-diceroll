@@ -273,12 +273,18 @@ public:
     void Orbit(float Degrees);
     void Zoom(float Amount);
     /**
-     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The focus is
-     * clamped to the board plus a margin, and returns to the active unit when the turn changes.
+     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The view may
+     * show at most PanMarginCells (1.5) past the board's outer tile edge, so an axis on which the view is wider than the
+     * board stays at the board centre, and nothing pans while the whole board is in view. The pan returns to the active
+     * unit when the turn changes.
      */
     void Pan(float Right, float Away);
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
+    /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
+    bool WholeBoardInView() const;
+    /** Shakes the camera (hits and crits call this through playback); it decays over about Amount / 1.8 seconds. */
+    void Shake(float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); }
     /** The camera pitch below horizontal, in degrees, for the current zoom. */
     float CameraPitch() const;
     /** The screen area the HUD leaves free; the board is fitted and centred in it. */
@@ -294,15 +300,26 @@ public:
     /**
      * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
      * the board metric's scale, so framing and the zoom clamp (900 to 6400) look the same at any cell size.
-     * Where the camera frames the whole board by default: the nearest zoom at which the board's four corners sit
-     * inside the HUD-safe rect from the home yaw (-90), at 45 degrees. This is the pitch anchor.
+     * FramedDistance() is the pitch anchor: the nearest zoom at which the board's four corners sit inside the
+     * HUD-safe rect from the home yaw (-90), at 45 degrees. It no longer is the default zoom (see below), but the pitch
+     * ramp (35 / 45 / 60 degrees) and the far stop stay tied to it.
      */
     float FramedDistance() const;
-    /** The default zoom for a board seen from another yaw: its corners fit the safe rect there too (clamped to the zoom range). */
+    /**
+     * The default zoom for a board seen from a yaw (#148 gate 2): the closer of the whole-board fit (WholeBoardDistance) and
+     * the distance at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (FigureDistance), clamped to
+     * the zoom range. A board that fits at the closer figure distance keeps its whole-board fit.
+     */
     float FramedDistance(float ForYaw) const;
-    /** Whether the default zoom for a yaw really contains the board inside the zoom range (false only for a board too large to fit). */
+    /** The nearest zoom from a yaw at which the board's corners fit the safe rect (clamped to the zoom range); the old default, and where the far pose starts. */
+    float WholeBoardDistance(float ForYaw) const;
+    /** The zoom at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (about 59 px at 720), on the zoom-tied pitch curve. */
+    float FigureDistance() const;
+    /** The far pose: the end of the pitch ramp (FarStop of the anchor), never nearer than the whole-board fit from that yaw. */
+    float FarFramedDistance(float ForYaw) const;
+    /** Whether the whole-board fit from a yaw lies inside the zoom range (false only for a board too large to fit). */
     bool FramedFits(float ForYaw) const;
-    /** Whether the zoom rests at the default fit for the current yaw. Orbit keeps such a camera fitted; a zoom the player chose is left alone. */
+    /** Whether the zoom rests at the default for the current yaw. Orbit keeps such a camera at the default; a zoom the player chose is left alone. */
     bool AtFramedZoom() const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
@@ -628,8 +645,21 @@ private:
     void UpdateMarkers();
     void UpdateEffects();
     void UpdateCamera(float DeltaSeconds);
-    /** The unpanned focus: the board centre leaned toward the acting unit (view space). */
+    /**
+     * The unpanned focus (view space). While the whole board is in view from the rendered pose: the board centre leaned toward
+     * the acting unit, as far as the board stays inside the safe rect. Otherwise: the acting unit itself.
+     */
     FVector BaseFocus() const;
+    /** The unit the camera follows: the presented focus during playback, else the active combatant; INDEX_NONE outside combat. */
+    int32 CameraFocusId() const;
+    /**
+     * Clamps Base + Offset to the pan bound for the pose rendered this frame (CameraRig.h ClampPan) and returns the focus.
+     * Offset is the player's pan: it is cleared while the whole board is in view and on axes locked to the board centre,
+     * and otherwise re-pinned to the bound so a held key does not wind up past it.
+     */
+    FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
+    /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
+    FVector2D HoldUnit(const FVector2D& Wanted) const;
     /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
     void SelectShadowLights();
     void Record(const FCombatResult& Result);
