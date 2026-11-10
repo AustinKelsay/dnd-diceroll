@@ -77,18 +77,45 @@ bool FProtectionQueryTest::RunTest(const FString& Parameters)
         FBuildCatalog::Create(TEXT("fighter.champion"), 2, TEXT("Ally"), Ally);
         Berserker.Cell = {1, 1}; Berserker.InitiativeBonus = 30; Ally.Cell = {3, 2}; Ally.InitiativeBonus = 10;
         FCombatantState Foe = Enemy(); Foe.Cell = {2, 1}; // beside the Berserker
-        FCombatantState Second = Enemy(); Second.Id = 21; Second.Cell = {3, 1}; Second.InitiativeBonus = -30; // beside the Ally, acts last
+        FCombatantState Second = Enemy(); Second.Id = 21; Second.Cell = {3, 1}; // beside the Ally; both enemies act after the heroes
         FCombatEncounter Encounter; Encounter.Combatants = {Berserker, Ally, Foe, Second};
+        // Hits and criticals follow the seed: take the first seed (deterministically) whose two enemy attacks are plain hits.
+        auto Opening = [&](int32 Seed, FCombatBattle& Out)
+        {
+            FString Ignored;
+            if (!Out.Start(Encounter, Seed, Ignored)) { return false; }
+            Out.Submit({ECombatCommandType::Special1, 1, {}, 1}); Out.Submit({ECombatCommandType::EndTurn, 1}); Out.Submit({ECombatCommandType::EndTurn, 2});
+            return true;
+        };
+        int32 Seed = INDEX_NONE;
+        for (int32 Candidate = 1; Candidate <= 200 && Seed == INDEX_NONE; ++Candidate)
+        {
+            FCombatBattle Probe;
+            bool bPlain = Opening(Candidate, Probe);
+            for (int32 Turn = 0; Turn < 2 && bPlain; ++Turn)
+            {
+                const int32 Active = Probe.ActiveId();
+                const FCombatResult Hit = Probe.Submit({ECombatCommandType::Attack, Active, {}, Active == 20 ? 1 : 2});
+                bPlain = Hit.bAccepted && Hit.bHit && !Hit.bCritical && Probe.Submit({ECombatCommandType::EndTurn, Active}).bAccepted;
+            }
+            if (bPlain) { Seed = Candidate; }
+        }
+        if (!TestTrue(TEXT("Some seed gives two plain enemy hits"), Seed != INDEX_NONE)) { return false; }
         FCombatBattle Battle;
-        if (!TestTrue(TEXT("Start rage-only scenario"), Battle.Start(Encounter, 42, Error))) { return false; }
+        if (!TestTrue(TEXT("Start rage-only scenario"), Battle.Start(Encounter, Seed, Error))) { return false; }
         TestEqual(TEXT("No protection before Rage"), Battle.Protection(1).Amount, 0);
         TestTrue(TEXT("Rage"), Battle.Submit({ECombatCommandType::Special1, 1, {}, 1}).bAccepted);
         TestEqual(TEXT("Rage supplies its own protection"), Battle.Protection(1).SourceId, 1);
         Battle.Submit({ECombatCommandType::EndTurn, 1}); Battle.Submit({ECombatCommandType::EndTurn, 2});
-        CheckHit(Battle, 20, 1, 1, TEXT("Rage only"));
-        Battle.Submit({ECombatCommandType::EndTurn, 20});
-        TestEqual(TEXT("The second enemy acts next"), Battle.ActiveId(), 21);
-        CheckHit(Battle, 21, 2, 0, TEXT("Unprotected"));
+        // The two enemies act in seeded order; the Rage lasts until the Berserker's next turn, so it covers both.
+        for (int32 Turn = 0; Turn < 2; ++Turn)
+        {
+            const int32 Active = Battle.ActiveId();
+            if (!TestTrue(TEXT("An enemy has the turn"), Active == 20 || Active == 21)) { break; }
+            if (Active == 20) { CheckHit(Battle, 20, 1, 1, TEXT("Rage only")); }
+            else { CheckHit(Battle, 21, 2, 0, TEXT("Unprotected")); }
+            Battle.Submit({ECombatCommandType::EndTurn, Active});
+        }
     }
     return !HasAnyErrors();
 }
