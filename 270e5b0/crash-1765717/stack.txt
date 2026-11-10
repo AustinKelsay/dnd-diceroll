@@ -1,0 +1,25 @@
+[2026.11.10-05.42.24:509][221]LogCore: Error: Error reentered: Assertion failed: (Index >= 0) & (Index < ArrayNum) [File:Runtime/Core/Public/Containers/Array.h] [Line: 1339] 
+Array index out of bounds: -1 into an array of size 1
+
+[2026.11.10-05.42.24:537][221]LogCore: === Critical error: ===
+Unhandled Exception: SIGSEGV: invalid attempt to write memory at address 0x0000000000000003
+
+[2026.11.10-05.42.24:537][221]LogCore: Fatal error!
+
+0x00007f23ec619079 libUnrealEditor-Core.so!FDebug::CheckVerifyFailedImpl2(char const*, char const*, int, char16_t const*, ...) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Misc/AssertionMacros.cpp:793]
+0x00007f23e9a8c4b5 libUnrealEditor-Engine.so!FVirtualTextureTileOffsetData::GetTileOffset(unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/Runtime/Core/Public/Containers/Array.h:1339]
+0x00007f23e9a8601f libUnrealEditor-Engine.so!FVirtualTextureBuiltData::GetTileOffset(unsigned int, unsigned int, unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Engine/Private/VT/VirtualTextureBuiltData.cpp:207]
+0x00007f23e9a85d4c libUnrealEditor-Engine.so!FUploadingVirtualTexture::GetLocalMipBias(unsigned char, unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Engine/Private/VT/UploadingVirtualTexture.cpp:114]
+0x00007f23d0bc454a libUnrealEditor-Renderer.so!FAllocatedVirtualTexture::LockOrUnlockTiles(FVirtualTextureSystem*, bool) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/AllocatedVirtualTexture.cpp:254]
+0x00007f23d0bc4881 libUnrealEditor-Renderer.so!FAllocatedVirtualTexture::Destroy(FVirtualTextureSystem*) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/AllocatedVirtualTexture.cpp:149]
+0x00007f23d0c4a3be libUnrealEditor-Renderer.so!FVirtualTextureSystem::DestroyPendingVirtualTextures(bool) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:730]
+0x00007f23d0c49756 libUnrealEditor-Renderer.so!FVirtualTextureSystem::~FVirtualTextureSystem() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:326]
+0x00007f23d0c47405 libUnrealEditor-Renderer.so!FVirtualTextureSystem::Shutdown() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:285]
+0x00007f23d0578a4a libUnrealEditor-Renderer.so!FRendererModule::ShutdownModule() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/Renderer.cpp:215]
+0x00007f23ec7b4739 libUnrealEditor-Core.so!FModuleManager::UnloadModule(FName, bool, bool) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Modules/ModuleManager.cpp:1345]
+0x00007f23ec7b5b90 libUnrealEditor-Core.so!FModuleManager::UnloadModulesAtShutdown() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Modules/ModuleManager.cpp:1493]
+0x000000000023d066 UnrealEditor-Cmd!FEngineLoop::Exit() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Launch/Private/LaunchEngineLoop.cpp:5182]
+0x000000000023d369 UnrealEditor-Cmd!GuardedMain(char16_t const*) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Launch/Private/Launch.cpp:71]
+0x00007f23ed2befbd libUnrealEditor-UnixCommonStartup.so!CommonUnixMain(int, char**, int (*)(char16_t const*), void (*)()) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Unix/UnixCommonStartup/Private/UnixCommonStartup.cpp:324]
+0x00007f23df827781 libc.so.6!UnknownFunction(0x27780)
+0x00007f23df8278b9 libc.so.6!__libc_start_main(+0x88)

@@ -1,0 +1,37 @@
+Generating report for minidump
+
+Application version 5.8.4.0
+ ... built from changelist 58902052
+
+OS version Linux 7.2.15-1-omarchy (network name: plebdev-ultra)
+Running 2 x86_64 processors (2 logical cores)
+Exception was "SIGSEGV: invalid attempt to write memory at address 0x0000000000000003"
+
+<SOURCE START>
+<SOURCE END>
+
+<CALLSTACK START>
+libUnrealEditor-Core.so!FDebug::CheckVerifyFailedImpl2(char const*, char const*, int, char16_t const*, ...) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Misc/AssertionMacros.cpp:793]
+libUnrealEditor-Engine.so!FVirtualTextureTileOffsetData::GetTileOffset(unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/Runtime/Core/Public/Containers/Array.h:1339]
+libUnrealEditor-Engine.so!FVirtualTextureBuiltData::GetTileOffset(unsigned int, unsigned int, unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Engine/Private/VT/VirtualTextureBuiltData.cpp:207]
+libUnrealEditor-Engine.so!FUploadingVirtualTexture::GetLocalMipBias(unsigned char, unsigned int) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Engine/Private/VT/UploadingVirtualTexture.cpp:114]
+libUnrealEditor-Renderer.so!FAllocatedVirtualTexture::LockOrUnlockTiles(FVirtualTextureSystem*, bool) const [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/AllocatedVirtualTexture.cpp:254]
+libUnrealEditor-Renderer.so!FAllocatedVirtualTexture::Destroy(FVirtualTextureSystem*) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/AllocatedVirtualTexture.cpp:149]
+libUnrealEditor-Renderer.so!FVirtualTextureSystem::DestroyPendingVirtualTextures(bool) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:730]
+libUnrealEditor-Renderer.so!FVirtualTextureSystem::~FVirtualTextureSystem() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:326]
+libUnrealEditor-Renderer.so!FVirtualTextureSystem::Shutdown() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/VT/VirtualTextureSystem.cpp:285]
+libUnrealEditor-Renderer.so!FRendererModule::ShutdownModule() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Renderer/Private/Renderer.cpp:215]
+libUnrealEditor-Core.so!FModuleManager::UnloadModule(FName, bool, bool) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Modules/ModuleManager.cpp:1345]
+libUnrealEditor-Core.so!FModuleManager::UnloadModulesAtShutdown() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Core/Private/Modules/ModuleManager.cpp:1493]
+UnrealEditor-Cmd!FEngineLoop::Exit() [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Launch/Private/LaunchEngineLoop.cpp:5182]
+UnrealEditor-Cmd!GuardedMain(char16_t const*) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Launch/Private/Launch.cpp:71]
+libUnrealEditor-UnixCommonStartup.so!CommonUnixMain(int, char**, int (*)(char16_t const*), void (*)()) [/mnt/horde/++UE5/Sync/Engine/Source/./Runtime/Unix/UnixCommonStartup/Private/UnixCommonStartup.cpp:324]
+libc.so.6!UnknownFunction(0x27780)
+libc.so.6!__libc_start_main(+0x88)
+UnrealEditor-Cmd!_start(+0x29)
+
+<CALLSTACK END>
+
+0 loaded modules
+
+Report end!
