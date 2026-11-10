@@ -91,7 +91,7 @@ bool FBalanceTrace::RunTest(const FString& Parameters)
     if (!TestNotNull(TEXT("Known party ") + Parts[0], Party)) { return false; }
     FString Error;
     const FString Folder = BalanceHarness::GroupFolder(TEXT("trace"), Error);
-    if (!TestTrue(TEXT("Trace folder inside .local/ ") + Error, !Folder.IsEmpty())) { return false; }
+    if (!TestTrue(TEXT("Trace folder inside .local/ ") + Error, BalanceHarness::EnsureFolder(Folder, Error))) { return false; }
     const FString Path = FPaths::Combine(Folder, FString::Printf(TEXT("%s-%s-%s.txt"), *Parts[0], *Parts[1], *Parts[2]));
     TestTrue(TEXT("Trace written to ") + Path, FFileHelper::SaveStringToFile(BalanceHarness::TraceRun(*Party, FCString::Atoi(*Parts[1]), FCString::Atoi(*Parts[2])), *Path));
     return !HasAnyErrors();

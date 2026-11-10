@@ -1,6 +1,8 @@
 import csv
 import io
 import json
+import os
+import shutil
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import sys
@@ -147,6 +149,24 @@ class BalanceReportTests(unittest.TestCase):
         self.assertEqual(balance_report.resolve_folder(".local/balance/run", self.local), self.root.resolve())
         with redirect_stdout(io.StringIO()):
             self.assertEqual(balance_report.main([".local/balance/run"], local_root=self.local), 0)
+
+    @unittest.skipUnless(hasattr(os, "symlink"), "needs symlinks")
+    def test_refuses_symlinks_out_of_local(self):
+        self.group("A", [("p1", 1, "Victory", 5, [("fighter.champion", True, 40)] * 4)])
+        outside = Path(self.temp.name) / "outside"
+        shutil.copytree(self.root, outside / "run")
+        (self.local / "link-out").symlink_to(outside, target_is_directory=True)
+        (self.local / "link-dangling").symlink_to(Path(self.temp.name) / "missing", target_is_directory=True)
+        (self.local / "link-in").symlink_to(self.local / "balance", target_is_directory=True)
+        for folder in (".local/link-out/run", ".local/link-dangling/run", str(self.local / "link-out" / "run")):
+            err = io.StringIO()
+            with redirect_stderr(err):
+                self.assertEqual(balance_report.main([folder], local_root=self.local), 2, folder)
+            self.assertIn("must be inside", err.getvalue())
+        self.assertFalse((outside / "run" / "summary.md").exists())
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(balance_report.main([".local/link-in/run"], local_root=self.local), 0)
+        self.assertTrue((self.root / "summary.md").exists())
 
     def test_refuses_empty_or_incomplete_folder(self):
         err = io.StringIO()

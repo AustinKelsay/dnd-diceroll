@@ -117,12 +117,18 @@ FString EncountersCsv(const TArray<FRunStats>& Runs);
 FString HeroesCsv(const TArray<FRunStats>& Runs);
 
 /**
- * The results root: DND_BALANCE_OUT (relative to the project) or .local/balance/<UTC stamp>. It must lie inside the
- * checkout's .local/ after collapsing "..": anything else is refused with an error and an empty root.
+ * True when Path lies inside the checkout's .local/: lexically after collapsing "..", and on Unix also physically, with
+ * every symlink on the path (dangling ones refused) resolved against the real .local/. Otherwise false with an Error.
  */
+bool InsideLocal(const FString& Path, FString& Error);
+/** The results root: Requested (relative to the project) or .local/balance/<UTC stamp>; refused (empty) unless InsideLocal. */
 bool ResolveOutputRoot(const FString& Requested, FString& OutRoot, FString& Error);
-/** ResolveOutputRoot of DND_BALANCE_OUT, then the group name; empty (with Error) when refused. */
+/** ResolveOutputRoot of Requested, then the group name, itself checked; empty (with Error) when refused. */
+FString GroupFolderFor(const FString& Requested, const FString& Group, FString& Error);
+/** GroupFolderFor of DND_BALANCE_OUT. */
 FString GroupFolder(const FString& Group, FString& Error);
+/** Creates Folder after checking it is InsideLocal, and checks again once it exists. */
+bool EnsureFolder(const FString& Folder, FString& Error);
 bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error);
 }
 #endif

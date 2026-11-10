@@ -8,6 +8,10 @@
 #include "Party/BuildCatalog.h"
 #include "Persistence/ExpeditionSave.h"
 
+#if PLATFORM_UNIX
+#include <unistd.h>
+#endif
+
 // Small public-seam checks of the balance harness (#179). The bulk baseline is Balance.Baseline.*,
 // outside the Project. prefix, so ordinary gates never run it.
 namespace BalanceHarnessTest
@@ -195,6 +199,36 @@ bool FBalanceOutputTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("Refused outside .local/: ") + Outside, ResolveOutputRoot(Outside, Root, Error));
         TestTrue(TEXT("Refusal leaves no root and says why: ") + Outside, Root.IsEmpty() && Error.Contains(TEXT(".local")));
     }
+#if PLATFORM_UNIX
+    // Real symlinks inside .local/: one to a folder outside it, one dangling, one back inside it.
+    const FString Target = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("BalanceLinkTarget")));
+    const FString OutLink = Local + TEXT("/balance-link-out-test"), Dangling = Local + TEXT("/balance-link-dangling-test"), InLink = Local + TEXT("/balance-link-in-test");
+    IFileManager::Get().MakeDirectory(*Target, true);
+    IFileManager::Get().MakeDirectory(*(Local + TEXT("/balance")), true);
+    for (const FString& Link : {OutLink, Dangling, InLink}) { unlink(TCHAR_TO_UTF8(*Link)); }
+    const bool bLinked = symlink(TCHAR_TO_UTF8(*Target), TCHAR_TO_UTF8(*OutLink)) == 0 &&
+        symlink(TCHAR_TO_UTF8(*(Target + TEXT("-missing"))), TCHAR_TO_UTF8(*Dangling)) == 0 &&
+        symlink(TCHAR_TO_UTF8(*(Local + TEXT("/balance"))), TCHAR_TO_UTF8(*InLink)) == 0;
+    if (TestTrue(TEXT("Created the test symlinks"), bLinked))
+    {
+        Error.Reset();
+        TestFalse(TEXT("Root through a link to outside .local/ is refused"), ResolveOutputRoot(TEXT(".local/balance-link-out-test/run"), Root, Error));
+        TestTrue(TEXT("The refusal names the real destination"), Error.Contains(TEXT("BalanceLinkTarget")));
+        TestFalse(TEXT("Root through a dangling link is refused"), ResolveOutputRoot(TEXT(".local/balance-link-dangling-test/run"), Root, Error));
+        Error.Reset();
+        TestTrue(TEXT("A group that climbs into the outside link is refused"),
+            BalanceHarness::GroupFolderFor(TEXT(".local/balance/ok"), TEXT("../../balance-link-out-test/group"), Error).IsEmpty() && !Error.IsEmpty());
+        Error.Reset();
+        TestFalse(TEXT("EnsureFolder refuses the outside link"), BalanceHarness::EnsureFolder(OutLink + TEXT("/group"), Error));
+        TestFalse(TEXT("Nothing was created behind the outside link"), IFileManager::Get().DirectoryExists(*(Target + TEXT("/group"))));
+        Error.Reset();
+        TestTrue(TEXT("A link that stays inside .local/ is accepted"), ResolveOutputRoot(TEXT(".local/balance-link-in-test/run"), Root, Error));
+    }
+    for (const FString& Link : {OutLink, Dangling, InLink}) { unlink(TCHAR_TO_UTF8(*Link)); }
+    IFileManager::Get().DeleteDirectory(*Target, false, true);
+#else
+    AddInfo(TEXT("Physical (symlink) containment is checked on Unix only; this platform has the lexical check."));
+#endif
     return !HasAnyErrors();
 }
 #endif

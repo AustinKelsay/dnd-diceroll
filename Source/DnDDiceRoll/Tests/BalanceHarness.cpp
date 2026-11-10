@@ -12,6 +12,12 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 
+#if PLATFORM_UNIX
+#include <limits.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#endif
+
 namespace BalanceHarness
 {
 namespace Policy
@@ -857,42 +863,96 @@ FString HeroesCsv(const TArray<FRunStats>& Runs)
     return Out;
 }
 
+namespace
+{
+FString CleanPath(FString Path)
+{
+    Path = FPaths::ConvertRelativePathToFull(Path);
+    FPaths::NormalizeDirectoryName(Path);
+    FPaths::CollapseRelativeDirectories(Path);
+    return Path;
+}
+
+FString LocalRoot() { return CleanPath(FPaths::Combine(FPaths::ProjectDir(), TEXT(".local"))); }
+
+#if PLATFORM_UNIX
+/** Path with every symlink resolved: the real path of its deepest existing entry (a link counts, even dangling) plus the rest. */
+bool PhysicalPath(const FString& Path, FString& Out)
+{
+    FString Existing = Path, Rest;
+    struct stat Entry;
+    while (lstat(TCHAR_TO_UTF8(*Existing), &Entry) != 0)
+    {
+        const FString Parent = FPaths::GetPath(Existing);
+        if (Parent.IsEmpty() || Parent == Existing) { return false; }
+        Rest = Rest.IsEmpty() ? FPaths::GetCleanFilename(Existing) : FPaths::Combine(FPaths::GetCleanFilename(Existing), Rest);
+        Existing = Parent;
+    }
+    char Real[PATH_MAX];
+    if (!realpath(TCHAR_TO_UTF8(*Existing), Real)) { return false; } // a dangling link fails here
+    Out = UTF8_TO_TCHAR(Real);
+    if (!Rest.IsEmpty()) { Out = FPaths::Combine(Out, Rest); }
+    return true;
+}
+#endif
+}
+
+bool InsideLocal(const FString& Path, FString& Error)
+{
+    const FString Local = LocalRoot();
+    const FString Clean = CleanPath(Path);
+    auto Refuse = [&](const FString& Seen)
+    {
+        Error = FString::Printf(TEXT("Balance output must be inside %s/, not %s"), *Local, *Seen);
+        return false;
+    };
+    // Lexical: after collapsing "..".
+    if (Clean.Contains(TEXT("..")) || !Clean.StartsWith(Local + TEXT("/"))) { return Refuse(Clean); }
+#if PLATFORM_UNIX
+    // Physical: a symlink anywhere on the path (or .local itself being one) must still land inside the real .local/.
+    FString RealLocal, RealPath;
+    if (!PhysicalPath(Local, RealLocal) || !PhysicalPath(Clean, RealPath) || !RealPath.StartsWith(RealLocal + TEXT("/"))) { return Refuse(RealPath.IsEmpty() ? Clean : RealPath); }
+#endif
+    return true;
+}
+
 bool ResolveOutputRoot(const FString& Requested, FString& OutRoot, FString& Error)
 {
     static const FString Stamp = FDateTime::UtcNow().ToString(TEXT("%Y%m%dT%H%M%SZ"));
-    auto Clean = [](FString Path)
-    {
-        Path = FPaths::ConvertRelativePathToFull(Path);
-        FPaths::NormalizeDirectoryName(Path);
-        FPaths::CollapseRelativeDirectories(Path);
-        return Path;
-    };
-    const FString Local = Clean(FPaths::Combine(FPaths::ProjectDir(), TEXT(".local")));
     FString Root = Requested.IsEmpty() ? FPaths::Combine(TEXT(".local"), TEXT("balance"), Stamp) : Requested;
     if (FPaths::IsRelative(Root)) { Root = FPaths::Combine(FPaths::ProjectDir(), Root); }
-    Root = Clean(Root);
-    // Lexical check after collapsing ".." (a symlink inside .local/ is not followed).
-    if (Root.Contains(TEXT("..")) || !Root.StartsWith(Local + TEXT("/")))
-    {
-        Error = FString::Printf(TEXT("Balance output must be inside %s/, not %s"), *Local, *Root);
-        OutRoot.Reset();
-        return false;
-    }
+    Root = CleanPath(Root);
+    OutRoot.Reset();
+    if (!InsideLocal(Root, Error)) { return false; }
     OutRoot = Root;
     return true;
 }
 
-FString GroupFolder(const FString& Group, FString& Error)
+FString GroupFolderFor(const FString& Requested, const FString& Group, FString& Error)
 {
     FString Root;
-    if (!ResolveOutputRoot(FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_OUT")), Root, Error)) { return FString(); }
-    return FPaths::Combine(Root, Group);
+    if (!ResolveOutputRoot(Requested, Root, Error)) { return FString(); }
+    const FString Folder = CleanPath(FPaths::Combine(Root, Group));
+    return InsideLocal(Folder, Error) ? Folder : FString();
+}
+
+FString GroupFolder(const FString& Group, FString& Error)
+{
+    return GroupFolderFor(FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_OUT")), Group, Error);
+}
+
+bool EnsureFolder(const FString& Folder, FString& Error)
+{
+    if (Folder.IsEmpty()) { if (Error.IsEmpty()) { Error = TEXT("No output folder"); } return false; }
+    if (!InsideLocal(Folder, Error)) { return false; }
+    if (!IFileManager::Get().MakeDirectory(*Folder, true)) { Error = TEXT("Cannot create ") + Folder; return false; }
+    // Check again now the folders exist, in case one became a link meanwhile.
+    return InsideLocal(Folder, Error);
 }
 
 bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error)
 {
-    if (Folder.IsEmpty()) { if (Error.IsEmpty()) { Error = TEXT("No output folder"); } return false; }
-    if (!IFileManager::Get().MakeDirectory(*Folder, true)) { Error = TEXT("Cannot create ") + Folder; return false; }
+    if (!EnsureFolder(Folder, Error)) { return false; }
     const TSharedRef<FJsonObject> Meta = MakeShared<FJsonObject>();
     Meta->SetStringField(TEXT("group"), Group);
     Meta->SetNumberField(TEXT("policy_version"), PolicyVersion);
