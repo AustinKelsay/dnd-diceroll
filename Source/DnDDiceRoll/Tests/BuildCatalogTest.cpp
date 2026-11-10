@@ -275,8 +275,27 @@ bool FBarbarianPersistenceTest::RunTest(const FString& Parameters)
     for (int32 I = 1; I <= 4; ++I) { FPartyBuildSelection S; S.Id = I; S.Name = FString::Printf(TEXT("Barbarian %d"), I); S.BuildId = TEXT("barbarian.wild-magic"); Party.Add(S); }
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/Barbarians"), FGuid::NewGuid().ToString());
     const FString Path = FPaths::Combine(Directory, TEXT("current-v1.json"));
+    // #184: the first seed from 42 on where this opening (Rage, approach, Wild Bolt) is possible and the scripted player
+    // then completes five fights, played on a plain run with the same commands the session submits below.
+    const int32 Seed = ExpeditionTestSupport::FirstSeedWhere([&Party](int32 Candidate)
+    {
+        FExpeditionRun Probe; FString Ignored;
+        if (!Probe.NewRun(Candidate, Party, Ignored, TEXT("probe")) || !Probe.ChooseRoute(Probe.Progress().Offers[0].Id, Ignored)) { return false; }
+        while (Probe.Battle().Find(Probe.Battle().ActiveId())->Side == ECombatSide::Enemy) { Probe.PlayEnemyTurn(); }
+        const int32 Hero = Probe.Battle().ActiveId();
+        if (!Probe.Submit({ECombatCommandType::Special1, Hero, {}, Hero}).bAccepted) { return false; }
+        auto Near = [&Probe](FIntPoint Cell) { int32 D = 1000; for (const auto& U : Probe.Battle().Snapshot().Encounter.Combatants) { if (U.Side == ECombatSide::Enemy && U.Life == ECombatLife::Conscious) { D = FMath::Min(D, ExpeditionTestSupport::Distance(Cell, U.Cell)); } } return D; };
+        auto Steps = Probe.Battle().LegalMoves(Hero);
+        Steps.Sort([&](FIntPoint A, FIntPoint B) { return Near(A) == Near(B) ? (A.Y == B.Y ? A.X < B.X : A.Y < B.Y) : Near(A) < Near(B); });
+        if (!Steps.IsEmpty()) { Probe.Submit({ECombatCommandType::Move, Hero, Steps[0]}); }
+        const auto Bolts = Probe.Battle().LegalTargets(Hero, ECombatCommandType::Special2);
+        if (Bolts.IsEmpty() || !Probe.Submit({ECombatCommandType::Special2, Hero, {}, Bolts[0]}).bAccepted) { return false; }
+        Probe.Submit({ECombatCommandType::EndTurn, Hero});
+        return ExpeditionTestSupport::FinishRunScripted(Probe);
+    });
+    if (!TestTrue(TEXT("Some seed allows the Barbarian opening and five fights"), Seed != INDEX_NONE)) { return false; }
     FExpeditionSession Session(Path);
-    if (!TestTrue(TEXT("New duplicate Barbarians"), Session.NewRun(42, Party, Error, TEXT("barbarians")))) { return false; }
+    if (!TestTrue(TEXT("New duplicate Barbarians"), Session.NewRun(Seed, Party, Error, TEXT("barbarians")))) { return false; }
     TestTrue(TEXT("First route"), Session.ChooseRoute(Session.Run().Progress().Offers[0].Id, Error));
     while (Session.Run().Battle().Find(Session.Run().Battle().ActiveId())->Side == ECombatSide::Enemy) { Session.PlayEnemyTurn(); }
     const int32 Id = Session.Run().Battle().ActiveId();

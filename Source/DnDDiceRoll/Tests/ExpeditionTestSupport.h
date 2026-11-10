@@ -85,4 +85,39 @@ inline bool FinishCombat(FExpeditionRun& Run, bool bFight = true, TArray<FCombat
     }
     return Run.Progress().Phase != EExpeditionPhase::Combat;
 }
+
+// Continues a run with the scripted choices the full-run tests use: the first offer, FinishCombat, the reward to the
+// first conscious survivor, and the camp. True when the run ends in Victory.
+inline bool FinishRunScripted(FExpeditionRun& Run)
+{
+    FString Error;
+    for (int32 Guard = 0; Guard < 64; ++Guard)
+    {
+        switch (Run.Progress().Phase)
+        {
+        case EExpeditionPhase::Victory: return true;
+        case EExpeditionPhase::Defeat: return false;
+        case EExpeditionPhase::Route: if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { return false; } break;
+        case EExpeditionPhase::Combat: if (!FinishCombat(Run)) { return false; } break;
+        case EExpeditionPhase::Reward:
+        {
+            int32 Survivor = 1;
+            while (Survivor <= 4 && Run.Battle().Find(Survivor)->Life != ECombatLife::Conscious) { ++Survivor; }
+            if (Survivor > 4 || !Run.ClaimReward(Survivor, Error)) { return false; }
+            break;
+        }
+        case EExpeditionPhase::Recovery: if (!Run.Recover(true, Error)) { return false; } break;
+        }
+    }
+    return false;
+}
+
+// Since the Compact tuning of catalog revision 8 (#184), the scripted FinishCombat player can lose a run. A test whose
+// subject is a completed five-fight run (persistence, progression) uses the first seed from 42 on that Accept takes.
+// The search is deterministic; callers assert that a seed was found, so a later retune that makes it impossible fails.
+inline int32 FirstSeedWhere(TFunctionRef<bool(int32)> Accept, int32 From = 42, int32 Tries = 64)
+{
+    for (int32 Seed = From; Seed < From + Tries; ++Seed) { if (Accept(Seed)) { return Seed; } }
+    return INDEX_NONE;
+}
 }

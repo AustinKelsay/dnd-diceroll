@@ -51,7 +51,7 @@ struct DNDDICEROLL_API FExpeditionProgress
 {
     GENERATED_BODY()
     UPROPERTY() TArray<FPartyBuildSelection> Party;
-    UPROPERTY() int32 CatalogRevision = 7;
+    UPROPERTY() int32 CatalogRevision = 8;
     /** Compact (default) or SRD 5.2.1. Schema 4 loads as Compact. */
     UPROPERTY() ERuleset Ruleset = ERuleset::Compact;
     UPROPERTY() int32 Seed = 0;

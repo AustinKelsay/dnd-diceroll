@@ -84,7 +84,7 @@ By slot (rotation):
 | 5 | dangerous | 1584 | 100% | 3.6 | 5% | 73% / 41% | 0.066 | 0.011 |
 | 5 | guarded | 1584 | 100% | 2.6 | 2% | 77% / 55% | 0.000 | 0.000 |
 
-- Dangerous fights (3 enemies) last 0.3 to 1.3 rounds longer and cost two to four times the HP of Guarded ones (2 enemies). Neither threatens the run.
+- Dangerous fights (3 enemies) last 0.3 to 1.3 rounds longer and cost 1.7 to 3.7 times the HP of Guarded ones (2 enemies). Neither threatens the run.
 - Pressure rises a little with stage (enemy HP grows by 2 per stage), but the party's level and gear rise faster. Downs concentrate in the Dangerous fights 4 and 5, still under 0.07 per fight.
 - By recipe: the broken wall (recipe 2) gives the longest fights (4.3 rounds Dangerous, 3.2 Guarded) against 1.9–3.2 for the others; its one-cell gaps funnel the party. The split stones (0) and ruined pillars (1) play alike.
 - Camp is taken after fight 1; potions accumulate faster than they are used (0.47 drunk per hero per run, 2.2 left at the end).

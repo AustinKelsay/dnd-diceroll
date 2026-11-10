@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Run/ExpeditionRun.h"
+#include "Persistence/ExpeditionSave.h"
 
 #include "ExpeditionTestSupport.h"
 using namespace ExpeditionTestSupport;
@@ -359,6 +360,91 @@ bool FSkipRecoveryTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Skipped opportunity cannot be used later"), Run.Recover(true, Error));
     TestTrue(TEXT("Skip rejection atomic"), SameRun(Skipped, Run.Snapshot()));
     TestEqual(TEXT("Guarded history does not grant extra supplies"), Run.Progress().Offers[0].RewardPotions, 1);
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompactEnemyTuningTest, "Project.Expedition.Run.CompactEnemyTuning",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
+{
+    // Catalog revision 8 (#184): the Compact enemy stats by stage, for each route, as the run generates them. Counts,
+    // roles and ranges are unchanged; SRD keeps revision 7 (Project.Expedition.Run.SrdSeedUnchangedByCompactTuning).
+    struct FExpected { int32 HP, AttackBonus, DamageBonus; };
+    const FExpected Guarded[] = {{20, 4, 3}, {24, 4, 3}, {28, 5, 3}, {32, 5, 4}, {36, 5, 4}};
+    const FExpected Dangerous[] = {{24, 4, 3}, {28, 4, 3}, {32, 5, 3}, {36, 5, 4}, {40, 5, 4}};
+    for (const int32 Choice : {0, 1})
+    {
+        // The enemies of every fight, taking route Choice each time; a run that falls before fight 5 records fewer.
+        auto Play = [Choice](int32 Seed, TArray<TArray<FCombatantState>>& Fights)
+        {
+            FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("tuning-fixture"));
+            for (int32 Guard = 0; Guard < 64; ++Guard)
+            {
+                const auto Phase = Run.Progress().Phase;
+                if (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat) { break; }
+                if (Phase == EExpeditionPhase::Route)
+                {
+                    if (!Run.ChooseRoute(Run.Progress().Offers[Choice].Id, Error)) { break; }
+                    Fights.Add(Run.Battle().Snapshot().Encounter.Combatants.FilterByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Enemy; }));
+                }
+                else if (Phase == EExpeditionPhase::Combat) { if (!FinishCombat(Run)) { break; } }
+                else if (Phase == EExpeditionPhase::Reward)
+                {
+                    int32 Survivor = 1; while (Survivor <= 4 && Run.Battle().Find(Survivor)->Life != ECombatLife::Conscious) { ++Survivor; }
+                    if (Survivor > 4 || !Run.ClaimReward(Survivor, Error)) { break; }
+                }
+                else if (!Run.Recover(true, Error)) { break; }
+            }
+        };
+        const int32 Seed = FirstSeedWhere([&Play](int32 Candidate) { TArray<TArray<FCombatantState>> Fights; Play(Candidate, Fights); return Fights.Num() == 5; }, 42, 200);
+        if (!TestTrue(TEXT("Some seed reaches all five fights on this route"), Seed != INDEX_NONE)) { continue; }
+        TArray<TArray<FCombatantState>> Fights;
+        Play(Seed, Fights);
+        for (int32 Stage = 0; Stage < Fights.Num(); ++Stage)
+        {
+            const FExpected& E = (Choice == 1 ? Dangerous : Guarded)[Stage];
+            const FString Where = FString::Printf(TEXT("%s fight %d"), Choice == 1 ? TEXT("Dangerous") : TEXT("Guarded"), Stage + 1);
+            TestEqual(Where + TEXT(": enemy count unchanged"), Fights[Stage].Num(), Choice == 1 ? 3 : 2);
+            for (int32 I = 0; I < Fights[Stage].Num(); ++I)
+            {
+                const FCombatantState& U = Fights[Stage][I];
+                TestEqual(Where + TEXT(": HP"), U.MaxHP, E.HP);
+                TestEqual(Where + TEXT(": armour"), U.ArmorClass, Choice == 1 ? 13 : 12);
+                TestEqual(Where + TEXT(": attack bonus"), U.AttackBonus, E.AttackBonus);
+                TestEqual(Where + TEXT(": damage die"), U.DamageDie, Choice == 1 ? 8 : 6);
+                TestEqual(Where + TEXT(": damage bonus"), U.DamageBonus, E.DamageBonus);
+                TestEqual(Where + TEXT(": the last enemy is the archer, the rest raiders"), U.Range, I == Fights[Stage].Num() - 1 ? 4 : 1);
+            }
+        }
+    }
+    // A revision 7 Compact run keeps revision 7 enemies for its whole lifetime: the format 4 fixture saved between
+    // battles (after fight 1) generates its next fight with the old stats and keeps its revision.
+    FString Error;
+    FExpeditionSaveData Fixture;
+    if (TestTrue(TEXT("Read the revision 7 fixture"), FExpeditionSave::Read(FPaths::ProjectDir() / TEXT("Source/DnDDiceRoll/Tests/Fixtures/Schema4/between-battles-v4.json"), Fixture, Error)))
+    {
+        FExpeditionRun Old;
+        TestTrue(TEXT("Restore it"), Old.Restore(Fixture.Current, Error));
+        TestEqual(TEXT("It is a revision 7 run"), Old.Progress().CatalogRevision, 7);
+        TestTrue(TEXT("Choose its Dangerous road"), Old.ChooseRoute(Old.Progress().Offers[1].Id, Error));
+        for (const auto& U : Old.Battle().Snapshot().Encounter.Combatants)
+        {
+            if (U.Side != ECombatSide::Enemy) { continue; }
+            TestTrue(TEXT("Revision 7 Dangerous fight 2 enemy stats"), U.MaxHP == 14 && U.ArmorClass == 12 && U.AttackBonus == 2 && U.DamageDie == 6 && U.DamageBonus == 1);
+        }
+        TestEqual(TEXT("Still revision 7"), Old.Progress().CatalogRevision, 7);
+    }
+    // New runs are revision 8; a revision outside 7..8 is refused by name and changes nothing.
+    FExpeditionRun Run; Run.NewRun(42, Error, TEXT("tuning-fixture"));
+    TestEqual(TEXT("New runs use revision 8"), Run.Progress().CatalogRevision, 8);
+    const FExpeditionSnapshot Before = Run.Snapshot();
+    for (const int32 Revision : {6, 9})
+    {
+        FExpeditionSnapshot Unknown = Run.Snapshot(); Unknown.Progress.CatalogRevision = Revision;
+        TestFalse(FString::Printf(TEXT("Revision %d refused"), Revision), Run.Restore(Unknown, Error));
+        TestTrue(TEXT("The refusal names the revision and the supported ones: ") + Error,
+            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 8")));
+        TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
+    }
     return !HasAnyErrors();
 }
 #endif
