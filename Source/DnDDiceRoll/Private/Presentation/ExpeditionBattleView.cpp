@@ -318,12 +318,12 @@ FExpeditionInstance AExpeditionBattleView::PlaceInstance(int32 GroupIndex, const
     return Result;
 }
 
-void AExpeditionBattleView::UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data)
+void AExpeditionBattleView::UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data, bool bMotion)
 {
     if (!Instance.IsValid() || !Groups.IsValidIndex(Instance.Group)) { return; }
     FExpeditionGroup& Group = Groups[Instance.Group];
     if (!Group.Component) { return; }
-    MoveInstances(Instance.Group, Instance.Index, MakeArrayView(&Local, 1), true);
+    MoveInstances(Instance.Group, Instance.Index, MakeArrayView(&Local, 1), bMotion);
     if (Group.CustomFloats > 0 && Data.Num() > 0) { Group.Component->SetCustomData(Instance.Index, Data, false); }
     Group.bDirty = true;
 }
@@ -495,11 +495,14 @@ void AExpeditionBattleView::SetSlot(FExpeditionSlot& Slot, bool bVisible, const 
         || (bVisible && (!Location.Equals(Slot.Location, 0.001) || !Rotation.Equals(Slot.Rotation, 0.001) || !Scale.Equals(Slot.Scale, 0.00001)));
     const bool bTinted = !Slot.bPlaced || (bVisible && !Color.Equals(Slot.Colour, 0.002f));
     if (!bMoved && !bTinted) { return; }
+    // Only a piece that stays visible while it moves (a flying shot) draws a velocity; showing, hiding or reusing a pooled piece
+    // somewhere else is a jump.
+    const bool bMotion = Slot.bPlaced && Slot.bVisible && bVisible;
     if (bVisible) { Slot.Location = Location; Slot.Rotation = Rotation; Slot.Scale = Scale; Slot.Colour = Color; }
     // A hidden piece collapses to a point where it last stood.
     const FTransform Local = bVisible ? FTransform(Rotation, Location, Scale) : FTransform(Slot.Rotation, Slot.Location, FVector::ZeroVector);
     const float Data[3] = {Slot.Colour.R, Slot.Colour.G, Slot.Colour.B};
-    UpdateInstance(Slot.Instance, Local, bTinted ? MakeArrayView(Data, 3) : TConstArrayView<float>());
+    UpdateInstance(Slot.Instance, Local, bTinted ? MakeArrayView(Data, 3) : TConstArrayView<float>(), bMotion);
     Slot.bVisible = bVisible;
     Slot.bPlaced = true;
 }

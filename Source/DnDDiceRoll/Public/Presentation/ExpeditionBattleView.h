@@ -556,7 +556,8 @@ private:
     int32 PlainGroupFor(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCastShadow);
     FExpeditionInstance PlaceInstance(int32 Group, const FTransform& Local, TConstArrayView<float> Data);
     /** Rewrites an instance's transform and custom data; marks the group for the end-of-frame flush. */
-    void UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data);
+    /** bMotion: the instance moved continuously since last frame (it draws a velocity); false for show, hide or a reuse elsewhere. */
+    void UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data, bool bMotion = true);
     /** Moves instances of a group. bMotion: continuous movement, so the previous transform is the current one (a motion vector);
      * otherwise a jump (show, hide, reuse), so previous = new and no velocity is drawn. */
     void MoveInstances(int32 GroupIndex, int32 Start, TConstArrayView<FTransform> Transforms, bool bMotion);
