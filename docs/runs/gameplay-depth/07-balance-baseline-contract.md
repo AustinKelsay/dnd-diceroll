@@ -25,24 +25,24 @@ The harness never calls a private or `friend` API, never edits a snapshot, and n
 
 ## 3. Party policy (deterministic, legal commands only)
 
-On each party turn the policy repeats one decision step until it chooses End Turn, the battle ends, or 16 steps pass (a stall, section 7). Each step takes the **first** rule below that applies. Every command it submits is first checked against the authority: a target must be in `LegalTargets(actor, command)` and a destination in `LegalMoves(actor)`. A submitted command the run rejects is counted as a policy error (the gate is zero) and ends the turn.
+On each party turn the policy repeats one decision step until it chooses End Turn, the battle ends, or 16 steps pass (a stall, section 7). Each step takes the **first** rule below that applies. Every command it submits is first checked against the authority: a target must be in `LegalTargets(actor, command)` and a destination in `LegalMoves(actor)`. A proposal outside those lists is never submitted: it counts as an illegal proposal and the hero ends its turn instead. A submitted command the run rejects counts as a policy error. Both gates are zero.
 
 "Threatened" means some conscious enemy is within its own `Speed + Range` cells (Manhattan) of that hero, that is, it can attack this hero on its next turn. "Low" means conscious with HP at or below half of max HP. Expected damage is the forecast's average `(Min + Max) / 2` times hit chance; an area special adds every listed victim's loss.
 
 1. **Rage.** Rage is legal and an enemy is within `Speed + Range + 1` of the Barbarian: Rage (Bonus Action). Rage-gated specials come later.
 2. **Revive.** A Downed ally is adjacent: Potion on them if legal (heals 2d4+2), otherwise Rescue (1 HP). Uses the Action.
-3. **Reach a Downed ally.** The Action is unspent and a Downed ally is not adjacent: move to the nearest legal cell (fewest steps, then cell order) from which a look-ahead shows Rescue or Potion legal on them.
+3. **Reach a Downed ally.** The Action is unspent and a Downed ally is not adjacent: move to the nearest legal cell (fewest steps, then cell order) from which a look-ahead shows Rescue or Potion legal on them. If none is reachable this turn, the **designated rescuer** (the conscious ally with the shortest walking distance to a free cell beside the most urgent Downed hero, fewest rescue turns left first; units block; ties to the lowest ID) steps to the legal cell that brings it closest, and may still attack afterwards.
 4. **Heal.** A healing command (Second Wind, Cure Wounds, a kit Healing special, Potion) is legal on a low hero: heal the hero with the lowest HP fraction (then lowest ID), with Bonus Action heals first, then the larger expected heal, Potion last on ties.
 5. **Bonus protection.** A Bonus Action Protect special is legal on a threatened hero who is not already protected by at least that amount: protect the one with the lowest HP fraction.
 6. **Exchange.** A Swap special is legal on a low ally adjacent to an enemy, and the actor is not low and has at least 25 points more HP fraction: swap with the lowest such ally.
 7. **Damage special.** For each legal damaging special (Strike, Surge, Push, Area, Magic Missile, Precision Strike) take its best target: a guaranteed drop (`Min >= HP`) first, then the highest expected damage, then lowest HP, then lowest ID.
    - A Bonus Action special is used whenever it has a target.
    - An Action special is used when the basic Attack is not legal, or the special guarantees a drop, or its expected damage beats the best basic Attack's.
-   - **Healer's reserve:** a kit that also has a Healing special does not spend its last Kit use on damage unless that use guarantees a drop.
+   - **Healer's reserve:** a kit with a Kit-paid Healing special does not spend its last Kit use on anything else (damage, protection, exchange) unless that use guarantees a drop.
 8. **Attack** the legal target with the lowest HP (then lowest ID).
 9. **Move.** The Action is unspent and no Attack is legal:
    - to a legal cell from which a look-ahead shows Attack legal. Candidates are prefiltered by Manhattan range; ranged heroes (Range 2 or more) prefer the cell farthest from the nearest enemy, melee heroes the fewest steps; then cell order. At most 16 look-aheads;
-   - otherwise toward the enemy: the legal cell with the smallest walking distance to any conscious enemy (a breadth-first distance over unblocked cells, computed from the snapshot), only if it is closer than where the hero stands.
+   - otherwise toward the enemy: the legal cell with the smallest walking distance to any conscious enemy, only if it is closer than where the hero stands. The distance is a breadth-first search from the snapshot in which other units (bodies included) block; only when that finds no closer cell does it fall back to terrain alone. (A terrain-only first version jammed the party in a one-cell wall gap behind a body until round 60; see the report.)
 10. **Action protection.** An Action Protect special is legal on a threatened hero: as rule 5. Reached only when no attack was possible this turn.
 11. **End Turn.**
 
@@ -93,7 +93,8 @@ Definitions:
 Harness code lives with the tests (`Source/DnDDiceRoll/Tests/Balance*`), so no shipping code changes.
 
 - `Project.Balance.*`: small policy, coverage and determinism tests, part of the ordinary `Project.` gate (a few seconds).
-- `Balance.Baseline.<Group>`: the bulk baseline, deliberately **outside** the `Project.` prefix so ordinary gates never run it. Groups: `Fixed` (the nine representative parties) and `Rotation1` … `Rotation5` (one pass each). The filter `Balance.Baseline.` runs all six in one process.
+- `Balance.Baseline.<Group>`: the bulk baseline, deliberately **outside** the `Project.` prefix so ordinary gates never run it. Groups: `Fixed` (the nine representative parties) and `Rotation1` … `Rotation5` (one pass each). The filter `Balance.Baseline.` runs all six in one process. Each group is a latent command that plays one party (32 runs) per frame: a single 20-second block on the game thread made the engine's own pending HTTP connectivity check time out and log warnings.
+- `Balance.Trace`: writes one run as a text log (board each round, every command and result) for reproducing a stall, death or outlier: `DND_BALANCE_TRACE=<party>:<seed>:<route pattern>`, for example `familiar:20261116:23`, into `<out>/trace/`.
 
 ```sh
 export DND_BALANCE_OUT=.local/balance/$(date -u +%Y%m%dT%H%M%SZ)   # optional; one folder for all groups
@@ -103,13 +104,13 @@ python3 tools/balance_report.py "$DND_BALANCE_OUT"
 
 Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `group.json` (party list, seeds, policy version, run count, elapsed time). Without `DND_BALANCE_OUT` the folder is `.local/balance/<UTC stamp>/`. `tools/balance_report.py` (standard library only) merges every group under the folder into `summary.json` and `summary.md`. `.local/` is ignored; the committed baseline report quotes the summary.
 
-**Runtime budget:** the whole baseline in at most 240 s of test time at `--cores 2` (the helper's test process limit is 300 s), and well under ten minutes of locked wall time. If it does not fit, groups run as separate locked jobs into the same `DND_BALANCE_OUT`. The `Project.Balance.` tests stay under 10 s together.
+**Runtime budget:** the whole baseline in at most 240 s of test time at `--cores 2` (the helper's test process limit is 300 s), and well under ten minutes of locked wall time. If it does not fit, groups run as separate locked jobs into the same `DND_BALANCE_OUT`. The `Project.Balance.` tests stay under 10 s together. **Measured:** 3,168 runs in 20.4 s of harness time, 45 s of locked wall time including editor start and exit; `Project.Balance.` about 0.4 s.
 
 ## 7. Stalls, anomalies and outliers
 
 - **Stall:** a fight reaching round 60 without an outcome, or a party turn reaching 16 steps. The run stops and is reported as `Stall` with its party and seed. Target: zero.
 - **Policy error:** a command the run rejected, or a proposal that was not in the legal lists. Gate: zero.
-- **Passive end:** the policy ended a turn with its Action unspent while an Attack was legal, or while it had movement left and a legal move closer to an enemy. Gate: zero (this is the "never stalls while a legal action exists" check).
+- **Passive end:** the policy ended a turn with its Action unspent while an Attack was legal, or while it had movement left and a legal move closer to an enemy by rule 9's distance (the same function decides both). Gate: zero (this is the "never stalls while a legal action exists" check).
 - **Idle turns** (only End Turn) are reported per kit, not gated.
 - **Outlier kit:** on a per-kit metric (win rate of the parties containing it, damage per fight present, healing, protection, death rate), a robust z-score `|x - median| / (1.4826 x MAD)` of at least 3 across the 70 kits, or a win rate at least 15 points from the rotation mean whose 95% Wilson interval excludes it.
 - **Unusable signature:** a kit special available on under 10% of the hero's turns for a reason other than an empty resource, or never used in any run. "Rarely used when available" (under 10% of available turns) points at the policy rather than the kit.
@@ -127,4 +128,4 @@ Helper tests cover `tools/balance_report.py` (merge, rates, Wilson interval, rob
 
 ## 9. Delivery
 
-One PR to `staging`: this contract, the harness and its tests, the report tool and its tests, and `08-balance-baseline-report.md` with the baseline. No tuning. Evidence: doctor, helper tests, `contribute.py check`, build with zero warnings, full `Project.` with zero warnings, one explicit `Balance.Baseline.` run, and selected summaries on an `evidence/pr<number>-<sha>` branch.
+One PR to `staging`: this contract, the harness and its tests, the report tool and its tests, and [08-balance-baseline-report.md](08-balance-baseline-report.md) with the baseline. No tuning. Evidence: doctor, helper tests, `contribute.py check`, build with zero warnings, full `Project.` with zero warnings, one explicit `Balance.Baseline.` run, and selected summaries on an `evidence/pr<number>-<sha>` branch.
