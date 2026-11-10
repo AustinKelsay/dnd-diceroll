@@ -1909,7 +1909,17 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         Offset = Arm.Offset;
         Framing = Arm.Framing;
     }
-    Camera->SetWorldLocation(GetActorTransform().TransformPosition(Focus) + Offset + Framing + Shake);
+    FVector Eye = GetActorTransform().TransformPosition(Focus) + Offset + Framing + Shake;
+    if (!bOverview && !Shake.IsNearlyZero() && !WholeBoardInView())
+    {
+        // A shake moves the view too: the shaken pose keeps the pan bound (level, so it does not widen the view), and unpanned the
+        // acting unit still wins.
+        const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+        if (PanOffset.IsNearlyZero()) { Shaken = HoldUnit(Shaken); }
+        Eye = GetActorTransform().TransformPosition(FVector(Shaken.X, Shaken.Y, Focus.Z)) + Offset + Framing;
+    }
+    Camera->SetWorldLocation(Eye);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
 }

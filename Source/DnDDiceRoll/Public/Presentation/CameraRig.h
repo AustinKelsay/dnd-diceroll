@@ -324,7 +324,7 @@ namespace ExpeditionCameraRig
         return true;
     }
 
-    /** A pan-clamped focus, and whether each board axis was locked to the board centre because the view is wider than the bound. */
+    /** A pan-clamped focus, and whether each board axis was locked (the view centred on the board) because the view is wider than the bound. */
     struct FPanBound
     {
         FVector2D Focus = FVector2D::ZeroVector;
@@ -335,8 +335,10 @@ namespace ExpeditionCameraRig
     /**
      * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within PanMarginCells of the
      * board's outer tile edge on every side. Per board axis: when the board plus its margins is smaller than the view the
-     * focus is locked to the board centre on that axis (the pan has nothing to reach); otherwise it is clamped to the interval
-     * that keeps the view inside. The bound is on the view's bounding box, so it never shows more than asked at any yaw.
+     * axis is locked with the view's bounding box centred on the board (the pan has nothing to reach); otherwise the focus is
+     * clamped to the interval that keeps the view inside. The locked focus is the midpoint of that (empty) interval, the point
+     * it shrinks to, so a zoom or orbit across the threshold moves the focus continuously. The bound is on the view's bounding
+     * box, so it never shows more than asked at any yaw.
      */
     inline FPanBound ClampPan(const FVector2D& Wanted, int32 Width, int32 Height, const FBoardMetric& Metric,
         float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
@@ -360,14 +362,23 @@ namespace ExpeditionCameraRig
             MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X);
             MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y);
         }
-        const FVector2D Centre = BoardCentre(Width, Height, Metric);
         const double LowX = LowerX - MinX, HighX = UpperX - MaxX;
         const double LowY = LowerY - MinY, HighY = UpperY - MaxY;
         Result.bLockedX = LowX > HighX;
         Result.bLockedY = LowY > HighY;
-        Result.Focus.X = Result.bLockedX ? Centre.X : FMath::Clamp(Wanted.X, LowX, HighX);
-        Result.Focus.Y = Result.bLockedY ? Centre.Y : FMath::Clamp(Wanted.Y, LowY, HighY);
+        Result.Focus.X = Result.bLockedX ? 0.5 * (LowX + HighX) : FMath::Clamp(Wanted.X, LowX, HighX);
+        Result.Focus.Y = Result.bLockedY ? 0.5 * (LowY + HighY) : FMath::Clamp(Wanted.Y, LowY, HighY);
         return Result;
+    }
+
+    /**
+     * The focus a camera shake may move the view to without breaking the pan bound: Focus plus the shake's horizontal part,
+     * clamped like a pan. The height part is dropped while the bound applies, because a rising camera widens the view.
+     */
+    inline FVector2D ShakenFocus(const FVector2D& Focus, const FVector& Shake, int32 Width, int32 Height, const FBoardMetric& Metric,
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
+    {
+        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe).Focus;
     }
 
     /** Whether a unit's tile (corners at the board top) and head project inside the safe rect shrunk to InFill, from a focus on the ground. */

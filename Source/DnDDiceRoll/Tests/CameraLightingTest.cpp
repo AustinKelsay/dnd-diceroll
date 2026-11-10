@@ -223,7 +223,7 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
                             if (Bound.bLockedX)
                             {
                                 ++Locked;
-                                TestTrue(*(Label + TEXT(": a view wider than the board plus margin keeps X at the board centre")), FMath::Abs(Bound.Focus.X - Centre.X) < 0.01);
+                                TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in X")), FMath::Abs(Bound.Focus.X + 0.5 * (MinX + MaxX) - Centre.X) < 0.01);
                                 TestTrue(*(Label + TEXT(": a locked axis really is wider than the bound")), MaxX - MinX > UpperX - LowerX - 0.01);
                             }
                             else
@@ -238,7 +238,7 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
                             if (Bound.bLockedY)
                             {
                                 ++Locked;
-                                TestTrue(*(Label + TEXT(": a view wider than the board plus margin keeps Y at the board centre")), FMath::Abs(Bound.Focus.Y - Centre.Y) < 0.01);
+                                TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in Y")), FMath::Abs(Bound.Focus.Y + 0.5 * (MinY + MaxY) - Centre.Y) < 0.01);
                                 TestTrue(*(Label + TEXT(": a locked axis really is wider than the bound (Y)")), MaxY - MinY > UpperY - LowerY - 0.01);
                             }
                             else
@@ -248,6 +248,14 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
                                 const bool bOnBound = FMath::Abs(Bound.Focus.Y + MaxY - UpperY) < 0.5 || FMath::Abs(Bound.Focus.Y + MinY - LowerY) < 0.5;
                                 TestTrue(*(Label + TEXT(": a focus pushed past the bound rests on it (Y)")), bOnBound);
                                 Reached += bOnBound ? 1 : 0;
+                            }
+                            // A shake at a pan stop keeps the bound too (its height part is dropped).
+                            for (const FVector& Shake : {FVector(14.0, 14.0, 14.0), FVector(-14.0, 14.0, -14.0), FVector(14.0, -14.0, 14.0), FVector(-14.0, -14.0, 0.0)})
+                            {
+                                const FVector2D Shaken = ShakenFocus(Bound.Focus, Shake * Metric.Scale(), Board.Key, Board.Value, Metric, Yaw, Distance, Pitch, Safe);
+                                const bool bInX = Bound.bLockedX ? FMath::Abs(Shaken.X - Bound.Focus.X) < 0.01 : Shaken.X + MinX >= LowerX - 0.5 && Shaken.X + MaxX <= UpperX + 0.5;
+                                const bool bInY = Bound.bLockedY ? FMath::Abs(Shaken.Y - Bound.Focus.Y) < 0.01 : Shaken.Y + MinY >= LowerY - 0.5 && Shaken.Y + MaxY <= UpperY + 0.5;
+                                TestTrue(*(Label + TEXT(": a shake at the pan stop keeps the bound")), bInX && bInY);
                             }
                         }
                     }
@@ -266,7 +274,40 @@ bool FCameraRigMathTest::RunTest(const FString& Parameters)
         // A small board seen from afar is smaller than the view on both axes: nothing to pan to.
         const float Anchor8 = FMath::Clamp(FitDistance(8, 7, Metric, HomeYaw, 0.0f, Safe).Distance, MinFramed, MaxFramed);
         const FPanBound Small = ClampPan(FVector2D(1.0e6, 1.0e6), 8, 7, Metric, -90.0f, FarStop(Anchor8), PitchFor(FarStop(Anchor8), Anchor8), Safe);
-        TestTrue(TEXT("A small board far away locks both axes at its centre"), Small.bLockedX && Small.bLockedY && Small.Focus.Equals(BoardCentre(8, 7, Metric), 0.01));
+        {
+            const float FarAway = FarStop(Anchor8);
+            FVector2D Ground[4];
+            const bool bGround = VisibleGround(-90.0f, FarAway, PitchFor(FarAway, Anchor8), Metric, Safe, Ground);
+            double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+            for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
+            const FVector2D ViewCentre = Small.Focus + FVector2D(0.5 * (MinX + MaxX), 0.5 * (MinY + MaxY));
+            TestTrue(TEXT("A small board far away locks both axes with the view centred on it"), bGround && Small.bLockedX && Small.bLockedY && ViewCentre.Equals(BoardCentre(8, 7, Metric), 0.01));
+        }
+        // Locking is continuous: sweeping the zoom through the threshold where an axis locks moves the clamped focus smoothly
+        // (locking to the board centre instead jumped about 65 cm on 18x12 at yaw -90). Steps of 2 reference units move it a few cm.
+        for (const TPair<int32, int32>& Board : {TPair<int32, int32>(18, 11), TPair<int32, int32>(18, 12), TPair<int32, int32>(16, 11)})
+        {
+            const float Anchor = FMath::Clamp(FitDistance(Board.Key, Board.Value, Metric, HomeYaw, 0.0f, Safe).Distance, MinFramed, MaxFramed);
+            for (const float Yaw : {-90.0f, 0.0f, 33.0f})
+            {
+                for (const FVector2D Wanted : {FVector2D(1.0e6, 1.0e6), FVector2D(-1.0e6, -1.0e6)})
+                {
+                    FPanBound Last = ClampPan(Wanted, Board.Key, Board.Value, Metric, Yaw, MinDistance, PitchFor(MinDistance, Anchor), Safe);
+                    double Worst = 0.0;
+                    int32 Locks = 0;
+                    for (float Distance = MinDistance + 2.0f; Distance <= MaxDistance; Distance += 2.0f)
+                    {
+                        const FPanBound Next = ClampPan(Wanted, Board.Key, Board.Value, Metric, Yaw, Distance, PitchFor(Distance, Anchor), Safe);
+                        Worst = FMath::Max(Worst, FVector2D::Distance(Next.Focus, Last.Focus));
+                        Locks += (Next.bLockedX != Last.bLockedX) + (Next.bLockedY != Last.bLockedY);
+                        Last = Next;
+                    }
+                    const FString Label = FString::Printf(TEXT("%dx%d yaw %.0f pushed (%.0e, %.0e)"), Board.Key, Board.Value, Yaw, Wanted.X, Wanted.Y);
+                    TestTrue(*(Label + TEXT(": the sweep crosses a lock threshold")), Locks > 0);
+                    TestTrue(*FString::Printf(TEXT("%s: the clamped focus moves at most 20 cm per 2-unit zoom step (worst %.1f)"), *Label, Worst), Worst < 20.0);
+                }
+            }
+        }
     }
     // The default zoom targets figure size: a standing 180 cm figure at the focus is 88 px tall at 1080 viewport pixels (scaled with height),
     // within 10 %, on the boards the game generates; a board that already fits closer keeps its whole-board fit.
@@ -446,13 +487,12 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
                 MinX = FMath::Min(MinX, InView.X); MaxX = FMath::Max(MaxX, InView.X);
                 MinY = FMath::Min(MinY, InView.Y); MaxY = FMath::Max(MaxY, InView.Y);
             }
-            const FVector Focus = View->CameraFocus();
-            // A locked axis rests at the board centre; the unit hold may only move it toward the acting unit (never past it) when the unit would be out of view.
             const FVector UnitAt = View->UnitPosition(View->Rules().ActiveId(), 0.0f);
             auto BetweenCentreAndUnit = [](double Value, double Centre, double Unit) { return Value >= FMath::Min(Centre, Unit) - 1.0 && Value <= FMath::Max(Centre, Unit) + 1.0; };
-            if (MaxX - MinX > UpperX - LowerX) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin stays at the board centre in X")), BetweenCentreAndUnit(Focus.X, BoardMid.X, UnitAt.X)); }
+            // A locked axis centres the view (not the focus) on the board; the unit hold may only move it toward the acting unit.
+            if (MaxX - MinX > UpperX - LowerX) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in X")), BetweenCentreAndUnit(0.5 * (MinX + MaxX), BoardMid.X, UnitAt.X)); }
             else { TestTrue(*(Label + TEXT(": the view stays within 1.5 cells of the board in X")), MinX >= LowerX - 1.0 && MaxX <= UpperX + 1.0); }
-            if (MaxY - MinY > UpperY - LowerY) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin stays at the board centre in Y")), BetweenCentreAndUnit(Focus.Y, BoardMid.Y, UnitAt.Y)); }
+            if (MaxY - MinY > UpperY - LowerY) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in Y")), BetweenCentreAndUnit(0.5 * (MinY + MaxY), BoardMid.Y, UnitAt.Y)); }
             else { TestTrue(*(Label + TEXT(": the view stays within 1.5 cells of the board in Y")), MinY >= LowerY - 1.0 && MaxY <= UpperY + 1.0); }
         };
         for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f, 33.0f})
@@ -490,7 +530,8 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             const FString At = FString::Printf(TEXT("pan stop (%.0f, %.0f)"), Push.Key, Push.Value);
             View->SnapCamera(-90.0f, 1300.0f);
             for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
-            View->Zoom(1000.0f);
+            // Out to just short of the whole-board fit (beyond it nothing pans and the bound no longer applies), through any lock threshold on the way.
+            View->Zoom(View->WholeBoardDistance(-90.0f) - 20.0f - 1300.0f);
             for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); CheckPanBound(FString::Printf(TEXT("Zooming out from the %s, frame %d"), *At, Frame)); }
             View->SnapCamera(-90.0f, 1300.0f);
             for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
