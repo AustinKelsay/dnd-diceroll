@@ -141,9 +141,11 @@ bool FCaptureCompilationDrainTest::RunTest(const FString& Parameters)
         {
             // The poses path must be absolute, or the director fails and ends the process.
             const FString PosesPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(Directory, TEXT("poses.json")));
-            FFileHelper::SaveStringToFile(TEXT("{\"version\":1,\"settleFrames\":1,\"shots\":[{\"name\":\"menu\",\"mode\":\"start\"}]}"), *PosesPath);
-            const TSharedPtr<FExpeditionCaptureDirector> Director = FExpeditionCaptureDirector::Create(Player, View, PosesPath, FPaths::Combine(Directory, TEXT("out")), TEXT("drain-test"));
-            if (TestTrue(TEXT("Director"), Director.IsValid()))
+            const bool bWrotePoses = FFileHelper::SaveStringToFile(TEXT("{\"version\":1,\"settleFrames\":1,\"shots\":[{\"name\":\"menu\",\"mode\":\"start\"}]}"), *PosesPath);
+            TestTrue(TEXT("The poses file is written"), bWrotePoses);
+            // An unreadable poses file would make the director request process exit, so create it only after a good write.
+            const TSharedPtr<FExpeditionCaptureDirector> Director = bWrotePoses ? FExpeditionCaptureDirector::Create(Player, View, PosesPath, FPaths::Combine(Directory, TEXT("out")), TEXT("drain-test")) : nullptr;
+            if (bWrotePoses && TestTrue(TEXT("Director"), Director.IsValid()))
             {
                 // Each drain records the tick it ran in and whether the run had been resumed by then.
                 TArray<TPair<int32, bool>> Calls;
