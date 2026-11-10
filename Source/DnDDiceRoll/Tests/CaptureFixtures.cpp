@@ -2,6 +2,8 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Combat/ActionFacts.h"
+#include "Party/BuildCatalog.h"
 #include "Persistence/ExpeditionSave.h"
 #include "ExpeditionTestSupport.h"
 
@@ -9,7 +11,8 @@
  * Developer tool, not a behavior test: writes real checkpoints at each expedition phase
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
- * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12), each with a
+ * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, and the action dock's
+ * kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle), each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -91,6 +94,107 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindBoard(TEXT("board-16x11"), 16, 11);
     FindBoard(TEXT("board-18x12"), 18, 12);
+    // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
+    // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
+    auto CloseIn = [](FExpeditionRun& Run, int32 Id)
+    {
+        FIntPoint Best = Run.Battle().Find(Id)->Cell;
+        int32 BestSteps = MAX_int32;
+        for (const FIntPoint& Cell : Run.Battle().LegalMoves(Id))
+        {
+            for (const FCombatantState& Enemy : Run.Battle().Snapshot().Encounter.Combatants)
+            {
+                const int32 Steps = ExpeditionTestSupport::Distance(Cell, Enemy.Cell);
+                if (Enemy.Side == ECombatSide::Enemy && Enemy.HP > 0 && Steps < BestSteps) { BestSteps = Steps; Best = Cell; }
+            }
+        }
+        return BestSteps != MAX_int32 && Run.Submit({ECombatCommandType::Move, Id, Best}).bAccepted;
+    };
+    auto FindActing = [&](const TCHAR* Name, const TArray<FString>& Builds, const FString& Acting, const TFunction<bool(FExpeditionRun&, int32)>& Script)
+    {
+        for (int32 Seed = 1; Seed < 400; ++Seed)
+        {
+            TArray<FPartyBuildSelection> Party;
+            for (int32 Index = 0; Index < Builds.Num(); ++Index)
+            {
+                FPartyBuildSelection Slot;
+                Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+                Party.Add(Slot);
+            }
+            FString Error;
+            FExpeditionRun Run;
+            if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("capture-kit-%d"), Seed)) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party || Active->BuildId != Acting) { continue; }
+            const int32 Id = Active->Id;
+            if (Script && (!Script(Run, Id) || Run.Battle().ActiveId() != Id)) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 400 gives %s the first turn in the state %s needs"), *Acting, Name));
+    };
+    FindActing(TEXT("kit-barbarian-battle"), {TEXT("barbarian.berserker"), TEXT("wizard.evocation"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("barbarian.berserker"), nullptr);
+    FindActing(TEXT("kit-wizard-battle"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"), nullptr);
+    // Already raging: the Rage bonus action was spent, so Rage says "Already raging" and the Bonus action is gone.
+    FindActing(TEXT("kit-barbarian-raging"), {TEXT("barbarian.berserker"), TEXT("wizard.evocation"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("barbarian.berserker"),
+        [](FExpeditionRun& Run, int32 Id)
+        {
+            return Run.Submit({ECombatCommandType::Special1, Id, {}, Id}).bAccepted && Run.Battle().Find(Id)->RageTurns > 0;
+        });
+    // Everything spent: the Wizard closes in, bursts (Bonus, a Kit) and fires a missile (Action, a Kit and a Slot), leaving no Kit.
+    FindActing(TEXT("kit-wizard-all-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"),
+        [&CloseIn](FExpeditionRun& Run, int32 Id)
+        {
+            for (int32 Step = 0; Step < 4; ++Step)
+            {
+                const TArray<int32> Burst = Run.Battle().LegalTargets(Id, ECombatCommandType::Special2);
+                const TArray<int32> Missile = Run.Battle().LegalTargets(Id, ECombatCommandType::MagicMissile);
+                if (!Burst.IsEmpty() && !Missile.IsEmpty())
+                {
+                    return Run.Submit({ECombatCommandType::Special2, Id, {}, Burst[0]}).bAccepted && Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Missile[0]}).bAccepted &&
+                        Run.Battle().Find(Id)->KitUses == 0 && !Run.Battle().Snapshot().bActionAvailable && !Run.Battle().Snapshot().bBonusActionAvailable;
+                }
+                if (!CloseIn(Run, Id)) { return false; }
+            }
+            return false;
+        });
+    // Blocked sight: a first turn where some attack or ability finds every target in range but behind an obstacle.
+    {
+        bool bFound = false;
+        for (int32 Seed = 1; Seed < 3000 && !bFound; ++Seed)
+        {
+            for (int32 Offer = 0; Offer < 2 && !bFound; ++Offer)
+            {
+                TArray<FPartyBuildSelection> Party;
+                const TCHAR* Builds[] = {TEXT("wizard.evocation"), TEXT("ranger.hunter"), TEXT("fighter.battle-master"), TEXT("cleric.life")};
+                for (int32 Index = 0; Index < 4; ++Index)
+                {
+                    FPartyBuildSelection Slot;
+                    Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+                    Party.Add(Slot);
+                }
+                FString Error;
+                FExpeditionRun Run;
+                if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("capture-sight-%d"), Seed))) { continue; }
+                const FExpeditionRoute& Route = Run.Progress().Offers[Offer];
+                if (!Run.ChooseRoute(Route.Id, Error)) { continue; }
+                const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+                if (!Active || Active->Side != ECombatSide::Party) { continue; }
+                TArray<ECombatCommandType> Commands = {ECombatCommandType::Attack};
+                for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*Active)) { Commands.Add(Ability.Command); }
+                for (const ECombatCommandType Command : Commands)
+                {
+                    if (!FActionFactsQuery::For(Run.Battle(), Active->Id, Command).Blocks(EActionBlocker::SightBlocked)) { continue; }
+                    Write(TEXT("sight-blocked-battle"), Run);
+                    Describe(TEXT("sight-blocked-battle"), Run, Seed, Offer);
+                    bFound = true;
+                    break;
+                }
+            }
+        }
+        TestTrue(TEXT("A first turn exists where an action's only targets are behind blocked sight"), bFound);
+    }
     bool bVictoryWritten = false;
     for (int32 Seed = 1; Seed < 60 && !bVictoryWritten; ++Seed)
     {

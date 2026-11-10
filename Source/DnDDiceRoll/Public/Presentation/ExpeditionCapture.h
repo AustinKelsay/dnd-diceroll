@@ -5,8 +5,11 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle and Targeting need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start };
+/** What a capture shot shows. Battle, Targeting and Tooltip need an encounter; Overview needs the tabletop; Start leaves the run. */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip };
+
+/** Which dock action a Tooltip shot chooses, as its key does: A, F, M, R, P. */
+enum class ECaptureAction : uint8 { Attack, Special1, Special2, Rescue, Potion };
 
 /** One fixed pose from the poses file. A Distance of zero means the board's framed default; FarDistance (negative) means the far zoom stop for the yaw. */
 struct DNDDICEROLL_API FCaptureShot
@@ -16,6 +19,10 @@ struct DNDDICEROLL_API FCaptureShot
     bool bHasCamera = false;
     float Yaw = 0.0f;
     float Distance = 0.0f;
+    /** Tooltip shots only. */
+    ECaptureAction Action = ECaptureAction::Attack;
+    /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
+    FString Build;
 };
 
 struct DNDDICEROLL_API FCapturePoses
@@ -40,6 +47,7 @@ constexpr int32 MaxSettleFrames = 1200;
 DNDDICEROLL_API bool Requested(const TCHAR* CommandLine);
 
 DNDDICEROLL_API const TCHAR* ModeName(ECaptureMode Mode);
+DNDDICEROLL_API const TCHAR* ActionName(ECaptureAction Action);
 /** Pure: validates a poses document (version 1) and fills Out, or fails with a message naming the problem. */
 DNDDICEROLL_API bool ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error);
 }

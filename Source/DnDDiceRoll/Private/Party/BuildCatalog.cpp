@@ -39,13 +39,13 @@ const TArray<FBuildDefinition>& Definitions()
             B.Id = B.Profile.BuildId = FString(TEXT("barbarian.")) + Path;
             B.RageCap = B.Profile.RageUses = 2; B.RageRecovery = 1;
             B.Specials = {ECombatCommandType::Special1, ECombatCommandType::Special2};
-            FAbilityFacts Rage; Rage.ResourceName = TEXT("Rage"); Rage.ResourceCost = 1; Rage.Name = TEXT("Rage"); Rage.Description = TEXT("Bonus + 1 Rage use; self; +2 basic damage, reduce damage by 1 through next own turn");
+            FAbilityFacts Rage; Rage.ResourceName = TEXT("Rage"); Rage.ResourceCost = 1; Rage.Name = TEXT("Rage"); Rage.Description = TEXT("Self; +2 basic damage, reduce damage by 1 through next own turn");
             B.Abilities.Add(Rage);
             FAbilityFacts A; A.Command = ECombatCommandType::Special2; A.Target = EAbilityTarget::Enemy;
-            if (FString(Path) == TEXT("berserker")) { A.Name = TEXT("Frenzy"); A.Range = 1; A.Amount = 4; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Bonus; raging; enemy range 1; guaranteed 4 damage"); }
-            else if (FString(Path) == TEXT("totem-warrior")) { A.Name = TEXT("Shelter"); A.bBonus = false; A.Range = 3; A.Amount = 3; A.Target = EAbilityTarget::Ally; A.Effect = EAbilityEffect::Protect; A.Description = TEXT("Action; raging; other ally range 3; reduce damage by 3 until next own turn"); }
-            else if (FString(Path) == TEXT("beast")) { A.Name = TEXT("Long Claw"); A.Range = 2; A.Amount = 6; A.bBonus = false; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Action; raging; enemy range 2; guaranteed 6 damage"); }
-            else { A.Name = TEXT("Wild Bolt"); A.Amount = 4; A.Range = 3; A.bBonus = false; A.Effect = EAbilityEffect::Surge; A.Description = TEXT("Action; raging; enemy range 3; seeded outcome 1: 4 damage or 2: 8 damage"); }
+            if (FString(Path) == TEXT("berserker")) { A.Name = TEXT("Frenzy"); A.Range = 1; A.Amount = 4; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Enemy range 1; guaranteed 4 damage"); }
+            else if (FString(Path) == TEXT("totem-warrior")) { A.Name = TEXT("Shelter"); A.bBonus = false; A.Range = 3; A.Amount = 3; A.Target = EAbilityTarget::Ally; A.Effect = EAbilityEffect::Protect; A.Description = TEXT("Other ally range 3; reduce damage by 3 until next own turn"); }
+            else if (FString(Path) == TEXT("beast")) { A.Name = TEXT("Long Claw"); A.Range = 2; A.Amount = 6; A.bBonus = false; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Enemy range 2; guaranteed 6 damage"); }
+            else { A.Name = TEXT("Wild Bolt"); A.Amount = 4; A.Range = 3; A.bBonus = false; A.Effect = EAbilityEffect::Surge; A.Description = TEXT("Enemy range 3; seeded outcome 1: 4 damage or 2: 8 damage"); }
             B.Abilities.Add(A); Result.Add(B);
         }
         // Compact original adaptations. A shared two-use pool belongs to each adventurer.
@@ -59,7 +59,7 @@ const TArray<FBuildDefinition>& Definitions()
                 Effect == EAbilityEffect::Push ? TEXT("damage, then push one open cell away; blocked push stays put") :
                 Effect == EAbilityEffect::Surge ? TEXT("seeded damage: amount or twice amount") :
                 Effect == EAbilityEffect::Area ? TEXT("damage target and conscious enemies within 1 cell of target with sight") : TEXT("guaranteed damage");
-            A.Description = FString::Printf(TEXT("%s + 1 Kit; %s range %d + sight; %s (%d)"), Bonus ? TEXT("Bonus") : TEXT("Action"), Target == EAbilityTarget::Self ? TEXT("self") : Target == EAbilityTarget::Friendly ? TEXT("self or ally") : Target == EAbilityTarget::Ally ? TEXT("other ally") : TEXT("enemy"), Range, EffectText, Amount);
+            A.Description = FString::Printf(TEXT("%s range %d + sight; %s (%d)"), Target == EAbilityTarget::Self ? TEXT("Self") : Target == EAbilityTarget::Friendly ? TEXT("Self or ally") : Target == EAbilityTarget::Ally ? TEXT("Other ally") : TEXT("Enemy"), Range, EffectText, Amount);
             return A;
         };
         auto Kit = [&](FBuildDefinition B, const TCHAR* Id, const TCHAR* Subclass, FAbilityFacts First, FAbilityFacts Second)
@@ -120,7 +120,7 @@ const TArray<FBuildDefinition>& Definitions()
                 auto& Missile = B.Abilities[0];
                 Missile.Command = B.Specials[0] = ECombatCommandType::MagicMissile;
                 Missile.ResourceName = TEXT("Kit + Slot");
-                Missile.Description = TEXT("Action + 1 Kit + 1 Slot; enemy range 6 + sight; guaranteed 3d4+3 damage");
+                Missile.Description = TEXT("Enemy range 6 + sight; guaranteed 3d4+3 damage");
             }
         }
         Kit(Wizard,TEXT("wizard.illusion"),TEXT("illusion"),Ability(TEXT("Mirror Ward"),E::Protect,T::Self,0,4,true),Ability(TEXT("Illusory Exchange"),E::Swap,T::Ally,3,0,false));
@@ -150,7 +150,7 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Bard,TEXT("bard.valor"),TEXT("valor"),Ability(TEXT("Combat Inspiration"),E::Protect,T::Ally,1,4,true),Ability(TEXT("Valiant Strike"),E::Strike,T::Enemy,3,6,false));
         Kit(Bard,TEXT("bard.creation"),TEXT("creation"),Ability(TEXT("Dancing Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Resonant Burst"),E::Area,T::Enemy,2,5,false));
         Kit(Bard,TEXT("bard.eloquence"),TEXT("eloquence"),Ability(TEXT("Reassuring Word"),E::Protect,T::Ally,4,2,false),Ability(TEXT("Unsettling Note"),E::Strike,T::Enemy,4,5,true));
-        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Action + 1 Kit + 1 Slot; conscious self or ally range 1 + sight; heal 2d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Conscious self or ally range 1 + sight; heal 2d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
         auto Artificer = Add(TEXT(""),TEXT("artificer"),TEXT(""),TEXT("Artificer"),EAdventurerRole::Artificer,26,15,6,3,3,1);
         Kit(Artificer,TEXT("artificer.alchemist"),TEXT("alchemist"),Ability(TEXT("Restorative Elixir"),E::Healing,T::Ally,2,8,false),Ability(TEXT("Volatile Flask"),E::Area,T::Enemy,3,3,true));
         Kit(Artificer,TEXT("artificer.armorer"),TEXT("armorer"),Ability(TEXT("Defensive Field"),E::Protect,T::Self,0,4,true),Ability(TEXT("Thunder Gauntlet"),E::Push,T::Enemy,1,6,false));

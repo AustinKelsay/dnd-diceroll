@@ -1,4 +1,6 @@
 #include "Presentation/ExpeditionBattleView.h"
+#include "Combat/ActionFacts.h"
+#include "Presentation/ActionText.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionHUD.h"
@@ -1253,17 +1255,26 @@ void AExpeditionBattleView::CycleSpeed()
     PlayCue(EExpeditionCue::Click);
 }
 
-void AExpeditionBattleView::Execute(const FCombatCommand& Command)
+bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
-    if (bShowRecords) { return; }
+    if (bShowRecords) { return false; }
     const FCombatantState* Unit = Rules().Find(Command.ActorId);
-    if (!Unit || Unit->Side != ECombatSide::Party) { return; }
-    const FCombatResult Result = Session.Submit(Command);
+    if (!Unit || Unit->Side != ECombatSide::Party) { return false; }
+    FCombatResult Result = Session.Submit(Command);
+    if (!Result.bAccepted)
+    {
+        // The facts name what stops the action as a whole; the rules' own text stays for a target-specific failure they cannot explain.
+        // Nothing changed, so the facts read the state the rejection was decided on.
+        // A command the facts do not describe (cost None: the SRD-only Grapple, Shove and Escape, or one the kit lacks) keeps the rules' text.
+        const FActionFacts Facts = FActionFactsQuery::For(Rules(), Command.ActorId, Command.Type);
+        if (Facts.Cost != EActionCostKind::None && !Facts.Blockers.IsEmpty()) { Result.Feedback = ExpeditionStyle::BlockerText(Facts.Blockers[0]); }
+    }
     Record(Result);
     // An accepted order completes whatever is still being shown (already resolved), then plays.
     // Rejected input leaves playback untouched, so stray clicks never skip animation.
     if (Result.bAccepted) { Show.Finish(); Present({Result}); }
     else { PlayCue(EExpeditionCue::Click); }
+    return Result.bAccepted;
 }
 
 void AExpeditionBattleView::ChooseRoute(int32 Index)
