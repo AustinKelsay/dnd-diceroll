@@ -81,6 +81,12 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(frames[0].stats["GPU/Basepass"], 3.0)
         self.assertNotIn("[Platform]", " ".join(e for f in frames for e in f.events))
 
+    def test_parse_csv_accepts_a_long_metadata_field(self):
+        # A real capture ends with metadata rows whose command-line field exceeds csv's default 128 KiB limit.
+        long_row = "[Commandline]," + "x" * 200000
+        frames = perf.parse_csv(HEADER + '\n,5,1,1,2,1\n' + long_row + "\n")
+        self.assertEqual(len(frames), 1)
+
     def test_parse_rejects_other_files_and_missing_columns(self):
         with self.assertRaisesRegex(ValueError, "EVENTS"): perf.parse_csv("a,b\n1,2\n")
         with self.assertRaisesRegex(ValueError, "GPUTime"): perf.parse_csv("EVENTS,FrameTime,GameThreadTime\n,1,1\n")
