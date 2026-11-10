@@ -27,6 +27,7 @@ class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
 struct FDiceRollCharacter;
+struct FDiceRollWorldKit;
 
 UENUM()
 enum class EBoardTheme : uint8 { Meadow, Ruins, Vault };
@@ -247,6 +248,15 @@ public:
     bool ShowingFullGrid() const { return bFullGridShown; }
     /** True when this board is built from the Drowned Vigil world kit r002 (a Vigil board of a theme whose kit is switched on). */
     bool UsesVigilKit() const { return bVigilKit; }
+    /** True when this board is built from the Root of the World kit r002 (#149): a forest board of a theme whose Root kit is switched on. */
+    bool UsesRootKit() const { return bRootKit; }
+    /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
+    void UseTheme(UDiceRollTheme* Value);
+    /**
+     * The world mesh's scale in world space: 1 for an r002 world kit, which is authored at the true 150 cm cell and placed
+     * unscaled; the board metric's scale (cell / 110 cm) for the r001 art. Zero when the board has no themed world.
+     */
+    float WorldMeshScale() const;
     /** What the kit dressed this board with: scatter, mist and shaft pieces actually placed, with their cells and view-space positions. */
     const TArray<FPlacedDressing>& PlacedDressing() const { return Dressing; }
     /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
@@ -389,6 +399,9 @@ private:
     float OccluderPlaneSent = 0.0f;
     bool bOccluderBoardSent = false;
     bool bVigilKit = false;
+    bool bRootKit = false;
+    /** The world mesh of the last themed build. */
+    UPROPERTY() FExpeditionPart WorldPart;
     TArray<FPlacedDressing> Dressing;
     TMap<FIntPoint, int32> VariantsByCell;
     TMap<FIntPoint, FVector> SpotsByCell;
@@ -431,10 +444,10 @@ private:
     void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
-    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (Vigil boards, pillar and wall recipes). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
-    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches);
-    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing). */
-    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed);
+    /** The r002 obstacles of a world kit: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (pillar and wall recipes of a world kit; see VigilKit::ArchesFor). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
+    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing; the Root kit uses the same plan). */
+    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit);
     /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
     FExpeditionPart MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation);
     /** Pushes the sight lines to the occluder material. */
