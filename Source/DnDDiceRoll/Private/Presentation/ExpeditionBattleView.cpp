@@ -1805,12 +1805,12 @@ FVector2D AExpeditionBattleView::LimitPan(const FVector2D& Base, FVector2D& Offs
     return Bound.Focus;
 }
 
-FVector2D AExpeditionBattleView::HoldUnit(const FVector2D& Focus) const
+FVector2D AExpeditionBattleView::HoldUnit(const FVector2D& Wanted) const
 {
     const int32 FocusId = CameraFocusId();
-    if (bOverview || FocusId == INDEX_NONE || !Show.Unit(FocusId) || WholeBoardInView()) { return Focus; }
+    if (bOverview || FocusId == INDEX_NONE || !Show.Unit(FocusId) || WholeBoardInView()) { return Wanted; }
     const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-    return ExpeditionCameraRig::KeepUnitInside(Focus, FVector2D(UnitPosition(FocusId, -BoardMetric.BoardTop())), BoardMetric, Yaw, Distance, Pitch, Safe);
+    return ExpeditionCameraRig::KeepUnitInside(Wanted, FVector2D(UnitPosition(FocusId, -BoardMetric.BoardTop())), BoardMetric, Yaw, Distance, Pitch, Safe);
 }
 
 float AExpeditionBattleView::CameraPitch() const

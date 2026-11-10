@@ -653,7 +653,7 @@ private:
      */
     FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
     /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
-    FVector2D HoldUnit(const FVector2D& Focus) const;
+    FVector2D HoldUnit(const FVector2D& Wanted) const;
     /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
     void SelectShadowLights();
     void Record(const FCombatResult& Result);
