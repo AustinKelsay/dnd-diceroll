@@ -68,8 +68,9 @@ public:
     /** Once per rendered frame, from the player controller. */
     void Tick();
     /**
-     * Editor builds only (#174): finishes every outstanding shader and asset compilation, then flushes the render thread, so a
-     * material's shader map is never replaced while a frame still draws with it. Does nothing in other builds.
+     * Editor builds only (#174): finishes every outstanding shader and asset compilation, then flushes the render thread. A start-up
+     * mitigation for #174 (a shader map replaced while a frame still draws with it): later frames or a return to the start screen can
+     * queue more compilation, so a residual window remains. Does nothing in other builds.
      */
     static void DrainCompilation();
     /** Replaces what the director calls to drain compilation (default: DrainCompilation). It runs on the first Tick and on both sides of Resume. */
