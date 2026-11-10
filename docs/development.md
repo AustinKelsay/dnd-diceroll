@@ -123,7 +123,9 @@ Three passes run at 1920x1080 (`-windowed -ForceRes`, `-novsync` so FrameTime is
 2. **measured**: a fresh save root, the fight, quit to the checkpoint.
 3. **resume**: a new process on a copy of that checkpoint (the measured pass's save stays as the fight left it): Resume, claim the reward, take the camp, reach the route table.
 
-A pass fails the run when the game exits non-zero or by signal, leaves a new `Saved/Crashes/crashinfo-*` (in this checkout, `~/.config/Epic/<game>/Saved`, or the staged package), does not log `AUTOPLAY_DONE ok` and a normal `LogExit`, or leaves no CSV. A game that overruns `--timeout` gets one SIGTERM and is never killed.
+A pass fails the run when the game exits non-zero or by signal, leaves a new `Saved/Crashes/crashinfo-*` (in this checkout, `~/.config/Epic/<game>/Saved`, or the staged package), does not log `AUTOPLAY_DONE ok` and a normal `LogExit`, or leaves no CSV. A game that overruns `--timeout` (or whose helper gets Ctrl-C) gets one SIGTERM and is never killed; the helper keeps waiting, and so keeps the lock, until the game has exited, printing its PID every minute and ignoring further interrupts and a closed output, then fails the pass.
+
+One exception is retried. When the game exits by SIGFPE (exit -8 or 136), its log or console mentions SDL's `handle_wl_output_done`, and it never logged `AUTOPLAY_BEGIN`, it hit a known startup quirk of a headless Wayland output; the pass relaunches once on a fresh save. The first attempt's logs are kept as `game-attempt1.log` and `console-attempt1.log`, and `pass.json` records under `retried` its exit code and any crash reports it left. Those reports do not fail the pass; any crash report, failure or second SIGFPE from the relaunch does.
 
 ### Autoplay
 

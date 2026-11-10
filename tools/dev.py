@@ -837,28 +837,40 @@ class Dev:
     PERF_EXIT_WAIT = 60  # seconds between reports while a timed-out game is still exiting
 
     def perf_run(self, args, log, timeout, cwd):
-        """Run one game process, sampling its resident memory. On timeout it gets one SIGTERM (a normal exit request) and is never killed."""
+        """Run one game process, sampling its resident memory. On timeout or interrupt it gets one SIGTERM (a normal exit request) and is never killed."""
         with log.open("ab") as stream:
             process = subprocess.Popen([str(a) for a in args], cwd=cwd, stdout=stream, stderr=subprocess.STDOUT)
             pid = perf_tools.resolve_game_pid(process.pid, Path(str(args[0])).name)
             with perf_tools.RssSampler(pid) as sampler:
                 try:
                     code = process.wait(timeout=timeout)
-                except subprocess.TimeoutExpired:
+                except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
+                    reason = f"timed out after {timeout}s" if isinstance(exc, subprocess.TimeoutExpired) else "was interrupted"
                     process.terminate()
-                    # Never return while the game still runs: the caller's machine lock must stay held until it has exited.
-                    # It is asked to exit once and never killed; a stuck game is reported with its PID for manual recovery.
-                    ignored = False
-                    while True:
-                        try:
-                            process.wait(timeout=self.PERF_EXIT_WAIT)
-                            break
-                        except subprocess.TimeoutExpired:
-                            ignored = True
-                            print(f"Game PID {process.pid} timed out after {timeout}s and has not exited after SIGTERM; still waiting (the lock stays held). Inspect {log}", flush=True)
+                    ignored = self.perf_await_exit(process, reason, log)
                     detail = " after ignoring SIGTERM for a while" if ignored else ""
-                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and exited{detail}; inspect {log}") from None
+                    raise RuntimeError(f"Game PID {process.pid} {reason} and exited{detail}; inspect {log}") from None
         return code, sampler.summary()
+
+    def perf_await_exit(self, process, reason, log):
+        """Block until a game that was sent SIGTERM has exited. True if it outlived at least one wait.
+
+        Never return while the game still runs: the caller's machine lock must stay held until it has exited. A closed
+        output stream or a further Ctrl-C does not end the wait, and the game is never sent a second signal."""
+        ignored = False
+        while True:
+            try:
+                process.wait(timeout=self.PERF_EXIT_WAIT)
+                return ignored
+            except subprocess.TimeoutExpired:
+                ignored = True
+                message = f"Game PID {process.pid} {reason} and has not exited after SIGTERM; still waiting (the lock stays held). Inspect {log}"
+            except KeyboardInterrupt:
+                message = f"Game PID {process.pid} is still exiting; the interrupt is ignored until it has (the lock stays held)."
+            try:
+                print(message, flush=True)
+            except (OSError, ValueError):
+                pass  # nobody is reading the output any more; keep waiting regardless
 
     def perf_crash_dirs(self, binary):
         """Folders whose Saved/Crashes a run may write to: this checkout, the packaged game's user directory and its staged folder."""
@@ -971,7 +983,10 @@ class Dev:
             save.mkdir()
         log = folder / "game.log"
         crash_roots = self.perf_crash_dirs(ctx["binary"])
-        crashes_before = {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)}
+        def crash_reports():
+            return {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)}
+
+        crashes_before = crash_reports()
         started = time.time()
         size = ctx["size"]
         print(f"Perf pass {name}: {'resuming the checkpoint' if resuming else 'playing the fight'} at {size[0]}x{size[1]}")
@@ -984,8 +999,13 @@ class Dev:
                     break
                 # A headless Wayland output reports 0 mm physical size and SDL can divide by it at startup (SIGFPE in
                 # handle_wl_output_done); an identical relaunch works. Keep the failed attempt's logs and relaunch once.
-                retried = "startup SIGFPE in SDL handle_wl_output_done (headless output); relaunched once"
-                print(f"Perf pass {name}: {retried}")
+                # The failed attempt's crash report is evidence of the known quirk, not of this pass: record it, and
+                # judge only what the relaunch leaves.
+                first_crashes = sorted(crash_reports() - crashes_before)
+                crashes_before = crash_reports()
+                retried = {"reason": "startup SIGFPE in SDL handle_wl_output_done (headless output); relaunched once",
+                           "exit_code": code, "crash_reports": first_crashes}
+                print(f"Perf pass {name}: {retried['reason']}")
                 for kept_log in (log, folder / "console.log"):
                     if kept_log.is_file():
                         kept_log.rename(kept_log.with_name(kept_log.stem + "-attempt1" + kept_log.suffix))
@@ -996,7 +1016,7 @@ class Dev:
                     save.mkdir()
                 started = time.time()
         ended = time.time()
-        crashes = {str(r / "Saved" / "Crashes" / n) for r in crash_roots for n in crash_folders(r)} - crashes_before
+        crashes = crash_reports() - crashes_before
         problems = lifecycle_problems(code, set(), self.w.root, who="Game")
         if crashes:
             problems.append("new crash report(s): " + ", ".join(sorted(crashes)))

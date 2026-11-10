@@ -448,6 +448,11 @@ class PerfCommandTests(unittest.TestCase):
 
     def test_the_editor_dry_run_never_passes_the_gate(self):
         dev = self.prepare(package=False)
+        # A stand-in editor binary, so the run fingerprints a file of the test's own and never needs an installed engine.
+        dev.editor = self.root / "Engine/Binaries/Linux/UnrealEditor"
+        dev.editor.parent.mkdir(parents=True)
+        dev.editor.write_text("#!/bin/sh\n")
+        dev.editor.chmod(0o755)
         identity = {"fake": "identity"}
         (self.w.local / "build.json").write_text(json.dumps(identity))
         calls = []
@@ -744,6 +749,105 @@ class PerfCommandTests(unittest.TestCase):
         self.assertIn("still waiting", out.getvalue())
         process.terminate.assert_called_once()
         process.kill.assert_not_called()
+
+    def timed_out_game(self, waits):
+        process = Mock(pid=4321)
+        process.wait.side_effect = waits
+        sampler = Mock()
+        sampler.__enter__ = Mock(return_value=sampler)
+        sampler.__exit__ = Mock(return_value=False)
+        sampler.summary.return_value = {}
+        return process, sampler
+
+    def test_a_closed_output_or_ctrl_c_never_ends_the_wait_for_a_timed_out_game(self):
+        timeout = dev_module.subprocess.TimeoutExpired("game", 1)
+        for label, waits, printer in (("closed output", [timeout, timeout, timeout, 0], {"side_effect": BrokenPipeError}),
+                                      ("ctrl-c while exiting", [timeout, KeyboardInterrupt(), KeyboardInterrupt(), timeout, 0], {}),
+                                      ("ctrl-c and closed output", [timeout, KeyboardInterrupt(), 0], {"side_effect": BrokenPipeError})):
+            with self.subTest(label):
+                dev = Dev(self.w, host="linux")
+                dev.PERF_EXIT_WAIT = 0.01
+                process, sampler = self.timed_out_game(waits)
+                with tempfile.TemporaryDirectory() as temp, patch.object(dev_module.subprocess, "Popen", return_value=process), \
+                        patch.object(perf, "RssSampler", return_value=sampler), patch.object(perf, "resolve_game_pid", return_value=4322), \
+                        patch.object(dev_module, "print", create=True, **printer), self.assertRaisesRegex(RuntimeError, "timed out after 5s and exited"):
+                    dev.perf_run(["/x/CustomGame"], Path(temp) / "game.log", 5, temp)
+                self.assertEqual(process.wait.call_count, len(waits))  # it returned only once the game had exited
+                process.terminate.assert_called_once()
+                process.kill.assert_not_called()
+
+    def test_ctrl_c_during_a_pass_asks_the_game_to_exit_and_waits_for_it(self):
+        dev = Dev(self.w, host="linux")
+        dev.PERF_EXIT_WAIT = 0.01
+        timeout = dev_module.subprocess.TimeoutExpired("game", 1)
+        process, sampler = self.timed_out_game([KeyboardInterrupt(), timeout, 0])
+        with tempfile.TemporaryDirectory() as temp, patch.object(dev_module.subprocess, "Popen", return_value=process), \
+                patch.object(perf, "RssSampler", return_value=sampler), patch.object(perf, "resolve_game_pid", return_value=4322), \
+                contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(RuntimeError, "was interrupted and exited after ignoring SIGTERM"):
+            dev.perf_run(["/x/CustomGame"], Path(temp) / "game.log", 5, temp)
+        self.assertEqual(process.wait.call_count, 3)
+        process.terminate.assert_called_once()
+        process.kill.assert_not_called()
+
+    def sigfpe_then(self, calls, second, before_begin=True):
+        """perf_run for a pass whose first attempt dies of the headless SDL SIGFPE (leaving a crash report); `second` shapes the relaunch."""
+        base = self.fake_game(calls)
+        attempts = {}
+
+        def run(args, log, timeout, cwd):
+            args = [str(a) for a in args]
+            game_log = Path(next(a for a in args if a.startswith("-abslog=")).split("=", 1)[1])
+            name = game_log.parent.name
+            attempts[name] = attempts.get(name, 0) + 1
+            if name == "warmup" and attempts[name] == 1:
+                calls.append({"name": name, "args": args})
+                game_log.write_text(("" if before_begin else "AUTOPLAY_BEGIN\n") + "Signal 8 caught.\nhandle_wl_output_done\n")
+                (self.root / "Saved/Crashes/crashinfo-sigfpe").mkdir(parents=True)
+                return -8, {"samples": 1, "max_mb": 10.0}
+            result = base(args, log, timeout, cwd)
+            if name == "warmup" and second == "crash":
+                (self.root / "Saved/Crashes/crashinfo-relaunch").mkdir(parents=True)
+            if name == "warmup" and second == "sigfpe":
+                game_log.write_text("Signal 8 caught.\nhandle_wl_output_done\n")
+                return -8, result[1]
+            return result
+
+        return run
+
+    def test_a_startup_sigfpe_is_relaunched_once_and_its_crash_report_is_kept_as_evidence(self):
+        dev = self.prepare()
+        calls = []
+        with patch.object(dev, "perf_run", side_effect=self.sigfpe_then(calls, "ok")), contextlib.redirect_stdout(io.StringIO()):
+            report = dev.perf()
+        self.assertTrue(report["passed"], report["failures"])
+        self.assertEqual([c["name"] for c in calls], ["warmup", "warmup", "measured", "resume"])
+        output = next((self.w.local / "perf").iterdir())
+        record = json.loads((output / "warmup" / "pass.json").read_text())
+        self.assertEqual(record["retried"]["exit_code"], -8)
+        self.assertEqual(record["retried"]["crash_reports"], [str(self.root / "Saved/Crashes/crashinfo-sigfpe")])
+        self.assertTrue((output / "warmup" / "game-attempt1.log").is_file())
+        self.assertIsNone(json.loads((output / "measured" / "pass.json").read_text())["retried"])
+
+    def test_a_relaunch_that_crashes_or_hits_the_quirk_again_fails_the_pass(self):
+        for second, message in (("crash", "crashinfo-relaunch"), ("sigfpe", "signal 8")):
+            with self.subTest(second):
+                dev = self.prepare()
+                calls = []
+                with patch.object(dev, "perf_run", side_effect=self.sigfpe_then(calls, second)), contextlib.redirect_stdout(io.StringIO()), \
+                        self.assertRaisesRegex(RuntimeError, message) as caught:
+                    dev.perf()
+                self.assertNotIn("crashinfo-sigfpe", str(caught.exception))
+                self.assertEqual([c["name"] for c in calls], ["warmup", "warmup"])
+                for path in (self.root / "Builds", self.w.local / "perf", self.root / "Saved"):
+                    shutil.rmtree(path, ignore_errors=True)
+
+    def test_a_sigfpe_after_autoplay_began_is_not_retried(self):
+        dev = self.prepare()
+        calls = []
+        with patch.object(dev, "perf_run", side_effect=self.sigfpe_then(calls, "ok", before_begin=False)), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(RuntimeError, "signal 8"):
+            dev.perf()
+        self.assertEqual([c["name"] for c in calls], ["warmup"])
 
     def test_a_pass_without_memory_evidence_fails_the_report(self):
         dev = self.prepare()
