@@ -8,6 +8,7 @@
 #include "Presentation/BoardMetric.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Materials/MaterialInterface.h"
 
 namespace CameraLightingTestSupport
 {
@@ -405,6 +406,49 @@ bool FBattleLightingTest::RunTest(const FString& Parameters)
             for (int32 Index = 0; Index < Chosen.Num(); ++Index)
             { TestTrue(FString::Printf(TEXT("Shadowed light %d is the same light after a rebuild"), Index), Repeated[Index].Equals(Chosen[Index], 0.01)); }
         }
+    }
+    World->DestroyWorld(false);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFigureSilhouetteTest, "Project.Expedition.Presentation.FigureSilhouettes",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFigureSilhouetteTest::RunTest(const FString& Parameters)
+{
+    UWorld* World = MakeCameraWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FigureSilhouettes"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = StartBattle(World, Directory);
+    if (TestNotNull(TEXT("Battle view"), View))
+    {
+        int32 Party = 0, Enemies = 0;
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Life == ECombatLife::Dead) { continue; }
+            const bool bEnemy = Unit.Side == ECombatSide::Enemy;
+            (bEnemy ? Enemies : Party)++;
+            TestEqual(FString::Printf(TEXT("%s renders custom depth with its side's stencil"), *Unit.Name),
+                View->FigureStencil(Unit.Id), bEnemy ? AExpeditionBattleView::EnemyStencil : AExpeditionBattleView::PartyStencil);
+            // Only figure parts: the footprint ring and scenery never write the stencil.
+            if (USceneComponent* Root = View->UnitRigRoot(Unit.Id))
+            {
+                TArray<USceneComponent*> Children;
+                Root->GetChildrenComponents(true, Children);
+                for (USceneComponent* Child : Children)
+                {
+                    const UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child);
+                    if (Primitive) { TestTrue(FString::Printf(TEXT("%s part writes custom depth"), *Unit.Name), Primitive->bRenderCustomDepth); }
+                }
+            }
+        }
+        TestTrue(TEXT("The fixture has both sides"), Party > 0 && Enemies > 0);
+        // The blendable is added when the asset exists and silently skipped when it does not.
+        const bool bAsset = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/DnDDiceRoll/Theme/Materials/M_FigureSilhouette.M_FigureSilhouette"), nullptr, LOAD_Quiet | LOAD_NoWarn) != nullptr;
+        TestEqual(TEXT("The silhouette blendable is present exactly when M_FigureSilhouette exists"), View->HasSilhouetteBlendable(), bAsset);
+        // A rebuild never adds it twice.
+        View->SetBoardMetric(FBoardMetric(150.0f, 180.0f));
+        TestEqual(TEXT("A rebuild keeps one blendable"), View->HasSilhouetteBlendable(), bAsset);
     }
     World->DestroyWorld(false);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
