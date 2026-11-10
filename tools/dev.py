@@ -35,7 +35,7 @@ STATUS = "unreal_starter.status.StarterWorkspaceTools"
 
 
 # Linux (PlebDev Ultra) is the one validated host. Mac still runs through the same
-# commands but is no longer validated; other hosts get guidance only.
+# commands but is no longer validated; Windows helper evidence is advisory.
 HOSTS = {
     "linux": {"label": "linux/x86_64", "platform": "Linux",
               "engine_root": Path.home() / "Applications/UnrealEngine-5.8.4",
@@ -1255,7 +1255,7 @@ class Dev:
             # A real window can honor CloseMainWindow; null-RHI has no HWND.
             save = output / "save"
             save.mkdir(exist_ok=True)
-            return ["-windowed", "-ResX=1280", "-ResY=720", "-dx12", "-sm6", "-NoLiveCoding", f"-ExpeditionSaveRoot={save}"]
+            return ["-windowed", "-ResX=1280", "-ResY=720", "-NoLiveCoding", f"-ExpeditionSaveRoot={save}"]
         return self.layout["headless"]
 
     def package(self):

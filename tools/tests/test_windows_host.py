@@ -44,6 +44,7 @@ class WindowsHostTests(unittest.TestCase):
         for suffix in ('.backup', '-other'):
             self.assertFalse(project_argument(command.replace(str(project).upper().replace('/', '\\'), str(project).upper().replace('/', '\\') + suffix), project, windows=True))
         self.assertFalse(project_argument('UnrealEditor.exe -abslog=' + str(project), project, windows=True))
+        self.assertFalse(project_argument('UnrealEditor.exe -abslog="' + str(project) + '"', project, windows=True))
 
     def test_process_scan_associates_only_exact_project(self):
         row = {'ProcessId':12,'ExecutablePath':str(self.d.editor),'CommandLine':'UnrealEditor.exe "' + str(self.w.project) + '"'}
@@ -99,7 +100,8 @@ class WindowsHostTests(unittest.TestCase):
     def test_package_has_real_window_private_save_and_win64_binary(self):
         flags=self.d.package_launch_flags(self.w.root)
         self.assertIn('-windowed',flags)
-        self.assertIn('-sm6',flags)
+        self.assertNotIn('-sm6',flags)  # respect the project's cooked shader targets
+        self.assertNotIn('-dx12',flags)
         self.assertNotIn('-nullrhi',flags)
         self.assertIn('-ExpeditionSaveRoot=' + str(self.w.root/'save'),flags)
         binary=self.w.root/'Windows/Game/Binaries/Win64/Game.exe'

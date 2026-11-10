@@ -66,6 +66,8 @@ def project_argument(command, project, windows=False):
     if windows:
         command = command.replace("\\", "/")
         path = path.replace("\\", "/")
+        # A quoted flag value (e.g. -abslog="project") is not a project argument.
+        return bool(re.search(r'(?:^|\s)["\']?' + re.escape(path) + r'["\']?(?=$|\s)', command, flags=re.IGNORECASE))
     path = re.escape(path)
     return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command, flags=re.IGNORECASE if windows else 0))
 
