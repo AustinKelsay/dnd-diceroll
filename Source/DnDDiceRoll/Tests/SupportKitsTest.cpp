@@ -262,7 +262,10 @@ bool FSupportRunTest::RunTest(const FString& Parameters)
         FString Error; TArray<FPartyBuildSelection> Party;
         const TCHAR* Mixed[]={TEXT("cleric.life"),TEXT("druid.stars"),TEXT("bard.valor"),TEXT("cleric.light")};
         for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Slot %d"),Id); P.BuildId=Duplicate?TEXT("cleric.light"):Mixed[Id-1]; Party.Add(P); }
-        FExpeditionRun Run; TestTrue(TEXT("Construct support run"),Run.NewRun(42,Party,Error,Duplicate?TEXT("duplicate-support"):TEXT("mixed-support")));
+        // #184: the first seed from 42 on where the scripted player completes the run (see FirstSeedWhere).
+        const int32 Seed=ExpeditionTestSupport::FirstSeedWhere([&](int32 Candidate) { FExpeditionRun Probe; FString Ignored; return Probe.NewRun(Candidate,Party,Ignored,TEXT("probe")) && ExpeditionTestSupport::FinishRunScripted(Probe); });
+        if(!TestTrue(TEXT("Some seed lets the worked support party complete five fights"),Seed!=INDEX_NONE)) { continue; }
+        FExpeditionRun Run; TestTrue(TEXT("Construct support run"),Run.NewRun(Seed,Party,Error,Duplicate?TEXT("duplicate-support"):TEXT("mixed-support")));
         for(int32 Stage=0;Stage<5;++Stage)
         {
             if(!TestTrue(TEXT("Choose actual generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { break; }

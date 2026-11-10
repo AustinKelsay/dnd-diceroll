@@ -91,9 +91,33 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResumeEveryPhaseTest, "Project.Expedition.Pers
 bool FResumeEveryPhaseTest::RunTest(const FString& Parameters)
 {
     TSet<EExpeditionPhase> Phases; bool bSpentAction=false, bPartialMove=false, bBonus=false, bDowned=false, bDead=false;
+    // #184: the fighting run must reach Victory to serialize that phase. Take the first seed from 42 on where this
+    // test's own player (same choices, without the save round trips) wins; the passive run then loses on the same seed.
+    auto EndPhase = [](int32 Seed)
+    {
+        FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("phase-fixture"));
+        for (int32 Step=0; Step<1600; ++Step)
+        {
+            const auto Phase=Run.Progress().Phase; const auto& B=Run.Battle(); const auto* A=B.Find(B.ActiveId());
+            if (Phase==EExpeditionPhase::Victory || Phase==EExpeditionPhase::Defeat) { break; }
+            if (Phase==EExpeditionPhase::Route) { Run.ChooseRoute(Run.Progress().Offers[0].Id,Error); }
+            else if (Phase==EExpeditionPhase::Reward)
+            {
+                int32 Recipient=INDEX_NONE;
+                for (const auto& U:B.Snapshot().Encounter.Combatants) { if (U.Side==ECombatSide::Party && U.Life==ECombatLife::Conscious) { Recipient=U.Id; break; } }
+                Run.ClaimReward(Recipient,Error);
+            }
+            else if (Phase==EExpeditionPhase::Recovery) { Run.Recover(true,Error); }
+            else if (A->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); }
+            else { Run.Submit(NextPartyCommand(Run,true)); }
+        }
+        return Run.Progress().Phase;
+    };
+    const int32 Seed = ExpeditionTestSupport::FirstSeedWhere([&EndPhase](int32 Candidate) { return EndPhase(Candidate)==EExpeditionPhase::Victory; });
+    if (!TestTrue(TEXT("Some seed lets the fighting run win"), Seed!=INDEX_NONE)) { return false; }
     for (bool bFight : {true, false})
     {
-        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(42, Error, TEXT("phase-fixture"));
+        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(Seed, Error, TEXT("phase-fixture"));
         for (int32 Step=0; Step<1600; ++Step)
         {
             if (!TestTrue(*Error, Roundtrip(Run, Resumed, Error))) { return false; }
