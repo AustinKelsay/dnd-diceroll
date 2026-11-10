@@ -179,6 +179,8 @@ class ThemePlanTests(unittest.TestCase):
         # board-overlay-3 (#144) adds the per-instance ring colour on top of the depth-test change.
         self.assertIn('GRAPH_REVISION = "board-overlay-3"', overlay)
         self.assertIn("MaterialExpressionPerInstanceCustomData3Vector", overlay)
+        # Every grid style shares one component: opacity is read from custom float 3 on top of the Opacity parameter.
+        self.assertIn("MaterialExpressionPerInstanceCustomData, -500, 400, const_default_value=1.0, data_index=3", overlay)
 
     def test_instanced_part_materials_follow_the_revision_pattern(self):
         text = SCRIPT.read_text()

@@ -90,9 +90,8 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
         { continue; }
         ++Checked;
 
-        // The headline number: components that draw parts. The nine board-overlay bar sets (#142) are not parts and are reported apart.
-        const int32 Parts = View->PresentationComponentCount(false);
-        const int32 WithOverlay = View->PresentationComponentCount(true);
+        // The headline number counts every primitive component of the board, the contextual grid included (it shares the ring bank).
+        const int32 Parts = View->PresentationComponentCount();
         const int32 Logical = View->LogicalPartCount();
         const int32 Props = View->LogicalPropCount();
         const int32 Groups = View->InstancedGroupCount();
@@ -100,27 +99,40 @@ bool FInstancedPartsBudgetTest::RunTest(const FString& Parameters)
         const int32 Instances = OwnedInstances(*View);
         const int32 Obstacles = View->PlacedObstacles();
         const int32 Dressing = View->PlacedDressing().Num();
-        AddInfo(FString::Printf(TEXT("%s board, instanced: %d part components (%d with the overlay sets), %d groups, %d owned components, %d instances; %d logical parts, %d scenery props"),
-            Name, Parts, WithOverlay, Groups, Owned, Instances, Logical, Props));
-        TestTrue(FString::Printf(TEXT("%s: fewer than %d presentation components per themed rebuild (got %d)"), Name, ComponentBudget, Parts), Parts < ComponentBudget);
+        AddInfo(FString::Printf(TEXT("%s board, instanced: %d presentation components, %d groups, %d owned components, %d instances; %d logical parts, %d scenery props"),
+            Name, Parts, Groups, Owned, Instances, Logical, Props));
+        TestTrue(FString::Printf(TEXT("%s: fewer than %d presentation components in total per themed rebuild (got %d)"), Name, ComponentBudget, Parts), Parts < ComponentBudget);
         TestTrue(FString::Printf(TEXT("%s: the board has parts and props"), Name), Logical > 0 && Props > 0);
         TestTrue(FString::Printf(TEXT("%s: the dressing and obstacles are in the props"), Name),
             Props >= View->PlacedObstacles() + View->PlacedDressing().Num());
+
+        // The contextual grid shares the ring bank: the full-grid lines add bars, not components.
+        TestTrue(FString::Printf(TEXT("%s: the grid is drawn"), Name), View->DrawsContextualGrid());
+        FBoardHighlights Full;
+        Full.bFullGrid = true;
+        View->SetHighlights(Full);
+        View->Tick(0.016f);
+        const int32 GridBars = View->OverlayBars(BoardOverlay::EStyle::Grid);
+        TestTrue(FString::Printf(TEXT("%s: the full grid has bars"), Name), GridBars > 0);
+        TestEqual(FString::Printf(TEXT("%s: the full grid adds no component"), Name), View->PresentationComponentCount(), Parts);
+        TestTrue(FString::Printf(TEXT("%s: the full grid adds instances"), Name), OwnedInstances(*View) >= Instances + GridBars);
 
         // The same board with every part loose is what it drew before: the logical parts are identical, only the components differ.
         View->SetLooseParts(true);
         View->Tick(0.016f);
         TestFalse(FString::Printf(TEXT("%s: loose parts are not instanced"), Name), View->UsesInstancedParts());
-        const int32 LooseParts = View->PresentationComponentCount(false);
+        const int32 LooseParts = View->PresentationComponentCount();
         TestEqual(FString::Printf(TEXT("%s: the same logical parts, loose or instanced"), Name), View->LogicalPartCount(), Logical);
         TestEqual(FString::Printf(TEXT("%s: the same logical props, loose or instanced"), Name), View->LogicalPropCount(), Props);
         TestEqual(FString::Printf(TEXT("%s: the same obstacles"), Name), View->PlacedObstacles(), Obstacles);
         TestEqual(FString::Printf(TEXT("%s: the same dressing"), Name), View->PlacedDressing().Num(), Dressing);
+        TestEqual(FString::Printf(TEXT("%s: the same grid bars, banked or loose"), Name), View->OverlayBars(BoardOverlay::EStyle::Grid), GridBars);
         TestTrue(FString::Printf(TEXT("%s: loose parts need clearly more components (%d against %d)"), Name, LooseParts, Parts), LooseParts > Parts * 2);
-        AddInfo(FString::Printf(TEXT("%s board, loose: %d part components"), Name, LooseParts));
+        AddInfo(FString::Printf(TEXT("%s board, loose: %d presentation components"), Name, LooseParts));
+        View->SetHighlights(FBoardHighlights());
         View->SetLooseParts(false);
         View->Tick(0.016f);
-        TestEqual(FString::Printf(TEXT("%s: back to the instanced count"), Name), View->PresentationComponentCount(false), Parts);
+        TestEqual(FString::Printf(TEXT("%s: back to the instanced count"), Name), View->PresentationComponentCount(), Parts);
         TestEqual(FString::Printf(TEXT("%s: back to the same instances"), Name), OwnedInstances(*View), Instances);
 
         // Rebuilding must not leak components or instances: the board metric rebuild runs the same path as every other rebuild.
@@ -173,7 +185,7 @@ bool FInstancedPartsFallbackTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("A primitive board has no instanced groups"), View->InstancedGroupCount(), 0);
         const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
         TestEqual(TEXT("A primitive board keeps one cube tile per cell"), View->TileCount(), Encounter.Width * Encounter.Height);
-        TestTrue(TEXT("A primitive board has one component per part"), View->PresentationComponentCount(false) >= View->TileCount());
+        TestTrue(TEXT("A primitive board has one component per part"), View->PresentationComponentCount() >= View->TileCount());
         TestTrue(TEXT("A primitive board has parts"), View->LogicalPartCount() > 0);
         const int32 Parts = View->LogicalPartCount();
         View->SetBoardMetric(View->Metric());

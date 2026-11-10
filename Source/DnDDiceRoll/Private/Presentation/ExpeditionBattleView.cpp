@@ -436,29 +436,33 @@ bool AExpeditionBattleView::CanBankRings() const
     return bInstancedParts && OverlayMaterial && Cube;
 }
 
+void AExpeditionBattleView::EnsureBank()
+{
+    if (RingGroup != INDEX_NONE) { return; }
+    // The bank sits in actor space (unit rings do not tilt with the scenery root); markers convert on the way in. Its material
+    // instance is neutral (Color white, Opacity 1): each bar's rgb and opacity are the four custom floats (board-overlay-3).
+    UMaterialInstanceDynamic* Look = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
+    Look->SetVectorParameterValue(TEXT("Color"), FLinearColor::White);
+    Look->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
+    RingGroup = GroupFor(Cube, Look, false, 4, RootComponent);
+    if (Groups.IsValidIndex(RingGroup) && Groups[RingGroup].Component)
+    {
+        RingBank = Groups[RingGroup].Component;
+        RingBank->bReceivesDecals = false;
+    }
+}
+
 int32 AExpeditionBattleView::AddRingSlot(const FLinearColor& Color)
 {
-    if (RingGroup == INDEX_NONE)
-    {
-        // The bank sits in actor space (unit rings do not tilt with the scenery root); markers convert on the way in.
-        UMaterialInstanceDynamic* Look = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
-        Look->SetVectorParameterValue(TEXT("Color"), FLinearColor::White);
-        Look->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
-        RingGroup = GroupFor(Cube, Look, false, 3, RootComponent);
-        if (Groups.IsValidIndex(RingGroup) && Groups[RingGroup].Component)
-        {
-            RingBank = Groups[RingGroup].Component;
-            RingBank->bReceivesDecals = false;
-        }
-    }
+    EnsureBank();
     ++LogicalParts;
     FExpeditionRingState State;
     State.Colour = Color;
     const int32 Slot = RingStates.Add(State);
     // Every bar starts collapsed; SetRing places them. The colour is the bank's per-instance rgb.
     const FTransform Hidden(FRotator::ZeroRotator, FVector::ZeroVector, FVector::ZeroVector);
-    const float Data[3] = {Color.R, Color.G, Color.B};
-    for (int32 Bar = 0; Bar < RingSegments; ++Bar) { PlaceInstance(RingGroup, Hidden, MakeArrayView(Data, 3)); }
+    const float Data[4] = {Color.R, Color.G, Color.B, 1.0f};
+    for (int32 Bar = 0; Bar < RingSegments; ++Bar) { PlaceInstance(RingGroup, Hidden, MakeArrayView(Data, 4)); }
     return Slot;
 }
 
@@ -489,9 +493,10 @@ void AExpeditionBattleView::SetRing(int32 Slot, bool bVisible, const FVector& Ce
     }
     if (bTinted)
     {
-        float Data[RingSegments * 3];
-        for (int32 Index = 0; Index < RingSegments; ++Index) { Data[Index * 3] = Color.R; Data[Index * 3 + 1] = Color.G; Data[Index * 3 + 2] = Color.B; }
-        RingBank->SetCustomData(Start, Start + RingSegments - 1, TConstArrayView<float>(Data, RingSegments * 3), false);
+        float Data[RingSegments * 4];
+        for (int32 Index = 0; Index < RingSegments; ++Index)
+        { Data[Index * 4] = Color.R; Data[Index * 4 + 1] = Color.G; Data[Index * 4 + 2] = Color.B; Data[Index * 4 + 3] = 1.0f; }
+        RingBank->SetCustomData(Start, Start + RingSegments - 1, TConstArrayView<float>(Data, RingSegments * 4), false);
     }
     if (bVisible) { State.Centre = Centre; State.Scale = Scale; }
     State.Colour = Color;
@@ -500,13 +505,32 @@ void AExpeditionBattleView::SetRing(int32 Slot, bool bVisible, const FVector& Ce
     if (Groups.IsValidIndex(RingGroup)) { Groups[RingGroup].bDirty = true; }
 }
 
-int32 AExpeditionBattleView::PresentationComponentCount(bool bIncludeOverlay) const
+void AExpeditionBattleView::SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data)
 {
-    TSet<const UActorComponent*> Overlay;
-    if (!bIncludeOverlay) { for (const FExpeditionPart& Set : OverlaySets) { Overlay.Add(Set.Mesh.Get()); } }
+    if (!RingBank || OverlayBase == INDEX_NONE) { return; }
+    const int32 Count = Bars.Num();
+    const int32 Have = RingBank->GetInstanceCount() - OverlayBase;
+    // The bank only grows: bars beyond the current count are added once, and a smaller grid collapses what is left over.
+    if (Count > Have)
+    {
+        TArray<FTransform> More;
+        More.Append(Bars.GetData() + Have, Count - Have);
+        RingBank->AddInstances(More, false, false, false);
+    }
+    if (Count > 0)
+    {
+        RingBank->BatchUpdateInstancesTransforms(OverlayBase, TArrayView<const FTransform>(Bars.GetData(), Count), false, false, true);
+        RingBank->SetCustomData(OverlayBase, OverlayBase + Count - 1, TConstArrayView<float>(Data.GetData(), Data.Num()), false);
+    }
+    const int32 Left = RingBank->GetInstanceCount() - OverlayBase - Count;
+    if (Left > 0) { RingBank->BatchUpdateInstancesTransform(OverlayBase + Count, Left, FTransform(FRotator::ZeroRotator, FVector::ZeroVector, FVector::ZeroVector), false, false, true); }
+    if (Groups.IsValidIndex(RingGroup)) { Groups[RingGroup].bDirty = true; }
+}
+
+int32 AExpeditionBattleView::PresentationComponentCount() const
+{
     int32 Count = 0;
-    for (const TObjectPtr<UActorComponent>& Component : Spawned)
-    { if (Cast<UPrimitiveComponent>(Component.Get()) && !Overlay.Contains(Component.Get())) { ++Count; } }
+    for (const TObjectPtr<UActorComponent>& Component : Spawned) { if (Cast<UPrimitiveComponent>(Component.Get())) { ++Count; } }
     return Count;
 }
 
@@ -594,7 +618,7 @@ void AExpeditionBattleView::ClearPresentation()
     bOverlayBuilt = false; bFullGridShown = false;
     Rigs.Reset(); Scenery.Reset(); Flames.Reset(); FlameStrength.Reset(); Markers.Reset();
     ShotSlots.Reset(); ShotLights.Reset(); SparkSlots.Reset(); CampSlots.Reset(); WaystoneSlots.Reset();
-    Groups.Reset(); RingBank = nullptr; RingGroup = INDEX_NONE; RingStates.Reset();
+    Groups.Reset(); RingBank = nullptr; RingGroup = INDEX_NONE; OverlayBase = INDEX_NONE; RingStates.Reset();
     LogicalParts = 0; LogicalProps = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
@@ -2509,6 +2533,15 @@ void AExpeditionBattleView::BuildOverlay()
 {
     // Themed battle boards only: primitive boards keep the tinted cube tiles and the HUD markers.
     if (!Theme || bOverview || !Cube) { return; }
+    if (CanBankRings())
+    {
+        // One component draws every ring, marker and grid bar (#144): the grid's bars follow the rings in the bank, each style's
+        // colour and opacity riding in its bars' custom data. Rings are all built by now, so the bars start after them.
+        EnsureBank();
+        OverlayBase = RingBank ? RingBank->GetInstanceCount() : INDEX_NONE;
+        OverlayCounts.SetNumZeroed(static_cast<int32>(BoardOverlay::EStyle::Count));
+        return;
+    }
     for (int32 Index = 0; Index < static_cast<int32>(BoardOverlay::EStyle::Count); ++Index)
     {
         const FOverlayLook Look = OverlayLook(static_cast<BoardOverlay::EStyle>(Index));
@@ -2550,30 +2583,49 @@ void AExpeditionBattleView::UpdateOverlay()
     bFullGridShown = bGrid;
     bOverlayBuilt = true;
     OverlayState = BoardOverlay::BuildMask(Encounter.Width, Encounter.Height, OverlayInput, OverlayVictimsShown);
-    if (OverlaySets.IsEmpty()) { return; }
+    if (OverlaySets.IsEmpty() && OverlayBase == INDEX_NONE) { return; }
 
     TArray<BoardOverlay::FBar> Bars;
     BoardOverlay::BuildBars(OverlayState, OverlayInput, bGrid, Bars);
-    TArray<TArray<FTransform>> Groups;
-    Groups.SetNum(OverlaySets.Num());
+    // Per style: the bars' transforms, grouped so a style's look and count stay together.
+    TArray<TArray<FTransform>> ByStyle;
+    ByStyle.SetNum(static_cast<int32>(BoardOverlay::EStyle::Count));
     for (const BoardOverlay::FBar& Bar : Bars)
     {
         const int32 Index = static_cast<int32>(Bar.Style);
-        if (!Groups.IsValidIndex(Index)) { continue; }
+        if (!ByStyle.IsValidIndex(Index)) { continue; }
         const FVector2D Delta = (Bar.B - Bar.A) * BoardMetric.CellCm;
         const float Length = Delta.Size();
         // The bar is a 1 cm thick slab lying on the board; its underside is at the layer's lift.
         const float Height = BoardMetric.Scaled(OverlayLook(Bar.Style).Lift) + 0.5f;
-        Groups[Index].Add(FTransform(FRotator(0.0f, FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X)), 0.0f),
+        ByStyle[Index].Add(FTransform(FRotator(0.0f, FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X)), 0.0f),
             BoardPosition((Bar.A + Bar.B) * 0.5f, Height), FVector(Length / 100.0f, Bar.Width * BoardMetric.CellCm / 100.0f, 0.01f)));
+    }
+    if (OverlayBase != INDEX_NONE)
+    {
+        // One component for every style (#144): the bars in style order, each with its style's rgb and opacity as custom data.
+        TArray<FTransform> Flat;
+        TArray<float> Data;
+        for (int32 Index = 0; Index < ByStyle.Num(); ++Index)
+        {
+            const FOverlayLook Look = OverlayLook(static_cast<BoardOverlay::EStyle>(Index));
+            for (const FTransform& Bar : ByStyle[Index])
+            {
+                Flat.Add(Bar);
+                Data.Add(Look.Color.R); Data.Add(Look.Color.G); Data.Add(Look.Color.B); Data.Add(Look.Opacity);
+            }
+            OverlayCounts[Index] = ByStyle[Index].Num();
+        }
+        SetOverlayBars(Flat, Data);
+        return;
     }
     for (int32 Index = 0; Index < OverlaySets.Num(); ++Index)
     {
         UInstancedStaticMeshComponent* Set = Cast<UInstancedStaticMeshComponent>(OverlaySets[Index].Mesh);
         if (!Set) { continue; }
         Set->ClearInstances();
-        if (!Groups[Index].IsEmpty()) { Set->AddInstances(Groups[Index], false, false, false); }
-        Set->SetVisibility(!Groups[Index].IsEmpty());
-        OverlayCounts[Index] = Groups[Index].Num();
+        if (!ByStyle[Index].IsEmpty()) { Set->AddInstances(ByStyle[Index], false, false, false); }
+        Set->SetVisibility(!ByStyle[Index].IsEmpty());
+        OverlayCounts[Index] = ByStyle[Index].Num();
     }
 }

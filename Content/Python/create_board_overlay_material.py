@@ -12,9 +12,10 @@ Graph revision (metadata tag DiceRollGraphRevision, as the theme materials): an 
 GRAPH_REVISION is left alone; any other (or none) is rebuilt IN PLACE, so the asset, its path and every instance survive.
 board-overlay-2 draws with the depth test off, so the reach contour, path ribbon, brackets, blocked crosses and footprint
 rings stay visible through tall architecture (pillars, arches). The bars are thin, so drawing over figures is acceptable.
-board-overlay-3 (#144) multiplies the emissive colour by PerInstanceCustomData3Vector slot 0 (default 1, 1, 1): the footprint rings and
-markers of a battle board share one instanced component and carry each ring's colour per instance. The overlay's own bar sets have no custom
-data, so they read the default and draw exactly as before.
+board-overlay-3 (#144) multiplies the emissive colour by PerInstanceCustomData3Vector (slots 0-2, default 1, 1, 1) and the opacity by
+PerInstanceCustomData slot 3 (default 1): the footprint rings, the markers and every style of the contextual grid share one instanced
+component of a battle board and carry each bar's colour and opacity per instance. A component with no custom data (the dimmed-line fallback
+never uses this material, and a loose ring set keeps its own Color and Opacity parameters) reads the defaults and draws exactly as before.
 """
 import unreal
 
@@ -55,7 +56,11 @@ def build(material):
     mel.connect_material_expressions(mask, "", tinted, "A")
     mel.connect_material_expressions(instance_color, "", tinted, "B")
     mel.connect_material_property(tinted, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
-    mel.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
+    instance_opacity = expression(material, unreal.MaterialExpressionPerInstanceCustomData, -500, 400, const_default_value=1.0, data_index=3)
+    shown = expression(material, unreal.MaterialExpressionMultiply, -50, 250)
+    mel.connect_material_expressions(opacity, "", shown, "A")
+    mel.connect_material_expressions(instance_opacity, "", shown, "B")
+    mel.connect_material_property(shown, "", unreal.MaterialProperty.MP_OPACITY)
     mel.recompile_material(material)
 
 

@@ -304,7 +304,7 @@ public:
     float CameraFieldOfView() const;
     bool UsesTheme() const { return Theme != nullptr; }
     /** True when this board draws the contextual grid (themed battle boards); primitive boards tint cube tiles instead. */
-    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty(); }
+    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty() || OverlayBase != INDEX_NONE; }
     /** The per-cell state the contextual grid was last built from (also kept on primitive boards, where only the tiles show it). */
     const BoardOverlay::FMask& OverlayMask() const { return OverlayState; }
     /** Bars drawn for a style in the last overlay update; zero when the board has no contextual grid. */
@@ -376,10 +376,10 @@ public:
     /** The footprint rings and markers are drawn from one shared ring bank. */
     bool UsesRingBank() const { return RingBank != nullptr; }
     /**
-     * Test-only: primitive components (static, instanced and skeletal meshes) this board built; the nine board-overlay bar sets (#142,
-     * not parts) can be left out. InstancedGroupCount is how many of them are shared instanced groups.
+     * Test-only: every primitive component (static, instanced and skeletal meshes) this board built, the contextual grid included.
+     * InstancedGroupCount is how many of them are shared instanced groups.
      */
-    int32 PresentationComponentCount(bool bIncludeOverlay = true) const;
+    int32 PresentationComponentCount() const;
     int32 InstancedGroupCount() const { return Groups.Num(); }
     /** Test-only: the logical parts of the board (props, figure parts, rings and pooled effect pieces), the same whether instanced or loose. */
     int32 LogicalPartCount() const { return LogicalParts; }
@@ -469,9 +469,14 @@ private:
     UPROPERTY() TObjectPtr<UMaterialInterface> EffectMaterial;
     /** Every instanced group of this board; one component each. */
     UPROPERTY() TArray<FExpeditionGroup> Groups;
-    /** The shared ring bank: one component holding every footprint ring and marker (24 bars each). Null when rings are loose. */
+    /**
+     * The shared bar bank: one component holding every footprint ring and marker (24 bars each, first) and then the contextual grid's
+     * bars (all nine styles, after OverlayBase). Null when rings are loose.
+     */
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> RingBank;
     int32 RingGroup = INDEX_NONE;
+    /** First instance of the grid's bars in the bank, or INDEX_NONE when the grid draws as one bar set per style. */
+    int32 OverlayBase = INDEX_NONE;
     TArray<FExpeditionRingState> RingStates;
     /** Pooled effect pieces: instances in shared groups with the effect material, loose parts without it (and in the primitive look). */
     UPROPERTY() TArray<FExpeditionSlot> ShotSlots;
@@ -544,6 +549,9 @@ private:
     void SetSlot(FExpeditionSlot& Slot, bool bVisible, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color);
     // Ring bank.
     bool CanBankRings() const;
+    void EnsureBank();
+    /** Writes the grid's bars (transforms and rgba custom data, in style order) into the bank, growing it when needed and hiding what is left over. */
+    void SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data);
     int32 AddRingSlot(const FLinearColor& Color);
     void SetRing(int32 Slot, bool bVisible, const FVector& Centre, float Scale, const FLinearColor& Color);
     void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
