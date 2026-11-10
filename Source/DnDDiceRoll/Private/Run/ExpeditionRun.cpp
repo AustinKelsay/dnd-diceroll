@@ -51,6 +51,29 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
     }
 }
 
+// Enemy stats for one generated fight. SRD keeps the catalog revision 7 numbers exactly; Compact uses
+// the revision 8 tuning measured by the #179 balance harness (#184, docs/runs/gameplay-depth/10-balance-tuning-report.md).
+struct FEnemyStats { int32 HP = 0, ArmorClass = 0, AttackBonus = 0, DamageDie = 0, DamageBonus = 0; };
+FEnemyStats EnemyStats(ERuleset Ruleset, bool bDangerous, int32 Stage)
+{
+    FEnemyStats Stats;
+    if (Ruleset != ERuleset::Compact)
+    {
+        Stats.HP = (bDangerous ? 12 : 10) + Stage * 2;
+        Stats.ArmorClass = bDangerous ? 12 : 11;
+        Stats.AttackBonus = 2;
+        Stats.DamageDie = bDangerous ? 6 : 4;
+        Stats.DamageBonus = 1;
+        return Stats;
+    }
+    Stats.HP = (bDangerous ? 24 : 20) + Stage * 4;
+    Stats.ArmorClass = bDangerous ? 13 : 12;
+    Stats.AttackBonus = FMath::Min(5, 4 + Stage / 2);
+    Stats.DamageDie = bDangerous ? 8 : 6;
+    Stats.DamageBonus = 3 + Stage / 3;
+    return Stats;
+}
+
 int32 CountSurvivors(const FCombatBattle& Battle)
 {
     int32 Count = 0;
@@ -174,11 +197,12 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         Enemy.Cell = {Recipe.EnemyColumn, Recipe.FirstEnemyRow + Index * 2};
         // Three enemies use rows 3/5/7 or 4/6/8; every grid is at least eleven rows tall.
         Enemy.Range = bArcher ? 4 : 1;
-        Enemy.HP = Enemy.MaxHP = (Route.bDangerous ? 12 : 10) + State.EncountersCompleted * 2;
-        Enemy.ArmorClass = Route.bDangerous ? 12 : 11;
-        Enemy.AttackBonus = 2;
-        Enemy.DamageDie = Route.bDangerous ? 6 : 4;
-        Enemy.DamageBonus = 1;
+        const FEnemyStats Stats = EnemyStats(State.Ruleset, Route.bDangerous, State.EncountersCompleted);
+        Enemy.HP = Enemy.MaxHP = Stats.HP;
+        Enemy.ArmorClass = Stats.ArmorClass;
+        Enemy.AttackBonus = Stats.AttackBonus;
+        Enemy.DamageDie = Stats.DamageDie;
+        Enemy.DamageBonus = Stats.DamageBonus;
         Enemy.InitiativeBonus = 1;
         Layout.Combatants.Add(Enemy);
     }
@@ -254,8 +278,14 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     Error.Reset();
     auto Reject = [&Error]() { Error = TEXT("Invalid saved expedition: phase, party, routes or history disagree."); return false; };
     const auto& P = Snapshot.Progress;
+    if (P.CatalogRevision != FBuildCatalog::Revision)
+    {
+        // An older rules interpretation is refused by name rather than reinterpreted; the file itself stays on disk.
+        Error = FString::Printf(TEXT("This expedition was saved under rules revision %d; this build plays revision %d, so it cannot be resumed."), P.CatalogRevision, FBuildCatalog::Revision);
+        return false;
+    }
     if ((P.Ruleset != ERuleset::Compact && P.Ruleset != ERuleset::SRD) || Snapshot.Battle.Encounter.Ruleset != P.Ruleset ||
-        P.Party.Num() != 4 || P.CatalogRevision != FBuildCatalog::Revision || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
+        P.Party.Num() != 4 || P.RunId.IsEmpty() || P.RunId.Len() > 80 || static_cast<uint8>(P.Phase) > static_cast<uint8>(EExpeditionPhase::Defeat) ||
         P.EncountersCompleted < 0 || P.EncountersCompleted > EncounterCount || P.History.Num() > EncounterCount ||
         (P.bCampUsed && !P.bCampResolved) || P.bArtifactRecovered != (P.Phase == EExpeditionPhase::Victory)) { return Reject(); }
     for (int32 I = 0; I < 4; ++I)

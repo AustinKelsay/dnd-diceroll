@@ -361,4 +361,67 @@ bool FSkipRecoveryTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Guarded history does not grant extra supplies"), Run.Progress().Offers[0].RewardPotions, 1);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompactEnemyTuningTest, "Project.Expedition.Run.CompactEnemyTuning",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
+{
+    // Catalog revision 8 (#184): the Compact enemy stats by stage, for each route, as the run generates them. Counts,
+    // roles and ranges are unchanged; SRD keeps revision 7 (Project.Expedition.Run.SrdSeedUnchangedByCompactTuning).
+    struct FExpected { int32 HP, AttackBonus, DamageBonus; };
+    const FExpected Guarded[] = {{20, 4, 3}, {24, 4, 3}, {28, 5, 3}, {32, 5, 4}, {36, 5, 4}};
+    const FExpected Dangerous[] = {{24, 4, 3}, {28, 4, 3}, {32, 5, 3}, {36, 5, 4}, {40, 5, 4}};
+    for (const int32 Choice : {0, 1})
+    {
+        // The enemies of every fight, taking route Choice each time; a run that falls before fight 5 records fewer.
+        auto Play = [Choice](int32 Seed, TArray<TArray<FCombatantState>>& Fights)
+        {
+            FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("tuning-fixture"));
+            for (int32 Guard = 0; Guard < 64; ++Guard)
+            {
+                const auto Phase = Run.Progress().Phase;
+                if (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat) { break; }
+                if (Phase == EExpeditionPhase::Route)
+                {
+                    if (!Run.ChooseRoute(Run.Progress().Offers[Choice].Id, Error)) { break; }
+                    Fights.Add(Run.Battle().Snapshot().Encounter.Combatants.FilterByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Enemy; }));
+                }
+                else if (Phase == EExpeditionPhase::Combat) { if (!FinishCombat(Run)) { break; } }
+                else if (Phase == EExpeditionPhase::Reward)
+                {
+                    int32 Survivor = 1; while (Survivor <= 4 && Run.Battle().Find(Survivor)->Life != ECombatLife::Conscious) { ++Survivor; }
+                    if (Survivor > 4 || !Run.ClaimReward(Survivor, Error)) { break; }
+                }
+                else if (!Run.Recover(true, Error)) { break; }
+            }
+        };
+        const int32 Seed = FirstSeedWhere([&Play](int32 Candidate) { TArray<TArray<FCombatantState>> Fights; Play(Candidate, Fights); return Fights.Num() == 5; }, 42, 200);
+        if (!TestTrue(TEXT("Some seed reaches all five fights on this route"), Seed != INDEX_NONE)) { continue; }
+        TArray<TArray<FCombatantState>> Fights;
+        Play(Seed, Fights);
+        for (int32 Stage = 0; Stage < Fights.Num(); ++Stage)
+        {
+            const FExpected& E = (Choice == 1 ? Dangerous : Guarded)[Stage];
+            const FString Where = FString::Printf(TEXT("%s fight %d"), Choice == 1 ? TEXT("Dangerous") : TEXT("Guarded"), Stage + 1);
+            TestEqual(Where + TEXT(": enemy count unchanged"), Fights[Stage].Num(), Choice == 1 ? 3 : 2);
+            for (int32 I = 0; I < Fights[Stage].Num(); ++I)
+            {
+                const FCombatantState& U = Fights[Stage][I];
+                TestEqual(Where + TEXT(": HP"), U.MaxHP, E.HP);
+                TestEqual(Where + TEXT(": armour"), U.ArmorClass, Choice == 1 ? 13 : 12);
+                TestEqual(Where + TEXT(": attack bonus"), U.AttackBonus, E.AttackBonus);
+                TestEqual(Where + TEXT(": damage die"), U.DamageDie, Choice == 1 ? 8 : 6);
+                TestEqual(Where + TEXT(": damage bonus"), U.DamageBonus, E.DamageBonus);
+                TestEqual(Where + TEXT(": the last enemy is the archer, the rest raiders"), U.Range, I == Fights[Stage].Num() - 1 ? 4 : 1);
+            }
+        }
+    }
+    // A checkpoint from another rules revision is refused by name and changes nothing.
+    FExpeditionRun Run; FString Error; Run.NewRun(42, Error, TEXT("tuning-fixture"));
+    FExpeditionSnapshot Old = Run.Snapshot(); Old.Progress.CatalogRevision = 7;
+    const FExpeditionSnapshot Before = Run.Snapshot();
+    TestFalse(TEXT("Revision 7 snapshot refused"), Run.Restore(Old, Error));
+    TestTrue(TEXT("The refusal names both revisions: ") + Error, Error.Contains(TEXT("revision 7")) && Error.Contains(TEXT("revision 8")));
+    TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
+    return !HasAnyErrors();
+}
 #endif
