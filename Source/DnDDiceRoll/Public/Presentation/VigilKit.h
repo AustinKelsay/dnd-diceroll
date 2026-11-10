@@ -9,6 +9,12 @@
  * random stream, so the theme choice cannot change a checkpoint or a snapshot.
  *
  * Cells are board cells (the centre of cell (X, Y) is (X, Y)); the view converts them with the one board metric.
+ *
+ * The namespace keeps its #145 name but is the placement for every world kit: the Root of the World kit r002 (#149) is
+ * placed by the same functions, with its own meshes (UDiceRollTheme::KitFor). Its kit is authored to the same layout rules:
+ * dressing two cells (mist and shafts three) outside the board, shafts leaning toward -X, and 2-cell arches only over adjacent
+ * blocked pillar and wall cells. For the Root those are the spire / stump / sawn-stump pillars and the root curtain / fallen
+ * log / root tangle walls; its boulder stones are separate objects, so adjacent stones get no arch.
  */
 namespace VigilKit
 {
@@ -45,7 +51,7 @@ struct FArch
     float Yaw() const { return bAlongX ? 90.0f : 0.0f; }
 };
 
-/** Arches belong to the architectural recipes only: pillars (1) and walls (2). Adjacent blocked stones (0) get no arch. */
+/** Arches belong to the architectural recipes only: pillars (1) and walls (2), in both worlds. Adjacent blocked stones (0) get no arch. */
 inline bool ArchesFor(int32 Recipe) { return Recipe == 1 || Recipe == 2; }
 
 /**

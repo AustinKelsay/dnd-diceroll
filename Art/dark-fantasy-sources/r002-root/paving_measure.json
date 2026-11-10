@@ -1,0 +1,38 @@
+{
+ "before": {
+  "paving_luminance_mean": 0.2742,
+  "paving_luminance_std": 0.0593,
+  "paving_contrast_std_over_mean": 0.216,
+  "paving_luminance_p5_p95": [
+   0.1841,
+   0.3827
+  ],
+  "footprint_share_not_stone_top": 0.248,
+  "figure_bright_pixel_share_over_ground": 0.068,
+  "ground_busyness_std_over_mean": 0.388,
+  "figure_pixels": 6499,
+  "figure_luminance": 0.1191,
+  "ground_behind_figures_luminance": 0.3367,
+  "figure_to_ground_contrast": 0.477,
+  "figure_over_ground_ratio": 0.354,
+  "board_centre_ground_luminance": 0.3178
+ },
+ "after": {
+  "paving_luminance_mean": 0.1992,
+  "paving_luminance_std": 0.0386,
+  "paving_contrast_std_over_mean": 0.194,
+  "paving_luminance_p5_p95": [
+   0.1456,
+   0.2637
+  ],
+  "footprint_share_not_stone_top": 0.513,
+  "figure_bright_pixel_share_over_ground": 0.092,
+  "ground_busyness_std_over_mean": 0.407,
+  "figure_pixels": 6499,
+  "figure_luminance": 0.1056,
+  "ground_behind_figures_luminance": 0.215,
+  "figure_to_ground_contrast": 0.341,
+  "figure_over_ground_ratio": 0.491,
+  "board_centre_ground_luminance": 0.21
+ }
+}
