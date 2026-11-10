@@ -98,6 +98,27 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> RootDiorama;
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> VigilDiorama;
 
+    /**
+     * The Drowned Vigil world kit r002 (#145). Everything in it is authored at the true 150 cm cell, unlike the r001 art
+     * above (110 cm, scaled by the board metric), so it is placed unscaled. The import script sets bMetricKit only when the
+     * world and the three variant-A props are all r002; until then the r001 entries above are what the board draws, and
+     * the rest of this group is ignored. Every entry is optional and falls back individually.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") bool bMetricKit = false;
+    /** Near architecture split from the world; same origin as VigilWorld. Dither-fades when it blocks the camera. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TSoftObjectPtr<UStaticMesh> VigilOccluders;
+    /** Three variants (A, B, C) per obstacle recipe; the variant of a cell is chosen from the seed and the cell. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> PillarVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> WallVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> StonesVariants;
+    /** Spans two adjacent blocked cells; pivot at the midpoint of their shared edge, long axis Y. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TSoftObjectPtr<UStaticMesh> ArchTwoCell;
+    /** Non-blocking floor dressing (rubble, candles, bones, roots, weapons, puddle, urn, moss), outside the board. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> Scatter;
+    /** Translucent mist cards (upright, leaning, flat) and light shafts (prism, crossed planes). */
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> MistCards;
+    UPROPERTY(EditDefaultsOnly, Category = "Vigil Kit") TArray<TSoftObjectPtr<UStaticMesh>> LightShafts;
+
     /** Loads an entry; null when it is unset or missing. */
     static UStaticMesh* Load(const TSoftObjectPtr<UStaticMesh>& Mesh);
 };

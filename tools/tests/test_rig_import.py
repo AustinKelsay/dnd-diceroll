@@ -1,4 +1,5 @@
 import os
+import re
 import runpy
 import sys
 import unittest
@@ -37,7 +38,9 @@ class RigReimportRefusalTest(unittest.TestCase):
 
     def test_refusal_precedes_the_main_block(self):
         text = SCRIPT.read_text()
-        self.assertLess(text.index("if REIMPORT:\n    check_allow_list()\n    refuse_reimport()"), text.index("master = master_material()"))
+        refusal = re.search(r"\n(\s*)if REIMPORT:\n\1    check_allow_list\(\)\n\1    refuse_reimport\(\)\n", text)
+        self.assertIsNotNone(refusal, "the early refusal block")
+        self.assertLess(refusal.start(), text.index("master = master_material()"))
 
 
 if __name__ == "__main__":

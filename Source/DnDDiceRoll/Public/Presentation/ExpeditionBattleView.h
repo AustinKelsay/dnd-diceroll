@@ -6,6 +6,7 @@
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
+#include "Presentation/VigilKit.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
@@ -53,6 +54,9 @@ struct FExpeditionUnitRig
     float Phase = 0.0f;
     UPROPERTY() TObjectPtr<USceneComponent> Root;
     UPROPERTY() TArray<FExpeditionPart> Parts;
+    ECombatSide Side = ECombatSide::Party;
+    /** Whether the parts currently render into custom depth (the silhouette pass); dead figures do not. */
+    bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
     /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its nine clips by EUnitPose. */
@@ -98,6 +102,13 @@ struct FExpeditionSway
     float Phase = 0.0f;
     float Degrees = 0.0f;
     float Flicker = 0.0f;
+};
+
+/** A scatter, mist or light-shaft piece the Vigil kit placed (#145): its plan and where it stands in the view actor's space (cm). */
+struct FPlacedDressing
+{
+    VigilKit::FDressing Plan;
+    FVector Position = FVector::ZeroVector;
 };
 
 /** What the controller wants emphasised on the board this frame. */
@@ -230,10 +241,41 @@ public:
     int32 OverlayBars(BoardOverlay::EStyle Style) const;
     /** True while the full-grid lines are drawn. */
     bool ShowingFullGrid() const { return bFullGridShown; }
+    /** True when this board is built from the Drowned Vigil world kit r002 (a Vigil board of a theme whose kit is switched on). */
+    bool UsesVigilKit() const { return bVigilKit; }
+    /** What the kit dressed this board with: scatter, mist and shaft pieces actually placed, with their cells and view-space positions. */
+    const TArray<FPlacedDressing>& PlacedDressing() const { return Dressing; }
+    /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
+    int32 PlacedObstacles() const { return ObstaclePieces; }
+    int32 PlacedArches() const { return ArchPieces; }
+    /** Per blocked cell, the variant index its obstacle used (kit boards only; -1 for a cell under an arch). */
+    const TMap<FIntPoint, int32>& ObstacleVariants() const { return VariantsByCell; }
+    /** Where each kit obstacle piece stands in the view actor's space: per blocked cell, or the shared-edge midpoint for both cells of an arch. */
+    const TMap<FIntPoint, FVector>& ObstacleSpots() const { return SpotsByCell; }
+    /** True when the board has the near-architecture occluder. */
+    bool HasOccluder() const;
+    /**
+     * Opacity (OccluderFade::MinOpacity to 1) the sight-line part of the occluder fade has at a world-space point right
+     * now: the lower of the fade for the camera-to-focus and the camera-to-active-unit sight lines. 1 when the board has no occluder.
+     */
+    float OccluderOpacityAt(const FVector& WorldPoint) const;
+    /** The same for the board part: the point covers the board when the camera's ray through it lands on the grown board rectangle. */
+    float OccluderBoardOpacityAt(const FVector& WorldPoint) const;
+    /** What the shader is given: the board rectangle grown by OccluderFade::BoardMarginCells (world XY, min and max) and the board-top height. */
+    void OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const;
+    /** World points the occluder protects: the camera, the camera focus and the active unit's chest. */
+    void OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const;
     /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
     int32 TileCount() const { return Tiles.Num(); }
     /** World diameter in cm of the footprint ring under a combatant, read from the ring's geometry; zero if it has none. */
     float FootprintRingDiameterCm(int32 UnitId) const;
+    /** Custom-depth stencil values the figure silhouette material reads: party 1, enemy 2 (0 is no figure). */
+    static constexpr int32 PartyStencil = 1;
+    static constexpr int32 EnemyStencil = 2;
+    /** The stencil value on a combatant's figure parts when they all render custom depth; 0 when none do (dead, or no rig); -1 when mixed. */
+    int32 FigureStencil(int32 UnitId) const;
+    /** Whether the silhouette post-process material is in the grade's blendables (it is optional; absent when the asset does not exist). */
+    bool HasSilhouetteBlendable() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
@@ -284,6 +326,8 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
     UPROPERTY() TObjectPtr<UDiceRollTheme> Theme;
     UPROPERTY() TObjectPtr<UMaterialInterface> ThemeMaterial;
+    /** Post-process material that draws hidden figures' silhouettes; optional (see AttachSilhouette). */
+    UPROPERTY() TObjectPtr<UMaterialInterface> SilhouetteMaterial;
     FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
@@ -334,6 +378,18 @@ private:
     TArray<int32> OverlayCounts;
     UPROPERTY() TArray<FExpeditionUnitRig> Rigs;
     UPROPERTY() TArray<FExpeditionPart> Scenery;
+    /** Vigil kit (#145): the dithered occluder, and a record of what was placed. */
+    UPROPERTY() FExpeditionPart Occluder;
+    /** The board rectangle last pushed to the occluder material (min X, min Y, max X, max Y) and plane Z; pushed only when it changes. */
+    FVector4 OccluderBoardSent = FVector4(0.0, 0.0, 0.0, 0.0);
+    float OccluderPlaneSent = 0.0f;
+    bool bOccluderBoardSent = false;
+    bool bVigilKit = false;
+    TArray<FPlacedDressing> Dressing;
+    TMap<FIntPoint, int32> VariantsByCell;
+    TMap<FIntPoint, FVector> SpotsByCell;
+    int32 ObstaclePieces = 0;
+    int32 ArchPieces = 0;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> Flames;
     /** Per-flame base candela for themed lights; zero keeps the primitive torch strength. */
     TArray<float> FlameStrength;
@@ -371,12 +427,24 @@ private:
     void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (Vigil boards, pillar and wall recipes). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches);
+    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing). */
+    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed);
+    /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
+    FExpeditionPart MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation);
+    /** Pushes the sight lines to the occluder material. */
+    void UpdateOccluder();
     void BuildOverview();
     void AddSway(USceneComponent* Component, float Degrees, float Flicker);
     void UpdateSway();
     void BuildEffects(const FCombatEncounter& Encounter);
     void ApplyTheme();
     void UpdateRigs();
+    /** Adds M_FigureSilhouette to the grade's blendables when the asset exists; does nothing otherwise. */
+    void AttachSilhouette();
+    /** Turns a figure's custom depth and side stencil on or off (the footprint ring is excluded). */
+    void SetFigureSilhouette(FExpeditionUnitRig& Rig, bool bOn);
     void UpdateTiles();
     void BuildOverlay();
     void UpdateOverlay();
