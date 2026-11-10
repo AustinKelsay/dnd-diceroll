@@ -91,7 +91,7 @@ TArray<FArch> ArchPairs(const TArray<FIntPoint>& Blocked)
     return Arches;
 }
 
-TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds)
+TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds, const TArray<FVector2D>& Avoid, float AvoidRadius)
 {
     TArray<FCandidate> Scatter, Mist, Shaft;
     for (int32 Y = -MistMaxRing; Y < Height + MistMaxRing; ++Y)
@@ -100,7 +100,12 @@ TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDre
         {
             const FIntPoint Cell(X, Y);
             const int32 Ring = RingDistance(Cell, Width, Height);
-            if (Ring >= ScatterMinRing && Ring <= ScatterMaxRing) { Scatter.Add({Hash(Seed, 11, Cell), Cell}); }
+            if (Ring >= ScatterMinRing && Ring <= ScatterMaxRing)
+            {
+                const bool bBlocked = Avoid.ContainsByPredicate([&](const FVector2D& Point)
+                { return FVector2D::DistSquared(Point, FVector2D(Cell.X, Cell.Y)) < FMath::Square(static_cast<double>(AvoidRadius)); });
+                if (!bBlocked) { Scatter.Add({Hash(Seed, 11, Cell), Cell}); }
+            }
             if (Ring >= MistMinRing && Ring <= MistMaxRing) { Mist.Add({Hash(Seed, 12, Cell), Cell}); }
             if (Ring >= MistMinRing && Ring <= MistMaxRing && X <= ShaftMaxX) { Shaft.Add({Hash(Seed, 13, Cell), Cell}); }
         }

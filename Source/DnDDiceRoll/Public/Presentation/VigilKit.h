@@ -86,6 +86,11 @@ struct FDressingKinds
  * The dressing of a Width x Height board: ScatterCount scatter pieces on cells 2 to 3 outside the board, MistCount mist
  * cards 3 to 5 outside it, ShaftCount light shafts on the -X side. No two share a cell, and nothing is ever on or beside
  * a playable cell. Deterministic in (Width, Height, Seed, Kinds).
+ *
+ * Scatter cells whose centre lies within AvoidRadius cells of any point in Avoid (the braziers of #148, in board cells) are not
+ * candidates, so a piece of rubble never lands inside a brazier; the next-lowest scoring cells take their place and the count is
+ * unchanged. The default (nothing to avoid) is the plan #145 shipped.
  */
-DNDDICEROLL_API TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds);
+DNDDICEROLL_API TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds,
+    const TArray<FVector2D>& Avoid = TArray<FVector2D>(), float AvoidRadius = 0.0f);
 }
