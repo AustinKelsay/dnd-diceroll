@@ -1,0 +1,15 @@
+04:06:40 start Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide24/24 Vault24/24 done=0 rev=8
+04:06:40 ROUND 1 | Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide24/24 Vault24/24
+04:06:41 Ivo move 4,6 -> (7, 5)
+04:06:45   move not accepted
+04:06:48 Nix attack Raider 2
+04:06:52 Nix end turn | Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide16/24 Vault24/24
+04:06:55 Sera attack Raider 2
+04:06:59 Sera end turn | Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide11/24 Vault24/24
+04:07:02 Arden move 4,3 -> (6, 4)
+04:07:06   move not accepted
+04:07:09 ROUND 2 | Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide11/24 Vault24/24
+04:07:09 Ivo move 4,6 -> (6, 6)
+04:07:14 Ivo attack Raider 2
+04:07:18 Ivo end turn | Arden30/30 Nix22/22 Sera22/22 Ivo24/24 Raide24/24 Raide7/24 Vault24/24
+04:07:20 end elapsed 40s
