@@ -22,8 +22,7 @@ class RigReimportRefusalTest(unittest.TestCase):
             with self.assertRaises(RuntimeError) as raised:
                 runpy.run_path(str(SCRIPT), run_name="__main__")
         calls = {name for name, _, _ in fake.mock_calls}
-        # A call on a returned object (get_editor_subsystem().x) is recorded as "get_editor_subsystem().x".
-        unexpected = sorted(name for name in calls if name not in READS and not name.startswith("get_editor_subsystem().__"))
+        unexpected = sorted(name for name in calls if name not in READS)
         self.assertEqual(unexpected, [], "engine calls before the refusal")
         return str(raised.exception)
 
