@@ -2,10 +2,48 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Presentation/UnitPose.h"
 #include "DiceRollTheme.generated.h"
 
+class UAnimSequence;
 class UMaterialInterface;
+class USkeletalMesh;
 class UStaticMesh;
+
+/** One clip per pose of the shared humanoid skeleton (#147). Property names match EUnitPose's clip names. */
+USTRUCT(BlueprintType)
+struct DNDDICEROLL_API FDiceRollAnimSet
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Idle;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Walk;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Melee;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Ranged;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Cast;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Hit;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Downed;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Death;
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Recover;
+
+    const TSoftObjectPtr<UAnimSequence>& For(EUnitPose Pose) const;
+};
+
+/**
+ * A rigged character: a skeletal mesh on the shared skeleton and its clips. Optional like every theme entry; an unset or
+ * incomplete definition (any clip missing) leaves the unit on its static r001 mesh, then on primitives.
+ */
+USTRUCT(BlueprintType)
+struct DNDDICEROLL_API FDiceRollCharacter
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, Category = "Character") TSoftObjectPtr<USkeletalMesh> Mesh;
+    UPROPERTY(EditAnywhere, Category = "Character") FDiceRollAnimSet Animations;
+    /** Extra yaw in degrees if the import faces the wrong way (the r001 exports face +X). */
+    UPROPERTY(EditAnywhere, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
+
+    /** Loads the mesh and all nine clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
+    bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
+};
 
 /**
  * The dark-fantasy art set the battle view draws with. Every entry is optional: a missing
@@ -32,6 +70,11 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Raider;
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Scout;
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Archer;
+
+    /** Rigged characters (#147): the roster entries below use these when imported, otherwise the static meshes above. */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter FighterRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter WizardRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter RaiderRig;
 
     /** Surrounding worlds, authored around an 18 x 12 cell footprint centred on the origin. */
     UPROPERTY(EditDefaultsOnly, Category = "Worlds") TSoftObjectPtr<UStaticMesh> RootWorld;

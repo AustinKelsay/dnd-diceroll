@@ -156,8 +156,27 @@ void FExpeditionPlayback::Sync(const FCombatSnapshot& Snapshot)
         Display.MaxHP = FMath::Max(1, Unit.MaxHP);
         Display.Life = Unit.Life;
         Display.Tilt = Unit.Life == ECombatLife::Conscious ? 0.0f : 1.0f;
+        if (!Existing) { Display.Pose = ExpeditionPose::Rest(Display.Life); Display.bPoseSnap = true; ++Display.PoseSerial; }
+        else { Converge(Display, false); }
     }
     for (auto It = Displays.CreateIterator(); It; ++It) { if (!Present.Contains(It.Key())) { It.RemoveCurrent(); } }
+}
+
+void FExpeditionPlayback::SetPose(FUnitDisplay& Unit, EUnitPose Pose)
+{
+    if (Unit.Pose == Pose && !Unit.bPoseSnap) { return; }
+    Unit.Pose = Pose;
+    Unit.bPoseSnap = false;
+    ++Unit.PoseSerial;
+}
+
+void FExpeditionPlayback::Converge(FUnitDisplay& Unit, bool bSnap)
+{
+    const EUnitPose Rest = ExpeditionPose::Rest(Unit.Life);
+    if (Unit.Pose == Rest && (!bSnap || Unit.bPoseSnap)) { return; }
+    Unit.Pose = Rest;
+    Unit.bPoseSnap = bSnap;
+    ++Unit.PoseSerial;
 }
 
 void FExpeditionPlayback::Add(float Duration, TFunction<void()> Begin, TFunction<void(float)> Update)
@@ -236,11 +255,20 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
 {
     if (Result.Type == ECombatCommandType::Special1 || Result.Type == ECombatCommandType::Special2)
     {
+        const FCombatantState* SpecialActor = ExpeditionStyle::FindUnit(After, Result.ActorId);
+        bool bSpell = false;
+        if (SpecialActor)
+        {
+            for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*SpecialActor)) { if (Ability.Command == Result.Type) { bSpell = Ability.bSpell; } }
+        }
         for (const auto& Effect : Result.Effects)
         {
-            Add(0.45f, [this, Effect, Result]()
+            const bool bFar = SpecialActor && FMath::Abs(SpecialActor->Cell.X - Effect.Cell.X) + FMath::Abs(SpecialActor->Cell.Y - Effect.Cell.Y) > 1;
+            const EUnitPose ActorPose = ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
+            Add(0.45f, [this, Effect, Result, ActorPose]()
             {
                 auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }
+                if (ActorPose != EUnitPose::Idle) { if (FUnitDisplay* Actor = Displays.Find(Result.ActorId)) { SetPose(*Actor, ActorPose); } }
                 Focus = Result.ActorId;
                 Dice = FDiceTray();
                 if (Effect.Effect == EAbilityEffect::Rage)
@@ -264,6 +292,7 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
                 else
                 {
                     Unit->HP = FMath::Max(0, Unit->HP - Effect.Amount); Unit->Flash = 1.0f;
+                    if (Unit->HP > 0 && Unit->Life == ECombatLife::Conscious) { SetPose(*Unit, ExpeditionPose::ForDamage()); }
                     ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("-%d"), Effect.Amount), Blood);
                     if (Effect.Effect == EAbilityEffect::Surge) { ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Wild Bolt outcome %d"), Result.SurgeOutcome), PlaybackGold, 0.75f); }
                     Cue(EExpeditionCue::Hit);
@@ -301,6 +330,7 @@ void FExpeditionPlayback::AddMove(const FCombatResult& Result)
             Focus = Id;
             *From = Unit->Position;
             Unit->Facing = SafeDirection(*From, CellOf(Cell));
+            SetPose(*Unit, ExpeditionPose::ForCommand(ECombatCommandType::Move, false));
             Cue(EExpeditionCue::Step);
         }, [this, Id, Cell, From](float Alpha)
         {
@@ -325,6 +355,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const bool bRanged = FMath::Abs(Actor->Cell.X - Target->Cell.X) + FMath::Abs(Actor->Cell.Y - Target->Cell.Y) > 1;
     const FString ActorName = Actor->Name, TargetName = Target->Name;
     const EAdventurerRole Role = Actor->AdventurerRole;
+    const EUnitPose ActorPose = ExpeditionPose::ForCommand(Result.Type, bRanged, ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged));
     const bool bArrow = Role == EAdventurerRole::Rogue || (Actor->Side == ECombatSide::Enemy && bRanged);
 
     // Wind up while the d20 (or spell dice) tumble.
@@ -373,6 +404,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     {
         Add(0.5f, [=, this]()
         {
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             Cue(EExpeditionCue::Spell);
             for (int32 Index = 0; Index < 3; ++Index)
             {
@@ -384,6 +416,7 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     {
         Add(0.3f, [=, this]()
         {
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
             const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
                 Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.9f, 0.5f) : FLinearColor(0.85f, 0.75f, 0.6f);
@@ -392,7 +425,11 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     }
     else
     {
-        Add(0.16f, [=, this]() { Cue(EExpeditionCue::Swing); }, [=, this](float Alpha)
+        Add(0.16f, [=, this]()
+        {
+            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
+            Cue(EExpeditionCue::Swing);
+        }, [=, this](float Alpha)
         {
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Lean = Direction * FMath::Lerp(-0.12f, 0.42f, EaseInOut(Alpha)); }
         });
@@ -421,6 +458,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
         }
         Target->HP = FMath::Max(0, Target->HP - Result.Damage);
         Target->Flash = 1.0f;
+        // A unit that stays up flinches; one that falls goes straight to its fall clip in AddFalls.
+        if (Target->HP > 0 && Target->Life == ECombatLife::Conscious) { SetPose(*Target, ExpeditionPose::ForDamage()); }
         ShowText(Target->Position, FString::Printf(TEXT("-%d%s"), Result.Damage, Result.bCritical ? TEXT("!") : TEXT("")),
             Result.bCritical ? PlaybackGold : Blood, Result.bCritical ? 1.6f : 1.25f);
         if (Result.bSneakAttack) { ShowText(Target->Position, TEXT("SNEAK ATTACK"), FLinearColor(0.4f, 1.0f, 0.6f), 0.75f); }
@@ -464,6 +503,7 @@ void FExpeditionPlayback::AddFalls(const FCombatResult& Result, const FCombatSna
             *StartTilt = Display->Tilt;
             Display->Life = bDead ? ECombatLife::Dead : ECombatLife::Downed;
             Display->HP = 0;
+            SetPose(*Display, ExpeditionPose::ForFall(bDead));
             Focus = Id;
             if (bEnemy) { ShowText(Display->Position, TEXT("SLAIN"), Ash, 1.0f, 1.6f); }
             else if (bDead) { ShowText(Display->Position, Name.ToUpper() + TEXT(" HAS DIED"), Blood, 1.15f, 2.2f); }
@@ -493,7 +533,12 @@ void FExpeditionPlayback::AddHealing(const FCombatResult& Result, const FCombatS
     Add(Result.EffectDice.IsEmpty() ? 0.3f : FDiceTray::TumbleSeconds, [=, this]()
     {
         Focus = ActorId;
-        if (FUnitDisplay* Unit = Displays.Find(ActorId)) { Unit->Glow = 1.0f; if (ActorId != TargetId) { Unit->Facing = Direction; } }
+        if (FUnitDisplay* Unit = Displays.Find(ActorId))
+        {
+            Unit->Glow = 1.0f;
+            if (ActorId != TargetId) { Unit->Facing = Direction; }
+            if (const EUnitPose Pose = ExpeditionPose::ForCommand(Result.Type, false); Pose != EUnitPose::Idle) { SetPose(*Unit, Pose); }
+        }
         Dice = FDiceTray();
         Dice.bVisible = true;
         Dice.Title = Title;
@@ -523,6 +568,7 @@ void FExpeditionPlayback::AddHealing(const FCombatResult& Result, const FCombatS
         Unit->HP = FMath::Min(Unit->MaxHP, Unit->HP + Result.Healing);
         Unit->Life = ECombatLife::Conscious;
         Unit->Glow = 1.0f;
+        if (bWasDown) { SetPose(*Unit, ExpeditionPose::ForRecovery()); }
         ShowSparkles(Unit->Position, Color);
         ShowText(Unit->Position, FString::Printf(TEXT("+%d"), Result.Healing), Color, 1.25f);
         if (bWasDown) { ShowText(Unit->Position, TEXT("BACK ON THEIR FEET"), Mint, 0.8f, 1.8f); }
@@ -595,12 +641,16 @@ void FExpeditionPlayback::StepRunner(float Seconds)
 
 void FExpeditionPlayback::Finish()
 {
-    if (!IsBusy()) { return; }
-    bSkipping = true;
-    StepRunner(TNumericLimits<float>::Max());
-    bSkipping = false;
-    Shots.Reset();
-    Glitter.Reset();
-    for (auto& Pair : Displays) { Pair.Value.ShownHP = Pair.Value.TrailHP = Pair.Value.HP; }
-    Dice.Age = FMath::Max(Dice.Age, FDiceTray::TumbleSeconds + 0.5f);
+    // Poses converge even when no step is queued, so a clip still playing from an earlier result ends on the committed pose.
+    if (IsBusy())
+    {
+        bSkipping = true;
+        StepRunner(TNumericLimits<float>::Max());
+        bSkipping = false;
+        Shots.Reset();
+        Glitter.Reset();
+        for (auto& Pair : Displays) { Pair.Value.ShownHP = Pair.Value.TrailHP = Pair.Value.HP; }
+        Dice.Age = FMath::Max(Dice.Age, FDiceTray::TumbleSeconds + 0.5f);
+    }
+    for (auto& Pair : Displays) { Converge(Pair.Value, true); }
 }

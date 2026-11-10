@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/UnitPose.h"
 
 /** Sounds and moments the playback asks the world to express. */
 enum class EExpeditionCue : uint8
@@ -26,6 +27,12 @@ struct DNDDICEROLL_API FUnitDisplay
     float ShownHP = 0.0f;
     float TrailHP = 0.0f;
     ECombatLife Life = ECombatLife::Conscious;
+    /** The clip the figure should show (#147). Chosen from committed results; never read back by rules. */
+    EUnitPose Pose = EUnitPose::Idle;
+    /** Bumps whenever Pose is set or converged, so a repeated clip restarts and the view notices the change. */
+    int32 PoseSerial = 0;
+    /** True when the pose was reached by convergence on the committed state (reset, resume, skip, Finish): show the clip's end. */
+    bool bPoseSnap = true;
 };
 
 struct DNDDICEROLL_API FFloatingText
@@ -154,6 +161,10 @@ private:
     void AddHealing(const FCombatResult& Result, const FCombatSnapshot& After);
     void AddImpact(const FCombatResult& Result, FVector2D Direction);
     void AddFalls(const FCombatResult& Result, const FCombatSnapshot& After);
+    /** Plays a clip on a figure. Repeating the clip already playing changes nothing. */
+    static void SetPose(FUnitDisplay& Unit, EUnitPose Pose);
+    /** Moves the pose to the one the committed life implies. A snap also finishes a clip still playing. */
+    static void Converge(FUnitDisplay& Unit, bool bSnap);
     void StepRunner(float Seconds);
     void Advance(float Seconds);
 };
