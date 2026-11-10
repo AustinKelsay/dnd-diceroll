@@ -1,0 +1,33 @@
+== staging default-seed-battle 1920x1080 04:28:41
+exit 0 shots=6
+== pr175 default-seed-battle 1920x1080 04:28:45
+exit 0 shots=6
+== staging default-seed-battle 1280x720 04:28:49
+exit 0 shots=6
+== pr175 default-seed-battle 1280x720 04:28:52
+exit 0 shots=6
+== staging board-vigil-pillars 1920x1080 04:28:55
+exit 0 shots=6
+== pr175 board-vigil-pillars 1920x1080 04:28:59
+exit 0 shots=6
+== staging board-vigil-pillars 1280x720 04:29:03
+exit 0 shots=6
+== pr175 board-vigil-pillars 1280x720 04:29:06
+exit 0 shots=6
+== staging board-vigil-walls 1920x1080 04:29:09
+exit 0 shots=6
+== pr175 board-vigil-walls 1920x1080 04:29:13
+exit 0 shots=6
+== staging board-vigil-walls 1280x720 04:29:17
+exit 0 shots=6
+== pr175 board-vigil-walls 1280x720 04:29:20
+exit 0 shots=6
+== staging board-18x12 1920x1080 04:29:23
+exit 0 shots=6
+== pr175 board-18x12 1920x1080 04:29:27
+exit 0 shots=6
+== staging board-18x12 1280x720 04:29:31
+exit 0 shots=6
+== pr175 board-18x12 1280x720 04:29:34
+exit 0 shots=6
+ALLDONE 04:29:38

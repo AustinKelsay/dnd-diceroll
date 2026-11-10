@@ -1,0 +1,12 @@
+board-vigil-pillars battle-yaw000-default  staging-vs-staging2 PSNR=120  staging-vs-pr PSNR=48.4952
+board-vigil-pillars battle-yaw090-near  staging-vs-staging2 PSNR=120  staging-vs-pr PSNR=51.2905
+board-vigil-pillars battle-yaw180-default  staging-vs-staging2 PSNR=120  staging-vs-pr PSNR=49.2284
+board-vigil-pillars battle-yawm90-near  staging-vs-staging2 PSNR=64.325  staging-vs-pr PSNR=59.6494
+board-vigil-pillars targeting-yawm90-default  staging-vs-staging2 PSNR=120  staging-vs-pr PSNR=44.715
+board-vigil-pillars targeting-yawm90-near  staging-vs-staging2 PSNR=120  staging-vs-pr PSNR=69.5458
+default-seed-battle battle-yaw000-default  staging-vs-staging2 PSNR=71.7925  staging-vs-pr PSNR=53.5186
+default-seed-battle battle-yaw090-near  staging-vs-staging2 PSNR=63.8181  staging-vs-pr PSNR=60.1281
+default-seed-battle battle-yaw180-default  staging-vs-staging2 PSNR=80.3656  staging-vs-pr PSNR=54.647
+default-seed-battle battle-yawm90-near  staging-vs-staging2 PSNR=63.2208  staging-vs-pr PSNR=59.0523
+default-seed-battle targeting-yawm90-default  staging-vs-staging2 PSNR=96.7117  staging-vs-pr PSNR=51.9528
+default-seed-battle targeting-yawm90-near  staging-vs-staging2 PSNR=79.9923  staging-vs-pr PSNR=61.9952
