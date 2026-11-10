@@ -44,6 +44,21 @@ constexpr int32 SparkPool = 16;
 // Table-top height of the mission overview; its legs stand on a floor laid over the sandbox's.
 constexpr float OverviewHeight = 80.0f;
 
+/**
+ * The `Color` tint stored on a kit mesh's own material instance (white unless the import script lowered it). A part's
+ * dynamic material would otherwise overwrite it with the part colour, so the lever the lead tunes on the instance (for
+ * example the Root paving value, #149) multiplies into the colour the part is drawn with.
+ */
+FLinearColor InstanceTint(const UStaticMesh* Mesh)
+{
+    FLinearColor Tint = FLinearColor::White;
+    if (const UMaterialInterface* Own = Mesh ? Mesh->GetMaterial(0) : nullptr)
+    {
+        Own->GetVectorParameterValue(FHashedMaterialParameterInfo(TEXT("Color")), Tint);
+    }
+    return Tint;
+}
+
 struct FPalette
 {
     FLinearColor TileA, TileB, Ground, Rim, Rock, RockDark, Fog, Sun;
@@ -693,7 +708,7 @@ void AExpeditionBattleView::ClearPresentation()
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
-    bVigilKit = false; ObstaclePieces = 0; ArchPieces = 0;
+    bVigilKit = false; bRootKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
 }
 
 void AExpeditionBattleView::RebuildBoard()
@@ -822,6 +837,17 @@ FUnitAnimationState AExpeditionBattleView::UnitAnimation(int32 UnitId) const
         break;
     }
     return State;
+}
+
+void AExpeditionBattleView::UseTheme(UDiceRollTheme* Value)
+{
+    if (!Value) { UsePrimitives(); return; }
+    Theme = Value;
+    ThemeMaterial = !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
+    if (!ThemeMaterial) { UsePrimitives(); return; }
+    OverviewTable = UDiceRollTheme::Load(Theme->Tabletop);
+    BoardMetric = FBoardMetric(Theme->CellSize, Theme->FigureHeight);
+    RebuildBoard();
 }
 
 void AExpeditionBattleView::UsePrimitives()
@@ -2204,16 +2230,20 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // The world surrounds an 18 x 12 footprint; a dark underlay hides the sandbox past its edge.
     PlaceProp(Cube, FVector(Center.X, Center.Y, Ground - 60.0f), FVector(600.0f, 600.0f, 0.1f), FLinearColor(0.01f, 0.01f, 0.012f));
-    // The r002 kit is authored at the true 150 cm cell, so under the root the metric scales it is placed at 1 / scale.
-    // The r001 art (110 cm) keeps the root's scale. Only Vigil boards use the r002 world; every board uses the r002 obstacles.
+    // The r002 kits are authored at the true 150 cm cell, so under the root the metric scales they are placed at 1 / scale.
+    // The r001 art (110 cm) keeps the root's scale. A world uses its r002 mesh, occluders and dressing only when its own kit is
+    // switched on (the Vigil kit on Vigil boards, #145; the Root kit on forest boards, #149). bMetric is the Vigil flag: it also
+    // says the shared r001 obstacle packages (Theme->Pillar, Wall, Stones) now hold r002 variant A at the true metric.
+    const FDiceRollWorldKit Kit = Theme->KitFor(bForest);
     const bool bMetric = Theme->bMetricKit;
-    const bool bVigil = bMetric && !bForest;
+    const bool bWorldKit = Kit.bMetric;
     const FVector MetricScale(1.0f / SceneScale());
-    PlaceProp(World, FVector(Center.X, Center.Y, Ground), bVigil ? MetricScale : FVector::OneVector, FLinearColor::White);
-    bVigilKit = bVigil;
-    if (bVigil)
+    WorldProp = PlaceProp(World, FVector(Center.X, Center.Y, Ground), bWorldKit ? MetricScale : FVector::OneVector, bWorldKit ? KitTint(World) : FLinearColor::White);
+    bVigilKit = bWorldKit && !bForest;
+    bRootKit = bWorldKit && bForest;
+    if (bWorldKit)
     {
-        if (UStaticMesh* Near = ThemeMesh(Theme->VigilOccluders))
+        if (UStaticMesh* Near = ThemeMesh(*Kit.Occluders))
         {
             Occluder = PlaceOccluder(Near, FVector(Center.X, Center.Y, Ground), MetricScale);
         }
@@ -2228,8 +2258,11 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     FRandomStream Random(Seed);
     const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
     // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
-    // consumed by the r001 path, so the kit never changes what the fallback draws.
-    if (!(bMetric && BuildKitObstacles(Encounter, Kind, Seed, bVigil && VigilKit::ArchesFor(Kind))))
+    // consumed by the r001 path, so the kit never changes what the fallback draws. A world kit places its own variants (and
+    // arches over pillar and wall recipes). Without one, the Vigil kit's variants still serve every board once it is on, as before.
+    bool bBuilt = bWorldKit && BuildKitObstacles(Encounter, Kind, Seed, VigilKit::ArchesFor(Kind), Kit);
+    if (!bBuilt && bMetric && bForest) { bBuilt = BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(false)); }
+    if (!bBuilt)
     {
         UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
         for (const FIntPoint& Cell : Encounter.BlockedCells)
@@ -2240,7 +2273,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
                 FLinearColor::White * Random.FRandRange(0.85f, 1.0f), FRotator(0.0f, Turn, 0.0f));
         }
     }
-    if (bVigil) { BuildKitDressing(Encounter, Seed); }
+    if (bWorldKit) { BuildKitDressing(Encounter, Seed, Kit); }
     // Braziers ring the board and banners mark the far edge; flames flicker, banners sway.
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
@@ -2291,20 +2324,20 @@ FExpeditionPart AExpeditionBattleView::MakeOwnMaterialPart(UStaticMesh* Mesh, FV
     return Part;
 }
 
-bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches)
+bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit)
 {
-    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Recipe == 1 ? Theme->PillarVariants : Recipe == 2 ? Theme->WallVariants : Theme->StonesVariants;
+    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Kit.Variants(Recipe);
     TArray<UStaticMesh*> Variants;
     bool bAny = false;
     for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Variants.Add(ThemeMesh(Entry)); bAny = bAny || Variants.Last() != nullptr; }
     if (!bAny) { return false; }
     const FVector MetricScale(1.0f / SceneScale());
     TSet<FIntPoint> Covered;
-    if (UStaticMesh* Arch = bArches ? ThemeMesh(Theme->ArchTwoCell) : nullptr)
+    if (UStaticMesh* Arch = bArches ? ThemeMesh(*Kit.Arch) : nullptr)
     {
         for (const VigilKit::FArch& Pair : VigilKit::ArchPairs(Encounter.BlockedCells))
         {
-            const FExpeditionProp Piece = PlaceProp(Arch, SceneBoard(Pair.Midpoint()), MetricScale, FLinearColor::White, FRotator(0.0f, Pair.Yaw(), 0.0f));
+            const FExpeditionProp Piece = PlaceProp(Arch, SceneBoard(Pair.Midpoint()), MetricScale, KitTint(Arch), FRotator(0.0f, Pair.Yaw(), 0.0f));
             Covered.Add(Pair.A); Covered.Add(Pair.B);
             VariantsByCell.Add(Pair.A, -1); VariantsByCell.Add(Pair.B, -1);
             const FVector Spot = PropActorPosition(Piece);
@@ -2323,7 +2356,7 @@ bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter,
         if (Index == INDEX_NONE) { continue; }
         const float Turn = 90.0f * static_cast<float>(VigilKit::Hash(Seed, 2, Cell) % 4u) + (Recipe == 0 ? (VigilKit::Unit(Seed, 3, Cell) - 0.5f) * 40.0f : 0.0f);
         const float Tint = 0.85f + 0.15f * VigilKit::Unit(Seed, 4, Cell);
-        const FExpeditionProp Piece = PlaceProp(Variants[Index], SceneBoard(FVector2D(Cell.X, Cell.Y)), MetricScale, FLinearColor::White * Tint, FRotator(0.0f, Turn, 0.0f));
+        const FExpeditionProp Piece = PlaceProp(Variants[Index], SceneBoard(FVector2D(Cell.X, Cell.Y)), MetricScale, KitTint(Variants[Index]) * Tint, FRotator(0.0f, Turn, 0.0f));
         VariantsByCell.Add(Cell, Index);
         SpotsByCell.Add(Cell, PropActorPosition(Piece));
         ++ObstaclePieces;
@@ -2331,7 +2364,7 @@ bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter,
     return true;
 }
 
-void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed)
+void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit)
 {
     auto Load = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
     {
@@ -2339,7 +2372,7 @@ void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, 
         for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Meshes.Add(ThemeMesh(Entry)); }
         return Meshes;
     };
-    const TArray<UStaticMesh*> Scatter = Load(Theme->Scatter), Mist = Load(Theme->MistCards), Shafts = Load(Theme->LightShafts);
+    const TArray<UStaticMesh*> Scatter = Load(*Kit.Scatter), Mist = Load(*Kit.Mist), Shafts = Load(*Kit.Shafts);
     VigilKit::FDressingKinds Kinds;
     Kinds.Scatter = Scatter.Num(); Kinds.Mist = Mist.Num(); Kinds.Shaft = Shafts.Num();
     const FVector MetricScale(1.0f / SceneScale());
@@ -2352,12 +2385,31 @@ void AExpeditionBattleView::BuildKitDressing(const FCombatEncounter& Encounter, 
         const FRotator Turn(0.0f, Plan.Yaw, 0.0f);
         // Translucent cards (mist and shafts) keep their own material and cast no shadow.
         const bool bCard = Plan.Kind != VigilKit::EDressingKind::Scatter;
-        const FExpeditionProp Piece = PlaceProp(Mesh, Local, MetricScale, FLinearColor::White, Turn, !bCard, bCard);
+        const FExpeditionProp Piece = PlaceProp(Mesh, Local, MetricScale, bCard ? FLinearColor::White : KitTint(Mesh), Turn, !bCard, bCard);
         FPlacedDressing Placed;
         Placed.Plan = Plan;
         Placed.Position = PropActorPosition(Piece);
         Dressing.Add(Placed);
     }
+}
+
+float AExpeditionBattleView::WorldMeshScale() const
+{
+    // The world is a loose part, or an instance in a group (#144); either way report its world-space scale.
+    if (WorldProp.Loose) { return IsValid(WorldProp.Loose) ? static_cast<float>(WorldProp.Loose->GetComponentScale().X) : 0.0f; }
+    if (WorldProp.Instance.IsValid() && Groups.IsValidIndex(WorldProp.Instance.Group) && Groups[WorldProp.Instance.Group].Component)
+    {
+        FTransform Transform;
+        if (Groups[WorldProp.Instance.Group].Component->GetInstanceTransform(WorldProp.Instance.Index, Transform, true)) { return static_cast<float>(Transform.GetScale3D().X); }
+    }
+    return 0.0f;
+}
+
+FLinearColor AExpeditionBattleView::KitTint(const UStaticMesh* Mesh) const
+{
+    // An instanced themed group draws with the mesh's own material instance, whose Color already carries the tint; a loose part's
+    // dynamic material overwrites Color, so the tint is multiplied into the part colour there (#149's paving lever).
+    return bInstancedParts ? FLinearColor::White : InstanceTint(Mesh);
 }
 
 bool AExpeditionBattleView::HasOccluder() const { return IsValid(Occluder.Mesh); }

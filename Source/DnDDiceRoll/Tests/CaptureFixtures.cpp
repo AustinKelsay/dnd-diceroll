@@ -12,8 +12,10 @@
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
- * board-vigil-walls, and the action dock's kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent,
- * sight-blocked-battle, and the hint fixtures end-turn-only-battle and downed-ally-battle), each with a
+ * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
+ * recipes, which show the Root of the World kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, and the hint fixtures end-turn-only-battle and downed-ally-battle),
+ * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -116,6 +118,28 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindVigilRecipe(TEXT("board-vigil-pillars"), 1);
     FindVigilRecipe(TEXT("board-vigil-walls"), 2);
+    // Root of the World boards (the Stream trail, route offer 0) with the same architectural recipes (#149): the broken wall is the
+    // one whose adjacent blocked cells get the Root's 2-cell arch (`board-root-r002`, in the default gallery set); the ruined pillars
+    // show the spire and stump variants (`board-root-pillars`, render it with `gallery --fixture board-root-pillars`).
+    auto FindRootRecipe = [&](const TCHAR* Name, int32 Recipe)
+    {
+        for (int32 Seed = 1; Seed < 2000; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[0];
+            if (Route.bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 2000 gives a forest route with recipe %d and the party first"), Recipe));
+    };
+    FindRootRecipe(TEXT("board-root-r002"), 2);
+    FindRootRecipe(TEXT("board-root-pillars"), 1);
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)

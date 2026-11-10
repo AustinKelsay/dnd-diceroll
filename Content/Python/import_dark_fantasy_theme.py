@@ -18,6 +18,12 @@ Drowned Vigil world kit r002 (issue #145 phase 2) -- the reviewed reimport path,
   - One THEME_ASSET line per asset, THEME_FILE lines for every Theme file whose SHA-256 changed, and the run saves only
     dirty packages and raises if a save fails.
 
+Root of the World world kit r002 (issue #149 phase 2) goes through the same code path with its own table (theme_plan.ROOT_R002):
+  - The Root kit has 25 rows: 24 new packages (SM_World_Root_Occluders, SM_Prop_Root_* variants and arch, SM_Scatter_Root_*,
+    SM_Fx_Root_*) and the revised SM_World_Root, whose r001 package is replaced ONLY with DND_THEME_REIMPORT=world-root. Its meshes
+    are tagged DiceRollAssetRevision=root-kit-r002 and UDiceRollTheme::bRootMetricKit is set only when SM_World_Root carries it.
+  - INSTANCE_TINTS in theme_plan writes the Color tint of a kit instance (the lever for the paving value); it is written only
+    when it differs.
 Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
 colour for sparks, shots and the camp, and the master, occluder, card and effect materials carry the instanced-static-mesh usage flag.
 Nothing else changes: a run on a current theme only sets the missing flags.
@@ -304,7 +310,15 @@ def import_mesh(asset_id, name, folder):
     return unreal.load_asset(package), texture
 
 
-KIT_TAG_VALUE = "vigil-kit-r002"
+KIT_TAG_VALUE = theme_plan.VIGIL_TAG
+# The world kits this script imports through one code path: name, revision tag, table, metric gate, theme array sizes and the
+# data-asset flag the gate sets. Plain data, so nothing here touches the engine before main().
+KITS = [
+    {"name": "vigil", "tag": theme_plan.VIGIL_TAG, "rows": theme_plan.R002, "gate": theme_plan.METRIC_GATE,
+     "sizes": theme_plan.ARRAY_SIZES, "flag": "metric_kit"},
+    {"name": "root", "tag": theme_plan.ROOT_TAG, "rows": theme_plan.ROOT_R002, "gate": theme_plan.ROOT_METRIC_GATE,
+     "sizes": theme_plan.ROOT_ARRAY_SIZES, "flag": "root_metric_kit"},
+]
 # A headless commandlet does not load the static mesh editor module, so its subsystem would be None.
 unreal.load_module("StaticMeshEditor")
 mesh_tools = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
@@ -672,8 +686,18 @@ def r001_source(asset_id, name):
     return os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
 
 
-def kit_tagged(mesh):
-    return mesh is not None and library.get_metadata_tag(mesh, theme_plan.REVISION_TAG) == KIT_TAG_VALUE
+def kit_tag(mesh):
+    """The kit revision tag a mesh carries (vigil-kit-r002 or root-kit-r002), or None for an r001 mesh."""
+    if mesh is None:
+        return None
+    tag = library.get_metadata_tag(mesh, theme_plan.REVISION_TAG)
+    return tag if tag in theme_plan.KIT_TAGS else None
+
+
+def kit_tagged(mesh, tag=None):
+    """True when the mesh carries a kit tag: this one when `tag` is given, either kit's otherwise."""
+    found = kit_tag(mesh)
+    return found is not None and (tag is None or found == tag)
 
 
 def theme_hashes():
@@ -727,7 +751,7 @@ def import_lods(mesh, asset_id, revision, name):
         raise RuntimeError("LOD exports beside {} do not match its asset record: {} vs {}".format(name, exports, expected))
     for (index, _, digest), path in zip(expected, exports):
         if theme_plan.sha256_file(path) != digest:
-            raise RuntimeError("LOD{} of {} differs from its asset record; rerun write_records_r002.py".format(index, name))
+            raise RuntimeError("LOD{} of {} differs from its asset record; rerun write_records_r002.py (write_records_root_r002.py for the Root)".format(index, name))
         result = mesh_tools.import_lod(mesh, index, path)
         if result < 0:
             raise RuntimeError("Unable to import LOD {} of {} from {}".format(index, name, path))
@@ -809,7 +833,7 @@ def import_kit_asset(asset_id, revision, name, folder, replace):
     # Records list every export (LOD0 and any authored LODs); check the LOD0 file this import reads.
     export = [entry for entry in record["files"] if entry["role"] == "export" and os.path.basename(entry["path"]) == os.path.basename(source)]
     if record["unreal_package"] != theme_plan.package_path(folder, name) or len(export) != 1 or export[0]["sha256"] != theme_plan.sha256_file(source):
-        raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py")
+        raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py (write_records_root_r002.py for the Root)")
     package = theme_plan.package_path(folder, name)
     target_texture = THEME + "/Textures/T_" + name[3:]
     if library.does_asset_exist(package):
@@ -899,8 +923,10 @@ def set_texture(texture, revision):
             texture.set_editor_property(prop, value)
 
 
-def material_instance(mesh_name, instance_name, texture_name, texture, asset_id, look, parents, kind=theme_plan.LIT, revision=1, source=None):
-    """Creates or refreshes one MI_* child of the matching parent for a mesh and returns it (shared by static and skeletal meshes)."""
+def material_instance(mesh_name, instance_name, texture_name, texture, asset_id, look, parents, kind=theme_plan.LIT, revision=1, source=None, tint=None):
+    """Creates or refreshes one MI_* child of the matching parent for a mesh and returns it (shared by static and skeletal meshes).
+
+    `tint` is an optional (r, g, b) written to the instance's `Color` parameter (the master's and the occluder's tint); None leaves it alone."""
     roughness, rim, fill, glow, self_lit = look
     path = THEME + "/Materials/" + instance_name
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
@@ -929,14 +955,20 @@ def material_instance(mesh_name, instance_name, texture_name, texture, asset_id,
         if abs(mel.get_material_instance_scalar_parameter_value(instance, parameter) - value) > 1e-6:
             mel.set_material_instance_scalar_parameter_value(instance, parameter, value)
             changed = True
+    if tint is not None and kind != theme_plan.CARD:
+        wanted = unreal.LinearColor(tint[0], tint[1], tint[2], 1.0)
+        current = mel.get_material_instance_vector_parameter_value(instance, "Color")
+        if max(abs(current.r - wanted.r), abs(current.g - wanted.g), abs(current.b - wanted.b), abs(current.a - wanted.a)) > 1e-6:
+            mel.set_material_instance_vector_parameter_value(instance, "Color", wanted)
+            changed = True
     if changed:
         mel.update_material_instance(instance)
     unreal.log("THEME_MATERIAL {} glow={} mask={}".format(mesh_name, glow if masked and kind != theme_plan.CARD else 0.0, masked))
     return instance
 
 
-def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan.LIT, revision=1, source=None):
-    instance = material_instance(name, "MI_" + name[3:], "T_" + name[3:], texture, asset_id, look, parents, kind, revision, source)
+def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan.LIT, revision=1, source=None, tint=None):
+    instance = material_instance(name, "MI_" + name[3:], "T_" + name[3:], texture, asset_id, look, parents, kind, revision, source, tint)
     # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
         if mesh.get_material(index) != instance:
@@ -1224,7 +1256,7 @@ def asset_line(asset_id, package, action, source, mesh, extra=""):
     nanite = "n/a" if mesh is None else ("on" if nanite_enabled(mesh) else "off")
     lods = "n/a" if mesh is None else mesh_tools.get_lod_count(mesh)
     shapes = "n/a" if mesh is None else collision_shapes(mesh)
-    kit = "n/a" if mesh is None else (KIT_TAG_VALUE if kit_tagged(mesh) else "r001")
+    kit = "n/a" if mesh is None else (kit_tag(mesh) or "r001")
     unreal.log("THEME_ASSET id={} package={} kit={} action={} source_tris={} source_sha256={} nanite={} lods={} collision_shapes={}{}".format(
         asset_id, package, kit, action, tris, digest, nanite, lods, shapes, (" " + extra) if extra else ""))
 
@@ -1237,6 +1269,65 @@ def set_list(theme, prop, items):
     wanted = [name(item) for item in items]
     if current != wanted:
         set_if_different(theme, prop, items)
+
+
+def check_metric_gate(kit, replacements):
+    """Raises unless a kit's metric-gate packages are all (or none) tagged or being replaced in this run."""
+    gate = {}
+    for row in kit["rows"]:
+        if row[0] in kit["gate"]:
+            package = theme_plan.package_path(row[3], row[2])
+            gate[row[0]] = (library.does_asset_exist(package) and kit_tagged(unreal.load_asset(package), kit["tag"])) or row[0] in replacements
+    if any(gate.values()) and not all(gate.values()):
+        raise RuntimeError("Replace the {} metric gate together: {} (now {})".format(kit["name"], ", ".join(kit["gate"]), gate))
+
+
+def import_kit(kit, theme, parents, replacements):
+    """Imports one world kit's rows (the Vigil's, then the Root's) and returns (meshes loaded, whether its metric gate is met).
+
+    A row whose package holds a mesh with this kit's tag is left alone ("present"); a row whose package exists as r001 is skipped
+    unless its id is allow-listed and requested; everything else is imported, stripped of collision and Nanite, given its explicit
+    LODs and tagged. The theme's array properties and the kit's metric flag are written only when they differ."""
+    slots = {prop: [None] * count for prop, count in kit["sizes"].items()}
+    loaded = 0
+    for asset_id, revision, name, folder, kind, prop, index, look in kit["rows"]:
+        package = theme_plan.package_path(folder, name)
+        source = theme_plan.export_path(asset_id, revision, name)
+        exists = library.does_asset_exist(package)
+        replace = asset_id in replacements
+        if exists and kit_tagged(unreal.load_asset(package), kit["tag"]):
+            mesh, texture, action = unreal.load_asset(package), None, "present"
+        elif exists and not replace:
+            reason = "r001 package kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.ALL_REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
+            asset_line(asset_id, package, "skipped", source, unreal.load_asset(package), "reason=\"" + reason + "\"")
+            continue
+        else:
+            mesh, texture = import_kit_asset(asset_id, revision, name, folder, replace)
+            action = "replaced" if exists else "created"
+            mesh_tools.remove_collisions(mesh)
+            shapes = collision_shapes(mesh)
+            if shapes:
+                raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
+            import_lods(mesh, asset_id, revision, name)
+            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, kit["tag"])
+            mesh.modify()  # marks the package dirty so the import is saved
+        force_nanite_off(mesh)
+        check_lod_count(mesh, asset_id, revision)
+        if theme_plan.record_lods(asset_id, revision):
+            repair_lod_slots(mesh, name)
+        apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source, tint=theme_plan.INSTANCE_TINTS.get(asset_id))
+        asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
+        if index is None:
+            set_if_different(theme, prop, mesh)
+        else:
+            slots[prop][index] = mesh
+        loaded += 1
+    for prop, items in slots.items():
+        set_list(theme, prop, items)
+    metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2])), kit["tag"]) for row in kit["rows"] if row[0] in kit["gate"])
+    if bool(theme.get_editor_property(kit["flag"])) != metric:
+        set_if_different(theme, kit["flag"], metric)
+    return loaded, metric
 
 
 def main():
@@ -1261,15 +1352,10 @@ def main():
     theme = theme_asset()
     set_if_different(theme, "tint_material", master)
 
-    # The kit's true-metric world and props replace their r001 packages together or not at all: the board scales r001 art
-    # and places r002 art unscaled, so a mix would draw one of them at the wrong size.
-    gate = {}
-    for row in theme_plan.R002:
-        if row[0] in theme_plan.METRIC_GATE:
-            package = theme_plan.package_path(row[3], row[2])
-            gate[row[0]] = (library.does_asset_exist(package) and kit_tagged(unreal.load_asset(package))) or row[0] in replacements
-    if any(gate.values()) and not all(gate.values()):
-        raise RuntimeError("Replace the metric gate together: {} (now {})".format(", ".join(theme_plan.METRIC_GATE), gate))
+    # A kit's true-metric world (and, for the Vigil, props) replaces its r001 packages together or not at all: the board scales
+    # r001 art and places r002 art unscaled, so a mix would draw one of them at the wrong size.
+    for kit in KITS:
+        check_metric_gate(kit, replacements)
 
     found = 0
     for asset_id, name, folder, prop, *look in ASSETS:
@@ -1292,45 +1378,9 @@ def main():
         asset_line(asset_id, package, "kept-r001", r001_source(asset_id, name), mesh)
         found += 1
 
-    slots = {prop: [None] * count for prop, count in theme_plan.ARRAY_SIZES.items()}
-    kit_loaded = 0
-    for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.R002:
-        package = theme_plan.package_path(folder, name)
-        source = theme_plan.export_path(asset_id, revision, name)
-        exists = library.does_asset_exist(package)
-        replace = asset_id in replacements
-        if exists and kit_tagged(unreal.load_asset(package)):
-            mesh, texture, action = unreal.load_asset(package), None, "present"
-        elif exists and not replace:
-            reason = "r001 package kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
-            asset_line(asset_id, package, "skipped", source, unreal.load_asset(package), "reason=\"" + reason + "\"")
-            continue
-        else:
-            mesh, texture = import_kit_asset(asset_id, revision, name, folder, replace)
-            action = "replaced" if exists else "created"
-            mesh_tools.remove_collisions(mesh)
-            shapes = collision_shapes(mesh)
-            if shapes:
-                raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
-            import_lods(mesh, asset_id, revision, name)
-            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, KIT_TAG_VALUE)
-            mesh.modify()  # marks the package dirty so the import is saved
-        force_nanite_off(mesh)
-        check_lod_count(mesh, asset_id, revision)
-        if theme_plan.record_lods(asset_id, revision):
-            repair_lod_slots(mesh, name)
-        apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
-        asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
-        if index is None:
-            set_if_different(theme, prop, mesh)
-        else:
-            slots[prop][index] = mesh
-        kit_loaded += 1
-    for prop, items in slots.items():
-        set_list(theme, prop, items)
-    metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2]))) for row in theme_plan.R002 if row[0] in theme_plan.METRIC_GATE)
-    if bool(theme.get_editor_property("metric_kit")) != metric:
-        set_if_different(theme, "metric_kit", metric)
+    kit_loaded, kit_metric = {}, {}
+    for kit in KITS:
+        kit_loaded[kit["name"]], kit_metric[kit["name"]] = import_kit(kit, theme, parents, replacements)
 
     rigged = import_rig(master, theme)
 
@@ -1343,7 +1393,9 @@ def main():
         state = "added" if path not in before else "removed" if path not in after else "changed"
         unreal.log("THEME_FILE {} {} sha256={}".format(state, path, after.get(path, "-")))
     unreal.log("THEME_FILES_CHANGED {}".format(len(changed)))
-    unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes, kit {}/{} meshes, metric_kit={}".format(found, len(ASSETS), kit_loaded, len(theme_plan.R002), metric))
+    unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes, kit {}/{} meshes, metric_kit={}".format(
+        found, len(ASSETS), kit_loaded["vigil"], len(theme_plan.R002), kit_metric["vigil"]))
+    unreal.log("THEME_ROOT_COMPLETE root kit {}/{} meshes, root_metric_kit={}".format(kit_loaded["root"], len(theme_plan.ROOT_R002), kit_metric["root"]))
     unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))
 
 
