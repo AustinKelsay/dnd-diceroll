@@ -1,0 +1,12 @@
+board-vigil-pillars 1920x1080 targeting-yawm90-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=52.7833  AE2%=110.261
+board-vigil-pillars 1920x1080 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=68.4538  AE2%=1.0402
+board-vigil-pillars 1280x720 targeting-yawm90-default  stg-vs-stg2 PSNR=92.3355  stg-vs-pr PSNR=51.0476  AE2%=83.6873
+board-vigil-pillars 1280x720 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=73.1714  AE2%=0.0676471
+board-vigil-walls 1920x1080 targeting-yawm90-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=46.8662  AE2%=500.094
+board-vigil-walls 1920x1080 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=53.2471  AE2%=80.3392
+board-vigil-walls 1280x720 targeting-yawm90-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=55.9893  AE2%=20.4647
+board-vigil-walls 1280x720 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=58.6902  AE2%=12.2461
+board-18x12 1920x1080 targeting-yawm90-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=60.6904  AE2%=15.348
+board-18x12 1920x1080 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=57.3456  AE2%=31.6735
+board-18x12 1280x720 targeting-yawm90-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=59.2336  AE2%=9.37451
+board-18x12 1280x720 battle-yaw000-default  stg-vs-stg2 PSNR=120  stg-vs-pr PSNR=54.8474  AE2%=19.1559
