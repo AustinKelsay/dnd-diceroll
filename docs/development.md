@@ -28,10 +28,11 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 | `test --filter Project.Starter.SandboxAssets` | Run an explicit named test; zero matches fail |
 | `test --filter Project.Tools.CaptureFixtures` | Write real expedition checkpoints for each phase under `Saved/CaptureFixtures/<phase>/` for visual QA |
 | `gallery [--fixture NAME ...] [--res WxH ...] [--primitives] [--poses PATH]` | Render the fixed-pose capture gallery under `.local/gallery/<timestamp>/` (see Capture gallery) |
+| `perf [--package DIR \| --editor]` | Play one seeded Watchtower road fight with the game's autoplay mode (warm-up, measured pass, fresh-process Resume), sample the CSV profiler and the game's RSS, and check the #148 budgets (see Performance gate) |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
 | `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
 
-Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, bootstrap, the skill check, the editor, the cook, and the packaged game. Other commands refuse it. `build` fails on any compiler or build-tool warning. It only sees warnings from files it recompiles, so the merge gate builds each PR in a fresh checkout where every file compiles.
+Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, bootstrap, the skill check, the editor, the cook, the packaged game and `perf` runs. Other commands refuse it. `build` fails on any compiler or build-tool warning. It only sees warnings from files it recompiles, so the merge gate builds each PR in a fresh checkout where every file compiles.
 
 Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. Unreal-free geometry checks live in `tools/tests/native/`; see its [README](../tools/tests/native/README.md) for the compile recipe. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor`. Live Coding exists only for Win64 x64 in the installed engine; do not use it on Linux.
 
@@ -55,7 +56,7 @@ On Linux, after those checks pass twice, `close` sends **one** SIGTERM to the ve
 
 Several agents use Ultra at once, and only one Unreal job may run at a time. A machine-wide lock file enforces that, so no one has to hand out turns. Ultra's host convention is `/home/plebdev/.t3/ultra-unreal.lock`; every checkout on Ultra must use this same lock.
 
-1. Acquire the machine lock for each standalone native job: each `tools/dev.py` `build`, `test`, `bootstrap`, `verify-skills`, `gallery` and `package` run, and each `UnrealEditor-Cmd` commandlet. Within an already locked editor session (item 3), run `smoke` and `capture` directly and sequentially without acquiring the machine lock again. Before a build, test, bootstrap, skill check, package or gallery run, close your editor, verify it exited, and release the session lock. Use `--cores 2` on the helper commands that accept it; omit it for `smoke` and `capture`, which refuse it. Direct commandlets use `-corelimit=2`. On Ultra, replace `relaunch` with `close` inside the existing session, verify exit, release the session lock, run a separately locked `build`, then acquire a new session lock before `editor`. For example:
+1. Acquire the machine lock for each standalone native job: each `tools/dev.py` `build`, `test`, `bootstrap`, `verify-skills`, `gallery`, `perf` and `package` run, and each `UnrealEditor-Cmd` commandlet. Within an already locked editor session (item 3), run `smoke` and `capture` directly and sequentially without acquiring the machine lock again. Before a build, test, bootstrap, skill check, package or gallery run, close your editor, verify it exited, and release the session lock. Use `--cores 2` on the helper commands that accept it; omit it for `smoke` and `capture`, which refuse it. Direct commandlets use `-corelimit=2`. On Ultra, replace `relaunch` with `close` inside the existing session, verify exit, release the session lock, run a separately locked `build`, then acquire a new session lock before `editor`. For example:
 
    ```sh
    flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 build
@@ -82,6 +83,61 @@ Per fixture and resolution the helper copies the checkpoint into a fresh save ro
 `tools/capture/poses.json` is the poses data (version 1): four yaws (-90, 0, 90, 180) times near (1300), default (the board's framed distance for that yaw: the nearest zoom at which the four board corners project inside the HUD-safe rect, solved exactly from the FOV, pitch, yaw and viewport aspect; about 3100 to 5700 for 16x11 and 18x12 boards, so a fixed far number can be nearer than default on a wide board) and far (`"distance": "far"`: the far zoom stop, `FarStop` of the home framed distance, where the pitch reaches 60 degrees, and never nearer than default for that yaw) battle shots, two targeting shots, an `overview` shot and the `start-screen` shot, plus five `tooltip` shots and two build-picker `start` shots (below). Distances are in reference units, the cm of the 110 cm r001 cell: the board metric (150 cm cells by default) multiplies them by cell / 110, so a pose frames the board the same at any cell size, and the clamp 900 to 6400 is in the same units. The manifest records `cellCm`, and each shot's `distance` and camera location (world cm) as rendered. Distances must stay inside the battle clamp 900 to 6400. Modes: `battle`; `targeting` (Attack mode with the keyboard cursor on the nearest enemy in reach, or on the reachable step closest to one when none is in reach, so reach, path and target feedback show); `overview` (the route tabletop, needs a route-phase fixture); `start` (the title screen; always shot last); `tooltip` (#58: the action dock's tooltip for `"action"` `attack`, `special1`, `special2`, `rescue` or `potion`, chosen the way its key chooses it, so the keyboard path is what shows; skipped when an enemy holds the turn or the hero lacks that action). The cost and usage tags are on every battle shot. A `start` shot may name a `build` (a catalog id) to select it for the first hero, so the build picker shows its ability costs. The fixtures `kit-barbarian-battle`, `kit-wizard-battle` (Magic Missile spends a Kit and a Slot), `kit-barbarian-raging` (Rage spent: already raging, Bonus action used), `kit-wizard-all-spent` (burst and missile played: Action and Bonus used, no Kit left) and `sight-blocked-battle` (an action whose only targets are behind blocked sight) are written by the same fixture test and are not in the default list; pass them with `--fixture`. A shot that does not apply to a fixture (for example `overview` on a battle fixture, or `targeting` when an enemy holds the turn) is recorded as `skipped` with a reason and is not an error; a run with every shot skipped is. The game exits non-zero and writes a failed manifest on a missing checkpoint or a playback that never settles.
 
 Capture mode only resumes and looks. It never submits a combat command (enemy turns are held) and never writes the checkpoint, and with `-ExpeditionCapture` absent the game is unchanged. The fixed time step and a fixed frame count after each pose make flame and idle motion repeat, and exposure adapts quickly (speed 20) so a shot does not depend on the one before it. Determinism limits: camera transforms repeat exactly; pixels repeat to within a mean absolute difference of about 0.03 of 255 on the same machine, GPU and driver (compare images with a tolerance, not byte equality). Results from another GPU or driver, or `-ForceRes` windows larger than the host desktop, are not promised to match. The enemy-turn view comes from the `default-seed-enemy-turn` fixture: fixture preparation (an automation test) ends the party's turns, and capture mode resumes with that enemy's turn held. Capture runs bind no keys or mouse buttons, so a focused capture window cannot act.
+
+## Performance gate (#148)
+
+`python3 tools/dev.py perf` measures one fixed fight on a **packaged Linux Development game** against the budgets of the graphics overhaul's second owner gate. The game plays the fight itself, so every run is the same workload; the helper only launches it, samples it and reads the numbers back.
+
+**Budgets** (1920x1080, warm package, measured over the steady state): p95 FrameTime ≤ 16.7 ms, p95 GPUTime ≤ 12 ms, p95 GameThreadTime ≤ 4 ms, resident memory ≤ 5 GB (5120 MiB). The steady state is every frame of the measured pass outside a transition window. A budget with no measurement fails: a zero or absent GPUTime column (a driver without GPU timestamps) cannot be read as a pass. Other resolutions and `--editor` runs are reported but cannot pass the gate.
+
+**Transition hitches are reported separately**, never inside the steady state: `start->route` (start screen to route table), `route->battle`, `battle->reward` (battle to the reward screen), and `resume` (a fresh process resuming the checkpoint). The report gives each one's worst frame, its duration and frame count, and its worst GPU and game-thread frame. `plan` (the autoplay planning on the start screen), `quit` and `reward->route` are listed too. A window runs from the frame of the click to the moment the screen has settled, and the analyzer widens each by `--transition-pad` frames (default 3).
+
+### Running it
+
+```sh
+# 1. Package once per commit (a Development game; see Commands). Hold the machine lock for the whole job.
+flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 package
+# 2. Measure the newest finished package (or --package Builds/<stamp>). About three game runs of a few minutes each.
+flock -w 7200 /home/plebdev/.t3/ultra-unreal.lock python3 tools/dev.py --cores 2 perf
+```
+
+The machine lock covers the whole `perf` run (it launches three game processes one after another, so the job may take up to half an hour; keep to the lock's 30-minute guidance and split with `--no-warmup` only for dry runs). Run it with the window on the real display: `--offscreen` adds `-RenderOffscreen` and presents no frames. `perf` refuses a running editor for this project like `gallery` does. `--editor` runs `UnrealEditor <project> -game` instead of a package (after a `build`) as a quick dry run of the harness; it prints the numbers but never passes.
+
+Three passes run at 1920x1080 (`-windowed -ForceRes`, `-novsync` so FrameTime is not pinned to the refresh rate; `--vsync` keeps it on) with `-csvCaptureFrames=<--csv-frames>` (an upper bound; the game ends the capture itself), `-csvGpuStats`, sound on (the synthesized cues are part of the game-thread cost; `--no-sound`) and `-corelimit=<--cores>`:
+
+1. **warm-up**: a full fight, discarded, so shader and file caches are warm. It must still exit cleanly.
+2. **measured**: a fresh save root, the fight, quit to the checkpoint.
+3. **resume**: a new process on a copy of that checkpoint (the measured pass's save stays as the fight left it): Resume, claim the reward, take the camp, reach the route table.
+
+A pass fails the run when the game exits non-zero or by signal, leaves a new `Saved/Crashes/crashinfo-*` (in this checkout, `~/.config/Epic/<game>/Saved`, or the staged package), does not log `AUTOPLAY_DONE ok` and a normal `LogExit`, or leaves no CSV. A game that overruns `--timeout` gets one SIGTERM and is never killed.
+
+### Autoplay
+
+`-ExpeditionAutoplay=<absolute script.json>` (`tools/autoplay/watchtower-road.json`) makes the player controller drive a real run through the same path a player uses: the build picker, the HUD buttons (`New`, `Route1`, the dock modes, `EndTurn`, `Menu`, `Resume`, `Claim`, `Camp`) and a click on a cell. It never touches rules, saves or RNG; it needs a clean `-ExpeditionSaveRoot`, and it runs only when `-ExpeditionCapture` is absent. A person at the keyboard can still interfere, so leave the window alone while it runs. `-ExpeditionAutoplayResume` runs the second pass above.
+
+The script holds the party (the four original roles by default), the route (`dangerous`: the Watchtower road), waits (`thinkFrames`, `settleFrames`, `bootFrames`, time limits) and a list of tactical `variants`. The seed must be 20261030, the one a first New Run uses; everything else that varies is the party and the variants. Before the first click the game **plans** the fight headlessly on a detached run: for each variant a policy plays the whole encounter (a front-line hero walks up, attacks once and stands, the others use one special and hold until someone falls; then the nearest heroes walk to the fallen one and Rescue; then the party wins), and the game keeps the variant that reaches every beat (a move, an attack, a Special1 or Special2, a party member downed, that member rescued, victory) with the most survivors. If none does it logs why (`AUTOPLAY_PLAN` lines) and exits 1. The live fight replays the chosen commands at normal speed, checking before each one that the live state equals the plan's, so animation, effects and overlay are real and a divergence fails loudly. Rejected or unreachable steps, a stage that takes longer than `stageSeconds`, or a fight longer than `fightSeconds` also exit 1.
+
+The game logs one line per beat and transition and records the same text as a CSV event, so a capture can be sliced without matching frame numbers:
+
+```
+AUTOPLAY_BEAT move frame=1234 t=41.2 step=3 type=0 actor=1 target=-1
+AUTOPLAY_TRANSITION route->battle begin frame=900 t=30.1
+AUTOPLAY_TRANSITION route->battle end frame=935 t=31.0 frames=35 seconds=0.9
+AUTOPLAY_DONE ok pass=fresh beats=move,attack,special,downing,rescue,victory,quit steps=57
+AUTOPLAY_CSV path=/home/.../Saved/Profiling/CSV/Profile(...).csv
+```
+
+(`downing` is logged when the rules commit it, which is a moment before the fall plays.) The CSV profiler writes under `Saved/Profiling/CSV`: for a packaged Linux game that is its user directory (`~/.config/Epic/<game>/Saved/...`), not the staged package. The game logs the path it wrote; the helper uses that and otherwise searches the staged package, the user directory, `~/.config/Epic/UnrealEngine/5.8/Saved/Profiling/CSV` and this checkout's `Saved/`.
+
+### Reading the report
+
+Everything is under `.local/perf/<timestamp>/`: `report.md` (the verdict, a budget table, the steady state, every transition, memory, the most expensive GPU passes, the passes and the host), `report.json` (the same data), and per pass a folder with `game.log`, `console.log`, the CSV copy (`measured.csv`, `resume.csv`) and the save root used. The command exits 1 when a budget or a required transition is missing.
+
+- **Steady state**: *gate* is every non-transition frame of the measured pass; *fight only* is the frames between `route->battle` and `battle->reward`, the heavy scene; *resume pass* is informational (calm screens, so it would flatter the gate).
+- **Memory**: VmRSS of the game process from `/proc/<pid>/status` every 0.5 s, and the kernel's VmHWM high-water mark; the budget uses the larger of the sampled maximum and VmHWM, over all passes.
+- **Hitches**: read the worst frame and the duration of each transition; a long duration with a modest worst frame is loading spread over frames, a huge worst frame is one stall.
+
+Limits: the numbers are for this machine, GPU and driver. GPUTime needs GPU timestamps from the RHI; if the report says no GPUTime measurement, the driver does not supply them. `-csvGpuStats` per-pass columns appear only if the RHI provides them. Planning and `quit` frames are set aside as windows, so a planning stall on the start screen never reaches the steady state. Unit tests for the analyzer, the sampler and the command are in `tools/tests/test_perf.py`; the plan and the live driver are covered by `Project.Expedition.Autoplay.` in the engine.
 
 ## Agent workflow and evidence
 
