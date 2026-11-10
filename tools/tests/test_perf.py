@@ -408,7 +408,7 @@ class PerfCommandTests(unittest.TestCase):
         self.assertEqual([c["name"] for c in calls], ["warmup", "measured", "resume"])
         for call in calls:
             args = call["args"]
-            self.assertTrue(args[0].endswith("Binaries/Linux/CustomGame"))
+            self.assertTrue(Path(args[0]).as_posix().endswith("Binaries/Linux/CustomGame"))
             for needed in ("-windowed", "-ForceRes", "-ResX=1920", "-ResY=1080", "-csvGpuStats", "-novsync", "-corelimit=2", "-unattended"):
                 self.assertIn(needed, args)
             self.assertTrue(any(a.startswith("-csvCaptureFrames=200000") for a in args))
