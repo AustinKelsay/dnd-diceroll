@@ -281,6 +281,10 @@ public:
     void Pan(float Right, float Away);
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
+    /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
+    bool WholeBoardInView() const;
+    /** Shakes the camera (hits and crits call this through playback); it decays over about Amount / 1.8 seconds. */
+    void Shake(float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); }
     /** The camera pitch below horizontal, in degrees, for the current zoom. */
     float CameraPitch() const;
     /** The screen area the HUD leaves free; the board is fitted and centred in it. */
@@ -648,8 +652,6 @@ private:
     FVector BaseFocus() const;
     /** The unit the camera follows: the presented focus during playback, else the active combatant; INDEX_NONE outside combat. */
     int32 CameraFocusId() const;
-    /** Whether the whole board is inside the safe rect from the pose the camera renders this frame. */
-    bool WholeBoardInView() const;
     /**
      * Clamps Base + Offset to the pan bound for the pose rendered this frame (CameraRig.h ClampPan) and returns the focus.
      * Offset is the player's pan: it is cleared while the whole board is in view and on axes locked to the board centre,

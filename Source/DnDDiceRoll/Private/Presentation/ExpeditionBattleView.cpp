@@ -676,7 +676,7 @@ void AExpeditionBattleView::BeginPlay()
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
-    Show.OnShake = [this](float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); };
+    Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
     RebuildBoard();

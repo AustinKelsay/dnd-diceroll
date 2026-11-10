@@ -468,9 +468,11 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
         const FVector2D BoardMid = BoardCentre(Encounter.Width, Encounter.Height, View->Metric());
         const double LowerX = -(0.5 + PanMarginCells) * Cell, UpperX = (Encounter.Width - 1 + 0.5 + PanMarginCells) * Cell;
         const double LowerY = -(0.5 + PanMarginCells) * Cell, UpperY = (Encounter.Height - 1 + 0.5 + PanMarginCells) * Cell;
-        auto CheckPanBound = [&](const FString& Label)
+        // Returns whether the bound applied (it does not while the whole board is in view: then nothing pans).
+        auto CheckPanBound = [&](const FString& Label) -> bool
         {
             using namespace CameraLightingTestSupport;
+            if (View->WholeBoardInView()) { return false; }
             const FSafeRect Rect = View->SafeRect();
             const FTransform Camera = View->CameraTransform();
             const FTransform Actor = View->GetActorTransform();
@@ -482,18 +484,34 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             {
                 FVector2D Ground;
                 if (!TestTrue(*(Label + TEXT(": a safe rect corner has ground under it")),
-                    Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(PlaneZ), Ground))) { return; }
+                    Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(PlaneZ), Ground))) { return true; }
                 const FVector InView = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, PlaneZ));
                 MinX = FMath::Min(MinX, InView.X); MaxX = FMath::Max(MaxX, InView.X);
                 MinY = FMath::Min(MinY, InView.Y); MaxY = FMath::Max(MaxY, InView.Y);
             }
             const FVector UnitAt = View->UnitPosition(View->Rules().ActiveId(), 0.0f);
-            auto BetweenCentreAndUnit = [](double Value, double Centre, double Unit) { return Value >= FMath::Min(Centre, Unit) - 1.0 && Value <= FMath::Max(Centre, Unit) + 1.0; };
-            // A locked axis centres the view (not the focus) on the board; the unit hold may only move it toward the acting unit.
-            if (MaxX - MinX > UpperX - LowerX) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in X")), BetweenCentreAndUnit(0.5 * (MinX + MaxX), BoardMid.X, UnitAt.X)); }
+            // The rendered focus: the arm's framing puts it in the middle of the safe rect (on the focus plane, the actor's height).
+            FVector2D FocusGround;
+            if (!TestTrue(*(Label + TEXT(": the safe rect centre has ground under it")),
+                Unproject(FVector2D(0.5, 0.5) + Rect.CentreOffset(), Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(Actor.GetLocation().Z), FocusGround))) { return true; }
+            const FVector Rendered = Actor.InverseTransformPosition(FVector(FocusGround.X, FocusGround.Y, Actor.GetLocation().Z));
+            FString Where;
+            const bool bUnitIn = UnitInsideRect(*View, Rect, Where);
+            // A locked axis centres the view on the board exactly. The only exception is the unpanned unit hold: it moves the focus
+            // from the centring focus toward the acting unit (never past it), and then the unit is in view.
+            auto Locked = [&](const TCHAR* Axis, double ViewMid, double BoardMidAxis, double FocusAxis, double UnitAxis)
+            {
+                const double Off = ViewMid - BoardMidAxis;
+                if (FMath::Abs(Off) <= 1.0) { return; }
+                const double Centring = FocusAxis - Off;
+                const bool bTowardUnit = FocusAxis >= FMath::Min(Centring, UnitAxis) - 1.0 && FocusAxis <= FMath::Max(Centring, UnitAxis) + 1.0;
+                TestTrue(*FString::Printf(TEXT("%s: a locked %s axis is off centre by %.1f cm only for the unit hold (focus %.1f, centring %.1f, unit %.1f)"), *Label, Axis, Off, FocusAxis, Centring, UnitAxis), bTowardUnit && bUnitIn);
+            };
+            if (MaxX - MinX > UpperX - LowerX) { Locked(TEXT("X"), 0.5 * (MinX + MaxX), BoardMid.X, Rendered.X, UnitAt.X); }
             else { TestTrue(*(Label + TEXT(": the view stays within 1.5 cells of the board in X")), MinX >= LowerX - 1.0 && MaxX <= UpperX + 1.0); }
-            if (MaxY - MinY > UpperY - LowerY) { TestTrue(*(Label + TEXT(": a view wider than the board plus margin is centred on the board in Y")), BetweenCentreAndUnit(0.5 * (MinY + MaxY), BoardMid.Y, UnitAt.Y)); }
+            if (MaxY - MinY > UpperY - LowerY) { Locked(TEXT("Y"), 0.5 * (MinY + MaxY), BoardMid.Y, Rendered.Y, UnitAt.Y); }
             else { TestTrue(*(Label + TEXT(": the view stays within 1.5 cells of the board in Y")), MinY >= LowerY - 1.0 && MaxY <= UpperY + 1.0); }
+            return true;
         };
         for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f, 33.0f})
         {
@@ -532,11 +550,55 @@ bool FBattleCameraTest::RunTest(const FString& Parameters)
             for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
             // Out to just short of the whole-board fit (beyond it nothing pans and the bound no longer applies), through any lock threshold on the way.
             View->Zoom(View->WholeBoardDistance(-90.0f) - 20.0f - 1300.0f);
-            for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); CheckPanBound(FString::Printf(TEXT("Zooming out from the %s, frame %d"), *At, Frame)); }
+            int32 Bounded = 0;
+            for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); Bounded += CheckPanBound(FString::Printf(TEXT("Zooming out from the %s, frame %d"), *At, Frame)) ? 1 : 0; }
+            TestTrue(*FString::Printf(TEXT("Zooming out from the %s checks the bound on most frames before the whole board is in view (%d)"), *At, Bounded), Bounded >= 15);
             View->SnapCamera(-90.0f, 1300.0f);
             for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
             View->Orbit(90.0f);
-            for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 60.0f); CheckPanBound(FString::Printf(TEXT("Orbiting from the %s, frame %d"), *At, Frame)); }
+            for (int32 Frame = 0; Frame < 90; ++Frame)
+            {
+                View->Tick(1.0f / 60.0f);
+                TestTrue(*FString::Printf(TEXT("Orbiting from the %s at near zoom, frame %d, the bound applies"), *At, Frame), CheckPanBound(FString::Printf(TEXT("Orbiting from the %s, frame %d"), *At, Frame)));
+            }
+            // A shake at the pan stop (a crit's 1.0) keeps the bound on every frame through the rendered camera, and the camera really shakes.
+            View->SnapCamera(-90.0f, 1300.0f);
+            for (int32 Step = 0; Step < 40; ++Step) { View->Pan(Push.Key, Push.Value); View->Tick(1.0f / 60.0f); }
+            const FVector Still = View->CameraTransform().GetLocation();
+            View->Shake(1.0f);
+            double Moved = 0.0;
+            for (int32 Frame = 0; Frame < 40; ++Frame)
+            {
+                View->Tick(1.0f / 60.0f);
+                CheckPanBound(FString::Printf(TEXT("Shaking at the %s, frame %d"), *At, Frame));
+                Moved = FMath::Max(Moved, FVector::Dist(View->CameraTransform().GetLocation(), Still));
+            }
+            TestTrue(*FString::Printf(TEXT("A shake at the %s still moves the camera (%.1f cm)"), *At, Moved), Moved > 2.0);
+        }
+        // Unpanned at the default zoom (the whole board not in view), a shake never takes the acting unit out of the safe rect (the unit hold wins over the bound).
+        {
+            View->SnapCamera(-90.0f, View->FramedDistance(-90.0f));
+            View->Tick(1.0f / 60.0f);
+            View->Shake(1.0f);
+            for (int32 Frame = 0; Frame < 40; ++Frame)
+            {
+                View->Tick(1.0f / 60.0f);
+                FString Where;
+                const bool bInside = CameraLightingTestSupport::UnitInsideRect(*View, View->SafeRect(), Where);
+                TestTrue(*FString::Printf(TEXT("Shaking unpanned at the default zoom, frame %d: the acting unit stays in the safe rect %s"), Frame, *Where), bInside);
+            }
+        }
+        // With the whole board in view the bound does not apply, and a shake moves the camera as before, height included.
+        {
+            View->SnapCamera(-90.0f, View->FarFramedDistance(-90.0f));
+            View->Tick(1.0f / 60.0f);
+            TestTrue(TEXT("The far stop shows the whole board"), View->WholeBoardInView());
+            const FVector Still = View->CameraTransform().GetLocation();
+            View->Shake(1.0f);
+            double Rise = 0.0;
+            for (int32 Frame = 0; Frame < 20; ++Frame) { View->Tick(1.0f / 60.0f); Rise = FMath::Max(Rise, FMath::Abs(View->CameraTransform().GetLocation().Z - Still.Z)); }
+            TestTrue(*FString::Printf(TEXT("With the whole board in view a shake still moves the camera's height (%.1f cm)"), Rise), Rise > 1.0);
+            View->Tick(1.0f); // let the shake die out before the checks below
         }
         // A snap is a fixed pose: no pan, no drift.
         View->SnapCamera(90.0f, 1100.0f);
