@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Presentation/ExpeditionAutoplay.h"
 #include "Misc/CommandLine.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
@@ -19,6 +20,8 @@ void AExpeditionPlayerController::BeginPlay()
     if (!IsValid(BattleView)) { return; }
     SetViewTarget(BattleView);
     Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
+    // Autoplay plays real commands, so it never runs together with a capture (which only looks).
+    if (!Capture.IsValid()) { Autoplay = FExpeditionAutoplayDirector::TryCreate(this, BattleView); }
     if (Capture.IsValid())
     {
         bCapturing = true;
@@ -205,6 +208,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     TargetIds = Highlights.Targets;
     BattleView->SetHighlights(Highlights);
     if (Capture.IsValid()) { Capture->Tick(); }
+    if (Autoplay.IsValid()) { Autoplay->Tick(); }
 }
 
 bool AExpeditionPlayerController::PointerPosition(float& X, float& Y) const
@@ -452,20 +456,29 @@ int32 AExpeditionPlayerController::Actor() const
     return BattleView->InCombat() && Active && Active->Side == ECombatSide::Party ? Active->Id : SelectedId;
 }
 
-void AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
+bool AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
 {
-    if (!AllowsGameplayInput()) { return; }
+    if (!AllowsGameplayInput()) { return false; }
     const int32 ActorId = Actor();
+    bool bAccepted = false;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
         if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
-        else { Acted(BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id})); }
-        return;
+        else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); Acted(bAccepted); }
+        return bAccepted;
     }
-    if (SelectedAction == ECombatCommandType::Attack) { Acted(BattleView->Execute({ECombatCommandType::Move, ActorId, Cell})); }
-    else { Acted(BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE})); }
+    if (SelectedAction == ECombatCommandType::Attack) { bAccepted = BattleView->Execute({ECombatCommandType::Move, ActorId, Cell}); }
+    else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, INDEX_NONE}); }
+    Acted(bAccepted);
+    return bAccepted;
+}
+
+TSharedPtr<FExpeditionAutoplayDirector> AExpeditionPlayerController::StartAutoplay(const ExpeditionAutoplay::FAutoplayScript& Script, bool bResume, bool bExitOnFinish)
+{
+    Autoplay = FExpeditionAutoplayDirector::Create(this, BattleView, Script, bResume, bExitOnFinish);
+    return Autoplay;
 }
 
 ECombatCommandType AExpeditionPlayerController::RoleAction() const

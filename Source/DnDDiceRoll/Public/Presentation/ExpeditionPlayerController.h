@@ -3,11 +3,13 @@
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
 #include "Run/ExpeditionRun.h"
+#include "Presentation/ExpeditionAutoplay.h"
 #include "GameFramework/PlayerController.h"
 #include "ExpeditionPlayerController.generated.h"
 
 class AExpeditionBattleView;
 class FExpeditionCaptureDirector;
+class FExpeditionAutoplayDirector;
 
 /** Turns mouse, keyboard and HUD buttons into view commands. Holds selection only. */
 UCLASS()
@@ -90,11 +92,19 @@ public:
     bool ShowsFullGrid() const { return bGridHeld || bGridPreview; }
     /** True in a capture run: no input is bound and the physical pointer is ignored. */
     bool IsCapturing() const { return bCapturing; }
+    /**
+     * The click path: acts on a cell as a left click does for the selected mode (a move, an attack, an ability or a
+     * rescue on whoever stands there). Returns whether the rules accepted the command. Autoplay (#148) and tests use it.
+     */
+    bool ActAtCell(FIntPoint Cell);
+    /** Starts autoplay in this process (-ExpeditionAutoplay starts it from the command line). Tests pass bExitOnFinish false. */
+    TSharedPtr<FExpeditionAutoplayDirector> StartAutoplay(const ExpeditionAutoplay::FAutoplayScript& Script, bool bResume, bool bExitOnFinish);
 private:
     /** The mouse position, or false in a capture run so a focused window cannot change a shot. */
     bool PointerPosition(float& X, float& Y) const;
     bool bCapturing = false;
     TSharedPtr<FExpeditionCaptureDirector> Capture;
+    TSharedPtr<FExpeditionAutoplayDirector> Autoplay;
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
@@ -168,7 +178,6 @@ private:
     void History();
     void OlderRecords();
     void NewerRecords();
-    void ActAtCell(FIntPoint Cell);
     void MoveCursor(FIntPoint ScreenOffset);
     void CursorUp();
     void CursorDown();
