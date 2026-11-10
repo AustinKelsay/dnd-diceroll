@@ -43,7 +43,78 @@ struct FExpeditionPart
     UPROPERTY() TObjectPtr<UMaterialInstanceDynamic> Material;
     UPROPERTY() FLinearColor Base = FLinearColor::White;
     FLinearColor Shown = FLinearColor::Transparent;
+    /** Footprint rings and markers drawn from the shared ring bank (#144) have no component of their own: the bank slot. */
+    int32 RingSlot = INDEX_NONE;
     void SetColor(const FLinearColor& Color);
+};
+
+/**
+ * One instanced group (#144): every instance shares a mesh and a material, so the group is one component and one draw.
+ * Tint and glow ride in per-instance custom data (CustomFloats floats per instance), not in per-part material instances.
+ */
+USTRUCT()
+struct FExpeditionGroup
+{
+    GENERATED_BODY()
+    UPROPERTY() TObjectPtr<UStaticMesh> Mesh;
+    UPROPERTY() TObjectPtr<UMaterialInterface> Material;
+    UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> Component;
+    bool bCastShadow = true;
+    int32 CustomFloats = 0;
+    /** A plain group (engine shape, BasicShapeMaterial, no custom data) is keyed by the one colour its material instance carries. */
+    bool bPlain = false;
+    FLinearColor Colour = FLinearColor::White;
+    /** Instances changed since the last flush; the render thread is told once per frame. */
+    bool bDirty = false;
+    /** Instances moved continuously this frame and last frame. Their previous transforms give the renderer motion vectors (TSR
+     * reprojects them like moving loose components); an instance that stops moving has its previous transform reset at flush. */
+    TArray<int32> Moved;
+    TArray<int32> MovedLast;
+};
+
+/** Where an instance lives: its group and its index in the group's component. */
+struct FExpeditionInstance
+{
+    int32 Group = INDEX_NONE;
+    int32 Index = INDEX_NONE;
+    bool IsValid() const { return Group != INDEX_NONE && Index != INDEX_NONE; }
+};
+
+/**
+ * A placed prop: an instance in a group, or a loose component when instancing is off (primitive look, tests comparing the two).
+ * Local is the transform under the scenery root, so a position never needs the component.
+ */
+struct FExpeditionProp
+{
+    FExpeditionInstance Instance;
+    UStaticMeshComponent* Loose = nullptr;
+    FTransform Local;
+    FRotator Rotation = FRotator::ZeroRotator;
+};
+
+/** One pooled effect piece (a spark, a shot, a camp stone): a loose part, or an instance in a shared group. */
+USTRUCT()
+struct FExpeditionSlot
+{
+    GENERATED_BODY()
+    UPROPERTY() FExpeditionPart Loose;
+    FExpeditionInstance Instance;
+    FVector Location = FVector::ZeroVector;
+    FRotator Rotation = FRotator::ZeroRotator;
+    FVector Scale = FVector::OneVector;
+    FLinearColor Colour = FLinearColor::Transparent;
+    bool bVisible = false;
+    bool bPlaced = false;
+};
+
+/** The shared footprint-ring and marker bank (#144): 24 bars per ring slot in one component, colour per instance. */
+struct FExpeditionRingState
+{
+    FVector Centre = FVector::ZeroVector;
+    float Scale = 0.0f;
+    FLinearColor Colour = FLinearColor::Transparent;
+    bool bVisible = false;
+    bool bPlaced = false;
 };
 
 USTRUCT()
@@ -97,6 +168,9 @@ struct FExpeditionSway
 {
     GENERATED_BODY()
     UPROPERTY() TObjectPtr<USceneComponent> Component;
+    /** Instanced props (#144) sway through their instance transform instead; Location is where it stands under the scenery root. */
+    FExpeditionInstance Instance;
+    FVector Location = FVector::ZeroVector;
     FRotator Base = FRotator::ZeroRotator;
     FVector Scale = FVector::OneVector;
     float Phase = 0.0f;
@@ -238,7 +312,7 @@ public:
     float CameraFieldOfView() const;
     bool UsesTheme() const { return Theme != nullptr; }
     /** True when this board draws the contextual grid (themed battle boards); primitive boards tint cube tiles instead. */
-    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty(); }
+    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty() || OverlayBase != INDEX_NONE; }
     /** The per-cell state the contextual grid was last built from (also kept on primitive boards, where only the tiles show it). */
     const BoardOverlay::FMask& OverlayMask() const { return OverlayState; }
     /** Bars drawn for a style in the last overlay update; zero when the board has no contextual grid. */
@@ -298,6 +372,27 @@ public:
     FUnitAnimationState UnitAnimation(int32 UnitId) const;
     /** Switches to the engine-primitive presentation (what -ExpeditionPrimitives does at startup) and rebuilds. */
     void UsePrimitives();
+    /**
+     * Test-only presentation data (#144). Draws every static part as its own component again (what the primitive look always does)
+     * instead of instancing, and rebuilds; false restores the instanced groups. Only the number of components differs.
+     */
+    void SetLooseParts(bool bLoose);
+    /** True when themed parts are drawn from shared instanced groups (the default for a themed board with the instancing materials). */
+    bool UsesInstancedParts() const { return bInstancedParts; }
+    /** The shared effect material (sparks, shots, camp, waystone) was found, so those pieces are instanced. */
+    bool UsesInstancedEffects() const { return bInstancedEffects; }
+    /** The footprint rings and markers are drawn from one shared ring bank. */
+    bool UsesRingBank() const { return RingBank != nullptr; }
+    /**
+     * Test-only: every primitive component (static, instanced and skeletal meshes) this board built, the contextual grid included.
+     * InstancedGroupCount is how many of them are shared instanced groups.
+     */
+    int32 PresentationComponentCount() const;
+    int32 InstancedGroupCount() const { return Groups.Num(); }
+    /** Test-only: the logical parts of the board (props, figure parts, rings and pooled effect pieces), the same whether instanced or loose. */
+    int32 LogicalPartCount() const { return LogicalParts; }
+    /** Test-only: logical scenery props only (everything placed through the prop path), the same whether instanced or loose. */
+    int32 LogicalPropCount() const { return LogicalProps; }
     FVector CellPosition(FIntPoint Cell) const;
     FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
     /** Where a combatant currently appears, including playback motion. */
@@ -336,6 +431,12 @@ private:
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
     UPROPERTY() TArray<FExpeditionSway> Swaying;
+    /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
+    bool bLooseParts = false;
+    bool bInstancedParts = false;
+    bool bInstancedEffects = false;
+    int32 LogicalParts = 0;
+    int32 LogicalProps = 0;
 
     float Yaw = -90.0f;
     float TargetYaw = -90.0f;
@@ -372,6 +473,24 @@ private:
     UPROPERTY() TArray<FExpeditionPart> OverlaySets;
     /** Translucent unlit "Color" x "Opacity" material for the contextual grid; absent until created in the editor. */
     UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
+    /** Lit opaque material that takes its colour from per-instance custom data (sparks, shots, camp, waystone, plain props); optional. */
+    UPROPERTY() TObjectPtr<UMaterialInterface> EffectMaterial;
+    /** Every instanced group of this board; one component each. */
+    UPROPERTY() TArray<FExpeditionGroup> Groups;
+    /**
+     * The shared bar bank: one component holding every footprint ring and marker (24 bars each, first) and then the contextual grid's
+     * bars (all nine styles, after OverlayBase). Null when rings are loose.
+     */
+    UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> RingBank;
+    int32 RingGroup = INDEX_NONE;
+    /** First instance of the grid's bars in the bank, or INDEX_NONE when the grid draws as one bar set per style. */
+    int32 OverlayBase = INDEX_NONE;
+    TArray<FExpeditionRingState> RingStates;
+    /** Pooled effect pieces: instances in shared groups with the effect material, loose parts without it (and in the primitive look). */
+    UPROPERTY() TArray<FExpeditionSlot> ShotSlots;
+    UPROPERTY() TArray<FExpeditionSlot> SparkSlots;
+    UPROPERTY() TArray<FExpeditionSlot> CampSlots;
+    UPROPERTY() TArray<FExpeditionSlot> WaystoneSlots;
     BoardOverlay::FMask OverlayState;
     /** The inputs the mask was last built from, and reusable scratch for this frame's victims; an unchanged frame allocates nothing. */
     FBoardHighlights OverlayInput;
@@ -398,12 +517,8 @@ private:
     /** Per-flame base candela for themed lights; zero keeps the primitive torch strength. */
     TArray<float> FlameStrength;
     UPROPERTY() TArray<FExpeditionPart> Markers;     // 0 active, 1 selected, rest targets.
-    UPROPERTY() TArray<FExpeditionPart> ShotMeshes;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
-    UPROPERTY() TArray<FExpeditionPart> SparkMeshes;
-    UPROPERTY() TArray<FExpeditionPart> CampParts;
     UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
-    UPROPERTY() TArray<FExpeditionPart> WaystoneParts;
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
@@ -418,6 +533,41 @@ private:
     FVector SceneBoard(FVector2D Cell, float ReferenceHeight = 0.0f) const { return BoardMetric.ReferencePosition(Cell, ReferenceHeight); }
     void ClearPresentation();
     void RebuildBoard();
+    // Instanced groups (#144).
+    /** The group for a mesh and material, created on first use (under Parent, the scenery root by default). */
+    int32 GroupFor(UStaticMesh* Mesh, UMaterialInterface* Material, bool bCastShadow, int32 CustomFloats, USceneComponent* Parent = nullptr);
+    /** The group of an engine shape in one colour (BasicShapeMaterial cannot read custom data, so one material instance per colour). */
+    int32 PlainGroupFor(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCastShadow);
+    FExpeditionInstance PlaceInstance(int32 Group, const FTransform& Local, TConstArrayView<float> Data);
+    /** Rewrites an instance's transform and custom data; marks the group for the end-of-frame flush. */
+    /** bMotion: the instance moved continuously since last frame (it draws a velocity); false for show, hide or a reuse elsewhere. */
+    void UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data, bool bMotion = true);
+    /** Moves instances of a group. bMotion: continuous movement, so the previous transform is the current one (a motion vector);
+     * otherwise a jump (show, hide, reuse), so previous = new and no velocity is drawn. */
+    void MoveInstances(int32 GroupIndex, int32 Start, TConstArrayView<FTransform> Transforms, bool bMotion);
+    /** Reused buffers for MoveInstances, so a frame of sway allocates nothing once warm. */
+    TArray<FTransform> MoveNew, MovePrev;
+    void FlushGroups();
+    /**
+     * A static themed prop at a scenery-local transform. Instanced into the (mesh, material) group when the board is instanced, a
+     * loose MakePart otherwise. Theme meshes tint through custom data (one float), plain shapes through the effect material (rgb).
+     */
+    FExpeditionProp PlaceProp(UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator, bool bCastShadow = true, bool bOwnMaterial = false);
+    /** The occluder: one instance with its own material instance (the sight lines go to that material). */
+    FExpeditionPart PlaceOccluder(UStaticMesh* Mesh, FVector Location, FVector Scale);
+    /** A scenery-local transform in the view actor's space (the same for an instance and a loose part). */
+    FVector PropActorPosition(const FExpeditionProp& Prop) const;
+    void AddSway(const FExpeditionProp& Prop, float Degrees, float Flicker);
+    // Pooled effect pieces: a slot is a loose part or an instance; SetSlot moves and tints it and hides it with a zero scale.
+    FExpeditionSlot MakeSlot(UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation, bool bCastShadow);
+    void SetSlot(FExpeditionSlot& Slot, bool bVisible, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color);
+    // Ring bank.
+    bool CanBankRings() const;
+    void EnsureBank();
+    /** Writes the grid's bars (transforms and rgba custom data, in style order) into the bank, growing it when needed and hiding what is left over. */
+    void SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data);
+    int32 AddRingSlot(const FLinearColor& Color);
+    void SetRing(int32 Slot, bool bVisible, const FVector& Centre, float Scale, const FLinearColor& Color);
     void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
     void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
     void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);

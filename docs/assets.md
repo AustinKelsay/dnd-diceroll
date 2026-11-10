@@ -105,6 +105,19 @@ Import policy (v2), applied by `import_dark_fantasy_theme.py`:
 
 The Unreal import, build, automation and gallery captures are done (PR #164). What stays pending is the on-screen pass of the three records.
 
+## Instanced presentation parts (issue #144)
+
+Material changes for instancing, all original work by this project's agents (no third-party content). Nothing is imported; **no mesh, texture or Art/ source changes**. Two headless runs are needed, with the editor closed, in this order, and each is idempotent:
+
+1. `Content/Python/import_dark_fantasy_theme.py` (the existing theme import). The master graph revision goes from `dice-theme-4` to `dice-theme-5`: `Color` is multiplied by `PerInstanceCustomData[0]` (scalar, default 1), so every instanced prop carries its brightness tint per instance and every other mesh reads the default. A new material `Materials/M_DiceRollEffect` (revision `dice-effect-1`; lit, opaque, BaseColor = `Color` x `PerInstanceCustomData3Vector[0]`, `Roughness` 0.5, the BasicShapeMaterial look) is created once through `ensure_material`. The `used_with_instanced_static_meshes` flag is set (`set_if_different`, recompile only when it changed) on `M_DiceRollTheme`, `M_DiceRollOccluder`, `M_DiceRollCard` and `M_DiceRollEffect`, which cooked builds need.
+2. `Content/Python/create_board_overlay_material.py`. `M_BoardOverlay` goes from `board-overlay-2` to `board-overlay-3`: emissive is multiplied by `PerInstanceCustomData3Vector` (slots 0-2, default 1, 1, 1) and opacity by `PerInstanceCustomData` slot 3 (default 1) on top of the `Opacity` parameter. The shared bar bank (rings, markers and all nine grid styles) uses them for each bar's colour and opacity; a component with no custom data reads the defaults and draws as before.
+
+**Assets a run changes:** `Theme/Materials/M_DiceRollTheme.uasset` (graph and flag), `M_DiceRollOccluder.uasset` and `M_DiceRollCard.uasset` (flag), the new `M_DiceRollEffect.uasset`, and `M_BoardOverlay.uasset` (graph). The `MI_*` instances, meshes, textures and `DA_DiceRollTheme` keep their exact bytes.
+
+**Run record (2026-11-10, lead, headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`, with a hash diff of `Config/` and `Content/` around each run):**
+- **Theme import:** exit 0, no warnings. It changed exactly `M_DiceRollTheme`, `M_DiceRollOccluder` and `M_DiceRollCard`, and added `M_DiceRollEffect`. An immediate rerun changed nothing.
+- **Overlay script:** exit 0, no warnings. It changed exactly `M_BoardOverlay`. An immediate rerun changed nothing.
+
 ## Game splash (issue #131)
 
 `Content/Splash/Splash.bmp` is the splash the packaged Linux game shows while it loads. It is a raw file rather than an Unreal asset: the engine reads `<Project>/Content/Splash/Splash.bmp` directly, and Linux packaging stages that exact file outside the pak (`LinuxPlatform.Automation.cs`). Non-editor builds load it with `SDL_LoadBMP`, so it is an uncompressed 24-bit BMP, 720×370 like the engine's own splash. `Content/Splash/Icon.bmp` (64×64, 24-bit) is the splash window's icon: once a splash exists, the engine also looks up `Splash/Icon` and logs `Game icon not found.` without it. Packaging stages only `Splash.bmp` by itself, so `Config/DefaultGame.ini` adds `+DirectoriesToAlwaysStageAsNonUFS=(Path="Splash")` to ship the folder. Both files are Git LFS tracked (`*.bmp`).
