@@ -889,14 +889,19 @@ class Dev:
             cwd = binary.parent
         head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        # Fingerprints, so every pass of a run measures the same bytes, not merely the same paths.
+        package_commit = None
+        if folder and (Path(folder) / "verified.json").is_file():
+            package_commit = json.loads((Path(folder) / "verified.json").read_text()).get("commit")
         return {"size": size, "editor": editor, "script": script_path, "binary": binary, "cwd": cwd, "folder": folder, "frames": frames, "timeout": timeout,
                 "offscreen": offscreen, "vsync": vsync, "sound": sound, "commit": head, "dirty": dirty,
+                "binary_sha256": file_sha256(binary), "script_sha256": file_sha256(script_path), "package_commit": package_commit,
                 "directories": perf_tools.csv_directories(self.w.settings["game_target"], package=folder, project_root=self.w.root)}
 
     @staticmethod
     def perf_identity(record):
         """What every pass of one run must agree on: the build under test and how it was launched."""
-        return {key: record.get(key) for key in ("commit", "dirty", "binary", "mode", "script", "cores", "flags")}
+        return {key: record.get(key) for key in ("commit", "dirty", "binary", "binary_sha256", "mode", "script", "script_sha256", "package_commit", "cores", "flags")}
 
     def perf_mismatch(self, base, other, label):
         """Problems when `other` (a pass.json or the current context record) was made from a different build or with different flags."""
@@ -938,7 +943,8 @@ class Dev:
             raise RuntimeError(f"The {name} pass already ran in {output.name}; start a new run")
         mode = "editor (-game): a dry run, not the gate" if ctx["editor"] else "packaged Development"
         flags = {"vsync": ctx["vsync"], "sound": ctx["sound"], "offscreen": ctx["offscreen"], "csv_frames": ctx["frames"], "resolution": f"{ctx['size'][0]}x{ctx['size'][1]}"}
-        current = {"name": name, "commit": ctx["commit"], "dirty": ctx["dirty"], "binary": str(ctx["binary"]), "mode": mode, "script": str(ctx["script"]),
+        current = {"name": name, "commit": ctx["commit"], "dirty": ctx["dirty"], "binary": str(ctx["binary"]), "binary_sha256": ctx["binary_sha256"],
+                   "mode": mode, "script": str(ctx["script"]), "script_sha256": ctx["script_sha256"], "package_commit": ctx["package_commit"],
                    "cores": self.cores, "flags": flags}
         save = folder / "save"
         if resuming:
@@ -1023,8 +1029,13 @@ class Dev:
         for name in ("warmup", "resume"):
             if name in records:
                 problems += self.perf_mismatch(records["measured"], records[name], name)
+        # Warm means the warm-up finished before the measurement began, and the resume follows the measured pass.
+        order = [n for n in ("warmup", "measured", "resume") if n in records]
+        for before, after in zip(order, order[1:]):
+            if records[before]["ended"] > records[after]["started"]:
+                problems.append(f"{after} started before {before} ended (passes must run warm-up, measured, resume, in that order)")
         if problems:
-            raise RuntimeError("The passes of one run must share a commit, binary and flags: " + "; ".join(problems))
+            raise RuntimeError("The passes of one run must share a commit, binary and flags and run in order: " + "; ".join(problems))
         captures, rss = {}, {}
         for name in ("measured", "resume"):
             kept = output / records[name]["csv"]
@@ -1152,9 +1163,20 @@ class Dev:
         exited = "LogExit: Exiting." in text
         if not exited:
             raise RuntimeError(f"Packaged game did not log a normal exit; inspect {launch_log}")
-        write_json(output / "verified.json", {"binary": str(binary), "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
+        head = self.execute(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dirty = bool(self.execute(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip())
+        write_json(output / "verified.json", {"binary": str(binary), "commit": head, "dirty": dirty, "startup_map": self.w.game_map, "launched_at": stamp(), "exit_code": process.returncode, "normal_exit_logged": exited, **events,
                                               "package_warnings": package_events["warnings"], "package_errors": package_events["errors"]})
         print(f"Packaged game entered {self.w.game_map} and exited normally (code {process.returncode}); warning lines: launch {len(events['warnings'])}, package {len(package_events['warnings'])}; package error lines: {len(package_events['errors'])}; evidence: {output}")
+
+def file_sha256(path):
+    """SHA-256 of a file, read in chunks (a packaged binary is large)."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
 
 def crash_folders(root):
     """Names of Unreal crash reports under the project's Saved/Crashes (crashinfo-*)."""

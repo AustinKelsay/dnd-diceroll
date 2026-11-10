@@ -535,6 +535,35 @@ class PerfCommandTests(unittest.TestCase):
         found = re.search(r"PERF_RUN (\w+)", out.getvalue())
         return result, found.group(1) if found else None
 
+    def test_a_rebuilt_binary_or_edited_script_at_the_same_path_is_refused(self):
+        dev = self.prepare()
+        binary = self.root / "Builds/20260101T000000Z/Linux/CustomGame/Binaries/Linux/CustomGame"
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="measured")
+            binary.write_text("#!/bin/sh\n# rebuilt\n")
+            with self.assertRaisesRegex(RuntimeError, "binary_sha256 differs"): dev.perf(only="resume", run=run)
+            binary.write_text("#!/bin/sh\n")
+            script = self.root / "tools/autoplay/watchtower-road.json"
+            script.write_text(json.dumps({"version": 1, "party": ["a", "b", "c", "e"]}))
+            with self.assertRaisesRegex(RuntimeError, "script_sha256 differs"): dev.perf(only="resume", run=run)
+
+    def test_passes_out_of_order_fail_the_report(self):
+        dev = self.prepare()
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="measured")
+            dev.perf(only="warmup", run=run)
+            dev.perf(only="resume", run=run)
+            with self.assertRaisesRegex(RuntimeError, "measured started before warmup ended"): dev.perf(only="report", run=run)
+
+    def test_the_package_commit_is_recorded_from_its_verified_json(self):
+        dev = self.prepare()
+        (self.root / "Builds/20260101T000000Z/verified.json").write_text(json.dumps({"commit": "pkg789"}))
+        with patch.object(dev, "perf_run", side_effect=self.fake_game([])):
+            _, run = self.stamp_of(dev.perf, only="measured")
+        record = json.loads((self.w.local / "perf" / run / "measured" / "pass.json").read_text())
+        self.assertEqual(record["package_commit"], "pkg789")
+        self.assertEqual(len(record["binary_sha256"]), 64)
+
     def test_each_pass_runs_alone_and_the_report_is_built_from_the_run_folder(self):
         dev = self.prepare()
         calls = []
