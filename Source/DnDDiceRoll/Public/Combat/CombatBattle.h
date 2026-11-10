@@ -203,6 +203,14 @@ struct DNDDICEROLL_API FActionForecast
     TArray<FTargetEffect> Effects;
 };
 
+/** Damage reduction resolution applies to a combatant right now, and who supplies it: the strongest
+ * guard (first in roster order on ties), else the combatant itself for its Rage; INDEX_NONE when zero. */
+struct DNDDICEROLL_API FProtectionFacts
+{
+    int32 Amount = 0;
+    int32 SourceId = INDEX_NONE;
+};
+
 /** Geometry only: independent of budgets, resources and occupant eligibility. */
 struct DNDDICEROLL_API FActionReach
 {
@@ -230,6 +238,8 @@ public:
     TArray<FIntPoint> PathTo(int32 Id, FIntPoint Destination) const;
     /** Hit chance and effect range for a legal target. Consumes no random numbers. */
     FActionForecast Forecast(int32 ActorId, ECombatCommandType Action, int32 TargetId) const;
+    /** The protection the next hit on TargetId would lose to. The same function resolution uses; consumes no random numbers. */
+    FProtectionFacts Protection(int32 TargetId) const;
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
@@ -270,7 +280,7 @@ private:
     void AdvanceTurn();
     void CheckOutcome();
     TArray<int32> OrderedAreaTargets(const FCombatantState& Actor, const FCombatantState& Target) const;
-    int32 ProtectionFor(const FCombatantState& Target) const;
+    int32 ProtectionFor(const FCombatantState& Target, int32* OutSourceId = nullptr) const;
     void ApplyDamage(FCombatantState& Target, int32 Damage, bool bCritical = false);
     FCombatantState* MutableFind(int32 Id);
     FCombatResult Resolve(const FCombatCommand& Command);
