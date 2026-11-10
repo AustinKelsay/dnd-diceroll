@@ -790,6 +790,28 @@ class PerfCommandTests(unittest.TestCase):
         process.terminate.assert_called_once()
         process.kill.assert_not_called()
 
+    def test_a_failure_after_launch_still_waits_for_the_game_with_one_sigterm(self):
+        timeout = dev_module.subprocess.TimeoutExpired("game", 1)
+        for label, setup, error in (
+                ("ctrl-c while sending SIGTERM", {"terminate": KeyboardInterrupt, "waits": [timeout, timeout, timeout, 0]}, "timed out after 5s and exited"),
+                ("ctrl-c while resolving the PID", {"resolve": KeyboardInterrupt, "waits": [timeout, 0]}, "was interrupted and exited"),
+                ("the sampler cannot start", {"sampler": OSError("no /proc"), "waits": [timeout, 0]}, "no /proc")):
+            with self.subTest(label):
+                dev = Dev(self.w, host="linux")
+                dev.PERF_EXIT_WAIT = 0.01
+                process, sampler = self.timed_out_game(setup["waits"])
+                if "terminate" in setup:
+                    process.terminate.side_effect = setup["terminate"]
+                made = {"side_effect": setup["sampler"]} if "sampler" in setup else {"return_value": sampler}
+                resolved = {"side_effect": setup["resolve"]} if "resolve" in setup else {"return_value": 4322}
+                with tempfile.TemporaryDirectory() as temp, patch.object(dev_module.subprocess, "Popen", return_value=process), \
+                        patch.object(perf, "RssSampler", **made), patch.object(perf, "resolve_game_pid", **resolved), \
+                        contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex((RuntimeError, OSError), error):
+                    dev.perf_run(["/x/CustomGame"], Path(temp) / "game.log", 5, temp)
+                self.assertEqual(process.wait.call_count, len(setup["waits"]))  # returned only once the game had exited
+                process.terminate.assert_called_once()
+                process.kill.assert_not_called()
+
     def sigfpe_then(self, calls, second, before_begin=True):
         """perf_run for a pass whose first attempt dies of the headless SDL SIGFPE (leaving a crash report); `second` shapes the relaunch."""
         base = self.fake_game(calls)

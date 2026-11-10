@@ -837,20 +837,36 @@ class Dev:
     PERF_EXIT_WAIT = 60  # seconds between reports while a timed-out game is still exiting
 
     def perf_run(self, args, log, timeout, cwd):
-        """Run one game process, sampling its resident memory. On timeout or interrupt it gets one SIGTERM (a normal exit request) and is never killed."""
+        """Run one game process, sampling its resident memory.
+
+        Whatever ends the wait early (the timeout, Ctrl-C, a sampler failure) the game gets one SIGTERM (a normal exit
+        request), is never killed, and this returns or raises only after it has exited, so the caller's lock is held."""
         with log.open("ab") as stream:
             process = subprocess.Popen([str(a) for a in args], cwd=cwd, stdout=stream, stderr=subprocess.STDOUT)
-            pid = perf_tools.resolve_game_pid(process.pid, Path(str(args[0])).name)
-            with perf_tools.RssSampler(pid) as sampler:
+            code = None
+            reason = "could not be sampled"
+            try:
                 try:
-                    code = process.wait(timeout=timeout)
-                except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
-                    reason = f"timed out after {timeout}s" if isinstance(exc, subprocess.TimeoutExpired) else "was interrupted"
-                    process.terminate()
-                    ignored = self.perf_await_exit(process, reason, log)
-                    detail = " after ignoring SIGTERM for a while" if ignored else ""
-                    raise RuntimeError(f"Game PID {process.pid} {reason} and exited{detail}; inspect {log}") from None
-        return code, sampler.summary()
+                    pid = perf_tools.resolve_game_pid(process.pid, Path(str(args[0])).name)
+                    with perf_tools.RssSampler(pid) as sampler:
+                        code = process.wait(timeout=timeout)
+                    return code, sampler.summary()
+                except subprocess.TimeoutExpired:
+                    reason = f"timed out after {timeout}s"
+                except KeyboardInterrupt:
+                    reason = "was interrupted"
+            finally:
+                if code is None:
+                    ignored = self.perf_stop(process, reason, log)
+            raise RuntimeError(f"Game PID {process.pid} {reason} and exited{' after ignoring SIGTERM for a while' if ignored else ''}; inspect {log}")
+
+    def perf_stop(self, process, reason, log):
+        """Send a still-running game one SIGTERM and wait until it has exited. True if it outlived at least one wait."""
+        try:
+            process.terminate()
+        except (OSError, KeyboardInterrupt):
+            pass  # never resend: a game that missed the request still ends on its own autoplay time limits
+        return self.perf_await_exit(process, reason, log)
 
     def perf_await_exit(self, process, reason, log):
         """Block until a game that was sent SIGTERM has exited. True if it outlived at least one wait.
