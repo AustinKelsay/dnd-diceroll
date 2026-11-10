@@ -763,7 +763,8 @@ class PerfCommandTests(unittest.TestCase):
         timeout = dev_module.subprocess.TimeoutExpired("game", 1)
         for label, waits, printer in (("closed output", [timeout, timeout, timeout, 0], {"side_effect": BrokenPipeError}),
                                       ("ctrl-c while exiting", [timeout, KeyboardInterrupt(), KeyboardInterrupt(), timeout, 0], {}),
-                                      ("ctrl-c and closed output", [timeout, KeyboardInterrupt(), 0], {"side_effect": BrokenPipeError})):
+                                      ("ctrl-c and closed output", [timeout, KeyboardInterrupt(), 0], {"side_effect": BrokenPipeError}),
+                                      ("ctrl-c while printing", [timeout, timeout, timeout, 0], {"side_effect": KeyboardInterrupt})):
             with self.subTest(label):
                 dev = Dev(self.w, host="linux")
                 dev.PERF_EXIT_WAIT = 0.01

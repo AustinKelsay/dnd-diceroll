@@ -869,8 +869,8 @@ class Dev:
                 message = f"Game PID {process.pid} is still exiting; the interrupt is ignored until it has (the lock stays held)."
             try:
                 print(message, flush=True)
-            except (OSError, ValueError):
-                pass  # nobody is reading the output any more; keep waiting regardless
+            except (OSError, ValueError, KeyboardInterrupt):
+                pass  # a closed output or a Ctrl-C mid-print must not end the wait
 
     def perf_crash_dirs(self, binary):
         """Folders whose Saved/Crashes a run may write to: this checkout, the packaged game's user directory and its staged folder."""
