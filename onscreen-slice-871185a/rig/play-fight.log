@@ -1,0 +1,52 @@
+02:40:41 start Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide12/12 Raide12/12 Vault12/12 done=0 rev=7
+02:40:41 ROUND 1 | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide12/12 Raide12/12 Vault12/12
+02:40:42 Nix attack Raider 2
+02:40:46 Nix end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide12/12 Raide12/12 Vault12/12
+02:40:49 Sera attack Raider 2
+02:40:52 Sera end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide12/12 Raide4/12 Vault12/12
+02:40:56 Ivo attack Raider 2
+02:40:59 Ivo end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide12/12 Raide0/12L2 Vault12/12
+02:41:02 Arden move 4,3 -> (6, 4)
+02:41:07 Arden attack Raider 1
+02:41:11 Arden end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide12/12 Raide0/12L2 Vault12/12
+02:41:14 ROUND 2 | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide12/12 Raide0/12L2 Vault12/12
+02:41:14 Nix attack Raider 1
+02:41:18 Nix end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:41:21 Sera move 4,5 -> (6, 5)
+02:41:25   move not accepted
+02:41:28 Ivo move 4,6 -> (7, 6)
+02:41:33 Ivo attack Vault bow
+02:41:37 Ivo end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:41:40 Arden move 6,4 -> (10, 4)
+02:41:45   move not accepted
+02:41:47 ROUND 3 | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:41:48 Nix attack Vault bow
+02:41:51 Nix end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:41:55 Sera move 4,5 -> (6, 5)
+02:41:59   move not accepted
+02:42:02 Ivo attack Vault bow
+02:42:06 Ivo end turn | Arden30/30 Nix19/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:42:09 Arden move 6,4 -> (10, 4)
+02:42:14   move not accepted
+02:42:16 ROUND 4 | Arden30/30 Nix13/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault12/12
+02:42:16 Nix attack Vault bow
+02:42:20 Nix end turn | Arden30/30 Nix13/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault8/12
+02:42:23 Sera move 4,5 -> (6, 5)
+02:42:28   move not accepted
+02:42:31 Ivo attack Vault bow
+02:42:34 Ivo end turn | Arden30/30 Nix13/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault8/12
+02:42:38 Arden move 6,4 -> (10, 4)
+02:42:42   move not accepted
+02:42:44 ROUND 5 | Arden30/30 Nix6/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault8/12
+02:42:45 Nix attack Vault bow
+02:42:49 Nix end turn | Arden30/30 Nix6/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault1/12
+02:42:52 Sera Cure Wounds Nix
+02:42:56 Sera end turn | Arden30/30 Nix6/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault1/12
+02:42:59 Ivo attack Vault bow
+02:43:03 Ivo end turn | Arden30/30 Nix6/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault1/12
+02:43:06 Arden move 6,4 -> (10, 4)
+02:43:11   move not accepted
+02:43:13 ROUND 6 | Arden30/30 Nix1/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault1/12
+02:43:13 Nix attack Vault bow
+02:43:17 STOP phase=2 done=1 | Arden30/30 Nix1/22 Sera22/22 Ivo22/22 Raide0/12L2 Raide0/12L2 Vault0/12L2
+02:43:17 end elapsed 156s
