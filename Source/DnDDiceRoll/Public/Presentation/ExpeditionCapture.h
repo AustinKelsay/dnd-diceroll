@@ -5,8 +5,11 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle, Targeting and Tooltip need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip };
+/** What a capture shot shows. Battle, Targeting, Tooltip and Hint need an encounter; Overview needs the tabletop; Start leaves the run. */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint };
+
+/** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
+enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };
 
 /** Which dock action a Tooltip shot chooses, as its key does: A, F, M, R, P. */
 enum class ECaptureAction : uint8 { Attack, Special1, Special2, Rescue, Potion };
@@ -21,6 +24,8 @@ struct DNDDICEROLL_API FCaptureShot
     float Distance = 0.0f;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
+    /** Hint shots only. */
+    ECaptureHint Hint = ECaptureHint::Move;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
 };
@@ -48,6 +53,7 @@ DNDDICEROLL_API bool Requested(const TCHAR* CommandLine);
 
 DNDDICEROLL_API const TCHAR* ModeName(ECaptureMode Mode);
 DNDDICEROLL_API const TCHAR* ActionName(ECaptureAction Action);
+DNDDICEROLL_API const TCHAR* HintName(ECaptureHint Hint);
 /** Pure: validates a poses document (version 1) and fills Out, or fails with a message naming the problem. */
 DNDDICEROLL_API bool ParsePoses(const FString& Json, FCapturePoses& Out, FString& Error);
 }
@@ -63,8 +69,18 @@ class DNDDICEROLL_API FExpeditionCaptureDirector
 public:
     /** Null unless the command line asks for a capture run. */
     static TSharedPtr<FExpeditionCaptureDirector> TryCreate(AExpeditionPlayerController* Controller, AExpeditionBattleView* View);
+    /** Same as TryCreate with the values already read from the command line (also the seam automation uses). */
+    static TSharedPtr<FExpeditionCaptureDirector> Create(AExpeditionPlayerController* Controller, AExpeditionBattleView* View, const FString& PosesPath, const FString& OutputDir, const FString& Fixture);
     /** Once per rendered frame, from the player controller. */
     void Tick();
+    /**
+     * Editor builds only (#174): finishes every outstanding shader and asset compilation, then flushes the render thread. A start-up
+     * mitigation for #174 (a shader map replaced while a frame still draws with it): later frames or a return to the start screen can
+     * queue more compilation, so a residual window remains. Does nothing in other builds.
+     */
+    static void DrainCompilation();
+    /** Replaces what the director calls to drain compilation (default: DrainCompilation). It runs on the first Tick and on both sides of Resume. */
+    void SetCompilationDrain(TFunction<void()> InDrain) { Drain = MoveTemp(InDrain); }
 
 private:
     enum class EStage : uint8 { Loading, Next, Settling, Saving, Done };
@@ -87,6 +103,8 @@ private:
     int32 Frames = 0;
     int32 StageFrames = 0;
     bool bResumed = false;
+    bool bDrainedAtStart = false;
+    TFunction<void()> Drain;
     bool bFailed = false;
     FString Failure;
     FIntPoint Resolution = FIntPoint::ZeroValue;

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Combat/ActionFacts.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/CombatHints.h"
 #include "GameFramework/HUD.h"
 #include "ExpeditionHUD.generated.h"
 
@@ -37,6 +38,15 @@ struct FActionTooltipRequest
     TArray<FString> Reasons;
     bool operator==(const FActionTooltipRequest& Other) const
     { return Command == Other.Command && Headline == Other.Headline && Usage == Other.Usage && Effect == Other.Effect && Reasons == Other.Reasons; }
+};
+
+/** The hint callout the last draw asked for (#158): which hint, its words and its rectangle in viewport pixels. */
+struct FHintRequest
+{
+    ECombatHint Hint = ECombatHint::Count;
+    FString Title;
+    TArray<FString> Lines;
+    FBox2D Box = FBox2D(ForceInit);
 };
 
 /**
@@ -83,14 +93,34 @@ public:
     int32 DockRebuilds() const { return DockRebuildCount; }
     /** The lines the build picker's details panel asked to draw for the shown build's abilities, from facts: name, then its cost and usage. */
     const TArray<FString>& BuildPickerLinesRequested() const { return PickerLines; }
+    /** The hint callout the last DrawHUD asked to draw (#158), or null. Empty whenever an overlay, playback or enemy turn owns the screen. */
+    const FHintRequest* HintRequested() const { return bHintRequested ? &HintDrawn : nullptr; }
     /** Test support: act as if the pointer were at this viewport position; a negative position returns to the physical pointer. */
     void PreviewPointer(FVector2D ViewportPosition) { PointerPreview = ViewportPosition; }
     /** Whether the last draw requested keyboard inspection brackets, before projection. */
     bool KeyboardCursorRequested() const { return bCursorRequested; }
-    /** The combatant whose full status panel the last draw showed, or INDEX_NONE. */
+    /** The combatant whose full status panel the last draw showed, or INDEX_NONE. With several panels up, the one drawn last. */
     int32 PartyDetailUnit() const { return DetailUnitId; }
+    /** Every combatant whose full status panel the last draw showed, in party order (#171). */
+    const TArray<int32>& PartyDetailUnits() const { return DetailUnitIds; }
+    /** The targeting legend's backing panel in viewport pixels, or null when the last draw showed none (#171). */
+    const FBox2D* LegendRequested() const { return bLegendRequested ? &LegendBox : nullptr; }
+    /** Every full status panel the last draw showed, in viewport pixels (#171). */
+    const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
 private:
     int32 DetailUnitId = INDEX_NONE;
+    TArray<int32> DetailUnitIds;
+    TArray<FBox2D> DetailRects;
+    FBox2D LegendBox = FBox2D(ForceInit);
+    bool bLegendRequested = false;
+    /** The path-cost number waits until every panel and chip is placed, then draws over them (#171). */
+    bool bPathCostPending = false;
+    FVector2D PathCostEnd = FVector2D::ZeroVector;
+    FString PathCostText;
+    /** Where the chips of the last draw sit, design units, so the cost plate can keep clear of them. */
+    TArray<FBox2D> ChipPanels;
+    void DrawLegend(bool bGroundGrid);
+    void DrawPathCost();
     TArray<FActionTagRequest> TagsRequested;
     TArray<FString> PickerLines;
     /** One dock button as the facts describe it, kept until the combat state changes. */
@@ -113,6 +143,8 @@ private:
     /** The scale text needs to fit MaxWidth, never below Min; bClipped is set when even Min does not fit. */
     float FitScale(const FString& Value, float Base, float Min, float MaxWidth, bool& bClipped) const;
     FString Ellipsize(const FString& Value, float Scale, float MaxWidth) const;
+    FHintRequest HintDrawn;
+    bool bHintRequested = false;
     FActionTooltipRequest TooltipRequested;
     bool bTooltipRequested = false;
     FVector2D PointerPreview = FVector2D(-1, -1);
@@ -120,8 +152,9 @@ private:
     int32 ReachRequested = 0;
     bool bCursorRequested = false;
     enum class EAlign : uint8 { Left, Center, Right };
-    struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; bool bTransient = false; };
+    struct FButtonArea { FName Id; FBox2D Box; bool bEnabled = true; bool bTransient = false; bool bFocusless = false; };
     bool bTransientButtons = false; // Set while the open Menu draws: its buttons are excluded from the persistent budget.
+    bool bFocusless = false; // Set while a hint draws: its buttons take no keyboard focus and add no Tab stop (#158).
     TArray<FButtonArea> Buttons;
     TArray<FBox2D> Blockers;
     TArray<FBox2D> Persistent; // Always-on panels in design units, for the coverage budget (#146).
@@ -168,6 +201,7 @@ private:
     void DrawParty();
     void DrawPartyCard(const FCombatantState& Unit, int32 Index, float Y);
     void DrawPartyDetail(const FCombatantState& Unit, float X, float Y);
+    void DrawHint();
     void DrawActionBar();
     void DrawForecast();
     void DrawDice();
