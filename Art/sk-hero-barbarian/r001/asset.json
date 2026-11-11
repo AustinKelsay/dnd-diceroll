@@ -58,7 +58,7 @@
     {
       "role": "source",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian_source.blend",
-      "sha256": "d97438aa6c261a3456f9c48504c77869529ee24388cc46290b2e87c9b0dc6e31"
+      "sha256": "0cd6c33d4e09c62774ec887abec4d7e5f1dc95fe282088ff6744e96c69ac3a12"
     },
     {
       "role": "source",
@@ -73,7 +73,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
-      "sha256": "9ff0786535cbc3d3e9f44e059585bf1a0b25bfdf452b666984ce04b5a057c9ec"
+      "sha256": "fbca4bcdf4791c1b10f778f1a54be7e0c834f7fcd997ac6297d7b56c1f0e7b74"
     },
     {
       "role": "source",
@@ -118,17 +118,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian.glb",
-      "sha256": "e9c5b8af2a27132a7347e1e923ad795d04fa6f43bb5f60ec57e21fb9aa8d6b4c"
+      "sha256": "cd2912784eba9973dc01251f7109c5579d5ddb15e42351f2e7045e11bfcda397"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian_LOD1.glb",
-      "sha256": "6a781f892a1a6fe3b58586512c758e5be5857713a745398a4cf9571aabad03c7"
+      "sha256": "c286d07679d016f040718b0c06bbd0e1615578cbc3dd89e3b541e3caa6287bf4"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian_LOD2.glb",
-      "sha256": "b4e819723256d41ff81c4150b7b30b5be6b3f5b0673574dcb1ba12fb161c47a9"
+      "sha256": "9d239083c15fa01afd735d987b48aa66500b22550e51ebc8473dcd5cd7a73fba"
     }
   ],
   "import_policy": {

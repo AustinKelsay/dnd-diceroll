@@ -58,7 +58,7 @@
     {
       "role": "source",
       "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_source.blend",
-      "sha256": "087076bc8fa3a687e61206b4495b4c685c4498b24df3ad8b5d2708fe16a8a61d"
+      "sha256": "63750aa54dffe68f3639cad3ccd4df364b0e4b41c13e01d6fbb18006b335c0c8"
     },
     {
       "role": "source",
@@ -73,7 +73,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
-      "sha256": "9ff0786535cbc3d3e9f44e059585bf1a0b25bfdf452b666984ce04b5a057c9ec"
+      "sha256": "fbca4bcdf4791c1b10f778f1a54be7e0c834f7fcd997ac6297d7b56c1f0e7b74"
     },
     {
       "role": "source",
@@ -118,17 +118,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-monk/r001/SK_Hero_Monk.glb",
-      "sha256": "9f4c4f454cba017091da4beafec1a31ab498d983e00ab063579bf439d0afd94a"
+      "sha256": "d1f20b1c4944e56b70f836433c50bf5cc76affb03398f73b0f234aa4a2cebfb6"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_LOD1.glb",
-      "sha256": "87108758419265a3c759533b9518edf0f6e2930b35c04dd793d0d4eadecb3c7d"
+      "sha256": "59d0321bb47ab3a035fc4997f4dc209eeef5ac8bad100742dd0fb80cae2c294a"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_LOD2.glb",
-      "sha256": "843d5e4b3c3e255d81677ea75047b0e8313424e1b152918826cf8e8b02ca92ab"
+      "sha256": "cb65360682b792a2099b49fae4b8a0360d26e6fcfba436d6b90f0340a4c0c838"
     }
   ],
   "import_policy": {
