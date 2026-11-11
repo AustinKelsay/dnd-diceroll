@@ -69,6 +69,23 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("Mode name"), FString(ExpeditionCapture::ModeName(ECaptureMode::Impact)), FString(TEXT("impact")));
         }
     }
+    // A pose shot (#150) holds a hero of a class in a clip at a time, and carries a camera.
+    {
+        FCapturePoses Held;
+        TestTrue(TEXT("Pose shots parse"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"p\",\"mode\":\"pose\",\"role\":\"Rogue\",\"pose\":\"melee\",\"time\":0.37,\"yaw\":0,\"distance\":\"default\"},"
+            "{\"name\":\"q\",\"mode\":\"pose\",\"role\":\"Cleric\",\"pose\":\"Downed\",\"yaw\":90,\"distance\":1300}]}"), Held, Error));
+        if (Held.Shots.Num() == 2)
+        {
+            TestEqual(TEXT("Pose mode"), Held.Shots[0].Mode, ECaptureMode::Pose);
+            TestTrue(TEXT("A pose shot carries a camera"), Held.Shots[0].bHasCamera);
+            TestEqual(TEXT("The role is read"), Held.Shots[0].Role, FString(TEXT("Rogue")));
+            TestEqual(TEXT("The clip is read in any case"), Held.Shots[0].Pose, EUnitPose::Melee);
+            TestEqual(TEXT("The time is read"), Held.Shots[0].Time, 0.37f);
+            TestEqual(TEXT("A clip in its own case"), Held.Shots[1].Pose, EUnitPose::Downed);
+            TestEqual(TEXT("The time defaults to the first frame"), Held.Shots[1].Time, 0.0f);
+            TestEqual(TEXT("Mode name"), FString(ExpeditionCapture::ModeName(ECaptureMode::Pose)), FString(TEXT("pose")));
+        }
+    }
     // Capture runs bind no player input; only a real -ExpeditionCapture= value turns that on.
     TestTrue(TEXT("Capture is requested by a poses path"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionCapture=/tmp/poses.json -ExpeditionSaveRoot=/tmp/s")));
     TestFalse(TEXT("A normal run is not a capture run"), ExpeditionCapture::Requested(TEXT("-game -ExpeditionSaveRoot=/tmp/s")));
@@ -113,6 +130,11 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-first\",\"effect\":\"spell\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-second\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"settleFrames\":3,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":4,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"pose\":\"melee\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"pose\":\"dance\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"pose\":\"melee\",\"time\":11,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"pose\":\"melee\",\"yaw\":0}]}"),
     };
     for (const TCHAR* Text : Bad)
     {

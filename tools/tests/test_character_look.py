@@ -18,12 +18,15 @@ CHANGED = {
     "MI_Foe_Raider", "MI_Foe_Scout", "MI_Foe_Archer",
     "MI_SK_Hero_Fighter", "MI_SK_Hero_Wizard", "MI_SK_Foe_Raider",
 }
+# The rig material instances batch 1 of the cast (#150) adds; new packages, so they are not part of the #148 change set above.
+CAST_BATCH1 = {"MI_SK_Hero_Rogue", "MI_SK_Hero_Cleric"}
 # Roughness, glow and self-light of each character, unchanged by #148.
 CHARACTER_OTHERS = {
     "SM_Hero_Fighter": (0.55, 1.0, 0.0), "SM_Hero_Rogue": (0.6, 1.0, 0.0), "SM_Hero_Cleric": (0.6, 1.0, 0.0),
     "SM_Hero_Wizard": (0.65, 1.0, 0.0), "SM_Foe_Raider": (0.6, 1.0, 0.0), "SM_Foe_Scout": (0.6, 1.0, 0.0),
     "SM_Foe_Archer": (0.6, 1.0, 0.0),
     "SK_Hero_Fighter": (0.55, 1.0, 0.0), "SK_Hero_Wizard": (0.65, 1.0, 0.0), "SK_Foe_Raider": (0.6, 1.0, 0.0),
+    "SK_Hero_Rogue": (0.6, 1.0, 0.0), "SK_Hero_Cleric": (0.6, 1.0, 0.0),
 }
 # Rim and Fill of every other r001 row, before and after #148.
 NON_CHARACTER = {
@@ -71,7 +74,7 @@ class CharacterLookTest(unittest.TestCase):
     def test_the_change_set_is_exactly_the_character_instances(self):
         names = {"MI_" + name[3:] for name, (folder, _) in static_rows().items() if folder == "Characters"}
         names |= {"MI_" + name for name in rig_rows()}
-        self.assertEqual(names, CHANGED)
+        self.assertEqual(names, CHANGED | CAST_BATCH1)
 
     def test_the_import_writes_a_scalar_only_when_it_differs(self):
         text = SCRIPT.read_text()

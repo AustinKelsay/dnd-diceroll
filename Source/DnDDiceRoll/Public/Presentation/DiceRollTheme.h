@@ -100,10 +100,30 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Scout;
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Archer;
 
-    /** Rigged characters (#147): the roster entries below use these when imported, otherwise the static meshes above. */
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter FighterRig;
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter WizardRig;
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter RaiderRig;
+    /**
+     * Rigged party characters (#150), by class: the key is the role's enum name ("Fighter", "Rogue", "Cleric", "Wizard", ...; see
+     * ClassKey). A later cast batch gives another class a rig by adding an entry here, by data only. A class with no usable entry
+     * (missing, or its mesh unset) falls back to its static r001 mesh, then to primitives; an entry whose mesh or any clip fails
+     * to load does too (FDiceRollCharacter::Load).
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> ClassRigs;
+    /** Rigged foes by archetype name ("Raider"; the scout and archer follow in a later batch). */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> FoeRigs;
+
+    /**
+     * The three pilot fields (#147), kept only so a theme saved before #150 still resolves its rigs: RigForClass and RigForFoe read
+     * them when the maps have no entry. The import script moves them into the maps; new work uses the maps.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter FighterRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter WizardRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter RaiderRig;
+
+    /** The ClassRigs key of a class: the role's enum name ("Rogue"). None has no key. */
+    static FName ClassKey(EAdventurerRole Role);
+    /** The rig definition of a class, or null when it has none (the caller falls back to the static mesh, then primitives). */
+    const FDiceRollCharacter* RigForClass(EAdventurerRole Role) const;
+    /** The rig definition of a foe archetype, or null. */
+    const FDiceRollCharacter* RigForFoe(FName Archetype) const;
 
     /** Surrounding worlds, authored around an 18 x 12 cell footprint centred on the origin. */
     UPROPERTY(EditDefaultsOnly, Category = "Worlds") TSoftObjectPtr<UStaticMesh> RootWorld;

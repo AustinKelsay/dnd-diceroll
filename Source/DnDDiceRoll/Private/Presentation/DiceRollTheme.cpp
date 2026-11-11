@@ -67,6 +67,31 @@ FDiceRollWorldKit UDiceRollTheme::KitFor(EDiceRollKit Kind) const
     return Kit;
 }
 
+FName UDiceRollTheme::ClassKey(EAdventurerRole Role)
+{
+    if (Role == EAdventurerRole::None) { return NAME_None; }
+    const UEnum* Enum = StaticEnum<EAdventurerRole>();
+    return Enum ? FName(*Enum->GetNameStringByValue(static_cast<int64>(Role))) : NAME_None;
+}
+
+const FDiceRollCharacter* UDiceRollTheme::RigForClass(EAdventurerRole Role) const
+{
+    const FName Key = ClassKey(Role);
+    if (Key.IsNone()) { return nullptr; }
+    const FDiceRollCharacter* Entry = ClassRigs.Find(Key);
+    if (Entry && !Entry->Mesh.IsNull()) { return Entry; }
+    const FDiceRollCharacter* Legacy = Role == EAdventurerRole::Fighter ? &FighterRig : Role == EAdventurerRole::Wizard ? &WizardRig : nullptr;
+    return Legacy && !Legacy->Mesh.IsNull() ? Legacy : nullptr;
+}
+
+const FDiceRollCharacter* UDiceRollTheme::RigForFoe(FName Archetype) const
+{
+    if (Archetype.IsNone()) { return nullptr; }
+    const FDiceRollCharacter* Entry = FoeRigs.Find(Archetype);
+    if (Entry && !Entry->Mesh.IsNull()) { return Entry; }
+    return Archetype == FName(TEXT("Raider")) && !RaiderRig.Mesh.IsNull() ? &RaiderRig : nullptr;
+}
+
 const TSoftObjectPtr<UAnimSequence>& FDiceRollAnimSet::For(EUnitPose Pose) const
 {
     switch (Pose)

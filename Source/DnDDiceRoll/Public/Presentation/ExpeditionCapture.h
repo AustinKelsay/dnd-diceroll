@@ -6,8 +6,8 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact and Roll need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact };
+/** What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact, Roll and Pose need an encounter; Overview needs the tabletop; Start leaves the run. */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact, Pose };
 
 /** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
 enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };
@@ -36,6 +36,10 @@ struct DNDDICEROLL_API FCaptureShot
     EImpactMoment Moment = EImpactMoment::Landing;
     /** Impact shots only: rendered frames between the hit and the screenshot (the flash is held at its peak throughout). */
     int32 Frames = DefaultImpactFrames;
+    /** Pose shots only (#150): a party hero of this class (the role's enum name, "Rogue") held in this clip at this time in seconds, with no command and no rules change. */
+    FString Role;
+    EUnitPose Pose = EUnitPose::Idle;
+    float Time = 0.0f;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
 };
@@ -114,6 +118,16 @@ private:
         bool bHasBolt = false;
         FIntRect Bolt;
         bool bImpactFired = false;
+        /** Battle and targeting shots (#150): every figure on the board with its projected footprint box in screenshot pixels, so a tool can
+         * measure one class's figure against the ground behind it (tools/figure_contrast.py). Units whose box is off screen are left out. */
+        struct FUnitBox
+        {
+            int32 Id = INDEX_NONE;
+            FString Name, Role;
+            bool bParty = false, bRigged = false;
+            FIntRect Box;
+        };
+        TArray<FUnitBox> Units;
     };
 
     TWeakObjectPtr<AExpeditionPlayerController> Controller;

@@ -152,6 +152,8 @@ struct FExpeditionUnitRig
     int32 PoseSerial = -1;
     /** A natural return to Idle waits for a one-shot clip that is still playing. */
     bool bIdleAfter = false;
+    /** Capture support (#150): the clip and time are held by PreviewPose, so UpdateAnimation leaves the figure alone. */
+    bool bPosePreview = false;
 };
 
 /** What a figure's animation shows right now (tests and tools). */
@@ -346,6 +348,12 @@ public:
      */
     void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
     void ClearImpactPreview();
+    /**
+     * Capture support (#150): holds a rigged figure in a clip at a time (seconds, clamped to the clip) with no command and no rules
+     * change, until ClearPosePreview hands it back to playback. False when the unit has no skinned figure.
+     */
+    bool PreviewPose(int32 UnitId, EUnitPose Pose, float Seconds);
+    void ClearPosePreview();
     int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */
     void SnapCameraToTargets() { bCameraPlaced = false; }

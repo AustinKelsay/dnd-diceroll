@@ -989,12 +989,20 @@ def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan
 RIG_FOLDER = THEME + "/Characters"
 SKELETON = RIG_FOLDER + "/SKEL_Humanoid"
 CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
-# asset id, mesh name, data-asset property, look (roughness, rim, fill, glow, self_lit): characters get Rim 1.6 and Fill 1.25 (#148).
+# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit): characters get Rim 1.6 and Fill 1.25 (#148).
+# The rig key says where the data asset holds the definition (#150): "class:<Role>" is UDiceRollTheme::ClassRigs[<Role>], "foe:<Archetype>"
+# is FoeRigs[<Archetype>]. The fighter comes first because its import yields the shared skeleton and the nine clips (every later
+# character reuses them), and a cast batch appends its characters here.
 RIG = [
-    ("sk-hero-fighter", "SK_Hero_Fighter", "fighter_rig", (0.55, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.6, 1.25, 1.0, 0.0)),
 ]
+CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
+# The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.
+PILOT_FIELDS = {"class:Fighter": "fighter_rig", "class:Wizard": "wizard_rig", "foe:Raider": "raider_rig"}
 # Replacement is refused (see refuse_reimport): the allow-list is only validated so the refusal can name the problem.
 REIMPORT = {token.strip() for token in os.environ.get("THEME_RIG_REIMPORT", "").split(",") if token.strip()}
 
@@ -1182,23 +1190,52 @@ def path_of(asset):
     return asset.get_path_name() if hasattr(asset, "get_path_name") else str(asset)
 
 
-def rig_definition(theme, prop, name):
-    """The data-asset entry for a character, or None when it already matches (so an unchanged theme is not dirtied)."""
-    current = theme.get_editor_property(prop)
-    mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
-    clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
-    animations = current.get_editor_property("animations")
-    if path_of(current.get_editor_property("mesh")) == path_of(mesh) and all(
-            path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items()):
-        return None
+def rig_target(key):
+    """The data-asset map property and the entry name of a rig key ("class:Rogue" -> class_rigs, Rogue)."""
+    kind, entry = key.split(":", 1)
+    return (CLASS_RIGS if kind == "class" else FOE_RIGS), entry
+
+
+def rig_matches(definition, mesh, clips):
+    animations = definition.get_editor_property("animations")
+    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and all(
+        path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items())
+
+
+def new_rig_definition(mesh, clips, yaw):
     definition = unreal.DiceRollCharacter()
     definition.set_editor_property("mesh", mesh)
-    definition.set_editor_property("yaw_offset", current.get_editor_property("yaw_offset"))
+    definition.set_editor_property("yaw_offset", yaw)
     animation_set = unreal.DiceRollAnimSet()
     for clip, asset in clips.items():
         animation_set.set_editor_property(clip.lower(), asset)
     definition.set_editor_property("animations", animation_set)
     return definition
+
+
+def assign_rig(theme, key, name):
+    """Puts a character's definition in its map entry, and moves a pilot field's definition (#147) into the map. Returns the log
+    words for what changed (empty when the theme already matched, so an unchanged theme is not dirtied). Only the entry of this
+    key is written; other entries and other properties are never touched."""
+    prop, entry = rig_target(key)
+    mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
+    clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
+    entries = {str(k): v for k, v in theme.get_editor_property(prop).items()}
+    pilot_name = PILOT_FIELDS.get(key)
+    pilot = theme.get_editor_property(pilot_name) if pilot_name else None
+    pilot_set = pilot is not None and pilot.get_editor_property("mesh") is not None
+    changed = []
+    current = entries.get(entry)
+    if current is None or not rig_matches(current, mesh, clips):
+        source = current if current is not None else pilot
+        yaw = source.get_editor_property("yaw_offset") if source is not None else 0.0
+        entries[entry] = new_rig_definition(mesh, clips, yaw)
+        theme.set_editor_property(prop, {unreal.Name(k): v for k, v in entries.items()})
+        changed.append("assigned")
+    if pilot_set:
+        theme.set_editor_property(pilot_name, unreal.DiceRollCharacter())
+        changed.append("pilot field cleared")
+    return changed
 
 
 def import_rig(master, theme):
@@ -1214,7 +1251,7 @@ def import_rig(master, theme):
         raise RuntimeError("Incomplete rig bundle, missing: {}. Delete the survivors deliberately in the editor and rerun.".format(
             [path for path, here in zip(bundle, present) if not here]))
     found = 0
-    for asset_id, name, prop, look in RIG:
+    for asset_id, name, key, look in RIG:
         package = RIG_FOLDER + "/" + name
         staging = None
         if library.does_asset_exist(package):
@@ -1235,10 +1272,8 @@ def import_rig(master, theme):
         apply_rig_material(mesh, texture, asset_id, name, look, master)
         if staging:
             remove_staging(staging)
-        definition = rig_definition(theme, prop, name)
-        if definition is not None:
-            theme.set_editor_property(prop, definition)
-            rig_log("theme", prop, "assigned")
+        for status in assign_rig(theme, key, name):
+            rig_log("theme", key, status)
         found += 1
     for clip in CLIPS:
         if all(present):
