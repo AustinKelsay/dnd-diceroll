@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "asset_id": "world-vault",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Worlds/SM_World_Vault",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS, dark high fantasy with a PS1 look: a roofless crypt hall of cold basalt ashlar with reliquary alcoves, sarcophagi, chains and the Waystone, lit by a single cold-blue accent (the colour the finale already uses for its text); all textures and geometry procedural; no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored from scratch in metres, a new package (the Vault never had a world of its own; it drew the Vigil kit): continuous irregular flagstone paving (35-100 cm, random courses and patch angles, the Root/#145 recipe in cold blue-grey) over a dark slab floor, cold-blue rune inlays (glow only via COLOR_0.a), a far hall of ashlar walls with lancet glows and capped piers outside the sight volume, low dressing (sarcophagus rows, a collapsed vault rib, drums, urns, chests, chains, bones, skulls, candle stubs, crystal chips) at the open front and corners; vertex light at about 75 cm near the board; everything that enters the sight volume goes to SM_World_Vault_Occluders",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); #145 r002 standard; parent #138",
+    "parameters": {
+      "units": "metres, 1 cell = 1.50 m, footprint 18 x 12 cells = 27 x 18 m centred on the origin (the 16 x 11 board sits inside it)",
+      "axes": "+X forward, Z up",
+      "material": "one baseColor atlas 2048x2048 plus COLOR_0 RGBA (A = glow mask on the cold-blue rune and crystal materials, 0 elsewhere)",
+      "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
+      "pivot": "origin = board centre at floor level, geometry in place (not per-cell)",
+      "triangles": 102730,
+      "stones": 1775,
+      "clear_volume_rule": "Camera clear volume (camera_volume.py): SIGHT VOLUME = convex hull of the footprint (+ half-cell margin, lifted 12 cm) and every camera eye of the #143 pose law (framed 1400-4600, zoom 900-6400, pitch 35/45/60, 36 yaws) plus the lead envelope (reach 55 m, height 66 m); the world shell keeps 1.0 m outside it except ground within 12 cm of the floor; meshes that enter it are the occluders. EYE SPACE = every eye, 1.5 m sphere: no mesh contains or approaches an eye.",
+      "content": {
+        "landmark": 1,
+        "secondary_groups": 9,
+        "groups": {
+          "architecture": 3,
+          "waystone": 1,
+          "reliquary_alcoves": 8,
+          "collapsed_rib": 13,
+          "sarcophagi": 10,
+          "reliquary_dressing": 8,
+          "chains": 11,
+          "small_scatter": 215,
+          "far_hall": 15
+        },
+        "medium_props": 38,
+        "small_props": 276
+      },
+      "camera_check": {
+        "eyes": 22824,
+        "nearest_geometry_to_any_eye_m": ">2.0",
+        "rays_72_cameras": {
+          "cameras": 72,
+          "targets": 864,
+          "total_rays": 62208,
+          "blocked_by_world_alone": 0,
+          "blocked_by_world_with_occluders": 0,
+          "blocked_by_occluders": 353
+        },
+        "rays_envelope_sweep": {
+          "cameras": 848,
+          "targets": 54,
+          "total_rays": 45792,
+          "blocked_by_world": 0
+        },
+        "highest_point_inside_footprint_m": 0.033,
+        "world_points_inside_sight_volume": 0
+      },
+      "stone_equiv_diameter_cm_p5_p50_p95": [
+        41.7,
+        66.1,
+        82.7
+      ],
+      "stone_long_side_cm_p5_p50_p95_max": [
+        44.2,
+        80.6,
+        93.3,
+        100.9
+      ],
+      "stone_aspect_p5_p50_p95_max": [
+        1.06,
+        1.47,
+        2.26,
+        2.97
+      ],
+      "stone_vertex_count_histogram": {
+        "4": 1259,
+        "5": 354,
+        "6": 150
+      },
+      "edge_orientation_resultants_R2_R4_R6": [
+        0.014,
+        0.267,
+        0.046
+      ],
+      "edge_length_share_within_3deg_of_cell_axes": 0.005,
+      "atlas_fill": 0.267,
+      "paired_asset": "world-vault-occluders",
+      "lods": {
+        "lod0_triangles": 102730,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 51364,
+            "fraction": 0.5,
+            "file": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0004
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0015,
+              0.0092
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 25681,
+            "fraction": 0.25,
+            "file": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0103,
+              0.016
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0112,
+              0.0331
+            ]
+          }
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/camera_volume.py",
+      "sha256": "a91131797bd4964c8b830c4cf710959c5e1b0fc076ae48063683a7306579864c"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/paving_vault.py",
+      "sha256": "4ed9b4d4addf74913f6a0f9230b324f34546139e19222a821654fb9f90471a4c"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/vault_lib.py",
+      "sha256": "822d5e2a0977c5497c973c91dd2a325eafc07c71030a5af169a1687ddb223684"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_vault_r002.py",
+      "sha256": "fe887de83604f50778ed047b6f65c85c8c60c2ab402e84f1065c56420d3c80b1"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/validate_vault_r002.py",
+      "sha256": "c42ba705a9fd73051549d95bb0f6fddb9c9790535ecda911e2b0f683ef24a6ed"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/lod_r002.py",
+      "sha256": "9d3d7733820e7deda02ec49da2cb8c841df3f046460c95ec950d802a58e5ba53"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_lods_vault_r002.py",
+      "sha256": "58188a6b4c6a18bce17f19590c9bc015480a828e4465551e90e3ecef2da7099f"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/relabel_lods_vault_r002.py",
+      "sha256": "c7e99c5440696bf017d5da20fc0dcbeed6259c87a924a736c5924b9f34f615fa"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vault/r001/SM_World_Vault.glb",
+      "sha256": "a8b293059d84b60d0aadc9c7d41284eed66d8dca3169db5b071943d6585b2c4e"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
+      "sha256": "57f6633f8252e1b138b03e1c6e2b47944951c06d31e5f0719b92726c36dbfe48"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
+      "sha256": "790e0d1e93ed07ee7f5b42744d0ac94c502d6bd0ed82c706d4b7e830301bb834"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#149 phase 2, as #145)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

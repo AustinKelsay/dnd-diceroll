@@ -1,0 +1,558 @@
+{
+  "SM_World_Vault": {
+    "asset_id": "world-vault",
+    "revision": 1,
+    "lod0_triangles": 102730,
+    "lod0_glow_area_m2": 195.9284,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 51364,
+        "fraction": 0.5,
+        "file": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
+        "sha256": "57f6633f8252e1b138b03e1c6e2b47944951c06d31e5f0719b92726c36dbfe48",
+        "bytes": 6603140,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0004
+        ],
+        "appearance": {
+          "rgb_mean": 0.0015,
+          "rgb_p95": 0.0092,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 195.9284
+      },
+      {
+        "lod": 2,
+        "triangles": 25681,
+        "fraction": 0.25,
+        "file": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
+        "sha256": "790e0d1e93ed07ee7f5b42744d0ac94c502d6bd0ed82c706d4b7e830301bb834",
+        "bytes": 3626692,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0103,
+          0.016
+        ],
+        "appearance": {
+          "rgb_mean": 0.0112,
+          "rgb_p95": 0.0331,
+          "alpha_mean": 0.0043,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 187.12164
+      }
+    ]
+  },
+  "SM_World_Vault_Occluders": {
+    "asset_id": "world-vault-occluders",
+    "revision": 1,
+    "lod0_triangles": 33788,
+    "lod0_glow_area_m2": 7.61248,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 18344,
+        "fraction": 0.5429,
+        "file": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
+        "sha256": "0cefb65be548c188a8b7e4d87d273045916092b26500ef51a9e941fdd744454b",
+        "bytes": 2076356,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0352
+        ],
+        "appearance": {
+          "rgb_mean": 0.0111,
+          "rgb_p95": 0.0355,
+          "alpha_mean": 0.0053,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 7.61248
+      }
+    ]
+  },
+  "SM_Prop_Vault_Pillar": {
+    "asset_id": "prop-vault-pillar",
+    "revision": 1,
+    "lod0_triangles": 1150,
+    "lod0_glow_area_m2": 0.13906,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 574,
+        "fraction": 0.4991,
+        "file": "Art/prop-vault-pillar/r001/SM_Prop_Vault_Pillar_LOD1.glb",
+        "sha256": "0795b04c00918daef738c402527fc62b1d98a32f2c2a79f7c972210e1a189f87",
+        "bytes": 129120,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0084,
+          "rgb_p95": 0.0423,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.13906
+      },
+      {
+        "lod": 2,
+        "triangles": 288,
+        "fraction": 0.2504,
+        "file": "Art/prop-vault-pillar/r001/SM_Prop_Vault_Pillar_LOD2.glb",
+        "sha256": "0deb23181cc214b9deddb1bb232c304baa65cba445fcb9df1ad70524ab1695b5",
+        "bytes": 114720,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0032,
+          0.0156
+        ],
+        "appearance": {
+          "rgb_mean": 0.0121,
+          "rgb_p95": 0.0633,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.13906
+      }
+    ]
+  },
+  "SM_Prop_Vault_Pillar_B": {
+    "asset_id": "prop-vault-pillar-b",
+    "revision": 1,
+    "lod0_triangles": 3260,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 1630,
+        "fraction": 0.5,
+        "file": "Art/prop-vault-pillar-b/r001/SM_Prop_Vault_Pillar_B_LOD1.glb",
+        "sha256": "6f575d7d1c9f93a55301cb7e09c21c30717515dbc451cac96ab7f55cbef29e35",
+        "bytes": 281376,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0057,
+          0.0093
+        ],
+        "appearance": {
+          "rgb_mean": 0.0282,
+          "rgb_p95": 0.1534,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 1304,
+        "fraction": 0.4,
+        "file": "Art/prop-vault-pillar-b/r001/SM_Prop_Vault_Pillar_B_LOD2.glb",
+        "sha256": "f744e4cbc2d307da56e7c1334c0fed8f8bb2075355ed2de374985da1d68c0b0e",
+        "bytes": 241900,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0095,
+          0.0134
+        ],
+        "appearance": {
+          "rgb_mean": 0.0373,
+          "rgb_p95": 0.199,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Vault_Pillar_C": {
+    "asset_id": "prop-vault-pillar-c",
+    "revision": 1,
+    "lod0_triangles": 688,
+    "lod0_glow_area_m2": 0.3093,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 344,
+        "fraction": 0.5,
+        "file": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD1.glb",
+        "sha256": "7d4edfe771da5b63b19cd0e2efd68b99dda2e2acbcba4b8de5cc9570e1c82b56",
+        "bytes": 95160,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0042
+        ],
+        "appearance": {
+          "rgb_mean": 0.0052,
+          "rgb_p95": 0.0371,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.3093
+      },
+      {
+        "lod": 2,
+        "triangles": 188,
+        "fraction": 0.2733,
+        "file": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD2.glb",
+        "sha256": "3fa0ea5cfbe2779530b598007631bfbbb6fe547ae94a2537de4857a955e11807",
+        "bytes": 81780,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0192,
+          0.0532
+        ],
+        "appearance": {
+          "rgb_mean": 0.0176,
+          "rgb_p95": 0.0929,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.3093
+      }
+    ]
+  },
+  "SM_Prop_Vault_Wall": {
+    "asset_id": "prop-vault-wall",
+    "revision": 1,
+    "lod0_triangles": 1218,
+    "lod0_glow_area_m2": 0.05375,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 608,
+        "fraction": 0.4992,
+        "file": "Art/prop-vault-wall/r001/SM_Prop_Vault_Wall_LOD1.glb",
+        "sha256": "dbc40514ec4a988a66b9b1feefb92f6293572c4545ea50d5e361c3b59e648853",
+        "bytes": 119576,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0043,
+          "rgb_p95": 0.0168,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.05375
+      },
+      {
+        "lod": 2,
+        "triangles": 304,
+        "fraction": 0.2496,
+        "file": "Art/prop-vault-wall/r001/SM_Prop_Vault_Wall_LOD2.glb",
+        "sha256": "82628e8988cfceceeadfd8484233a4b9dc345ed9c1c4cf24bb579e4545112799",
+        "bytes": 109308,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0069,
+          "rgb_p95": 0.0313,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.05375
+      }
+    ]
+  },
+  "SM_Prop_Vault_Wall_B": {
+    "asset_id": "prop-vault-wall-b",
+    "revision": 1,
+    "lod0_triangles": 1269,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 634,
+        "fraction": 0.4996,
+        "file": "Art/prop-vault-wall-b/r001/SM_Prop_Vault_Wall_B_LOD1.glb",
+        "sha256": "7034b164fda9eb0e35e97a703c3882c818cdd0cbbee0d530375f0be26fce190d",
+        "bytes": 127728,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0097,
+          "rgb_p95": 0.0521,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 317,
+        "fraction": 0.2498,
+        "file": "Art/prop-vault-wall-b/r001/SM_Prop_Vault_Wall_B_LOD2.glb",
+        "sha256": "d6c480060a55f3f64dde9b8e76e9aeb400314278b114ffd83a349e94dc0a9914",
+        "bytes": 114584,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0187,
+          "rgb_p95": 0.0825,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Vault_Wall_C": {
+    "asset_id": "prop-vault-wall-c",
+    "revision": 1,
+    "lod0_triangles": 1830,
+    "lod0_glow_area_m2": 0.11152,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 914,
+        "fraction": 0.4995,
+        "file": "Art/prop-vault-wall-c/r001/SM_Prop_Vault_Wall_C_LOD1.glb",
+        "sha256": "5d5c0fd7fd2f5539e984c97f927a124832c27ed64e9adb7aee9ec38980e9bc3f",
+        "bytes": 160124,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0107,
+          "rgb_p95": 0.0571,
+          "alpha_mean": 0.0138,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.11152
+      },
+      {
+        "lod": 2,
+        "triangles": 458,
+        "fraction": 0.2503,
+        "file": "Art/prop-vault-wall-c/r001/SM_Prop_Vault_Wall_C_LOD2.glb",
+        "sha256": "71b0ee74300f98f898825e78fb4a048ededa13bb3c0ff842ef9dd4c624e8df68",
+        "bytes": 134020,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0093
+        ],
+        "appearance": {
+          "rgb_mean": 0.0183,
+          "rgb_p95": 0.0983,
+          "alpha_mean": 0.0233,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.11152
+      }
+    ]
+  },
+  "SM_Prop_Vault_Stones": {
+    "asset_id": "prop-vault-stones",
+    "revision": 1,
+    "lod0_triangles": 638,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 318,
+        "fraction": 0.4984,
+        "file": "Art/prop-vault-stones/r001/SM_Prop_Vault_Stones_LOD1.glb",
+        "sha256": "81326d40927677b7a243b3b60db2261dd376bb6cc4cd36281b6811e868eff33c",
+        "bytes": 126172,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0188,
+          0.041
+        ],
+        "appearance": {
+          "rgb_mean": 0.0075,
+          "rgb_p95": 0.0441,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 234,
+        "fraction": 0.3668,
+        "file": "Art/prop-vault-stones/r001/SM_Prop_Vault_Stones_LOD2.glb",
+        "sha256": "85db6eed1b7e98e54a91ea2e876cbc9851f955d2b2f278e02f21167f53b9b296",
+        "bytes": 116384,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0443,
+          0.0866
+        ],
+        "appearance": {
+          "rgb_mean": 0.0128,
+          "rgb_p95": 0.0667,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Vault_Stones_B": {
+    "asset_id": "prop-vault-stones-b",
+    "revision": 1,
+    "lod0_triangles": 2796,
+    "lod0_glow_area_m2": 0.32411,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 1398,
+        "fraction": 0.5,
+        "file": "Art/prop-vault-stones-b/r001/SM_Prop_Vault_Stones_B_LOD1.glb",
+        "sha256": "d1246c74c2bbb602d10358635d43a9b10ac9dc04a2a8eae0bf7c718ef07e3997",
+        "bytes": 213928,
+        "deviation_m_p50_p95_max": [
+          0.0003,
+          0.007,
+          0.0142
+        ],
+        "appearance": {
+          "rgb_mean": 0.0191,
+          "rgb_p95": 0.1116,
+          "alpha_mean": 0.0093,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.32411
+      },
+      {
+        "lod": 2,
+        "triangles": 698,
+        "fraction": 0.2496,
+        "file": "Art/prop-vault-stones-b/r001/SM_Prop_Vault_Stones_B_LOD2.glb",
+        "sha256": "c1905bd1d5eec1ad1e14251e4a34bba3b372152c52a4aeef74f27a06fcb31efd",
+        "bytes": 135724,
+        "deviation_m_p50_p95_max": [
+          0.0026,
+          0.0162,
+          0.0318
+        ],
+        "appearance": {
+          "rgb_mean": 0.0369,
+          "rgb_p95": 0.1677,
+          "alpha_mean": 0.0238,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.32411
+      }
+    ]
+  },
+  "SM_Prop_Vault_Stones_C": {
+    "asset_id": "prop-vault-stones-c",
+    "revision": 1,
+    "lod0_triangles": 463,
+    "lod0_glow_area_m2": 0.0,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 231,
+        "fraction": 0.4989,
+        "file": "Art/prop-vault-stones-c/r001/SM_Prop_Vault_Stones_C_LOD1.glb",
+        "sha256": "efd3d353af004c1b8962b1774f91dc1269668c183765ad0a86443e64ed565373",
+        "bytes": 114400,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0304,
+          0.0349
+        ],
+        "appearance": {
+          "rgb_mean": 0.0109,
+          "rgb_p95": 0.0604,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      },
+      {
+        "lod": 2,
+        "triangles": 184,
+        "fraction": 0.3974,
+        "file": "Art/prop-vault-stones-c/r001/SM_Prop_Vault_Stones_C_LOD2.glb",
+        "sha256": "3dad99e7940119a1219c2aca045ea30117d37cadea4465731b2daa82619a526e",
+        "bytes": 108952,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0379,
+          0.0831
+        ],
+        "appearance": {
+          "rgb_mean": 0.0142,
+          "rgb_p95": 0.0707,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.0
+      }
+    ]
+  },
+  "SM_Prop_Vault_Arch2Cell": {
+    "asset_id": "prop-vault-arch-2cell",
+    "revision": 1,
+    "lod0_triangles": 1324,
+    "lod0_glow_area_m2": 0.04625,
+    "lods": [
+      {
+        "lod": 1,
+        "triangles": 661,
+        "fraction": 0.4992,
+        "file": "Art/prop-vault-arch-2cell/r001/SM_Prop_Vault_Arch2Cell_LOD1.glb",
+        "sha256": "2423e6017ca983bb6aa4bb66bbc535c0a03529269ac1ed5a5e90c0c452f09cba",
+        "bytes": 146360,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "appearance": {
+          "rgb_mean": 0.0113,
+          "rgb_p95": 0.0552,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.04625
+      },
+      {
+        "lod": 2,
+        "triangles": 356,
+        "fraction": 0.2689,
+        "file": "Art/prop-vault-arch-2cell/r001/SM_Prop_Vault_Arch2Cell_LOD2.glb",
+        "sha256": "1befa0a685f30e1831af766c0f011b099d064ec0463a00516224a942822c3341",
+        "bytes": 129840,
+        "deviation_m_p50_p95_max": [
+          0.0,
+          0.0035,
+          0.0572
+        ],
+        "appearance": {
+          "rgb_mean": 0.0248,
+          "rgb_p95": 0.1256,
+          "alpha_mean": 0.0,
+          "alpha_p95": 0.0
+        },
+        "glow_area_m2": 0.04625
+      }
+    ]
+  }
+}

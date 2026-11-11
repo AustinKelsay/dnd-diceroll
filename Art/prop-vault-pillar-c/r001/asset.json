@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop-vault-pillar-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Pillar_C",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS, dark high fantasy with a PS1 look: a roofless crypt hall of cold basalt ashlar with reliquary alcoves, sarcophagi, chains and the Waystone, lit by a single cold-blue accent (the colour the finale already uses for its text); all textures and geometry procedural; no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_kit_vault_r002.py): rune stele: a tapered basalt slab on a stepped base with a cold-blue glyph; conforming subdivision to 45 cm, vertex colour = ray-cast ambient occlusion x height gradient; glow only via COLOR_0.a on the rune and crystal materials",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); #145 r002 standard; parent #138",
+    "parameters": {
+      "units": "metres at true scale for a 150 cm cell",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of its 150 cm cell, at floor level",
+      "triangles": 688,
+      "size_m": [
+        1.2,
+        1.0912,
+        1.95
+      ],
+      "bbox_min_m": [
+        -0.6,
+        -0.5912,
+        0
+      ],
+      "bbox_max_m": [
+        0.6,
+        0.5,
+        1.95
+      ],
+      "atlas_px": 512,
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "theme": "the Vault finale (encounter 5 only; the Vigil and Root kits are separate)",
+      "lods": {
+        "lod0_triangles": 688,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 344,
+            "fraction": 0.5,
+            "file": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0042
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0052,
+              0.0371
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 188,
+            "fraction": 0.2733,
+            "file": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0192,
+              0.0532
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0176,
+              0.0929
+            ]
+          }
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/vault_lib.py",
+      "sha256": "822d5e2a0977c5497c973c91dd2a325eafc07c71030a5af169a1687ddb223684"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_kit_vault_r002.py",
+      "sha256": "94900977f0272bdda62140d2316ab94a3435424eb33d5d60bff53721932fdcef"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/lod_r002.py",
+      "sha256": "9d3d7733820e7deda02ec49da2cb8c841df3f046460c95ec950d802a58e5ba53"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_lods_vault_r002.py",
+      "sha256": "58188a6b4c6a18bce17f19590c9bc015480a828e4465551e90e3ecef2da7099f"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/relabel_lods_vault_r002.py",
+      "sha256": "c7e99c5440696bf017d5da20fc0dcbeed6259c87a924a736c5924b9f34f615fa"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C.glb",
+      "sha256": "8abd19ed3f060ae1f2217c8d62147cd06441439224d4c07db9690473479b7dd4"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD1.glb",
+      "sha256": "7d4edfe771da5b63b19cd0e2efd68b99dda2e2acbcba4b8de5cc9570e1c82b56"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C_LOD2.glb",
+      "sha256": "3fa0ea5cfbe2779530b598007631bfbbb6fe547ae94a2537de4857a955e11807"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#149 phase 2, as #145)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

@@ -1,0 +1,433 @@
+{
+ "pieces_dropped_for_footprint": [],
+ "pieces_dropped_for_sight_volume": [
+  "small77"
+ ],
+ "patches": {
+  "total": 190,
+  "bare_earth": 5,
+  "stone": 185,
+  "radius_m_min_max": [
+   2.25,
+   5.62
+  ],
+  "candidate_stones": 2586,
+  "stones_after_overlap": 2113
+ },
+ "stones": 1775,
+ "stones_measured_interior": 1763,
+ "stone_equiv_diameter_cm_p5_p50_p95": [
+  41.7,
+  66.1,
+  82.7
+ ],
+ "stone_long_side_cm_p5_p50_p95_max": [
+  44.2,
+  80.6,
+  93.3,
+  100.9
+ ],
+ "stone_short_side_cm_p5_p50_p95": [
+  34.1,
+  49.0,
+  66.2
+ ],
+ "stone_aspect_long_over_short_p5_p50_p95_max": [
+  1.06,
+  1.47,
+  2.26,
+  2.97
+ ],
+ "stone_vertex_count_histogram": {
+  "4": 1259,
+  "5": 354,
+  "6": 150
+ },
+ "edge_orientation_histogram_10deg_bins_length_share": [
+  0.01,
+  0.046,
+  0.06,
+  0.074,
+  0.042,
+  0.081,
+  0.09,
+  0.077,
+  0.011,
+  0.01,
+  0.048,
+  0.072,
+  0.048,
+  0.046,
+  0.087,
+  0.123,
+  0.061,
+  0.013
+ ],
+ "edge_orientation_resultants_R2_R4_R6": [
+  0.014,
+  0.267,
+  0.046
+ ],
+ "edge_length_share_within_3deg_of_cell_axes": 0.005,
+ "stone_top_height_range_cm": [
+  -2.7,
+  2.7
+ ],
+ "stone_tris": 23286,
+ "footprint_share_stone_tops": 0.573,
+ "base_tris": 11800,
+ "ao_samples": 72127,
+ "source_tris_by_group": {
+  "wallB": 12817,
+  "wallR": 3843,
+  "wallL": 5542,
+  "ribstub-": 72,
+  "ribstub": 72,
+  "sarc": 1680,
+  "sarcB": 508,
+  "chest": 100,
+  "urnF": 960,
+  "ribfall": 396,
+  "drumF": 216,
+  "chainF": 1452,
+  "chainH": 1200,
+  "small": 14386,
+  "hallback": 600,
+  "hallfront": 600,
+  "hallright": 660,
+  "hallleft": 660,
+  "pier": 616
+ },
+ "pieces": {
+  "total": 275,
+  "world": 258,
+  "occluders": 16,
+  "occluder_names": [
+   "wallB",
+   "wallR",
+   "wallL",
+   "ribstub-15",
+   "ribstub-10",
+   "ribstub-5",
+   "ribstub5",
+   "ribstub10",
+   "ribstub15",
+   "ribfall0",
+   "chainH0",
+   "chainH1",
+   "chainH2",
+   "chainH3",
+   "chainH4",
+   "chainH5"
+  ]
+ },
+ "content_counts": {
+  "landmark": 1,
+  "secondary_groups": 9,
+  "groups": {
+   "architecture": 3,
+   "waystone": 1,
+   "reliquary_alcoves": 8,
+   "collapsed_rib": 13,
+   "sarcophagi": 10,
+   "reliquary_dressing": 8,
+   "chains": 11,
+   "small_scatter": 215,
+   "far_hall": 15
+  },
+  "medium_props": 38,
+  "small_props": 276
+ },
+ "atlas": {
+  "size": 2048,
+  "regions": 13,
+  "pad_px": 16,
+  "fill_fraction": 0.267,
+  "regions_px": {
+   "floor": [
+    512,
+    512
+   ],
+   "ashlar": [
+    512,
+    512
+   ],
+   "paveA": [
+    256,
+    256
+   ],
+   "paveC": [
+    256,
+    256
+   ],
+   "paveB": [
+    256,
+    256
+   ],
+   "paveM": [
+    256,
+    256
+   ],
+   "stone": [
+    256,
+    256
+   ],
+   "basalt": [
+    256,
+    256
+   ],
+   "wood": [
+    64,
+    64
+   ],
+   "iron": [
+    64,
+    64
+   ],
+   "bone": [
+    64,
+    64
+   ],
+   "rune": [
+    8,
+    8
+   ],
+   "crystal": [
+    8,
+    8
+   ]
+  },
+  "regions_xywh": {
+   "floor": [
+    16,
+    16,
+    512,
+    512
+   ],
+   "ashlar": [
+    560,
+    16,
+    512,
+    512
+   ],
+   "paveA": [
+    1104,
+    16,
+    256,
+    256
+   ],
+   "paveC": [
+    1392,
+    16,
+    256,
+    256
+   ],
+   "paveB": [
+    1680,
+    16,
+    256,
+    256
+   ],
+   "paveM": [
+    1104,
+    304,
+    256,
+    256
+   ],
+   "stone": [
+    1392,
+    304,
+    256,
+    256
+   ],
+   "basalt": [
+    1680,
+    304,
+    256,
+    256
+   ],
+   "wood": [
+    1968,
+    16,
+    64,
+    64
+   ],
+   "iron": [
+    1968,
+    112,
+    64,
+    64
+   ],
+   "bone": [
+    1968,
+    208,
+    64,
+    64
+   ],
+   "rune": [
+    1968,
+    304,
+    8,
+    8
+   ],
+   "crystal": [
+    2008,
+    304,
+    8,
+    8
+   ]
+  }
+ },
+ "floor_texels_per_m": 256.0,
+ "paving_texels_per_m": 256,
+ "world": {
+  "triangles": 102730,
+  "glow_tris": 336,
+  "by_material": {
+   "paveA": 9198,
+   "paveC": 5499,
+   "paveB": 7671,
+   "paveM": 918,
+   "floor": 35912,
+   "ashlar": 12336,
+   "stone": 15486,
+   "wood": 124,
+   "iron": 2004,
+   "bone": 12946,
+   "rune": 428,
+   "crystal": 580
+  },
+  "edge_len_m_floor_within_8m_median_p90_max": [
+   0.512,
+   0.843,
+   1.0
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.387,
+   0.752
+  ],
+  "edge_len_m_dressing_above_20cm_within_14m_median_p90_max": [
+   0.2,
+   0.918,
+   1.555
+  ],
+  "glb": {
+   "triangles": 102730,
+   "vertices": 188149,
+   "bbox_min_m": [
+    -48,
+    -48,
+    -0.0562
+   ],
+   "bbox_max_m": [
+    48,
+    48,
+    8.9313
+   ],
+   "size_m": [
+    96,
+    96,
+    8.9875
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 9340608,
+   "extensions": []
+  }
+ },
+ "occluders": {
+  "triangles": 33788,
+  "glow_tris": 383,
+  "by_material": {
+   "stone": 10016,
+   "iron": 1728,
+   "bone": 4180,
+   "basalt": 566,
+   "ashlar": 16634,
+   "rune": 568,
+   "crystal": 580
+  },
+  "edge_len_m_floor_within_8m_median_p90_max": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "edge_len_m_stone_tops_median_p90": [
+   0.0,
+   0.0
+  ],
+  "edge_len_m_dressing_above_20cm_within_14m_median_p90_max": [
+   0.3,
+   0.735,
+   1.0
+  ],
+  "glb": {
+   "triangles": 33788,
+   "vertices": 45659,
+   "bbox_min_m": [
+    -21.1924,
+    -8.0698,
+    -0.0428
+   ],
+   "bbox_max_m": [
+    18.09,
+    15.2,
+    6.35
+   ],
+   "size_m": [
+    39.2824,
+    23.2698,
+    6.3928
+   ],
+   "image_px": [
+    2048,
+    2048
+   ],
+   "color0": [
+    "VEC4",
+    5123,
+    true
+   ],
+   "samplers": [
+    [
+     9729,
+     9987
+    ]
+   ],
+   "materials": 1,
+   "bytes": 2611052,
+   "extensions": []
+  }
+ },
+ "footprint_m": [
+  27.0,
+  18.0
+ ],
+ "cell_m": 1.5,
+ "wall_inner_faces_m": {
+  "sides_x": 16.5,
+  "back_y": 12.1,
+  "cells_outside_18x12": [
+   2.0,
+   2.07
+  ],
+  "cells_outside_16x11": [
+   3.0,
+   2.57
+  ]
+ }
+}
