@@ -14,7 +14,8 @@
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
  * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
  * recipes, which show the Root of the World kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
- * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, and the hint fixtures end-turn-only-battle and downed-ally-battle),
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars and cast2-board-root-r002 with a party of barbarian, monk, paladin and ranger),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
@@ -140,6 +141,48 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindRootRecipe(TEXT("board-root-r002"), 2);
     FindRootRecipe(TEXT("board-root-pillars"), 1);
+    // Rigged cast batch 2 (#150): the same three boards the cast is judged on (the default seed, Vigil pillars, Root recipe 2) with a party of
+    // the barbarian, monk, paladin and ranger, so those classes can be captured and measured on them: `cast2-default-seed-battle`,
+    // `cast2-board-vigil-pillars`, `cast2-board-root-r002` (render with `gallery --fixture <name>`; the pose sheet is cast2-poses.json).
+    {
+        TArray<FPartyBuildSelection> Cast2;
+        const TCHAR* Builds[] = {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("ranger.hunter")};
+        for (int32 Index = 0; Index < 4; ++Index)
+        {
+            FPartyBuildSelection Slot;
+            Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+            Cast2.Add(Slot);
+        }
+        {
+            FString Error;
+            FExpeditionRun Run;
+            if (TestTrue(TEXT("The default seed starts with the batch 2 party"), Run.NewRun(DefaultSeed, Cast2, Error, FString::Printf(TEXT("capture-cast2-%d"), DefaultSeed)) &&
+                Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)))
+            {
+                Write(TEXT("cast2-default-seed-battle"), Run);
+                Describe(TEXT("cast2-default-seed-battle"), Run, DefaultSeed, 0);
+            }
+        }
+        const auto FindCast2 = [&](const TCHAR* Name, int32 Offer, bool bDangerous, int32 Recipe)
+        {
+            for (int32 Seed = 1; Seed < 2000; ++Seed)
+            {
+                FString Error;
+                FExpeditionRun Run;
+                if (!Run.NewRun(Seed, Cast2, Error, FString::Printf(TEXT("capture-cast2-%d"), Seed))) { continue; }
+                const FExpeditionRoute& Route = Run.Progress().Offers[Offer];
+                if (Route.bDangerous != bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+                const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+                if (!Active || Active->Side != ECombatSide::Party) { continue; }
+                Write(Name, Run);
+                Describe(Name, Run, Seed, Offer);
+                return;
+            }
+            AddError(FString::Printf(TEXT("No seed below 2000 gives %s with the batch 2 party first"), Name));
+        };
+        FindCast2(TEXT("cast2-board-vigil-pillars"), 1, true, 1);
+        FindCast2(TEXT("cast2-board-root-r002"), 0, false, 2);
+    }
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)

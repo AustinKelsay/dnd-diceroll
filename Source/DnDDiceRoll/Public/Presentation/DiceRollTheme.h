@@ -24,6 +24,8 @@ struct DNDDICEROLL_API FDiceRollAnimSet
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Downed;
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Death;
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Recover;
+    /** The tenth clip (#150 batch 2): the weapon-up rally of a martial self or ally effect. */
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Brace;
 
     const TSoftObjectPtr<UAnimSequence>& For(EUnitPose Pose) const;
 };
@@ -41,7 +43,7 @@ struct DNDDICEROLL_API FDiceRollCharacter
     /** Extra yaw in degrees if the import faces the wrong way (the r001 exports face +X). */
     UPROPERTY(EditAnywhere, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
 
-    /** Loads the mesh and all nine clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
+    /** Loads the mesh and all ten clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
 };
 

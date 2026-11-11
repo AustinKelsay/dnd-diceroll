@@ -67,6 +67,7 @@ const TSoftObjectPtr<UAnimSequence>& FDiceRollAnimSet::For(EUnitPose Pose) const
     case EUnitPose::Downed: return Downed;
     case EUnitPose::Death: return Death;
     case EUnitPose::Recover: return Recover;
+    case EUnitPose::Brace: return Brace;
     default: return Idle;
     }
 }

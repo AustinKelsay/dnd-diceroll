@@ -14,6 +14,7 @@ const TCHAR* ClipName(EUnitPose Pose)
     case EUnitPose::Downed: return TEXT("Downed");
     case EUnitPose::Death: return TEXT("Death");
     case EUnitPose::Recover: return TEXT("Recover");
+    case EUnitPose::Brace: return TEXT("Brace");
     default: return TEXT("Idle");
     }
 }
@@ -39,30 +40,33 @@ EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool bSpellAttack)
     case ECombatCommandType::Attack:
     case ECombatCommandType::PrecisionStrike: return bRanged ? EUnitPose::Ranged : EUnitPose::Melee;
     case ECombatCommandType::MagicMissile:
-    case ECombatCommandType::CureWounds:
-    case ECombatCommandType::Special1:
-    case ECombatCommandType::Special2: return EUnitPose::Cast;
-    default: return EUnitPose::Idle; // EndTurn, SecondWind, Potion, Rescue: no dedicated clip.
+    case ECombatCommandType::CureWounds: return EUnitPose::Cast;
+    case ECombatCommandType::SecondWind: return EUnitPose::Brace; // a martial self-heal, not a spell
+    // Special1 and Special2 depend on the ability (spell or not, attack or ward): see ForAbility. A command with no ability facts has no clip.
+    default: return EUnitPose::Idle; // EndTurn, Special1, Special2, Potion, Rescue, Grapple, Shove, Escape: no dedicated clip.
     }
 }
 
 EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell)
 {
-    if (bSpell && Effect != EAbilityEffect::Swap && Effect != EAbilityEffect::Mitigation) { return EUnitPose::Cast; }
+    if (Effect == EAbilityEffect::Swap || Effect == EAbilityEffect::Mitigation) { return EUnitPose::Idle; }
+    if (bSpell) { return EUnitPose::Cast; }
     switch (Effect)
     {
     case EAbilityEffect::Strike:
     case EAbilityEffect::WeaponAttack:
     case EAbilityEffect::Area:
-    case EAbilityEffect::Push: return bRanged ? EUnitPose::Ranged : EUnitPose::Melee;
+    case EAbilityEffect::Push:
+    case EAbilityEffect::Surge:    // seeded damage to an enemy (a barbarian's Wild Bolt): an attack when it is not a spell
+    case EAbilityEffect::Missile: return bRanged ? EUnitPose::Ranged : EUnitPose::Melee;
     case EAbilityEffect::Rage:
     case EAbilityEffect::Protect:
-    case EAbilityEffect::Surge:
-    case EAbilityEffect::Healing:
-    case EAbilityEffect::Missile: return EUnitPose::Cast;
-    default: return EUnitPose::Idle; // Swap, Mitigation.
+    case EAbilityEffect::Healing: return EUnitPose::Brace;
+    default: return EUnitPose::Idle;
     }
 }
+
+EUnitPose ForAbility(const FAbilityFacts& Ability, bool bRanged) { return ForEffect(Ability.Effect, bRanged, Ability.bSpell); }
 
 EUnitPose ForDamage() { return EUnitPose::Hit; }
 EUnitPose ForFall(bool bDead) { return bDead ? EUnitPose::Death : EUnitPose::Downed; }

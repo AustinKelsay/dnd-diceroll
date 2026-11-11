@@ -6,8 +6,8 @@
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/UnitPose.h"
 
-// The full rigged cast (#150), batch 1: the class lookup that later batches fill by data, the shipped rogue and cleric
-// rigs, and the clips their abilities play. Board-level convergence, heights and resume for these rigs are asserted in
+// The full rigged cast (#150): the class lookup that later batches fill by data, the shipped rigs of batches 0 to 2 (fighter, wizard,
+// rogue, cleric, barbarian, monk, paladin, ranger), and the clips their abilities play. Board-level convergence, heights and resume for these rigs are asserted in
 // UnitPoseTest.cpp, whose figure checks cover every class the shipped theme rigs.
 
 namespace
@@ -73,12 +73,13 @@ bool FRigLookupTest::RunTest(const FString& Parameters)
     const FDiceRollCharacter* Raider = Theme->RigForFoe(FName(TEXT("Raider")));
     TestTrue(TEXT("The foe map entry wins over the pilot field"), Raider && Raider != &Theme->RaiderRig);
 
-    // The shipped theme: the four original classes resolve to their own rig (never a static or primitive fallback) with a
+    // The shipped theme: the eight rigged classes resolve to their own rig (never a static or primitive fallback) with a
     // complete clip set and three LODs; the foe raider too. Run import_dark_fantasy_theme.py if this fails.
     const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(ThemePath)).LoadSynchronous();
     if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
     const TPair<EAdventurerRole, const TCHAR*> Cast[] = {{EAdventurerRole::Fighter, TEXT("SK_Hero_Fighter")}, {EAdventurerRole::Rogue, TEXT("SK_Hero_Rogue")},
-        {EAdventurerRole::Cleric, TEXT("SK_Hero_Cleric")}, {EAdventurerRole::Wizard, TEXT("SK_Hero_Wizard")}};
+        {EAdventurerRole::Cleric, TEXT("SK_Hero_Cleric")}, {EAdventurerRole::Wizard, TEXT("SK_Hero_Wizard")}, {EAdventurerRole::Barbarian, TEXT("SK_Hero_Barbarian")},
+        {EAdventurerRole::Monk, TEXT("SK_Hero_Monk")}, {EAdventurerRole::Paladin, TEXT("SK_Hero_Paladin")}, {EAdventurerRole::Ranger, TEXT("SK_Hero_Ranger")}};
     TSet<const USkeleton*> Skeletons;
     for (const TPair<EAdventurerRole, const TCHAR*>& Entry : Cast)
     {
@@ -87,9 +88,9 @@ bool FRigLookupTest::RunTest(const FString& Parameters)
         if (!TestNotNull(*(Label + TEXT(" has a shipped rig")), Rig)) { continue; }
         USkeletalMesh* Mesh = nullptr;
         TArray<UAnimSequence*> Clips;
-        if (!TestTrue(*(Label + TEXT(" loads its mesh and all nine clips")), Rig->Load(Mesh, Clips)) || !Mesh) { continue; }
+        if (!TestTrue(*(Label + TEXT(" loads its mesh and all ten clips")), Rig->Load(Mesh, Clips)) || !Mesh) { continue; }
         TestTrue(*(Label + TEXT(" is its own mesh")), Mesh->GetName() == Label);
-        TestEqual(*(Label + TEXT(" has nine clips")), Clips.Num(), ExpeditionPose::Count);
+        TestEqual(*(Label + TEXT(" has ten clips")), Clips.Num(), ExpeditionPose::Count);
         TestEqual(*(Label + TEXT(" has three LODs")), Mesh->GetLODNum(), 3);
         TestEqual(*(Label + TEXT(" has one material slot")), Mesh->GetMaterials().Num(), 1);
         if (Mesh->GetMaterials().Num() == 1) { TestNotNull(*(Label + TEXT(" has its material")), Mesh->GetMaterials()[0].MaterialInterface.Get()); }
@@ -146,8 +147,8 @@ bool FCastBatchClipsTest::RunTest(const FString& Parameters)
             }
         }
     }
-    // The rogue's non-spell Protect and Healing specials play the shared Cast gesture today (ForEffect maps those effects by effect, not by spell).
-    // Batch 2 gives them a Brace clip: change these expectations with it. Both abilities must have been found, so this cannot pass vacuously.
+    // The rogue's non-spell Protect and Healing specials play the Brace rally (#150 batch 2), not the arms-raised Cast gesture. Both abilities
+    // must have been found, so this cannot pass vacuously.
     int32 Gestures = 0;
     for (const TCHAR* Id : {TEXT("rogue.thief"), TEXT("rogue.phantom")})
     {
@@ -161,7 +162,7 @@ bool FCastBatchClipsTest::RunTest(const FString& Parameters)
             TestFalse(FString::Printf(TEXT("%s is not a spell"), *Ability.Name), Ability.bSpell);
             TestEqual(FString::Printf(TEXT("%s is %s"), *Ability.Name, bFastHands ? TEXT("Healing") : TEXT("Protect")), Ability.Effect, bFastHands ? EAbilityEffect::Healing : EAbilityEffect::Protect);
             for (const bool bFar : {false, true})
-            { TestEqual(FString::Printf(TEXT("%s plays the shared Cast gesture (batch 2: Brace)"), *Ability.Name), ForEffect(Ability.Effect, bFar, Ability.bSpell), EUnitPose::Cast); }
+            { TestEqual(FString::Printf(TEXT("%s plays Brace"), *Ability.Name), ForEffect(Ability.Effect, bFar, Ability.bSpell), EUnitPose::Brace); }
             ++Gestures;
         }
     }

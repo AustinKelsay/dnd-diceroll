@@ -203,8 +203,8 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
             FAbilityFacts A; A.Command = Command; A.Description = FCombatBattle::DescribeAction(Command); A.ResourceCost = 1;
             if (Command == ECombatCommandType::SecondWind) { A.Name = TEXT("Second Wind"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Wind"); A.bResourceAvailable = Hero.SecondWindUses > 0; }
             else if (Command == ECombatCommandType::PrecisionStrike) { A.Name = TEXT("Precision Strike"); A.Effect = EAbilityEffect::WeaponAttack; A.ResourceName = TEXT("Maneuver"); A.Target = EAbilityTarget::Enemy; A.Range = Hero.Range; A.bBonus = false; A.bResourceAvailable = Hero.ManeuverUses > 0; }
-            else if (Command == ECombatCommandType::CureWounds) { A.Name = TEXT("Cure Wounds"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Ally; A.Range = BuildRules::TouchRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
-            else { A.Name = TEXT("Magic Missile"); A.Effect = EAbilityEffect::Missile; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Enemy; A.Range = BuildRules::MissileRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
+            else if (Command == ECombatCommandType::CureWounds) { A.Name = TEXT("Cure Wounds"); A.bSpell = true; A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Ally; A.Range = BuildRules::TouchRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
+            else { A.Name = TEXT("Magic Missile"); A.bSpell = true; A.Effect = EAbilityEffect::Missile; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Enemy; A.Range = BuildRules::MissileRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
             Result.Add(A);
         }
         return Result;

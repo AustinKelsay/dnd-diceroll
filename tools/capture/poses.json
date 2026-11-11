@@ -263,6 +263,21 @@
       "name": "build-wizard-evocation",
       "mode": "start",
       "build": "wizard.evocation"
+    },
+    {
+      "name": "build-monk-open-hand",
+      "mode": "start",
+      "build": "monk.open-hand"
+    },
+    {
+      "name": "build-paladin-devotion",
+      "mode": "start",
+      "build": "paladin.devotion"
+    },
+    {
+      "name": "build-ranger-hunter",
+      "mode": "start",
+      "build": "ranger.hunter"
     }
   ]
 }

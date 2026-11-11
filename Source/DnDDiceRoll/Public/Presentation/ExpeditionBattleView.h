@@ -141,7 +141,7 @@ struct FExpeditionUnitRig
     bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
-    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its nine clips by EUnitPose. */
+    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its ten clips by EUnitPose. */
     UPROPERTY() TObjectPtr<USkeletalMeshComponent> Skin;
     UPROPERTY() TArray<TObjectPtr<UAnimSequence>> Clips;
     /** The clip on the figure and its time. The view advances the time itself (at playback speed), so poses are deterministic. */
