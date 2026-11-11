@@ -1,21 +1,21 @@
 {
  "SM_Overview_Diorama_Root": {
-  "triangles": 11246,
-  "vertices": 31849,
+  "triangles": 11258,
+  "vertices": 31913,
   "bbox_min_m": [
-   -0.2431,
-   -0.326,
+   -0.2521,
+   -0.335,
    0
   ],
   "bbox_max_m": [
-   0.2431,
-   0.326,
-   0.2397
+   0.2521,
+   0.335,
+   0.4489
   ],
   "size_m": [
-   0.4863,
-   0.652,
-   0.2397
+   0.5043,
+   0.67,
+   0.4489
   ],
   "image_px": [
    1024,
@@ -33,7 +33,7 @@
    ]
   ],
   "materials": 1,
-  "bytes": 1586976,
+  "bytes": 1589612,
   "extensions": [],
   "world": {
    "source_tris": 73281,
@@ -105,25 +105,25 @@
   },
   "asset_id": "overview-diorama-root",
   "file": "Art/overview-diorama-root/r001/SM_Overview_Diorama_Root.glb",
-  "glow_vertices_share": 0.0675
+  "glow_vertices_share": 0.0674
  },
  "SM_Overview_Diorama_Vigil": {
-  "triangles": 17996,
-  "vertices": 50199,
+  "triangles": 17998,
+  "vertices": 50185,
   "bbox_min_m": [
-   -0.3107,
-   -0.326,
+   -0.3197,
+   -0.335,
    0
   ],
   "bbox_max_m": [
-   0.3107,
-   0.326,
-   0.5249
+   0.3197,
+   0.335,
+   0.5532
   ],
   "size_m": [
-   0.6215,
-   0.652,
-   0.5249
+   0.6395,
+   0.67,
+   0.5532
   ],
   "image_px": [
    1024,
@@ -141,7 +141,7 @@
    ]
   ],
   "materials": 1,
-  "bytes": 2388776,
+  "bytes": 2388224,
   "extensions": [],
   "world": {
    "source_tris": 32625,
@@ -212,22 +212,22 @@
   "glow_vertices_share": 0.0526
  },
  "SM_Overview_Diorama_Vault": {
-  "triangles": 29346,
-  "vertices": 64675,
+  "triangles": 29357,
+  "vertices": 63921,
   "bbox_min_m": [
-   -0.2454,
-   -0.326,
+   -0.2544,
+   -0.335,
    0
   ],
   "bbox_max_m": [
-   0.2454,
-   0.326,
-   0.2616
+   0.2544,
+   0.335,
+   0.3775
   ],
   "size_m": [
-   0.4909,
-   0.652,
-   0.2616
+   0.5089,
+   0.67,
+   0.3775
   ],
   "image_px": [
    1024,
@@ -245,7 +245,7 @@
    ]
   ],
   "materials": 1,
-  "bytes": 2979112,
+  "bytes": 2949020,
   "extensions": [],
   "world": {
    "source_tris": 25681,

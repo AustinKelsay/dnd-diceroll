@@ -264,6 +264,11 @@ public:
     bool InCombat() const;
     /** True while the tabletop mission overview is shown instead of a battle board. */
     bool ShowingOverview() const { return bOverview; }
+    /** The overview scene as last built (#149): the table and each diorama by mesh name, and the candle light positions in table cm; empty off the tabletop. */
+    const TArray<FName>& OverviewMeshes() const { return OverviewDrawnMeshes; }
+    const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
+    /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
+    bool OverviewIsR002() const { return bOverview && bOverviewR002; }
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -509,6 +514,16 @@ private:
     FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
+    /** The rest of the overview set (#149), loaded with the table: the dioramas, and whether the set is the r002 one. */
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewRoot;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVigil;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVault;
+    bool bOverviewR002 = false;
+    /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
+    TArray<FName> OverviewDrawnMeshes;
+    TArray<FVector> OverviewDrawnLights;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    void LoadOverviewSet();
     UPROPERTY() TArray<FExpeditionSway> Swaying;
     /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
     bool bLooseParts = false;

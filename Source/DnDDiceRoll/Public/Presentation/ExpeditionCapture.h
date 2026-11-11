@@ -26,6 +26,9 @@ struct DNDDICEROLL_API FCaptureShot
     bool bHasCamera = false;
     float Yaw = 0.0f;
     float Distance = 0.0f;
+    /** Optional pan (#149): the view pans this far right and away from the camera, in reference cm like Distance, then the pan bound applies. A large value reaches the pan stop. Camera shots only. */
+    bool bHasPan = false;
+    FVector2D Pan = FVector2D::ZeroVector;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
     /** Hint shots only. */

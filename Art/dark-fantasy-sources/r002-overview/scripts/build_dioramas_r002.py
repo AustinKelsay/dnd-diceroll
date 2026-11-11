@@ -24,7 +24,7 @@ import lod_r002 as LOD
 
 ROOT, OUT_SRC = O.ROOT, O.OUT_SRC
 ATLAS, TRAY_W = 1024, 0.58
-PLINTH, SKIRT, RAIL = 0.035, 0.022, 0.014
+STEP, PLINTH, SKIRT, RAIL = 0.05, 0.11, 0.022, 0.014          # a two-tier display riser: it lifts the miniature above the route banner
 STAGE_Z = PLINTH + SKIRT
 
 
@@ -41,7 +41,7 @@ def kit(asset, rev, name):
 # props = (glb, x, y, yaw, down), gain = texture brightness (the overview's three candles light it)
 SPECS = {
     'root': dict(
-        asset='overview-diorama-root', name='SM_Overview_Diorama_Root', window=(-14, 14, -10, 10), zmax=16.0, back='+y', zscale=1.8, pscale=1.4, skirt='soil', plaque='leaf', gain=(1.4, 1.9, 1.3),
+        asset='overview-diorama-root', name='SM_Overview_Diorama_Root', window=(-14, 14, -10, 10), zmax=16.0, back='+y', zscale=2.3, pscale=1.9, skirt='soil', plaque='leaf', gain=(1.4, 1.9, 1.3),
         sources=[('world', glb('world-root', 2, 'SM_World_Root_LOD2'), 4), ('occ', glb('world-root-occluders', 1, 'SM_World_Root_Occluders_LOD2'), 8)],
         props=[(kit('prop-root-pillar', 1, 'SM_Prop_Root_Pillar_LOD2'), -6, 4, 20, 4), (kit('prop-root-pillar-b', 1, 'SM_Prop_Root_Pillar_B_LOD2'), 7, 5, 200, 4),
                (kit('prop-root-pillar-c', 1, 'SM_Prop_Root_Pillar_C_LOD2'), -1, -5, 70, 4), (kit('prop-root-stones', 1, 'SM_Prop_Root_Stones_LOD2'), 9, -3, 10, 4),
@@ -49,14 +49,14 @@ SPECS = {
                (kit('scatter-root-mushrooms', 1, 'SM_Scatter_Root_Mushrooms'), -8, 0, 90, 4)],
         target=14000),
     'vigil': dict(
-        asset='overview-diorama-vigil', name='SM_Overview_Diorama_Vigil', window=(-19, 19, -11, 25), zmax=22.0, back='+y', zscale=1.5, pscale=1.6, skirt='ashlar', plaque='wave', gain=2.0,
+        asset='overview-diorama-vigil', name='SM_Overview_Diorama_Vigil', window=(-19, 19, -11, 25), zmax=22.0, back='+y', zscale=1.35, pscale=1.6, skirt='ashlar', plaque='wave', gain=2.0,
         sources=[('world', glb('world-vigil', 2, 'SM_World_Vigil_LOD2'), 4), ('occ', glb('world-vigil-occluders', 2, 'SM_World_Vigil_Occluders_LOD2'), 16)],
         props=[(kit('prop-pillar', 2, 'SM_Prop_Pillar_LOD2'), -7, 3, 0, 4), (kit('prop-pillar-b', 1, 'SM_Prop_Pillar_B_LOD2'), 6, 6, 0, 4),
                (kit('prop-pillar', 2, 'SM_Prop_Pillar_LOD2'), 3, -5, 0, 4), (kit('prop-wall-c', 1, 'SM_Prop_Wall_C_LOD2'), -3, -8, 0, 4),
                (kit('prop-arch-2cell', 1, 'SM_Prop_Arch2Cell_LOD2'), 9, -2, 90, 4), (kit('prop-pillar-b', 1, 'SM_Prop_Pillar_B_LOD2'), -11, -9, 0, 4)],
         target=18000),
     'vault': dict(
-        asset='overview-diorama-vault', name='SM_Overview_Diorama_Vault', window=(-18, 18, -17, 9), zmax=12.0, back='-y', zscale=2.0, pscale=1.7, skirt='ashlar', plaque='rune', gain=2.4,
+        asset='overview-diorama-vault', name='SM_Overview_Diorama_Vault', window=(-18, 18, -17, 9), zmax=12.0, back='-y', zscale=2.4, pscale=1.7, skirt='ashlar', plaque='rune', gain=2.4,
         sources=[('world', glb('world-vault', 1, 'SM_World_Vault_LOD2'), 4), ('occ', glb('world-vault-occluders', 1, 'SM_World_Vault_Occluders_LOD1'), 8)],
         props=[(kit('prop-vault-pillar', 1, 'SM_Prop_Vault_Pillar_LOD2'), -7, -3, 0, 4), (kit('prop-vault-pillar-b', 1, 'SM_Prop_Vault_Pillar_B_LOD2'), 6, -2, 0, 4),
                (kit('prop-vault-pillar-c', 1, 'SM_Prop_Vault_Pillar_C_LOD2'), 1, 2, 0, 4), (kit('prop-vault-wall-b', 1, 'SM_Prop_Vault_Wall_B_LOD2'), -3, 5, 90, 4),
@@ -104,7 +104,8 @@ def plaque_tile(kind, w=128, h=24):
 def tray_soup(W, D, spec):
     """The tray in asset coordinates (x = depth toward the viewer, y = width), stage plane at STAGE_Z.  Returns the soup and the textures it needs."""
     sp = Soup()
-    sp.box('wood', (0, 0, PLINTH / 2), (D + .07, W + .07, PLINTH), tile=1.0)
+    sp.box('wood', (0, 0, STEP / 2), (D + .09, W + .09, STEP), tile=1.0)
+    sp.box('wood', (0, 0, (STEP + PLINTH) / 2), (D + .07, W + .07, PLINTH - STEP), tile=1.0)
     sp.box('skirt', (0, 0, PLINTH + SKIRT / 2), (D, W, SKIRT), tile=1.0, bottom=False)
     rh = PLINTH + SKIRT + RAIL
     for (cx, cy, sx, sy) in ((D / 2 + .014, 0, .028, W + .056), (-D / 2 - .014, 0, .028, W + .056), (0, W / 2 + .014, D, .028), (0, -W / 2 - .014, D, .028)):

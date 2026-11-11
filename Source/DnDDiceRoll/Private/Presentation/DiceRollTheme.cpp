@@ -32,6 +32,26 @@ bool UDiceRollTheme::VaultKitComplete() const
         && AllSet(VaultScatter, 8) && AllSet(VaultMistCards, 3) && AllSet(VaultLightShafts, 2);
 }
 
+bool UDiceRollTheme::OverviewR002Complete() const
+{
+    return bOverviewR002 && Set(OverviewTabletop) && Set(OverviewRootDiorama) && Set(OverviewVigilDiorama) && Set(OverviewVaultDiorama);
+}
+
+FDiceRollOverview UDiceRollTheme::LoadOverview() const
+{
+    FDiceRollOverview Found;
+    if (OverviewR002Complete())
+    {
+        Found.Table = Load(OverviewTabletop); Found.Root = Load(OverviewRootDiorama); Found.Vigil = Load(OverviewVigilDiorama); Found.Vault = Load(OverviewVaultDiorama);
+        Found.bR002 = true;
+        // A package that exists but fails to load sends the whole overview back to r001: one set or the other.
+        if (Found.Table && Found.Root && Found.Vigil && Found.Vault) { return Found; }
+        Found = FDiceRollOverview();
+    }
+    Found.Table = Load(Tabletop); Found.Root = Load(RootDiorama); Found.Vigil = Load(VigilDiorama);
+    return Found;
+}
+
 FDiceRollWorldKit UDiceRollTheme::KitFor(EDiceRollKit Kind) const
 {
     FDiceRollWorldKit Kit;

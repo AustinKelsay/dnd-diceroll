@@ -15,11 +15,11 @@
     "parameters": {
       "units": "metres",
       "pivot": "middle of the underside of the tray; placed on the table top",
-      "triangles": 17996,
+      "triangles": 17998,
       "size_m": [
-        0.6215,
-        0.652,
-        0.5249
+        0.6395,
+        0.67,
+        0.5532
       ],
       "scale": 0.01526,
       "tray_footprint_m": [
@@ -80,12 +80,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-overview/scripts/build_dioramas_r002.py",
-      "sha256": "42b8e598b38ead54a99b448cd077b139436f47c6d34c93f5ef2542762b9df338"
+      "sha256": "ec54e2eccb496499074134953c87e7412643dd582b7c4e1ab5551b7db7890ab8"
     },
     {
       "role": "export",
       "path": "Art/overview-diorama-vigil/r001/SM_Overview_Diorama_Vigil.glb",
-      "sha256": "8450b7e06bd1958553052084e8436dcfa0e4bd1dbfe8743d06aaecf92f56eb95"
+      "sha256": "2bff94f591a709a18d14582de2cc8a0cf66dbc2bace1f18109c548ad89eea964"
     }
   ],
   "import_policy": {

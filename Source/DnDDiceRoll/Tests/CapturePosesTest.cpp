@@ -46,6 +46,20 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
             TestTrue(TEXT("A hint shot carries a camera"), Hinted.Shots[0].bHasCamera && Hinted.Shots[0].Mode == ECaptureMode::Hint);
         }
     }
+    // A battle shot may name a pan (#149: the Vigil window's pan stop): numeric right and away, both required, and the shot says so.
+    {
+        FCapturePoses Panned;
+        TestTrue(TEXT("A panned shot parses"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"p\",\"mode\":\"battle\",\"yaw\":-90,\"distance\":\"default\",\"pan\":{\"right\":-300,\"away\":9999}},"
+            "{\"name\":\"q\",\"mode\":\"battle\",\"yaw\":0,\"distance\":\"default\"}]}"), Panned, Error));
+        if (Panned.Shots.Num() == 2)
+        {
+            TestTrue(TEXT("The pan is read"), Panned.Shots[0].bHasPan && Panned.Shots[0].Pan.X == -300.0 && Panned.Shots[0].Pan.Y == 9999.0);
+            TestFalse(TEXT("A shot without a pan has none"), Panned.Shots[1].bHasPan);
+        }
+        FCapturePoses Bad;
+        TestFalse(TEXT("A pan needs both fields"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"p\",\"mode\":\"battle\",\"yaw\":0,\"distance\":\"default\",\"pan\":{\"right\":3}}]}"), Bad, Error));
+        TestFalse(TEXT("A pan must be an object"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"p\",\"mode\":\"battle\",\"yaw\":0,\"distance\":\"default\",\"pan\":5}]}"), Bad, Error));
+    }
     // An impact shot (#189) carries a camera, defaults to a hit held four frames, and can name a spell effect and its own frame count.
     {
         FCapturePoses Impacts;

@@ -259,6 +259,17 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("far"), ESearchCase::CaseSensitive)) { Shot.Distance = FarDistance; }
             else if (Distance.IsValid() && Distance->Type == EJson::Number && Distance->TryGetNumber(Number) && Number >= MinDistance && Number <= MaxDistance) { Shot.Distance = static_cast<float>(Number); }
             else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\", \"far\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
+            // Optional "pan": {"right": cm, "away": cm}: the view pans after the camera is placed (the pan bound still applies), so a shot can show a pan stop.
+            const TSharedPtr<FJsonObject>* PanObject = nullptr;
+            if ((*Entry)->TryGetObjectField(TEXT("pan"), PanObject) && PanObject)
+            {
+                double Right = 0.0, Away = 0.0;
+                if (!(*PanObject)->TryGetNumberField(TEXT("right"), Right) || !(*PanObject)->TryGetNumberField(TEXT("away"), Away) || FMath::Abs(Right) > 100000.0 || FMath::Abs(Away) > 100000.0)
+                { Error = Shot.Name + TEXT(" needs a \"pan\" with numeric \"right\" and \"away\" within 100000"); return false; }
+                Shot.bHasPan = true;
+                Shot.Pan = FVector2D(Right, Away);
+            }
+            else if ((*Entry)->HasField(TEXT("pan"))) { Error = Shot.Name + TEXT(" has a \"pan\" that is not an object"); return false; }
         }
         if (Shot.Mode == ECaptureMode::Impact && Shot.Frames > Out.SettleFrames)
         { Error = FString::Printf(TEXT("%s has \"frames\" %d beyond settleFrames %d"), *Shot.Name, Shot.Frames, Out.SettleFrames); return false; }
@@ -429,6 +440,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         // Default is the play default at that yaw: figure-sized (88 px at 1080), or the whole-board fit where that is closer (#148 gate 2). Far is the end of the pitch ramp (FarStop of the home fit), never nearer than the whole-board fit at that yaw, which can exceed it on a wide board.
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? Board->FarFramedDistance(Shot.Yaw) : Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance(Shot.Yaw);
         Board->SnapCamera(Shot.Yaw, Wanted);
+        if (Shot.bHasPan) { Board->Pan(static_cast<float>(Shot.Pan.X), static_cast<float>(Shot.Pan.Y)); }
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
@@ -780,6 +792,13 @@ void FExpeditionCaptureDirector::WriteManifest() const
             Shot->SetStringField(TEXT("file"), Result.File);
             Shot->SetNumberField(TEXT("yaw"), Result.Yaw);
             Shot->SetNumberField(TEXT("distance"), Result.Distance);
+            if (Result.Shot.bHasPan)
+            {
+                TSharedRef<FJsonObject> Pan = MakeShared<FJsonObject>();
+                Pan->SetNumberField(TEXT("right"), Result.Shot.Pan.X);
+                Pan->SetNumberField(TEXT("away"), Result.Shot.Pan.Y);
+                Shot->SetObjectField(TEXT("pan"), Pan);
+            }
             TSharedRef<FJsonObject> Camera = MakeShared<FJsonObject>();
             Camera->SetObjectField(TEXT("location"), Vector(Result.Location, TEXT("x"), TEXT("y"), TEXT("z")));
             Camera->SetObjectField(TEXT("rotation"), Vector(FVector(Result.Rotation.Pitch, Result.Rotation.Yaw, Result.Rotation.Roll), TEXT("pitch"), TEXT("yaw"), TEXT("roll")));
