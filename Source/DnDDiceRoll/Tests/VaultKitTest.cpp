@@ -26,7 +26,7 @@
  */
 namespace
 {
-UDiceRollTheme* TransientThemeCopy(const UDiceRollTheme* Shipped)
+UDiceRollTheme* VaultThemeCopy(const UDiceRollTheme* Shipped)
 {
     UDiceRollTheme* Copy = Shipped ? DuplicateObject<UDiceRollTheme>(Shipped, GetTransientPackage()) : nullptr;
     if (Copy)
@@ -51,7 +51,7 @@ void DestroyVaultWorld(UWorld* World)
     CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
 }
 
-const UDiceRollTheme* ShippedTheme()
+const UDiceRollTheme* VaultShippedTheme()
 {
     return LoadObject<UDiceRollTheme>(nullptr, TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme"), nullptr, LOAD_Quiet | LOAD_NoWarn);
 }
@@ -83,7 +83,7 @@ bool WriteFinaleCheckpoint(const FString& Path, int32 Recipe, int32* FoundSeed =
     return false;
 }
 
-AExpeditionBattleView* ResumeBoard(FAutomationTestBase& Test, UWorld* World, const FString& Path)
+AExpeditionBattleView* VaultResumeBoard(FAutomationTestBase& Test, UWorld* World, const FString& Path)
 {
     AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
     if (!Test.TestNotNull(TEXT("Battle view"), View)) { return nullptr; }
@@ -95,15 +95,15 @@ AExpeditionBattleView* ResumeBoard(FAutomationTestBase& Test, UWorld* World, con
     return View;
 }
 
-struct FPlacement
+struct FVaultPlacement
 {
     TMap<FIntPoint, int32> Variants;
     TMap<FIntPoint, FVector> Spots;
     TArray<TTuple<FIntPoint, int32, int32>> Dressing;
     int32 Obstacles = 0, Arches = 0;
-    static FPlacement Of(const AExpeditionBattleView& View)
+    static FVaultPlacement Of(const AExpeditionBattleView& View)
     {
-        FPlacement Placement;
+        FVaultPlacement Placement;
         Placement.Variants = View.ObstacleVariants();
         Placement.Spots = View.ObstacleSpots();
         for (const FPlacedDressing& Placed : View.PlacedDressing()) { Placement.Dressing.Add(MakeTuple(Placed.Plan.Cell, Placed.Plan.Variant, static_cast<int32>(Placed.Plan.Kind))); }
@@ -111,14 +111,14 @@ struct FPlacement
         Placement.Arches = View.PlacedArches();
         return Placement;
     }
-    bool operator==(const FPlacement& Other) const
+    bool operator==(const FVaultPlacement& Other) const
     {
         return Variants.OrderIndependentCompareEqual(Other.Variants) && Spots.OrderIndependentCompareEqual(Other.Spots)
             && Dressing == Other.Dressing && Obstacles == Other.Obstacles && Arches == Other.Arches;
     }
 };
 
-struct FFinaleOutcome
+struct FVaultFinaleOutcome
 {
     FCombatSnapshot Battle;
     FString Checkpoint;
@@ -127,9 +127,9 @@ struct FFinaleOutcome
 };
 
 /** The rules-only policy of RootKitTest on the finale checkpoint, under a presentation variant: 0 the shipped theme, 1 primitives, 2 a copy with the Vault kit off. */
-FFinaleOutcome PlayFinale(FAutomationTestBase& Test, UWorld* World, const FString& Directory, const FString& Source, int32 Variant)
+FVaultFinaleOutcome VaultPlayFinale(FAutomationTestBase& Test, UWorld* World, const FString& Directory, const FString& Source, int32 Variant)
 {
-    FFinaleOutcome Outcome;
+    FVaultFinaleOutcome Outcome;
     AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
     if (!Test.TestNotNull(TEXT("Battle view"), View)) { return Outcome; }
     const FString Path = FPaths::Combine(Directory, FString::FromInt(Variant), TEXT("current.json"));
@@ -141,9 +141,9 @@ FFinaleOutcome PlayFinale(FAutomationTestBase& Test, UWorld* World, const FStrin
     if (Variant == 1) { View->UsePrimitives(); }
     else if (Variant == 2)
     {
-        if (const UDiceRollTheme* Shipped = ShippedTheme())
+        if (const UDiceRollTheme* Shipped = VaultShippedTheme())
         {
-            Off.Reset(TransientThemeCopy(Shipped));
+            Off.Reset(VaultThemeCopy(Shipped));
             Off->bVaultMetricKit = false;
             View->UseTheme(Off.Get());
         }
@@ -171,8 +171,8 @@ FFinaleOutcome PlayFinale(FAutomationTestBase& Test, UWorld* World, const FStrin
     return Outcome;
 }
 
-int32 RouteRecipe(const AExpeditionBattleView& View) { return View.Progress().History.IsEmpty() ? 0 : View.Progress().History.Last().Route.Recipe; }
-int32 RouteSeed(const AExpeditionBattleView& View) { return View.Progress().History.IsEmpty() ? 7 : View.Progress().History.Last().Route.EncounterSeed; }
+int32 VaultRouteRecipe(const AExpeditionBattleView& View) { return View.Progress().History.IsEmpty() ? 0 : View.Progress().History.Last().Route.Recipe; }
+int32 VaultRouteSeed(const AExpeditionBattleView& View) { return View.Progress().History.IsEmpty() ? 7 : View.Progress().History.Last().Route.EncounterSeed; }
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVaultKitSelectionTest, "Project.Expedition.Presentation.VaultKitIsSelectedAndFallsBackToVigil",
@@ -242,7 +242,7 @@ bool FVaultKitSelectionTest::RunTest(const FString& Parameters)
 
     // The shipped theme: the flag is set only with a complete kit (the import script sets it only when the world carries the r002 tag).
     // This test is about the shipped Vault, so it fails when the import has not switched it on.
-    const UDiceRollTheme* Shipped = ShippedTheme();
+    const UDiceRollTheme* Shipped = VaultShippedTheme();
     if (TestNotNull(TEXT("The shipped theme asset"), Shipped))
     {
         TestTrue(TEXT("The shipped theme's Vault kit is switched on (run the theme import)"), Shipped->bVaultMetricKit);
@@ -311,7 +311,7 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
     {
         const FString Path = FPaths::Combine(Directory, FString::FromInt(Recipe), TEXT("current.json"));
         if (!TestTrue(FString::Printf(TEXT("A seed reaches the finale with recipe %d"), Recipe), WriteFinaleCheckpoint(Path, Recipe))) { continue; }
-        FPlacement First, Second;
+        FVaultPlacement First, Second;
         int32 Seed = 0, Width = 0, Height = 0;
         TArray<FIntPoint> Blocked;
         bool bKit = false;
@@ -319,15 +319,15 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
         {
             UWorld* World = MakeVaultWorld();
             if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
-            if (AExpeditionBattleView* View = ResumeBoard(*this, World, Path))
+            if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
             {
-                TestEqual(TEXT("The checkpoint's board is the recipe asked for"), RouteRecipe(*View), Recipe);
+                TestEqual(TEXT("The checkpoint's board is the recipe asked for"), VaultRouteRecipe(*View), Recipe);
                 TestTrue(TEXT("It is the finale board"), View->Progress().History.Num() >= FExpeditionRun::EncounterCount);
                 bKit = View->UsesVaultKit();
-                (Build == 0 ? First : Second) = FPlacement::Of(*View);
+                (Build == 0 ? First : Second) = FVaultPlacement::Of(*View);
                 if (Build == 0)
                 {
-                    Seed = RouteSeed(*View);
+                    Seed = VaultRouteSeed(*View);
                     Width = View->Rules().Snapshot().Encounter.Width; Height = View->Rules().Snapshot().Encounter.Height;
                     Blocked = View->Rules().Snapshot().Encounter.BlockedCells;
                     TestFalse(TEXT("The Vault board never uses the Root kit"), View->UsesRootKit());
@@ -360,7 +360,7 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
         Kinds.Scatter = 8; Kinds.Mist = 3; Kinds.Shaft = 2;
         UWorld* World = MakeVaultWorld();
         if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
-        if (AExpeditionBattleView* View = ResumeBoard(*this, World, Path))
+        if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
         {
             const TArray<VigilKit::FDressing> Plan = VigilKit::PlanDressing(Width, Height, VaultSeed, Kinds,
                 BrazierRing::Cells(BrazierRing::Plan(Width, Height, Seed)), BrazierRing::ScatterClearCells);
@@ -397,9 +397,9 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
             // The kit is presentation: another cell size moves the pieces with the metric but changes none of the choices.
             const FBoardMetric Original = View->Metric();
             View->SetBoardMetric(FBoardMetric(180.0f, 190.0f));
-            TestTrue(TEXT("The choices are the same at another cell size"), FPlacement::Of(*View).Variants.OrderIndependentCompareEqual(First.Variants));
+            TestTrue(TEXT("The choices are the same at another cell size"), FVaultPlacement::Of(*View).Variants.OrderIndependentCompareEqual(First.Variants));
             View->SetBoardMetric(Original);
-            TestTrue(TEXT("The choices are the same after another rebuild"), FPlacement::Of(*View) == First);
+            TestTrue(TEXT("The choices are the same after another rebuild"), FVaultPlacement::Of(*View) == First);
         }
         DestroyVaultWorld(World);
     }
@@ -414,11 +414,11 @@ bool FVaultKitFallbackTest::RunTest(const FString& Parameters)
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultKitFallback"), FGuid::NewGuid().ToString());
     const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
     if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Path, -1))) { return false; }
-    const UDiceRollTheme* Shipped = ShippedTheme();
+    const UDiceRollTheme* Shipped = VaultShippedTheme();
     if (!TestNotNull(TEXT("The shipped theme asset"), Shipped)) { return false; }
     UWorld* World = MakeVaultWorld();
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
-    if (AExpeditionBattleView* View = ResumeBoard(*this, World, Path))
+    if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
     {
         const bool bOn = View->UsesVaultKit();
         if (!TestTrue(TEXT("The shipped theme draws the Vault kit on the finale (run the theme import)"), bOn)) { DestroyVaultWorld(World); return false; }
@@ -433,7 +433,7 @@ bool FVaultKitFallbackTest::RunTest(const FString& Parameters)
         const TSoftObjectPtr<UStaticMesh> Unloadable{FSoftObjectPath(TEXT("/Engine/BasicShapes/Cube.NoSuchVaultMesh"))};
         for (int32 Case = 0; Case < 5; ++Case)
         {
-            TStrongObjectPtr<UDiceRollTheme> Broken(TransientThemeCopy(Shipped));
+            TStrongObjectPtr<UDiceRollTheme> Broken(VaultThemeCopy(Shipped));
             if (Case == 0) { Broken->bVaultMetricKit = false; }
             else if (Case == 1) { Broken->VaultOccluders = nullptr; }
             else if (Case == 2) { Broken->VaultScatter.Pop(); }
@@ -474,12 +474,12 @@ bool FVaultThemeChoiceTest::RunTest(const FString& Parameters)
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultThemeChoice"), FGuid::NewGuid().ToString());
     const FString Source = FPaths::Combine(Directory, TEXT("finale.json"));
     if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Source, -1))) { return false; }
-    FFinaleOutcome Outcomes[3];
+    FVaultFinaleOutcome Outcomes[3];
     for (int32 Variant = 0; Variant < 3; ++Variant)
     {
         UWorld* World = MakeVaultWorld();
         if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
-        Outcomes[Variant] = PlayFinale(*this, World, Directory, Source, Variant);
+        Outcomes[Variant] = VaultPlayFinale(*this, World, Directory, Source, Variant);
         DestroyVaultWorld(World);
     }
     TestTrue(TEXT("The scripted policy gave commands"), Outcomes[0].Commands > 0);
