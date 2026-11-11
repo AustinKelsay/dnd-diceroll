@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "asset_id": "sk-hero-paladin",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SK_Hero_Paladin",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/150",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5 lead, Claude Sonnet 5.5 subagent) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused."
+  },
+  "recipe": {
+    "method": "Paladin: heavy body in polished plate, heraldic tabard, white cape, crested helm, warhammer on weapon_socket, tower shield on shield_socket. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py); no external motion data",
+    "approved_reference": "Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); #150 batch 2 design calls by the graphics lead (class looks, Brace clip, Rim 1.6 and Fill 1.25)",
+    "parameters": {
+      "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)",
+      "units": "metres, +X forward, Z up, foot pivot at origin",
+      "fps": 30,
+      "atlas": "1024x1024, 1 material",
+      "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
+      "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
+      "clips": "ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop)",
+      "blender_validation": {
+        "tris": {
+          "LOD1": {
+            "tris": 1697,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD2": {
+            "tris": 916,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD0": {
+            "tris": 3652
+          }
+        },
+        "lod_ratio": {
+          "LOD1": 0.465,
+          "LOD2": 0.251,
+          "LOD0": 1.0
+        },
+        "body_height_m": 1.817,
+        "seam_mm_idle_walk": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (contact sheets only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/sk-hero-paladin/r001/SK_Hero_Paladin_source.blend",
+      "sha256": "29412d45cd4144b7308f3df75b99c38bdcf113c97d64b08fcd27d5d341d88010"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/README_BATCH2.md",
+      "sha256": "70a474d9e7d760de693edbb37b2287b4a7cecfc780791ee519e23959ec9b0162"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
+      "sha256": "706b8b51061ee3b2f5e49697437fc8d0d40377bcc3e9ff5ad6c6aa2aacb14053"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
+      "sha256": "62417997c098b8502aa0d1d67245fa4f89df78a741aeb6b92f061415726720ca"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/brace.py",
+      "sha256": "faed12c79e0bbee5ea873bcdd6bc527d800a6f30139f6c4dcabb1f4a21462a08"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/build2.py",
+      "sha256": "0b0a8dde82affeff680693dd0769df7e6adc59ec780f1ca8a227ce5450430b05"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review2.py",
+      "sha256": "fb44f632d56c71d0422fe92e51f2fd74c73039deb3415ab3724dcb81f9e246fe"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/make_records2.py",
+      "sha256": "1b414f20de1e06271d3fa45a2cc79b23afacc92237ecb19f72c8eb6c459f9eaa"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/README.md",
+      "sha256": "79cc252119037ca002c61166af063012fbee3a00563abfd2381fb57b3acc47da"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/rigkit.py",
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/clips.py",
+      "sha256": "d9f898e7fbdd1e5fa270c4323c0aafab36c4721f851e09b911c04ca3ab350a59"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/characters.py",
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-paladin/r001/SK_Hero_Paladin.glb",
+      "sha256": "aef4ce6a5f2b214d6259029a511c2c2fd9052fb7612e6e9be80bdd2a28d21ea3"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-paladin/r001/SK_Hero_Paladin_LOD1.glb",
+      "sha256": "cda0737f71f30946606391a690b87c329e1b5ee9abf1f449f86d5a11c9010061"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-paladin/r001/SK_Hero_Paladin_LOD2.glb",
+      "sha256": "1df9eee1f90c160ee1591e5c7d8e40039b9ec163520a55f12335052b5cae6bf5"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-rigged-character",
+    "version": 1,
+    "settings": {
+      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and no clips are imported for this character",
+      "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
+      "nanite": "off, set explicitly (gate 1 pipeline rule)",
+      "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
+      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the clips baked into this glb are not imported",
+      "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
+      "texture_filter": "trilinear, anisotropic 8",
+      "collision": "none (presentation only)"
+    }
+  },
+  "validation": {
+    "state": "passed",
+    "evidence": [
+      "Art/rig-pilot/cast/metrics/validate_paladin.json",
+      "Art/rig-pilot/cast/metrics/build_paladin.json",
+      "Art/rig-pilot/cast/previews/sheet_07_batch2_turnaround.png",
+      "Art/rig-pilot/cast/previews/sheet_10_paladin_clips.png",
+      "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
+    ]
+  }
+}
