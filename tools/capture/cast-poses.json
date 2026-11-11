@@ -217,6 +217,26 @@
       "time": 2.6,
       "yaw": 0,
       "distance": 1300
+    },
+    {
+      "name": "builder-rogue-assassin",
+      "mode": "start",
+      "build": "rogue.assassin"
+    },
+    {
+      "name": "builder-rogue-thief",
+      "mode": "start",
+      "build": "rogue.thief"
+    },
+    {
+      "name": "builder-cleric-life",
+      "mode": "start",
+      "build": "cleric.life"
+    },
+    {
+      "name": "builder-cleric-light",
+      "mode": "start",
+      "build": "cleric.light"
     }
   ]
 }

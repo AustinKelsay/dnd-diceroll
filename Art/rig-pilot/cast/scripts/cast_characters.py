@@ -202,10 +202,10 @@ def build_rogue(rig, M0):
 
 
 ROGUE_ATLAS = {
-    'plate': ('bands', dict(base=(.66, .50, .32), line=(.96, .90, .72), spacing=64)),       # tan studded leather, pale stitching
+    'plate': ('bands', dict(base=(.54, .40, .25), line=(.96, .90, .72), spacing=64)),       # tan studded leather, pale stitching (one notch darker, review round 1)
     'trim': ('scales', dict(a=(.97, .94, .82), b=(.86, .80, .62))),                           # pale cream trim
-    'cloth': ('folds', dict(base=(.40, .60, .42), period=30, hem=(.95, .92, .80), hem2=(.80, .72, .46))),
-    'leather': ('weave', dict(base=(.62, .43, .26))),
+    'cloth': ('folds', dict(base=(.32, .49, .34), period=30, hem=(.95, .92, .80), hem2=(.80, .72, .46))),
+    'leather': ('weave', dict(base=(.50, .34, .20))),
     'blade': ('blade', dict(base=(.90, .94, 1.0))),
     'glow': ('flat', dict(base=(.55, 1.0, .78))),
     'rune': ('rune', dict(bg=(.05, .20, .18), fg=(.55, 1.0, .80))),
