@@ -66,22 +66,22 @@
     {
       "role": "source",
       "path": "Art/sk-hero-rogue/r002/SK_Hero_Rogue_source.blend",
-      "sha256": "6b1df103d44ebfac47bb490ba94c10e95c9a4410b0ba5b56ddefb156994fb1c7"
+      "sha256": "7209b66f894fbc06379490e2842022d85ce00dfabf988efb2cb209ef925d43e0"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README.md",
-      "sha256": "74f1f63451a89e30a4b37eb325d44db339bdc94484a13701531bf88600f6575f"
+      "sha256": "f90f3ba584ccf3de90ab365291c1f05a514d504c45034ed5c46913d21347c650"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
-      "sha256": "706b8b51061ee3b2f5e49697437fc8d0d40377bcc3e9ff5ad6c6aa2aacb14053"
+      "sha256": "eeeb0bbebb6fca6e4e449546a226c5c62dc8ed0005d5801c5b7ce81e1998fe3f"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build.py",
-      "sha256": "a6470b669763d8a26f3ac91b9465657129fc1f600285646c97ba07c9e38455ab"
+      "sha256": "59d1e30c2044ee1e994b6b4bfcc84e952ab0679cb8b45203df17756481542f5d"
     },
     {
       "role": "source",
@@ -146,17 +146,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-rogue/r002/SK_Hero_Rogue.glb",
-      "sha256": "387db477706c53a59e18a68b0e524da142db2cae501a96e8fd92bb783c923c81"
+      "sha256": "63922e57438eb9dc598e83412d389ba76c3fa0fae982fd326163338e7bdb94f5"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-rogue/r001/SK_Hero_Rogue_LOD1.glb",
-      "sha256": "48b429adc0d32f8322d6d3d52f3879d3351046e06ff2b0312931ce2e3cf93b11"
+      "sha256": "c62b8bb05b288dc1f197657d079b4aef7ffd47bb5d5046068e89e52430ba73d5"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-rogue/r001/SK_Hero_Rogue_LOD2.glb",
-      "sha256": "b448b5b0ea8a82ea20d5d25065e7b6605e709950d345079159b8c320cff93adf"
+      "sha256": "2c71bbe3a1213fe1fa18455537503ddfc3b68f4cebe2de54663dc6e9042cf4fe"
     }
   ],
   "import_policy": {

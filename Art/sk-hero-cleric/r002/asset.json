@@ -71,17 +71,17 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README.md",
-      "sha256": "74f1f63451a89e30a4b37eb325d44db339bdc94484a13701531bf88600f6575f"
+      "sha256": "f90f3ba584ccf3de90ab365291c1f05a514d504c45034ed5c46913d21347c650"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
-      "sha256": "706b8b51061ee3b2f5e49697437fc8d0d40377bcc3e9ff5ad6c6aa2aacb14053"
+      "sha256": "eeeb0bbebb6fca6e4e449546a226c5c62dc8ed0005d5801c5b7ce81e1998fe3f"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build.py",
-      "sha256": "a6470b669763d8a26f3ac91b9465657129fc1f600285646c97ba07c9e38455ab"
+      "sha256": "59d1e30c2044ee1e994b6b4bfcc84e952ab0679cb8b45203df17756481542f5d"
     },
     {
       "role": "source",
