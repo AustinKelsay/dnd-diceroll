@@ -435,25 +435,25 @@
       "distance": 1300
     },
     {
-      "name": "battlemyawm090mdefault",
+      "name": "battle-yawm90-default",
       "mode": "battle",
       "yaw": -90,
       "distance": "default"
     },
     {
-      "name": "battlemyawp000mdefault",
+      "name": "battle-yaw000-default",
       "mode": "battle",
       "yaw": 0,
       "distance": "default"
     },
     {
-      "name": "battlemyawp090mdefault",
+      "name": "battle-yaw090-default",
       "mode": "battle",
       "yaw": 90,
       "distance": "default"
     },
     {
-      "name": "battlemyawp180mdefault",
+      "name": "battle-yaw180-default",
       "mode": "battle",
       "yaw": 180,
       "distance": "default"

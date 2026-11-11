@@ -202,10 +202,10 @@ def build_barbarian(rig, M0):
 
 
 BARBARIAN_ATLAS = {
-    'plate': ('bands', dict(base=(.55, .34, .20), line=(.86, .66, .42), spacing=64)),         # tanned hide bracers
+    'plate': ('bands', dict(base=(.44, .26, .14), line=(.80, .60, .38), spacing=64)),         # tanned hide bracers
     'trim': ('scales', dict(a=(.88, .60, .26), b=(.70, .44, .18))),                           # bronze
-    'cloth': ('folds', dict(base=(.80, .62, .38), period=26, hem=(.42, .27, .16), hem2=(.30, .18, .10))),   # fur, repainted by paint_fur
-    'leather': ('weave', dict(base=(.50, .31, .18))),
+    'cloth': ('folds', dict(base=(.62, .40, .20), period=26, hem=(.32, .19, .10), hem2=(.24, .14, .07))),   # fur, repainted by paint_fur
+    'leather': ('weave', dict(base=(.40, .24, .13))),
     'blade': ('blade', dict(base=(.74, .78, .83))),
     'glow': ('flat', dict(base=(1.0, .50, .22))),
     'rune': ('rune', dict(bg=(.30, .10, .05), fg=(1.0, .55, .24))),
@@ -213,8 +213,8 @@ BARBARIAN_ATLAS = {
     'bone': ('flat', dict(base=(.95, .91, .80))),
     'accent': ('flat', dict(base=(.96, .95, .90))),                                           # white paint
     'dark': ('flat', dict(base=(.17, .12, .10))),
-    'emblem': ('flat', dict(base=(.78, .57, .42))),                                           # warpaint skin, repainted by paint_warpaint
-    'emblem2': ('flat', dict(base=(.58, .27, .13))),                                          # auburn hair and beard
+    'emblem': ('flat', dict(base=(.72, .50, .36))),                                           # warpaint skin, repainted by paint_warpaint
+    'emblem2': ('flat', dict(base=(.50, .20, .08))),                                          # auburn hair and beard
 }
 
 
@@ -225,7 +225,7 @@ def paint_fur(A, region, spec, seed):
     nz = K.smooth_noise(rng, n, 16)
     yy, xx = np.mgrid[0:n, 0:n]
     col = np.array(spec[region][1]['base'], np.float32)
-    tip = np.array((.34, .21, .12), np.float32)
+    tip = np.array((.26, .15, .08), np.float32)
     streak = np.repeat(rng.random(n // 3 + 1), 3)[:n][None, :] * np.ones((n, 1))
     wob = np.sin(yy * .07 + xx * .02 + rng.random() * 6) * .5 + .5
     t = np.ones((n, n, 4), np.float32)
@@ -322,19 +322,19 @@ def build_monk(rig, M0):
 
 
 MONK_ATLAS = {
-    'plate': ('bands', dict(base=(.76, .52, .16), line=(.98, .84, .50), spacing=64)),         # ochre
+    'plate': ('bands', dict(base=(.64, .40, .10), line=(.96, .78, .44), spacing=64)),         # ochre
     'trim': ('scales', dict(a=(.24, .17, .14), b=(.34, .22, .16))),                           # dark brown trim
-    'cloth': ('folds', dict(base=(.98, .60, .10), period=32, hem=(.30, .17, .10), hem2=(.60, .34, .10))),   # saffron
-    'leather': ('weave', dict(base=(.40, .27, .17))),
+    'cloth': ('folds', dict(base=(.92, .44, .04), period=32, hem=(.30, .17, .10), hem2=(.60, .34, .10))),   # saffron
+    'leather': ('weave', dict(base=(.32, .20, .12))),
     'blade': ('blade', dict(base=(.84, .88, .94))),
     'glow': ('flat', dict(base=(1.0, .86, .38))),
     'rune': ('rune', dict(bg=(.30, .18, .06), fg=(1.0, .86, .38))),
-    'skin': ('flat', dict(base=(.80, .60, .45))),
+    'skin': ('flat', dict(base=(.74, .52, .38))),
     'bone': ('flat', dict(base=(.96, .92, .82))),
     'accent': ('flat', dict(base=(.97, .93, .80))),                                           # hand and shin wraps
     'dark': ('flat', dict(base=(.16, .12, .12))),
-    'emblem': ('folds', dict(base=(.62, .22, .10), period=24, hem=(.98, .62, .14), hem2=(.30, .17, .10))),   # sash: dark rust
-    'emblem2': ('flat', dict(base=(.40, .27, .17))),
+    'emblem': ('folds', dict(base=(.50, .15, .06), period=24, hem=(.92, .50, .08), hem2=(.30, .17, .10))),   # sash: dark rust
+    'emblem2': ('flat', dict(base=(.32, .20, .12))),
 }
 
 
