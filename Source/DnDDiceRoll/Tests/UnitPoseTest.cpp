@@ -1153,4 +1153,69 @@ bool FRiggedRecoverTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatchFallenTest, "Project.Expedition.Presentation.CastBatchFallenAndRecover",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatchFallenTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    // The rogue and the cleric (#150 batch 1), downed and dead in a committed checkpoint, resume in a fresh world and view at the end of
+    // their Downed and Death clips; their skinned meshes also play Recover, and playback takes the figure back to the committed pose.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatchFallen"), FGuid::NewGuid().ToString());
+    for (const EAdventurerRole Role : {EAdventurerRole::Rogue, EAdventurerRole::Cleric})
+    {
+        for (const ECombatLife Life : {ECombatLife::Downed, ECombatLife::Dead})
+        {
+            const FString Label = FString::Printf(TEXT("%s %s"), *UDiceRollTheme::ClassKey(Role).ToString(), Life == ECombatLife::Downed ? TEXT("downed") : TEXT("dead"));
+            FExpeditionRun Run;
+            FString Error;
+            if (!TestTrue(Label + TEXT(": a run starts"), Run.NewRun(7, Error, TEXT("cast-fallen")))) { continue; }
+            const auto* Offer = Run.Progress().Offers.FindByPredicate([](const auto& Route) { return !Route.bDangerous; });
+            if (!TestTrue(Label + TEXT(": a route is chosen"), Offer && Run.ChooseRoute(Offer->Id, Error))) { continue; }
+            FExpeditionSnapshot Snapshot = Run.Snapshot();
+            int32 HeroId = INDEX_NONE;
+            for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+            {
+                if (Unit.Side != ECombatSide::Party || Unit.AdventurerRole != Role) { continue; }
+                Unit.HP = 0;
+                Unit.Life = Life;
+                Unit.RescueTurnsLeft = Life == ECombatLife::Downed ? 2 : 0;
+                HeroId = Unit.Id;
+            }
+            if (!TestTrue(Label + TEXT(": the default party has one"), HeroId != INDEX_NONE)) { continue; }
+            const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("%d-%d"), static_cast<int32>(Role), static_cast<int32>(Life)), TEXT("current.json"));
+            FExpeditionSaveData Data;
+            Data.Current = Snapshot;
+            if (!TestTrue(Label + TEXT(": the checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); continue; }
+            AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+            if (!TestNotNull(Label + TEXT(": resumed view"), View)) { continue; }
+            View->Resume();
+            View->Tick(0.016f);
+            if (TestTrue(Label + TEXT(": the resumed view is mid-encounter"), View->HasRun() && View->InCombat()))
+            {
+                const FUnitAnimationState State = View->UnitAnimation(HeroId);
+                TestTrue(Label + TEXT(" is a rigged figure"), State.bSkeletal);
+                const EUnitPose Rest = ExpeditionPose::Rest(Life);
+                ExpectPose(*this, Label + TEXT(" holds its fallen pose"), State.Pose, Rest);
+                TestTrue(Label + TEXT(" has its clip bound"), State.Clip.Contains(ExpeditionPose::ClipName(Rest)));
+                TestTrue(*(Label + FString::Printf(TEXT(" holds the end of its clip (%.3f of %.3f s)"), State.Time, State.Length)), State.Length > 0.1f && State.Time >= State.Length - 0.001f);
+                ExpectFiguresConverged(*this, *View, Label + TEXT(" resumed"));
+                // Its skinned mesh plays Recover (the clip a rescue shows), and handing it back to playback converges on the committed pose.
+                if (TestTrue(Label + TEXT(": Recover can be held"), View->PreviewPose(HeroId, EUnitPose::Recover, 1.0f)))
+                {
+                    View->Tick(0.016f);
+                    const FUnitAnimationState Held = View->UnitAnimation(HeroId);
+                    ExpectPose(*this, Label + TEXT(" plays Recover"), Held.Pose, EUnitPose::Recover);
+                    TestTrue(Label + TEXT(" has its Recover clip bound"), Held.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Recover)) && Held.Length > 0.1f);
+                    View->ClearPosePreview();
+                    View->Tick(0.016f);
+                    ExpectFiguresConverged(*this, *View, Label + TEXT(" after Recover"));
+                }
+            }
+            ReleaseView(View);
+        }
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
 #endif
