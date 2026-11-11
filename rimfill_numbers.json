@@ -1,0 +1,525 @@
+{
+ "base3": {
+  "Fighter": {
+   "n": 15,
+   "mean": 2.72,
+   "worst": 1.42,
+   "merge": 18.8,
+   "luma": 141.7,
+   "boards": {
+    "Root": 2.67,
+    "Vault": 2.21,
+    "Vigil": 3.3
+   },
+   "boardWorst": {
+    "Root": 2.19,
+    "Vault": 1.42,
+    "Vigil": 2.19
+   }
+  },
+  "Wizard": {
+   "n": 15,
+   "mean": 2.95,
+   "worst": 1.82,
+   "merge": 4.4,
+   "luma": 169.4,
+   "boards": {
+    "Root": 2.44,
+    "Vault": 2.92,
+    "Vigil": 3.5
+   },
+   "boardWorst": {
+    "Root": 1.82,
+    "Vault": 1.95,
+    "Vigil": 2.52
+   }
+  },
+  "Rogue": {
+   "n": 15,
+   "mean": 2.95,
+   "worst": 1.79,
+   "merge": 10.4,
+   "luma": 160.0,
+   "boards": {
+    "Root": 2.68,
+    "Vault": 3.54,
+    "Vigil": 2.63
+   },
+   "boardWorst": {
+    "Root": 1.79,
+    "Vault": 2.38,
+    "Vigil": 1.97
+   }
+  },
+  "Cleric": {
+   "n": 15,
+   "mean": 3.45,
+   "worst": 2.08,
+   "merge": 2.8,
+   "luma": 195.9,
+   "boards": {
+    "Root": 3.29,
+    "Vault": 3.77,
+    "Vigil": 3.29
+   },
+   "boardWorst": {
+    "Root": 2.08,
+    "Vault": 2.89,
+    "Vigil": 2.41
+   }
+  },
+  "Barbarian": {
+   "n": 15,
+   "mean": 2.73,
+   "worst": 1.7,
+   "merge": 6.2,
+   "luma": 160.6,
+   "boards": {
+    "Root": 2.2,
+    "Vault": 2.99,
+    "Vigil": 3.0
+   },
+   "boardWorst": {
+    "Root": 1.7,
+    "Vault": 2.36,
+    "Vigil": 1.98
+   }
+  },
+  "Monk": {
+   "n": 15,
+   "mean": 2.63,
+   "worst": 1.54,
+   "merge": 10.3,
+   "luma": 162.3,
+   "boards": {
+    "Root": 2.46,
+    "Vault": 2.83,
+    "Vigil": 2.59
+   },
+   "boardWorst": {
+    "Root": 1.54,
+    "Vault": 2.13,
+    "Vigil": 1.79
+   }
+  },
+  "Paladin": {
+   "n": 15,
+   "mean": 3.33,
+   "worst": 1.82,
+   "merge": 4.8,
+   "luma": 184.4,
+   "boards": {
+    "Root": 3.13,
+    "Vault": 3.74,
+    "Vigil": 3.11
+   },
+   "boardWorst": {
+    "Root": 1.82,
+    "Vault": 2.43,
+    "Vigil": 2.19
+   }
+  },
+  "Ranger": {
+   "n": 15,
+   "mean": 2.9,
+   "worst": 1.95,
+   "merge": 8.7,
+   "luma": 159.2,
+   "boards": {
+    "Root": 2.46,
+    "Vault": 3.02,
+    "Vigil": 3.22
+   },
+   "boardWorst": {
+    "Root": 1.95,
+    "Vault": 2.46,
+    "Vigil": 2.63
+   }
+  },
+  "Raider": {
+   "n": 20,
+   "mean": 3.41,
+   "worst": 2.19,
+   "merge": 9.7,
+   "luma": 138.9,
+   "boards": {
+    "Vigil": 3.41
+   },
+   "boardWorst": {
+    "Vigil": 2.19
+   }
+  }
+ },
+ "a2": {
+  "Fighter": {
+   "n": 15,
+   "mean": 2.61,
+   "worst": 1.42,
+   "merge": 18.9,
+   "luma": 137.1,
+   "boards": {
+    "Root": 2.53,
+    "Vault": 2.17,
+    "Vigil": 3.13
+   },
+   "boardWorst": {
+    "Root": 2.0,
+    "Vault": 1.42,
+    "Vigil": 2.16
+   }
+  },
+  "Wizard": {
+   "n": 15,
+   "mean": 2.78,
+   "worst": 1.68,
+   "merge": 4.9,
+   "luma": 161.6,
+   "boards": {
+    "Root": 2.28,
+    "Vault": 2.74,
+    "Vigil": 3.32
+   },
+   "boardWorst": {
+    "Root": 1.68,
+    "Vault": 1.77,
+    "Vigil": 2.37
+   }
+  },
+  "Rogue": {
+   "n": 15,
+   "mean": 2.8,
+   "worst": 1.66,
+   "merge": 11.2,
+   "luma": 153.4,
+   "boards": {
+    "Root": 2.54,
+    "Vault": 3.36,
+    "Vigil": 2.5
+   },
+   "boardWorst": {
+    "Root": 1.66,
+    "Vault": 2.29,
+    "Vigil": 1.8
+   }
+  },
+  "Cleric": {
+   "n": 15,
+   "mean": 3.34,
+   "worst": 1.91,
+   "merge": 3.9,
+   "luma": 190.8,
+   "boards": {
+    "Root": 3.16,
+    "Vault": 3.66,
+    "Vigil": 3.2
+   },
+   "boardWorst": {
+    "Root": 1.91,
+    "Vault": 2.77,
+    "Vigil": 2.27
+   }
+  },
+  "Barbarian": {
+   "n": 15,
+   "mean": 2.57,
+   "worst": 1.53,
+   "merge": 7.1,
+   "luma": 153.3,
+   "boards": {
+    "Root": 2.07,
+    "Vault": 2.8,
+    "Vigil": 2.82
+   },
+   "boardWorst": {
+    "Root": 1.53,
+    "Vault": 2.24,
+    "Vigil": 1.85
+   }
+  },
+  "Monk": {
+   "n": 15,
+   "mean": 2.51,
+   "worst": 1.44,
+   "merge": 10.8,
+   "luma": 156.5,
+   "boards": {
+    "Root": 2.35,
+    "Vault": 2.69,
+    "Vigil": 2.48
+   },
+   "boardWorst": {
+    "Root": 1.44,
+    "Vault": 2.01,
+    "Vigil": 1.67
+   }
+  },
+  "Paladin": {
+   "n": 15,
+   "mean": 3.24,
+   "worst": 1.71,
+   "merge": 5.4,
+   "luma": 179.8,
+   "boards": {
+    "Root": 3.03,
+    "Vault": 3.65,
+    "Vigil": 3.03
+   },
+   "boardWorst": {
+    "Root": 1.71,
+    "Vault": 2.35,
+    "Vigil": 2.09
+   }
+  },
+  "Ranger": {
+   "n": 15,
+   "mean": 2.72,
+   "worst": 1.74,
+   "merge": 9.2,
+   "luma": 152.0,
+   "boards": {
+    "Root": 2.31,
+    "Vault": 2.83,
+    "Vigil": 3.03
+   },
+   "boardWorst": {
+    "Root": 1.74,
+    "Vault": 2.23,
+    "Vigil": 2.38
+   }
+  },
+  "Raider": {
+   "n": 20,
+   "mean": 3.19,
+   "worst": 2.01,
+   "merge": 12.0,
+   "luma": 132.6,
+   "boards": {
+    "Vigil": 3.19
+   },
+   "boardWorst": {
+    "Vigil": 2.01
+   }
+  }
+ },
+ "b2": {
+  "Fighter": {
+   "n": 15,
+   "mean": 2.55,
+   "worst": 1.41,
+   "merge": 19.1,
+   "luma": 134.6,
+   "boards": {
+    "Root": 2.46,
+    "Vault": 2.14,
+    "Vigil": 3.04
+   },
+   "boardWorst": {
+    "Root": 1.91,
+    "Vault": 1.41,
+    "Vigil": 2.14
+   }
+  },
+  "Wizard": {
+   "n": 15,
+   "mean": 2.7,
+   "worst": 1.62,
+   "merge": 5.3,
+   "luma": 157.5,
+   "boards": {
+    "Root": 2.21,
+    "Vault": 2.65,
+    "Vigil": 3.23
+   },
+   "boardWorst": {
+    "Root": 1.62,
+    "Vault": 1.69,
+    "Vigil": 2.3
+   }
+  },
+  "Rogue": {
+   "n": 15,
+   "mean": 2.72,
+   "worst": 1.6,
+   "merge": 11.6,
+   "luma": 149.9,
+   "boards": {
+    "Root": 2.47,
+    "Vault": 3.27,
+    "Vigil": 2.43
+   },
+   "boardWorst": {
+    "Root": 1.6,
+    "Vault": 2.25,
+    "Vigil": 1.71
+   }
+  },
+  "Cleric": {
+   "n": 15,
+   "mean": 3.28,
+   "worst": 1.83,
+   "merge": 4.1,
+   "luma": 188.1,
+   "boards": {
+    "Root": 3.09,
+    "Vault": 3.6,
+    "Vigil": 3.16
+   },
+   "boardWorst": {
+    "Root": 1.83,
+    "Vault": 2.71,
+    "Vigil": 2.2
+   }
+  },
+  "Barbarian": {
+   "n": 15,
+   "mean": 2.48,
+   "worst": 1.46,
+   "merge": 7.7,
+   "luma": 149.5,
+   "boards": {
+    "Root": 2.01,
+    "Vault": 2.71,
+    "Vigil": 2.73
+   },
+   "boardWorst": {
+    "Root": 1.46,
+    "Vault": 2.17,
+    "Vigil": 1.79
+   }
+  },
+  "Monk": {
+   "n": 15,
+   "mean": 2.44,
+   "worst": 1.39,
+   "merge": 11.1,
+   "luma": 153.3,
+   "boards": {
+    "Root": 2.29,
+    "Vault": 2.62,
+    "Vigil": 2.42
+   },
+   "boardWorst": {
+    "Root": 1.39,
+    "Vault": 1.95,
+    "Vigil": 1.61
+   }
+  },
+  "Paladin": {
+   "n": 15,
+   "mean": 3.19,
+   "worst": 1.65,
+   "merge": 5.7,
+   "luma": 177.3,
+   "boards": {
+    "Root": 2.98,
+    "Vault": 3.6,
+    "Vigil": 2.99
+   },
+   "boardWorst": {
+    "Root": 1.65,
+    "Vault": 2.31,
+    "Vigil": 2.04
+   }
+  },
+  "Ranger": {
+   "n": 15,
+   "mean": 2.63,
+   "worst": 1.64,
+   "merge": 9.5,
+   "luma": 148.1,
+   "boards": {
+    "Root": 2.23,
+    "Vault": 2.73,
+    "Vigil": 2.93
+   },
+   "boardWorst": {
+    "Root": 1.64,
+    "Vault": 2.12,
+    "Vigil": 2.26
+   }
+  },
+  "Raider": {
+   "n": 20,
+   "mean": 3.08,
+   "worst": 1.92,
+   "merge": 15.3,
+   "luma": 129.1,
+   "boards": {
+    "Vigil": 3.08
+   },
+   "boardWorst": {
+    "Vigil": 1.92
+   }
+  }
+ },
+ "static": {
+  "Barbarian": {
+   "n": 15,
+   "mean": 2.47,
+   "worst": 1.33,
+   "merge": 6.6,
+   "luma": 167.8,
+   "boards": {
+    "Root": 1.97,
+    "Vault": 2.49,
+    "Vigil": 2.93
+   },
+   "boardWorst": {
+    "Root": 1.37,
+    "Vault": 1.47,
+    "Vigil": 1.33
+   }
+  },
+  "Monk": {
+   "n": 15,
+   "mean": 2.35,
+   "worst": 1.34,
+   "merge": 12.6,
+   "luma": 139.8,
+   "boards": {
+    "Root": 2.4,
+    "Vault": 2.29,
+    "Vigil": 2.36
+   },
+   "boardWorst": {
+    "Root": 1.34,
+    "Vault": 1.46,
+    "Vigil": 1.44
+   }
+  },
+  "Paladin": {
+   "n": 15,
+   "mean": 2.54,
+   "worst": 1.31,
+   "merge": 10.7,
+   "luma": 143.1,
+   "boards": {
+    "Root": 2.42,
+    "Vault": 2.66,
+    "Vigil": 2.53
+   },
+   "boardWorst": {
+    "Root": 1.31,
+    "Vault": 1.69,
+    "Vigil": 1.72
+   }
+  },
+  "Ranger": {
+   "n": 15,
+   "mean": 2.55,
+   "worst": 1.46,
+   "merge": 11.2,
+   "luma": 134.6,
+   "boards": {
+    "Root": 2.27,
+    "Vault": 2.53,
+    "Vigil": 2.84
+   },
+   "boardWorst": {
+    "Root": 1.46,
+    "Vault": 1.83,
+    "Vigil": 1.88
+   }
+  }
+ }
+}

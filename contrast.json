@@ -1,0 +1,3090 @@
+{
+ "Barbarian": {
+  "rigged_rim1.2_fill1.0": {
+   "role": "Barbarian",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.074,
+     "contrastRatioMin": 1.535,
+     "mergeFractionMean": 0.0784,
+     "figureLumaMean": 145.52,
+     "groundLumaMean": 76.28
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.801,
+     "contrastRatioMin": 2.238,
+     "mergeFractionMean": 0.054,
+     "figureLumaMean": 157.41,
+     "groundLumaMean": 61.67
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.822,
+     "contrastRatioMin": 1.854,
+     "mergeFractionMean": 0.0791,
+     "figureLumaMean": 157.07,
+     "groundLumaMean": 66.1
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.566,
+     "contrastRatioMin": 1.535,
+     "mergeFractionMean": 0.0705,
+     "figureLumaMean": 153.33,
+     "groundLumaMean": 68.02
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 2.399,
+     "mergeFraction": 0.0679,
+     "figureLuma": 138.56,
+     "groundLuma": 64.71,
+     "figurePixels": 2460,
+     "groundPixels": 10004,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1515,
+      455,
+      1576,
+      569
+     ]
+    },
+    {
+     "contrastRatio": 1.535,
+     "mergeFraction": 0.1266,
+     "figureLuma": 116.99,
+     "groundLuma": 80.61,
+     "figurePixels": 1975,
+     "groundPixels": 7900,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1346,
+      314,
+      1396,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 1.96,
+     "mergeFraction": 0.0877,
+     "figureLuma": 170.1,
+     "groundLuma": 95.18,
+     "figurePixels": 1482,
+     "groundPixels": 5928,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      847,
+      259,
+      885,
+      367
+     ]
+    },
+    {
+     "contrastRatio": 2.451,
+     "mergeFraction": 0.0292,
+     "figureLuma": 165.56,
+     "groundLuma": 69.12,
+     "figurePixels": 1539,
+     "groundPixels": 6156,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      985,
+      393,
+      1023,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.027,
+     "mergeFraction": 0.0805,
+     "figureLuma": 136.41,
+     "groundLuma": 71.79,
+     "figurePixels": 2460,
+     "groundPixels": 10004,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1515,
+      455,
+      1576,
+      569
+     ]
+    },
+    {
+     "contrastRatio": 3.405,
+     "mergeFraction": 0.0284,
+     "figureLuma": 157.05,
+     "groundLuma": 50.75,
+     "figurePixels": 2430,
+     "groundPixels": 9882,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1532,
+      453,
+      1593,
+      566
+     ]
+    },
+    {
+     "contrastRatio": 3.113,
+     "mergeFraction": 0.0662,
+     "figureLuma": 157.78,
+     "groundLuma": 55.08,
+     "figurePixels": 1872,
+     "groundPixels": 7332,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1298,
+      300,
+      1345,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 2.238,
+     "mergeFraction": 0.0532,
+     "figureLuma": 157.75,
+     "groundLuma": 76.9,
+     "figurePixels": 1560,
+     "groundPixels": 6084,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      832,
+      300,
+      871,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 2.51,
+     "mergeFraction": 0.0606,
+     "figureLuma": 157.35,
+     "groundLuma": 63.45,
+     "figurePixels": 1600,
+     "groundPixels": 6240,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1036,
+      394,
+      1075,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.74,
+     "mergeFraction": 0.0617,
+     "figureLuma": 157.12,
+     "groundLuma": 62.19,
+     "figurePixels": 2430,
+     "groundPixels": 9882,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1532,
+      453,
+      1593,
+      566
+     ]
+    },
+    {
+     "contrastRatio": 4.051,
+     "mergeFraction": 0.1251,
+     "figureLuma": 159.23,
+     "groundLuma": 48.8,
+     "figurePixels": 2542,
+     "groundPixels": 10168,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1531,
+      485,
+      1593,
+      599
+     ]
+    },
+    {
+     "contrastRatio": 1.941,
+     "mergeFraction": 0.0557,
+     "figureLuma": 143.51,
+     "groundLuma": 75.69,
+     "figurePixels": 1975,
+     "groundPixels": 7900,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1344,
+      307,
+      1394,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 1.854,
+     "mergeFraction": 0.0651,
+     "figureLuma": 160.14,
+     "groundLuma": 83.35,
+     "figurePixels": 1444,
+     "groundPixels": 5776,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      842,
+      229,
+      880,
+      335
+     ]
+    },
+    {
+     "contrastRatio": 2.283,
+     "mergeFraction": 0.0435,
+     "figureLuma": 166.39,
+     "groundLuma": 74.13,
+     "figurePixels": 1539,
+     "groundPixels": 6156,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      987,
+      393,
+      1025,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.979,
+     "mergeFraction": 0.1062,
+     "figureLuma": 156.07,
+     "groundLuma": 48.51,
+     "figurePixels": 2542,
+     "groundPixels": 10168,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1531,
+      485,
+      1593,
+      599
+     ]
+    }
+   ]
+  },
+  "primitive_fallback": {
+   "role": "Barbarian",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 1.97,
+     "contrastRatioMin": 1.369,
+     "mergeFractionMean": 0.0679,
+     "figureLumaMean": 158.31,
+     "groundLumaMean": 89.21
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.495,
+     "contrastRatioMin": 1.471,
+     "mergeFractionMean": 0.0651,
+     "figureLumaMean": 173.86,
+     "groundLumaMean": 79.19
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.931,
+     "contrastRatioMin": 1.33,
+     "mergeFractionMean": 0.0636,
+     "figureLumaMean": 171.22,
+     "groundLumaMean": 77.46
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.465,
+     "contrastRatioMin": 1.33,
+     "mergeFractionMean": 0.0655,
+     "figureLumaMean": 167.8,
+     "groundLumaMean": 81.95
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 2.401,
+     "mergeFraction": 0.0878,
+     "figureLuma": 145.63,
+     "groundLuma": 64.85,
+     "figurePixels": 2460,
+     "groundPixels": 10004,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1515,
+      455,
+      1576,
+      569
+     ]
+    },
+    {
+     "contrastRatio": 1.369,
+     "mergeFraction": 0.0785,
+     "figureLuma": 94.08,
+     "groundLuma": 81.99,
+     "figurePixels": 1975,
+     "groundPixels": 7900,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1346,
+      314,
+      1396,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.256,
+     "mergeFraction": 0.0715,
+     "figureLuma": 198.31,
+     "groundLuma": 99.75,
+     "figurePixels": 1482,
+     "groundPixels": 5928,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      847,
+      259,
+      885,
+      367
+     ]
+    },
+    {
+     "contrastRatio": 1.832,
+     "mergeFraction": 0.0052,
+     "figureLuma": 215.98,
+     "groundLuma": 127.02,
+     "figurePixels": 1539,
+     "groundPixels": 6156,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      985,
+      393,
+      1023,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 1.994,
+     "mergeFraction": 0.0967,
+     "figureLuma": 137.53,
+     "groundLuma": 72.43,
+     "figurePixels": 2460,
+     "groundPixels": 10004,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1515,
+      455,
+      1576,
+      569
+     ]
+    },
+    {
+     "contrastRatio": 3.644,
+     "mergeFraction": 0.0029,
+     "figureLuma": 211.64,
+     "groundLuma": 65.61,
+     "figurePixels": 2430,
+     "groundPixels": 9882,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1532,
+      453,
+      1593,
+      566
+     ]
+    },
+    {
+     "contrastRatio": 2.572,
+     "mergeFraction": 0.031,
+     "figureLuma": 177.01,
+     "groundLuma": 77.65,
+     "figurePixels": 1872,
+     "groundPixels": 7332,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1298,
+      300,
+      1345,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 1.471,
+     "mergeFraction": 0.2346,
+     "figureLuma": 119.96,
+     "groundLuma": 84.88,
+     "figurePixels": 1560,
+     "groundPixels": 6084,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      832,
+      300,
+      871,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 1.821,
+     "mergeFraction": 0.0187,
+     "figureLuma": 162.05,
+     "groundLuma": 93.44,
+     "figurePixels": 1600,
+     "groundPixels": 6240,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1036,
+      394,
+      1075,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.966,
+     "mergeFraction": 0.0383,
+     "figureLuma": 198.66,
+     "groundLuma": 74.39,
+     "figurePixels": 2430,
+     "groundPixels": 9882,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1532,
+      453,
+      1593,
+      566
+     ]
+    },
+    {
+     "contrastRatio": 5.027,
+     "mergeFraction": 0.0063,
+     "figureLuma": 210.38,
+     "groundLuma": 50.7,
+     "figurePixels": 2542,
+     "groundPixels": 10168,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1531,
+      485,
+      1593,
+      599
+     ]
+    },
+    {
+     "contrastRatio": 1.62,
+     "mergeFraction": 0.2471,
+     "figureLuma": 118.32,
+     "groundLuma": 77.85,
+     "figurePixels": 1975,
+     "groundPixels": 7900,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1344,
+      307,
+      1394,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 1.33,
+     "mergeFraction": 0.0388,
+     "figureLuma": 120.03,
+     "groundLuma": 94.17,
+     "figurePixels": 1444,
+     "groundPixels": 5776,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      842,
+      229,
+      880,
+      335
+     ]
+    },
+    {
+     "contrastRatio": 1.886,
+     "mergeFraction": 0.0227,
+     "figureLuma": 203.38,
+     "groundLuma": 113.75,
+     "figurePixels": 1539,
+     "groundPixels": 6156,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      987,
+      393,
+      1025,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 4.791,
+     "mergeFraction": 0.0031,
+     "figureLuma": 203.99,
+     "groundLuma": 50.81,
+     "figurePixels": 2542,
+     "groundPixels": 10168,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 1",
+     "role": "Barbarian",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1531,
+      485,
+      1593,
+      599
+     ]
+    }
+   ]
+  }
+ },
+ "Monk": {
+  "rigged_rim1.2_fill1.0": {
+   "role": "Monk",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.352,
+     "contrastRatioMin": 1.437,
+     "mergeFractionMean": 0.0681,
+     "figureLumaMean": 160.9,
+     "groundLumaMean": 76.56
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.695,
+     "contrastRatioMin": 2.008,
+     "mergeFractionMean": 0.0586,
+     "figureLumaMean": 160.23,
+     "groundLumaMean": 65.28
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.479,
+     "contrastRatioMin": 1.668,
+     "mergeFractionMean": 0.1987,
+     "figureLumaMean": 148.44,
+     "groundLumaMean": 67.47
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.509,
+     "contrastRatioMin": 1.437,
+     "mergeFractionMean": 0.1085,
+     "figureLumaMean": 156.52,
+     "groundLumaMean": 69.77
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 2.511,
+     "mergeFraction": 0.0996,
+     "figureLuma": 153.69,
+     "groundLuma": 67.54,
+     "figurePixels": 2430,
+     "groundPixels": 9558,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1500,
+      393,
+      1559,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 1.437,
+     "mergeFraction": 0.0912,
+     "figureLuma": 132.55,
+     "groundLuma": 96.8,
+     "figurePixels": 1896,
+     "groundPixels": 7584,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1255,
+      314,
+      1303,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.323,
+     "mergeFraction": 0.0487,
+     "figureLuma": 179.08,
+     "groundLuma": 84.96,
+     "figurePixels": 1580,
+     "groundPixels": 6162,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      844,
+      314,
+      883,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.901,
+     "mergeFraction": 0.0147,
+     "figureLuma": 184.34,
+     "groundLuma": 67.28,
+     "figurePixels": 1701,
+     "groundPixels": 6804,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1079,
+      393,
+      1121,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.587,
+     "mergeFraction": 0.0864,
+     "figureLuma": 154.84,
+     "groundLuma": 66.2,
+     "figurePixels": 2430,
+     "groundPixels": 9558,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1500,
+      393,
+      1559,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.923,
+     "mergeFraction": 0.05,
+     "figureLuma": 159.95,
+     "groundLuma": 62.23,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1517,
+      394,
+      1575,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.008,
+     "mergeFraction": 0.1008,
+     "figureLuma": 149.33,
+     "groundLuma": 72.61,
+     "figurePixels": 1716,
+     "groundPixels": 7020,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1209,
+      300,
+      1254,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 2.787,
+     "mergeFraction": 0.0244,
+     "figureLuma": 171.21,
+     "groundLuma": 68.14,
+     "figurePixels": 1600,
+     "groundPixels": 6400,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      829,
+      355,
+      869,
+      465
+     ]
+    },
+    {
+     "contrastRatio": 2.751,
+     "mergeFraction": 0.071,
+     "figureLuma": 160.78,
+     "groundLuma": 62.43,
+     "figurePixels": 1760,
+     "groundPixels": 6880,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1128,
+      394,
+      1171,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.006,
+     "mergeFraction": 0.047,
+     "figureLuma": 159.9,
+     "groundLuma": 60.97,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1517,
+      394,
+      1575,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.179,
+     "mergeFraction": 0.1148,
+     "figureLuma": 166.9,
+     "groundLuma": 60.93,
+     "figurePixels": 2430,
+     "groundPixels": 9720,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1516,
+      422,
+      1576,
+      535
+     ]
+    },
+    {
+     "contrastRatio": 1.668,
+     "mergeFraction": 0.1377,
+     "figureLuma": 143.16,
+     "groundLuma": 86.51,
+     "figurePixels": 1896,
+     "groundPixels": 7426,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1254,
+      307,
+      1301,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 2.267,
+     "mergeFraction": 0.0692,
+     "figureLuma": 173.51,
+     "groundLuma": 84.05,
+     "figurePixels": 1560,
+     "groundPixels": 6084,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      839,
+      281,
+      878,
+      389
+     ]
+    },
+    {
+     "contrastRatio": 3.184,
+     "mergeFraction": 0.1135,
+     "figureLuma": 174.33,
+     "groundLuma": 62.02,
+     "figurePixels": 1701,
+     "groundPixels": 6804,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1080,
+      393,
+      1122,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.099,
+     "mergeFraction": 0.5584,
+     "figureLuma": 84.28,
+     "groundLuma": 43.84,
+     "figurePixels": 2430,
+     "groundPixels": 9720,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1516,
+      422,
+      1576,
+      535
+     ]
+    }
+   ]
+  },
+  "primitive_fallback": {
+   "role": "Monk",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.396,
+     "contrastRatioMin": 1.336,
+     "mergeFractionMean": 0.0923,
+     "figureLumaMean": 154.92,
+     "groundLumaMean": 75.91
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.288,
+     "contrastRatioMin": 1.459,
+     "mergeFractionMean": 0.1083,
+     "figureLumaMean": 138.44,
+     "groundLumaMean": 64.51
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.356,
+     "contrastRatioMin": 1.438,
+     "mergeFractionMean": 0.178,
+     "figureLumaMean": 126.19,
+     "groundLumaMean": 61.6
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.346,
+     "contrastRatioMin": 1.336,
+     "mergeFractionMean": 0.1262,
+     "figureLumaMean": 139.85,
+     "groundLumaMean": 67.34
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 3.157,
+     "mergeFraction": 0.1642,
+     "figureLuma": 153.17,
+     "groundLuma": 58.47,
+     "figurePixels": 2430,
+     "groundPixels": 9558,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1500,
+      393,
+      1559,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 1.336,
+     "mergeFraction": 0.0622,
+     "figureLuma": 104.77,
+     "groundLuma": 87.07,
+     "figurePixels": 1896,
+     "groundPixels": 7584,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1255,
+      314,
+      1303,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.129,
+     "mergeFraction": 0.0405,
+     "figureLuma": 178.6,
+     "groundLuma": 87.05,
+     "figurePixels": 1580,
+     "groundPixels": 6162,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      844,
+      314,
+      883,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.194,
+     "mergeFraction": 0.0359,
+     "figureLuma": 184.18,
+     "groundLuma": 88.35,
+     "figurePixels": 1701,
+     "groundPixels": 6804,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1079,
+      393,
+      1121,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.162,
+     "mergeFraction": 0.1588,
+     "figureLuma": 153.89,
+     "groundLuma": 58.63,
+     "figurePixels": 2430,
+     "groundPixels": 9558,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1500,
+      393,
+      1559,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.354,
+     "mergeFraction": 0.0435,
+     "figureLuma": 171.72,
+     "groundLuma": 57.42,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1517,
+      394,
+      1575,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 1.459,
+     "mergeFraction": 0.183,
+     "figureLuma": 119.97,
+     "groundLuma": 75.4,
+     "figurePixels": 1716,
+     "groundPixels": 7020,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1209,
+      300,
+      1254,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 1.575,
+     "mergeFraction": 0.1606,
+     "figureLuma": 113.27,
+     "groundLuma": 67.67,
+     "figurePixels": 1600,
+     "groundPixels": 6400,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      829,
+      355,
+      869,
+      465
+     ]
+    },
+    {
+     "contrastRatio": 1.712,
+     "mergeFraction": 0.1125,
+     "figureLuma": 115.26,
+     "groundLuma": 64.16,
+     "figurePixels": 1760,
+     "groundPixels": 6880,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1128,
+      394,
+      1171,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.338,
+     "mergeFraction": 0.0418,
+     "figureLuma": 171.96,
+     "groundLuma": 57.89,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1517,
+      394,
+      1575,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 4.031,
+     "mergeFraction": 0.1037,
+     "figureLuma": 170.98,
+     "groundLuma": 50.65,
+     "figurePixels": 2430,
+     "groundPixels": 9720,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1516,
+      422,
+      1576,
+      535
+     ]
+    },
+    {
+     "contrastRatio": 1.619,
+     "mergeFraction": 0.0812,
+     "figureLuma": 109.79,
+     "groundLuma": 72.09,
+     "figurePixels": 1896,
+     "groundPixels": 7426,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1254,
+      307,
+      1301,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 1.438,
+     "mergeFraction": 0.0494,
+     "figureLuma": 103.47,
+     "groundLuma": 77.3,
+     "figurePixels": 1560,
+     "groundPixels": 6084,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      839,
+      281,
+      878,
+      389
+     ]
+    },
+    {
+     "contrastRatio": 2.558,
+     "mergeFraction": 0.1164,
+     "figureLuma": 162.79,
+     "groundLuma": 66.86,
+     "figurePixels": 1701,
+     "groundPixels": 6804,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1080,
+      393,
+      1122,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.133,
+     "mergeFraction": 0.5391,
+     "figureLuma": 83.92,
+     "groundLuma": 41.12,
+     "figurePixels": 2430,
+     "groundPixels": 9720,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 2",
+     "role": "Monk",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1516,
+      422,
+      1576,
+      535
+     ]
+    }
+   ]
+  }
+ },
+ "Paladin": {
+  "rigged_rim1.2_fill1.0": {
+   "role": "Paladin",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 3.034,
+     "contrastRatioMin": 1.705,
+     "mergeFractionMean": 0.0556,
+     "figureLumaMean": 174.33,
+     "groundLumaMean": 69.55
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 3.648,
+     "contrastRatioMin": 2.347,
+     "mergeFractionMean": 0.0386,
+     "figureLumaMean": 184.46,
+     "groundLumaMean": 65.77
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 3.031,
+     "contrastRatioMin": 2.089,
+     "mergeFractionMean": 0.0684,
+     "figureLumaMean": 180.62,
+     "groundLumaMean": 68.86
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 3.238,
+     "contrastRatioMin": 1.705,
+     "mergeFractionMean": 0.0542,
+     "figureLumaMean": 179.8,
+     "groundLumaMean": 68.06
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 3.501,
+     "mergeFraction": 0.0674,
+     "figureLuma": 166.16,
+     "groundLuma": 54.31,
+     "figurePixels": 2240,
+     "groundPixels": 9120,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1486,
+      335,
+      1543,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 1.705,
+     "mergeFraction": 0.0627,
+     "figureLuma": 135.97,
+     "groundLuma": 88.65,
+     "figurePixels": 1738,
+     "groundPixels": 6952,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1165,
+      314,
+      1209,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.477,
+     "mergeFraction": 0.0194,
+     "figureLuma": 193.84,
+     "groundLuma": 88.83,
+     "figurePixels": 1600,
+     "groundPixels": 6400,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      841,
+      371,
+      881,
+      482
+     ]
+    },
+    {
+     "contrastRatio": 3.937,
+     "mergeFraction": 0.073,
+     "figureLuma": 206.3,
+     "groundLuma": 61.21,
+     "figurePixels": 1863,
+     "groundPixels": 7452,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1172,
+      393,
+      1218,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.55,
+     "mergeFraction": 0.0554,
+     "figureLuma": 169.39,
+     "groundLuma": 54.76,
+     "figurePixels": 2240,
+     "groundPixels": 9120,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1486,
+      335,
+      1543,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 4.697,
+     "mergeFraction": 0.0262,
+     "figureLuma": 177.67,
+     "groundLuma": 51.69,
+     "figurePixels": 2212,
+     "groundPixels": 8848,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1503,
+      337,
+      1559,
+      446
+     ]
+    },
+    {
+     "contrastRatio": 2.347,
+     "mergeFraction": 0.0583,
+     "figureLuma": 172.98,
+     "groundLuma": 79.23,
+     "figurePixels": 1560,
+     "groundPixels": 6396,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1121,
+      300,
+      1162,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 2.723,
+     "mergeFraction": 0.0163,
+     "figureLuma": 193.62,
+     "groundLuma": 80.02,
+     "figurePixels": 1600,
+     "groundPixels": 6560,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      825,
+      413,
+      866,
+      524
+     ]
+    },
+    {
+     "contrastRatio": 3.729,
+     "mergeFraction": 0.0682,
+     "figureLuma": 196.29,
+     "groundLuma": 65.56,
+     "figurePixels": 1920,
+     "groundPixels": 7520,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1220,
+      394,
+      1267,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 4.745,
+     "mergeFraction": 0.024,
+     "figureLuma": 181.72,
+     "groundLuma": 52.35,
+     "figurePixels": 2212,
+     "groundPixels": 8848,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1503,
+      337,
+      1559,
+      446
+     ]
+    },
+    {
+     "contrastRatio": 4.206,
+     "mergeFraction": 0.0422,
+     "figureLuma": 191.8,
+     "groundLuma": 49.43,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1501,
+      363,
+      1559,
+      474
+     ]
+    },
+    {
+     "contrastRatio": 2.089,
+     "mergeFraction": 0.1318,
+     "figureLuma": 158.79,
+     "groundLuma": 82.78,
+     "figurePixels": 1738,
+     "groundPixels": 6794,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1165,
+      307,
+      1208,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 2.659,
+     "mergeFraction": 0.0468,
+     "figureLuma": 189.04,
+     "groundLuma": 81.16,
+     "figurePixels": 1580,
+     "groundPixels": 6320,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      836,
+      336,
+      876,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 2.619,
+     "mergeFraction": 0.0757,
+     "figureLuma": 171.22,
+     "groundLuma": 73.39,
+     "figurePixels": 1863,
+     "groundPixels": 7452,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1173,
+      393,
+      1219,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.582,
+     "mergeFraction": 0.0453,
+     "figureLuma": 192.23,
+     "groundLuma": 57.56,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1501,
+      363,
+      1559,
+      474
+     ]
+    }
+   ]
+  },
+  "primitive_fallback": {
+   "role": "Paladin",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.418,
+     "contrastRatioMin": 1.306,
+     "mergeFractionMean": 0.0943,
+     "figureLumaMean": 136.32,
+     "groundLumaMean": 64.35
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.659,
+     "contrastRatioMin": 1.691,
+     "mergeFractionMean": 0.0939,
+     "figureLumaMean": 145.48,
+     "groundLumaMean": 60.18
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.532,
+     "contrastRatioMin": 1.723,
+     "mergeFractionMean": 0.1321,
+     "figureLumaMean": 147.44,
+     "groundLumaMean": 62.36
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.536,
+     "contrastRatioMin": 1.306,
+     "mergeFractionMean": 0.1068,
+     "figureLumaMean": 143.08,
+     "groundLumaMean": 62.3
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 2.627,
+     "mergeFraction": 0.1152,
+     "figureLuma": 125.53,
+     "groundLuma": 52.53,
+     "figurePixels": 2240,
+     "groundPixels": 9120,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1486,
+      335,
+      1543,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 1.306,
+     "mergeFraction": 0.0616,
+     "figureLuma": 88.14,
+     "groundLuma": 79.17,
+     "figurePixels": 1738,
+     "groundPixels": 6952,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1165,
+      314,
+      1209,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.414,
+     "mergeFraction": 0.0356,
+     "figureLuma": 175.08,
+     "groundLuma": 78.04,
+     "figurePixels": 1600,
+     "groundPixels": 6400,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      841,
+      371,
+      881,
+      482
+     ]
+    },
+    {
+     "contrastRatio": 3.11,
+     "mergeFraction": 0.146,
+     "figureLuma": 166.84,
+     "groundLuma": 59.43,
+     "figurePixels": 1863,
+     "groundPixels": 7452,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1172,
+      393,
+      1218,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.632,
+     "mergeFraction": 0.1129,
+     "figureLuma": 125.99,
+     "groundLuma": 52.58,
+     "figurePixels": 2240,
+     "groundPixels": 9120,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1486,
+      335,
+      1543,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 3.323,
+     "mergeFraction": 0.0687,
+     "figureLuma": 157.21,
+     "groundLuma": 56.67,
+     "figurePixels": 2212,
+     "groundPixels": 8848,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1503,
+      337,
+      1559,
+      446
+     ]
+    },
+    {
+     "contrastRatio": 2.587,
+     "mergeFraction": 0.1103,
+     "figureLuma": 152.6,
+     "groundLuma": 60.87,
+     "figurePixels": 1560,
+     "groundPixels": 6396,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1121,
+      300,
+      1162,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 1.691,
+     "mergeFraction": 0.0606,
+     "figureLuma": 130.46,
+     "groundLuma": 70.98,
+     "figurePixels": 1600,
+     "groundPixels": 6560,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      825,
+      413,
+      866,
+      524
+     ]
+    },
+    {
+     "contrastRatio": 2.373,
+     "mergeFraction": 0.1594,
+     "figureLuma": 129.6,
+     "groundLuma": 55.55,
+     "figurePixels": 1920,
+     "groundPixels": 7520,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1220,
+      394,
+      1267,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.322,
+     "mergeFraction": 0.0705,
+     "figureLuma": 157.53,
+     "groundLuma": 56.83,
+     "figurePixels": 2212,
+     "groundPixels": 8848,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1503,
+      337,
+      1559,
+      446
+     ]
+    },
+    {
+     "contrastRatio": 3.479,
+     "mergeFraction": 0.0927,
+     "figureLuma": 175.93,
+     "groundLuma": 53.05,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1501,
+      363,
+      1559,
+      474
+     ]
+    },
+    {
+     "contrastRatio": 1.849,
+     "mergeFraction": 0.1507,
+     "figureLuma": 115.66,
+     "groundLuma": 68.26,
+     "figurePixels": 1738,
+     "groundPixels": 6794,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1165,
+      307,
+      1208,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 1.723,
+     "mergeFraction": 0.1582,
+     "figureLuma": 119.16,
+     "groundLuma": 67.22,
+     "figurePixels": 1580,
+     "groundPixels": 6320,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      836,
+      336,
+      876,
+      445
+     ]
+    },
+    {
+     "contrastRatio": 2.631,
+     "mergeFraction": 0.1546,
+     "figureLuma": 153.82,
+     "groundLuma": 64.05,
+     "figurePixels": 1863,
+     "groundPixels": 7452,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1173,
+      393,
+      1219,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.98,
+     "mergeFraction": 0.1043,
+     "figureLuma": 172.64,
+     "groundLuma": 59.21,
+     "figurePixels": 2320,
+     "groundPixels": 9280,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 3",
+     "role": "Paladin",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1501,
+      363,
+      1559,
+      474
+     ]
+    }
+   ]
+  }
+ },
+ "Ranger": {
+  "rigged_rim1.2_fill1.0": {
+   "role": "Ranger",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.309,
+     "contrastRatioMin": 1.738,
+     "mergeFractionMean": 0.1192,
+     "figureLumaMean": 141.75,
+     "groundLumaMean": 66.74
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.829,
+     "contrastRatioMin": 2.227,
+     "mergeFractionMean": 0.0991,
+     "figureLumaMean": 156.01,
+     "groundLumaMean": 60.68
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 3.029,
+     "contrastRatioMin": 2.384,
+     "mergeFractionMean": 0.0578,
+     "figureLumaMean": 158.29,
+     "groundLumaMean": 55.63
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.722,
+     "contrastRatioMin": 1.738,
+     "mergeFractionMean": 0.092,
+     "figureLumaMean": 152.01,
+     "groundLumaMean": 61.02
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 2.31,
+     "mergeFraction": 0.1905,
+     "figureLuma": 134.83,
+     "groundLuma": 68.53,
+     "figurePixels": 2184,
+     "groundPixels": 8580,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1473,
+      279,
+      1528,
+      387
+     ]
+    },
+    {
+     "contrastRatio": 1.738,
+     "mergeFraction": 0.0785,
+     "figureLuma": 121.08,
+     "groundLuma": 70.38,
+     "figurePixels": 1580,
+     "groundPixels": 6478,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1074,
+      314,
+      1115,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 2.52,
+     "mergeFraction": 0.1278,
+     "figureLuma": 149.52,
+     "groundLuma": 56.47,
+     "figurePixels": 1620,
+     "groundPixels": 6642,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      838,
+      432,
+      879,
+      545
+     ]
+    },
+    {
+     "contrastRatio": 2.72,
+     "mergeFraction": 0.0324,
+     "figureLuma": 166.88,
+     "groundLuma": 67.89,
+     "figurePixels": 1944,
+     "groundPixels": 7938,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1266,
+      393,
+      1315,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.255,
+     "mergeFraction": 0.1667,
+     "figureLuma": 136.42,
+     "groundLuma": 70.44,
+     "figurePixels": 2184,
+     "groundPixels": 8580,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1473,
+      279,
+      1528,
+      387
+     ]
+    },
+    {
+     "contrastRatio": 3.362,
+     "mergeFraction": 0.1406,
+     "figureLuma": 155.86,
+     "groundLuma": 55.82,
+     "figurePixels": 2106,
+     "groundPixels": 8424,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1489,
+      283,
+      1543,
+      391
+     ]
+    },
+    {
+     "contrastRatio": 2.665,
+     "mergeFraction": 0.0655,
+     "figureLuma": 165.79,
+     "groundLuma": 62.62,
+     "figurePixels": 1482,
+     "groundPixels": 5928,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1032,
+      300,
+      1070,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 2.647,
+     "mergeFraction": 0.0465,
+     "figureLuma": 159.21,
+     "groundLuma": 65.36,
+     "figurePixels": 1722,
+     "groundPixels": 6888,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      821,
+      473,
+      863,
+      587
+     ]
+    },
+    {
+     "contrastRatio": 2.227,
+     "mergeFraction": 0.112,
+     "figureLuma": 140.89,
+     "groundLuma": 62.01,
+     "figurePixels": 2000,
+     "groundPixels": 8000,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1313,
+      394,
+      1363,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.245,
+     "mergeFraction": 0.1311,
+     "figureLuma": 158.31,
+     "groundLuma": 57.57,
+     "figurePixels": 2106,
+     "groundPixels": 8424,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1489,
+      283,
+      1543,
+      391
+     ]
+    },
+    {
+     "contrastRatio": 3.669,
+     "mergeFraction": 0.0502,
+     "figureLuma": 159.55,
+     "groundLuma": 47.71,
+     "figurePixels": 2212,
+     "groundPixels": 8690,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1488,
+      307,
+      1543,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 2.384,
+     "mergeFraction": 0.0323,
+     "figureLuma": 149.28,
+     "groundLuma": 57.91,
+     "figurePixels": 1580,
+     "groundPixels": 6320,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1076,
+      307,
+      1116,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 2.672,
+     "mergeFraction": 0.0759,
+     "figureLuma": 157.28,
+     "groundLuma": 59.39,
+     "figurePixels": 1620,
+     "groundPixels": 6480,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      833,
+      393,
+      873,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 2.97,
+     "mergeFraction": 0.0885,
+     "figureLuma": 164.83,
+     "groundLuma": 62.71,
+     "figurePixels": 1944,
+     "groundPixels": 7938,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1266,
+      393,
+      1315,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.448,
+     "mergeFraction": 0.042,
+     "figureLuma": 160.49,
+     "groundLuma": 50.44,
+     "figurePixels": 2212,
+     "groundPixels": 8690,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": true,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1488,
+      307,
+      1543,
+      416
+     ]
+    }
+   ]
+  },
+  "primitive_fallback": {
+   "role": "Ranger",
+   "mergeBand": 12.0,
+   "summary": {
+    "cast2-board-root-r002": {
+     "shots": 5,
+     "contrastRatioMean": 2.274,
+     "contrastRatioMin": 1.463,
+     "mergeFractionMean": 0.09,
+     "figureLumaMean": 125.15,
+     "groundLumaMean": 64.98
+    },
+    "cast2-board-vault": {
+     "shots": 5,
+     "contrastRatioMean": 2.525,
+     "contrastRatioMin": 1.831,
+     "mergeFractionMean": 0.1262,
+     "figureLumaMean": 139.64,
+     "groundLumaMean": 58.28
+    },
+    "cast2-board-vigil-pillars": {
+     "shots": 5,
+     "contrastRatioMean": 2.845,
+     "contrastRatioMin": 1.875,
+     "mergeFractionMean": 0.1211,
+     "figureLumaMean": 138.89,
+     "groundLumaMean": 53.49
+    },
+    "all": {
+     "shots": 15,
+     "contrastRatioMean": 2.548,
+     "contrastRatioMin": 1.463,
+     "mergeFractionMean": 0.1124,
+     "figureLumaMean": 134.56,
+     "groundLumaMean": 58.92
+    }
+   },
+   "shots": [
+    {
+     "contrastRatio": 1.963,
+     "mergeFraction": 0.1259,
+     "figureLuma": 104.74,
+     "groundLuma": 67.47,
+     "figurePixels": 2184,
+     "groundPixels": 8580,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1473,
+      279,
+      1528,
+      387
+     ]
+    },
+    {
+     "contrastRatio": 1.463,
+     "mergeFraction": 0.1418,
+     "figureLuma": 81.94,
+     "groundLuma": 67.04,
+     "figurePixels": 1580,
+     "groundPixels": 6478,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1074,
+      314,
+      1115,
+      423
+     ]
+    },
+    {
+     "contrastRatio": 3.239,
+     "mergeFraction": 0.0383,
+     "figureLuma": 175.34,
+     "groundLuma": 55.34,
+     "figurePixels": 1620,
+     "groundPixels": 6642,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      838,
+      432,
+      879,
+      545
+     ]
+    },
+    {
+     "contrastRatio": 2.746,
+     "mergeFraction": 0.0211,
+     "figureLuma": 158.95,
+     "groundLuma": 67.43,
+     "figurePixels": 1944,
+     "groundPixels": 7938,
+     "fixture": "cast2-board-root-r002",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1266,
+      393,
+      1315,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 1.957,
+     "mergeFraction": 0.1227,
+     "figureLuma": 104.77,
+     "groundLuma": 67.64,
+     "figurePixels": 2184,
+     "groundPixels": 8580,
+     "fixture": "cast2-board-root-r002",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1473,
+      279,
+      1528,
+      387
+     ]
+    },
+    {
+     "contrastRatio": 3.164,
+     "mergeFraction": 0.1519,
+     "figureLuma": 150.75,
+     "groundLuma": 54.5,
+     "figurePixels": 2106,
+     "groundPixels": 8424,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1489,
+      283,
+      1543,
+      391
+     ]
+    },
+    {
+     "contrastRatio": 2.427,
+     "mergeFraction": 0.1262,
+     "figureLuma": 147.37,
+     "groundLuma": 59.18,
+     "figurePixels": 1482,
+     "groundPixels": 5928,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1032,
+      300,
+      1070,
+      408
+     ]
+    },
+    {
+     "contrastRatio": 1.831,
+     "mergeFraction": 0.047,
+     "figureLuma": 130.34,
+     "groundLuma": 65.96,
+     "figurePixels": 1722,
+     "groundPixels": 6888,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      821,
+      473,
+      863,
+      587
+     ]
+    },
+    {
+     "contrastRatio": 2.019,
+     "mergeFraction": 0.1525,
+     "figureLuma": 118.76,
+     "groundLuma": 57.54,
+     "figurePixels": 2000,
+     "groundPixels": 8000,
+     "fixture": "cast2-board-vault",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1313,
+      394,
+      1363,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.186,
+     "mergeFraction": 0.1534,
+     "figureLuma": 150.97,
+     "groundLuma": 54.23,
+     "figurePixels": 2106,
+     "groundPixels": 8424,
+     "fixture": "cast2-board-vault",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1489,
+      283,
+      1543,
+      391
+     ]
+    },
+    {
+     "contrastRatio": 3.606,
+     "mergeFraction": 0.0619,
+     "figureLuma": 154.86,
+     "groundLuma": 47.06,
+     "figurePixels": 2212,
+     "groundPixels": 8690,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1488,
+      307,
+      1543,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 2.03,
+     "mergeFraction": 0.1437,
+     "figureLuma": 110.18,
+     "groundLuma": 54.17,
+     "figurePixels": 1580,
+     "groundPixels": 6320,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw000-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1076,
+      307,
+      1116,
+      416
+     ]
+    },
+    {
+     "contrastRatio": 1.875,
+     "mergeFraction": 0.2043,
+     "figureLuma": 114.98,
+     "groundLuma": 57.66,
+     "figurePixels": 1620,
+     "groundPixels": 6480,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw090-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      833,
+      393,
+      873,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.121,
+     "mergeFraction": 0.1363,
+     "figureLuma": 159.33,
+     "groundLuma": 61.01,
+     "figurePixels": 1944,
+     "groundPixels": 7938,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "battle-yaw180-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1266,
+      393,
+      1315,
+      505
+     ]
+    },
+    {
+     "contrastRatio": 3.592,
+     "mergeFraction": 0.0592,
+     "figureLuma": 155.11,
+     "groundLuma": 47.53,
+     "figurePixels": 2212,
+     "groundPixels": 8690,
+     "fixture": "cast2-board-vigil-pillars",
+     "shot": "targeting-yawm90-default",
+     "unit": "Hero 4",
+     "role": "Ranger",
+     "rigged": false,
+     "size": [
+      1920,
+      1080
+     ],
+     "box": [
+      1488,
+      307,
+      1543,
+      416
+     ]
+    }
+   ]
+  }
+ }
+}
