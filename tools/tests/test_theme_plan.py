@@ -316,7 +316,7 @@ class RootKitPlanTests(unittest.TestCase):
             self.assertEqual(glow, 1.0 if row[4] != theme_plan.CARD else 0.0, row[0])
 
     def test_instance_tints_name_kit_rows_and_stay_neutral_or_darker(self):
-        ids = {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002}
+        ids = {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002}
         for asset_id, tint in theme_plan.INSTANCE_TINTS.items():
             self.assertIn(asset_id, ids)
             self.assertEqual(len(tint), 3)
@@ -328,7 +328,7 @@ class RootKitPlanTests(unittest.TestCase):
         self.assertIn("set_material_instance_vector_parameter_value(instance, \"Color\", wanted)", text)
 
     def test_kit_tags_are_distinct_and_the_script_writes_the_kits_own(self):
-        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002"))
+        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002", "vault-kit-r002"))
         text = SCRIPT.read_text()
         self.assertIn('library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, kit["tag"])', text)
         # The r001 pass must not reset a replaced Root world: any kit tag counts.
@@ -338,11 +338,131 @@ class RootKitPlanTests(unittest.TestCase):
         header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "VigilKit.h").read_text()
         self.assertIn("return Recipe == 1 || Recipe == 2;", header)
         view = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "ExpeditionBattleView.cpp").read_text()
-        self.assertIn("BuildKitObstacles(Encounter, Kind, Seed, VigilKit::ArchesFor(Kind), Kit)", view)
-        self.assertIn("Theme->KitFor(bForest)", view)
+        self.assertIn("BuildKitObstacles(Encounter, Kind, DecorationSeed, VigilKit::ArchesFor(Kind), Kit)", view)
+        self.assertIn("Theme->KitFor(KitKindFor(BoardTheme))", view)
         # A kit-less Root board keeps today's behaviour: Vigil variants (when on) without arches, then r001.
-        self.assertIn("BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(false))", view)
+        self.assertIn("BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(EDiceRollKit::Vigil))", view)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VaultKitPlanTests(unittest.TestCase):
+    """The Vault kit r002 rows (#149): a third kit through the same table-driven import, all new packages, pointer-safe for LFS."""
+
+    def test_every_vault_row_matches_its_asset_record(self):
+        seen = set()
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.VAULT_R002:
+            record = json.loads((ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json").read_text())
+            self.assertEqual(record["asset_id"], asset_id)
+            self.assertEqual(record["revision"], revision)
+            self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
+            export = [entry for entry in record["files"] if entry["role"] == "export" and "_LOD" not in entry["path"]]
+            self.assertEqual(len(export), 1)
+            source = theme_plan.export_path(asset_id, revision, name)
+            self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+            self.assertEqual(record["import_policy"]["settings"]["nanite"], "off, set explicitly on import")
+            self.assertEqual(len(look), 5, asset_id)
+            self.assertNotIn(asset_id, seen)
+            seen.add(asset_id)
+        self.assertEqual(len(theme_plan.VAULT_R002), 25)
+        # No id appears in another kit, and no package is claimed twice.
+        self.assertFalse(seen & {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002})
+        packages = [theme_plan.package_path(row[3], row[2]) for row in theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002]
+        self.assertEqual(len(packages), len(set(packages)))
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
+
+    def test_the_vault_replaces_nothing(self):
+        old = r001_packages()
+        colliding = {row[0] for row in theme_plan.VAULT_R002 if theme_plan.package_path(row[3], row[2]) in old}
+        self.assertEqual(colliding, set())
+        self.assertEqual(theme_plan.VAULT_METRIC_GATE, ("world-vault",))
+        self.assertFalse({row[0] for row in theme_plan.VAULT_R002} & set(theme_plan.ALL_REPLACEABLE))
+        textures = {"T_" + row[2][3:] for row in theme_plan.VAULT_R002}
+        self.assertFalse(textures & {"T_" + package.rsplit("/", 1)[1][3:] for package in old})
+
+    def test_vault_array_slots_are_complete_and_properties_exist_in_the_theme(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "DiceRollTheme.h").read_text()
+        slots = {}
+        for row in theme_plan.VAULT_R002:
+            prop, index = row[5], row[6]
+            self.assertIn(pascal(prop), header)
+            if index is not None:
+                self.assertNotIn(index, slots.setdefault(prop, set()))
+                slots[prop].add(index)
+        self.assertEqual({prop: len(found) for prop, found in slots.items()}, theme_plan.VAULT_ARRAY_SIZES)
+        for prop, count in theme_plan.VAULT_ARRAY_SIZES.items():
+            self.assertEqual(slots[prop], set(range(count)))
+        # The theme's own completeness test asks for the same counts.
+        source = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "DiceRollTheme.cpp").read_text()
+        self.assertIn("AllSet(VaultScatter, 8)", source)
+        self.assertIn("AllSet(VaultMistCards, 3)", source)
+        self.assertIn("AllSet(VaultLightShafts, 2)", source)
+        self.assertIn("bVaultMetricKit", header)
+        text = SCRIPT.read_text()
+        self.assertIn('"flag": "vault_metric_kit"', text)
+        self.assertIn("theme_plan.VAULT_R002", text)
+        self.assertEqual([row[0] for row in theme_plan.VAULT_R002 if row[5] == "vault_scatter"], [
+            "scatter-vault-" + word for word in ("bones", "skulls", "candles", "rubble", "chains", "urns", "relics", "crystals")])
+
+    def test_vault_lods_follow_the_policy(self):
+        """Explicit LODs for the world, obstacle variants and arch (LOD1 and LOD2), the occluders LOD1 only; scatter, cards and shafts exempt."""
+        two = {"world-vault", "prop-vault-arch-2cell"} | {"prop-vault-%s%s" % (kind, suffix) for kind in ("pillar", "wall", "stones") for suffix in ("", "-b", "-c")}
+        one = {"world-vault-occluders"}
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.VAULT_R002:
+            files = theme_plan.lod_exports(asset_id, revision, name)
+            recorded = theme_plan.record_lods(asset_id, revision)
+            self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in two else [1] if asset_id in one else [], asset_id)
+            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
+                pointers.append(asset_id)
+                continue
+            triangles = theme_plan.triangle_count(theme_plan.export_path(asset_id, revision, name))
+            previous = triangles
+            for (lod, path, digest), file in zip(recorded, files):
+                self.assertEqual(theme_plan.sha256_file(file), digest, path)
+                count = theme_plan.triangle_count(file)
+                self.assertLess(count, previous, path)
+                if asset_id in one:
+                    # Pinned sharp-edge vertices stop the collapse at about 54 % (README); LOD2 would equal LOD1, so there is none.
+                    self.assertTrue(0.50 <= count / triangles <= 0.60, path)
+                else:
+                    self.assertGreaterEqual(count / triangles, 0.24 if lod == 2 else 0.48, path)
+                    self.assertLessEqual(count / triangles, 0.40 if lod == 2 else 0.52, path)
+                previous = count
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped triangle and hash checks of %d): git lfs pull to run them" % len(pointers))
+
+    def test_vault_kinds_looks_and_tints(self):
+        kinds = {row[0]: row[4] for row in theme_plan.VAULT_R002}
+        self.assertEqual(kinds["world-vault-occluders"], theme_plan.OCCLUDER)
+        for asset_id, kind in kinds.items():
+            if asset_id.startswith("fx-vault-"):
+                self.assertEqual(kind, theme_plan.CARD, asset_id)
+            elif asset_id != "world-vault-occluders":
+                self.assertEqual(kind, theme_plan.LIT, asset_id)
+        for row in theme_plan.VAULT_R002:
+            roughness, rim, fill, glow, self_lit = row[7]
+            self.assertTrue(0.0 <= roughness <= 1.0 and 0.0 <= fill <= 1.0, row[0])
+            self.assertEqual((rim, self_lit), (0.0, 0.0), row[0])
+            self.assertEqual(glow, 1.0 if row[4] != theme_plan.CARD else 0.0, row[0])
+        self.assertEqual(theme_plan.INSTANCE_TINTS["world-vault"], (1.0, 1.0, 1.0))
+        self.assertEqual(theme_plan.INSTANCE_TINTS["world-vault-occluders"], (1.0, 1.0, 1.0))
+        self.assertEqual(theme_plan.VAULT_TAG, "vault-kit-r002")
+
+    def test_the_vault_flag_follows_the_world_tag_and_the_theme_falls_back_to_the_vigil(self):
+        text = SCRIPT.read_text()
+        self.assertIn("THEME_VAULT_COMPLETE", text)
+        view = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "ExpeditionBattleView.cpp").read_text()
+        self.assertIn("Kit.Kind == EDiceRollKit::Vault", view)
+        self.assertIn("Theme->KitFor(EDiceRollKit::Vigil)", view)
+        theme = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "DiceRollTheme.cpp").read_text()
+        self.assertIn("if (Kind == EDiceRollKit::Vault && !VaultKitComplete()) { Kind = EDiceRollKit::Vigil; }", theme)

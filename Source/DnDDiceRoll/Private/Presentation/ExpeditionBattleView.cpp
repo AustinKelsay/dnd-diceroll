@@ -725,7 +725,7 @@ void AExpeditionBattleView::ClearPresentation()
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
-    bVigilKit = false; bRootKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
+    bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
 }
 
 void AExpeditionBattleView::RebuildBoard()
@@ -2343,11 +2343,20 @@ bool AExpeditionBattleView::WantsOverview() const
     return OverviewTable && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
 }
 
+EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)
+{
+    return Theme == EBoardTheme::Meadow ? EDiceRollKit::Root : Theme == EBoardTheme::Vault ? EDiceRollKit::Vault : EDiceRollKit::Vigil;
+}
+
 bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
 {
-    const bool bForest = BoardTheme == EBoardTheme::Meadow;
-    UStaticMesh* World = ThemeMesh(bForest ? Theme->RootWorld : Theme->VigilWorld);
+    // The kit the board wants. The finale asks for the Vault kit and gets the Vigil kit, as before the Vault existed, when any Vault
+    // entry is missing from the theme or its world does not load (#149).
+    FDiceRollWorldKit Kit = Theme->KitFor(KitKindFor(BoardTheme));
+    UStaticMesh* World = ThemeMesh(*Kit.World);
+    if (!World && Kit.Kind == EDiceRollKit::Vault) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
+    const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
     // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).
     const float Ground = RefTop;
@@ -2358,13 +2367,15 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // The r001 art (110 cm) keeps the root's scale. A world uses its r002 mesh, occluders and dressing only when its own kit is
     // switched on (the Vigil kit on Vigil boards, #145; the Root kit on forest boards, #149). bMetric is the Vigil flag: it also
     // says the shared r001 obstacle packages (Theme->Pillar, Wall, Stones) now hold r002 variant A at the true metric.
-    const FDiceRollWorldKit Kit = Theme->KitFor(bForest);
     const bool bMetric = Theme->bMetricKit;
     const bool bWorldKit = Kit.bMetric;
     const FVector MetricScale(1.0f / SceneScale());
     WorldProp = PlaceProp(World, FVector(Center.X, Center.Y, Ground), bWorldKit ? MetricScale : FVector::OneVector, bWorldKit ? KitTint(World) : FLinearColor::White);
-    bVigilKit = bWorldKit && !bForest;
-    bRootKit = bWorldKit && bForest;
+    bVigilKit = bWorldKit && Kit.Kind == EDiceRollKit::Vigil;
+    bRootKit = bWorldKit && Kit.Kind == EDiceRollKit::Root;
+    bVaultKit = bWorldKit && Kit.Kind == EDiceRollKit::Vault;
+    // Obstacles and dressing are drawn from the kit's decoration seed, a private hash that never reads rules state or a random stream.
+    const int32 DecorationSeed = VigilKit::KitSeed(Seed, Encounter.Width, Encounter.Height, static_cast<int32>(Kit.Kind));
     if (bWorldKit)
     {
         if (UStaticMesh* Near = ThemeMesh(*Kit.Occluders))
@@ -2384,8 +2395,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
     // consumed by the r001 path, so the kit never changes what the fallback draws. A world kit places its own variants (and
     // arches over pillar and wall recipes). Without one, the Vigil kit's variants still serve every board once it is on, as before.
-    bool bBuilt = bWorldKit && BuildKitObstacles(Encounter, Kind, Seed, VigilKit::ArchesFor(Kind), Kit);
-    if (!bBuilt && bMetric && bForest) { bBuilt = BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(false)); }
+    bool bBuilt = bWorldKit && BuildKitObstacles(Encounter, Kind, DecorationSeed, VigilKit::ArchesFor(Kind), Kit);
+    if (!bBuilt && bMetric && bForest) { bBuilt = BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(EDiceRollKit::Vigil)); }
     if (!bBuilt)
     {
         UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
@@ -2401,7 +2412,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // follows the board and not the world. The kit's scatter keeps clear of them. Banners mark the far edge; flames flicker,
     // banners sway.
     const TArray<BrazierRing::FBrazier> Ring = BrazierRing::Plan(Encounter.Width, Encounter.Height, Seed);
-    if (bWorldKit) { BuildKitDressing(Encounter, Seed, Kit, BrazierRing::Cells(Ring)); }
+    if (bWorldKit) { BuildKitDressing(Encounter, DecorationSeed, Kit, BrazierRing::Cells(Ring)); }
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
     UStaticMesh* Banner = ThemeMesh(Theme->Banner);
@@ -2422,8 +2433,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         FlameStrength.SetNum(Flames.Num());
         FlameStrength.Last() = Strength;
     }
-    // Iron cages hang on chains from the cathedral's unseen vault and swing slowly.
-    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest)
+    // Iron cages hang on chains from the cathedral's unseen vault and swing slowly. The Vault world has its own chains and no cathedral roof.
+    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest && !bVaultKit)
     {
         for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
         {

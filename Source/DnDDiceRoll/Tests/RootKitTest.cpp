@@ -269,15 +269,15 @@ bool FRootKitSelectionTest::RunTest(const FString& Parameters)
 {
     // Pure: a theme with nothing set has no kit in either world, and the two worlds read their own properties.
     UDiceRollTheme* Theme = NewObject<UDiceRollTheme>(GetTransientPackage());
-    TestFalse(TEXT("A fresh theme has no Root kit"), Theme->KitFor(true).bMetric);
-    TestFalse(TEXT("A fresh theme has no Vigil kit"), Theme->KitFor(false).bMetric);
+    TestFalse(TEXT("A fresh theme has no Root kit"), Theme->KitFor(EDiceRollKit::Root).bMetric);
+    TestFalse(TEXT("A fresh theme has no Vigil kit"), Theme->KitFor(EDiceRollKit::Vigil).bMetric);
     Theme->bRootMetricKit = true;
-    TestTrue(TEXT("bRootMetricKit switches the forest kit on"), Theme->KitFor(true).bMetric);
-    TestFalse(TEXT("It leaves the Vigil kit off"), Theme->KitFor(false).bMetric);
+    TestTrue(TEXT("bRootMetricKit switches the forest kit on"), Theme->KitFor(EDiceRollKit::Root).bMetric);
+    TestFalse(TEXT("It leaves the Vigil kit off"), Theme->KitFor(EDiceRollKit::Vigil).bMetric);
     Theme->bRootMetricKit = false; Theme->bMetricKit = true;
-    TestFalse(TEXT("The Vigil flag leaves the Root kit off"), Theme->KitFor(true).bMetric);
-    TestTrue(TEXT("It switches the Vigil kit on"), Theme->KitFor(false).bMetric);
-    const FDiceRollWorldKit Root = Theme->KitFor(true), Vigil = Theme->KitFor(false);
+    TestFalse(TEXT("The Vigil flag leaves the Root kit off"), Theme->KitFor(EDiceRollKit::Root).bMetric);
+    TestTrue(TEXT("It switches the Vigil kit on"), Theme->KitFor(EDiceRollKit::Vigil).bMetric);
+    const FDiceRollWorldKit Root = Theme->KitFor(EDiceRollKit::Root), Vigil = Theme->KitFor(EDiceRollKit::Vigil);
     TestTrue(TEXT("The Root kit points at the Root properties"), Root.Occluders == &Theme->RootOccluders && Root.Arch == &Theme->RootArchTwoCell
         && Root.Scatter == &Theme->RootScatter && Root.Mist == &Theme->RootMistCards && Root.Shafts == &Theme->RootLightShafts);
     TestTrue(TEXT("The Vigil kit points at the Vigil properties"), Vigil.Occluders == &Theme->VigilOccluders && Vigil.Arch == &Theme->ArchTwoCell

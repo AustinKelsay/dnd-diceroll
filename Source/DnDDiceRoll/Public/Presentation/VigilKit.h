@@ -36,6 +36,13 @@ DNDDICEROLL_API uint32 Hash(int32 Seed, int32 Salt, FIntPoint Cell);
 DNDDICEROLL_API float Unit(int32 Seed, int32 Salt, FIntPoint Cell);
 /** The variant (0 .. Count-1) of a recipe's obstacle on a cell; 0 when Count is 1 or less. */
 DNDDICEROLL_API int32 VariantIndex(int32 Seed, int32 Recipe, FIntPoint Cell, int32 Count);
+/**
+ * The seed a world kit places its obstacle variants and dressing from (#149). The Vigil (kind 0) and the Root (kind 1) keep the encounter
+ * seed, so their shipped boards do not move. The Vault (kind 2) mixes its kind and the board size into it with the same private hash,
+ * so the finale never repeats the pattern another world would draw for the same encounter seed; a decoration seed of (Width, Height,
+ * EncounterSeed, kit kind) that never reads rules state or any random stream. The braziers keep the encounter seed.
+ */
+DNDDICEROLL_API int32 KitSeed(int32 Seed, int32 Width, int32 Height, int32 KitKind);
 /** Chebyshev distance in cells from a cell to the Width x Height board; 0 for every cell on the board. */
 DNDDICEROLL_API int32 RingDistance(FIntPoint Cell, int32 Width, int32 Height);
 
