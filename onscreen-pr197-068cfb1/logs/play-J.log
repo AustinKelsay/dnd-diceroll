@@ -1,0 +1,138 @@
+16:46:10 start Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault1/36 done=4 rev=8
+16:46:10 ROUND 1 | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault1/36
+16:46:11 Nix special m -> {'X': 4, 'Y': 5}
+16:46:15   special not accepted
+16:46:17 Nix move 4,5 -> (6, 5)
+16:46:21   move not accepted
+16:46:24 Sera special m -> {'X': 4, 'Y': 5}
+16:46:28   special not accepted
+16:46:30 Sera move 4,6 -> (6, 5)
+16:46:35   move not accepted
+16:46:38 Ivo move 4,7 -> (7, 7)
+16:46:44 Ivo attack Scout 1
+16:46:48 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault1/36
+16:46:50 ROUND 2 | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault1/36
+16:46:51 Nix move 4,5 -> (6, 5)
+16:46:55   move not accepted
+16:46:58 Sera move 4,6 -> (5, 6)
+16:47:04 Sera attack Scout 1
+16:47:08 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault1/36
+16:47:11 Ivo special m -> {'X': 8, 'Y': 6}
+16:47:15   special not accepted
+16:47:17 Ivo attack Scout 1
+16:47:20 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault0/36L2
+16:47:23 ROUND 3 | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault0/36L2
+16:47:24 Nix move 4,5 -> (6, 5)
+16:47:28   move not accepted
+16:47:31 Sera attack Scout 1
+16:47:35 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault0/36L2
+16:47:38 Ivo special f -> {'X': 8, 'Y': 6}
+16:47:42   special not accepted
+16:47:44 Ivo attack Scout 1
+16:47:48 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault0/36L2
+16:47:50 ROUND 4 | Arden0/30L2 Nix16/22 Sera22/22 Ivo22/22 Scout1/36 Vault0/36L2
+16:47:51 Nix move 4,5 -> (6, 5)
+16:47:56   move not accepted
+16:47:59 Sera attack Scout 1
+16:48:02 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:05 Ivo special m -> {'X': 8, 'Y': 6}
+16:48:09   special not accepted
+16:48:11 Ivo attack Scout 1
+16:48:15 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:18 ROUND 5 | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:18 Nix move 4,5 -> (6, 5)
+16:48:23   move not accepted
+16:48:26 Sera attack Scout 1
+16:48:30 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:33 Ivo special f -> {'X': 8, 'Y': 6}
+16:48:37   special not accepted
+16:48:39 Ivo attack Scout 1
+16:48:42 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:45 ROUND 6 | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:48:46 Nix move 4,5 -> (6, 5)
+16:48:50   move not accepted
+16:48:53 Sera attack Scout 1
+16:48:57 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:00 Ivo special m -> {'X': 8, 'Y': 6}
+16:49:04   special not accepted
+16:49:06 Ivo attack Scout 1
+16:49:10 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:12 ROUND 7 | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:13 Nix move 4,5 -> (6, 5)
+16:49:18   move not accepted
+16:49:21 Sera attack Scout 1
+16:49:24 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:27 Ivo special f -> {'X': 8, 'Y': 6}
+16:49:31   special not accepted
+16:49:33 Ivo attack Scout 1
+16:49:37 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:39 ROUND 8 | Arden0/30L2 Nix16/22 Sera22/22 Ivo15/22 Scout1/36 Vault0/36L2
+16:49:40 Nix move 4,5 -> (6, 5)
+16:49:45   move not accepted
+16:49:48 Sera Cure Wounds Ivo
+16:49:52 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:49:55 Ivo special m -> {'X': 8, 'Y': 6}
+16:49:59   special not accepted
+16:50:01 Ivo attack Scout 1
+16:50:04 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:50:07 ROUND 9 | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:50:08 Nix move 4,5 -> (6, 5)
+16:50:12   move not accepted
+16:50:15 Sera Cure Wounds Ivo
+16:50:19 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:50:22 Ivo special f -> {'X': 8, 'Y': 6}
+16:50:26   special not accepted
+16:50:28 Ivo attack Scout 1
+16:50:32 Ivo end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:50:34 ROUND 10 | Arden0/30L2 Nix16/22 Sera22/22 Ivo7/22 Scout1/36 Vault0/36L2
+16:50:35 Nix move 4,5 -> (6, 5)
+16:50:40   move not accepted
+16:50:43 Sera attack Scout 1
+16:50:46 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:50:49 ROUND 11 | Arden0/30L2 Nix16/22 Sera22/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:50:50 Nix move 4,5 -> (6, 5)
+16:50:54   move not accepted
+16:50:57 Sera attack Scout 1
+16:51:01 Sera end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:51:03 ROUND 12 | Arden0/30L2 Nix16/22 Sera22/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:51:04 Nix attack Scout 1
+16:51:08 Nix end turn | Arden0/30L2 Nix16/22 Sera22/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:51:11 Sera attack Scout 1
+16:51:15 Sera end turn | Arden0/30L2 Nix16/22 Sera13/22 Ivo0/22L1 Scout1/36 Vault0/36L2
+16:51:17 ROUND 13 | Arden0/30L2 Nix16/22 Sera13/22 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:18 Nix attack Scout 1
+16:51:22 Nix end turn | Arden0/30L2 Nix16/22 Sera13/22 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:25 Sera attack Scout 1
+16:51:29 Sera end turn | Arden0/30L2 Nix16/22 Sera8/22 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:31 ROUND 14 | Arden0/30L2 Nix16/22 Sera8/22 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:32 Nix attack Scout 1
+16:51:36 Nix end turn | Arden0/30L2 Nix16/22 Sera8/22 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:38 ROUND 15 | Arden0/30L2 Nix16/22 Sera0/22L1 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:39 Nix attack Scout 1
+16:51:43 Nix end turn | Arden0/30L2 Nix16/22 Sera0/22L1 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:45 ROUND 16 | Arden0/30L2 Nix16/22 Sera0/22L1 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:46 Nix attack Scout 1
+16:51:50 Nix end turn | Arden0/30L2 Nix16/22 Sera0/22L1 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:52 ROUND 17 | Arden0/30L2 Nix16/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:53 Nix attack Scout 1
+16:51:57 Nix end turn | Arden0/30L2 Nix16/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:51:59 ROUND 18 | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:00 Nix attack Scout 1
+16:52:04 Nix end turn | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:06 ROUND 19 | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:07 Nix attack Scout 1
+16:52:10 Nix end turn | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:13 ROUND 20 | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:14 Nix attack Scout 1
+16:52:17 Nix end turn | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:20 ROUND 21 | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:21 Nix attack Scout 1
+16:52:24 Nix end turn | Arden0/30L2 Nix11/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:27 ROUND 22 | Arden0/30L2 Nix3/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:27 Nix attack Scout 1
+16:52:31 Nix end turn | Arden0/30L2 Nix3/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:34 ROUND 23 | Arden0/30L2 Nix3/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:34 Nix attack Scout 1
+16:52:38 Nix end turn | Arden0/30L2 Nix3/22 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:40 STOP phase=5 done=4 | Arden0/30L2 Nix0/22L2 Sera0/22L2 Ivo0/22L2 Scout1/36 Vault0/36L2
+16:52:40 end elapsed 390s
