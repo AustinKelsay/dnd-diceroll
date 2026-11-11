@@ -10,15 +10,15 @@
         "triangles": 51364,
         "fraction": 0.5,
         "file": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
-        "sha256": "57f6633f8252e1b138b03e1c6e2b47944951c06d31e5f0719b92726c36dbfe48",
-        "bytes": 6603140,
+        "sha256": "2d129cbb74178b11958a10dd53cbe166f222a1a4abf4b608170aa2938aa44485",
+        "bytes": 6607980,
         "deviation_m_p50_p95_max": [
           0.0,
           0.0,
           0.0004
         ],
         "appearance": {
-          "rgb_mean": 0.0015,
+          "rgb_mean": 0.0017,
           "rgb_p95": 0.0092,
           "alpha_mean": 0.0,
           "alpha_p95": 0.0
@@ -30,20 +30,20 @@
         "triangles": 25681,
         "fraction": 0.25,
         "file": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
-        "sha256": "790e0d1e93ed07ee7f5b42744d0ac94c502d6bd0ed82c706d4b7e830301bb834",
-        "bytes": 3626692,
+        "sha256": "dd447e0735132c5a563a8c364f0059ad775eb4cf9a0e942c5435de0274556f7a",
+        "bytes": 3630132,
         "deviation_m_p50_p95_max": [
           0.0,
-          0.0103,
-          0.016
+          0.0095,
+          0.0158
         ],
         "appearance": {
-          "rgb_mean": 0.0112,
-          "rgb_p95": 0.0331,
+          "rgb_mean": 0.0113,
+          "rgb_p95": 0.0327,
           "alpha_mean": 0.0043,
           "alpha_p95": 0.0
         },
-        "glow_area_m2": 187.12164
+        "glow_area_m2": 187.13514
       }
     ]
   },
@@ -55,20 +55,20 @@
     "lods": [
       {
         "lod": 1,
-        "triangles": 18344,
+        "triangles": 18342,
         "fraction": 0.5429,
         "file": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
-        "sha256": "0cefb65be548c188a8b7e4d87d273045916092b26500ef51a9e941fdd744454b",
-        "bytes": 2076356,
+        "sha256": "e03d7f5db40946ffc1ab7ba7290c406db91cbd6e252da889071151f287bac4d6",
+        "bytes": 2076184,
         "deviation_m_p50_p95_max": [
           0.0,
           0.0,
           0.0352
         ],
         "appearance": {
-          "rgb_mean": 0.0111,
-          "rgb_p95": 0.0355,
-          "alpha_mean": 0.0053,
+          "rgb_mean": 0.0112,
+          "rgb_p95": 0.0338,
+          "alpha_mean": 0.0055,
           "alpha_p95": 0.0
         },
         "glow_area_m2": 7.61248

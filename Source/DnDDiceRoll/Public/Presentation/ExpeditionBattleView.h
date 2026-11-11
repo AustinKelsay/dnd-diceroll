@@ -577,6 +577,9 @@ private:
     bool bVigilKit = false;
     bool bRootKit = false;
     bool bVaultKit = false;
+    /** The far-zoom grade last applied (0 at the default zoom, 1 at the far stop); negative until the first update. Vault boards only. */
+    float AppliedFarGrade = -1.0f;
+    void UpdateFarGrade();
     /** The world mesh of the last themed build. */
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;

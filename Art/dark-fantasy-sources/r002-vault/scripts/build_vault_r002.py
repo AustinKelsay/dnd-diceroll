@@ -9,7 +9,7 @@ Writes
   Art/dark-fantasy-sources/r002-vault/world_metrics.json         the measured numbers quoted in the README
   Art/dark-fantasy-sources/r002-vault/T_World_Vault_Atlas.png    the 2048 x 2048 atlas (identical image embedded in both glbs)
 
-Layout (the finale, encounter 5; the camera's home yaw is -90, so it looks along +Y and the front is the -Y side):
+Layout (the finale, encounter 5; designed with the back on +Y and the front on -Y, then exported mirrored in Y because the glTF -> Unreal import mirrors Y, so in game the back wall is on the far side of the home camera):
   * the front is open; walls stand 1.8-2.8 cells outside the largest board (18 x 12) at the back (+Y) and sides (+-X) and run out as
     broken, declining runs toward the front;
   * the Waystone landmark stands in an apse in the middle of the back wall, on a three-step dais;
@@ -604,12 +604,18 @@ def main():
         grp[k] = grp.get(k, 0) + len(p['soup']['P'])
     STATS['source_tris_by_group'] = grp
     STATS['pieces'] = dict(total=len(PIECES), world=len(world_pieces), occluders=len(occ_pieces), occluder_names=[p['name'] for p in occ_pieces])
-    STATS['content_counts'] = dict(landmark=1, secondary_groups=len(COUNTS['groups']) - 0, groups=COUNTS['groups'], medium_props=COUNTS['medium'], small_props=COUNTS['small'])
+    SECONDARY = ('reliquary_alcoves', 'sarcophagi', 'collapsed_rib', 'chains')
+    STATS['content_counts'] = dict(landmark=1, secondary_groups=list(SECONDARY), groups=COUNTS['groups'], medium_props=COUNTS['medium'], small_props=COUNTS['small'])
     for d in [x for x in (world, occl) if x is not None]:
         assert np.isfinite(d['C']).all(), 'non-finite vertex colour'
         d['C'] = L.knee(d['C'] * 1.05)
         gl = np.isin(d['mat'], GLOW_MATS)
         d['C'][gl] = 1.0
+    # The glTF -> Unreal import mirrors Y (Blender +Y lands on the game's -Y, the camera's home side), so the design above (back wall and
+    # Waystone on +Y) is exported mirrored: in game the Waystone stands on the far side of the home camera.  X is unchanged.
+    MIRROR_Y = np.diag([1.0, -1.0, 1.0, 1.0])
+    world = L.xform(world, MIRROR_Y)
+    occl = L.xform(occl, MIRROR_Y) if occl is not None else None
     mats_all = list(dict.fromkeys(world['mat'].tolist() + (occl['mat'].tolist() if occl is not None else [])))
     dummy = tri_soup([[(0, 0, -9999), (1, 0, -9999), (0, 1, -9999)]] * len(mats_all), [[(.5, .5), (.51, .5), (.5, .51)]] * len(mats_all),
                      [[(1, 1, 1)] * 3] * len(mats_all), 'x')

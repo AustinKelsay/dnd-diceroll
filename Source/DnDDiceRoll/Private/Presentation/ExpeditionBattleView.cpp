@@ -95,7 +95,7 @@ FGrade GradeFor(EBoardTheme Theme)
     switch (Theme)
     {
     case EBoardTheme::Ruins: return {0.20f, 0.22f, 0.014f, 0.16f};
-    case EBoardTheme::Vault: return {0.25f, 0.28f, 0.020f, 0.09f};
+    case EBoardTheme::Vault: return {0.25f, 0.28f, 0.020f, 0.10f};
     default: return {0.15f, 0.15f, 0.010f, 0.26f};
     }
 }
@@ -119,8 +119,10 @@ FPalette ThemedPaletteFor(EBoardTheme Theme)
         Palette.Sun = {0.6f, 0.68f, 1.0f}; Palette.SunIntensity = 2.4f; Palette.SunPitch = -50.0f; Palette.SunYaw = 60.0f;
         Palette.Fog = {0.1f, 0.13f, 0.26f}; Palette.FogDensity = 0.035f; break;
     case EBoardTheme::Vault:
-        Palette.Sun = {0.45f, 0.5f, 0.9f}; Palette.SunIntensity = 1.3f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
-        Palette.Fog = {0.05f, 0.06f, 0.14f}; Palette.FogDensity = 0.045f; break;
+        // The Vault world (#149) carries its own baked cold light; the sun is a pale, low-saturation moonlight so the dark basalt stays grey-blue and the
+        // cyan accent is the only strong colour.
+        Palette.Sun = {0.62f, 0.7f, 0.95f}; Palette.SunIntensity = 1.5f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
+        Palette.Fog = {0.05f, 0.065f, 0.12f}; Palette.FogDensity = 0.04f; break;
     default:
         Palette.Sun = {1.0f, 0.86f, 0.62f}; Palette.SunIntensity = 3.2f; Palette.SunPitch = -48.0f; Palette.SunYaw = -30.0f;
         Palette.Fog = {0.22f, 0.3f, 0.2f}; Palette.FogDensity = 0.03f; break;
@@ -961,7 +963,8 @@ void AExpeditionBattleView::ApplyTheme()
     if (Theme)
     {
         // Darker, cooler and less saturated than the primitive look; candles carry the warmth.
-        Settings.ColorSaturation = FVector4(0.95f, 0.95f, 0.95f, 1.0f);
+        const float Saturation = BoardTheme == EBoardTheme::Vault && !bOverview ? 0.8f : 0.95f;
+        Settings.ColorSaturation = FVector4(Saturation, Saturation, Saturation, 1.0f);
         Settings.ColorContrast = FVector4(1.12f, 1.12f, 1.12f, 1.0f);
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
@@ -984,6 +987,28 @@ void AExpeditionBattleView::ApplyTheme()
         Settings.bOverride_DepthOfFieldFocalDistance = true;
         Settings.DepthOfFieldFocalDistance = 0.0f;
     }
+    AppliedFarGrade = -1.0f;
+}
+
+// The Vault's far-zoom grade (#149, gate 2 found the far view dim and flat): from the default zoom out to the far stop the exposure band lifts by up
+// to 0.7 stop, the vignette eases off and the contrast rises a little, so the floor reads against the walls and the dark beyond them. The Vigil and
+// the Root keep their grade (play happens at the figure-sized default; their far views were measured and left alone, see docs/architecture.md).
+void AExpeditionBattleView::UpdateFarGrade()
+{
+    if (!Theme || bOverview || BoardTheme != EBoardTheme::Vault || !HasRun()) { return; }
+    const float Default = FramedDistance(Yaw);
+    const float Far = FarFramedDistance(Yaw);
+    const float T = Far > Default + 1.0f ? FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((Distance - Default) / (Far - Default), 0.0f, 1.0f)) : 0.0f;
+    if (FMath::Abs(T - AppliedFarGrade) < 0.01f) { return; }
+    AppliedFarGrade = T;
+    const FGrade Biome = GradeFor(BoardTheme);
+    FPostProcessSettings& Settings = Grade->Settings;
+    const float Lift = 1.0f + 0.62f * T;
+    Settings.AutoExposureMinBrightness = Biome.Luminance * Lift / ExposureBand;
+    Settings.AutoExposureMaxBrightness = Biome.Luminance * Lift * ExposureBand;
+    Settings.VignetteIntensity = Biome.Vignette * (1.0f - 0.6f * T);
+    const float Contrast = FMath::Lerp(1.12f, 1.2f, T);
+    Settings.ColorContrast = FVector4(Contrast, Contrast, Contrast, 1.0f);
 }
 
 void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
@@ -1953,6 +1978,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     Camera->SetWorldLocation(Eye);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
+    UpdateFarGrade();
 }
 
 // The tabletop is a fixed, composed view; orbit, zoom and pan belong to battles.

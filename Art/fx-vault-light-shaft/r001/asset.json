@@ -73,12 +73,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_kit_vault_r002.py",
-      "sha256": "94900977f0272bdda62140d2316ab94a3435424eb33d5d60bff53721932fdcef"
+      "sha256": "5569d897bb753a69a2aeb5a8fe7ac74ef77507444028630a122933f86e064074"
     },
     {
       "role": "export",
       "path": "Art/fx-vault-light-shaft/r001/SM_Fx_Vault_LightShaft.glb",
-      "sha256": "529be99cc8eb7a4eee61d2e230292461e24414901ae2179367739a08560c7242"
+      "sha256": "80ca782419eaa473d51350a529bff5f141faaeec0b1cfa7684d99b0a686657a5"
     }
   ],
   "import_policy": {

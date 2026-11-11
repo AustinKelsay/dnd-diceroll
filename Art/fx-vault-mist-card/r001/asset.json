@@ -73,12 +73,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_kit_vault_r002.py",
-      "sha256": "94900977f0272bdda62140d2316ab94a3435424eb33d5d60bff53721932fdcef"
+      "sha256": "5569d897bb753a69a2aeb5a8fe7ac74ef77507444028630a122933f86e064074"
     },
     {
       "role": "export",
       "path": "Art/fx-vault-mist-card/r001/SM_Fx_Vault_MistCard.glb",
-      "sha256": "d852f1b0c5783be9c42ecf49f6a5a27a4d29fd9571a8e40417debdc5794a2d9d"
+      "sha256": "accddc8152d68e9060fedaa61a90024807c9cad3b2fad0b6379291b62916096b"
     }
   ],
   "import_policy": {

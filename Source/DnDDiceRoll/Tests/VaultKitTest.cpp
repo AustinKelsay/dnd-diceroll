@@ -356,6 +356,14 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
                 TestEqual(TEXT("A piece is its planned variant"), View->PlacedDressing()[Index].Plan.Variant, Plan[Index].Variant);
                 TestTrue(TEXT("No piece is on a playable cell"), VigilKit::RingDistance(View->PlacedDressing()[Index].Plan.Cell, Width, Height) >= VigilKit::ScatterMinRing);
             }
+            // The instanced board stays under #144's budget of 40 drawing components per rebuild, overlays included; the counts are reported.
+            if (View->UsesInstancedParts())
+            {
+                const int32 Parts = View->PresentationComponentCount();
+                AddInfo(FString::Printf(TEXT("Vault recipe %d, %dx%d: %d presentation components, %d instanced groups, %d scenery props (%d obstacle pieces, %d arches, %d dressing)"),
+                    Recipe, Width, Height, Parts, View->InstancedGroupCount(), View->LogicalPropCount(), View->PlacedObstacles(), View->PlacedArches(), View->PlacedDressing().Num()));
+                TestTrue(FString::Printf(TEXT("The instanced Vault board stays under 40 drawing components (%d)"), Parts), Parts < 40);
+            }
             TestEqual(TEXT("With the Vault kit the world stands at the true metric"), View->WorldMeshScale(), 1.0f, 0.001f);
             TestTrue(TEXT("The kit placed obstacles, dressing and an occluder"), View->PlacedObstacles() > 0 && !View->PlacedDressing().IsEmpty() && View->HasOccluder());
             // The kit is presentation: another cell size moves the pieces with the metric but changes none of the choices.

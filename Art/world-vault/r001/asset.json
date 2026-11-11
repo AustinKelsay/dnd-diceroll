@@ -23,7 +23,12 @@
       "clear_volume_rule": "Camera clear volume (camera_volume.py): SIGHT VOLUME = convex hull of the footprint (+ half-cell margin, lifted 12 cm) and every camera eye of the #143 pose law (framed 1400-4600, zoom 900-6400, pitch 35/45/60, 36 yaws) plus the lead envelope (reach 55 m, height 66 m); the world shell keeps 1.0 m outside it except ground within 12 cm of the floor; meshes that enter it are the occluders. EYE SPACE = every eye, 1.5 m sphere: no mesh contains or approaches an eye.",
       "content": {
         "landmark": 1,
-        "secondary_groups": 9,
+        "secondary_groups": [
+          "reliquary_alcoves",
+          "sarcophagi",
+          "collapsed_rib",
+          "chains"
+        ],
         "groups": {
           "architecture": 3,
           "waystone": 1,
@@ -103,7 +108,7 @@
               0.0004
             ],
             "appearance_rgb_mean_p95": [
-              0.0015,
+              0.0017,
               0.0092
             ]
           },
@@ -114,12 +119,12 @@
             "file": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
             "deviation_m_p50_p95_max": [
               0.0,
-              0.0103,
-              0.016
+              0.0095,
+              0.0158
             ],
             "appearance_rgb_mean_p95": [
-              0.0112,
-              0.0331
+              0.0113,
+              0.0327
             ]
           }
         ]
@@ -170,7 +175,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_vault_r002.py",
-      "sha256": "fe887de83604f50778ed047b6f65c85c8c60c2ab402e84f1065c56420d3c80b1"
+      "sha256": "88bbb99f027868176f6c151ea6b5930afae2d4bf4212f27e34e3d62a1e7a0671"
     },
     {
       "role": "source",
@@ -195,17 +200,17 @@
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault.glb",
-      "sha256": "a8b293059d84b60d0aadc9c7d41284eed66d8dca3169db5b071943d6585b2c4e"
+      "sha256": "e88ff3c38eb00c7e44b8835e784988a36ce3ad4ba25e8efe698dc27a6f2dfcb3"
     },
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
-      "sha256": "57f6633f8252e1b138b03e1c6e2b47944951c06d31e5f0719b92726c36dbfe48"
+      "sha256": "2d129cbb74178b11958a10dd53cbe166f222a1a4abf4b608170aa2938aa44485"
     },
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
-      "sha256": "790e0d1e93ed07ee7f5b42744d0ac94c502d6bd0ed82c706d4b7e830301bb834"
+      "sha256": "dd447e0735132c5a563a8c364f0059ad775eb4cf9a0e942c5435de0274556f7a"
     }
   ],
   "import_policy": {

@@ -54,7 +54,7 @@
         "lods": [
           {
             "lod": 1,
-            "triangles": 18344,
+            "triangles": 18342,
             "fraction": 0.5429,
             "file": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
             "deviation_m_p50_p95_max": [
@@ -63,8 +63,8 @@
               0.0352
             ],
             "appearance_rgb_mean_p95": [
-              0.0111,
-              0.0355
+              0.0112,
+              0.0338
             ]
           }
         ]
@@ -115,7 +115,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_vault_r002.py",
-      "sha256": "fe887de83604f50778ed047b6f65c85c8c60c2ab402e84f1065c56420d3c80b1"
+      "sha256": "88bbb99f027868176f6c151ea6b5930afae2d4bf4212f27e34e3d62a1e7a0671"
     },
     {
       "role": "source",
@@ -140,12 +140,12 @@
     {
       "role": "export",
       "path": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders.glb",
-      "sha256": "1ab2a355b5478a730f7fd82e40a42b95d294b39836e6d9cf128ed993f1e19e57"
+      "sha256": "272d30b7ff806e9784d170cf0060e91c978cea4141d9f770b013a8925c57e49a"
     },
     {
       "role": "export",
       "path": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
-      "sha256": "0cefb65be548c188a8b7e4d87d273045916092b26500ef51a9e941fdd744454b"
+      "sha256": "e03d7f5db40946ffc1ab7ba7290c406db91cbd6e252da889071151f287bac4d6"
     }
   ],
   "import_policy": {

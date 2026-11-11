@@ -2,7 +2,7 @@
 
   blender -b --python Art/dark-fantasy-sources/r002-vault/scripts/render_previews_vault.py [-- shot ...]
 
-Shots (1600x900 EEVEE, FOV 40 horizontal as in Unreal, camera south of the board looking north):
+Shots (1600x900 EEVEE, FOV 40 horizontal as in Unreal, camera north of the exported (Y-mirrored) board looking south, the game's home camera):
   default_p45   whole 18 x 12 board, pitch 45
   close_p35     party framing, pitch 35
   far_p60       whole board plus surroundings, pitch 60
@@ -129,7 +129,7 @@ def place(path, x, y, yaw=0, scale=1.0, z=0.0, kind='solid', lit_figure=False):
     return vault, obs
 
 
-def place_camera(fov, pitch, target, fit_pts=None, dist=None, yaw=-90, margin=.94):
+def place_camera(fov, pitch, target, fit_pts=None, dist=None, yaw=90, margin=.94):
     sc = bpy.context.scene
     for o in [o for o in bpy.data.objects if o.type == 'CAMERA']:
         bpy.data.objects.remove(o)
@@ -259,10 +259,10 @@ def board_shots(only):
         'default_p45': lambda: place_camera(40, 45, (0, 0, 0), board),
         'close_p35': lambda: place_camera(40, 35, (fx + 2.2, fy, .9), [cell_xy(i, j) + (0,) for i, j in ((4, 3), (13, 3), (13, 8), (4, 8))] + [cell_xy(5, 5) + (1.9,)], margin=.9),
         'far_p60': lambda: place_camera(40, 60, (0, 0, 0), [(p[0] * 1.35, p[1] * 1.35, 0) for p in board]),
-        'wide_p26': lambda: place_camera(40, 26, (0, 2, 4), dist=70, yaw=-62),
-        'occ_highlight': lambda: place_camera(40, 26, (0, 2, 4), dist=70, yaw=-62),
-        'paving_close': lambda: place_camera(40, 35, (fx - 2.5, fy - 2.2, 0), dist=7.5, yaw=-80),
-        'clear_volume': lambda: place_camera(40, 12, (0, 0, 34), dist=300, yaw=-70),
+        'wide_p26': lambda: place_camera(40, 26, (0, 2, 4), dist=70, yaw=118),
+        'occ_highlight': lambda: place_camera(40, 26, (0, 2, 4), dist=70, yaw=118),
+        'paving_close': lambda: place_camera(40, 35, (fx - 2.5, fy - 2.2, 0), dist=7.5, yaw=100),
+        'clear_volume': lambda: place_camera(40, 12, (0, 0, 34), dist=300, yaw=110),
     }
     for nm in only or list(shots):
         if nm == 'occ_highlight':

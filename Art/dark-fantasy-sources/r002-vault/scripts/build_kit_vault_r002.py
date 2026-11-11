@@ -352,7 +352,7 @@ def fx_cards(name):
         s, a = card((-1.5, -1.5, .12), (3.0, 0, 0), (0, 3.0, 0), 6, 6, lambda u, v: .6 * soft(u, v, .8), uv0=(.0, .3), uvs=(.7, .7))
         s['P'] = s['P'][:, [0, 2, 1]] if False else s['P']
     s, a = doubled(s, a)
-    col = np.ones((len(s['P']), 3, 3)) * np.array((.70, .80, .96))
+    col = np.ones((len(s['P']), 3, 3)) * np.array((.45, .52, .62))
     return s, a, col
 
 
@@ -397,7 +397,7 @@ def fx_shaft(kind):
     f = L.flipped(s, .004)
     s = L.cat(s, f)
     a = np.concatenate([a, a[:, [0, 2, 1]]])
-    col = np.ones((len(s['P']), 3, 3)) * np.array((.62, .84, 1.0))
+    col = np.ones((len(s['P']), 3, 3)) * np.array((.36, .50, .60))
     return s, a, col
 
 
@@ -486,7 +486,7 @@ def main():
             continue
         s, a, col = fn()
         s['C'] = col
-        finish(asset, unreal, rev, name, s, texs, size, {}, alpha=a, bake=False)
+        finish(asset, unreal, rev, name, s, texs, size, {}, alpha=a * 0.5, bake=False)         # cold cards read brighter than the stone: keep them faint
     if not only:
         with open(os.path.join(OUT_SRC, 'kit_metrics.json'), 'w') as fh:
             json.dump(METRICS, fh, indent=1)
