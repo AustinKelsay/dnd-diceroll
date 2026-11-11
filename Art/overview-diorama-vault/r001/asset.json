@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "asset_id": "overview-diorama-vault",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Overview/SM_Overview_Diorama_Vault",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS from the r002 world kits (diorama crops) and procedural geometry and textures (table); no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "A miniature of the Vault r002 world (SM_World_Vault LOD2 and its occluders): the world cropped to a window with exact clipping, scaled to a 58 cm tray (about 1:62), its baked vertex light and glow mask kept, kit pieces placed where the game puts obstacles, set on a dark-oak tray with brass corners and a plaque, packed into one 1024 atlas and decimated to a triangle target",
+    "approved_reference": "#138 look (candlelit tabletop overview); #149 lead calls; the r002 standard of #145, the Root and the Vault",
+    "parameters": {
+      "units": "metres",
+      "pivot": "middle of the underside of the tray; placed on the table top",
+      "triangles": 29346,
+      "size_m": [
+        0.4909,
+        0.652,
+        0.2616
+      ],
+      "scale": 0.01611,
+      "tray_footprint_m": [
+        0.489,
+        0.65
+      ],
+      "atlas_px": 1024,
+      "atlas_fill": 0.444,
+      "replaces": "new: no r001 Vault diorama (the finale drew the Vigil diorama)"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/vault_lib.py",
+      "sha256": "822d5e2a0977c5497c973c91dd2a325eafc07c71030a5af169a1687ddb223684"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/lod_r002.py",
+      "sha256": "9d3d7733820e7deda02ec49da2cb8c841df3f046460c95ec950d802a58e5ba53"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-overview/scripts/ov_lib.py",
+      "sha256": "7e6633b388a08eeb433c566c2e6706e1d0aff9862fe5f276a9a27324c6181a40"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-overview/scripts/build_dioramas_r002.py",
+      "sha256": "42b8e598b38ead54a99b448cd077b139436f47c6d34c93f5ef2542762b9df338"
+    },
+    {
+      "role": "export",
+      "path": "Art/overview-diorama-vault/r001/SM_Overview_Diorama_Vault.glb",
+      "sha256": "ff751b3ca4b9e7ef84fcb299216588d5d7bd40495bfbf960d8363f2f3d6ed299"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed import (#149 overview set)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "none: one low-count mesh drawn by the overview only (the table is placed once, the dioramas at most twice)",
+      "collision": "none (presentation only)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB baked light, A glow mask: flames and route markers)",
+      "axes": "metres, the asset faces +X (the overview turns it -90 degrees about Z toward the camera), +Y is the viewer's right, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

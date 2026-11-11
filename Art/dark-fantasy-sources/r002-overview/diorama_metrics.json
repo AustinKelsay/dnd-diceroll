@@ -1,0 +1,318 @@
+{
+ "SM_Overview_Diorama_Root": {
+  "triangles": 11246,
+  "vertices": 31849,
+  "bbox_min_m": [
+   -0.2431,
+   -0.326,
+   0
+  ],
+  "bbox_max_m": [
+   0.2431,
+   0.326,
+   0.2397
+  ],
+  "size_m": [
+   0.4863,
+   0.652,
+   0.2397
+  ],
+  "image_px": [
+   1024,
+   1024
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 1586976,
+  "extensions": [],
+  "world": {
+   "source_tris": 73281,
+   "in_window": 8315
+  },
+  "occ": {
+   "source_tris": 2212,
+   "in_window": 0
+  },
+  "tray_footprint_m": [
+   0.484,
+   0.65
+  ],
+  "scale": 0.02071,
+  "atlas_fill": 0.445,
+  "atlas_regions_px": {
+   "world": [
+    512,
+    512
+   ],
+   "occ": [
+    256,
+    256
+   ],
+   "prop0": [
+    64,
+    64
+   ],
+   "prop1": [
+    64,
+    64
+   ],
+   "prop2": [
+    64,
+    64
+   ],
+   "prop3": [
+    64,
+    64
+   ],
+   "prop4": [
+    64,
+    64
+   ],
+   "prop5": [
+    32,
+    32
+   ],
+   "prop6": [
+    32,
+    32
+   ],
+   "wood": [
+    256,
+    256
+   ],
+   "brass": [
+    64,
+    64
+   ],
+   "plaque": [
+    128,
+    24
+   ],
+   "skirt": [
+    128,
+    128
+   ]
+  },
+  "asset_id": "overview-diorama-root",
+  "file": "Art/overview-diorama-root/r001/SM_Overview_Diorama_Root.glb",
+  "glow_vertices_share": 0.0675
+ },
+ "SM_Overview_Diorama_Vigil": {
+  "triangles": 17996,
+  "vertices": 50199,
+  "bbox_min_m": [
+   -0.3107,
+   -0.326,
+   0
+  ],
+  "bbox_max_m": [
+   0.3107,
+   0.326,
+   0.5249
+  ],
+  "size_m": [
+   0.6215,
+   0.652,
+   0.5249
+  ],
+  "image_px": [
+   1024,
+   1024
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 2388776,
+  "extensions": [],
+  "world": {
+   "source_tris": 32625,
+   "in_window": 30195
+  },
+  "occ": {
+   "source_tris": 3076,
+   "in_window": 2380
+  },
+  "tray_footprint_m": [
+   0.619,
+   0.65
+  ],
+  "scale": 0.01526,
+  "atlas_fill": 0.415,
+  "atlas_regions_px": {
+   "world": [
+    512,
+    512
+   ],
+   "occ": [
+    256,
+    128
+   ],
+   "prop0": [
+    64,
+    64
+   ],
+   "prop1": [
+    64,
+    64
+   ],
+   "prop2": [
+    64,
+    64
+   ],
+   "prop3": [
+    64,
+    64
+   ],
+   "prop4": [
+    64,
+    64
+   ],
+   "prop5": [
+    64,
+    64
+   ],
+   "wood": [
+    256,
+    256
+   ],
+   "brass": [
+    64,
+    64
+   ],
+   "plaque": [
+    128,
+    24
+   ],
+   "skirt": [
+    128,
+    128
+   ]
+  },
+  "asset_id": "overview-diorama-vigil",
+  "file": "Art/overview-diorama-vigil/r001/SM_Overview_Diorama_Vigil.glb",
+  "glow_vertices_share": 0.0526
+ },
+ "SM_Overview_Diorama_Vault": {
+  "triangles": 29346,
+  "vertices": 64675,
+  "bbox_min_m": [
+   -0.2454,
+   -0.326,
+   0
+  ],
+  "bbox_max_m": [
+   0.2454,
+   0.326,
+   0.2616
+  ],
+  "size_m": [
+   0.4909,
+   0.652,
+   0.2616
+  ],
+  "image_px": [
+   1024,
+   1024
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 2979112,
+  "extensions": [],
+  "world": {
+   "source_tris": 25681,
+   "in_window": 8555
+  },
+  "occ": {
+   "source_tris": 18342,
+   "in_window": 18059
+  },
+  "tray_footprint_m": [
+   0.489,
+   0.65
+  ],
+  "scale": 0.01611,
+  "atlas_fill": 0.444,
+  "atlas_regions_px": {
+   "world": [
+    512,
+    512
+   ],
+   "occ": [
+    256,
+    256
+   ],
+   "prop0": [
+    64,
+    64
+   ],
+   "prop1": [
+    64,
+    64
+   ],
+   "prop2": [
+    64,
+    64
+   ],
+   "prop3": [
+    64,
+    64
+   ],
+   "prop4": [
+    64,
+    64
+   ],
+   "prop5": [
+    32,
+    32
+   ],
+   "wood": [
+    256,
+    256
+   ],
+   "brass": [
+    64,
+    64
+   ],
+   "plaque": [
+    128,
+    24
+   ],
+   "skirt": [
+    128,
+    128
+   ]
+  },
+  "asset_id": "overview-diorama-vault",
+  "file": "Art/overview-diorama-vault/r001/SM_Overview_Diorama_Vault.glb",
+  "glow_vertices_share": 0.0541
+ }
+}

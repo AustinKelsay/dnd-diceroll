@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "asset_id": "world-vigil-occluders",
+  "revision": 2,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Worlds/SM_World_Vigil_Occluders",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/145",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender from the owner-approved Vigil look (issue #38) and the #140 gate-1 decisions; textures are r001 swatches (project-owned) or procedural; no third-party or downloaded content"
+  },
+  "recipe": {
+    "method": "Architecture pieces that block any of 72 candidate camera positions (3 distances x pitches 35/45/60 x 8 yaws) to any floor cell, or rise near the board, exported as a separate mesh for dither fade; conforming subdivision (no T-junctions); r002: the stained-glass rose is re-pointed from a 128 x 128 atlas region (about 40 texels/m) to a new 1024 x 1024 region in the free half of the atlas (about 320 texels/m), the same design redrawn at full resolution; no other UV, position, vertex colour or atlas pixel changes (patch_rose_vigil.py, proved by validate_rose_vigil.py)",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); parent #138",
+    "parameters": {
+      "units": "metres, 1 cell = 1.50 m, footprint 18 x 12 cells = 27 x 18 m centred on the origin",
+      "axes": "+X forward, Z up",
+      "material": "one baseColor atlas 2048x2048 plus COLOR_0 RGBA",
+      "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
+      "pivot": "origin = board centre at floor level; place at identity together with SM_World_Vigil",
+      "triangles": 12307,
+      "paired_asset": "world-vigil",
+      "atlas": "the r001 atlas (identical pixels everywhere else) plus a 1024 x 1024 rose region with 16 px wrapped padding at atlas pixel (16, 880); SM_World_Vigil keeps its own atlas, which has no rose",
+      "lods": {
+        "lod0_triangles": 12307,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 6154,
+            "fraction": 0.5,
+            "file": "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0003
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0039,
+              0.0196
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 3076,
+            "fraction": 0.2499,
+            "file": "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0082,
+              0.0406
+            ]
+          }
+        ]
+      },
+      "rose_window": {
+        "texels_per_m_before": 14.2,
+        "texels_per_m_after": 222.2,
+        "region_px": [
+          1024,
+          1024
+        ],
+        "derived_from": "world-vigil-occluders r001"
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/vigil.blend",
+      "sha256": "b904e00f6fa898e58e5ce5e6a1dbe01cfb5e95581fc24b1ac7610419c1e25c48"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_vigil_r002.py",
+      "sha256": "6d4f885fc65e79925544655b1ac0b59e56e4e953c998b9bb84e3367dbfd509f4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/lod_r002.py",
+      "sha256": "5ba8084f17b66b456fa71f3b12f48ee813d21faced97a7c972413004da4c2765"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002/scripts/build_lods_r002.py",
+      "sha256": "55287225acc7b2f5053de5496c8cdbd2f6d9dab7ff9423dc379c871c25a6a268"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-rose/scripts/rose_lib.py",
+      "sha256": "37f853d36b57c13f24ed07a23170b97ed2d8e5e058a701d36bbcb0d7e6dccd3f"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-rose/scripts/patch_rose_vigil.py",
+      "sha256": "b2ab38c8fd858ab1d056d125dde5f4851f5f6f13c6a688f3c6cf759b91b9dc5d"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py",
+      "sha256": "ce83f15e51ce9270eaba88a8ea5d522cadecd45d5db67bf47213245460c31997"
+    },
+    {
+      "role": "reference",
+      "path": "Art/dark-fantasy-sources/r002-rose/T_World_Vigil_Atlas_rose.png",
+      "sha256": "ea2b6f8f1b2e9a89a2a2ca23e2aaea4bd16b8b795ec99eb5c13c540d761aa4ba"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders.glb",
+      "sha256": "61f3218fbd71c8383f7b3eaaa966b4b5b406a7b310df2913cf56369999a90c49"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD1.glb",
+      "sha256": "067e7a4cae78b594b1aee41c2bef7aeae7ad8b8d9f0164d5d7c381206a00d2f9"
+    },
+    {
+      "role": "export",
+      "path": "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD2.glb",
+      "sha256": "fb9911853d397a847d4d42f827ca5c8e6af8fe59701b97b10e9bf08db1e27c31"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#145 phase 2)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}
