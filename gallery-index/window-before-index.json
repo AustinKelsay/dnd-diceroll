@@ -1,0 +1,389 @@
+{
+  "commit": "d354a5699a3ee9b0410a3cec16ae32afc40969f0",
+  "dirty": true,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-cb958d59-03bd0b480f4da877/tools/capture/vigil-window-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "board-vigil-walls",
+      "seed": 6,
+      "board": [
+        16,
+        12
+      ],
+      "fixture_info": {
+        "seed": 6,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 16,
+        "boardHeight": 12
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "directory": "board-vigil-walls/1920x1080",
+      "shots": [
+        {
+          "name": "vigil-window-a",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1497,
+                "y0": 381,
+                "x1": 1555,
+                "y1": 492
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1483,
+                "y0": 323,
+                "x1": 1539,
+                "y1": 432
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1470,
+                "y0": 268,
+                "x1": 1524,
+                "y1": 376
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1457,
+                "y0": 216,
+                "x1": 1510,
+                "y1": 322
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 838,
+                "y0": 442,
+                "x1": 880,
+                "y1": 555
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 845,
+                "y0": 323,
+                "x1": 884,
+                "y1": 432
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 850,
+                "y0": 216,
+                "x1": 887,
+                "y1": 322
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "vigil-window-a.png",
+          "yaw": -90,
+          "distance": 2641.99951171875,
+          "pan": {
+            "right": 400,
+            "away": -99999
+          },
+          "camera": {
+            "location": {
+              "x": 1494.8346802624778,
+              "y": -2626.093924125549,
+              "z": 2788.1565130725826
+            },
+            "rotation": {
+              "pitch": -41.703428687649705,
+              "yaw": 89.99999749552187,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "vigil-window-d",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1292,
+                "y0": 452,
+                "x1": 1352,
+                "y1": 575
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1331,
+                "y0": 399,
+                "x1": 1391,
+                "y1": 519
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1369,
+                "y0": 348,
+                "x1": 1428,
+                "y1": 466
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1405,
+                "y0": 299,
+                "x1": 1464,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 669,
+                "y0": 297,
+                "x1": 725,
+                "y1": 414
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 770,
+                "y0": 206,
+                "x1": 821,
+                "y1": 319
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 863,
+                "y0": 123,
+                "x1": 909,
+                "y1": 232
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "vigil-window-d.png",
+          "yaw": -120,
+          "distance": 2641.99951171875,
+          "pan": {
+            "right": 0,
+            "away": -99999
+          },
+          "camera": {
+            "location": {
+              "x": -441.1228377960763,
+              "y": -2309.180644935897,
+              "z": 2788.1565137430835
+            },
+            "rotation": {
+              "pitch": -41.703429276534784,
+              "yaw": 59.99999676407233,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "vigil-window-e",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1497,
+                "y0": 381,
+                "x1": 1555,
+                "y1": 492
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1483,
+                "y0": 323,
+                "x1": 1539,
+                "y1": 432
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1470,
+                "y0": 268,
+                "x1": 1524,
+                "y1": 376
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1457,
+                "y0": 216,
+                "x1": 1510,
+                "y1": 322
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 838,
+                "y0": 442,
+                "x1": 880,
+                "y1": 555
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 845,
+                "y0": 323,
+                "x1": 884,
+                "y1": 432
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Foe",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 850,
+                "y0": 216,
+                "x1": 887,
+                "y1": 322
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "vigil-window-e.png",
+          "yaw": -90,
+          "distance": 2641.99951171875,
+          "pan": {
+            "right": -400,
+            "away": -99999
+          },
+          "camera": {
+            "location": {
+              "x": 1494.8346802624778,
+              "y": -2626.093924125549,
+              "z": 2788.1565130725826
+            },
+            "rotation": {
+              "pitch": -41.703428687649705,
+              "yaw": 89.99999749552187,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    }
+  ]
+}
