@@ -322,7 +322,7 @@ def build_monk(rig, M0):
 
 
 MONK_ATLAS = {
-    'plate': ('bands', dict(base=(.72, .47, .12), line=(.97, .81, .47), spacing=64)),         # ochre
+    'plate': ('bands', dict(base=(.86, .62, .20), line=(1.0, .88, .54), spacing=64)),         # golden ochre (tabard and trousers)
     'trim': ('scales', dict(a=(.24, .17, .14), b=(.34, .22, .16))),                           # dark brown trim
     'cloth': ('folds', dict(base=(.95, .51, .06), period=32, hem=(.30, .17, .10), hem2=(.60, .34, .10))),   # saffron
     'leather': ('weave', dict(base=(.36, .23, .14))),

@@ -12,6 +12,9 @@ SCRIPT = ROOT / "Content" / "Python" / "import_dark_fantasy_theme.py"
 # Graphics overhaul #148: every character material reads against the dark ground with a stronger Rim and Fill.
 CHARACTER_RIM = 1.6
 CHARACTER_FILL = 1.25
+# The rigged characters (RIG rows) take a lower pair (#150): their palettes are bright, and the static pair washed them out on screen.
+RIG_RIM = 1.2
+RIG_FILL = 1.0
 # The material instances a headless import must change, and only these (names are the MI_* packages in /Game/DnDDiceRoll/Theme/Materials).
 CHANGED = {
     "MI_Hero_Fighter", "MI_Hero_Rogue", "MI_Hero_Cleric", "MI_Hero_Wizard",
@@ -59,12 +62,13 @@ def rig_rows():
 
 class CharacterLookTest(unittest.TestCase):
     def test_every_character_carries_the_stronger_rim_and_fill(self):
-        rows = {name: look for name, (folder, look) in static_rows().items() if folder == "Characters"}
-        rows.update(rig_rows())
+        static = {name: look for name, (folder, look) in static_rows().items() if folder == "Characters"}
+        rigs = rig_rows()
+        rows = {**static, **rigs}
         self.assertEqual(set(rows), set(CHARACTER_OTHERS), "the character roster changed: update this test and the docs/assets.md change set")
         for name, (roughness, rim, fill, glow, self_lit) in rows.items():
-            self.assertEqual(rim, CHARACTER_RIM, name + " Rim")
-            self.assertEqual(fill, CHARACTER_FILL, name + " Fill")
+            wanted = (RIG_RIM, RIG_FILL) if name in rigs else (CHARACTER_RIM, CHARACTER_FILL)
+            self.assertEqual((rim, fill), wanted, name + " Rim and Fill (static 1.6 / 1.25, rigged 1.2 / 1.0)")
             self.assertEqual((roughness, glow, self_lit), CHARACTER_OTHERS[name], name + " roughness, glow and self-light are unchanged")
 
     def test_non_character_rows_are_unchanged(self):

@@ -996,20 +996,24 @@ FIRST_CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Deat
 BRACE_CLIP = "Brace"
 CLIPS = FIRST_CLIPS + [BRACE_CLIP]
 BRACE_SOURCE = ("sk-hero-fighter", "SK_Hero_Fighter", "r002")
-# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit): characters get Rim 1.6 and Fill 1.25 (#148).
+# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit). The static r001 characters keep Rim 1.6 and Fill 1.25 (#148, tuned for
+# their dark figures); the rigged ones, whose palettes are already bright, take Rim 1.2 and Fill 1.0 (#150: the lowest pair of 1.2/1.0 and 1.0/0.9 that
+# keeps every rigged class at a mean region contrast of 2.3 or more and a worst shot of 1.4 or more on Vigil, Root and the Vault; see docs/assets.md).
+# apply_rig_material writes these scalars to the MI_SK_* instance only when they differ, so a rerun retunes the instances in place and touches
+# no mesh, texture or clip.
 # The rig key says where the data asset holds the definition (#150): "class:<Role>" is UDiceRollTheme::ClassRigs[<Role>], "foe:<Archetype>"
 # is FoeRigs[<Archetype>]. The fighter comes first because its import yields the shared skeleton and the nine clips (every later
 # character reuses them), and a cast batch appends its characters here.
 RIG = [
-    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-barbarian", "SK_Hero_Barbarian", "class:Barbarian", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-barbarian", "SK_Hero_Barbarian", "class:Barbarian", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
 CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
 # The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.
