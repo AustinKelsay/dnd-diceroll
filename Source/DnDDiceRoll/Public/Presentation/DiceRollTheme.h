@@ -45,15 +45,22 @@ struct DNDDICEROLL_API FDiceRollCharacter
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
 };
 
+/** Which world kit a board draws with: the Drowned Vigil (Ruins), the Root of the World (Meadow) or the Vault (the finale). */
+enum class EDiceRollKit : uint8 { Vigil, Root, Vault };
+
 /**
- * What one world draws its kit with (#145 Drowned Vigil, #149 Root of the World): read-only views of the theme's own
+ * What one world draws its kit with (#145 Drowned Vigil, #149 Root of the World and Vault): read-only views of the theme's own
  * properties, so they stay valid while the theme does. A world with no kit switched on has bMetric false and the view
  * ignores everything else; every entry is optional and falls back individually.
  */
 struct FDiceRollWorldKit
 {
+    /** The kit these entries belong to. A Vault request that falls back to the Vigil kit reports Vigil. */
+    EDiceRollKit Kind = EDiceRollKit::Vigil;
     /** The world and its kit are authored at the true 150 cm cell and are placed unscaled. */
     bool bMetric = false;
+    /** The world mesh: the kit's own r002 world when bMetric, otherwise the r001 world of the same kind (drawn scaled by the board metric). */
+    const TSoftObjectPtr<UStaticMesh>* World = nullptr;
     const TSoftObjectPtr<UStaticMesh>* Occluders = nullptr;
     const TArray<TSoftObjectPtr<UStaticMesh>>* Pillars = nullptr;
     const TArray<TSoftObjectPtr<UStaticMesh>>* Walls = nullptr;
@@ -183,8 +190,40 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootMistCards;
     UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootLightShafts;
 
-    /** The kit a board draws with: the Root kit on a forest (Meadow) board, the Vigil kit on every other. */
-    FDiceRollWorldKit KitFor(bool bForest) const;
+    /**
+     * The Vault world kit r002 (#149), the finale's own world: the same kit shape as the two above, authored at the true 150 cm cell and
+     * placed unscaled, in its own packages (the Vault never had an r001 world; it drew the Vigil kit with a cold grade). The import script
+     * sets bVaultMetricKit only when SM_World_Vault carries the r002 tag. Presentation only (ADR-0001): nothing here reads or feeds rules.
+     * If any Vault entry is missing, KitFor(Vault) returns the Vigil kit, so the finale looks as it did before the Vault existed.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Worlds") TSoftObjectPtr<UStaticMesh> VaultWorld;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") bool bVaultMetricKit = false;
+    /** Near architecture (walls, the Waystone apse, alcoves, sarcophagus rows) split from the world; same origin as VaultWorld. Dither-fades when it blocks the camera. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TSoftObjectPtr<UStaticMesh> VaultOccluders;
+    /** Three variants (A, B, C) per obstacle recipe: broken column, ossuary pier and rune stele (pillar), ashlar run, stacked coffins and iron grille (wall), rubble, bone mound and toppled statue (stones). */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultPillarVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultWallVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultStonesVariants;
+    /** Spans two adjacent blocked cells; pivot at the midpoint of their shared edge, long axis Y. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TSoftObjectPtr<UStaticMesh> VaultArchTwoCell;
+    /** Non-blocking floor dressing (bones, skulls, candles, rubble, chains, urns, relics, crystals), outside the board. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultScatter;
+    /** Translucent mist cards (upright, leaning, flat) and light shafts (prism, crossed planes). */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultMistCards;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultLightShafts;
+
+    /**
+     * True when the Vault kit is switched on and every entry it needs is set and refers to a package that exists (world, occluders, 3 + 3 + 3
+     * variants, the arch, 8 scatter, 3 mist cards, 2 shafts). A reference to a deleted package counts as missing. A package that exists but fails to load
+     * is caught by the view, which loads every piece before it places anything.
+     */
+    bool VaultKitComplete() const;
+
+    /**
+     * The kit a board draws with. Root is the forest (Meadow) kit, Vigil the Ruins kit; the Vault request is the finale's and returns the
+     * Vigil kit, exactly as before the Vault existed, when VaultKitComplete() is false.
+     */
+    FDiceRollWorldKit KitFor(EDiceRollKit Kind) const;
 
     /** Loads an entry; null when it is unset or missing. */
     static UStaticMesh* Load(const TSoftObjectPtr<UStaticMesh>& Mesh);

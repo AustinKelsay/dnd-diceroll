@@ -24,6 +24,10 @@ Root of the World world kit r002 (issue #149 phase 2) goes through the same code
     are tagged DiceRollAssetRevision=root-kit-r002 and UDiceRollTheme::bRootMetricKit is set only when SM_World_Root carries it.
   - INSTANCE_TINTS in theme_plan writes the Color tint of a kit instance (the lever for the paving value); it is written only
     when it differs.
+Vault world kit r002 (issue #149) is a third kit through the same path (theme_plan.VAULT_R002, 25 rows, all new packages, nothing replaced):
+  - SM_World_Vault, SM_World_Vault_Occluders (LOD1 only), the nine obstacle variants and the arch, eight scatter, three mist cards and
+    two shafts, tagged DiceRollAssetRevision=vault-kit-r002. UDiceRollTheme::bVaultMetricKit is set only when SM_World_Vault carries
+    the tag; the theme falls back to the Vigil kit when any Vault entry is missing.
 Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
 colour for sparks, shots and the camp, and the master, occluder, card and effect materials carry the instanced-static-mesh usage flag.
 Nothing else changes: a run on a current theme only sets the missing flags.
@@ -318,6 +322,8 @@ KITS = [
      "sizes": theme_plan.ARRAY_SIZES, "flag": "metric_kit"},
     {"name": "root", "tag": theme_plan.ROOT_TAG, "rows": theme_plan.ROOT_R002, "gate": theme_plan.ROOT_METRIC_GATE,
      "sizes": theme_plan.ROOT_ARRAY_SIZES, "flag": "root_metric_kit"},
+    {"name": "vault", "tag": theme_plan.VAULT_TAG, "rows": theme_plan.VAULT_R002, "gate": theme_plan.VAULT_METRIC_GATE,
+     "sizes": theme_plan.VAULT_ARRAY_SIZES, "flag": "vault_metric_kit"},
 ]
 # A headless commandlet does not load the static mesh editor module, so its subsystem would be None.
 unreal.load_module("StaticMeshEditor")
@@ -687,7 +693,7 @@ def r001_source(asset_id, name):
 
 
 def kit_tag(mesh):
-    """The kit revision tag a mesh carries (vigil-kit-r002 or root-kit-r002), or None for an r001 mesh."""
+    """The kit revision tag a mesh carries (vigil-kit-r002, root-kit-r002 or vault-kit-r002), or None for an r001 mesh."""
     if mesh is None:
         return None
     tag = library.get_metadata_tag(mesh, theme_plan.REVISION_TAG)
@@ -1318,7 +1324,7 @@ def check_metric_gate(kit, replacements):
 
 
 def import_kit(kit, theme, parents, replacements):
-    """Imports one world kit's rows (the Vigil's, then the Root's) and returns (meshes loaded, whether its metric gate is met).
+    """Imports one world kit's rows (the Vigil's, the Root's, then the Vault's) and returns (meshes loaded, whether its metric gate is met).
 
     A row whose package holds a mesh with this kit's tag is left alone ("present"); a row whose package exists as r001 is skipped
     unless its id is allow-listed and requested; everything else is imported, stripped of collision and Nanite, given its explicit
@@ -1431,6 +1437,7 @@ def main():
     unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes, kit {}/{} meshes, metric_kit={}".format(
         found, len(ASSETS), kit_loaded["vigil"], len(theme_plan.R002), kit_metric["vigil"]))
     unreal.log("THEME_ROOT_COMPLETE root kit {}/{} meshes, root_metric_kit={}".format(kit_loaded["root"], len(theme_plan.ROOT_R002), kit_metric["root"]))
+    unreal.log("THEME_VAULT_COMPLETE vault kit {}/{} meshes, vault_metric_kit={}".format(kit_loaded["vault"], len(theme_plan.VAULT_R002), kit_metric["vault"]))
     unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))
 
 
