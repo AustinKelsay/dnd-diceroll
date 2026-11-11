@@ -1,0 +1,34 @@
+14:26:04 start Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24 done=0 rev=8
+14:26:04 ROUND 1 | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:26:05 Ivo move 4,6 -> (6, 5)
+14:26:10 Ivo end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:26:13 Nix special m -> {'X': 4, 'Y': 4}
+14:26:17   special not accepted
+14:26:19 Nix move 4,4 -> (5, 4)
+14:26:25 Nix attack Raider 1
+14:26:28 Nix end turn | Arden30/30 Nix22/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:26:32 Arden move 4,3 -> (6, 4)
+14:26:36   move not accepted
+14:26:39 Sera special m -> {'X': 4, 'Y': 3}
+14:26:43   special not accepted
+14:26:45 Sera move 4,5 -> (5, 4)
+14:26:50   move not accepted
+14:26:52 ROUND 2 | Arden30/30 Nix8/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:26:53 Ivo special m -> {'X': 8, 'Y': 4}
+14:26:57   special not accepted
+14:26:59 Ivo attack Raider 1
+14:27:03 Ivo end turn | Arden30/30 Nix8/22 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:27:06 Arden move 4,3 -> (6, 4)
+14:27:11   move not accepted
+14:27:14 Sera move 4,5 -> (5, 4)
+14:27:20 Sera attack Raider 1
+14:27:23 Sera end turn | Arden30/30 Nix0/22L1 Sera22/22 Ivo22/22 Raide24/24 Raide24/24 Vault24/24
+14:27:28 ROUND 3 | Arden30/30 Nix0/22L1 Sera17/22 Ivo17/22 Raide24/24 Raide24/24 Vault24/24
+14:27:29 Ivo special f -> {'X': 6, 'Y': 6}
+14:27:33   special not accepted
+14:27:35 Ivo attack Raider 2
+14:27:38 Ivo end turn | Arden30/30 Nix0/22L1 Sera17/22 Ivo17/22 Raide24/24 Raide24/24 Vault24/24
+14:27:42 Arden move 4,3 -> (5, 6)
+14:27:46   move not accepted
+14:27:49 STOPDOWN rescuer Sera at {'X': 6, 'Y': 4} downed Nix at {'X': 7, 'Y': 4} round 3
+14:27:49 end elapsed 104s

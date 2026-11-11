@@ -1,0 +1,11 @@
+13:53:08 start Arden30/30 Nix11/22 Sera22/22 Ivo22/22 Raide32/32 Raide32/32 Vault32/32 done=2 rev=8
+13:53:08 ROUND 1 | Arden30/30 Nix11/22 Sera22/22 Ivo22/22 Raide32/32 Raide32/32 Vault32/32
+13:53:09 Sera special m -> {'X': 4, 'Y': 4}
+13:53:14 Sera move 4,5 -> (6, 4)
+13:53:19 Sera attack Raider 1
+13:53:22 Sera end turn | Arden30/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32
+13:53:25 Ivo move 4,6 -> (5, 6)
+13:53:31 Ivo attack Raider 2
+13:53:34 Ivo end turn | Arden30/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32
+13:53:38 Arden move 4,3 -> (8, 3)
+13:53:42 Arden end turn | Arden30/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32

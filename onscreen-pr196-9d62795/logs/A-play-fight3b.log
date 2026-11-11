@@ -1,0 +1,91 @@
+13:54:51 start Arden19/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32 done=2 rev=8
+13:54:51 ROUND 1 | Arden19/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32
+13:54:51 Nix special m -> {'X': 4, 'Y': 4}
+13:54:55   special not accepted
+13:54:57 Nix move 4,4 -> (7, 3)
+13:55:02   move not accepted
+13:55:06 ROUND 2 | Arden14/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32
+13:55:07 Sera special m -> {'X': 4, 'Y': 4}
+13:55:11   special not accepted
+13:55:13 Sera attack Raider 2
+13:55:16 Sera end turn | Arden14/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault32/32
+13:55:20 Ivo special m -> {'X': 8, 'Y': 7}
+13:55:24 Ivo attack Vault bow
+13:55:28 Ivo end turn | Arden14/30 Nix11/22 Sera22/22 Ivo22/22 Raide24/32 Raide32/32 Vault24/32
+13:55:31 Arden attack Raider 1
+13:55:34 Arden end turn | Arden14/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide32/32 Vault24/32
+13:55:37 Nix move 4,4 -> (5, 4)
+13:55:42 Nix attack Raider 2
+13:55:46 Nix end turn | Arden14/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide32/32 Vault24/32
+13:55:51 ROUND 3 | Arden6/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide32/32 Vault24/32
+13:55:51 Sera attack Raider 2
+13:55:55 Sera end turn | Arden6/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:55:58 Ivo special f -> {'X': 8, 'Y': 7}
+13:56:02   special not accepted
+13:56:04 Ivo attack Vault bow
+13:56:07 Ivo end turn | Arden6/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:10 Arden attack Raider 1
+13:56:14 Arden end turn | Arden6/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:17 Nix attack Raider 2
+13:56:21 Nix end turn | Arden1/30 Nix11/22 Sera22/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:25 ROUND 4 | Arden0/30L1 Nix11/22 Sera17/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:26 Sera attack Raider 2
+13:56:29 Sera end turn | Arden0/30L1 Nix11/22 Sera17/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:33 Ivo special m -> {'X': 7, 'Y': 4}
+13:56:37   special not accepted
+13:56:38 Ivo attack Raider 2
+13:56:42 Ivo end turn | Arden0/30L1 Nix11/22 Sera17/22 Ivo22/22 Raide17/32 Raide22/32 Vault24/32
+13:56:45 Nix attack Raider 2
+13:56:49 Nix end turn | Arden0/30L1 Nix11/22 Sera17/22 Ivo22/22 Raide17/32 Raide9/32 Vault24/32
+13:56:51 ROUND 5 | Arden0/30L1 Nix11/22 Sera13/22 Ivo22/22 Raide17/32 Raide9/32 Vault24/32
+13:56:52 Sera attack Raider 2
+13:56:55 Sera end turn | Arden0/30L1 Nix11/22 Sera13/22 Ivo22/22 Raide17/32 Raide9/32 Vault24/32
+13:56:59 Ivo special f -> {'X': 7, 'Y': 4}
+13:57:03   special not accepted
+13:57:04 Ivo attack Raider 2
+13:57:08 Ivo end turn | Arden0/30L1 Nix11/22 Sera13/22 Ivo22/22 Raide17/32 Raide9/32 Vault24/32
+13:57:11 Nix attack Raider 2
+13:57:15 Nix end turn | Arden0/30L1 Nix11/22 Sera13/22 Ivo11/22 Raide17/32 Raide0/32L2 Vault24/32
+13:57:17 ROUND 6 | Arden0/30L1 Nix11/22 Sera5/22 Ivo11/22 Raide17/32 Raide0/32L2 Vault24/32
+13:57:18 Sera attack Raider 1
+13:57:21 Sera end turn | Arden0/30L1 Nix11/22 Sera5/22 Ivo11/22 Raide8/32 Raide0/32L2 Vault24/32
+13:57:25 Ivo special m -> {'X': 6, 'Y': 3}
+13:57:29   special not accepted
+13:57:30 Ivo attack Raider 1
+13:57:34 Ivo end turn | Arden0/30L1 Nix11/22 Sera5/22 Ivo11/22 Raide8/32 Raide0/32L2 Vault24/32
+13:57:37 Nix attack Raider 1
+13:57:41 Nix end turn | Arden0/30L2 Nix11/22 Sera5/22 Ivo5/22 Raide8/32 Raide0/32L2 Vault24/32
+13:57:43 ROUND 7 | Arden0/30L2 Nix11/22 Sera5/22 Ivo5/22 Raide8/32 Raide0/32L2 Vault24/32
+13:57:44 Sera attack Raider 1
+13:57:47 Sera end turn | Arden0/30L2 Nix11/22 Sera5/22 Ivo5/22 Raide1/32 Raide0/32L2 Vault24/32
+13:57:51 Ivo special f -> {'X': 6, 'Y': 3}
+13:57:55   special not accepted
+13:57:56 Ivo attack Raider 1
+13:58:00 Ivo end turn | Arden0/30L2 Nix11/22 Sera5/22 Ivo5/22 Raide1/32 Raide0/32L2 Vault24/32
+13:58:03 Nix attack Raider 1
+13:58:07 Nix end turn | Arden0/30L2 Nix11/22 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault24/32
+13:58:09 ROUND 8 | Arden0/30L2 Nix11/22 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault24/32
+13:58:10 Sera move 6,4 -> (8, 4)
+13:58:14   move not accepted
+13:58:17 Nix move 5,4 -> (5, 5)
+13:58:21   move not accepted
+13:58:23 ROUND 9 | Arden0/30L2 Nix6/22 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault24/32
+13:58:24 Sera attack Vault bow
+13:58:28 Sera end turn | Arden0/30L2 Nix6/22 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:30 ROUND 10 | Arden0/30L2 Nix0/22L1 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:31 Sera Rescue Nix
+13:58:35 Sera end turn | Arden0/30L2 Nix0/22L1 Sera5/22 Ivo0/22L1 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:37 ROUND 11 | Arden0/30L2 Nix0/22L1 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:38 Sera Rescue Nix
+13:58:41 Sera end turn | Arden0/30L2 Nix0/22L1 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:44 ROUND 12 | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:45 Sera attack Vault bow
+13:58:48 Sera end turn | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:51 ROUND 13 | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:51 Sera attack Vault bow
+13:58:55 Sera end turn | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:57 ROUND 14 | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:58:57 Sera attack Vault bow
+13:59:01 Sera end turn | Arden0/30L2 Nix0/22L2 Sera5/22 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:59:04 STOP phase=5 done=2 | Arden0/30L2 Nix0/22L2 Sera0/22L2 Ivo0/22L2 Raide0/32L2 Raide0/32L2 Vault15/32
+13:59:04 end elapsed 253s

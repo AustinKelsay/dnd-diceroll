@@ -1,0 +1,89 @@
+14:03:27 start Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide28/28 Raide28/28 Vault28/28 done=1 rev=8
+14:03:27 ROUND 1 | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide28/28 Raide28/28 Vault28/28
+14:03:28 Nix special m -> {'X': 4, 'Y': 4}
+14:03:32   special not accepted
+14:03:33 Nix attack Raider 1
+14:03:37 Nix end turn | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide28/28 Raide28/28 Vault28/28
+14:03:40 Arden move 4,3 -> (5, 3)
+14:03:44 Arden end turn | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide28/28 Raide28/28 Vault28/28
+14:03:48 Ivo special f -> {'X': 5, 'Y': 4}
+14:03:52 Ivo end turn | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide21/28 Raide28/28 Vault28/28
+14:03:55 Sera special m -> {'X': 4, 'Y': 4}
+14:03:59 Sera attack Raider 1
+14:04:03 Sera end turn | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide21/28 Raide28/28 Vault28/28
+14:04:05 ROUND 2 | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide21/28 Raide28/28 Vault28/28
+14:04:07 Nix attack Raider 1
+14:04:11 Nix end turn | Arden13/30 Nix14/22 Sera22/22 Ivo17/22 Raide21/28 Raide28/28 Vault28/28
+14:04:14 Arden move 6,3 -> (5, 3)
+14:04:19 Arden attack Raider 1
+14:04:23 Arden end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:25 Ivo special m -> {'X': 5, 'Y': 6}
+14:04:29   special not accepted
+14:04:31 Ivo attack Raider 2
+14:04:35 Ivo end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:38 Sera Cure Wounds Arden
+14:04:42 Sera end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:44 ROUND 3 | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:46 Nix attack Raider 1
+14:04:50 Nix end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:53 Arden attack Raider 1
+14:04:56 Arden end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:04:59 Ivo special f -> {'X': 5, 'Y': 6}
+14:05:03   special not accepted
+14:05:05 Ivo attack Raider 2
+14:05:08 Ivo end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:12 Sera Cure Wounds Arden
+14:05:15 Sera end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:18 ROUND 4 | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:20 Nix attack Raider 1
+14:05:23 Nix end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:26 Arden attack Raider 1
+14:05:30 Arden end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:33 Ivo special m -> {'X': 5, 'Y': 6}
+14:05:37   special not accepted
+14:05:39 Ivo attack Raider 2
+14:05:42 Ivo end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:45 Sera Cure Wounds Arden
+14:05:49 Sera end turn | Arden13/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:52 ROUND 5 | Arden7/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:05:54 Nix attack Raider 1
+14:05:57 Nix end turn | Arden7/30 Nix14/22 Sera22/22 Ivo10/22 Raide9/28 Raide28/28 Vault28/28
+14:06:00 Arden attack Raider 1
+14:06:04 Arden end turn | Arden7/30 Nix14/22 Sera22/22 Ivo5/22 Raide0/28L2 Raide28/28 Vault28/28
+14:06:07 Ivo special f -> {'X': 5, 'Y': 6}
+14:06:11   special not accepted
+14:06:12 Ivo attack Raider 2
+14:06:16 Ivo end turn | Arden7/30 Nix14/22 Sera22/22 Ivo5/22 Raide0/28L2 Raide28/28 Vault28/28
+14:06:19 Sera Cure Wounds Arden
+14:06:23 Sera end turn | Arden7/30 Nix14/22 Sera22/22 Ivo5/22 Raide0/28L2 Raide28/28 Vault28/28
+14:06:25 ROUND 6 | Arden7/30 Nix14/22 Sera22/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:06:25 Nix attack Raider 2
+14:06:29 Nix end turn | Arden7/30 Nix14/22 Sera22/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:06:32 Arden move 5,3 -> (5, 4)
+14:06:37   move not accepted
+14:06:39 Sera Cure Wounds Arden
+14:06:43 Sera end turn | Arden7/30 Nix14/22 Sera22/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:06:46 ROUND 7 | Arden7/30 Nix14/22 Sera22/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:06:46 Nix attack Raider 2
+14:06:49 Nix end turn | Arden7/30 Nix14/22 Sera22/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:06:52 Arden move 5,3 -> (5, 4)
+14:06:57   move not accepted
+14:07:00 Sera Cure Wounds Arden
+14:07:03 Sera end turn | Arden7/30 Nix14/22 Sera8/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:07:06 ROUND 8 | Arden7/30 Nix14/22 Sera1/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:07:06 Nix attack Raider 2
+14:07:09 Nix end turn | Arden7/30 Nix14/22 Sera1/22 Ivo0/22L1 Raide0/28L2 Raide28/28 Vault28/28
+14:07:12 Arden move 5,3 -> (5, 4)
+14:07:17   move not accepted
+14:07:20 Sera Cure Wounds Arden
+14:07:23 Sera end turn | Arden7/30 Nix14/22 Sera1/22 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:26 ROUND 9 | Arden7/30 Nix14/22 Sera1/22 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:26 Nix attack Raider 2
+14:07:29 Nix end turn | Arden7/30 Nix14/22 Sera1/22 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:32 Arden move 5,3 -> (5, 4)
+14:07:37   move not accepted
+14:07:39 ROUND 10 | Arden0/30L1 Nix14/22 Sera0/22L1 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:39 Nix Rescue Sera
+14:07:43 Nix end turn | Arden0/30L1 Nix14/22 Sera0/22L1 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:46 STOP phase=5 done=1 | Arden0/30L2 Nix0/22L2 Sera0/22L2 Ivo0/22L2 Raide0/28L2 Raide28/28 Vault28/28
+14:07:46 end elapsed 258s
