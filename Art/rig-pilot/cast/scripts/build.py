@@ -32,6 +32,7 @@ def build_one(key):
     builder, name, seed = C.CHARACTERS[key]
     out_dir = os.path.join(ROOT, 'Art', C.ASSET_IDS[key], 'r001')
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.context.preferences.filepaths.save_version = 0      # read_factory_settings resets it: no .blend1 backup next to the source
     sc = bpy.context.scene
     sc.render.fps = K.FPS
     ao = K.make_armature(sc)

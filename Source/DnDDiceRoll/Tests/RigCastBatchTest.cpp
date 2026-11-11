@@ -146,6 +146,26 @@ bool FCastBatchClipsTest::RunTest(const FString& Parameters)
             }
         }
     }
+    // The rogue's non-spell Protect and Healing specials play the shared Cast gesture today (ForEffect maps those effects by effect, not by spell).
+    // Batch 2 gives them a Brace clip: change these expectations with it. Both abilities must have been found, so this cannot pass vacuously.
+    int32 Gestures = 0;
+    for (const TCHAR* Id : {TEXT("rogue.thief"), TEXT("rogue.phantom")})
+    {
+        const FBuildDefinition* Build = FBuildCatalog::Find(Id);
+        if (!TestNotNull(FString::Printf(TEXT("%s is in the catalog"), Id), Build)) { continue; }
+        for (const FAbilityFacts& Ability : Build->Abilities)
+        {
+            const bool bFastHands = Build->Id == TEXT("rogue.thief") && Ability.Name == TEXT("Fast Hands");
+            const bool bGhostShelter = Build->Id == TEXT("rogue.phantom") && Ability.Name == TEXT("Ghost Shelter");
+            if (!bFastHands && !bGhostShelter) { continue; }
+            TestFalse(FString::Printf(TEXT("%s is not a spell"), *Ability.Name), Ability.bSpell);
+            TestEqual(FString::Printf(TEXT("%s is %s"), *Ability.Name, bFastHands ? TEXT("Healing") : TEXT("Protect")), Ability.Effect, bFastHands ? EAbilityEffect::Healing : EAbilityEffect::Protect);
+            for (const bool bFar : {false, true})
+            { TestEqual(FString::Printf(TEXT("%s plays the shared Cast gesture (batch 2: Brace)"), *Ability.Name), ForEffect(Ability.Effect, bFar, Ability.bSpell), EUnitPose::Cast); }
+            ++Gestures;
+        }
+    }
+    TestEqual(TEXT("Fast Hands and Ghost Shelter were both checked"), Gestures, 2);
     TestTrue(TEXT("The catalog has cleric builds"), Clerics > 0);
     TestTrue(TEXT("The catalog has rogue builds"), Rogues > 0);
     TestTrue(TEXT("Rogue weapon abilities were exercised"), Weapons > 0);

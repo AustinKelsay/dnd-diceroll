@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure how well one class's figure reads against the ground behind it (#150, from the gate 2 finding on #148).
+"""Image-region statistics for how well one class's figure reads against the ground beside it (#150, from the gate 2 finding on #148).
 
 Reads the `battle` and `targeting` shots of a capture gallery run (`python3 tools/dev.py gallery`). The game writes every figure's
 projected footprint box into the manifest (`units`: the footprint ring's square, from the board top to the figure's head, with the camera
@@ -14,11 +14,11 @@ and reports, with luminance computed from the 8-bit sRGB code values after the s
 
 * contrast ratio: (lighter + 0.05) / (darker + 0.05) of the mean linear luminance of the figure region and of the ground (WCAG's formula; 1 is
   invisible, 3 is the usual floor for large shapes)
-* merge fraction: the share of figure-region pixels whose 8-bit luma (Rec. 709 weights on the code values) is within MERGE_BAND of the ground's median luma; a
-  figure that merges with a shadow pool has a high one
+* merge fraction: the share of figure-region pixels whose 8-bit luma (Rec. 709 weights on the code values) is within MERGE_BAND of the ground region's median luma; a
+  figure sitting in a shadow pool has a high one
 * mean luma of the figure and of the ground, 0 to 255
 
-It does not separate the figure from the pixels around it (there is no mask), so the figure region also holds some floor, ring and bar; compare the same
+These are statistics of two rectangles, not of the figure: there is no figure mask, so the figure region also holds floor, ring, bar and sometimes scenery, and the ground strips hold whatever stands beside the figure. They say nothing about the figure's own pixels alone. Compare the same
 fixtures with and without the change (for example `gallery --static-figures` against a plain gallery), not an absolute value against a standard. A
 visual check of silhouette, ring and bar still goes with it. Standard library only (the PNG decoder of tools/impact_flash.py).
 
@@ -150,7 +150,7 @@ def main(argv=None):
         print(f"No {args.role} figures with a footprint box were found.", file=sys.stderr)
         return 2
     for r in results:
-        print(f"{r['fixture']:22} {r['shot']:26} {r['unit']:8} rigged={str(r['rigged']):5} contrast {r['contrastRatio']:5.2f}  merge {r['mergeFraction'] * 100:5.1f}%"
+        print(f"{r['fixture']:22} {r['shot']:26} {r['unit']:8} rigged={str(r['rigged']):5} region contrast {r['contrastRatio']:5.2f}  region merge {r['mergeFraction'] * 100:5.1f}%"
               f"  figure luma {r['figureLuma']:6.1f}  ground luma {r['groundLuma']:6.1f}")
     by_fixture = {}
     for r in results:
