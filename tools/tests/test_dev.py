@@ -430,6 +430,8 @@ class GalleryTests(unittest.TestCase):
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
                                                     {"name": "first", "mode": "impact", "effect": "missile", "phase": "landing-first", "yaw": 0, "distance": "default"},
                                                     {"name": "second", "mode": "impact", "effect": "missile", "phase": "landing-second", "yaw": 0, "distance": "default"}]))), 5)
+        self.assertEqual(len(load_poses(self.poses([{"name": "rogue-melee", "mode": "pose", "role": "Rogue", "pose": "Melee", "time": 0.37, "yaw": 0, "distance": "default"},
+                                                    {"name": "cleric-down", "mode": "pose", "role": "Cleric", "pose": "downed", "yaw": 90, "distance": 1300}]))), 2)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
                {"version": 1, "shots": ["x"]}, {"version": 1, "shots": [{"mode": "start"}]}, {"version": 1, "shots": [{"name": "a b", "mode": "start"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "orbit"}]}, {"version": 1, "shots": [{"name": "a", "mode": "battle", "distance": 1300}]},
@@ -447,6 +449,10 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "pose": "melee", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "dance", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "melee", "time": 11, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "role": "Rogue", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "later", "effect": "spell", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "flight", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "phase": "flight", "yaw": 0, "distance": 1300}]},
@@ -562,7 +568,8 @@ class GalleryTests(unittest.TestCase):
     def test_gallery_takes_cores_and_the_operation_lock_like_other_commands(self):
         self.assertIn("gallery", dev_module.CORE_COMMANDS)
         source = Path(dev_module.__file__).read_text()
-        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)', source)
+        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures)', source)
+        self.assertIn('"-ExpeditionStaticFigures"', source)
 
 
 class EvidenceTests(unittest.TestCase):

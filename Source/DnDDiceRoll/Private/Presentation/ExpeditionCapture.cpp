@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/CombatHints.h"
+#include "Presentation/DiceRollTheme.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
@@ -71,6 +72,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Hint: return TEXT("hint");
     case ECaptureMode::Impact: return TEXT("impact");
     case ECaptureMode::Roll: return TEXT("roll");
+    case ECaptureMode::Pose: return TEXT("pose");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -167,7 +169,29 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         else if (Mode == TEXT("hint")) { Shot.Mode = ECaptureMode::Hint; }
         else if (Mode == TEXT("impact")) { Shot.Mode = ECaptureMode::Impact; }
         else if (Mode == TEXT("roll")) { Shot.Mode = ECaptureMode::Roll; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("pose")) { Shot.Mode = ECaptureMode::Pose; }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose)"), *Shot.Name, *Mode); return false; }
+        if (Shot.Mode == ECaptureMode::Pose)
+        {
+            // A hero of a class held in one clip at one time (#150): the clip name as in EUnitPose ("Melee"), any case.
+            FString Pose;
+            if (!(*Entry)->TryGetStringField(TEXT("role"), Shot.Role) || !ValidName(Shot.Role)) { Error = Shot.Name + TEXT(" needs a \"role\" (a class name such as Rogue)"); return false; }
+            bool bFound = false;
+            if ((*Entry)->TryGetStringField(TEXT("pose"), Pose))
+            {
+                for (int32 Clip = 0; Clip < ExpeditionPose::Count && !bFound; ++Clip)
+                {
+                    if (Pose.Equals(ExpeditionPose::ClipName(static_cast<EUnitPose>(Clip)), ESearchCase::IgnoreCase)) { Shot.Pose = static_cast<EUnitPose>(Clip); bFound = true; }
+                }
+            }
+            if (!bFound) { Error = Shot.Name + TEXT(" needs a \"pose\" of Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death or Recover"); return false; }
+            if ((*Entry)->HasField(TEXT("time")))
+            {
+                double Seconds = 0.0;
+                if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > 10.0) { Error = Shot.Name + TEXT(" needs \"time\" in seconds from 0 to 10"); return false; }
+                Shot.Time = static_cast<float>(Seconds);
+            }
+        }
         if (Shot.Mode == ECaptureMode::Impact)
         {
             if ((*Entry)->HasField(TEXT("effect")))
@@ -222,7 +246,7 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Action == TEXT("potion")) { Shot.Action = ECaptureAction::Potion; }
             else { Error = FString::Printf(TEXT("%s has unknown action \"%s\" (attack, special1, special2, rescue, potion)"), *Shot.Name, *Action); return false; }
         }
-        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Impact || Shot.Mode == ECaptureMode::Roll)
+        if (Shot.Mode == ECaptureMode::Battle || Shot.Mode == ECaptureMode::Targeting || Shot.Mode == ECaptureMode::Tooltip || Shot.Mode == ECaptureMode::Hint || Shot.Mode == ECaptureMode::Impact || Shot.Mode == ECaptureMode::Roll || Shot.Mode == ECaptureMode::Pose)
         {
             Shot.bHasCamera = true;
             double Yaw = 0.0;
@@ -390,6 +414,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     Player->ClearHintPreview();
     Board->ClearImpactPreview();
     Board->ClearRollPreview();
+    Board->ClearPosePreview();
     switch (Shot.Mode)
     {
     case ECaptureMode::Battle:
@@ -398,12 +423,26 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     case ECaptureMode::Hint:
     case ECaptureMode::Impact:
     case ECaptureMode::Roll:
+    case ECaptureMode::Pose:
     {
         if (!Board->InCombat()) { Skip = TEXT("the checkpoint is not in an encounter"); return false; }
         // Default is the play default at that yaw: figure-sized (88 px at 1080), or the whole-board fit where that is closer (#148 gate 2). Far is the end of the pitch ramp (FarStop of the home fit), never nearer than the whole-board fit at that yaw, which can exceed it on a wide board.
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? Board->FarFramedDistance(Shot.Yaw) : Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance(Shot.Yaw);
         Board->SnapCamera(Shot.Yaw, Wanted);
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
+        if (Shot.Mode == ECaptureMode::Pose)
+        {
+            // A party hero of the class, held in the clip at the time: no command is submitted and the battle is untouched (UpdateAnimation leaves the figure alone).
+            const FCombatantState* Hero = nullptr;
+            for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
+            { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Hero = &Unit; break; } }
+            if (!Hero) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+            if (!Board->PreviewPose(Hero->Id, Shot.Pose, Shot.Time)) { Skip = FString::Printf(TEXT("the %s is not a rigged figure"), *Shot.Role); return false; }
+            Pending.TargetId = Hero->Id;
+            Pending.TargetName = Hero->Name;
+            Pending.TargetCell = Hero->Cell;
+            return true;
+        }
         if (Shot.Mode == ECaptureMode::Impact)
         {
             // The struck unit is the standing opponent nearest to whoever holds the turn. The hit itself is fired later, a fixed number of frames before the screenshot (Tick).
@@ -601,6 +640,22 @@ void FExpeditionCaptureDirector::Tick()
             Pending.Location = Camera.GetLocation();
             Pending.Rotation = Camera.Rotator();
             Pending.Fov = Board->CameraFieldOfView();
+            Pending.Units.Reset();
+            if (Pending.Shot.Mode == ECaptureMode::Battle || Pending.Shot.Mode == ECaptureMode::Targeting || Pending.Shot.Mode == ECaptureMode::Pose)
+            {
+                const UEnum* RoleEnum = StaticEnum<EAdventurerRole>();
+                for (const FCombatantState& Combatant : Board->Rules().Snapshot().Encounter.Combatants)
+                {
+                    FResult::FUnitBox Entry;
+                    if (!ProjectFootprint(Combatant.Id, Entry.Box)) { continue; }
+                    Entry.Id = Combatant.Id;
+                    Entry.Name = Combatant.Name;
+                    Entry.bParty = Combatant.Side == ECombatSide::Party;
+                    Entry.Role = Entry.bParty && RoleEnum ? RoleEnum->GetNameStringByValue(static_cast<int64>(Combatant.AdventurerRole)) : TEXT("Foe");
+                    Entry.bRigged = Board->UnitAnimation(Combatant.Id).bSkeletal;
+                    Pending.Units.Add(Entry);
+                }
+            }
             if (Pending.Shot.Mode == ECaptureMode::Impact)
             {
                 Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint);
@@ -685,6 +740,37 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 Target->SetObjectField(TEXT("bolt"), Bolt);
             }
             Shot->SetObjectField(TEXT("target"), Target);
+        }
+        if (Result.Shot.Mode == ECaptureMode::Pose && Result.Status != TEXT("skipped"))
+        {
+            // The hero and the clip the shot held (#150).
+            TSharedRef<FJsonObject> Held = MakeShared<FJsonObject>();
+            Held->SetNumberField(TEXT("id"), Result.TargetId);
+            Held->SetStringField(TEXT("name"), Result.TargetName);
+            Held->SetStringField(TEXT("role"), Result.Shot.Role);
+            Held->SetStringField(TEXT("pose"), ExpeditionPose::ClipName(Result.Shot.Pose));
+            Held->SetNumberField(TEXT("time"), Result.Shot.Time);
+            Shot->SetObjectField(TEXT("held"), Held);
+        }
+        if (!Result.Units.IsEmpty() && Result.Status != TEXT("skipped"))
+        {
+            // Every figure's footprint box in screenshot pixels (#150), for measuring a class against the ground behind it.
+            TArray<TSharedPtr<FJsonValue>> Units;
+            for (const FResult::FUnitBox& Entry : Result.Units)
+            {
+                TSharedRef<FJsonObject> Unit = MakeShared<FJsonObject>();
+                Unit->SetNumberField(TEXT("id"), Entry.Id);
+                Unit->SetStringField(TEXT("name"), Entry.Name);
+                Unit->SetStringField(TEXT("role"), Entry.Role);
+                Unit->SetStringField(TEXT("side"), Entry.bParty ? TEXT("party") : TEXT("enemy"));
+                Unit->SetBoolField(TEXT("rigged"), Entry.bRigged);
+                TSharedRef<FJsonObject> Box = MakeShared<FJsonObject>();
+                Box->SetNumberField(TEXT("x0"), Entry.Box.Min.X); Box->SetNumberField(TEXT("y0"), Entry.Box.Min.Y);
+                Box->SetNumberField(TEXT("x1"), Entry.Box.Max.X); Box->SetNumberField(TEXT("y1"), Entry.Box.Max.Y);
+                Unit->SetObjectField(TEXT("box"), Box);
+                Units.Add(MakeShared<FJsonValueObject>(Unit));
+            }
+            Shot->SetArrayField(TEXT("units"), Units);
         }
         if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
         Shot->SetStringField(TEXT("status"), Result.Status);

@@ -847,6 +847,32 @@ void AExpeditionBattleView::ClearImpactPreview()
     ImpactTargetId = INDEX_NONE;
 }
 
+bool AExpeditionBattleView::PreviewPose(int32 UnitId, EUnitPose Pose, float Seconds)
+{
+    for (FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId || !Rig.Skin) { continue; }
+        UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Pose)) ? Rig.Clips[static_cast<int32>(Pose)].Get() : nullptr;
+        if (!Clip) { return false; }
+        ShowPose(Rig, Pose, false);
+        Rig.bPosePreview = true;
+        Rig.PoseTime = FMath::Clamp(Seconds, 0.0f, Clip->GetPlayLength());
+        Rig.Skin->SetPosition(Rig.PoseTime, false);
+        return true;
+    }
+    return false;
+}
+
+void AExpeditionBattleView::ClearPosePreview()
+{
+    for (FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (!Rig.bPosePreview) { continue; }
+        Rig.bPosePreview = false;
+        Rig.PoseSerial = -1; // the next update shows the pose playback holds
+    }
+}
+
 FTransform AExpeditionBattleView::CameraTransform() const { return Camera->GetComponentTransform(); }
 float AExpeditionBattleView::CameraFieldOfView() const { return Camera->FieldOfView; }
 
@@ -1539,17 +1565,11 @@ void AExpeditionBattleView::UpdateRigs()
 const FDiceRollCharacter* AExpeditionBattleView::UnitRigged(const FCombatantState& Unit) const
 {
     if (!Theme || !bSkeletalFigures) { return nullptr; }
-    if (Unit.Side == ECombatSide::Party)
-    {
-        switch (Unit.AdventurerRole)
-        {
-        case EAdventurerRole::Fighter: return &Theme->FighterRig;
-        case EAdventurerRole::Wizard: return &Theme->WizardRig;
-        default: return nullptr;
-        }
-    }
+    // A party hero is rigged by class (#150); a class without an entry has no rig and keeps its static figure. Entries are data, so
+    // a later cast batch adds a class without touching this code.
+    if (Unit.Side == ECombatSide::Party) { return Theme->RigForClass(Unit.AdventurerRole); }
     // The same roster rule as UnitMesh: ranged foes are archers, the rest are raiders or scouts.
-    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? &Theme->RaiderRig : nullptr;
+    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? Theme->RigForFoe(FName(TEXT("Raider"))) : nullptr;
 }
 
 bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit)
@@ -1614,6 +1634,7 @@ void AExpeditionBattleView::ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bo
 
 void AExpeditionBattleView::UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit)
 {
+    if (Rig.bPosePreview) { Rig.Stamp = Clock; return; }
     const float Delta = FMath::Max(0.0f, Clock - Rig.Stamp) * Show.Speed;
     Rig.Stamp = Clock;
     if (Unit.PoseSerial != Rig.PoseSerial)

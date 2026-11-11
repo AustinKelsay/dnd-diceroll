@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-rogue-melee-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-ranged-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-cast-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-hit-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-downed-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-death-default",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-rogue-melee-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-rogue-ranged-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-rogue-cast-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-rogue-hit-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-rogue-downed-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-rogue-death-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-melee-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-ranged-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-cast-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-hit-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-downed-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-death-default",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-cleric-melee-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-ranged-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-cast-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-hit-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-downed-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-cleric-death-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "builder-rogue-assassin",
+      "mode": "start",
+      "build": "rogue.assassin"
+    },
+    {
+      "name": "builder-rogue-thief",
+      "mode": "start",
+      "build": "rogue.thief"
+    },
+    {
+      "name": "builder-cleric-life",
+      "mode": "start",
+      "build": "cleric.life"
+    },
+    {
+      "name": "builder-cleric-light",
+      "mode": "start",
+      "build": "cleric.light"
+    }
+  ]
+}
