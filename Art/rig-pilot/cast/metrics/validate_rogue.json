@@ -1,0 +1,187 @@
+{
+ "character": "rogue",
+ "file": "SK_Hero_Rogue.glb",
+ "bones": 25,
+ "bones_match_contract": true,
+ "bone_order_equal": false,
+ "clips": {
+  "Cast": [
+   0.0,
+   42.0
+  ],
+  "Death": [
+   0.0,
+   78.0
+  ],
+  "Downed": [
+   0.0,
+   72.0
+  ],
+  "Hit": [
+   0.0,
+   15.0
+  ],
+  "Idle": [
+   0.0,
+   60.0
+  ],
+  "Melee": [
+   0.0,
+   30.0
+  ],
+  "Ranged": [
+   0.0,
+   36.0
+  ],
+  "Recover": [
+   0.0,
+   66.0
+  ],
+  "Walk": [
+   0.0,
+   30.0
+  ]
+ },
+ "clips_match": {
+  "Idle": true,
+  "Walk": true,
+  "Melee": true,
+  "Ranged": true,
+  "Cast": true,
+  "Hit": true,
+  "Downed": true,
+  "Death": true,
+  "Recover": true
+ },
+ "tris_lod0": 3454,
+ "materials": [
+  "M_Hero_Rogue"
+ ],
+ "atlas_px": [
+  [
+   1024,
+   1024
+  ]
+ ],
+ "color_attributes": [
+  [
+   "Color",
+   "BYTE_COLOR",
+   "CORNER"
+  ]
+ ],
+ "glow_alpha": {
+  "verts_alpha_gt_0": 96,
+  "verts": 10362,
+  "alpha_min": 0.0,
+  "alpha_max": 1.0,
+  "rgb_min": 0.799
+ },
+ "body_height_m_excluding_held_items": 1.805,
+ "max_influences": 3,
+ "deformation_vs_bind": {
+  "Idle@30": {
+   "max_cm": 60.3,
+   "mean_cm": 4.9,
+   "moving_verts": 6364
+  },
+  "Walk@8": {
+   "max_cm": 46.6,
+   "mean_cm": 15.5,
+   "moving_verts": 7705
+  },
+  "Walk@23": {
+   "max_cm": 59.9,
+   "mean_cm": 15.3,
+   "moving_verts": 7705
+  },
+  "Melee@11": {
+   "max_cm": 109.7,
+   "mean_cm": 37.6,
+   "moving_verts": 7705
+  },
+  "Ranged@22": {
+   "max_cm": 146.7,
+   "mean_cm": 24.6,
+   "moving_verts": 7705
+  },
+  "Cast@22": {
+   "max_cm": 108.8,
+   "mean_cm": 27.9,
+   "moving_verts": 7705
+  },
+  "Hit@3": {
+   "max_cm": 62.4,
+   "mean_cm": 18.7,
+   "moving_verts": 7705
+  },
+  "Downed@60": {
+   "max_cm": 148.5,
+   "mean_cm": 67.5,
+   "moving_verts": 7705
+  },
+  "Death@66": {
+   "max_cm": 177.2,
+   "mean_cm": 103.8,
+   "moving_verts": 7705
+  },
+  "Recover@30": {
+   "max_cm": 119.7,
+   "mean_cm": 54.2,
+   "moving_verts": 7705
+  }
+ },
+ "seam_mm_first_vs_last_max_vertex": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 1496.648,
+  "Death": 1777.475,
+  "Recover": 1496.648
+ },
+ "root_drift_mm": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 0.0,
+  "Death": 0.0,
+  "Recover": 0.0
+ },
+ "seconds": {
+  "Idle": 2.0,
+  "Walk": 1.0,
+  "Melee": 1.0,
+  "Ranged": 1.2,
+  "Cast": 1.4,
+  "Hit": 0.5,
+  "Downed": 2.4,
+  "Death": 2.6,
+  "Recover": 2.2
+ },
+ "lods": {
+  "LOD1": {
+   "tris": 1584,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD2": {
+   "tris": 1033,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD0": {
+   "tris": 3454
+  }
+ },
+ "lod_ratio": {
+  "LOD1": 0.459,
+  "LOD2": 0.299,
+  "LOD0": 1.0
+ }
+}

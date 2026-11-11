@@ -1,0 +1,113 @@
+{
+ "name": "SK_Hero_Cleric",
+ "asset_id": "sk-hero-cleric",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 4158,
+   "verts": 2804,
+   "height_m": 1.799,
+   "zmax": 1.8,
+   "zmin": 0.001,
+   "glow_verts": 144
+  },
+  "LOD1": {
+   "tris": 2067,
+   "verts": 1636,
+   "height_m": 1.799,
+   "zmax": 1.8,
+   "zmin": 0.001,
+   "glow_verts": 132
+  },
+  "LOD2": {
+   "tris": 1068,
+   "verts": 984,
+   "height_m": 1.754,
+   "zmax": 1.755,
+   "zmin": 0.001,
+   "glow_verts": 92
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Hero_Cleric.glb": 1688720,
+  "SK_Hero_Cleric_LOD1.glb": 816056,
+  "SK_Hero_Cleric_LOD2.glb": 667252
+ }
+}

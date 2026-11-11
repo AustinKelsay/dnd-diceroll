@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "asset_id": "sk-hero-cleric",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SK_Hero_Cleric",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/150",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5 lead, Claude Sonnet 5.5 subagent) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused."
+  },
+  "recipe": {
+    "method": "Cleric: robed body with a steel cuirass and tabard, mace on weapon_socket, round shield on shield_socket. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build.py, cast_characters.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py; no external motion data",
+    "approved_reference": "Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); gate 2 readability follow-up on #148/#138 (pale trim, lighter hood lining or sash, Rim 1.6 and Fill 1.25)",
+    "parameters": {
+      "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)",
+      "units": "metres, +X forward, Z up, foot pivot at origin",
+      "fps": 30,
+      "atlas": "1024x1024, 1 material",
+      "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
+      "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
+      "blender_validation": {
+        "tris": {
+          "LOD1": {
+            "tris": 2067,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD2": {
+            "tris": 1068,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD0": {
+            "tris": 4158
+          }
+        },
+        "lod_ratio": {
+          "LOD1": 0.497,
+          "LOD2": 0.257,
+          "LOD0": 1.0
+        },
+        "body_height_m": 1.799,
+        "seam_mm_idle_walk": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (contact sheets only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/sk-hero-cleric/r001/SK_Hero_Cleric_source.blend",
+      "sha256": "40a59bc58a6374c786f30753089110578ee17060b946161823f506608ab363f3"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/README.md",
+      "sha256": "74f1f63451a89e30a4b37eb325d44db339bdc94484a13701531bf88600f6575f"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
+      "sha256": "706b8b51061ee3b2f5e49697437fc8d0d40377bcc3e9ff5ad6c6aa2aacb14053"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/build.py",
+      "sha256": "a6470b669763d8a26f3ac91b9465657129fc1f600285646c97ba07c9e38455ab"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review.py",
+      "sha256": "339402deec49f756a2b80927aa363723d336186c80b8d5448dcf9c5eabd2f08a"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/make_records.py",
+      "sha256": "bdb7b62f3d0f53ca499a066decdcccc1bdc8e081fa2be120727c0404f5896173"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/README.md",
+      "sha256": "79cc252119037ca002c61166af063012fbee3a00563abfd2381fb57b3acc47da"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/rigkit.py",
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/clips.py",
+      "sha256": "d9f898e7fbdd1e5fa270c4323c0aafab36c4721f851e09b911c04ca3ab350a59"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/characters.py",
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-cleric/r001/SK_Hero_Cleric.glb",
+      "sha256": "1c0341e55b239c40962f301561a2010bdd21bf4933be417c6da5d1ce5e0e9087"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-cleric/r001/SK_Hero_Cleric_LOD1.glb",
+      "sha256": "90b1306b187d9e8d0e2d17102dd243e3c3c4b352acda7308d715f1038e12af09"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-cleric/r001/SK_Hero_Cleric_LOD2.glb",
+      "sha256": "7a9bf27c7d17a01aa9081e0eac14180d38063f76aff4cc0611bd3a031e5f0337"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-rigged-character",
+    "version": 1,
+    "settings": {
+      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and no clips are imported for this character",
+      "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
+      "nanite": "off, set explicitly (gate 1 pipeline rule)",
+      "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
+      "animations": "the nine shared A_Humanoid_* clips from #147 are reused; the clips baked into this glb are not imported",
+      "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
+      "texture_filter": "trilinear, anisotropic 8",
+      "collision": "none (presentation only)"
+    }
+  },
+  "validation": {
+    "state": "passed",
+    "evidence": [
+      "Art/rig-pilot/cast/metrics/validate_cleric.json",
+      "Art/rig-pilot/cast/metrics/build_cleric.json",
+      "Art/rig-pilot/cast/previews/sheet_02_cast_turnaround.png",
+      "Art/rig-pilot/cast/previews/sheet_04_cleric_clips.png",
+      "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
+    ]
+  }
+}
