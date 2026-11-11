@@ -1,5 +1,722 @@
 {
- "Rogue-rigged": {
+ "Rogue rigged-darker-rogue (head 9d62795)": {
+  "note": "image-region statistics (rectangles, no figure mask)",
+  "summary": {
+   "shots": 15,
+   "contrastRatioMean": 2.66,
+   "contrastRatioMin": 1.617,
+   "mergeFractionMean": 0.0938,
+   "figureLumaMean": 157.09,
+   "groundLumaMean": 64.68
+  },
+  "shots": [
+   {
+    "contrastRatio": 3.522,
+    "mergeFraction": 0.0128,
+    "figureLuma": 162.19,
+    "groundLuma": 40.76,
+    "figurePixels": 2430,
+    "groundPixels": 9558,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1521,
+     414,
+     1580,
+     526
+    ]
+   },
+   {
+    "contrastRatio": 1.617,
+    "mergeFraction": 0.1093,
+    "figureLuma": 136.09,
+    "groundLuma": 81.46,
+    "figurePixels": 1794,
+    "groundPixels": 7176,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1254,
+     302,
+     1300,
+     410
+    ]
+   },
+   {
+    "contrastRatio": 2.212,
+    "mergeFraction": 0.0365,
+    "figureLuma": 174.47,
+    "groundLuma": 82.28,
+    "figurePixels": 1560,
+    "groundPixels": 6084,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     833,
+     302,
+     872,
+     410
+    ]
+   },
+   {
+    "contrastRatio": 2.792,
+    "mergeFraction": 0.022,
+    "figureLuma": 165.51,
+    "groundLuma": 54.6,
+    "figurePixels": 1680,
+    "groundPixels": 6720,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1081,
+     394,
+     1123,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 3.244,
+    "mergeFraction": 0.0107,
+    "figureLuma": 165.75,
+    "groundLuma": 44.77,
+    "figurePixels": 2430,
+    "groundPixels": 9558,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1521,
+     414,
+     1580,
+     526
+    ]
+   },
+   {
+    "contrastRatio": 3.231,
+    "mergeFraction": 0.1033,
+    "figureLuma": 151.33,
+    "groundLuma": 52.87,
+    "figurePixels": 2430,
+    "groundPixels": 9558,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1500,
+     393,
+     1559,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 1.776,
+    "mergeFraction": 0.1297,
+    "figureLuma": 144.0,
+    "groundLuma": 89.63,
+    "figurePixels": 1896,
+    "groundPixels": 7584,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1255,
+     314,
+     1303,
+     423
+    ]
+   },
+   {
+    "contrastRatio": 2.258,
+    "mergeFraction": 0.0563,
+    "figureLuma": 175.6,
+    "groundLuma": 83.16,
+    "figurePixels": 1580,
+    "groundPixels": 6162,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     844,
+     314,
+     883,
+     423
+    ]
+   },
+   {
+    "contrastRatio": 2.909,
+    "mergeFraction": 0.0106,
+    "figureLuma": 171.36,
+    "groundLuma": 57.28,
+    "figurePixels": 1701,
+    "groundPixels": 6804,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1079,
+     393,
+     1121,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 3.258,
+    "mergeFraction": 0.1025,
+    "figureLuma": 152.41,
+    "groundLuma": 52.51,
+    "figurePixels": 2430,
+    "groundPixels": 9558,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1500,
+     393,
+     1559,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 4.06,
+    "mergeFraction": 0.0942,
+    "figureLuma": 170.16,
+    "groundLuma": 49.97,
+    "figurePixels": 2430,
+    "groundPixels": 9720,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1516,
+     422,
+     1576,
+     535
+    ]
+   },
+   {
+    "contrastRatio": 1.939,
+    "mergeFraction": 0.039,
+    "figureLuma": 160.45,
+    "groundLuma": 84.93,
+    "figurePixels": 1896,
+    "groundPixels": 7426,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw000-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1254,
+     307,
+     1301,
+     416
+    ]
+   },
+   {
+    "contrastRatio": 2.258,
+    "mergeFraction": 0.0712,
+    "figureLuma": 174.42,
+    "groundLuma": 85.59,
+    "figurePixels": 1560,
+    "groundPixels": 6084,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw090-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     839,
+     281,
+     878,
+     389
+    ]
+   },
+   {
+    "contrastRatio": 2.464,
+    "mergeFraction": 0.0752,
+    "figureLuma": 160.92,
+    "groundLuma": 66.49,
+    "figurePixels": 1701,
+    "groundPixels": 6804,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw180-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1080,
+     393,
+     1122,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 2.353,
+    "mergeFraction": 0.5337,
+    "figureLuma": 91.76,
+    "groundLuma": 43.86,
+    "figurePixels": 2430,
+    "groundPixels": 9720,
+    "fixture": "board-vigil-pillars",
+    "shot": "targeting-yawm90-default",
+    "unit": "Nix",
+    "role": "Rogue",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1516,
+     422,
+     1576,
+     535
+    ]
+   }
+  ]
+ },
+ "Cleric rigged-darker-rogue (head 9d62795)": {
+  "note": "image-region statistics (rectangles, no figure mask)",
+  "summary": {
+   "shots": 15,
+   "contrastRatioMean": 3.335,
+   "contrastRatioMin": 2.067,
+   "mergeFractionMean": 0.025,
+   "figureLumaMean": 190.28,
+   "groundLumaMean": 65.03
+  },
+  "shots": [
+   {
+    "contrastRatio": 4.052,
+    "mergeFraction": 0.0058,
+    "figureLuma": 192.17,
+    "groundLuma": 49.72,
+    "figurePixels": 2240,
+    "groundPixels": 9120,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1506,
+     356,
+     1563,
+     466
+    ]
+   },
+   {
+    "contrastRatio": 2.225,
+    "mergeFraction": 0.0012,
+    "figureLuma": 155.05,
+    "groundLuma": 68.27,
+    "figurePixels": 1716,
+    "groundPixels": 6708,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1165,
+     302,
+     1208,
+     410
+    ]
+   },
+   {
+    "contrastRatio": 3.092,
+    "mergeFraction": 0.0088,
+    "figureLuma": 206.7,
+    "groundLuma": 77.58,
+    "figurePixels": 1600,
+    "groundPixels": 6400,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     830,
+     356,
+     870,
+     466
+    ]
+   },
+   {
+    "contrastRatio": 4.015,
+    "mergeFraction": 0.0619,
+    "figureLuma": 204.56,
+    "groundLuma": 53.6,
+    "figurePixels": 1760,
+    "groundPixels": 7200,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1174,
+     394,
+     1219,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 4.036,
+    "mergeFraction": 0.0022,
+    "figureLuma": 191.09,
+    "groundLuma": 49.24,
+    "figurePixels": 2240,
+    "groundPixels": 9120,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1506,
+     356,
+     1563,
+     466
+    ]
+   },
+   {
+    "contrastRatio": 3.737,
+    "mergeFraction": 0.0121,
+    "figureLuma": 187.44,
+    "groundLuma": 56.23,
+    "figurePixels": 2240,
+    "groundPixels": 9120,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1486,
+     335,
+     1543,
+     445
+    ]
+   },
+   {
+    "contrastRatio": 2.067,
+    "mergeFraction": 0.0368,
+    "figureLuma": 149.63,
+    "groundLuma": 83.03,
+    "figurePixels": 1738,
+    "groundPixels": 6952,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1165,
+     314,
+     1209,
+     423
+    ]
+   },
+   {
+    "contrastRatio": 3.009,
+    "mergeFraction": 0.0069,
+    "figureLuma": 207.09,
+    "groundLuma": 78.66,
+    "figurePixels": 1600,
+    "groundPixels": 6400,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     841,
+     371,
+     881,
+     482
+    ]
+   },
+   {
+    "contrastRatio": 3.755,
+    "mergeFraction": 0.0821,
+    "figureLuma": 202.73,
+    "groundLuma": 60.13,
+    "figurePixels": 1863,
+    "groundPixels": 7452,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1172,
+     393,
+     1218,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 3.729,
+    "mergeFraction": 0.0103,
+    "figureLuma": 187.27,
+    "groundLuma": 55.95,
+    "figurePixels": 2240,
+    "groundPixels": 9120,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1486,
+     335,
+     1543,
+     445
+    ]
+   },
+   {
+    "contrastRatio": 4.594,
+    "mergeFraction": 0.0017,
+    "figureLuma": 215.24,
+    "groundLuma": 52.06,
+    "figurePixels": 2320,
+    "groundPixels": 9280,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1501,
+     363,
+     1559,
+     474
+    ]
+   },
+   {
+    "contrastRatio": 2.387,
+    "mergeFraction": 0.0305,
+    "figureLuma": 174.57,
+    "groundLuma": 80.54,
+    "figurePixels": 1738,
+    "groundPixels": 6794,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw000-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1165,
+     307,
+     1208,
+     416
+    ]
+   },
+   {
+    "contrastRatio": 2.977,
+    "mergeFraction": 0.0241,
+    "figureLuma": 199.31,
+    "groundLuma": 75.95,
+    "figurePixels": 1580,
+    "groundPixels": 6320,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw090-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     836,
+     336,
+     876,
+     445
+    ]
+   },
+   {
+    "contrastRatio": 2.435,
+    "mergeFraction": 0.0768,
+    "figureLuma": 170.07,
+    "groundLuma": 75.45,
+    "figurePixels": 1863,
+    "groundPixels": 7452,
+    "fixture": "board-vigil-pillars",
+    "shot": "battle-yaw180-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1173,
+     393,
+     1219,
+     505
+    ]
+   },
+   {
+    "contrastRatio": 3.919,
+    "mergeFraction": 0.0134,
+    "figureLuma": 211.3,
+    "groundLuma": 59.1,
+    "figurePixels": 2320,
+    "groundPixels": 9280,
+    "fixture": "board-vigil-pillars",
+    "shot": "targeting-yawm90-default",
+    "unit": "Sera",
+    "role": "Cleric",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1501,
+     363,
+     1559,
+     474
+    ]
+   }
+  ]
+ },
+ "Rogue rigged-first-palette (f91f21c)": {
+  "note": "image-region statistics (rectangles, no figure mask)",
   "summary": {
    "shots": 15,
    "contrastRatioMean": 2.87,
@@ -356,7 +1073,8 @@
    }
   ]
  },
- "Cleric-rigged": {
+ "Cleric rigged-first-palette (f91f21c)": {
+  "note": "image-region statistics (rectangles, no figure mask)",
   "summary": {
    "shots": 15,
    "contrastRatioMean": 3.337,
@@ -713,7 +1431,8 @@
    }
   ]
  },
- "Rogue-static": {
+ "Rogue static": {
+  "note": "image-region statistics (rectangles, no figure mask)",
   "summary": {
    "shots": 15,
    "contrastRatioMean": 1.858,
@@ -1070,7 +1789,8 @@
    }
   ]
  },
- "Cleric-static": {
+ "Cleric static": {
+  "note": "image-region statistics (rectangles, no figure mask)",
   "summary": {
    "shots": 15,
    "contrastRatioMean": 1.95,
