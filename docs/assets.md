@@ -105,6 +105,37 @@ Import policy (v2), applied by `import_dark_fantasy_theme.py`:
 
 The Unreal import, build, automation and gallery captures are done (PR #164). What stays pending is the on-screen pass of the three records.
 
+## Rigged cast, batch 1: rogue and cleric (issue #150)
+
+`Art/rig-pilot/cast/` (see its `README.md`) holds the Blender half: the new agile body, the rogue and cleric recipes, checks (`metrics/`) and contact sheets (`previews/`). The skeleton contract is the #147 one and is unchanged (`Art/rig-pilot/r001/README.md`); r001's scripts are imported, never edited. Records: `Art/sk-hero-rogue/r001/` and `Art/sk-hero-cleric/r001/` (`asset.json`, three glbs each, `*_source.blend`). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository.
+
+| Character | Body | Tris LOD0 / LOD1 / LOD2 | Height (excluding held items) |
+| --- | --- | --- | --- |
+| `SK_Hero_Rogue` | agile (new) | 3,454 / 1,584 (46%) / 1,033 (30%) | 180.5 cm |
+| `SK_Hero_Cleric` | robed | 4,158 / 2,067 (50%) / 1,068 (26%) | 179.9 cm |
+
+**Decisions (lead delegated the body choice to this slice):** the rogue gets a new agile body (lighter, leather, hood, cloak, twin daggers); the cleric uses the robed body under a steel cuirass and tabard, so it does not read as a recoloured fighter at the default zoom (reasoning in the cast README). All nine clips stay shared (no per-character clips): the short daggers, the mace and the round shield were checked on every clip's sheet and do not pass through the body. The rogue's dark-figure finding from gate 2 is answered in the palette (sage cloak, cream hem, pale hood lining, scarf and mask, cream trim, a copper sash) and in the character material (Rim 1.6 and Fill 1.25, as #148). The cleric's holy symbol is an original rising half sun over a horizon bar (no real-world religious symbol).
+
+**Import (headless, `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`, hash snapshots of `Config/` and `Content/` around each run):** `import_dark_fantasy_theme.py` adds `SK_Hero_Rogue` and `SK_Hero_Cleric` to its `RIG` table. The existing skeleton and nine clips are reused (no new skeleton, no clip import), each mesh gets LOD1 and LOD2 from its `_LOD1`/`_LOD2` glb and Nanite off, and the material instance `MI_SK_*` of `M_DiceRollTheme` takes Rim 1.6, Fill 1.25 and Glow from the real vertex-alpha mask. Run 1: `THEME_RIG_COMPLETE 5/5 characters, 9 clips` with no script warnings, `THEME_FILES_CHANGED 7` printed by the script (it hashes the packaged files under `Content/DnDDiceRoll/Theme`). The full hash diff: **added exactly** `Characters/SK_Hero_Cleric`, `Characters/SK_Hero_Rogue`, `Materials/MI_SK_Hero_Cleric`, `Materials/MI_SK_Hero_Rogue`, `Textures/T_SK_Hero_Cleric`, `Textures/T_SK_Hero_Rogue`; **changed exactly** `DA_DiceRollTheme`; nothing removed. `SKEL_Humanoid`, the three pilot meshes, the nine `A_Humanoid_*` clips, `M_DiceRollTheme` and every other asset kept their exact bytes. Reruns (two, the second after the final source edits): exit 0, `THEME_FILES_CHANGED 0`, no file changed. Known Interchange warnings, as in #147: the skinned mesh is not the root, the LOD naming pattern, and the staging folder. `Content/Python/__pycache__` (ignored) is not counted.
+
+**Theme data:** `UDiceRollTheme` gains `ClassRigs` and `FoeRigs` (`TMap<FName, FDiceRollCharacter>`), keyed by the class's enum name (`Fighter`, `Rogue`, `Cleric`, `Wizard`) or the foe archetype (`Raider`); `RigForClass` and `RigForFoe` replace the fixed lookups. A later cast batch fills a class by data only: add its character to `RIG` in the import script. The three pilot fields (`FighterRig`, `WizardRig`, `RaiderRig`) stay in the class, so a theme saved before this change still resolves its rigs (the maps win when both are set); the import moves their definitions into the maps and clears them, which is why `DA_DiceRollTheme` changes.
+
+**Poses:** a spell casts: the cleric's basic ranged attack (Sacred Flame, `IsSpellAttack`) and every cleric kit ability (all `bSpell`) play Cast, and the cleric's melee mace plays Melee. The rogue never casts a basic attack; its weapon abilities (Strike, Area, Push, not `bSpell`) play Melee or Ranged, and only the arcane trickster's kit abilities are spells. Limitation: `ExpeditionPose::ForEffect` maps Protect, Healing, Surge, Rage and Missile to Cast whether or not the ability is a spell (a pilot rule, unchanged), so the rogue's non-spell Protect and Healing specials (Fast Hands, Ghost Shelter) play the shared Cast clip, an arms-raised gesture, with daggers in hand. `RigCastBatchTest` pins both behaviours.
+
+**Readability, measured (default zoom, 1920x1080, `tools/figure_contrast.py` over `gallery` runs):** the same fixtures, build and head, with the static r001 figures (`gallery --static-figures`) against the rigged ones. The tool compares a figure's body region with the ground just beside it, from each unit's projected footprint box in the manifest (the figure's own pixels are not masked, so only compare like with like). Contrast ratio is the WCAG formula on the mean linear luminance; the merge fraction is the share of body pixels within 12 of the ground's median luma.
+
+| Rogue | Static r001 | Rigged (this PR) |
+| --- | --- | --- |
+| Mean contrast, 15 default-zoom shots (4 yaws and targeting, 3 boards) | 1.86 | **2.87** |
+| Mean contrast, Root (`board-root-r002`) / Vigil (`board-vigil-pillars`) / Stream-trail default seed | 1.86 / 1.87 / 1.84 | **2.91 / 2.81 / 2.89** |
+| Worst shot (yaw 0, camera looking at the lit side of the ground) | 1.02 | **1.75** |
+| Mean merge fraction | 18.8% | **8.3%** |
+| The cleric, for reference: mean contrast / merge | 1.95 / 19.0% | **3.34 / 2.5%** |
+
+The weakest figure at the default zoom is no longer a shadow-merged rogue; the weakest rigged shot is a bright-ground yaw. Selected captures are on the evidence branch linked from the PR; the on-screen pass is the lead's.
+
+**Budget (per party of four, added by this batch):** skinned components 2 to 4 (the rogue and cleric replace two static figure components), LOD0 triangles 10,404 to 14,928 (+4,524: 3,454 + 4,158 skinned in place of 1,343 + 1,745 static), and the figures at the default zoom (about 95 px) draw LOD1 or LOD2. The timing budget (p95 4 ms, GPU 3.5 ms, game thread 1.5 ms, RSS 1.5 GiB) is measured by the lead's package and perf pass, not here.
+
 ## Root of the World r002 world kit (issue #149)
 
 Blender-side revision of the Root world, built to the #145 standard (150 cm cells, no geometry in the board footprint, a camera clear volume, occluder split, 2048² atlas at about 256 texels/m, vertex light, explicit LODs). Original, agent-authored procedural work by the scripts in `Art/dark-fantasy-sources/r002-root/scripts/` (Blender 5.2.3 LTS); no outside content. `world-root` r002 revises r001 at the same package; the occluders, three variants each of Root pillar, wall and stones, a 2-cell root arch, eight scatter props, three mist cards and two light shafts are new ids at r001 (`world-root-occluders`, `prop-root-*`, `scatter-root-*`, `fx-root-*`), each with a record under `Art/<asset-id>/rNNN/asset.json`. All records are `validation.state: pending`: nothing was imported or rendered in Unreal. Details, rebuild commands, measurements and the camera check are in `Art/dark-fantasy-sources/r002-root/README.md`.
