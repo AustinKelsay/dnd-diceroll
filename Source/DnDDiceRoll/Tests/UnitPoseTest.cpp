@@ -513,7 +513,12 @@ double FigureHeight(const AExpeditionBattleView& View, USceneComponent* RigRoot)
 
 bool ExpectsRig(const FCombatantState& Unit)
 {
-    if (Unit.Side == ECombatSide::Party) { return Unit.AdventurerRole == EAdventurerRole::Fighter || Unit.AdventurerRole == EAdventurerRole::Wizard; }
+    // The four original classes are rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric); the rest keep static figures until their batch.
+    if (Unit.Side == ECombatSide::Party)
+    {
+        return Unit.AdventurerRole == EAdventurerRole::Fighter || Unit.AdventurerRole == EAdventurerRole::Rogue ||
+            Unit.AdventurerRole == EAdventurerRole::Cleric || Unit.AdventurerRole == EAdventurerRole::Wizard;
+    }
     return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider"));
 }
 
@@ -615,10 +620,23 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
                     TestTrue(FString::Printf(TEXT("%s is a rigged figure (run import_dark_fantasy_theme.py)"), *Unit.Name), State.bSkeletal);
                 }
                 if (!State.bSkeletal) { continue; }
+                // Per-figure render settings reach the skin (it draws through Rig.Skin, not Rig.Parts): the silhouette's custom depth
+                // and stencil by side, and a tintable material per skin slot for the hit flash and rim.
+                TestEqual(*FString::Printf(TEXT("%s's skin carries its side's silhouette stencil"), *Unit.Name),
+                    View->FigureStencil(Unit.Id), Unit.Side == ECombatSide::Enemy ? AExpeditionBattleView::EnemyStencil : AExpeditionBattleView::PartyStencil);
+                TArray<FLinearColor> SkinColors;
+                FLinearColor SkinRing;
+                TestTrue(*FString::Printf(TEXT("%s's skin has a tintable slot"), *Unit.Name), View->UnitShownColors(Unit.Id, SkinColors, SkinRing) && SkinColors.Num() == 1);
                 const double Height = FigureHeight(*View, RigRoot);
                 TestTrue(FString::Printf(TEXT("%s stands 175 to 185 cm (measured %.1f)"), *Unit.Name, Height), Height >= 175.0 && Height <= 185.0);
             }
             TestTrue(TEXT("The default party has rigged characters"), Expected > 0);
+            // Batch 1 (#150): the rogue and the cleric are rigged, never a static or primitive fallback, once the theme is imported.
+            TSet<EAdventurerRole> RiggedRoles;
+            for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+            { if (Unit.Side == ECombatSide::Party && View->UnitAnimation(Unit.Id).bSkeletal) { RiggedRoles.Add(Unit.AdventurerRole); } }
+            for (const EAdventurerRole Role : {EAdventurerRole::Fighter, EAdventurerRole::Rogue, EAdventurerRole::Cleric, EAdventurerRole::Wizard})
+            { TestTrue(FString::Printf(TEXT("The default party's %s is rigged"), *UDiceRollTheme::ClassKey(Role).ToString()), RiggedRoles.Contains(Role)); }
             TestEqual(TEXT("Exactly the expected units are rigged"), View->SkeletalFigureCount(), Expected);
             ExpectFiguresConverged(*this, *View, TEXT("a fresh board"));
             ReleaseView(View);
