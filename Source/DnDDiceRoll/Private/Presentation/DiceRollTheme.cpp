@@ -2,6 +2,7 @@
 #include "Animation/AnimSequence.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
+#include "Misc/PackageName.h"
 
 UStaticMesh* UDiceRollTheme::Load(const TSoftObjectPtr<UStaticMesh>& Mesh)
 {
@@ -10,7 +11,12 @@ UStaticMesh* UDiceRollTheme::Load(const TSoftObjectPtr<UStaticMesh>& Mesh)
 
 namespace
 {
-bool Set(const TSoftObjectPtr<UStaticMesh>& Mesh) { return !Mesh.IsNull(); }
+/** An entry that is set and whose package is loaded or exists on disk: a dangling reference to a deleted package is not set. */
+bool Set(const TSoftObjectPtr<UStaticMesh>& Mesh)
+{
+    if (Mesh.IsNull()) { return false; }
+    return Mesh.IsValid() || FPackageName::DoesPackageExist(Mesh.ToSoftObjectPath().GetLongPackageName());
+}
 bool AllSet(const TArray<TSoftObjectPtr<UStaticMesh>>& Meshes, int32 Count)
 {
     if (Meshes.Num() != Count) { return false; }

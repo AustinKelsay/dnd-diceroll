@@ -211,6 +211,8 @@ def main():
     with open(os.path.join(OUT, 'camera_check.json'), 'w') as fh:
         json.dump(REPORT, fh, indent=1)
     print('VAULT VALIDATE', 'FAIL' if fails else 'OK', len(fails))
+    if fails:
+        raise SystemExit(1)          # a failed validation must fail the run (a printed FAIL with exit 0 hides it)
 
 
 main()

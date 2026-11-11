@@ -104,9 +104,11 @@ ROOT_ARRAY_SIZES = {"root_pillar_variants": 3, "root_wall_variants": 3, "root_st
 VAULT_STONE = (0.92, 0.0, 0.05, 1.0, 0.0)
 VAULT_PILLAR = (0.92, 0.0, 0.05, 1.0, 0.0)
 VAULT_WALL = (0.92, 0.0, 0.05, 1.0, 0.0)
+# The Waystone halo, its rune channels and the alcove lines are in the occluder mesh: Glow 0.25 keeps them from clipping against the bloom (peak luma under 250 on the apse).
+VAULT_OCCLUDER = (0.9, 0.0, 0.0, 0.25, 0.0)
 VAULT_R002 = [
     ("world-vault", 1, "SM_World_Vault", "Worlds", LIT, "vault_world", None, GROUND),
-    ("world-vault-occluders", 1, "SM_World_Vault_Occluders", "Worlds", OCCLUDER, "vault_occluders", None, GROUND),
+    ("world-vault-occluders", 1, "SM_World_Vault_Occluders", "Worlds", OCCLUDER, "vault_occluders", None, VAULT_OCCLUDER),
     ("prop-vault-pillar", 1, "SM_Prop_Vault_Pillar", "Props", LIT, "vault_pillar_variants", 0, VAULT_PILLAR),
     ("prop-vault-pillar-b", 1, "SM_Prop_Vault_Pillar_B", "Props", LIT, "vault_pillar_variants", 1, VAULT_PILLAR),
     ("prop-vault-pillar-c", 1, "SM_Prop_Vault_Pillar_C", "Props", LIT, "vault_pillar_variants", 2, VAULT_PILLAR),

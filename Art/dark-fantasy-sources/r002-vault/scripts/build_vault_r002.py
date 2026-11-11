@@ -48,6 +48,7 @@ ATLAS = 2048
 PAD = 16
 SIGHT_MARGIN = 1.0
 GLOW_MATS = VL.GLOW_MATS
+GLOW_LIGHT = 0.5
 BASE_Z = -.05
 FLOOR_TILE_M = 2.0
 rng = np.random.default_rng(1493)
@@ -605,12 +606,13 @@ def main():
     STATS['source_tris_by_group'] = grp
     STATS['pieces'] = dict(total=len(PIECES), world=len(world_pieces), occluders=len(occ_pieces), occluder_names=[p['name'] for p in occ_pieces])
     SECONDARY = ('reliquary_alcoves', 'sarcophagi', 'collapsed_rib', 'chains')
-    STATS['content_counts'] = dict(landmark=1, secondary_groups=list(SECONDARY), groups=COUNTS['groups'], medium_props=COUNTS['medium'], small_props=COUNTS['small'])
+    STATS['content_counts'] = dict(landmark=1, secondary_groups=list(SECONDARY), groups=COUNTS['groups'], medium_props=COUNTS['medium'], small_props=COUNTS['small'],
+                                       note='the small props are batched into the SM_World_Vault export as ordinary triangles (baked, one mesh); they are not runtime instances, and the game adds its own instanced scatter on top')
     for d in [x for x in (world, occl) if x is not None]:
         assert np.isfinite(d['C']).all(), 'non-finite vertex colour'
         d['C'] = L.knee(d['C'] * 1.05)
         gl = np.isin(d['mat'], GLOW_MATS)
-        d['C'][gl] = 1.0
+        d['C'][gl] = GLOW_LIGHT        # not 1.0: with the far-zoom exposure lift, full-light rune bars clip to pure white in the game (apse peak luma, PR #197 review)
     # The glTF -> Unreal import mirrors Y (Blender +Y lands on the game's -Y, the camera's home side), so the design above (back wall and
     # Waystone on +Y) is exported mirrored: in game the Waystone stands on the far side of the home camera.  X is unchanged.
     MIRROR_Y = np.diag([1.0, -1.0, 1.0, 1.0])

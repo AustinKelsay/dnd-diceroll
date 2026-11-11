@@ -38,10 +38,10 @@ Scripts: `r002_lib.py`, `lod_r002.py` and `camera_volume.py` (the #145/Root help
 | Landmark | 1 | the Waystone and its apse, dais, statues and halo |
 | Secondary groups | 4 | reliquary alcoves (8: relic shelves with crystals, ossuary skull rows, hooded statues), sarcophagus rows (10 coffins and chests in the front corners), the collapsed vault rib (fallen arcs, drums, rubble, 6 corbel stubs), chains (11) |
 | Medium props | 38 | sarcophagi, chests, urns, statues, drums, rib segments |
-| Small props | 276 | 215 floor scatter pieces (skulls, long bones, rib cages, candle stubs, crystal chips, rubble) plus chains, skulls and candles in the alcoves |
+| Small props | 276 | **batched into the `SM_World_Vault` export as ordinary triangles (one mesh), not runtime instances**: 215 floor scatter pieces (skulls, long bones, rib cages, candle stubs, crystal chips, rubble) plus chains, skulls and candles in the alcoves |
 | Architecture | back wall with apse, two side walls, 12 pilasters, 16 hall wall runs and piers, far hall (perimeter wall with buttresses and lancet glows, capped under the sight volume) |
 
-`world_metrics.json` records the counts. The game adds 18 scatter pieces, 4 mist cards, 2 light shafts and the brazier ring on top, from the kit below.
+`world_metrics.json` records the counts (the medium and small props are all baked into the world and occluder meshes; the game's instanced props are the 18 scatter pieces, mist cards and shafts below plus its own braziers). The game adds 18 scatter pieces, 4 mist cards, 2 light shafts and the brazier ring on top, from the kit below.
 
 ## The camera clear volume
 

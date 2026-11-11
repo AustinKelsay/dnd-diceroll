@@ -63,7 +63,7 @@
               0.0352
             ],
             "appearance_rgb_mean_p95": [
-              0.0112,
+              0.0069,
               0.0338
             ]
           }
@@ -115,12 +115,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_vault_r002.py",
-      "sha256": "88bbb99f027868176f6c151ea6b5930afae2d4bf4212f27e34e3d62a1e7a0671"
+      "sha256": "a54633dd32805c8f1eea396fceba2fb8d3e2c120ae5b1a6f8cfa948b82f882e9"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/validate_vault_r002.py",
-      "sha256": "c42ba705a9fd73051549d95bb0f6fddb9c9790535ecda911e2b0f683ef24a6ed"
+      "sha256": "fe4f9d8c24ba8033da5331c8dcadbf45595d287c87dc0d3ac2008bc6b9ac9c71"
     },
     {
       "role": "source",
@@ -140,12 +140,12 @@
     {
       "role": "export",
       "path": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders.glb",
-      "sha256": "272d30b7ff806e9784d170cf0060e91c978cea4141d9f770b013a8925c57e49a"
+      "sha256": "5a1409381f11972c6b064c6244d0a52a8a019c4b365381034a29ea9898d7c2d0"
     },
     {
       "role": "export",
       "path": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
-      "sha256": "e03d7f5db40946ffc1ab7ba7290c406db91cbd6e252da889071151f287bac4d6"
+      "sha256": "dd2d6c344f922c8d79ecc947c6d95f2f8882e9cb4a168385321b79ef5a1178a2"
     }
   ],
   "import_policy": {

@@ -110,6 +110,13 @@ constexpr float FogStartReference = 3600.0f;
 
 // The dark-fantasy worlds carry their own baked light; the sun only adds direction and the
 // fog sells depth. Ruins and the vault share the Drowned Vigil world with different grades.
+// The Vault's apse Waystone (#149): its distance behind the board centre (cm, the world is authored at the true metric), how far the floating shard stands in front of
+// the monolith (toward the board), and the gain on the Waystone light there, tuned so the apse leads the composition without blowing out.
+constexpr float VaultApseOffsetCm = 1355.0f;
+constexpr float VaultApseShardOffsetCm = 150.0f;
+constexpr float VaultWaystoneGain = 0.25f;
+constexpr float VaultShardGlow = 0.08f;   // the apse shard's emissive colour is scaled by this, so the halo and shard do not clip against the bloom
+
 FPalette ThemedPaletteFor(EBoardTheme Theme)
 {
     FPalette Palette = PaletteFor(Theme);
@@ -990,8 +997,8 @@ void AExpeditionBattleView::ApplyTheme()
     AppliedFarGrade = -1.0f;
 }
 
-// The Vault's far-zoom grade (#149, gate 2 found the far view dim and flat): from the default zoom out to the far stop the exposure band lifts by up
-// to 0.7 stop, the vignette eases off and the contrast rises a little, so the floor reads against the walls and the dark beyond them. The Vigil and
+// The Vault's far-zoom grade (#149, gate 2 found the far view dim and flat): from the default zoom out to the far stop the exposure lifts by up
+// to 0.7 stop (the luminance band divides by the lift), the vignette eases off and the contrast rises a little, so the floor reads against the walls and the dark beyond them. The Vigil and
 // the Root keep their grade (play happens at the figure-sized default; their far views were measured and left alone, see docs/architecture.md).
 void AExpeditionBattleView::UpdateFarGrade()
 {
@@ -1004,8 +1011,9 @@ void AExpeditionBattleView::UpdateFarGrade()
     const FGrade Biome = GradeFor(BoardTheme);
     FPostProcessSettings& Settings = Grade->Settings;
     const float Lift = 1.0f + 0.62f * T;
-    Settings.AutoExposureMinBrightness = Biome.Luminance * Lift / ExposureBand;
-    Settings.AutoExposureMaxBrightness = Biome.Luminance * Lift * ExposureBand;
+    // Exposure is the inverse of the luminance the band clamps the scene to, so a brighter far view needs a lower band, not a higher one.
+    Settings.AutoExposureMinBrightness = Biome.Luminance / Lift / ExposureBand;
+    Settings.AutoExposureMaxBrightness = Biome.Luminance / Lift * ExposureBand;
     Settings.VignetteIntensity = Biome.Vignette * (1.0f - 0.6f * T);
     const float Contrast = FMath::Lerp(1.12f, 1.2f, T);
     Settings.ColorContrast = FVector4(Contrast, Contrast, Contrast, 1.0f);
@@ -1484,10 +1492,14 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
     // The Waystone floats above its pedestal in the vault until the finale is won.
     if (BoardTheme == EBoardTheme::Vault)
     {
-        // The far-right corner keeps the Waystone clear of the initiative strip.
-        const FVector Pedestal = SceneBoard(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -RefTop + 6.0f);
+        // The legacy pedestal stands in the far-right corner, clear of the initiative strip. On a Vault-kit board the world's own Waystone in the apse
+        // leads the composition instead: no pedestal, and the same floating shard and light (with their intensity and artifact behaviour) stand at the apse.
+        const bool bApse = bVaultKit;
+        const FVector Pedestal = bApse ? ApseLocal + FVector(0.0f, -VaultApseShardOffsetCm / SceneScale(), 0.0f) : SceneBoard(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -RefTop + 6.0f);
+        WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * 4.0f, FRotator(45, 45, 0), true));
+        if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
     }
 }
@@ -1797,7 +1809,7 @@ void AExpeditionBattleView::UpdateEffects()
         const float Rise = bClaimed ? 60.0f + 20.0f * FMath::Sin(Clock * 1.5f) : 10.0f * FMath::Sin(Clock * 1.8f);
         const FVector Base = WaystoneSlots[0].Location;
         SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Clock * 40.0f, 45), WaystoneSlots[1].Scale, WaystoneSlots[1].Colour);
-        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
+        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
     }
 }
 
@@ -2374,13 +2386,30 @@ EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)
     return Theme == EBoardTheme::Meadow ? EDiceRollKit::Root : Theme == EBoardTheme::Vault ? EDiceRollKit::Vault : EDiceRollKit::Vigil;
 }
 
+bool AExpeditionBattleView::VaultPiecesLoad(const FDiceRollWorldKit& Kit) const
+{
+    auto Loads = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
+    {
+        for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { if (!ThemeMesh(Entry)) { return false; } }
+        return true;
+    };
+    return ThemeMesh(*Kit.World) && ThemeMesh(*Kit.Occluders) && ThemeMesh(*Kit.Arch)
+        && Loads(*Kit.Pillars) && Loads(*Kit.Walls) && Loads(*Kit.Stones) && Loads(*Kit.Scatter) && Loads(*Kit.Mist) && Loads(*Kit.Shafts);
+}
+
+FVector AExpeditionBattleView::WaystoneLightLocation() const
+{
+    return WaystoneLight ? WaystoneLight->GetComponentLocation() : FVector::ZeroVector;
+}
+
 bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
 {
     // The kit the board wants. The finale asks for the Vault kit and gets the Vigil kit, as before the Vault existed, when any Vault
     // entry is missing from the theme or its world does not load (#149).
     FDiceRollWorldKit Kit = Theme->KitFor(KitKindFor(BoardTheme));
     UStaticMesh* World = ThemeMesh(*Kit.World);
-    if (!World && Kit.Kind == EDiceRollKit::Vault) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
+    // Atomic: every Vault piece loads before anything is placed, or the whole finale draws the Vigil kit (a dangling or unloadable piece never leaves a half kit).
+    if (Kit.Kind == EDiceRollKit::Vault && !(World && VaultPiecesLoad(Kit))) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
     const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
@@ -2400,6 +2429,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     bVigilKit = bWorldKit && Kit.Kind == EDiceRollKit::Vigil;
     bRootKit = bWorldKit && Kit.Kind == EDiceRollKit::Root;
     bVaultKit = bWorldKit && Kit.Kind == EDiceRollKit::Vault;
+    // The apse Waystone stands 13.55 m behind the board centre on the far (+Y) side (the world is authored at the true metric, placed at 1 / scale).
+    ApseLocal = Center + FVector(0.0f, VaultApseOffsetCm / SceneScale(), 0.0f);
     // Obstacles and dressing are drawn from the kit's decoration seed, a private hash that never reads rules state or a random stream.
     const int32 DecorationSeed = VigilKit::KitSeed(Seed, Encounter.Width, Encounter.Height, static_cast<int32>(Kit.Kind));
     if (bWorldKit)

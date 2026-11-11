@@ -453,7 +453,7 @@ class VaultKitPlanTests(unittest.TestCase):
             roughness, rim, fill, glow, self_lit = row[7]
             self.assertTrue(0.0 <= roughness <= 1.0 and 0.0 <= fill <= 1.0, row[0])
             self.assertEqual((rim, self_lit), (0.0, 0.0), row[0])
-            self.assertEqual(glow, 1.0 if row[4] != theme_plan.CARD else 0.0, row[0])
+            self.assertEqual(glow, 0.0 if row[4] == theme_plan.CARD else 0.25 if row[0] == "world-vault-occluders" else 1.0, row[0])
         self.assertEqual(theme_plan.INSTANCE_TINTS["world-vault"], (1.0, 1.0, 1.0))
         self.assertEqual(theme_plan.INSTANCE_TINTS["world-vault-occluders"], (1.0, 1.0, 1.0))
         self.assertEqual(theme_plan.VAULT_TAG, "vault-kit-r002")

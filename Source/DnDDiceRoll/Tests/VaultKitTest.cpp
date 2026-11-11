@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Components/LightComponent.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -55,10 +56,10 @@ const UDiceRollTheme* ShippedTheme()
     return LoadObject<UDiceRollTheme>(nullptr, TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme"), nullptr, LOAD_Quiet | LOAD_NoWarn);
 }
 
-/** A theme whose Vault entries are all set to a placeholder path (completeness only asks that they are set; nothing here loads them). */
+/** A theme whose Vault entries are all set to a placeholder that exists (the engine cube; completeness asks that every entry is set and its package exists). */
 void FillVault(UDiceRollTheme& Theme)
 {
-    const TSoftObjectPtr<UStaticMesh> Placeholder{FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Worlds/SM_World_Vault.SM_World_Vault"))};
+    const TSoftObjectPtr<UStaticMesh> Placeholder{FSoftObjectPath(TEXT("/Engine/BasicShapes/Cube.Cube"))};
     auto Fill = [&](TArray<TSoftObjectPtr<UStaticMesh>>& Meshes, int32 Count) { Meshes.Init(Placeholder, Count); };
     Theme.bVaultMetricKit = true;
     Theme.VaultWorld = Placeholder; Theme.VaultOccluders = Placeholder; Theme.VaultArchTwoCell = Placeholder;
@@ -227,12 +228,26 @@ bool FVaultKitSelectionTest::RunTest(const FString& Parameters)
     Falls(TEXT("a scatter piece"), [](UDiceRollTheme& T) { T.VaultScatter[7] = nullptr; });
     Falls(TEXT("a mist card"), [](UDiceRollTheme& T) { T.VaultMistCards.Empty(); });
     Falls(TEXT("a light shaft"), [](UDiceRollTheme& T) { T.VaultLightShafts[0] = nullptr; });
+    // A reference to a deleted or unknown package is as good as unset: the entry is non-empty but dangling.
+    const TSoftObjectPtr<UStaticMesh> Dangling{FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Worlds/SM_Deleted_Vault_Piece.SM_Deleted_Vault_Piece"))};
+    Falls(TEXT("a dangling world"), [&](UDiceRollTheme& T) { T.VaultWorld = Dangling; });
+    Falls(TEXT("a dangling occluder"), [&](UDiceRollTheme& T) { T.VaultOccluders = Dangling; });
+    Falls(TEXT("a dangling arch"), [&](UDiceRollTheme& T) { T.VaultArchTwoCell = Dangling; });
+    Falls(TEXT("a dangling pillar variant"), [&](UDiceRollTheme& T) { T.VaultPillarVariants[2] = Dangling; });
+    Falls(TEXT("a dangling wall variant"), [&](UDiceRollTheme& T) { T.VaultWallVariants[0] = Dangling; });
+    Falls(TEXT("a dangling stones variant"), [&](UDiceRollTheme& T) { T.VaultStonesVariants[1] = Dangling; });
+    Falls(TEXT("a dangling scatter piece"), [&](UDiceRollTheme& T) { T.VaultScatter[4] = Dangling; });
+    Falls(TEXT("a dangling mist card"), [&](UDiceRollTheme& T) { T.VaultMistCards[1] = Dangling; });
+    Falls(TEXT("a dangling light shaft"), [&](UDiceRollTheme& T) { T.VaultLightShafts[1] = Dangling; });
 
     // The shipped theme: the flag is set only with a complete kit (the import script sets it only when the world carries the r002 tag).
-    if (const UDiceRollTheme* Shipped = ShippedTheme())
+    // This test is about the shipped Vault, so it fails when the import has not switched it on.
+    const UDiceRollTheme* Shipped = ShippedTheme();
+    if (TestNotNull(TEXT("The shipped theme asset"), Shipped))
     {
-        if (Shipped->bVaultMetricKit) { TestTrue(TEXT("The shipped theme's Vault flag means a complete kit"), Shipped->VaultKitComplete()); }
-        else { AddInfo(TEXT("The shipped theme's Vault kit is not switched on yet (the plain import has not run); the finale draws the Vigil kit.")); }
+        TestTrue(TEXT("The shipped theme's Vault kit is switched on (run the theme import)"), Shipped->bVaultMetricKit);
+        TestTrue(TEXT("The shipped theme's Vault kit is complete and every entry exists"), Shipped->VaultKitComplete());
+        TestTrue(TEXT("The shipped theme's Vault request returns the Vault kit"), Shipped->KitFor(EDiceRollKit::Vault).Kind == EDiceRollKit::Vault);
     }
     return !HasAnyErrors();
 }
@@ -322,7 +337,7 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
             DestroyVaultWorld(World);
         }
         TestTrue(TEXT("The same seeded board places the same pieces twice"), First == Second);
-        if (!bKit) { AddInfo(TEXT("The theme's Vault kit is not switched on (no bVaultMetricKit); the Vault placement checks were skipped.")); continue; }
+        if (!TestTrue(FString::Printf(TEXT("Recipe %d: the finale board is built from the Vault kit (run the theme import)"), Recipe), bKit)) { continue; }
 
         TestEqual(TEXT("Every blocked cell has an obstacle spot"), First.Spots.Num(), Blocked.Num());
         TestEqual(TEXT("Pieces and arches cover every blocked cell exactly once"), First.Obstacles + First.Arches, Blocked.Num());
@@ -357,13 +372,26 @@ bool FVaultKitPlacementTest::RunTest(const FString& Parameters)
                 TestTrue(TEXT("No piece is on a playable cell"), VigilKit::RingDistance(View->PlacedDressing()[Index].Plan.Cell, Width, Height) >= VigilKit::ScatterMinRing);
             }
             // The instanced board stays under #144's budget of 40 drawing components per rebuild, overlays included; the counts are reported.
-            if (View->UsesInstancedParts())
+            if (TestTrue(TEXT("The Vault board is instanced"), View->UsesInstancedParts()))
             {
                 const int32 Parts = View->PresentationComponentCount();
                 AddInfo(FString::Printf(TEXT("Vault recipe %d, %dx%d: %d presentation components, %d instanced groups, %d scenery props (%d obstacle pieces, %d arches, %d dressing)"),
                     Recipe, Width, Height, Parts, View->InstancedGroupCount(), View->LogicalPropCount(), View->PlacedObstacles(), View->PlacedArches(), View->PlacedDressing().Num()));
                 TestTrue(FString::Printf(TEXT("The instanced Vault board stays under 40 drawing components (%d)"), Parts), Parts < 40);
             }
+            // One Waystone light, at the apse; the legacy pedestal is not drawn.
+            TestEqual(TEXT("The Vault board has exactly one Waystone light"), View->WaystoneLightCount(), 1);
+            TestFalse(TEXT("The legacy Waystone pedestal is not drawn with the Vault kit"), View->WaystoneDrawsPedestal());
+            int32 CyanLights = 0;
+            TInlineComponentArray<ULightComponent*> Lights;
+            View->GetComponents(Lights);
+            const FColor Cyan = FLinearColor(0.3f, 0.85f, 1.0f).ToFColor(true);
+            for (const ULightComponent* Light : Lights)
+            { if (FMath::Abs(int32(Light->LightColor.R) - Cyan.R) < 3 && FMath::Abs(int32(Light->LightColor.G) - Cyan.G) < 3 && FMath::Abs(int32(Light->LightColor.B) - Cyan.B) < 3) { ++CyanLights; } }
+            TestEqual(TEXT("No other light is Waystone-coloured"), CyanLights, 1);
+            const FVector Centre = View->GetActorTransform().TransformPosition(View->BoardPosition(FVector2D((Width - 1) * 0.5f, (Height - 1) * 0.5f)));
+            const FVector At = View->WaystoneLightLocation() - Centre;
+            TestTrue(FString::Printf(TEXT("The Waystone light sits at the apse: on the centre line and 12 m behind the board centre (got %.0f, %.0f)"), At.X, At.Y), FMath::Abs(At.X) < 25.0f && FMath::Abs(At.Y - 1205.0f) < 25.0f);
             TestEqual(TEXT("With the Vault kit the world stands at the true metric"), View->WorldMeshScale(), 1.0f, 0.001f);
             TestTrue(TEXT("The kit placed obstacles, dressing and an occluder"), View->PlacedObstacles() > 0 && !View->PlacedDressing().IsEmpty() && View->HasOccluder());
             // The kit is presentation: another cell size moves the pieces with the metric but changes none of the choices.
@@ -387,25 +415,39 @@ bool FVaultKitFallbackTest::RunTest(const FString& Parameters)
     const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
     if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Path, -1))) { return false; }
     const UDiceRollTheme* Shipped = ShippedTheme();
-    if (!Shipped) { AddInfo(TEXT("The shipped theme asset is not available here.")); return true; }
+    if (!TestNotNull(TEXT("The shipped theme asset"), Shipped)) { return false; }
     UWorld* World = MakeVaultWorld();
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
     if (AExpeditionBattleView* View = ResumeBoard(*this, World, Path))
     {
         const bool bOn = View->UsesVaultKit();
-        if (!bOn) { AddInfo(TEXT("The shipped theme's Vault kit is not switched on; the fallbacks are checked against the kit-less theme only.")); }
-        else { TestFalse(TEXT("The Vault board is not also a Vigil board"), View->UsesVigilKit()); }
+        if (!TestTrue(TEXT("The shipped theme draws the Vault kit on the finale (run the theme import)"), bOn)) { DestroyVaultWorld(World); return false; }
+        TestFalse(TEXT("The Vault board is not also a Vigil board"), View->UsesVigilKit());
+        TestTrue(TEXT("The Vault board has no pedestal and one Waystone light"), !View->WaystoneDrawsPedestal() && View->WaystoneLightCount() == 1);
+        TestTrue(TEXT("The shipped theme's Vigil kit is on (the fallback has something to draw)"), Shipped->bMetricKit);
 
         // The Vault flag off, and then any one entry missing: the finale draws the Vigil kit exactly as it did before the Vault.
-        for (int32 Case = 0; Case < 3; ++Case)
+        // Cases 3 and 4 are real load failures: the package exists, so the theme calls the kit complete, but the object is not in it. The view loads every
+        // piece before it places any, so the whole finale falls back (the engine's load warning is declared).
+        const TSoftObjectPtr<UStaticMesh> Dangling{FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Worlds/SM_Deleted_Vault_Piece.SM_Deleted_Vault_Piece"))};
+        const TSoftObjectPtr<UStaticMesh> Unloadable{FSoftObjectPath(TEXT("/Engine/BasicShapes/Cube.NoSuchVaultMesh"))};
+        for (int32 Case = 0; Case < 5; ++Case)
         {
             TStrongObjectPtr<UDiceRollTheme> Broken(TransientThemeCopy(Shipped));
             if (Case == 0) { Broken->bVaultMetricKit = false; }
             else if (Case == 1) { Broken->VaultOccluders = nullptr; }
-            else { Broken->VaultScatter.Pop(); }
+            else if (Case == 2) { Broken->VaultScatter.Pop(); }
+            else if (Case == 3) { Broken->VaultOccluders = Dangling; }
+            else
+            {
+                TestTrue(TEXT("An unloadable entry still counts as complete (its package exists)"), (Broken->VaultStonesVariants[1] = Unloadable, Broken->VaultKitComplete()));
+                AddExpectedMessage(TEXT("NoSuchVaultMesh"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 0);
+            }
             View->UseTheme(Broken.Get());
             View->Tick(0.016f);
-            TestFalse(TEXT("No Vault kit when one of its pieces is missing"), View->UsesVaultKit());
+            TestFalse(FString::Printf(TEXT("Case %d: no Vault kit when one of its pieces is missing or does not load"), Case), View->UsesVaultKit());
+            TestTrue(FString::Printf(TEXT("Case %d: the legacy Waystone pedestal is back"), Case), View->WaystoneDrawsPedestal() && View->WaystoneLightCount() == 1);
+            TestTrue(FString::Printf(TEXT("Case %d: nothing of the Vault kit was placed (the dressing is the Vigil's)"), Case), View->UsesVigilKit() == Shipped->bMetricKit);
             TestEqual(TEXT("A finale board without the Vault kit is still a themed board"), View->UsesVigilKit(), Shipped->bMetricKit);
             if (Shipped->bMetricKit)
             {
@@ -416,7 +458,7 @@ bool FVaultKitFallbackTest::RunTest(const FString& Parameters)
         // The Vault again on the shipped theme, after the fallbacks.
         View->UseTheme(const_cast<UDiceRollTheme*>(Shipped));
         View->Tick(0.016f);
-        TestEqual(TEXT("The shipped theme draws the Vault kit again"), View->UsesVaultKit(), bOn);
+        TestTrue(TEXT("The shipped theme draws the Vault kit again"), View->UsesVaultKit());
     }
     DestroyVaultWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -441,6 +483,9 @@ bool FVaultThemeChoiceTest::RunTest(const FString& Parameters)
         DestroyVaultWorld(World);
     }
     TestTrue(TEXT("The scripted policy gave commands"), Outcomes[0].Commands > 0);
+    TestTrue(TEXT("The shipped presentation drew the Vault kit"), Outcomes[0].bVaultKit);
+    TestFalse(TEXT("The primitive presentation did not"), Outcomes[1].bVaultKit);
+    TestFalse(TEXT("The kit-off copy did not"), Outcomes[2].bVaultKit);
     for (int32 Variant = 1; Variant < 3; ++Variant)
     {
         TestEqual(TEXT("The same commands were accepted"), Outcomes[Variant].Commands, Outcomes[0].Commands);

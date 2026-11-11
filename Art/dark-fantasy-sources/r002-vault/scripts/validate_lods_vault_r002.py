@@ -95,6 +95,8 @@ def main():
                     print(f'  footprint region (footprint + 1 m): {len(sel)} triangles, max deviation {edge[2]:.4f} m')
             print(f'{tag:34s} {len(P0):7d} -> {len(P):7d} tris, dev {fwd[2]:.3f}/{back[2]:.3f} m, appearance {app["rgb_mean"]:.3f}/{app["rgb_p95"]:.3f}, glow {g1:.3f}/{g0:.3f} m2')
     print('LOD VALIDATE', 'FAIL' if fails else 'OK', len(fails))
+    if fails:
+        raise SystemExit(1)          # a failed validation must fail the run
 
 
 main()

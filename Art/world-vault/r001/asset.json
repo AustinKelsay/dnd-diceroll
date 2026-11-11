@@ -41,7 +41,8 @@
           "far_hall": 15
         },
         "medium_props": 38,
-        "small_props": 276
+        "small_props": 276,
+        "note": "the small props are batched into the SM_World_Vault export as ordinary triangles (baked, one mesh); they are not runtime instances, and the game adds its own instanced scatter on top"
       },
       "camera_check": {
         "eyes": 22824,
@@ -123,7 +124,7 @@
               0.0158
             ],
             "appearance_rgb_mean_p95": [
-              0.0113,
+              0.0079,
               0.0327
             ]
           }
@@ -175,12 +176,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/build_vault_r002.py",
-      "sha256": "88bbb99f027868176f6c151ea6b5930afae2d4bf4212f27e34e3d62a1e7a0671"
+      "sha256": "a54633dd32805c8f1eea396fceba2fb8d3e2c120ae5b1a6f8cfa948b82f882e9"
     },
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-vault/scripts/validate_vault_r002.py",
-      "sha256": "c42ba705a9fd73051549d95bb0f6fddb9c9790535ecda911e2b0f683ef24a6ed"
+      "sha256": "fe4f9d8c24ba8033da5331c8dcadbf45595d287c87dc0d3ac2008bc6b9ac9c71"
     },
     {
       "role": "source",
@@ -200,17 +201,17 @@
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault.glb",
-      "sha256": "e88ff3c38eb00c7e44b8835e784988a36ce3ad4ba25e8efe698dc27a6f2dfcb3"
+      "sha256": "29cde44f6e8afa09c1216d464b2bd4fea1efd3f43bbefab62099a2bdee243219"
     },
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
-      "sha256": "2d129cbb74178b11958a10dd53cbe166f222a1a4abf4b608170aa2938aa44485"
+      "sha256": "cd7a20b94775ae29af7ff06e2395a29ece1a7f7b28d29378f1ab885bebc2ecfa"
     },
     {
       "role": "export",
       "path": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
-      "sha256": "dd447e0735132c5a563a8c364f0059ad775eb4cf9a0e942c5435de0274556f7a"
+      "sha256": "35225c53da9247dea2ae0740d6b03a5e571407339578bdcc25c0ba7238eeabff"
     }
   ],
   "import_policy": {

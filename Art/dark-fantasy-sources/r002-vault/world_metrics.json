@@ -141,7 +141,8 @@
    "far_hall": 15
   },
   "medium_props": 38,
-  "small_props": 276
+  "small_props": 276,
+  "note": "the small props are batched into the SM_World_Vault export as ordinary triangles (baked, one mesh); they are not runtime instances, and the game adds its own instanced scatter on top"
  },
  "atlas": {
   "size": 2048,

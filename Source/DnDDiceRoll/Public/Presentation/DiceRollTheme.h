@@ -192,7 +192,11 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultMistCards;
     UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultLightShafts;
 
-    /** True when the Vault kit is switched on and every entry it needs is set (world, occluders, 3 + 3 + 3 variants, the arch, 8 scatter, 3 mist cards, 2 shafts). */
+    /**
+     * True when the Vault kit is switched on and every entry it needs is set and refers to a package that exists (world, occluders, 3 + 3 + 3
+     * variants, the arch, 8 scatter, 3 mist cards, 2 shafts). A reference to a deleted package counts as missing. A package that exists but fails to load
+     * is caught by the view, which loads every piece before it places anything.
+     */
     bool VaultKitComplete() const;
 
     /**

@@ -10,7 +10,7 @@
         "triangles": 51364,
         "fraction": 0.5,
         "file": "Art/world-vault/r001/SM_World_Vault_LOD1.glb",
-        "sha256": "2d129cbb74178b11958a10dd53cbe166f222a1a4abf4b608170aa2938aa44485",
+        "sha256": "cd7a20b94775ae29af7ff06e2395a29ece1a7f7b28d29378f1ab885bebc2ecfa",
         "bytes": 6607980,
         "deviation_m_p50_p95_max": [
           0.0,
@@ -30,7 +30,7 @@
         "triangles": 25681,
         "fraction": 0.25,
         "file": "Art/world-vault/r001/SM_World_Vault_LOD2.glb",
-        "sha256": "dd447e0735132c5a563a8c364f0059ad775eb4cf9a0e942c5435de0274556f7a",
+        "sha256": "35225c53da9247dea2ae0740d6b03a5e571407339578bdcc25c0ba7238eeabff",
         "bytes": 3630132,
         "deviation_m_p50_p95_max": [
           0.0,
@@ -38,7 +38,7 @@
           0.0158
         ],
         "appearance": {
-          "rgb_mean": 0.0113,
+          "rgb_mean": 0.0079,
           "rgb_p95": 0.0327,
           "alpha_mean": 0.0043,
           "alpha_p95": 0.0
@@ -58,7 +58,7 @@
         "triangles": 18342,
         "fraction": 0.5429,
         "file": "Art/world-vault-occluders/r001/SM_World_Vault_Occluders_LOD1.glb",
-        "sha256": "e03d7f5db40946ffc1ab7ba7290c406db91cbd6e252da889071151f287bac4d6",
+        "sha256": "dd2d6c344f922c8d79ecc947c6d95f2f8882e9cb4a168385321b79ef5a1178a2",
         "bytes": 2076184,
         "deviation_m_p50_p95_max": [
           0.0,
@@ -66,7 +66,7 @@
           0.0352
         ],
         "appearance": {
-          "rgb_mean": 0.0112,
+          "rgb_mean": 0.0069,
           "rgb_p95": 0.0338,
           "alpha_mean": 0.0055,
           "alpha_p95": 0.0

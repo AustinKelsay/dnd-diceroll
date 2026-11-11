@@ -368,6 +368,10 @@ public:
     bool UsesVaultKit() const { return bVaultKit; }
     /** The world kit a board theme asks for: the Root on Meadow, the Vigil on Ruins, the Vault on the finale (UDiceRollTheme::KitFor falls back to the Vigil kit when the Vault is incomplete). */
     static EDiceRollKit KitKindFor(EBoardTheme Theme);
+    /** The Waystone's light: the number of lights (0 or 1), where it stands in world space, and whether the legacy pedestal is drawn. On a Vault-kit board the light stands at the apse Waystone and there is no pedestal. */
+    int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
+    FVector WaystoneLightLocation() const;
+    bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
     /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
     void UseTheme(UDiceRollTheme* Value);
     /**
@@ -580,6 +584,11 @@ private:
     /** The far-zoom grade last applied (0 at the default zoom, 1 at the far stop); negative until the first update. Vault boards only. */
     float AppliedFarGrade = -1.0f;
     void UpdateFarGrade();
+    /** True when every piece of the Vault kit loads; checked before anything is placed. */
+    bool VaultPiecesLoad(const FDiceRollWorldKit& Kit) const;
+    /** Where the apse Waystone stands in scenery-local space (a Vault-kit board), and the light's gain there. */
+    FVector ApseLocal = FVector::ZeroVector;
+    float WaystoneGain = 1.0f;
     /** The world mesh of the last themed build. */
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;
