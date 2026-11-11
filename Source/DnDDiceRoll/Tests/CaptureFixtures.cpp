@@ -13,9 +13,10 @@
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
  * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
- * recipes, which show the Root of the World kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
+ * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
+ * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
- * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars and cast2-board-root-r002 with a party of barbarian, monk, paladin and ranger),
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
@@ -182,7 +183,35 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         };
         FindCast2(TEXT("cast2-board-vigil-pillars"), 1, true, 1);
         FindCast2(TEXT("cast2-board-root-r002"), 0, false, 2);
+        // The Vault finale (the same scripted player as board-vault) with the batch 2 party, the board the cast is also judged on (#149).
+        bool bVault = false;
+        for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast2)) { continue; }
+            Write(TEXT("cast2-board-vault"), Run);
+            Describe(TEXT("cast2-board-vault"), Run, Seed, 0);
+            bVault = true;
+        }
+        if (!bVault) { AddError(TEXT("No seed below 400 reaches the broken-wall finale with the batch 2 party first")); }
     }
+    // The Vault finale (encounter 5, #149): the first seeds that reach the fifth fight with the party acting first, found by the scripted
+    // player. `board-vault` is the broken-wall finale (adjacent blocked cells get the Vault's 2-cell crypt arch; in the default gallery set),
+    // `board-vault-pillars` the ruined-pillar finale (render it with `gallery --fixture board-vault-pillars`).
+    auto FindFinale = [&](const TCHAR* Name, int32 Recipe)
+    {
+        for (int32 Seed = 1; Seed < 400; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe)) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 400 reaches the finale with recipe %d and the party first"), Recipe));
+    };
+    FindFinale(TEXT("board-vault"), 2);
+    FindFinale(TEXT("board-vault-pillars"), 1);
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)

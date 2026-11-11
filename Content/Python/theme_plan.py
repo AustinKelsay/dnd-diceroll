@@ -1,8 +1,8 @@
 """Pure-Python half of the theme import (no `unreal` import, so unit tests can run it): what the Drowned Vigil
-world kit r002 and the Root of the World kit r002 import, which existing assets a run may replace, and how to read an export.
+world kit r002, the Root of the World kit r002 and the Vault kit r002 import, which existing assets a run may replace, and how to read an export.
 
-Used by import_dark_fantasy_theme.py (issue #145 phase 2 for the Vigil, #149 phase 2 for the Root). The rules:
-  - Every r002 asset has a table row (R002 for the Vigil, ROOT_R002 for the Root). A row whose package already exists is
+Used by import_dark_fantasy_theme.py (issue #145 phase 2 for the Vigil, #149 phase 2 for the Root and the Vault). The rules:
+  - Every r002 asset has a table row (R002 for the Vigil, ROOT_R002 for the Root, VAULT_R002 for the Vault). A row whose package already exists is
     SKIPPED, never overwritten.
   - Only the ids in REPLACEABLE (the four revised Vigil r001 packages) and ROOT_REPLACEABLE (the Root world) may be replaced, and
     only when the run is told so explicitly with the environment variable DND_THEME_REIMPORT=<id>[,<id>...] (or `all`, meaning
@@ -97,17 +97,59 @@ ROOT_REPLACEABLE = {"world-root": "r002 world at true metric"}
 ROOT_METRIC_GATE = ("world-root",)
 ROOT_ARRAY_SIZES = {"root_pillar_variants": 3, "root_wall_variants": 3, "root_stones_variants": 3, "root_scatter": 8, "root_mist_cards": 3, "root_light_shafts": 2}
 
+# The Vault world kit r002 (#149): the finale's own world. Every row is a new id and a new package (the Vault never had an r001
+# world: it drew the Vigil kit with a cold grade), so nothing here replaces an existing package. The three obstacle recipes are the
+# Vault's broken columns, ossuary piers and rune steles (pillar), ashlar runs, stacked sarcophagi and iron grilles (wall) and rubble,
+# bone mounds and toppled statues (stones). Same columns and checks as the Root rows.
+VAULT_STONE = (0.92, 0.0, 0.05, 1.0, 0.0)
+VAULT_PILLAR = (0.92, 0.0, 0.05, 1.0, 0.0)
+VAULT_WALL = (0.92, 0.0, 0.05, 1.0, 0.0)
+# The Waystone halo, its rune channels and the alcove lines are in the occluder mesh: Glow 0.25 keeps them from clipping against the bloom (peak luma under 250 on the apse).
+VAULT_OCCLUDER = (0.9, 0.0, 0.0, 0.25, 0.0)
+VAULT_R002 = [
+    ("world-vault", 1, "SM_World_Vault", "Worlds", LIT, "vault_world", None, GROUND),
+    ("world-vault-occluders", 1, "SM_World_Vault_Occluders", "Worlds", OCCLUDER, "vault_occluders", None, VAULT_OCCLUDER),
+    ("prop-vault-pillar", 1, "SM_Prop_Vault_Pillar", "Props", LIT, "vault_pillar_variants", 0, VAULT_PILLAR),
+    ("prop-vault-pillar-b", 1, "SM_Prop_Vault_Pillar_B", "Props", LIT, "vault_pillar_variants", 1, VAULT_PILLAR),
+    ("prop-vault-pillar-c", 1, "SM_Prop_Vault_Pillar_C", "Props", LIT, "vault_pillar_variants", 2, VAULT_PILLAR),
+    ("prop-vault-wall", 1, "SM_Prop_Vault_Wall", "Props", LIT, "vault_wall_variants", 0, VAULT_WALL),
+    ("prop-vault-wall-b", 1, "SM_Prop_Vault_Wall_B", "Props", LIT, "vault_wall_variants", 1, VAULT_WALL),
+    ("prop-vault-wall-c", 1, "SM_Prop_Vault_Wall_C", "Props", LIT, "vault_wall_variants", 2, VAULT_WALL),
+    ("prop-vault-stones", 1, "SM_Prop_Vault_Stones", "Props", LIT, "vault_stones_variants", 0, VAULT_STONE),
+    ("prop-vault-stones-b", 1, "SM_Prop_Vault_Stones_B", "Props", LIT, "vault_stones_variants", 1, VAULT_STONE),
+    ("prop-vault-stones-c", 1, "SM_Prop_Vault_Stones_C", "Props", LIT, "vault_stones_variants", 2, VAULT_STONE),
+    ("prop-vault-arch-2cell", 1, "SM_Prop_Vault_Arch2Cell", "Props", LIT, "vault_arch_two_cell", None, VAULT_WALL),
+    ("scatter-vault-bones", 1, "SM_Scatter_Vault_Bones", "Scatter", LIT, "vault_scatter", 0, (0.85, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-skulls", 1, "SM_Scatter_Vault_Skulls", "Scatter", LIT, "vault_scatter", 1, (0.85, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-candles", 1, "SM_Scatter_Vault_Candles", "Scatter", LIT, "vault_scatter", 2, (0.8, 0.0, 0.0, 1.0, 0.0)),
+    ("scatter-vault-rubble", 1, "SM_Scatter_Vault_Rubble", "Scatter", LIT, "vault_scatter", 3, (0.92, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-chains", 1, "SM_Scatter_Vault_Chains", "Scatter", LIT, "vault_scatter", 4, (0.55, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-urns", 1, "SM_Scatter_Vault_Urns", "Scatter", LIT, "vault_scatter", 5, (0.7, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-relics", 1, "SM_Scatter_Vault_Relics", "Scatter", LIT, "vault_scatter", 6, (0.5, 0.0, 0.05, 1.0, 0.0)),
+    ("scatter-vault-crystals", 1, "SM_Scatter_Vault_Crystals", "Scatter", LIT, "vault_scatter", 7, (0.35, 0.0, 0.0, 1.0, 0.0)),
+    ("fx-vault-mist-card", 1, "SM_Fx_Vault_MistCard", "Fx", CARD, "vault_mist_cards", 0, CARDLOOK),
+    ("fx-vault-mist-card-b", 1, "SM_Fx_Vault_MistCard_B", "Fx", CARD, "vault_mist_cards", 1, CARDLOOK),
+    ("fx-vault-mist-card-c", 1, "SM_Fx_Vault_MistCard_C", "Fx", CARD, "vault_mist_cards", 2, CARDLOOK),
+    ("fx-vault-light-shaft", 1, "SM_Fx_Vault_LightShaft", "Fx", CARD, "vault_light_shafts", 0, CARDLOOK),
+    ("fx-vault-light-shaft-b", 1, "SM_Fx_Vault_LightShaft_B", "Fx", CARD, "vault_light_shafts", 1, CARDLOOK),
+]
+# The Vault kit is switched on (UDiceRollTheme::bVaultMetricKit) only when its world carries the vault-kit-r002 tag.
+VAULT_METRIC_GATE = ("world-vault",)
+VAULT_ARRAY_SIZES = {"vault_pillar_variants": 3, "vault_wall_variants": 3, "vault_stones_variants": 3, "vault_scatter": 8, "vault_mist_cards": 3, "vault_light_shafts": 2}
+
 # Per-instance `Color` tint (linear RGB) written on a kit mesh's MI_*; the lever for "the stone competes with the figures".
 # UDiceRollTheme's view multiplies it into the colour the part draws with (InstanceTint in ExpeditionBattleView.cpp), so
 # lowering a number here and rerunning the plain import changes only that MI. 1.0 is neutral: the paving was already
 # recalibrated in Blender (mean luminance 0.199, 27 % below the first pass), so the starting value leaves it as exported.
 # Note the tint multiplies the whole mesh including the glow mask's fungus caps and sap veins.
-INSTANCE_TINTS = {"world-root": (1.0, 1.0, 1.0), "world-root-occluders": (1.0, 1.0, 1.0)}
+INSTANCE_TINTS = {"world-root": (1.0, 1.0, 1.0), "world-root-occluders": (1.0, 1.0, 1.0),
+                  "world-vault": (1.0, 1.0, 1.0), "world-vault-occluders": (1.0, 1.0, 1.0)}
 
 # The kit tags the import script writes on a replaced or created mesh (DiceRollAssetRevision).
 VIGIL_TAG = "vigil-kit-r002"
 ROOT_TAG = "root-kit-r002"
-KIT_TAGS = (VIGIL_TAG, ROOT_TAG)
+VAULT_TAG = "vault-kit-r002"
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG)
 
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.
