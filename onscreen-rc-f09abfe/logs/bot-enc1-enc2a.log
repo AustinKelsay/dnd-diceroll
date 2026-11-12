@@ -1,0 +1,190 @@
+[   0.0s] PHASE 1 encounters done 0
+[   2.0s] R1 Sera(cleric) move a->(6, 4) mv4 actTrue
+[   6.4s] R1 Sera(cleric) attack a->(9, 4) mv1 actTrue
+[  10.7s] R1 Sera(cleric) move a->(7, 4) mv1 actFalse
+[  15.1s] end turn Sera
+[  15.8s] R1 Ivo(wizard) move a->(6, 6) mv4 actTrue
+[  20.2s] R1 Ivo(wizard) attack f->(9, 6) mv2 actTrue
+[  24.4s] R1 Ivo(wizard) move a->(8, 6) mv2 actFalse
+[  28.6s] end turn Ivo
+[  29.3s] R1 Arden(fighter) move a->(8, 3) mv4 actTrue
+[  33.7s] R1 Arden(fighter) attack a->(8, 4) mv0 actTrue
+[  38.1s] end turn Arden
+[  38.8s] R1 Nix(rogue) move a->(5, 4) mv4 actTrue
+[  43.3s] R1 Nix(rogue) attack a->(8, 4) mv3 actTrue
+[  47.6s] R1 Nix(rogue) move a->(6, 4) mv3 actFalse
+[  52.1s] end turn Nix
+[  52.8s] R2 Sera(cleric) attack a->(8, 4) mv4 actTrue
+[  57.1s] end turn Sera
+[  57.8s] R2 Ivo(wizard) attack f->(9, 6) mv4 actTrue
+[  62.0s] end turn Ivo
+[  62.7s] R2 Arden(fighter) attack a->(8, 4) mv4 actTrue
+[  67.1s] end turn Arden
+[  67.8s] R2 Nix(rogue) attack a->(8, 4) mv4 actTrue
+[  72.2s] end turn Nix
+[  72.9s] R3 Sera(cleric) attack a->(8, 4) mv4 actTrue
+[  77.3s] R3 Sera(cleric) move a->(8, 4) mv4 actFalse
+[  83.7s]   not accepted
+[  84.5s] R3 Sera(cleric) move a->(10, 4) mv4 actFalse
+[  90.8s]   not accepted
+[  91.6s] R3 Sera(cleric) move a->(9, 3) mv4 actFalse
+[  98.0s]   not accepted
+[  98.8s] R3 Sera(cleric) move a->(9, 5) mv4 actFalse
+[ 105.1s]   not accepted
+[ 105.9s] R3 Sera(cleric) move a->(9, 4) mv4 actFalse
+[ 112.3s]   not accepted
+[ 113.1s] R3 Sera(cleric) move a->(8, 5) mv4 actFalse
+[ 119.5s]   not accepted
+[ 120.3s] R3 Sera(cleric) move a->(10, 5) mv4 actFalse
+[ 126.5s]   not accepted
+[ 127.3s] end turn Sera
+[ 128.0s] R3 Ivo(wizard) attack a->(9, 6) mv4 actTrue
+[ 132.2s] end turn Ivo
+[ 132.9s] R3 Arden(fighter) move a->(9, 5) mv4 actTrue
+[ 137.2s] R3 Arden(fighter) attack a->(9, 6) mv1 actTrue
+[ 141.4s] PHASE 2 encounters done 1
+[ 149.5s] PHASE 3 encounters done 1
+[ 154.4s] PHASE 0 encounters done 1
+[ 159.2s] PHASE 1 encounters done 1
+[ 161.1s] R1 Ivo(wizard) move a->(6, 5) mv4 actTrue
+[ 165.5s] end turn Ivo
+[ 166.2s] R1 Nix(rogue) move a->(8, 4) mv4 actTrue
+[ 170.6s] end turn Nix
+[ 171.3s] R1 Sera(cleric) move a->(7, 4) mv4 actTrue
+[ 175.7s] end turn Sera
+[ 179.6s] R1 Arden(fighter) move a->(6, 3) mv4 actTrue
+[ 184.1s] end turn Arden
+[ 184.8s] R2 Ivo(wizard) attack f->(8, 3) mv4 actTrue
+[ 191.3s]   not accepted
+[ 192.1s] R2 Ivo(wizard) attack f->(8, 3) mv4 actTrue
+[ 198.6s]   not accepted
+[ 199.4s] R2 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 205.8s]   not accepted
+[ 206.6s] R2 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 213.1s]   not accepted
+[ 213.9s] R2 Ivo(wizard) attack f->(9, 4) mv4 actTrue
+[ 220.3s]   not accepted
+[ 221.1s] R2 Ivo(wizard) attack f->(9, 4) mv4 actTrue
+[ 227.4s]   not accepted
+[ 228.2s] R2 Ivo(wizard) attack a->(9, 4) mv4 actTrue
+[ 234.6s]   not accepted
+[ 235.4s] R2 Ivo(wizard) attack a->(9, 4) mv4 actTrue
+[ 241.8s]   not accepted
+[ 242.6s] R2 Ivo(wizard) move a->(6, 4) mv4 actTrue
+[ 247.0s] end turn Ivo
+[ 247.7s] R2 Nix(rogue) attack a->(8, 3) mv4 actTrue
+[ 252.2s] end turn Nix
+[ 252.9s] R2 Sera(cleric) heal f->(8, 4) mv4 actTrue
+[ 257.2s] end turn Sera
+[ 260.4s] end turn Arden
+[ 261.1s] R3 Ivo(wizard) attack f->(8, 3) mv4 actTrue
+[ 267.5s]   not accepted
+[ 268.3s] R3 Ivo(wizard) attack f->(8, 3) mv4 actTrue
+[ 274.8s]   not accepted
+[ 275.6s] R3 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 282.1s]   not accepted
+[ 282.9s] R3 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 289.3s]   not accepted
+[ 290.1s] R3 Ivo(wizard) attack f->(9, 4) mv4 actTrue
+[ 294.4s] end turn Ivo
+[ 295.2s] R3 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 299.5s] end turn Sera
+[ 303.4s] end turn Arden
+[ 304.2s] R4 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 310.6s]   not accepted
+[ 311.4s] R4 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 317.9s]   not accepted
+[ 318.7s] end turn Ivo
+[ 319.4s] R4 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 323.8s] end turn Sera
+[ 327.7s] end turn Arden
+[ 328.4s] R5 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 332.8s] end turn Ivo
+[ 333.5s] R5 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 337.9s] end turn Sera
+[ 341.8s] end turn Arden
+[ 342.5s] R6 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 346.9s] end turn Ivo
+[ 347.6s] R6 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 352.0s] end turn Sera
+[ 355.9s] end turn Arden
+[ 356.6s] R7 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 361.0s] end turn Ivo
+[ 361.7s] R7 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 366.1s] end turn Sera
+[ 370.0s] R7 Arden(fighter) rescue r->(6, 4) mv4 actTrue
+[ 374.5s] end turn Arden
+[ 375.4s] R8 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 379.9s] end turn Ivo
+[ 380.6s] R8 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 384.9s] end turn Sera
+[ 388.0s] R8 Arden(fighter) rescue r->(6, 4) mv4 actTrue
+[ 392.5s] end turn Arden
+[ 393.2s] R9 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 397.6s] end turn Ivo
+[ 398.3s] R9 Nix(rogue) attack a->(6, 5) mv4 actTrue
+[ 404.8s]   not accepted
+[ 405.6s] R9 Nix(rogue) attack a->(6, 5) mv4 actTrue
+[ 412.1s]   not accepted
+[ 412.9s] R9 Nix(rogue) attack a->(8, 3) mv4 actTrue
+[ 417.3s] end turn Nix
+[ 418.0s] R9 Sera(cleric) heal f->(8, 4) mv4 actTrue
+[ 422.3s] end turn Sera
+[ 425.5s] R9 Arden(fighter) rescue r->(6, 4) mv4 actTrue
+[ 429.9s] end turn Arden
+[ 430.6s] R10 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 435.0s] end turn Ivo
+[ 435.7s] R10 Nix(rogue) attack a->(6, 5) mv4 actTrue
+[ 442.2s]   not accepted
+[ 443.0s] R10 Nix(rogue) attack a->(6, 5) mv4 actTrue
+[ 449.5s]   not accepted
+[ 450.3s] R10 Nix(rogue) attack a->(8, 3) mv4 actTrue
+[ 454.7s] end turn Nix
+[ 455.4s] R10 Sera(cleric) attack a->(6, 5) mv4 actTrue
+[ 461.8s]   not accepted
+[ 462.6s] R10 Sera(cleric) attack a->(6, 5) mv4 actTrue
+[ 469.1s]   not accepted
+[ 469.9s] R10 Sera(cleric) attack a->(8, 3) mv4 actTrue
+[ 476.4s]   not accepted
+[ 477.2s] R10 Sera(cleric) attack a->(8, 3) mv4 actTrue
+[ 483.6s]   not accepted
+[ 484.4s] end turn Sera
+[ 487.6s] end turn Arden
+[ 488.3s] R11 Ivo(wizard) attack a->(6, 5) mv4 actTrue
+[ 492.7s] end turn Ivo
+[ 493.4s] R11 Nix(rogue) attack a->(8, 3) mv4 actTrue
+[ 497.8s] end turn Nix
+[ 498.5s] R11 Sera(cleric) attack a->(8, 3) mv4 actTrue
+[ 505.0s]   not accepted
+[ 505.8s] R11 Sera(cleric) attack a->(8, 3) mv4 actTrue
+[ 512.2s]   not accepted
+[ 513.0s] end turn Sera
+[ 513.7s] end turn Arden
+[ 514.4s] R12 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 520.9s]   not accepted
+[ 521.7s] R12 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 528.2s]   not accepted
+[ 529.0s] end turn Ivo
+[ 529.7s] R12 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 534.0s] end turn Sera
+[ 534.7s] end turn Arden
+[ 535.4s] R13 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[ 541.9s]   not accepted
+[ 542.7s] R13 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[ 547.1s] end turn Ivo
+[ 547.8s] R13 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 552.2s] end turn Sera
+[ 552.9s] end turn Arden
+[ 553.6s] R14 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[ 560.1s]   not accepted
+[ 560.9s] R14 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[ 565.2s] end turn Ivo
+[ 566.0s] R14 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[ 570.3s] end turn Sera
+[ 571.0s] end turn Arden
+[ 571.7s] R15 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 578.2s]   not accepted
+[ 579.0s] R15 Ivo(wizard) attack a->(8, 3) mv4 actTrue
+[ 585.5s]   not accepted
+[ 586.3s] end turn Ivo
+[ 587.0s] R15 Sera(cleric) rescue r->(8, 4) mv4 actTrue

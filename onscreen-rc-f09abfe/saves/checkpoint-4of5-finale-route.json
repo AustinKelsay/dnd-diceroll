@@ -1,0 +1,585 @@
+{
+	"Version": 5,
+	"Current":
+	{
+		"Progress":
+		{
+			"Party": [
+				{
+					"ID": 1,
+					"Name": "Arden",
+					"BuildId": "fighter.champion"
+				},
+				{
+					"ID": 2,
+					"Name": "Nix",
+					"BuildId": "rogue.thief"
+				},
+				{
+					"ID": 3,
+					"Name": "Sera",
+					"BuildId": "cleric.life"
+				},
+				{
+					"ID": 4,
+					"Name": "Ivo",
+					"BuildId": "wizard.evocation"
+				}
+			],
+			"CatalogRevision": 8,
+			"Ruleset": 0,
+			"Seed": 20261030,
+			"RunId": "01A1D063-6BD9-7A90-9FBA-592930985CD6",
+			"GenerationRandomState": 108783726,
+			"Phase": 0,
+			"EncountersCompleted": 4,
+			"Offers": [
+				{
+					"ID": 9,
+					"Name": "Artifact vault: Stream trail",
+					"Preview": "Guarded | 2 guards incl. archer | ruined pillars | recover artifact; no loot",
+					"EncounterSeed": 1696497152,
+					"Recipe": 1,
+					"Width": 17,
+					"Height": 11,
+					"EnemyCount": 2,
+					"bDangerous": false,
+					"RewardPotions": 0
+				},
+				{
+					"ID": 10,
+					"Name": "Artifact vault: Watchtower road",
+					"Preview": "Dangerous | 3 guards incl. archer | broken wall | recover artifact; no loot",
+					"EncounterSeed": 1786897408,
+					"Recipe": 2,
+					"Width": 17,
+					"Height": 11,
+					"EnemyCount": 3,
+					"bDangerous": true,
+					"RewardPotions": 0
+				}
+			],
+			"History": [
+				{
+					"Route":
+					{
+						"ID": 1,
+						"Name": "Stream trail",
+						"Preview": "Guarded | 2 scouts | ruined pillars | +1 gear (rank 3 cap) | +1 potions",
+						"EncounterSeed": 915485184,
+						"Recipe": 1,
+						"Width": 18,
+						"Height": 11,
+						"EnemyCount": 2,
+						"bDangerous": false,
+						"RewardPotions": 1
+					},
+					"Outcome": 1,
+					"RewardRecipient": 1,
+					"Survivors": 4
+				},
+				{
+					"Route":
+					{
+						"ID": 4,
+						"Name": "Watchtower road",
+						"Preview": "Dangerous | 3 raiders incl. archer | broken wall | +1 gear (rank 3 cap) | +2 potions",
+						"EncounterSeed": 1597848832,
+						"Recipe": 2,
+						"Width": 18,
+						"Height": 11,
+						"EnemyCount": 3,
+						"bDangerous": true,
+						"RewardPotions": 2
+					},
+					"Outcome": 1,
+					"RewardRecipient": 1,
+					"Survivors": 4
+				},
+				{
+					"Route":
+					{
+						"ID": 5,
+						"Name": "Stream trail",
+						"Preview": "Guarded | 2 scouts | ruined pillars | +1 gear (rank 3 cap) | +2 potions (secured supplies)",
+						"EncounterSeed": 858150144,
+						"Recipe": 1,
+						"Width": 18,
+						"Height": 11,
+						"EnemyCount": 2,
+						"bDangerous": false,
+						"RewardPotions": 2
+					},
+					"Outcome": 1,
+					"RewardRecipient": 1,
+					"Survivors": 4
+				},
+				{
+					"Route":
+					{
+						"ID": 8,
+						"Name": "Watchtower road",
+						"Preview": "Dangerous | 3 raiders incl. archer | broken wall | +1 gear (rank 3 cap) | +2 potions",
+						"EncounterSeed": 300095488,
+						"Recipe": 2,
+						"Width": 17,
+						"Height": 12,
+						"EnemyCount": 3,
+						"bDangerous": true,
+						"RewardPotions": 2
+					},
+					"Outcome": 1,
+					"RewardRecipient": 1,
+					"Survivors": 4
+				}
+			],
+			"bCampResolved": true,
+			"bCampUsed": true,
+			"bArtifactRecovered": false
+		},
+		"Battle":
+		{
+			"Encounter":
+			{
+				"Width": 17,
+				"Height": 12,
+				"BlockedCells": [
+					{
+						"X": 7,
+						"Y": 1
+					},
+					{
+						"X": 7,
+						"Y": 2
+					},
+					{
+						"X": 7,
+						"Y": 3
+					},
+					{
+						"X": 7,
+						"Y": 5
+					},
+					{
+						"X": 7,
+						"Y": 6
+					},
+					{
+						"X": 7,
+						"Y": 8
+					},
+					{
+						"X": 7,
+						"Y": 9
+					},
+					{
+						"X": 13,
+						"Y": 1
+					},
+					{
+						"X": 14,
+						"Y": 1
+					},
+					{
+						"X": 15,
+						"Y": 1
+					},
+					{
+						"X": 13,
+						"Y": 9
+					},
+					{
+						"X": 14,
+						"Y": 9
+					}
+				],
+				"Combatants": [
+					{
+						"ID": 1,
+						"Name": "Arden",
+						"Role": "Fighter",
+						"BuildId": "fighter.champion",
+						"ClassId": "fighter",
+						"SubclassId": "champion",
+						"AdventurerRole": 1,
+						"Life": 0,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 2,
+						"SpellSlots": 0,
+						"Potions": 8,
+						"WeaponRank": 3,
+						"Level": 5,
+						"FighterSubclass": 1,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 0,
+						"Cell":
+						{
+							"X": 8,
+							"Y": 6
+						},
+						"MaxHP": 30,
+						"HP": 1,
+						"ArmorClass": 16,
+						"AttackBonus": 5,
+						"DamageDie": 6,
+						"DamageBonus": 7,
+						"Range": 1,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 17,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 2,
+						"Name": "Nix",
+						"Role": "Rogue",
+						"BuildId": "rogue.thief",
+						"ClassId": "rogue",
+						"SubclassId": "thief",
+						"AdventurerRole": 2,
+						"Life": 0,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 1,
+						"WeaponRank": 0,
+						"Level": 5,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 2,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": true,
+						"Side": 0,
+						"Cell":
+						{
+							"X": 8,
+							"Y": 7
+						},
+						"MaxHP": 22,
+						"HP": 1,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 6,
+						"DamageBonus": 7,
+						"Range": 3,
+						"Speed": 4,
+						"InitiativeBonus": 4,
+						"Initiative": 10,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 3,
+						"Name": "Sera",
+						"Role": "Cleric",
+						"BuildId": "cleric.life",
+						"ClassId": "cleric",
+						"SubclassId": "life",
+						"AdventurerRole": 3,
+						"Life": 0,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 1,
+						"WeaponRank": 0,
+						"Level": 5,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 0,
+						"Cell":
+						{
+							"X": 9,
+							"Y": 5
+						},
+						"MaxHP": 22,
+						"HP": 1,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 6,
+						"DamageBonus": 7,
+						"Range": 3,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 15,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 4,
+						"Name": "Ivo",
+						"Role": "Wizard",
+						"BuildId": "wizard.evocation",
+						"ClassId": "wizard",
+						"SubclassId": "evocation",
+						"AdventurerRole": 4,
+						"Life": 0,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 1,
+						"WeaponRank": 0,
+						"Level": 5,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 0,
+						"Cell":
+						{
+							"X": 10,
+							"Y": 4
+						},
+						"MaxHP": 22,
+						"HP": 1,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 10,
+						"DamageBonus": 4,
+						"Range": 4,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 20,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 20,
+						"Name": "Raider 1",
+						"Role": "Raider",
+						"BuildId": "",
+						"ClassId": "",
+						"SubclassId": "",
+						"AdventurerRole": 0,
+						"Life": 2,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 0,
+						"WeaponRank": 0,
+						"Level": 1,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 1,
+						"Cell":
+						{
+							"X": 9,
+							"Y": 6
+						},
+						"MaxHP": 36,
+						"HP": 0,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 8,
+						"DamageBonus": 4,
+						"Range": 1,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 12,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 21,
+						"Name": "Raider 2",
+						"Role": "Raider",
+						"BuildId": "",
+						"ClassId": "",
+						"SubclassId": "",
+						"AdventurerRole": 0,
+						"Life": 2,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 0,
+						"WeaponRank": 0,
+						"Level": 1,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 1,
+						"Cell":
+						{
+							"X": 8,
+							"Y": 5
+						},
+						"MaxHP": 36,
+						"HP": 0,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 8,
+						"DamageBonus": 4,
+						"Range": 1,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 13,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					},
+					{
+						"ID": 22,
+						"Name": "Vault bow",
+						"Role": "Archer",
+						"BuildId": "",
+						"ClassId": "",
+						"SubclassId": "",
+						"AdventurerRole": 0,
+						"Life": 2,
+						"RescueTurnsLeft": 0,
+						"SecondWindUses": 0,
+						"SpellSlots": 0,
+						"Potions": 0,
+						"WeaponRank": 0,
+						"Level": 1,
+						"FighterSubclass": 0,
+						"ManeuverUses": 0,
+						"KitUses": 0,
+						"GuardTurns": 0,
+						"GuardAmount": 0,
+						"RageUses": 0,
+						"RageTurns": 0,
+						"GuardTargetId": -1,
+						"LastSurge": 0,
+						"bSneakWeapon": false,
+						"Side": 1,
+						"Cell":
+						{
+							"X": 11,
+							"Y": 7
+						},
+						"MaxHP": 36,
+						"HP": 0,
+						"ArmorClass": 13,
+						"AttackBonus": 5,
+						"DamageDie": 8,
+						"DamageBonus": 4,
+						"Range": 4,
+						"Speed": 4,
+						"InitiativeBonus": 1,
+						"Initiative": 13,
+						"bReactionAvailable": true,
+						"DeathSaveSuccesses": 0,
+						"DeathSaveFailures": 0,
+						"TemporaryHP": 0,
+						"bConcentrating": false,
+						"Size": 2,
+						"bSurprised": false,
+						"bDisengaged": false,
+						"bProne": false,
+						"GrapplerId": -1
+					}
+				],
+				"Ruleset": 0,
+				"bAmbush": false,
+				"AmbushStealthTotals": []
+			},
+			"RandomState": -883725204,
+			"TurnOrder": [
+				4,
+				1,
+				3,
+				21,
+				22,
+				20,
+				2
+			],
+			"TurnIndex": 1,
+			"round": 9,
+			"MovementLeft": 4,
+			"bActionAvailable": false,
+			"bBonusActionAvailable": true,
+			"Phase": 1
+		}
+	},
+	"Records": []
+}

@@ -1,0 +1,34 @@
+[   0.0s] PHASE 1 encounters done 4
+[   2.0s] R5 Arden(fighter) move a->(9, 5) mv4 actFalse
+[   8.9s]   not accepted
+[   9.7s] R5 Arden(fighter) move a->(9, 5) mv4 actFalse
+[  16.6s]   not accepted
+[  17.4s] R5 Arden(fighter) move a->(8, 6) mv4 actFalse
+[  24.2s]   not accepted
+[  25.0s] R5 Arden(fighter) move a->(8, 6) mv4 actFalse
+[  31.9s]   not accepted
+[  32.7s] R5 Arden(fighter) move a->(9, 4) mv4 actFalse
+[  39.6s]   not accepted
+[  40.4s] R5 Arden(fighter) move a->(9, 4) mv4 actFalse
+[  47.3s]   not accepted
+[  48.1s] R5 Arden(fighter) move a->(8, 5) mv4 actFalse
+[  55.1s]   not accepted
+[  55.9s] R5 Arden(fighter) move a->(8, 5) mv4 actFalse
+[  62.8s]   not accepted
+[  63.6s] R5 Arden(fighter) move a->(10, 5) mv4 actFalse
+[  70.4s]   not accepted
+[  71.2s] R5 Arden(fighter) move a->(10, 5) mv4 actFalse
+[  78.0s]   not accepted
+[  78.8s] R5 Arden(fighter) move a->(8, 7) mv4 actFalse
+[  85.6s]   not accepted
+[  86.4s] R5 Arden(fighter) move a->(8, 7) mv4 actFalse
+[  93.2s]   not accepted
+[  94.0s] R5 Arden(fighter) move a->(8, 4) mv4 actFalse
+[ 101.0s]   not accepted
+[ 101.8s] R5 Arden(fighter) move a->(8, 4) mv4 actFalse
+[ 108.8s]   not accepted
+[ 109.6s] R5 Arden(fighter) move a->(10, 4) mv4 actFalse
+[ 116.5s]   not accepted
+[ 117.3s] R5 Arden(fighter) move a->(10, 4) mv4 actFalse
+[ 124.1s]   not accepted
+[ 124.9s] no state change for 120s

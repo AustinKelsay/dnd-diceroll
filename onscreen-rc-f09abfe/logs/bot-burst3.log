@@ -1,0 +1,36 @@
+[   0.0s] PHASE 1 encounters done 4
+[   2.0s] R5 Ivo(wizard) attack a->(9, 6) mv4 actTrue
+[   6.8s] R5 Ivo(wizard) move a->(9, 5) mv4 actFalse
+[  11.6s] end turn Ivo
+[  12.3s] R5 Sera(cleric) move a->(8, 4) mv4 actTrue
+[  19.3s]   not accepted
+[  20.1s] R5 Sera(cleric) move a->(8, 4) mv4 actTrue
+[  27.1s]   not accepted
+[  27.9s] R5 Sera(cleric) move a->(9, 4) mv4 actTrue
+[  34.8s]   not accepted
+[  35.6s] R5 Sera(cleric) move a->(9, 4) mv4 actTrue
+[  42.5s]   not accepted
+[  43.3s] R5 Sera(cleric) move a->(6, 7) mv4 actTrue
+[  48.1s] end turn Sera
+[  48.9s] R5 Nix(rogue) attack a->(9, 6) mv4 actTrue
+[  53.6s] R5 Nix(rogue) move a->(8, 6) mv4 actFalse
+[  58.4s] end turn Nix
+[  59.2s] R6 Arden(fighter) potion p->(8, 3) mv4 actTrue
+[  64.1s] R6 Arden(fighter) move a->(10, 5) mv4 actFalse
+[  68.9s] end turn Arden
+[  69.6s] R6 Ivo(wizard) attack a->(9, 6) mv4 actTrue
+[  74.3s] end turn Ivo
+[  75.0s] R6 Sera(cleric) move a->(7, 7) mv4 actTrue
+[  79.8s] R6 Sera(cleric) attack a->(9, 6) mv3 actTrue
+[  84.6s] R6 Sera(cleric) move a->(9, 7) mv3 actFalse
+[  89.3s] end turn Sera
+[  90.0s] R6 Nix(rogue) attack a->(9, 6) mv4 actTrue
+[  94.8s] end turn Nix
+[  95.5s] R7 Arden(fighter) potion p->(9, 5) mv4 actTrue
+[ 100.3s] R7 Arden(fighter) move a->(10, 6) mv4 actFalse
+[ 105.0s] end turn Arden
+[ 105.7s] R7 Ivo(wizard) attack a->(9, 6) mv4 actTrue
+[ 110.5s] end turn Ivo
+[ 111.2s] R7 Sera(cleric) attack a->(9, 6) mv4 actTrue
+[ 115.9s] PHASE 4 encounters done 5
+[ 117.8s] ENDING phase 4

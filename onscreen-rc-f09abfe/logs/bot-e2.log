@@ -1,0 +1,36 @@
+[   0.0s] PHASE 1 encounters done 1
+[   1.9s] R15 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[   6.2s] end turn Sera
+[   6.9s] end turn Arden
+[   7.6s] end turn Ivo
+[   8.3s] R16 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  12.7s] end turn Sera
+[  13.4s] end turn Arden
+[  14.1s] end turn Ivo
+[  14.8s] R17 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  19.2s] end turn Sera
+[  19.9s] end turn Arden
+[  20.6s] end turn Ivo
+[  21.3s] R18 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  25.6s] end turn Sera
+[  26.3s] end turn Arden
+[  27.0s] end turn Ivo
+[  27.7s] R19 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  32.1s] end turn Sera
+[  32.8s] end turn Arden
+[  33.5s] end turn Ivo
+[  34.2s] R20 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  38.6s] end turn Sera
+[  39.3s] end turn Arden
+[  40.0s] R21 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  46.5s]   not accepted
+[  47.3s] R21 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  51.7s] end turn Ivo
+[  52.4s] R21 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  56.7s] end turn Sera
+[  57.4s] end turn Arden
+[  58.1s] R22 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  64.6s]   not accepted
+[  65.4s] R22 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  69.8s] end turn Ivo
+[  70.5s] R22 Sera(cleric) rescue r->(8, 4) mv4 actTrue

@@ -1,0 +1,21 @@
+[   0.0s] PHASE 1 encounters done 1
+[   1.9s] R22 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[   6.2s] end turn Sera
+[   6.9s] end turn Arden
+[   7.6s] R23 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  14.1s]   not accepted
+[  14.9s] R23 Ivo(wizard) rescue r->(7, 4) mv4 actTrue
+[  19.3s] end turn Ivo
+[  20.0s] R23 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  24.4s] end turn Sera
+[  25.1s] end turn Arden
+[  25.8s] end turn Ivo
+[  26.5s] R24 Nix(rogue) attack a->(8, 3) mv4 actTrue
+[  30.9s] end turn Nix
+[  31.6s] end turn Sera
+[  32.3s] end turn Arden
+[  33.0s] end turn Ivo
+[  33.7s] R25 Sera(cleric) rescue r->(8, 4) mv4 actTrue
+[  38.1s] end turn Sera
+[  38.8s] end turn Arden
+[  39.5s] R26 Ivo(wizard) rescue r->(7, 4) mv4 actTrue

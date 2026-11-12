@@ -1,0 +1,59 @@
+[   0.0s] PHASE 1 encounters done 4
+[   2.0s] R3 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[   7.2s] end turn Arden
+[   7.9s] R3 Sera(cleric) potion p->(4, 5) mv4 actTrue
+[  13.0s] end turn Sera
+[  16.9s] R4 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[  22.0s] end turn Arden
+[  22.7s] R4 Sera(cleric) rescue r->(4, 4) mv4 actTrue
+[  27.9s] R4 Sera(cleric) move a->(5, 4) mv4 actFalse
+[  32.9s] end turn Sera
+[  33.6s] R4 Nix(rogue) potion p->(4, 4) mv4 actTrue
+[  38.7s] R4 Nix(rogue) move a->(3, 2) mv4 actFalse
+[  44.0s] R4 Nix(rogue) move a->(4, 2) mv1 actFalse
+[  49.2s] end turn Nix
+[  54.0s] R5 Arden(fighter) potion p->(4, 2) mv4 actTrue
+[  59.2s] end turn Arden
+[  59.9s] R5 Sera(cleric) attack a->(5, 3) mv4 actTrue
+[  65.0s] end turn Sera
+[  65.7s] R5 Nix(rogue) attack a->(5, 3) mv4 actTrue
+[  70.8s] R5 Nix(rogue) move a->(5, 2) mv4 actFalse
+[  76.0s] end turn Nix
+[  79.9s] R6 Arden(fighter) attack a->(5, 3) mv4 actTrue
+[  85.0s] end turn Arden
+[  85.7s] R6 Sera(cleric) attack a->(5, 3) mv4 actTrue
+[  90.8s] end turn Sera
+[  91.5s] R6 Nix(rogue) attack a->(5, 3) mv4 actTrue
+[  96.7s] end turn Nix
+[ 101.4s] R7 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[ 106.6s] R7 Arden(fighter) move a->(4, 4) mv4 actFalse
+[ 111.7s] end turn Arden
+[ 112.4s] R7 Nix(rogue) attack a->(5, 3) mv4 actTrue
+[ 117.5s] R7 Nix(rogue) move a->(5, 3) mv4 actFalse
+[ 124.7s]   not accepted
+[ 125.5s] R7 Nix(rogue) move a->(5, 3) mv4 actFalse
+[ 132.6s]   not accepted
+[ 133.4s] R7 Nix(rogue) move a->(6, 4) mv4 actFalse
+[ 140.5s]   not accepted
+[ 141.3s] R7 Nix(rogue) move a->(6, 4) mv4 actFalse
+[ 148.4s]   not accepted
+[ 149.2s] end turn Nix
+[ 149.9s] R8 Arden(fighter) rescue r->(5, 4) mv4 actTrue
+[ 154.9s] R8 Arden(fighter) move a->(6, 5) mv4 actFalse
+[ 159.9s] end turn Arden
+[ 160.6s] R8 Sera(cleric) attack a->(6, 6) mv4 actTrue
+[ 165.5s] R8 Sera(cleric) move a->(5, 6) mv4 actFalse
+[ 170.5s] end turn Sera
+[ 171.2s] R8 Nix(rogue) move a->(4, 5) mv4 actTrue
+[ 176.2s] R8 Nix(rogue) attack a->(6, 6) mv0 actTrue
+[ 181.2s] end turn Nix
+[ 181.9s] R9 Arden(fighter) potion p->(6, 5) mv4 actTrue
+[ 186.8s] end turn Arden
+[ 187.5s] R9 Sera(cleric) attack a->(6, 6) mv4 actTrue
+[ 192.5s] end turn Sera
+[ 193.2s] R9 Nix(rogue) attack a->(6, 6) mv4 actTrue
+[ 198.1s] R9 Nix(rogue) move a->(4, 7) mv4 actFalse
+[ 203.0s] end turn Nix
+[ 203.7s] R10 Arden(fighter) attack a->(6, 6) mv4 actTrue
+[ 208.6s] PHASE 4 encounters done 5
+[ 210.4s] ENDING phase 4

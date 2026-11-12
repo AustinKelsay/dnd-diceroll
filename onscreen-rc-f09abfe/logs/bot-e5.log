@@ -1,0 +1,28 @@
+[   0.0s] PHASE 1 encounters done 4
+[   2.1s] R2 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[   8.6s]   not accepted
+[   9.4s] R2 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[  16.0s]   not accepted
+[  16.8s] R2 Arden(fighter) rescue r->(4, 4) mv4 actTrue
+[  23.3s]   not accepted
+[  24.1s] R2 Arden(fighter) rescue r->(4, 4) mv4 actTrue
+[  30.6s]   not accepted
+[  31.4s] end turn Arden
+[  32.1s] R2 Sera(cleric) potion p->(4, 5) mv4 actTrue
+[  38.6s]   not accepted
+[  39.4s] R2 Sera(cleric) potion p->(4, 5) mv4 actTrue
+[  45.9s]   not accepted
+[  46.7s] R2 Sera(cleric) rescue r->(4, 4) mv4 actTrue
+[  53.2s]   not accepted
+[  54.0s] R2 Sera(cleric) rescue r->(4, 4) mv4 actTrue
+[  60.5s]   not accepted
+[  61.3s] R2 Sera(cleric) rescue r->(4, 6) mv4 actTrue
+[  67.7s]   not accepted
+[  68.5s] R2 Sera(cleric) rescue r->(4, 6) mv4 actTrue
+[  74.9s]   not accepted
+[  75.7s] R2 Sera(cleric) attack a->(5, 4) mv4 actTrue
+[  82.2s]   not accepted
+[  83.0s] R2 Sera(cleric) attack a->(5, 4) mv4 actTrue
+[  89.5s]   not accepted
+[  90.3s] end turn Sera
+[  95.0s] R3 Arden(fighter) potion p->(4, 3) mv4 actTrue

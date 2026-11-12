@@ -1,0 +1,86 @@
+[   0.0s] PHASE 1 encounters done 4
+[   2.0s] R1 Arden(fighter) potion p->(4, 3) mv4 actTrue
+[   7.2s] R1 Arden(fighter) move a->(8, 3) mv4 actFalse
+[  12.2s] end turn Arden
+[  12.9s] R1 Ivo(wizard) potion p->(4, 5) mv4 actTrue
+[  17.9s] R1 Ivo(wizard) move a->(6, 6) mv4 actFalse
+[  22.8s] R1 Ivo(wizard) move a->(8, 6) mv2 actFalse
+[  27.6s] end turn Ivo
+[  28.3s] R1 Sera(cleric) potion p->(4, 4) mv4 actTrue
+[  33.4s] R1 Sera(cleric) move a->(6, 4) mv4 actFalse
+[  38.4s] R1 Sera(cleric) move a->(7, 4) mv1 actFalse
+[  43.4s] end turn Sera
+[  44.1s] R1 Nix(rogue) potion p->(4, 4) mv4 actTrue
+[  49.2s] R1 Nix(rogue) move a->(7, 3) mv4 actFalse
+[  54.2s] end turn Nix
+[  59.0s] R2 Ivo(wizard) attack a->(9, 6) mv4 actTrue
+[  63.7s] R2 Ivo(wizard) move a->(9, 3) mv4 actFalse
+[  68.6s] end turn Ivo
+[  69.4s] R2 Sera(cleric) attack a->(8, 4) mv4 actTrue
+[  74.5s] R2 Sera(cleric) move a->(5, 2) mv4 actFalse
+[  79.7s] end turn Sera
+[  80.4s] R2 Nix(rogue) rescue r->(8, 3) mv4 actTrue
+[  85.3s] R2 Nix(rogue) move a->(7, 4) mv4 actFalse
+[  90.3s] end turn Nix
+[  94.2s] R3 Arden(fighter) potion p->(8, 3) mv4 actTrue
+[  99.2s] end turn Arden
+[  99.9s] R3 Ivo(wizard) attack a->(8, 4) mv4 actTrue
+[ 104.8s] R3 Ivo(wizard) move a->(9, 4) mv4 actFalse
+[ 109.7s] end turn Ivo
+[ 110.4s] R3 Sera(cleric) move a->(6, 5) mv4 actTrue
+[ 115.4s] end turn Sera
+[ 116.1s] R3 Nix(rogue) attack a->(8, 4) mv4 actTrue
+[ 121.0s] end turn Nix
+[ 124.9s] R4 Ivo(wizard) attack a->(8, 4) mv4 actTrue
+[ 129.9s] R4 Ivo(wizard) move a->(9, 3) mv4 actFalse
+[ 134.8s] end turn Ivo
+[ 135.5s] R4 Sera(cleric) move a->(7, 3) mv4 actTrue
+[ 140.5s] R4 Sera(cleric) rescue r->(8, 3) mv1 actTrue
+[ 145.4s] R4 Sera(cleric) move a->(6, 3) mv1 actFalse
+[ 150.5s] end turn Sera
+[ 151.2s] R4 Nix(rogue) attack a->(8, 4) mv4 actTrue
+[ 156.1s] R4 Nix(rogue) move a->(8, 4) mv4 actFalse
+[ 163.1s]   not accepted
+[ 163.9s] R4 Nix(rogue) move a->(8, 4) mv4 actFalse
+[ 170.9s]   not accepted
+[ 171.7s] R4 Nix(rogue) move a->(10, 4) mv4 actFalse
+[ 178.5s]   not accepted
+[ 179.3s] R4 Nix(rogue) move a->(10, 4) mv4 actFalse
+[ 186.2s]   not accepted
+[ 187.0s] R4 Nix(rogue) move a->(6, 6) mv4 actFalse
+[ 191.9s] R4 Nix(rogue) move a->(7, 6) mv1 actFalse
+[ 196.8s] end turn Nix
+[ 197.5s] R5 Arden(fighter) potion p->(8, 3) mv4 actTrue
+[ 202.4s] R5 Arden(fighter) move a->(9, 5) mv4 actFalse
+[ 209.3s]   not accepted
+[ 210.1s] R5 Arden(fighter) move a->(9, 5) mv4 actFalse
+[ 217.0s]   not accepted
+[ 217.8s] R5 Arden(fighter) move a->(8, 6) mv4 actFalse
+[ 224.6s]   not accepted
+[ 225.4s] R5 Arden(fighter) move a->(8, 6) mv4 actFalse
+[ 232.3s]   not accepted
+[ 233.1s] R5 Arden(fighter) move a->(9, 4) mv4 actFalse
+[ 240.0s]   not accepted
+[ 240.8s] R5 Arden(fighter) move a->(9, 4) mv4 actFalse
+[ 247.8s]   not accepted
+[ 248.6s] R5 Arden(fighter) move a->(8, 5) mv4 actFalse
+[ 255.5s]   not accepted
+[ 256.3s] R5 Arden(fighter) move a->(8, 5) mv4 actFalse
+[ 263.2s]   not accepted
+[ 264.0s] R5 Arden(fighter) move a->(10, 5) mv4 actFalse
+[ 270.8s]   not accepted
+[ 271.6s] R5 Arden(fighter) move a->(10, 5) mv4 actFalse
+[ 278.4s]   not accepted
+[ 279.3s] R5 Arden(fighter) move a->(8, 7) mv4 actFalse
+[ 286.1s]   not accepted
+[ 286.9s] R5 Arden(fighter) move a->(8, 7) mv4 actFalse
+[ 293.7s]   not accepted
+[ 294.5s] R5 Arden(fighter) move a->(8, 4) mv4 actFalse
+[ 301.5s]   not accepted
+[ 302.3s] R5 Arden(fighter) move a->(8, 4) mv4 actFalse
+[ 309.2s]   not accepted
+[ 310.0s] R5 Arden(fighter) move a->(10, 4) mv4 actFalse
+[ 316.9s]   not accepted
+[ 317.7s] R5 Arden(fighter) move a->(10, 4) mv4 actFalse
+[ 324.6s]   not accepted
+[ 325.4s] no state change for 120s
