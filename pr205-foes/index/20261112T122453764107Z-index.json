@@ -1,0 +1,4562 @@
+{
+  "commit": "c9c581bee8dbd0c7a21061314de53a87b7d99807",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-1a1c207f-d3c648cee44e07ac/tools/capture/foes-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "foes-vigil-a",
+      "seed": 1,
+      "board": [
+        17,
+        11
+      ],
+      "fixture_info": {
+        "seed": 1,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 17,
+        "boardHeight": 11,
+        "foeLooks": "Scout,Skirmisher,Archer"
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "foes-vigil-a/1920x1080",
+      "shots": [
+        {
+          "name": "pose-scout-melee-t037",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Scout",
+            "pose": "Melee",
+            "time": 0.3700000047683716
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-scout-melee-t037.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-scout-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Scout",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-scout-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-scout-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Scout",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-scout-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-scout-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Scout",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-scout-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-ranged-t073",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.7300000190734863
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t073.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-ranged-t040",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.4000000059604645
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t040.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-melee-t037",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Skirmisher",
+            "pose": "Melee",
+            "time": 0.3700000047683716
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-skirmisher-melee-t037.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Skirmisher",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-skirmisher-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Skirmisher",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-skirmisher-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Skirmisher",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Skirmisher",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-skirmisher-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-melee-t020",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-melee-t055",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-warden-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-brace-t045",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-raider-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Raider on the board"
+        }
+      ]
+    },
+    {
+      "fixture": "foes-vigil-b",
+      "seed": 1,
+      "board": [
+        17,
+        11
+      ],
+      "fixture_info": {
+        "seed": 1,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 17,
+        "boardHeight": 11,
+        "foeLooks": "Brute,Warden,Archer"
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "foes-vigil-b/1920x1080",
+      "shots": [
+        {
+          "name": "pose-scout-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-archer-ranged-t073",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.7300000190734863
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t073.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-ranged-t040",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.4000000059604645
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t040.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-brute-melee-t020",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Melee",
+            "time": 0.20000000298023224
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-melee-t020.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-melee-t037",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Melee",
+            "time": 0.3700000047683716
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-melee-t037.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-melee-t055",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Melee",
+            "time": 0.550000011920929
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-melee-t055.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-brute-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Brute",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-brute-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-warden-melee-t037",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Warden",
+            "pose": "Melee",
+            "time": 0.3700000047683716
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-warden-melee-t037.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-warden-brace-t045",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Warden",
+            "pose": "Brace",
+            "time": 0.44999998807907104
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-warden-brace-t045.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-warden-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Warden",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-warden-hit-t010.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-warden-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Warden",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1344,
+                "y0": 307,
+                "x1": 1394,
+                "y1": 416
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1254,
+                "y0": 307,
+                "x1": 1301,
+                "y1": 416
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1165,
+                "y0": 307,
+                "x1": 1208,
+                "y1": 416
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1076,
+                "y0": 307,
+                "x1": 1116,
+                "y1": 416
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1297,
+                "y0": 621,
+                "x1": 1353,
+                "y1": 740
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1092,
+                "y0": 621,
+                "x1": 1139,
+                "y1": 740
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 884,
+                "y0": 621,
+                "x1": 927,
+                "y1": 740
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-warden-death-t260.png",
+          "yaw": 0,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 4054.4301925055406,
+              "y": 1122.59031718608,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415555,
+              "yaw": 180,
+              "roll": 4.703912676387699e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-warden-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 21,
+            "name": "Raider 2",
+            "role": "Warden",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 842,
+                "y0": 229,
+                "x1": 880,
+                "y1": 335
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 839,
+                "y0": 281,
+                "x1": 878,
+                "y1": 389
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 836,
+                "y0": 336,
+                "x1": 876,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 833,
+                "y0": 393,
+                "x1": 873,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Brute",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1285,
+                "y0": 281,
+                "x1": 1333,
+                "y1": 389
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Warden",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1303,
+                "y0": 393,
+                "x1": 1353,
+                "y1": 505
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1322,
+                "y0": 519,
+                "x1": 1376,
+                "y1": 634
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-warden-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2654.8095703125,
+          "camera": {
+            "location": {
+              "x": 768.669798360248,
+              "y": 4126.885661845555,
+              "z": 2781.8698196144815
+            },
+            "rotation": {
+              "pitch": -41.35083391415549,
+              "yaw": -89.99999749552194,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-raider-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Raider on the board"
+        }
+      ]
+    },
+    {
+      "fixture": "board-vault-raiders",
+      "seed": 1,
+      "board": [
+        18,
+        12
+      ],
+      "fixture_info": {
+        "seed": 1,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 12
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "board-vault-raiders/1920x1080",
+      "shots": [
+        {
+          "name": "pose-scout-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-scout-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Scout on the board"
+        },
+        {
+          "name": "pose-archer-ranged-t073",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.7300000190734863
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1298,
+                "y0": 300,
+                "x1": 1345,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1209,
+                "y0": 300,
+                "x1": 1254,
+                "y1": 408
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1121,
+                "y0": 300,
+                "x1": 1162,
+                "y1": 408
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1032,
+                "y0": 300,
+                "x1": 1070,
+                "y1": 408
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1478,
+                "y0": 756,
+                "x1": 1545,
+                "y1": 878
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1263,
+                "y0": 756,
+                "x1": 1320,
+                "y1": 878
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1048,
+                "y0": 756,
+                "x1": 1095,
+                "y1": 878
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t073.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-ranged-t040",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Ranged",
+            "time": 0.4000000059604645
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1298,
+                "y0": 300,
+                "x1": 1345,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1209,
+                "y0": 300,
+                "x1": 1254,
+                "y1": 408
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1121,
+                "y0": 300,
+                "x1": 1162,
+                "y1": 408
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1032,
+                "y0": 300,
+                "x1": 1070,
+                "y1": 408
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1478,
+                "y0": 756,
+                "x1": 1545,
+                "y1": 878
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1263,
+                "y0": 756,
+                "x1": 1320,
+                "y1": 878
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1048,
+                "y0": 756,
+                "x1": 1095,
+                "y1": 878
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-ranged-t040.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-hit-t010",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Hit",
+            "time": 0.10000000149011612
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1298,
+                "y0": 300,
+                "x1": 1345,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1209,
+                "y0": 300,
+                "x1": 1254,
+                "y1": 408
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1121,
+                "y0": 300,
+                "x1": 1162,
+                "y1": 408
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1032,
+                "y0": 300,
+                "x1": 1070,
+                "y1": 408
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1478,
+                "y0": 756,
+                "x1": 1545,
+                "y1": 878
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1263,
+                "y0": 756,
+                "x1": 1320,
+                "y1": 878
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1048,
+                "y0": 756,
+                "x1": 1095,
+                "y1": 878
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-hit-t010.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-death-t260",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Death",
+            "time": 2.5999999046325684
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1298,
+                "y0": 300,
+                "x1": 1345,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1209,
+                "y0": 300,
+                "x1": 1254,
+                "y1": 408
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1121,
+                "y0": 300,
+                "x1": 1162,
+                "y1": 408
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1032,
+                "y0": 300,
+                "x1": 1070,
+                "y1": 408
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1478,
+                "y0": 756,
+                "x1": 1545,
+                "y1": 878
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1263,
+                "y0": 756,
+                "x1": 1320,
+                "y1": 878
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1048,
+                "y0": 756,
+                "x1": 1095,
+                "y1": 878
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-death-t260.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-archer-idle-default-yaw90",
+          "mode": "pose",
+          "held": {
+            "id": 22,
+            "name": "Vault bow",
+            "role": "Archer",
+            "pose": "Idle",
+            "time": 0
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 832,
+                "y0": 300,
+                "x1": 871,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 829,
+                "y0": 355,
+                "x1": 869,
+                "y1": 465
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 825,
+                "y0": 413,
+                "x1": 866,
+                "y1": 524
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 821,
+                "y0": 473,
+                "x1": 863,
+                "y1": 587
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1444,
+                "y0": 249,
+                "x1": 1496,
+                "y1": 355
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1469,
+                "y0": 355,
+                "x1": 1524,
+                "y1": 465
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1497,
+                "y0": 473,
+                "x1": 1557,
+                "y1": 587
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-archer-idle-default-yaw90.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "pose-skirmisher-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-skirmisher-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Skirmisher on the board"
+        },
+        {
+          "name": "pose-brute-melee-t020",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-melee-t055",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-brute-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Brute on the board"
+        },
+        {
+          "name": "pose-warden-melee-t037",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-brace-t045",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-hit-t010",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-death-t260",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-warden-idle-default-yaw90",
+          "mode": "pose",
+          "status": "skipped",
+          "reason": "no Warden on the board"
+        },
+        {
+          "name": "pose-raider-melee-t037",
+          "mode": "pose",
+          "held": {
+            "id": 20,
+            "name": "Raider 1",
+            "role": "Raider",
+            "pose": "Melee",
+            "time": 0.3700000047683716
+          },
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1298,
+                "y0": 300,
+                "x1": 1345,
+                "y1": 408
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1209,
+                "y0": 300,
+                "x1": 1254,
+                "y1": 408
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1121,
+                "y0": 300,
+                "x1": 1162,
+                "y1": 408
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1032,
+                "y0": 300,
+                "x1": 1070,
+                "y1": 408
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1478,
+                "y0": 756,
+                "x1": 1545,
+                "y1": 878
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1263,
+                "y0": 756,
+                "x1": 1320,
+                "y1": 878
+              }
+            },
+            {
+              "id": 22,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1048,
+                "y0": 756,
+                "x1": 1095,
+                "y1": 878
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "pose-raider-melee-t037.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    }
+  ]
+}

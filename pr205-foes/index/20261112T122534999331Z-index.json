@@ -1,0 +1,4363 @@
+{
+  "commit": "c9c581bee8dbd0c7a21061314de53a87b7d99807",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-1a1c207f-d3c648cee44e07ac/tools/capture/poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": true,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1139,
+                "y0": 467,
+                "x1": 1243,
+                "y1": 735
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 50,
+                "y0": 350,
+                "x1": 196,
+                "y1": 604
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 159,
+                "y0": 157,
+                "x1": 281,
+                "y1": 387
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 753.0452839234661,
+              "y": -971.119189482341,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1536,
+                "y0": 476,
+                "x1": 1598,
+                "y1": 589
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1521,
+                "y0": 414,
+                "x1": 1580,
+                "y1": 526
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1506,
+                "y0": 356,
+                "x1": 1563,
+                "y1": 466
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1492,
+                "y0": 302,
+                "x1": 1547,
+                "y1": 410
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1054,
+                "y0": 414,
+                "x1": 1095,
+                "y1": 526
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1049,
+                "y0": 302,
+                "x1": 1088,
+                "y1": 410
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6404730823024,
+              "y": -2612.134523689172,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": 89.99999749552201,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1283,
+                "y0": 554,
+                "x1": 1310,
+                "y1": 601
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1280,
+                "y0": 510,
+                "x1": 1307,
+                "y1": 557
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1277,
+                "y0": 467,
+                "x1": 1304,
+                "y1": 514
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1274,
+                "y0": 425,
+                "x1": 1300,
+                "y1": 472
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1032,
+                "y0": 510,
+                "x1": 1054,
+                "y1": 557
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1031,
+                "y0": 425,
+                "x1": 1052,
+                "y1": 472
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 5049.296875,
+          "camera": {
+            "location": {
+              "x": 1599.439414875274,
+              "y": -3373.204394615405,
+              "z": 6975.710575202735
+            },
+            "rotation": {
+              "pitch": -60.00000446255754,
+              "yaw": 89.99999749552195,
+              "roll": 1.2722220442120655e-14
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1497,
+                "y0": 247,
+                "x1": 1616,
+                "y1": 489
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1307,
+                "y0": 247,
+                "x1": 1412,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 925,
+                "y0": 247,
+                "x1": 1003,
+                "y1": 489
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1453,
+                "y0": 946,
+                "x1": 1621,
+                "y1": 1080
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 910,
+                "y0": 946,
+                "x1": 1022,
+                "y1": 1080
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559776,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1342,
+                "y0": 302,
+                "x1": 1392,
+                "y1": 410
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1254,
+                "y0": 302,
+                "x1": 1300,
+                "y1": 410
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1165,
+                "y0": 302,
+                "x1": 1208,
+                "y1": 410
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1076,
+                "y0": 302,
+                "x1": 1116,
+                "y1": 410
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1296,
+                "y0": 609,
+                "x1": 1351,
+                "y1": 727
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1093,
+                "y0": 609,
+                "x1": 1140,
+                "y1": 727
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1227,
+                "y0": 310,
+                "x1": 1250,
+                "y1": 355
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1183,
+                "y0": 310,
+                "x1": 1205,
+                "y1": 355
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1138,
+                "y0": 310,
+                "x1": 1160,
+                "y1": 355
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1094,
+                "y0": 310,
+                "x1": 1115,
+                "y1": 355
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1193,
+                "y0": 504,
+                "x1": 1216,
+                "y1": 548
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1100,
+                "y0": 504,
+                "x1": 1122,
+                "y1": 548
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 5389.7890625,
+          "camera": {
+            "location": {
+              "x": 5624.921401985336,
+              "y": 1384.5247930709427,
+              "z": 7446.107781874398
+            },
+            "rotation": {
+              "pitch": -60.00000480594002,
+              "yaw": 180,
+              "roll": -7.062251102908949e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1101,
+                "y0": 76,
+                "x1": 1179,
+                "y1": 296
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 446.9545656115115,
+              "y": 2471.1191761026903,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 837,
+                "y0": 250,
+                "x1": 874,
+                "y1": 356
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 833,
+                "y0": 302,
+                "x1": 872,
+                "y1": 410
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 830,
+                "y0": 356,
+                "x1": 870,
+                "y1": 466
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 826,
+                "y0": 414,
+                "x1": 867,
+                "y1": 526
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1281,
+                "y0": 302,
+                "x1": 1328,
+                "y1": 410
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1298,
+                "y0": 414,
+                "x1": 1349,
+                "y1": 526
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1011,
+                "y0": 383,
+                "x1": 1032,
+                "y1": 431
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1012,
+                "y0": 425,
+                "x1": 1032,
+                "y1": 472
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1012,
+                "y0": 467,
+                "x1": 1033,
+                "y1": 514
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1013,
+                "y0": 510,
+                "x1": 1034,
+                "y1": 557
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1254,
+                "y0": 425,
+                "x1": 1281,
+                "y1": 472
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1260,
+                "y0": 510,
+                "x1": 1287,
+                "y1": 557
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 5049.296875,
+          "camera": {
+            "location": {
+              "x": 410.56021661611965,
+              "y": 4873.204342647844,
+              "z": 6975.710575202735
+            },
+            "rotation": {
+              "pitch": -60.00000446255754,
+              "yaw": -89.99999749552195,
+              "roll": -1.2722220442120655e-14
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 721,
+                "y0": 247,
+                "x1": 810,
+                "y1": 489
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 925,
+                "y0": 247,
+                "x1": 1003,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1307,
+                "y0": 247,
+                "x1": 1412,
+                "y1": 489
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 934,
+                "y0": 0,
+                "x1": 993,
+                "y1": 73
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1228,
+                "y0": 0,
+                "x1": 1303,
+                "y1": 73
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -1121.1191694128647,
+              "y": 596.9544903790002,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 989,
+                "y0": 394,
+                "x1": 1027,
+                "y1": 505
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1081,
+                "y0": 394,
+                "x1": 1123,
+                "y1": 505
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1174,
+                "y0": 394,
+                "x1": 1219,
+                "y1": 505
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1266,
+                "y0": 394,
+                "x1": 1315,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1067,
+                "y0": 137,
+                "x1": 1103,
+                "y1": 239
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1231,
+                "y0": 137,
+                "x1": 1272,
+                "y1": 239
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.16580118020704,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1056,
+                "y0": 582,
+                "x1": 1077,
+                "y1": 626
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1102,
+                "y0": 582,
+                "x1": 1125,
+                "y1": 626
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1149,
+                "y0": 582,
+                "x1": 1173,
+                "y1": 626
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1196,
+                "y0": 582,
+                "x1": 1221,
+                "y1": 626
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1096,
+                "y0": 382,
+                "x1": 1117,
+                "y1": 427
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1186,
+                "y0": 382,
+                "x1": 1209,
+                "y1": 427
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 5389.7890625,
+          "camera": {
+            "location": {
+              "x": -3389.832087289936,
+              "y": 115.47482215984292,
+              "z": 7446.107781874398
+            },
+            "rotation": {
+              "pitch": -60.00000480593988,
+              "yaw": 5.008956158441863e-06,
+              "roll": -7.583034380783438e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1536,
+                "y0": 476,
+                "x1": 1598,
+                "y1": 589
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1521,
+                "y0": 414,
+                "x1": 1580,
+                "y1": 526
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1506,
+                "y0": 356,
+                "x1": 1563,
+                "y1": 466
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1492,
+                "y0": 302,
+                "x1": 1547,
+                "y1": 410
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1054,
+                "y0": 414,
+                "x1": 1095,
+                "y1": 526
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1049,
+                "y0": 302,
+                "x1": 1088,
+                "y1": 410
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.640473082302,
+              "y": -2612.134523689172,
+              "z": 2773.9983050391147
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": 89.99999749552201,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1139,
+                "y0": 467,
+                "x1": 1243,
+                "y1": 735
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 50,
+                "y0": 350,
+                "x1": 196,
+                "y1": 604
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 159,
+                "y0": 157,
+                "x1": 281,
+                "y1": 387
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 753.0452839234661,
+              "y": -971.119189482341,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yawm90-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6404730823024,
+              "y": -2612.134523689172,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": 89.99999749552201,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw000-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw090-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw180-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-yaw000-default",
+          "mode": "impact",
+          "effect": "hit",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-yaw000-near",
+          "mode": "impact",
+          "effect": "hit",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "status": "captured",
+          "file": "impact-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-spell-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-spell-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-fire-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-fire-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-spell-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1041,
+              "y0": 325,
+              "x1": 1122,
+              "y1": 431
+            }
+          },
+          "status": "captured",
+          "file": "impact-spell-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-fire-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1041,
+              "y0": 325,
+              "x1": 1122,
+              "y1": 431
+            }
+          },
+          "status": "captured",
+          "file": "impact-fire-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1041,
+              "y0": 325,
+              "x1": 1122,
+              "y1": 431
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-landing1-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing-first",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-landing1-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-landing2-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing-second",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-landing2-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-attack",
+          "mode": "tooltip",
+          "action": "attack",
+          "status": "captured",
+          "file": "tooltip-attack.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-special1",
+          "mode": "tooltip",
+          "action": "special1",
+          "status": "captured",
+          "file": "tooltip-special1.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-special2",
+          "mode": "tooltip",
+          "action": "special2",
+          "status": "captured",
+          "file": "tooltip-special2.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-rescue",
+          "mode": "tooltip",
+          "action": "rescue",
+          "status": "captured",
+          "file": "tooltip-rescue.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-potion",
+          "mode": "tooltip",
+          "action": "potion",
+          "status": "captured",
+          "file": "tooltip-potion.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "hint-move",
+          "mode": "hint",
+          "hint": "move",
+          "status": "captured",
+          "file": "hint-move.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "hint-resources",
+          "mode": "hint",
+          "hint": "resources",
+          "status": "skipped",
+          "reason": "no resource is spent or short"
+        },
+        {
+          "name": "hint-rescue",
+          "mode": "hint",
+          "hint": "rescue",
+          "status": "skipped",
+          "reason": "no party member is Downed"
+        },
+        {
+          "name": "hint-endturn",
+          "mode": "hint",
+          "hint": "endturn",
+          "status": "skipped",
+          "reason": "the active hero still has an action besides End Turn"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-barbarian-berserker",
+          "mode": "start",
+          "build": "barbarian.berserker",
+          "status": "captured",
+          "file": "build-barbarian-berserker.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-wizard-evocation",
+          "mode": "start",
+          "build": "wizard.evocation",
+          "status": "captured",
+          "file": "build-wizard-evocation.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-monk-open-hand",
+          "mode": "start",
+          "build": "monk.open-hand",
+          "status": "captured",
+          "file": "build-monk-open-hand.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-paladin-devotion",
+          "mode": "start",
+          "build": "paladin.devotion",
+          "status": "captured",
+          "file": "build-paladin-devotion.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-ranger-hunter",
+          "mode": "start",
+          "build": "ranger.hunter",
+          "status": "captured",
+          "file": "build-ranger-hunter.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-sorcerer-draconic-bloodline",
+          "mode": "start",
+          "build": "sorcerer.draconic-bloodline",
+          "status": "captured",
+          "file": "build-sorcerer-draconic-bloodline.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-warlock-fiend",
+          "mode": "start",
+          "build": "warlock.fiend",
+          "status": "captured",
+          "file": "build-warlock-fiend.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-druid-land",
+          "mode": "start",
+          "build": "druid.land",
+          "status": "captured",
+          "file": "build-druid-land.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "board-root-r002",
+      "seed": 3,
+      "board": [
+        16,
+        11
+      ],
+      "fixture_info": {
+        "seed": 3,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 16,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": true,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "board-root-r002/1920x1080",
+      "shots": [
+        {
+          "name": "battle-yawm90-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1101,
+                "y0": 76,
+                "x1": 1179,
+                "y1": 296
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 753.0452839234661,
+              "y": -1121.1191894823407,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1515,
+                "y0": 455,
+                "x1": 1576,
+                "y1": 569
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1500,
+                "y0": 393,
+                "x1": 1559,
+                "y1": 505
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1486,
+                "y0": 335,
+                "x1": 1543,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1473,
+                "y0": 279,
+                "x1": 1528,
+                "y1": 387
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 837,
+                "y0": 455,
+                "x1": 878,
+                "y1": 569
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 843,
+                "y0": 335,
+                "x1": 883,
+                "y1": 445
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 1493.8905235423144,
+              "y": -2582.970763095268,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 89.99999749552175,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yawm90-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1262,
+                "y0": 539,
+                "x1": 1292,
+                "y1": 591
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1259,
+                "y0": 490,
+                "x1": 1289,
+                "y1": 543
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1256,
+                "y0": 443,
+                "x1": 1285,
+                "y1": 496
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1253,
+                "y0": 397,
+                "x1": 1282,
+                "y1": 450
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 874,
+                "y0": 539,
+                "x1": 898,
+                "y1": 591
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 876,
+                "y0": 443,
+                "x1": 899,
+                "y1": 496
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yawm90-far.png",
+          "yaw": -90,
+          "distance": 4563.88525390625,
+          "camera": {
+            "location": {
+              "x": 1452.2932891084624,
+              "y": -3036.8222462639606,
+              "z": 6305.104254011595
+            },
+            "rotation": {
+              "pitch": -60.00000467467726,
+              "yaw": 89.9999974955221,
+              "roll": 2.5444441047400704e-14
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1307,
+                "y0": 247,
+                "x1": 1412,
+                "y1": 489
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 925,
+                "y0": 247,
+                "x1": 1003,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 721,
+                "y0": 247,
+                "x1": 810,
+                "y1": 489
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559772,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1346,
+                "y0": 314,
+                "x1": 1396,
+                "y1": 423
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1255,
+                "y0": 314,
+                "x1": 1303,
+                "y1": 423
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1165,
+                "y0": 314,
+                "x1": 1209,
+                "y1": 423
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1074,
+                "y0": 314,
+                "x1": 1115,
+                "y1": 423
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1430,
+                "y0": 794,
+                "x1": 1496,
+                "y1": 917
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1210,
+                "y0": 794,
+                "x1": 1265,
+                "y1": 917
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw000-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1234,
+                "y0": 325,
+                "x1": 1261,
+                "y1": 376
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1184,
+                "y0": 325,
+                "x1": 1210,
+                "y1": 376
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1134,
+                "y0": 325,
+                "x1": 1158,
+                "y1": 376
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1084,
+                "y0": 325,
+                "x1": 1107,
+                "y1": 376
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1254,
+                "y0": 642,
+                "x1": 1283,
+                "y1": 691
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1146,
+                "y0": 642,
+                "x1": 1173,
+                "y1": 691
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw000-far.png",
+          "yaw": 0,
+          "distance": 4783.099609375,
+          "camera": {
+            "location": {
+              "x": 4985.315941824386,
+              "y": 1300.0968055406179,
+              "z": 6607.953633203859
+            },
+            "rotation": {
+              "pitch": -60.000004813976894,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1139,
+                "y0": 467,
+                "x1": 1243,
+                "y1": 735
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-near.png",
+          "yaw": 90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 446.9545656115115,
+              "y": 2321.1191761026903,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": -89.99999749552184,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 847,
+                "y0": 259,
+                "x1": 885,
+                "y1": 367
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 844,
+                "y0": 314,
+                "x1": 883,
+                "y1": 423
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 841,
+                "y0": 371,
+                "x1": 881,
+                "y1": 482
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 838,
+                "y0": 432,
+                "x1": 879,
+                "y1": 545
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1468,
+                "y0": 259,
+                "x1": 1522,
+                "y1": 367
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1495,
+                "y0": 371,
+                "x1": 1553,
+                "y1": 482
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349441,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw090-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1029,
+                "y0": 388,
+                "x1": 1052,
+                "y1": 441
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1029,
+                "y0": 434,
+                "x1": 1053,
+                "y1": 487
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1030,
+                "y0": 481,
+                "x1": 1054,
+                "y1": 533
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1031,
+                "y0": 529,
+                "x1": 1055,
+                "y1": 581
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1402,
+                "y0": 388,
+                "x1": 1434,
+                "y1": 441
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1411,
+                "y0": 481,
+                "x1": 1444,
+                "y1": 533
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw090-far.png",
+          "yaw": 90,
+          "distance": 4563.88525390625,
+          "camera": {
+            "location": {
+              "x": 377.70637882392964,
+              "y": 4416.822197504139,
+              "z": 6305.104254011595
+            },
+            "rotation": {
+              "pitch": -60.00000467467726,
+              "yaw": -89.99999749552208,
+              "roll": -1.2722220523700352e-14
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-near",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 925,
+                "y0": 247,
+                "x1": 1003,
+                "y1": 489
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1307,
+                "y0": 247,
+                "x1": 1412,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1497,
+                "y0": 247,
+                "x1": 1616,
+                "y1": 489
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-near.png",
+          "yaw": 180,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": -1121.1191694128647,
+              "y": 446.9544903790006,
+              "z": 1179.070711848488
+            },
+            "rotation": {
+              "pitch": -34.999998513974155,
+              "yaw": 5.008956283540573e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 985,
+                "y0": 393,
+                "x1": 1023,
+                "y1": 505
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1079,
+                "y0": 393,
+                "x1": 1121,
+                "y1": 505
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1172,
+                "y0": 393,
+                "x1": 1218,
+                "y1": 505
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1266,
+                "y0": 393,
+                "x1": 1315,
+                "y1": 505
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 981,
+                "y0": 39,
+                "x1": 1013,
+                "y1": 139
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1139,
+                "y0": 39,
+                "x1": 1177,
+                "y1": 139
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": -2582.9707223762543,
+              "y": 381.10891407357343,
+              "z": 2790.2254637616547
+            },
+            "rotation": {
+              "pitch": -41.82464128280435,
+              "yaw": 5.0089565259502265e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw180-far",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1063,
+                "y0": 561,
+                "x1": 1087,
+                "y1": 610
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1116,
+                "y0": 561,
+                "x1": 1141,
+                "y1": 610
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1169,
+                "y0": 561,
+                "x1": 1195,
+                "y1": 610
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1222,
+                "y0": 561,
+                "x1": 1249,
+                "y1": 610
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1057,
+                "y0": 254,
+                "x1": 1079,
+                "y1": 306
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 1155,
+                "y0": 254,
+                "x1": 1180,
+                "y1": 306
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw180-far.png",
+          "yaw": 180,
+          "distance": 4783.099609375,
+          "camera": {
+            "location": {
+              "x": -2990.8304227711883,
+              "y": 126.89870152237938,
+              "z": 6607.953633203859
+            },
+            "rotation": {
+              "pitch": -60.0000048139768,
+              "yaw": 5.0089559608984615e-06,
+              "roll": 7.583034382625781e-22
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1515,
+                "y0": 455,
+                "x1": 1576,
+                "y1": 569
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1500,
+                "y0": 393,
+                "x1": 1559,
+                "y1": 505
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1486,
+                "y0": 335,
+                "x1": 1543,
+                "y1": 445
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1473,
+                "y0": 279,
+                "x1": 1528,
+                "y1": 387
+              }
+            },
+            {
+              "id": 20,
+              "name": "Scout 1",
+              "role": "Scout",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 837,
+                "y0": 455,
+                "x1": 878,
+                "y1": 569
+              }
+            },
+            {
+              "id": 21,
+              "name": "Vault bow",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": false,
+              "box": {
+                "x0": 843,
+                "y0": 335,
+                "x1": 883,
+                "y1": 445
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 1493.890523542314,
+              "y": -2582.970763095268,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 89.99999749552175,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-near",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1109,
+                "y0": 157,
+                "x1": 1192,
+                "y1": 387
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": false,
+              "box": {
+                "x0": 1101,
+                "y0": 76,
+                "x1": 1179,
+                "y1": 296
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yawm90-near.png",
+          "yaw": -90,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 753.0452839234661,
+              "y": -1121.1191894823407,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 89.99999749552185,
+              "roll": -3.882740262784008e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yawm90-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 1493.8905235423144,
+              "y": -2582.970763095268,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 89.99999749552175,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw000-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw090-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "roll-yaw180-default",
+          "mode": "roll",
+          "status": "captured",
+          "file": "roll-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": -2582.9707223762543,
+              "y": 381.1089140735735,
+              "z": 2790.2254637616547
+            },
+            "rotation": {
+              "pitch": -41.82464128280435,
+              "yaw": 5.0089565259502265e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-yaw000-default",
+          "mode": "impact",
+          "effect": "hit",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-yaw000-near",
+          "mode": "impact",
+          "effect": "hit",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3
+          },
+          "status": "captured",
+          "file": "impact-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-spell-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-spell-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-fire-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-fire-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-spell-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            },
+            "bolt": {
+              "x0": 1143,
+              "y0": 282,
+              "x1": 1227,
+              "y1": 388
+            }
+          },
+          "status": "captured",
+          "file": "impact-spell-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-fire-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            },
+            "bolt": {
+              "x0": 1143,
+              "y0": 282,
+              "x1": 1227,
+              "y1": 388
+            }
+          },
+          "status": "captured",
+          "file": "impact-fire-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-flight-yaw090-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            },
+            "bolt": {
+              "x0": 1143,
+              "y0": 282,
+              "x1": 1227,
+              "y1": 388
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-flight-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-landing1-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing-first",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-landing1-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "impact-missile-landing2-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "landing-second",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "status": "captured",
+          "file": "impact-missile-landing2-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-attack",
+          "mode": "tooltip",
+          "action": "attack",
+          "status": "captured",
+          "file": "tooltip-attack.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-special1",
+          "mode": "tooltip",
+          "action": "special1",
+          "status": "captured",
+          "file": "tooltip-special1.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-special2",
+          "mode": "tooltip",
+          "action": "special2",
+          "status": "captured",
+          "file": "tooltip-special2.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-rescue",
+          "mode": "tooltip",
+          "action": "rescue",
+          "status": "captured",
+          "file": "tooltip-rescue.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "tooltip-potion",
+          "mode": "tooltip",
+          "action": "potion",
+          "status": "captured",
+          "file": "tooltip-potion.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "hint-move",
+          "mode": "hint",
+          "hint": "move",
+          "status": "captured",
+          "file": "hint-move.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "hint-resources",
+          "mode": "hint",
+          "hint": "resources",
+          "status": "skipped",
+          "reason": "no resource is spent or short"
+        },
+        {
+          "name": "hint-rescue",
+          "mode": "hint",
+          "hint": "rescue",
+          "status": "skipped",
+          "reason": "no party member is Downed"
+        },
+        {
+          "name": "hint-endturn",
+          "mode": "hint",
+          "hint": "endturn",
+          "status": "skipped",
+          "reason": "the active hero still has an action besides End Turn"
+        },
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "skipped",
+          "reason": "the checkpoint is not at the route table"
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-barbarian-berserker",
+          "mode": "start",
+          "build": "barbarian.berserker",
+          "status": "captured",
+          "file": "build-barbarian-berserker.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-wizard-evocation",
+          "mode": "start",
+          "build": "wizard.evocation",
+          "status": "captured",
+          "file": "build-wizard-evocation.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-monk-open-hand",
+          "mode": "start",
+          "build": "monk.open-hand",
+          "status": "captured",
+          "file": "build-monk-open-hand.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-paladin-devotion",
+          "mode": "start",
+          "build": "paladin.devotion",
+          "status": "captured",
+          "file": "build-paladin-devotion.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-ranger-hunter",
+          "mode": "start",
+          "build": "ranger.hunter",
+          "status": "captured",
+          "file": "build-ranger-hunter.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-sorcerer-draconic-bloodline",
+          "mode": "start",
+          "build": "sorcerer.draconic-bloodline",
+          "status": "captured",
+          "file": "build-sorcerer-draconic-bloodline.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-warlock-fiend",
+          "mode": "start",
+          "build": "warlock.fiend",
+          "status": "captured",
+          "file": "build-warlock-fiend.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "build-druid-land",
+          "mode": "start",
+          "build": "druid.land",
+          "status": "captured",
+          "file": "build-druid-land.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    }
+  ]
+}

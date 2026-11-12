@@ -1,0 +1,3192 @@
+{
+ "Archer": {
+  "shots": 55,
+  "mean": 3.518,
+  "worst": 2.075,
+  "boards": {
+   "Vigil": 3.78,
+   "Root": 3.13,
+   "Vault": 4.6
+  },
+  "merge": 0.1084,
+  "gate": true,
+  "rows": [
+   {
+    "contrastRatio": 3.22,
+    "mergeFraction": 0.1173,
+    "figureLuma": 125.76,
+    "groundLuma": 49.75,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.532,
+    "mergeFraction": 0.0341,
+    "figureLuma": 111.12,
+    "groundLuma": 51.49,
+    "figurePixels": 2436,
+    "groundPixels": 9744,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1255,
+     708,
+     1311,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.612,
+    "mergeFraction": 0.0737,
+    "figureLuma": 131.25,
+    "groundLuma": 51.51,
+    "figurePixels": 2240,
+    "groundPixels": 8800,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1401,
+     369,
+     1456,
+     480
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.097,
+    "mergeFraction": 0.0386,
+    "figureLuma": 145.86,
+    "groundLuma": 58.29,
+    "figurePixels": 1296,
+    "groundPixels": 5328,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1103,
+     84,
+     1140,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.205,
+    "mergeFraction": 0.1139,
+    "figureLuma": 126.0,
+    "groundLuma": 50.02,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.219,
+    "mergeFraction": 0.1173,
+    "figureLuma": 125.71,
+    "groundLuma": 49.74,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-b",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.532,
+    "mergeFraction": 0.0333,
+    "figureLuma": 111.11,
+    "groundLuma": 51.49,
+    "figurePixels": 2436,
+    "groundPixels": 9744,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1255,
+     708,
+     1311,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.612,
+    "mergeFraction": 0.0732,
+    "figureLuma": 131.23,
+    "groundLuma": 51.5,
+    "figurePixels": 2240,
+    "groundPixels": 8800,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1401,
+     369,
+     1456,
+     480
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.096,
+    "mergeFraction": 0.0401,
+    "figureLuma": 145.84,
+    "groundLuma": 58.29,
+    "figurePixels": 1296,
+    "groundPixels": 5328,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1103,
+     84,
+     1140,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.203,
+    "mergeFraction": 0.1145,
+    "figureLuma": 125.92,
+    "groundLuma": 50.01,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-b",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.21,
+    "mergeFraction": 0.1193,
+    "figureLuma": 125.43,
+    "groundLuma": 49.75,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-c",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.532,
+    "mergeFraction": 0.0337,
+    "figureLuma": 111.1,
+    "groundLuma": 51.48,
+    "figurePixels": 2436,
+    "groundPixels": 9744,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1255,
+     708,
+     1311,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.611,
+    "mergeFraction": 0.0714,
+    "figureLuma": 131.22,
+    "groundLuma": 51.5,
+    "figurePixels": 2240,
+    "groundPixels": 8800,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1401,
+     369,
+     1456,
+     480
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.094,
+    "mergeFraction": 0.0401,
+    "figureLuma": 145.77,
+    "groundLuma": 58.28,
+    "figurePixels": 1296,
+    "groundPixels": 5328,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1103,
+     84,
+     1140,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.194,
+    "mergeFraction": 0.1159,
+    "figureLuma": 125.64,
+    "groundLuma": 50.01,
+    "figurePixels": 1458,
+    "groundPixels": 5994,
+    "fixture": "foes-root-c",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     938,
+     393,
+     975,
+     505
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 4.309,
+    "mergeFraction": 0.1603,
+    "figureLuma": 143.87,
+    "groundLuma": 43.74,
+    "figurePixels": 1404,
+    "groundPixels": 5772,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     872,
+     283,
+     909,
+     391
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.99,
+    "mergeFraction": 0.107,
+    "figureLuma": 160.57,
+    "groundLuma": 35.9,
+    "figurePixels": 2112,
+    "groundPixels": 8272,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1048,
+     756,
+     1095,
+     878
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.704,
+    "mergeFraction": 0.2407,
+    "figureLuma": 133.93,
+    "groundLuma": 29.81,
+    "figurePixels": 2460,
+    "groundPixels": 9840,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1497,
+     473,
+     1557,
+     587
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.657,
+    "mergeFraction": 0.0799,
+    "figureLuma": 134.53,
+    "groundLuma": 40.84,
+    "figurePixels": 1440,
+    "groundPixels": 5904,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1257,
+     52,
+     1298,
+     151
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.366,
+    "mergeFraction": 0.1567,
+    "figureLuma": 145.42,
+    "groundLuma": 42.98,
+    "figurePixels": 1404,
+    "groundPixels": 5772,
+    "fixture": "foes-vault-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     872,
+     283,
+     909,
+     391
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.31,
+    "mergeFraction": 0.1581,
+    "figureLuma": 143.87,
+    "groundLuma": 43.73,
+    "figurePixels": 1404,
+    "groundPixels": 5772,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     872,
+     283,
+     909,
+     391
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.99,
+    "mergeFraction": 0.107,
+    "figureLuma": 160.55,
+    "groundLuma": 35.88,
+    "figurePixels": 2112,
+    "groundPixels": 8272,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1048,
+     756,
+     1095,
+     878
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.665,
+    "mergeFraction": 0.2419,
+    "figureLuma": 133.92,
+    "groundLuma": 30.72,
+    "figurePixels": 2460,
+    "groundPixels": 9840,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1497,
+     473,
+     1557,
+     587
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.657,
+    "mergeFraction": 0.0785,
+    "figureLuma": 134.54,
+    "groundLuma": 40.84,
+    "figurePixels": 1440,
+    "groundPixels": 5904,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1257,
+     52,
+     1298,
+     151
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.368,
+    "mergeFraction": 0.1538,
+    "figureLuma": 145.44,
+    "groundLuma": 42.97,
+    "figurePixels": 1404,
+    "groundPixels": 5772,
+    "fixture": "foes-vault-finale",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     872,
+     283,
+     909,
+     391
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.701,
+    "mergeFraction": 0.1323,
+    "figureLuma": 148.13,
+    "groundLuma": 56.01,
+    "figurePixels": 1368,
+    "groundPixels": 5472,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1037,
+     203,
+     1073,
+     308
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.125,
+    "mergeFraction": 0.0624,
+    "figureLuma": 140.32,
+    "groundLuma": 55.05,
+    "figurePixels": 1892,
+    "groundPixels": 7396,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     884,
+     621,
+     927,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.44,
+    "mergeFraction": 0.1147,
+    "figureLuma": 134.92,
+    "groundLuma": 44.44,
+    "figurePixels": 2241,
+    "groundPixels": 8964,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1322,
+     519,
+     1376,
+     634
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.83,
+    "mergeFraction": 0.1079,
+    "figureLuma": 139.6,
+    "groundLuma": 48.86,
+    "figurePixels": 1752,
+    "groundPixels": 6862,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1395,
+     133,
+     1442,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.772,
+    "mergeFraction": 0.1235,
+    "figureLuma": 149.9,
+    "groundLuma": 55.59,
+    "figurePixels": 1368,
+    "groundPixels": 5472,
+    "fixture": "foes-vigil-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1037,
+     203,
+     1073,
+     308
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.697,
+    "mergeFraction": 0.133,
+    "figureLuma": 148.05,
+    "groundLuma": 56.03,
+    "figurePixels": 1368,
+    "groundPixels": 5472,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1037,
+     203,
+     1073,
+     308
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.125,
+    "mergeFraction": 0.0624,
+    "figureLuma": 140.32,
+    "groundLuma": 55.05,
+    "figurePixels": 1892,
+    "groundPixels": 7396,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     884,
+     621,
+     927,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.463,
+    "mergeFraction": 0.1013,
+    "figureLuma": 133.46,
+    "groundLuma": 43.65,
+    "figurePixels": 2241,
+    "groundPixels": 8964,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1322,
+     519,
+     1376,
+     634
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.83,
+    "mergeFraction": 0.1079,
+    "figureLuma": 139.59,
+    "groundLuma": 48.86,
+    "figurePixels": 1752,
+    "groundPixels": 6862,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1395,
+     133,
+     1442,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.771,
+    "mergeFraction": 0.1272,
+    "figureLuma": 149.86,
+    "groundLuma": 55.59,
+    "figurePixels": 1368,
+    "groundPixels": 5472,
+    "fixture": "foes-vigil-b",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1037,
+     203,
+     1073,
+     308
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.095,
+    "mergeFraction": 0.1865,
+    "figureLuma": 122.15,
+    "groundLuma": 52.97,
+    "figurePixels": 756,
+    "groundPixels": 2916,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     562,
+     223,
+     589,
+     297
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.972,
+    "mergeFraction": 0.1133,
+    "figureLuma": 114.39,
+    "groundLuma": 46.34,
+    "figurePixels": 1121,
+    "groundPixels": 4484,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     806,
+     529,
+     844,
+     611
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 4.017,
+    "mergeFraction": 0.0824,
+    "figureLuma": 131.53,
+    "groundLuma": 47.16,
+    "figurePixels": 1080,
+    "groundPixels": 4212,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     996,
+     247,
+     1035,
+     322
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.306,
+    "mergeFraction": 0.0657,
+    "figureLuma": 136.19,
+    "groundLuma": 50.47,
+    "figurePixels": 624,
+    "groundPixels": 2496,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     759,
+     26,
+     785,
+     93
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.107,
+    "mergeFraction": 0.1772,
+    "figureLuma": 122.92,
+    "groundLuma": 52.99,
+    "figurePixels": 756,
+    "groundPixels": 2916,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     562,
+     223,
+     589,
+     297
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.122,
+    "mergeFraction": 0.1594,
+    "figureLuma": 123.8,
+    "groundLuma": 53.01,
+    "figurePixels": 1600,
+    "groundPixels": 6400,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     843,
+     335,
+     883,
+     445
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.937,
+    "mergeFraction": 0.1112,
+    "figureLuma": 114.74,
+    "groundLuma": 47.05,
+    "figurePixels": 2492,
+    "groundPixels": 9790,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1210,
+     794,
+     1265,
+     917
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 4.038,
+    "mergeFraction": 0.0793,
+    "figureLuma": 132.49,
+    "groundLuma": 47.57,
+    "figurePixels": 2320,
+    "groundPixels": 9280,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1495,
+     371,
+     1553,
+     482
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.244,
+    "mergeFraction": 0.0694,
+    "figureLuma": 135.53,
+    "groundLuma": 50.76,
+    "figurePixels": 1368,
+    "groundPixels": 5472,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1139,
+     39,
+     1177,
+     139
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.134,
+    "mergeFraction": 0.15,
+    "figureLuma": 124.3,
+    "groundLuma": 53.07,
+    "figurePixels": 1600,
+    "groundPixels": 6400,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     843,
+     335,
+     883,
+     445
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.647,
+    "mergeFraction": 0.1716,
+    "figureLuma": 124.14,
+    "groundLuma": 62.01,
+    "figurePixels": 676,
+    "groundPixels": 2704,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     699,
+     201,
+     725,
+     273
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.085,
+    "mergeFraction": 0.0833,
+    "figureLuma": 109.09,
+    "groundLuma": 61.36,
+    "figurePixels": 912,
+    "groundPixels": 3534,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     729,
+     406,
+     760,
+     485
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.737,
+    "mergeFraction": 0.0643,
+    "figureLuma": 131.99,
+    "groundLuma": 48.27,
+    "figurePixels": 918,
+    "groundPixels": 3672,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     865,
+     276,
+     899,
+     351
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.776,
+    "mergeFraction": 0.0486,
+    "figureLuma": 140.6,
+    "groundLuma": 46.31,
+    "figurePixels": 700,
+    "groundPixels": 2800,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     820,
+     91,
+     848,
+     160
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.643,
+    "mergeFraction": 0.1568,
+    "figureLuma": 124.61,
+    "groundLuma": 62.07,
+    "figurePixels": 676,
+    "groundPixels": 2704,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     699,
+     201,
+     725,
+     273
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.686,
+    "mergeFraction": 0.1776,
+    "figureLuma": 125.31,
+    "groundLuma": 62.05,
+    "figurePixels": 1560,
+    "groundPixels": 6084,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1049,
+     302,
+     1088,
+     410
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.075,
+    "mergeFraction": 0.0975,
+    "figureLuma": 107.69,
+    "groundLuma": 61.12,
+    "figurePixels": 2040,
+    "groundPixels": 7990,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1093,
+     609,
+     1140,
+     727
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.722,
+    "mergeFraction": 0.0726,
+    "figureLuma": 131.58,
+    "groundLuma": 48.58,
+    "figurePixels": 2106,
+    "groundPixels": 8262,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1298,
+     414,
+     1349,
+     526
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.718,
+    "mergeFraction": 0.0308,
+    "figureLuma": 142.25,
+    "groundLuma": 47.19,
+    "figurePixels": 1460,
+    "groundPixels": 5986,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1231,
+     137,
+     1272,
+     239
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.695,
+    "mergeFraction": 0.1705,
+    "figureLuma": 125.67,
+    "groundLuma": 62.03,
+    "figurePixels": 1560,
+    "groundPixels": 6084,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Vault bow",
+    "role": "Archer",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1049,
+     302,
+     1088,
+     410
+    ],
+    "board": "Root"
+   }
+  ]
+ },
+ "Skirmisher": {
+  "shots": 15,
+  "mean": 3.529,
+  "worst": 2.249,
+  "boards": {
+   "Vigil": 3.21,
+   "Root": 2.75,
+   "Vault": 4.63
+  },
+  "merge": 0.1411,
+  "gate": true,
+  "rows": [
+   {
+    "contrastRatio": 2.766,
+    "mergeFraction": 0.109,
+    "figureLuma": 134.47,
+    "groundLuma": 70.06,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.643,
+    "mergeFraction": 0.1268,
+    "figureLuma": 107.07,
+    "groundLuma": 56.03,
+    "figurePixels": 2871,
+    "groundPixels": 11484,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1468,
+     708,
+     1534,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.239,
+    "mergeFraction": 0.1014,
+    "figureLuma": 131.08,
+    "groundLuma": 57.2,
+    "figurePixels": 2002,
+    "groundPixels": 7854,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1379,
+     258,
+     1430,
+     365
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.249,
+    "mergeFraction": 0.0955,
+    "figureLuma": 147.83,
+    "groundLuma": 83.14,
+    "figurePixels": 1152,
+    "groundPixels": 4608,
+    "fixture": "foes-root-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     941,
+     84,
+     973,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.851,
+    "mergeFraction": 0.1084,
+    "figureLuma": 136.92,
+    "groundLuma": 69.88,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 4.84,
+    "mergeFraction": 0.1862,
+    "figureLuma": 142.42,
+    "groundLuma": 34.55,
+    "figurePixels": 1600,
+    "groundPixels": 6240,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     867,
+     394,
+     906,
+     505
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.385,
+    "mergeFraction": 0.1688,
+    "figureLuma": 138.87,
+    "groundLuma": 28.93,
+    "figurePixels": 2464,
+    "groundPixels": 10032,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1263,
+     756,
+     1320,
+     878
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.892,
+    "mergeFraction": 0.2371,
+    "figureLuma": 117.3,
+    "groundLuma": 27.7,
+    "figurePixels": 2240,
+    "groundPixels": 8800,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1469,
+     355,
+     1524,
+     465
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.239,
+    "mergeFraction": 0.1134,
+    "figureLuma": 131.96,
+    "groundLuma": 41.76,
+    "figurePixels": 1296,
+    "groundPixels": 5040,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1102,
+     52,
+     1137,
+     151
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.779,
+    "mergeFraction": 0.1925,
+    "figureLuma": 141.46,
+    "groundLuma": 34.61,
+    "figurePixels": 1600,
+    "groundPixels": 6240,
+    "fixture": "foes-vault-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     867,
+     394,
+     906,
+     505
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.462,
+    "mergeFraction": 0.1823,
+    "figureLuma": 136.49,
+    "groundLuma": 49.8,
+    "figurePixels": 1580,
+    "groundPixels": 6162,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1040,
+     307,
+     1079,
+     416
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 2.527,
+    "mergeFraction": 0.0494,
+    "figureLuma": 131.56,
+    "groundLuma": 54.53,
+    "figurePixels": 2064,
+    "groundPixels": 8084,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1092,
+     621,
+     1139,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.466,
+    "mergeFraction": 0.1842,
+    "figureLuma": 120.76,
+    "groundLuma": 48.43,
+    "figurePixels": 2025,
+    "groundPixels": 8100,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1303,
+     393,
+     1353,
+     505
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.508,
+    "mergeFraction": 0.0802,
+    "figureLuma": 135.58,
+    "groundLuma": 45.62,
+    "figurePixels": 1533,
+    "groundPixels": 6132,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1230,
+     133,
+     1272,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.089,
+    "mergeFraction": 0.181,
+    "figureLuma": 136.41,
+    "groundLuma": 53.23,
+    "figurePixels": 1580,
+    "groundPixels": 6162,
+    "fixture": "foes-vigil-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Skirmisher",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1040,
+     307,
+     1079,
+     416
+    ],
+    "board": "Vigil"
+   }
+  ]
+ },
+ "Brute": {
+  "shots": 15,
+  "mean": 3.445,
+  "worst": 1.962,
+  "boards": {
+   "Vigil": 3.38,
+   "Root": 2.73,
+   "Vault": 4.23
+  },
+  "merge": 0.0936,
+  "gate": true,
+  "rows": [
+   {
+    "contrastRatio": 2.531,
+    "mergeFraction": 0.0825,
+    "figureLuma": 150.2,
+    "groundLuma": 81.26,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-b",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.71,
+    "mergeFraction": 0.3612,
+    "figureLuma": 105.71,
+    "groundLuma": 55.98,
+    "figurePixels": 2871,
+    "groundPixels": 11484,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1468,
+     708,
+     1534,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.925,
+    "mergeFraction": 0.0904,
+    "figureLuma": 147.13,
+    "groundLuma": 55.08,
+    "figurePixels": 2002,
+    "groundPixels": 7854,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1379,
+     258,
+     1430,
+     365
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 1.962,
+    "mergeFraction": 0.0842,
+    "figureLuma": 144.91,
+    "groundLuma": 89.5,
+    "figurePixels": 1152,
+    "groundPixels": 4608,
+    "fixture": "foes-root-b",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     941,
+     84,
+     973,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.502,
+    "mergeFraction": 0.0765,
+    "figureLuma": 151.75,
+    "groundLuma": 83.02,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-b",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.592,
+    "mergeFraction": 0.043,
+    "figureLuma": 177.36,
+    "groundLuma": 54.0,
+    "figurePixels": 1743,
+    "groundPixels": 6972,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     861,
+     517,
+     903,
+     632
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 6.511,
+    "mergeFraction": 0.0361,
+    "figureLuma": 143.53,
+    "groundLuma": 21.92,
+    "figurePixels": 2992,
+    "groundPixels": 11792,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1478,
+     756,
+     1545,
+     878
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.327,
+    "mergeFraction": 0.1184,
+    "figureLuma": 144.19,
+    "groundLuma": 35.99,
+    "figurePixels": 1976,
+    "groundPixels": 7904,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1444,
+     249,
+     1496,
+     355
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 2.094,
+    "mergeFraction": 0.0851,
+    "figureLuma": 131.43,
+    "groundLuma": 62.9,
+    "figurePixels": 1152,
+    "groundPixels": 4464,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     945,
+     52,
+     976,
+     151
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.624,
+    "mergeFraction": 0.0425,
+    "figureLuma": 178.51,
+    "groundLuma": 54.24,
+    "figurePixels": 1743,
+    "groundPixels": 6972,
+    "fixture": "foes-vault-finale",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     861,
+     517,
+     903,
+     632
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.204,
+    "mergeFraction": 0.0494,
+    "figureLuma": 169.18,
+    "groundLuma": 61.59,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1045,
+     422,
+     1086,
+     535
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.755,
+    "mergeFraction": 0.0839,
+    "figureLuma": 118.91,
+    "groundLuma": 40.47,
+    "figurePixels": 2408,
+    "groundPixels": 9632,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1297,
+     621,
+     1353,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.308,
+    "mergeFraction": 0.0849,
+    "figureLuma": 139.92,
+    "groundLuma": 39.32,
+    "figurePixels": 1872,
+    "groundPixels": 7488,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1285,
+     281,
+     1333,
+     389
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 2.494,
+    "mergeFraction": 0.1096,
+    "figureLuma": 135.25,
+    "groundLuma": 60.47,
+    "figurePixels": 1314,
+    "groundPixels": 5256,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1066,
+     133,
+     1102,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.141,
+    "mergeFraction": 0.0556,
+    "figureLuma": 169.54,
+    "groundLuma": 62.65,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "foes-vigil-b",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Brute",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1045,
+     422,
+     1086,
+     535
+    ],
+    "board": "Vigil"
+   }
+  ]
+ },
+ "Warden": {
+  "shots": 15,
+  "mean": 3.742,
+  "worst": 1.84,
+  "boards": {
+   "Vigil": 3.78,
+   "Root": 3.22,
+   "Vault": 4.22
+  },
+  "merge": 0.0791,
+  "gate": true,
+  "rows": [
+   {
+    "contrastRatio": 3.649,
+    "mergeFraction": 0.0777,
+    "figureLuma": 169.54,
+    "groundLuma": 72.26,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-c",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.315,
+    "mergeFraction": 0.3222,
+    "figureLuma": 100.75,
+    "groundLuma": 58.18,
+    "figurePixels": 2871,
+    "groundPixels": 11484,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1468,
+     708,
+     1534,
+     829
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 4.715,
+    "mergeFraction": 0.035,
+    "figureLuma": 167.27,
+    "groundLuma": 54.58,
+    "figurePixels": 2002,
+    "groundPixels": 7854,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1379,
+     258,
+     1430,
+     365
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 1.906,
+    "mergeFraction": 0.033,
+    "figureLuma": 160.78,
+    "groundLuma": 96.63,
+    "figurePixels": 1152,
+    "groundPixels": 4608,
+    "fixture": "foes-root-c",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     941,
+     84,
+     973,
+     185
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.519,
+    "mergeFraction": 0.0837,
+    "figureLuma": 172.58,
+    "groundLuma": 75.29,
+    "figurePixels": 1660,
+    "groundPixels": 6474,
+    "fixture": "foes-root-c",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     937,
+     520,
+     976,
+     636
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.379,
+    "mergeFraction": 0.1021,
+    "figureLuma": 178.59,
+    "groundLuma": 87.01,
+    "figurePixels": 1460,
+    "groundPixels": 5694,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1125,
+     138,
+     1164,
+     240
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.416,
+    "mergeFraction": 0.0286,
+    "figureLuma": 154.63,
+    "groundLuma": 53.5,
+    "figurePixels": 1992,
+    "groundPixels": 7802,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     736,
+     538,
+     783,
+     653
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 7.658,
+    "mergeFraction": 0.0883,
+    "figureLuma": 192.67,
+    "groundLuma": 44.75,
+    "figurePixels": 2322,
+    "groundPixels": 9288,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1232,
+     679,
+     1286,
+     798
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.197,
+    "mergeFraction": 0.1022,
+    "figureLuma": 139.38,
+    "groundLuma": 51.15,
+    "figurePixels": 2025,
+    "groundPixels": 8100,
+    "fixture": "foes-vault-finale",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1529,
+     184,
+     1583,
+     288
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.471,
+    "mergeFraction": 0.0925,
+    "figureLuma": 176.86,
+    "groundLuma": 84.4,
+    "figurePixels": 1460,
+    "groundPixels": 5694,
+    "fixture": "foes-vault-finale",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1125,
+     138,
+     1164,
+     240
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 4.77,
+    "mergeFraction": 0.0582,
+    "figureLuma": 173.21,
+    "groundLuma": 49.76,
+    "figurePixels": 1580,
+    "groundPixels": 6162,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1040,
+     307,
+     1079,
+     416
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 1.84,
+    "mergeFraction": 0.0092,
+    "figureLuma": 121.83,
+    "groundLuma": 65.29,
+    "figurePixels": 2064,
+    "groundPixels": 8084,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1092,
+     621,
+     1139,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.884,
+    "mergeFraction": 0.0607,
+    "figureLuma": 160.1,
+    "groundLuma": 47.98,
+    "figurePixels": 2025,
+    "groundPixels": 8100,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1303,
+     393,
+     1353,
+     505
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.069,
+    "mergeFraction": 0.0398,
+    "figureLuma": 144.42,
+    "groundLuma": 53.86,
+    "figurePixels": 1533,
+    "groundPixels": 6132,
+    "fixture": "foes-vigil-b",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1230,
+     133,
+     1272,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.339,
+    "mergeFraction": 0.0538,
+    "figureLuma": 171.85,
+    "groundLuma": 52.54,
+    "figurePixels": 1580,
+    "groundPixels": 6162,
+    "fixture": "foes-vigil-b",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 2",
+    "role": "Warden",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1040,
+     307,
+     1079,
+     416
+    ],
+    "board": "Vigil"
+   }
+  ]
+ },
+ "Scout": {
+  "shots": 30,
+  "mean": 3.372,
+  "worst": 2.007,
+  "boards": {
+   "Vigil": 3.76,
+   "Root": 2.9,
+   "Vault": 4.88
+  },
+  "merge": 0.0934,
+  "gate": true,
+  "rows": [
+   {
+    "contrastRatio": 4.977,
+    "mergeFraction": 0.1578,
+    "figureLuma": 147.72,
+    "groundLuma": 33.88,
+    "figurePixels": 1743,
+    "groundPixels": 6972,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     861,
+     517,
+     903,
+     632
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 6.401,
+    "mergeFraction": 0.13,
+    "figureLuma": 145.16,
+    "groundLuma": 23.97,
+    "figurePixels": 2992,
+    "groundPixels": 11792,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1478,
+     756,
+     1545,
+     878
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.024,
+    "mergeFraction": 0.1508,
+    "figureLuma": 133.99,
+    "groundLuma": 34.15,
+    "figurePixels": 1976,
+    "groundPixels": 7904,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1444,
+     249,
+     1496,
+     355
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 2.717,
+    "mergeFraction": 0.0339,
+    "figureLuma": 136.27,
+    "groundLuma": 50.42,
+    "figurePixels": 1152,
+    "groundPixels": 4464,
+    "fixture": "foes-vault-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     945,
+     52,
+     976,
+     151
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 5.289,
+    "mergeFraction": 0.1675,
+    "figureLuma": 149.18,
+    "groundLuma": 32.45,
+    "figurePixels": 1743,
+    "groundPixels": 6972,
+    "fixture": "foes-vault-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     861,
+     517,
+     903,
+     632
+    ],
+    "board": "Vault"
+   },
+   {
+    "contrastRatio": 3.895,
+    "mergeFraction": 0.1241,
+    "figureLuma": 146.21,
+    "groundLuma": 46.58,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1045,
+     422,
+     1086,
+     535
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.576,
+    "mergeFraction": 0.1292,
+    "figureLuma": 127.16,
+    "groundLuma": 41.65,
+    "figurePixels": 2408,
+    "groundPixels": 9632,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw000-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1297,
+     621,
+     1353,
+     740
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.016,
+    "mergeFraction": 0.1015,
+    "figureLuma": 125.42,
+    "groundLuma": 36.37,
+    "figurePixels": 1872,
+    "groundPixels": 7488,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw090-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1285,
+     281,
+     1333,
+     389
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 3.172,
+    "mergeFraction": 0.0434,
+    "figureLuma": 144.94,
+    "groundLuma": 53.15,
+    "figurePixels": 1314,
+    "groundPixels": 5256,
+    "fixture": "foes-vigil-a",
+    "shot": "battle-yaw180-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1066,
+     133,
+     1102,
+     235
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 4.133,
+    "mergeFraction": 0.1198,
+    "figureLuma": 148.11,
+    "groundLuma": 45.47,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "foes-vigil-a",
+    "shot": "targeting-yawm90-default",
+    "unit": "Raider 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1045,
+     422,
+     1086,
+     535
+    ],
+    "board": "Vigil"
+   },
+   {
+    "contrastRatio": 2.87,
+    "mergeFraction": 0.0503,
+    "figureLuma": 133.65,
+    "groundLuma": 63.74,
+    "figurePixels": 756,
+    "groundPixels": 3024,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     558,
+     303,
+     586,
+     379
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.028,
+    "mergeFraction": 0.1317,
+    "figureLuma": 114.92,
+    "groundLuma": 72.46,
+    "figurePixels": 1298,
+    "groundPixels": 5192,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     953,
+     529,
+     997,
+     611
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.145,
+    "mergeFraction": 0.0828,
+    "figureLuma": 142.14,
+    "groundLuma": 66.74,
+    "figurePixels": 954,
+    "groundPixels": 3816,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     979,
+     172,
+     1015,
+     245
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.63,
+    "mergeFraction": 0.0436,
+    "figureLuma": 138.12,
+    "groundLuma": 66.51,
+    "figurePixels": 528,
+    "groundPixels": 2112,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     654,
+     26,
+     676,
+     93
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.945,
+    "mergeFraction": 0.0516,
+    "figureLuma": 133.0,
+    "groundLuma": 62.73,
+    "figurePixels": 756,
+    "groundPixels": 3024,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     558,
+     303,
+     586,
+     379
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.828,
+    "mergeFraction": 0.0476,
+    "figureLuma": 134.35,
+    "groundLuma": 64.55,
+    "figurePixels": 1640,
+    "groundPixels": 6724,
+    "fixture": "board-root-r002",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     837,
+     455,
+     878,
+     569
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.007,
+    "mergeFraction": 0.1423,
+    "figureLuma": 114.34,
+    "groundLuma": 72.79,
+    "figurePixels": 2937,
+    "groundPixels": 11748,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1430,
+     794,
+     1496,
+     917
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.066,
+    "mergeFraction": 0.0821,
+    "figureLuma": 140.5,
+    "groundLuma": 67.03,
+    "figurePixels": 2106,
+    "groundPixels": 8424,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1468,
+     259,
+     1522,
+     367
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.553,
+    "mergeFraction": 0.0382,
+    "figureLuma": 137.27,
+    "groundLuma": 67.54,
+    "figurePixels": 1152,
+    "groundPixels": 4608,
+    "fixture": "board-root-r002",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     981,
+     39,
+     1013,
+     139
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.949,
+    "mergeFraction": 0.0482,
+    "figureLuma": 135.5,
+    "groundLuma": 63.67,
+    "figurePixels": 1640,
+    "groundPixels": 6724,
+    "fixture": "board-root-r002",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     837,
+     455,
+     878,
+     569
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.083,
+    "mergeFraction": 0.1098,
+    "figureLuma": 130.11,
+    "groundLuma": 53.74,
+    "figurePixels": 756,
+    "groundPixels": 3024,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     702,
+     276,
+     730,
+     351
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.556,
+    "mergeFraction": 0.0965,
+    "figureLuma": 104.34,
+    "groundLuma": 41.99,
+    "figurePixels": 1026,
+    "groundPixels": 4218,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     864,
+     406,
+     901,
+     485
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.578,
+    "mergeFraction": 0.0745,
+    "figureLuma": 135.58,
+    "groundLuma": 53.04,
+    "figurePixels": 832,
+    "groundPixels": 3328,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     854,
+     201,
+     886,
+     273
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.348,
+    "mergeFraction": 0.0417,
+    "figureLuma": 145.28,
+    "groundLuma": 53.44,
+    "figurePixels": 600,
+    "groundPixels": 2500,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     711,
+     91,
+     736,
+     160
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.161,
+    "mergeFraction": 0.1296,
+    "figureLuma": 130.31,
+    "groundLuma": 53.26,
+    "figurePixels": 756,
+    "groundPixels": 3024,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1280,
+     720
+    ],
+    "box": [
+     702,
+     276,
+     730,
+     351
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.984,
+    "mergeFraction": 0.1173,
+    "figureLuma": 128.47,
+    "groundLuma": 54.16,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1054,
+     414,
+     1095,
+     526
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 2.529,
+    "mergeFraction": 0.0954,
+    "figureLuma": 103.72,
+    "groundLuma": 42.02,
+    "figurePixels": 2380,
+    "groundPixels": 9350,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw000-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1296,
+     609,
+     1351,
+     727
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.423,
+    "mergeFraction": 0.0897,
+    "figureLuma": 132.14,
+    "groundLuma": 53.05,
+    "figurePixels": 1872,
+    "groundPixels": 7332,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw090-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1281,
+     302,
+     1328,
+     410
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.221,
+    "mergeFraction": 0.0365,
+    "figureLuma": 146.2,
+    "groundLuma": 54.8,
+    "figurePixels": 1314,
+    "groundPixels": 5256,
+    "fixture": "default-seed-battle",
+    "shot": "battle-yaw180-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1067,
+     137,
+     1103,
+     239
+    ],
+    "board": "Root"
+   },
+   {
+    "contrastRatio": 3.048,
+    "mergeFraction": 0.1352,
+    "figureLuma": 128.33,
+    "groundLuma": 53.76,
+    "figurePixels": 1620,
+    "groundPixels": 6642,
+    "fixture": "default-seed-battle",
+    "shot": "targeting-yawm90-default",
+    "unit": "Scout 1",
+    "role": "Scout",
+    "rigged": true,
+    "size": [
+     1920,
+     1080
+    ],
+    "box": [
+     1054,
+     414,
+     1095,
+     526
+    ],
+    "board": "Root"
+   }
+  ]
+ }
+}
