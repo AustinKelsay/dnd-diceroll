@@ -162,7 +162,14 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         if (!(*Entry)->TryGetStringField(TEXT("mode"), Mode)) { Error = Shot.Name + TEXT(" needs a \"mode\""); return false; }
         if (Mode == TEXT("battle")) { Shot.Mode = ECaptureMode::Battle; }
         else if (Mode == TEXT("targeting")) { Shot.Mode = ECaptureMode::Targeting; }
-        else if (Mode == TEXT("overview")) { Shot.Mode = ECaptureMode::Overview; }
+        else if (Mode == TEXT("overview"))
+        {
+            Shot.Mode = ECaptureMode::Overview;
+            double Hero = 0.0;
+            if ((*Entry)->HasField(TEXT("hero")) && ((*Entry)->TryGetField(TEXT("hero"))->Type != EJson::Number || !(*Entry)->TryGetNumberField(TEXT("hero"), Hero) || Hero < 1.0 || Hero > 4.0 || Hero != FMath::FloorToDouble(Hero)))
+            { Error = Shot.Name + TEXT(" needs a \"hero\" party slot from 1 to 4"); return false; }
+            Shot.Hero = static_cast<int32>(Hero);
+        }
         else if (Mode == TEXT("start"))
         {
             Shot.Mode = ECaptureMode::Start;
@@ -607,6 +614,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     }
     case ECaptureMode::Overview:
         if (!Board->ShowingOverview()) { Skip = TEXT("the checkpoint is not at the route table"); return false; }
+        if (Shot.Hero > 0) { Player->SelectPartyIndex(Shot.Hero - 1, false); }
         Board->SnapCameraToTargets();
         return true;
     case ECaptureMode::Start:
@@ -862,6 +870,7 @@ void FExpeditionCaptureDirector::WriteManifest() const
             Shot->SetArrayField(TEXT("units"), Units);
         }
         if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
+        if (Result.Shot.Hero > 0) { Shot->SetNumberField(TEXT("hero"), Result.Shot.Hero); }
         Shot->SetStringField(TEXT("status"), Result.Status);
         if (Result.Status == TEXT("skipped")) { Shot->SetStringField(TEXT("reason"), Result.Reason); }
         else
