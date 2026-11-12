@@ -684,6 +684,8 @@ void AExpeditionBattleView::BeginPlay()
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
     // -ExpeditionNoPalettes keeps the rigged figures in their class colours (the baseline the subclass palettes are measured against).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
+    // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -1649,7 +1651,7 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
         if (bPalettes && Unit.Side == ECombatSide::Party)
         {
             ExpeditionPalette::FPalette Palette = ExpeditionPalette::ForUnit(Unit);
-            if (const int32* Accent = PartyAccents.Find(Unit.Id)) { ExpeditionPalette::SetAccent(Palette, ExpeditionPalette::ClassKeyOf(Unit), *Accent); }
+            if (const int32* Accent = bAccents ? PartyAccents.Find(Unit.Id) : nullptr) { ExpeditionPalette::SetAccent(Palette, ExpeditionPalette::ClassKeyOf(Unit), *Accent); }
             if (Palette.bKnownClass) { ExpeditionPalette::Apply(Look.Material, Palette); }
         }
         Rig.Parts.Add(Look);

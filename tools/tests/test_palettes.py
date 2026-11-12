@@ -52,9 +52,13 @@ class PaletteTableTests(unittest.TestCase):
             for slot, names in cls["tiles"].items():
                 self.assertTrue(names and all(name in regions for name in names), key + " " + slot)
                 self.assertTrue(all(tiles[key][name]["area_share"] > 0 for name in names if slot != "G"), key + " " + slot + " covers a tile the mesh never uses")
-            # The accent must be visible at the default zoom: at least a tenth of the surface.
+            # The duplicate accent is a SMALL region (a sash, trim band, tabard, wrap or plume): never the plate, cloth or skin base tiles, and at most 15% of the
+            # figure's surface (lead's call on PR #203; the first version recoloured the fighter's whole body). It must still be visible: at least 2% of the surface.
+            for base in ("plate", "cloth", "skin"):
+                self.assertNotIn(base, cls["tiles"]["X"], key + " accent must not cover the " + base + " base tile")
             share = sum(tiles[key][name]["area_share"] for name in cls["tiles"]["X"])
-            self.assertGreaterEqual(share, 0.10, key + " accent tiles cover too little of the figure")
+            self.assertLessEqual(share, 0.15, key + " accent tiles cover too much of the figure (" + str(round(share, 3)) + ")")
+            self.assertGreaterEqual(share, 0.02, key + " accent tiles are too small to read at the default zoom")
             # A build slot never claims a tile that another build slot of the class also claims (the colours would fight).
             claimed = [name for slot in ("A", "B", "C") for name in cls["tiles"][slot]]
             self.assertEqual(len(claimed), len(set(claimed)), key + " slots overlap")

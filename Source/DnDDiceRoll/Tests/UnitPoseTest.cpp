@@ -2574,26 +2574,28 @@ bool FCastBatch4MappingTest::RunTest(const FString& Parameters)
     {
         TestFalse(TEXT("The bard's bolt differs from every other caster's"), Bard.Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Other, false).Color, 0.05f));
     }
-    // Seen side by side the bolts must read as different hues (on screen, in sRGB): the sorcerer's was an ember red close to the wizard's orange, so it is now a crimson-magenta.
-    // Each pair is at least 24 degrees apart except the cleric's amber and the wizard's orange, the pair that was already so (they differ in brightness and saturation).
-    const TArray<TPair<EAdventurerRole, const TCHAR*>> Casters = {{EAdventurerRole::Wizard, TEXT("wizard")}, {EAdventurerRole::Cleric, TEXT("cleric")}, {EAdventurerRole::Sorcerer, TEXT("sorcerer")},
-        {EAdventurerRole::Warlock, TEXT("warlock")}, {EAdventurerRole::Druid, TEXT("druid")}, {EAdventurerRole::Bard, TEXT("bard")}, {EAdventurerRole::Artificer, TEXT("artificer")}};
+    // Seen side by side the bolts must read as different hues (sRGB hue in degrees; the lead's spread): wizard orange 32, cleric gold 48, druid leaf green 110, bard teal 170,
+    // warlock eldritch violet 275, sorcerer crimson-magenta 329. Each hue is within 8 degrees of its target and every pair is at least 15 degrees apart (the wizard's orange and the
+    // cleric's gold, 16 apart, are the closest pair; they differ in brightness and saturation too).
+    const TArray<TTuple<EAdventurerRole, const TCHAR*, float>> Casters = {{EAdventurerRole::Wizard, TEXT("wizard"), 32.0f}, {EAdventurerRole::Cleric, TEXT("cleric"), 48.0f},
+        {EAdventurerRole::Druid, TEXT("druid"), 110.0f}, {EAdventurerRole::Bard, TEXT("bard"), 170.0f}, {EAdventurerRole::Warlock, TEXT("warlock"), 275.0f}, {EAdventurerRole::Sorcerer, TEXT("sorcerer"), 329.0f}};
     const auto Hue = [](EAdventurerRole Role)
     {
         const FColor Encoded = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Role, false).Color.ToFColor(true);
         return FLinearColor(Encoded.R / 255.0f, Encoded.G / 255.0f, Encoded.B / 255.0f).LinearRGBToHSV().R;
     };
+    const auto Apart = [](float A, float B) { const float Raw = FMath::Abs(A - B); return FMath::Min(Raw, 360.0f - Raw); };
     for (int32 A = 0; A < Casters.Num(); ++A)
     {
+        TestTrue(*FString::Printf(TEXT("The %s bolt is %.0f degrees (target %.0f)"), Casters[A].Get<1>(), Hue(Casters[A].Get<0>()), Casters[A].Get<2>()), Apart(Hue(Casters[A].Get<0>()), Casters[A].Get<2>()) <= 8.0f);
         for (int32 B = A + 1; B < Casters.Num(); ++B)
         {
-            const float Raw = FMath::Abs(Hue(Casters[A].Key) - Hue(Casters[B].Key));
-            const float Apart = FMath::Min(Raw, 360.0f - Raw);
-            const bool bKnownPair = (Casters[A].Key == EAdventurerRole::Wizard && Casters[B].Key == EAdventurerRole::Cleric);
-            TestTrue(*FString::Printf(TEXT("%s and %s bolts are %.0f degrees apart in hue"), Casters[A].Value, Casters[B].Value, Apart), Apart >= (bKnownPair ? 8.0f : 24.0f));
+            const float Between = Apart(Hue(Casters[A].Get<0>()), Hue(Casters[B].Get<0>()));
+            TestTrue(*FString::Printf(TEXT("%s and %s bolts are %.0f degrees apart in hue"), Casters[A].Get<1>(), Casters[B].Get<1>(), Between), Between >= 15.0f);
         }
     }
-    TestTrue(TEXT("The sorcerer's bolt is far from the wizard's orange"), FMath::Min(FMath::Abs(Hue(EAdventurerRole::Sorcerer) - Hue(EAdventurerRole::Wizard)), 360.0f - FMath::Abs(Hue(EAdventurerRole::Sorcerer) - Hue(EAdventurerRole::Wizard))) >= 45.0f);
+    // The artificer's special bolt (blue-cyan, 195) stays clear of the bard's teal.
+    TestTrue(TEXT("The artificer's bolt is at least 15 degrees from the bard's"), Apart(Hue(EAdventurerRole::Artificer), Hue(EAdventurerRole::Bard)) >= 15.0f);
     return !HasAnyErrors();
 }
 

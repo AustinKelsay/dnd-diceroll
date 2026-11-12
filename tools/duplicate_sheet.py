@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The duplicate-identity accent sheet (#150 batch 4): parties with repeated classes, in the game's own render.
 
-Reads gallery runs of the fixtures `dup-four-fighters-*` and `dup-two-pairs-*` (Project.Tools.CaptureFixtures), rendered with
+Reads gallery runs of the fixtures `dup-four-fighters-*`, `dup-four-paladins-*` and `dup-two-pairs-*` (Project.Tools.CaptureFixtures), rendered with
 tools/capture/palette-poses.json, and crops the party out of the `battle-yaw000-default` shot of each (the union of the party heroes' boxes in the
 manifest, with a margin), one row per fixture. Four fighters of the same build differ only by the party-slot accent; two pairs show a class twice
 with two subclasses. ImageMagick 7 (`magick`) does the cropping and layout.
@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 SHOT = "battle-yaw000-default"
-ORDER = [f"{name}-{board}" for name in ("dup-four-fighters", "dup-two-pairs") for board in ("root", "vigil", "vault")]
+ORDER = [f"{name}-{board}" for name in ("dup-four-fighters", "dup-four-paladins", "dup-two-pairs") for board in ("root", "vigil", "vault")]
 
 
 def main(argv=None):

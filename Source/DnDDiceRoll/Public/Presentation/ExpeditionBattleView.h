@@ -515,6 +515,8 @@ private:
     TMap<int32, int32> PartyAccents;
     /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */
     bool bPalettes = true;
+    /** Party-slot accents on the palettes (off with -ExpeditionNoAccents: the same palettes without the accent, a measurement baseline). */
+    bool bAccents = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;

@@ -227,15 +227,16 @@ TArray<FPlaybackProjectile> FExpeditionPlayback::MagicMissileBolts(FVector2D Fro
 
 FPlaybackProjectile FExpeditionPlayback::RangedBolt(FVector2D From, FVector2D To, EAdventurerRole Role, bool bArrow)
 {
-    // A caster's bolt takes the colour of its magic (#150 batch 3 adds the last three): the Wizard's orange fire, the Cleric's amber, the Sorcerer's crimson-magenta ember (moved off orange-red in batch 4, so it never reads as the Wizard's Fire Bolt beside it), the
-    // Warlock's eldritch green (its glow-mask colour) and the Druid's leaf-gold thorn flame; batch 4 adds the Bard's teal dissonant note and the Artificer's cyan
-    // (its spell specials only: its basic attack is a crossbow bolt, an arrow). Any other shooter's arrow is the pale arrow colour.
+    // A caster's bolt takes the colour of its magic, spread round the hue wheel so any two side by side read as different colours (sRGB hue, #150 batch 4, the lead's call
+    // after the batch 3 and 4 on-screen passes): the Wizard's orange fire (32), the Cleric's gold (48), the Druid's leaf green (110), the Bard's teal (170), the Warlock's eldritch
+    // violet (275; its hand sigil and orb stay green on the figure) and the Sorcerer's crimson-magenta ember (329). The Artificer's blue-cyan (195) is for its spell specials only: its basic
+    // attack is a crossbow bolt, an arrow. Any other shooter's arrow is the pale arrow colour.
     const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
-        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) :
-        Role == EAdventurerRole::Sorcerer ? FLinearColor(0.95f, 0.07f, 0.38f) :
-        Role == EAdventurerRole::Warlock ? FLinearColor(0.35f, 1.0f, 0.3f) :
-        Role == EAdventurerRole::Druid ? FLinearColor(0.75f, 0.95f, 0.22f) :
-        Role == EAdventurerRole::Bard ? FLinearColor(0.15f, 0.95f, 0.65f) :
+        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.74f, 0.12f) :
+        Role == EAdventurerRole::Druid ? FLinearColor(0.16f, 0.89f, 0.09f) :
+        Role == EAdventurerRole::Bard ? FLinearColor(0.03f, 0.83f, 0.6f) :
+        Role == EAdventurerRole::Warlock ? FLinearColor(0.27f, 0.065f, 0.5f) :
+        Role == EAdventurerRole::Sorcerer ? FLinearColor(0.89f, 0.07f, 0.35f) :
         Role == EAdventurerRole::Artificer ? FLinearColor(0.25f, 0.75f, 1.0f) : FLinearColor(0.85f, 0.75f, 0.6f);
     return {From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow};
 }

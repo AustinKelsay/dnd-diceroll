@@ -18,7 +18,7 @@
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
- * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-* and dup-two-pairs-*, the duplicate-accent parties),
+ * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
@@ -488,9 +488,17 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         // Duplicate parties: four of one build, and two pairs of two classes; on Vigil, Root and the Vault.
         TArray<TPair<FString, TArray<FString>>> Duplicates;
         Duplicates.Emplace(TEXT("dup-four-fighters"), TArray<FString>{TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion")});
+        Duplicates.Emplace(TEXT("dup-four-paladins"), TArray<FString>{TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion")});
         Duplicates.Emplace(TEXT("dup-two-pairs"), TArray<FString>{TEXT("cleric.life"), TEXT("rogue.thief"), TEXT("cleric.war"), TEXT("rogue.thief")});
         for (const TPair<FString, TArray<FString>>& Duplicate : Duplicates)
         { for (int32 Board = 0; Board < 3; ++Board) { WriteBoard(FString::Printf(TEXT("%s-%s"), *Duplicate.Key, BoardNames[Board]), Duplicate.Value, Board); } }
+        // Four of one build for every class, on the Root board only: `acc-<class>-root`, the accent region of each class is measured on them (tools/accent_share.py, with
+        // and without `gallery --no-accents`).
+        for (const FString& Class : ClassOrder)
+        {
+            const TArray<FString> Four = {First[Class], First[Class], First[Class], First[Class]};
+            WriteBoard(FString::Printf(TEXT("acc-%s-root"), *Class), Four, 1);
+        }
     }
     bool bVictoryWritten = false;
     for (int32 Seed = 1; Seed < 60 && !bVictoryWritten; ++Seed)

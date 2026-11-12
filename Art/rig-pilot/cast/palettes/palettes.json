@@ -30,8 +30,7 @@
      "rune"
     ],
     "X": [
-     "cloth",
-     "emblem",
+     "accent",
      "emblem2"
     ]
    },
@@ -59,8 +58,7 @@
      "rune"
     ],
     "X": [
-     "emblem",
-     "accent"
+     "trim"
     ]
    },
    "default": {}
@@ -82,8 +80,8 @@
      "rune"
     ],
     "X": [
-     "emblem",
-     "emblem2"
+     "emblem2",
+     "accent"
     ]
    },
    "default": {}
@@ -104,7 +102,6 @@
      "rune"
     ],
     "X": [
-     "emblem",
      "accent"
     ]
    },
@@ -126,8 +123,7 @@
      "rune"
     ],
     "X": [
-     "leather",
-     "emblem2"
+     "trim"
     ]
    },
    "default": {}
@@ -149,8 +145,7 @@
      "rune"
     ],
     "X": [
-     "cloth",
-     "emblem"
+     "accent"
     ]
    },
    "default": {}
@@ -173,9 +168,8 @@
      "rune"
     ],
     "X": [
-     "emblem",
-     "emblem2",
-     "cloth"
+     "trim",
+     "accent"
     ]
    },
    "default": {}
@@ -197,7 +191,8 @@
      "rune"
     ],
     "X": [
-     "cloth"
+     "accent",
+     "trim"
     ]
    },
    "default": {}
@@ -218,7 +213,8 @@
      "rune"
     ],
     "X": [
-     "cloth"
+     "glow",
+     "emblem2"
     ]
    },
    "default": {}
@@ -241,8 +237,7 @@
      "rune"
     ],
     "X": [
-     "plate",
-     "accent"
+     "trim"
     ]
    },
    "default": {}
@@ -264,7 +259,8 @@
      "rune"
     ],
     "X": [
-     "leather"
+     "emblem",
+     "trim"
     ]
    },
    "default": {}
@@ -285,7 +281,7 @@
      "rune"
     ],
     "X": [
-     "emblem"
+     "trim"
     ]
    },
    "default": {}
@@ -307,7 +303,7 @@
      "rune"
     ],
     "X": [
-     "leather"
+     "trim"
     ]
    },
    "default": {
