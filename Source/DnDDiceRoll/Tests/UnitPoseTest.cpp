@@ -197,12 +197,16 @@ bool FUnitPoseChoiceTest::RunTest(const FString& Parameters)
     ExpectPose(*this, TEXT("rogue, distant"), Basic(EAdventurerRole::Rogue, true), EUnitPose::Ranged);
     ExpectPose(*this, TEXT("an enemy, distant"), Basic(EAdventurerRole::None, true), EUnitPose::Ranged);
     TestFalse(TEXT("Precision Strike is never a spell"), IsSpellAttack(ECombatCommandType::PrecisionStrike, EAdventurerRole::Wizard, true));
-    for (const ECombatCommandType Plain : {ECombatCommandType::EndTurn, ECombatCommandType::SecondWind, ECombatCommandType::Potion, ECombatCommandType::Rescue})
+    for (const ECombatCommandType Plain : {ECombatCommandType::EndTurn, ECombatCommandType::Potion, ECombatCommandType::Rescue})
     { ExpectPose(*this, TEXT("a command with no clip"), ExpeditionPose::ForCommand(Plain, false), EUnitPose::Idle); }
+    ExpectPose(*this, TEXT("Second Wind is a martial self-heal: the weapon-up Brace"), ExpeditionPose::ForCommand(ECombatCommandType::SecondWind, false), EUnitPose::Brace);
     ExpectPose(*this, TEXT("a weapon effect up close"), ExpeditionPose::ForEffect(EAbilityEffect::WeaponAttack, false), EUnitPose::Melee);
     ExpectPose(*this, TEXT("a strike at range"), ExpeditionPose::ForEffect(EAbilityEffect::Strike, true), EUnitPose::Ranged);
-    ExpectPose(*this, TEXT("a spell effect"), ExpeditionPose::ForEffect(EAbilityEffect::Surge, true), EUnitPose::Cast);
-    ExpectPose(*this, TEXT("a swap"), ExpeditionPose::ForEffect(EAbilityEffect::Swap, false), EUnitPose::Idle);
+    ExpectPose(*this, TEXT("a spell effect"), ExpeditionPose::ForEffect(EAbilityEffect::Surge, true, true), EUnitPose::Cast);
+    ExpectPose(*this, TEXT("a non-spell surge attacks"), ExpeditionPose::ForEffect(EAbilityEffect::Surge, true), EUnitPose::Ranged);
+    ExpectPose(*this, TEXT("a non-spell ward braces"), ExpeditionPose::ForEffect(EAbilityEffect::Protect, false), EUnitPose::Brace);
+    ExpectPose(*this, TEXT("a non-spell swap braces"), ExpeditionPose::ForEffect(EAbilityEffect::Swap, false), EUnitPose::Brace);
+    ExpectPose(*this, TEXT("a used mitigation braces"), ExpeditionPose::ForEffect(EAbilityEffect::Mitigation, false), EUnitPose::Brace);
     ExpectPose(*this, TEXT("damage"), ExpeditionPose::ForDamage(), EUnitPose::Hit);
     ExpectPose(*this, TEXT("downing"), ExpeditionPose::ForFall(false), EUnitPose::Downed);
     ExpectPose(*this, TEXT("death"), ExpeditionPose::ForFall(true), EUnitPose::Death);
@@ -211,7 +215,7 @@ bool FUnitPoseChoiceTest::RunTest(const FString& Parameters)
     ExpectPose(*this, TEXT("a conscious unit"), ExpeditionPose::Rest(ECombatLife::Conscious), EUnitPose::Idle);
     ExpectPose(*this, TEXT("a downed unit"), ExpeditionPose::Rest(ECombatLife::Downed), EUnitPose::Downed);
     ExpectPose(*this, TEXT("a dead unit"), ExpeditionPose::Rest(ECombatLife::Dead), EUnitPose::Death);
-    // Names, loops and the theme's animation set agree for all nine clips.
+    // Names, loops and the theme's animation set agree for all ten clips.
     const FDiceRollAnimSet Set;
     TSet<FString> Names;
     TSet<const void*> Slots;
@@ -222,8 +226,9 @@ bool FUnitPoseChoiceTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Only Idle and Walk loop"), ExpeditionPose::IsLooping(Pose) == (Pose == EUnitPose::Idle || Pose == EUnitPose::Walk));
         Slots.Add(&Set.For(Pose));
     }
-    TestEqual(TEXT("Nine distinct clip names"), Names.Num(), ExpeditionPose::Count);
-    TestEqual(TEXT("Nine distinct animation slots"), Slots.Num(), ExpeditionPose::Count);
+    TestEqual(TEXT("Ten distinct clip names"), Names.Num(), ExpeditionPose::Count);
+    TestEqual(TEXT("Ten distinct animation slots"), Slots.Num(), ExpeditionPose::Count);
+    TestEqual(TEXT("Brace is the tenth clip"), FString(ExpeditionPose::ClipName(EUnitPose::Brace)), FString(TEXT("Brace")));
     return !HasAnyErrors();
 }
 
@@ -369,7 +374,8 @@ bool FPlaybackPosesTest::RunTest(const FString& Parameters)
         if (TestNotNull(TEXT("The catalog has Frenzy"), Frenzy)) { TestFalse(TEXT("Frenzy is a weapon ability"), Frenzy->bSpell); }
         ExpectPose(*this, TEXT("a spell Area effect up close"), ExpeditionPose::ForEffect(EAbilityEffect::Area, false, true), EUnitPose::Cast);
         ExpectPose(*this, TEXT("a weapon Area effect at range"), ExpeditionPose::ForEffect(EAbilityEffect::Area, true, false), EUnitPose::Ranged);
-        ExpectPose(*this, TEXT("a spell swap still has no clip"), ExpeditionPose::ForEffect(EAbilityEffect::Swap, false, true), EUnitPose::Idle);
+        ExpectPose(*this, TEXT("a spell swap casts"), ExpeditionPose::ForEffect(EAbilityEffect::Swap, false, true), EUnitPose::Cast);
+        ExpectPose(*this, TEXT("a spell mitigation casts"), ExpeditionPose::ForEffect(EAbilityEffect::Mitigation, false, true), EUnitPose::Cast);
 
         FPoseScene Scene;
         if (!TestTrue(TEXT("Scene builds"), MakeScene(Scene, 7))) { return false; }
@@ -513,11 +519,14 @@ double FigureHeight(const AExpeditionBattleView& View, USceneComponent* RigRoot)
 
 bool ExpectsRig(const FCombatantState& Unit)
 {
-    // The four original classes are rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric); the rest keep static figures until their batch.
+    // Eight classes are rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric, batch 2 barbarian, monk, paladin and ranger); the rest keep their
+    // static or primitive figures until their batch.
     if (Unit.Side == ECombatSide::Party)
     {
         return Unit.AdventurerRole == EAdventurerRole::Fighter || Unit.AdventurerRole == EAdventurerRole::Rogue ||
-            Unit.AdventurerRole == EAdventurerRole::Cleric || Unit.AdventurerRole == EAdventurerRole::Wizard;
+            Unit.AdventurerRole == EAdventurerRole::Cleric || Unit.AdventurerRole == EAdventurerRole::Wizard ||
+            Unit.AdventurerRole == EAdventurerRole::Barbarian || Unit.AdventurerRole == EAdventurerRole::Monk ||
+            Unit.AdventurerRole == EAdventurerRole::Paladin || Unit.AdventurerRole == EAdventurerRole::Ranger;
     }
     return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider"));
 }
@@ -1453,6 +1462,594 @@ bool FCastBatchPlaybackTest::RunTest(const FString& Parameters)
                 TestFalse(Label + TEXT(": without a Hit first"), Seen.Saw(S.Hero, EUnitPose::Hit));
             });
         }
+    }
+    return !HasAnyErrors();
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// Batch 2 of the rigged cast (#150): the barbarian, monk, paladin and ranger, and the tenth clip, Brace.
+// ---------------------------------------------------------------------------------------------------------------------------
+
+namespace CastBatch2
+{
+// What the lead decided for the clip of an ability (#150), in order: a spell casts, whatever its effect (a swap included); a non-spell attack
+// swings or shoots; a non-spell self or ally effect (a swap and an actively used mitigation included) braces. Written out here from the
+// ability's facts, independently of ExpeditionPose.
+EUnitPose Decided(const FAbilityFacts& A, bool bFar)
+{
+    if (A.bSpell) { return EUnitPose::Cast; }
+    const bool bAttack = A.Target == EAbilityTarget::Enemy;
+    if (bAttack) { return bFar ? EUnitPose::Ranged : EUnitPose::Melee; }
+    return EUnitPose::Brace;
+}
+
+const FAbilityFacts* FindAbility(const TCHAR* BuildId, const TCHAR* Name)
+{
+    const FBuildDefinition* Build = FBuildCatalog::Find(BuildId);
+    return Build ? Build->Abilities.FindByPredicate([Name](const FAbilityFacts& A) { return A.Name == Name; }) : nullptr;
+}
+
+struct FClass
+{
+    EAdventurerRole Role;
+    const TCHAR* Who;
+    const TCHAR* HeroBuild;        // the build the class is played as in the scenes
+    const TCHAR* BraceBuild;       // a build with a non-spell self or ally effect, and its ability
+    const TCHAR* BraceAbility;
+    const TCHAR* WeaponBuild;      // a build with a non-spell weapon special, and its ability
+    const TCHAR* WeaponAbility;
+    bool bBraceOnAlly;
+    bool bShoots;                  // the class's attack is mostly at range (the ranger's bow)
+};
+
+const FClass Classes[] = {
+    {EAdventurerRole::Barbarian, TEXT("barbarian"), TEXT("barbarian.berserker"), TEXT("barbarian.berserker"), TEXT("Rage"), TEXT("barbarian.berserker"), TEXT("Frenzy"), false, false},
+    {EAdventurerRole::Monk, TEXT("monk"), TEXT("monk.open-hand"), TEXT("monk.open-hand"), TEXT("Patient Defense"), TEXT("monk.open-hand"), TEXT("Open Palm"), false, false},
+    {EAdventurerRole::Paladin, TEXT("paladin"), TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("Sacred Shelter"), TEXT("paladin.vengeance"), TEXT("Avenging Smite"), true, false},
+    {EAdventurerRole::Ranger, TEXT("ranger"), TEXT("ranger.hunter"), TEXT("ranger.beast-master"), TEXT("Companion Guard"), TEXT("ranger.hunter"), TEXT("Volley"), true, true},
+};
+
+// A Special1 or Special2 result of an ability on one target.
+FCombatResult SpecialOf(const FAbilityFacts& Ability, RigPoseTest::FPoseScene& Scene, int32 Actor, int32 Target)
+{
+    FCombatResult Out = RigPoseTest::MakeResult(Ability.Command, Actor, Target);
+    FTargetEffect Effect;
+    Effect.TargetId = Target;
+    Effect.Effect = Ability.Effect;
+    Effect.Amount = FMath::Max(1, Ability.Amount);
+    Effect.Cell = Scene.Unit(Scene.After, Target)->Cell;
+    Out.Effects.Add(Effect);
+    if (Ability.Target == EAbilityTarget::Enemy) { Out.bHit = true; Out.Damage = Effect.Amount; }
+    return Out;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBraceMappingTest, "Project.Expedition.Presentation.BraceMapping",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBraceMappingTest::RunTest(const FString& Parameters)
+{
+    using namespace CastBatch2;
+    // The tenth clip.
+    TestEqual(TEXT("Ten clips"), ExpeditionPose::Count, 10);
+    TestEqual(TEXT("Brace is named Brace"), FString(ExpeditionPose::ClipName(EUnitPose::Brace)), FString(TEXT("Brace")));
+    TestFalse(TEXT("Brace plays once"), ExpeditionPose::IsLooping(EUnitPose::Brace));
+
+    // Every fixed command, one expected clip each: a sweep over the enum so a new command cannot be left unconsidered.
+    int32 Commands = 0;
+    for (int32 Index = static_cast<int32>(ECombatCommandType::Move); Index <= static_cast<int32>(ECombatCommandType::Escape); ++Index)
+    {
+        const ECombatCommandType Type = static_cast<ECombatCommandType>(Index);
+        EUnitPose Want = EUnitPose::Idle;
+        switch (Type)
+        {
+        case ECombatCommandType::Move: Want = EUnitPose::Walk; break;
+        case ECombatCommandType::Attack: case ECombatCommandType::PrecisionStrike: Want = EUnitPose::Melee; break;
+        case ECombatCommandType::MagicMissile: case ECombatCommandType::CureWounds: Want = EUnitPose::Cast; break;
+        case ECombatCommandType::SecondWind: Want = EUnitPose::Brace; break;
+        default: break; // EndTurn, Rescue, Potion, Special1, Special2 (chosen from the ability), Grapple, Shove, Escape
+        }
+        RigPoseTest::ExpectPose(*this, FString::Printf(TEXT("command %d up close"), Index), ExpeditionPose::ForCommand(Type, false), Want);
+        ++Commands;
+    }
+    TestEqual(TEXT("All fourteen commands were swept"), Commands, 14);
+    RigPoseTest::ExpectPose(*this, TEXT("a potion has no clip"), ExpeditionPose::ForCommand(ECombatCommandType::Potion, false), EUnitPose::Idle);
+
+    // Every ability of every catalog build, built the way a run builds the hero (the base builds' abilities come from their Specials).
+    int32 Builds = 0, Abilities = 0, Spells = 0, Attacks = 0, Braces = 0, Swaps = 0, SpellSwaps = 0;
+    TSet<FString> Braced;
+    for (const FBuildDefinition& Build : FBuildCatalog::All())
+    {
+        FCombatantState Hero;
+        if (!TestTrue(FString::Printf(TEXT("%s builds a hero"), *Build.Id), FBuildCatalog::Create(Build.Id, 1, TEXT("Hero"), Hero))) { continue; }
+        ++Builds;
+        for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(Hero))
+        {
+            ++Abilities;
+            for (const bool bFar : {false, true})
+            {
+                const FString Label = FString::Printf(TEXT("%s %s (%s)"), *Build.Id, *Ability.Name, bFar ? TEXT("far") : TEXT("near"));
+                const EUnitPose Pose = ExpeditionPose::ForAbility(Ability, bFar);
+                RigPoseTest::ExpectPose(*this, Label, Pose, Decided(Ability, bFar));
+                if (Ability.Effect == EAbilityEffect::Swap && !bFar) { ++(Ability.bSpell ? SpellSwaps : Swaps); }
+                if (Ability.bSpell) { TestEqual(*(Label + TEXT(" casts")), Pose, EUnitPose::Cast); if (!bFar) { ++Spells; } }
+                else if (Ability.Target == EAbilityTarget::Enemy)
+                {
+                    TestEqual(*(Label + TEXT(" attacks with a weapon clip")), Pose, bFar ? EUnitPose::Ranged : EUnitPose::Melee);
+                    if (!bFar) { ++Attacks; }
+                }
+                else
+                {
+                    TestEqual(*(Label + TEXT(" is a non-spell self or ally effect: Brace")), Pose, EUnitPose::Brace);
+                    if (!bFar) { ++Braces; Braced.Add(Ability.Name); }
+                }
+                TestFalse(*(Label + TEXT(": a spell is never Brace")), Ability.bSpell && Pose == EUnitPose::Brace);
+            }
+        }
+    }
+    AddInfo(FString::Printf(TEXT("Catalog sweep: %d builds, %d abilities (%d spells, %d weapon attacks, %d non-spell self or ally effects braced, of them %d non-spell swaps; %d spell swaps cast)"), Builds, Abilities, Spells, Attacks, Braces, Swaps, SpellSwaps));
+    TestTrue(TEXT("The sweep covered the catalog"), Builds >= 60 && Abilities >= 120);
+    TestTrue(TEXT("Spells, weapon attacks, braces, non-spell swaps and spell swaps were all met"), Spells > 0 && Attacks > 0 && Braces > 0 && Swaps > 0 && SpellSwaps > 0);
+    // The abilities the lead named play Brace, and each was found (so none passes vacuously).
+    for (const TCHAR* Name : {TEXT("Rage"), TEXT("Fast Hands"), TEXT("Ghost Shelter"), TEXT("Patient Defense"), TEXT("Lay on Hands"), TEXT("Second Wind")})
+    { TestTrue(FString::Printf(TEXT("%s plays Brace"), Name), Braced.Contains(Name)); }
+    // The swaps the review named: a caster's swap casts (Benign Exchange, Misty Exchange: bSpell), a non-spell swap braces (Quick Exchange, Relentless Exchange).
+    for (const TPair<const TCHAR*, const TCHAR*>& Entry : {TPair<const TCHAR*, const TCHAR*>(TEXT("wizard.conjuration"), TEXT("Benign Exchange")), TPair<const TCHAR*, const TCHAR*>(TEXT("warlock.archfey"), TEXT("Misty Exchange"))})
+    {
+        const FAbilityFacts* Swap = FindAbility(Entry.Key, Entry.Value);
+        if (TestNotNull(FString::Printf(TEXT("%s is in the catalog"), Entry.Value), Swap)) { TestTrue(FString::Printf(TEXT("%s is a spell swap and casts"), Entry.Value), Swap->Effect == EAbilityEffect::Swap && Swap->bSpell && ExpeditionPose::ForAbility(*Swap, false) == EUnitPose::Cast); }
+    }
+    for (const TPair<const TCHAR*, const TCHAR*>& Entry : {TPair<const TCHAR*, const TCHAR*>(TEXT("rogue.thief"), TEXT("Quick Exchange")), TPair<const TCHAR*, const TCHAR*>(TEXT("paladin.vengeance"), TEXT("Relentless Exchange"))})
+    {
+        const FAbilityFacts* Swap = FindAbility(Entry.Key, Entry.Value);
+        if (TestNotNull(FString::Printf(TEXT("%s is in the catalog"), Entry.Value), Swap)) { TestTrue(FString::Printf(TEXT("%s is a non-spell swap and braces"), Entry.Value), Swap->Effect == EAbilityEffect::Swap && !Swap->bSpell && ExpeditionPose::ForAbility(*Swap, false) == EUnitPose::Brace); }
+    }
+    // Spells with a self or ally effect still cast (Cure Wounds, wards of a caster), and an attack that is a spell does too.
+    const FAbilityFacts* Cure = FindAbility(TEXT("cleric.life"), TEXT("Cure Wounds"));
+    if (TestNotNull(TEXT("Cure Wounds is in the catalog"), Cure)) { TestTrue(TEXT("Cure Wounds is a spell and casts"), Cure->bSpell && ExpeditionPose::ForAbility(*Cure, false) == EUnitPose::Cast); }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch2PlaybackTest, "Project.Expedition.Presentation.CastBatch2PlaybackConverges",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch2PlaybackTest::RunTest(const FString& Parameters)
+{
+    using namespace CastBatchPlayback;
+    using namespace CastBatch2;
+    // The barbarian, monk, paladin and ranger (#150 batch 2), each named, through real FExpeditionPlayback: an attack, a weapon special,
+    // a Brace (a non-spell self or ally effect), a hit, downing, a rescue that plays Recover and ends at Idle, and death. Each outcome is
+    // played to the end at 1x, 2x, instant (Finish) and skipped mid-animation (Finish after some frames), and a fresh playback reset on the
+    // committed state (the Resume path) shows the same pose and transform.
+    for (const FClass& Class : Classes)
+    {
+        const FString Who = Class.Who;
+        const FString Hero = Class.HeroBuild;
+        auto Scene = [&](int32 FoeX, FPoseScene& Out, const TCHAR* Build) { return MakeScene(Out, FoeX) && MakeHero(Out, Build); };
+        const FAbilityFacts* Brace = FindAbility(Class.BraceBuild, Class.BraceAbility);
+        const FAbilityFacts* Weapon = FindAbility(Class.WeaponBuild, Class.WeaponAbility);
+        if (!TestNotNull(Who + TEXT(": the catalog has ") + Class.BraceAbility, Brace) || !TestNotNull(Who + TEXT(": the catalog has ") + Class.WeaponAbility, Weapon)) { return false; }
+        TestFalse(Who + TEXT(": ") + Class.BraceAbility + TEXT(" is not a spell"), Brace->bSpell);
+        TestFalse(Who + TEXT(": ") + Class.WeaponAbility + TEXT(" is not a spell"), Weapon->bSpell);
+
+        // The basic attack: a weapon up close; the ranger shoots from range.
+        for (const int32 FoeX : {3, 7})
+        {
+            const bool bFar = FoeX == 7;
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(FoeX, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.After, S.Foe)->HP = S.Unit(S.Before, S.Foe)->HP - 3;
+            FCombatResult Strike = MakeResult(ECombatCommandType::Attack, S.Hero, S.Foe);
+            Strike.bHit = true;
+            Strike.Damage = 3;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s attacks %s"), *Who, bFar ? TEXT("at range") : TEXT("up close")), S, Strike, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + (bFar ? TEXT(": a ranged clip") : TEXT(": a melee clip")), Seen.Saw(S.Hero, bFar ? EUnitPose::Ranged : EUnitPose::Melee));
+                TestFalse(Label + TEXT(": never a cast or a brace"), Seen.Saw(S.Hero, EUnitPose::Cast) || Seen.Saw(S.Hero, EUnitPose::Brace));
+                TestTrue(Label + TEXT(": the target flinches"), Seen.Saw(S.Foe, EUnitPose::Hit));
+            });
+        }
+        // A non-spell weapon special (Frenzy, Open Palm, Avenging Smite, Volley): the same weapon clips, never Cast.
+        {
+            const bool bFar = Weapon->Range > 1;
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(bFar ? 6 : 3, S, Class.WeaponBuild))) { return false; }
+            S.Unit(S.After, S.Foe)->HP = S.Unit(S.Before, S.Foe)->HP - 3;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s %s"), *Who, Class.WeaponAbility), S, SpecialOf(*Weapon, S, S.Hero, S.Foe), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": a weapon clip"), Seen.Saw(S.Hero, bFar ? EUnitPose::Ranged : EUnitPose::Melee));
+                TestFalse(Label + TEXT(": never a cast or a brace"), Seen.Saw(S.Hero, EUnitPose::Cast) || Seen.Saw(S.Hero, EUnitPose::Brace));
+            });
+        }
+        // Brace: Rage, Patient Defense, Sacred Shelter, Companion Guard, a non-spell self or ally effect, plays the rally and settles at Idle.
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(7, S, Class.BraceBuild))) { return false; }
+            const int32 Target = Class.bBraceOnAlly ? S.Ally : S.Hero;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s %s"), *Who, Class.BraceAbility), S, SpecialOf(*Brace, S, S.Hero, Target), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero braces"), Seen.Saw(S.Hero, EUnitPose::Brace));
+                TestFalse(Label + TEXT(": not the arms-raised cast, no weapon clip"), Seen.Saw(S.Hero, EUnitPose::Cast) || Seen.Saw(S.Hero, EUnitPose::Melee) || Seen.Saw(S.Hero, EUnitPose::Ranged));
+            });
+            FExpeditionPlayback Show;
+            Show.Reset(S.Before);
+            Show.Enqueue({SpecialOf(*Brace, S, S.Hero, Target)}, S.After);
+            FSeen Seen;
+            PlayOut(Show, S.After, Seen);
+            for (int32 Frame = 0; Frame < 200; ++Frame) { Show.Tick(0.05f); }
+            ExpectPose(*this, Who + TEXT(" stands at Idle after Brace"), Show.Unit(S.Hero)->Pose, EUnitPose::Idle);
+        }
+        // Hit, downed, rescue (Recover, then Idle) and death.
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.After, S.Hero)->HP = S.Unit(S.Before, S.Hero)->HP - 3;
+            PlayAtEveryEnding(*this, Who + TEXT(" is hit"), S, Blow(S, 3), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero flinches"), Seen.Saw(S.Hero, EUnitPose::Hit));
+                TestFalse(Label + TEXT(": and does not fall"), Seen.Saw(S.Hero, EUnitPose::Downed) || Seen.Saw(S.Hero, EUnitPose::Death));
+            });
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            FCombatResult Down = Blow(S, 99);
+            Down.Downed = {S.Hero};
+            S.Unit(S.After, S.Hero)->HP = 0;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Downed;
+            PlayAtEveryEnding(*this, Who + TEXT(" goes down"), S, Down, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero is downed"), Seen.Saw(S.Hero, EUnitPose::Downed));
+                TestFalse(Label + TEXT(": not dead"), Seen.Saw(S.Hero, EUnitPose::Death));
+            });
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(7, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.Before, S.Hero)->Life = ECombatLife::Downed;
+            S.Unit(S.Before, S.Hero)->HP = 0;
+            S.After = S.Before;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Conscious;
+            S.Unit(S.After, S.Hero)->HP = 5;
+            FCombatResult Save = MakeResult(ECombatCommandType::Rescue, S.Ally, S.Hero);
+            Save.Healing = 5;
+            PlayAtEveryEnding(*this, Who + TEXT(" is rescued"), S, Save, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero plays Recover"), Seen.Saw(S.Hero, EUnitPose::Recover));
+                TestTrue(Label + TEXT(": from Downed"), Seen.Saw(S.Hero, EUnitPose::Downed));
+            });
+            FExpeditionPlayback Show;
+            Show.Reset(S.Before);
+            Show.Enqueue({Save}, S.After);
+            FSeen Seen;
+            PlayOut(Show, S.After, Seen);
+            for (int32 Frame = 0; Frame < 200; ++Frame) { Show.Tick(0.05f); }
+            ExpectPose(*this, Who + TEXT(" stands at Idle after Recover"), Show.Unit(S.Hero)->Pose, EUnitPose::Idle);
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            FCombatResult Kill = Blow(S, 99);
+            Kill.Died = {S.Hero};
+            S.Unit(S.After, S.Hero)->HP = 0;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Dead;
+            PlayAtEveryEnding(*this, Who + TEXT(" dies"), S, Kill, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero dies"), Seen.Saw(S.Hero, EUnitPose::Death));
+                TestFalse(Label + TEXT(": without a Hit first"), Seen.Saw(S.Hero, EUnitPose::Hit));
+            });
+        }
+    }
+    return !HasAnyErrors();
+}
+
+namespace CastBatch2
+{
+// A fresh run whose party is the four batch 2 classes (the build picker's path), on a Stream trail board.
+bool NewCastRun(FExpeditionRun& Run, int32 Seed, const TCHAR* Identity, TMap<EAdventurerRole, int32>& Ids)
+{
+    TArray<FPartyBuildSelection> Party;
+    int32 Index = 0;
+    for (const FClass& Class : Classes)
+    {
+        FPartyBuildSelection Slot;
+        Slot.Id = ++Index;
+        Slot.Name = FString::Printf(TEXT("Hero %d"), Index);
+        Slot.BuildId = Class.HeroBuild;
+        Party.Add(Slot);
+    }
+    FString Error;
+    if (!Run.NewRun(Seed, Party, Error, Identity)) { return false; }
+    const auto* Route = Run.Progress().Offers.FindByPredicate([](const auto& R) { return !R.bDangerous; });
+    if (!Route || !Run.ChooseRoute(Route->Id, Error)) { return false; }
+    for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Party) { Ids.Add(Unit.AdventurerRole, Unit.Id); } }
+    return Ids.Num() == 4;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch2FiguresTest, "Project.Expedition.Presentation.CastBatch2RiggedFigures",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch2FiguresTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatch2;
+    // A party of the four batch 2 classes on a real board: each is a rigged figure (never the static or primitive fallback), on its cell,
+    // 175 to 185 cm tall, with the silhouette stencil and one tintable skin slot, plays Brace on its skinned mesh, and converges.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatch2Figures"), FGuid::NewGuid().ToString());
+    FExpeditionRun Run;
+    TMap<EAdventurerRole, int32> Ids;
+    if (!TestTrue(TEXT("A run with the four batch 2 classes starts"), NewCastRun(Run, 7, TEXT("cast2-figures"), Ids))) { return false; }
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Run.Snapshot();
+    FString Error;
+    if (!TestTrue(TEXT("The checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); return false; }
+    UWorld* World = nullptr;
+    AExpeditionBattleView* View = MakeView(World, Path, EView::Rigged);
+    if (!TestNotNull(TEXT("Resumed view"), View)) { return false; }
+    View->Resume();
+    View->Tick(0.016f);
+    TestTrue(TEXT("The shipped theme loads"), View->UsesTheme());
+    for (const FClass& Class : Classes)
+    {
+        const int32 Id = Ids.FindRef(Class.Role);
+        const FString Label = Class.Who;
+        const FUnitAnimationState State = View->UnitAnimation(Id);
+        if (!TestTrue(Label + TEXT(" is a rigged figure (run import_dark_fantasy_theme.py)"), State.bSkeletal)) { continue; }
+        USceneComponent* RigRoot = View->UnitRigRoot(Id);
+        if (!TestNotNull(Label + TEXT(" has a rig root"), RigRoot)) { continue; }
+        const FCombatantState* Unit = View->Rules().Find(Id);
+        TestTrue(Label + TEXT("'s rig root is on its cell"), Unit && FVector2D(RigRoot->GetRelativeLocation()).Equals(FVector2D(View->CellPosition(Unit->Cell)), 0.1f));
+        TestEqual(*(Label + TEXT("'s skin carries the party silhouette stencil")), View->FigureStencil(Id), AExpeditionBattleView::PartyStencil);
+        TArray<FLinearColor> SkinColors;
+        FLinearColor SkinRing;
+        TestTrue(Label + TEXT("'s skin has one tintable slot"), View->UnitShownColors(Id, SkinColors, SkinRing) && SkinColors.Num() == 1);
+        const double Height = FigureHeight(*View, RigRoot);
+        TestTrue(FString::Printf(TEXT("%s stands 175 to 185 cm (measured %.1f)"), *Label, Height), Height >= 175.0 && Height <= 185.0);
+        // Its skinned mesh plays Brace (the tenth clip), then playback hands it back to Idle.
+        if (TestTrue(Label + TEXT(": Brace can be held"), View->PreviewPose(Id, EUnitPose::Brace, 0.5f)))
+        {
+            View->Tick(0.016f);
+            const FUnitAnimationState Held = View->UnitAnimation(Id);
+            ExpectPose(*this, Label + TEXT(" plays Brace"), Held.Pose, EUnitPose::Brace);
+            TestTrue(*(Label + FString::Printf(TEXT(" has its Brace clip bound (%.2f s)"), Held.Length)), Held.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Brace)) && Held.Length > 0.5f && Held.Length < 1.1f);
+            View->ClearPosePreview();
+            View->Tick(0.016f);
+        }
+    }
+    TestEqual(TEXT("Exactly the four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    ExpectFiguresConverged(*this, *View, TEXT("the batch 2 party at rest"));
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch2FallenTest, "Project.Expedition.Presentation.CastBatch2FallenAndRecover",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch2FallenTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatch2;
+    // Each of the four, downed and dead in a committed checkpoint, resumes in a fresh world and views at the end of its Downed or Death
+    // clip; its skinned mesh also plays Recover, and handing it back to playback converges on the committed pose.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatch2Fallen"), FGuid::NewGuid().ToString());
+    for (const FClass& Class : Classes)
+    {
+        for (const ECombatLife Life : {ECombatLife::Downed, ECombatLife::Dead})
+        {
+            const FString Label = FString::Printf(TEXT("%s %s"), Class.Who, Life == ECombatLife::Downed ? TEXT("downed") : TEXT("dead"));
+            FExpeditionRun Run;
+            TMap<EAdventurerRole, int32> Ids;
+            if (!TestTrue(Label + TEXT(": a run starts"), NewCastRun(Run, 7, TEXT("cast2-fallen"), Ids))) { continue; }
+            FExpeditionSnapshot Snapshot = Run.Snapshot();
+            const int32 HeroId = Ids.FindRef(Class.Role);
+            for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+            {
+                if (Unit.Id != HeroId) { continue; }
+                Unit.HP = 0;
+                Unit.Life = Life;
+                Unit.RescueTurnsLeft = Life == ECombatLife::Downed ? 2 : 0;
+            }
+            const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("%d-%d"), static_cast<int32>(Class.Role), static_cast<int32>(Life)), TEXT("current.json"));
+            FExpeditionSaveData Data;
+            Data.Current = Snapshot;
+            FString Error;
+            if (!TestTrue(Label + TEXT(": the checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); continue; }
+            AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+            if (!TestNotNull(Label + TEXT(": resumed view"), View)) { continue; }
+            View->Resume();
+            View->Tick(0.016f);
+            if (TestTrue(Label + TEXT(": the resumed view is mid-encounter"), View->HasRun() && View->InCombat()))
+            {
+                const FUnitAnimationState State = View->UnitAnimation(HeroId);
+                TestTrue(Label + TEXT(" is a rigged figure"), State.bSkeletal);
+                const EUnitPose Rest = ExpeditionPose::Rest(Life);
+                ExpectPose(*this, Label + TEXT(" holds its fallen pose"), State.Pose, Rest);
+                TestTrue(Label + TEXT(" has its clip bound"), State.Clip.Contains(ExpeditionPose::ClipName(Rest)));
+                TestTrue(*(Label + FString::Printf(TEXT(" holds the end of its clip (%.3f of %.3f s)"), State.Time, State.Length)), State.Length > 0.1f && State.Time >= State.Length - 0.001f);
+                ExpectFiguresConverged(*this, *View, Label + TEXT(" resumed"));
+                if (TestTrue(Label + TEXT(": Recover can be held"), View->PreviewPose(HeroId, EUnitPose::Recover, 1.0f)))
+                {
+                    View->Tick(0.016f);
+                    const FUnitAnimationState Held = View->UnitAnimation(HeroId);
+                    ExpectPose(*this, Label + TEXT(" plays Recover"), Held.Pose, EUnitPose::Recover);
+                    TestTrue(Label + TEXT(" has its Recover clip bound"), Held.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Recover)) && Held.Length > 0.1f);
+                    View->ClearPosePreview();
+                    View->Tick(0.016f);
+                    ExpectFiguresConverged(*this, *View, Label + TEXT(" after Recover"));
+                }
+            }
+            ReleaseView(View);
+        }
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch2OverridesTest, "Project.Expedition.Presentation.CastBatch2ClipOverrides",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatch2;
+    // Per-class clip overrides (#150 batch 2 review): the ranger's bow draw replaces the shared Ranged clip and the barbarian's two-handed swing the
+    // shared Melee clip, for those classes only; a class with no entry, or an entry with no clip, plays the shared clip.
+    const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme"))).LoadSynchronous();
+    if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
+    const auto ClipNames = [&](const FDiceRollCharacter& Rig, TArray<FString>& Out) -> bool
+    {
+        USkeletalMesh* Mesh = nullptr;
+        TArray<UAnimSequence*> Clips;
+        if (!Rig.Load(Mesh, Clips) || Clips.Num() != ExpeditionPose::Count) { return false; }
+        for (const UAnimSequence* Clip : Clips) { Out.Add(Clip ? Clip->GetName() : FString()); }
+        return true;
+    };
+    const auto Slot = [](EUnitPose Pose) { return static_cast<int32>(Pose); };
+    for (const FClass& Class : Classes)
+    {
+        const FDiceRollCharacter* Rig = Shipped->RigForClass(Class.Role);
+        if (!TestNotNull(FString::Printf(TEXT("%s has a rig"), Class.Who), Rig)) { continue; }
+        TArray<FString> Names;
+        if (!TestTrue(FString::Printf(TEXT("%s loads"), Class.Who), ClipNames(*Rig, Names))) { continue; }
+        const bool bRanger = Class.Role == EAdventurerRole::Ranger, bBarbarian = Class.Role == EAdventurerRole::Barbarian;
+        // Which pose is overridden, and by which clip.
+        for (int32 Index = 0; Index < ExpeditionPose::Count; ++Index)
+        {
+            const EUnitPose Pose = static_cast<EUnitPose>(Index);
+            FString Want = FString::Printf(TEXT("A_Humanoid_%s"), ExpeditionPose::ClipName(Pose));
+            if (bRanger && Pose == EUnitPose::Ranged) { Want = TEXT("A_Ranger_Ranged"); }
+            if (bBarbarian && Pose == EUnitPose::Melee) { Want = TEXT("A_Barbarian_Melee"); }
+            TestEqual(FString::Printf(TEXT("%s plays %s for %s"), Class.Who, *Want, ExpeditionPose::ClipName(Pose)), Names[Index], Want);
+        }
+        TestEqual(FString::Printf(TEXT("%s has %d overrides"), Class.Who, bRanger || bBarbarian ? 1 : 0), Rig->Overrides.Num(), bRanger || bBarbarian ? 1 : 0);
+        if (bRanger || bBarbarian)
+        {
+            // Absent: the same definition with the override removed, or set but empty, plays the shared clip.
+            FDiceRollCharacter Without = *Rig;
+            Without.Overrides.Empty();
+            TArray<FString> Shared;
+            if (TestTrue(Class.Who + FString(TEXT(" without its override loads")), ClipNames(Without, Shared)))
+            { TestEqual(Class.Who + FString(TEXT(" falls back to the shared clip")), Shared[Slot(bRanger ? EUnitPose::Ranged : EUnitPose::Melee)], bRanger ? FString(TEXT("A_Humanoid_Ranged")) : FString(TEXT("A_Humanoid_Melee"))); }
+            FDiceRollCharacter Empty = *Rig;
+            Empty.Overrides.Empty();
+            Empty.Overrides.Add(FName(bRanger ? TEXT("Ranged") : TEXT("Melee")), TSoftObjectPtr<UAnimSequence>());
+            Shared.Reset();
+            if (TestTrue(Class.Who + FString(TEXT(" with an empty override entry loads")), ClipNames(Empty, Shared)))
+            { TestEqual(Class.Who + FString(TEXT(" falls back when the entry has no clip")), Shared[Slot(bRanger ? EUnitPose::Ranged : EUnitPose::Melee)], bRanger ? FString(TEXT("A_Humanoid_Ranged")) : FString(TEXT("A_Humanoid_Melee"))); }
+            // Any clip on the skeleton can be named: an override of Ranged by the shared Cast clip plays Cast in the Ranged slot (the mechanism, not just the two shipped clips).
+            FDiceRollCharacter Substitute = *Rig;
+            Substitute.Overrides.Empty();
+            Substitute.Overrides.Add(FName(TEXT("Hit")), Rig->Animations.Cast);
+            Shared.Reset();
+            if (TestTrue(Class.Who + FString(TEXT(" with a substitute override loads")), ClipNames(Substitute, Shared)))
+            {
+                TestEqual(Class.Who + FString(TEXT(" plays the substitute in the overridden slot")), Shared[Slot(EUnitPose::Hit)], FString(TEXT("A_Humanoid_Cast")));
+                TestEqual(Class.Who + FString(TEXT(" and the shared clip in the others")), Shared[Slot(EUnitPose::Cast)], FString(TEXT("A_Humanoid_Cast")));
+                TestEqual(Class.Who + FString(TEXT(" keeps the shared Idle")), Shared[Slot(EUnitPose::Idle)], FString(TEXT("A_Humanoid_Idle")));
+            }
+        }
+    }
+
+    // In a view: the overridden pose plays the class's own clip on the skinned mesh (its length is the authored 1.2 s or 1.0 s), the others the shared one,
+    // and handing the pose back converges on the committed state; a fresh Resume starts every figure at rest.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatch2Overrides"), FGuid::NewGuid().ToString());
+    FExpeditionRun Run;
+    TMap<EAdventurerRole, int32> Ids;
+    if (!TestTrue(TEXT("A run with the four batch 2 classes starts"), NewCastRun(Run, 7, TEXT("cast2-overrides"), Ids))) { return false; }
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Run.Snapshot();
+    FString Error;
+    if (!TestTrue(TEXT("The checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); return false; }
+    AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+    if (!TestNotNull(TEXT("Resumed view"), View)) { return false; }
+    View->Resume();
+    View->Tick(0.016f);
+    for (const FClass& Class : Classes)
+    {
+        const int32 Id = Ids.FindRef(Class.Role);
+        for (const EUnitPose Pose : {EUnitPose::Ranged, EUnitPose::Melee})
+        {
+            const bool bOwn = (Class.Role == EAdventurerRole::Ranger && Pose == EUnitPose::Ranged) || (Class.Role == EAdventurerRole::Barbarian && Pose == EUnitPose::Melee);
+            const FString Label = FString::Printf(TEXT("%s %s"), Class.Who, ExpeditionPose::ClipName(Pose));
+            if (!TestTrue(Label + TEXT(" can be held"), View->PreviewPose(Id, Pose, 0.5f))) { continue; }
+            View->Tick(0.016f);
+            const FUnitAnimationState Held = View->UnitAnimation(Id);
+            ExpectPose(*this, Label, Held.Pose, Pose);
+            const FString Want = bOwn ? (Class.Role == EAdventurerRole::Ranger ? FString(TEXT("A_Ranger_Ranged")) : FString(TEXT("A_Barbarian_Melee"))) : FString::Printf(TEXT("A_Humanoid_%s"), ExpeditionPose::ClipName(Pose));
+            TestTrue(*(Label + FString::Printf(TEXT(" plays %s on the skinned mesh (%s)"), *Want, *Held.Clip)), Held.Clip.Contains(Want));
+            if (bOwn) { TestTrue(*(Label + FString::Printf(TEXT(" override length %.2f s"), Held.Length)), Held.Length > 0.9f && Held.Length < 1.3f); }
+            View->ClearPosePreview();
+            View->Tick(0.016f);
+            ExpectFiguresConverged(*this, *View, Label + TEXT(" after the override"));
+        }
+    }
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+// The arrow's wiring (#198): every ranged attack that is not a spell throws an arrow, which carries no light and flashes nothing, and leaves the bow
+// at the Ranged clip's release frame, not when the draw begins. The Ranger's own bow once threw a spell bolt (a 50 cd point light at the shooter),
+// which blew the ranger and the floor out for two or three frames at release. Played through real FExpeditionPlayback.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRangedReleaseArrowTest, "Project.Expedition.Presentation.RangedReleaseArrows",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatchPlayback;
+    struct FCase { const TCHAR* Name; const TCHAR* Build; EAdventurerRole Role; bool bFoeShoots; bool bArrow; };
+    const FCase Cases[] = {
+        {TEXT("ranger"), TEXT("ranger.hunter"), EAdventurerRole::Ranger, false, true},
+        {TEXT("rogue"), nullptr, EAdventurerRole::Rogue, false, true},
+        {TEXT("foe archer"), nullptr, EAdventurerRole::None, true, true},
+        {TEXT("wizard (a spell, for contrast)"), nullptr, EAdventurerRole::Wizard, false, false},
+        {TEXT("cleric (a spell, for contrast)"), nullptr, EAdventurerRole::Cleric, false, false},
+    };
+    for (const FCase& Case : Cases)
+    {
+        FPoseScene S;
+        if (!TestTrue(FString(Case.Name) + TEXT(": scene builds"), MakeScene(S, 7))) { return false; }
+        if (Case.Build && !TestTrue(FString(Case.Name) + TEXT(": the hero builds"), MakeHero(S, Case.Build))) { return false; }
+        S.Unit(S.Before, S.Hero)->AdventurerRole = Case.Role;
+        const int32 Shooter = Case.bFoeShoots ? S.Foe : S.Hero, Struck = Case.bFoeShoots ? S.Hero : S.Foe;
+        S.After = S.Before;
+        S.Unit(S.After, Struck)->HP = S.Unit(S.Before, Struck)->HP - 2;
+        FCombatResult Shot = MakeResult(ECombatCommandType::Attack, Shooter, Struck);
+        Shot.bHit = true;
+        Shot.Damage = 2;
+        FExpeditionPlayback Show;
+        Show.Reset(S.Before);
+        Show.Enqueue({Shot}, S.After);
+        float Clock = 0.0f, DrawStart = -1.0f, FirstShot = -1.0f, MaxFlash = 0.0f;
+        int32 Arrows = 0, Bolts = 0;
+        for (int32 Frame = 0; Frame < 1200 && Show.IsBusy(); ++Frame)
+        {
+            Show.Tick(0.016f);
+            Clock += 0.016f;
+            const FUnitDisplay* Unit = Show.Unit(Shooter);
+            if (Unit && Unit->Pose == EUnitPose::Ranged && DrawStart < 0.0f) { DrawStart = Clock; }
+            if (Unit) { MaxFlash = FMath::Max(MaxFlash, Unit->Flash); }
+            for (const FPlaybackProjectile& Live : Show.Projectiles())
+            {
+                if (Live.Age < 0.0f) { continue; }
+                if (FirstShot < 0.0f) { FirstShot = Clock; }
+                (Live.bArrow ? Arrows : Bolts) += 1;
+            }
+        }
+        const FString Who = Case.Name;
+        TestTrue(Who + TEXT(": something was thrown"), Arrows + Bolts > 0);
+        TestTrue(Who + FString::Printf(TEXT(": %s (%d arrow frames, %d bolt frames)"), Case.bArrow ? TEXT("an arrow, never a spell bolt") : TEXT("a spell bolt"), Arrows, Bolts),
+            Case.bArrow ? (Arrows > 0 && Bolts == 0) : (Bolts > 0 && Arrows == 0));
+        TestEqual(*(Who + TEXT(": the shooter is never flashed")), MaxFlash, 0.0f);
+        if (Case.bArrow)
+        {
+            // The arrow leaves at the release frame (frame 26 of 30 fps) of the Ranged clip, not at the start of the draw.
+            TestTrue(Who + TEXT(": the Ranged clip plays"), DrawStart >= 0.0f);
+            TestTrue(*(Who + FString::Printf(TEXT(": the arrow leaves %.2f s after the draw starts, at the release frame (%.2f s)"), FirstShot - DrawStart, FExpeditionPlayback::RangedReleaseSeconds)),
+                FirstShot - DrawStart >= FExpeditionPlayback::RangedReleaseSeconds - 0.05f && FirstShot - DrawStart <= FExpeditionPlayback::RangedReleaseSeconds + 0.12f);
+        }
+        TestFalse(Who + TEXT(": playback is done"), Show.IsBusy());
+        ExpectConverged(*this, Who + TEXT(" after the shot"), Show, S.After);
     }
     return !HasAnyErrors();
 }

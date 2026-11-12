@@ -124,6 +124,7 @@ const TSoftObjectPtr<UAnimSequence>& FDiceRollAnimSet::For(EUnitPose Pose) const
     case EUnitPose::Downed: return Downed;
     case EUnitPose::Death: return Death;
     case EUnitPose::Recover: return Recover;
+    case EUnitPose::Brace: return Brace;
     default: return Idle;
     }
 }
@@ -137,10 +138,19 @@ bool FDiceRollCharacter::Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& O
     TArray<UAnimSequence*> Clips;
     for (int32 Index = 0; Index < ExpeditionPose::Count; ++Index)
     {
-        const TSoftObjectPtr<UAnimSequence>& Entry = Animations.For(static_cast<EUnitPose>(Index));
-        UAnimSequence* Clip = Entry.IsNull() ? nullptr : Entry.LoadSynchronous();
-        if (!Clip) { return false; }
-        Clips.Add(Clip);
+        const EUnitPose Pose = static_cast<EUnitPose>(Index);
+        const TSoftObjectPtr<UAnimSequence>& Entry = Animations.For(Pose);
+        UAnimSequence* Shared = Entry.IsNull() ? nullptr : Entry.LoadSynchronous();
+        if (!Shared) { return false; }
+        const TSoftObjectPtr<UAnimSequence>* Override = Overrides.Find(FName(ExpeditionPose::ClipName(Pose)));
+        if (Override && !Override->IsNull())
+        {
+            UAnimSequence* Replaced = Override->LoadSynchronous();
+            if (!Replaced) { return false; }
+            Clips.Add(Replaced);
+            continue;
+        }
+        Clips.Add(Shared);
     }
     if (!Loaded) { return false; }
     OutMesh = Loaded;

@@ -115,11 +115,12 @@ inline bool FinishRunScripted(FExpeditionRun& Run)
 // Plays the scripted player to the start of the fifth fight (the finale, drawn with EBoardTheme::Vault) on the seeded run and chooses its
 // route: the first offer of every earlier route, FinishCombat, the reward to the first conscious survivor, the camp. False when the scripted
 // player loses on the way, when the finale's obstacle recipe is not `Recipe` (0 split stones, 1 ruined pillars, 2 broken wall; -1 any) or,
-// with bPartyFirst, when an enemy acts first. Deterministic in Seed.
-inline bool ReachFinale(FExpeditionRun& Run, int32 Seed, int32 Recipe = -1, bool bPartyFirst = true)
+// with bPartyFirst, when an enemy acts first. Party (when given) is the party the run starts with; bDangerous picks the dangerous road (raiders) instead of the plain one (scouts). Deterministic in Seed.
+inline bool ReachFinale(FExpeditionRun& Run, int32 Seed, int32 Recipe = -1, bool bPartyFirst = true, const TArray<FPartyBuildSelection>* Party = nullptr, bool bDangerous = false)
 {
     FString Error;
-    if (!Run.NewRun(Seed, Error, FString::Printf(TEXT("finale-%d"), Seed))) { return false; }
+    const FString Identity = FString::Printf(TEXT("finale-%d"), Seed);
+    if (!(Party ? Run.NewRun(Seed, *Party, Error, Identity) : Run.NewRun(Seed, Error, Identity))) { return false; }
     while (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted < FExpeditionRun::EncounterCount - 1)
     {
         if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { return false; }
@@ -130,7 +131,10 @@ inline bool ReachFinale(FExpeditionRun& Run, int32 Seed, int32 Recipe = -1, bool
         if (Run.Progress().Phase == EExpeditionPhase::Recovery && !Run.Recover(true, Error)) { return false; }
     }
     if (Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != FExpeditionRun::EncounterCount - 1) { return false; }
-    const FExpeditionRoute Route = Run.Progress().Offers[0];
+    // The finale's route: the first offer that is (bDangerous) or is not a dangerous road; the dangerous finale has raiders, the other has scouts.
+    const FExpeditionRoute* Pick = Run.Progress().Offers.FindByPredicate([bDangerous](const FExpeditionRoute& Offer) { return Offer.bDangerous == bDangerous; });
+    if (!Pick) { return false; }
+    const FExpeditionRoute Route = *Pick;
     if ((Recipe >= 0 && Route.Recipe != Recipe) || !Run.ChooseRoute(Route.Id, Error)) { return false; }
     const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
     return Run.Progress().History.Num() >= FExpeditionRun::EncounterCount && Run.Progress().Phase == EExpeditionPhase::Combat && (!bPartyFirst || (Active && Active->Side == ECombatSide::Party));

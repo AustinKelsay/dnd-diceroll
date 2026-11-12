@@ -38,7 +38,9 @@ colour for sparks, shots and the camp, and the master, occluder, card and effect
 Nothing else changes: a run on a current theme only sets the missing flags.
 
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
-skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). Existing rig assets are
+skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). The full rigged cast (#150) appends
+its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger) and the tenth shared clip, Brace, is
+imported once, non-destructively, from the fighter's r002 glb (an existing A_Humanoid_Brace is kept). Existing rig assets are
 never overwritten and this script never deletes them (a force delete nulls references other assets hold). A
 THEME_RIG_REIMPORT request is validated and then refused: delete the rig assets deliberately in the editor, rerun.
 """
@@ -995,17 +997,36 @@ def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan
 
 RIG_FOLDER = THEME + "/Characters"
 SKELETON = RIG_FOLDER + "/SKEL_Humanoid"
-CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
-# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit): characters get Rim 1.6 and Fill 1.25 (#148).
+# The nine clips of the fighter's r001 glb (#147) and the tenth, Brace (#150 batch 2), which comes from the fighter's r002 glb (the same
+# meshes and clips with Brace added). Every character on the shared skeleton uses all ten.
+FIRST_CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
+BRACE_CLIP = "Brace"
+CLIPS = FIRST_CLIPS + [BRACE_CLIP]
+BRACE_SOURCE = ("sk-hero-fighter", "SK_Hero_Fighter", "r002")
+# Per-class clip overrides (#150 batch 2 review): rig key -> {shared clip: (clip package name, action name in that class's LOD0 glb)}. The theme's rig
+# definition names them (FDiceRollCharacter::Overrides, data) and the game plays them instead of the shared clip for that class only.
+CLIP_OVERRIDES = {
+    "class:Barbarian": {"Melee": ("A_Barbarian_Melee", "Melee_Barbarian")},
+    "class:Ranger": {"Ranged": ("A_Ranger_Ranged", "Ranged_Ranger")},
+}
+# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit). The static r001 characters keep Rim 1.6 and Fill 1.25 (#148, tuned for
+# their dark figures); the rigged ones, whose palettes are already bright, take Rim 1.2 and Fill 1.0 (#150: the lowest pair of 1.2/1.0 and 1.0/0.9 that
+# keeps every rigged class at a mean region contrast of 2.3 or more and a worst shot of 1.4 or more on Vigil, Root and the Vault; see docs/assets.md).
+# apply_rig_material writes these scalars to the MI_SK_* instance only when they differ, so a rerun retunes the instances in place and touches
+# no mesh, texture or clip.
 # The rig key says where the data asset holds the definition (#150): "class:<Role>" is UDiceRollTheme::ClassRigs[<Role>], "foe:<Archetype>"
 # is FoeRigs[<Archetype>]. The fighter comes first because its import yields the shared skeleton and the nine clips (every later
 # character reuses them), and a cast batch appends its characters here.
 RIG = [
-    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.6, 1.25, 1.0, 0.0)),
-    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.6, 1.25, 1.0, 0.0)),
+    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-barbarian", "SK_Hero_Barbarian", "class:Barbarian", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
 CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
 # The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.
@@ -1048,8 +1069,8 @@ def refuse_reimport():
                        "rig assets deliberately in the editor (fix up references), then rerun without THEME_RIG_REIMPORT.")
 
 
-def source_glb(asset_id, name):
-    return os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
+def source_glb(asset_id, name, revision="r001"):
+    return os.path.join(ROOT, "Art", asset_id, revision, name + ".glb")
 
 
 def import_glb(source, staging, skeleton):
@@ -1145,12 +1166,12 @@ def import_rig_mesh(asset_id, name, shared, first):
         for asset in imported:
             if isinstance(asset, unreal.AnimSequence) and clip_of(asset):
                 found.setdefault(clip_of(asset), []).append(asset)
-        if sorted(found) != sorted(CLIPS) or any(len(group) != 1 for group in found.values()):
+        if sorted(found) != sorted(FIRST_CLIPS) or any(len(group) != 1 for group in found.values()):
             raise RuntimeError("Expected exactly the nine clips {} from {}, got {}".format(
-                CLIPS, source, {clip: [a.get_name() for a in group] for clip, group in found.items()}))
+                FIRST_CLIPS, source, {clip: [a.get_name() for a in group] for clip, group in found.items()}))
         if not library.rename_asset(skeletons[0].get_path_name(), SKELETON):
             raise RuntimeError("Unable to move skeleton to " + SKELETON)
-        for clip in CLIPS:
+        for clip in FIRST_CLIPS:
             if not library.rename_asset(found[clip][0].get_path_name(), clip_path(clip)):
                 raise RuntimeError("Unable to move clip to " + clip_path(clip))
     skeleton = unreal.load_asset(SKELETON)
@@ -1203,16 +1224,19 @@ def rig_target(key):
     return (CLASS_RIGS if kind == "class" else FOE_RIGS), entry
 
 
-def rig_matches(definition, mesh, clips):
+def rig_matches(definition, mesh, clips, overrides=None):
     animations = definition.get_editor_property("animations")
-    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and all(
+    held = {str(k): path_of(v) for k, v in definition.get_editor_property("overrides").items()}
+    wanted = {clip: path_of(asset) for clip, asset in (overrides or {}).items()}
+    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and held == wanted and all(
         path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items())
 
 
-def new_rig_definition(mesh, clips, yaw):
+def new_rig_definition(mesh, clips, yaw, overrides=None):
     definition = unreal.DiceRollCharacter()
     definition.set_editor_property("mesh", mesh)
     definition.set_editor_property("yaw_offset", yaw)
+    definition.set_editor_property("overrides", {unreal.Name(clip): asset for clip, asset in (overrides or {}).items()})
     animation_set = unreal.DiceRollAnimSet()
     for clip, asset in clips.items():
         animation_set.set_editor_property(clip.lower(), asset)
@@ -1227,16 +1251,17 @@ def assign_rig(theme, key, name):
     prop, entry = rig_target(key)
     mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
     clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
+    overrides = {shared: unreal.load_asset(override_path(package_name)) for shared, (package_name, _) in CLIP_OVERRIDES.get(key, {}).items()}
     entries = {str(k): v for k, v in theme.get_editor_property(prop).items()}
     pilot_name = PILOT_FIELDS.get(key)
     pilot = theme.get_editor_property(pilot_name) if pilot_name else None
     pilot_set = pilot is not None and pilot.get_editor_property("mesh") is not None
     changed = []
     current = entries.get(entry)
-    if current is None or not rig_matches(current, mesh, clips):
+    if current is None or not rig_matches(current, mesh, clips, overrides):
         source = current if current is not None else pilot
         yaw = source.get_editor_property("yaw_offset") if source is not None else 0.0
-        entries[entry] = new_rig_definition(mesh, clips, yaw)
+        entries[entry] = new_rig_definition(mesh, clips, yaw, overrides)
         theme.set_editor_property(prop, {unreal.Name(k): v for k, v in entries.items()})
         changed.append("assigned")
     if pilot_set:
@@ -1245,14 +1270,73 @@ def assign_rig(theme, key, name):
     return changed
 
 
+def override_path(package_name):
+    return RIG_FOLDER + "/Animations/" + package_name
+
+
+def import_override_clips(asset_id, name, key):
+    """Imports a class's override clips (CLIP_OVERRIDES) when absent and never touches an existing one: the class's own r001 glb on the shared
+    skeleton into staging, the action's sequence moved to its package, the rest of staging deleted. Returns {shared clip: log word}."""
+    words = {}
+    for shared, (package_name, action) in CLIP_OVERRIDES.get(key, {}).items():
+        package = override_path(package_name)
+        if library.does_asset_exist(package):
+            words[shared] = "kept"
+            continue
+        source = source_glb(asset_id, name)
+        skeleton = unreal.load_asset(SKELETON)
+        if not os.path.isfile(source) or skeleton is None:
+            raise RuntimeError("Cannot import " + package + ": missing " + (source if not os.path.isfile(source) else SKELETON))
+        staging = THEME + "/_Import/" + package_name
+        imported = import_glb(source, staging, skeleton)
+        wanted = action.lower()
+        found = [a for a in imported if isinstance(a, unreal.AnimSequence) and a.get_name().lower().replace("|", "_").endswith(wanted)]
+        if len(found) != 1:
+            raise RuntimeError("Expected exactly one {} clip from {}, got {}".format(action, source, [a.get_name() for a in found]))
+        if found[0].get_editor_property("skeleton") != skeleton:
+            raise RuntimeError("The imported clip " + action + " is not on " + SKELETON)
+        if not library.rename_asset(found[0].get_path_name(), package):
+            raise RuntimeError("Unable to move clip to " + package)
+        remove_staging(staging)
+        words[shared] = "imported"
+    return words
+
+
+def import_brace_clip():
+    """Imports the tenth clip, Brace, into its package when it is absent, and never touches an existing one. The source is the fighter's r002
+    glb (the r001 meshes and nine clips plus Brace); it is imported on the shared skeleton into staging, the Brace sequence is moved to its
+    package, and everything else in staging (the mesh, texture and material the glb brings) is deleted again. Returns the log word."""
+    package = clip_path(BRACE_CLIP)
+    if library.does_asset_exist(package):
+        return "kept"
+    asset_id, name, revision = BRACE_SOURCE
+    source = source_glb(asset_id, name, revision)
+    if not os.path.isfile(source):
+        raise RuntimeError("Missing Brace source " + source)
+    shared = unreal.load_asset(SKELETON)
+    if shared is None:
+        raise RuntimeError("Cannot import Brace: " + SKELETON + " does not exist")
+    staging = THEME + "/_Import/Brace"
+    imported = import_glb(source, staging, shared)
+    found = [asset for asset in imported if isinstance(asset, unreal.AnimSequence) and clip_of(asset) == BRACE_CLIP]
+    if len(found) != 1:
+        raise RuntimeError("Expected exactly one Brace clip from {}, got {}".format(source, [a.get_name() for a in found]))
+    if found[0].get_editor_property("skeleton") != shared:
+        raise RuntimeError("The imported Brace clip is not on " + SKELETON)
+    if not library.rename_asset(found[0].get_path_name(), package):
+        raise RuntimeError("Unable to move clip to " + package)
+    remove_staging(staging)
+    return "imported"
+
+
 def import_rig(master, theme):
     if not os.path.isdir(os.path.join(ROOT, "Art", "rig-pilot")):
         unreal.log_warning("THEME_RIG_SKIPPED Art/rig-pilot is not in this checkout")
         return 0
     check_allow_list()
     names = [name for _, name, _, _ in RIG]
-    # The skeleton, the clips and the fighter come from one import, so they exist together or not at all.
-    bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in CLIPS]
+    # The skeleton, the nine clips and the fighter come from one import, so they exist together or not at all.
+    bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in FIRST_CLIPS]
     present = [library.does_asset_exist(path) for path in bundle]
     if any(present) and not all(present):
         raise RuntimeError("Incomplete rig bundle, missing: {}. Delete the survivors deliberately in the editor and rerun.".format(
@@ -1274,15 +1358,19 @@ def import_rig(master, theme):
             rig_log("mesh", package, "imported", lods)
             if name == names[0]:
                 rig_log("skeleton", SKELETON, "imported")
-                for clip in CLIPS:
+                for clip in FIRST_CLIPS:
                     rig_log("clip", clip_path(clip), "imported")
+        if name == names[0]:
+            rig_log("clip", clip_path(BRACE_CLIP), import_brace_clip())     # before any rig is assigned: every definition holds all ten
         apply_rig_material(mesh, texture, asset_id, name, look, master)
         if staging:
             remove_staging(staging)
+        for shared, word in import_override_clips(asset_id, name, key).items():          # before the rig is assigned: its definition names them
+            rig_log("override", override_path(CLIP_OVERRIDES[key][shared][0]), word)
         for status in assign_rig(theme, key, name):
             rig_log("theme", key, status)
         found += 1
-    for clip in CLIPS:
+    for clip in FIRST_CLIPS:
         if all(present):
             rig_log("clip", clip_path(clip), "kept")
     if all(present):

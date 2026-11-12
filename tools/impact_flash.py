@@ -146,7 +146,9 @@ def measure_shot(directory, resolution, shot, limits=None):
     if shot.get("mode") != "impact" or shot.get("status") != "captured":
         return []
     target = shot.get("target", {})
-    boxes = [(shot["name"], target.get("footprint")), (shot["name"] + ":bolt", target.get("bolt"))]
+    # The struck unit, an in-flight shot's bolt, and (an arrow or bolt shot naming a shooter, #198) the shooter, which is what a release blowout whitens.
+    shooter = shot.get("shooter", {})
+    boxes = [(shot["name"], target.get("footprint")), (shot["name"] + ":bolt", target.get("bolt")), (shot["name"] + ":shooter", shooter.get("footprint"))]
     results = []
     for name, box in boxes:
         if not box:
@@ -156,7 +158,7 @@ def measure_shot(directory, resolution, shot, limits=None):
         if resolution and (width, height) != tuple(resolution):
             raise ValueError(f"{shot['file']} is {width}x{height}, the manifest says {resolution[0]}x{resolution[1]}")
         stats = measure_box(image, channels, rect)
-        stats.update({"shot": name, "target": target.get("name"), "cell": [target.get("cellX"), target.get("cellY")],
+        stats.update({"shot": name, "target": shooter.get("name") if name.endswith(":shooter") else target.get("name"), "cell": [target.get("cellX"), target.get("cellY")],
                       "box": list(rect), "size": [width, height], "pass": verdict(stats, **(limits or {}))})
         results.append(stats)
     return results
@@ -179,11 +181,12 @@ def measure_manifest(manifest_path, names=None, limits=None):
 
 
 def unmeasured_shots(manifest_path, names=None):
-    """Captured impact shots with no footprint box (the struck unit was off screen), as 'fixture WxH shot' labels."""
+    """Captured impact shots with no footprint box (the struck unit, or the named shooter, was off screen), as 'fixture WxH shot' labels."""
     manifest = json.loads(Path(manifest_path).read_text())
     size = manifest.get("resolution") or {}
     return [f"{manifest.get('fixture', '-')} {size.get('width', '?')}x{size.get('height', '?')} {shot['name']}" for shot in manifest.get("shots", [])
-            if shot.get("mode") == "impact" and shot.get("status") == "captured" and not shot.get("target", {}).get("footprint")
+            if shot.get("mode") == "impact" and shot.get("status") == "captured"
+            and (not shot.get("target", {}).get("footprint") or ("shooter" in shot and not shot["shooter"].get("footprint")))
             and (not names or shot["name"] in names)]
 
 

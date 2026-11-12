@@ -83,6 +83,19 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
             TestEqual(TEXT("Mode name"), FString(ExpeditionCapture::ModeName(ECaptureMode::Impact)), FString(TEXT("impact")));
         }
     }
+    // An arrow shot (#198) may name its shooter and show the release.
+    {
+        FCapturePoses Arrows;
+        TestTrue(TEXT("Arrow shots parse"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"a\",\"mode\":\"impact\",\"effect\":\"arrow\",\"phase\":\"release\",\"role\":\"Ranger\",\"yaw\":0,\"distance\":\"default\"},"
+            "{\"name\":\"b\",\"mode\":\"impact\",\"effect\":\"bolt\",\"phase\":\"flight\",\"yaw\":90,\"distance\":1300}]}"), Arrows, Error));
+        if (Arrows.Shots.Num() == 2)
+        {
+            TestTrue(TEXT("The arrow, its release and its shooter are read"), Arrows.Shots[0].Effect == EImpactPreview::Arrow && Arrows.Shots[0].Moment == EImpactMoment::Release && Arrows.Shots[0].Role == TEXT("Ranger"));
+            TestTrue(TEXT("The pre-fix bolt is read, with no shooter by default"), Arrows.Shots[1].Effect == EImpactPreview::Bolt && Arrows.Shots[1].Moment == EImpactMoment::Flight && Arrows.Shots[1].Role.IsEmpty());
+            TestEqual(TEXT("Effect name"), FString(ExpeditionCapture::EffectName(EImpactPreview::Arrow)), FString(TEXT("arrow")));
+            TestEqual(TEXT("Phase name"), FString(ExpeditionCapture::PhaseName(EImpactMoment::Release)), FString(TEXT("release")));
+        }
+    }
     // A pose shot (#150) holds a hero of a class in a clip at a time, and carries a camera.
     {
         FCapturePoses Held;
@@ -144,6 +157,8 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-first\",\"effect\":\"spell\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"phase\":\"landing-second\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"settleFrames\":3,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"frames\":4,\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"effect\":\"spell\",\"phase\":\"release\",\"yaw\":0,\"distance\":1300}]}"),
+        TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"impact\",\"effect\":\"fire\",\"role\":\"Wizard\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"pose\":\"melee\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"yaw\":0,\"distance\":1300}]}"),
         TEXT("{\"version\":1,\"shots\":[{\"name\":\"m\",\"mode\":\"pose\",\"role\":\"Rogue\",\"pose\":\"dance\",\"yaw\":0,\"distance\":1300}]}"),

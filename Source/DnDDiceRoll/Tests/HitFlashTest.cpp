@@ -220,4 +220,76 @@ bool FHitFlashVolleyTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("A rogue's arrow is an arrow"), FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).bArrow);
     return !HasAnyErrors();
 }
+
+// The arrow's lights around a ranged release (#198): an arrow carries no point light at any moment (release, flight, landing), the shooter's figure is
+// not tinted by it, and the spell bolt a Ranger used to throw (the same construction in the arrow's colour) does carry its 50 cd light at the shooter at release,
+// which is what blew the ranger and the floor out. The real point lights are read from the view, so a light put back on an arrow in UpdateEffects fails here.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHitFlashArrowLightTest, "Project.Expedition.Presentation.HitFlashArrowLights",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHitFlashArrowLightTest::RunTest(const FString& Parameters)
+{
+    const UWorld::InitializationValues Values = UWorld::InitializationValues()
+        .AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/HitFlashArrowLights"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = World->SpawnActor<AExpeditionBattleView>();
+    if (TestNotNull(TEXT("Battle view"), View))
+    {
+        View->ConfigureStorage(FPaths::Combine(Directory, TEXT("current.json")));
+        View->DispatchBeginPlay();
+        View->NewRun();
+        View->ChooseRoute(0);
+        View->HoldEnemyTurns(true);
+        View->Tick(0.016f);
+        View->Tick(0.016f);
+        int32 TargetId = INDEX_NONE, ShooterId = INDEX_NONE;
+        FVector2D From = FVector2D::ZeroVector;
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious && TargetId == INDEX_NONE) { TargetId = Unit.Id; }
+            if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious && ShooterId == INDEX_NONE) { ShooterId = Unit.Id; From = FVector2D(Unit.Cell.X, Unit.Cell.Y); }
+        }
+        if (TestTrue(TEXT("A shooter and a foe"), TargetId != INDEX_NONE && ShooterId != INDEX_NONE))
+        {
+            TArray<FLinearColor> Idle;
+            FLinearColor IdleRing;
+            TestTrue(TEXT("The shooter's figure can be read"), View->UnitShownColors(ShooterId, Idle, IdleRing));
+            struct FMoment { const TCHAR* Name; EImpactMoment Moment; };
+            const FMoment Moments[] = {{TEXT("release"), EImpactMoment::Release}, {TEXT("flight"), EImpactMoment::Flight}, {TEXT("landing"), EImpactMoment::Landing}};
+            for (const FMoment& Moment : Moments)
+            {
+                View->ClearImpactPreview();
+                View->PreviewImpact(TargetId, EImpactPreview::Arrow, From, Moment.Moment);
+                View->Tick(0.016f);
+                const TArray<FPlaybackProjectile>& Shots = View->Playback().Projectiles();
+                const TArray<float> Lights = View->BoltLightIntensities();
+                TestTrue(FString::Printf(TEXT("arrow %s: one arrow in the air"), Moment.Name), Shots.Num() == 1 && Shots[0].bArrow);
+                float Total = 0.0f;
+                for (const float Light : Lights) { Total += Light; }
+                TestTrue(FString::Printf(TEXT("arrow %s: %.2f cd in all, none (an arrow carries no light)"), Moment.Name, Total), Total == 0.0f);
+                TArray<FLinearColor> Shown;
+                FLinearColor Ring;
+                if (View->UnitShownColors(ShooterId, Shown, Ring) && TestEqual(*FString::Printf(TEXT("arrow %s: the shooter has the same parts"), Moment.Name), Shown.Num(), Idle.Num()))
+                {
+                    for (int32 Part = 0; Part < Shown.Num(); ++Part)
+                    { TestTrue(*FString::Printf(TEXT("arrow %s: the shooter's part %d is not flashed"), Moment.Name, Part), Shown[Part].Equals(Idle[Part], 0.01f)); }
+                    TestTrue(*FString::Printf(TEXT("arrow %s: nor is its ring"), Moment.Name), Ring.Equals(IdleRing, 0.01f));
+                }
+            }
+            // What the Ranger threw before: a spell bolt in the arrow's colour, with its light on the shooter's cell at release.
+            View->ClearImpactPreview();
+            View->PreviewImpact(TargetId, EImpactPreview::Bolt, From, EImpactMoment::Release);
+            View->Tick(0.016f);
+            const TArray<float> Old = View->BoltLightIntensities();
+            TestTrue(TEXT("The old Ranger bolt at release carries about its 50 cd flight light"), Old.Num() > 0 && Old[0] > 0.9f * ExpeditionFlash::BoltLightCandelas);
+            View->ClearImpactPreview();
+        }
+    }
+    World->DestroyWorld(false);
+    FlushRenderingCommands();
+    CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
 #endif

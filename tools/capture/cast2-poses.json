@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-barbarian-melee-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-ranged-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-cast-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-brace-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-hit-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-downed-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-death-default",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-melee-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-ranged-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-cast-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-brace-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-hit-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-downed-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-monk-death-default",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-melee-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-ranged-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-cast-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-brace-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-hit-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-downed-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-paladin-death-default",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-melee-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-ranged-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-cast-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-brace-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-hit-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-downed-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-ranger-death-default",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-barbarian-melee-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-barbarian-ranged-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-barbarian-brace-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-barbarian-downed-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-barbarian-death-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-monk-melee-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-monk-ranged-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-monk-brace-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-monk-downed-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-monk-death-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-paladin-melee-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-paladin-ranged-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-paladin-brace-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-paladin-downed-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-paladin-death-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-ranger-melee-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-ranger-ranged-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-ranger-ranged-held-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-held-yaw-20",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": -20,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-held-yaw135",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": 135,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-draw-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.4,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-start-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.1,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-return-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 1.18,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-brace-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-ranger-downed-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-ranger-death-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yawm90-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw180-default",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "build-barbarian-berserker",
+      "mode": "start",
+      "build": "barbarian.berserker"
+    },
+    {
+      "name": "build-monk-open-hand",
+      "mode": "start",
+      "build": "monk.open-hand"
+    },
+    {
+      "name": "build-paladin-devotion",
+      "mode": "start",
+      "build": "paladin.devotion"
+    },
+    {
+      "name": "build-ranger-hunter",
+      "mode": "start",
+      "build": "ranger.hunter"
+    }
+  ]
+}
