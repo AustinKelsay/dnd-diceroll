@@ -124,7 +124,7 @@ class ImpactFlashTest(unittest.TestCase):
     def impact(self, name, file, box, status="captured", bolt=None, shooter=None):
         shot = {"name": name, "mode": "impact", "status": status, "file": file, "target": {"id": 3, "name": "Raider", "cellX": 4, "cellY": 5}}
         if shooter:
-            shot["shooter"] = {"id": 1, "name": "Ranger", "role": "Ranger", "footprint": dict(zip(("x0", "y0", "x1", "y1"), shooter))}
+            shot["shooter"] = {"id": 1, "name": "Ranger", "role": "Ranger", "cellX": 1, "cellY": 2, "footprint": dict(zip(("x0", "y0", "x1", "y1"), shooter))}
         if box:
             shot["target"]["footprint"] = dict(zip(("x0", "y0", "x1", "y1"), box))
         if bolt:
@@ -170,6 +170,9 @@ class ImpactFlashTest(unittest.TestCase):
         self.assertTrue(results[0]["pass"])
         self.assertFalse(results[1]["pass"])
         self.assertEqual(results[1]["target"], "Ranger")
+        # The shooter result carries the shooter's cell (1, 2), the target result the struck unit's (4, 5): the shooter row used to repeat the target's.
+        self.assertEqual(results[0]["cell"], [4, 5])
+        self.assertEqual(results[1]["cell"], [1, 2])
 
     def test_a_shooter_off_screen_is_unmeasured(self):
         shot = self.impact("arrow-release", "calm.png", (0, 0, 5, 5))

@@ -158,7 +158,9 @@ def measure_shot(directory, resolution, shot, limits=None):
         if resolution and (width, height) != tuple(resolution):
             raise ValueError(f"{shot['file']} is {width}x{height}, the manifest says {resolution[0]}x{resolution[1]}")
         stats = measure_box(image, channels, rect)
-        stats.update({"shot": name, "target": shooter.get("name") if name.endswith(":shooter") else target.get("name"), "cell": [target.get("cellX"), target.get("cellY")],
+        # A shooter result reports the shooter's own cell (the manifest records it as shooter.cellX/cellY), not the struck unit's.
+        owner = shooter if name.endswith(":shooter") else target
+        stats.update({"shot": name, "target": owner.get("name"), "cell": [owner.get("cellX"), owner.get("cellY")],
                       "box": list(rect), "size": [width, height], "pass": verdict(stats, **(limits or {}))})
         results.append(stats)
     return results

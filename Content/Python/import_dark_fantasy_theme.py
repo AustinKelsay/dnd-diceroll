@@ -39,7 +39,7 @@ Nothing else changes: a run on a current theme only sets the missing flags.
 
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
 skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). The full rigged cast (#150) appends
-its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger) and the tenth shared clip, Brace, is
+its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger; batch 3: sorcerer, warlock, druid) and the tenth shared clip, Brace, is
 imported once, non-destructively, from the fighter's r002 glb (an existing A_Humanoid_Brace is kept). Existing rig assets are
 never overwritten and this script never deletes them (a force delete nulls references other assets hold). A
 THEME_RIG_REIMPORT request is validated and then refused: delete the rig assets deliberately in the editor, rerun.
@@ -1027,6 +1027,9 @@ RIG = [
     ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-sorcerer", "SK_Hero_Sorcerer", "class:Sorcerer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-warlock", "SK_Hero_Warlock", "class:Warlock", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-druid", "SK_Hero_Druid", "class:Druid", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
 CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
 # The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.

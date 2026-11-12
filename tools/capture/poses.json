@@ -278,6 +278,21 @@
       "name": "build-ranger-hunter",
       "mode": "start",
       "build": "ranger.hunter"
+    },
+    {
+      "name": "build-sorcerer-draconic-bloodline",
+      "mode": "start",
+      "build": "sorcerer.draconic-bloodline"
+    },
+    {
+      "name": "build-warlock-fiend",
+      "mode": "start",
+      "build": "warlock.fiend"
+    },
+    {
+      "name": "build-druid-land",
+      "mode": "start",
+      "build": "druid.land"
     }
   ]
 }
