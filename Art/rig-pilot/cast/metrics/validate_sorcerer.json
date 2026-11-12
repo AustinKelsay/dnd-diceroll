@@ -1,0 +1,211 @@
+{
+ "character": "sorcerer",
+ "file": "SK_Hero_Sorcerer.glb",
+ "bones": 25,
+ "bones_match_contract": true,
+ "bone_order_equal": false,
+ "clips": {
+  "Brace": [
+   0.0,
+   24.0
+  ],
+  "Cast": [
+   0.0,
+   42.0
+  ],
+  "Death": [
+   0.0,
+   78.0
+  ],
+  "Downed": [
+   0.0,
+   72.0
+  ],
+  "Hit": [
+   0.0,
+   15.0
+  ],
+  "Idle": [
+   0.0,
+   60.0
+  ],
+  "Melee": [
+   0.0,
+   30.0
+  ],
+  "Ranged": [
+   0.0,
+   36.0
+  ],
+  "Recover": [
+   0.0,
+   66.0
+  ],
+  "Walk": [
+   0.0,
+   30.0
+  ]
+ },
+ "clips_match": {
+  "Idle": true,
+  "Walk": true,
+  "Melee": true,
+  "Ranged": true,
+  "Cast": true,
+  "Hit": true,
+  "Downed": true,
+  "Death": true,
+  "Recover": true,
+  "Brace": true
+ },
+ "tris_lod0": 3730,
+ "materials": [
+  "M_Hero_Sorcerer"
+ ],
+ "atlas_px": [
+  [
+   1024,
+   1024
+  ]
+ ],
+ "color_attributes": [
+  [
+   "Color",
+   "BYTE_COLOR",
+   "CORNER"
+  ]
+ ],
+ "glow_alpha": {
+  "verts_alpha_gt_0": 1092,
+  "verts": 11190,
+  "alpha_min": 0.0,
+  "alpha_max": 1.0,
+  "rgb_min": 0.799
+ },
+ "body_height_m_excluding_held_items": 1.794,
+ "max_influences": 3,
+ "deformation_vs_bind": {
+  "Idle@30": {
+   "max_cm": 42.3,
+   "mean_cm": 5.8,
+   "moving_verts": 6792
+  },
+  "Walk@8": {
+   "max_cm": 48.3,
+   "mean_cm": 16.5,
+   "moving_verts": 8481
+  },
+  "Walk@23": {
+   "max_cm": 46.9,
+   "mean_cm": 14.4,
+   "moving_verts": 8481
+  },
+  "Melee@11": {
+   "max_cm": 110.2,
+   "mean_cm": 41.5,
+   "moving_verts": 8481
+  },
+  "Ranged@22": {
+   "max_cm": 150.6,
+   "mean_cm": 28.4,
+   "moving_verts": 8474
+  },
+  "Cast@22": {
+   "max_cm": 95.7,
+   "mean_cm": 30.9,
+   "moving_verts": 8475
+  },
+  "Hit@3": {
+   "max_cm": 57.8,
+   "mean_cm": 20.6,
+   "moving_verts": 8481
+  },
+  "Downed@60": {
+   "max_cm": 148.7,
+   "mean_cm": 72.0,
+   "moving_verts": 8481
+  },
+  "Death@66": {
+   "max_cm": 181.3,
+   "mean_cm": 99.4,
+   "moving_verts": 8481
+  },
+  "Recover@30": {
+   "max_cm": 118.5,
+   "mean_cm": 56.8,
+   "moving_verts": 8481
+  }
+ },
+ "seam_mm_first_vs_last_max_vertex": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 1603.649,
+  "Death": 1819.277,
+  "Recover": 1603.649,
+  "Brace": 0.0
+ },
+ "root_drift_mm": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 0.0,
+  "Death": 0.0,
+  "Recover": 0.0,
+  "Brace": 0.0
+ },
+ "seconds": {
+  "Idle": 2.0,
+  "Walk": 1.0,
+  "Melee": 1.0,
+  "Ranged": 1.2,
+  "Cast": 1.4,
+  "Hit": 0.5,
+  "Downed": 2.4,
+  "Death": 2.6,
+  "Recover": 2.2,
+  "Brace": 0.8
+ },
+ "lods": {
+  "LOD1": {
+   "tris": 1794,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD2": {
+   "tris": 1130,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD0": {
+   "tris": 3730
+  }
+ },
+ "lod_ratio": {
+  "LOD1": 0.481,
+  "LOD2": 0.303,
+  "LOD0": 1.0
+ },
+ "checks": {
+  "bones_25_match_contract": true,
+  "ten_clips_with_expected_ranges": true,
+  "one_material_one_1024_atlas": true,
+  "glow_alpha_present": true,
+  "at_most_4_influences": true,
+  "height_175_to_185_cm": true,
+  "tris_lod0_3k_to_6k": true,
+  "lod1_about_half": true,
+  "lod2_about_quarter": true,
+  "lod_bones_25_same_names": true,
+  "idle_walk_loop_seams_0mm": true,
+  "action_clips_end_on_idle_0mm": true,
+  "root_drift_0mm_every_clip": true
+ },
+ "pass": true
+}
