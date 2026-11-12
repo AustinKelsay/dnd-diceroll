@@ -275,10 +275,11 @@ P2 is inconclusive when it would be met if every small or tied class it needs we
 Rules:
 - The slice 3/4 holds in P4 each use a statistic suited to their kind:
   - **win-rate holds** (rotation 55–90%, every representative party at least 35%): the point estimate with its Wilson interval, as in contracts 09 and 11;
-  - **Dangerous at least 1.5x Guarded HP**: the metric inherited unchanged from contract 09 T4 and report 12. For **each fight 1–5**, take the mean **net** HP lost per fight on Dangerous routes divided by the same mean on Guarded routes (report 12: 1.6x at fight 5 to 3.3x at fight 4). Each fight's ratio gets a seed-cluster bootstrap interval, using the same fixed resample seed and resampling whole seeds. The hold is **met only when every fight's lower bound is at least 1.5**. A pooled total never stands in for it, because a strong fight can hide a failing one. Undefined denominators are bounded:
-    - a resample whose Guarded mean is 0 while its Dangerous mean is positive counts as above the threshold;
-    - a resample where both means are 0 counts as below it (conservative);
-    - the number of such resamples per fight is reported.
+  - **Dangerous at least 1.5x Guarded HP**: the metric inherited unchanged from contract 09 T4 and report 12. For **each fight 1–5**, take the mean **net** HP lost per fight on Dangerous routes divided by the same mean on Guarded routes (report 12: 1.6x at fight 5 to 3.3x at fight 4). Each fight's ratio gets a seed-cluster bootstrap interval, using the same fixed resample seed and resampling whole seeds. The hold is **met only when every fight's lower bound is at least 1.5**. A pooled total never stands in for it, because a strong fight can hide a failing one. Net HP lost is signed (healing can exceed damage), so the ratio is defined only for a positive Guarded mean. One sign-safe rule, `D` and `G` being the Dangerous and Guarded means, decides both the full sample and every resample:
+    - **above the threshold** only when `D > 0` and either `G <= 0`, or `G > 0` and `D / G >= 1.5`;
+    - **below it** in every other case. Any `D <= 0` is below, including both means negative, where a ratio such as −20% / −10% = 2.0 must not pass.
+    - The interval is taken over the per-resample ratio when `G > 0`. The report also counts, per fight, the resamples decided by the sign rule instead of the ratio, and the lower bound is the 2.5th percentile of the resample outcomes with sign-decided ones placed at +inf (above) or −inf (below).
+    - The helper tests add fixtures for `G = 0, D > 0`; `G = 0, D = 0`; `G < 0, D < 0`; `G > 0, D < 0`; and `G < 0, D > 0`.
     A fight with no Guarded or no Dangerous encounters in the full sample is reported as **not evaluable (not met)**.
   - **finale has the highest defeat share**: for each other stage, the bootstrap interval of (finale share − that stage's share), with shares pooled over routes and a seed-cluster bootstrap. The hold is met when every difference is above 0.
   A hold whose interval straddles its threshold is marked **borderline**.
