@@ -421,6 +421,21 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
                     const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
                     if (!Active || Active->Side != ECombatSide::Party) { continue; }
                 }
+                if (Board == 2)
+                {
+                    // The scripted player reaches the finale with heroes Downed, lying under their neighbours; a look at a build wants every hero standing, so the
+                    // Downed are stood up at full health (the same kind of edit as downed-ally-battle, validated by the restore). A seed that reaches the finale with a hero Dead is skipped (a permanent loss cannot be undone).
+                    FExpeditionSnapshot Snapshot = Run.Snapshot();
+                    if (Snapshot.Battle.Encounter.Combatants.ContainsByPredicate([](const FCombatantState& Unit) { return Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Dead; })) { continue; }
+                    for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+                    {
+                        if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Downed)
+                        { Unit.Life = ECombatLife::Conscious; Unit.HP = Unit.MaxHP; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
+                    }
+                    FExpeditionRun Healed;
+                    if (!Healed.Restore(Snapshot, Error)) { continue; }
+                    Run = MoveTemp(Healed);
+                }
                 Write(*Name, Run);
                 Describe(*Name, Run, Seed, Board == 0 ? 1 : 0);
                 return;

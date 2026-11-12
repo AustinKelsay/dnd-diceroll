@@ -72,7 +72,7 @@ class PaletteTableTests(unittest.TestCase):
             self.assertRegex(accent["hex"], r"^#[0-9a-f]{6}$")
         self.assertEqual(len(self.src["accent"]["hues"]), 4)
 
-    def test_the_fighter_default_is_the_corrected_steel(self):
+    def test_the_fighter_and_artificer_defaults_are_corrected(self):
         default = self.res["classes"]["fighter"]["default"]["slots"]
         self.assertEqual(list(default), ["A"])
         champion = self.res["builds"]["fighter.champion"]["slots"]
@@ -80,7 +80,7 @@ class PaletteTableTests(unittest.TestCase):
         # The warm silver is lighter than the old blue steel (#6890ad-ish blue at luma 0.47).
         self.assertGreater(default["A"]["spec"][2], 1.05)
         for key, cls in self.res["classes"].items():
-            if key != "fighter":
+            if key not in ("fighter", "artificer"):   # the two whose class colours merged with the Vault stone take a corrected default
                 self.assertEqual(cls["default"]["slots"], {}, key + " default is the class's own look")
 
     def test_tile_order_matches_the_atlas_and_the_material(self):
