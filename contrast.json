@@ -6,19 +6,19 @@
    "summary": {
     "cast2-board-root-r002": {
      "shots": 5,
-     "contrastRatioMean": 2.074,
+     "contrastRatioMean": 2.075,
      "contrastRatioMin": 1.535,
-     "mergeFractionMean": 0.0784,
-     "figureLumaMean": 145.52,
-     "groundLumaMean": 76.28
+     "mergeFractionMean": 0.0783,
+     "figureLumaMean": 145.53,
+     "groundLumaMean": 76.27
     },
     "cast2-board-vault": {
      "shots": 5,
-     "contrastRatioMean": 2.801,
+     "contrastRatioMean": 2.802,
      "contrastRatioMin": 2.238,
      "mergeFractionMean": 0.054,
-     "figureLumaMean": 157.41,
-     "groundLumaMean": 61.67
+     "figureLumaMean": 157.4,
+     "groundLumaMean": 61.66
     },
     "cast2-board-vigil-pillars": {
      "shots": 5,
@@ -34,15 +34,15 @@
      "contrastRatioMin": 1.535,
      "mergeFractionMean": 0.0705,
      "figureLumaMean": 153.33,
-     "groundLumaMean": 68.02
+     "groundLumaMean": 68.01
     }
    },
    "shots": [
     {
-     "contrastRatio": 2.399,
-     "mergeFraction": 0.0679,
-     "figureLuma": 138.56,
-     "groundLuma": 64.71,
+     "contrastRatio": 2.403,
+     "mergeFraction": 0.0675,
+     "figureLuma": 138.59,
+     "groundLuma": 64.66,
      "figurePixels": 2460,
      "groundPixels": 10004,
      "fixture": "cast2-board-root-r002",
@@ -154,10 +154,10 @@
      ]
     },
     {
-     "contrastRatio": 3.405,
+     "contrastRatio": 3.409,
      "mergeFraction": 0.0284,
-     "figureLuma": 157.05,
-     "groundLuma": 50.75,
+     "figureLuma": 157.01,
+     "groundLuma": 50.7,
      "figurePixels": 2430,
      "groundPixels": 9882,
      "fixture": "cast2-board-vault",
@@ -271,8 +271,8 @@
     {
      "contrastRatio": 4.051,
      "mergeFraction": 0.1251,
-     "figureLuma": 159.23,
-     "groundLuma": 48.8,
+     "figureLuma": 159.25,
+     "groundLuma": 48.81,
      "figurePixels": 2542,
      "groundPixels": 10168,
      "fixture": "cast2-board-vigil-pillars",
@@ -780,23 +780,23 @@
      "shots": 5,
      "contrastRatioMean": 2.352,
      "contrastRatioMin": 1.437,
-     "mergeFractionMean": 0.0681,
+     "mergeFractionMean": 0.0683,
      "figureLumaMean": 160.9,
-     "groundLumaMean": 76.56
+     "groundLumaMean": 76.5
     },
     "cast2-board-vault": {
      "shots": 5,
-     "contrastRatioMean": 2.695,
+     "contrastRatioMean": 2.696,
      "contrastRatioMin": 2.008,
-     "mergeFractionMean": 0.0586,
-     "figureLumaMean": 160.23,
-     "groundLumaMean": 65.28
+     "mergeFractionMean": 0.0585,
+     "figureLumaMean": 160.24,
+     "groundLumaMean": 65.27
     },
     "cast2-board-vigil-pillars": {
      "shots": 5,
      "contrastRatioMean": 2.479,
      "contrastRatioMin": 1.668,
-     "mergeFractionMean": 0.1987,
+     "mergeFractionMean": 0.1989,
      "figureLumaMean": 148.44,
      "groundLumaMean": 67.47
     },
@@ -804,17 +804,17 @@
      "shots": 15,
      "contrastRatioMean": 2.509,
      "contrastRatioMin": 1.437,
-     "mergeFractionMean": 0.1085,
+     "mergeFractionMean": 0.1086,
      "figureLumaMean": 156.52,
-     "groundLumaMean": 69.77
+     "groundLumaMean": 69.75
     }
    },
    "shots": [
     {
-     "contrastRatio": 2.511,
-     "mergeFraction": 0.0996,
-     "figureLuma": 153.69,
-     "groundLuma": 67.54,
+     "contrastRatio": 2.512,
+     "mergeFraction": 0.0984,
+     "figureLuma": 153.67,
+     "groundLuma": 67.39,
      "figurePixels": 2430,
      "groundPixels": 9558,
      "fixture": "cast2-board-root-r002",
@@ -835,7 +835,7 @@
     },
     {
      "contrastRatio": 1.437,
-     "mergeFraction": 0.0912,
+     "mergeFraction": 0.0918,
      "figureLuma": 132.55,
      "groundLuma": 96.8,
      "figurePixels": 1896,
@@ -903,10 +903,10 @@
      ]
     },
     {
-     "contrastRatio": 2.587,
-     "mergeFraction": 0.0864,
+     "contrastRatio": 2.589,
+     "mergeFraction": 0.0877,
      "figureLuma": 154.84,
-     "groundLuma": 66.2,
+     "groundLuma": 66.06,
      "figurePixels": 2430,
      "groundPixels": 9558,
      "fixture": "cast2-board-root-r002",
@@ -926,10 +926,10 @@
      ]
     },
     {
-     "contrastRatio": 2.923,
-     "mergeFraction": 0.05,
-     "figureLuma": 159.95,
-     "groundLuma": 62.23,
+     "contrastRatio": 2.927,
+     "mergeFraction": 0.0496,
+     "figureLuma": 159.97,
+     "groundLuma": 62.19,
      "figurePixels": 2320,
      "groundPixels": 9280,
      "fixture": "cast2-board-vault",
@@ -973,7 +973,7 @@
     },
     {
      "contrastRatio": 2.787,
-     "mergeFraction": 0.0244,
+     "mergeFraction": 0.0238,
      "figureLuma": 171.21,
      "groundLuma": 68.14,
      "figurePixels": 1600,
@@ -1018,10 +1018,10 @@
      ]
     },
     {
-     "contrastRatio": 3.006,
-     "mergeFraction": 0.047,
+     "contrastRatio": 3.007,
+     "mergeFraction": 0.0474,
      "figureLuma": 159.9,
-     "groundLuma": 60.97,
+     "groundLuma": 60.96,
      "figurePixels": 2320,
      "groundPixels": 9280,
      "fixture": "cast2-board-vault",
@@ -1041,10 +1041,10 @@
      ]
     },
     {
-     "contrastRatio": 3.179,
-     "mergeFraction": 0.1148,
-     "figureLuma": 166.9,
-     "groundLuma": 60.93,
+     "contrastRatio": 3.178,
+     "mergeFraction": 0.1156,
+     "figureLuma": 166.89,
+     "groundLuma": 60.94,
      "figurePixels": 2430,
      "groundPixels": 9720,
      "fixture": "cast2-board-vigil-pillars",
@@ -1066,7 +1066,7 @@
     {
      "contrastRatio": 1.668,
      "mergeFraction": 0.1377,
-     "figureLuma": 143.16,
+     "figureLuma": 143.19,
      "groundLuma": 86.51,
      "figurePixels": 1896,
      "groundPixels": 7426,
@@ -1087,7 +1087,7 @@
      ]
     },
     {
-     "contrastRatio": 2.267,
+     "contrastRatio": 2.268,
      "mergeFraction": 0.0692,
      "figureLuma": 173.51,
      "groundLuma": 84.05,
@@ -1550,43 +1550,43 @@
    "summary": {
     "cast2-board-root-r002": {
      "shots": 5,
-     "contrastRatioMean": 3.034,
-     "contrastRatioMin": 1.705,
-     "mergeFractionMean": 0.0556,
-     "figureLumaMean": 174.33,
-     "groundLumaMean": 69.55
+     "contrastRatioMean": 3.037,
+     "contrastRatioMin": 1.71,
+     "mergeFractionMean": 0.0546,
+     "figureLumaMean": 174.6,
+     "groundLumaMean": 69.44
     },
     "cast2-board-vault": {
      "shots": 5,
-     "contrastRatioMean": 3.648,
+     "contrastRatioMean": 3.652,
      "contrastRatioMin": 2.347,
-     "mergeFractionMean": 0.0386,
-     "figureLumaMean": 184.46,
-     "groundLumaMean": 65.77
+     "mergeFractionMean": 0.0378,
+     "figureLumaMean": 184.91,
+     "groundLumaMean": 65.76
     },
     "cast2-board-vigil-pillars": {
      "shots": 5,
-     "contrastRatioMean": 3.031,
-     "contrastRatioMin": 2.089,
-     "mergeFractionMean": 0.0684,
-     "figureLumaMean": 180.62,
-     "groundLumaMean": 68.86
+     "contrastRatioMean": 3.034,
+     "contrastRatioMin": 2.094,
+     "mergeFractionMean": 0.0685,
+     "figureLumaMean": 180.92,
+     "groundLumaMean": 68.92
     },
     "all": {
      "shots": 15,
-     "contrastRatioMean": 3.238,
-     "contrastRatioMin": 1.705,
-     "mergeFractionMean": 0.0542,
-     "figureLumaMean": 179.8,
-     "groundLumaMean": 68.06
+     "contrastRatioMean": 3.241,
+     "contrastRatioMin": 1.71,
+     "mergeFractionMean": 0.0536,
+     "figureLumaMean": 180.14,
+     "groundLumaMean": 68.04
     }
    },
    "shots": [
     {
-     "contrastRatio": 3.501,
-     "mergeFraction": 0.0674,
-     "figureLuma": 166.16,
-     "groundLuma": 54.31,
+     "contrastRatio": 3.512,
+     "mergeFraction": 0.0656,
+     "figureLuma": 166.81,
+     "groundLuma": 54.19,
      "figurePixels": 2240,
      "groundPixels": 9120,
      "fixture": "cast2-board-root-r002",
@@ -1606,10 +1606,10 @@
      ]
     },
     {
-     "contrastRatio": 1.705,
-     "mergeFraction": 0.0627,
+     "contrastRatio": 1.71,
+     "mergeFraction": 0.0604,
      "figureLuma": 135.97,
-     "groundLuma": 88.65,
+     "groundLuma": 88.34,
      "figurePixels": 1738,
      "groundPixels": 6952,
      "fixture": "cast2-board-root-r002",
@@ -1629,10 +1629,10 @@
      ]
     },
     {
-     "contrastRatio": 2.477,
+     "contrastRatio": 2.471,
      "mergeFraction": 0.0194,
      "figureLuma": 193.84,
-     "groundLuma": 88.83,
+     "groundLuma": 88.98,
      "figurePixels": 1600,
      "groundPixels": 6400,
      "fixture": "cast2-board-root-r002",
@@ -1652,10 +1652,10 @@
      ]
     },
     {
-     "contrastRatio": 3.937,
+     "contrastRatio": 3.932,
      "mergeFraction": 0.073,
-     "figureLuma": 206.3,
-     "groundLuma": 61.21,
+     "figureLuma": 206.28,
+     "groundLuma": 61.04,
      "figurePixels": 1863,
      "groundPixels": 7452,
      "fixture": "cast2-board-root-r002",
@@ -1675,10 +1675,10 @@
      ]
     },
     {
-     "contrastRatio": 3.55,
-     "mergeFraction": 0.0554,
-     "figureLuma": 169.39,
-     "groundLuma": 54.76,
+     "contrastRatio": 3.561,
+     "mergeFraction": 0.0545,
+     "figureLuma": 170.08,
+     "groundLuma": 54.63,
      "figurePixels": 2240,
      "groundPixels": 9120,
      "fixture": "cast2-board-root-r002",
@@ -1698,10 +1698,10 @@
      ]
     },
     {
-     "contrastRatio": 4.697,
-     "mergeFraction": 0.0262,
-     "figureLuma": 177.67,
-     "groundLuma": 51.69,
+     "contrastRatio": 4.731,
+     "mergeFraction": 0.0231,
+     "figureLuma": 179.02,
+     "groundLuma": 51.58,
      "figurePixels": 2212,
      "groundPixels": 8848,
      "fixture": "cast2-board-vault",
@@ -1722,9 +1722,9 @@
     },
     {
      "contrastRatio": 2.347,
-     "mergeFraction": 0.0583,
-     "figureLuma": 172.98,
-     "groundLuma": 79.23,
+     "mergeFraction": 0.0596,
+     "figureLuma": 172.99,
+     "groundLuma": 79.22,
      "figurePixels": 1560,
      "groundPixels": 6396,
      "fixture": "cast2-board-vault",
@@ -1744,10 +1744,10 @@
      ]
     },
     {
-     "contrastRatio": 2.723,
+     "contrastRatio": 2.72,
      "mergeFraction": 0.0163,
      "figureLuma": 193.62,
-     "groundLuma": 80.02,
+     "groundLuma": 79.94,
      "figurePixels": 1600,
      "groundPixels": 6560,
      "fixture": "cast2-board-vault",
@@ -1767,10 +1767,10 @@
      ]
     },
     {
-     "contrastRatio": 3.729,
+     "contrastRatio": 3.705,
      "mergeFraction": 0.0682,
      "figureLuma": 196.29,
-     "groundLuma": 65.56,
+     "groundLuma": 65.77,
      "figurePixels": 1920,
      "groundPixels": 7520,
      "fixture": "cast2-board-vault",
@@ -1790,10 +1790,10 @@
      ]
     },
     {
-     "contrastRatio": 4.745,
-     "mergeFraction": 0.024,
-     "figureLuma": 181.72,
-     "groundLuma": 52.35,
+     "contrastRatio": 4.757,
+     "mergeFraction": 0.0217,
+     "figureLuma": 182.65,
+     "groundLuma": 52.3,
      "figurePixels": 2212,
      "groundPixels": 8848,
      "fixture": "cast2-board-vault",
@@ -1813,10 +1813,10 @@
      ]
     },
     {
-     "contrastRatio": 4.206,
-     "mergeFraction": 0.0422,
-     "figureLuma": 191.8,
-     "groundLuma": 49.43,
+     "contrastRatio": 4.216,
+     "mergeFraction": 0.0435,
+     "figureLuma": 192.5,
+     "groundLuma": 49.53,
      "figurePixels": 2320,
      "groundPixels": 9280,
      "fixture": "cast2-board-vigil-pillars",
@@ -1836,10 +1836,10 @@
      ]
     },
     {
-     "contrastRatio": 2.089,
-     "mergeFraction": 0.1318,
-     "figureLuma": 158.79,
-     "groundLuma": 82.78,
+     "contrastRatio": 2.094,
+     "mergeFraction": 0.1283,
+     "figureLuma": 158.82,
+     "groundLuma": 82.51,
      "figurePixels": 1738,
      "groundPixels": 6794,
      "fixture": "cast2-board-vigil-pillars",
@@ -1859,10 +1859,10 @@
      ]
     },
     {
-     "contrastRatio": 2.659,
+     "contrastRatio": 2.651,
      "mergeFraction": 0.0468,
-     "figureLuma": 189.04,
-     "groundLuma": 81.16,
+     "figureLuma": 189.07,
+     "groundLuma": 81.39,
      "figurePixels": 1580,
      "groundPixels": 6320,
      "fixture": "cast2-board-vigil-pillars",
@@ -1882,10 +1882,10 @@
      ]
     },
     {
-     "contrastRatio": 2.619,
+     "contrastRatio": 2.61,
      "mergeFraction": 0.0757,
      "figureLuma": 171.22,
-     "groundLuma": 73.39,
+     "groundLuma": 73.54,
      "figurePixels": 1863,
      "groundPixels": 7452,
      "fixture": "cast2-board-vigil-pillars",
@@ -1905,10 +1905,10 @@
      ]
     },
     {
-     "contrastRatio": 3.582,
-     "mergeFraction": 0.0453,
-     "figureLuma": 192.23,
-     "groundLuma": 57.56,
+     "contrastRatio": 3.597,
+     "mergeFraction": 0.0483,
+     "figureLuma": 192.98,
+     "groundLuma": 57.61,
      "figurePixels": 2320,
      "groundPixels": 9280,
      "fixture": "cast2-board-vigil-pillars",
@@ -2322,43 +2322,43 @@
    "summary": {
     "cast2-board-root-r002": {
      "shots": 5,
-     "contrastRatioMean": 2.309,
-     "contrastRatioMin": 1.738,
-     "mergeFractionMean": 0.1192,
-     "figureLumaMean": 141.75,
-     "groundLumaMean": 66.74
+     "contrastRatioMean": 2.293,
+     "contrastRatioMin": 1.756,
+     "mergeFractionMean": 0.1164,
+     "figureLumaMean": 141.3,
+     "groundLumaMean": 66.95
     },
     "cast2-board-vault": {
      "shots": 5,
-     "contrastRatioMean": 2.829,
-     "contrastRatioMin": 2.227,
-     "mergeFractionMean": 0.0991,
-     "figureLumaMean": 156.01,
-     "groundLumaMean": 60.68
+     "contrastRatioMean": 2.812,
+     "contrastRatioMin": 2.216,
+     "mergeFractionMean": 0.0975,
+     "figureLumaMean": 155.69,
+     "groundLumaMean": 60.91
     },
     "cast2-board-vigil-pillars": {
      "shots": 5,
-     "contrastRatioMean": 3.029,
-     "contrastRatioMin": 2.384,
-     "mergeFractionMean": 0.0578,
-     "figureLumaMean": 158.29,
-     "groundLumaMean": 55.63
+     "contrastRatioMean": 3.012,
+     "contrastRatioMin": 2.416,
+     "mergeFractionMean": 0.0587,
+     "figureLumaMean": 158.24,
+     "groundLumaMean": 55.9
     },
     "all": {
      "shots": 15,
-     "contrastRatioMean": 2.722,
-     "contrastRatioMin": 1.738,
-     "mergeFractionMean": 0.092,
-     "figureLumaMean": 152.01,
-     "groundLumaMean": 61.02
+     "contrastRatioMean": 2.706,
+     "contrastRatioMin": 1.756,
+     "mergeFractionMean": 0.0909,
+     "figureLumaMean": 151.75,
+     "groundLumaMean": 61.26
     }
    },
    "shots": [
     {
-     "contrastRatio": 2.31,
-     "mergeFraction": 0.1905,
-     "figureLuma": 134.83,
-     "groundLuma": 68.53,
+     "contrastRatio": 2.278,
+     "mergeFraction": 0.1832,
+     "figureLuma": 133.85,
+     "groundLuma": 69.0,
      "figurePixels": 2184,
      "groundPixels": 8580,
      "fixture": "cast2-board-root-r002",
@@ -2378,10 +2378,10 @@
      ]
     },
     {
-     "contrastRatio": 1.738,
-     "mergeFraction": 0.0785,
-     "figureLuma": 121.08,
-     "groundLuma": 70.38,
+     "contrastRatio": 1.756,
+     "mergeFraction": 0.0766,
+     "figureLuma": 121.32,
+     "groundLuma": 69.72,
      "figurePixels": 1580,
      "groundPixels": 6478,
      "fixture": "cast2-board-root-r002",
@@ -2401,10 +2401,10 @@
      ]
     },
     {
-     "contrastRatio": 2.52,
-     "mergeFraction": 0.1278,
-     "figureLuma": 149.52,
-     "groundLuma": 56.47,
+     "contrastRatio": 2.488,
+     "mergeFraction": 0.1321,
+     "figureLuma": 148.83,
+     "groundLuma": 57.36,
      "figurePixels": 1620,
      "groundPixels": 6642,
      "fixture": "cast2-board-root-r002",
@@ -2424,10 +2424,10 @@
      ]
     },
     {
-     "contrastRatio": 2.72,
-     "mergeFraction": 0.0324,
-     "figureLuma": 166.88,
-     "groundLuma": 67.89,
+     "contrastRatio": 2.714,
+     "mergeFraction": 0.0319,
+     "figureLuma": 167.1,
+     "groundLuma": 67.83,
      "figurePixels": 1944,
      "groundPixels": 7938,
      "fixture": "cast2-board-root-r002",
@@ -2447,10 +2447,10 @@
      ]
     },
     {
-     "contrastRatio": 2.255,
-     "mergeFraction": 0.1667,
-     "figureLuma": 136.42,
-     "groundLuma": 70.44,
+     "contrastRatio": 2.228,
+     "mergeFraction": 0.1584,
+     "figureLuma": 135.41,
+     "groundLuma": 70.86,
      "figurePixels": 2184,
      "groundPixels": 8580,
      "fixture": "cast2-board-root-r002",
@@ -2470,10 +2470,10 @@
      ]
     },
     {
-     "contrastRatio": 3.362,
-     "mergeFraction": 0.1406,
-     "figureLuma": 155.86,
-     "groundLuma": 55.82,
+     "contrastRatio": 3.336,
+     "mergeFraction": 0.1387,
+     "figureLuma": 156.1,
+     "groundLuma": 56.33,
      "figurePixels": 2106,
      "groundPixels": 8424,
      "fixture": "cast2-board-vault",
@@ -2493,10 +2493,10 @@
      ]
     },
     {
-     "contrastRatio": 2.665,
-     "mergeFraction": 0.0655,
-     "figureLuma": 165.79,
-     "groundLuma": 62.62,
+     "contrastRatio": 2.707,
+     "mergeFraction": 0.0594,
+     "figureLuma": 165.9,
+     "groundLuma": 61.64,
      "figurePixels": 1482,
      "groundPixels": 5928,
      "fixture": "cast2-board-vault",
@@ -2516,10 +2516,10 @@
      ]
     },
     {
-     "contrastRatio": 2.647,
-     "mergeFraction": 0.0465,
-     "figureLuma": 159.21,
-     "groundLuma": 65.36,
+     "contrastRatio": 2.603,
+     "mergeFraction": 0.0453,
+     "figureLuma": 157.79,
+     "groundLuma": 66.26,
      "figurePixels": 1722,
      "groundPixels": 6888,
      "fixture": "cast2-board-vault",
@@ -2539,10 +2539,10 @@
      ]
     },
     {
-     "contrastRatio": 2.227,
-     "mergeFraction": 0.112,
-     "figureLuma": 140.89,
-     "groundLuma": 62.01,
+     "contrastRatio": 2.216,
+     "mergeFraction": 0.109,
+     "figureLuma": 141.1,
+     "groundLuma": 62.2,
      "figurePixels": 2000,
      "groundPixels": 8000,
      "fixture": "cast2-board-vault",
@@ -2562,10 +2562,10 @@
      ]
     },
     {
-     "contrastRatio": 3.245,
-     "mergeFraction": 0.1311,
-     "figureLuma": 158.31,
-     "groundLuma": 57.57,
+     "contrastRatio": 3.198,
+     "mergeFraction": 0.1353,
+     "figureLuma": 157.57,
+     "groundLuma": 58.13,
      "figurePixels": 2106,
      "groundPixels": 8424,
      "fixture": "cast2-board-vault",
@@ -2585,10 +2585,10 @@
      ]
     },
     {
-     "contrastRatio": 3.669,
-     "mergeFraction": 0.0502,
-     "figureLuma": 159.55,
-     "groundLuma": 47.71,
+     "contrastRatio": 3.627,
+     "mergeFraction": 0.0511,
+     "figureLuma": 159.51,
+     "groundLuma": 48.32,
      "figurePixels": 2212,
      "groundPixels": 8690,
      "fixture": "cast2-board-vigil-pillars",
@@ -2608,10 +2608,10 @@
      ]
     },
     {
-     "contrastRatio": 2.384,
-     "mergeFraction": 0.0323,
-     "figureLuma": 149.28,
-     "groundLuma": 57.91,
+     "contrastRatio": 2.416,
+     "mergeFraction": 0.0304,
+     "figureLuma": 149.39,
+     "groundLuma": 57.01,
      "figurePixels": 1580,
      "groundPixels": 6320,
      "fixture": "cast2-board-vigil-pillars",
@@ -2631,10 +2631,10 @@
      ]
     },
     {
-     "contrastRatio": 2.672,
-     "mergeFraction": 0.0759,
-     "figureLuma": 157.28,
-     "groundLuma": 59.39,
+     "contrastRatio": 2.638,
+     "mergeFraction": 0.0858,
+     "figureLuma": 156.92,
+     "groundLuma": 60.42,
      "figurePixels": 1620,
      "groundPixels": 6480,
      "fixture": "cast2-board-vigil-pillars",
@@ -2654,10 +2654,10 @@
      ]
     },
     {
-     "contrastRatio": 2.97,
-     "mergeFraction": 0.0885,
-     "figureLuma": 164.83,
-     "groundLuma": 62.71,
+     "contrastRatio": 2.961,
+     "mergeFraction": 0.0838,
+     "figureLuma": 164.9,
+     "groundLuma": 62.65,
      "figurePixels": 1944,
      "groundPixels": 7938,
      "fixture": "cast2-board-vigil-pillars",
@@ -2677,10 +2677,10 @@
      ]
     },
     {
-     "contrastRatio": 3.448,
-     "mergeFraction": 0.042,
-     "figureLuma": 160.49,
-     "groundLuma": 50.44,
+     "contrastRatio": 3.419,
+     "mergeFraction": 0.0425,
+     "figureLuma": 160.5,
+     "groundLuma": 51.1,
      "figurePixels": 2212,
      "groundPixels": 8690,
      "fixture": "cast2-board-vigil-pillars",
