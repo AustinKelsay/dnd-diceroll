@@ -21,7 +21,7 @@ import render_lib as RL
 ROOT = O.ROOT
 PREV = os.path.join(O.OUT_SRC, 'previews')
 LIFT = 0.80
-LIGHTS_M = {'candelabra': (-0.30, 1.00, 0.43), 'pillar': (-0.34, -1.00, 0.30), 'cluster': (1.55, 0.95, 0.12)}
+LIGHTS_M = {'candelabra': (-0.30, 1.00, 0.43), 'pillar': (-0.34, -1.00, 0.30), 'cluster': (0.90, 0.55, 0.12)}
 W, H = 1920, 1080
 HUD = {
     'start': [(20, 15, 465, 1060), (1330, 15, 1900, 250), (1330, 850, 1900, 1050), (485, 1010, 1310, 1070)],
@@ -61,7 +61,7 @@ def game_like(ob, ambient=.55, glow_gain=2.6):
         slot.material.use_backface_culling = True
 
 
-def put(path, loc_ue, yaw_ue, label):
+def put(path, loc_ue, yaw_ue, label, scale=1.0):
     """Imports a glb and places it like the game does: UE location (cm) and yaw, with Y mirrored into Blender."""
     obs = RL.import_glb(path)
     root = bpy.data.objects.new(label, None)
@@ -72,18 +72,26 @@ def put(path, loc_ue, yaw_ue, label):
         game_like(o)
     root.location = (loc_ue[0] / 100, -loc_ue[1] / 100, loc_ue[2] / 100)
     root.rotation_euler = (0, 0, math.radians(-yaw_ue))
+    root.scale = (scale, scale, scale)
     return root
 
 
-def scene(dioramas, with_floor=True):
+SIDE_SCALE = {'root': .68, 'vigil': .62, 'vault': .68}
+
+
+def scene(dioramas, with_floor=True, route=False):
     sc = RL.setup_scene((W, H), bg=(.012, .010, .010))
     sc.render.resolution_x, sc.render.resolution_y = W, H
     sc.view_settings.view_transform = 'Standard'
     put(TABLE, (0, 0, LIFT * 100), -90, 'table')
     n = len(dioramas)
     for i, key in enumerate(dioramas):
-        x = 0.0 if n == 1 else (52.0 if i == 0 else -52.0)
-        put(DIO[key], (x, 22.0, LIFT * 100), -90 + (-10.0 if i == 0 else 10.0), 'dio_' + key)
+        # OverviewLayout.h: the title's pair at the back of the table, the route and finale screens' pair on the lower table beside the cards
+        if route:
+            x, y, sc = (112.0 if i == 0 else -112.0), -166.0, SIDE_SCALE[key]
+        else:
+            x, y, sc = (0.0 if n == 1 else (50.0 if i == 0 else -34.0)), 16.0, 1.0
+        put(DIO[key], (x, y, LIFT * 100), -90 + (-10.0 if i == 0 else 10.0), 'dio_' + key, sc)
     if with_floor:
         bpy.ops.mesh.primitive_plane_add(size=6, location=(0, 0, .05))
         fl = bpy.context.object
@@ -93,7 +101,7 @@ def scene(dioramas, with_floor=True):
     for name, (x, y, z) in LIGHTS_M.items():
         ld = bpy.data.lights.new(name, 'POINT')
         ld.color = (1.0, .62, .32)
-        ld.energy = {'candelabra': 90, 'pillar': 90, 'cluster': 45}[name]
+        ld.energy = {'candelabra': 90, 'pillar': 90, 'cluster': 12}[name]
         ld.shadow_soft_size = .02
         lo = bpy.data.objects.new(name, ld)
         bpy.context.scene.collection.objects.link(lo)
@@ -144,14 +152,14 @@ def main():
     only = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
     os.makedirs(PREV, exist_ok=True)
     shots = {
-        'game_start': (['root', 'vigil'], 'start'), 'game_route': (['root', 'vigil'], 'route'), 'game_finale': (['vault'], 'route'),
+        'game_start': (['root', 'vigil'], 'start'), 'game_route': (['root', 'vigil'], 'route'), 'game_finale': (['vault', 'vault'], 'route'),
         'game_nohud': (['root', 'vigil'], None),
     }
     for name, (dios, hud) in shots.items():
         if only and name not in only:
             continue
         dios = [d for d in dios if os.path.exists(DIO[d])]
-        scene(dios)
+        scene(dios, route=hud == 'route')
         game_camera()
         render(os.path.join(PREV, name + '.png'), hud)
     for key in ('root', 'vigil', 'vault'):

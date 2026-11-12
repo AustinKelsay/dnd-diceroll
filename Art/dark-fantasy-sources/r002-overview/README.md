@@ -17,17 +17,17 @@ Under the machine lock on the shared host. Needs `Art/dark-fantasy-sources/r002-
 ## What the frame shows (why it is composed this way)
 
 The overview camera (eye 420 cm back and 208 cm above the table top, aimed 32 degrees down, FOV 50) and the HUD together hide most of an ordinary table: on the route screen the banner and the two
-route cards cover the middle of the frame, and on the start screen the class panel covers the left third. What stays visible is the strip above the banner, the flanks and the band below the
-cards, and on the start screen everything between the panels. The r001 table was 120 cm deep, so the lower half of the frame was bare floor and the dioramas sat behind the banner. The r002 table is 265 cm deep
-(front edge at the bottom of the frame), the war map and the props live in the band below the cards, the three candles flank the dioramas and the right flank holds a tankard, dagger, dice and coins.
-`previews/game_start.png`, `game_route.png` and `game_finale.png` draw the HUD blocks in grey over the Blender render of this camera.
+route cards cover the middle of the frame, and on the title the drawers cover the left and right. The r001 table was 120 cm deep, so the lower half of the frame was bare floor. The r002 table is 265 cm deep
+(front edge at the bottom of the frame). The war map is in the band below the cards; **the dioramas stand beside it**: on the route and finale screens each on the lower table next to its card (scaled 0.68, the
+cathedral 0.62), on the title between the drawers at the back. The loose props lie on the middle of the table (the title's open band), not on the flanks the dioramas use. The numbers are in `OverviewLayout.h` and
+are proved clear of the HUD by a test. `previews/game_start.png`, `game_route.png` and `game_finale.png` draw the HUD blocks in grey over the Blender render of this camera.
 
 ## The war table `SM_Overview_Tabletop`
 
 Origin at the middle of the table top, the asset faces +X (the overview turns it -90 degrees about Z), +Y is the viewer's right. 3.4 x 2.65 m oak planks at 256 texels/m (a 512 px, 2 m tile), a leather-spined bookcase behind it, a hand-drawn
 vellum map (640 x 384 px on 1.05 x 0.63 m, about 610 texels/m) of the five-stop route with a fork, held by stone weights with five glowing route markers (vertex-alpha glow), a brass candlestick, a pillar candle and a candle cluster
-(the three runtime lights sit on these flames: `tabletop_metrics.json` `lights_m`), a tankard, dagger, d20, d8 and d6 dice, coins, a pouch, inkwell and quill, scrolls, a spyglass, a book stack, a letter and an hourglass; shelf candle jars.
-Conforming subdivision (3.5 cm near the props, 10 cm on the map), ray-cast ambient occlusion and a warm candle bake into `COLOR_0`; flames and route markers carry glow in `COLOR_0.a`. One 2048 atlas, 37 % filled.
+(the three runtime lights sit on these flames: `tabletop_metrics.json` `lights_m`), a tankard, dagger, d20, d8 and d6 dice, coins, a pouch, inkwell and quill, scrolls, a spyglass, a book stack, a letter and an hourglass, all in the middle of the table; shelf candle jars.
+Conforming subdivision (3.5 cm near the props, 10 cm on the map; 36,481 triangles), ray-cast ambient occlusion and a warm candle bake into `COLOR_0`; flames and route markers carry glow in `COLOR_0.a`. One 2048 atlas, 37 % filled.
 
 ## The dioramas `SM_Overview_Diorama_{Root,Vigil,Vault}`
 

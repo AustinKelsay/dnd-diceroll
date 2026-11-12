@@ -1339,9 +1339,9 @@ void AExpeditionHUD::DrawTitle()
 void AExpeditionHUD::DrawRoutes()
 {
     const FExpeditionProgress& Run = View->Progress();
-    const float CardWidth = 340, CardHeight = 250, Gap = 30;
-    const float Top = H * 0.5f - CardHeight * 0.5f - 10;
-    Panel(W * 0.5f - 370, Top - 84, 740, 76, Gold, 0.95f);
+    constexpr float CardWidth = ExpeditionLayout::RouteCardWidth, CardHeight = ExpeditionLayout::RouteCardHeight, Gap = ExpeditionLayout::RouteCardGap;
+    const float Top = static_cast<float>(ExpeditionLayout::RouteTop(H));
+    Panel(W * 0.5f - ExpeditionLayout::RouteBannerWidth * 0.5f, Top - ExpeditionLayout::RouteBannerAbove, ExpeditionLayout::RouteBannerWidth, ExpeditionLayout::RouteBannerHeight, Gold, 0.95f);
     Text(TEXT("CHOOSE YOUR PATH"), W * 0.5f, Top - 66, Gold, 1.5f, EAlign::Center);
     Text(FString::Printf(TEXT("Encounter %d of %d  ·  Injuries and losses carry forward  ·  No automatic rest"), Run.EncountersCompleted + 1, FExpeditionRun::EncounterCount), W * 0.5f, Top - 30, Muted, 0.76f, EAlign::Center);
     for (int32 Index = 0; Index < Run.Offers.Num() && Index < 2; ++Index)

@@ -42,6 +42,22 @@ inline Rect LogRect(double W, double H, int Lines = LogMaxLines)
 // and the board bounds both read these.
 constexpr double PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
 
+// The route screen (DrawRoutes): the "Choose your path" banner and the two route cards, centred, the cards side by side. DrawRoutes and the tabletop overview's layout
+// (OverviewLayout.h, #149) both read these, so the dioramas cannot be placed under the HUD they are meant to show beside.
+constexpr double RouteCardWidth = 340, RouteCardHeight = 250, RouteCardGap = 30;
+constexpr double RouteBannerWidth = 740, RouteBannerHeight = 76, RouteBannerAbove = 84;
+inline double RouteTop(double H) { return H * 0.5 - RouteCardHeight * 0.5 - 10; }
+inline Rect RouteBannerRect(double W, double H)
+{
+    const double Top = RouteTop(H) - RouteBannerAbove;
+    return {W * 0.5 - RouteBannerWidth * 0.5, Top, W * 0.5 + RouteBannerWidth * 0.5, Top + RouteBannerHeight};
+}
+inline Rect RouteCardRect(double W, double H, int Index)
+{
+    const double X = W * 0.5 + (Index == 0 ? -RouteCardWidth - RouteCardGap * 0.5 : RouteCardGap * 0.5);
+    return {X, RouteTop(H), X + RouteCardWidth, RouteTop(H) + RouteCardHeight};
+}
+
 // Where the d20 roll card sits (#190): the strip of the left margin below the party cards and above the combat log. The camera keeps
 // the board inside BoardBounds, to the right of this strip (BoardLeft), and the top band belongs to the status strip and the Menu, so a
 // card here never covers the active unit, its target or their cells, whichever way the board is turned. The strip is as wide as the margin

@@ -2729,12 +2729,12 @@ void AExpeditionBattleView::BuildOverview()
         for (const FExpeditionRoute& Route : Progress().Offers) { Dangerous.Add(Route.bDangerous); }
     }
     const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun(), bFinale, Dangerous, OverviewVault != nullptr);
-    for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002))
+    for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002, HasRun()))
     {
         UStaticMesh* Diorama = Spot.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault : Spot.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil : OverviewRoot;
         if (!Diorama) { continue; }
         // The camera looks along +Y, so world +X is screen-left: offer 0 sits left, under its card.
-        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0f), FVector::OneVector, FLinearColor::White, Toward + FRotator(0.0f, Spot.Yaw, 0.0f)));
+        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0f), FVector(Spot.Scale), FLinearColor::White, Toward + FRotator(0.0f, Spot.Yaw, 0.0f)));
         OverviewDrawnMeshes.Add(Diorama->GetFName());
     }
     // The surviving party stands on the map as painted miniatures.

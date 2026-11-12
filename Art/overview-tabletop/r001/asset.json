@@ -15,7 +15,7 @@
     "parameters": {
       "units": "metres",
       "pivot": "middle of the table top; the table occupies x -0.60 to +2.05 (front toward +X) and y +-1.70",
-      "triangles": 33178,
+      "triangles": 36481,
       "size_m": [
         3.1,
         6.2,
@@ -41,8 +41,8 @@
           0.3
         ],
         "cluster": [
-          1.55,
-          0.95,
+          0.9,
+          0.55,
           0.12
         ]
       },
@@ -120,12 +120,12 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-overview/scripts/build_tabletop_r002.py",
-      "sha256": "f0fcafbc9fe76e468f5aa8e61410001b9cab05f9971622aa50d3c4a62736466d"
+      "sha256": "2b6a8c1e472a89bb14a166b0fa0dacfc5217c6001bc659bc2b461af5f9bd9c18"
     },
     {
       "role": "export",
       "path": "Art/overview-tabletop/r001/SM_Overview_Tabletop.glb",
-      "sha256": "445d6445673d694487deb279252f40ec481449c8b07b7f428e66b81717d5ff78"
+      "sha256": "2daa8eac8655c26e812f9367bbd081db7b30cc0bfb2aa6c88e30aefcd837e679"
     }
   ],
   "import_policy": {

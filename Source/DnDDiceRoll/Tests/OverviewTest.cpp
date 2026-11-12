@@ -9,6 +9,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/OverviewLayout.h"
 #include "RenderingThread.h"
+#include "SceneView.h"
 #include "UObject/GarbageCollection.h"
 #include "UObject/StrongObjectPtr.h"
 #include "ExpeditionTestSupport.h"
@@ -120,23 +121,41 @@ bool FOverviewLayoutTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Without a Vault diorama the finale draws the Vigil as before"), OverviewLayout::Kinds(true, true, Mixed, false) == TArray<EDiorama>({EDiorama::Vigil, EDiorama::Vigil}));
     TestTrue(TEXT("No offers, no dioramas"), OverviewLayout::Kinds(true, false, {}, true).IsEmpty());
 
-    // Placement: offer 0 screen-left (+X), offer 1 screen-right, a single road in the middle; the r002 row stands 8 cm further back on its deeper table.
+    // Placement on the title and on the r001 set: offer 0 screen-left (+X), offer 1 screen-right, a single road in the middle; the r002 row stands 8 cm further back on its deeper table.
     for (const bool bR002 : {false, true})
     {
-        const TArray<OverviewLayout::FPlacement> Two = OverviewLayout::Layout({EDiorama::Root, EDiorama::Vigil}, bR002);
-        if (!TestEqual(TEXT("Two placements"), Two.Num(), 2)) { return false; }
-        TestEqual(TEXT("Offer 0 is screen-left"), Two[0].Offset.X, 52.0);
-        TestEqual(TEXT("Offer 1 is screen-right"), Two[1].Offset.X, -52.0);
-        TestEqual(TEXT("The row's depth"), Two[0].Offset.Y, bR002 ? 30.0 : 22.0);
-        TestEqual(TEXT("Both stand at one depth"), Two[0].Offset.Y, Two[1].Offset.Y);
-        TestTrue(TEXT("They turn a little toward each other"), Two[0].Yaw == -10.0f && Two[1].Yaw == 10.0f);
-        TestTrue(TEXT("Each keeps its world"), Two[0].Kind == EDiorama::Root && Two[1].Kind == EDiorama::Vigil);
-        const TArray<OverviewLayout::FPlacement> One = OverviewLayout::Layout({EDiorama::Vault}, bR002);
-        if (!TestEqual(TEXT("One placement"), One.Num(), 1)) { return false; }
-        TestEqual(TEXT("A single road stands in the middle"), One[0].Offset.X, 0.0);
+        for (const bool bRoute : {false, true})
+        {
+            if (bR002 && bRoute) { continue; }
+            const TArray<OverviewLayout::FPlacement> Two = OverviewLayout::Layout({EDiorama::Root, EDiorama::Vigil}, bR002, bRoute);
+            if (!TestEqual(TEXT("Two placements"), Two.Num(), 2)) { return false; }
+            TestEqual(TEXT("Offer 0 is screen-left"), Two[0].Offset.X, bR002 ? 50.0 : 52.0);
+            TestEqual(TEXT("Offer 1 is screen-right"), Two[1].Offset.X, bR002 ? -34.0 : -52.0);
+            TestEqual(TEXT("The row's depth"), Two[0].Offset.Y, bR002 ? 16.0 : 22.0);
+            TestEqual(TEXT("Both stand at one depth"), Two[0].Offset.Y, Two[1].Offset.Y);
+            TestTrue(TEXT("They turn a little toward each other"), Two[0].Yaw == -10.0f && Two[1].Yaw == 10.0f);
+            TestTrue(TEXT("Each keeps its world, at full size"), Two[0].Kind == EDiorama::Root && Two[1].Kind == EDiorama::Vigil && Two[0].Scale == 1.0f && Two[1].Scale == 1.0f);
+            const TArray<OverviewLayout::FPlacement> One = OverviewLayout::Layout({EDiorama::Vault}, bR002, bRoute);
+            if (!TestEqual(TEXT("One placement"), One.Num(), 1)) { return false; }
+            TestEqual(TEXT("A single road stands in the middle"), One[0].Offset.X, 0.0);
+        }
     }
-    // The table's back edge is 60 cm behind the centre; a 62 cm deep diorama centred 30 cm back still stands on it (x_a = -0.30 +- 0.31).
-    TestTrue(TEXT("The r002 row stays on the table"), OverviewLayout::DioramaDepth(true) + 31.0f <= 62.0f + 1.0f);
+    // The r002 route and finale screens: each diorama beside its card on the lower table, scaled, the Vigil smaller; a lone offer takes the left spot.
+    {
+        const TArray<OverviewLayout::FPlacement> Side = OverviewLayout::Layout({EDiorama::Root, EDiorama::Vigil}, true, true);
+        if (!TestEqual(TEXT("Two side placements"), Side.Num(), 2)) { return false; }
+        TestTrue(TEXT("Offer 0 is left of the left card, offer 1 right of the right card"), Side[0].Offset.X > 0.0 && Side[1].Offset.X < 0.0 && Side[0].Offset.X == -Side[1].Offset.X);
+        TestTrue(TEXT("Both are in front of the table's middle, on the lower table"), Side[0].Offset.Y == Side[1].Offset.Y && Side[0].Offset.Y < -100.0);
+        TestTrue(TEXT("They are scaled to the open margin, the Vigil the smallest"), Side[0].Scale == 0.68f && Side[1].Scale == 0.62f && Side[0].Scale < 1.0f);
+        TestEqual(TEXT("A lone offer takes the left spot"), OverviewLayout::Layout({EDiorama::Vault}, true, true)[0].Offset.X, 112.0);
+        TestEqual(TEXT("The Vault is as large as the forest"), OverviewLayout::SideScale(EDiorama::Vault), OverviewLayout::SideScale(EDiorama::Root));
+    }
+    // The r001 set keeps its layout on every screen (the route flag changes nothing there).
+    {
+        const TArray<OverviewLayout::FPlacement> A = OverviewLayout::Layout({EDiorama::Root, EDiorama::Vigil}, false, false);
+        const TArray<OverviewLayout::FPlacement> B = OverviewLayout::Layout({EDiorama::Root, EDiorama::Vigil}, false, true);
+        TestTrue(TEXT("r001 placement is the same on the route screen"), A.Num() == 2 && B.Num() == 2 && A[0].Offset == B[0].Offset && A[1].Offset == B[1].Offset && A[0].Scale == B[0].Scale && A[1].Yaw == B[1].Yaw);
+    }
 
     // The three candle lights: three of them, on the table, and r001's unchanged.
     const TArray<FVector> Old = OverviewLayout::Candles(false);
@@ -144,10 +163,11 @@ bool FOverviewLayoutTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Three lights on the r001 table"), Old.Num(), 3);
     TestEqual(TEXT("Three lights on the r002 table"), Lights.Num(), 3);
     TestTrue(TEXT("The r001 spots are unchanged"), Old[0] == FVector(-100, 30, 40) && Old[1] == FVector(100, 34, 40) && Old[2] == FVector(0, -70, 70));
+    TestTrue(TEXT("The r002 cluster hangs on the candle cluster's flame"), Lights[2] == FVector(-55, -90, 15));
     const TArray<float> OldStrengths = OverviewLayout::CandleStrengths(false);
     const TArray<float> Strengths = OverviewLayout::CandleStrengths(true);
     TestTrue(TEXT("The r001 strengths are unchanged"), OldStrengths == TArray<float>({16.0f, 16.0f, 16.0f}));
-    TestTrue(TEXT("One strength per light, the low cluster the dimmest"), Strengths.Num() == Lights.Num() && Strengths[2] < Strengths[0] && Strengths[2] > 0.0f);
+    TestTrue(TEXT("One strength per light, the low cluster the dimmest"), Strengths.Num() == Lights.Num() && Strengths[2] == 4.0f && Strengths[0] == 16.0f && Strengths[1] == 16.0f);
     for (const FVector& Light : Lights) { TestTrue(TEXT("A candle light hangs above the table top, within the table"), Light.Z > 0.0f && Light.Z < 60.0f && FMath::Abs(Light.X) < 170.0f && Light.Y > -240.0f && Light.Y < 60.0f); }
     TestTrue(TEXT("The two back candles flank the dioramas"), Lights[0].X < -52.0f - 20.0f && Lights[1].X > 52.0f + 20.0f);
     return !HasAnyErrors();
@@ -330,6 +350,139 @@ bool FOverviewChoiceLeavesStateTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("The checkpoint bytes are identical"), Checkpoints[Variant], Checkpoints[0]);
     }
     TestFalse(TEXT("A checkpoint was written"), Checkpoints[0].IsEmpty());
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+namespace
+{
+/** The projected bounds, in design units, of one diorama as the view places it: the mesh's local box, scaled, turned toward the camera plus the row's yaw, moved to its spot. */
+bool DioramaBounds(const UStaticMesh& Mesh, const OverviewLayout::FPlacement& Spot, double Width, double Height, ExpeditionLayout::Rect& Out)
+{
+    const FBox Local = Mesh.GetBoundingBox();
+    const FRotator Turn(0.0f, -90.0f + Spot.Yaw, 0.0f);
+    const double Scale = ExpeditionLayout::ViewScale(Width, Height);
+    FVector2D Low(1e9, 1e9), High(-1e9, -1e9);
+    for (int32 Corner = 0; Corner < 8; ++Corner)
+    {
+        const FVector Point((Corner & 1) ? Local.Max.X : Local.Min.X, (Corner & 2) ? Local.Max.Y : Local.Min.Y, (Corner & 4) ? Local.Max.Z : Local.Min.Z);
+        const FVector OnTable = Turn.RotateVector(Point * Spot.Scale) + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0);
+        FVector2D Pixel;
+        if (!OverviewLayout::Project(OnTable, Width, Height, Pixel)) { return false; }
+        Low = FVector2D(FMath::Min(Low.X, Pixel.X), FMath::Min(Low.Y, Pixel.Y));
+        High = FVector2D(FMath::Max(High.X, Pixel.X), FMath::Max(High.Y, Pixel.Y));
+    }
+    Out = {Low.X / Scale, Low.Y / Scale, High.X / Scale, High.Y / Scale};
+    return true;
+}
+
+bool OverviewRectsOverlap(const ExpeditionLayout::Rect& A, const ExpeditionLayout::Rect& B, double Margin)
+{
+    return A.Left < B.Right + Margin && A.Right > B.Left - Margin && A.Top < B.Bottom + Margin && A.Bottom > B.Top - Margin;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverviewHudClearTest, "Project.Expedition.Presentation.OverviewDioramasStayClearOfTheHud",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FOverviewHudClearTest::RunTest(const FString& Parameters)
+{
+    // The dioramas are the point of the overview, so on every screen that shows them (the title, the route screen, the finale's route screen with two Vault roads) and at both
+    // capture resolutions, each one's projected bounds stay inside the viewport and clear of every HUD rectangle (the banner, both cards, the party cards, a hero's details, the
+    // status strip, the Menu, the feedback line; on the title the drawers). The meshes are the shipped theme's r002 set.
+    const UDiceRollTheme* Shipped = OverviewShippedTheme();
+    if (!TestNotNull(TEXT("The shipped theme asset"), Shipped) || !TestTrue(TEXT("Its r002 overview is on (run the theme import)"), Shipped->OverviewR002Complete())) { return false; }
+    const FDiceRollOverview Set = Shipped->LoadOverview();
+    if (!TestTrue(TEXT("The r002 set loads"), Set.bR002 && Set.Root && Set.Vigil && Set.Vault)) { return false; }
+    auto MeshOf = [&](EDiorama Kind) { return Kind == EDiorama::Vault ? Set.Vault : Kind == EDiorama::Vigil ? Set.Vigil : Set.Root; };
+    struct FScreen { const TCHAR* Name; bool bHasRun; bool bFinale; TArray<bool> Dangerous; };
+    const TArray<FScreen> Screens = {{TEXT("title"), false, false, {}}, {TEXT("route (guarded and dangerous)"), true, false, {false, true}}, {TEXT("route (two guarded roads)"), true, false, {false, false}},
+        {TEXT("route (two dangerous roads)"), true, false, {true, true}}, {TEXT("finale (two Vault roads)"), true, true, {false, true}}};
+    constexpr double Margin = 4.0, EdgeInset = 12.0;
+    for (const FIntPoint& Resolution : {FIntPoint(1920, 1080), FIntPoint(1280, 720)})
+    {
+        const double Scale = ExpeditionLayout::ViewScale(Resolution.X, Resolution.Y);
+        const double W = Resolution.X / Scale, H = Resolution.Y / Scale;
+        for (const FScreen& Screen : Screens)
+        {
+            const TArray<EDiorama> Kinds = OverviewLayout::Kinds(Screen.bHasRun, Screen.bFinale, Screen.Dangerous, true);
+            const TArray<OverviewLayout::FPlacement> Spots = OverviewLayout::Layout(Kinds, true, Screen.bHasRun);
+            const TArray<ExpeditionLayout::Rect> Hud = OverviewLayout::HudRects(Screen.bHasRun, W, H);
+            TArray<ExpeditionLayout::Rect> Placed;
+            for (int32 Index = 0; Index < Spots.Num(); ++Index)
+            {
+                ExpeditionLayout::Rect Box{};
+                const FString Label = FString::Printf(TEXT("%s, %dx%d, offer %d"), Screen.Name, Resolution.X, Resolution.Y, Index);
+                if (!TestTrue(Label + TEXT(": the bounds project"), DioramaBounds(*MeshOf(Spots[Index].Kind), Spots[Index], Resolution.X, Resolution.Y, Box))) { continue; }
+                const FString Where = FString::Printf(TEXT(" (bounds %.0f,%.0f to %.0f,%.0f of %.0f x %.0f)"), Box.Left, Box.Top, Box.Right, Box.Bottom, W, H);
+                TestTrue(Label + TEXT(": inside the viewport with a margin") + Where, Box.Left >= EdgeInset && Box.Top >= EdgeInset && Box.Right <= W - EdgeInset && Box.Bottom <= H - EdgeInset);
+                for (int32 Rect = 0; Rect < Hud.Num(); ++Rect)
+                { TestFalse(FString::Printf(TEXT("%s: clear of HUD rect %d%s"), *Label, Rect, *Where), OverviewRectsOverlap(Box, Hud[Rect], Margin)); }
+                for (const ExpeditionLayout::Rect& Other : Placed) { TestFalse(Label + TEXT(": clear of the other diorama"), OverviewRectsOverlap(Box, Other, 0.0)); }
+                Placed.Add(Box);
+                // At least 150 x 120 design units: a diorama must still read as its world.
+                TestTrue(Label + TEXT(": big enough to read"), Box.Right - Box.Left >= 150.0 && Box.Bottom - Box.Top >= 100.0);
+            }
+        }
+    }
+    // On the route and finale screens the war map (centre 1.66 m toward the viewer, 1.05 x 0.63 m) lies between the two dioramas: they do not overlap its box on the table.
+    for (const bool bFinale : {false, true})
+    {
+        const TArray<EDiorama> Kinds = OverviewLayout::Kinds(true, bFinale, {false, true}, true);
+        for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, true, true))
+        {
+            const FBox Local = MeshOf(Spot.Kind)->GetBoundingBox();
+            const FRotator Turn(0.0f, -90.0f + Spot.Yaw, 0.0f);
+            double Nearest = 1e9;
+            for (int32 Corner = 0; Corner < 4; ++Corner)
+            {
+                const FVector Point((Corner & 1) ? Local.Max.X : Local.Min.X, (Corner & 2) ? Local.Max.Y : Local.Min.Y, 0.0);
+                const FVector OnTable = Turn.RotateVector(Point * Spot.Scale) + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0);
+                Nearest = FMath::Min(Nearest, FMath::Abs(OnTable.X) );   // table-top X is screen-left; the map spans |X| < 52.5 cm (1.05 m wide) about the middle
+            }
+            TestTrue(TEXT("A diorama's tray stays beside the war map, not on it"), Nearest > 52.5 + 5.0);
+        }
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOverviewCameraConstantsTest, "Project.Expedition.Presentation.OverviewLayoutProjectsLikeTheCamera",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FOverviewCameraConstantsTest::RunTest(const FString& Parameters)
+{
+    // The layout test projects with OverviewLayout::Project; this proves it is the overview camera's own projection: the view's camera pose and field of view are the
+    // constants, and Unreal's projection of a few table points lands where Project says (both resolutions).
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/OverviewCamera"), FGuid::NewGuid().ToString());
+    const FString Start = FPaths::Combine(Directory, TEXT("start.json"));
+    if (!TestTrue(TEXT("A route checkpoint at the start"), WriteRouteCheckpoint(Start, false))) { return false; }
+    UWorld* World = MakeOverviewWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    if (AExpeditionBattleView* View = OverviewBoard(*this, World, Start))
+    {
+        View->SnapCameraToTargets();
+        View->Tick(0.016f);
+        if (TestTrue(TEXT("The overview is shown"), View->ShowingOverview()))
+        {
+            const FTransform Camera = View->CameraTransform();
+            const FVector Table(0.0, 0.0, 80.0);
+            TestTrue(TEXT("The eye is where OverviewLayout says"), Camera.GetLocation().Equals(Table + OverviewLayout::CameraEye(), 0.5));
+            TestTrue(TEXT("The aim is where OverviewLayout says"), Camera.GetRotation().GetForwardVector().Equals(OverviewLayout::CameraLook().GetSafeNormal(), 0.001));
+            TestEqual(TEXT("The horizontal field of view"), static_cast<double>(View->CameraFieldOfView()), OverviewLayout::CameraFieldOfView, 0.001);
+            for (const FIntPoint& Resolution : {FIntPoint(1920, 1080), FIntPoint(1280, 720)})
+            {
+                const FMatrix ViewRotation = FInverseRotationMatrix(Camera.Rotator()) * FMatrix(FPlane(0, 0, 1, 0), FPlane(1, 0, 0, 0), FPlane(0, 1, 0, 0), FPlane(0, 0, 0, 1));
+                const FMatrix ViewMatrix = FTranslationMatrix(-Camera.GetLocation()) * ViewRotation;
+                const FMatrix Projection = FReversedZPerspectiveMatrix(FMath::DegreesToRadians(View->CameraFieldOfView() * 0.5f), static_cast<float>(Resolution.X), static_cast<float>(Resolution.Y), 10.0f);
+                for (const FVector& Point : {FVector(0, 0, 0), FVector(112, -166, 20), FVector(-112, -166, 40), FVector(-95, -60, 12), FVector(52, 22, 30)})
+                {
+                    FVector2D Real, Mine;
+                    if (!FSceneView::ProjectWorldToScreen(Table + Point, FIntRect(0, 0, Resolution.X, Resolution.Y), ViewMatrix * Projection, Real) || !OverviewLayout::Project(Point, Resolution.X, Resolution.Y, Mine))
+                    { AddError(TEXT("A table point does not project")); continue; }
+                    TestTrue(FString::Printf(TEXT("%dx%d: projects like the camera (%s: %.1f, %.1f vs %.1f, %.1f)"), Resolution.X, Resolution.Y, *Point.ToString(), Mine.X, Mine.Y, Real.X, Real.Y), Mine.Equals(Real, 1.5));
+                }
+            }
+        }
+    }
+    DestroyOverviewWorld(World);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

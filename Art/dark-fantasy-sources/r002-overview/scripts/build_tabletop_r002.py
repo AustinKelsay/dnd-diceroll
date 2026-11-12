@@ -28,7 +28,7 @@ RNG = np.random.default_rng(2611)
 # table (metres): back edge, front edge, half width, thickness
 X0, X1, HY, TH = -0.60, 2.05, 1.70, 0.09
 # the candles: (name, x, y, flame z) - the three runtime lights sit on these flames
-LIGHTS = {'candelabra': (-0.30, 1.00, 0.43), 'pillar': (-0.34, -1.00, 0.30), 'cluster': (1.55, 0.95, 0.12)}
+LIGHTS = {'candelabra': (-0.30, 1.00, 0.43), 'pillar': (-0.34, -1.00, 0.30), 'cluster': (0.90, 0.55, 0.12)}
 MAP_C, MAP_W, MAP_D, MAP_YAW = (1.66, -0.02), 1.05, 0.63, -3.0
 GLOW = ('flame', 'ember')
 # shelf ornaments by row (y positions along the case); books skip them
@@ -358,26 +358,26 @@ def build():
     candlestick(sp, LIGHTS['candelabra'][0], LIGHTS['candelabra'][1])
     pillar_candle(sp, LIGHTS['pillar'][0], LIGHTS['pillar'][1])
     candle_cluster(sp, LIGHTS['cluster'][0], LIGHTS['cluster'][1], rng)
-    tankard(sp, 1.40, 1.12)
-    dagger(sp, 1.78, .86, 34)
-    for (x, y, yaw) in ((1.48, .72, 12), (1.58, .66, 51)):
+    tankard(sp, 0.70, 1.00)
+    dagger(sp, 1.12, .92, 34)
+    for (x, y, yaw) in ((1.00, .78, 12), (1.08, .68, 51)):
         add(sp, O.die6((x, y, 0), .022, yaw))
     V, F = O.icosa(.019)
-    V = O.rest_on_floor(V + np.array((1.38, .74, 0)))
+    V = O.rest_on_floor(V + np.array((.95, .84, 0)))
     sub = Soup(); O.tri_faces(sub, 'd20', V, F); add(sp, sub.soup())
     V, F = O.octa(.018)
-    V = O.rest_on_floor(V + np.array((1.64, .82, 0)))
+    V = O.rest_on_floor(V + np.array((1.04, .60, 0)))
     sub = Soup(); O.tri_faces(sub, 'd8', V, F); add(sp, sub.soup())
-    coins(sp, 1.30, .88, 9, rng)
-    pouch(sp, 1.20, 1.28)
-    inkwell(sp, 1.80, -1.05)
-    scroll(sp, 1.45, -.92, 78)
-    scroll(sp, 1.38, -.78, 96, .26)
+    coins(sp, 0.78, .74, 9, rng)
+    pouch(sp, 0.62, 1.18)
+    inkwell(sp, 0.82, -1.02)
+    scroll(sp, 1.00, -.80, 78)
+    scroll(sp, 0.92, -.62, 96, .26)
     hourglass(sp, .22, -1.32)
-    book_stack(sp, .78, -.95, rng)
-    spyglass(sp, .62, 1.02)
-    letter(sp, .95, .52, 14)
-    scroll(sp, .55, 1.10, 8, .34)
+    book_stack(sp, .55, -1.10, rng)
+    spyglass(sp, 1.10, -.98)
+    letter(sp, 1.02, -.34, 14)
+    scroll(sp, .45, 1.15, 8, .34)
     # shelf ornaments
     globe_and_jars(sp, rng, .06, ORN[0])
     globe_and_jars(sp, rng, .32, ORN[1])
@@ -385,7 +385,7 @@ def build():
     s['mat'] = np.array(s['mat'], dtype=object)
 
     # ---- bake: subdivide (fine near the props and the map), ambient occlusion, warm candle light
-    zones = [(1.40, 1.12, .20), (1.78, .86, .22), (1.50, .70, .20), (1.30, .88, .15), (1.20, 1.28, .12), (1.80, -1.05, .12), (1.45, -.92, .30), (.22, -1.32, .10),
+    zones = [(.70, 1.00, .20), (1.12, .92, .22), (1.02, .72, .20), (.78, .74, .15), (.62, 1.18, .12), (.82, -1.02, .12), (.96, -.72, .30), (.22, -1.32, .10), (1.10, -.98, .25), (.55, -1.10, .25),
              (LIGHTS['cluster'][0], LIGHTS['cluster'][1], .20), (LIGHTS['candelabra'][0], LIGHTS['candelabra'][1], .20), (LIGHTS['pillar'][0], LIGHTS['pillar'][1], .20)]
 
     def lim(mid):
