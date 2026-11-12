@@ -1,0 +1,370 @@
+{
+	"version": 1,
+	"status": "ok",
+	"fixture": "foes-vault-a",
+	"poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-1a1c207f-d3c648cee44e07ac/tools/capture/foe-archer-release-poses.json",
+	"settleFrames": 60,
+	"primitives": false,
+	"themed": true,
+	"cellCm": 150,
+	"resolution":
+	{
+		"width": 1920,
+		"height": 1080
+	},
+	"seed": 1,
+	"boardWidth": 18,
+	"boardHeight": 12,
+	"shots": [
+		{
+			"name": "arrow-release-yaw000-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "release",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1032,
+					"y0": 300,
+					"x1": 1070,
+					"y1": 408
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1048,
+					"y0": 756,
+					"x1": 1095,
+					"y1": 878
+				}
+			},
+			"status": "captured",
+			"file": "arrow-release-yaw000-default.png",
+			"yaw": 0,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 4125.0718381134302,
+					"y": 1201.5610536497456,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": 180,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "arrow-release-yaw090-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "release",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 821,
+					"y0": 473,
+					"x1": 863,
+					"y1": 587
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1497,
+					"y0": 473,
+					"x1": 1557,
+					"y1": 587
+				}
+			},
+			"status": "captured",
+			"file": "arrow-release-yaw090-default.png",
+			"yaw": 90,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 780.05873023936874,
+					"y": 4125.0718853243043,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": -89.999997495522067,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "arrow-flight-yaw000-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "flight",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1032,
+					"y0": 300,
+					"x1": 1070,
+					"y1": 408
+				},
+				"bolt":
+				{
+					"x0": 1018,
+					"y0": 499,
+					"x1": 1104,
+					"y1": 615
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1048,
+					"y0": 756,
+					"x1": 1095,
+					"y1": 878
+				}
+			},
+			"status": "captured",
+			"file": "arrow-flight-yaw000-default.png",
+			"yaw": 0,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 4125.0718381134302,
+					"y": 1201.5610536497456,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": 180,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "arrow-flight-yaw090-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "flight",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 821,
+					"y0": 473,
+					"x1": 863,
+					"y1": 587
+				},
+				"bolt":
+				{
+					"x0": 1141,
+					"y0": 468,
+					"x1": 1231,
+					"y1": 582
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1497,
+					"y0": 473,
+					"x1": 1557,
+					"y1": 587
+				}
+			},
+			"status": "captured",
+			"file": "arrow-flight-yaw090-default.png",
+			"yaw": 90,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 780.05873023936874,
+					"y": 4125.0718853243043,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": -89.999997495522067,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "arrow-landing-yaw000-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "landing",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1032,
+					"y0": 300,
+					"x1": 1070,
+					"y1": 408
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1048,
+					"y0": 756,
+					"x1": 1095,
+					"y1": 878
+				}
+			},
+			"status": "captured",
+			"file": "arrow-landing-yaw000-default.png",
+			"yaw": 0,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 4125.0718381134302,
+					"y": 1201.5610536497456,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": 180,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "arrow-landing-yaw090-default",
+			"mode": "impact",
+			"effect": "arrow",
+			"frames": 4,
+			"phase": "landing",
+			"target":
+			{
+				"id": 4,
+				"name": "Ivo",
+				"cellX": 4,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 821,
+					"y0": 473,
+					"x1": 863,
+					"y1": 587
+				}
+			},
+			"shooter":
+			{
+				"id": 22,
+				"name": "Vault bow",
+				"role": "Archer",
+				"cellX": 11,
+				"cellY": 7,
+				"footprint":
+				{
+					"x0": 1497,
+					"y0": 473,
+					"x1": 1557,
+					"y1": 587
+				}
+			},
+			"status": "captured",
+			"file": "arrow-landing-yaw090-default.png",
+			"yaw": 90,
+			"distance": 2672.9833984375,
+			"camera":
+			{
+				"location":
+				{
+					"x": 780.05873023936874,
+					"y": 4125.0718853243043,
+					"z": 2772.1649522296543
+				},
+				"rotation":
+				{
+					"pitch": -40.845763588785765,
+					"yaw": -89.999997495522067,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		}
+	]
+}

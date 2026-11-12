@@ -8,7 +8,7 @@
    "Root": 3.13,
    "Vault": 4.6
   },
-  "merge": 0.1084,
+  "merge": 0.1083,
   "gate": true,
   "rows": [
    {
@@ -134,7 +134,7 @@
    {
     "contrastRatio": 3.219,
     "mergeFraction": 0.1173,
-    "figureLuma": 125.71,
+    "figureLuma": 125.7,
     "groundLuma": 49.74,
     "figurePixels": 1458,
     "groundPixels": 5994,
@@ -396,7 +396,7 @@
     "board": "Vault"
    },
    {
-    "contrastRatio": 4.99,
+    "contrastRatio": 4.991,
     "mergeFraction": 0.107,
     "figureLuma": 160.57,
     "groundLuma": 35.9,
@@ -470,7 +470,7 @@
    {
     "contrastRatio": 4.366,
     "mergeFraction": 0.1567,
-    "figureLuma": 145.42,
+    "figureLuma": 145.41,
     "groundLuma": 42.98,
     "figurePixels": 1404,
     "groundPixels": 5772,
@@ -492,7 +492,7 @@
     "board": "Vault"
    },
    {
-    "contrastRatio": 4.31,
+    "contrastRatio": 4.309,
     "mergeFraction": 0.1581,
     "figureLuma": 143.87,
     "groundLuma": 43.73,
@@ -589,7 +589,7 @@
    },
    {
     "contrastRatio": 4.368,
-    "mergeFraction": 0.1538,
+    "mergeFraction": 0.1546,
     "figureLuma": 145.44,
     "groundLuma": 42.97,
     "figurePixels": 1404,
@@ -612,7 +612,7 @@
     "board": "Vault"
    },
    {
-    "contrastRatio": 3.701,
+    "contrastRatio": 3.7,
     "mergeFraction": 0.1323,
     "figureLuma": 148.13,
     "groundLuma": 56.01,
@@ -733,9 +733,9 @@
    },
    {
     "contrastRatio": 3.697,
-    "mergeFraction": 0.133,
-    "figureLuma": 148.05,
-    "groundLuma": 56.03,
+    "mergeFraction": 0.1323,
+    "figureLuma": 148.04,
+    "groundLuma": 56.02,
     "figurePixels": 1368,
     "groundPixels": 5472,
     "fixture": "foes-vigil-b",
@@ -756,10 +756,10 @@
     "board": "Vigil"
    },
    {
-    "contrastRatio": 3.125,
-    "mergeFraction": 0.0624,
-    "figureLuma": 140.32,
-    "groundLuma": 55.05,
+    "contrastRatio": 3.124,
+    "mergeFraction": 0.0618,
+    "figureLuma": 140.3,
+    "groundLuma": 55.04,
     "figurePixels": 1892,
     "groundPixels": 7396,
     "fixture": "foes-vigil-b",
@@ -1093,7 +1093,7 @@
    },
    {
     "contrastRatio": 2.647,
-    "mergeFraction": 0.1716,
+    "mergeFraction": 0.1701,
     "figureLuma": 124.14,
     "groundLuma": 62.01,
     "figurePixels": 676,
@@ -1213,7 +1213,7 @@
    },
    {
     "contrastRatio": 2.686,
-    "mergeFraction": 0.1776,
+    "mergeFraction": 0.1769,
     "figureLuma": 125.31,
     "groundLuma": 62.05,
     "figurePixels": 1560,
@@ -1491,7 +1491,7 @@
    },
    {
     "contrastRatio": 5.385,
-    "mergeFraction": 0.1688,
+    "mergeFraction": 0.1692,
     "figureLuma": 138.87,
     "groundLuma": 28.93,
     "figurePixels": 2464,
@@ -1587,7 +1587,7 @@
    },
    {
     "contrastRatio": 3.462,
-    "mergeFraction": 0.1823,
+    "mergeFraction": 0.1816,
     "figureLuma": 136.49,
     "groundLuma": 49.8,
     "figurePixels": 1580,
@@ -1716,7 +1716,7 @@
    "Root": 2.73,
    "Vault": 4.23
   },
-  "merge": 0.0936,
+  "merge": 0.0934,
   "gate": true,
   "rows": [
    {
@@ -1961,9 +1961,9 @@
    },
    {
     "contrastRatio": 3.204,
-    "mergeFraction": 0.0494,
+    "mergeFraction": 0.0488,
     "figureLuma": 169.18,
-    "groundLuma": 61.59,
+    "groundLuma": 61.58,
     "figurePixels": 1620,
     "groundPixels": 6642,
     "fixture": "foes-vigil-b",
@@ -1985,8 +1985,8 @@
    },
    {
     "contrastRatio": 3.755,
-    "mergeFraction": 0.0839,
-    "figureLuma": 118.91,
+    "mergeFraction": 0.0826,
+    "figureLuma": 118.9,
     "groundLuma": 40.47,
     "figurePixels": 2408,
     "groundPixels": 9632,
@@ -2084,7 +2084,7 @@
  "Warden": {
   "shots": 15,
   "mean": 3.742,
-  "worst": 1.84,
+  "worst": 1.839,
   "boards": {
    "Vigil": 3.78,
    "Root": 3.22,
@@ -2216,7 +2216,7 @@
    {
     "contrastRatio": 3.379,
     "mergeFraction": 0.1021,
-    "figureLuma": 178.59,
+    "figureLuma": 178.58,
     "groundLuma": 87.01,
     "figurePixels": 1460,
     "groundPixels": 5694,
@@ -2240,7 +2240,7 @@
    {
     "contrastRatio": 3.416,
     "mergeFraction": 0.0286,
-    "figureLuma": 154.63,
+    "figureLuma": 154.64,
     "groundLuma": 53.5,
     "figurePixels": 1992,
     "groundPixels": 7802,
@@ -2312,7 +2312,7 @@
    {
     "contrastRatio": 3.471,
     "mergeFraction": 0.0925,
-    "figureLuma": 176.86,
+    "figureLuma": 176.85,
     "groundLuma": 84.4,
     "figurePixels": 1460,
     "groundPixels": 5694,
@@ -2358,10 +2358,10 @@
     "board": "Vigil"
    },
    {
-    "contrastRatio": 1.84,
+    "contrastRatio": 1.839,
     "mergeFraction": 0.0092,
-    "figureLuma": 121.83,
-    "groundLuma": 65.29,
+    "figureLuma": 121.82,
+    "groundLuma": 65.3,
     "figurePixels": 2064,
     "groundPixels": 8084,
     "fixture": "foes-vigil-b",
@@ -2464,7 +2464,7 @@
    "Root": 2.9,
    "Vault": 4.88
   },
-  "merge": 0.0934,
+  "merge": 0.0935,
   "gate": true,
   "rows": [
    {
@@ -2493,7 +2493,7 @@
    },
    {
     "contrastRatio": 6.401,
-    "mergeFraction": 0.13,
+    "mergeFraction": 0.1303,
     "figureLuma": 145.16,
     "groundLuma": 23.97,
     "figurePixels": 2992,
@@ -2590,7 +2590,7 @@
    {
     "contrastRatio": 3.895,
     "mergeFraction": 0.1241,
-    "figureLuma": 146.21,
+    "figureLuma": 146.22,
     "groundLuma": 46.58,
     "figurePixels": 1620,
     "groundPixels": 6642,
@@ -2950,7 +2950,7 @@
    {
     "contrastRatio": 3.083,
     "mergeFraction": 0.1098,
-    "figureLuma": 130.11,
+    "figureLuma": 130.1,
     "groundLuma": 53.74,
     "figurePixels": 756,
     "groundPixels": 3024,
@@ -3068,10 +3068,10 @@
     "board": "Root"
    },
    {
-    "contrastRatio": 2.984,
-    "mergeFraction": 0.1173,
+    "contrastRatio": 2.983,
+    "mergeFraction": 0.1185,
     "figureLuma": 128.47,
-    "groundLuma": 54.16,
+    "groundLuma": 54.15,
     "figurePixels": 1620,
     "groundPixels": 6642,
     "fixture": "default-seed-battle",
