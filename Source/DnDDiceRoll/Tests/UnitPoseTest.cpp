@@ -526,15 +526,9 @@ double FigureHeight(const AExpeditionBattleView& View, USceneComponent* RigRoot)
 
 bool ExpectsRig(const FCombatantState& Unit)
 {
-    // Eight classes are rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric, batch 2 barbarian, monk, paladin and ranger); the rest keep their
-    // static or primitive figures until their batch.
-    if (Unit.Side == ECombatSide::Party)
-    {
-        return Unit.AdventurerRole == EAdventurerRole::Fighter || Unit.AdventurerRole == EAdventurerRole::Rogue ||
-            Unit.AdventurerRole == EAdventurerRole::Cleric || Unit.AdventurerRole == EAdventurerRole::Wizard ||
-            Unit.AdventurerRole == EAdventurerRole::Barbarian || Unit.AdventurerRole == EAdventurerRole::Monk ||
-            Unit.AdventurerRole == EAdventurerRole::Paladin || Unit.AdventurerRole == EAdventurerRole::Ranger;
-    }
+    // Every party class is rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric, batch 2 barbarian, monk, paladin and ranger, batch 3 sorcerer,
+    // warlock and druid, batch 4 bard and artificer); of the foes only the raider is.
+    if (Unit.Side == ECombatSide::Party) { return Unit.AdventurerRole != EAdventurerRole::None; }
     return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider"));
 }
 
@@ -2345,6 +2339,8 @@ bool FCasterBasicAttackTest::RunTest(const FString& Parameters)
         {TEXT("warlock"), EAdventurerRole::Warlock, false, true},
         {TEXT("druid"), EAdventurerRole::Druid, false, true},
         {TEXT("cleric"), EAdventurerRole::Cleric, false, true},
+        {TEXT("bard"), EAdventurerRole::Bard, false, true},
+        {TEXT("artificer"), EAdventurerRole::Artificer, false, false},
         {TEXT("ranger"), EAdventurerRole::Ranger, false, false},
         {TEXT("rogue"), EAdventurerRole::Rogue, false, false},
         {TEXT("foe archer"), EAdventurerRole::None, true, false},
@@ -2406,7 +2402,7 @@ bool FCasterBasicAttackTest::RunTest(const FString& Parameters)
         }
     }
     // Each caster's bolt is its own colour, and none is the arrow's pale colour.
-    TestEqual(TEXT("Four caster bolt colours were seen"), BoltColours.Num(), 4);
+    TestEqual(TEXT("Five caster bolt colours were seen (the cleric and the sorcerer, warlock, druid and bard)"), BoltColours.Num(), 5);
     for (int32 A = 0; A < BoltColours.Num(); ++A)
     {
         for (int32 B = A + 1; B < BoltColours.Num(); ++B) { TestFalse(FString::Printf(TEXT("Bolt colours %d and %d differ"), A, B), BoltColours[A].Equals(BoltColours[B], 0.05f)); }
@@ -2431,6 +2427,8 @@ bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
         {TEXT("druid (a thorn flame)"), nullptr, EAdventurerRole::Druid, false, false},
         {TEXT("wizard (a spell bolt)"), nullptr, EAdventurerRole::Wizard, false, false},
         {TEXT("cleric (a spell bolt)"), nullptr, EAdventurerRole::Cleric, false, false},
+        {TEXT("bard (a dissonant bolt)"), nullptr, EAdventurerRole::Bard, false, false},
+        {TEXT("artificer (a crossbow bolt)"), nullptr, EAdventurerRole::Artificer, false, true},
     };
     for (const FCase& Case : Cases)
     {
@@ -2486,6 +2484,412 @@ bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
         TestFalse(Who + TEXT(": playback is done"), Show.IsBusy());
         ExpectConverged(*this, Who + TEXT(" after the shot"), Show, S.After);
     }
+    return !HasAnyErrors();
+}
+
+namespace CastBatch4
+{
+// The bard and artificer (#150 batch 4). Every kit ability of both is a spell (the catalog marks the casters, the artificer and the bard among them), so their specials cast and
+// neither braces. The bard's basic attack is a teal spell bolt from range and a rapier swing up close; the artificer's is a lightless crossbow bolt (an arrow, the Ranged clip) from range
+// and a hammer swing up close; only the artificer's damaging spell specials from range throw a cyan bolt.
+struct FClass
+{
+    EAdventurerRole Role;
+    const TCHAR* Who;
+    const TCHAR* HeroBuild;
+    const TCHAR* SpellBuild;      // a build whose Special is a spell that damages an enemy, and its ability
+    const TCHAR* SpellAbility;
+    const TCHAR* WardBuild;       // a build whose Special is a spell with a self or ally effect, and its ability
+    const TCHAR* WardAbility;
+    bool bWardOnAlly;
+    bool bBasicSpell;             // the ranged basic attack is a spell bolt (Cast) rather than an arrow (Ranged)
+};
+
+const FClass Classes[] = {
+    {EAdventurerRole::Bard, TEXT("bard"), TEXT("bard.valor"), TEXT("bard.valor"), TEXT("Valiant Strike"), TEXT("bard.eloquence"), TEXT("Reassuring Word"), true, true},
+    {EAdventurerRole::Artificer, TEXT("artificer"), TEXT("artificer.battle-smith"), TEXT("artificer.artillerist"), TEXT("Force Cannon"), TEXT("artificer.armorer"), TEXT("Defensive Field"), false, false},
+};
+
+bool NewCastRun(FExpeditionRun& Run, int32 Seed, const TCHAR* Identity, TMap<EAdventurerRole, int32>& Ids)
+{
+    TArray<FPartyBuildSelection> Party;
+    int32 Index = 0;
+    for (const TCHAR* Build : {Classes[0].HeroBuild, Classes[1].HeroBuild, TEXT("fighter.champion"), TEXT("wizard.evocation")})
+    {
+        FPartyBuildSelection Slot;
+        Slot.Id = ++Index;
+        Slot.Name = FString::Printf(TEXT("Hero %d"), Index);
+        Slot.BuildId = Build;
+        Party.Add(Slot);
+    }
+    FString Error;
+    if (!Run.NewRun(Seed, Party, Error, Identity)) { return false; }
+    const auto* Route = Run.Progress().Offers.FindByPredicate([](const auto& R) { return !R.bDangerous; });
+    if (!Route || !Run.ChooseRoute(Route->Id, Error)) { return false; }
+    for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Party) { Ids.Add(Unit.AdventurerRole, Unit.Id); } }
+    return Ids.Num() == 4;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch4MappingTest, "Project.Expedition.Presentation.CastBatch4ClipMapping",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch4MappingTest::RunTest(const FString& Parameters)
+{
+    for (const CastBatch4::FClass& Class : CastBatch4::Classes)
+    {
+        int32 Builds = 0, Abilities = 0;
+        for (const FBuildDefinition& Build : FBuildCatalog::All())
+        {
+            if (Build.Profile.AdventurerRole != Class.Role) { continue; }
+            FCombatantState Hero;
+            if (!TestTrue(FString::Printf(TEXT("%s builds a hero"), *Build.Id), FBuildCatalog::Create(Build.Id, 1, TEXT("Hero"), Hero))) { continue; }
+            ++Builds;
+            for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(Hero))
+            {
+                ++Abilities;
+                TestTrue(FString::Printf(TEXT("%s %s is a spell"), *Build.Id, *Ability.Name), Ability.bSpell);
+                for (const bool bFar : {false, true})
+                { RigPoseTest::ExpectPose(*this, FString::Printf(TEXT("%s %s (%s)"), *Build.Id, *Ability.Name, bFar ? TEXT("far") : TEXT("near")), ExpeditionPose::ForAbility(Ability, bFar), EUnitPose::Cast); }
+            }
+        }
+        TestTrue(FString::Printf(TEXT("%s: the catalog has its builds and abilities (%d builds, %d abilities)"), Class.Who, Builds, Abilities), Builds >= 4 && Abilities >= 8);
+        TestEqual(FString::Printf(TEXT("%s's ranged basic attack is %s"), Class.Who, Class.bBasicSpell ? TEXT("a spell") : TEXT("not a spell")),
+            ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, true), Class.bBasicSpell);
+        TestFalse(FString::Printf(TEXT("%s's adjacent basic attack is a weapon"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, false));
+        TestFalse(FString::Printf(TEXT("%s's Precision Strike is never a spell"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::PrecisionStrike, Class.Role, true));
+        // The attack's clip: a spell casts at range; otherwise the weapon clip by distance.
+        RigPoseTest::ExpectPose(*this, FString(Class.Who) + TEXT(" attacks at range"), ExpeditionPose::ForCommand(ECombatCommandType::Attack, true, ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, true)),
+            Class.bBasicSpell ? EUnitPose::Cast : EUnitPose::Ranged);
+        RigPoseTest::ExpectPose(*this, FString(Class.Who) + TEXT(" attacks up close"), ExpeditionPose::ForCommand(ECombatCommandType::Attack, false, ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, false)), EUnitPose::Melee);
+    }
+    // The bolt colours: the bard's teal and the artificer's cyan are their own, and neither is the arrow's pale colour.
+    const FLinearColor Bard = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Bard, false).Color;
+    const FLinearColor Artificer = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Artificer, false).Color;
+    const FLinearColor Arrow = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).Color;
+    TestFalse(TEXT("The bard's bolt is not the arrow colour"), Bard.Equals(Arrow, 0.05f));
+    TestFalse(TEXT("The artificer's bolt is not the arrow colour"), Artificer.Equals(Arrow, 0.05f));
+    TestFalse(TEXT("The bard's and the artificer's bolts differ"), Bard.Equals(Artificer, 0.05f));
+    for (const EAdventurerRole Other : {EAdventurerRole::Wizard, EAdventurerRole::Cleric, EAdventurerRole::Sorcerer, EAdventurerRole::Warlock, EAdventurerRole::Druid})
+    {
+        TestFalse(TEXT("The bard's bolt differs from every other caster's"), Bard.Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Other, false).Color, 0.05f));
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch4PlaybackTest, "Project.Expedition.Presentation.CastBatch4PlaybackConverges",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch4PlaybackTest::RunTest(const FString& Parameters)
+{
+    using namespace CastBatchPlayback;
+    using CastBatch2::FindAbility;
+    using CastBatch2::SpecialOf;
+    // The bard and artificer (#150 batch 4), each named, through real FExpeditionPlayback: a basic attack (up close and from range), a damaging spell, a ward (a spell:
+    // Cast, never Brace), a hit, downing, a rescue that plays Recover and ends at Idle, and death. Each outcome at 1x, 2x, instant (Finish), skipped mid-animation, and a
+    // fresh playback reset on the committed state (the Resume path) shows the same pose and transform.
+    for (const CastBatch4::FClass& Class : CastBatch4::Classes)
+    {
+        const FString Who = Class.Who;
+        auto Scene = [&](int32 FoeX, FPoseScene& Out, const TCHAR* Build) { return MakeScene(Out, FoeX) && MakeHero(Out, Build); };
+        const FAbilityFacts* Spell = FindAbility(Class.SpellBuild, Class.SpellAbility);
+        const FAbilityFacts* Ward = FindAbility(Class.WardBuild, Class.WardAbility);
+        if (!TestNotNull(Who + TEXT(": the catalog has ") + Class.SpellAbility, Spell) || !TestNotNull(Who + TEXT(": the catalog has ") + Class.WardAbility, Ward)) { return false; }
+        TestTrue(Who + TEXT(": ") + Class.SpellAbility + TEXT(" is a damaging spell"), Spell->bSpell && Spell->Target == EAbilityTarget::Enemy);
+        TestTrue(Who + TEXT(": ") + Class.WardAbility + TEXT(" is a spell with no enemy target"), Ward->bSpell && Ward->Target != EAbilityTarget::Enemy);
+        for (const int32 FoeX : {3, 7})
+        {
+            const bool bFar = FoeX == 7;
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(FoeX, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.After, S.Foe)->HP = S.Unit(S.Before, S.Foe)->HP - 3;
+            FCombatResult Strike = MakeResult(ECombatCommandType::Attack, S.Hero, S.Foe);
+            Strike.bHit = true;
+            Strike.Damage = 3;
+            const EUnitPose Expected = !bFar ? EUnitPose::Melee : Class.bBasicSpell ? EUnitPose::Cast : EUnitPose::Ranged;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s attacks %s"), *Who, bFar ? TEXT("at range") : TEXT("up close")), S, Strike, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the expected clip"), Seen.Saw(S.Hero, Expected));
+                for (const EUnitPose Other : {EUnitPose::Melee, EUnitPose::Ranged, EUnitPose::Cast, EUnitPose::Brace})
+                { if (Other != Expected) { TestFalse(Label + FString::Printf(TEXT(": not %s"), ExpeditionPose::ClipName(Other)), Seen.Saw(S.Hero, Other)); } }
+                TestTrue(Label + TEXT(": the target flinches"), Seen.Saw(S.Foe, EUnitPose::Hit));
+            });
+        }
+        for (const int32 FoeX : {3, 6})
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(FoeX, S, Class.SpellBuild))) { return false; }
+            S.Unit(S.After, S.Foe)->HP = S.Unit(S.Before, S.Foe)->HP - 3;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s %s (foe at %d)"), *Who, Class.SpellAbility, FoeX), S, SpecialOf(*Spell, S, S.Hero, S.Foe), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero casts"), Seen.Saw(S.Hero, EUnitPose::Cast));
+                TestFalse(Label + TEXT(": no weapon clip, no brace"), Seen.Saw(S.Hero, EUnitPose::Melee) || Seen.Saw(S.Hero, EUnitPose::Ranged) || Seen.Saw(S.Hero, EUnitPose::Brace));
+            });
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(7, S, Class.WardBuild))) { return false; }
+            const int32 Target = Class.bWardOnAlly ? S.Ally : S.Hero;
+            PlayAtEveryEnding(*this, FString::Printf(TEXT("%s %s"), *Who, Class.WardAbility), S, SpecialOf(*Ward, S, S.Hero, Target), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero casts"), Seen.Saw(S.Hero, EUnitPose::Cast));
+                TestFalse(Label + TEXT(": a spell never braces, no weapon clip"), Seen.Saw(S.Hero, EUnitPose::Brace) || Seen.Saw(S.Hero, EUnitPose::Melee) || Seen.Saw(S.Hero, EUnitPose::Ranged));
+            });
+            FExpeditionPlayback Show;
+            Show.Reset(S.Before);
+            Show.Enqueue({SpecialOf(*Ward, S, S.Hero, Target)}, S.After);
+            FSeen Seen;
+            PlayOut(Show, S.After, Seen);
+            for (int32 Frame = 0; Frame < 200; ++Frame) { Show.Tick(0.05f); }
+            ExpectPose(*this, Who + TEXT(" stands at Idle after the ward"), Show.Unit(S.Hero)->Pose, EUnitPose::Idle);
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.After, S.Hero)->HP = S.Unit(S.Before, S.Hero)->HP - 3;
+            PlayAtEveryEnding(*this, Who + TEXT(" is hit"), S, Blow(S, 3), [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero flinches"), Seen.Saw(S.Hero, EUnitPose::Hit));
+                TestFalse(Label + TEXT(": and does not fall"), Seen.Saw(S.Hero, EUnitPose::Downed) || Seen.Saw(S.Hero, EUnitPose::Death));
+            });
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            FCombatResult Down = Blow(S, 99);
+            Down.Downed = {S.Hero};
+            S.Unit(S.After, S.Hero)->HP = 0;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Downed;
+            PlayAtEveryEnding(*this, Who + TEXT(" goes down"), S, Down, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero is downed"), Seen.Saw(S.Hero, EUnitPose::Downed));
+                TestFalse(Label + TEXT(": not dead"), Seen.Saw(S.Hero, EUnitPose::Death));
+            });
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(7, S, Class.HeroBuild))) { return false; }
+            S.Unit(S.Before, S.Hero)->Life = ECombatLife::Downed;
+            S.Unit(S.Before, S.Hero)->HP = 0;
+            S.After = S.Before;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Conscious;
+            S.Unit(S.After, S.Hero)->HP = 5;
+            FCombatResult Save = MakeResult(ECombatCommandType::Rescue, S.Ally, S.Hero);
+            Save.Healing = 5;
+            PlayAtEveryEnding(*this, Who + TEXT(" is rescued"), S, Save, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero plays Recover"), Seen.Saw(S.Hero, EUnitPose::Recover));
+                TestTrue(Label + TEXT(": from Downed"), Seen.Saw(S.Hero, EUnitPose::Downed));
+            });
+            FExpeditionPlayback Show;
+            Show.Reset(S.Before);
+            Show.Enqueue({Save}, S.After);
+            FSeen Seen;
+            PlayOut(Show, S.After, Seen);
+            for (int32 Frame = 0; Frame < 200; ++Frame) { Show.Tick(0.05f); }
+            ExpectPose(*this, Who + TEXT(" stands at Idle after Recover"), Show.Unit(S.Hero)->Pose, EUnitPose::Idle);
+        }
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), Scene(3, S, Class.HeroBuild))) { return false; }
+            FCombatResult Kill = Blow(S, 99);
+            Kill.Died = {S.Hero};
+            S.Unit(S.After, S.Hero)->HP = 0;
+            S.Unit(S.After, S.Hero)->Life = ECombatLife::Dead;
+            PlayAtEveryEnding(*this, Who + TEXT(" dies"), S, Kill, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + TEXT(": the hero dies"), Seen.Saw(S.Hero, EUnitPose::Death));
+                TestFalse(Label + TEXT(": without a Hit first"), Seen.Saw(S.Hero, EUnitPose::Hit));
+            });
+        }
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArtificerSpellBoltTest, "Project.Expedition.Presentation.ArtificerSpellBolt",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FArtificerSpellBoltTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatchPlayback;
+    using CastBatch2::FindAbility;
+    using CastBatch2::SpecialOf;
+    // The artificer's damaging spell special aimed at an enemy from range throws one cyan bolt at the Cast release frame, before the hit lands and never an arrow; the same special up
+    // close, a ward, and every other class's special throw nothing (the lead's call: a cyan bolt only for the artificer's spell specials).
+    const FAbilityFacts* Cannon = FindAbility(TEXT("artificer.artillerist"), TEXT("Force Cannon"));
+    const FAbilityFacts* Field = FindAbility(TEXT("artificer.armorer"), TEXT("Defensive Field"));
+    const FAbilityFacts* Valiant = FindAbility(TEXT("bard.valor"), TEXT("Valiant Strike"));
+    if (!TestNotNull(TEXT("Force Cannon is in the catalog"), Cannon) || !TestNotNull(TEXT("Defensive Field is in the catalog"), Field) || !TestNotNull(TEXT("Valiant Strike is in the catalog"), Valiant)) { return false; }
+    struct FCase { const TCHAR* Name; const TCHAR* Build; const FAbilityFacts* Ability; int32 FoeX; bool bSelf; bool bBolt; };
+    const FCase Cases[] = {
+        {TEXT("artificer Force Cannon from range"), TEXT("artificer.artillerist"), Cannon, 7, false, true},
+        {TEXT("artificer Force Cannon up close"), TEXT("artificer.artillerist"), Cannon, 3, false, false},
+        {TEXT("artificer Defensive Field (a ward)"), TEXT("artificer.armorer"), Field, 7, true, false},
+        {TEXT("bard Valiant Strike from range (no special bolt)"), TEXT("bard.valor"), Valiant, 7, false, false},
+    };
+    const FLinearColor Cyan = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Artificer, false).Color;
+    for (const FCase& Case : Cases)
+    {
+        FPoseScene S;
+        if (!TestTrue(FString(Case.Name) + TEXT(": scene builds"), MakeScene(S, Case.FoeX) && MakeHero(S, Case.Build))) { return false; }
+        const int32 Target = Case.bSelf ? S.Hero : S.Foe;
+        if (!Case.bSelf) { S.Unit(S.After, S.Foe)->HP = S.Unit(S.Before, S.Foe)->HP - 3; }
+        FExpeditionPlayback Show;
+        Show.Reset(S.Before);
+        Show.Enqueue({SpecialOf(*Case.Ability, S, S.Hero, Target)}, S.After);
+        float Clock = 0.0f, CastStart = -1.0f, FirstBolt = -1.0f, FirstHit = -1.0f;
+        int32 Bolts = 0, Arrows = 0;
+        bool bCyan = true;
+        for (int32 Frame = 0; Frame < 1200 && Show.IsBusy(); ++Frame)
+        {
+            Show.Tick(0.016f);
+            Clock += 0.016f;
+            const FUnitDisplay* Hero = Show.Unit(S.Hero);
+            if (Hero && Hero->Pose == EUnitPose::Cast && CastStart < 0.0f) { CastStart = Clock; }
+            const FUnitDisplay* Struck = Show.Unit(S.Foe);
+            if (Struck && Struck->Pose == EUnitPose::Hit && FirstHit < 0.0f) { FirstHit = Clock; }
+            for (const FPlaybackProjectile& Live : Show.Projectiles())
+            {
+                if (Live.Age < 0.0f) { continue; }
+                if (FirstBolt < 0.0f) { FirstBolt = Clock; }
+                (Live.bArrow ? Arrows : Bolts) += 1;
+                bCyan &= !Live.bArrow && Live.Color.Equals(Cyan, 0.001f);
+            }
+        }
+        const FString Who = Case.Name;
+        TestEqual(*(Who + TEXT(": never an arrow")), Arrows, 0);
+        if (Case.bBolt)
+        {
+            TestTrue(*(Who + TEXT(": a cyan bolt flew")), Bolts > 0 && bCyan);
+            TestTrue(Who + TEXT(": the Cast clip plays"), CastStart >= 0.0f);
+            TestTrue(*(Who + FString::Printf(TEXT(": the bolt leaves %.2f s after the cast starts, at the release frame (%.2f s)"), FirstBolt - CastStart, FExpeditionPlayback::CastReleaseSeconds)),
+                FirstBolt - CastStart >= FExpeditionPlayback::CastReleaseSeconds - 0.05f && FirstBolt - CastStart <= FExpeditionPlayback::CastReleaseSeconds + 0.12f);
+            TestTrue(*(Who + TEXT(": the hit lands after the bolt leaves")), FirstHit > FirstBolt);
+        }
+        else { TestEqual(*(Who + TEXT(": nothing is thrown")), Bolts, 0); }
+        TestFalse(Who + TEXT(": playback is done"), Show.IsBusy());
+        ExpectConverged(*this, Who + TEXT(" after the special"), Show, S.After);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch4FiguresTest, "Project.Expedition.Presentation.CastBatch4RiggedFigures",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch4FiguresTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    // A party of the bard, the artificer, a fighter and a wizard on a real board: each is a rigged figure (never the static or primitive fallback), on its cell, 175 to 185 cm tall,
+    // with the silhouette stencil and one tintable skin slot, plays Cast and Brace on its skinned mesh, and converges. The bard and artificer resolve to their own rigs.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatch4Figures"), FGuid::NewGuid().ToString());
+    FExpeditionRun Run;
+    TMap<EAdventurerRole, int32> Ids;
+    if (!TestTrue(TEXT("A run with the two batch 4 classes starts"), CastBatch4::NewCastRun(Run, 7, TEXT("cast4-figures"), Ids))) { return false; }
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    FExpeditionSaveData Data;
+    Data.Current = Run.Snapshot();
+    FString Error;
+    if (!TestTrue(TEXT("The checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); return false; }
+    UWorld* World = nullptr;
+    AExpeditionBattleView* View = MakeView(World, Path, EView::Rigged);
+    if (!TestNotNull(TEXT("Resumed view"), View)) { return false; }
+    View->Resume();
+    View->Tick(0.016f);
+    TestTrue(TEXT("The shipped theme loads"), View->UsesTheme());
+    const UDiceRollTheme* Theme = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme"))).LoadSynchronous();
+    for (const CastBatch4::FClass& Class : CastBatch4::Classes)
+    {
+        const int32 Id = Ids.FindRef(Class.Role);
+        const FString Label = Class.Who;
+        const FDiceRollCharacter* Rig = Theme ? Theme->RigForClass(Class.Role) : nullptr;
+        if (TestNotNull(Label + TEXT(" resolves to a rig with no fallback"), Rig)) { TestTrue(Label + TEXT(" has its own mesh"), Rig->Mesh.ToString().Contains(FString(TEXT("SK_Hero_")) + (Class.Role == EAdventurerRole::Bard ? TEXT("Bard") : TEXT("Artificer")))); }
+        const FUnitAnimationState State = View->UnitAnimation(Id);
+        if (!TestTrue(Label + TEXT(" is a rigged figure (run import_dark_fantasy_theme.py)"), State.bSkeletal)) { continue; }
+        USceneComponent* RigRoot = View->UnitRigRoot(Id);
+        if (!TestNotNull(Label + TEXT(" has a rig root"), RigRoot)) { continue; }
+        const FCombatantState* Unit = View->Rules().Find(Id);
+        TestTrue(Label + TEXT("'s rig root is on its cell"), Unit && FVector2D(RigRoot->GetRelativeLocation()).Equals(FVector2D(View->CellPosition(Unit->Cell)), 0.1f));
+        TestEqual(*(Label + TEXT("'s skin carries the party silhouette stencil")), View->FigureStencil(Id), AExpeditionBattleView::PartyStencil);
+        TArray<FLinearColor> SkinColors;
+        FLinearColor SkinRing;
+        TestTrue(Label + TEXT("'s skin has one tintable slot"), View->UnitShownColors(Id, SkinColors, SkinRing) && SkinColors.Num() == 1);
+        const double Height = FigureHeight(*View, RigRoot);
+        TestTrue(FString::Printf(TEXT("%s stands 175 to 185 cm (measured %.1f)"), *Label, Height), Height >= 175.0 && Height <= 185.0);
+        for (const EUnitPose Pose : {EUnitPose::Cast, EUnitPose::Brace})
+        {
+            if (TestTrue(Label + TEXT(": the clip can be held"), View->PreviewPose(Id, Pose, 0.5f)))
+            {
+                View->Tick(0.016f);
+                const FUnitAnimationState Held = View->UnitAnimation(Id);
+                ExpectPose(*this, Label + TEXT(" plays its clip"), Held.Pose, Pose);
+                TestTrue(*(Label + FString::Printf(TEXT(" has its %s clip bound (%.2f s)"), ExpeditionPose::ClipName(Pose), Held.Length)), Held.Clip.Contains(ExpeditionPose::ClipName(Pose)) && Held.Length > 0.5f);
+                View->ClearPosePreview();
+                View->Tick(0.016f);
+            }
+        }
+    }
+    TestEqual(TEXT("All four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    ExpectFiguresConverged(*this, *View, TEXT("the batch 4 party at rest"));
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCastBatch4FallenTest, "Project.Expedition.Presentation.CastBatch4FallenAndRecover",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCastBatch4FallenTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    // Each of the two, downed and dead in a committed checkpoint, resumes in a fresh world at the end of its Downed or Death clip; its skinned mesh also plays Recover.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/CastBatch4Fallen"), FGuid::NewGuid().ToString());
+    for (const CastBatch4::FClass& Class : CastBatch4::Classes)
+    {
+        for (const ECombatLife Life : {ECombatLife::Downed, ECombatLife::Dead})
+        {
+            const FString Label = FString::Printf(TEXT("%s %s"), Class.Who, Life == ECombatLife::Downed ? TEXT("downed") : TEXT("dead"));
+            FExpeditionRun Run;
+            TMap<EAdventurerRole, int32> Ids;
+            if (!TestTrue(Label + TEXT(": a run starts"), CastBatch4::NewCastRun(Run, 7, TEXT("cast4-fallen"), Ids))) { continue; }
+            FExpeditionSnapshot Snapshot = Run.Snapshot();
+            const int32 HeroId = Ids.FindRef(Class.Role);
+            for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+            {
+                if (Unit.Id != HeroId) { continue; }
+                Unit.HP = 0;
+                Unit.Life = Life;
+                Unit.RescueTurnsLeft = Life == ECombatLife::Downed ? 2 : 0;
+            }
+            const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("%d-%d"), static_cast<int32>(Class.Role), static_cast<int32>(Life)), TEXT("current.json"));
+            FExpeditionSaveData Data;
+            Data.Current = Snapshot;
+            FString Error;
+            if (!TestTrue(Label + TEXT(": the checkpoint writes"), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); continue; }
+            AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+            if (!TestNotNull(Label + TEXT(": resumed view"), View)) { continue; }
+            View->Resume();
+            View->Tick(0.016f);
+            if (TestTrue(Label + TEXT(": the resumed view is mid-encounter"), View->HasRun() && View->InCombat()))
+            {
+                const FUnitAnimationState State = View->UnitAnimation(HeroId);
+                TestTrue(Label + TEXT(" is a rigged figure"), State.bSkeletal);
+                const EUnitPose Rest = ExpeditionPose::Rest(Life);
+                ExpectPose(*this, Label + TEXT(" holds its fallen pose"), State.Pose, Rest);
+                TestTrue(Label + TEXT(" has its clip bound"), State.Clip.Contains(ExpeditionPose::ClipName(Rest)));
+                TestTrue(*(Label + FString::Printf(TEXT(" holds the end of its clip (%.3f of %.3f s)"), State.Time, State.Length)), State.Length > 0.1f && State.Time >= State.Length - 0.001f);
+                ExpectFiguresConverged(*this, *View, Label + TEXT(" resumed"));
+                if (TestTrue(Label + TEXT(": Recover can be held"), View->PreviewPose(HeroId, EUnitPose::Recover, 1.0f)))
+                {
+                    View->Tick(0.016f);
+                    const FUnitAnimationState Held = View->UnitAnimation(HeroId);
+                    ExpectPose(*this, Label + TEXT(" plays Recover"), Held.Pose, EUnitPose::Recover);
+                    TestTrue(Label + TEXT(" has its Recover clip bound"), Held.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Recover)) && Held.Length > 0.1f);
+                    View->ClearPosePreview();
+                    View->Tick(0.016f);
+                    ExpectFiguresConverged(*this, *View, Label + TEXT(" after Recover"));
+                }
+            }
+            ReleaseView(View);
+        }
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
 
