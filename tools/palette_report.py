@@ -67,10 +67,10 @@ def aggregate(measurements):
     return rows
 
 
-def collect(run, parties, only=None):
+def collect(runs, parties, only=None):
     members = real_members(parties)
     measurements = []
-    for manifest_path in sorted(Path(run).rglob("manifest.json")):
+    for manifest_path in sorted(path for run in runs for path in Path(run).rglob("manifest.json")):
         manifest = json.loads(manifest_path.read_text())
         match = FIXTURE.match(manifest.get("fixture", ""))
         if not match or match.group(1) not in members:
@@ -95,7 +95,7 @@ def markdown(rows):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("run", help="a gallery run folder")
+    parser.add_argument("run", nargs="+", help="gallery run folder(s) (one `gallery` run per fixture is fine: every manifest below each is read)")
     parser.add_argument("--parties", default=str(PARTIES), help="palette-parties.json written by the fixture test")
     parser.add_argument("--builds", help="comma-separated catalog build ids to report (default all measured)")
     parser.add_argument("--json", metavar="FILE")

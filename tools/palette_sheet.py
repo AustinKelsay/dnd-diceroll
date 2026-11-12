@@ -31,10 +31,10 @@ def magick(*args):
     subprocess.run([exe, *map(str, args)], check=True)
 
 
-def crops(run, parties, board, out_dir):
+def crops(runs, parties, board, out_dir):
     members = palette_report.real_members(parties)
     found = {}
-    for manifest_path in sorted(Path(run).rglob("manifest.json")):
+    for manifest_path in sorted(path for run in runs for path in Path(run).rglob("manifest.json")):
         manifest = json.loads(manifest_path.read_text())
         match = palette_report.FIXTURE.match(manifest.get("fixture", ""))
         if not match or match.group(2) != board or match.group(1) not in members:
@@ -61,7 +61,7 @@ def crops(run, parties, board, out_dir):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("run")
+    parser.add_argument("run", nargs="+")
     parser.add_argument("--out", required=True)
     parser.add_argument("--parties", default=str(palette_report.PARTIES))
     parser.add_argument("--board", default="root", choices=palette_report.BOARDS)

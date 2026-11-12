@@ -310,7 +310,7 @@ bool FPaletteDuplicatesTest::RunTest(const FString& Parameters)
             }
         }
         TestEqual(*(Label + TEXT(": accented heroes")), Accented, Case.Accented);
-        if (Case.Accented == 4 && Party.Num() == 4)
+        if (Case.Builds == &Same && Party.Num() == 4)
         {
             // Four of one build look different only through the accent: the subclass slots are equal.
             for (int32 Index = 1; Index < 4; ++Index)
