@@ -1,0 +1,13 @@
+artificer   20 measurements  accent share of the figure: mean   7.0%  worst  12.0%   patch   129 px per copy  copies apart: mean dE  41.5  nearest  20.0
+barbarian   20 measurements  accent share of the figure: mean   4.0%  worst   9.2%   patch    72 px per copy  copies apart: mean dE  46.2  nearest  20.6
+bard        20 measurements  accent share of the figure: mean   6.7%  worst  11.8%   patch   116 px per copy  copies apart: mean dE  33.9  nearest  12.5
+cleric      20 measurements  accent share of the figure: mean   6.1%  worst  13.7%   patch   125 px per copy  copies apart: mean dE  43.4  nearest  12.6
+druid       20 measurements  accent share of the figure: mean   8.0%  worst  13.4%   patch   143 px per copy  copies apart: mean dE  43.5  nearest  19.1
+fighter     20 measurements  accent share of the figure: mean   7.7%  worst  14.5%   patch   149 px per copy  copies apart: mean dE  36.6  nearest  13.7
+monk        20 measurements  accent share of the figure: mean   4.3%  worst   7.4%   patch    80 px per copy  copies apart: mean dE  39.6  nearest  17.4
+paladin     20 measurements  accent share of the figure: mean   7.8%  worst  21.5%   patch   166 px per copy  copies apart: mean dE  47.0  nearest  10.1
+ranger      20 measurements  accent share of the figure: mean   4.0%  worst   8.5%   patch    72 px per copy  copies apart: mean dE  34.1  nearest  16.7
+rogue       20 measurements  accent share of the figure: mean   7.8%  worst  24.1%   patch   130 px per copy  copies apart: mean dE  40.0  nearest  16.7
+sorcerer    20 measurements  accent share of the figure: mean   8.5%  worst  17.7%   patch   138 px per copy  copies apart: mean dE  36.0  nearest  15.7
+warlock     20 measurements  accent share of the figure: mean   6.4%  worst  15.6%   patch   128 px per copy  copies apart: mean dE  35.1  nearest  19.5
+wizard      20 measurements  accent share of the figure: mean   5.5%  worst   7.3%   patch   102 px per copy  copies apart: mean dE  30.7  nearest  18.3

@@ -1,0 +1,582 @@
+{
+ "rogue": {
+  "units": 20,
+  "mean": 0.0566,
+  "worst": 0.0807,
+  "patch_px": 97.2,
+  "separation": 29.4,
+  "nearest": 12.9,
+  "rows": [
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 115,
+    "figure": 1650,
+    "share": 0.0697,
+    "patch_rgb": [
+     161.9,
+     117.1,
+     114.7
+    ],
+    "separation": 36.4,
+    "nearest": 20.1
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 99,
+    "figure": 1519,
+    "share": 0.0652,
+    "patch_rgb": [
+     98.4,
+     124.4,
+     158.3
+    ],
+    "separation": 36.4,
+    "nearest": 20.1
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 132,
+    "figure": 1635,
+    "share": 0.0807,
+    "patch_rgb": [
+     90.7,
+     151.1,
+     104.1
+    ],
+    "separation": 36.4,
+    "nearest": 20.1
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 105,
+    "figure": 1494,
+    "share": 0.0703,
+    "patch_rgb": [
+     131.2,
+     124.1,
+     98.8
+    ],
+    "separation": 36.4,
+    "nearest": 20.1
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 75,
+    "figure": 1372,
+    "share": 0.0547,
+    "patch_rgb": [
+     172.1,
+     149.5,
+     147.4
+    ],
+    "separation": 17.1,
+    "nearest": 12.9
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 73,
+    "figure": 1476,
+    "share": 0.0495,
+    "patch_rgb": [
+     142.9,
+     161.8,
+     160.3
+    ],
+    "separation": 17.1,
+    "nearest": 12.9
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 86,
+    "figure": 1560,
+    "share": 0.0551,
+    "patch_rgb": [
+     142.8,
+     166.6,
+     130.5
+    ],
+    "separation": 17.1,
+    "nearest": 12.9
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 88,
+    "figure": 1423,
+    "share": 0.0618,
+    "patch_rgb": [
+     158.6,
+     153.7,
+     131.7
+    ],
+    "separation": 17.1,
+    "nearest": 12.9
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 90,
+    "figure": 1468,
+    "share": 0.0613,
+    "patch_rgb": [
+     202.5,
+     166.8,
+     134.2
+    ],
+    "separation": 29.7,
+    "nearest": 18.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 120,
+    "figure": 1683,
+    "share": 0.0713,
+    "patch_rgb": [
+     137.1,
+     181.1,
+     179.9
+    ],
+    "separation": 29.7,
+    "nearest": 18.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 108,
+    "figure": 1728,
+    "share": 0.0625,
+    "patch_rgb": [
+     125.1,
+     181.7,
+     122.5
+    ],
+    "separation": 29.7,
+    "nearest": 18.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 113,
+    "figure": 1915,
+    "share": 0.059,
+    "patch_rgb": [
+     167.6,
+     177.2,
+     120.7
+    ],
+    "separation": 29.7,
+    "nearest": 18.0
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 132,
+    "figure": 2288,
+    "share": 0.0577,
+    "patch_rgb": [
+     162.8,
+     131.9,
+     123.2
+    ],
+    "separation": 28.5,
+    "nearest": 15.5
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 106,
+    "figure": 2053,
+    "share": 0.0516,
+    "patch_rgb": [
+     116.9,
+     137.0,
+     161.5
+    ],
+    "separation": 28.5,
+    "nearest": 15.5
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 80,
+    "figure": 1907,
+    "share": 0.042,
+    "patch_rgb": [
+     120.2,
+     166.0,
+     130.8
+    ],
+    "separation": 28.5,
+    "nearest": 15.5
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 80,
+    "figure": 1758,
+    "share": 0.0455,
+    "patch_rgb": [
+     131.7,
+     123.2,
+     94.5
+    ],
+    "separation": 28.5,
+    "nearest": 15.5
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 78,
+    "figure": 2267,
+    "share": 0.0344,
+    "patch_rgb": [
+     181.9,
+     127.7,
+     120.6
+    ],
+    "separation": 35.3,
+    "nearest": 22.5
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 93,
+    "figure": 2066,
+    "share": 0.045,
+    "patch_rgb": [
+     104.6,
+     132.9,
+     162.5
+    ],
+    "separation": 35.3,
+    "nearest": 22.5
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 85,
+    "figure": 1885,
+    "share": 0.0451,
+    "patch_rgb": [
+     114.0,
+     165.3,
+     125.3
+    ],
+    "separation": 35.3,
+    "nearest": 22.5
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 85,
+    "figure": 1724,
+    "share": 0.0493,
+    "patch_rgb": [
+     136.6,
+     127.3,
+     98.5
+    ],
+    "separation": 35.3,
+    "nearest": 22.5
+   }
+  ]
+ },
+ "paladin": {
+  "units": 20,
+  "mean": 0.081,
+  "worst": 0.1536,
+  "patch_px": 146.5,
+  "separation": 31.4,
+  "nearest": 13.2,
+  "rows": [
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 87,
+    "figure": 1826,
+    "share": 0.0476,
+    "patch_rgb": [
+     179.8,
+     124.2,
+     132.3
+    ],
+    "separation": 27.7,
+    "nearest": 16.5
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 90,
+    "figure": 1714,
+    "share": 0.0525,
+    "patch_rgb": [
+     120.9,
+     141.6,
+     182.8
+    ],
+    "separation": 27.7,
+    "nearest": 16.5
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 80,
+    "figure": 1568,
+    "share": 0.051,
+    "patch_rgb": [
+     118.8,
+     151.5,
+     139.3
+    ],
+    "separation": 27.7,
+    "nearest": 16.5
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 68,
+    "figure": 1425,
+    "share": 0.0477,
+    "patch_rgb": [
+     131.3,
+     128.6,
+     129.5
+    ],
+    "separation": 27.7,
+    "nearest": 16.5
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 195,
+    "figure": 1406,
+    "share": 0.1387,
+    "patch_rgb": [
+     156.7,
+     116.9,
+     130.7
+    ],
+    "separation": 23.7,
+    "nearest": 15.8
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 235,
+    "figure": 1530,
+    "share": 0.1536,
+    "patch_rgb": [
+     117.8,
+     155.6,
+     171.0
+    ],
+    "separation": 23.7,
+    "nearest": 15.8
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 239,
+    "figure": 1581,
+    "share": 0.1512,
+    "patch_rgb": [
+     124.6,
+     151.5,
+     128.6
+    ],
+    "separation": 23.7,
+    "nearest": 15.8
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 225,
+    "figure": 1476,
+    "share": 0.1524,
+    "patch_rgb": [
+     136.9,
+     131.5,
+     122.8
+    ],
+    "separation": 23.7,
+    "nearest": 15.8
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 63,
+    "figure": 1471,
+    "share": 0.0428,
+    "patch_rgb": [
+     206.2,
+     117.5,
+     115.3
+    ],
+    "separation": 44.1,
+    "nearest": 29.2
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 81,
+    "figure": 1687,
+    "share": 0.048,
+    "patch_rgb": [
+     111.0,
+     150.1,
+     183.1
+    ],
+    "separation": 44.1,
+    "nearest": 29.2
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 72,
+    "figure": 1723,
+    "share": 0.0418,
+    "patch_rgb": [
+     91.9,
+     154.7,
+     111.5
+    ],
+    "separation": 44.1,
+    "nearest": 29.2
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 69,
+    "figure": 1940,
+    "share": 0.0356,
+    "patch_rgb": [
+     150.7,
+     142.4,
+     118.7
+    ],
+    "separation": 44.1,
+    "nearest": 29.2
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 161,
+    "figure": 2287,
+    "share": 0.0704,
+    "patch_rgb": [
+     169.5,
+     107.0,
+     119.1
+    ],
+    "separation": 31.3,
+    "nearest": 15.9
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 201,
+    "figure": 2286,
+    "share": 0.0879,
+    "patch_rgb": [
+     109.9,
+     126.9,
+     172.9
+    ],
+    "separation": 31.3,
+    "nearest": 15.9
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 174,
+    "figure": 2139,
+    "share": 0.0813,
+    "patch_rgb": [
+     104.9,
+     138.9,
+     126.2
+    ],
+    "separation": 31.3,
+    "nearest": 15.9
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 165,
+    "figure": 1991,
+    "share": 0.0829,
+    "patch_rgb": [
+     113.7,
+     112.9,
+     107.6
+    ],
+    "separation": 31.3,
+    "nearest": 15.9
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 152,
+    "figure": 2283,
+    "share": 0.0666,
+    "patch_rgb": [
+     169.4,
+     107.2,
+     118.7
+    ],
+    "separation": 30.2,
+    "nearest": 13.2
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 220,
+    "figure": 2314,
+    "share": 0.0951,
+    "patch_rgb": [
+     106.6,
+     128.6,
+     174.5
+    ],
+    "separation": 30.2,
+    "nearest": 13.2
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 179,
+    "figure": 2126,
+    "share": 0.0842,
+    "patch_rgb": [
+     112.8,
+     144.2,
+     135.9
+    ],
+    "separation": 30.2,
+    "nearest": 13.2
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 174,
+    "figure": 1966,
+    "share": 0.0885,
+    "patch_rgb": [
+     119.3,
+     121.1,
+     116.8
+    ],
+    "separation": 30.2,
+    "nearest": 13.2
+   }
+  ]
+ }
+}

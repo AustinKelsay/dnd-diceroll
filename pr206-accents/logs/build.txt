@@ -1,0 +1,6 @@
+Output binary: /home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Binaries/Linux/UnrealEditor
+
+Result: Succeeded
+Total execution time: 1.01 seconds
+Trace written to file /home/plebdev/.config/Epic/UnrealBuildTool/Trace.uba with size 2.7kb
+Build passed with 0 warnings; log: /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-24aefcc3-6e664eb7eaaaf5a7/.local/build/20261112T123628978609Z.log

@@ -1,0 +1,6 @@
+Capturing board-root-r002 at 1280x720
+Capturing board-vault at 1920x1080
+Capturing board-vault at 1280x720
+Capturing default-seed-route at 1920x1080
+Capturing default-seed-route at 1280x720
+Gallery: 18 run(s), 684 picture(s), 162 skipped as not applicable; index: /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-24aefcc3-6e664eb7eaaaf5a7/.local/gallery/20261112T124320994037Z/index.json

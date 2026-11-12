@@ -1,0 +1,4 @@
+(PR #203 table, acc-rogue-root and acc-paladin-root, same tool, the same 20 default-zoom views)
+rogue       20 measurements  accent share of the figure: mean   5.7%  worst   8.1%   patch    97 px per copy  copies apart: mean dE  29.4  nearest  12.9
+paladin     20 measurements  accent share of the figure: mean   8.1%  worst  15.4%   patch   146 px per copy  copies apart: mean dE  31.4  nearest  13.2
+before duplicate-party contrast: paladins 3.23 mean / 1.62 worst (Vigil 3.12, Root 2.91, Vault 3.66); rogues 2.63 / 1.70 (2.63, 2.33, 2.94)
