@@ -16,7 +16,7 @@
       "units": "metres, 1 cell = 1.50 m, footprint 18 x 12 cells = 27 x 18 m centred on the origin",
       "axes": "+X forward, Z up",
       "material": "one baseColor atlas 4096x2048 plus COLOR_0 RGBA (A = glow mask)",
-      "sampling": "Linear (trilinear + mips) with 16 px wrapped padding per atlas region",
+      "sampling": "Linear (trilinear + mips); 16 px wrapped padding around each region of the r001 left half, 24 px around the 2000 x 2000 rose region",
       "pivot": "origin = board centre at floor level; place at identity together with SM_World_Vigil",
       "triangles": 12307,
       "paired_asset": "world-vigil",
@@ -141,7 +141,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py",
-      "sha256": "a6913b4e8f18effa8b00df540973dfc33313f9a1a46743ecf9acc1971d7b2f2a"
+      "sha256": "8dc079388e36e87e2a356bddf459c8522f2e43e74f775aee6dda0def1eeb9906"
     },
     {
       "role": "reference",
