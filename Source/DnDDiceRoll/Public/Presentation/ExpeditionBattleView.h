@@ -3,9 +3,11 @@
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
+#include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -26,6 +28,7 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
+enum class EDiceRollKit : uint8;
 struct FDiceRollCharacter;
 struct FDiceRollWorldKit;
 
@@ -47,6 +50,16 @@ struct FExpeditionPart
     /** Footprint rings and markers drawn from the shared ring bank (#144) have no component of their own: the bank slot. */
     int32 RingSlot = INDEX_NONE;
     void SetColor(const FLinearColor& Color);
+    /**
+     * A hit's flash on the figure's rim (#189): the material's "RimColor" turns toward a warm white (ExpeditionFlash::RimColor). Materials without
+     * "Rim" and "RimColor" (the engine primitives) are left alone. The first call remembers the look the material had.
+     */
+    void SetFlash(float Flash);
+    /** The rim look the material had before any flash, read on the first SetFlash. */
+    float BaseRim = 0.0f;
+    FLinearColor BaseRimColor = FLinearColor::White;
+    float ShownFlash = 0.0f;
+    enum class ERim : uint8 { Unread, Present, Absent } RimState = ERim::Unread;
 };
 
 /**
@@ -131,7 +144,7 @@ struct FExpeditionUnitRig
     bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
-    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its nine clips by EUnitPose. */
+    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its ten clips by EUnitPose. */
     UPROPERTY() TObjectPtr<USkeletalMeshComponent> Skin;
     UPROPERTY() TArray<TObjectPtr<UAnimSequence>> Clips;
     /** The clip on the figure and its time. The view advances the time itself (at playback speed), so poses are deterministic. */
@@ -141,6 +154,8 @@ struct FExpeditionUnitRig
     int32 PoseSerial = -1;
     /** A natural return to Idle waits for a one-shot clip that is still playing. */
     bool bIdleAfter = false;
+    /** Capture support (#150): the clip and time are held by PreviewPose, so UpdateAnimation leaves the figure alone. */
+    bool bPosePreview = false;
 };
 
 /** What a figure's animation shows right now (tests and tools). */
@@ -251,6 +266,11 @@ public:
     bool InCombat() const;
     /** True while the tabletop mission overview is shown instead of a battle board. */
     bool ShowingOverview() const { return bOverview; }
+    /** The overview scene as last built (#149): the table and each diorama by mesh name, and the candle light positions in table cm; empty off the tabletop. */
+    const TArray<FName>& OverviewMeshes() const { return OverviewDrawnMeshes; }
+    const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
+    /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
+    bool OverviewIsR002() const { return bOverview && bOverviewR002; }
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -261,6 +281,11 @@ public:
 
     // Presentation.
     const FExpeditionPlayback& Playback() const { return Show; }
+    /** Capture and test support (#190): a landed roll card that stays up until cleared. */
+    void PreviewRoll(const FDiceTray& Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Show.PreviewTray(Tray, Age); }
+    /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
+    bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
+    void ClearRollPreview() { Show.ClearTrayPreview(); }
     bool IsPresenting() const { return Show.IsBusy(); }
     void SkipPresentation();
     void CycleSpeed();
@@ -324,6 +349,19 @@ public:
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
+    /**
+     * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
+     * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
+     */
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing, EAdventurerRole Shooter = EAdventurerRole::None);
+    void ClearImpactPreview();
+    /**
+     * Capture support (#150): holds a rigged figure in a clip at a time (seconds, clamped to the clip) with no command and no rules
+     * change, until ClearPosePreview hands it back to playback. False when the unit has no skinned figure.
+     */
+    bool PreviewPose(int32 UnitId, EUnitPose Pose, float Seconds);
+    void ClearPosePreview();
+    int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */
     void SnapCameraToTargets() { bCameraPlaced = false; }
     FTransform CameraTransform() const;
@@ -341,6 +379,14 @@ public:
     bool UsesVigilKit() const { return bVigilKit; }
     /** True when this board is built from the Root of the World kit r002 (#149): a forest board of a theme whose Root kit is switched on. */
     bool UsesRootKit() const { return bRootKit; }
+    /** True when this board is built from the Vault world kit r002 (#149): the finale of a theme whose Vault kit is switched on and complete. */
+    bool UsesVaultKit() const { return bVaultKit; }
+    /** The world kit a board theme asks for: the Root on Meadow, the Vigil on Ruins, the Vault on the finale (UDiceRollTheme::KitFor falls back to the Vigil kit when the Vault is incomplete). */
+    static EDiceRollKit KitKindFor(EBoardTheme Theme);
+    /** The Waystone's light: the number of lights (0 or 1), where it stands in world space, and whether the legacy pedestal is drawn. On a Vault-kit board the light stands at the apse Waystone and there is no pedestal. */
+    int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
+    FVector WaystoneLightLocation() const;
+    bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
     /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
     void UseTheme(UDiceRollTheme* Value);
     /**
@@ -385,6 +431,19 @@ public:
     int32 FigureStencil(int32 UnitId) const;
     /** Whether the silhouette post-process material is in the grade's blendables (it is optional; absent when the asset does not exist). */
     bool HasSilhouetteBlendable() const;
+    /**
+     * Test-only (#189): the tint last pushed to each of a combatant's figure parts (for a rigged figure, one per skin material slot) and to its
+     * footprint ring, as the materials hold it. False when the combatant has no figure. A ring-bank ring reports the bank's colour for its slot.
+     */
+    bool UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const;
+    /**
+     * Test-only (#150 batch 4): the palette a rigged party figure's skin material holds right now (its subclass slots and, when its class appears more
+     * than once in the party, the accent slot), read back from the material parameters. False when the combatant is not a rigged figure or its material
+     * does not carry the palette parameters.
+     */
+    bool UnitPalette(int32 UnitId, ExpeditionPalette::FPalette& OutPalette) const;
+    /** Test-only (#189): the intensity (candelas) each spell bolt's point light was last set to, in bolt order (zero for an idle light or an arrow). */
+    TArray<float> BoltLightIntensities() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
@@ -397,6 +456,15 @@ public:
     void SetBoardMetric(const FBoardMetric& Value);
     /** Draws the static r001 meshes instead of the rigged characters (what -ExpeditionStaticFigures does at startup) and rebuilds. */
     void UseStaticFigures();
+    /**
+     * Capture and test support (#150 foe batch): draws the board's enemies, in encounter order, as these looks instead of the ones their names give, and rebuilds.
+     * A checkpoint cannot carry a renamed enemy (a restored run is checked against the generated roster), and the skirmisher, brute and warden are not generated
+     * until #188, so the gallery shows them through this: presentation only, nothing is written to the run, the rules or the RNG. -ExpeditionFoeLooks=Skirmisher,Brute,Archer
+     * does the same at startup (the FoeRigs keys, ExpeditionFoe::RigKey); an empty array restores the names' own looks.
+     */
+    void SetFoeLooks(const TArray<EFoeLook>& Looks);
+    /** The look an enemy is drawn as: the override of its place in the encounter when there is one, otherwise ExpeditionFoe::LookOf. */
+    EFoeLook FoeLookFor(const FCombatantState& Unit) const;
     /** How many figures on the board are rigged characters. */
     int32 SkeletalFigureCount() const;
     /** The animation shown on a combatant's figure; bSkeletal is false for static and primitive figures. */
@@ -449,8 +517,18 @@ private:
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
+    int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
     bool bSkeletalFigures = true;
+    /** SetFoeLooks: the look of each enemy in encounter order; empty uses the names. */
+    TArray<EFoeLook> FoeLookOrder;
+    /** The accent slot of each party member whose class appears more than once in the party (ExpeditionPalette::AccentSlots), built with the rigs. */
+    TMap<int32, int32> PartyAccents;
+    /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */
+    bool bPalettes = true;
+    /** Party-slot accents on the palettes (off with -ExpeditionNoAccents: the same palettes without the accent, a measurement baseline). */
+    bool bAccents = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
@@ -461,6 +539,16 @@ private:
     FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
+    /** The rest of the overview set (#149), loaded with the table: the dioramas, and whether the set is the r002 one. */
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewRoot;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVigil;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVault;
+    bool bOverviewR002 = false;
+    /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
+    TArray<FName> OverviewDrawnMeshes;
+    TArray<FVector> OverviewDrawnLights;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    void LoadOverviewSet();
     UPROPERTY() TArray<FExpeditionSway> Swaying;
     /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
     bool bLooseParts = false;
@@ -540,6 +628,15 @@ private:
     bool bOccluderBoardSent = false;
     bool bVigilKit = false;
     bool bRootKit = false;
+    bool bVaultKit = false;
+    /** The far-zoom grade last applied (0 at the default zoom, 1 at the far stop); negative until the first update. Vault boards only. */
+    float AppliedFarGrade = -1.0f;
+    void UpdateFarGrade();
+    /** True when every piece of the Vault kit loads; checked before anything is placed. */
+    bool VaultPiecesLoad(const FDiceRollWorldKit& Kit) const;
+    /** Where the apse Waystone stands in scenery-local space (a Vault-kit board), and the light's gain there. */
+    FVector ApseLocal = FVector::ZeroVector;
+    float WaystoneGain = 1.0f;
     /** The world mesh of the last themed build. */
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;

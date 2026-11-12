@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-fighter-idle-near",
+      "mode": "pose",
+      "role": "Fighter",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-rogue-idle-near",
+      "mode": "pose",
+      "role": "Rogue",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-cleric-idle-near",
+      "mode": "pose",
+      "role": "Cleric",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-wizard-idle-near",
+      "mode": "pose",
+      "role": "Wizard",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-barbarian-idle-near",
+      "mode": "pose",
+      "role": "Barbarian",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-monk-idle-near",
+      "mode": "pose",
+      "role": "Monk",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-paladin-idle-near",
+      "mode": "pose",
+      "role": "Paladin",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-idle-near",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-sorcerer-idle-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-warlock-idle-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-druid-idle-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-bard-idle-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    },
+    {
+      "name": "pose-artificer-idle-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Idle",
+      "time": 0.5,
+      "yaw": -35,
+      "distance": 900
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "asset_id": "sk-foe-skirmisher",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SK_Foe_Skirmisher",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/150",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5 lead, Claude Sonnet 5.5 subagent) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 raider look (tan hide, red cloth, bone-white) is imitated, no r001 mesh or texture is reused."
+  },
+  "recipe": {
+    "method": "Skirmisher: lean agile body with bare skin painted with a red war stripe, hide harness, bone fetishes and feather crest, red streamers, twin sickles (right on weapon_socket, left on shield_socket). Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build_foes.py, cast_foes.py) on the r001 skeleton; the ten shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus Brace (brace.py); no external motion data",
+    "approved_reference": "Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); #150 foe batch design calls by the graphics lead (hostile palette family, silhouettes, height bands, rigged Rim 1.2 and Fill 1.0); #188 encounter-identity contract for the skirmisher, brute and warden roles",
+    "parameters": {
+      "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)",
+      "units": "metres, +X forward, Z up, foot pivot at origin",
+      "fps": 30,
+      "atlas": "1024x1024, 1 material",
+      "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
+      "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
+      "clips": "ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace",
+      "blender_validation": {
+        "tris": {
+          "LOD1": {
+            "tris": 1761,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD2": {
+            "tris": 936,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD0": {
+            "tris": 3324
+          }
+        },
+        "lod_ratio": {
+          "LOD1": 0.53,
+          "LOD2": 0.282,
+          "LOD0": 1.0
+        },
+        "body_height_m": 1.826,
+        "seam_mm_idle_walk": [
+          0.0,
+          0.0
+        ],
+        "checks": {
+          "bones: 25 and the contract": true,
+          "clips: all ten with their frame ranges": true,
+          "lods: same bone names, LOD1 and LOD2": true,
+          "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+          "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+          "root drift 0.01 mm or less in every clip": true,
+          "at most 4 influences per vertex": true,
+          "one material on a 1024x1024 atlas": true,
+          "glow alpha present on runes and gems": true,
+          "height 175 to 185 cm excluding held items": true,
+          "LOD0 3,000 to 6,000 triangles": true
+        }
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (contact sheets only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/sk-foe-skirmisher/r001/SK_Foe_Skirmisher_source.blend",
+      "sha256": "58659bdbfa74179ad27d824b62dcd196403a744022db33b9c488c27635edb895"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/README_FOES.md",
+      "sha256": "b28472d50a2006b38fe41c5d9e02b22095fa4949a4b89251e48af9ba86e6c5eb"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
+      "sha256": "eeeb0bbebb6fca6e4e449546a226c5c62dc8ed0005d5801c5b7ce81e1998fe3f"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_foes.py",
+      "sha256": "6d151b96ab47556758ec4bc4c2ab0337e669357e684e74075b59f692c1ea12ab"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/brace.py",
+      "sha256": "faed12c79e0bbee5ea873bcdd6bc527d800a6f30139f6c4dcabb1f4a21462a08"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/overrides.py",
+      "sha256": "1e3626a5f53ec1e0f27abaecba7109d8eb2c458b28ed1f66e4d0d88a3d15101c"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/overrides_foes.py",
+      "sha256": "8617499838dabe8678fb54f8e2f36b67f7bb0c5786a5b6ebb84a62546cf5e187"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/build_foes.py",
+      "sha256": "3d3fe67f3e1b2cb6193c112cecce8b46d4011e8521ec51ac6b169c96eae13df3"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review_foes.py",
+      "sha256": "dcc98bb16cc55eb22f68da7fff3557d31678deaf0df6b09ed4bd534627309bee"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review2.py",
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review.py",
+      "sha256": "339402deec49f756a2b80927aa363723d336186c80b8d5448dcf9c5eabd2f08a"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/make_records_foes.py",
+      "sha256": "7d9e8cf77e606000d1002f775f6842ff4ccc3d05168c0b2735410dea5f57c27c"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/README.md",
+      "sha256": "79cc252119037ca002c61166af063012fbee3a00563abfd2381fb57b3acc47da"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/rigkit.py",
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/clips.py",
+      "sha256": "d9f898e7fbdd1e5fa270c4323c0aafab36c4721f851e09b911c04ca3ab350a59"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/characters.py",
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/review.py",
+      "sha256": "b415c12e22f73cec08713bbb08975dde335a574cc9cd0f36589eddba9dd05370"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-foe-skirmisher/r001/SK_Foe_Skirmisher.glb",
+      "sha256": "9eb994446133fba79c4d001a7a3b9f841ad5b9a3edb898ce43f48a9537dde770"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-foe-skirmisher/r001/SK_Foe_Skirmisher_LOD1.glb",
+      "sha256": "af78d249f72f44c78eac1273315be3e2cd9987f45f92eaac42754204db9547d9"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-foe-skirmisher/r001/SK_Foe_Skirmisher_LOD2.glb",
+      "sha256": "c35a03666229014e22071e0f2e55783c5c17d5004f8c9b64aa52bd6f97f150a0"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-rigged-character",
+    "version": 1,
+    "settings": {
+      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton",
+      "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
+      "nanite": "off, set explicitly (gate 1 pipeline rule)",
+      "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
+      "animations": "the ten shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the shared clips baked into this glb are not imported",
+      "material": "MI_* child of M_DiceRollTheme with rim and fill terms (rigged 1.2 and 1.0); glow from vertex alpha only",
+      "texture_filter": "trilinear, anisotropic 8",
+      "collision": "none (presentation only)"
+    }
+  },
+  "validation": {
+    "state": "passed",
+    "evidence": [
+      "Art/rig-pilot/cast/metrics/validate_skirmisher.json",
+      "Art/rig-pilot/cast/metrics/build_skirmisher.json",
+      "Art/rig-pilot/cast/previews/sheet_f02_foes_turnaround_a.png",
+      "Art/rig-pilot/cast/previews/sheet_f06_skirmisher_clips.png",
+      "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
+    ]
+  }
+}

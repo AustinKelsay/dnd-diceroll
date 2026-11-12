@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "fire-release-wizard-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "fire-release-wizard-yaw090-default",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "fire-release-wizard-yaw180-default",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "fire-release-wizard-yaw270-default",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "missile-release-wizard-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-cleric-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-cleric-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-cleric-yaw180-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-cleric-yaw270-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "fire-release-wizard-yaw000-near",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "spell-release-cleric-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    }
+  ]
+}

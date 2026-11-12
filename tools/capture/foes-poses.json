@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-scout-melee-t037",
+      "mode": "pose",
+      "role": "Scout",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-scout-hit-t010",
+      "mode": "pose",
+      "role": "Scout",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-scout-death-t260",
+      "mode": "pose",
+      "role": "Scout",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-scout-idle-default-yaw90",
+      "mode": "pose",
+      "role": "Scout",
+      "pose": "Idle",
+      "time": 0.0,
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "pose-archer-ranged-t073",
+      "mode": "pose",
+      "role": "Archer",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-archer-ranged-t040",
+      "mode": "pose",
+      "role": "Archer",
+      "pose": "Ranged",
+      "time": 0.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-archer-hit-t010",
+      "mode": "pose",
+      "role": "Archer",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-archer-death-t260",
+      "mode": "pose",
+      "role": "Archer",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-archer-idle-default-yaw90",
+      "mode": "pose",
+      "role": "Archer",
+      "pose": "Idle",
+      "time": 0.0,
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "pose-skirmisher-melee-t037",
+      "mode": "pose",
+      "role": "Skirmisher",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-skirmisher-hit-t010",
+      "mode": "pose",
+      "role": "Skirmisher",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-skirmisher-death-t260",
+      "mode": "pose",
+      "role": "Skirmisher",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-skirmisher-idle-default-yaw90",
+      "mode": "pose",
+      "role": "Skirmisher",
+      "pose": "Idle",
+      "time": 0.0,
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-melee-t020",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Melee",
+      "time": 0.2,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-melee-t037",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-melee-t055",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Melee",
+      "time": 0.55,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-hit-t010",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-death-t260",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-brute-idle-default-yaw90",
+      "mode": "pose",
+      "role": "Brute",
+      "pose": "Idle",
+      "time": 0.0,
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warden-melee-t037",
+      "mode": "pose",
+      "role": "Warden",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warden-brace-t045",
+      "mode": "pose",
+      "role": "Warden",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warden-hit-t010",
+      "mode": "pose",
+      "role": "Warden",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warden-death-t260",
+      "mode": "pose",
+      "role": "Warden",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warden-idle-default-yaw90",
+      "mode": "pose",
+      "role": "Warden",
+      "pose": "Idle",
+      "time": 0.0,
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "pose-raider-melee-t037",
+      "mode": "pose",
+      "role": "Raider",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    }
+  ]
+}

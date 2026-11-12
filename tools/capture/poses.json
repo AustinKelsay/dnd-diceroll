@@ -87,6 +87,103 @@
       "distance": 1300
     },
     {
+      "name": "roll-yawm90-default",
+      "mode": "roll",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw000-default",
+      "mode": "roll",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw090-default",
+      "mode": "roll",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "roll-yaw180-default",
+      "mode": "roll",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "impact-yaw000-default",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-yaw000-near",
+      "mode": "impact",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "impact-spell-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-spell-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-fire-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "fire",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-landing1-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-first",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "impact-missile-landing2-yaw000-default",
+      "mode": "impact",
+      "effect": "missile",
+      "phase": "landing-second",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
       "name": "tooltip-attack",
       "mode": "tooltip",
       "action": "attack",
@@ -166,6 +263,36 @@
       "name": "build-wizard-evocation",
       "mode": "start",
       "build": "wizard.evocation"
+    },
+    {
+      "name": "build-monk-open-hand",
+      "mode": "start",
+      "build": "monk.open-hand"
+    },
+    {
+      "name": "build-paladin-devotion",
+      "mode": "start",
+      "build": "paladin.devotion"
+    },
+    {
+      "name": "build-ranger-hunter",
+      "mode": "start",
+      "build": "ranger.hunter"
+    },
+    {
+      "name": "build-sorcerer-draconic-bloodline",
+      "mode": "start",
+      "build": "sorcerer.draconic-bloodline"
+    },
+    {
+      "name": "build-warlock-fiend",
+      "mode": "start",
+      "build": "warlock.fiend"
+    },
+    {
+      "name": "build-druid-land",
+      "mode": "start",
+      "build": "druid.land"
     }
   ]
 }

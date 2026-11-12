@@ -38,6 +38,56 @@ inline Rect LogRect(double W, double H, int Lines = LogMaxLines)
     return {LogLeft, H - LogBottomMargin - Height, LogLeft + LogWidth, H - LogBottomMargin};
 }
 
+// The party cards (DrawPartyCard): a column of 200 x 64 cards, one every 68 units, from the top of the left edge. The roll card
+// and the board bounds both read these.
+constexpr double PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
+
+// The route screen (DrawRoutes): the "Choose your path" banner and the two route cards, centred, the cards side by side. DrawRoutes and the tabletop overview's layout
+// (OverviewLayout.h, #149) both read these, so the dioramas cannot be placed under the HUD they are meant to show beside.
+constexpr double RouteCardWidth = 340, RouteCardHeight = 250, RouteCardGap = 30;
+constexpr double RouteBannerWidth = 740, RouteBannerHeight = 76, RouteBannerAbove = 84;
+inline double RouteTop(double H) { return H * 0.5 - RouteCardHeight * 0.5 - 10; }
+inline Rect RouteBannerRect(double W, double H)
+{
+    const double Top = RouteTop(H) - RouteBannerAbove;
+    return {W * 0.5 - RouteBannerWidth * 0.5, Top, W * 0.5 + RouteBannerWidth * 0.5, Top + RouteBannerHeight};
+}
+inline Rect RouteCardRect(double W, double H, int Index)
+{
+    const double X = W * 0.5 + (Index == 0 ? -RouteCardWidth - RouteCardGap * 0.5 : RouteCardGap * 0.5);
+    return {X, RouteTop(H), X + RouteCardWidth, RouteTop(H) + RouteCardHeight};
+}
+
+// The hero details that follow a hovered or selected party card (DrawPartyDetail): 320 wide, right of the card column, top level with the card, 14 plus 17 per wrapped
+// line high (never fewer than the HUD's MinDetailLines). PartyDetailMaxLines is the bound the tabletop overview's layout keeps clear of: the name and build (at most 2 wrapped
+// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed.
+constexpr double PartyDetailWidth = 320, PartyDetailGap = 8, PartyDetailPad = 14, PartyDetailLineHeight = 17;
+constexpr int PartyDetailMaxLines = 8;
+inline Rect PartyDetailRect(int Slot, int Lines)
+{
+    const double X = PartyCardX + PartyCardWidth + PartyDetailGap, Y = PartyCardTop + Slot * PartyCardPitch;
+    return {X, Y, X + PartyDetailWidth, Y + PartyDetailPad + Lines * PartyDetailLineHeight};
+}
+
+// The title screen's two drawers (DrawTitle): the party, class and subclass on the left; on the right the build's details and the actions, which share the column
+// (the details panel grows with the build's abilities down to the actions panel at the foot), so the whole column is the HUD's.
+constexpr double TitleMargin = 12, TitleLeftWidth = 300, TitleRightWidth = 380;
+
+// Where the d20 roll card sits (#190): the strip of the left margin below the party cards and above the combat log. The camera keeps
+// the board inside BoardBounds, to the right of this strip (BoardLeft), and the top band belongs to the status strip and the Menu, so a
+// card here never covers the active unit, its target or their cells, whichever way the board is turned. The strip is as wide as the margin
+// leaves and as tall as it can be; the card's own height follows its text.
+constexpr double RollCardLeft = 8, RollCardGap = 8;
+// Inside the card (design units from its top): the title above RollCardRowTop, the dice row between RollCardRowTop and RollCardRowBottom
+// (tumbling, landing and glowing dice are kept inside it), the verdict from RollCardVerdictTop and the detail lines from RollCardDetailTop.
+constexpr double RollCardRowTop = 26, RollCardRowBottom = 104, RollCardVerdictTop = 106, RollCardDetailTop = 138;
+inline Rect RollCardBounds(double W, double H, int PartyCount = 4)
+{
+    const Rect Log = LogRect(W, H);
+    const double Top = PartyCardTop + std::max(0, PartyCount - 1) * PartyCardPitch + PartyCardHeight + RollCardGap;
+    return {RollCardLeft, Top, BoardLeft - RollCardGap, Log.Top - RollCardGap};
+}
+
 // The board area stays clear of the party cards, strips and action bar, and also of the tallest the combat log can get:
 // where the log's columns overlap the board's, the bottom edge rises to the log's top.
 inline Rect BoardBounds(double W, double H)

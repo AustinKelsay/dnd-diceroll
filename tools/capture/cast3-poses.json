@@ -1,0 +1,423 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-sorcerer-melee-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-ranged-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-cast-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-brace-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-hit-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-downed-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-death-default",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-melee-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-ranged-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-cast-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-brace-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-hit-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-downed-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-warlock-death-default",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-melee-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-ranged-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-cast-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-brace-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-hit-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-downed-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-druid-death-default",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-sorcerer-melee-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-ranged-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-cast-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-brace-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-hit-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-downed-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-sorcerer-death-near",
+      "mode": "pose",
+      "role": "Sorcerer",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-melee-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-ranged-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-cast-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-brace-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-hit-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-downed-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-warlock-death-near",
+      "mode": "pose",
+      "role": "Warlock",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-melee-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-ranged-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-cast-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-brace-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-hit-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-downed-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-druid-death-near",
+      "mode": "pose",
+      "role": "Druid",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yawm90-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw180-default",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "build-sorcerer-draconic-bloodline",
+      "mode": "start",
+      "build": "sorcerer.draconic-bloodline"
+    },
+    {
+      "name": "build-warlock-fiend",
+      "mode": "start",
+      "build": "warlock.fiend"
+    },
+    {
+      "name": "build-druid-land",
+      "mode": "start",
+      "build": "druid.land"
+    }
+  ]
+}

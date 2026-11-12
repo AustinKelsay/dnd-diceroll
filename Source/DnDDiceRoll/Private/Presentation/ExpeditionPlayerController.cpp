@@ -2,6 +2,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ExpeditionCapture.h"
+#include "Presentation/CameraRig.h"
 #include "Presentation/ExpeditionAutoplay.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
@@ -312,7 +313,8 @@ void AExpeditionPlayerController::ObserveHints()
 ECombatHint AExpeditionPlayerController::VisibleHint() const
 {
     // Re-checked here: the state was observed at the start of the frame, and a key or click may land after an overlay opened.
-    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() ? HintState.Visible() : ECombatHint::Count;
+    // The roll card owns the left margin the hint sits in until it has gone: the hint waits, and its keys do nothing meanwhile (#190).
+    return IsValid(BattleView) && ShowsTargeting() && !ShowingMenu() && !BattleView->RollCardUp() ? HintState.Visible() : ECombatHint::Count;
 }
 
 bool AExpeditionPlayerController::PreviewHint(ECombatHint Hint, FString& Why)
@@ -446,7 +448,8 @@ bool AExpeditionPlayerController::HoverCell(FIntPoint& Cell) const
     {
         if (!IsValid(BattleView) || SimulatedViewport.X <= 0 || SimulatedViewport.Y <= 0) { return false; }
         const FTransform Pose = BattleView->CameraTransform();
-        const double HalfWidth = FMath::Tan(FMath::DegreesToRadians(BattleView->CameraFieldOfView()) * 0.5), HalfHeight = HalfWidth * SimulatedViewport.Y / SimulatedViewport.X;
+        // Unreal keeps the vertical field of view of a 16:9 view at any viewport (CameraRig.h).
+        const double HalfHeight = ExpeditionCameraRig::HalfTanY(), HalfWidth = ExpeditionCameraRig::HalfTanX(float(SimulatedViewport.X) / float(SimulatedViewport.Y));
         const double X = SimulatedPointer.X / SimulatedViewport.X * 2.0 - 1.0, Y = 1.0 - SimulatedPointer.Y / SimulatedViewport.Y * 2.0;
         const FVector Direction = (Pose.GetRotation().GetForwardVector() + Pose.GetRotation().GetRightVector() * (X * HalfWidth) + Pose.GetRotation().GetUpVector() * (Y * HalfHeight)).GetSafeNormal();
         return BattleView->CellAtRay(Pose.GetLocation(), Direction, Cell);

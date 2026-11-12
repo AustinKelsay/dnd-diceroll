@@ -57,6 +57,11 @@ float Unit(int32 Seed, int32 Salt, FIntPoint Cell)
     return static_cast<float>(Hash(Seed, Salt, Cell) >> 8) / 16777216.0f;
 }
 
+int32 KitSeed(int32 Seed, int32 Width, int32 Height, int32 KitKind)
+{
+    return KitKind < 2 ? Seed : static_cast<int32>(Hash(Seed, 7000 + KitKind, FIntPoint(Width, Height)));
+}
+
 int32 VariantIndex(int32 Seed, int32 Recipe, FIntPoint Cell, int32 Count)
 {
     return Count <= 1 ? 0 : static_cast<int32>(Hash(Seed, 1000 + Recipe, Cell) % static_cast<uint32>(Count));

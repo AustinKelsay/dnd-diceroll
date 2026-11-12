@@ -1,0 +1,142 @@
+import ast
+import importlib.util
+import json
+import re
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+CAST = ROOT / "Art" / "rig-pilot" / "cast"
+PAL = CAST / "palettes"
+CATALOG = ROOT / "Source" / "DnDDiceRoll" / "Private" / "Party" / "BuildCatalog.cpp"
+SCRIPT = ROOT / "Content" / "Python" / "import_dark_fantasy_theme.py"
+CPP = ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "ExpeditionPalette.cpp"
+
+
+def generator():
+    spec = importlib.util.spec_from_file_location("palettes_generator", CAST / "scripts" / "palettes.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def catalog_ids():
+    ids = set(re.findall(r'TEXT\("([a-z]+\.[a-z\-]+)"\)', CATALOG.read_text()))
+    return ids | {"barbarian." + path for path in ("berserker", "totem-warrior", "beast", "wild-magic")}
+
+
+class PaletteTableTests(unittest.TestCase):
+    """The subclass palette table (#150 batch 4): authored data, its generated outputs and the material that reads them."""
+
+    def setUp(self):
+        self.gen = generator()
+        self.src = json.loads((PAL / "palettes.json").read_text())
+        self.res = json.loads((PAL / "palettes.resolved.json").read_text())
+
+    def test_generated_outputs_are_current(self):
+        resolved = self.gen.resolve()
+        self.assertEqual(json.loads(json.dumps(resolved)), self.res, "palettes.resolved.json is stale: run palettes.py")
+        self.assertEqual((PAL / "swatches.html").read_text(), self.gen.html(resolved))
+        self.assertEqual(self.gen.INL.read_text(), self.gen.inl(resolved), "ExpeditionPaletteTable.inl is stale: run palettes.py")
+
+    def test_every_catalog_build_has_exactly_one_row(self):
+        self.assertEqual(set(self.src["builds"]), catalog_ids())
+        self.assertEqual(len(self.src["builds"]), 70)
+
+    def test_classes_are_the_thirteen_party_classes_and_slots_use_real_tiles(self):
+        regions = self.gen.REGIONS
+        self.assertEqual(len(self.src["classes"]), 13)
+        tiles = json.loads((PAL / "tiles.json").read_text())
+        for key, cls in self.src["classes"].items():
+            self.assertEqual(set(cls["tiles"]), {"A", "B", "C", "G", "X"}, key)
+            for slot, names in cls["tiles"].items():
+                self.assertTrue(names and all(name in regions for name in names), key + " " + slot)
+                self.assertTrue(all(tiles[key][name]["area_share"] > 0 for name in names if slot != "G"), key + " " + slot + " covers a tile the mesh never uses")
+            # The duplicate accent is a SMALL region (a sash, trim band, tabard, wrap or plume): never the plate, cloth or skin base tiles, and at most about 15% of the
+            # figure's surface (lead's call on PR #203; the first version recoloured the fighter's whole body). It must still be visible: at least 2% of the surface.
+            for base in ("plate", "cloth", "skin"):
+                self.assertNotIn(base, cls["tiles"]["X"], key + " accent must not cover the " + base + " base tile")
+            share = sum(tiles[key][name]["area_share"] for name in cls["tiles"]["X"])
+            self.assertLessEqual(share, 0.17, key + " accent tiles cover too much of the figure (" + str(round(share, 3)) + ")")
+            self.assertGreaterEqual(share, 0.02, key + " accent tiles are too small to read at the default zoom")
+            # A build slot never claims a tile that another build slot of the class also claims (the colours would fight).
+            claimed = [name for slot in ("A", "B", "C") for name in cls["tiles"][slot]]
+            self.assertEqual(len(claimed), len(set(claimed)), key + " slots overlap")
+
+    def test_the_rogue_and_paladin_accents_are_the_bands_that_read_at_the_default_zoom(self):
+        """#150 follow-up to PR #203: on the packaged build four rogues looked identical and four paladins only marginally apart, because their accent was thin trim
+        (wrist bands, cuffs, hem lines: a few pixels at about 70 px). Measured in game with four copies (tools/accent_share.py): the rogue's copper sash (`emblem`)
+        and hood lining, scarf and mask (`accent`), the paladin's shield face (`emblem2`) and its shield back, hammer haft and boots (`leather`). The paladin's
+        tabard (`emblem`) stays out: its purple crown device is the class identity, and recolouring the whole tile took 36% of the figure from the front."""
+        x = {key: self.src["classes"][key]["tiles"]["X"] for key in ("rogue", "paladin")}
+        self.assertEqual(sorted(x["rogue"]), ["accent", "emblem"])
+        self.assertEqual(sorted(x["paladin"]), ["emblem2", "leather"])
+        self.assertNotIn("trim", x["rogue"] + x["paladin"], "the thin trim tiles were what failed to read")
+        self.assertNotIn("emblem", x["paladin"], "the tabard keeps its purple heraldry in every look")
+        self.assertNotIn("plate", x["paladin"], "the silver plate stays silver")
+        # An accent never takes a tile a build slot recolours for the same class unless the class already shared it before (the rogue's sash is its slot B colour; a
+        # duplicate rogue's sash is the party-slot colour, the subclass palette still colours the cloak and trim).
+        for key in ("rogue", "paladin"):
+            cls = self.src["classes"][key]
+            for tile in x[key]:
+                for slot in ("A", "C"):
+                    self.assertNotIn(tile, cls["tiles"][slot], key + " accent tile " + tile + " would hide the subclass colour of slot " + slot)
+        tiles = json.loads((PAL / "tiles.json").read_text())
+        for key in x:
+            share = sum(tiles[key][name]["area_share"] for name in x[key])
+            self.assertGreaterEqual(share, 0.08, key + " accent region is too small to read at the default zoom")
+            self.assertLessEqual(share, 0.14, key + " accent region is too large (the measured share must stay about 10% or less)")
+
+    def test_variants_keep_the_class_brightness(self):
+        for bid, build in self.res["builds"].items():
+            for slot, value in build["slots"].items():
+                self.assertGreaterEqual(value["luma_ratio"], 0.8, bid + " " + slot + " is darker than its class")
+                h, s, ratio = value["spec"]
+                self.assertTrue(0 <= h < 360 and 0 <= s <= 1 and ratio > 0, bid)
+        for key, cls in self.res["classes"].items():
+            for slot in "ABCGX":
+                self.assertGreater(cls["slots"][slot]["reference"], 0, key + " " + slot)
+        for hue, accent in zip(self.src["accent"]["hues"], self.res["classes"]["fighter"]["accent"]):
+            self.assertRegex(accent["hex"], r"^#[0-9a-f]{6}$")
+        self.assertEqual(len(self.src["accent"]["hues"]), 4)
+
+    def test_the_fighter_and_artificer_defaults_are_corrected(self):
+        default = self.res["classes"]["fighter"]["default"]["slots"]
+        self.assertEqual(list(default), ["A"])
+        champion = self.res["builds"]["fighter.champion"]["slots"]
+        self.assertEqual(default["A"]["hex"], champion["A"]["hex"])
+        # The warm silver is lighter than the old blue steel (#6890ad-ish blue at luma 0.47).
+        self.assertGreater(default["A"]["spec"][2], 1.05)
+        for key, cls in self.res["classes"].items():
+            if key not in ("fighter", "artificer"):   # the two whose class colours merged with the Vault stone take a corrected default
+                self.assertEqual(cls["default"]["slots"], {}, key + " default is the class's own look")
+
+    def test_tile_order_matches_the_atlas_and_the_material(self):
+        tree = ast.parse((ROOT / "Art" / "rig-pilot" / "r001" / "scripts" / "rigkit.py").read_text())
+        regions = next(ast.literal_eval(node.value) for node in tree.body if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "REGIONS")
+        self.assertEqual(regions, self.gen.REGIONS)
+        script = SCRIPT.read_text()
+        self.assertIn('PALETTE_SLOTS = ("A", "B", "C", "G", "X")', script)
+        self.assertIn('"PalMask" + slot', script)
+        self.assertIn('"Pal" + slot', script)
+        cpp = CPP.read_text()
+        self.assertIn('TEXT("PalMask%s")', cpp)
+        self.assertIn('TEXT("Pal%s")', cpp)
+        # Masks are scalars read as float: every bit pattern must be exactly representable.
+        for cls in self.res["classes"].values():
+            for slot in cls["slots"].values():
+                self.assertLess(slot["mask"], 1 << 13)
+
+    def test_the_master_keeps_every_existing_input_when_masks_are_zero(self):
+        script = SCRIPT.read_text()
+        # The palette block sits between the texture sample and the vertex-colour multiply; with all masks 0 each lerp returns its A input, the texture.
+        self.assertIn("palette = palette_block(material, tex, -3000, -1800)", script)
+        self.assertIn('scalar(material, "PalMask" + slot, 0.0,', script)
+        # The Power node's input pins are "Base" and "Exp": "Exponent" connects nothing and silently leaves the exponent at 2 (every tile then reads the same bit).
+        self.assertIn('power, "Exp")', script)
+        self.assertNotIn('power, "Exponent")', script)
+        self.assertIn("mel.connect_material_expressions(current, current_out, blend, \"A\")", script)
+
+
+if __name__ == "__main__":
+    unittest.main()

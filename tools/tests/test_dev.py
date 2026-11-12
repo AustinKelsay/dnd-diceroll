@@ -15,7 +15,7 @@ from mcp_client import MCP, decode_response
 from scaffold import new_class
 import dev as dev_module
 import struct
-from dev import Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
+from dev import FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
 
 
 class Response(io.BytesIO):
@@ -424,7 +424,31 @@ class GalleryTests(unittest.TestCase):
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
-        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 27)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 47)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast2-poses.json")), 62)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-poses.json")), 49)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/foes-poses.json")), 25)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/foe-archer-release-poses.json")), 6)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/ranged-release-poses.json")), 22)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/spell-release-poses.json")), 11)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 28)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-poses.json")), 34)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
+        self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
+                                                    {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
+                                                    {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
+                                                    {"name": "first", "mode": "impact", "effect": "missile", "phase": "landing-first", "yaw": 0, "distance": "default"},
+                                                    {"name": "second", "mode": "impact", "effect": "missile", "phase": "landing-second", "yaw": 0, "distance": "default"}]))), 5)
+        self.assertEqual(len(load_poses(self.poses([{"name": "arrow-release", "mode": "impact", "effect": "arrow", "phase": "release", "role": "Ranger", "yaw": 0, "distance": "default"},
+                                                    {"name": "arrow-flight", "mode": "impact", "effect": "arrow", "phase": "flight", "yaw": 90, "distance": 1300},
+                                                    {"name": "bolt-release", "mode": "impact", "effect": "bolt", "phase": "release", "role": "Ranger", "yaw": 0, "distance": "default"}]))), 3)
+        # A spell bolt also has a release and a named shooter (#150 batch 3): the shooter is held in its Cast clip.
+        self.assertEqual(len(load_poses(self.poses([{"name": "fire-release", "mode": "impact", "effect": "fire", "phase": "release", "role": "Wizard", "yaw": 0, "distance": "default"},
+                                                    {"name": "spell-release", "mode": "impact", "effect": "spell", "phase": "release", "role": "Cleric", "yaw": 90, "distance": 1300},
+                                                    {"name": "missile-release", "mode": "impact", "effect": "missile", "phase": "release", "yaw": 0, "distance": "default"}]))), 3)
+        self.assertEqual(len(load_poses(self.poses([{"name": "rogue-melee", "mode": "pose", "role": "Rogue", "pose": "Melee", "time": 0.37, "yaw": 0, "distance": "default"},
+                                                    {"name": "cleric-down", "mode": "pose", "role": "Cleric", "pose": "downed", "yaw": 90, "distance": 1300}]))), 2)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
                {"version": 1, "shots": ["x"]}, {"version": 1, "shots": [{"mode": "start"}]}, {"version": 1, "shots": [{"name": "a b", "mode": "start"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "orbit"}]}, {"version": 1, "shots": [{"name": "a", "mode": "battle", "distance": 1300}]},
@@ -440,6 +464,23 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "move", "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "start", "build": "Wizard"}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "pose": "melee", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "dance", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "melee", "time": 11, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "role": "Rogue", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "release", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "role": "Wizard", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "arrow", "role": "Ra nger", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "later", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "phase": "flight", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-first", "effect": "spell", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "landing-second", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "settleFrames": 3, "shots": [{"name": "a", "mode": "impact", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "battle", "frames": 4, "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "yaw": 0}]},
                {"version": 1, "settleFrames": 0, "shots": self.SHOTS}]
         for data in bad:
             path = self.root / "bad.json"
@@ -547,7 +588,10 @@ class GalleryTests(unittest.TestCase):
     def test_gallery_takes_cores_and_the_operation_lock_like_other_commands(self):
         self.assertIn("gallery", dev_module.CORE_COMMANDS)
         source = Path(dev_module.__file__).read_text()
-        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)', source)
+        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures, no_palettes=args.no_palettes, no_accents=args.no_accents)', source)
+        self.assertIn('"-ExpeditionStaticFigures"', source)
+        self.assertIn('"-ExpeditionNoPalettes"', source)
+        self.assertIn('"-ExpeditionNoAccents"', source)
 
 
 class EvidenceTests(unittest.TestCase):

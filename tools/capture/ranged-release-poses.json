@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "arrow-release-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-flight-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-landing-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "bolt-release-yaw000-default",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-release-yaw090-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-flight-yaw090-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-landing-yaw090-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "bolt-release-yaw090-default",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-release-yaw180-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-flight-yaw180-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "flight",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-landing-yaw180-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "bolt-release-yaw180-default",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-release-yaw270-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-flight-yaw270-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "flight",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-landing-yaw270-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "bolt-release-yaw270-default",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-release-yaw000-near",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "arrow-landing-yaw000-near",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-release-yaw000-near",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "arrow-release-yaw090-near",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 90,
+      "distance": 1300
+    },
+    {
+      "name": "arrow-landing-yaw090-near",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Ranger",
+      "phase": "landing",
+      "yaw": 90,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-release-yaw090-near",
+      "mode": "impact",
+      "effect": "bolt",
+      "role": "Ranger",
+      "phase": "release",
+      "yaw": 90,
+      "distance": 1300
+    }
+  ]
+}

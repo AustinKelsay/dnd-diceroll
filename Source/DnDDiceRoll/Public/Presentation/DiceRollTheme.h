@@ -24,6 +24,8 @@ struct DNDDICEROLL_API FDiceRollAnimSet
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Downed;
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Death;
     UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Recover;
+    /** The tenth clip (#150 batch 2): the weapon-up rally of a martial self or ally effect. */
+    UPROPERTY(EditAnywhere, Category = "Animation") TSoftObjectPtr<UAnimSequence> Brace;
 
     const TSoftObjectPtr<UAnimSequence>& For(EUnitPose Pose) const;
 };
@@ -40,20 +42,61 @@ struct DNDDICEROLL_API FDiceRollCharacter
     UPROPERTY(EditAnywhere, Category = "Character") FDiceRollAnimSet Animations;
     /** Extra yaw in degrees if the import faces the wrong way (the r001 exports face +X). */
     UPROPERTY(EditAnywhere, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
+    /**
+     * Per-class clip overrides (#150): the key is a clip name ("Ranged", "Melee", ... see ExpeditionPose::ClipName), the value a clip on the same
+     * skeleton that replaces the shared one for this character only (the ranger's bow draw, the barbarian's two-handed swing). A pose with no entry
+     * (or an entry with no clip set) plays the shared clip in Animations; an entry whose clip fails to load makes the whole definition incomplete.
+     */
+    UPROPERTY(EditAnywhere, Category = "Character") TMap<FName, TSoftObjectPtr<UAnimSequence>> Overrides;
+    /**
+     * How tall this character stands as a multiple of the theme's FigureHeight (#150 foe batch). Every rig is fitted to FigureHeight by its mesh bounds, so a
+     * horned brute or a crowned warden would stand as short as a scout; a bigger figure carries its stature here as data (1.0, the default, is the fitted
+     * height every earlier rig keeps). The multiple applies to the bounds, crest and horns included.
+     */
+    UPROPERTY(EditAnywhere, Category = "Character", meta = (ClampMin = "0.5", ClampMax = "1.5")) float HeightScale = 1.0f;
+    /** The lowest and highest stature the view applies. The metadata clamp above only guides the editor; a value set through Python, C++ or a saved asset reaches the view as it is. */
+    static constexpr float MinHeightScale = 0.5f;
+    static constexpr float MaxHeightScale = 1.5f;
+    /**
+     * HeightScale as the view applies it: a non-finite value is 1.0, anything else is clamped to [MinHeightScale, MaxHeightScale], so a zero, negative or huge value can never hide,
+     * invert or balloon a figure. bOutAdjusted (when given) says whether the stored value had to be changed (the view then logs one warning).
+     */
+    float ResolvedHeightScale(bool* bOutAdjusted = nullptr) const;
 
-    /** Loads the mesh and all nine clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
+    /** Loads the mesh and all ten clips (indexed by EUnitPose), each the class's override when it has one and the shared clip otherwise. False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
 };
 
 /**
- * What one world draws its kit with (#145 Drowned Vigil, #149 Root of the World): read-only views of the theme's own
+ * The meshes the tabletop overview draws, loaded as one set (#149): the r002 war table and its three route dioramas when the theme has them all, otherwise the
+ * r001 table and its two dioramas (the Vault road then draws the Vigil diorama). Raw pointers; the view keeps them alive.
+ */
+struct FDiceRollOverview
+{
+    UStaticMesh* Table = nullptr;
+    UStaticMesh* Root = nullptr;
+    UStaticMesh* Vigil = nullptr;
+    UStaticMesh* Vault = nullptr;
+    /** True for the r002 set. */
+    bool bR002 = false;
+};
+
+/** Which world kit a board draws with: the Drowned Vigil (Ruins), the Root of the World (Meadow) or the Vault (the finale). */
+enum class EDiceRollKit : uint8 { Vigil, Root, Vault };
+
+/**
+ * What one world draws its kit with (#145 Drowned Vigil, #149 Root of the World and Vault): read-only views of the theme's own
  * properties, so they stay valid while the theme does. A world with no kit switched on has bMetric false and the view
  * ignores everything else; every entry is optional and falls back individually.
  */
 struct FDiceRollWorldKit
 {
+    /** The kit these entries belong to. A Vault request that falls back to the Vigil kit reports Vigil. */
+    EDiceRollKit Kind = EDiceRollKit::Vigil;
     /** The world and its kit are authored at the true 150 cm cell and are placed unscaled. */
     bool bMetric = false;
+    /** The world mesh: the kit's own r002 world when bMetric, otherwise the r001 world of the same kind (drawn scaled by the board metric). */
+    const TSoftObjectPtr<UStaticMesh>* World = nullptr;
     const TSoftObjectPtr<UStaticMesh>* Occluders = nullptr;
     const TArray<TSoftObjectPtr<UStaticMesh>>* Pillars = nullptr;
     const TArray<TSoftObjectPtr<UStaticMesh>>* Walls = nullptr;
@@ -93,10 +136,30 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Scout;
     UPROPERTY(EditDefaultsOnly, Category = "Characters") TSoftObjectPtr<UStaticMesh> Archer;
 
-    /** Rigged characters (#147): the roster entries below use these when imported, otherwise the static meshes above. */
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter FighterRig;
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter WizardRig;
-    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") FDiceRollCharacter RaiderRig;
+    /**
+     * Rigged party characters (#150), by class: the key is the role's enum name ("Fighter", "Rogue", "Cleric", "Wizard", ...; see
+     * ClassKey). A later cast batch gives another class a rig by adding an entry here, by data only. A class with no usable entry
+     * (missing, or its mesh unset) falls back to its static r001 mesh, then to primitives; an entry whose mesh or any clip fails
+     * to load does too (FDiceRollCharacter::Load).
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> ClassRigs;
+    /** Rigged foes by archetype name (ExpeditionFoe::RigKey: "Raider", "Scout", "Archer", and from #188 "Skirmisher", "Brute", "Warden"; see FoeLook.h). */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> FoeRigs;
+
+    /**
+     * The three pilot fields (#147), kept only so a theme saved before #150 still resolves its rigs: RigForClass and RigForFoe read
+     * them when the maps have no entry. The import script moves them into the maps; new work uses the maps.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter FighterRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter WizardRig;
+    UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters|Pilot (superseded by ClassRigs and FoeRigs)") FDiceRollCharacter RaiderRig;
+
+    /** The ClassRigs key of a class: the role's enum name ("Rogue"). None has no key. */
+    static FName ClassKey(EAdventurerRole Role);
+    /** The rig definition of a class, or null when it has none (the caller falls back to the static mesh, then primitives). */
+    const FDiceRollCharacter* RigForClass(EAdventurerRole Role) const;
+    /** The rig definition of a foe archetype, or null. */
+    const FDiceRollCharacter* RigForFoe(FName Archetype) const;
 
     /** Surrounding worlds, authored around an 18 x 12 cell footprint centred on the origin. */
     UPROPERTY(EditDefaultsOnly, Category = "Worlds") TSoftObjectPtr<UStaticMesh> RootWorld;
@@ -119,6 +182,24 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> Tabletop;
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> RootDiorama;
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> VigilDiorama;
+
+    /**
+     * The overview set r002 (#149, the last part): the war table and the Root, Vigil and Vault dioramas, new packages beside the r001 ones above, which stay
+     * as the fallback. The import script sets bOverviewR002 only when all four carry the overview-r002 tag. Presentation only (ADR-0001).
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") bool bOverviewR002 = false;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewTabletop;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewRootDiorama;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewVigilDiorama;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewVaultDiorama;
+
+    /** True when the r002 overview is switched on and all four entries are set and refer to packages that exist. */
+    bool OverviewR002Complete() const;
+    /**
+     * Loads the overview as one set: the r002 table and dioramas when the set is complete and every one of them loads, otherwise the r001 table and dioramas,
+     * never a mix. Vault is null for the r001 set. Table is null when even the r001 table does not load (the overview is then not shown).
+     */
+    FDiceRollOverview LoadOverview() const;
 
     /**
      * The Drowned Vigil world kit r002 (#145). Everything in it is authored at the true 150 cm cell, unlike the r001 art
@@ -163,8 +244,40 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootMistCards;
     UPROPERTY(EditDefaultsOnly, Category = "Root Kit") TArray<TSoftObjectPtr<UStaticMesh>> RootLightShafts;
 
-    /** The kit a board draws with: the Root kit on a forest (Meadow) board, the Vigil kit on every other. */
-    FDiceRollWorldKit KitFor(bool bForest) const;
+    /**
+     * The Vault world kit r002 (#149), the finale's own world: the same kit shape as the two above, authored at the true 150 cm cell and
+     * placed unscaled, in its own packages (the Vault never had an r001 world; it drew the Vigil kit with a cold grade). The import script
+     * sets bVaultMetricKit only when SM_World_Vault carries the r002 tag. Presentation only (ADR-0001): nothing here reads or feeds rules.
+     * If any Vault entry is missing, KitFor(Vault) returns the Vigil kit, so the finale looks as it did before the Vault existed.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Worlds") TSoftObjectPtr<UStaticMesh> VaultWorld;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") bool bVaultMetricKit = false;
+    /** Near architecture (walls, the Waystone apse, alcoves, sarcophagus rows) split from the world; same origin as VaultWorld. Dither-fades when it blocks the camera. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TSoftObjectPtr<UStaticMesh> VaultOccluders;
+    /** Three variants (A, B, C) per obstacle recipe: broken column, ossuary pier and rune stele (pillar), ashlar run, stacked coffins and iron grille (wall), rubble, bone mound and toppled statue (stones). */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultPillarVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultWallVariants;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultStonesVariants;
+    /** Spans two adjacent blocked cells; pivot at the midpoint of their shared edge, long axis Y. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TSoftObjectPtr<UStaticMesh> VaultArchTwoCell;
+    /** Non-blocking floor dressing (bones, skulls, candles, rubble, chains, urns, relics, crystals), outside the board. */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultScatter;
+    /** Translucent mist cards (upright, leaning, flat) and light shafts (prism, crossed planes). */
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultMistCards;
+    UPROPERTY(EditDefaultsOnly, Category = "Vault Kit") TArray<TSoftObjectPtr<UStaticMesh>> VaultLightShafts;
+
+    /**
+     * True when the Vault kit is switched on and every entry it needs is set and refers to a package that exists (world, occluders, 3 + 3 + 3
+     * variants, the arch, 8 scatter, 3 mist cards, 2 shafts). A reference to a deleted package counts as missing. A package that exists but fails to load
+     * is caught by the view, which loads every piece before it places anything.
+     */
+    bool VaultKitComplete() const;
+
+    /**
+     * The kit a board draws with. Root is the forest (Meadow) kit, Vigil the Ruins kit; the Vault request is the finale's and returns the
+     * Vigil kit, exactly as before the Vault existed, when VaultKitComplete() is false.
+     */
+    FDiceRollWorldKit KitFor(EDiceRollKit Kind) const;
 
     /** Loads an entry; null when it is unset or missing. */
     static UStaticMesh* Load(const TSoftObjectPtr<UStaticMesh>& Mesh);
