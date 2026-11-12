@@ -63,6 +63,30 @@ class PaletteTableTests(unittest.TestCase):
             claimed = [name for slot in ("A", "B", "C") for name in cls["tiles"][slot]]
             self.assertEqual(len(claimed), len(set(claimed)), key + " slots overlap")
 
+    def test_the_rogue_and_paladin_accents_are_the_bands_that_read_at_the_default_zoom(self):
+        """#150 follow-up to PR #203: on the packaged build four rogues looked identical and four paladins only marginally apart, because their accent was thin trim
+        (wrist bands, cuffs, hem lines: a few pixels at about 70 px). Measured in game with four copies (tools/accent_share.py): the rogue's copper sash (`emblem`)
+        and hood lining, scarf and mask (`accent`), the paladin's shield face (`emblem2`) and its shield back, hammer haft and boots (`leather`). The paladin's
+        tabard (`emblem`) stays out: its purple crown device is the class identity, and recolouring the whole tile took 36% of the figure from the front."""
+        x = {key: self.src["classes"][key]["tiles"]["X"] for key in ("rogue", "paladin")}
+        self.assertEqual(sorted(x["rogue"]), ["accent", "emblem"])
+        self.assertEqual(sorted(x["paladin"]), ["emblem2", "leather"])
+        self.assertNotIn("trim", x["rogue"] + x["paladin"], "the thin trim tiles were what failed to read")
+        self.assertNotIn("emblem", x["paladin"], "the tabard keeps its purple heraldry in every look")
+        self.assertNotIn("plate", x["paladin"], "the silver plate stays silver")
+        # An accent never takes a tile a build slot recolours for the same class unless the class already shared it before (the rogue's sash is its slot B colour; a
+        # duplicate rogue's sash is the party-slot colour, the subclass palette still colours the cloak and trim).
+        for key in ("rogue", "paladin"):
+            cls = self.src["classes"][key]
+            for tile in x[key]:
+                for slot in ("A", "C"):
+                    self.assertNotIn(tile, cls["tiles"][slot], key + " accent tile " + tile + " would hide the subclass colour of slot " + slot)
+        tiles = json.loads((PAL / "tiles.json").read_text())
+        for key in x:
+            share = sum(tiles[key][name]["area_share"] for name in x[key])
+            self.assertGreaterEqual(share, 0.08, key + " accent region is too small to read at the default zoom")
+            self.assertLessEqual(share, 0.14, key + " accent region is too large (the measured share must stay about 10% or less)")
+
     def test_variants_keep_the_class_brightness(self):
         for bid, build in self.res["builds"].items():
             for slot, value in build["slots"].items():

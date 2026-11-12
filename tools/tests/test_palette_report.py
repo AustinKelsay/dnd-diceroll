@@ -78,5 +78,47 @@ class PaletteReportTests(unittest.TestCase):
         self.assertEqual(len(roles), 13)
 
 
+def duplicates(cls, contrast=3.0, skip=(), extra=()):
+    """Every copy of a duplicate party in every board x shot, minus the (board, shot, copy) triples in skip."""
+    rows = [(cls, board, shot, f"Hero {copy}", contrast, 0.1) for board in BOARDS for shot in SHOTS for copy in range(palette_report.COPIES) if (board, shot, copy) not in skip]
+    return rows + list(extra)
+
+
+class DuplicatePartyGateTests(unittest.TestCase):
+    """The same floors over the duplicate-accent parties dup-four-<class>s-*: every copy in every default-zoom shot (60 measurements per class)."""
+
+    def test_four_copies_in_every_shot_pass(self):
+        row = palette_report.aggregate_duplicates(duplicates("rogue"), ["rogue"])["rogue"]
+        self.assertTrue(row["pass"], row["failures"])
+        self.assertEqual(row["measurements"], 60)
+
+    def test_a_missing_copy_shot_or_class_fails(self):
+        row = palette_report.aggregate_duplicates(duplicates("rogue", skip={("vault", SHOTS[1], 2)}), ["rogue"])["rogue"]
+        self.assertFalse(row["pass"])
+        self.assertIn("59 of 60", row["failures"][0])
+        rows = palette_report.aggregate_duplicates(duplicates("rogue"), ["rogue", "paladin"])
+        self.assertFalse(rows["paladin"]["pass"])
+        self.assertIsNone(rows["paladin"]["mean"])
+
+    def test_a_measurement_repeated_is_reported(self):
+        row = palette_report.aggregate_duplicates(duplicates("paladin", extra=[("paladin", "root", SHOTS[0], "Hero 0", 3.0, 0.1)]), ["paladin"])["paladin"]
+        self.assertFalse(row["pass"])
+
+    def test_the_gate_floors_apply_to_every_copy(self):
+        data = duplicates("paladin")
+        data[3] = ("paladin", data[3][1], data[3][2], data[3][3], 1.38, 0.2)
+        row = palette_report.aggregate_duplicates(data, ["paladin"])["paladin"]
+        self.assertFalse(row["pass"])
+        self.assertTrue(any("worst" in reason for reason in row["failures"]), row["failures"])
+        low = palette_report.aggregate_duplicates(duplicates("paladin", contrast=1.9), ["paladin"])["paladin"]
+        self.assertTrue(any("mean" in reason for reason in low["failures"]))
+        self.assertTrue(any("vigil mean" in reason for reason in low["failures"]))
+
+    def test_the_fixture_name_names_the_class(self):
+        self.assertEqual(palette_report.DUPLICATE_FIXTURE.match("dup-four-rogues-vault").groups(), ("rogue", "vault"))
+        self.assertIsNone(palette_report.DUPLICATE_FIXTURE.match("dup-two-pairs-root"))
+        self.assertIsNone(palette_report.DUPLICATE_FIXTURE.match("pal-00-root"))
+
+
 if __name__ == "__main__":
     unittest.main()
