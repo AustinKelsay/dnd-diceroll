@@ -35,11 +35,11 @@ public:
             Seconds += FPlatformTime::Seconds() - Start;
             return false;
         }
-        int32 Errors = 0, Illegal = 0, Passive = 0, Mismatches = 0, Stalls = 0, Wins = 0;
+        int32 Errors = 0, Illegal = 0, Passive = 0, Mismatches = 0, Stalls = 0, Deadlocks = 0, Wins = 0;
         for (const auto& Run : Runs)
         {
             Errors += Run.PolicyErrors; Illegal += Run.IllegalProposals; Passive += Run.PassiveEnds; Mismatches += Run.ProtectionMismatches;
-            Stalls += Run.Outcome == TEXT("Stall") ? 1 : 0; Wins += Run.Outcome == TEXT("Victory") ? 1 : 0;
+            Stalls += Run.Outcome == TEXT("Stall") ? 1 : 0; Deadlocks += Run.bDeadlock ? 1 : 0; Wins += Run.Outcome == TEXT("Victory") ? 1 : 0;
         }
         FString Error;
         const FString Folder = GroupFolder(Group, Error);
@@ -50,8 +50,10 @@ public:
         Test.TestEqual(TEXT("No illegal proposal"), Illegal, 0);
         Test.TestEqual(TEXT("No passive end"), Passive, 0);
         Test.TestEqual(TEXT("Every committed prevention equals the protection query"), Mismatches, 0);
-        // Stalls are findings, reported by the summary, not test failures.
-        Test.AddInfo(FString::Printf(TEXT("Balance group %s (catalog revision %d): %d runs, %d victories, %d stalls, %.1f s -> %s"), *Group, Revision, Runs.Num(), Wins, Stalls, Seconds, *Folder));
+        // Since #188 a deadlocked stall fails the sweep: a fight in which no unit can ever reach an opponent is a soft lock in the real game. Other
+        // stalls (a policy loop, such as reviving a hero the last foe re-downs every round while a legal attack exists) stay findings, listed by the summary.
+        Test.TestEqual(TEXT("No run deadlocks"), Deadlocks, 0);
+        Test.AddInfo(FString::Printf(TEXT("Balance group %s (catalog revision %d): %d runs, %d victories, %d stalls (%d deadlocks), %.1f s -> %s"), *Group, Revision, Runs.Num(), Wins, Stalls, Deadlocks, Seconds, *Folder));
         return true;
     }
 

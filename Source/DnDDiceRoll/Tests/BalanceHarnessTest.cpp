@@ -231,4 +231,33 @@ bool FBalanceOutputTest::RunTest(const FString& Parameters)
 #endif
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceDeadlockTest, "Project.Balance.DeadlockedStallIsRecognised",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceDeadlockTest::RunTest(const FString& Parameters)
+{
+    // The soft lock of PR #214's first head (trace rot2-03:20261119:10, fight 4): the last hero at (7, 8) with terrain at (7, 9), bodies at (7, 7),
+    // (6, 8) and (8, 8), the brute at (6, 6). Nothing can ever reach anything: a deadlock. Open the terrain cell, or turn a body into a live ally,
+    // and a path exists again. The sweep (Balance.Baseline.*) fails on any deadlocked run.
+    FCombatSnapshot S;
+    S.Encounter.Width = 16; S.Encounter.Height = 11;
+    S.Encounter.BlockedCells = {FIntPoint(7, 9)};
+    auto Add = [&S](int32 Id, ECombatSide Side, FIntPoint Cell, ECombatLife Life, int32 Range)
+    {
+        FCombatantState U; U.Id = Id; U.Side = Side; U.Cell = Cell; U.Life = Life; U.Range = Range; U.HP = Life == ECombatLife::Conscious ? 10 : 0;
+        S.Encounter.Combatants.Add(U);
+    };
+    Add(4, ECombatSide::Party, {7, 8}, ECombatLife::Conscious, 1);
+    Add(21, ECombatSide::Enemy, {7, 7}, ECombatLife::Dead, 1);
+    Add(22, ECombatSide::Enemy, {6, 8}, ECombatLife::Dead, 1);
+    Add(23, ECombatSide::Enemy, {8, 8}, ECombatLife::Dead, 4);
+    Add(20, ECombatSide::Enemy, {6, 6}, ECombatLife::Conscious, 1);
+    TestTrue(TEXT("The traced configuration is a deadlock"), BalanceHarness::Deadlocked(S));
+    FCombatSnapshot Open = S; Open.Encounter.BlockedCells.Reset();
+    TestFalse(TEXT("Without the terrain cell the hero can walk out"), BalanceHarness::Deadlocked(Open));
+    FCombatSnapshot Live = S; Live.Encounter.Combatants[1].Life = ECombatLife::Conscious; Live.Encounter.Combatants[1].HP = 5; Live.Encounter.Combatants[1].Side = ECombatSide::Party;
+    TestFalse(TEXT("A live unit is not a wall"), BalanceHarness::Deadlocked(Live));
+    FCombatSnapshot Ranged = S; Ranged.Encounter.Combatants[0].Range = 3;
+    TestFalse(TEXT("A ranged hero reaches the brute from where it stands"), BalanceHarness::Deadlocked(Ranged));
+    return !HasAnyErrors();
+}
 #endif
