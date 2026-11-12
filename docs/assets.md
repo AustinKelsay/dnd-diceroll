@@ -304,17 +304,17 @@ The foe batch rigs the two foes that drew as static meshes, the scout and the ar
 
 **Palettes and accents are the party's:** batch 4's subclass palettes and party accents apply to `Side == Party` only; a test reads each foe's material and finds every palette mask at 0.
 
-**Readability** (the heroes' gate: per foe the mean over its default-zoom shots at least 2.3, the worst shot at least 1.4, every per-board mean at least 2.0; `tools/figure_contrast.py`, 1920x1080, the four yaws and the targeting shots at default zoom, the foe fixtures plus `default-seed-battle` and `board-root-r002`):
+**Readability** (the heroes' gate: per foe the mean over its default-zoom shots at least 2.3, the worst shot at least 1.4, every per-board mean at least 2.0; `tools/figure_contrast.py`, 1920x1080, the four yaws and the targeting shots at default zoom, the foe fixtures plus `default-seed-battle` and `board-root-r002`, measured at the final head):
 
 | Foe | Shots | Mean | Worst | Vigil | Root | Vault | Merge |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Scout | 20 | 3.59 | 2.01 | 3.76 | 2.86 | 4.88 | 10.0% |
-| Archer | 45 | 3.60 | 2.08 | 3.78 | 3.13 | 4.60 | 10.7% |
+| Scout | 30 | 3.37 | 2.01 | 3.76 | 2.90 | 4.88 | 9.3% |
+| Archer | 55 | 3.52 | 2.08 | 3.78 | 3.13 | 4.60 | 10.8% |
 | Skirmisher | 15 | 3.53 | 2.25 | 3.21 | 2.75 | 4.63 | 14.1% |
 | Brute | 15 | 3.45 | 1.96 | 3.38 | 2.73 | 4.23 | 9.4% |
 | Warden | 15 | 3.74 | 1.84 | 3.78 | 3.22 | 4.22 | 7.9% |
 
-All five pass. Against their static meshes (the same two fixtures, the default-zoom shots): the scout's mean contrast went from 2.03 to 2.86 (worst 1.40 to 2.01, merge 18.9% to 8.3%) and the archer's from 2.48 to 3.14 (worst 1.94 to 2.08).
+All five pass. Against their static meshes (the same two fixtures, the default-zoom shots): the scout's mean contrast went from 2.03 to 2.90 (worst 1.40 to 2.01, merge 18.9% to 8.2%) and the archer's from 2.48 to 3.14 (worst 1.94 to 2.08, merge 14.6% to 11.3%).
 
 ## Root of the World r002 world kit (issue #149)
 
