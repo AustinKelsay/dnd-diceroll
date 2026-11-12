@@ -71,12 +71,12 @@
     {
       "role": "source",
       "path": "Art/sk-hero-sorcerer/r001/SK_Hero_Sorcerer_source.blend",
-      "sha256": "50e2000bd5e46c4f03a08df883b136cc056beb9bddc5aff6cd44260346fcd0f1"
+      "sha256": "d270c4ae6491a7ae7f778d0bc2b56c6f0c33d4c334b2225177067a448a0b0caa"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH3.md",
-      "sha256": "c02b93488a131e4d3d66a2cfab786de29198f4712a8f7f3b3a0c934280234881"
+      "sha256": "41d7227cddc291803ce0d35e037a73f2f6cb8456123b0884cb91ded07aeb4b24"
     },
     {
       "role": "source",
@@ -91,7 +91,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch3.py",
-      "sha256": "fc10e650d4586751d3b61b5d6478e1da1abcf8c551034d1de64d2cecc165a557"
+      "sha256": "cc7dbbb82ee72e62d16aaf75009da814a59d6cdc679db454e69bce164cbb260d"
     },
     {
       "role": "source",
@@ -101,12 +101,12 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build3.py",
-      "sha256": "aed40b97596e46ecb7d922880d99ec40be7fc471d78b3f623de13c94946b48d7"
+      "sha256": "eb1352c566b009bd526cf552042fb53cd852e8c7b4142e83d117dab0b182e5ef"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review3.py",
-      "sha256": "0cd14897f468470f3f8f9bf67211d45c164bbf3301f582c8cc193b2535eb496e"
+      "sha256": "f7286c6f58360ba5fa8496472762305d9e054882a7710d2e272baac7adfa3353"
     },
     {
       "role": "source",
@@ -136,17 +136,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-sorcerer/r001/SK_Hero_Sorcerer.glb",
-      "sha256": "87cadaf7be0762143b0b5d30fab95ca2f115c955de38097b8bfb643a648a610a"
+      "sha256": "f357856f833bed5f3ab7644b3053f203082300257afd5ad66c75b20b80b44fca"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-sorcerer/r001/SK_Hero_Sorcerer_LOD1.glb",
-      "sha256": "15bd9962a07928926edf728600fc66da462348044a56ac8de16ddb2740200469"
+      "sha256": "aaf21a05b0b8de8fcc5f7efb67bacef2ada9a88ccfa0f1fc21918500b29cd28d"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-sorcerer/r001/SK_Hero_Sorcerer_LOD2.glb",
-      "sha256": "ef5cad59f493e15be887cbe23e4cfa1f475b4e33dfc4b281250e57234146b543"
+      "sha256": "52646a2f6b231640ee88c2a162aa9c23fdc766996c18eb037d7f937f67d5b4b1"
     }
   ],
   "import_policy": {

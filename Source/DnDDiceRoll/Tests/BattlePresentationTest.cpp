@@ -428,7 +428,8 @@ bool FAbilityFeedbackTest::RunTest(const FString& Parameters)
     Hit.ActorId = 5; Hit.TargetId = 1; Hit.NaturalRoll = 12; Hit.AttackTotal = 17; Hit.Damage = 2;
     Hit.EffectDice = {{6, 5}}; Hit.DamagePrevented = 3;
     FExpeditionPlayback Playback; Playback.Reset(Before); Playback.Enqueue({Hit}, After);
-    for (int32 Frame = 0; Frame < 200 && Playback.IsBusy(); ++Frame) { Playback.Tick(0.01f); }
+    // A ranged attack now waits for the bow's release frame before the arrow leaves (FExpeditionPlayback::RangedReleaseSeconds), so give it 4 s.
+    for (int32 Frame = 0; Frame < 400 && Playback.IsBusy(); ++Frame) { Playback.Tick(0.01f); }
     TestTrue(TEXT("Damage equation includes committed protection"), Playback.Tray().Detail.Contains(TEXT("5 - 3 protection = 2")));
     TestEqual(TEXT("Protected hit playback converges"), Playback.Unit(1)->HP, After.Encounter.Combatants[0].HP);
     return !HasAnyErrors();

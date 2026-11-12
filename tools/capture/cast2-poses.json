@@ -408,6 +408,60 @@
       "distance": 1300
     },
     {
+      "name": "pose-ranger-ranged-held-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-held-yaw-20",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": -20,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-held-yaw135",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.77,
+      "yaw": 135,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-draw-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.4,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-start-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 0.1,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
+      "name": "pose-ranger-ranged-return-yaw-45",
+      "mode": "pose",
+      "role": "Ranger",
+      "pose": "Ranged",
+      "time": 1.18,
+      "yaw": -45,
+      "distance": 900
+    },
+    {
       "name": "pose-ranger-brace-near",
       "mode": "pose",
       "role": "Ranger",

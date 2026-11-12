@@ -184,11 +184,11 @@ def ranger_pose_fn(rig):
             rot = {k: tuple(np.array(rot.get(k, (0, 0, 0)), float) * (1 - wgt) + np.array(idle.get(k, (0, 0, 0)), float) * wgt) for k in set(rot) | set(idle)}
         return finish(rot, loc if f > 0 and edge < 1.0 else CL.idle_at(0)[1])
 
-    def scale_at(f):       # the blade vanishes while the bow is out
-        if f <= 2 or f >= 35:
+    def scale_at(f):       # the blade vanishes while the bow is out: gone within two frames of the clip starting, back by the last frames
+        if f <= 0 or f >= 35:
             return 1.0
-        if f < 6:
-            return 1.0 - (1.0 - HIDE) * ease((f - 2) / 4.0)
+        if f < 2:
+            return 1.0 - (1.0 - HIDE) * ease(f / 2.0)
         if f <= 31:
             return HIDE
         return HIDE + (1.0 - HIDE) * ease((f - 31) / 4.0)

@@ -63,7 +63,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH2.md",
-      "sha256": "36c2e8c33d1108123c347a5d8c48162e879e2f9004adbf3003f73a1d6bfc2125"
+      "sha256": "31757ab69f42644ff63792811fea378313cf8a7b651ec709dbd46575e10654e9"
     },
     {
       "role": "source",
@@ -83,17 +83,17 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build2.py",
-      "sha256": "809389c26f25b62dc4e11c49c7f4099e5feeb198c108a0e3ea61c0ab69e2f314"
+      "sha256": "d00068658baaff15de9d2ba03905fb5fbaa4a71b5306dfae673c0b64fef36cb8"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "a251fcb623756f198ce7777702d68b807c6fb2f2cded236007c4d1b560c7c7ec"
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records2.py",
-      "sha256": "d57e2ffad84b5ca7203ad3cc549b4978614238a14a57b354e43e5e2539b1a722"
+      "sha256": "9d89ba8b13a7f895701f7aa4d46578d2c9f4dff020265f74e4305da946b2fce0"
     },
     {
       "role": "source",
@@ -139,7 +139,7 @@
       "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
       "nanite": "off, set explicitly (gate 1 pipeline rule)",
       "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
-      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the clips baked into this glb are not imported",
+      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the other clips baked into this glb are not imported",
       "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
       "texture_filter": "trilinear, anisotropic 8",
       "collision": "none (presentation only)"

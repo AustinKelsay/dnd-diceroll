@@ -1,4 +1,5 @@
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/OverviewLayout.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/BrazierRing.h"
@@ -691,7 +692,7 @@ void AExpeditionBattleView::BeginPlay()
         Theme = ThemeAsset.LoadSynchronous();
         ThemeMaterial = Theme && !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
         if (!ThemeMaterial) { Theme = nullptr; }
-        OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
+        LoadOverviewSet();
     }
     // The translucent material for the contextual grid and (themed) footprint rings is optional; without it they draw as
     // dimmed opaque lines. Created by Content/Python/create_board_overlay_material.py.
@@ -846,10 +847,10 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     UpdateCamera(0.0f);
 }
 
-void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment, EAdventurerRole Shooter)
 {
     ImpactTargetId = TargetId;
-    Show.PreviewImpact(TargetId, Effect, From, Moment);
+    Show.PreviewImpact(TargetId, Effect, From, Moment, Shooter);
 }
 
 void AExpeditionBattleView::ClearImpactPreview()
@@ -932,14 +933,14 @@ void AExpeditionBattleView::UseTheme(UDiceRollTheme* Value)
     Theme = Value;
     ThemeMaterial = !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
     if (!ThemeMaterial) { UsePrimitives(); return; }
-    OverviewTable = UDiceRollTheme::Load(Theme->Tabletop);
+    LoadOverviewSet();
     BoardMetric = FBoardMetric(Theme->CellSize, Theme->FigureHeight);
     RebuildBoard();
 }
 
 void AExpeditionBattleView::UsePrimitives()
 {
-    Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr;
+    Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr; OverviewRoot = nullptr; OverviewVigil = nullptr; OverviewVault = nullptr; bOverviewR002 = false;
     BoardMetric = FBoardMetric();
     RebuildBoard();
 }
@@ -2710,6 +2711,13 @@ void AExpeditionBattleView::UpdateOccluder()
     }
 }
 
+void AExpeditionBattleView::LoadOverviewSet()
+{
+    const FDiceRollOverview Set = Theme ? Theme->LoadOverview() : FDiceRollOverview();
+    OverviewTable = Set.Table; OverviewRoot = Set.Root; OverviewVigil = Set.Vigil; OverviewVault = Set.Vault;
+    bOverviewR002 = Set.bR002 && Set.Table;
+}
+
 void AExpeditionBattleView::BuildOverview()
 {
     // The table stands on a dark floor raised over the sandbox floor (top at Z=0); everything
@@ -2718,24 +2726,27 @@ void AExpeditionBattleView::BuildOverview()
     Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, 5.0f), FVector(300.0f, 300.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
     // Assets face +X; the camera looks from -Y, so turn everything to face it.
     const FRotator Toward(0.0f, -90.0f, 0.0f);
+    OverviewDrawnMeshes.Reset();
+    OverviewDrawnLights.Reset();
     Scenery.Add(MakePart(OverviewTable, nullptr, Lift, FVector::OneVector, FLinearColor::White, Toward));
-    // One low-detail diorama per offered road: the forest for guarded roads, the drowned
-    // cathedral for dangerous roads and the finale. The title shows both.
-    TArray<bool> Cathedral;
+    OverviewDrawnMeshes.Add(OverviewTable->GetFName());
+    // One diorama per offered road (OverviewLayout::Kinds): the forest for guarded roads, the drowned cathedral for dangerous roads and,
+    // with the r002 set, the Vault for the finale. The title shows the first two worlds.
+    TArray<bool> Dangerous;
+    bool bFinale = false;
     if (HasRun())
     {
-        const bool bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
-        for (const FExpeditionRoute& Route : Progress().Offers) { Cathedral.Add(Route.bDangerous || bFinale); }
+        bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
+        for (const FExpeditionRoute& Route : Progress().Offers) { Dangerous.Add(Route.bDangerous); }
     }
-    else { Cathedral = {false, true}; }
-    for (int32 Index = 0; Index < Cathedral.Num(); ++Index)
+    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun(), bFinale, Dangerous, OverviewVault != nullptr);
+    for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002, HasRun()))
     {
-        UStaticMesh* Diorama = ThemeMesh(Cathedral[Index] ? Theme->VigilDiorama : Theme->RootDiorama);
+        UStaticMesh* Diorama = Spot.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault : Spot.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil : OverviewRoot;
         if (!Diorama) { continue; }
         // The camera looks along +Y, so world +X is screen-left: offer 0 sits left, under its card.
-        const float X = Cathedral.Num() == 1 ? 0.0f : Index == 0 ? 52.0f : -52.0f;
-        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(X, 22.0f, 0.0f), FVector::OneVector, FLinearColor::White,
-            Toward + FRotator(0.0f, Index == 0 ? -10.0f : 10.0f, 0.0f)));
+        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0f), FVector(Spot.Scale), FLinearColor::White, Toward + FRotator(0.0f, Spot.Yaw, 0.0f)));
+        OverviewDrawnMeshes.Add(Diorama->GetFName());
     }
     // The surviving party stands on the map as painted miniatures.
     int32 Slot = 0;
@@ -2748,11 +2759,14 @@ void AExpeditionBattleView::BuildOverview()
         }
         ++Slot;
     }
-    for (const FVector& Candle : {FVector(-100, 30, 40), FVector(100, 34, 40), FVector(0, -70, 70)})
+    const TArray<FVector> Candles = OverviewLayout::Candles(bOverviewR002);
+    const TArray<float> Strengths = OverviewLayout::CandleStrengths(bOverviewR002);
+    for (int32 Index = 0; Index < Candles.Num(); ++Index)
     {
-        Flames.Add(MakeLight(nullptr, Lift + Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 380.0f));
+        Flames.Add(MakeLight(nullptr, Lift + Candles[Index], FLinearColor(1.0f, 0.62f, 0.32f), Strengths[Index], 380.0f));
         FlameStrength.SetNum(Flames.Num());
-        FlameStrength.Last() = 16.0f;
+        FlameStrength.Last() = Strengths[Index];
+        OverviewDrawnLights.Add(Candles[Index]);
     }
 }
 

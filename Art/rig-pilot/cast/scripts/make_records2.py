@@ -17,9 +17,17 @@ ROOT = Path(__file__).resolve().parents[4]
 CAST = 'Art/rig-pilot/cast'
 SHARED = [f'{CAST}/README_BATCH2.md'] + [f'{CAST}/scripts/{n}' for n in ('cast_characters.py', 'cast_batch2.py', 'brace.py', 'build2.py', 'review2.py', 'make_records2.py')] + \
     ['Art/rig-pilot/r001/README.md'] + [f'Art/rig-pilot/r001/scripts/{n}' for n in ('rigkit.py', 'clips.py', 'characters.py')]
+# Per-class clip overrides (overrides.py, review round 1): the action exported in the class's own LOD0 glb, the package it is imported to once, and the
+# theme entry that names it. overrides.py also authors the ranger's bow (the string's nock is skinned to hand.R at the override's hold pose), so it is a
+# retained source of exactly these two assets.
+OVERRIDE = {
+    'ranger': dict(shared='Ranged', action='Ranged_Ranger', frames=36, package='A_Ranger_Ranged', entry='ClassRigs[Ranger].Overrides[Ranged]'),
+    'barbarian': dict(shared='Melee', action='Melee_Barbarian', frames=30, package='A_Barbarian_Melee', entry='ClassRigs[Barbarian].Overrides[Melee]'),
+}
+OVERRIDE_SOURCE = f'{CAST}/scripts/overrides.py'
 NEW = {
     'sk-hero-barbarian': ('SK_Hero_Barbarian', 'barbarian', 'Barbarian: heavy skeleton fit bulked up 9%, bare painted torso and arms, fur mantle and kilt, greataxe on weapon_socket'),
-    'sk-hero-monk': ('SK_Hero_Monk', 'monk', 'Monk: agile body, saffron gi, ochre short tabard, sash, wrapped hands, bo staff slung on the back, unarmed in hand'),
+    'sk-hero-monk': ('SK_Hero_Monk', 'monk', 'Monk: agile body, saffron gi, golden-ochre short tabard and trousers, sash, wrapped hands, bo staff slung on the back, unarmed in hand'),
     'sk-hero-paladin': ('SK_Hero_Paladin', 'paladin', 'Paladin: heavy body in polished plate, heraldic tabard, white cape, crested helm, warhammer on weapon_socket, tower shield on shield_socket'),
     'sk-hero-ranger': ('SK_Hero_Ranger', 'ranger', 'Ranger: agile body, hooded cape, quiver, short blade on weapon_socket, longbow on shield_socket'),
 }
@@ -67,6 +75,9 @@ for aid, (name, key, desc) in NEW.items():
     v = load(f'{CAST}/metrics/validate_{key}.json')
     files = [('source', f'{base}/{name}_source.blend')] + [('source', p) for p in SHARED]
     files += [('export', f'{base}/{name}.glb'), ('export', f'{base}/{name}_LOD1.glb'), ('export', f'{base}/{name}_LOD2.glb')]
+    ov = OVERRIDE.get(key)
+    if ov:
+        files.insert(1 + len(SHARED), ('source', OVERRIDE_SOURCE))      # after the shared sources, before the exports
     rec = {
         'schema_version': 1, 'asset_id': aid, 'revision': 1,
         'unreal_package': f'/Game/DnDDiceRoll/Theme/Characters/{name}',
@@ -76,27 +87,39 @@ for aid, (name, key, desc) in NEW.items():
             'license': 'Project-owned original work; same terms as this repository',
             'origin': 'Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused.'},
         'recipe': {
-            'method': desc + '. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py); no external motion data',
+            'method': desc + '. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py)' + (
+                f"; one per-class override of the shared {ov['shared']} clip, {ov['action']} ({ov['frames']} frames), authored on the shared skeleton by overrides.py with a small IK over rigkit's FK (the ranger's bow, whose string nock is skinned to hand.R, is authored there too)" if ov else '') + '; no external motion data',
             'approved_reference': 'Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); #150 batch 2 design calls by the graphics lead (class looks, Brace clip, Rim 1.6 and Fill 1.25)',
             'parameters': {'skeleton': '25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)', 'units': 'metres, +X forward, Z up, foot pivot at origin',
                            'fps': 30, 'atlas': '1024x1024, 1 material', 'vertex_color': 'COLOR_0 RGBA, alpha = glow mask',
                            'lods': 'LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips',
-                           'clips': 'ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop)',
+                           'clips': 'ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop)' + (
+                               f"; plus the override action {ov['action']} in this glb (0 to {ov['frames']} frames, starts and ends on Idle frame 0)" if ov else ''),
                            'blender_validation': {'tris': v['lods'], 'lod_ratio': v['lod_ratio'], 'body_height_m': v['body_height_m_excluding_held_items'],
                                                   'seam_mm_idle_walk': [v['seam_mm_first_vs_last_max_vertex']['Idle'], v['seam_mm_first_vs_last_max_vertex']['Walk']]}},
             'model_revision': 'not applicable (procedural Blender scripts)'},
         'tools': {'blender': '5.2.3 LTS', 'imagemagick': '7 (contact sheets only)'},
         'files': [{'role': r, 'path': p, 'sha256': sha(p)} for r, p in files],
         'import_policy': {'name': 'dnd-diceroll-rigged-character', 'version': 1, 'settings': {
-            'importer': 'glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and no clips are imported for this character',
+            'importer': 'glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton' + (
+                ' and, apart from the one override clip named under override_clip, no clips are imported for this character' if ov else ' and no clips are imported for this character'),
             'shared_skeleton': '/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid',
             'nanite': 'off, set explicitly (gate 1 pipeline rule)', 'lods': 'LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh',
-            'animations': 'the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the clips baked into this glb are not imported',
+            'animations': 'the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the other clips baked into this glb are not imported' + (
+                f" (the baked shared {ov['shared']} is not used for this class: its override replaces it)" if ov else ''),
             'material': 'MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only',
-            'texture_filter': 'trilinear, anisotropic 8', 'collision': 'none (presentation only)'}},
+            'texture_filter': 'trilinear, anisotropic 8', 'collision': 'none (presentation only)',
+            **({'override_clip': {
+                'source_action': ov['action'], 'source_file': f'{base}/{name}.glb (the LOD0 export, the same file the mesh is imported from)',
+                'shared_clip_replaced': ov['shared'], 'destination_package': f"/Game/DnDDiceRoll/Theme/Characters/Animations/{ov['package']}",
+                'skeleton': '/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid (the shared one: the glb is imported onto it, the sequence is checked to be on it, nothing else of that import is kept)',
+                'policy': 'import once: an existing destination package is kept and never replaced or deleted; the staging import is deleted after the sequence is moved',
+                'theme_entry': ov['entry'] + ' (data, UDiceRollTheme / FDiceRollCharacter::Overrides); a class with no entry plays the shared clip',
+                'script': 'Content/Python/import_dark_fantasy_theme.py, CLIP_OVERRIDES and import_override_clips'}} if ov else {})}},
         'validation': {'state': 'passed', 'evidence': [
             f'{CAST}/metrics/validate_{key}.json', f'{CAST}/metrics/build_{key}.json',
             f'{CAST}/previews/sheet_07_batch2_turnaround.png', f'{CAST}/previews/sheet_{ {"barbarian": 8, "monk": 9, "paladin": 10, "ranger": 11}[key]:02d}_{key}_clips.png',
+            *([f'{CAST}/previews/sheet_{ {"barbarian": 16, "ranger": 15}[key]}_{key}_override_clip.png'] if ov else []),
             ISSUE]},
     }
     (ROOT / base / 'asset.json').write_text(json.dumps(rec, indent=2) + '\n')

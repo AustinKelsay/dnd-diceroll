@@ -16,7 +16,7 @@
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
  * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
- * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, and
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
  * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-* and dup-two-pairs-*, the duplicate-accent parties),
  * each with a
@@ -144,59 +144,63 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindRootRecipe(TEXT("board-root-r002"), 2);
     FindRootRecipe(TEXT("board-root-pillars"), 1);
-    // Rigged cast batch 2 (#150): the same three boards the cast is judged on (the default seed, Vigil pillars, Root recipe 2) with a party of
-    // the barbarian, monk, paladin and ranger, so those classes can be captured and measured on them: `cast2-default-seed-battle`,
-    // `cast2-board-vigil-pillars`, `cast2-board-root-r002` (render with `gallery --fixture <name>`; the pose sheet is cast2-poses.json).
+    // Rigged cast batches 2 and 3 (#150): the same three boards the cast is judged on (the default seed, Vigil pillars, Root recipe 2) and the Vault finale with a
+    // party of the batch's classes, so those classes can be captured and measured on them: `cast2-default-seed-battle`, `cast2-board-vigil-pillars`,
+    // `cast2-board-root-r002`, `cast2-board-vault` (barbarian, monk, paladin, ranger) and the same four names with `cast3-` (sorcerer, warlock, druid and a wizard,
+    // whose Fire Bolt is the spell bolt the release is measured on). Render with `gallery --fixture <name>`; the pose sheets are cast2-poses.json and cast3-poses.json.
+    const auto WriteCastFixtures = [&](const TCHAR* Prefix, const TArray<const TCHAR*>& Builds, const TCHAR* Label)
     {
-        TArray<FPartyBuildSelection> Cast2;
-        const TCHAR* Builds[] = {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("ranger.hunter")};
-        for (int32 Index = 0; Index < 4; ++Index)
+        TArray<FPartyBuildSelection> Cast;
+        for (int32 Index = 0; Index < Builds.Num(); ++Index)
         {
             FPartyBuildSelection Slot;
             Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
-            Cast2.Add(Slot);
+            Cast.Add(Slot);
         }
+        const FString Group = Prefix;
         {
             FString Error;
             FExpeditionRun Run;
-            if (TestTrue(TEXT("The default seed starts with the batch 2 party"), Run.NewRun(DefaultSeed, Cast2, Error, FString::Printf(TEXT("capture-cast2-%d"), DefaultSeed)) &&
+            if (TestTrue(*FString::Printf(TEXT("The default seed starts with the %s party"), Label), Run.NewRun(DefaultSeed, Cast, Error, FString::Printf(TEXT("capture-%s-%d"), Prefix, DefaultSeed)) &&
                 Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)))
             {
-                Write(TEXT("cast2-default-seed-battle"), Run);
-                Describe(TEXT("cast2-default-seed-battle"), Run, DefaultSeed, 0);
+                Write(*(Group + TEXT("-default-seed-battle")), Run);
+                Describe(*(Group + TEXT("-default-seed-battle")), Run, DefaultSeed, 0);
             }
         }
-        const auto FindCast2 = [&](const TCHAR* Name, int32 Offer, bool bDangerous, int32 Recipe)
+        const auto FindCast = [&](const FString& Name, int32 Offer, bool bDangerous, int32 Recipe)
         {
             for (int32 Seed = 1; Seed < 2000; ++Seed)
             {
                 FString Error;
                 FExpeditionRun Run;
-                if (!Run.NewRun(Seed, Cast2, Error, FString::Printf(TEXT("capture-cast2-%d"), Seed))) { continue; }
+                if (!Run.NewRun(Seed, Cast, Error, FString::Printf(TEXT("capture-%s-%d"), Prefix, Seed))) { continue; }
                 const FExpeditionRoute& Route = Run.Progress().Offers[Offer];
                 if (Route.bDangerous != bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
                 const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
                 if (!Active || Active->Side != ECombatSide::Party) { continue; }
-                Write(Name, Run);
-                Describe(Name, Run, Seed, Offer);
+                Write(*Name, Run);
+                Describe(*Name, Run, Seed, Offer);
                 return;
             }
-            AddError(FString::Printf(TEXT("No seed below 2000 gives %s with the batch 2 party first"), Name));
+            AddError(FString::Printf(TEXT("No seed below 2000 gives %s with the %s party first"), *Name, Label));
         };
-        FindCast2(TEXT("cast2-board-vigil-pillars"), 1, true, 1);
-        FindCast2(TEXT("cast2-board-root-r002"), 0, false, 2);
-        // The Vault finale (the same scripted player as board-vault) with the batch 2 party, the board the cast is also judged on (#149).
+        FindCast(Group + TEXT("-board-vigil-pillars"), 1, true, 1);
+        FindCast(Group + TEXT("-board-root-r002"), 0, false, 2);
+        // The Vault finale (the same scripted player as board-vault) with the batch's party, the board the cast is also judged on (#149).
         bool bVault = false;
         for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
         {
             FExpeditionRun Run;
-            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast2)) { continue; }
-            Write(TEXT("cast2-board-vault"), Run);
-            Describe(TEXT("cast2-board-vault"), Run, Seed, 0);
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast)) { continue; }
+            Write(*(Group + TEXT("-board-vault")), Run);
+            Describe(*(Group + TEXT("-board-vault")), Run, Seed, 0);
             bVault = true;
         }
-        if (!bVault) { AddError(TEXT("No seed below 400 reaches the broken-wall finale with the batch 2 party first")); }
-    }
+        if (!bVault) { AddError(FString::Printf(TEXT("No seed below 400 reaches the broken-wall finale with the %s party first"), Label)); }
+    };
+    WriteCastFixtures(TEXT("cast2"), {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("ranger.hunter")}, TEXT("batch 2"));
+    WriteCastFixtures(TEXT("cast3"), {TEXT("sorcerer.draconic-bloodline"), TEXT("warlock.fiend"), TEXT("druid.land"), TEXT("wizard.evocation")}, TEXT("batch 3"));
     // The Vault finale (encounter 5, #149): the first seeds that reach the fifth fight with the party acting first, found by the scripted
     // player. `board-vault` is the broken-wall finale (adjacent blocked cells get the Vault's 2-cell crypt arch; in the default gallery set),
     // `board-vault-pillars` the ruined-pillar finale (render it with `gallery --fixture board-vault-pillars`).

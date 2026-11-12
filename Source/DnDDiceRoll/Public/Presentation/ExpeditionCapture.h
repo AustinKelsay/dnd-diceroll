@@ -26,6 +26,9 @@ struct DNDDICEROLL_API FCaptureShot
     bool bHasCamera = false;
     float Yaw = 0.0f;
     float Distance = 0.0f;
+    /** Optional pan (#149): the view pans this far right and away from the camera, in reference cm like Distance, then the pan bound applies. A large value reaches the pan stop. Camera shots only. */
+    bool bHasPan = false;
+    FVector2D Pan = FVector2D::ZeroVector;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
     /** Hint shots only. */
@@ -117,6 +120,14 @@ private:
         FVector2D ImpactFrom = FVector2D::ZeroVector;
         bool bHasBolt = false;
         FIntRect Bolt;
+        /** Impact shots with a "role" (#198): the shooter, a party hero of that class, held in its Ranged clip, and its footprint box (the shot's measured subject). */
+        int32 ShooterId = INDEX_NONE;
+        FString ShooterName;
+        /** The shooter's own cell (the manifest records it as shooter.cellX/cellY, so a shooter result is not reported at the target's cell) and its class. */
+        FIntPoint ShooterCell = FIntPoint::ZeroValue;
+        EAdventurerRole ShooterRole = EAdventurerRole::None;
+        bool bHasShooterBox = false;
+        FIntRect ShooterBox;
         bool bImpactFired = false;
         /** Battle and targeting shots (#150): every figure on the board with its projected footprint box in screenshot pixels, so a tool can
          * measure one class's figure against the ground behind it (tools/figure_contrast.py). Units whose box is off screen are left out. */

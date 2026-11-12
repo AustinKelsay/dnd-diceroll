@@ -1,6 +1,8 @@
 """Prove the r002 re-exports only add the Brace clip: compares an earlier LOD0 glb with its r002 re-export in a fresh process.
 
-    blender -b --python Art/rig-pilot/cast/scripts/compare_r002.py -- <dir-with-the-old-glbs> <key> [<key> ...]
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/compare_r002.py -- <dir-with-the-old-glbs> <key> [<key> ...]
+
+`--python-exit-code 1` makes Blender exit 1 when the script raises (an uncaught exception otherwise still exits 0); a failed comparison also exits 1 itself.
 
 For each key (fighter wizard raider rogue cleric) the old glb is the r001 file copied into <dir> before the re-export. Checks: the
 same vertex count and vertex positions in the bind pose (max difference), the same bones, every old clip present in the new file

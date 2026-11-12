@@ -87,8 +87,8 @@ CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", 
 CAPTURE_CLIPS = ("idle", "walk", "melee", "ranged", "cast", "hit", "downed", "death", "recover", "brace")
 CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 CAPTURE_HINTS = ("move", "resources", "rescue", "endturn")
-CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile")
-CAPTURE_PHASES = ("landing", "flight", "landing-first", "landing-second")
+CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile", "arrow", "bolt")
+CAPTURE_PHASES = ("landing", "flight", "release", "landing-first", "landing-second")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 6400)
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -156,9 +156,16 @@ def load_poses(path):
             if "phase" in shot and shot["phase"] not in CAPTURE_PHASES:
                 raise ValueError(f"{name} needs a \"phase\" of {', '.join(CAPTURE_PHASES)}")
             if shot.get("phase", "landing") != "landing" and shot.get("effect", "hit") == "hit":
-                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire or missile)")
+                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire, missile, arrow or bolt)")
             if shot.get("phase") in ("landing-first", "landing-second") and shot.get("effect") != "missile":
                 raise ValueError(f"{name} lands a first or second bolt, which only \"effect\" missile has")
+            if shot.get("phase") == "release" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} shows a release, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
+            if "role" in shot:
+                if shot.get("effect", "hit") == "hit":
+                    raise ValueError(f"{name} names a shooter, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
+                if not isinstance(shot["role"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", shot["role"]):
+                    raise ValueError(f"{name} needs a \"role\" (a class name such as Ranger)")
             frames = shot.get("frames", 4)
             if isinstance(frames, bool) or not isinstance(frames, int) or not 1 <= frames <= min(60, settle):
                 raise ValueError(f"{name} needs \"frames\" as a whole number from 1 to 60, within settleFrames")
@@ -172,8 +179,8 @@ def load_poses(path):
             seconds = shot.get("time", 0)
             if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 10:
                 raise ValueError(f"{name} needs \"time\" in seconds from 0 to 10")
-        elif "role" in shot or "pose" in shot or "time" in shot:
-            raise ValueError(f"{name} may give \"role\", \"pose\" or \"time\" on a pose shot only")
+        elif "pose" in shot or "time" in shot or ("role" in shot and shot["mode"] != "impact"):
+            raise ValueError(f"{name} may give \"role\", \"pose\" or \"time\" on a pose shot only (an impact shot of an arrow or bolt may name a \"role\")")
         if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact", "pose"):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:

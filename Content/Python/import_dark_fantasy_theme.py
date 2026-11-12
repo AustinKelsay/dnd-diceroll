@@ -28,13 +28,18 @@ Vault world kit r002 (issue #149) is a third kit through the same path (theme_pl
   - SM_World_Vault, SM_World_Vault_Occluders (LOD1 only), the nine obstacle variants and the arch, eight scatter, three mist cards and
     two shafts, tagged DiceRollAssetRevision=vault-kit-r002. UDiceRollTheme::bVaultMetricKit is set only when SM_World_Vault carries
     the tag; the theme falls back to the Vigil kit when any Vault entry is missing.
+Overview set r002 (issue #149, the last part) is a fourth kit through the same path (theme_plan.OVERVIEW_R002, 4 rows, all new packages, nothing replaced):
+  - SM_Overview_Tabletop and the Root, Vigil and Vault dioramas, tagged DiceRollAssetRevision=overview-r002. UDiceRollTheme::bOverviewR002 is set only when all
+    four carry the tag; the view uses the set when it is complete and loadable and the r001 SM_Tabletop and dioramas otherwise.
+  - world-vigil-occluders is replaceable too (theme_plan.ROSE_REPLACEABLE): DND_THEME_REIMPORT=world-vigil-occluders reimports the occluders and their two LODs
+    and the atlas (4096 x 2048, with the stained-glass rose at full resolution) in place and tags the mesh vigil-kit-r002-rose.
 Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
 colour for sparks, shots and the camp, and the master, occluder, card and effect materials carry the instanced-static-mesh usage flag.
 Nothing else changes: a run on a current theme only sets the missing flags.
 
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
 skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). The full rigged cast (#150) appends
-its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger) and the tenth shared clip, Brace, is
+its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger; batch 3: sorcerer, warlock, druid) and the tenth shared clip, Brace, is
 imported once, non-destructively, from the fighter's r002 glb (an existing A_Humanoid_Brace is kept). Existing rig assets are
 never overwritten and this script never deletes them (a force delete nulls references other assets hold). A
 THEME_RIG_REIMPORT request is validated and then refused: delete the rig assets deliberately in the editor, rerun.
@@ -393,6 +398,8 @@ KITS = [
      "sizes": theme_plan.ROOT_ARRAY_SIZES, "flag": "root_metric_kit"},
     {"name": "vault", "tag": theme_plan.VAULT_TAG, "rows": theme_plan.VAULT_R002, "gate": theme_plan.VAULT_METRIC_GATE,
      "sizes": theme_plan.VAULT_ARRAY_SIZES, "flag": "vault_metric_kit"},
+    {"name": "overview", "tag": theme_plan.OVERVIEW_TAG, "rows": theme_plan.OVERVIEW_R002, "gate": theme_plan.OVERVIEW_METRIC_GATE,
+     "sizes": theme_plan.OVERVIEW_ARRAY_SIZES, "flag": "overview_r002"},
 ]
 # A headless commandlet does not load the static mesh editor module, so its subsystem would be None.
 unreal.load_module("StaticMeshEditor")
@@ -1087,6 +1094,9 @@ RIG = [
     ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-sorcerer", "SK_Hero_Sorcerer", "class:Sorcerer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-warlock", "SK_Hero_Warlock", "class:Warlock", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-druid", "SK_Hero_Druid", "class:Druid", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-bard", "SK_Hero_Bard", "class:Bard", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-artificer", "SK_Hero_Artificer", "class:Artificer", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
@@ -1493,10 +1503,11 @@ def import_kit(kit, theme, parents, replacements):
         source = theme_plan.export_path(asset_id, revision, name)
         exists = library.does_asset_exist(package)
         replace = asset_id in replacements
-        if exists and kit_tagged(unreal.load_asset(package), kit["tag"]):
+        row_tag = theme_plan.ROW_TAGS.get(asset_id, kit["tag"])      # a row with a newer revision of its own carries its own tag
+        if exists and kit_tagged(unreal.load_asset(package), row_tag):
             mesh, texture, action = unreal.load_asset(package), None, "present"
         elif exists and not replace:
-            reason = "r001 package kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.ALL_REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
+            reason = "older revision kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.ALL_REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
             asset_line(asset_id, package, "skipped", source, unreal.load_asset(package), "reason=\"" + reason + "\"")
             continue
         else:
@@ -1507,7 +1518,7 @@ def import_kit(kit, theme, parents, replacements):
             if shapes:
                 raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
             import_lods(mesh, asset_id, revision, name)
-            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, kit["tag"])
+            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, row_tag)
             mesh.modify()  # marks the package dirty so the import is saved
         force_nanite_off(mesh)
         check_lod_count(mesh, asset_id, revision)
@@ -1595,6 +1606,7 @@ def main():
         found, len(ASSETS), kit_loaded["vigil"], len(theme_plan.R002), kit_metric["vigil"]))
     unreal.log("THEME_ROOT_COMPLETE root kit {}/{} meshes, root_metric_kit={}".format(kit_loaded["root"], len(theme_plan.ROOT_R002), kit_metric["root"]))
     unreal.log("THEME_VAULT_COMPLETE vault kit {}/{} meshes, vault_metric_kit={}".format(kit_loaded["vault"], len(theme_plan.VAULT_R002), kit_metric["vault"]))
+    unreal.log("THEME_OVERVIEW_COMPLETE overview set {}/{} meshes, overview_r002={}".format(kit_loaded["overview"], len(theme_plan.OVERVIEW_R002), kit_metric["overview"]))
     unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))
 
 

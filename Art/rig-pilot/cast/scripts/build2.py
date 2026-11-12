@@ -4,8 +4,10 @@ build.py (batch 1) is not edited so batch 1 asset records that hash it stay vali
 Build the cast characters (LOD0 with all ten clips, LOD1, LOD2) -> Art/<asset-id>/r001/*.glb + source .blend.
 
 Run from the repository root (one Blender process at a time):
-    blender -b --python Art/rig-pilot/cast/scripts/build2.py [-- rogue cleric barbarian monk paladin ranger]
-    blender -b --python Art/rig-pilot/cast/scripts/build2.py -- --r002 fighter wizard raider rogue cleric
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build2.py [-- rogue cleric barbarian monk paladin ranger]
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build2.py -- --r002 fighter wizard raider rogue cleric
+
+Every command takes `--python-exit-code 1` (Blender then exits 1 when the script raises; otherwise an uncaught exception still exits 0 and a pipeline would read it as success).
 
 Uses the r001 skeleton, clips and exporter unchanged (Art/rig-pilot/r001/scripts); only the recipes are new. The tenth clip, Brace
 (brace.py, batch 2), is registered when cast_batch2 is imported. `--r002` re-exports the five earlier characters with the ten clips

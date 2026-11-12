@@ -15,7 +15,7 @@ Batch 2 adds the **barbarian, monk, paladin and ranger** and the tenth shared cl
 | Paladin | Heavy body in polished silver plate (round pauldrons, gold trim), a closed helm with a purple crest fin and a glowing brow gem, a heraldic purple tabard with an original crown device, a white cape lined in royal purple, a **warhammer** (square head, back beak) and a **tall tower shield** | The fighter has blue steel, a crimson cape, a longsword and a kite shield; the cleric has ivory, teal, gold and a round shield and flanged mace. White, silver and purple, a tall rectangular shield and a hammer share none of that. The device is a three-pointed crown (no real-world heraldry) |
 | Ranger | Agile body in olive-tan leather, a **pointed hood with a drooping tail** and a cream feather, a moss-green mantle and a **short cape to the hip** with a russet hem and dark-green lining, a quiver with fletched arrows on the back, a short blade on `weapon_socket` and a **longbow on `shield_socket`** | The rogue is a pale blue-green long cloak with a cream hem and lining, a rounded hood and twin daggers. The ranger is yellower and more saturated, with a shorter cape, a pointed drooping hood, and the tall bow, which is the biggest silhouette change |
 | Longbow | Authored upright at the hold (frame 23) of the ranger's own Ranged clip (`Ranged_Ranger`, below). The string is two segments from the limb tips to a **nock vertex skinned to `hand.R`** and authored where the right hand is at full draw, so the clip's right hand visibly draws it back. In every other clip the thin brown string trails from the limb tips to wherever the right hand is | The shared Ranged clip cannot put a hand on a string for one character. In Idle the bow is carried tilted (about 30 degrees) with the string running to the hand at the hip; at the default zoom it is a sub-pixel line |
-| Short blade and Ranged | The blade is in the right hand in every shared clip (so Melee is a blade attack). `Ranged_Ranger` scales `weapon_socket` to 1/1000 while the bow is out (a socket-bone scale animation), so the blade is **gone from the hand during Ranged** and back by the last frames | The lead asked for the blade sheathed or hidden during the draw. Nothing else is skinned to `weapon_socket` on the ranger |
+| Short blade and Ranged | The blade is in the right hand in every shared clip (so Melee is a blade attack). `Ranged_Ranger` scales `weapon_socket` to 1/1000 from frame 2 to frame 31 (a socket-bone scale animation: full size at frame 0, half at frame 1, back to full by frame 35), so the blade is **gone within two frames of the clip starting, through the whole draw, hold and release**, and back as the arm returns to Idle. `review2.py validate ranger` checks the scale at every frame. The blade seen while the ranger waits for the dice is the Idle blade: the Ranged clip has not started | The lead asked for the blade sheathed or hidden during the draw. Nothing else is skinned to `weapon_socket` on the ranger |
 | Hands and held items | Clips stay shared; nothing needed a per-character fix | As batch 1 |
 
 ## Brace (the tenth clip)
@@ -28,7 +28,7 @@ Batch 2 adds the **barbarian, monk, paladin and ranger** and the tenth shared cl
 
 A class may override one shared clip on the same skeleton, as data in its rig definition (`FDiceRollCharacter::Overrides`, a map from a clip name to a clip), falling back to the shared clip. `overrides.py` authors two, keyed in the frame counts of the clips they replace, starting and ending on Idle frame 0 and in place; both are exported in their class's LOD0 glb beside the ten shared clips (`Ranged_Ranger` 36 frames, `Melee_Barbarian` 30 frames) and imported as `A_Ranger_Ranged` and `A_Barbarian_Melee`.
 
-* **Ranger Ranged (a bow draw):** the left arm raises the bow level at the target, the right hand goes to the string, draws it to the cheek, holds, releases (the string snaps forward) and drops; the blade is scaled away while the bow is out. A small Gauss-Newton IK over rigkit's FK puts each hand on its target, written for the standing figure and carried on the chest.
+* **Ranger Ranged (a bow draw):** the left arm raises the bow level at the target, the right hand goes to the string, draws it to the cheek, holds, releases (the string snaps forward) and drops; the blade is scaled away from frame 2 to frame 31 (the whole draw, hold and release). A small Gauss-Newton IK over rigkit's FK puts each hand on its target, written for the standing figure and carried on the chest.
 * **Barbarian Melee (two-handed):** the right hand carries the axe through the coil, chop and follow-through (position and haft direction keyed, solved through the arm, the hand and a `weapon_socket` grip adjustment); the left hand is solved onto the haft point every frame, so both hands swing it. Both arms ease from and back to Idle at the ends. The paladin's one-handed hammer with the tall shield is accepted as is.
 
 ## Characters
@@ -38,20 +38,22 @@ A class may override one shared clip on the same skeleton, as data in its rig de
 | Barbarian `SK_Hero_Barbarian` | heavy, bulked up | 177.1 cm | 3946 / 1720 (44%) / 934 (24%) | fur mantle and kilt, bare painted arms, bronze armlets, headband, braids, greataxe |
 | Monk `SK_Hero_Monk` | agile | 180.6 cm | 3128 / 1515 (48%) / 756 (24%) | gi, short tabard, sash, wraps, beads, bo staff on the back; unarmed |
 | Paladin `SK_Hero_Paladin` | heavy | 181.7 cm | 3652 / 1697 (46%) / 916 (25%) | plate, crested helm, tabard, cape, warhammer, tower shield |
-| Ranger `SK_Hero_Ranger` | agile | 181.0 cm | 3514 / 1671 (48%) / 1017 (29%) | hood, cape, quiver, short blade, longbow |
+| Ranger `SK_Hero_Ranger` | agile | 181.0 cm | 3522 / 1679 (48%) / 1025 (29%) | hood, cape, quiver, short blade, longbow |
 
 One material per character on its own 1024x1024 atlas (the same 13 tiles). Atlas marks painted over the base tiles: the barbarian's fur (`cloth`) and warpaint (`emblem`), the paladin's crown device (`emblem` tabard, `emblem2` shield). Glow alpha only on runes and gems: barbarian axe runes (24 vertices), monk bead (36), paladin hammer, helm, shield and pommel gems and runes (120), ranger blade gem and rune, bow riser gem (84). 3 influences at most. Heights are 175 to 185 cm; the LOD1 of the barbarian is 44% rather than 50%.
 
 ## Scripts (repository root, one Blender process at a time, under the machine lock)
 
+**Every Blender command takes `--python-exit-code 1`**: Blender then exits 1 when the script raises (an uncaught exception otherwise still exits 0, so a failed build or validation could read as success in a pipeline); the gates in `review2.py` and `compare_r002.py` exit 1 themselves as well. The `...` in the rows below stands for `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/`.
+
 | Script | Does |
 | --- | --- |
-| `blender -b --python Art/rig-pilot/cast/scripts/build2.py [-- barbarian monk paladin ranger]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
+| `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build2.py [-- barbarian monk paladin ranger]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
 | `... build2.py -- --r002 fighter wizard raider rogue cleric` | re-exports the five earlier characters with ten clips into `Art/<asset-id>/r002/` |
-| `... review2.py -- validate <key> [--r002]` | fresh process: re-imports the glbs and writes `metrics/validate_<key>[_r002].json` (bones, ten clips, seams, LOD bone names, influences, glow alpha, root drift) |
-| `... compare_r002.py -- <dir with the old glbs> fighter wizard raider rogue cleric` | proves the re-exports changed nothing but the extra clip |
-| `... review2.py -- sheet2 bind\|turn\|clips\|brace\|stone` | renders `previews/sheet_06..14` (ImageMagick 7) |
-| `python3 Art/rig-pilot/cast/scripts/make_records2.py` | writes the four r001 records and the five r002 records |
+| `... review2.py -- validate <key> [--r002]` | fresh process: re-imports the glbs and writes `metrics/validate_<key>[_r002].json` (bones, ten clips, seams, LOD bone names, influences, glow alpha, root drift, height, triangles, the override clips) and **exits 1 on any failed predicate** |
+| `... compare_r002.py -- <dir with the old glbs> fighter wizard raider rogue cleric` | proves the re-exports changed nothing but the extra clip; exits 1 otherwise |
+| `... review2.py -- sheet2 bind\|turn\|clips\|brace\|stone\|override` | renders `previews/sheet_06..16` (ImageMagick 7; `override` is the two per-class clips beside the shared clips they replace) |
+| `python3 Art/rig-pilot/cast/scripts/make_records2.py` | writes the four r001 records and the five r002 records; refuses (exit 1) unless every validation JSON and the r002 comparison pass |
 
 ## Known roughness
 
