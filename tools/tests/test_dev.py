@@ -424,9 +424,12 @@ class GalleryTests(unittest.TestCase):
     def test_poses_validation(self):
         self.assertEqual(len(load_poses(self.poses())), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "battle-far", "mode": "battle", "yaw": 0, "distance": "far"}]))), 1)
-        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 44)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 47)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast2-poses.json")), 62)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-poses.json")), 49)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/ranged-release-poses.json")), 22)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/spell-release-poses.json")), 11)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 28)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
@@ -435,6 +438,10 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(self.poses([{"name": "arrow-release", "mode": "impact", "effect": "arrow", "phase": "release", "role": "Ranger", "yaw": 0, "distance": "default"},
                                                     {"name": "arrow-flight", "mode": "impact", "effect": "arrow", "phase": "flight", "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-release", "mode": "impact", "effect": "bolt", "phase": "release", "role": "Ranger", "yaw": 0, "distance": "default"}]))), 3)
+        # A spell bolt also has a release and a named shooter (#150 batch 3): the shooter is held in its Cast clip.
+        self.assertEqual(len(load_poses(self.poses([{"name": "fire-release", "mode": "impact", "effect": "fire", "phase": "release", "role": "Wizard", "yaw": 0, "distance": "default"},
+                                                    {"name": "spell-release", "mode": "impact", "effect": "spell", "phase": "release", "role": "Cleric", "yaw": 90, "distance": 1300},
+                                                    {"name": "missile-release", "mode": "impact", "effect": "missile", "phase": "release", "yaw": 0, "distance": "default"}]))), 3)
         self.assertEqual(len(load_poses(self.poses([{"name": "rogue-melee", "mode": "pose", "role": "Rogue", "pose": "Melee", "time": 0.37, "yaw": 0, "distance": "default"},
                                                     {"name": "cleric-down", "mode": "pose", "role": "Cleric", "pose": "downed", "yaw": 90, "distance": 1300}]))), 2)
         bad = [{"version": 2, "shots": self.SHOTS}, {"version": 1, "shots": []}, {"version": 1}, {"version": True, "shots": self.SHOTS},
@@ -458,9 +465,8 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "dance", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "pose", "role": "Rogue", "pose": "melee", "time": 11, "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "role": "Rogue", "yaw": 0, "distance": 1300}]},
-               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "spell", "phase": "release", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "release", "yaw": 0, "distance": 1300}]},
-               {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "fire", "role": "Wizard", "yaw": 0, "distance": 1300}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "impact", "role": "Wizard", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "arrow", "role": "Ra nger", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "later", "effect": "spell", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "phase": "flight", "yaw": 0, "distance": 1300}]},

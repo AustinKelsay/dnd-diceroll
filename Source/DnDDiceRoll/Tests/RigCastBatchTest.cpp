@@ -6,8 +6,8 @@
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/UnitPose.h"
 
-// The full rigged cast (#150): the class lookup that later batches fill by data, the shipped rigs of batches 0 to 2 (fighter, wizard,
-// rogue, cleric, barbarian, monk, paladin, ranger), and the clips their abilities play. Board-level convergence, heights and resume for these rigs are asserted in
+// The full rigged cast (#150): the class lookup that later batches fill by data, the shipped rigs of batches 0 to 3 (fighter, wizard,
+// rogue, cleric, barbarian, monk, paladin, ranger, sorcerer, warlock, druid), and the clips their abilities play. Board-level convergence, heights and resume for these rigs are asserted in
 // UnitPoseTest.cpp, whose figure checks cover every class the shipped theme rigs.
 
 namespace
@@ -73,13 +73,14 @@ bool FRigLookupTest::RunTest(const FString& Parameters)
     const FDiceRollCharacter* Raider = Theme->RigForFoe(FName(TEXT("Raider")));
     TestTrue(TEXT("The foe map entry wins over the pilot field"), Raider && Raider != &Theme->RaiderRig);
 
-    // The shipped theme: the eight rigged classes resolve to their own rig (never a static or primitive fallback) with a
+    // The shipped theme: the eleven rigged classes resolve to their own rig (never a static or primitive fallback) with a
     // complete clip set and three LODs; the foe raider too. Run import_dark_fantasy_theme.py if this fails.
     const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(ThemePath)).LoadSynchronous();
     if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
     const TPair<EAdventurerRole, const TCHAR*> Cast[] = {{EAdventurerRole::Fighter, TEXT("SK_Hero_Fighter")}, {EAdventurerRole::Rogue, TEXT("SK_Hero_Rogue")},
         {EAdventurerRole::Cleric, TEXT("SK_Hero_Cleric")}, {EAdventurerRole::Wizard, TEXT("SK_Hero_Wizard")}, {EAdventurerRole::Barbarian, TEXT("SK_Hero_Barbarian")},
-        {EAdventurerRole::Monk, TEXT("SK_Hero_Monk")}, {EAdventurerRole::Paladin, TEXT("SK_Hero_Paladin")}, {EAdventurerRole::Ranger, TEXT("SK_Hero_Ranger")}};
+        {EAdventurerRole::Monk, TEXT("SK_Hero_Monk")}, {EAdventurerRole::Paladin, TEXT("SK_Hero_Paladin")}, {EAdventurerRole::Ranger, TEXT("SK_Hero_Ranger")},
+        {EAdventurerRole::Sorcerer, TEXT("SK_Hero_Sorcerer")}, {EAdventurerRole::Warlock, TEXT("SK_Hero_Warlock")}, {EAdventurerRole::Druid, TEXT("SK_Hero_Druid")}};
     TSet<const USkeleton*> Skeletons;
     for (const TPair<EAdventurerRole, const TCHAR*>& Entry : Cast)
     {
