@@ -272,12 +272,14 @@ def encounter_blocks(rows):
 
 
 def fight_block(group):
-    """Finished fights of `group`: count, defeats, rounds, HP lost and the melee share of party damage."""
+    """Finished fights of `group`: count, defeats, rounds, HP lost (net of healing), HP taken (gross damage taken), both as a share of
+    the party's HP at the start of the fight, and the melee share of party damage."""
     finished = [r for r in group if r["outcome"] in ("Victory", "Defeat")]
     damage = sum(number(r, "damage") for r in finished)
     return dict(rate(sum(1 for r in finished if r["outcome"] == "Defeat"), len(finished)), **{
         "rounds": mean([number(r, "rounds") for r in finished]),
         "hp_lost_fraction": mean([(number(r, "hp_start") - number(r, "hp_end")) / max(1, number(r, "hp_max")) for r in finished]),
+        "hp_taken_fraction": mean([number(r, "damage_taken") / max(1, number(r, "hp_max")) for r in finished]),
         "melee_share": sum(number(r, "melee_damage") for r in finished) / damage if damage else 0.0,
     })
 
@@ -315,8 +317,10 @@ def risk_blocks(rows):
         for high in words[i + 1:]:
             pairs.append({"lower": low, "higher": high,
                           "costs_more": tiers[high]["hp_lost_fraction"] > tiers[low]["hp_lost_fraction"],
+                          "takes_more": tiers[high]["hp_taken_fraction"] > tiers[low]["hp_taken_fraction"],
                           "loses_more": tiers[high]["rate"] > tiers[low]["rate"]})
-    return {"tiers": tiers, "pairs": pairs, "ordered": all(p["costs_more"] and p["loses_more"] for p in pairs)}
+    return {"tiers": tiers, "pairs": pairs, "ordered": all(p["costs_more"] and p["loses_more"] for p in pairs),
+            "ordered_taken": all(p["takes_more"] and p["loses_more"] for p in pairs)}
 
 
 def group_by_pair(rows, a, b):
@@ -383,19 +387,23 @@ def markdown(summary):
     lines += ["", "## Encounters by stage and route", "", "| Stage | Route | Fights | Win rate | Rounds | HP lost | Lowest party HP (mean / worst) | Downs | Deaths | Heroes standing at start |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for e in summary["encounters"].values():
         lines.append(f"| {e['stage']} | {e['route']} | {e['n']} | {interval(e)} | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['hp_low_fraction'])} / {percent(e['hp_low_min'])} | {e['downs']:.2f} | {e['deaths']:.2f} | {e['conscious_start']:.2f} |")
-    lines += ["", "## Stages by route (fights 1-2 approach, 3-4 pressure, 5 finale)", "", "| Stage | Route | Fights | Defeats | Rounds | HP lost | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- |"]
+    lines += ["", "## Stages by route (fights 1-2 approach, 3-4 pressure, 5 finale; HP lost is net of healing, HP taken gross, both of the party's HP)", "",
+              "| Stage | Route | Fights | Defeats | Rounds | HP lost | HP taken | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
     for e in summary["stage_kinds"].values():
-        lines.append(f"| {e['kind']} | {e['route']} | {e['n']} | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['melee_share'])} |")
-    lines += ["", "## Layouts by route", "", "| Recipe | Layout | Route | Fights (stages) | Defeats | Rounds | HP lost | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+        lines.append(f"| {e['kind']} | {e['route']} | {e['n']} | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['hp_taken_fraction'])} | {percent(e['melee_share'])} |")
+    lines += ["", "## Layouts by route", "", "| Recipe | Layout | Route | Fights (stages) | Defeats | Rounds | HP lost | HP taken | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for e in summary["layouts"].values():
-        lines.append(f"| {e['recipe']} | {e['layout']} | {e['route']} | {e['n']} ({', '.join(str(s) for s in e['stages'])}) | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['melee_share'])} |")
+        lines.append(f"| {e['recipe']} | {e['layout']} | {e['route']} | {e['n']} ({', '.join(str(s) for s in e['stages'])}) | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['hp_taken_fraction'])} | {percent(e['melee_share'])} |")
     risk = summary["risk"]
-    lines += ["", "## Risk words (revision 9 table by stage and route)", "", "| Risk | Fights | Defeats | HP lost | Rounds |", "| --- | --- | --- | --- | --- |"]
+    lines += ["", "## Risk words (revision 9 table by stage and route)", "", "| Risk | Fights | Defeats | HP lost | HP taken | Rounds |", "| --- | --- | --- | --- | --- | --- |"]
     for t in risk["tiers"].values():
-        lines.append(f"| {t['risk']} | {t['n']} | {100 * t['rate']:.1f}% | {percent(t['hp_lost_fraction'])} | {t['rounds']:.1f} |")
-    lines += ["", "Every higher word costs more HP and loses more often: " + ("yes" if risk["ordered"] else "no, " + "; ".join(
-        f"{p['higher']} vs {p['lower']}" + ("" if p["costs_more"] else " costs no more") + ("" if p["loses_more"] else " loses no more often")
-        for p in risk["pairs"] if not (p["costs_more"] and p["loses_more"]))) + "."]
+        lines.append(f"| {t['risk']} | {t['n']} | {100 * t['rate']:.1f}% | {percent(t['hp_lost_fraction'])} | {percent(t['hp_taken_fraction'])} | {t['rounds']:.1f} |")
+    def verdict(ordered, key, what):
+        def failing(p):
+            return " and ".join(([] if p[key] else [f"{what} no more"]) + ([] if p["loses_more"] else ["loses no more often"]))
+        return "yes" if ordered else "no, " + "; ".join(f"{p['higher']} vs {p['lower']} {failing(p)}" for p in risk["pairs"] if not (p[key] and p["loses_more"]))
+    lines += ["", "Every higher word costs more HP (net) and loses more often: " + verdict(risk["ordered"], "costs_more", "costs") + ".",
+              "", "Every higher word takes more HP (gross) and loses more often: " + verdict(risk["ordered_taken"], "takes_more", "takes") + "."]
     lines += ["", "## Outliers", ""]
     lines += [f"- {o['kit']}: {o['metric']} {o['value']:.3f}" + (f" (robust z {o['z']:.1f})" if o["z"] is not None else "") for o in summary["outliers"]] or ["None."]
     lines += ["", "## Special signatures", ""]

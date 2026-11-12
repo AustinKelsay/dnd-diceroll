@@ -121,7 +121,7 @@ class BalanceReportTests(unittest.TestCase):
                   (5, "guarded", 6, "Defeat", 40, 70, 35, 9), (3, "dangerous", 4, "Defeat", 60, 90, 45, 8), (5, "dangerous", 6, "Stall", 99, 1, 1, 60)]
         for i, (stage, route, recipe, outcome, lost, damage, melee, rounds) in enumerate(fights):
             rows.append({"party": "p", "seed": i, "stage": stage, "route": route, "recipe": recipe, "outcome": outcome, "rounds": rounds,
-                         "hp_start": 100, "hp_end": 100 - lost, "hp_max": 100, "damage": damage, "melee_damage": melee})
+                         "hp_start": 100, "hp_end": 100 - lost, "hp_max": 100, "damage": damage, "melee_damage": melee, "damage_taken": lost + 10})
         write(folder / "runs.csv", RUN_FIELDS, [{"party": "p", "archetype": "rotation", "builds": "fighter.champion", "seed": 0, "outcome": "Victory"}])
         write(folder / "encounters.csv", ENCOUNTER_FIELDS, rows)
         write(folder / "heroes.csv", HERO_FIELDS, [])
@@ -147,8 +147,11 @@ class BalanceReportTests(unittest.TestCase):
         failing = [(p["lower"], p["higher"]) for p in summary["risk"]["pairs"] if not p["loses_more"]]
         self.assertEqual(failing, [("low", "moderate")])
         text = balance_report.markdown(summary)
-        self.assertIn("| 3 | fallen colonnade | guarded | 1 (3) | 0.0% | 5.0 | 20% | 50% |", text)
-        self.assertIn("Every higher word costs more HP and loses more often: no, moderate vs low loses no more often.", text)
+        self.assertIn("| 3 | fallen colonnade | guarded | 1 (3) | 0.0% | 5.0 | 20% | 30% | 50% |", text)
+        self.assertIn("Every higher word costs more HP (net) and loses more often: no, moderate vs low loses no more often.", text)
+        self.assertIn("Every higher word takes more HP (gross) and loses more often: no, moderate vs low loses no more often.", text)
+        self.assertAlmostEqual(colonnade["hp_taken_fraction"], 0.3)
+        self.assertTrue(all(p["takes_more"] for p in summary["risk"]["pairs"]))
         self.assertIn("Catalog revision 9.", text)
 
     def test_writes_summary_files(self):

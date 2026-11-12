@@ -452,7 +452,8 @@ bool FCompactRevision9FingerprintTest::RunTest(const FString& Parameters)
     const FString Fingerprint = FString::Printf(TEXT("rng=%d|gen=%d|partyHp=%d|alive=%d|phase=%d|fights=%d|rounds=%d|turn=%d"), Run.Battle().Snapshot().RandomState,
         Run.Progress().GenerationRandomState, PartyHp, Alive, static_cast<int32>(Run.Progress().Phase), Run.Progress().History.Num(), Run.Battle().Snapshot().Round, Run.Battle().Snapshot().TurnIndex);
     AddInfo(TEXT("Revision 9 seed 42 fingerprint: ") + Fingerprint);
-    TestEqual(TEXT("Revision 9 seed 42 golden"), Fingerprint, FString(TEXT("GOLDEN")));
+    // Captured on the #188 head: the scripted party wins fights 1-4 and falls in the vault sanctum (phase 5, Defeat) in round 8.
+    TestEqual(TEXT("Revision 9 seed 42 golden"), Fingerprint, FString(TEXT("rng=-1266537499|gen=-1390404750|partyHp=0|alive=0|phase=5|fights=5|rounds=8|turn=5")));
     return !HasAnyErrors();
 }
 #endif
