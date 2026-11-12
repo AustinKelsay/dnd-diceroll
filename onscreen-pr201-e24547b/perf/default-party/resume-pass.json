@@ -1,0 +1,42 @@
+{
+  "name": "resume",
+  "commit": "e24547b3675f3d5c91f9cc862f3facf615fdabfa",
+  "dirty": false,
+  "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-07f94f24-db431b77301bf2cd/Builds/20261112T050455657485Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "binary_sha256": "694dd454bd322e5b02d20274ca0a2245fe42218ccf28a78a9abf32748042aad2",
+  "mode": "packaged Development",
+  "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-07f94f24-db431b77301bf2cd/tools/autoplay/watchtower-road.json",
+  "script_sha256": "df75d321868b24fe15f08e53fbb4a6a31b2bab7583d51dd86f34b2cd6c105854",
+  "package_commit": "e24547b3675f3d5c91f9cc862f3facf615fdabfa",
+  "cores": 2,
+  "flags": {
+    "vsync": false,
+    "sound": true,
+    "offscreen": false,
+    "csv_frames": 200000,
+    "resolution": "1920x1080"
+  },
+  "exit_code": 0,
+  "log": "resume/game.log",
+  "csv": "resume/resume.csv",
+  "rss": {
+    "samples": 14,
+    "interval_s": 0.5,
+    "max_sampled_mb": 1226.1,
+    "peak_hwm_mb": 1226.1,
+    "max_mb": 1226.1
+  },
+  "retried": null,
+  "started": 1794461375.767139,
+  "ended": 1794461382.692844,
+  "started_at": "2026-11-12T05:29:35.767139+00:00",
+  "ended_at": "2026-11-12T05:29:42.692844+00:00",
+  "csv_source": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-07f94f24-db431b77301bf2cd/Builds/20261112T050455657485Z/Linux/DnDDiceRoll/Saved/Profiling/CSV/Profile(20261111_232935).csv",
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) i9-14900K",
+    "logical_cpus": 32,
+    "memory_total_mb": 15736,
+    "kernel": "7.2.15-1-omarchy",
+    "gpu": "NVIDIA GeForce RTX 4080 SUPER, 615.78.08, 16376 MiB"
+  }
+}
