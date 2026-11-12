@@ -220,16 +220,16 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
                 else if (Phase == TEXT("release")) { Shot.Moment = EImpactMoment::Release; }
                 else { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\", \"flight\", \"release\", \"landing-first\" or \"landing-second\""); return false; }
                 if (Shot.Moment != EImpactMoment::Landing && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" has a bolt phase but no bolt (\"effect\" spell, fire, missile, arrow or bolt)"); return false; }
-                if (Shot.Moment == EImpactMoment::Release && Shot.Effect != EImpactPreview::Arrow && Shot.Effect != EImpactPreview::Bolt)
-                { Error = Shot.Name + TEXT(" shows a release, which only \"effect\" arrow and bolt have"); return false; }
+                if (Shot.Moment == EImpactMoment::Release && Shot.Effect == EImpactPreview::Hit)
+                { Error = Shot.Name + TEXT(" shows a release, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)"); return false; }
                 if ((Shot.Moment == EImpactMoment::FirstLanding || Shot.Moment == EImpactMoment::SecondLanding) && Shot.Effect != EImpactPreview::Missile)
                 { Error = Shot.Name + TEXT(" lands a first or second bolt, which only \"effect\" missile has"); return false; }
             }
             if ((*Entry)->HasField(TEXT("role")))
             {
-                // The shooter (#198): a party hero of this class, held in its Ranged clip at the shot's moment; the shot's subject is that hero.
+                // The shooter (#198): a party hero of this class, held in its Ranged clip (arrow, bolt) or its Cast clip (spell, fire, missile) at the shot's moment; the shot's subject is that hero.
                 if (!(*Entry)->TryGetStringField(TEXT("role"), Shot.Role) || !ValidName(Shot.Role)) { Error = Shot.Name + TEXT(" needs a \"role\" (a class name such as Ranger)"); return false; }
-                if (Shot.Effect != EImpactPreview::Arrow && Shot.Effect != EImpactPreview::Bolt) { Error = Shot.Name + TEXT(" names a shooter, which only \"effect\" arrow and bolt have"); return false; }
+                if (Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" names a shooter, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)"); return false; }
             }
             if ((*Entry)->HasField(TEXT("frames")))
             {
@@ -505,6 +505,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
                 Pending.TargetCell = Struck->Cell;
                 Pending.ShooterId = Shooter->Id;
                 Pending.ShooterName = Shooter->Name;
+                Pending.ShooterCell = Shooter->Cell;
                 Pending.ImpactFrom = FVector2D(Shooter->Cell.X, Shooter->Cell.Y);
             }
             return true;
@@ -661,10 +662,13 @@ void FExpeditionCaptureDirector::Tick()
                 Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment);
                 if (Pending.ShooterId != INDEX_NONE)
                 {
-                    // The shooter in its Ranged clip at the moment: the release frame, then a little after it (the follow-through) for the flight and the landing.
-                    const float Release = FExpeditionPlayback::RangedReleaseSeconds;
+                    // The shooter in its clip at the moment: an arrow or a Ranger's old bolt in Ranged, a spell bolt in Cast, at the release frame and then a little
+                    // after it (the follow-through) for the flight and the landing.
+                    const bool bCast = Pending.Shot.Effect == EImpactPreview::Spell || Pending.Shot.Effect == EImpactPreview::Fire || Pending.Shot.Effect == EImpactPreview::Missile;
+                    const float Release = bCast ? FExpeditionPlayback::CastReleaseSeconds : FExpeditionPlayback::RangedReleaseSeconds;
                     const float Held = Pending.Shot.Moment == EImpactMoment::Release ? Release : Pending.Shot.Moment == EImpactMoment::Flight ? Release + 0.15f : Release + 0.3f;
-                    if (!Board->PreviewPose(Pending.ShooterId, EUnitPose::Ranged, Held)) { Fail(FString::Printf(TEXT("%s is not a rigged figure with a Ranged clip"), *Pending.ShooterName)); return; }
+                    if (!Board->PreviewPose(Pending.ShooterId, bCast ? EUnitPose::Cast : EUnitPose::Ranged, Held))
+                    { Fail(FString::Printf(TEXT("%s is not a rigged figure with a %s clip"), *Pending.ShooterName, bCast ? TEXT("Cast") : TEXT("Ranged"))); return; }
                 }
                 Pending.bImpactFired = true;
             }
@@ -802,6 +806,8 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 Shooter->SetNumberField(TEXT("id"), Result.ShooterId);
                 Shooter->SetStringField(TEXT("name"), Result.ShooterName);
                 Shooter->SetStringField(TEXT("role"), Result.Shot.Role);
+                Shooter->SetNumberField(TEXT("cellX"), Result.ShooterCell.X);
+                Shooter->SetNumberField(TEXT("cellY"), Result.ShooterCell.Y);
                 if (Result.bHasShooterBox)
                 {
                     TSharedRef<FJsonObject> Box = MakeShared<FJsonObject>();

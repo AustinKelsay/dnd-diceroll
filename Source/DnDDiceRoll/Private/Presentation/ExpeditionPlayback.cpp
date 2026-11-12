@@ -417,7 +417,8 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const EAdventurerRole Role = Actor->AdventurerRole;
     const EUnitPose ActorPose = ExpeditionPose::ForCommand(Result.Type, bRanged, ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged));
     // Every ranged attack that is not a spell is an arrow (the Ranger's bow included): it carries no light and nothing flashes the shooter.
-    // A spell bolt throws a point light from the shooter's cell, which blew the whole ranger and the floor out at release (#198).
+    // A spell bolt throws a point light from the shooter's cell, which blew the whole ranger and the floor out at release (#198); it now leaves at the
+    // Cast clip's release frame and its light ramps in over the first stretch of flight (ExpeditionFlash::BoltRampEnd, #150 batch 3).
     const bool bArrow = !ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged);
 
     // Wind up while the d20 (or spell dice) tumble.
@@ -464,9 +465,13 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     // Deliver the blow: a lunge in melee, a projectile at range.
     if (bMissile)
     {
-        Add(0.5f, [=, this]()
+        // The cast plays out before the bolts leave: the clip's release frame is the thrust, with the focus pointing at the target.
+        Add(CastReleaseSeconds, [=, this]()
         {
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
+        });
+        Add(0.5f, [=, this]()
+        {
             Cue(EExpeditionCue::Spell);
             Shots.Append(MagicMissileBolts(From, To));
         });
@@ -475,16 +480,17 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     {
         // A bow draw plays out before the arrow leaves: the clip's release frame is when the string lets go (the Ranged clips key it at frame 26).
         const bool bDraw = ActorPose == EUnitPose::Ranged;
-        if (bDraw)
+        const bool bCast = ActorPose == EUnitPose::Cast;
+        if (bDraw || bCast)
         {
-            Add(RangedReleaseSeconds, [=, this]()
+            Add(bCast ? CastReleaseSeconds : RangedReleaseSeconds, [=, this]()
             {
                 if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
             });
         }
         Add(0.3f, [=, this]()
         {
-            if (!bDraw) { if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); } }
+            if (!bDraw && !bCast) { if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); } }
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
             Shots.Add(RangedBolt(From, To, Role, bArrow));
         });

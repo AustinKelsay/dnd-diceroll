@@ -123,6 +123,8 @@ private:
         /** Impact shots with a "role" (#198): the shooter, a party hero of that class, held in its Ranged clip, and its footprint box (the shot's measured subject). */
         int32 ShooterId = INDEX_NONE;
         FString ShooterName;
+        /** The shooter's own cell (the manifest records it as shooter.cellX/cellY, so a shooter result is not reported at the target's cell) and its class. */
+        FIntPoint ShooterCell = FIntPoint::ZeroValue;
         bool bHasShooterBox = false;
         FIntRect ShooterBox;
         bool bImpactFired = false;

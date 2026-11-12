@@ -59,12 +59,19 @@ bool FHitFlashTintTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("A lone bolt mid-flight carries the flight light"), BoltLight(1, 0.5f), BoltLightCandelas);
     TestEqual(TEXT("A lone bolt at its target carries the landing light"), BoltLight(1, 1.0f), BoltLandingCandelas);
     TestEqual(TEXT("Just before it lands it is still at the landing light"), BoltLight(1, 0.92f), BoltLandingCandelas);
-    float Last = BoltLight(1, 0.0f);
+    // The light ramps in from nothing at the caster over the first BoltRampEnd of the path (#150 batch 3), then never rises on the way to the target.
+    TestEqual(TEXT("A bolt on the caster's own cell carries no light"), BoltLight(1, 0.0f), 0.0f);
+    float Last = BoltLight(1, BoltRampEnd);
     for (int32 Step = 1; Step <= 20; ++Step)
     {
-        const float Now = BoltLight(1, Step / 20.0f);
-        TestTrue(TEXT("The light never rises on the way to the target"), Now <= Last + 0.0001f);
-        Last = Now;
+        const float Alpha = Step / 20.0f;
+        const float Now = BoltLight(1, Alpha);
+        if (Alpha <= BoltRampEnd) { TestTrue(TEXT("The light rises over the ramp"), Now >= BoltLight(1, (Step - 1) / 20.0f) - 0.0001f); }
+        else
+        {
+            TestTrue(TEXT("The light never rises after the ramp, on the way to the target"), Now <= Last + 0.0001f);
+            Last = Now;
+        }
     }
     TestTrue(TEXT("Three bolts carry less than one"), 3.0f * BoltLight(3, 0.5f) < BoltLight(1, 0.5f));
     TestTrue(TEXT("The flight light is far under the old 180 cd"), BoltLightCandelas < 60.0f);
@@ -155,6 +162,8 @@ bool FHitFlashBoltLightTest::RunTest(const FString& Parameters)
         {
             struct FCase { const TCHAR* Name; EImpactPreview Effect; EImpactMoment Moment; int32 Live; };
             const FCase Cases[] = {
+                {TEXT("fire at release"), EImpactPreview::Fire, EImpactMoment::Release, 1},
+                {TEXT("spell at release"), EImpactPreview::Spell, EImpactMoment::Release, 1},
                 {TEXT("fire in flight"), EImpactPreview::Fire, EImpactMoment::Flight, 1},
                 {TEXT("fire landing"), EImpactPreview::Fire, EImpactMoment::Landing, 1},
                 {TEXT("spell in flight"), EImpactPreview::Spell, EImpactMoment::Flight, 1},
@@ -192,6 +201,33 @@ bool FHitFlashBoltLightTest::RunTest(const FString& Parameters)
             View->Tick(0.016f);
             TestTrue(TEXT("A lone bolt at its target carries 3.5 cd"), FMath::IsNearlyEqual(View->BoltLightIntensities()[0], 3.5f, 0.01f));
             View->ClearImpactPreview();
+            // The light at release (#150 batch 3): a bolt starts on the caster's own cell, and the full 50 cd there blew the caster out (peak 255, up to 1.76% pure white).
+            // The light ramps in over the first stretch of flight, so what is left at the release frame is a small part of the flight light, for a lone bolt (the Fire
+            // Bolt and the Cleric's radiant bolt) and for a Magic Missile's first bolt alike; it never exceeds that part, and rises with the flight.
+            for (const EImpactPreview Effect : {EImpactPreview::Fire, EImpactPreview::Spell, EImpactPreview::Missile})
+            {
+                View->ClearImpactPreview();
+                View->PreviewImpact(TargetId, Effect, From, EImpactMoment::Release);
+                View->Tick(0.016f);
+                const TArray<float> Released = View->BoltLightIntensities();
+                float Total = 0.0f;
+                for (const float Light : Released) { Total += Light; }
+                TestTrue(FString::Printf(TEXT("A bolt at its release frame carries %.2f cd, at most a fifth of its 50 cd flight light"), Total), Total <= 0.2f * ExpeditionFlash::BoltLightCandelas + 0.01f);
+                int32 Left = 0;
+                for (const FPlaybackProjectile& Live : View->Playback().Projectiles())
+                { if (Live.Age >= 0.0f) { ++Left; TestTrue(TEXT("The bolt that has left is at the start of its flight"), Live.Age / Live.Duration < 0.3f); } }
+                TestEqual(TEXT("Only the first bolt has left at release"), Left, 1);
+                View->ClearImpactPreview();
+            }
+            TestTrue(TEXT("The light is nothing at the caster"), ExpeditionFlash::BoltLight(1, 0.0f) == 0.0f);
+            TestTrue(TEXT("The light is at its full flight value by the end of the ramp"), FMath::IsNearlyEqual(ExpeditionFlash::BoltLight(1, ExpeditionFlash::BoltRampEnd), ExpeditionFlash::BoltLightCandelas, 0.01f));
+            float Previous = -1.0f;
+            for (int32 Step = 0; Step <= 10; ++Step)
+            {
+                const float Light = ExpeditionFlash::BoltLight(1, ExpeditionFlash::BoltRampEnd * Step / 10.0f);
+                TestTrue(FString::Printf(TEXT("The ramp only rises (step %d: %.2f cd)"), Step, Light), Light >= Previous);
+                Previous = Light;
+            }
         }
     }
     World->DestroyWorld(false);
@@ -222,8 +258,8 @@ bool FHitFlashVolleyTest::RunTest(const FString& Parameters)
 }
 
 // The arrow's lights around a ranged release (#198): an arrow carries no point light at any moment (release, flight, landing), the shooter's figure is
-// not tinted by it, and the spell bolt a Ranger used to throw (the same construction in the arrow's colour) does carry its 50 cd light at the shooter at release,
-// which is what blew the ranger and the floor out. The real point lights are read from the view, so a light put back on an arrow in UpdateEffects fails here.
+// not tinted by it, and the spell bolt a Ranger used to throw (the same construction in the arrow's colour) carries only the ramped-in part of its light at the shooter at
+// release (it was the whole 50 cd, which is what blew the ranger and the floor out). The real point lights are read from the view, so a light put back on an arrow in UpdateEffects fails here.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHitFlashArrowLightTest, "Project.Expedition.Presentation.HitFlashArrowLights",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FHitFlashArrowLightTest::RunTest(const FString& Parameters)
@@ -282,7 +318,8 @@ bool FHitFlashArrowLightTest::RunTest(const FString& Parameters)
             View->PreviewImpact(TargetId, EImpactPreview::Bolt, From, EImpactMoment::Release);
             View->Tick(0.016f);
             const TArray<float> Old = View->BoltLightIntensities();
-            TestTrue(TEXT("The old Ranger bolt at release carries about its 50 cd flight light"), Old.Num() > 0 && Old[0] > 0.9f * ExpeditionFlash::BoltLightCandelas);
+            // Before batch 3 this light was the whole 50 cd; the ramp (ExpeditionFlash::BoltRampEnd) now holds it to a fraction at the release frame for every spell bolt.
+            TestTrue(TEXT("The old Ranger bolt at release carries only the ramped-in part of its 50 cd flight light"), Old.Num() > 0 && Old[0] > 0.0f && Old[0] <= 0.2f * ExpeditionFlash::BoltLightCandelas);
             View->ClearImpactPreview();
         }
     }

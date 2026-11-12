@@ -21,8 +21,8 @@ enum class EImpactPreview : uint8 { Hit, Spell, Fire, Missile, Arrow, Bolt };
 /**
  * When a capture-mode impact preview is taken (#189). Landing: the hit itself with its flash (for Magic Missile the final bolt landing, as the
  * production impact step begins while the last bolt is still arriving). Flight: the bolt half way along its path, no hit. FirstLanding and
- * SecondLanding: Magic Missile only, the first or second bolt landing while the others are still in flight, before the hit. Release (#198): Arrow and
- * Bolt only, the moment the shot leaves the shooter (the Ranged clip's release frame), no hit.
+ * SecondLanding: Magic Missile only, the first or second bolt landing while the others are still in flight, before the hit. Release (#198, spells in
+ * batch 3): any bolt, the moment the shot leaves the shooter (the Ranged clip's release frame for an arrow or a Ranger's old bolt, the Cast clip's for a spell), no hit.
  */
 enum class EImpactMoment : uint8 { Landing, Flight, FirstLanding, SecondLanding, Release };
 
@@ -151,6 +151,8 @@ public:
     static constexpr float MissileStagger = 0.09f;
     /** Seconds from the start of a Ranged clip to its release frame (frame 26 at 30 fps, shared and the ranger's own): the arrow leaves then. */
     static constexpr float RangedReleaseSeconds = 26.0f / 30.0f;
+    /** Seconds from the start of a Cast clip to its release frame (frame 22 at 30 fps: the thrust, the staff or focus pointing at the target): a spell bolt leaves then. */
+    static constexpr float CastReleaseSeconds = 22.0f / 30.0f;
     /** The three Magic Missile bolts as AddAttack throws them: the second and third start later (negative Age), and arc to either side. */
     static TArray<FPlaybackProjectile> MagicMissileBolts(FVector2D From, FVector2D To);
     /** The bolt of a ranged attack by a role: a rogue's or an enemy archer's arrow, a Cleric's radiant bolt, a Wizard's fire bolt. */

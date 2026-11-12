@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "spell-release-sorcerer-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-sorcerer-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-sorcerer-yaw180-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-sorcerer-yaw270-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-warlock-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-warlock-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-warlock-yaw180-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-warlock-yaw270-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-druid-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-druid-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-druid-yaw180-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-druid-yaw270-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 270,
+      "distance": "default"
+    },
+    {
+      "name": "arrow-release-sorcerer-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-sorcerer-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "arrow-release-warlock-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-warlock-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "arrow-release-druid-yaw000-default",
+      "mode": "impact",
+      "effect": "arrow",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-release-druid-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "release",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "fire-release-wizard-yaw000-default",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "release",
+      "yaw": 0,
+      "distance": "default"
+    }
+  ]
+}

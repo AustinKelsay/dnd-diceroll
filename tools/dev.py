@@ -159,11 +159,11 @@ def load_poses(path):
                 raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire, missile, arrow or bolt)")
             if shot.get("phase") in ("landing-first", "landing-second") and shot.get("effect") != "missile":
                 raise ValueError(f"{name} lands a first or second bolt, which only \"effect\" missile has")
-            if shot.get("phase") == "release" and shot.get("effect") not in ("arrow", "bolt"):
-                raise ValueError(f"{name} shows a release, which only \"effect\" arrow and bolt have")
+            if shot.get("phase") == "release" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} shows a release, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
             if "role" in shot:
-                if shot.get("effect") not in ("arrow", "bolt"):
-                    raise ValueError(f"{name} names a shooter, which only \"effect\" arrow and bolt have")
+                if shot.get("effect", "hit") == "hit":
+                    raise ValueError(f"{name} names a shooter, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
                 if not isinstance(shot["role"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", shot["role"]):
                     raise ValueError(f"{name} needs a \"role\" (a class name such as Ranger)")
             frames = shot.get("frames", 4)
