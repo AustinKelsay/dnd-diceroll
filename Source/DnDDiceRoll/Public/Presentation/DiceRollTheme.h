@@ -54,6 +54,14 @@ struct DNDDICEROLL_API FDiceRollCharacter
      * height every earlier rig keeps). The multiple applies to the bounds, crest and horns included.
      */
     UPROPERTY(EditAnywhere, Category = "Character", meta = (ClampMin = "0.5", ClampMax = "1.5")) float HeightScale = 1.0f;
+    /** The lowest and highest stature the view applies. The metadata clamp above only guides the editor; a value set through Python, C++ or a saved asset reaches the view as it is. */
+    static constexpr float MinHeightScale = 0.5f;
+    static constexpr float MaxHeightScale = 1.5f;
+    /**
+     * HeightScale as the view applies it: a non-finite value is 1.0, anything else is clamped to [MinHeightScale, MaxHeightScale], so a zero, negative or huge value can never hide,
+     * invert or balloon a figure. bOutAdjusted (when given) says whether the stored value had to be changed (the view then logs one warning).
+     */
+    float ResolvedHeightScale(bool* bOutAdjusted = nullptr) const;
 
     /** Loads the mesh and all ten clips (indexed by EUnitPose), each the class's override when it has one and the shared clip otherwise. False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;

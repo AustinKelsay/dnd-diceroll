@@ -4,6 +4,9 @@
 #include "UObject/GarbageCollection.h"
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include <limits>
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -3409,6 +3412,185 @@ bool FFoeLooksFlagTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("A dangerous first fight is two raiders and the archer"), Named, TArray<int32>({LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Archer)}));
         ReleaseView(Plain);
     }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHeightScaleResolvedTest, "Project.Expedition.Presentation.HeightScaleIsResolvedAtUse",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHeightScaleResolvedTest::RunTest(const FString& Parameters)
+{
+    // The metadata clamp only guides the editor: a value set through Python, C++ or a saved asset reaches the view as it is, so the view resolves it at use.
+    struct FCase { const TCHAR* Name; float Value; float Want; bool bAdjusted; };
+    const float NaN = std::numeric_limits<float>::quiet_NaN();
+    const float Inf = std::numeric_limits<float>::infinity();
+    for (const FCase& Case : {FCase{TEXT("the default"), 1.0f, 1.0f, false}, FCase{TEXT("the brute"), 1.08f, 1.08f, false}, FCase{TEXT("the warden"), 1.12f, 1.12f, false},
+                              FCase{TEXT("the lowest allowed"), 0.5f, 0.5f, false}, FCase{TEXT("the highest allowed"), 1.5f, 1.5f, false},
+                              FCase{TEXT("zero"), 0.0f, 0.5f, true}, FCase{TEXT("negative"), -1.0f, 0.5f, true}, FCase{TEXT("just under the floor"), 0.49f, 0.5f, true},
+                              FCase{TEXT("huge"), 40.0f, 1.5f, true}, FCase{TEXT("just over the ceiling"), 1.51f, 1.5f, true},
+                              FCase{TEXT("not a number"), NaN, 1.0f, true}, FCase{TEXT("infinite"), Inf, 1.0f, true}, FCase{TEXT("negative infinity"), -Inf, 1.0f, true}})
+    {
+        FDiceRollCharacter Entry;
+        Entry.HeightScale = Case.Value;
+        bool bAdjusted = !Case.bAdjusted;
+        const float Resolved = Entry.ResolvedHeightScale(&bAdjusted);
+        TestTrue(*FString::Printf(TEXT("%s resolves to %.2f (got %.2f)"), Case.Name, Case.Want, Resolved), FMath::IsFinite(Resolved) && FMath::IsNearlyEqual(Resolved, Case.Want, 1.0e-4f));
+        TestEqual(*FString::Printf(TEXT("%s is %sreported as adjusted"), Case.Name, Case.bAdjusted ? TEXT("") : TEXT("not ")), bAdjusted, Case.bAdjusted);
+        TestTrue(*FString::Printf(TEXT("%s stays inside the bounds"), Case.Name), Resolved >= FDiceRollCharacter::MinHeightScale && Resolved <= FDiceRollCharacter::MaxHeightScale);
+        TestEqual(*FString::Printf(TEXT("%s resolves the same without the flag"), Case.Name), Entry.ResolvedHeightScale(), Resolved);
+    }
+    // The shipped theme needs no adjusting: every entry's stored stature is inside the bounds.
+    const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(FoeBatch::ThemeAssetPath)).LoadSynchronous();
+    if (TestNotNull(TEXT("The shipped theme loads"), Shipped))
+    {
+        int32 Entries = 0;
+        for (const TPair<FName, FDiceRollCharacter>& Pair : Shipped->ClassRigs) { bool bAdjusted = true; Pair.Value.ResolvedHeightScale(&bAdjusted); TestFalse(*(Pair.Key.ToString() + TEXT(" needs no adjusting")), bAdjusted); ++Entries; }
+        for (const TPair<FName, FDiceRollCharacter>& Pair : Shipped->FoeRigs) { bool bAdjusted = true; Pair.Value.ResolvedHeightScale(&bAdjusted); TestFalse(*(Pair.Key.ToString() + TEXT(" needs no adjusting")), bAdjusted); ++Entries; }
+        TestEqual(TEXT("Thirteen classes and six foes were checked"), Entries, 19);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeArcherArrowTest, "Project.Expedition.Presentation.FoeArcherArrowReleasesLightless",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeArcherArrowTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // The rigged foe archer (the Vault bow) shoots through the production projectile construction: an arrow carries no light at release, in flight or on landing, the shooter is not
+    // flashed, and the shooter held at the release frame is in its own Ranged_Archer draw, 26 frames in, inside a 36-frame clip.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeArcherArrow"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = MakeView(nullptr, FPaths::Combine(Directory, TEXT("current.json")), EView::Rigged);
+    if (!TestNotNull(TEXT("Battle view"), View)) { return false; }
+    View->NewRun();
+    View->ChooseRoute(1);
+    View->HoldEnemyTurns(true);
+    View->Tick(0.016f);
+    View->Tick(0.016f);
+    int32 ShooterId = INDEX_NONE, TargetId = INDEX_NONE, Nearest = MAX_int32;
+    FIntPoint ShooterCell(0, 0);
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Enemy && View->FoeLookFor(Unit) == EFoeLook::Archer) { ShooterId = Unit.Id; ShooterCell = Unit.Cell; } }
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+    {
+        const int32 Distance = FMath::Abs(Unit.Cell.X - ShooterCell.X) + FMath::Abs(Unit.Cell.Y - ShooterCell.Y);
+        if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; TargetId = Unit.Id; }
+    }
+    if (TestTrue(TEXT("An archer and a hero to shoot"), ShooterId != INDEX_NONE && TargetId != INDEX_NONE) && TestTrue(TEXT("The archer is a rigged figure"), View->UnitAnimation(ShooterId).bSkeletal))
+    {
+        TArray<FLinearColor> Idle;
+        FLinearColor IdleRing;
+        TestTrue(TEXT("The shooter's figure can be read"), View->UnitShownColors(ShooterId, Idle, IdleRing));
+        struct FMoment { const TCHAR* Name; EImpactMoment Moment; };
+        for (const FMoment& Moment : {FMoment{TEXT("release"), EImpactMoment::Release}, FMoment{TEXT("flight"), EImpactMoment::Flight}, FMoment{TEXT("landing"), EImpactMoment::Landing}})
+        {
+            View->ClearImpactPreview();
+            View->PreviewImpact(TargetId, EImpactPreview::Arrow, FVector2D(ShooterCell.X, ShooterCell.Y), Moment.Moment);
+            View->Tick(0.016f);
+            const TArray<FPlaybackProjectile>& Shots = View->Playback().Projectiles();
+            TestTrue(FString::Printf(TEXT("foe archer arrow %s: one arrow in the air"), Moment.Name), Shots.Num() == 1 && Shots[0].bArrow);
+            float Total = 0.0f;
+            for (const float Light : View->BoltLightIntensities()) { Total += Light; }
+            TestTrue(FString::Printf(TEXT("foe archer arrow %s: %.2f cd in all, none (an arrow carries no light)"), Moment.Name, Total), Total == 0.0f);
+            TArray<FLinearColor> Shown;
+            FLinearColor Ring;
+            if (View->UnitShownColors(ShooterId, Shown, Ring) && TestEqual(*FString::Printf(TEXT("foe archer arrow %s: the shooter has the same parts"), Moment.Name), Shown.Num(), Idle.Num()))
+            { for (int32 Part = 0; Part < Shown.Num(); ++Part) { TestTrue(*FString::Printf(TEXT("foe archer arrow %s: the shooter's part %d is not flashed"), Moment.Name, Part), Shown[Part].Equals(Idle[Part], 0.01f)); } }
+        }
+        View->ClearImpactPreview();
+        // The release: the arrow leaves when the held draw reaches the release frame, which is inside the archer's own clip.
+        if (TestTrue(TEXT("The archer can be held at the release frame"), View->PreviewPose(ShooterId, EUnitPose::Ranged, FExpeditionPlayback::RangedReleaseSeconds)))
+        {
+            View->Tick(0.016f);
+            const FUnitAnimationState Held = View->UnitAnimation(ShooterId);
+            TestTrue(*(FString::Printf(TEXT("The held clip is the archer's own draw (%s)"), *Held.Clip)), Held.Clip.Contains(TEXT("A_Archer_Ranged")));
+            TestTrue(*FString::Printf(TEXT("It is held at the release frame, %.3f s of %.3f s"), Held.Time, Held.Length), FMath::IsNearlyEqual(Held.Time, FExpeditionPlayback::RangedReleaseSeconds, 0.04f) && Held.Length > Held.Time + 0.2f);
+            View->ClearPosePreview();
+        }
+    }
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeFallenResumeTest, "Project.Expedition.Presentation.FoeFallenRigsResumeAtDeath",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeFallenResumeTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // Deterministic, not combat luck: for each of the six looks a checkpoint of a real fight is edited so that exactly that foe is dead (HP 0, Life Dead, put through the run's restore
+    // validation like any saved state), written, and resumed in a fresh world and view. The fallen foe must be drawn with its own rig, lie at the last frame of Death, and every other
+    // figure must stand. Every one of the six cases must run: the count is asserted.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeFallenResume"), FGuid::NewGuid().ToString());
+    int32 Checked = 0;
+    for (const FLook& Entry : Looks)
+    {
+        const FString Label = FString::Printf(TEXT("fallen %s"), Entry.Key);
+        const int32 Slot = Entry.Look == EFoeLook::Archer ? 2 : 0;       // a dangerous road has three enemies, the last of them the archer
+        TArray<EFoeLook> Order = {EFoeLook::Raider, EFoeLook::Scout, EFoeLook::Archer};
+        Order[Slot] = Entry.Look;
+        FExpeditionRun Run;
+        FString Error;
+        const FExpeditionRoute* Offer = nullptr;
+        if (!TestTrue(*(Label + TEXT(": a run starts")), Run.NewRun(7, Error, TEXT("foe-fallen-resume")))) { continue; }
+        Offer = Run.Progress().Offers.FindByPredicate([](const FExpeditionRoute& Route) { return Route.bDangerous; });
+        if (!TestTrue(*(Label + TEXT(": the dangerous road starts a fight")), Offer && Run.ChooseRoute(Offer->Id, Error))) { continue; }
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        int32 FallenId = INDEX_NONE, Order3 = 0;
+        for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Enemy) { continue; }
+            if (Order3++ == Slot) { Unit.HP = 0; Unit.Life = ECombatLife::Dead; FallenId = Unit.Id; }
+        }
+        FExpeditionRun Checkpoint;
+        if (!TestTrue(*FString::Printf(TEXT("%s: the checkpoint is a valid run (%s)"), *Label, *Error), FallenId != INDEX_NONE && Checkpoint.Restore(Snapshot, Error))) { continue; }
+        const FString Path = FPaths::Combine(Directory, Entry.Key, TEXT("current.json"));
+        FExpeditionSaveData Data;
+        Data.Current = Checkpoint.Snapshot();
+        if (!TestTrue(*(Label + TEXT(": the checkpoint writes")), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); continue; }
+        AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+        if (!TestNotNull(*(Label + TEXT(": resumed view")), View)) { continue; }
+        View->SetFoeLooks(Order);
+        View->Resume();
+        View->Tick(0.016f);
+        FExpeditionSnapshot Restored;
+        Restored.Progress = View->Progress();
+        Restored.Battle = View->Rules().Snapshot();
+        TestTrue(*(Label + TEXT(": the resumed run is the checkpoint")), View->HasRun() && ExpeditionTestSupport::SameRun(Data.Current, Restored));
+        const FCombatantState* Fallen = View->Rules().Find(FallenId);
+        if (TestNotNull(*(Label + TEXT(": the fallen foe is in the encounter")), Fallen))
+        {
+            TestTrue(*(Label + TEXT(": it is dead")), Fallen->Life == ECombatLife::Dead);
+            TestEqual(*(Label + TEXT(": it is drawn as this look")), LookIndex(View->FoeLookFor(*Fallen)), LookIndex(Entry.Look));
+            const FUnitAnimationState State = View->UnitAnimation(FallenId);
+            if (TestTrue(*(Label + TEXT(": it is a rigged figure")), State.bSkeletal))
+            {
+                ExpectPose(*this, Label, State.Pose, EUnitPose::Death);
+                TestTrue(*(Label + TEXT(": the clip is Death")), State.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Death)));
+                TestTrue(*FString::Printf(TEXT("%s: it holds the last frame of Death (%.3f of %.3f s)"), *Label, State.Time, State.Length), State.Length > 0.1f && FMath::IsNearlyEqual(State.Time, State.Length, 1.0e-3f));
+            }
+            // The right rig: the skinned mesh under its rig root is this look's own.
+            FString MeshName;
+            if (USceneComponent* Root = View->UnitRigRoot(FallenId))
+            {
+                TArray<USceneComponent*> Children;
+                Root->GetChildrenComponents(true, Children);
+                for (USceneComponent* Child : Children)
+                { if (const USkeletalMeshComponent* Skin = Cast<USkeletalMeshComponent>(Child)) { MeshName = Skin->GetSkeletalMeshAsset() ? Skin->GetSkeletalMeshAsset()->GetName() : FString(); } }
+            }
+            TestEqual(*(Label + TEXT(": the rig is its own mesh")), MeshName, FString(Entry.Mesh));
+        }
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Id == FallenId) { continue; }
+            TestTrue(*FString::Printf(TEXT("%s: %s still stands"), *Label, *Unit.Name), Unit.Life == ECombatLife::Conscious && ExpeditionPose::Rest(Unit.Life) == EUnitPose::Idle);
+        }
+        ExpectFiguresConverged(*this, *View, Label + TEXT(" resumed"));
+        ++Checked;
+        ReleaseView(View);
+    }
+    TestEqual(TEXT("All six looks (scout, raider, archer, skirmisher, brute, warden) were resumed with a fallen foe"), Checked, 6);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

@@ -1672,7 +1672,11 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
     // The mesh origin is at the feet. Fit it to the metric's figure height (the rig root already carries the cell scale),
     // exactly as static figures are fitted.
     const float MeshHeight = static_cast<float>(Mesh->GetBounds().GetBox().Max.Z);
-    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm * Definition->HeightScale / BoardMetric.Scale() / MeshHeight : 1.0f;
+    // The stature is data (HeightScale); a value outside [0.5, 1.5] or not finite is brought back at use, with a warning, so it can never hide, invert or balloon a figure.
+    bool bScaleAdjusted = false;
+    const float Stature = Definition->ResolvedHeightScale(&bScaleAdjusted);
+    if (bScaleAdjusted) { UE_LOG(LogTemp, Warning, TEXT("%s: HeightScale %f is outside [%.1f, %.1f] or not finite; using %.2f"), *Mesh->GetName(), Definition->HeightScale, FDiceRollCharacter::MinHeightScale, FDiceRollCharacter::MaxHeightScale, Stature); }
+    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm * Stature / BoardMetric.Scale() / MeshHeight : 1.0f;
     Skin->SetRelativeScale3D(FVector(Fit));
     Skin->SetRelativeRotation(FRotator(0.0f, Definition->YawOffset, 0.0f));
     // One tintable instance per slot, like static figures: Flash and Glow reach the figure through "Color".

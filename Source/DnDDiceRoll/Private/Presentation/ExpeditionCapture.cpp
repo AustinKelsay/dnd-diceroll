@@ -494,16 +494,21 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
             Pending.ImpactFrom = FVector2D(Holder->Cell.X, Holder->Cell.Y);
             if (!Shot.Role.IsEmpty())
             {
-                // A named shooter instead of whoever holds the turn: the party hero of that class, against the nearest standing foe.
+                // A named shooter instead of whoever holds the turn: the party hero of that class, or (#150 foe batch) the foe of that look (Archer), against the nearest standing
+                // opponent on the other side.
                 const FCombatantState* Shooter = nullptr;
                 for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
-                { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Shooter = &Unit; break; } }
-                if (!Shooter) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+                {
+                    const bool bMatch = Unit.Side == ECombatSide::Party ? UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role
+                        : ExpeditionFoe::RigKey(Board->FoeLookFor(Unit)).ToString() == Shot.Role;
+                    if (bMatch) { Shooter = &Unit; break; }
+                }
+                if (!Shooter) { Skip = FString::Printf(TEXT("no %s on the board"), *Shot.Role); return false; }
                 Struck = nullptr; Nearest = MAX_int32;
                 for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
                 {
                     const int32 Distance = FMath::Abs(Unit.Cell.X - Shooter->Cell.X) + FMath::Abs(Unit.Cell.Y - Shooter->Cell.Y);
-                    if (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
+                    if (Unit.Side != Shooter->Side && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
                 }
                 if (!Struck) { Skip = TEXT("no standing opponent to strike"); return false; }
                 Pending.TargetId = Struck->Id;
