@@ -21,7 +21,7 @@ Nothing here changes rules, saves, the dice or the balance. The look is all pres
 
 **The mission overview is a candlelit war table.** The start, route and finale screens sit on a table with a hand-drawn route map, candles, a tankard, dice, scrolls and a bookcase, with a small diorama of the forest, the nave and the Vault standing on it. The HUD is compact and the d20 roll card sits in the left margin.
 
-**It still runs fast.** On the packaged game at 1920x1080, three full runs of the same fight gave a 95th-percentile frame of 3.36 to 3.38 ms (budget 4 ms), GPU 2.67 to 2.69 ms (3.5), game thread 1.19 to 1.20 ms (1.5) and 1243 to 1252 MiB of memory (1.5 GiB). That is a little over 0.2 ms slower than the first vertical slice (gate 2) and about the same as the last release. The worst frame during the fight was 6.6 ms; the two earlier one-off stalls (a 2.5 s frame and a 46 ms cluster) did not come back.
+**It still runs fast.** On the packaged game at 1920x1080, three full runs of the same fight gave a 95th-percentile frame of 3.36 to 3.38 ms (budget 4 ms), GPU 2.67 to 2.69 ms (3.5), game thread 1.19 to 1.20 ms (1.5) and 1243 to 1252 MiB of memory (1.5 GiB). That is a little over 0.2 ms slower than the first vertical slice (gate 2) and about the same as the last release. The worst steady-state frame, excluding loading transitions, was 6.6 ms. Entering a battle and resuming a save each take one 58 to 65 ms load hitch, as before. The two earlier one-off stalls (a 2.5 s frame and a 46 ms cluster) did not come back.
 
 ## Screenshots
 
@@ -38,7 +38,7 @@ Nothing here changes rules, saves, the dice or the balance. The look is all pres
 ## What was decided
 
 - **Bigger arenas (#151): no.** The arenas stay 16 to 18 by 11 to 12. The default zoom is figure-sized now, so a bigger board would mean more panning and travel turns, not bigger figures; the encounter plan (#188) is built on today's sizes; and a change would reopen the Compact balance baseline. Room to flank comes from layouts and the new architecture. If you want bigger maps anyway, reopen #151.
-- **Rogues from behind.** Four rogues are told apart by their sashes from the front and sides, but from behind they are still hard to tell apart (a cloak-hem change was deferred; see below).
+- **Rogues from behind.** Four rogues are told apart by their sashes from the front and three-quarter views, but side-on and from behind they are still hard to tell apart (a cloak-hem change was deferred; see below).
 - **CI mistake, fixed.** One cast PR (#203) was merged with a red check; the cause was a Python 3.11 test issue and #204 fixed it. The rule is now: check CI immediately before merging.
 
 ## What is not covered
