@@ -2001,7 +2001,7 @@ bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
 namespace CastBatch3
 {
 // The three casters of batch 3 (#150). Every kit ability of a sorcerer, warlock or druid is a spell, so their specials cast and none braces (a non-spell
-// self or ally effect would); their basic attack is a weapon (a melee swing up close, an arrow at range) and Magic Missile is the wizard's.
+// self or ally effect would); their basic attack is a class-tinted spell bolt from range (Cast) and a weapon swing up close (Melee), and Magic Missile is the wizard's.
 struct FClass
 {
     EAdventurerRole Role;

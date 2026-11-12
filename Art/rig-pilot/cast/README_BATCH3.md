@@ -35,8 +35,8 @@ Blender exits 0 when a script raises unless it is started with `--python-exit-co
 | Script | Does |
 | --- | --- |
 | `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build3.py [-- sorcerer warlock druid]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
-| `... review3.py -- validate <key>` | fresh process: re-imports the glbs and writes `metrics/validate_<key>.json` with a `checks` table and `pass`; **any failed check exits non-zero** (25 bones matching the contract, ten clips with the expected ranges, one material and one 1024 atlas, glow alpha, at most 4 influences, 175 to 185 cm, 3 to 6k tris, LOD1 40 to 55% and LOD2 20 to 32%, LOD bone names, loop seams and every action clip ending on Idle at 0.01 mm, root drift 0.01 mm; this is review2.py's gate) |
-| `... review3.py -- sheet3 bind\|turn\|clips\|stone` | renders `previews/sheet_17..22` (ImageMagick 7) |
+| `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review3.py -- validate <key>` | fresh process: re-imports the glbs and writes `metrics/validate_<key>.json` with a `checks` table and `pass`; **any failed check exits non-zero** (25 bones matching the contract, ten clips with the expected ranges, one material and one 1024 atlas, glow alpha, at most 4 influences, 175 to 185 cm, 3 to 6k tris, LOD1 40 to 55% and LOD2 20 to 32%, LOD bone names, loop seams and every action clip ending on Idle at 0.01 mm, root drift 0.01 mm; this is review2.py's gate) |
+| `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review3.py -- sheet3 bind\|turn\|clips\|stone` | renders `previews/sheet_17..22` (ImageMagick 7) |
 | `python3 Art/rig-pilot/cast/scripts/make_records3.py` | writes the three `Art/<asset-id>/r001/asset.json` records; **refuses** (exit 1, nothing written) unless every validation JSON passes |
 
 ## Known roughness

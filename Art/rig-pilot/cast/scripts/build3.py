@@ -3,7 +3,7 @@
 Build the cast characters (LOD0 with all ten clips, LOD1, LOD2) -> Art/<asset-id>/r001/*.glb + source .blend.
 
 Run from the repository root (one Blender process at a time, under the machine lock):
-    blender -b --python Art/rig-pilot/cast/scripts/build3.py [-- sorcerer warlock druid]
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build3.py [-- sorcerer warlock druid]
 
 Uses the r001 skeleton, clips and exporter and the batch 2 Brace clip unchanged; only the recipes (cast_batch3.py) are new.
 """

@@ -1,7 +1,7 @@
 """Fresh-process review of the batch 3 exports (#150): validation numbers and contact sheets for the sorcerer, warlock and druid.
 
-    blender -b --python Art/rig-pilot/cast/scripts/review3.py -- validate <sorcerer|warlock|druid>
-    blender -b --python Art/rig-pilot/cast/scripts/review3.py -- sheet3 bind|turn|clips|stone
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review3.py -- validate <sorcerer|warlock|druid>
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review3.py -- sheet3 bind|turn|clips|stone
 
 review.py and review2.py (batches 1 and 2) are not edited by batch 3: this script loads review2.py (and through it review.py and the r001
 review functions) into its own namespace after registering the batch 3 classes, so validate expects the ten clips. validate runs review2's
