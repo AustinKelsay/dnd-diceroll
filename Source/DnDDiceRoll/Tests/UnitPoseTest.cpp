@@ -2510,7 +2510,7 @@ EFoeLook Before(const FString& Name, int32 Range)
     return Range > 1 ? EFoeLook::Archer : Name.Contains(TEXT("raider")) ? EFoeLook::Raider : EFoeLook::Scout;
 }
 
-int32 Index(EFoeLook Look) { return static_cast<int32>(Look); }
+int32 LookIndex(EFoeLook Look) { return static_cast<int32>(Look); }
 
 const TCHAR* ThemeAssetPath = TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme");
 }
@@ -2532,7 +2532,7 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
                               FCase{TEXT("Cave raider"), 1, EFoeLook::Raider}, FCase{TEXT("Ghoul"), 1, EFoeLook::Scout}, FCase{TEXT(""), 1, EFoeLook::Scout},
                               FCase{TEXT("Scout 1"), 1, EFoeLook::Scout}, FCase{TEXT("Raider 3"), 1, EFoeLook::Raider}, FCase{TEXT("Moss archer"), 4, EFoeLook::Archer}})
     {
-        TestEqual(*FString::Printf(TEXT("\"%s\" (range %d) is drawn as the expected look"), Case.Name, Case.Range), Index(LookFromName(Case.Name, Case.Range)), Index(Case.Look));
+        TestEqual(*FString::Printf(TEXT("\"%s\" (range %d) is drawn as the expected look"), Case.Name, Case.Range), LookIndex(LookFromName(Case.Name, Case.Range)), LookIndex(Case.Look));
     }
     // Today's enemies map exactly as before: every enemy of real runs (both roads of the first fight on three seeds, the plain and the dangerous finale) and the tutorial encounter.
     TArray<FCombatantState> Foes;
@@ -2558,7 +2558,7 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
     for (const FCombatantState& Unit : Foes)
     {
         Names.Add(Unit.Name);
-        TestEqual(*FString::Printf(TEXT("%s (range %d, role %s) keeps today's look"), *Unit.Name, Unit.Range, *Unit.Role), Index(LookOf(Unit)), Index(Before(Unit.Name, Unit.Range)));
+        TestEqual(*FString::Printf(TEXT("%s (range %d, role %s) keeps today's look"), *Unit.Name, Unit.Range, *Unit.Role), LookIndex(LookOf(Unit)), LookIndex(Before(Unit.Name, Unit.Range)));
         TestTrue(*FString::Printf(TEXT("%s is not one of the #188 roles"), *Unit.Name), LookOf(Unit) == EFoeLook::Scout || LookOf(Unit) == EFoeLook::Raider || LookOf(Unit) == EFoeLook::Archer);
     }
     TestTrue(TEXT("Scouts, raiders and the Vault bow were among them"), Names.Contains(TEXT("Scout 1")) && Names.Contains(TEXT("Raider 1")) && Names.Contains(TEXT("Vault bow")));
@@ -2567,18 +2567,18 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
     EFoeLook Saved = EFoeLook::Scout;
     for (const FLook& Entry : {Looks[3], Looks[4], Looks[5]})
     {
-        TestTrue(*FString::Printf(TEXT("Role \"%s\" names a look"), Entry.Key), LookFromSavedRole(Entry.Key, Saved) && Index(Saved) == Index(Entry.Look));
-        TestTrue(*FString::Printf(TEXT("Role \"%s\" is case-insensitive"), Entry.Key), LookFromSavedRole(FString(Entry.Key).ToUpper(), Saved) && Index(Saved) == Index(Entry.Look));
+        TestTrue(*FString::Printf(TEXT("Role \"%s\" names a look"), Entry.Key), LookFromSavedRole(Entry.Key, Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
+        TestTrue(*FString::Printf(TEXT("Role \"%s\" is case-insensitive"), Entry.Key), LookFromSavedRole(FString(Entry.Key).ToUpper(), Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
     }
     for (const TCHAR* Role : {TEXT("Raider"), TEXT("Archer"), TEXT(""), TEXT("Scout"), TEXT("Fighter")}) { TestFalse(*FString::Printf(TEXT("Role \"%s\" is not decided by the saved role"), Role), LookFromSavedRole(Role, Saved)); }
     FCombatantState Unit;
     Unit.Side = ECombatSide::Enemy;
     Unit.Name = TEXT("Raider 1"); Unit.Role = TEXT("Warden"); Unit.Range = 1;
-    TestEqual(TEXT("A saved Warden role wins over a raider's name"), Index(LookOf(Unit)), Index(EFoeLook::Warden));
+    TestEqual(TEXT("A saved Warden role wins over a raider's name"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Warden));
     Unit.Range = 4;
-    TestEqual(TEXT("A ranged foe is an archer whatever its saved role"), Index(LookOf(Unit)), Index(EFoeLook::Archer));
+    TestEqual(TEXT("A ranged foe is an archer whatever its saved role"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Archer));
     Unit.Range = 1; Unit.Role = TEXT("Raider"); Unit.Name = TEXT("Scout 1");
-    TestEqual(TEXT("Today's saved role \"Raider\" leaves the name to decide: a scout"), Index(LookOf(Unit)), Index(EFoeLook::Scout));
+    TestEqual(TEXT("Today's saved role \"Raider\" leaves the name to decide: a scout"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Scout));
 
     // The keys are the FoeRigs archetype names, each its own; the theme looks them up by exactly that name and never leaks one rig to another look.
     UDiceRollTheme* Theme = NewObject<UDiceRollTheme>(GetTransientPackage());
@@ -2684,7 +2684,7 @@ bool FFoeBatchPlaybackTest::RunTest(const FString& Parameters)
             if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, FoeX))) { return false; }
             FCombatantState* Foe = S.Unit(S.Before, S.Foe);
             Foe->Name = Entry.Name; Foe->Range = Entry.Range;
-            TestEqual(*(Who + TEXT(": the scene's foe is drawn as this look")), Index(ExpeditionFoe::LookOf(*Foe)), Index(Entry.Look));
+            TestEqual(*(Who + TEXT(": the scene's foe is drawn as this look")), LookIndex(ExpeditionFoe::LookOf(*Foe)), LookIndex(Entry.Look));
             S.After = S.Before;
             S.Unit(S.After, S.Hero)->HP = S.Unit(S.Before, S.Hero)->HP - 2;
             FCombatResult Strike = MakeResult(ECombatCommandType::Attack, S.Foe, S.Hero);
@@ -2791,7 +2791,7 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
                 const FString Who = FString::Printf(TEXT("%s: %s"), *Label, Entry->Key);
                 const FCombatantState* Foe = View->Rules().Find(Foes[Index]);
                 if (!TestNotNull(*(Who + TEXT(" is on the board")), Foe)) { continue; }
-                TestEqual(*(Who + TEXT(": the view draws it as this look")), Index(View->FoeLookFor(*Foe)), Index(Wanted[Index]));
+                TestEqual(*(Who + TEXT(": the view draws it as this look")), LookIndex(View->FoeLookFor(*Foe)), LookIndex(Wanted[Index]));
                 const FUnitAnimationState State = View->UnitAnimation(Foe->Id);
                 if (!TestTrue(*(Who + TEXT(" is a rigged figure (run import_dark_fantasy_theme.py)")), State.bSkeletal)) { continue; }
                 const FDiceRollCharacter* Rig = Shipped->RigForFoe(ExpeditionFoe::RigKey(Wanted[Index]));
