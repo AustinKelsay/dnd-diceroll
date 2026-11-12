@@ -1,0 +1,16 @@
+rr errors=0 matwarn=0
+rv errors=0 matwarn=0
+rg errors=0 matwarn=0
+pvigil errors=0 matwarn=0
+proot errors=0 matwarn=0
+pvault errors=0 matwarn=0
+fvigil errors=0 matwarn=0
+froot errors=0 matwarn=0
+fvault errors=0 matwarn=0
+tp errors=0 matwarn=0
+rs errors=0 matwarn=0
+rs2 errors=0 matwarn=0
+d-default-seed-battle errors=0 matwarn=0
+d-board-vigil-pillars errors=0 matwarn=0
+d-board-root-r002 errors=0 matwarn=0
+d-board-vault errors=0 matwarn=0

@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "resolution": "1920x1080",
+  "gate_resolution": true,
+  "budgets": {
+    "frame_p95_ms": 16.7,
+    "gpu_p95_ms": 12.0,
+    "game_p95_ms": 4.0,
+    "rss_mb": 5120.0
+  },
+  "checks": [
+    {
+      "name": "frame_p95_ms",
+      "label": "p95 FrameTime",
+      "value": 3.407,
+      "limit": 16.7,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "gpu_p95_ms",
+      "label": "p95 GPUTime",
+      "value": 2.687,
+      "limit": 12.0,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "game_p95_ms",
+      "label": "p95 GameThreadTime",
+      "value": 1.247,
+      "limit": 4.0,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "rss_mb",
+      "label": "max RSS",
+      "value": 1227.0,
+      "limit": 5120.0,
+      "passed": true,
+      "note": ""
+    }
+  ],
+  "steady": {
+    "frames": 25031,
+    "duration_ms": 70998.273,
+    "frame_p50_ms": 2.77,
+    "frame_p95_ms": 3.407,
+    "frame_max_ms": 46.05,
+    "gpu_p50_ms": 2.468,
+    "gpu_p95_ms": 2.687,
+    "gpu_max_ms": 6.117,
+    "game_p50_ms": 0.864,
+    "game_p95_ms": 1.247,
+    "game_max_ms": 16.891
+  },
+  "fight": {
+    "frames": 24969,
+    "duration_ms": 70844.231,
+    "frame_p50_ms": 2.77,
+    "frame_p95_ms": 3.408,
+    "frame_max_ms": 46.05,
+    "gpu_p50_ms": 2.468,
+    "gpu_p95_ms": 2.688,
+    "gpu_max_ms": 6.117,
+    "game_p50_ms": 0.864,
+    "game_p95_ms": 1.245,
+    "game_max_ms": 16.891
+  },
+  "resume_steady": {
+    "frames": 20,
+    "duration_ms": 55.324,
+    "frame_p50_ms": 2.775,
+    "frame_p95_ms": 3.592,
+    "frame_max_ms": 3.593,
+    "gpu_p50_ms": 2.46,
+    "gpu_p95_ms": 2.634,
+    "gpu_max_ms": 2.635,
+    "game_p50_ms": 0.794,
+    "game_p95_ms": 0.867,
+    "game_max_ms": 0.873
+  },
+  "rss": {
+    "samples": 178,
+    "interval_s": 0.5,
+    "max_sampled_mb": 1227.0,
+    "peak_hwm_mb": 1227.0,
+    "max_mb": 1227.0,
+    "per_pass": {
+      "measured": {
+        "samples": 164,
+        "interval_s": 0.5,
+        "max_sampled_mb": 1225.9,
+        "peak_hwm_mb": 1221.5,
+        "max_mb": 1225.9
+      },
+      "resume": {
+        "samples": 14,
+        "interval_s": 0.5,
+        "max_sampled_mb": 1227.0,
+        "peak_hwm_mb": 1227.0,
+        "max_mb": 1227.0
+      }
+    }
+  },
+  "transitions": [
+    {
+      "name": "plan",
+      "first_frame": 183,
+      "last_frame": 183,
+      "frames": 1,
+      "duration_ms": 25.595,
+      "worst_frame_ms": 25.595,
+      "worst_frame_index": 183,
+      "worst_gpu_ms": 2.602,
+      "worst_game_ms": 24.918,
+      "pass": "measured"
+    },
+    {
+      "name": "start->route",
+      "first_frame": 207,
+      "last_frame": 1218,
+      "frames": 1012,
+      "duration_ms": 2266.661,
+      "worst_frame_ms": 6.854,
+      "worst_frame_index": 207,
+      "worst_gpu_ms": 3.936,
+      "worst_game_ms": 7.428,
+      "pass": "measured"
+    },
+    {
+      "name": "route->battle",
+      "first_frame": 1242,
+      "last_frame": 1272,
+      "frames": 31,
+      "duration_ms": 150.25,
+      "worst_frame_ms": 59.446,
+      "worst_frame_index": 1242,
+      "worst_gpu_ms": 4.488,
+      "worst_game_ms": 58.702,
+      "pass": "measured"
+    },
+    {
+      "name": "battle->reward",
+      "first_frame": 26245,
+      "last_frame": 28211,
+      "frames": 1967,
+      "duration_ms": 5509.331,
+      "worst_frame_ms": 6.605,
+      "worst_frame_index": 27320,
+      "worst_gpu_ms": 4.402,
+      "worst_game_ms": 4.619,
+      "pass": "measured"
+    },
+    {
+      "name": "quit",
+      "first_frame": 28235,
+      "last_frame": 28265,
+      "frames": 31,
+      "duration_ms": 68.086,
+      "worst_frame_ms": 3.423,
+      "worst_frame_index": 28236,
+      "worst_gpu_ms": 2.61,
+      "worst_game_ms": 1.642,
+      "pass": "measured"
+    },
+    {
+      "name": "resume",
+      "first_frame": 181,
+      "last_frame": 896,
+      "frames": 716,
+      "duration_ms": 2086.423,
+      "worst_frame_ms": 70.098,
+      "worst_frame_index": 181,
+      "worst_gpu_ms": 4.751,
+      "worst_game_ms": 69.781,
+      "pass": "resume"
+    },
+    {
+      "name": "reward->route",
+      "first_frame": 920,
+      "last_frame": 1767,
+      "frames": 848,
+      "duration_ms": 2386.897,
+      "worst_frame_ms": 6.7,
+      "worst_frame_index": 1737,
+      "worst_gpu_ms": 4.53,
+      "worst_game_ms": 6.521,
+      "pass": "resume"
+    }
+  ],
+  "beats": [
+    {
+      "frame": 1652,
+      "name": "move"
+    },
+    {
+      "frame": 2155,
+      "name": "special"
+    },
+    {
+      "frame": 3003,
+      "name": "attack"
+    },
+    {
+      "frame": 8775,
+      "name": "downing"
+    },
+    {
+      "frame": 10098,
+      "name": "rescue"
+    },
+    {
+      "frame": 26245,
+      "name": "victory"
+    },
+    {
+      "frame": 28265,
+      "name": "quit"
+    }
+  ],
+  "failures": [],
+  "passed": true,
+  "stamp": "20261112T131230018201Z",
+  "commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "mode": "packaged Development",
+  "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/tools/autoplay/watchtower-road.json",
+  "cores": 2,
+  "flags": {
+    "vsync": false,
+    "sound": true,
+    "offscreen": false,
+    "csv_frames": 200000,
+    "resolution": "1920x1080",
+    "warmup": true,
+    "transition_pad": 3
+  },
+  "warmup": true,
+  "pass_gaps": [
+    {
+      "from": "warmup",
+      "to": "measured",
+      "seconds": 10.3
+    },
+    {
+      "from": "measured",
+      "to": "resume",
+      "seconds": 0.9
+    }
+  ],
+  "passes": [
+    {
+      "name": "warmup",
+      "commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "dirty": false,
+      "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+      "binary_sha256": "070eeb7bd5fa2777295242ca8ea0ed63388517430042ac7e8cab55c9fc2ae255",
+      "mode": "packaged Development",
+      "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/tools/autoplay/watchtower-road.json",
+      "script_sha256": "df75d321868b24fe15f08e53fbb4a6a31b2bab7583d51dd86f34b2cd6c105854",
+      "package_commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "cores": 2,
+      "flags": {
+        "vsync": false,
+        "sound": true,
+        "offscreen": false,
+        "csv_frames": 200000,
+        "resolution": "1920x1080"
+      },
+      "exit_code": 0,
+      "log": "warmup/game.log",
+      "csv": null,
+      "rss": {
+        "samples": 164,
+        "interval_s": 0.5,
+        "max_sampled_mb": 1239.3,
+        "peak_hwm_mb": 1234.2,
+        "max_mb": 1239.3
+      },
+      "retried": null,
+      "started": 1794489150.018356,
+      "ended": 1794489231.6234198,
+      "started_at": "2026-11-12T13:12:30.018356+00:00",
+      "ended_at": "2026-11-12T13:13:51.623420+00:00"
+    },
+    {
+      "name": "measured",
+      "commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "dirty": false,
+      "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+      "binary_sha256": "070eeb7bd5fa2777295242ca8ea0ed63388517430042ac7e8cab55c9fc2ae255",
+      "mode": "packaged Development",
+      "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/tools/autoplay/watchtower-road.json",
+      "script_sha256": "df75d321868b24fe15f08e53fbb4a6a31b2bab7583d51dd86f34b2cd6c105854",
+      "package_commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "cores": 2,
+      "flags": {
+        "vsync": false,
+        "sound": true,
+        "offscreen": false,
+        "csv_frames": 200000,
+        "resolution": "1920x1080"
+      },
+      "exit_code": 0,
+      "log": "measured/game.log",
+      "csv": "measured/measured.csv",
+      "rss": {
+        "samples": 164,
+        "interval_s": 0.5,
+        "max_sampled_mb": 1225.9,
+        "peak_hwm_mb": 1221.5,
+        "max_mb": 1225.9
+      },
+      "retried": null,
+      "started": 1794489241.9036703,
+      "ended": 1794489323.5588279,
+      "started_at": "2026-11-12T13:14:01.903670+00:00",
+      "ended_at": "2026-11-12T13:15:23.558828+00:00",
+      "csv_source": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Saved/Profiling/CSV/Profile(20261112_071401).csv",
+      "hardware": {
+        "cpu": "Intel(R) Core(TM) i9-14900K",
+        "logical_cpus": 32,
+        "memory_total_mb": 15736,
+        "kernel": "7.2.15-1-omarchy",
+        "gpu": "NVIDIA GeForce RTX 4080 SUPER, 615.78.08, 16376 MiB"
+      }
+    },
+    {
+      "name": "resume",
+      "commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "dirty": false,
+      "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+      "binary_sha256": "070eeb7bd5fa2777295242ca8ea0ed63388517430042ac7e8cab55c9fc2ae255",
+      "mode": "packaged Development",
+      "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/tools/autoplay/watchtower-road.json",
+      "script_sha256": "df75d321868b24fe15f08e53fbb4a6a31b2bab7583d51dd86f34b2cd6c105854",
+      "package_commit": "2c3ac779606646afdfd93fa7a724178ecd7a2c36",
+      "cores": 2,
+      "flags": {
+        "vsync": false,
+        "sound": true,
+        "offscreen": false,
+        "csv_frames": 200000,
+        "resolution": "1920x1080"
+      },
+      "exit_code": 0,
+      "log": "resume/game.log",
+      "csv": "resume/resume.csv",
+      "rss": {
+        "samples": 14,
+        "interval_s": 0.5,
+        "max_sampled_mb": 1227.0,
+        "peak_hwm_mb": 1227.0,
+        "max_mb": 1227.0
+      },
+      "retried": null,
+      "started": 1794489324.492395,
+      "ended": 1794489331.4682395,
+      "started_at": "2026-11-12T13:15:24.492395+00:00",
+      "ended_at": "2026-11-12T13:15:31.468240+00:00",
+      "csv_source": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-ca6d63de-1439986ddd5d03a0/Builds/20261112T131020135518Z/Linux/DnDDiceRoll/Saved/Profiling/CSV/Profile(20261112_071524).csv",
+      "hardware": {
+        "cpu": "Intel(R) Core(TM) i9-14900K",
+        "logical_cpus": 32,
+        "memory_total_mb": 15736,
+        "kernel": "7.2.15-1-omarchy",
+        "gpu": "NVIDIA GeForce RTX 4080 SUPER, 615.78.08, 16376 MiB"
+      }
+    }
+  ],
+  "top_gpu_stats": [
+    {
+      "stat": "GPU/TemporalSuperResolution",
+      "p95_ms": 0.848,
+      "mean_ms": 0.696
+    },
+    {
+      "stat": "GPU/ShadowDepths",
+      "p95_ms": 0.33,
+      "mean_ms": 0.33
+    },
+    {
+      "stat": "GPU/Postprocessing",
+      "p95_ms": 0.266,
+      "mean_ms": 0.268
+    },
+    {
+      "stat": "GPU/Unaccounted",
+      "p95_ms": 0.208,
+      "mean_ms": 0.195
+    },
+    {
+      "stat": "GPU/SSAO",
+      "p95_ms": 0.206,
+      "mean_ms": 0.202
+    },
+    {
+      "stat": "GPU/Lights",
+      "p95_ms": 0.177,
+      "mean_ms": 0.174
+    },
+    {
+      "stat": "GPU/Basepass",
+      "p95_ms": 0.129,
+      "mean_ms": 0.125
+    },
+    {
+      "stat": "GPU/BuildRenderingCommandsDeferred",
+      "p95_ms": 0.089,
+      "mean_ms": 0.086
+    }
+  ],
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) i9-14900K",
+    "logical_cpus": 32,
+    "memory_total_mb": 15736,
+    "kernel": "7.2.15-1-omarchy",
+    "gpu": "NVIDIA GeForce RTX 4080 SUPER, 615.78.08, 16376 MiB"
+  }
+}

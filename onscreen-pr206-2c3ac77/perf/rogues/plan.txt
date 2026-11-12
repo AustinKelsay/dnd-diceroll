@@ -1,0 +1,1 @@
+AUTOPLAY_PLAN chosen variant=1 commands=43 survivors=4 downed=2 round=7
