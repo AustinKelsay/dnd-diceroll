@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "overview",
+      "mode": "overview"
+    },
+    {
+      "name": "start-screen",
+      "mode": "start"
+    }
+  ]
+}

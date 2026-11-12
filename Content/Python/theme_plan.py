@@ -4,7 +4,8 @@ world kit r002, the Root of the World kit r002 and the Vault kit r002 import, wh
 Used by import_dark_fantasy_theme.py (issue #145 phase 2 for the Vigil, #149 phase 2 for the Root and the Vault). The rules:
   - Every r002 asset has a table row (R002 for the Vigil, ROOT_R002 for the Root, VAULT_R002 for the Vault). A row whose package already exists is
     SKIPPED, never overwritten.
-  - Only the ids in REPLACEABLE (the four revised Vigil r001 packages) and ROOT_REPLACEABLE (the Root world) may be replaced, and
+  - Only the ids in REPLACEABLE (the four revised Vigil r001 packages), ROOT_REPLACEABLE (the Root world) and ROSE_REPLACEABLE (the Vigil occluders with the
+    high-resolution rose, #149) may be replaced, and
     only when the run is told so explicitly with the environment variable DND_THEME_REIMPORT=<id>[,<id>...] (or `all`, meaning
     exactly every replaceable id). An id outside those lists is an error, not a silent no-op.
   - Nothing here touches other r001 assets.
@@ -32,7 +33,7 @@ GROUND = (0.9, 0.0, 0.0, 1.0, 0.0)
 CARDLOOK = (1.0, 0.0, 0.0, 0.0, 0.0)
 R002 = [
     ("world-vigil", 2, "SM_World_Vigil", "Worlds", LIT, "vigil_world", None, GROUND),
-    ("world-vigil-occluders", 1, "SM_World_Vigil_Occluders", "Worlds", OCCLUDER, "vigil_occluders", None, GROUND),
+    ("world-vigil-occluders", 2, "SM_World_Vigil_Occluders", "Worlds", OCCLUDER, "vigil_occluders", None, GROUND),
     ("prop-pillar", 2, "SM_Prop_Pillar", "Props", LIT, "pillar_variants", 0, PILLAR),
     ("prop-pillar-b", 1, "SM_Prop_Pillar_B", "Props", LIT, "pillar_variants", 1, PILLAR),
     ("prop-pillar-c", 1, "SM_Prop_Pillar_C", "Props", LIT, "pillar_variants", 2, PILLAR),
@@ -104,7 +105,7 @@ ROOT_ARRAY_SIZES = {"root_pillar_variants": 3, "root_wall_variants": 3, "root_st
 VAULT_STONE = (0.92, 0.0, 0.05, 1.0, 0.0)
 VAULT_PILLAR = (0.92, 0.0, 0.05, 1.0, 0.0)
 VAULT_WALL = (0.92, 0.0, 0.05, 1.0, 0.0)
-# The Waystone halo, its rune channels and the alcove lines are in the occluder mesh: Glow 0.25 keeps them from clipping against the bloom (peak luma under 250 on the apse).
+# The Waystone halo, its rune channels and the alcove lines are in the occluder mesh: Glow 0.25 keeps them from clipping against the bloom. At the default zoom the apse peak luma stays under 250; at far zoom up to 0.7% of the apse core may clip, an accepted landmark highlight (lead call on #149).
 VAULT_OCCLUDER = (0.9, 0.0, 0.0, 0.25, 0.0)
 VAULT_R002 = [
     ("world-vault", 1, "SM_World_Vault", "Worlds", LIT, "vault_world", None, GROUND),
@@ -137,6 +138,26 @@ VAULT_R002 = [
 VAULT_METRIC_GATE = ("world-vault",)
 VAULT_ARRAY_SIZES = {"vault_pillar_variants": 3, "vault_wall_variants": 3, "vault_stones_variants": 3, "vault_scatter": 8, "vault_mist_cards": 3, "vault_light_shafts": 2}
 
+# The overview set r002 (#149, the last part): the war table and the three route dioramas, four new ids and new packages under /Game/DnDDiceRoll/Theme/Overview
+# (the r001 SM_Tabletop, SM_Diorama_Root and SM_Diorama_Vigil stay as the fallback). Nothing in this table replaces an existing package. The look is the r001
+# overview's (roughness, no rim, no fill, glow on, self-lit 0.3 for the table, 0.6 for the Vigil and Vault dioramas and 0.85 for the Root (the darkest at 1280x720): on the route screens they stand at the front corners, far from the candles): the table sits in candlelight and the meshes lift themselves a little.
+OVERVIEW_R002 = [
+    ("overview-tabletop", 1, "SM_Overview_Tabletop", "Overview", LIT, "overview_tabletop", None, (0.8, 0.0, 0.0, 1.0, 0.3)),
+    ("overview-diorama-root", 1, "SM_Overview_Diorama_Root", "Overview", LIT, "overview_root_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.85)),
+    ("overview-diorama-vigil", 1, "SM_Overview_Diorama_Vigil", "Overview", LIT, "overview_vigil_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.6)),
+    ("overview-diorama-vault", 1, "SM_Overview_Diorama_Vault", "Overview", LIT, "overview_vault_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.6)),
+]
+# The overview set is switched on (UDiceRollTheme::bOverviewR002) only when all four carry the overview-r002 tag; the view then also loads them as a set.
+OVERVIEW_METRIC_GATE = tuple(row[0] for row in OVERVIEW_R002)
+OVERVIEW_ARRAY_SIZES = {}
+
+# The Vigil occluders carry the stained-glass rose in a high-resolution atlas region (#149): world-vigil-occluders r002 replaces the r001 export
+# at the same package and texture, with its two LODs. The mesh is tagged ROSE_TAG afterwards, so a run can tell it from the first r002 import.
+ROSE_REPLACEABLE = {"world-vigil-occluders": "r002: the stained-glass rose at about 220 texels/m (was 14)"}
+ROSE_TAG = "vigil-kit-r002-rose"
+# The tag a row's mesh must carry to count as imported; the kit's own tag unless the row has a newer revision of its own.
+ROW_TAGS = {"world-vigil-occluders": ROSE_TAG}
+
 # Per-instance `Color` tint (linear RGB) written on a kit mesh's MI_*; the lever for "the stone competes with the figures".
 # UDiceRollTheme's view multiplies it into the colour the part draws with (InstanceTint in ExpeditionBattleView.cpp), so
 # lowering a number here and rerunning the plain import changes only that MI. 1.0 is neutral: the paving was already
@@ -149,7 +170,8 @@ INSTANCE_TINTS = {"world-root": (1.0, 1.0, 1.0), "world-root-occluders": (1.0, 1
 VIGIL_TAG = "vigil-kit-r002"
 ROOT_TAG = "root-kit-r002"
 VAULT_TAG = "vault-kit-r002"
-KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG)
+OVERVIEW_TAG = "overview-r002"
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG)
 
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.
@@ -176,11 +198,11 @@ def sha256_file(path):
     return digest.hexdigest()
 
 
-ALL_REPLACEABLE = {**REPLACEABLE, **ROOT_REPLACEABLE}
+ALL_REPLACEABLE = {**REPLACEABLE, **ROOT_REPLACEABLE, **ROSE_REPLACEABLE}
 
 
 def requested_replacements(value):
-    """The set of asset ids a run may replace, from DND_THEME_REIMPORT. Raises on an id outside REPLACEABLE or ROOT_REPLACEABLE."""
+    """The set of asset ids a run may replace, from DND_THEME_REIMPORT. Raises on an id outside REPLACEABLE, ROOT_REPLACEABLE or ROSE_REPLACEABLE."""
     value = (value or "").strip()
     if not value:
         return set()
