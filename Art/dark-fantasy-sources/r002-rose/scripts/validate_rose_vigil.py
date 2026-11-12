@@ -2,7 +2,7 @@
 
   blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py
 
-For each patched occluder glb against its source: positions, normals, COLOR_0, indices and every non-rose TEXCOORD are byte-identical;
+For each patched occluder glb against its source: positions, normals, COLOR_0 and indices are byte-identical; every non-rose TEXCOORD keeps its texel (its U is halved because the atlas doubled in width);
 rose TEXCOORDs map back exactly; the atlas differs only inside the new region (the old rose region stays); texel density of the rose
 triangles before and after; and an appearance check (the same sample points read from the old and the new atlas).
 Writes r002-rose/rose_metrics.json.

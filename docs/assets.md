@@ -91,7 +91,7 @@ Import policy (v2), applied by `import_dark_fantasy_theme.py`:
 
 `Art/rig-pilot/r001/` holds the Blender half of the rigged pilot: the shared 25-bone skeleton contract (`README.md`), the recipes (`scripts/`), checks (`metrics/`) and contact sheets (`previews/`). The fighter, wizard and raider have records at `Art/sk-hero-fighter/r001/`, `Art/sk-hero-wizard/r001/` and `Art/sk-foe-raider/r001/` (skeletal glb with nine clips, plus LOD1 and LOD2 glbs). All original, made by script in Blender 5.2.3 LTS with no third-party content; project-owned, same terms as the repository.
 
-**Import (phase 2, done: headless import, build, automation and gallery captures are recorded on PR #164; the on-screen pass is pending):** `Content/Python/import_dark_fantasy_theme.py` imports the pilot in the same headless run as the static theme. It creates, under `/Game/DnDDiceRoll/Theme`:
+**Import (phase 2, done: headless import, build, automation and gallery captures are recorded on PR #164; its on-screen pass found no blocking defect, see `evidence/onscreen-pr164-a9afa5e`):** `Content/Python/import_dark_fantasy_theme.py` imports the pilot in the same headless run as the static theme. It creates, under `/Game/DnDDiceRoll/Theme`:
 - `Characters/SKEL_Humanoid`, the one skeleton, from the fighter's import;
 - `Characters/SK_Hero_Fighter`, `SK_Hero_Wizard` and `SK_Foe_Raider`, each with LOD1 and LOD2 from the `_LOD1`/`_LOD2` glbs (`SkeletalMeshEditorSubsystem.import_lod`) and Nanite explicitly off;
 - `Characters/Animations/A_Humanoid_<Clip>` for Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death and Recover, imported once from the fighter's LOD0 glb because every clip is shared across characters;
@@ -103,7 +103,7 @@ Import policy (v2), applied by `import_dark_fantasy_theme.py`:
 
 **Pilot decisions (2026-11-09):** the three characters share one set of nine clips, including one Cast clip (revisited in #150); palette zones are skipped for the pilot; a unit hit and downed in the same step goes straight to its fall clip with no Hit first. Spells cast, whatever their normalized effect: a special with the ability's `bSpell` fact plays Cast, and so does a basic Attack that the rules reference names as a spell (`ExpeditionPose::IsSpellAttack`): the wizard's Fire Bolt at any distance and the cleric's ranged Sacred Flame. Other roles' basic attacks are weapon attacks; the remaining casters' fixed attack profiles are unnamed, so they keep weapon clips until #150 gives them rigs.
 
-The Unreal import, build, automation and gallery captures are done (PR #164). What stays pending is the on-screen pass of the three records.
+The Unreal import, build, automation and gallery captures are done (PR #164). The on-screen pass has since run (PR #164, then every cast PR); the three records' `validation.state` was left at `pending`, see the note on record validation at the end of this file.
 
 ## Rigged cast, batch 1: rogue and cleric (issue #150)
 
@@ -354,7 +354,7 @@ Expected change set (what the lead verifies by hash diff of `Config/` and `Conte
   - **Replace run (`world-root`):** exit 0, no warnings. It changed exactly `SM_World_Root`, `T_World_Root`, `MI_World_Root` and `DA_DiceRollTheme` (`THEME_FILES_CHANGED 4`, `root_metric_kit=True`).
   - **Rerun:** changed nothing.
   - **Then:** build 0 warnings; `Project.Expedition.` 231/231, 0 warnings, with the six Root kit tests on the replaced kit and no skips; capture fixtures with `board-root-r002` and `board-root-pillars`; galleries 302 themed, 44 Root-pillar and 300 primitive.
-  - **Pending:** the coordinator's on-screen pass. The asset records' `validation` stays `pending` until then, with this evidence listed.
+  - **On-screen:** the coordinator's pass found no defect (6 pass, 1 partial, 1 not exercised at `9e463d4`; 4 of 4 at `de20b2f`; PR #176). The asset records' `validation` still reads `pending`, see the note on record validation at the end of this file.
 - **Rerun** of either changes nothing. A change to `INSTANCE_TINTS` changes only the named `MI_*`.
 - Any failure in the replace run (an import that does not report the package, a LOD count other than 3, a leftover collision shape) raises before saving, as for the Vigil.
 
@@ -468,3 +468,7 @@ All sound effects (dice, hits, misses, spells, healing, footsteps, turn chimes, 
   - **Changed exactly:** `M_DiceRollTheme` (`used_with_skeletal_mesh`) and `DA_DiceRollTheme`.
   - Every other asset was unchanged. No physics asset is kept.
   - **Warnings:** Interchange's "skinned mesh is not root" (the exports parent the mesh under the armature), the LOD naming pattern, and a staging-folder notice. All are known and harmless.
+
+## Note on record validation (#152, 2026-11-12)
+
+Most `Art/*/r00N/asset.json` records (104 of 125) still carry `"validation": {"state": "pending"}`: the records were written by the generators at import time and the later on-screen and native evidence was recorded on the PRs, the run record ([graphics overhaul](runs/graphics-overhaul/README.md)) and the `evidence/*` branches instead of being written back into the JSON. Provenance, recipes, exports and source hashes in the records are what each generator (`write_records_*.py`) wrote from the files at its last run, but `pending` should not be read as "never checked". A future pass can write the evidence links into the records; none was needed to ship.

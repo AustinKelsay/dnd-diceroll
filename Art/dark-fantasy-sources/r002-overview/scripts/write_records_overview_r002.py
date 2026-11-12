@@ -98,6 +98,7 @@ def main():
     rec['recipe']['parameters']['material'] = 'one baseColor atlas 4096x2048 plus COLOR_0 RGBA (A = glow mask)'
     rec['recipe']['parameters']['atlas'] = 'the r001 2048x2048 atlas unchanged in the left half (pixel for pixel; non-rose U coordinates rescaled by 1/2 to keep their texels) plus a 2000 x 2000 rose region at atlas pixel (2072, 24) with 24 px wrapped padding in the right half; SM_World_Vigil keeps its own 2048 atlas, which has no rose'
     f0 = next(iter(rm['files'].values()))
+    rec['recipe']['parameters']['sampling'] = 'Linear (trilinear + mips); 16 px wrapped padding around each region of the r001 left half, 24 px around the 2000 x 2000 rose region'
     rec['recipe']['parameters']['rose_window'] = dict(texels_per_m_before=f0['texels_per_m_before'], texels_per_m_after=f0['texels_per_m_after'], region_px=[2000, 2000], region_origin_px=[2072, 24], padding_px=24, atlas_px=[4096, 2048], derived_from='world-vigil-occluders r001')
     exports = [f'Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders{lod}.glb' for lod in ('', '_LOD1', '_LOD2')]
     keep = [f for f in prev['files'] if f['role'] != 'export']
