@@ -1,0 +1,1622 @@
+{
+ "version": 1,
+ "comment": "Reviewable palette table for #150 batch 4 (presentation only; ADR-0001: chosen from the build id, never fed back). Edit this file, then run python3 Art/rig-pilot/cast/scripts/palettes.py to regenerate palettes.resolved.json, swatches.html and Source/DnDDiceRoll/Private/Presentation/ExpeditionPaletteTable.inl. A slot colour is [hue degrees, saturation 0..1, luminance ratio]: the colour has the given hue and saturation and a perceptual luminance of ratio x the class default of that slot (so 1.0 keeps the class's own brightness). A missing slot keeps the class colours. Slots: A primary garment, B secondary garment, C trim, G glow (spell colour); X is the duplicate-identity accent, applied last over the class accent tiles.",
+ "accent": {
+  "hues": [
+   5,
+   215,
+   130,
+   48
+  ],
+  "saturation": 0.85,
+  "luminance_min": 0.3,
+  "luminance_max": 0.6,
+  "note": "party slot k (its position among the party in the encounter) tints the class accent tiles with hue k; used for every member of a class that appears more than once in the party"
+ },
+ "classes": {
+  "fighter": {
+   "tiles": {
+    "A": [
+     "plate"
+    ],
+    "B": [
+     "cloth"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "cloth",
+     "emblem2"
+    ]
+   },
+   "default": {
+    "A": [
+     38,
+     0.06,
+     1.12
+    ]
+   }
+  },
+  "rogue": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "emblem",
+     "accent"
+    ]
+   },
+   "default": {}
+  },
+  "cleric": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "emblem",
+     "emblem2"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "emblem",
+     "emblem2"
+    ]
+   },
+   "default": {}
+  },
+  "wizard": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "emblem",
+     "accent"
+    ]
+   },
+   "default": {}
+  },
+  "barbarian": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "leather"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "leather",
+     "emblem2"
+    ]
+   },
+   "default": {}
+  },
+  "monk": {
+   "tiles": {
+    "A": [
+     "plate"
+    ],
+    "B": [
+     "cloth",
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "cloth",
+     "emblem"
+    ]
+   },
+   "default": {}
+  },
+  "paladin": {
+   "tiles": {
+    "A": [
+     "plate"
+    ],
+    "B": [
+     "emblem",
+     "emblem2",
+     "cloth"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "emblem",
+     "emblem2",
+     "cloth"
+    ]
+   },
+   "default": {}
+  },
+  "ranger": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "plate",
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "cloth"
+    ]
+   },
+   "default": {}
+  },
+  "sorcerer": {
+   "tiles": {
+    "A": [
+     "emblem"
+    ],
+    "B": [
+     "cloth"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "cloth"
+    ]
+   },
+   "default": {}
+  },
+  "warlock": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "plate",
+     "dark",
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "plate",
+     "accent"
+    ]
+   },
+   "default": {}
+  },
+  "druid": {
+   "tiles": {
+    "A": [
+     "cloth",
+     "emblem"
+    ],
+    "B": [
+     "leather"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "leather"
+    ]
+   },
+   "default": {}
+  },
+  "bard": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "emblem"
+    ],
+    "C": [
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "emblem"
+    ]
+   },
+   "default": {}
+  },
+  "artificer": {
+   "tiles": {
+    "A": [
+     "cloth"
+    ],
+    "B": [
+     "leather"
+    ],
+    "C": [
+     "plate",
+     "trim"
+    ],
+    "G": [
+     "glow",
+     "rune"
+    ],
+    "X": [
+     "leather"
+    ]
+   },
+   "default": {}
+  }
+ },
+ "builds": {
+  "fighter.champion": {
+   "name": "Champion",
+   "note": "Steel and crimson (the class look), the steel warmed to silver so it stops merging with the blue Vault stone",
+   "A": [
+    38,
+    0.06,
+    1.12
+   ]
+  },
+  "fighter.battle-master": {
+   "name": "Battle Master",
+   "note": "Green-grey steel, forest cape: the tactician",
+   "A": [
+    165,
+    0.1,
+    1.15
+   ],
+   "B": [
+    150,
+    0.6,
+    1.05
+   ]
+  },
+  "fighter.eldritch-knight": {
+   "name": "Eldritch Knight",
+   "note": "Violet-silver steel, arcane violet cape, cyan trim and glow",
+   "A": [
+    270,
+    0.18,
+    1.12
+   ],
+   "B": [
+    265,
+    0.65,
+    1.2
+   ],
+   "C": [
+    200,
+    0.5,
+    1.0
+   ],
+   "G": [
+    190,
+    0.8,
+    1.0
+   ]
+  },
+  "fighter.psi-warrior": {
+   "name": "Psi Warrior",
+   "note": "Pale cold steel, teal cape and trim, aqua glow",
+   "A": [
+    200,
+    0.1,
+    1.15
+   ],
+   "B": [
+    190,
+    0.7,
+    1.1
+   ],
+   "C": [
+    185,
+    0.4,
+    1.0
+   ],
+   "G": [
+    170,
+    0.8,
+    1.0
+   ]
+  },
+  "fighter.rune-knight": {
+   "name": "Rune Knight",
+   "note": "Bronze-stone armour, ochre cape, amber runes",
+   "A": [
+    28,
+    0.22,
+    1.08
+   ],
+   "B": [
+    15,
+    0.55,
+    1.1
+   ],
+   "C": [
+    35,
+    0.7,
+    0.95
+   ],
+   "G": [
+    28,
+    0.9,
+    1.1
+   ]
+  },
+  "rogue.thief": {
+   "name": "Thief",
+   "note": "The class look: sage cloak, copper sash"
+  },
+  "rogue.assassin": {
+   "name": "Assassin",
+   "note": "Dim crimson cloak, ash-pale trim",
+   "A": [
+    355,
+    0.5,
+    0.95
+   ],
+   "B": [
+    40,
+    0.2,
+    0.92
+   ],
+   "C": [
+    0,
+    0.05,
+    0.92
+   ],
+   "G": [
+    0,
+    0.8,
+    1.0
+   ]
+  },
+  "rogue.arcane-trickster": {
+   "name": "Arcane Trickster",
+   "note": "Violet cloak, magenta sash, violet glow",
+   "A": [
+    285,
+    0.4,
+    1.08
+   ],
+   "B": [
+    320,
+    0.55,
+    1.0
+   ],
+   "G": [
+    300,
+    0.8,
+    1.0
+   ]
+  },
+  "rogue.phantom": {
+   "name": "Phantom",
+   "note": "Pale spectral blue-grey cloak and sash",
+   "A": [
+    200,
+    0.18,
+    1.18
+   ],
+   "B": [
+    190,
+    0.3,
+    1.1
+   ],
+   "C": [
+    200,
+    0.1,
+    1.0
+   ],
+   "G": [
+    185,
+    0.7,
+    1.0
+   ]
+  },
+  "rogue.soulknife": {
+   "name": "Soulknife",
+   "note": "Indigo cloak, teal sash, psychic violet glow",
+   "A": [
+    245,
+    0.35,
+    1.12
+   ],
+   "B": [
+    175,
+    0.5,
+    1.0
+   ],
+   "G": [
+    265,
+    0.8,
+    1.0
+   ]
+  },
+  "cleric.knowledge": {
+   "name": "Knowledge",
+   "note": "Pale blue-grey cassock, blue tabard",
+   "A": [
+    220,
+    0.14,
+    1.0
+   ],
+   "B": [
+    225,
+    0.55,
+    1.15
+   ],
+   "G": [
+    215,
+    0.6,
+    1.0
+   ]
+  },
+  "cleric.life": {
+   "name": "Life",
+   "note": "The class look: ivory cassock, teal tabard"
+  },
+  "cleric.light": {
+   "name": "Light",
+   "note": "Warm cream-gold cassock, amber tabard",
+   "A": [
+    48,
+    0.22,
+    1.05
+   ],
+   "B": [
+    38,
+    0.7,
+    1.3
+   ],
+   "C": [
+    45,
+    0.8,
+    1.0
+   ],
+   "G": [
+    48,
+    0.9,
+    1.0
+   ]
+  },
+  "cleric.nature": {
+   "name": "Nature",
+   "note": "Pale sage cassock, green tabard",
+   "A": [
+    95,
+    0.18,
+    0.98
+   ],
+   "B": [
+    120,
+    0.5,
+    1.1
+   ],
+   "C": [
+    75,
+    0.6,
+    0.95
+   ],
+   "G": [
+    110,
+    0.7,
+    1.0
+   ]
+  },
+  "cleric.tempest": {
+   "name": "Tempest",
+   "note": "Storm-grey cassock, storm blue tabard",
+   "A": [
+    215,
+    0.12,
+    0.98
+   ],
+   "B": [
+    205,
+    0.65,
+    1.2
+   ],
+   "C": [
+    195,
+    0.35,
+    1.05
+   ],
+   "G": [
+    195,
+    0.8,
+    1.0
+   ]
+  },
+  "cleric.trickery": {
+   "name": "Trickery",
+   "note": "Lilac cassock, magenta-violet tabard",
+   "A": [
+    275,
+    0.14,
+    0.98
+   ],
+   "B": [
+    300,
+    0.45,
+    1.2
+   ],
+   "C": [
+    285,
+    0.5,
+    1.0
+   ],
+   "G": [
+    295,
+    0.7,
+    1.0
+   ]
+  },
+  "cleric.war": {
+   "name": "War",
+   "note": "Warm white cassock, crimson tabard",
+   "A": [
+    20,
+    0.12,
+    0.95
+   ],
+   "B": [
+    5,
+    0.7,
+    1.4
+   ],
+   "C": [
+    30,
+    0.8,
+    0.95
+   ]
+  },
+  "cleric.order": {
+   "name": "Order",
+   "note": "Cream cassock, royal violet tabard, gold",
+   "A": [
+    40,
+    0.1,
+    0.98
+   ],
+   "B": [
+    265,
+    0.45,
+    1.3
+   ],
+   "C": [
+    50,
+    0.8,
+    1.0
+   ]
+  },
+  "cleric.peace": {
+   "name": "Peace",
+   "note": "Soft cream cassock, aqua tabard",
+   "A": [
+    60,
+    0.15,
+    1.0
+   ],
+   "B": [
+    170,
+    0.35,
+    1.2
+   ],
+   "C": [
+    50,
+    0.6,
+    1.0
+   ]
+  },
+  "cleric.twilight": {
+   "name": "Twilight",
+   "note": "Dusk lavender-grey cassock, violet tabard, amber trim",
+   "A": [
+    250,
+    0.2,
+    0.92
+   ],
+   "B": [
+    265,
+    0.5,
+    1.0
+   ],
+   "C": [
+    30,
+    0.7,
+    0.95
+   ],
+   "G": [
+    260,
+    0.6,
+    1.1
+   ]
+  },
+  "wizard.abjuration": {
+   "name": "Abjuration",
+   "note": "The class look: indigo robe, lavender panels"
+  },
+  "wizard.conjuration": {
+   "name": "Conjuration",
+   "note": "Teal robe, pale green panels",
+   "A": [
+    175,
+    0.5,
+    1.08
+   ],
+   "B": [
+    160,
+    0.3,
+    1.0
+   ],
+   "G": [
+    170,
+    0.8,
+    1.0
+   ]
+  },
+  "wizard.divination": {
+   "name": "Divination",
+   "note": "Blue robe, pale gold panels, silver trim, gold glow",
+   "A": [
+    215,
+    0.55,
+    1.08
+   ],
+   "B": [
+    45,
+    0.35,
+    0.95
+   ],
+   "C": [
+    210,
+    0.15,
+    1.15
+   ],
+   "G": [
+    50,
+    0.8,
+    1.0
+   ]
+  },
+  "wizard.enchantment": {
+   "name": "Enchantment",
+   "note": "Orchid-pink robe and panels",
+   "A": [
+    320,
+    0.45,
+    1.12
+   ],
+   "B": [
+    330,
+    0.3,
+    1.0
+   ],
+   "G": [
+    325,
+    0.7,
+    1.0
+   ]
+  },
+  "wizard.evocation": {
+   "name": "Evocation",
+   "note": "Flame-red robe, cream-amber panels, ember glow",
+   "A": [
+    18,
+    0.7,
+    1.28
+   ],
+   "B": [
+    35,
+    0.35,
+    1.0
+   ],
+   "G": [
+    25,
+    0.9,
+    1.1
+   ]
+  },
+  "wizard.illusion": {
+   "name": "Illusion",
+   "note": "Orchid-violet robe, pale violet panels",
+   "A": [
+    300,
+    0.4,
+    1.1
+   ],
+   "B": [
+    260,
+    0.3,
+    1.05
+   ],
+   "G": [
+    290,
+    0.7,
+    1.0
+   ]
+  },
+  "wizard.necromancy": {
+   "name": "Necromancy",
+   "note": "Sickly green robe, bone panels, green glow",
+   "A": [
+    150,
+    0.35,
+    0.98
+   ],
+   "B": [
+    75,
+    0.2,
+    0.92
+   ],
+   "C": [
+    75,
+    0.3,
+    1.0
+   ],
+   "G": [
+    135,
+    0.9,
+    1.0
+   ]
+  },
+  "wizard.transmutation": {
+   "name": "Transmutation",
+   "note": "Amber-brown robe, steel panels",
+   "A": [
+    38,
+    0.55,
+    1.12
+   ],
+   "B": [
+    190,
+    0.3,
+    1.0
+   ],
+   "G": [
+    40,
+    0.8,
+    1.0
+   ]
+  },
+  "wizard.bladesinging": {
+   "name": "Bladesinging",
+   "note": "Silver-blue robe, silver panels and trim",
+   "A": [
+    195,
+    0.5,
+    1.08
+   ],
+   "B": [
+    210,
+    0.1,
+    1.18
+   ],
+   "C": [
+    200,
+    0.2,
+    1.22
+   ],
+   "G": [
+    190,
+    0.7,
+    1.0
+   ]
+  },
+  "wizard.order-of-scribes": {
+   "name": "Order of Scribes",
+   "note": "Parchment-brown robe, parchment panels, ink trim",
+   "A": [
+    30,
+    0.3,
+    1.02
+   ],
+   "B": [
+    45,
+    0.25,
+    1.1
+   ],
+   "C": [
+    25,
+    0.6,
+    0.95
+   ],
+   "G": [
+    28,
+    0.7,
+    1.0
+   ]
+  },
+  "barbarian.berserker": {
+   "name": "Berserker",
+   "note": "Russet-red fur and bands, ember runes",
+   "A": [
+    15,
+    0.55,
+    1.0
+   ],
+   "B": [
+    10,
+    0.5,
+    1.08
+   ],
+   "G": [
+    10,
+    0.9,
+    1.0
+   ]
+  },
+  "barbarian.totem-warrior": {
+   "name": "Totem Warrior",
+   "note": "Mossy fur, verdigris bronze",
+   "A": [
+    100,
+    0.3,
+    0.98
+   ],
+   "B": [
+    35,
+    0.3,
+    1.12
+   ],
+   "C": [
+    175,
+    0.45,
+    1.08
+   ],
+   "G": [
+    170,
+    0.7,
+    1.0
+   ]
+  },
+  "barbarian.beast": {
+   "name": "Beast",
+   "note": "The class look: tawny fur"
+  },
+  "barbarian.wild-magic": {
+   "name": "Wild Magic",
+   "note": "Heather fur, sea-green wraps, gold trim, magenta glow",
+   "A": [
+    285,
+    0.35,
+    1.12
+   ],
+   "B": [
+    160,
+    0.35,
+    1.15
+   ],
+   "C": [
+    55,
+    0.8,
+    1.0
+   ],
+   "G": [
+    300,
+    0.8,
+    1.0
+   ]
+  },
+  "monk.open-hand": {
+   "name": "Open Hand",
+   "note": "The class look: saffron gi, rust sash"
+  },
+  "monk.shadow": {
+   "name": "Shadow",
+   "note": "Dusk-indigo gi, violet sash",
+   "A": [
+    250,
+    0.25,
+    0.92
+   ],
+   "B": [
+    265,
+    0.4,
+    1.25
+   ],
+   "C": [
+    270,
+    0.2,
+    1.6
+   ]
+  },
+  "monk.four-elements": {
+   "name": "Four Elements",
+   "note": "Water-cyan gi, ember sash",
+   "A": [
+    195,
+    0.55,
+    0.98
+   ],
+   "B": [
+    15,
+    0.6,
+    1.3
+   ],
+   "C": [
+    200,
+    0.2,
+    1.6
+   ],
+   "G": [
+    195,
+    0.7,
+    1.0
+   ]
+  },
+  "monk.mercy": {
+   "name": "Mercy",
+   "note": "Pale sage gi, soft green sash",
+   "A": [
+    95,
+    0.2,
+    1.22
+   ],
+   "B": [
+    140,
+    0.35,
+    1.3
+   ],
+   "C": [
+    100,
+    0.15,
+    1.6
+   ]
+  },
+  "monk.astral-self": {
+   "name": "Astral Self",
+   "note": "Violet gi, blue sash, blue glow",
+   "A": [
+    265,
+    0.4,
+    1.02
+   ],
+   "B": [
+    220,
+    0.45,
+    1.3
+   ],
+   "C": [
+    225,
+    0.2,
+    1.8
+   ],
+   "G": [
+    220,
+    0.8,
+    1.0
+   ]
+  },
+  "paladin.devotion": {
+   "name": "Devotion",
+   "note": "The class look: silver plate, purple tabard"
+  },
+  "paladin.ancients": {
+   "name": "Ancients",
+   "note": "Sage-silver plate, green tabard and cape",
+   "A": [
+    110,
+    0.12,
+    0.92
+   ],
+   "B": [
+    125,
+    0.55,
+    1.25
+   ],
+   "C": [
+    60,
+    0.6,
+    0.95
+   ]
+  },
+  "paladin.vengeance": {
+   "name": "Vengeance",
+   "note": "Dark steel plate, crimson tabard and cape",
+   "A": [
+    0,
+    0.04,
+    0.84
+   ],
+   "B": [
+    355,
+    0.7,
+    1.3
+   ],
+   "C": [
+    20,
+    0.5,
+    0.92
+   ]
+  },
+  "paladin.glory": {
+   "name": "Glory",
+   "note": "Gold-silver plate, blue tabard and cape",
+   "A": [
+    48,
+    0.35,
+    0.96
+   ],
+   "B": [
+    210,
+    0.6,
+    1.4
+   ],
+   "C": [
+    48,
+    0.9,
+    1.0
+   ]
+  },
+  "paladin.watchers": {
+   "name": "Watchers",
+   "note": "Steel plate, teal-steel tabard and cape",
+   "A": [
+    215,
+    0.12,
+    0.94
+   ],
+   "B": [
+    185,
+    0.5,
+    1.3
+   ],
+   "C": [
+    200,
+    0.2,
+    1.1
+   ]
+  },
+  "ranger.hunter": {
+   "name": "Hunter",
+   "note": "The class look: moss cloak, olive-tan tunic"
+  },
+  "ranger.beast-master": {
+   "name": "Beast Master",
+   "note": "Brown cloak, tan tunic, russet trim",
+   "A": [
+    30,
+    0.6,
+    0.98
+   ],
+   "B": [
+    35,
+    0.4,
+    0.96
+   ],
+   "C": [
+    25,
+    0.8,
+    1.0
+   ]
+  },
+  "ranger.fey-wanderer": {
+   "name": "Fey Wanderer",
+   "note": "Heather cloak, sea-green tunic, pink trim, pink glow",
+   "A": [
+    300,
+    0.35,
+    1.2
+   ],
+   "B": [
+    150,
+    0.35,
+    1.05
+   ],
+   "C": [
+    320,
+    0.5,
+    1.1
+   ],
+   "G": [
+    310,
+    0.8,
+    1.0
+   ]
+  },
+  "ranger.swarmkeeper": {
+   "name": "Swarmkeeper",
+   "note": "Yellow-green cloak, straw tunic, amber trim",
+   "A": [
+    60,
+    0.65,
+    1.1
+   ],
+   "B": [
+    45,
+    0.4,
+    0.96
+   ],
+   "C": [
+    40,
+    0.9,
+    1.1
+   ],
+   "G": [
+    50,
+    0.9,
+    1.0
+   ]
+  },
+  "sorcerer.draconic-bloodline": {
+   "name": "Draconic Bloodline",
+   "note": "The class look: crimson coat, black-violet mantle"
+  },
+  "sorcerer.wild-magic": {
+   "name": "Wild Magic",
+   "note": "Magenta coat, sea-teal mantle, gold trim, magenta glow",
+   "A": [
+    290,
+    0.6,
+    1.35
+   ],
+   "B": [
+    170,
+    0.4,
+    1.4
+   ],
+   "C": [
+    55,
+    0.7,
+    1.0
+   ],
+   "G": [
+    300,
+    0.9,
+    1.0
+   ]
+  },
+  "sorcerer.aberrant-mind": {
+   "name": "Aberrant Mind",
+   "note": "Violet coat, teal mantle and trim, teal glow",
+   "A": [
+    265,
+    0.45,
+    1.42
+   ],
+   "B": [
+    170,
+    0.3,
+    1.3
+   ],
+   "C": [
+    165,
+    0.5,
+    1.0
+   ],
+   "G": [
+    170,
+    0.9,
+    1.0
+   ]
+  },
+  "sorcerer.clockwork-soul": {
+   "name": "Clockwork Soul",
+   "note": "Brass coat, steel mantle, brass trim, cyan glow",
+   "A": [
+    35,
+    0.45,
+    1.55
+   ],
+   "B": [
+    210,
+    0.15,
+    1.5
+   ],
+   "C": [
+    40,
+    0.8,
+    1.0
+   ],
+   "G": [
+    195,
+    0.9,
+    1.0
+   ]
+  },
+  "warlock.archfey": {
+   "name": "Archfey",
+   "note": "Sea-green coat and lining, lime glow",
+   "A": [
+    150,
+    0.4,
+    1.6
+   ],
+   "B": [
+    165,
+    0.4,
+    1.8
+   ],
+   "C": [
+    60,
+    0.3,
+    1.0
+   ],
+   "G": [
+    75,
+    0.8,
+    1.0
+   ]
+  },
+  "warlock.fiend": {
+   "name": "Fiend",
+   "note": "Infernal red coat, ash trim, ember glow",
+   "A": [
+    5,
+    0.65,
+    1.7
+   ],
+   "B": [
+    10,
+    0.55,
+    1.8
+   ],
+   "C": [
+    30,
+    0.3,
+    0.95
+   ],
+   "G": [
+    15,
+    0.9,
+    1.0
+   ]
+  },
+  "warlock.great-old-one": {
+   "name": "Great Old One",
+   "note": "The class look: plum coat, green glow"
+  },
+  "warlock.fathomless": {
+   "name": "Fathomless",
+   "note": "Deep-sea blue coat, sea trim, sea glow",
+   "A": [
+    195,
+    0.6,
+    1.5
+   ],
+   "B": [
+    205,
+    0.5,
+    1.7
+   ],
+   "C": [
+    180,
+    0.3,
+    0.95
+   ],
+   "G": [
+    180,
+    0.9,
+    1.0
+   ]
+  },
+  "warlock.genie": {
+   "name": "Genie",
+   "note": "Blue coat, gold lining, gold glow",
+   "A": [
+    210,
+    0.55,
+    1.5
+   ],
+   "B": [
+    45,
+    0.5,
+    1.8
+   ],
+   "C": [
+    45,
+    0.7,
+    0.92
+   ],
+   "G": [
+    40,
+    0.9,
+    1.0
+   ]
+  },
+  "druid.land": {
+   "name": "Land",
+   "note": "The class look: moss robe, bark tunic"
+  },
+  "druid.moon": {
+   "name": "Moon",
+   "note": "Silver-blue robe, pale bark tunic, cool glow",
+   "A": [
+    215,
+    0.3,
+    1.2
+   ],
+   "B": [
+    220,
+    0.2,
+    1.38
+   ],
+   "C": [
+    200,
+    0.2,
+    1.15
+   ],
+   "G": [
+    200,
+    0.5,
+    1.2
+   ]
+  },
+  "druid.spores": {
+   "name": "Spores",
+   "note": "Mushroom tan-red robe, mauve tunic, mauve glow",
+   "A": [
+    20,
+    0.35,
+    1.05
+   ],
+   "B": [
+    330,
+    0.25,
+    1.3
+   ],
+   "C": [
+    335,
+    0.4,
+    1.05
+   ],
+   "G": [
+    310,
+    0.7,
+    1.0
+   ]
+  },
+  "druid.stars": {
+   "name": "Stars",
+   "note": "Night-violet robe, indigo tunic, gold trim and glow",
+   "A": [
+    255,
+    0.4,
+    1.22
+   ],
+   "B": [
+    240,
+    0.35,
+    1.4
+   ],
+   "C": [
+    50,
+    0.6,
+    1.1
+   ],
+   "G": [
+    55,
+    0.8,
+    1.0
+   ]
+  },
+  "druid.wildfire": {
+   "name": "Wildfire",
+   "note": "Ember-orange robe, ash tunic, amber trim, fire glow",
+   "A": [
+    20,
+    0.65,
+    1.05
+   ],
+   "B": [
+    15,
+    0.4,
+    1.25
+   ],
+   "C": [
+    35,
+    0.9,
+    1.0
+   ],
+   "G": [
+    20,
+    0.95,
+    1.0
+   ]
+  },
+  "bard.lore": {
+   "name": "Lore",
+   "note": "The class look: wine doublet, teal cape"
+  },
+  "bard.valor": {
+   "name": "Valor",
+   "note": "Scarlet doublet, straw-gold cape",
+   "A": [
+    5,
+    0.7,
+    1.45
+   ],
+   "B": [
+    45,
+    0.35,
+    1.0
+   ]
+  },
+  "bard.creation": {
+   "name": "Creation",
+   "note": "Violet doublet, gold cape and trim, violet glow",
+   "A": [
+    280,
+    0.45,
+    1.5
+   ],
+   "B": [
+    40,
+    0.55,
+    1.2
+   ],
+   "C": [
+    48,
+    0.5,
+    1.0
+   ],
+   "G": [
+    275,
+    0.8,
+    1.0
+   ]
+  },
+  "bard.eloquence": {
+   "name": "Eloquence",
+   "note": "Royal-blue doublet, rose cape, silver trim, blue glow",
+   "A": [
+    215,
+    0.55,
+    1.5
+   ],
+   "B": [
+    350,
+    0.4,
+    1.1
+   ],
+   "C": [
+    210,
+    0.1,
+    1.1
+   ],
+   "G": [
+    215,
+    0.8,
+    1.0
+   ]
+  },
+  "artificer.alchemist": {
+   "name": "Alchemist",
+   "note": "Grey-green coat, olive apron, acid brass, green glow",
+   "A": [
+    150,
+    0.15,
+    1.05
+   ],
+   "B": [
+    85,
+    0.45,
+    1.0
+   ],
+   "C": [
+    60,
+    0.7,
+    1.0
+   ],
+   "G": [
+    130,
+    0.8,
+    1.0
+   ]
+  },
+  "artificer.armorer": {
+   "name": "Armorer",
+   "note": "Bright steel coat, blue-grey apron, silver plates, cyan glow",
+   "A": [
+    215,
+    0.1,
+    1.28
+   ],
+   "B": [
+    210,
+    0.2,
+    1.0
+   ],
+   "C": [
+    210,
+    0.3,
+    1.1
+   ]
+  },
+  "artificer.artillerist": {
+   "name": "Artillerist",
+   "note": "Warm grey coat, rust apron, copper, orange glow",
+   "A": [
+    10,
+    0.25,
+    1.02
+   ],
+   "B": [
+    15,
+    0.6,
+    0.96
+   ],
+   "C": [
+    20,
+    0.8,
+    1.0
+   ],
+   "G": [
+    25,
+    0.9,
+    1.0
+   ]
+  },
+  "artificer.battle-smith": {
+   "name": "Battle Smith",
+   "note": "The class look: soot canvas, tan apron, brass and copper, cyan glow"
+  }
+ }
+}

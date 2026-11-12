@@ -1,0 +1,1718 @@
+{
+ "fighter": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.406,
+    0.484,
+    0.679
+   ],
+   "area_share": 0.5282,
+   "mean_z": 1.014
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.927,
+    0.706,
+    0.268
+   ],
+   "area_share": 0.1383,
+   "mean_z": 1.075
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.734,
+    0.174,
+    0.185
+   ],
+   "area_share": 0.1327,
+   "mean_z": 1.0
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.455,
+    0.3,
+    0.182
+   ],
+   "area_share": 0.0711,
+   "mean_z": 0.478
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.829,
+    0.888,
+    0.961
+   ],
+   "area_share": 0.0123,
+   "mean_z": 0.944
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.99,
+    0.718,
+    0.279
+   ],
+   "area_share": 0.0012,
+   "mean_z": 1.131
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.38,
+    0.23,
+    0.086
+   ],
+   "area_share": 0.0049,
+   "mean_z": 0.946
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.778,
+    0.618,
+    0.498
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.917,
+    0.878,
+    0.758
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.957,
+    0.966,
+    0.99
+   ],
+   "area_share": 0.0164,
+   "mean_z": 1.571
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.1,
+    0.1,
+    0.14
+   ],
+   "area_share": 0.0014,
+   "mean_z": 1.615
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.919,
+    0.775,
+    0.633
+   ],
+   "area_share": 0.0732,
+   "mean_z": 0.78
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.346,
+    0.373,
+    0.48
+   ],
+   "area_share": 0.0203,
+   "mean_z": 0.925
+  }
+ },
+ "rogue": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.547,
+    0.41,
+    0.259
+   ],
+   "area_share": 0.1694,
+   "mean_z": 1.207
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.91,
+    0.868,
+    0.719
+   ],
+   "area_share": 0.0747,
+   "mean_z": 1.082
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.33,
+    0.463,
+    0.332
+   ],
+   "area_share": 0.2884,
+   "mean_z": 1.012
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.458,
+    0.311,
+    0.183
+   ],
+   "area_share": 0.3187,
+   "mean_z": 0.763
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.891,
+    0.929,
+    0.976
+   ],
+   "area_share": 0.0095,
+   "mean_z": 0.786
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.549,
+    0.99,
+    0.78
+   ],
+   "area_share": 0.0017,
+   "mean_z": 0.862
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.098,
+    0.276,
+    0.239
+   ],
+   "area_share": 0.0011,
+   "mean_z": 0.783
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.82,
+    0.659,
+    0.539
+   ],
+   "area_share": 0.0248,
+   "mean_z": 1.596
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.959,
+    0.929,
+    0.84
+   ],
+   "area_share": 0.0075,
+   "mean_z": 1.255
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.968,
+    0.949,
+    0.88
+   ],
+   "area_share": 0.0464,
+   "mean_z": 1.546
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.2,
+    0.18,
+    0.22
+   ],
+   "area_share": 0.0012,
+   "mean_z": 1.625
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.825,
+    0.498,
+    0.227
+   ],
+   "area_share": 0.0566,
+   "mean_z": 0.973
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.619,
+    0.43,
+    0.26
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  }
+ },
+ "cleric": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.796,
+    0.813,
+    0.877
+   ],
+   "area_share": 0.114,
+   "mean_z": 1.361
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.939,
+    0.759,
+    0.3
+   ],
+   "area_share": 0.1167,
+   "mean_z": 1.103
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.824,
+    0.793,
+    0.681
+   ],
+   "area_share": 0.4639,
+   "mean_z": 0.944
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.513,
+    0.357,
+    0.229
+   ],
+   "area_share": 0.0824,
+   "mean_z": 0.574
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.833,
+    0.872,
+    0.94
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.99,
+    0.9,
+    0.5
+   ],
+   "area_share": 0.0021,
+   "mean_z": 1.233
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.37,
+    0.286,
+    0.102
+   ],
+   "area_share": 0.0156,
+   "mean_z": 0.492
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.86,
+    0.679,
+    0.539
+   ],
+   "area_share": 0.0398,
+   "mean_z": 1.41
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.959,
+    0.939,
+    0.86
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.977,
+    0.959,
+    0.9
+   ],
+   "area_share": 0.0205,
+   "mean_z": 1.443
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.22,
+    0.18,
+    0.2
+   ],
+   "area_share": 0.0012,
+   "mean_z": 1.625
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.239,
+    0.464,
+    0.552
+   ],
+   "area_share": 0.1127,
+   "mean_z": 0.82
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.352,
+    0.521,
+    0.586
+   ],
+   "area_share": 0.0309,
+   "mean_z": 0.971
+  }
+ },
+ "wizard": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.51,
+    0.47,
+    0.804
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.933,
+    0.732,
+    0.301
+   ],
+   "area_share": 0.0454,
+   "mean_z": 1.097
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.392,
+    0.341,
+    0.755
+   ],
+   "area_share": 0.7059,
+   "mean_z": 0.883
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.424,
+    0.276,
+    0.184
+   ],
+   "area_share": 0.0687,
+   "mean_z": 0.567
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.835,
+    0.894,
+    0.967
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.621,
+    0.951,
+    0.992
+   ],
+   "area_share": 0.0061,
+   "mean_z": 1.487
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.167,
+    0.225,
+    0.437
+   ],
+   "area_share": 0.0213,
+   "mean_z": 0.21
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.861,
+    0.841,
+    0.881
+   ],
+   "area_share": 0.0391,
+   "mean_z": 1.372
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.921,
+    0.881,
+    0.761
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.951,
+    0.951,
+    0.992
+   ],
+   "area_share": 0.0505,
+   "mean_z": 1.375
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.12,
+    0.12,
+    0.3
+   ],
+   "area_share": 0.0013,
+   "mean_z": 1.625
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.765,
+    0.712,
+    0.913
+   ],
+   "area_share": 0.0617,
+   "mean_z": 0.692
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.261,
+    0.292,
+    0.494
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  }
+ },
+ "barbarian": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.509,
+    0.308,
+    0.166
+   ],
+   "area_share": 0.0228,
+   "mean_z": 0.996
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.792,
+    0.521,
+    0.22
+   ],
+   "area_share": 0.0412,
+   "mean_z": 1.037
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.575,
+    0.395,
+    0.214
+   ],
+   "area_share": 0.3172,
+   "mean_z": 1.015
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.414,
+    0.258,
+    0.138
+   ],
+   "area_share": 0.2808,
+   "mean_z": 0.698
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.738,
+    0.777,
+    0.827
+   ],
+   "area_share": 0.0515,
+   "mean_z": 1.104
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.992,
+    0.5,
+    0.22
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.421,
+    0.178,
+    0.083
+   ],
+   "area_share": 0.007,
+   "mean_z": 1.104
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.781,
+    0.57,
+    0.421
+   ],
+   "area_share": 0.0519,
+   "mean_z": 1.297
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.951,
+    0.911,
+    0.801
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.961,
+    0.951,
+    0.901
+   ],
+   "area_share": 0.0018,
+   "mean_z": 1.585
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.17,
+    0.12,
+    0.1
+   ],
+   "area_share": 0.0021,
+   "mean_z": 1.641
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.701,
+    0.56,
+    0.488
+   ],
+   "area_share": 0.1868,
+   "mean_z": 1.217
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.54,
+    0.23,
+    0.1
+   ],
+   "area_share": 0.0369,
+   "mean_z": 1.555
+  }
+ },
+ "monk": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.843,
+    0.613,
+    0.204
+   ],
+   "area_share": 0.2815,
+   "mean_z": 0.772
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.286,
+    0.193,
+    0.148
+   ],
+   "area_share": 0.1122,
+   "mean_z": 0.986
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.764,
+    0.415,
+    0.055
+   ],
+   "area_share": 0.1862,
+   "mean_z": 1.166
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.325,
+    0.208,
+    0.126
+   ],
+   "area_share": 0.0801,
+   "mean_z": 0.506
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.824,
+    0.863,
+    0.921
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.988,
+    0.855,
+    0.378
+   ],
+   "area_share": 0.001,
+   "mean_z": 1.275
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.412,
+    0.287,
+    0.109
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.766,
+    0.546,
+    0.408
+   ],
+   "area_share": 0.1283,
+   "mean_z": 1.337
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.954,
+    0.915,
+    0.815
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.964,
+    0.924,
+    0.796
+   ],
+   "area_share": 0.087,
+   "mean_z": 0.82
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.159,
+    0.119,
+    0.119
+   ],
+   "area_share": 0.0091,
+   "mean_z": 1.717
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.513,
+    0.184,
+    0.064
+   ],
+   "area_share": 0.1145,
+   "mean_z": 1.012
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.358,
+    0.229,
+    0.139
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  }
+ },
+ "paladin": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.86,
+    0.878,
+    0.926
+   ],
+   "area_share": 0.4723,
+   "mean_z": 0.988
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.943,
+    0.774,
+    0.322
+   ],
+   "area_share": 0.1421,
+   "mean_z": 1.011
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.798,
+    0.772,
+    0.823
+   ],
+   "area_share": 0.1383,
+   "mean_z": 0.931
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.314,
+    0.204,
+    0.314
+   ],
+   "area_share": 0.0789,
+   "mean_z": 0.6
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.877,
+    0.897,
+    0.953
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.923,
+    0.822,
+    0.991
+   ],
+   "area_share": 0.0013,
+   "mean_z": 1.09
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.284,
+    0.165,
+    0.386
+   ],
+   "area_share": 0.0073,
+   "mean_z": 1.015
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.842,
+    0.662,
+    0.521
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.962,
+    0.943,
+    0.903
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.581,
+    0.221,
+    0.722
+   ],
+   "area_share": 0.0138,
+   "mean_z": 1.469
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.12,
+    0.1,
+    0.16
+   ],
+   "area_share": 0.002,
+   "mean_z": 1.608
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.609,
+    0.324,
+    0.648
+   ],
+   "area_share": 0.1102,
+   "mean_z": 0.9
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.6,
+    0.331,
+    0.704
+   ],
+   "area_share": 0.0338,
+   "mean_z": 0.934
+  }
+ },
+ "ranger": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.61,
+    0.529,
+    0.267
+   ],
+   "area_share": 0.178,
+   "mean_z": 1.207
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.704,
+    0.382,
+    0.151
+   ],
+   "area_share": 0.0697,
+   "mean_z": 1.039
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.415,
+    0.489,
+    0.177
+   ],
+   "area_share": 0.2588,
+   "mean_z": 1.143
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.425,
+    0.277,
+    0.166
+   ],
+   "area_share": 0.3818,
+   "mean_z": 0.798
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.877,
+    0.916,
+    0.953
+   ],
+   "area_share": 0.0066,
+   "mean_z": 0.847
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.862,
+    0.992,
+    0.421
+   ],
+   "area_share": 0.0012,
+   "mean_z": 0.81
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.239,
+    0.309,
+    0.101
+   ],
+   "area_share": 0.0006,
+   "mean_z": 0.848
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.802,
+    0.621,
+    0.481
+   ],
+   "area_share": 0.0261,
+   "mean_z": 1.596
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.953,
+    0.923,
+    0.822
+   ],
+   "area_share": 0.0047,
+   "mean_z": 1.546
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.953,
+    0.913,
+    0.762
+   ],
+   "area_share": 0.039,
+   "mean_z": 1.381
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.14,
+    0.16,
+    0.1
+   ],
+   "area_share": 0.002,
+   "mean_z": 1.632
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.194,
+    0.294,
+    0.146
+   ],
+   "area_share": 0.0317,
+   "mean_z": 1.658
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.461,
+    0.301,
+    0.18
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  }
+ },
+ "sorcerer": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.858,
+    0.171,
+    0.223
+   ],
+   "area_share": 0.0262,
+   "mean_z": 0.836
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.95,
+    0.67,
+    0.29
+   ],
+   "area_share": 0.0926,
+   "mean_z": 0.88
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.319,
+    0.223,
+    0.291
+   ],
+   "area_share": 0.2367,
+   "mean_z": 1.216
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.294,
+    0.184,
+    0.184
+   ],
+   "area_share": 0.0432,
+   "mean_z": 0.173
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.834,
+    0.854,
+    0.913
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.991,
+    0.66,
+    0.3
+   ],
+   "area_share": 0.0298,
+   "mean_z": 0.947
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.394,
+    0.132,
+    0.078
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.88,
+    0.68,
+    0.58
+   ],
+   "area_share": 0.0538,
+   "mean_z": 1.376
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.978,
+    0.93,
+    0.84
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.985,
+    0.92,
+    0.82
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.18,
+    0.12,
+    0.16
+   ],
+   "area_share": 0.2213,
+   "mean_z": 0.672
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.775,
+    0.161,
+    0.181
+   ],
+   "area_share": 0.2602,
+   "mean_z": 1.1
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.16,
+    0.1,
+    0.14
+   ],
+   "area_share": 0.0361,
+   "mean_z": 1.736
+  }
+ },
+ "warlock": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.385,
+    0.157,
+    0.485
+   ],
+   "area_share": 0.2014,
+   "mean_z": 1.193
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.876,
+    0.828,
+    0.936
+   ],
+   "area_share": 0.1118,
+   "mean_z": 1.052
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.386,
+    0.187,
+    0.484
+   ],
+   "area_share": 0.3546,
+   "mean_z": 0.933
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.274,
+    0.155,
+    0.274
+   ],
+   "area_share": 0.0621,
+   "mean_z": 0.491
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.831,
+    0.89,
+    0.813
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.619,
+    0.99,
+    0.339
+   ],
+   "area_share": 0.0062,
+   "mean_z": 1.001
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.145,
+    0.248,
+    0.09
+   ],
+   "area_share": 0.0099,
+   "mean_z": 0.562
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.719,
+    0.739,
+    0.679
+   ],
+   "area_share": 0.0308,
+   "mean_z": 1.57
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.959,
+    0.929,
+    0.859
+   ],
+   "area_share": 0.0059,
+   "mean_z": 1.223
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.968,
+    0.939,
+    0.984
+   ],
+   "area_share": 0.0274,
+   "mean_z": 1.653
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.2,
+    0.1,
+    0.26
+   ],
+   "area_share": 0.1528,
+   "mean_z": 0.644
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.26,
+    0.1,
+    0.339
+   ],
+   "area_share": 0.0249,
+   "mean_z": 0.84
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.3,
+    0.28,
+    0.301
+   ],
+   "area_share": 0.0119,
+   "mean_z": 0.84
+  }
+ },
+ "druid": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.512,
+    0.351,
+    0.187
+   ],
+   "area_share": 0.1107,
+   "mean_z": 0.728
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.924,
+    0.664,
+    0.231
+   ],
+   "area_share": 0.0572,
+   "mean_z": 0.898
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.389,
+    0.54,
+    0.204
+   ],
+   "area_share": 0.2561,
+   "mean_z": 1.02
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.374,
+    0.255,
+    0.144
+   ],
+   "area_share": 0.4109,
+   "mean_z": 0.877
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.838,
+    0.877,
+    0.8
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.992,
+    0.742,
+    0.221
+   ],
+   "area_share": 0.0037,
+   "mean_z": 1.374
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.355,
+    0.222,
+    0.065
+   ],
+   "area_share": 0.0008,
+   "mean_z": 1.137
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.803,
+    0.601,
+    0.441
+   ],
+   "area_share": 0.0424,
+   "mean_z": 1.371
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.953,
+    0.903,
+    0.762
+   ],
+   "area_share": 0.0073,
+   "mean_z": 0.942
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.783,
+    0.903,
+    0.461
+   ],
+   "area_share": 0.0259,
+   "mean_z": 1.354
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.16,
+    0.14,
+    0.08
+   ],
+   "area_share": 0.0011,
+   "mean_z": 1.625
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.542,
+    0.714,
+    0.276
+   ],
+   "area_share": 0.0439,
+   "mean_z": 1.131
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.501,
+    0.321,
+    0.17
+   ],
+   "area_share": 0.0399,
+   "mean_z": 1.592
+  }
+ },
+ "bard": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.743,
+    0.489,
+    0.254
+   ],
+   "area_share": 0.0403,
+   "mean_z": 0.947
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.941,
+    0.731,
+    0.3
+   ],
+   "area_share": 0.0862,
+   "mean_z": 1.0
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.604,
+    0.193,
+    0.292
+   ],
+   "area_share": 0.2195,
+   "mean_z": 1.209
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.423,
+    0.276,
+    0.184
+   ],
+   "area_share": 0.1268,
+   "mean_z": 0.764
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.893,
+    0.922,
+    0.966
+   ],
+   "area_share": 0.0068,
+   "mean_z": 0.883
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.991,
+    0.841,
+    0.42
+   ],
+   "area_share": 0.0018,
+   "mean_z": 1.184
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.373,
+    0.212,
+    0.095
+   ],
+   "area_share": 0.0008,
+   "mean_z": 0.876
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.861,
+    0.66,
+    0.52
+   ],
+   "area_share": 0.0394,
+   "mean_z": 1.588
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.97,
+    0.93,
+    0.821
+   ],
+   "area_share": 0.1287,
+   "mean_z": 1.255
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.978,
+    0.96,
+    0.901
+   ],
+   "area_share": 0.0084,
+   "mean_z": 1.741
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.14,
+    0.1,
+    0.14
+   ],
+   "area_share": 0.0015,
+   "mean_z": 1.625
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.157,
+    0.508,
+    0.478
+   ],
+   "area_share": 0.3021,
+   "mean_z": 0.927
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.58,
+    0.3,
+    0.16
+   ],
+   "area_share": 0.0377,
+   "mean_z": 1.566
+  }
+ },
+ "artificer": {
+  "plate": {
+   "index": 0,
+   "rgb": [
+    0.896,
+    0.666,
+    0.273
+   ],
+   "area_share": 0.1205,
+   "mean_z": 1.102
+  },
+  "trim": {
+   "index": 1,
+   "rgb": [
+    0.761,
+    0.39,
+    0.21
+   ],
+   "area_share": 0.1232,
+   "mean_z": 0.98
+  },
+  "cloth": {
+   "index": 2,
+   "rgb": [
+    0.453,
+    0.469,
+    0.52
+   ],
+   "area_share": 0.4288,
+   "mean_z": 0.916
+  },
+  "leather": {
+   "index": 3,
+   "rgb": [
+    0.606,
+    0.404,
+    0.239
+   ],
+   "area_share": 0.1668,
+   "mean_z": 0.83
+  },
+  "blade": {
+   "index": 4,
+   "rgb": [
+    0.815,
+    0.854,
+    0.913
+   ],
+   "area_share": 0.0127,
+   "mean_z": 0.896
+  },
+  "glow": {
+   "index": 5,
+   "rgb": [
+    0.45,
+    0.991,
+    0.991
+   ],
+   "area_share": 0.0104,
+   "mean_z": 1.011
+  },
+  "rune": {
+   "index": 6,
+   "rgb": [
+    0.121,
+    0.344,
+    0.375
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "skin": {
+   "index": 7,
+   "rgb": [
+    0.801,
+    0.62,
+    0.5
+   ],
+   "area_share": 0.0297,
+   "mean_z": 1.587
+  },
+  "bone": {
+   "index": 8,
+   "rgb": [
+    0.94,
+    0.9,
+    0.801
+   ],
+   "area_share": 0.0,
+   "mean_z": null
+  },
+  "accent": {
+   "index": 9,
+   "rgb": [
+    0.76,
+    0.9,
+    0.94
+   ],
+   "area_share": 0.003,
+   "mean_z": 1.516
+  },
+  "dark": {
+   "index": 10,
+   "rgb": [
+    0.17,
+    0.16,
+    0.19
+   ],
+   "area_share": 0.0749,
+   "mean_z": 1.037
+  },
+  "emblem": {
+   "index": 11,
+   "rgb": [
+    0.739,
+    0.38,
+    0.198
+   ],
+   "area_share": 0.012,
+   "mean_z": 1.46
+  },
+  "emblem2": {
+   "index": 12,
+   "rgb": [
+    0.6,
+    0.32,
+    0.18
+   ],
+   "area_share": 0.0179,
+   "mean_z": 1.694
+  }
+ }
+}
