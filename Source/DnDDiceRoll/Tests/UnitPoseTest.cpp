@@ -193,6 +193,13 @@ bool FUnitPoseChoiceTest::RunTest(const FString& Parameters)
     ExpectPose(*this, TEXT("wizard Fire Bolt, distant"), Basic(EAdventurerRole::Wizard, true), EUnitPose::Cast);
     ExpectPose(*this, TEXT("cleric Sacred Flame, distant"), Basic(EAdventurerRole::Cleric, true), EUnitPose::Cast);
     ExpectPose(*this, TEXT("cleric up close (a weapon)"), Basic(EAdventurerRole::Cleric, false), EUnitPose::Melee);
+    // The sorcerer, warlock and druid cast their basic attack from range (an ember bolt, an eldritch bolt, a thorn flame) and swing up close (#150 batch 3).
+    for (const EAdventurerRole Caster : {EAdventurerRole::Sorcerer, EAdventurerRole::Warlock, EAdventurerRole::Druid})
+    {
+        ExpectPose(*this, TEXT("a batch 3 caster, distant: a spell bolt"), Basic(Caster, true), EUnitPose::Cast);
+        ExpectPose(*this, TEXT("a batch 3 caster, adjacent: a weapon"), Basic(Caster, false), EUnitPose::Melee);
+    }
+    ExpectPose(*this, TEXT("ranger, distant: still an arrow"), Basic(EAdventurerRole::Ranger, true), EUnitPose::Ranged);
     ExpectPose(*this, TEXT("fighter, adjacent"), Basic(EAdventurerRole::Fighter, false), EUnitPose::Melee);
     ExpectPose(*this, TEXT("rogue, distant"), Basic(EAdventurerRole::Rogue, true), EUnitPose::Ranged);
     ExpectPose(*this, TEXT("an enemy, distant"), Basic(EAdventurerRole::None, true), EUnitPose::Ranged);
@@ -2060,8 +2067,10 @@ bool FCastBatch3MappingTest::RunTest(const FString& Parameters)
             }
         }
         TestTrue(FString::Printf(TEXT("%s: the catalog has its builds and abilities (%d builds, %d abilities)"), Class.Who, Builds, Abilities), Builds >= 4 && Abilities >= 8);
-        // The class's weapon attack: a swing up close, a shot at range, never a spell (only the wizard, and the cleric at range, cast their basic attack).
-        TestFalse(FString::Printf(TEXT("%s's basic attack is not a spell"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, false) || ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, true));
+        // The class's basic attack: a spell bolt from range (Cast), a weapon swing up close (Melee); Precision Strike is never a spell.
+        TestTrue(FString::Printf(TEXT("%s's ranged basic attack is a spell"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, true));
+        TestFalse(FString::Printf(TEXT("%s's adjacent basic attack is a weapon"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::Attack, Class.Role, false));
+        TestFalse(FString::Printf(TEXT("%s's Precision Strike is never a spell"), Class.Who), ExpeditionPose::IsSpellAttack(ECombatCommandType::PrecisionStrike, Class.Role, true));
     }
     return !HasAnyErrors();
 }
@@ -2087,7 +2096,7 @@ bool FCastBatch3PlaybackTest::RunTest(const FString& Parameters)
         TestTrue(Who + TEXT(": ") + Class.SpellAbility + TEXT(" is a damaging spell"), Spell->bSpell && Spell->Target == EAbilityTarget::Enemy);
         TestTrue(Who + TEXT(": ") + Class.WardAbility + TEXT(" is a spell with no enemy target"), Ward->bSpell && Ward->Target != EAbilityTarget::Enemy);
 
-        // The basic attack is a weapon: a swing up close, a shot (an arrow) from range.
+        // The basic attack: a weapon swing up close, a spell bolt (the Cast clip) from range.
         for (const int32 FoeX : {3, 7})
         {
             const bool bFar = FoeX == 7;
@@ -2099,8 +2108,10 @@ bool FCastBatch3PlaybackTest::RunTest(const FString& Parameters)
             Strike.Damage = 3;
             PlayAtEveryEnding(*this, FString::Printf(TEXT("%s attacks %s"), *Who, bFar ? TEXT("at range") : TEXT("up close")), S, Strike, [&](const FString& Label, const FSeen& Seen)
             {
-                TestTrue(Label + (bFar ? TEXT(": a ranged clip") : TEXT(": a melee clip")), Seen.Saw(S.Hero, bFar ? EUnitPose::Ranged : EUnitPose::Melee));
-                TestFalse(Label + TEXT(": never a cast or a brace"), Seen.Saw(S.Hero, EUnitPose::Cast) || Seen.Saw(S.Hero, EUnitPose::Brace));
+                TestTrue(Label + (bFar ? TEXT(": a cast") : TEXT(": a melee clip")), Seen.Saw(S.Hero, bFar ? EUnitPose::Cast : EUnitPose::Melee));
+                TestFalse(Label + (bFar ? TEXT(": no weapon clip, no brace") : TEXT(": no cast, no shot, no brace")),
+                    bFar ? (Seen.Saw(S.Hero, EUnitPose::Melee) || Seen.Saw(S.Hero, EUnitPose::Ranged) || Seen.Saw(S.Hero, EUnitPose::Brace))
+                         : (Seen.Saw(S.Hero, EUnitPose::Cast) || Seen.Saw(S.Hero, EUnitPose::Ranged) || Seen.Saw(S.Hero, EUnitPose::Brace)));
                 TestTrue(Label + TEXT(": the target flinches"), Seen.Saw(S.Foe, EUnitPose::Hit));
             });
         }
@@ -2319,6 +2330,91 @@ bool FCastBatch3FallenTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+// A caster's basic attack (#150 batch 3, the lead's call): the cleric and the sorcerer, warlock and druid cast a spell bolt from range in their own colour,
+// with the Cast clip, and swing a weapon up close (Melee, no bolt at all); the ranger, rogue and a foe archer still loose a lightless arrow. Presentation
+// only: the mapping is by class (ExpeditionPose::IsSpellAttack), nothing in the catalog, rules, save or RNG changes.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCasterBasicAttackTest, "Project.Expedition.Presentation.CasterBasicAttacks",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FCasterBasicAttackTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatchPlayback;
+    struct FCase { const TCHAR* Name; EAdventurerRole Role; bool bFoeShoots; bool bBolt; };
+    const FCase Cases[] = {
+        {TEXT("sorcerer"), EAdventurerRole::Sorcerer, false, true},
+        {TEXT("warlock"), EAdventurerRole::Warlock, false, true},
+        {TEXT("druid"), EAdventurerRole::Druid, false, true},
+        {TEXT("cleric"), EAdventurerRole::Cleric, false, true},
+        {TEXT("ranger"), EAdventurerRole::Ranger, false, false},
+        {TEXT("rogue"), EAdventurerRole::Rogue, false, false},
+        {TEXT("foe archer"), EAdventurerRole::None, true, false},
+    };
+    TArray<FLinearColor> BoltColours;
+    for (const FCase& Case : Cases)
+    {
+        for (const bool bFar : {false, true})
+        {
+            FPoseScene S;
+            const FString Who = FString::Printf(TEXT("%s %s"), Case.Name, bFar ? TEXT("at range") : TEXT("up close"));
+            if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, bFar ? 7 : 3))) { return false; }
+            S.Unit(S.Before, S.Hero)->AdventurerRole = Case.Role;
+            const int32 Shooter = Case.bFoeShoots ? S.Foe : S.Hero, Struck = Case.bFoeShoots ? S.Hero : S.Foe;
+            S.After = S.Before;
+            S.Unit(S.After, Struck)->HP = S.Unit(S.Before, Struck)->HP - 2;
+            FCombatResult Shot = MakeResult(ECombatCommandType::Attack, Shooter, Struck);
+            Shot.bHit = true;
+            Shot.Damage = 2;
+            FExpeditionPlayback Show;
+            Show.Reset(S.Before);
+            Show.Enqueue({Shot}, S.After);
+            bool bCast = false, bMelee = false, bRanged = false, bBolt = false, bArrow = false;
+            FLinearColor Colour = FLinearColor::Black;
+            for (int32 Frame = 0; Frame < 1200 && Show.IsBusy(); ++Frame)
+            {
+                Show.Tick(0.016f);
+                if (const FUnitDisplay* Unit = Show.Unit(Shooter))
+                {
+                    bCast |= Unit->Pose == EUnitPose::Cast;
+                    bMelee |= Unit->Pose == EUnitPose::Melee;
+                    bRanged |= Unit->Pose == EUnitPose::Ranged;
+                }
+                for (const FPlaybackProjectile& Live : Show.Projectiles())
+                {
+                    if (Live.Age < 0.0f) { continue; }
+                    (Live.bArrow ? bArrow : bBolt) = true;
+                    if (!Live.bArrow) { Colour = Live.Color; }
+                }
+            }
+            if (!bFar)
+            {
+                TestTrue(Who + TEXT(": a weapon swing"), bMelee && !bCast && !bRanged);
+                TestFalse(Who + TEXT(": nothing is thrown"), bBolt || bArrow);
+            }
+            else if (Case.bBolt)
+            {
+                TestTrue(Who + TEXT(": the Cast clip"), bCast && !bMelee && !bRanged);
+                TestTrue(Who + TEXT(": a spell bolt, never an arrow"), bBolt && !bArrow);
+                BoltColours.Add(Colour);
+                TestTrue(Who + TEXT(": the bolt has the class tint"), Colour.Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Case.Role, false).Color, 0.001f));
+            }
+            else
+            {
+                TestTrue(Who + TEXT(": the Ranged clip"), bRanged && !bCast && !bMelee);
+                TestTrue(Who + TEXT(": a lightless arrow, never a spell bolt"), bArrow && !bBolt);
+            }
+            ExpectConverged(*this, Who + TEXT(" after the attack"), Show, S.After);
+        }
+    }
+    // Each caster's bolt is its own colour, and none is the arrow's pale colour.
+    TestEqual(TEXT("Four caster bolt colours were seen"), BoltColours.Num(), 4);
+    for (int32 A = 0; A < BoltColours.Num(); ++A)
+    {
+        for (int32 B = A + 1; B < BoltColours.Num(); ++B) { TestFalse(FString::Printf(TEXT("Bolt colours %d and %d differ"), A, B), BoltColours[A].Equals(BoltColours[B], 0.05f)); }
+        TestFalse(TEXT("A caster's bolt is not the arrow colour"), BoltColours[A].Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).Color, 0.05f));
+    }
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRangedReleaseArrowTest, "Project.Expedition.Presentation.RangedReleaseArrows",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
@@ -2330,9 +2426,9 @@ bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
         {TEXT("ranger"), TEXT("ranger.hunter"), EAdventurerRole::Ranger, false, true},
         {TEXT("rogue"), nullptr, EAdventurerRole::Rogue, false, true},
         {TEXT("foe archer"), nullptr, EAdventurerRole::None, true, true},
-        {TEXT("sorcerer (a caster's weapon attack is an arrow)"), nullptr, EAdventurerRole::Sorcerer, false, true},
-        {TEXT("warlock (a caster's weapon attack is an arrow)"), nullptr, EAdventurerRole::Warlock, false, true},
-        {TEXT("druid (a caster's weapon attack is an arrow)"), nullptr, EAdventurerRole::Druid, false, true},
+        {TEXT("sorcerer (an ember bolt)"), nullptr, EAdventurerRole::Sorcerer, false, false},
+        {TEXT("warlock (an eldritch bolt)"), nullptr, EAdventurerRole::Warlock, false, false},
+        {TEXT("druid (a thorn flame)"), nullptr, EAdventurerRole::Druid, false, false},
         {TEXT("wizard (a spell bolt)"), nullptr, EAdventurerRole::Wizard, false, false},
         {TEXT("cleric (a spell bolt)"), nullptr, EAdventurerRole::Cleric, false, false},
     };

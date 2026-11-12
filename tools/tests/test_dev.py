@@ -429,7 +429,7 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-poses.json")), 49)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/ranged-release-poses.json")), 22)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/spell-release-poses.json")), 11)
-        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 19)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 28)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},

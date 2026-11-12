@@ -172,6 +172,87 @@
       "phase": "release",
       "yaw": 0,
       "distance": "default"
+    },
+    {
+      "name": "spell-flight-sorcerer-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-sorcerer-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-sorcerer-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "spell-flight-warlock-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-warlock-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-warlock-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "spell-flight-druid-yaw000-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-druid-yaw090-default",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "flight",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "spell-flight-druid-yaw000-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
     }
   ]
 }

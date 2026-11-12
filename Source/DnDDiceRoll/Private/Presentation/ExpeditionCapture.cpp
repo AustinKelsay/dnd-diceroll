@@ -506,6 +506,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
                 Pending.ShooterId = Shooter->Id;
                 Pending.ShooterName = Shooter->Name;
                 Pending.ShooterCell = Shooter->Cell;
+                Pending.ShooterRole = Shooter->AdventurerRole;
                 Pending.ImpactFrom = FVector2D(Shooter->Cell.X, Shooter->Cell.Y);
             }
             return true;
@@ -659,7 +660,7 @@ void FExpeditionCaptureDirector::Tick()
             // The hit lands Frames frames before the screenshot, once the pose has settled; its flash is held at the peak from then on (#189).
             if (!Pending.bImpactFired && StageFrames >= Poses.SettleFrames - Pending.Shot.Frames)
             {
-                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment);
+                Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment, Pending.ShooterRole);
                 if (Pending.ShooterId != INDEX_NONE)
                 {
                     // The shooter in its clip at the moment: an arrow or a Ranger's old bolt in Ranged, a spell bolt in Cast, at the release frame and then a little

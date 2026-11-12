@@ -844,10 +844,10 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     UpdateCamera(0.0f);
 }
 
-void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment, EAdventurerRole Shooter)
 {
     ImpactTargetId = TargetId;
-    Show.PreviewImpact(TargetId, Effect, From, Moment);
+    Show.PreviewImpact(TargetId, Effect, From, Moment, Shooter);
 }
 
 void AExpeditionBattleView::ClearImpactPreview()

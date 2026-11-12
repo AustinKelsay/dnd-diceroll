@@ -28,7 +28,10 @@ EUnitPose Rest(ECombatLife Life)
 
 bool IsSpellAttack(ECombatCommandType Type, EAdventurerRole Role, bool bRanged)
 {
-    return Type == ECombatCommandType::Attack && (Role == EAdventurerRole::Wizard || (Role == EAdventurerRole::Cleric && bRanged));
+    // The wizard's basic attack is Fire Bolt at any distance. The cleric (Sacred Flame) and the three batch 3 casters (#150: the sorcerer's ember bolt, the
+    // warlock's eldritch bolt, the druid's thorn flame) cast it from range and swing a weapon up close.
+    const bool bCasterAtRange = bRanged && (Role == EAdventurerRole::Cleric || Role == EAdventurerRole::Sorcerer || Role == EAdventurerRole::Warlock || Role == EAdventurerRole::Druid);
+    return Type == ECombatCommandType::Attack && (Role == EAdventurerRole::Wizard || bCasterAtRange);
 }
 
 EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool bSpellAttack)

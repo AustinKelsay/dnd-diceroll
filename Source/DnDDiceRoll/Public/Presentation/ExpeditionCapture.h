@@ -125,6 +125,7 @@ private:
         FString ShooterName;
         /** The shooter's own cell (the manifest records it as shooter.cellX/cellY, so a shooter result is not reported at the target's cell) and its class. */
         FIntPoint ShooterCell = FIntPoint::ZeroValue;
+        EAdventurerRole ShooterRole = EAdventurerRole::None;
         bool bHasShooterBox = false;
         FIntRect ShooterBox;
         bool bImpactFired = false;

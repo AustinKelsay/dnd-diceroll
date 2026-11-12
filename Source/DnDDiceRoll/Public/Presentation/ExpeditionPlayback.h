@@ -144,7 +144,7 @@ public:
      * (a cell), aged to Moment. Only Landing shows the hit; the other moments show bolts alone (no flash, flinch or text).
      * Presentation only: no hit points change. HoldImpact keeps the moment on screen; ReleaseImpact lets it go.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing, EAdventurerRole Shooter = EAdventurerRole::None);
 
     /** Seconds a Magic Missile bolt takes to arrive, and the delay between its three bolts (production and preview share these). */
     static constexpr float MissileFlight = 0.38f;

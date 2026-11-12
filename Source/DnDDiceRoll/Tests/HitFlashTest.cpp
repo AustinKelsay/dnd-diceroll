@@ -219,6 +219,35 @@ bool FHitFlashBoltLightTest::RunTest(const FString& Parameters)
                 TestEqual(TEXT("Only the first bolt has left at release"), Left, 1);
                 View->ClearImpactPreview();
             }
+            // The batch 3 casters' basic attack bolts (#150): the same light, ramped in the same way, in each class's own tint; the shooter named, as a real attack throws it.
+            TArray<FLinearColor> Tints;
+            for (const EAdventurerRole Caster : {EAdventurerRole::Wizard, EAdventurerRole::Cleric, EAdventurerRole::Sorcerer, EAdventurerRole::Warlock, EAdventurerRole::Druid})
+            {
+                for (const EImpactMoment Moment : {EImpactMoment::Release, EImpactMoment::Flight})
+                {
+                    View->ClearImpactPreview();
+                    View->PreviewImpact(TargetId, EImpactPreview::Spell, From, Moment, Caster);
+                    View->Tick(0.016f);
+                    const TArray<FPlaybackProjectile>& Live = View->Playback().Projectiles();
+                    float Light = 0.0f;
+                    for (const float Each : View->BoltLightIntensities()) { Light += Each; }
+                    if (!TestEqual(FString::Printf(TEXT("%d at moment %d: one bolt"), static_cast<int32>(Caster), static_cast<int32>(Moment)), Live.Num(), 1)) { continue; }
+                    TestFalse(TEXT("A caster's attack is a bolt, not an arrow"), Live[0].bArrow);
+                    TestTrue(TEXT("It carries its class tint"), Live[0].Color.Equals(FExpeditionPlayback::RangedBolt(From, From, Caster, false).Color, 0.001f));
+                    const float Expected = ExpeditionFlash::BoltLight(1, Live[0].Age / Live[0].Duration);
+                    TestTrue(FString::Printf(TEXT("Its light is %.2f cd, expected %.2f"), Light, Expected), FMath::IsNearlyEqual(Light, Expected, 0.01f));
+                    if (Moment == EImpactMoment::Release)
+                    {
+                        TestTrue(TEXT("At release it is a fifth of the flight light at most"), Light <= 0.2f * ExpeditionFlash::BoltLightCandelas + 0.01f);
+                        Tints.Add(Live[0].Color);
+                    }
+                    else { TestTrue(TEXT("In flight it is the full flight light"), FMath::IsNearlyEqual(Light, ExpeditionFlash::BoltLightCandelas, 0.01f)); }
+                }
+            }
+            TestEqual(TEXT("Five caster tints"), Tints.Num(), 5);
+            for (int32 A = 0; A < Tints.Num(); ++A)
+            { for (int32 B = A + 1; B < Tints.Num(); ++B) { TestFalse(FString::Printf(TEXT("Tints %d and %d differ"), A, B), Tints[A].Equals(Tints[B], 0.05f)); } }
+            View->ClearImpactPreview();
             TestTrue(TEXT("The light is nothing at the caster"), ExpeditionFlash::BoltLight(1, 0.0f) == 0.0f);
             TestTrue(TEXT("The light is at its full flight value by the end of the ramp"), FMath::IsNearlyEqual(ExpeditionFlash::BoltLight(1, ExpeditionFlash::BoltRampEnd), ExpeditionFlash::BoltLightCandelas, 0.01f));
             float Previous = -1.0f;
@@ -253,6 +282,18 @@ bool FHitFlashVolleyTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The arcs spread to both sides"), Volley[0].Arc * Volley[2].Arc < 0.0f);
     const FPlaybackProjectile Bolt = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Cleric, false);
     TestTrue(TEXT("A Cleric's bolt is gold"), Bolt.Color.R > Bolt.Color.G && Bolt.Color.G > Bolt.Color.B && !Bolt.bArrow);
+    for (const EAdventurerRole Caster : {EAdventurerRole::Sorcerer, EAdventurerRole::Warlock, EAdventurerRole::Druid})
+    {
+        const FPlaybackProjectile CasterBolt = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Caster, false);
+        TestFalse(TEXT("A batch 3 caster's bolt is not an arrow"), CasterBolt.bArrow);
+        TestFalse(TEXT("and not the pale arrow tint"), CasterBolt.Color.Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Ranger, false).Color, 0.05f));
+    }
+    const FPlaybackProjectile Ember = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Sorcerer, false);
+    const FPlaybackProjectile Eldritch = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Warlock, false);
+    const FPlaybackProjectile Thorn = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Druid, false);
+    TestTrue(TEXT("The Sorcerer's bolt is ember red"), Ember.Color.R > 0.9f && Ember.Color.G < 0.4f && Ember.Color.B < 0.3f);
+    TestTrue(TEXT("The Warlock's bolt is eldritch green"), Eldritch.Color.G > 0.9f && Eldritch.Color.R < 0.7f && Eldritch.Color.B < 0.5f);
+    TestTrue(TEXT("The Druid's bolt is leaf gold"), Thorn.Color.G > 0.9f && Thorn.Color.R > 0.6f && Thorn.Color.B < 0.4f);
     TestTrue(TEXT("A rogue's arrow is an arrow"), FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).bArrow);
     return !HasAnyErrors();
 }

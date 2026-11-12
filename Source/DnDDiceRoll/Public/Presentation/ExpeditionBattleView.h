@@ -351,7 +351,7 @@ public:
      * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
      * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing, EAdventurerRole Shooter = EAdventurerRole::None);
     void ClearImpactPreview();
     /**
      * Capture support (#150): holds a rigged figure in a clip at a time (seconds, clamped to the clip) with no command and no rules
