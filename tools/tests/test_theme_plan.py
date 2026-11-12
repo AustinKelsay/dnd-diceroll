@@ -93,7 +93,7 @@ class ThemePlanTests(unittest.TestCase):
         # The Root world joined the allow-list in #149; nothing else did.
         self.assertEqual(theme_plan.requested_replacements("world-root"), {"world-root"})
         self.assertEqual(theme_plan.requested_replacements("world-vigil,world-root"), {"world-vigil", "world-root"})
-        self.assertEqual(theme_plan.requested_replacements("all"), set(theme_plan.REPLACEABLE) | set(theme_plan.ROOT_REPLACEABLE))
+        self.assertEqual(theme_plan.requested_replacements("all"), set(theme_plan.REPLACEABLE) | set(theme_plan.ROOT_REPLACEABLE) | set(theme_plan.ROSE_REPLACEABLE))
         for bad in ("prop-pillar-b", "hero-fighter", "prop-root-pillar", "world-root-occluders", "tile-root", "world-vigil,tabletop"):
             with self.assertRaises(ValueError, msg=bad):
                 theme_plan.requested_replacements(bad)
@@ -328,9 +328,10 @@ class RootKitPlanTests(unittest.TestCase):
         self.assertIn("set_material_instance_vector_parameter_value(instance, \"Color\", wanted)", text)
 
     def test_kit_tags_are_distinct_and_the_script_writes_the_kits_own(self):
-        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002", "vault-kit-r002"))
+        self.assertEqual(theme_plan.KIT_TAGS, ("vigil-kit-r002", "root-kit-r002", "vault-kit-r002", "overview-r002", "vigil-kit-r002-rose"))
         text = SCRIPT.read_text()
-        self.assertIn('library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, kit["tag"])', text)
+        self.assertIn('library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, row_tag)', text)
+        self.assertIn('row_tag = theme_plan.ROW_TAGS.get(asset_id, kit["tag"])', text)
         # The r001 pass must not reset a replaced Root world: any kit tag counts.
         self.assertIn("def kit_tagged(mesh, tag=None):", text)
 
@@ -466,3 +467,72 @@ class VaultKitPlanTests(unittest.TestCase):
         self.assertIn("Theme->KitFor(EDiceRollKit::Vigil)", view)
         theme = (ROOT / "Source" / "DnDDiceRoll" / "Private" / "Presentation" / "DiceRollTheme.cpp").read_text()
         self.assertIn("if (Kind == EDiceRollKit::Vault && !VaultKitComplete()) { Kind = EDiceRollKit::Vigil; }", theme)
+
+
+class OverviewPlanTests(unittest.TestCase):
+    """The overview set r002 (#149, the last part): the war table and three dioramas as a fourth kit, and the Vigil occluders with the high-resolution rose."""
+
+    def test_every_overview_row_matches_its_asset_record_and_replaces_nothing(self):
+        old = r001_packages()
+        pointers = []
+        for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.OVERVIEW_R002:
+            record = json.loads((ROOT / "Art" / asset_id / ("r%03d" % revision) / "asset.json").read_text())
+            self.assertEqual((record["asset_id"], record["revision"]), (asset_id, revision))
+            self.assertEqual(record["unreal_package"], theme_plan.package_path(folder, name), asset_id)
+            self.assertNotIn(theme_plan.package_path(folder, name), old, "the r001 table and dioramas stay as the fallback")
+            export = [entry for entry in record["files"] if entry["role"] == "export"]
+            self.assertEqual(len(export), 1)
+            source = theme_plan.export_path(asset_id, revision, name)
+            self.assertEqual(Path(source), ROOT / export[0]["path"], asset_id)
+            if is_lfs_pointer(source):
+                pointers.append(asset_id)
+            else:
+                self.assertEqual(theme_plan.sha256_file(source), export[0]["sha256"], asset_id)
+            self.assertEqual(kind, theme_plan.LIT)
+            self.assertEqual(theme_plan.record_lods(asset_id, revision), [], "one low-count mesh: no LODs")
+            self.assertIsNone(index)
+        self.assertEqual(len(theme_plan.OVERVIEW_R002), 4)
+        ids = [row[0] for row in theme_plan.OVERVIEW_R002]
+        self.assertFalse(set(ids) & set(theme_plan.ALL_REPLACEABLE))
+        self.assertEqual(set(theme_plan.OVERVIEW_METRIC_GATE), set(ids))
+        taken = {row[0] for row in theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002}
+        self.assertFalse(taken & set(ids))
+        packages = [theme_plan.package_path(row[3], row[2]) for row in theme_plan.R002 + theme_plan.ROOT_R002 + theme_plan.VAULT_R002 + theme_plan.OVERVIEW_R002]
+        self.assertEqual(len(packages), len(set(packages)))
+        if pointers:
+            self.skipTest("LFS pointers, not hydrated exports (skipped the content hash of %d): git lfs pull to run it" % len(pointers))
+
+    def test_overview_properties_exist_in_the_theme_and_the_script_runs_the_kit(self):
+        header = (ROOT / "Source" / "DnDDiceRoll" / "Public" / "Presentation" / "DiceRollTheme.h").read_text()
+        for row in theme_plan.OVERVIEW_R002:
+            self.assertIn(pascal(row[5]), header)
+        self.assertIn("bOverviewR002", header)
+        text = SCRIPT.read_text()
+        self.assertIn('"flag": "overview_r002"', text)
+        self.assertIn("theme_plan.OVERVIEW_R002", text)
+        self.assertIn("THEME_OVERVIEW_COMPLETE", text)
+        self.assertEqual(theme_plan.OVERVIEW_TAG, "overview-r002")
+
+    def test_the_vigil_rose_replace_is_allow_listed_tagged_and_matches_its_record(self):
+        self.assertEqual(set(theme_plan.ROSE_REPLACEABLE), {"world-vigil-occluders"})
+        self.assertEqual(theme_plan.requested_replacements("world-vigil-occluders"), {"world-vigil-occluders"})
+        # It is not part of the world's metric gate (that stays the four r001 packages) and it is a revision of a package that already exists.
+        self.assertNotIn("world-vigil-occluders", theme_plan.METRIC_GATE)
+        self.assertEqual(theme_plan.ROW_TAGS, {"world-vigil-occluders": theme_plan.ROSE_TAG})
+        self.assertIn(theme_plan.ROSE_TAG, theme_plan.KIT_TAGS)
+        row = next(row for row in theme_plan.R002 if row[0] == "world-vigil-occluders")
+        self.assertEqual(row[1], 2)
+        record = json.loads((ROOT / "Art" / "world-vigil-occluders" / "r002" / "asset.json").read_text())
+        self.assertEqual(record["revision"], 2)
+        self.assertEqual(record["unreal_package"], theme_plan.package_path(row[3], row[2]))
+        self.assertEqual([entry[0] for entry in theme_plan.record_lods("world-vigil-occluders", 2)], [1, 2])
+        source = theme_plan.export_path("world-vigil-occluders", 2, row[2])
+        if is_lfs_pointer(source):
+            self.skipTest("LFS pointer, not the hydrated export: git lfs pull to run it")
+        # The atlas it embeds is the 4096 x 2048 one with the rose, and nothing else about the file's contract moved.
+        header, binary = theme_plan.read_glb(source)
+        view = header["bufferViews"][header["images"][0]["bufferView"]]
+        png = binary[view.get("byteOffset", 0):view.get("byteOffset", 0) + view["byteLength"]]
+        self.assertEqual(int.from_bytes(png[16:20], "big"), 4096)
+        self.assertEqual(int.from_bytes(png[20:24], "big"), 2048)
+        self.assertTrue(theme_plan.has_alpha_mask(source))

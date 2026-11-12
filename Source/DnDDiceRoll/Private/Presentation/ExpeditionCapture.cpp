@@ -98,6 +98,8 @@ const TCHAR* ExpeditionCapture::EffectName(EImpactPreview Effect)
     case EImpactPreview::Spell: return TEXT("spell");
     case EImpactPreview::Fire: return TEXT("fire");
     case EImpactPreview::Missile: return TEXT("missile");
+    case EImpactPreview::Arrow: return TEXT("arrow");
+    case EImpactPreview::Bolt: return TEXT("bolt");
     case EImpactPreview::Hit: return TEXT("hit");
     }
     return TEXT("hit");
@@ -108,6 +110,7 @@ const TCHAR* ExpeditionCapture::PhaseName(EImpactMoment Moment)
     switch (Moment)
     {
     case EImpactMoment::Flight: return TEXT("flight");
+    case EImpactMoment::Release: return TEXT("release");
     case EImpactMoment::FirstLanding: return TEXT("landing-first");
     case EImpactMoment::SecondLanding: return TEXT("landing-second");
     case EImpactMoment::Landing: return TEXT("landing");
@@ -202,7 +205,9 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
                 else if (Effect == TEXT("spell")) { Shot.Effect = EImpactPreview::Spell; }
                 else if (Effect == TEXT("fire")) { Shot.Effect = EImpactPreview::Fire; }
                 else if (Effect == TEXT("missile")) { Shot.Effect = EImpactPreview::Missile; }
-                else { Error = Shot.Name + TEXT(" needs an \"effect\" of \"hit\", \"spell\", \"fire\" or \"missile\""); return false; }
+                else if (Effect == TEXT("arrow")) { Shot.Effect = EImpactPreview::Arrow; }
+                else if (Effect == TEXT("bolt")) { Shot.Effect = EImpactPreview::Bolt; }
+                else { Error = Shot.Name + TEXT(" needs an \"effect\" of \"hit\", \"spell\", \"fire\", \"missile\", \"arrow\" or \"bolt\""); return false; }
             }
             if ((*Entry)->HasField(TEXT("phase")))
             {
@@ -212,10 +217,19 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
                 else if (Phase == TEXT("flight")) { Shot.Moment = EImpactMoment::Flight; }
                 else if (Phase == TEXT("landing-first")) { Shot.Moment = EImpactMoment::FirstLanding; }
                 else if (Phase == TEXT("landing-second")) { Shot.Moment = EImpactMoment::SecondLanding; }
-                else { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\", \"flight\", \"landing-first\" or \"landing-second\""); return false; }
-                if (Shot.Moment != EImpactMoment::Landing && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" has a bolt phase but no bolt (\"effect\" spell, fire or missile)"); return false; }
+                else if (Phase == TEXT("release")) { Shot.Moment = EImpactMoment::Release; }
+                else { Error = Shot.Name + TEXT(" needs a \"phase\" of \"landing\", \"flight\", \"release\", \"landing-first\" or \"landing-second\""); return false; }
+                if (Shot.Moment != EImpactMoment::Landing && Shot.Effect == EImpactPreview::Hit) { Error = Shot.Name + TEXT(" has a bolt phase but no bolt (\"effect\" spell, fire, missile, arrow or bolt)"); return false; }
+                if (Shot.Moment == EImpactMoment::Release && Shot.Effect != EImpactPreview::Arrow && Shot.Effect != EImpactPreview::Bolt)
+                { Error = Shot.Name + TEXT(" shows a release, which only \"effect\" arrow and bolt have"); return false; }
                 if ((Shot.Moment == EImpactMoment::FirstLanding || Shot.Moment == EImpactMoment::SecondLanding) && Shot.Effect != EImpactPreview::Missile)
                 { Error = Shot.Name + TEXT(" lands a first or second bolt, which only \"effect\" missile has"); return false; }
+            }
+            if ((*Entry)->HasField(TEXT("role")))
+            {
+                // The shooter (#198): a party hero of this class, held in its Ranged clip at the shot's moment; the shot's subject is that hero.
+                if (!(*Entry)->TryGetStringField(TEXT("role"), Shot.Role) || !ValidName(Shot.Role)) { Error = Shot.Name + TEXT(" needs a \"role\" (a class name such as Ranger)"); return false; }
+                if (Shot.Effect != EImpactPreview::Arrow && Shot.Effect != EImpactPreview::Bolt) { Error = Shot.Name + TEXT(" names a shooter, which only \"effect\" arrow and bolt have"); return false; }
             }
             if ((*Entry)->HasField(TEXT("frames")))
             {
@@ -259,6 +273,17 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             else if (Distance.IsValid() && Distance->TryGetString(Word) && Word.Equals(TEXT("far"), ESearchCase::CaseSensitive)) { Shot.Distance = FarDistance; }
             else if (Distance.IsValid() && Distance->Type == EJson::Number && Distance->TryGetNumber(Number) && Number >= MinDistance && Number <= MaxDistance) { Shot.Distance = static_cast<float>(Number); }
             else { Error = FString::Printf(TEXT("%s needs a \"distance\" of \"default\", \"far\" or a number from %.0f to %.0f"), *Shot.Name, MinDistance, MaxDistance); return false; }
+            // Optional "pan": {"right": cm, "away": cm}: the view pans after the camera is placed (the pan bound still applies), so a shot can show a pan stop.
+            const TSharedPtr<FJsonObject>* PanObject = nullptr;
+            if ((*Entry)->TryGetObjectField(TEXT("pan"), PanObject) && PanObject)
+            {
+                double Right = 0.0, Away = 0.0;
+                if (!(*PanObject)->TryGetNumberField(TEXT("right"), Right) || !(*PanObject)->TryGetNumberField(TEXT("away"), Away) || FMath::Abs(Right) > 100000.0 || FMath::Abs(Away) > 100000.0)
+                { Error = Shot.Name + TEXT(" needs a \"pan\" with numeric \"right\" and \"away\" within 100000"); return false; }
+                Shot.bHasPan = true;
+                Shot.Pan = FVector2D(Right, Away);
+            }
+            else if ((*Entry)->HasField(TEXT("pan"))) { Error = Shot.Name + TEXT(" has a \"pan\" that is not an object"); return false; }
         }
         if (Shot.Mode == ECaptureMode::Impact && Shot.Frames > Out.SettleFrames)
         { Error = FString::Printf(TEXT("%s has \"frames\" %d beyond settleFrames %d"), *Shot.Name, Shot.Frames, Out.SettleFrames); return false; }
@@ -429,6 +454,7 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         // Default is the play default at that yaw: figure-sized (88 px at 1080), or the whole-board fit where that is closer (#148 gate 2). Far is the end of the pitch ramp (FarStop of the home fit), never nearer than the whole-board fit at that yaw, which can exceed it on a wide board.
         const float Wanted = Shot.Distance == ExpeditionCapture::FarDistance ? Board->FarFramedDistance(Shot.Yaw) : Shot.Distance > 0.0f ? Shot.Distance : Board->FramedDistance(Shot.Yaw);
         Board->SnapCamera(Shot.Yaw, Wanted);
+        if (Shot.bHasPan) { Board->Pan(static_cast<float>(Shot.Pan.X), static_cast<float>(Shot.Pan.Y)); }
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
@@ -460,6 +486,27 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
             Pending.TargetName = Struck->Name;
             Pending.TargetCell = Struck->Cell;
             Pending.ImpactFrom = FVector2D(Holder->Cell.X, Holder->Cell.Y);
+            if (!Shot.Role.IsEmpty())
+            {
+                // A named shooter instead of whoever holds the turn: the party hero of that class, against the nearest standing foe.
+                const FCombatantState* Shooter = nullptr;
+                for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
+                { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Shooter = &Unit; break; } }
+                if (!Shooter) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+                Struck = nullptr; Nearest = MAX_int32;
+                for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
+                {
+                    const int32 Distance = FMath::Abs(Unit.Cell.X - Shooter->Cell.X) + FMath::Abs(Unit.Cell.Y - Shooter->Cell.Y);
+                    if (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
+                }
+                if (!Struck) { Skip = TEXT("no standing opponent to strike"); return false; }
+                Pending.TargetId = Struck->Id;
+                Pending.TargetName = Struck->Name;
+                Pending.TargetCell = Struck->Cell;
+                Pending.ShooterId = Shooter->Id;
+                Pending.ShooterName = Shooter->Name;
+                Pending.ImpactFrom = FVector2D(Shooter->Cell.X, Shooter->Cell.Y);
+            }
             return true;
         }
         if (Shot.Mode == ECaptureMode::Roll)
@@ -612,6 +659,13 @@ void FExpeditionCaptureDirector::Tick()
             if (!Pending.bImpactFired && StageFrames >= Poses.SettleFrames - Pending.Shot.Frames)
             {
                 Board->PreviewImpact(Pending.TargetId, Pending.Shot.Effect, Pending.ImpactFrom, Pending.Shot.Moment);
+                if (Pending.ShooterId != INDEX_NONE)
+                {
+                    // The shooter in its Ranged clip at the moment: the release frame, then a little after it (the follow-through) for the flight and the landing.
+                    const float Release = FExpeditionPlayback::RangedReleaseSeconds;
+                    const float Held = Pending.Shot.Moment == EImpactMoment::Release ? Release : Pending.Shot.Moment == EImpactMoment::Flight ? Release + 0.15f : Release + 0.3f;
+                    if (!Board->PreviewPose(Pending.ShooterId, EUnitPose::Ranged, Held)) { Fail(FString::Printf(TEXT("%s is not a rigged figure with a Ranged clip"), *Pending.ShooterName)); return; }
+                }
                 Pending.bImpactFired = true;
             }
             if (StageFrames < Poses.SettleFrames) { return; }
@@ -659,6 +713,7 @@ void FExpeditionCaptureDirector::Tick()
             if (Pending.Shot.Mode == ECaptureMode::Impact)
             {
                 Pending.bHasFootprint = ProjectFootprint(Pending.TargetId, Pending.Footprint);
+                if (Pending.ShooterId != INDEX_NONE) { Pending.bHasShooterBox = ProjectFootprint(Pending.ShooterId, Pending.ShooterBox); }
                 if (Pending.Shot.Moment == EImpactMoment::Flight)
                 {
                     // Half way along the path, at the bolt's height (about 55 plus the arc's 20 at the midpoint for a lobbed bolt).
@@ -740,6 +795,22 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 Target->SetObjectField(TEXT("bolt"), Bolt);
             }
             Shot->SetObjectField(TEXT("target"), Target);
+            if (Result.ShooterId != INDEX_NONE)
+            {
+                // The shooter of an arrow or bolt shot and its footprint box (tools/impact_flash.py measures it, #198).
+                TSharedRef<FJsonObject> Shooter = MakeShared<FJsonObject>();
+                Shooter->SetNumberField(TEXT("id"), Result.ShooterId);
+                Shooter->SetStringField(TEXT("name"), Result.ShooterName);
+                Shooter->SetStringField(TEXT("role"), Result.Shot.Role);
+                if (Result.bHasShooterBox)
+                {
+                    TSharedRef<FJsonObject> Box = MakeShared<FJsonObject>();
+                    Box->SetNumberField(TEXT("x0"), Result.ShooterBox.Min.X); Box->SetNumberField(TEXT("y0"), Result.ShooterBox.Min.Y);
+                    Box->SetNumberField(TEXT("x1"), Result.ShooterBox.Max.X); Box->SetNumberField(TEXT("y1"), Result.ShooterBox.Max.Y);
+                    Shooter->SetObjectField(TEXT("footprint"), Box);
+                }
+                Shot->SetObjectField(TEXT("shooter"), Shooter);
+            }
         }
         if (Result.Shot.Mode == ECaptureMode::Pose && Result.Status != TEXT("skipped"))
         {
@@ -780,6 +851,13 @@ void FExpeditionCaptureDirector::WriteManifest() const
             Shot->SetStringField(TEXT("file"), Result.File);
             Shot->SetNumberField(TEXT("yaw"), Result.Yaw);
             Shot->SetNumberField(TEXT("distance"), Result.Distance);
+            if (Result.Shot.bHasPan)
+            {
+                TSharedRef<FJsonObject> Pan = MakeShared<FJsonObject>();
+                Pan->SetNumberField(TEXT("right"), Result.Shot.Pan.X);
+                Pan->SetNumberField(TEXT("away"), Result.Shot.Pan.Y);
+                Shot->SetObjectField(TEXT("pan"), Pan);
+            }
             TSharedRef<FJsonObject> Camera = MakeShared<FJsonObject>();
             Camera->SetObjectField(TEXT("location"), Vector(Result.Location, TEXT("x"), TEXT("y"), TEXT("z")));
             Camera->SetObjectField(TEXT("rotation"), Vector(FVector(Result.Rotation.Pitch, Result.Rotation.Yaw, Result.Rotation.Roll), TEXT("pitch"), TEXT("yaw"), TEXT("roll")));

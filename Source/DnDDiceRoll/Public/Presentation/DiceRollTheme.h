@@ -53,6 +53,20 @@ struct DNDDICEROLL_API FDiceRollCharacter
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
 };
 
+/**
+ * The meshes the tabletop overview draws, loaded as one set (#149): the r002 war table and its three route dioramas when the theme has them all, otherwise the
+ * r001 table and its two dioramas (the Vault road then draws the Vigil diorama). Raw pointers; the view keeps them alive.
+ */
+struct FDiceRollOverview
+{
+    UStaticMesh* Table = nullptr;
+    UStaticMesh* Root = nullptr;
+    UStaticMesh* Vigil = nullptr;
+    UStaticMesh* Vault = nullptr;
+    /** True for the r002 set. */
+    bool bR002 = false;
+};
+
 /** Which world kit a board draws with: the Drowned Vigil (Ruins), the Root of the World (Meadow) or the Vault (the finale). */
 enum class EDiceRollKit : uint8 { Vigil, Root, Vault };
 
@@ -154,6 +168,24 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> Tabletop;
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> RootDiorama;
     UPROPERTY(EditDefaultsOnly, Category = "Overview") TSoftObjectPtr<UStaticMesh> VigilDiorama;
+
+    /**
+     * The overview set r002 (#149, the last part): the war table and the Root, Vigil and Vault dioramas, new packages beside the r001 ones above, which stay
+     * as the fallback. The import script sets bOverviewR002 only when all four carry the overview-r002 tag. Presentation only (ADR-0001).
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") bool bOverviewR002 = false;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewTabletop;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewRootDiorama;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewVigilDiorama;
+    UPROPERTY(EditDefaultsOnly, Category = "Overview r002") TSoftObjectPtr<UStaticMesh> OverviewVaultDiorama;
+
+    /** True when the r002 overview is switched on and all four entries are set and refer to packages that exist. */
+    bool OverviewR002Complete() const;
+    /**
+     * Loads the overview as one set: the r002 table and dioramas when the set is complete and every one of them loads, otherwise the r001 table and dioramas,
+     * never a mix. Vault is null for the r001 set. Table is null when even the r001 table does not load (the overview is then not shown).
+     */
+    FDiceRollOverview LoadOverview() const;
 
     /**
      * The Drowned Vigil world kit r002 (#145). Everything in it is authored at the true 150 cm cell, unlike the r001 art

@@ -1988,4 +1988,70 @@ bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+// The arrow's wiring (#198): every ranged attack that is not a spell throws an arrow, which carries no light and flashes nothing, and leaves the bow
+// at the Ranged clip's release frame, not when the draw begins. The Ranger's own bow once threw a spell bolt (a 50 cd point light at the shooter),
+// which blew the ranger and the floor out for two or three frames at release. Played through real FExpeditionPlayback.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRangedReleaseArrowTest, "Project.Expedition.Presentation.RangedReleaseArrows",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRangedReleaseArrowTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace CastBatchPlayback;
+    struct FCase { const TCHAR* Name; const TCHAR* Build; EAdventurerRole Role; bool bFoeShoots; bool bArrow; };
+    const FCase Cases[] = {
+        {TEXT("ranger"), TEXT("ranger.hunter"), EAdventurerRole::Ranger, false, true},
+        {TEXT("rogue"), nullptr, EAdventurerRole::Rogue, false, true},
+        {TEXT("foe archer"), nullptr, EAdventurerRole::None, true, true},
+        {TEXT("wizard (a spell, for contrast)"), nullptr, EAdventurerRole::Wizard, false, false},
+        {TEXT("cleric (a spell, for contrast)"), nullptr, EAdventurerRole::Cleric, false, false},
+    };
+    for (const FCase& Case : Cases)
+    {
+        FPoseScene S;
+        if (!TestTrue(FString(Case.Name) + TEXT(": scene builds"), MakeScene(S, 7))) { return false; }
+        if (Case.Build && !TestTrue(FString(Case.Name) + TEXT(": the hero builds"), MakeHero(S, Case.Build))) { return false; }
+        S.Unit(S.Before, S.Hero)->AdventurerRole = Case.Role;
+        const int32 Shooter = Case.bFoeShoots ? S.Foe : S.Hero, Struck = Case.bFoeShoots ? S.Hero : S.Foe;
+        S.After = S.Before;
+        S.Unit(S.After, Struck)->HP = S.Unit(S.Before, Struck)->HP - 2;
+        FCombatResult Shot = MakeResult(ECombatCommandType::Attack, Shooter, Struck);
+        Shot.bHit = true;
+        Shot.Damage = 2;
+        FExpeditionPlayback Show;
+        Show.Reset(S.Before);
+        Show.Enqueue({Shot}, S.After);
+        float Clock = 0.0f, DrawStart = -1.0f, FirstShot = -1.0f, MaxFlash = 0.0f;
+        int32 Arrows = 0, Bolts = 0;
+        for (int32 Frame = 0; Frame < 1200 && Show.IsBusy(); ++Frame)
+        {
+            Show.Tick(0.016f);
+            Clock += 0.016f;
+            const FUnitDisplay* Unit = Show.Unit(Shooter);
+            if (Unit && Unit->Pose == EUnitPose::Ranged && DrawStart < 0.0f) { DrawStart = Clock; }
+            if (Unit) { MaxFlash = FMath::Max(MaxFlash, Unit->Flash); }
+            for (const FPlaybackProjectile& Live : Show.Projectiles())
+            {
+                if (Live.Age < 0.0f) { continue; }
+                if (FirstShot < 0.0f) { FirstShot = Clock; }
+                (Live.bArrow ? Arrows : Bolts) += 1;
+            }
+        }
+        const FString Who = Case.Name;
+        TestTrue(Who + TEXT(": something was thrown"), Arrows + Bolts > 0);
+        TestTrue(Who + FString::Printf(TEXT(": %s (%d arrow frames, %d bolt frames)"), Case.bArrow ? TEXT("an arrow, never a spell bolt") : TEXT("a spell bolt"), Arrows, Bolts),
+            Case.bArrow ? (Arrows > 0 && Bolts == 0) : (Bolts > 0 && Arrows == 0));
+        TestEqual(*(Who + TEXT(": the shooter is never flashed")), MaxFlash, 0.0f);
+        if (Case.bArrow)
+        {
+            // The arrow leaves at the release frame (frame 26 of 30 fps) of the Ranged clip, not at the start of the draw.
+            TestTrue(Who + TEXT(": the Ranged clip plays"), DrawStart >= 0.0f);
+            TestTrue(*(Who + FString::Printf(TEXT(": the arrow leaves %.2f s after the draw starts, at the release frame (%.2f s)"), FirstShot - DrawStart, FExpeditionPlayback::RangedReleaseSeconds)),
+                FirstShot - DrawStart >= FExpeditionPlayback::RangedReleaseSeconds - 0.05f && FirstShot - DrawStart <= FExpeditionPlayback::RangedReleaseSeconds + 0.12f);
+        }
+        TestFalse(Who + TEXT(": playback is done"), Show.IsBusy());
+        ExpectConverged(*this, Who + TEXT(" after the shot"), Show, S.After);
+    }
+    return !HasAnyErrors();
+}
+
 #endif
