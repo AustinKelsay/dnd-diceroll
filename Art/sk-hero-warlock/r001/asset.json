@@ -71,12 +71,12 @@
     {
       "role": "source",
       "path": "Art/sk-hero-warlock/r001/SK_Hero_Warlock_source.blend",
-      "sha256": "052bf06abe4812477013acbeb56a88676e9900cd6efd97ddf3b24486a0af76b1"
+      "sha256": "a057f6768de64e4fb64c6ee15edd6a83477fa7a7eca36e29ea75761addddb713"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH3.md",
-      "sha256": "c02b93488a131e4d3d66a2cfab786de29198f4712a8f7f3b3a0c934280234881"
+      "sha256": "9da02c6df265d053ff27be23774264a863052035aad7dbaa80078df877890e59"
     },
     {
       "role": "source",
@@ -91,7 +91,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch3.py",
-      "sha256": "fc10e650d4586751d3b61b5d6478e1da1abcf8c551034d1de64d2cecc165a557"
+      "sha256": "cc7dbbb82ee72e62d16aaf75009da814a59d6cdc679db454e69bce164cbb260d"
     },
     {
       "role": "source",
@@ -136,17 +136,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-warlock/r001/SK_Hero_Warlock.glb",
-      "sha256": "cba64c4e27f75d908d7fae5693b66e6504d1ffe4937ea1ba19fe28f44a9c4f65"
+      "sha256": "803b050d498057443ac412baa5adf0cbd876120da8b80263c239c361667c4426"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-warlock/r001/SK_Hero_Warlock_LOD1.glb",
-      "sha256": "d2eca985cc91e1328036b7a2993f29bbf9b39df3f7f4ecdcc7411b6776d7d22c"
+      "sha256": "c9f659a20a0ae96f65a95ef18fc4cb8d68963f05aed489139b4539722ec21318"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-warlock/r001/SK_Hero_Warlock_LOD2.glb",
-      "sha256": "18181211b97e3c746741135fb66b5cb278196709d9bddb5dd0e91cc81c6aa5e0"
+      "sha256": "111890d0e4927c361ebfc8321cf8384697b85e7cd6f5bf039ea86691b2a1da1d"
     }
   ],
   "import_policy": {

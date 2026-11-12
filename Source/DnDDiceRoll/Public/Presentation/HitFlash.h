@@ -31,10 +31,12 @@ constexpr float BoltFadeStart = 0.55f;
 constexpr float BoltFadeEnd = 0.9f;
 /**
  * The bolt's path fraction over which its light ramps in from nothing (#150 batch 3). A bolt starts on the caster's own cell, and the full 50 cd there
- * (half a metre above the board) whitened the caster and the floor around it at release (peak 255, up to 1.76% pure white, for about six frames): the
- * light now rises over the first stretch of flight, away from the caster, and the glow of the bolt itself is unchanged.
+ * (half a metre above the board) whitened the caster and the floor around it at release (peak 255, up to 1.76% pure white in the Vault, 33% in the worst
+ * shots, for about six frames). The light now rises over the first half of the flight, as the square of a smoothstep (about 1% of its flight value a tenth of the
+ * way along, a quarter at a quarter of the way), so it is at its full value only once the bolt is well away from the caster and before the landing fade
+ * begins at BoltFadeStart. The glow of the bolt itself is unchanged.
  */
-constexpr float BoltRampEnd = 0.4f;
+constexpr float BoltRampEnd = 0.5f;
 /** The multiple of a bolt's colour (it was 6) and of a sparkle's (it was 5). The effect material clamps it into a base colour, so above 1 it only desaturates the bolt toward white; 1 keeps the full saturated colour. */
 constexpr float BoltEmissive = 1.0f;
 constexpr float SparkEmissive = 1.0f;
@@ -49,7 +51,7 @@ inline float BoltLight(int32 Bolts, float Alpha)
 {
     const float Count = static_cast<float>(FMath::Max(1, Bolts));
     const float Fade = FMath::SmoothStep(BoltFadeStart, BoltFadeEnd, FMath::Clamp(Alpha, 0.0f, 1.0f));
-    const float Ramp = FMath::SmoothStep(0.0f, BoltRampEnd, FMath::Clamp(Alpha, 0.0f, 1.0f));
+    const float Ramp = FMath::Square(FMath::SmoothStep(0.0f, BoltRampEnd, FMath::Clamp(Alpha, 0.0f, 1.0f)));
     return Ramp * FMath::Lerp(BoltLightCandelas, BoltLandingCandelas, Fade) / (Count * Count);
 }
 

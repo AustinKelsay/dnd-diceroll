@@ -169,15 +169,15 @@ def build_sorcerer(rig, M0):
 SORCERER_ATLAS = {
     'plate': ('bands', dict(base=(.86, .16, .22), line=(1.0, .66, .36), spacing=64)),         # crimson
     'trim': ('scales', dict(a=(1.0, .78, .36), b=(.92, .56, .22))),                           # ember gold
-    'cloth': ('folds', dict(base=(.30, .22, .34), period=30, hem=(1.0, .62, .26), hem2=(.88, .36, .16))),   # black-violet mantle, ember hem
-    'leather': ('weave', dict(base=(.32, .20, .20))),
+    'cloth': ('folds', dict(base=(.42, .32, .50), period=30, hem=(1.0, .62, .26), hem2=(.88, .36, .16))),   # black-violet mantle (lifted one notch after the contrast gate), ember hem
+    'leather': ('weave', dict(base=(.44, .30, .28))),
     'blade': ('blade', dict(base=(.84, .86, .92))),
     'glow': ('flat', dict(base=(1.0, .66, .30))),
     'rune': ('rune', dict(bg=(.30, .06, .05), fg=(1.0, .62, .26))),
     'skin': ('flat', dict(base=(.88, .68, .58))),
     'bone': ('flat', dict(base=(.98, .93, .84))),
     'accent': ('flat', dict(base=(.99, .92, .82))),
-    'dark': ('flat', dict(base=(.18, .12, .16))),                                             # black trousers and lining
+    'dark': ('flat', dict(base=(.30, .20, .26))),                                             # black trousers and lining (lifted after the contrast gate)
     'emblem': ('folds', dict(base=(.88, .14, .20), period=28, hem=(1.0, .66, .30), hem2=(.90, .40, .16))),   # crimson coat
     'emblem2': ('flat', dict(base=(.16, .10, .14))),                                          # black hair
 }
@@ -269,18 +269,18 @@ def build_warlock(rig, M0):
 
 
 WARLOCK_ATLAS = {
-    'plate': ('bands', dict(base=(.38, .15, .48), line=(.74, .52, .84), spacing=64)),         # plum coat
+    'plate': ('bands', dict(base=(.62, .34, .78), line=(.84, .66, .93), spacing=64)),         # plum coat (lifted twice after the contrast gate)
     'trim': ('scales', dict(a=(.96, .92, .99), b=(.80, .74, .90))),                           # pale bone-lavender trim
-    'cloth': ('folds', dict(base=(.40, .15, .52), period=30, hem=(.88, .82, .95), hem2=(.56, .92, .30))),   # plum, pale hem, green line
-    'leather': ('weave', dict(base=(.30, .17, .30))),
+    'cloth': ('folds', dict(base=(.68, .38, .84), period=30, hem=(.88, .82, .95), hem2=(.56, .92, .30))),   # plum, pale hem, green line
+    'leather': ('weave', dict(base=(.52, .36, .54))),
     'blade': ('blade', dict(base=(.84, .90, .82))),
     'glow': ('flat', dict(base=(.62, 1.0, .34))),                                             # sickly green
     'rune': ('rune', dict(bg=(.07, .13, .05), fg=(.62, 1.0, .34))),
     'skin': ('flat', dict(base=(.72, .74, .68))),
     'bone': ('flat', dict(base=(.96, .93, .86))),
     'accent': ('flat', dict(base=(.97, .94, .99))),                                           # hood lining, half mask
-    'dark': ('flat', dict(base=(.20, .10, .26))),
-    'emblem': ('flat', dict(base=(.26, .10, .34))),                                           # coat lining, tome cover edge
+    'dark': ('flat', dict(base=(.48, .30, .60))),
+    'emblem': ('flat', dict(base=(.40, .20, .52))),                                           # coat lining, tome cover edge
     'emblem2': ('flat', dict(base=(.22, .09, .30))),                                          # tome cover, repainted by paint_eye
 }
 
