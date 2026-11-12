@@ -46,11 +46,11 @@ inline float DioramaDepth(bool bR002) { return bR002 ? 16.0f : 22.0f; }
 /**
  * The route screens' side spots (r002): the HUD covers the middle of the frame with the banner and the two cards, so on the route and finale screens each diorama
  * stands on the lower table beside its card, flanking the war map: offer 0 to the screen-left of the left card, offer 1 to the right of the right card, scaled to fit
- * the open margin (the Vigil, the tallest, a little smaller). A lone offer takes the left spot. The numbers come from projecting the meshes' bounds with the overview
+ * the open margin below the tallest hero-details panel (the slot-4 panel, to design y 408), the Vigil, the tallest, the smallest. A lone offer takes the left spot. The numbers come from projecting the meshes' bounds with the overview
  * camera (the OverviewDioramasStayClearOfTheHud test), clear of every HUD rect in HudRects at both resolutions.
  */
-inline FVector2D SideSpot(int32 Index) { return FVector2D(Index == 0 ? 112.0 : -112.0, -166.0); }
-inline float SideScale(EDiorama Kind) { return Kind == EDiorama::Vigil ? 0.62f : 0.68f; }
+inline FVector2D SideSpot(int32 Index) { return FVector2D(Index == 0 ? 106.0 : -106.0, -180.0); }
+inline float SideScale(EDiorama Kind) { return Kind == EDiorama::Vigil ? 0.52f : Kind == EDiorama::Vault ? 0.66f : 0.64f; }
 
 /**
  * Where each diorama stands. On the title (and always on the r001 set) the pair stands at the back of the table, offer 0 screen-left, 1 screen-right, a lone one in the middle;
@@ -115,18 +115,21 @@ inline bool Project(const FVector& TableCm, double Width, double Height, FVector
     return true;
 }
 
-/** The HUD rectangles the overview sits behind, in design units (1280 x 720, the HUD's own space): conservative bounds of what the title and the route screens draw there. */
+/**
+ * The HUD rectangles the overview sits behind, in design units (1280 x 720, the HUD's own space). Where the HUD exposes its geometry it is that geometry (the route banner and
+ * cards, the party cards, the hero details of **every** slot at their tallest, the title's drawers); the rest are conservative bounds of what the screen draws there.
+ */
 inline TArray<ExpeditionLayout::Rect> HudRects(bool bRoute, double W, double H)
 {
     using ExpeditionLayout::Rect;
     TArray<Rect> Out;
-    Out.Add({W - 120.0, 4.0, W - 4.0, 48.0});                                                                // the Menu button
+    Out.Add({W - 130.0, 4.0, W - 4.0, 48.0});                                                                // the Menu button (up to 112 wide while waiting)
     if (bRoute)
     {
-        Out.Add({8.0, 4.0, 300.0, 50.0});                                                                    // the status strip
+        Out.Add({8.0, 4.0, 288.0, 50.0});                                                                    // the status strip (270 wide outside combat)
         Out.Add({ExpeditionLayout::PartyCardX, ExpeditionLayout::PartyCardTop, ExpeditionLayout::PartyCardX + ExpeditionLayout::PartyCardWidth,
             ExpeditionLayout::PartyCardTop + 3 * ExpeditionLayout::PartyCardPitch + ExpeditionLayout::PartyCardHeight});   // the party cards
-        Out.Add({216.0, 50.0, 545.0, 126.0});                                                                // a hero's details beside the cards
+        for (int32 Slot = 0; Slot < 4; ++Slot) { Out.Add(ExpeditionLayout::PartyDetailRect(Slot, ExpeditionLayout::PartyDetailMaxLines)); }   // a hero's details, whichever card is hovered or selected
         Out.Add(ExpeditionLayout::RouteBannerRect(W, H));
         Out.Add(ExpeditionLayout::RouteCardRect(W, H, 0));
         Out.Add(ExpeditionLayout::RouteCardRect(W, H, 1));
@@ -134,10 +137,9 @@ inline TArray<ExpeditionLayout::Rect> HudRects(bool bRoute, double W, double H)
     }
     else
     {
-        Out.Add({12.0, 12.0, 312.0, H - 12.0});                                                              // the left drawer: party, class, subclass
-        Out.Add({W - 392.0, 12.0, W - 12.0, 330.0});                                                         // the build's details
-        Out.Add({W - 392.0, 540.0, W - 12.0, H - 12.0});                                                     // the actions
-        Out.Add({328.0, H - 70.0, W - 396.0, H - 8.0});                                                      // the feedback line
+        Out.Add({ExpeditionLayout::TitleMargin, ExpeditionLayout::TitleMargin, ExpeditionLayout::TitleMargin + ExpeditionLayout::TitleLeftWidth, H - ExpeditionLayout::TitleMargin});   // the left drawer
+        Out.Add({W - ExpeditionLayout::TitleMargin - ExpeditionLayout::TitleRightWidth, ExpeditionLayout::TitleMargin, W - ExpeditionLayout::TitleMargin, H - ExpeditionLayout::TitleMargin});   // the right drawer: details growing down to the actions
+        Out.Add({ExpeditionLayout::TitleMargin + ExpeditionLayout::TitleLeftWidth + 16.0, H - ExpeditionLayout::TitleMargin - 77.0, W - ExpeditionLayout::TitleMargin - ExpeditionLayout::TitleRightWidth - 16.0, H - ExpeditionLayout::TitleMargin});   // the feedback line (up to 3 lines)
     }
     return Out;
 }

@@ -146,9 +146,9 @@ bool FOverviewLayoutTest::RunTest(const FString& Parameters)
         if (!TestEqual(TEXT("Two side placements"), Side.Num(), 2)) { return false; }
         TestTrue(TEXT("Offer 0 is left of the left card, offer 1 right of the right card"), Side[0].Offset.X > 0.0 && Side[1].Offset.X < 0.0 && Side[0].Offset.X == -Side[1].Offset.X);
         TestTrue(TEXT("Both are in front of the table's middle, on the lower table"), Side[0].Offset.Y == Side[1].Offset.Y && Side[0].Offset.Y < -100.0);
-        TestTrue(TEXT("They are scaled to the open margin, the Vigil the smallest"), Side[0].Scale == 0.68f && Side[1].Scale == 0.62f && Side[0].Scale < 1.0f);
-        TestEqual(TEXT("A lone offer takes the left spot"), OverviewLayout::Layout({EDiorama::Vault}, true, true)[0].Offset.X, 112.0);
-        TestEqual(TEXT("The Vault is as large as the forest"), OverviewLayout::SideScale(EDiorama::Vault), OverviewLayout::SideScale(EDiorama::Root));
+        TestTrue(TEXT("They are scaled to the open margin, the Vigil the smallest"), Side[0].Scale == 0.64f && Side[1].Scale == 0.52f && Side[0].Scale < 1.0f);
+        TestEqual(TEXT("A lone offer takes the left spot"), OverviewLayout::Layout({EDiorama::Vault}, true, true)[0].Offset.X, 106.0);
+        TestTrue(TEXT("The Vigil is the smallest"), OverviewLayout::SideScale(EDiorama::Vigil) < OverviewLayout::SideScale(EDiorama::Root) && OverviewLayout::SideScale(EDiorama::Vigil) < OverviewLayout::SideScale(EDiorama::Vault));
     }
     // The r001 set keeps its layout on every screen (the route flag changes nothing there).
     {

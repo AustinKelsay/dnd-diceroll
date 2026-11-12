@@ -1,6 +1,6 @@
 """Proves the Vigil rose patch changed the rose and nothing else (issue #149). Exits non-zero on any failure.
 
-  blender -b --python Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py
+  blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py
 
 For each patched occluder glb against its source: positions, normals, COLOR_0, indices and every non-rose TEXCOORD are byte-identical;
 rose TEXCOORDs map back exactly; the atlas differs only inside the new region (the old rose region stays); texel density of the rose
@@ -111,5 +111,19 @@ def main():
     print('rose patch validated')
 
 
+
+def run_guarded(entry):
+    """Blender exits 0 when a script raises; every way out of these scripts but success must be non-zero, so an unexpected exception is printed and exits 1.
+    (Run Blender with --python-exit-code 1 as well: it covers an error before this point, such as a failed import.)"""
+    try:
+        entry()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    main()
+    run_guarded(main)

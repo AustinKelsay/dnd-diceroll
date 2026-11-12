@@ -1,6 +1,6 @@
 """Previews of the overview set (issue #149), through the game's overview camera: Blender EEVEE, 1920 x 1080.
 
-  blender -b --python Art/dark-fantasy-sources/r002-overview/scripts/render_previews_overview.py [-- shot ...]      (under the machine lock)
+  blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-overview/scripts/render_previews_overview.py [-- shot ...]      (under the machine lock)
 
 Shots: game_start / game_route / game_finale (the overview camera with the route dioramas placed as BuildOverview places them, with the HUD blocks of the
 start screen and the route screen drawn over them in grey, so what the HUD hides is visible), table_wide, and one close view per diorama
@@ -76,7 +76,7 @@ def put(path, loc_ue, yaw_ue, label, scale=1.0):
     return root
 
 
-SIDE_SCALE = {'root': .68, 'vigil': .62, 'vault': .68}
+SIDE_SCALE = {'root': .64, 'vigil': .52, 'vault': .66}
 
 
 def scene(dioramas, with_floor=True, route=False):
@@ -88,7 +88,7 @@ def scene(dioramas, with_floor=True, route=False):
     for i, key in enumerate(dioramas):
         # OverviewLayout.h: the title's pair at the back of the table, the route and finale screens' pair on the lower table beside the cards
         if route:
-            x, y, sc = (112.0 if i == 0 else -112.0), -166.0, SIDE_SCALE[key]
+            x, y, sc = (106.0 if i == 0 else -106.0), -180.0, SIDE_SCALE[key]
         else:
             x, y, sc = (0.0 if n == 1 else (50.0 if i == 0 else -34.0)), 16.0, 1.0
         put(DIO[key], (x, y, LIFT * 100), -90 + (-10.0 if i == 0 else 10.0), 'dio_' + key, sc)
@@ -183,5 +183,19 @@ def main():
         render(os.path.join(PREV, 'table_wide.png'))
 
 
+
+def run_guarded(entry):
+    """Blender exits 0 when a script raises; every way out of these scripts but success must be non-zero, so an unexpected exception is printed and exits 1.
+    (Run Blender with --python-exit-code 1 as well: it covers an error before this point, such as a failed import.)"""
+    try:
+        entry()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    main()
+    run_guarded(main)

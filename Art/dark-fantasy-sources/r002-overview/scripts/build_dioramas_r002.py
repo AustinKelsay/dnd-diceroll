@@ -1,6 +1,6 @@
 """The three route dioramas, r002 (issue #149): the forest clearing, the drowned cathedral and the vault hall as miniatures on the war table.
 
-  blender -b --python Art/dark-fantasy-sources/r002-overview/scripts/build_dioramas_r002.py [-- root|vigil|vault ...]   (under the machine lock)
+  blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-overview/scripts/build_dioramas_r002.py [-- root|vigil|vault ...]   (under the machine lock)
 
 Each diorama is the real r002 world cropped to a window, scaled to a 58 cm tray (about 1:50), so it reads as its own world at the overview zoom
 by construction: the same paving, walls, spires, Waystone and stained glass, with the baked vertex light and glow mask the world carries.  Built from the
@@ -252,5 +252,19 @@ def main():
     json.dump(metrics, open(path, 'w'), indent=1)
 
 
+
+def run_guarded(entry):
+    """Blender exits 0 when a script raises; every way out of these scripts but success must be non-zero, so an unexpected exception is printed and exits 1.
+    (Run Blender with --python-exit-code 1 as well: it covers an error before this point, such as a failed import.)"""
+    try:
+        entry()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    main()
+    run_guarded(main)

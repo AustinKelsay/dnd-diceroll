@@ -140,10 +140,10 @@ VAULT_ARRAY_SIZES = {"vault_pillar_variants": 3, "vault_wall_variants": 3, "vaul
 
 # The overview set r002 (#149, the last part): the war table and the three route dioramas, four new ids and new packages under /Game/DnDDiceRoll/Theme/Overview
 # (the r001 SM_Tabletop, SM_Diorama_Root and SM_Diorama_Vigil stay as the fallback). Nothing in this table replaces an existing package. The look is the r001
-# overview's (roughness, no rim, no fill, glow on, self-lit 0.3 for the table and 0.6 for a diorama: on the route screens they stand at the front corners, far from the candles): the table sits in candlelight and the meshes lift themselves a little.
+# overview's (roughness, no rim, no fill, glow on, self-lit 0.3 for the table, 0.6 for the Vigil and Vault dioramas and 0.85 for the Root (the darkest at 1280x720): on the route screens they stand at the front corners, far from the candles): the table sits in candlelight and the meshes lift themselves a little.
 OVERVIEW_R002 = [
     ("overview-tabletop", 1, "SM_Overview_Tabletop", "Overview", LIT, "overview_tabletop", None, (0.8, 0.0, 0.0, 1.0, 0.3)),
-    ("overview-diorama-root", 1, "SM_Overview_Diorama_Root", "Overview", LIT, "overview_root_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.6)),
+    ("overview-diorama-root", 1, "SM_Overview_Diorama_Root", "Overview", LIT, "overview_root_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.85)),
     ("overview-diorama-vigil", 1, "SM_Overview_Diorama_Vigil", "Overview", LIT, "overview_vigil_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.6)),
     ("overview-diorama-vault", 1, "SM_Overview_Diorama_Vault", "Overview", LIT, "overview_vault_diorama", None, (0.9, 0.0, 0.0, 1.0, 0.6)),
 ]

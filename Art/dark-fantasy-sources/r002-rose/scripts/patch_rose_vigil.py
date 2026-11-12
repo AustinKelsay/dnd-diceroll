@@ -1,6 +1,6 @@
 """Vigil stained-glass rose at full resolution (issue #149, the Vigil window finding on #197).
 
-  blender -b --python Art/dark-fantasy-sources/r002-rose/scripts/patch_rose_vigil.py       (shared host: under the machine lock)
+  blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-rose/scripts/patch_rose_vigil.py       (shared host: under the machine lock)
 
 The rose in SM_World_Vigil / SM_World_Vigil_Occluders sat in a 128 x 128 atlas region, about 40 texels/m against 256 elsewhere. The lower
 60 % of the 2048 atlas is empty, so this adds a 1024 x 1024 rose region there (about 320 texels/m), rewrites only the TEXCOORD of the
@@ -95,5 +95,19 @@ def main():
     json.dump(report, open(os.path.join(R.OUT_SRC, 'patch_report.json'), 'w'), indent=1)
 
 
+
+def run_guarded(entry):
+    """Blender exits 0 when a script raises; every way out of these scripts but success must be non-zero, so an unexpected exception is printed and exits 1.
+    (Run Blender with --python-exit-code 1 as well: it covers an error before this point, such as a failed import.)"""
+    try:
+        entry()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    main()
+    run_guarded(main)

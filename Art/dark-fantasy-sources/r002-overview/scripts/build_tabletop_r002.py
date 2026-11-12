@@ -1,6 +1,6 @@
 """The candlelit war table, r002 (issue #149, parent #138): SM_Overview_Tabletop.
 
-  blender -b --python Art/dark-fantasy-sources/r002-overview/scripts/build_tabletop_r002.py       (shared host: under the machine lock)
+  blender -b --python-exit-code 1 --python Art/dark-fantasy-sources/r002-overview/scripts/build_tabletop_r002.py       (shared host: under the machine lock)
 
 What the route overview and the start screen show behind the HUD: oak planks at 256 texels/m, a bookcase of leather spines, and a war table
 deep enough that the near half of the frame is table, not floor.  On it: a hand-drawn vellum map of the five-stop route (the Vigil road, the
@@ -439,5 +439,19 @@ def bake_ao_(s, bvh):
     return O.bake_ao(s, bvh, strength=.7, dist=.5, n=10)
 
 
+
+def run_guarded(entry):
+    """Blender exits 0 when a script raises; every way out of these scripts but success must be non-zero, so an unexpected exception is printed and exits 1.
+    (Run Blender with --python-exit-code 1 as well: it covers an error before this point, such as a failed import.)"""
+    try:
+        entry()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
-    build()
+    run_guarded(build)

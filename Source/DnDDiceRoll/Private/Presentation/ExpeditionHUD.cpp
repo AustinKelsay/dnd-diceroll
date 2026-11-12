@@ -753,7 +753,7 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
     // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
     // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
-    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + 8, Y); }
+    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + ExpeditionLayout::PartyDetailGap, Y); }
 }
 
 void AExpeditionHUD::DrawHint()
@@ -786,7 +786,7 @@ void AExpeditionHUD::DrawHint()
 
 void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float Y)
 {
-    const float Width = 320;
+    constexpr float Width = ExpeditionLayout::PartyDetailWidth;
     DetailUnitId = Unit.Id;
     DetailUnitIds.Add(Unit.Id);
     TArray<TPair<FString, FLinearColor>> Lines;
@@ -812,7 +812,7 @@ void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float
     TArray<TPair<FString, FLinearColor>> Wrapped;
     for (const auto& Entry : Lines) { for (const auto& Line : Wrap(Entry.Key, Width - 24, 0.68f)) { Wrapped.Add({Line, Entry.Value}); } }
     while (Wrapped.Num() < MinDetailLines) { Wrapped.Add({TEXT(" "), Muted}); }
-    const float Height = 14 + Wrapped.Num() * 17.0f;
+    const float Height = ExpeditionLayout::PartyDetailPad + Wrapped.Num() * ExpeditionLayout::PartyDetailLineHeight;
     X = FMath::Min(X, W - Width - 8);
     Y = FMath::Min(Y, H - Height - 90);
     // The roll card shares the left margin: a status panel that would reach over it moves up clear of it (or right of it when there is
@@ -1232,7 +1232,7 @@ void AExpeditionHUD::DrawTitle()
     // Two side drawers leave the candlelit tabletop visible between them (#146).
     // Left: party slots, class and subclass. Right: build details and the actions.
     // Buttons register in the original order (Close, slots, class/subclass, then actions) so Tab keeps its sequence.
-    constexpr float Margin = 12, LeftWidth = 300, RightWidth = 380;
+    constexpr float Margin = ExpeditionLayout::TitleMargin, LeftWidth = ExpeditionLayout::TitleLeftWidth, RightWidth = ExpeditionLayout::TitleRightWidth;
     const float DrawerY = Margin, DrawerHeight = H - 2 * Margin;
     const float LeftX = Margin, RightX = W - Margin - RightWidth;
     Panel(LeftX, DrawerY, LeftWidth, DrawerHeight, Gold, 0.94f);

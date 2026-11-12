@@ -93,11 +93,12 @@ def main():
     prev = json.load(open(os.path.join(ROOT, 'Art', 'world-vigil-occluders', 'r001', 'asset.json')))
     rec = copy.deepcopy(prev)
     rec['revision'] = 2
-    rec['recipe']['method'] = prev['recipe']['method'] + '; r002: the stained-glass rose is re-pointed from a 128 x 128 atlas region (about 40 texels/m) to a new 1024 x 1024 region in the free half of the atlas (about 320 texels/m), the same design redrawn at full resolution; no other UV, position, vertex colour or atlas pixel changes (patch_rose_vigil.py, proved by validate_rose_vigil.py)'
+    rec['recipe']['method'] = prev['recipe']['method'] + '; r002: the stained-glass rose (about 9 m across) is re-pointed from a 128 x 128 atlas region (14.2 texels/m) to a new 2000 x 2000 region at atlas pixel (2072, 24) with 24 px of wrapped padding, the same design redrawn at full resolution (222.2 texels/m); the atlas becomes 4096 x 2048 with the old 2048 square pixel for pixel in the left half, so every non-rose vertex keeps its texel (its U is rescaled by 1/2); no position, normal, vertex colour or index changes (patch_rose_vigil.py, proved by validate_rose_vigil.py)'
     rec['recipe']['parameters'] = dict(prev['recipe']['parameters'])
-    rec['recipe']['parameters']['atlas'] = 'the r001 atlas (identical pixels everywhere else) plus a 1024 x 1024 rose region with 16 px wrapped padding at atlas pixel (16, 880); SM_World_Vigil keeps its own atlas, which has no rose'
+    rec['recipe']['parameters']['material'] = 'one baseColor atlas 4096x2048 plus COLOR_0 RGBA (A = glow mask)'
+    rec['recipe']['parameters']['atlas'] = 'the r001 2048x2048 atlas unchanged in the left half (pixel for pixel; non-rose U coordinates rescaled by 1/2 to keep their texels) plus a 2000 x 2000 rose region at atlas pixel (2072, 24) with 24 px wrapped padding in the right half; SM_World_Vigil keeps its own 2048 atlas, which has no rose'
     f0 = next(iter(rm['files'].values()))
-    rec['recipe']['parameters']['rose_window'] = dict(texels_per_m_before=f0['texels_per_m_before'], texels_per_m_after=f0['texels_per_m_after'], region_px=[1024, 1024], derived_from='world-vigil-occluders r001')
+    rec['recipe']['parameters']['rose_window'] = dict(texels_per_m_before=f0['texels_per_m_before'], texels_per_m_after=f0['texels_per_m_after'], region_px=[2000, 2000], region_origin_px=[2072, 24], padding_px=24, atlas_px=[4096, 2048], derived_from='world-vigil-occluders r001')
     exports = [f'Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders{lod}.glb' for lod in ('', '_LOD1', '_LOD2')]
     keep = [f for f in prev['files'] if f['role'] != 'export']
     for f in keep:
@@ -107,6 +108,7 @@ def main():
         [dict(role='export', path=p, sha256=sha(p)) for p in exports]
     lods = rec['recipe']['parameters'].get('lods')
     if lods:
+        lods['tool'] = lods['tool'].replace('16-bit COLOR_0 and atlas unchanged', '16-bit COLOR_0 unchanged, the atlas embedded as the r002 export (4096 x 2048)')
         for entry in lods['lods']:
             entry['file'] = entry['file'].replace('world-vigil-occluders/r001', 'world-vigil-occluders/r002')
     rec['validation'] = dict(state='pending', evidence=[])

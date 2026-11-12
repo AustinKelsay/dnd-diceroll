@@ -120,7 +120,7 @@
     {
       "role": "source",
       "path": "Art/dark-fantasy-sources/r002-overview/scripts/build_tabletop_r002.py",
-      "sha256": "2b6a8c1e472a89bb14a166b0fa0dacfc5217c6001bc659bc2b461af5f9bd9c18"
+      "sha256": "df98cc1d8531a2665771e245b80875ebf50654ba5cead080fe958a578998bbc5"
     },
     {
       "role": "export",
