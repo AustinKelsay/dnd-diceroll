@@ -193,19 +193,18 @@
   "LOD0": 1.0
  },
  "checks": {
-  "bones_25_match_contract": true,
-  "ten_clips_with_expected_ranges": true,
-  "one_material_one_1024_atlas": true,
-  "glow_alpha_present": true,
-  "at_most_4_influences": true,
-  "height_175_to_185_cm": true,
-  "tris_lod0_3k_to_6k": true,
-  "lod1_about_half": true,
-  "lod2_about_quarter": true,
-  "lod_bones_25_same_names": true,
-  "idle_walk_loop_seams_0mm": true,
-  "action_clips_end_on_idle_0mm": true,
-  "root_drift_0mm_every_clip": true
+  "bones: 25 and the contract": true,
+  "clips: all ten with their frame ranges": true,
+  "lods: same bone names, LOD1 and LOD2": true,
+  "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+  "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+  "root drift 0.01 mm or less in every clip": true,
+  "at most 4 influences per vertex": true,
+  "one material on a 1024x1024 atlas": true,
+  "glow alpha present on runes and gems": true,
+  "height 175 to 185 cm excluding held items": true,
+  "LOD0 3,000 to 6,000 triangles": true
  },
- "pass": true
+ "pass": true,
+ "failures": []
 }

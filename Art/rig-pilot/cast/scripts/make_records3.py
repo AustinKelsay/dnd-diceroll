@@ -16,9 +16,9 @@ CAST = 'Art/rig-pilot/cast'
 SHARED = [f'{CAST}/README_BATCH3.md'] + [f'{CAST}/scripts/{n}' for n in ('cast_characters.py', 'cast_batch2.py', 'cast_batch3.py', 'brace.py', 'build3.py', 'review3.py', 'make_records3.py')] + \
     ['Art/rig-pilot/r001/README.md'] + [f'Art/rig-pilot/r001/scripts/{n}' for n in ('rigkit.py', 'clips.py', 'characters.py')]
 NEW = {
-    'sk-hero-sorcerer': ('SK_Hero_Sorcerer', 'sorcerer', 'Sorcerer: agile body under a fitted crimson coat open at the front, black mantle, flame collar, ember veins on the sleeves, crackling crystal focus on weapon_socket, no staff', 17),
-    'sk-hero-warlock': ('SK_Hero_Warlock', 'warlock', 'Warlock: agile body, long plum hooded coat, pale hood lining and trim, bone pauldron, pact tome on a chain and eye pendant, rod with a green orb on weapon_socket', 18),
-    'sk-hero-druid': ('SK_Hero_Druid', 'druid', 'Druid: robed body, bark-brown tunic under a split moss-green robe, layered leaf mantle, small leafy circlet, gnarled staff with a glowing amber seed on weapon_socket', 19),
+    'sk-hero-sorcerer': ('SK_Hero_Sorcerer', 'sorcerer', 'Sorcerer: agile body under a fitted crimson coat open at the front, black mantle, flame collar, ember veins on the sleeves, crackling crystal focus on weapon_socket, no staff', 19),
+    'sk-hero-warlock': ('SK_Hero_Warlock', 'warlock', 'Warlock: agile body, long plum hooded coat, pale hood lining and trim, bone pauldron, pact tome on a chain and eye pendant, rod with a green orb on weapon_socket', 20),
+    'sk-hero-druid': ('SK_Hero_Druid', 'druid', 'Druid: robed body, bark-brown tunic under a split moss-green robe, layered leaf mantle, small leafy circlet, gnarled staff with a glowing amber seed on weapon_socket', 21),
 }
 ISSUE = 'https://github.com/AustinKelsay/dnd-diceroll/issues/150'
 
@@ -85,7 +85,7 @@ for aid, (name, key, desc, sheet) in NEW.items():
             'texture_filter': 'trilinear, anisotropic 8', 'collision': 'none (presentation only)'}},
         'validation': {'state': 'passed', 'evidence': [
             f'{CAST}/metrics/validate_{key}.json', f'{CAST}/metrics/build_{key}.json',
-            f'{CAST}/previews/sheet_16_batch3_turnaround.png', f'{CAST}/previews/sheet_{sheet:02d}_{key}_clips.png',
+            f'{CAST}/previews/sheet_18_batch3_turnaround.png', f'{CAST}/previews/sheet_{sheet:02d}_{key}_clips.png',
             ISSUE]},
     }
     (ROOT / base / 'asset.json').write_text(json.dumps(rec, indent=2) + '\n')

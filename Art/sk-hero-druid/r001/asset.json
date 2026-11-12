@@ -47,19 +47,17 @@
           0.0
         ],
         "checks": {
-          "bones_25_match_contract": true,
-          "ten_clips_with_expected_ranges": true,
-          "one_material_one_1024_atlas": true,
-          "glow_alpha_present": true,
-          "at_most_4_influences": true,
-          "height_175_to_185_cm": true,
-          "tris_lod0_3k_to_6k": true,
-          "lod1_about_half": true,
-          "lod2_about_quarter": true,
-          "lod_bones_25_same_names": true,
-          "idle_walk_loop_seams_0mm": true,
-          "action_clips_end_on_idle_0mm": true,
-          "root_drift_0mm_every_clip": true
+          "bones: 25 and the contract": true,
+          "clips: all ten with their frame ranges": true,
+          "lods: same bone names, LOD1 and LOD2": true,
+          "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+          "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+          "root drift 0.01 mm or less in every clip": true,
+          "at most 4 influences per vertex": true,
+          "one material on a 1024x1024 atlas": true,
+          "glow alpha present on runes and gems": true,
+          "height 175 to 185 cm excluding held items": true,
+          "LOD0 3,000 to 6,000 triangles": true
         }
       }
     },
@@ -78,7 +76,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH3.md",
-      "sha256": "63e921827185d78fa2fb9019236963b90ddfec3f90657851fd51a4b7f5af2b9c"
+      "sha256": "c02b93488a131e4d3d66a2cfab786de29198f4712a8f7f3b3a0c934280234881"
     },
     {
       "role": "source",
@@ -88,7 +86,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
-      "sha256": "de9fb99b170d0c54543fec941fe8aa37db40cf6b47660ca75abf0a7fb0e90f3c"
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
     },
     {
       "role": "source",
@@ -108,12 +106,12 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review3.py",
-      "sha256": "7a492cf998523763240e21f88f215b6ba7a3d7f926b7071731a280c5cf240365"
+      "sha256": "0cd14897f468470f3f8f9bf67211d45c164bbf3301f582c8cc193b2535eb496e"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records3.py",
-      "sha256": "4fa8348df20aaaa280e7c07308c10dc89c439a009db99b077b17612561c2d557"
+      "sha256": "fc9e6e5c4722e0ceba97b3b5ca5839f205bcac99dc009a7fd6c9eea93564cc3c"
     },
     {
       "role": "source",
@@ -170,8 +168,8 @@
     "evidence": [
       "Art/rig-pilot/cast/metrics/validate_druid.json",
       "Art/rig-pilot/cast/metrics/build_druid.json",
-      "Art/rig-pilot/cast/previews/sheet_16_batch3_turnaround.png",
-      "Art/rig-pilot/cast/previews/sheet_19_druid_clips.png",
+      "Art/rig-pilot/cast/previews/sheet_18_batch3_turnaround.png",
+      "Art/rig-pilot/cast/previews/sheet_21_druid_clips.png",
       "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
     ]
   }

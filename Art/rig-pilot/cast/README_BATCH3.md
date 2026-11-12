@@ -15,7 +15,7 @@ Batch 3 adds the **sorcerer, warlock and druid**. Everything is original and gen
 | Druid body | The **robed body**: a bark-brown tunic to the shin under a **split moss-green robe** with a ragged leaf hem, an amber-banded rope belt, a herb pouch, **three tiers of leaves** as a mantle, a leaf cape down the back, wooden bracers, wrapped boots | Robe and layered mantle against the ranger's tunic, short cape and hood. Value is the other split: the druid is a bright moss green over dark bark brown, the ranger an olive-tan with a dark green cape |
 | Druid circlet | A thin twig ring with a ring of small leaves and one amber gem, **no vertical sprigs**. Long brown hair, tan skin | The first version had two short sprigs that read as small horns in the turnaround; they were removed so the head cannot read as the antlered raider foe |
 | Druid staff | A **gnarled** wooden staff taller than the head: a bent path with knots, a crook at the top cradling a glowing **amber seed**, a side twig with two leaves, amber bindings | The wizard's staff is straight with a pale crystal; the crook, the knots and the amber make the druid's read as a branch |
-| Clips | **All ten shared clips, no override** | The crystal, the rod and the staff were checked on the Melee, Ranged, Cast, Downed, Death, Recover and Brace sheets (17 to 19). The crystal and rod rise with the arm in Cast and Brace; the staff swings as the wizard's does. The Ranged clip raises the right hand with the focus, as it does for the wizard |
+| Clips | **All ten shared clips, no override** | The crystal, the rod and the staff were checked on the Melee, Ranged, Cast, Downed, Death, Recover and Brace sheets (19 to 21). The crystal and rod rise with the arm in Cast and Brace; the staff swings as the wizard's does. The Ranged clip raises the right hand with the focus, as it does for the wizard |
 
 ## Characters
 
@@ -34,8 +34,8 @@ Blender exits 0 when a script raises unless it is started with `--python-exit-co
 | Script | Does |
 | --- | --- |
 | `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build3.py [-- sorcerer warlock druid]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
-| `... review3.py -- validate <key>` | fresh process: re-imports the glbs and writes `metrics/validate_<key>.json` with a `checks` table and `pass`; **any failed check exits non-zero** (25 bones matching the contract, ten clips with the expected ranges, one material and one 1024 atlas, glow alpha, at most 4 influences, 175 to 185 cm, 3 to 6k tris, LOD1 40 to 60% and LOD2 15 to 35%, LOD bone names, loop seams and every action clip's end on Idle at 0 mm, root drift 0 mm) |
-| `... review3.py -- sheet3 bind\|turn\|clips\|stone` | renders `previews/sheet_15..20` (ImageMagick 7) |
+| `... review3.py -- validate <key>` | fresh process: re-imports the glbs and writes `metrics/validate_<key>.json` with a `checks` table and `pass`; **any failed check exits non-zero** (25 bones matching the contract, ten clips with the expected ranges, one material and one 1024 atlas, glow alpha, at most 4 influences, 175 to 185 cm, 3 to 6k tris, LOD1 40 to 55% and LOD2 20 to 32%, LOD bone names, loop seams and every action clip ending on Idle at 0.01 mm, root drift 0.01 mm; this is review2.py's gate) |
+| `... review3.py -- sheet3 bind\|turn\|clips\|stone` | renders `previews/sheet_17..22` (ImageMagick 7) |
 | `python3 Art/rig-pilot/cast/scripts/make_records3.py` | writes the three `Art/<asset-id>/r001/asset.json` records; **refuses** (exit 1, nothing written) unless every validation JSON passes |
 
 ## Known roughness
