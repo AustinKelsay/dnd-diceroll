@@ -672,6 +672,8 @@ constexpr float PartyCardX = ExpeditionLayout::PartyCardX, PartyCardTop = Expedi
 void AExpeditionHUD::DrawParty()
 {
     int32 Index = 0;
+    HoveredParty = INDEX_NONE;
+    for (int32 Slot = 0; Slot < 4; ++Slot) { if (Hovered(PartyCardX, PartyCardTop + Slot * PartyCardPitch, PartyCardWidth, PartyCardHeight)) { HoveredParty = Slot; break; } }
     for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
@@ -753,7 +755,10 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
     // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
     // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
-    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + ExpeditionLayout::PartyDetailGap, Y); }
+    // Outside combat the details are placed clear of the screen's own panel, and two of them would take the same free spot, so a hovered card's details are the only ones
+    // shown while the pointer is on a card: the selected hero's step aside for them (#200). In combat the panels stack beside their own cards as before.
+    const bool bOtherHovered = !View->InCombat() && HoveredParty != INDEX_NONE && HoveredParty != Index;
+    if (bHover || (bSelected && !bOtherHovered && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + ExpeditionLayout::PartyDetailGap, Y); }
 }
 
 void AExpeditionHUD::DrawHint()

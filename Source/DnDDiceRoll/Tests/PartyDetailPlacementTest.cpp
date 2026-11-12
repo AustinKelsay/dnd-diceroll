@@ -147,6 +147,28 @@ bool FPartyDetailPlacementHudTest::RunTest(const FString& Parameters)
                     if (!TestEqual(Where + TEXT(": one details panel is drawn"), Panels.Num(), 1)) { continue; }
                     KeepsClear(*this, Where, ToDesign(Panels[0], Scale), W, H, Others);
                 }
+                // One hero selected, another's card hovered: the hovered card's details are the one panel shown, so the selected hero's cannot take the same spot and
+                // hide them (the review of #200).
+                TArray<int32> PartyIds;
+                for (const FCombatantState& Unit : Game.View->Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party) { PartyIds.Add(Unit.Id); } }
+                for (int32 Selected = 0; Selected < PartyIds.Num(); ++Selected)
+                {
+                    for (int32 Hovered = 0; Hovered < PartyIds.Num(); ++Hovered)
+                    {
+                        if (Hovered == Selected) { continue; }
+                        const FString Where = FString::Printf(TEXT("%s, %dx%d, hero %d selected and hero %d hovered%s"), Case.Name, Size.X, Size.Y, Selected + 1, Hovered + 1, bTallest ? TEXT(", tallest") : TEXT(""));
+                        Game.Player->SelectPartyIndex(Selected, false);
+                        Game.Player->SimulatePointer(FVector2D(ExpeditionLayout::PartyCardX + 100.0, ExpeditionLayout::PartyCardTop + Hovered * ExpeditionLayout::PartyCardPitch + 32.0) * Scale, FIntPoint(0, 0));
+                        Game.Frame(0.0f);
+                        Game.Frame(0.0f);
+                        const TArray<FBox2D>& Panels = Game.Hud->PartyDetailRects();
+                        if (!TestEqual(Where + TEXT(": one details panel is drawn, not two on one spot"), Panels.Num(), 1)) { continue; }
+                        TestEqual(Where + TEXT(": it is the hovered hero's"), Game.Hud->PartyDetailUnit(), PartyIds[Hovered]);
+                        KeepsClear(*this, Where, ToDesign(Panels[0], Scale), W, H, Others);
+                    }
+                }
+                Game.Player->ReleaseSimulatedPointer();
+                Game.Player->SelectPartyIndex(0, false);
             }
         }
         Game.Hud->PreviewDetailLines(0);
