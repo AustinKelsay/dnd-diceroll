@@ -16,7 +16,7 @@
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
  * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
- * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard, and
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
  * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-* and dup-two-pairs-*, the duplicate-accent parties),
  * each with a
@@ -201,6 +201,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     WriteCastFixtures(TEXT("cast2"), {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("ranger.hunter")}, TEXT("batch 2"));
     WriteCastFixtures(TEXT("cast3"), {TEXT("sorcerer.draconic-bloodline"), TEXT("warlock.fiend"), TEXT("druid.land"), TEXT("wizard.evocation")}, TEXT("batch 3"));
+    WriteCastFixtures(TEXT("cast4"), {TEXT("bard.valor"), TEXT("artificer.battle-smith"), TEXT("fighter.champion"), TEXT("wizard.evocation")}, TEXT("batch 4"));
     // The Vault finale (encounter 5, #149): the first seeds that reach the fifth fight with the party acting first, found by the scripted
     // player. `board-vault` is the broken-wall finale (adjacent blocked cells get the Vault's 2-cell crypt arch; in the default gallery set),
     // `board-vault-pillars` the ruined-pillar finale (render it with `gallery --fixture board-vault-pillars`).

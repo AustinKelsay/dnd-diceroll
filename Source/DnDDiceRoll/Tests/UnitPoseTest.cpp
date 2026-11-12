@@ -2574,6 +2574,26 @@ bool FCastBatch4MappingTest::RunTest(const FString& Parameters)
     {
         TestFalse(TEXT("The bard's bolt differs from every other caster's"), Bard.Equals(FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Other, false).Color, 0.05f));
     }
+    // Seen side by side the bolts must read as different hues (on screen, in sRGB): the sorcerer's was an ember red close to the wizard's orange, so it is now a crimson-magenta.
+    // Each pair is at least 24 degrees apart except the cleric's amber and the wizard's orange, the pair that was already so (they differ in brightness and saturation).
+    const TArray<TPair<EAdventurerRole, const TCHAR*>> Casters = {{EAdventurerRole::Wizard, TEXT("wizard")}, {EAdventurerRole::Cleric, TEXT("cleric")}, {EAdventurerRole::Sorcerer, TEXT("sorcerer")},
+        {EAdventurerRole::Warlock, TEXT("warlock")}, {EAdventurerRole::Druid, TEXT("druid")}, {EAdventurerRole::Bard, TEXT("bard")}, {EAdventurerRole::Artificer, TEXT("artificer")}};
+    const auto Hue = [](EAdventurerRole Role)
+    {
+        const FColor Encoded = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), Role, false).Color.ToFColor(true);
+        return FLinearColor(Encoded.R / 255.0f, Encoded.G / 255.0f, Encoded.B / 255.0f).LinearRGBToHSV().R;
+    };
+    for (int32 A = 0; A < Casters.Num(); ++A)
+    {
+        for (int32 B = A + 1; B < Casters.Num(); ++B)
+        {
+            const float Raw = FMath::Abs(Hue(Casters[A].Key) - Hue(Casters[B].Key));
+            const float Apart = FMath::Min(Raw, 360.0f - Raw);
+            const bool bKnownPair = (Casters[A].Key == EAdventurerRole::Wizard && Casters[B].Key == EAdventurerRole::Cleric);
+            TestTrue(*FString::Printf(TEXT("%s and %s bolts are %.0f degrees apart in hue"), Casters[A].Value, Casters[B].Value, Apart), Apart >= (bKnownPair ? 8.0f : 24.0f));
+        }
+    }
+    TestTrue(TEXT("The sorcerer's bolt is far from the wizard's orange"), FMath::Min(FMath::Abs(Hue(EAdventurerRole::Sorcerer) - Hue(EAdventurerRole::Wizard)), 360.0f - FMath::Abs(Hue(EAdventurerRole::Sorcerer) - Hue(EAdventurerRole::Wizard))) >= 45.0f);
     return !HasAnyErrors();
 }
 

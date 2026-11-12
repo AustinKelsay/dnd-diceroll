@@ -291,9 +291,14 @@ bool FHitFlashVolleyTest::RunTest(const FString& Parameters)
     const FPlaybackProjectile Ember = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Sorcerer, false);
     const FPlaybackProjectile Eldritch = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Warlock, false);
     const FPlaybackProjectile Thorn = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Druid, false);
-    TestTrue(TEXT("The Sorcerer's bolt is ember red"), Ember.Color.R > 0.9f && Ember.Color.G < 0.4f && Ember.Color.B < 0.3f);
+    // A crimson-magenta ember (#150 batch 4: it was an orange-red 20 degrees from the Wizard's Fire Bolt, so the two read as one colour side by side).
+    TestTrue(TEXT("The Sorcerer's bolt is a crimson-magenta ember"), Ember.Color.R > 0.9f && Ember.Color.G < 0.15f && Ember.Color.B > 0.25f && Ember.Color.B < 0.5f);
     TestTrue(TEXT("The Warlock's bolt is eldritch green"), Eldritch.Color.G > 0.9f && Eldritch.Color.R < 0.7f && Eldritch.Color.B < 0.5f);
     TestTrue(TEXT("The Druid's bolt is leaf gold"), Thorn.Color.G > 0.9f && Thorn.Color.R > 0.6f && Thorn.Color.B < 0.4f);
+    const FPlaybackProjectile Note = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Bard, false);
+    const FPlaybackProjectile Cyan = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Artificer, false);
+    TestTrue(TEXT("The Bard's bolt is a teal note and not an arrow"), !Note.bArrow && Note.Color.G > 0.9f && Note.Color.B > 0.5f && Note.Color.R < 0.3f);
+    TestTrue(TEXT("The Artificer's special bolt is a blue-cyan and not an arrow"), !Cyan.bArrow && Cyan.Color.B > 0.9f && Cyan.Color.G > 0.6f && Cyan.Color.R < 0.4f);
     TestTrue(TEXT("A rogue's arrow is an arrow"), FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Rogue, true).bArrow);
     return !HasAnyErrors();
 }

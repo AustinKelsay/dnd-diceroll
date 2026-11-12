@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "settleFrames": 30,
+  "shots": [
+    {
+      "name": "pose-bard-melee-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-ranged-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-cast-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-brace-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-hit-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-downed-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-death-default",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-melee-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-ranged-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-cast-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-brace-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-hit-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-downed-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-artificer-death-default",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "pose-bard-melee-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-ranged-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-cast-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-brace-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-hit-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-downed-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-bard-death-near",
+      "mode": "pose",
+      "role": "Bard",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-melee-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Melee",
+      "time": 0.37,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-ranged-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Ranged",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-cast-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Cast",
+      "time": 0.73,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-brace-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Brace",
+      "time": 0.45,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-hit-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Hit",
+      "time": 0.1,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-downed-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Downed",
+      "time": 2.4,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "pose-artificer-death-near",
+      "mode": "pose",
+      "role": "Artificer",
+      "pose": "Death",
+      "time": 2.6,
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "battle-yawm90-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "battle-yaw180-default",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "build-bard-lore",
+      "mode": "start",
+      "build": "bard.lore"
+    },
+    {
+      "name": "build-artificer-battle-smith",
+      "mode": "start",
+      "build": "artificer.battle-smith"
+    }
+  ]
+}
