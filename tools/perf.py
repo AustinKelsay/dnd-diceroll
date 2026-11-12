@@ -57,7 +57,11 @@ def parse_csv(text):
     The first line is the header (EVENTS, then stat names). Metadata rows ([Name],value) and a repeated header row at
     the end (HasHeaderRowAtEnd) are skipped. GPU pass columns (GPU/..., Exclusive/GPU/...) ride along in Frame.stats."""
     # The profiler writes its metadata (the command line, device names) as very long fields on a trailing row.
-    csv.field_size_limit(sys.maxsize)
+    try:
+        csv.field_size_limit(sys.maxsize)
+    except OverflowError:
+        # Python 3.11 uses C long here: Windows long is 32-bit even with 64-bit Python.
+        csv.field_size_limit((1 << 31) - 1)
     rows = csv.reader(io.StringIO(text))
     header = next(rows, None)
     if not header or header[0].strip() != "EVENTS":

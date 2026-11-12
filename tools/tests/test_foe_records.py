@@ -41,6 +41,9 @@ class FoeBatchRecordsTest(unittest.TestCase):
                 data = path.read_bytes()
                 if data.startswith(b"version https://git-lfs"):
                     continue
+                # Git text=auto checkouts use CRLF on Windows; records hash the LF blob.
+                if path.suffix.lower() in {".md", ".py", ".txt", ".rst", ".json", ".csv", ".yml", ".yaml", ".toml", ".ini", ".cfg"}:
+                    data = data.replace(b"\r\n", b"\n")
                 self.assertEqual(hashlib.sha256(data).hexdigest(), entry["sha256"], f"{key}: {entry['path']} changed after the record was written")
 
     def test_foe_looks_pattern_takes_only_the_rig_keys(self):

@@ -156,7 +156,8 @@ private:
     bool bPreviewPoseValid = false;
     FTransform PreviewPose;
     /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
-    static constexpr float PoseSlopCm = 0.5f, PoseSlopDegrees = 0.02f;
+    static constexpr float PoseSlopCm = 0.5f;
+    static constexpr float PoseSlopDegrees = 0.02f;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;
     FIntPoint KeyboardPreview = FIntPoint::ZeroValue;

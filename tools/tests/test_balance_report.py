@@ -3,6 +3,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import sys
@@ -151,13 +152,25 @@ class BalanceReportTests(unittest.TestCase):
             self.assertEqual(balance_report.main([".local/balance/run"], local_root=self.local), 0)
 
     @unittest.skipUnless(hasattr(os, "symlink"), "needs symlinks")
-    def test_refuses_symlinks_out_of_local(self):
+    def test_refuses_directory_links_out_of_local(self):
         self.group("A", [("p1", 1, "Victory", 5, [("fighter.champion", True, 40)] * 4)])
         outside = Path(self.temp.name) / "outside"
         shutil.copytree(self.root, outside / "run")
-        (self.local / "link-out").symlink_to(outside, target_is_directory=True)
-        (self.local / "link-dangling").symlink_to(Path(self.temp.name) / "missing", target_is_directory=True)
-        (self.local / "link-in").symlink_to(self.local / "balance", target_is_directory=True)
+        def directory_link(link, target):
+            if os.name == "nt":
+                # Directory junctions exercise the same escape without requiring symlink privileges.
+                script = Path(self.temp.name) / "junction.ps1"
+                script.write_text("param([string]$Link, [string]$Target)\n$ErrorActionPreference='Stop'\nNew-Item -ItemType Junction -Path $Link -Target $Target | Out-Null\n", encoding="utf-8")
+                subprocess.run(["powershell.exe", "-NoProfile", "-File", str(script), str(link), str(target)], check=True, capture_output=True)
+            else:
+                link.symlink_to(target, target_is_directory=True)
+
+        missing = Path(self.temp.name) / "missing"
+        missing.mkdir()
+        directory_link(self.local / "link-out", outside)
+        directory_link(self.local / "link-dangling", missing)
+        missing.rmdir()
+        directory_link(self.local / "link-in", self.local / "balance")
         for folder in (".local/link-out/run", ".local/link-dangling/run", str(self.local / "link-out" / "run")):
             err = io.StringIO()
             with redirect_stderr(err):
