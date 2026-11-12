@@ -1,3 +1,5 @@
+import ast
+import json
 import os
 import re
 import runpy
@@ -41,6 +43,41 @@ class RigReimportRefusalTest(unittest.TestCase):
         refusal = re.search(r"\n(\s*)if REIMPORT:\n\1    check_allow_list\(\)\n\1    refuse_reimport\(\)\n", text)
         self.assertIsNotNone(refusal, "the early refusal block")
         self.assertLess(refusal.start(), text.index("master = master_material()"))
+
+
+def script_table(name):
+    for node in ast.parse(SCRIPT.read_text()).body:
+        if isinstance(node, ast.Assign) and any(getattr(target, "id", "") == name for target in node.targets):
+            return ast.literal_eval(node.value)
+    raise AssertionError(name + " not found")
+
+
+def glb_animations(path):
+    data = path.read_bytes()
+    if data[:4] != b"glTF":
+        return None                      # an LFS pointer in a checkout without the binaries
+    length = int.from_bytes(data[12:16], "little")
+    return [a.get("name") for a in json.loads(data[20:20 + length]).get("animations", [])]
+
+
+class ClipOverrideTableTest(unittest.TestCase):
+    """CLIP_OVERRIDES (per-class clip overrides, #150) names real rows, real shared clips and real actions in the class's glb."""
+
+    def test_table_matches_the_rig_table_the_clips_and_the_glbs(self):
+        overrides = script_table("CLIP_OVERRIDES")
+        rig = {row[2]: row for row in script_table("RIG")}
+        clips = script_table("FIRST_CLIPS") + [script_table("BRACE_CLIP")]
+        self.assertTrue(overrides, "the table is not empty")
+        for key, entries in overrides.items():
+            self.assertIn(key, rig, key + " is a rig row")
+            for shared, (package, action) in entries.items():
+                self.assertIn(shared, clips, shared + " is a shared clip")
+                self.assertTrue(package.startswith("A_") and package != "A_Humanoid_" + shared, package)
+                names = glb_animations(ROOT / "Art" / rig[key][0] / "r001" / (rig[key][1] + ".glb"))
+                if names is None:
+                    self.skipTest("the glb binaries are not downloaded")
+                self.assertIn(action, names, action + " is exported in " + rig[key][1])
+                self.assertIn(shared, names, "the shared clip stays in the same glb")
 
 
 if __name__ == "__main__":

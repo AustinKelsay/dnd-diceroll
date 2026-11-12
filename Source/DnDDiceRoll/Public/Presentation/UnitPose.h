@@ -30,11 +30,11 @@ DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool
  * Fire Bolt at any distance; the cleric's ranged attack is Sacred Flame (a save in SRD, an attack roll in Compact; a spell in
  * both). Other roles' basic attacks are weapon attacks, and only Attack is affected (Precision Strike is a weapon maneuver). */
 DNDDICEROLL_API bool IsSpellAttack(ECombatCommandType Type, EAdventurerRole Role, bool bRanged);
-/** The actor's clip for one effect of a Special1 or Special2 command (#150 batch 2):
- *  - a spell (the ability's bSpell fact) casts, whatever its normalized effect, so a damaging spell is not mistaken for a weapon attack;
- *  - a non-spell ability that attacks (Strike, WeaponAttack, Area, Push, Surge, Missile) swings up close and shoots from more than one cell;
- *  - a non-spell self or ally effect (Rage, Protect, Healing) plays Brace, the weapon-up rally, not the arms-raised Cast gesture;
- *  - swaps and mitigation have no clip (Idle), spell or not. */
+/** The actor's clip for one effect of a Special1 or Special2 command (#150 batch 2), in this order:
+ *  1. a spell (the ability's bSpell fact) casts, whatever its normalized effect, a swap or mitigation included;
+ *  2. a non-spell ability that attacks (Strike, WeaponAttack, Area, Push, Surge, Missile) swings up close and shoots from more than one cell;
+ *  3. a non-spell self or ally effect (Rage, Protect, Healing, a swap, a used mitigation) plays Brace, the weapon-up rally;
+ *  4. nothing else has a clip: a potion, a rescue, End Turn (ForCommand), and a plain move walks (Walk). */
 DNDDICEROLL_API EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell = false);
 /** The same choice from the catalog's ability facts (Effect and bSpell), the one rule playback and the tests share. */
 DNDDICEROLL_API EUnitPose ForAbility(const FAbilityFacts& Ability, bool bRanged);

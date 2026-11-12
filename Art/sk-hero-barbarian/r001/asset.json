@@ -58,7 +58,7 @@
     {
       "role": "source",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian_source.blend",
-      "sha256": "0cd6c33d4e09c62774ec887abec4d7e5f1dc95fe282088ff6744e96c69ac3a12"
+      "sha256": "e371001956103db82f539d8e0109bc6a4a5a0face8e94ad630e75c2305317569"
     },
     {
       "role": "source",
@@ -73,7 +73,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
-      "sha256": "de9fb99b170d0c54543fec941fe8aa37db40cf6b47660ca75abf0a7fb0e90f3c"
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
     },
     {
       "role": "source",
@@ -83,17 +83,17 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build2.py",
-      "sha256": "0b0a8dde82affeff680693dd0769df7e6adc59ec780f1ca8a227ce5450430b05"
+      "sha256": "809389c26f25b62dc4e11c49c7f4099e5feeb198c108a0e3ea61c0ab69e2f314"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "fb44f632d56c71d0422fe92e51f2fd74c73039deb3415ab3724dcb81f9e246fe"
+      "sha256": "a251fcb623756f198ce7777702d68b807c6fb2f2cded236007c4d1b560c7c7ec"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records2.py",
-      "sha256": "1b414f20de1e06271d3fa45a2cc79b23afacc92237ecb19f72c8eb6c459f9eaa"
+      "sha256": "d57e2ffad84b5ca7203ad3cc549b4978614238a14a57b354e43e5e2539b1a722"
     },
     {
       "role": "source",
@@ -118,7 +118,7 @@
     {
       "role": "export",
       "path": "Art/sk-hero-barbarian/r001/SK_Hero_Barbarian.glb",
-      "sha256": "cd2912784eba9973dc01251f7109c5579d5ddb15e42351f2e7045e11bfcda397"
+      "sha256": "c6e59491825e6ccc6fc443be3062b4cc8806e84a7362e6a11e205ff6cba31898"
     },
     {
       "role": "export",

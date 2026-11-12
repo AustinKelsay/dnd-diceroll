@@ -73,3 +73,7 @@ for key in keys:
     print('COMPARE', key, res['pass'], res['max_vertex_diff_mm'], res['extra_clips'])
 with open(os.path.join(ROOT, 'Art', 'rig-pilot', 'cast', 'metrics', 'compare_r002.json'), 'w') as fh:
     json.dump(out, fh, indent=1)
+failed = [k for k, v in out.items() if not v['pass']]
+if failed:
+    print('COMPARE FAILED', ', '.join(failed))
+    sys.exit(1)

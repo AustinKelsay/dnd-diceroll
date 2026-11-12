@@ -321,7 +321,8 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
         for (const auto& Effect : Result.Effects)
         {
             const bool bFar = SpecialActor && FMath::Abs(SpecialActor->Cell.X - Effect.Cell.X) + FMath::Abs(SpecialActor->Cell.Y - Effect.Cell.Y) > 1;
-            const EUnitPose ActorPose = ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
+            // A Mitigation entry is the "Prevented N" note on a victim of a damaging special, not the actor's own effect: the ability's own entry poses the actor.
+            const EUnitPose ActorPose = Effect.Effect == EAbilityEffect::Mitigation ? EUnitPose::Idle : ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
             Add(0.45f, [this, Effect, Result, ActorPose]()
             {
                 auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }

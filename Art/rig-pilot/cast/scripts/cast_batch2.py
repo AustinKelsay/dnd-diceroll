@@ -22,6 +22,7 @@ sys.path.insert(0, HERE)
 import cast_characters as C                                                     # noqa: E402  (puts r001/scripts on sys.path)
 import brace                                                                    # noqa: E402,F401  (registers the Brace clip)
 import clips as CL                                                              # noqa: E402
+import overrides as OV                                                          # noqa: E402
 import rigkit as K                                                              # noqa: E402
 from rigkit import Body, JOINTS, blend_chain, box, deg, detail, dn, frame_matrix, loft, panel, prism, quad, sd, spike   # noqa: E402
 
@@ -448,9 +449,20 @@ def paint_crown(A, region, spec, seed):
 
 
 # ------------------------------------------------------------------ RANGER (agile body, longbow)
+_HOLD = {}
+
+
+def ranger_hold(rig):
+    """The override's pose at full draw (cached per armature): the bow is authored upright and the nock sits at hand.R here."""
+    if id(rig) not in _HOLD:
+        _HOLD[id(rig)] = OV.ranger_hold_pose(rig)
+    return _HOLD[id(rig)]
+
+
 def longbow(B, rig, M0, pose):
-    """A longbow in the left hand, authored where the left hand is in `pose` (the Ranged hold) so it is upright while drawn; the
-    right hand draws with no string coupling. Rigid on shield_socket."""
+    """A longbow in the left hand, authored where the left hand is in `pose` (the ranger's Ranged hold, frame 23 of Ranged_Ranger) so it is upright
+    while drawn. The stave is rigid on shield_socket; the string is two segments from the limb tips to a nock vertex skinned to hand.R, authored where
+    the right hand is at full draw, so the clip's right hand draws it back (and in every other clip the thin string trails to the hand)."""
     M = rig.fk(*pose)
     h, t = rig.head(M, 'hand.L'), rig.tail(M, 'hand.L')
     cg = h + (t - h) * .6
@@ -467,9 +479,17 @@ def longbow(B, rig, M0, pose):
     for sg in (1, -1):
         loft(B, [pts[-1] if sg > 0 else pts[0], (pts[-1] if sg > 0 else pts[0]) + np.array((0, 0, .03 * sg))], [.014, .0], [.014, .0], 4, 'trim', ws,
              caps=(True, False), ref=(1, 0, 0))
-    loft(B, [pts[0], pts[-1]], [.0035, .0035], [.0035, .0035], 4, 'bone', ws, ref=(1, 0, 0))                                                 # bowstring
     box(B, cg + aim * .03 + (0, 0, .12), (.016, .016, .016), 'glow', ws)                                                                     # gem set in the riser
     B.pop()
+    # the bowstring in bind coordinates, each vertex mapped through its own bone: limb tips on shield_socket, the nock on hand.R
+    T_bow, T_hand = rig.to_bind(M, 'shield_socket'), rig.to_bind(M, 'hand.R')
+    h, t = rig.head(M, 'hand.R'), rig.tail(M, 'hand.R')
+    nock_world = h + (t - h) * .6
+    a = (T_bow @ np.append(pts[0], 1.0))[:3]
+    b = (T_bow @ np.append(pts[-1], 1.0))[:3]
+    n = (T_hand @ np.append(nock_world, 1.0))[:3]
+    loft(B, [a, n, b], [.0035] * 3, [.0035] * 3, 4, 'leather', lambda p: {'hand.R': 1.0} if np.linalg.norm(np.asarray(p, float) - n) < .02 else {'shield_socket': 1.0},
+         ref=(1, 0, 0), dense=1)                                                                                                             # the string
 
 
 def build_ranger(rig, M0):
@@ -527,7 +547,7 @@ def build_ranger(rig, M0):
     B.push(rig.to_bind(M0, 'weapon_socket'))
     dagger(B, g, (math.cos(deg(48)), 0, math.sin(deg(48))), 'weapon_socket', blade=.40, rune=True)
     B.pop()
-    longbow(B, rig, M0, CL.CLIPS['Ranged'][2](22))
+    longbow(B, rig, M0, ranger_hold(rig))
     return B, RANGER_ATLAS
 
 

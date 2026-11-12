@@ -42,8 +42,14 @@ struct DNDDICEROLL_API FDiceRollCharacter
     UPROPERTY(EditAnywhere, Category = "Character") FDiceRollAnimSet Animations;
     /** Extra yaw in degrees if the import faces the wrong way (the r001 exports face +X). */
     UPROPERTY(EditAnywhere, Category = "Character", meta = (Units = "deg")) float YawOffset = 0.0f;
+    /**
+     * Per-class clip overrides (#150): the key is a clip name ("Ranged", "Melee", ... see ExpeditionPose::ClipName), the value a clip on the same
+     * skeleton that replaces the shared one for this character only (the ranger's bow draw, the barbarian's two-handed swing). A pose with no entry
+     * (or an entry with no clip set) plays the shared clip in Animations; an entry whose clip fails to load makes the whole definition incomplete.
+     */
+    UPROPERTY(EditAnywhere, Category = "Character") TMap<FName, TSoftObjectPtr<UAnimSequence>> Overrides;
 
-    /** Loads the mesh and all ten clips (indexed by EUnitPose). False, with nothing returned, when any is missing. */
+    /** Loads the mesh and all ten clips (indexed by EUnitPose), each the class's override when it has one and the shared clip otherwise. False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
 };
 

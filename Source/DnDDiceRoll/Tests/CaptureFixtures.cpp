@@ -16,7 +16,8 @@
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
  * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
- * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger),
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, and
+ * board-vault-raiders, the dangerous Vault finale against rigged raiders),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
@@ -212,6 +213,19 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindFinale(TEXT("board-vault"), 2);
     FindFinale(TEXT("board-vault-pillars"), 1);
+    // The dangerous finale (#150): the default party against raiders on the Vault, so the rigged raider can be measured there too (`board-vault-raiders`).
+    {
+        bool bFound = false;
+        for (int32 Seed = 1; Seed < 400 && !bFound; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            Write(TEXT("board-vault-raiders"), Run);
+            Describe(TEXT("board-vault-raiders"), Run, Seed, 1);
+            bFound = true;
+        }
+        if (!bFound) { AddError(TEXT("No seed below 400 reaches the dangerous broken-wall finale with the party first")); }
+    }
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)

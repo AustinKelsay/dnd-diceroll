@@ -996,6 +996,12 @@ FIRST_CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Deat
 BRACE_CLIP = "Brace"
 CLIPS = FIRST_CLIPS + [BRACE_CLIP]
 BRACE_SOURCE = ("sk-hero-fighter", "SK_Hero_Fighter", "r002")
+# Per-class clip overrides (#150 batch 2 review): rig key -> {shared clip: (clip package name, action name in that class's LOD0 glb)}. The theme's rig
+# definition names them (FDiceRollCharacter::Overrides, data) and the game plays them instead of the shared clip for that class only.
+CLIP_OVERRIDES = {
+    "class:Barbarian": {"Melee": ("A_Barbarian_Melee", "Melee_Barbarian")},
+    "class:Ranger": {"Ranged": ("A_Ranger_Ranged", "Ranged_Ranger")},
+}
 # asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit). The static r001 characters keep Rim 1.6 and Fill 1.25 (#148, tuned for
 # their dark figures); the rigged ones, whose palettes are already bright, take Rim 1.2 and Fill 1.0 (#150: the lowest pair of 1.2/1.0 and 1.0/0.9 that
 # keeps every rigged class at a mean region contrast of 2.3 or more and a worst shot of 1.4 or more on Vigil, Root and the Vault; see docs/assets.md).
@@ -1211,16 +1217,19 @@ def rig_target(key):
     return (CLASS_RIGS if kind == "class" else FOE_RIGS), entry
 
 
-def rig_matches(definition, mesh, clips):
+def rig_matches(definition, mesh, clips, overrides=None):
     animations = definition.get_editor_property("animations")
-    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and all(
+    held = {str(k): path_of(v) for k, v in definition.get_editor_property("overrides").items()}
+    wanted = {clip: path_of(asset) for clip, asset in (overrides or {}).items()}
+    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and held == wanted and all(
         path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items())
 
 
-def new_rig_definition(mesh, clips, yaw):
+def new_rig_definition(mesh, clips, yaw, overrides=None):
     definition = unreal.DiceRollCharacter()
     definition.set_editor_property("mesh", mesh)
     definition.set_editor_property("yaw_offset", yaw)
+    definition.set_editor_property("overrides", {unreal.Name(clip): asset for clip, asset in (overrides or {}).items()})
     animation_set = unreal.DiceRollAnimSet()
     for clip, asset in clips.items():
         animation_set.set_editor_property(clip.lower(), asset)
@@ -1235,22 +1244,55 @@ def assign_rig(theme, key, name):
     prop, entry = rig_target(key)
     mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
     clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
+    overrides = {shared: unreal.load_asset(override_path(package_name)) for shared, (package_name, _) in CLIP_OVERRIDES.get(key, {}).items()}
     entries = {str(k): v for k, v in theme.get_editor_property(prop).items()}
     pilot_name = PILOT_FIELDS.get(key)
     pilot = theme.get_editor_property(pilot_name) if pilot_name else None
     pilot_set = pilot is not None and pilot.get_editor_property("mesh") is not None
     changed = []
     current = entries.get(entry)
-    if current is None or not rig_matches(current, mesh, clips):
+    if current is None or not rig_matches(current, mesh, clips, overrides):
         source = current if current is not None else pilot
         yaw = source.get_editor_property("yaw_offset") if source is not None else 0.0
-        entries[entry] = new_rig_definition(mesh, clips, yaw)
+        entries[entry] = new_rig_definition(mesh, clips, yaw, overrides)
         theme.set_editor_property(prop, {unreal.Name(k): v for k, v in entries.items()})
         changed.append("assigned")
     if pilot_set:
         theme.set_editor_property(pilot_name, unreal.DiceRollCharacter())
         changed.append("pilot field cleared")
     return changed
+
+
+def override_path(package_name):
+    return RIG_FOLDER + "/Animations/" + package_name
+
+
+def import_override_clips(asset_id, name, key):
+    """Imports a class's override clips (CLIP_OVERRIDES) when absent and never touches an existing one: the class's own r001 glb on the shared
+    skeleton into staging, the action's sequence moved to its package, the rest of staging deleted. Returns {shared clip: log word}."""
+    words = {}
+    for shared, (package_name, action) in CLIP_OVERRIDES.get(key, {}).items():
+        package = override_path(package_name)
+        if library.does_asset_exist(package):
+            words[shared] = "kept"
+            continue
+        source = source_glb(asset_id, name)
+        skeleton = unreal.load_asset(SKELETON)
+        if not os.path.isfile(source) or skeleton is None:
+            raise RuntimeError("Cannot import " + package + ": missing " + (source if not os.path.isfile(source) else SKELETON))
+        staging = THEME + "/_Import/" + package_name
+        imported = import_glb(source, staging, skeleton)
+        wanted = action.lower()
+        found = [a for a in imported if isinstance(a, unreal.AnimSequence) and a.get_name().lower().replace("|", "_").endswith(wanted)]
+        if len(found) != 1:
+            raise RuntimeError("Expected exactly one {} clip from {}, got {}".format(action, source, [a.get_name() for a in found]))
+        if found[0].get_editor_property("skeleton") != skeleton:
+            raise RuntimeError("The imported clip " + action + " is not on " + SKELETON)
+        if not library.rename_asset(found[0].get_path_name(), package):
+            raise RuntimeError("Unable to move clip to " + package)
+        remove_staging(staging)
+        words[shared] = "imported"
+    return words
 
 
 def import_brace_clip():
@@ -1316,6 +1358,8 @@ def import_rig(master, theme):
         apply_rig_material(mesh, texture, asset_id, name, look, master)
         if staging:
             remove_staging(staging)
+        for shared, word in import_override_clips(asset_id, name, key).items():          # before the rig is assigned: its definition names them
+            rig_log("override", override_path(CLIP_OVERRIDES[key][shared][0]), word)
         for status in assign_rig(theme, key, name):
             rig_log("theme", key, status)
         found += 1

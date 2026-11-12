@@ -37,6 +37,10 @@
    0.0,
    36.0
   ],
+  "Ranged_Ranger": [
+   0.0,
+   36.0
+  ],
   "Recover": [
    0.0,
    66.0
@@ -58,7 +62,7 @@
   "Recover": true,
   "Brace": true
  },
- "tris_lod0": 3514,
+ "tris_lod0": 3522,
  "materials": [
   "M_Hero_Ranger"
  ],
@@ -77,7 +81,7 @@
  ],
  "glow_alpha": {
   "verts_alpha_gt_0": 84,
-  "verts": 10542,
+  "verts": 10566,
   "alpha_min": 0.0,
   "alpha_max": 1.0,
   "rgb_min": 0.799
@@ -86,54 +90,54 @@
  "max_influences": 3,
  "deformation_vs_bind": {
   "Idle@30": {
-   "max_cm": 76.3,
-   "mean_cm": 7.0,
-   "moving_verts": 6763
+   "max_cm": 92.2,
+   "mean_cm": 7.2,
+   "moving_verts": 6802
   },
   "Walk@8": {
-   "max_cm": 61.0,
-   "mean_cm": 16.5,
-   "moving_verts": 7915
+   "max_cm": 54.5,
+   "mean_cm": 16.7,
+   "moving_verts": 7954
   },
   "Walk@23": {
-   "max_cm": 93.0,
-   "mean_cm": 17.3,
-   "moving_verts": 7915
+   "max_cm": 92.5,
+   "mean_cm": 17.5,
+   "moving_verts": 7954
   },
   "Melee@11": {
    "max_cm": 109.7,
-   "mean_cm": 39.5,
-   "moving_verts": 7915
+   "mean_cm": 39.9,
+   "moving_verts": 7954
   },
   "Ranged@22": {
-   "max_cm": 154.5,
-   "mean_cm": 28.2,
-   "moving_verts": 7915
+   "max_cm": 178.6,
+   "mean_cm": 28.6,
+   "moving_verts": 7954
   },
   "Cast@22": {
-   "max_cm": 135.6,
-   "mean_cm": 31.9,
-   "moving_verts": 7915
+   "max_cm": 141.4,
+   "mean_cm": 32.2,
+   "moving_verts": 7954
   },
   "Hit@3": {
-   "max_cm": 79.4,
-   "mean_cm": 20.6,
-   "moving_verts": 7915
+   "max_cm": 91.3,
+   "mean_cm": 21.0,
+   "moving_verts": 7954
   },
   "Downed@60": {
    "max_cm": 153.7,
-   "mean_cm": 69.8,
-   "moving_verts": 7915
+   "mean_cm": 70.1,
+   "moving_verts": 7954
   },
   "Death@66": {
    "max_cm": 185.0,
-   "mean_cm": 106.3,
-   "moving_verts": 7915
+   "mean_cm": 106.2,
+   "moving_verts": 7954
   },
   "Recover@30": {
    "max_cm": 122.4,
    "mean_cm": 56.2,
-   "moving_verts": 7915
+   "moving_verts": 7954
   }
  },
  "seam_mm_first_vs_last_max_vertex": {
@@ -143,9 +147,9 @@
   "Ranged": 0.0,
   "Cast": 0.0,
   "Hit": 0.0,
-  "Downed": 1775.263,
+  "Downed": 1947.204,
   "Death": 1855.997,
-  "Recover": 1775.263,
+  "Recover": 1947.204,
   "Brace": 0.0
  },
  "root_drift_mm": {
@@ -174,22 +178,50 @@
  },
  "lods": {
   "LOD1": {
-   "tris": 1671,
+   "tris": 1679,
    "bones": 25,
    "same_bone_names": true
   },
   "LOD2": {
-   "tris": 1017,
+   "tris": 1025,
    "bones": 25,
    "same_bone_names": true
   },
   "LOD0": {
-   "tris": 3514
+   "tris": 3522
   }
  },
  "lod_ratio": {
-  "LOD1": 0.476,
-  "LOD2": 0.289,
+  "LOD1": 0.477,
+  "LOD2": 0.291,
   "LOD0": 1.0
- }
+ },
+ "checks": {
+  "bones: 25 and the contract": true,
+  "clips: all ten with their frame ranges": true,
+  "lods: same bone names, LOD1 and LOD2": true,
+  "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+  "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+  "root drift 0.01 mm or less in every clip": true,
+  "at most 4 influences per vertex": true,
+  "one material on a 1024x1024 atlas": true,
+  "glow alpha present on runes and gems": true,
+  "height 175 to 185 cm excluding held items": true,
+  "LOD0 3,000 to 6,000 triangles": true,
+  "override Ranged_Ranger: present with frames 0 to 36": true,
+  "override Ranged_Ranger: starts and ends on Idle frame 0 (0.01 mm)": true,
+  "override Ranged_Ranger: root drift 0": true
+ },
+ "override": {
+  "present": true,
+  "range": [
+   0.0,
+   36.0
+  ],
+  "first_vs_idle0_mm": 0.0,
+  "last_vs_idle0_mm": 0.0,
+  "root_drift_mm": 0.0
+ },
+ "pass": true,
+ "failures": []
 }

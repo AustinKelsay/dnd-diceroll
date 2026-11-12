@@ -23,22 +23,22 @@
       "blender_validation": {
         "tris": {
           "LOD1": {
-            "tris": 1671,
+            "tris": 1679,
             "bones": 25,
             "same_bone_names": true
           },
           "LOD2": {
-            "tris": 1017,
+            "tris": 1025,
             "bones": 25,
             "same_bone_names": true
           },
           "LOD0": {
-            "tris": 3514
+            "tris": 3522
           }
         },
         "lod_ratio": {
-          "LOD1": 0.476,
-          "LOD2": 0.289,
+          "LOD1": 0.477,
+          "LOD2": 0.291,
           "LOD0": 1.0
         },
         "body_height_m": 1.81,
@@ -58,7 +58,7 @@
     {
       "role": "source",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger_source.blend",
-      "sha256": "e4f966abf2d838ccdbc6a63ffc738dd56464efaa8a511a9c938cbd63d0a69f0c"
+      "sha256": "2e5177b972f5fe9a0c37329affc517722263b291c7927b01600d8d6a5855026e"
     },
     {
       "role": "source",
@@ -73,7 +73,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
-      "sha256": "de9fb99b170d0c54543fec941fe8aa37db40cf6b47660ca75abf0a7fb0e90f3c"
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
     },
     {
       "role": "source",
@@ -83,17 +83,17 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build2.py",
-      "sha256": "0b0a8dde82affeff680693dd0769df7e6adc59ec780f1ca8a227ce5450430b05"
+      "sha256": "809389c26f25b62dc4e11c49c7f4099e5feeb198c108a0e3ea61c0ab69e2f314"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "fb44f632d56c71d0422fe92e51f2fd74c73039deb3415ab3724dcb81f9e246fe"
+      "sha256": "a251fcb623756f198ce7777702d68b807c6fb2f2cded236007c4d1b560c7c7ec"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records2.py",
-      "sha256": "1b414f20de1e06271d3fa45a2cc79b23afacc92237ecb19f72c8eb6c459f9eaa"
+      "sha256": "d57e2ffad84b5ca7203ad3cc549b4978614238a14a57b354e43e5e2539b1a722"
     },
     {
       "role": "source",
@@ -118,17 +118,17 @@
     {
       "role": "export",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger.glb",
-      "sha256": "0d39ba96d84407858cdf3640efd319cf624d49aa1ec4636ee41e6923ef0b0cc9"
+      "sha256": "33929436004ea5d9960a89e8c8868643de12f770f26af337e12d05ac109b1e7a"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger_LOD1.glb",
-      "sha256": "bdcd2bb3de44318a7d9588ac745316c09896171fc844ba0b2192df97e06c0a23"
+      "sha256": "4c6cf0c7085da37b2d2b9c3ef834b59da07612940de3417ce66d3babd2f377a5"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger_LOD2.glb",
-      "sha256": "00750d14fdaa3d55fa4ddd5307aa210cdd2a77db801e12ca44e32b518b2cbb8c"
+      "sha256": "a7e6f3da8f6bc00f69b11521486161625c568b244431337b7d19cadd6774222e"
     }
   ],
   "import_policy": {
