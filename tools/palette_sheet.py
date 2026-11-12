@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The in-game palette contact sheet (#150 batch 4): every class, every subclass, in the game's own render.
 
-Reads a `gallery` run of the palette sweep fixtures (`pal-NN-root`, rendered with tools/capture/palette-poses.json): the shot
+Reads a `gallery` run of the palette sweep fixtures (`pal-NN-root`, rendered with tools/capture/palette-sheet-poses.json (the same pose shots at the closest zoom, 900)): the shot
 `pose-<class>-idle-near` of each fixture holds the party's hero of that class in Idle, close. This crops that hero (the unit's projected box in
 the manifest, with a margin), labels it with its build and lays the classes out as rows, subclasses as columns, in catalog order. ImageMagick 7
 (`magick`) does the cropping and the layout; the crops are written next to the sheet. A build that is a filler in a party is taken from the party

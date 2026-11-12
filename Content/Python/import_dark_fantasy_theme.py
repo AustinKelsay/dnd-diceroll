@@ -138,7 +138,7 @@ def add(material, a, b, x, y):
 
 # Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
 # revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
-MASTER_GRAPH_REVISION = "dice-theme-6"
+MASTER_GRAPH_REVISION = "dice-theme-7"
 MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
@@ -190,7 +190,10 @@ def palette_block(material, tex, x, y):
     index = add(material, mul(material, row, const(material, 4.0, x + 450, y + 160), x + 600, y + 100), col, x + 750, y)
     power = expression(material, unreal.MaterialExpressionPower, x + 900, y)
     mel.connect_material_expressions(const(material, 2.0, x + 800, y + 100), "", power, "Base")
-    mel.connect_material_expressions(index, "", power, "Exponent")
+    mel.connect_material_expressions(index, "", power, "Exp")          # the Power node's pins are Base and Exp (a wrong name connects nothing and leaves the exponent at its default of 2)
+    # A misnamed pin connects nothing and the graph still compiles: fail loudly if the Power node does not have both inputs wired.
+    if len([node for node in mel.get_inputs_for_material_expression(material, power) if node]) != 2:
+        raise RuntimeError("palette_block: the Power node's Base and Exp inputs are not both connected")
     luma_weights = expression(material, unreal.MaterialExpressionConstant3Vector, x, y + 250, constant=unreal.LinearColor(0.2126, 0.7152, 0.0722, 0.0))
     luma = binary(material, unreal.MaterialExpressionDotProduct, tex, luma_weights, x + 300, y + 250, "RGB", "")
     current, current_out = tex, "RGB"

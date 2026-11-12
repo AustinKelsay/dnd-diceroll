@@ -104,6 +104,9 @@ class PaletteTableTests(unittest.TestCase):
         # The palette block sits between the texture sample and the vertex-colour multiply; with all masks 0 each lerp returns its A input, the texture.
         self.assertIn("palette = palette_block(material, tex, -3000, -1800)", script)
         self.assertIn('scalar(material, "PalMask" + slot, 0.0,', script)
+        # The Power node's input pins are "Base" and "Exp": "Exponent" connects nothing and silently leaves the exponent at 2 (every tile then reads the same bit).
+        self.assertIn('power, "Exp")', script)
+        self.assertNotIn('power, "Exponent")', script)
         self.assertIn("mel.connect_material_expressions(current, current_out, blend, \"A\")", script)
 
 

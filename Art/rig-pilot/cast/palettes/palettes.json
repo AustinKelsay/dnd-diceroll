@@ -9,8 +9,8 @@
    48
   ],
   "saturation": 0.85,
-  "luminance_min": 0.3,
-  "luminance_max": 0.6,
+  "luminance_min": 0.4,
+  "luminance_max": 0.62,
   "note": "party slot k (its position among the party in the encounter) tints the class accent tiles with hue k; used for every member of a class that appears more than once in the party"
  },
  "classes": {
@@ -31,6 +31,7 @@
     ],
     "X": [
      "cloth",
+     "emblem",
      "emblem2"
     ]
    },

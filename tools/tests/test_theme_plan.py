@@ -188,7 +188,7 @@ class ThemePlanTests(unittest.TestCase):
     def test_instanced_part_materials_follow_the_revision_pattern(self):
         text = SCRIPT.read_text()
         # The master tint is per-instance custom data behind a bumped graph revision (#144).
-        self.assertIn('MASTER_GRAPH_REVISION = "dice-theme-6"', text)
+        self.assertIn('MASTER_GRAPH_REVISION = "dice-theme-7"', text)
         self.assertIn("MaterialExpressionPerInstanceCustomData,", text)
         # The effect material is created once through ensure_material with its own revision; a rerun keeps a current one.
         self.assertRegex(text, r'(?m)^EFFECT_GRAPH_REVISION = "dice-effect-\d+"$')
