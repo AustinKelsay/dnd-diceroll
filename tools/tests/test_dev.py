@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -97,7 +97,7 @@ class WorkspaceTests(unittest.TestCase):
         with patch.object(dev, "require_engine"), patch.object(dev, "require_closed"), patch.object(dev, "run_logged", return_value=0) as run:
             dev.build()  # A successful no-action build is valid too.
         command = [str(a) for a in run.call_args.args[0]]
-        self.assertTrue(command[0].endswith("Build/BatchFiles/Linux/Build.sh"))
+        self.assertTrue(command[0].replace("\\", "/").endswith("Build/BatchFiles/Linux/Build.sh"))
         self.assertEqual(command[1:4], ["CustomEditor", "Linux", "Development"])
         self.assertIn("-MaxParallelActions=2", command)
         receipt = json.loads((self.w.local / "build.json").read_text())
@@ -225,7 +225,7 @@ class WorkspaceTests(unittest.TestCase):
         self.w.local.mkdir()
         dev = Dev(self.w, host="linux")
         report = {"project_file": str(self.w.project), "engine_version": "5.8.4-58902052+++UE5",
-                  "instructions_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+                  "instructions_sha256": hashlib.sha256(source.read_text(encoding="utf-8").encode("utf-8")).hexdigest()}
         invalid = [None, {**report, "project_file": "/other/Game.uproject"},
                    {**report, "engine_version": "5.8.3-123+++UE5"},
                    {**report, "instructions_sha256": "stale"}]
@@ -265,7 +265,7 @@ class WorkspaceTests(unittest.TestCase):
             dev.test("Project.Starter.")
         self.assertEqual(len(list(self.w.local.glob("automation/*/verified.json"))), 1)
         command = self.commands[0]
-        self.assertTrue(command[0].endswith("Binaries/Linux/UnrealEditor-Cmd"))
+        self.assertTrue(command[0].replace("\\", "/").endswith("Binaries/Linux/UnrealEditor-Cmd"))
         self.assertIn("-ExecCmds=Automation RunTests Project.Starter.;SoftQuit", command)
         self.assertIn("-RenderOffscreen", command)
         self.assertIn("-corelimit=2", command)
@@ -306,8 +306,8 @@ class WorkspaceTests(unittest.TestCase):
 
     def test_linux_layout_and_unsupported_host(self):
         dev = Dev(self.w, host="linux")
-        self.assertTrue(str(dev.editor).endswith("Engine/Binaries/Linux/UnrealEditor"))
-        self.assertTrue(str(dev.cmd).endswith("Engine/Binaries/Linux/UnrealEditor-Cmd"))
+        self.assertTrue(str(dev.editor).replace("\\", "/").endswith("Engine/Binaries/Linux/UnrealEditor"))
+        self.assertTrue(str(dev.cmd).replace("\\", "/").endswith("Engine/Binaries/Linux/UnrealEditor-Cmd"))
         self.assertEqual(dev.platform, "Linux")
         self.assertEqual(Dev(self.w, host="mac").platform, "Mac")
         with patch("dev.current_host", return_value=None):
@@ -338,9 +338,11 @@ class WorkspaceTests(unittest.TestCase):
         binary.parent.mkdir(parents=True)
         (archive / "Linux/CustomGame.sh").write_text("#!/bin/sh\n")
         binary.write_text("")
-        with self.assertRaises(RuntimeError): dev.packaged_binary(archive)  # not executable
+        with patch("dev.os.access", return_value=False) if sys.platform == "win32" else nullcontext():
+            with self.assertRaises(RuntimeError): dev.packaged_binary(archive)  # POSIX execute permission is mocked on Windows
         binary.chmod(0o755)
-        self.assertEqual(dev.packaged_binary(archive), binary)
+        with patch("dev.os.access", return_value=True) if sys.platform == "win32" else nullcontext():
+            self.assertEqual(dev.packaged_binary(archive), binary)
 
     def test_smoke_preserves_start_failure_when_cleanup_fails(self):
         self.w.local.mkdir()
@@ -436,6 +438,8 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-poses.json")), 34)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/route-poses.json")), 4)
+        self.assertEqual(len(load_poses(self.poses([{"name": "route-hero", "mode": "overview", "hero": 4}]))), 1)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
@@ -464,6 +468,10 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "tips", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "move", "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "start", "build": "Wizard"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": 0}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": 5}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": "2"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "start", "hero": 2}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},

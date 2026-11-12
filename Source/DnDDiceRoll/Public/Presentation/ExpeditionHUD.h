@@ -120,6 +120,8 @@ public:
 private:
     int32 DetailUnitId = INDEX_NONE;
     TArray<int32> DetailUnitIds;
+    /** The party slot under the pointer this frame, or INDEX_NONE (set by DrawParty): on the route, reward and camp screens a hovered card's details replace the selected hero's (#200). */
+    int32 HoveredParty = INDEX_NONE;
     TArray<FBox2D> DetailRects;
     FBox2D LegendBox = FBox2D(ForceInit);
     bool bLegendRequested = false;

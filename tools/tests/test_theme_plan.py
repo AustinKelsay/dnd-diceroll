@@ -133,7 +133,7 @@ class ThemePlanTests(unittest.TestCase):
             files = theme_plan.lod_exports(asset_id, revision, name)
             recorded = theme_plan.record_lods(asset_id, revision)
             self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in with_lods else [], asset_id)
-            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            self.assertEqual([Path(path).relative_to(ROOT).as_posix() for path in files], [entry[1] for entry in recorded], asset_id)
             if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
                 pointers.append(asset_id)
                 continue
@@ -282,7 +282,7 @@ class RootKitPlanTests(unittest.TestCase):
             files = theme_plan.lod_exports(asset_id, revision, name)
             recorded = theme_plan.record_lods(asset_id, revision)
             self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in with_lods else [], asset_id)
-            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            self.assertEqual([Path(path).relative_to(ROOT).as_posix() for path in files], [entry[1] for entry in recorded], asset_id)
             if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
                 pointers.append(asset_id)
                 continue
@@ -422,7 +422,7 @@ class VaultKitPlanTests(unittest.TestCase):
             files = theme_plan.lod_exports(asset_id, revision, name)
             recorded = theme_plan.record_lods(asset_id, revision)
             self.assertEqual([entry[0] for entry in recorded], [1, 2] if asset_id in two else [1] if asset_id in one else [], asset_id)
-            self.assertEqual([str(Path(path).relative_to(ROOT)) for path in files], [entry[1] for entry in recorded], asset_id)
+            self.assertEqual([Path(path).relative_to(ROOT).as_posix() for path in files], [entry[1] for entry in recorded], asset_id)
             if is_lfs_pointer(theme_plan.export_path(asset_id, revision, name)) or any(is_lfs_pointer(file) for file in files):
                 pointers.append(asset_id)
                 continue

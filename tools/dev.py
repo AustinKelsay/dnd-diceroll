@@ -22,6 +22,7 @@ import subprocess
 import time
 import urllib.parse
 
+import windows_host
 from mcp_client import MCP
 import perf as perf_tools
 from scaffold import BASES, new_class
@@ -34,7 +35,7 @@ STATUS = "unreal_starter.status.StarterWorkspaceTools"
 
 
 # Linux (PlebDev Ultra) is the one validated host. Mac still runs through the same
-# commands but is no longer validated; other hosts get guidance only.
+# commands but is no longer validated; Windows helper evidence is advisory.
 HOSTS = {
     "linux": {"label": "linux/x86_64", "platform": "Linux",
               "engine_root": Path.home() / "Applications/UnrealEngine-5.8.4",
@@ -49,6 +50,15 @@ HOSTS = {
               "tools": ["git", "ps", "lsof"],
               "quit": "quit_by_signal", "save_dialog": False,
               "version_tools": []},
+    "windows": {"label": "win32/AMD64", "platform": "Win64",
+                "engine_root": Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Epic Games/UE_5.8",
+                "editor": "Binaries/Win64/UnrealEditor.exe", "cmd": "Binaries/Win64/UnrealEditor-Cmd.exe",
+                "build": "Build/BatchFiles/Build.bat", "uat": "Build/BatchFiles/RunUAT.bat",
+                "proxy": "Bin/Win64/unreal_mcp_proxy.exe", "process_token": "UnrealEditor.exe",
+                "headless": ["-nullrhi"],
+                "automation": lambda prefix: [f"-ExecCmds=Automation RunTests {prefix};SoftQuit", "-nullrhi"],
+                "packaged": "**/Binaries/Win64/{target}.exe", "tools": ["git", "powershell.exe", "dxdiag.exe"],
+                "quit": "quit_by_window", "save_dialog": False, "version_tools": []},
     "mac": {"label": "darwin/arm64", "platform": "Mac",
             "engine_root": Path("/Users/Shared/Epic Games/UE_5.8"),
             "editor": "Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor", "cmd": "Binaries/Mac/UnrealEditor-Cmd",
@@ -148,6 +158,8 @@ def load_poses(path):
             raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
         if "build" in shot and (shot["mode"] != "start" or not isinstance(shot["build"], str) or not re.fullmatch(r"[a-z0-9.-]{1,64}", shot["build"])):
             raise ValueError(f"{name} may give a \"build\" of lowercase letters, digits, '.' and '-' on a start shot only")
+        if "hero" in shot and (shot["mode"] != "overview" or isinstance(shot["hero"], bool) or not isinstance(shot["hero"], int) or not 1 <= shot["hero"] <= 4):
+            raise ValueError(f"{name} may give a \"hero\" party slot from 1 to 4 on an overview shot only")
         if shot["mode"] == "tooltip" and shot.get("action") not in CAPTURE_ACTIONS:
             raise ValueError(f"{name} needs an \"action\" of {', '.join(CAPTURE_ACTIONS)}")
         if shot["mode"] == "hint" and shot.get("hint") not in CAPTURE_HINTS:
@@ -236,6 +248,8 @@ def current_host():
         return "linux"
     if sys.platform == "darwin" and platform.machine() == "arm64":
         return "mac"
+    if sys.platform == "win32" and platform.machine().lower() in ("amd64", "x86_64"):
+        return "windows"
     return None
 
 
@@ -275,6 +289,10 @@ class Dev:
     @contextmanager
     def operation(self):
         self.w.local.mkdir(exist_ok=True)
+        if self.host == "windows":
+            with windows_host.operation_lock(self.w.local / "operation.lock"):
+                yield
+            return
         import fcntl  # Unix only; imported here so doctor can still guide other hosts.
         with (self.w.local / "operation.lock").open("a") as lock:
             try:
@@ -291,11 +309,30 @@ class Dev:
 
     def execute(self, args, **kwargs):
         args = [str(a) for a in args]
-        if "/" not in args[0]:
+        if "/" not in args[0] and "\\" not in args[0]:
             args[0] = self.tool(args[0])
-        return subprocess.run(args, cwd=self.w.root, check=True, **kwargs)
+        if self.host == "windows":
+            kwargs.setdefault("creationflags", windows_host.BELOW_NORMAL)
+        return subprocess.run(self.native_command(args), cwd=self.w.root, check=True, **kwargs)
+
+    def native_command(self, args, unreal=False):
+        args = [str(arg) for arg in args]
+        if self.host != "windows":
+            return args
+        if Path(args[0]).name.lower() in ("unrealeditor.exe", "unrealeditor-cmd.exe"):
+            # Fresh per-run INIs avoid UE 5.8 stale-layout warnings; never overwrite a user layout.
+            layouts = self.w.local / "layouts"
+            layouts.mkdir(parents=True, exist_ok=True)
+            args += ["-NoLiveCoding", f"-EditorLayoutIni={layouts / (stamp() + '.ini')}"]
+            unreal = True
+        return windows_host.unreal_command(args) if unreal else windows_host.batch_command(args)
+
+    def native_options(self):
+        return {"creationflags": windows_host.BELOW_NORMAL} if self.host == "windows" else {}
 
     def processes(self):
+        if self.host == "windows":
+            return windows_host.editor_processes(self.w.project)
         result = self.execute(["ps", "-axww", "-o", "pid=,command="], capture_output=True, text=True)
         processes = []
         for line in result.stdout.splitlines():
@@ -318,6 +355,8 @@ class Dev:
         return processes
 
     def listener(self):
+        if self.host == "windows":
+            return windows_host.listener_pid(self.endpoint.port)
         result = subprocess.run([self.tool("lsof"), "-nP", "-a", "-iTCP:" + str(self.endpoint.port), "-sTCP:LISTEN", "-Fp"], capture_output=True, text=True)
         if result.returncode not in (0, 1):
             raise RuntimeError(f"Cannot inspect listener: {result.stderr.strip()}")
@@ -329,7 +368,11 @@ class Dev:
     def os_identity(self):
         pid = self.listener()
         matches = [p for p in self.processes() if p["pid"] == pid]
-        if len(matches) != 1 or not matches[0]["command"].startswith(str(self.editor) + " "):
+        if self.host == "windows":
+            valid = len(matches) == 1 and os.path.normcase(str(Path(matches[0]["executable"]).resolve())) == os.path.normcase(str(self.editor))
+        else:
+            valid = len(matches) == 1 and matches[0]["command"].startswith(str(self.editor) + " ")
+        if not valid:
             raise RuntimeError("MCP listener is not a verified instance of this project and pinned editor")
         return pid
 
@@ -381,13 +424,15 @@ class Dev:
         if self.host != "linux" or not self.supported:
             print("NOTE " + OFF_ULTRA)
         if not self.supported:
-            print(f"SKIP Unreal checks: {sys.platform}/{platform.machine()} has no helper support (Windows is #51)")
+            print(f"SKIP Unreal checks: {sys.platform}/{platform.machine()} has no helper support (Windows support is tracked in #51)")
             return
         check("Host", self.check_host)
         for name in self.layout["tools"]:
             check(f"Tool {name}", lambda name=name: self.tool(name))
         check("Unreal", self.require_engine)
         check("Editor plugins", self.check_plugins)
+        if self.host == "windows":
+            check("DirectX 12", lambda: windows_host.dx12_report(self.w.local / "doctor" / "dxdiag.xml"))
         tools = [("Git LFS", ["git", "lfs", "version"]), *self.layout["version_tools"]]
         if self.host == "linux":
             check("Clang (engine toolchain)", self.check_clang)
@@ -409,7 +454,7 @@ class Dev:
 
     def check_host(self):
         if not self.supported:
-            raise RuntimeError("This helper supports Linux x86_64 (validated) and Apple Silicon macOS (unvalidated)")
+            raise RuntimeError("This helper supports Linux x86_64 (validated), Apple Silicon macOS and Windows x64 (advisory)")
         return f"{self.layout['label']} {platform.release()}" + ("" if self.host == "linux" else " (not validated)")
 
     def check_clang(self):
@@ -445,7 +490,7 @@ class Dev:
             yield
         finally:
             after = self.config_snapshot()
-            changed = [str(p.relative_to(self.w.root)) for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
+            changed = [p.relative_to(self.w.root).as_posix() for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
             if changed:
                 original = sys.exc_info()[1]
                 message = f"The engine changed tracked config {changed}; inspect `git diff` and restore it before committing. The helper does not revert it."
@@ -518,8 +563,8 @@ class Dev:
 
     def run_logged(self, args, log):
         """Stream a child's output to the console and a log file; return its exit code."""
-        with log.open("w") as stream:
-            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+        with log.open("w", encoding="utf-8" if self.host == "windows" else None) as stream:
+            process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", encoding="utf-8" if self.host == "windows" else None, **self.native_options())
             for line in process.stdout:
                 sys.stdout.write(line)
                 stream.write(line)
@@ -587,7 +632,7 @@ class Dev:
             raise RuntimeError("Editor build evidence is missing or stale; run build first")
         started = time.time()
         with (self.w.local / "editor-launch.log").open("ab") as log:
-            process = subprocess.Popen([str(self.editor), str(self.w.project), "-ModelContextProtocolStartServer", f"-ModelContextProtocolPort={self.endpoint.port}", f"-abslog={self.w.log}", "-nosplash", *self.native_limits()], cwd=self.w.root, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+            process = subprocess.Popen(self.native_command([str(self.editor), str(self.w.project), "-ModelContextProtocolStartServer", f"-ModelContextProtocolPort={self.endpoint.port}", f"-abslog={self.w.log}", "-nosplash", *self.native_limits()]), cwd=self.w.root, stdout=log, stderr=subprocess.STDOUT, start_new_session=True, **self.native_options())
         write_json(self.w.local / "editor.json", {"pid": process.pid, "project_file": str(self.w.project), "mcp_url": self.w.versions["mcp_url"], "launched_at": stamp()})
         if wait:
             deadline = time.monotonic() + 180
@@ -633,6 +678,10 @@ class Dev:
                 return
             time.sleep(0.5)
         raise RuntimeError("Editor did not exit in time. Check it in Unreal; do not signal it again. No force quit attempted.")
+
+    def quit_by_window(self, pid):
+        # Only after exact OS + MCP identity and two clean-state checks in close().
+        windows_host.normal_quit(pid)
 
     def quit_by_signal(self, pid):
         # Unreal's Unix handler turns the first SIGTERM into a normal engine exit request
@@ -727,7 +776,7 @@ class Dev:
     def run_bounded(self, args, log, timeout):
         """Run an owned headless engine process; on timeout leave it running and report it."""
         with log.open("ab") as stream:
-            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
             try:
                 return process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
@@ -769,17 +818,27 @@ class Dev:
         print(f"Automation passed: {report}; warning lines: {len(events['warnings'])}; evidence: {output}")
 
     def run_game(self, args, log, timeout):
-        """Run one owned game process. On timeout it gets one SIGTERM (a normal exit request); it is never killed."""
+        """Run one owned game process; request one normal host-specific exit on timeout, never kill."""
         with log.open("ab") as stream:
-            process = subprocess.Popen([str(a) for a in args], cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(self.native_command(args), cwd=self.w.root, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
             try:
                 return process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
-                process.terminate()
+                if self.host == "windows":
+                    if process.poll() is not None:
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and exited before the close request. Inspect {log}") from None
+                    try:
+                        windows_host.normal_quit(process.pid)
+                    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                        state = "left running" if process.poll() is None else "already exited"
+                        raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s; normal window-close request failed: {error}; {state}. Inspect {log}") from error
+                else:
+                    process.terminate()
                 try:
                     process.wait(timeout=30)
                 except subprocess.TimeoutExpired:
-                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
+                    request = "window-close request" if self.host == "windows" else "SIGTERM"
+                    raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one {request}; left running. Inspect {log}") from None
                 raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
 
     def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, static_figures=False, no_palettes=False, no_accents=False):
@@ -821,7 +880,7 @@ class Dev:
                     # The game only reads a copy; the real fixture and any real save stay untouched.
                     shutil.copy2(fixture_root / name / "current-v1.json", save / "current-v1.json")
                     log = target / "game.log"
-                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
+                    command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.gallery_flags(),
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
                                f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []),
@@ -935,6 +994,8 @@ class Dev:
 
     def perf_context(self, package, editor, script, resolution, frames, timeout, offscreen, vsync, sound):
         """Validate the arguments and resolve what a pass launches. Shared by every pass of a run."""
+        if self.host == "windows":
+            raise RuntimeError("Windows perf launches are unsupported: RSS capture and safe shutdown need a port. Use Ultra; --pass report can read existing evidence.")
         size = parse_resolution(resolution)
         if editor and package:
             raise ValueError("--editor and --package are exclusive")
@@ -1195,6 +1256,10 @@ class Dev:
             self.perf_pass(ctx, output, name, pad)
         return self.perf_report(output, pad)
 
+    def gallery_flags(self):
+        # Windows capture needs a real renderer/window; null-RHI is only for commandlets.
+        return [] if self.host == "windows" else self.layout["headless"]
+
     def packaged_binary(self, output):
         target = self.w.settings["game_target"]
         found = [p for p in output.glob(self.layout["packaged"].format(target=target)) if p.is_file() and os.access(p, os.X_OK)]
@@ -1202,19 +1267,27 @@ class Dev:
             raise RuntimeError(f"Cannot identify the packaged {target} executable in {output}: {found}")
         return found[0]
 
+    def package_launch_flags(self, output):
+        if self.host == "windows":
+            # A real window can honor CloseMainWindow; null-RHI has no HWND.
+            save = output / "save"
+            save.mkdir(exist_ok=True)
+            return ["-windowed", "-ResX=1280", "-ResY=720", "-NoLiveCoding", f"-ExpeditionSaveRoot={save}"]
+        return self.layout["headless"]
+
     def package(self):
         self.require_engine()
         self.require_closed()
         output = self.w.root / "Builds" / stamp()
         output.mkdir(parents=True)
         log = output / "package.log"
-        with self.config_guard(), log.open("w") as stream:
-            self.execute([self.engine / "Build/BatchFiles/RunUAT.sh", "BuildCookRun", f"-project={self.w.project}", f"-platform={self.platform}", "-clientconfig=Development", f"-target={self.w.settings['game_target']}", "-build", "-cook", "-stage", "-pak", "-package", "-archive", f"-archivedirectory={output}", "-unattended", "-nop4", "-utf8output", *self.package_limits()], stdout=stream, stderr=subprocess.STDOUT)
+        with self.config_guard(), log.open("w", encoding="utf-8" if self.host == "windows" else None) as stream:
+            self.execute([self.engine / self.layout.get("uat", "Build/BatchFiles/RunUAT.sh"), "BuildCookRun", f"-project={self.w.project}", f"-platform={self.platform}", "-clientconfig=Development", f"-target={self.w.settings['game_target']}", "-build", "-cook", "-stage", "-pak", "-package", "-archive", f"-archivedirectory={output}", "-unattended", "-nop4", "-utf8output", *self.package_limits()], stdout=stream, stderr=subprocess.STDOUT)
         package_events = log_events(log.read_text(errors="replace"))
         binary = self.packaged_binary(output)
         launch_log = output / "launch.log"
         with launch_log.open("w") as stream:
-            process = subprocess.Popen([str(binary), "-unattended", *self.layout["headless"], "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()], cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(self.native_command([str(binary), "-unattended", *self.package_launch_flags(output), "-nosound", "-stdout", "-FullStdOutLogOutput", *self.native_limits()], unreal=True), cwd=binary.parent, stdout=stream, stderr=subprocess.STDOUT, **self.native_options())
             try:
                 deadline = time.monotonic() + 90
                 loaded = False
@@ -1235,11 +1308,22 @@ class Dev:
                 # is Unreal's normal exit request on Linux and macOS; it is not escalated.
                 original = sys.exc_info()[1]
                 if process.poll() is None:
-                    process.terminate()
+                    if self.host == "windows":
+                        try:
+                            windows_host.normal_quit(process.pid)
+                        except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                            state = "left running" if process.poll() is None else "already exited"
+                            message = f"Packaged game PID {process.pid} normal window-close request failed: {error}; {state}"
+                            if original:
+                                message += f". Earlier failure: {original}"
+                            raise RuntimeError(message) from original
+                    else:
+                        process.terminate()
                     try:
                         process.wait(timeout=30)
                     except subprocess.TimeoutExpired:
-                        message = f"Packaged game PID {process.pid} did not exit after one SIGTERM; left running"
+                        request = "window-close request" if self.host == "windows" else "SIGTERM"
+                        message = f"Packaged game PID {process.pid} did not exit after one {request}; left running"
                         if original:
                             message += f". Earlier failure: {original}"
                         raise RuntimeError(message) from original
@@ -1285,6 +1369,8 @@ def lifecycle_problems(code, new_crashes, root, who="Engine"):
 
 def pid_exists(pid):
     """True until the process is fully gone; an exiting editor can drop out of `ps` matching first."""
+    if sys.platform == "win32":
+        return windows_host.pid_alive(pid)
     try:
         os.kill(pid, 0)  # Signal 0 only checks existence; nothing is delivered.
     except ProcessLookupError:

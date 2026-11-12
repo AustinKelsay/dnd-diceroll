@@ -129,7 +129,13 @@ inline TArray<ExpeditionLayout::Rect> HudRects(bool bRoute, double W, double H)
         Out.Add({8.0, 4.0, 288.0, 50.0});                                                                    // the status strip (270 wide outside combat)
         Out.Add({ExpeditionLayout::PartyCardX, ExpeditionLayout::PartyCardTop, ExpeditionLayout::PartyCardX + ExpeditionLayout::PartyCardWidth,
             ExpeditionLayout::PartyCardTop + 3 * ExpeditionLayout::PartyCardPitch + ExpeditionLayout::PartyCardHeight});   // the party cards
-        for (int32 Slot = 0; Slot < 4; ++Slot) { Out.Add(ExpeditionLayout::PartyDetailRect(Slot, ExpeditionLayout::PartyDetailMaxLines)); }   // a hero's details, whichever card is hovered or selected
+        // A hero's details, whichever card is hovered or selected, where the HUD puts them: beside the card, or clear of the banner and cards when they would meet (#200).
+        for (int32 Slot = 0; Slot < 4; ++Slot)
+        {
+            const Rect Usual = ExpeditionLayout::PartyDetailRect(Slot, ExpeditionLayout::PartyDetailMaxLines);
+            Out.Add(Usual);   // a shorter panel stays here when it is clear of the block
+            Out.Add(ExpeditionLayout::PartyDetailClearOf(Usual, ExpeditionLayout::RouteBlockRect(W, H), W, H));
+        }
         Out.Add(ExpeditionLayout::RouteBannerRect(W, H));
         Out.Add(ExpeditionLayout::RouteCardRect(W, H, 0));
         Out.Add(ExpeditionLayout::RouteCardRect(W, H, 1));

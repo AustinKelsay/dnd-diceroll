@@ -86,7 +86,7 @@ def check_repository(root):
     problems = []
     for name in files:
         path = Path(name)
-        if GENERATED.intersection(path.parts) or name.startswith(("Build/Mac/", "Build/Linux/")) or path.suffix == ".pyc":
+        if GENERATED.intersection(path.parts) or name.startswith(("Build/Mac/", "Build/Linux/", "Build/Win64/", "Build/Windows/FileOpenOrder/")) or path.suffix == ".pyc":
             problems.append(f"Generated output is tracked: {name}")
         if name.startswith("Config/") and re.search(rb"(?im)^\s*SecurityToken\s*=\s*[^\s\r\n]+", stored(root, name)):
             problems.append(f"Machine-generated SecurityToken is tracked: {name} (value omitted)")
@@ -99,7 +99,7 @@ def check_repository(root):
     except (KeyError, ValueError, configparser.Error, RuntimeError):
         problems.append("Cannot validate MCP endpoint configurations in the index.")
     file_set = set(files)
-    directories = {str(parent) for p in files for parent in Path(p).parents}
+    directories = {parent.as_posix() for p in files for parent in Path(p).parents}
     for name in files:
         if not name.endswith(".md"):
             continue
@@ -109,7 +109,7 @@ def check_repository(root):
             if parsed.scheme or parsed.netloc or not parsed.path:
                 continue
             target = Path(os.path.normpath(str(Path(name).parent / unquote(parsed.path))))
-            if str(target) not in file_set and str(target) not in directories:
+            if target.as_posix() not in file_set and target.as_posix() not in directories:
                 problems.append(f"Broken local link in {name}: {link}")
     return problems
 
@@ -129,7 +129,7 @@ def editor_problems(root):
     # Import the Unreal inspector only here; `check` stays host-neutral.
     from dev import Dev, current_host
     if current_host() is None:
-        return ["Editor state is unverified: local Unreal inspection supports Linux x86_64 (validated) and Apple Silicon macOS."]
+        return ["Editor state is unverified: local Unreal inspection supports Linux x86_64 (validated), Apple Silicon macOS and Windows x64 (advisory)."]
     from workspace import Workspace
     inspector = Dev(Workspace.discover(root))
     inspector.require_closed()
