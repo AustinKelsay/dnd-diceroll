@@ -3,7 +3,7 @@
   "settleFrames": 30,
   "shots": [
     {
-      "name": "pose-scout-melee-default",
+      "name": "pose-scout-melee-t037",
       "mode": "pose",
       "role": "Scout",
       "pose": "Melee",
@@ -12,7 +12,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-scout-hit-default",
+      "name": "pose-scout-hit-t010",
       "mode": "pose",
       "role": "Scout",
       "pose": "Hit",
@@ -21,7 +21,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-scout-death-default",
+      "name": "pose-scout-death-t260",
       "mode": "pose",
       "role": "Scout",
       "pose": "Death",
@@ -39,7 +39,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-archer-ranged-default",
+      "name": "pose-archer-ranged-t073",
       "mode": "pose",
       "role": "Archer",
       "pose": "Ranged",
@@ -48,7 +48,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-archer-ranged-default",
+      "name": "pose-archer-ranged-t040",
       "mode": "pose",
       "role": "Archer",
       "pose": "Ranged",
@@ -57,7 +57,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-archer-hit-default",
+      "name": "pose-archer-hit-t010",
       "mode": "pose",
       "role": "Archer",
       "pose": "Hit",
@@ -66,7 +66,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-archer-death-default",
+      "name": "pose-archer-death-t260",
       "mode": "pose",
       "role": "Archer",
       "pose": "Death",
@@ -84,7 +84,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-skirmisher-melee-default",
+      "name": "pose-skirmisher-melee-t037",
       "mode": "pose",
       "role": "Skirmisher",
       "pose": "Melee",
@@ -93,7 +93,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-skirmisher-hit-default",
+      "name": "pose-skirmisher-hit-t010",
       "mode": "pose",
       "role": "Skirmisher",
       "pose": "Hit",
@@ -102,7 +102,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-skirmisher-death-default",
+      "name": "pose-skirmisher-death-t260",
       "mode": "pose",
       "role": "Skirmisher",
       "pose": "Death",
@@ -120,7 +120,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-brute-melee-default",
+      "name": "pose-brute-melee-t020",
       "mode": "pose",
       "role": "Brute",
       "pose": "Melee",
@@ -129,7 +129,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-brute-melee-default",
+      "name": "pose-brute-melee-t037",
       "mode": "pose",
       "role": "Brute",
       "pose": "Melee",
@@ -138,7 +138,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-brute-melee-default",
+      "name": "pose-brute-melee-t055",
       "mode": "pose",
       "role": "Brute",
       "pose": "Melee",
@@ -147,7 +147,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-brute-hit-default",
+      "name": "pose-brute-hit-t010",
       "mode": "pose",
       "role": "Brute",
       "pose": "Hit",
@@ -156,7 +156,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-brute-death-default",
+      "name": "pose-brute-death-t260",
       "mode": "pose",
       "role": "Brute",
       "pose": "Death",
@@ -174,7 +174,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-warden-melee-default",
+      "name": "pose-warden-melee-t037",
       "mode": "pose",
       "role": "Warden",
       "pose": "Melee",
@@ -183,7 +183,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-warden-brace-default",
+      "name": "pose-warden-brace-t045",
       "mode": "pose",
       "role": "Warden",
       "pose": "Brace",
@@ -192,7 +192,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-warden-hit-default",
+      "name": "pose-warden-hit-t010",
       "mode": "pose",
       "role": "Warden",
       "pose": "Hit",
@@ -201,7 +201,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-warden-death-default",
+      "name": "pose-warden-death-t260",
       "mode": "pose",
       "role": "Warden",
       "pose": "Death",
@@ -219,7 +219,7 @@
       "distance": "default"
     },
     {
-      "name": "pose-raider-melee-default",
+      "name": "pose-raider-melee-t037",
       "mode": "pose",
       "role": "Raider",
       "pose": "Melee",

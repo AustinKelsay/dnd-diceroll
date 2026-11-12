@@ -15,7 +15,7 @@ from mcp_client import MCP, decode_response
 from scaffold import new_class
 import dev as dev_module
 import struct
-from dev import Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
+from dev import FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
 
 
 class Response(io.BytesIO):
@@ -427,6 +427,7 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/poses.json")), 47)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast2-poses.json")), 62)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-poses.json")), 49)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/foes-poses.json")), 25)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/ranged-release-poses.json")), 22)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/spell-release-poses.json")), 11)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 28)
