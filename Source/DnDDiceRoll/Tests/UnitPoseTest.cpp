@@ -2507,7 +2507,7 @@ struct FClass
 
 const FClass Classes[] = {
     {EAdventurerRole::Bard, TEXT("bard"), TEXT("bard.valor"), TEXT("bard.valor"), TEXT("Valiant Strike"), TEXT("bard.eloquence"), TEXT("Reassuring Word"), true, true},
-    {EAdventurerRole::Artificer, TEXT("artificer"), TEXT("artificer.battle-smith"), TEXT("artificer.artillerist"), TEXT("Force Cannon"), TEXT("artificer.armorer"), TEXT("Defensive Field"), false, false},
+    {EAdventurerRole::Artificer, TEXT("artificer"), TEXT("artificer.battle-smith"), TEXT("artificer.battle-smith"), TEXT("Defender Strike"), TEXT("artificer.armorer"), TEXT("Defensive Field"), false, false},
 };
 
 bool NewCastRun(FExpeditionRun& Run, int32 Seed, const TCHAR* Identity, TMap<EAdventurerRole, int32>& Ids)
@@ -2715,16 +2715,18 @@ bool FArtificerSpellBoltTest::RunTest(const FString& Parameters)
     using CastBatch2::SpecialOf;
     // The artificer's damaging spell special aimed at an enemy from range throws one cyan bolt at the Cast release frame, before the hit lands and never an arrow; the same special up
     // close, a ward, and every other class's special throw nothing (the lead's call: a cyan bolt only for the artificer's spell specials).
-    const FAbilityFacts* Cannon = FindAbility(TEXT("artificer.artillerist"), TEXT("Force Cannon"));
+    const FAbilityFacts* Cannon = FindAbility(TEXT("artificer.artillerist"), TEXT("Force Cannon"));      // a Push: no flinch, still a bolt
+    const FAbilityFacts* Strike = FindAbility(TEXT("artificer.battle-smith"), TEXT("Defender Strike"));
     const FAbilityFacts* Field = FindAbility(TEXT("artificer.armorer"), TEXT("Defensive Field"));
     const FAbilityFacts* Valiant = FindAbility(TEXT("bard.valor"), TEXT("Valiant Strike"));
-    if (!TestNotNull(TEXT("Force Cannon is in the catalog"), Cannon) || !TestNotNull(TEXT("Defensive Field is in the catalog"), Field) || !TestNotNull(TEXT("Valiant Strike is in the catalog"), Valiant)) { return false; }
-    struct FCase { const TCHAR* Name; const TCHAR* Build; const FAbilityFacts* Ability; int32 FoeX; bool bSelf; bool bBolt; };
+    if (!TestNotNull(TEXT("Force Cannon is in the catalog"), Cannon) || !TestNotNull(TEXT("Defender Strike is in the catalog"), Strike) || !TestNotNull(TEXT("Defensive Field is in the catalog"), Field) || !TestNotNull(TEXT("Valiant Strike is in the catalog"), Valiant)) { return false; }
+    struct FCase { const TCHAR* Name; const TCHAR* Build; const FAbilityFacts* Ability; int32 FoeX; bool bSelf; bool bBolt; bool bFlinch; };
     const FCase Cases[] = {
-        {TEXT("artificer Force Cannon from range"), TEXT("artificer.artillerist"), Cannon, 7, false, true},
-        {TEXT("artificer Force Cannon up close"), TEXT("artificer.artillerist"), Cannon, 3, false, false},
-        {TEXT("artificer Defensive Field (a ward)"), TEXT("artificer.armorer"), Field, 7, true, false},
-        {TEXT("bard Valiant Strike from range (no special bolt)"), TEXT("bard.valor"), Valiant, 7, false, false},
+        {TEXT("artificer Defender Strike from range"), TEXT("artificer.battle-smith"), Strike, 7, false, true, true},
+        {TEXT("artificer Force Cannon from range (a push)"), TEXT("artificer.artillerist"), Cannon, 7, false, true, false},
+        {TEXT("artificer Defender Strike up close"), TEXT("artificer.battle-smith"), Strike, 3, false, false, true},
+        {TEXT("artificer Defensive Field (a ward)"), TEXT("artificer.armorer"), Field, 7, true, false, false},
+        {TEXT("bard Valiant Strike from range (no special bolt)"), TEXT("bard.valor"), Valiant, 7, false, false, true},
     };
     const FLinearColor Cyan = FExpeditionPlayback::RangedBolt(FVector2D(1, 1), FVector2D(5, 1), EAdventurerRole::Artificer, false).Color;
     for (const FCase& Case : Cases)
@@ -2763,7 +2765,7 @@ bool FArtificerSpellBoltTest::RunTest(const FString& Parameters)
             TestTrue(Who + TEXT(": the Cast clip plays"), CastStart >= 0.0f);
             TestTrue(*(Who + FString::Printf(TEXT(": the bolt leaves %.2f s after the cast starts, at the release frame (%.2f s)"), FirstBolt - CastStart, FExpeditionPlayback::CastReleaseSeconds)),
                 FirstBolt - CastStart >= FExpeditionPlayback::CastReleaseSeconds - 0.05f && FirstBolt - CastStart <= FExpeditionPlayback::CastReleaseSeconds + 0.12f);
-            TestTrue(*(Who + TEXT(": the hit lands after the bolt leaves")), FirstHit > FirstBolt);
+            if (Case.bFlinch) { TestTrue(*(Who + TEXT(": the hit lands after the bolt leaves")), FirstHit > FirstBolt); }
         }
         else { TestEqual(*(Who + TEXT(": nothing is thrown")), Bolts, 0); }
         TestFalse(Who + TEXT(": playback is done"), Show.IsBusy());
