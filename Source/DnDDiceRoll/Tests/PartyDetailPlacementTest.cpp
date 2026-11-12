@@ -175,4 +175,76 @@ bool FPartyDetailPlacementHudTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+/**
+ * #213: after a number key selects a hero, moving the pointer over another party card must show that card's details, as a click-selected hero's do. The real controller
+ * takes the keys and the pointer; every screen that draws the party cards (route, reward, camp and combat) at each size.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPartyCardHoverAfterKeysTest, "Project.Expedition.Presentation.PartyCardHoverWorksAfterKeyboardSelection",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPartyCardHoverAfterKeysTest::RunTest(const FString& Parameters)
+{
+    using namespace PartyDetailPlacementTest;
+    FString Error;
+    FExpeditionRun Start;
+    Start.NewRun(20261030, Error, TEXT("card-hover-keys"));
+    struct FCase { const TCHAR* Name; FExpeditionSnapshot Checkpoint; bool bCombat; };
+    TArray<FCase> Cases;
+    Cases.Add({TEXT("route"), Start.Snapshot(), false});
+    {
+        FExpeditionRun Fight;
+        Fight.NewRun(20261030, Error, TEXT("card-hover-keys-combat"));
+        if (Fight.ChooseRoute(Fight.Progress().Offers[0].Id, Error)) { Cases.Add({TEXT("combat"), Fight.Snapshot(), true}); }
+    }
+    for (int32 Seed = 1; Seed < 60 && Cases.Num() < 4; ++Seed)
+    {
+        FExpeditionRun Won;
+        Won.NewRun(Seed, Error, FString::Printf(TEXT("card-hover-keys-%d"), Seed));
+        Won.ChooseRoute(Won.Progress().Offers[0].Id, Error);
+        if (!ExpeditionTestSupport::FinishCombat(Won) || Won.Progress().Phase != EExpeditionPhase::Reward) { continue; }
+        Cases.Add({TEXT("reward"), Won.Snapshot(), false});
+        for (const FCombatantState& Unit : Won.Battle().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Won.ClaimReward(Unit.Id, Error); break; } }
+        if (Won.Progress().Phase == EExpeditionPhase::Recovery) { Cases.Add({TEXT("camp"), Won.Snapshot(), false}); }
+    }
+    if (!TestEqual(TEXT("Route, combat, reward and camp checkpoints exist"), Cases.Num(), 4)) { return false; }
+    const FKey Keys[] = {EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four};
+    for (const FCase& Case : Cases)
+    {
+        FExpeditionSaveData Data;
+        Data.Current = Case.Checkpoint;
+        ExpeditionInputHarness::FHarness Game(*this, TEXT("CardHoverAfterKeys"), &Data);
+        if (!TestTrue(FString::Printf(TEXT("%s: input, board and HUD are ready"), Case.Name), Game.IsReady())) { continue; }
+        Game.Frame();
+        Game.Press(EKeys::O);
+        if (!TestTrue(FString::Printf(TEXT("%s: the checkpoint resumes"), Case.Name), Game.View->HasRun() && Game.View->InCombat() == Case.bCombat)) { continue; }
+        Game.Settle();
+        if (Case.bCombat) { Game.PartyTurn(); }
+        TArray<int32> PartyIds;
+        for (const FCombatantState& Unit : Game.View->Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party) { PartyIds.Add(Unit.Id); } }
+        for (const FIntPoint Size : Sizes)
+        {
+            Game.Target.Size = Size;
+            const double Scale = ExpeditionLayout::ViewScale(Size.X, Size.Y);
+            for (int32 Selected = 0; Selected < PartyIds.Num(); ++Selected)
+            {
+                for (int32 Hovered = 0; Hovered < PartyIds.Num(); ++Hovered)
+                {
+                    if (Hovered == Selected) { continue; }
+                    const FString Where = FString::Printf(TEXT("%s, %dx%d, key %d then the pointer over card %d"), Case.Name, Size.X, Size.Y, Selected + 1, Hovered + 1);
+                    // The pointer rests clear of the cards, a key selects, then the pointer moves onto another card.
+                    Game.Player->SimulatePointer(FVector2D(640.0, 40.0) * Scale, FIntPoint(0, 0));
+                    Game.Frame(0.0f);
+                    Game.Press(Keys[Selected]);
+                    Game.Player->SimulatePointer(FVector2D(ExpeditionLayout::PartyCardX + 100.0, ExpeditionLayout::PartyCardTop + Hovered * ExpeditionLayout::PartyCardPitch + 32.0) * Scale, FIntPoint(0, 0));
+                    Game.Frame(0.0f);
+                    Game.Frame(0.0f);
+                    TestTrue(Where + TEXT(": the hovered card's details are drawn"), Game.Hud->PartyDetailUnits().Contains(PartyIds[Hovered]));
+                }
+            }
+        }
+        Game.Player->ReleaseSimulatedPointer();
+    }
+    return !HasAnyErrors();
+}
 #endif
