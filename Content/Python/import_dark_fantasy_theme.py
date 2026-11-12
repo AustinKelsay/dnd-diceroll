@@ -133,7 +133,7 @@ def add(material, a, b, x, y):
 
 # Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
 # revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
-MASTER_GRAPH_REVISION = "dice-theme-5"
+MASTER_GRAPH_REVISION = "dice-theme-6"
 MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
@@ -147,6 +147,70 @@ def set_if_different(obj, prop, value):
         obj.set_editor_property(prop, value)
         return True
     return False
+
+
+PALETTE_SLOTS = ("A", "B", "C", "G", "X")
+
+
+def const(material, value, x, y):
+    return expression(material, unreal.MaterialExpressionConstant, x, y, r=value)
+
+
+def binary(material, kind, a, b, x, y, a_out="", b_out=""):
+    node = expression(material, kind, x, y)
+    mel.connect_material_expressions(a, a_out, node, "A")
+    mel.connect_material_expressions(b, b_out, node, "B")
+    return node
+
+
+def palette_block(material, tex, x, y):
+    """Subclass palettes and party accents (#150 batch 4): the atlas colour with up to five slots recoloured by atlas tile.
+
+    The character atlases have 13 tiles on a 4x4 grid (tile index = row * 4 + column, row 0 at the top, the UV's own orientation in Unreal),
+    so floor(uv * 4) names the tile of every pixel. Each slot has a scalar bit mask over the tiles ("PalMask<slot>", bit i = tile i) and a vector
+    "Pal<slot>" (RGB the target colour, A the reference luminance of the class's own colour of the slot). A pixel in a masked tile becomes
+    target x min(luminance(pixel) / reference, 1.7), so the tile keeps its folds, bands and highlights and takes the slot's hue. Every mask
+    defaults to 0, which is exactly the plain texture, so meshes with no palette (the static figures, the worlds and props) are unchanged.
+    The values are set on the figure's material instance from the build id and the party order (ExpeditionPalette in C++); the tile masks,
+    colours and reference luminances come from Art/rig-pilot/cast/palettes (palettes.py).
+    """
+    uv = expression(material, unreal.MaterialExpressionTextureCoordinate, x, y)
+    grid = mul(material, uv, const(material, 4.0, x, y + 100), x + 150, y)
+    cell = expression(material, unreal.MaterialExpressionFloor, x + 300, y)
+    mel.connect_material_expressions(grid, "", cell, "")
+    col = expression(material, unreal.MaterialExpressionComponentMask, x + 450, y - 60, r=True, g=False, b=False, a=False)
+    row = expression(material, unreal.MaterialExpressionComponentMask, x + 450, y + 60, r=False, g=True, b=False, a=False)
+    mel.connect_material_expressions(cell, "", col, "")
+    mel.connect_material_expressions(cell, "", row, "")
+    index = add(material, mul(material, row, const(material, 4.0, x + 450, y + 160), x + 600, y + 100), col, x + 750, y)
+    power = expression(material, unreal.MaterialExpressionPower, x + 900, y)
+    mel.connect_material_expressions(const(material, 2.0, x + 800, y + 100), "", power, "Base")
+    mel.connect_material_expressions(index, "", power, "Exponent")
+    luma_weights = expression(material, unreal.MaterialExpressionConstant3Vector, x, y + 250, constant=unreal.LinearColor(0.2126, 0.7152, 0.0722, 0.0))
+    luma = binary(material, unreal.MaterialExpressionDotProduct, tex, luma_weights, x + 300, y + 250, "RGB", "")
+    current, current_out = tex, "RGB"
+    for position, slot in enumerate(PALETTE_SLOTS):
+        sy = y + 400 + position * 420
+        mask = scalar(material, "PalMask" + slot, 0.0, x, sy)
+        colour = vector(material, "Pal" + slot, unreal.LinearColor(1, 1, 1, 1), x, sy + 100)
+        shifted = binary(material, unreal.MaterialExpressionDivide, mask, power, x + 1050, sy)
+        bit = binary(material, unreal.MaterialExpressionFmod, expression_floor(material, shifted, x + 1200, sy), const(material, 2.0, x + 1200, sy + 100), x + 1350, sy)
+        reference = binary(material, unreal.MaterialExpressionMax, colour, const(material, 0.02, x + 300, sy + 150), x + 300, sy + 100, "A", "")
+        ratio = binary(material, unreal.MaterialExpressionMin, binary(material, unreal.MaterialExpressionDivide, luma, reference, x + 450, sy + 100),
+                       const(material, 1.7, x + 450, sy + 200), x + 600, sy + 100)
+        recolour = mul(material, rgb(material, colour, "", x + 450, sy + 300), ratio, x + 750, sy + 250)
+        blend = expression(material, unreal.MaterialExpressionLinearInterpolate, x + 1500, sy)
+        mel.connect_material_expressions(current, current_out, blend, "A")
+        mel.connect_material_expressions(recolour, "", blend, "B")
+        mel.connect_material_expressions(bit, "", blend, "Alpha")
+        current, current_out = blend, ""
+    return current
+
+
+def expression_floor(material, source, x, y):
+    node = expression(material, unreal.MaterialExpressionFloor, x, y)
+    mel.connect_material_expressions(source, "", node, "")
+    return node
 
 
 def camera_clip(material, x, y):
@@ -188,7 +252,8 @@ def shadow_safe(material, mask, x, y):
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
-    base     = Tex.rgb x vertexColor.rgb x Color x PerInstanceCustomData[0]   (#144: tint of an instanced prop; 1 on every other mesh)
+    base     = palette(Tex.rgb) x vertexColor.rgb x Color x PerInstanceCustomData[0]   (#144: tint of an instanced prop; 1 on every other mesh;
+               palette: per-tile slot recolour of the character atlases, #150 batch 4, identity while every PalMask is 0)
     emissive = base x (vertexColor.a x Glow + SelfLit)           glow only where the vertex alpha says so
              + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
              + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
@@ -211,7 +276,9 @@ def master_material():
     tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -100, parameter_name="Tex", texture=white)
     vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
     tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -1100, 400)
-    lit = mul(material, tex, rgb(material, vertex, "", -900, 200), -700, 0, "RGB", "")
+    # The atlas colour, recoloured by the palette slots (all masks 0: the plain texture), then shaded by the vertex colour.
+    palette = palette_block(material, tex, -3000, -1800)
+    lit = mul(material, palette, rgb(material, vertex, "", -900, 200), -700, 0, "", "")
     # Instanced props (#144) share one material instance per group and carry their tint in per-instance custom data slot 0.
     # The node returns its default (1) for every mesh that has no custom data, so meshes, skeletal figures and the tint "Color"
     # of an ordinary component are unchanged.
@@ -1020,6 +1087,8 @@ RIG = [
     ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-bard", "SK_Hero_Bard", "class:Bard", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-artificer", "SK_Hero_Artificer", "class:Artificer", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
 CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
 # The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.

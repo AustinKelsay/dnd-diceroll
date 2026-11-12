@@ -25,6 +25,8 @@ CHANGED = {
 CAST_BATCH1 = {"MI_SK_Hero_Rogue", "MI_SK_Hero_Cleric"}
 # And batch 2 (#150): the barbarian, monk, paladin and ranger.
 CAST_BATCH2 = {"MI_SK_Hero_Barbarian", "MI_SK_Hero_Monk", "MI_SK_Hero_Paladin", "MI_SK_Hero_Ranger"}
+# And batch 4 (#150): the bard and artificer.
+CAST_BATCH4 = {"MI_SK_Hero_Bard", "MI_SK_Hero_Artificer"}
 # Roughness, glow and self-light of each character, unchanged by #148.
 CHARACTER_OTHERS = {
     "SM_Hero_Fighter": (0.55, 1.0, 0.0), "SM_Hero_Rogue": (0.6, 1.0, 0.0), "SM_Hero_Cleric": (0.6, 1.0, 0.0),
@@ -33,6 +35,7 @@ CHARACTER_OTHERS = {
     "SK_Hero_Fighter": (0.55, 1.0, 0.0), "SK_Hero_Wizard": (0.65, 1.0, 0.0), "SK_Foe_Raider": (0.6, 1.0, 0.0),
     "SK_Hero_Rogue": (0.6, 1.0, 0.0), "SK_Hero_Cleric": (0.6, 1.0, 0.0),
     "SK_Hero_Barbarian": (0.6, 1.0, 0.0), "SK_Hero_Monk": (0.6, 1.0, 0.0), "SK_Hero_Paladin": (0.6, 1.0, 0.0), "SK_Hero_Ranger": (0.6, 1.0, 0.0),
+    "SK_Hero_Bard": (0.6, 1.0, 0.0), "SK_Hero_Artificer": (0.6, 1.0, 0.0),
 }
 # Rim and Fill of every other r001 row, before and after #148.
 NON_CHARACTER = {
@@ -81,7 +84,7 @@ class CharacterLookTest(unittest.TestCase):
     def test_the_change_set_is_exactly_the_character_instances(self):
         names = {"MI_" + name[3:] for name, (folder, _) in static_rows().items() if folder == "Characters"}
         names |= {"MI_" + name for name in rig_rows()}
-        self.assertEqual(names, CHANGED | CAST_BATCH1 | CAST_BATCH2)
+        self.assertEqual(names, CHANGED | CAST_BATCH1 | CAST_BATCH2 | CAST_BATCH4)
 
     def test_the_import_writes_a_scalar_only_when_it_differs(self):
         text = SCRIPT.read_text()
