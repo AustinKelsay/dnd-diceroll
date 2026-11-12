@@ -44,7 +44,7 @@ class BatchFourRecordsTest(unittest.TestCase):
         # Only the three constants are needed: evaluate their assignments without running the script (it writes records).
         for name in ("CAST", "CAST_SCRIPTS", "R001_SCRIPTS", "SHARED"):
             node = next(n for n in ast.parse(text).body if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == name)
-            namespace[name] = eval(compile(ast.Expression(node.value), "make_records4", "eval"), {}, dict(namespace))
+            namespace[name] = eval(compile(ast.Expression(node.value), "make_records4", "eval"), dict(namespace))
         listed = {(ROOT / path).resolve() for path in namespace["SHARED"]}
         for entry in ("build4.py", "review4.py"):
             missing = sorted(str(path.relative_to(ROOT)) for path in dependencies(CAST / entry) if path.resolve() not in listed)
