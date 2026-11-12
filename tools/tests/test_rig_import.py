@@ -10,7 +10,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "Content" / "Python" / "import_dark_fantasy_theme.py"
-BUNDLE = ("SK_Hero_Fighter,SK_Hero_Wizard,SK_Foe_Raider,SK_Hero_Rogue,SK_Hero_Cleric,SK_Hero_Barbarian,SK_Hero_Monk,SK_Hero_Paladin,SK_Hero_Ranger,SK_Hero_Sorcerer,SK_Hero_Warlock,SK_Hero_Druid,"
+BUNDLE = ("SK_Hero_Fighter,SK_Hero_Wizard,SK_Foe_Raider,SK_Hero_Rogue,SK_Hero_Cleric,SK_Hero_Barbarian,SK_Hero_Monk,SK_Hero_Paladin,SK_Hero_Ranger,SK_Hero_Sorcerer,SK_Hero_Warlock,SK_Hero_Druid,SK_Foe_Scout,SK_Foe_Archer,SK_Foe_Skirmisher,SK_Foe_Brute,SK_Foe_Warden,"
           "SKEL_Humanoid,animations")
 # Calls the script makes while loading, before its main block: lookups only.
 READS = {"get_editor_subsystem", "load_module", "AssetToolsHelpers.get_asset_tools"}
