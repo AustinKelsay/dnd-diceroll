@@ -1923,7 +1923,7 @@ bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
         TestEqual(FString::Printf(TEXT("%s has %d overrides"), Class.Who, bRanger || bBarbarian ? 1 : 0), Rig->Overrides.Num(), bRanger || bBarbarian ? 1 : 0);
         if (bRanger || bBarbarian)
         {
-            // Absent: the same definition with the override removed, or set but empty, plays the shared clip; a set override that cannot load is incomplete.
+            // Absent: the same definition with the override removed, or set but empty, plays the shared clip.
             FDiceRollCharacter Without = *Rig;
             Without.Overrides.Empty();
             TArray<FString> Shared;
@@ -1935,13 +1935,17 @@ bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
             Shared.Reset();
             if (TestTrue(Class.Who + FString(TEXT(" with an empty override entry loads")), ClipNames(Empty, Shared)))
             { TestEqual(Class.Who + FString(TEXT(" falls back when the entry has no clip")), Shared[Slot(bRanger ? EUnitPose::Ranged : EUnitPose::Melee)], bRanger ? FString(TEXT("A_Humanoid_Ranged")) : FString(TEXT("A_Humanoid_Melee"))); }
-            FDiceRollCharacter Broken = *Rig;
-            Broken.Overrides.Empty();
-            Broken.Overrides.Add(FName(bRanger ? TEXT("Ranged") : TEXT("Melee")), TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Characters/Animations/A_Nobody.A_Nobody"))));
-            USkeletalMesh* Mesh = nullptr;
-            TArray<UAnimSequence*> Clips;
-            AddExpectedMessage(TEXT("A_Nobody"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 0);       // the missing asset is the point of the case
-            TestFalse(Class.Who + FString(TEXT(": an override that cannot load makes the definition incomplete")), Broken.Load(Mesh, Clips));
+            // Any clip on the skeleton can be named: an override of Ranged by the shared Cast clip plays Cast in the Ranged slot (the mechanism, not just the two shipped clips).
+            FDiceRollCharacter Substitute = *Rig;
+            Substitute.Overrides.Empty();
+            Substitute.Overrides.Add(FName(TEXT("Hit")), Rig->Animations.Cast);
+            Shared.Reset();
+            if (TestTrue(Class.Who + FString(TEXT(" with a substitute override loads")), ClipNames(Substitute, Shared)))
+            {
+                TestEqual(Class.Who + FString(TEXT(" plays the substitute in the overridden slot")), Shared[Slot(EUnitPose::Hit)], FString(TEXT("A_Humanoid_Cast")));
+                TestEqual(Class.Who + FString(TEXT(" and the shared clip in the others")), Shared[Slot(EUnitPose::Cast)], FString(TEXT("A_Humanoid_Cast")));
+                TestEqual(Class.Who + FString(TEXT(" keeps the shared Idle")), Shared[Slot(EUnitPose::Idle)], FString(TEXT("A_Humanoid_Idle")));
+            }
         }
     }
 
