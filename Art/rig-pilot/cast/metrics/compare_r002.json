@@ -1,0 +1,732 @@
+{
+ "fighter": {
+  "same_bones": true,
+  "verts": [
+   7471,
+   7471
+  ],
+  "max_vertex_diff_mm": 0.0,
+  "old_clips": [
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "new_clips": [
+   "Brace",
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "extra_clips": [
+   "Brace"
+  ],
+  "clips": {
+   "Cast": {
+    "range_old": [
+     0.0,
+     42.0
+    ],
+    "range_new": [
+     0.0,
+     42.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Death": {
+    "range_old": [
+     0.0,
+     78.0
+    ],
+    "range_new": [
+     0.0,
+     78.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Downed": {
+    "range_old": [
+     0.0,
+     72.0
+    ],
+    "range_new": [
+     0.0,
+     72.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Hit": {
+    "range_old": [
+     0.0,
+     15.0
+    ],
+    "range_new": [
+     0.0,
+     15.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Idle": {
+    "range_old": [
+     0.0,
+     60.0
+    ],
+    "range_new": [
+     0.0,
+     60.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Melee": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Ranged": {
+    "range_old": [
+     0.0,
+     36.0
+    ],
+    "range_new": [
+     0.0,
+     36.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Recover": {
+    "range_old": [
+     0.0,
+     66.0
+    ],
+    "range_new": [
+     0.0,
+     66.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Walk": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   }
+  },
+  "curve_count": 2250,
+  "pass": true
+ },
+ "wizard": {
+  "same_bones": true,
+  "verts": [
+   8836,
+   8836
+  ],
+  "max_vertex_diff_mm": 0.0,
+  "old_clips": [
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "new_clips": [
+   "Brace",
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "extra_clips": [
+   "Brace"
+  ],
+  "clips": {
+   "Cast": {
+    "range_old": [
+     0.0,
+     42.0
+    ],
+    "range_new": [
+     0.0,
+     42.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Death": {
+    "range_old": [
+     0.0,
+     78.0
+    ],
+    "range_new": [
+     0.0,
+     78.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Downed": {
+    "range_old": [
+     0.0,
+     72.0
+    ],
+    "range_new": [
+     0.0,
+     72.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Hit": {
+    "range_old": [
+     0.0,
+     15.0
+    ],
+    "range_new": [
+     0.0,
+     15.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Idle": {
+    "range_old": [
+     0.0,
+     60.0
+    ],
+    "range_new": [
+     0.0,
+     60.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Melee": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Ranged": {
+    "range_old": [
+     0.0,
+     36.0
+    ],
+    "range_new": [
+     0.0,
+     36.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Recover": {
+    "range_old": [
+     0.0,
+     66.0
+    ],
+    "range_new": [
+     0.0,
+     66.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Walk": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   }
+  },
+  "curve_count": 2250,
+  "pass": true
+ },
+ "raider": {
+  "same_bones": true,
+  "verts": [
+   7164,
+   7164
+  ],
+  "max_vertex_diff_mm": 0.0,
+  "old_clips": [
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "new_clips": [
+   "Brace",
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "extra_clips": [
+   "Brace"
+  ],
+  "clips": {
+   "Cast": {
+    "range_old": [
+     0.0,
+     42.0
+    ],
+    "range_new": [
+     0.0,
+     42.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Death": {
+    "range_old": [
+     0.0,
+     78.0
+    ],
+    "range_new": [
+     0.0,
+     78.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Downed": {
+    "range_old": [
+     0.0,
+     72.0
+    ],
+    "range_new": [
+     0.0,
+     72.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Hit": {
+    "range_old": [
+     0.0,
+     15.0
+    ],
+    "range_new": [
+     0.0,
+     15.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Idle": {
+    "range_old": [
+     0.0,
+     60.0
+    ],
+    "range_new": [
+     0.0,
+     60.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Melee": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Ranged": {
+    "range_old": [
+     0.0,
+     36.0
+    ],
+    "range_new": [
+     0.0,
+     36.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Recover": {
+    "range_old": [
+     0.0,
+     66.0
+    ],
+    "range_new": [
+     0.0,
+     66.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Walk": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   }
+  },
+  "curve_count": 2250,
+  "pass": true
+ },
+ "rogue": {
+  "same_bones": true,
+  "verts": [
+   7705,
+   7705
+  ],
+  "max_vertex_diff_mm": 0.0,
+  "old_clips": [
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "new_clips": [
+   "Brace",
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "extra_clips": [
+   "Brace"
+  ],
+  "clips": {
+   "Cast": {
+    "range_old": [
+     0.0,
+     42.0
+    ],
+    "range_new": [
+     0.0,
+     42.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Death": {
+    "range_old": [
+     0.0,
+     78.0
+    ],
+    "range_new": [
+     0.0,
+     78.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Downed": {
+    "range_old": [
+     0.0,
+     72.0
+    ],
+    "range_new": [
+     0.0,
+     72.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Hit": {
+    "range_old": [
+     0.0,
+     15.0
+    ],
+    "range_new": [
+     0.0,
+     15.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Idle": {
+    "range_old": [
+     0.0,
+     60.0
+    ],
+    "range_new": [
+     0.0,
+     60.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Melee": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Ranged": {
+    "range_old": [
+     0.0,
+     36.0
+    ],
+    "range_new": [
+     0.0,
+     36.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Recover": {
+    "range_old": [
+     0.0,
+     66.0
+    ],
+    "range_new": [
+     0.0,
+     66.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Walk": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   }
+  },
+  "curve_count": 2250,
+  "pass": true
+ },
+ "cleric": {
+  "same_bones": true,
+  "verts": [
+   9261,
+   9261
+  ],
+  "max_vertex_diff_mm": 0.0,
+  "old_clips": [
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "new_clips": [
+   "Brace",
+   "Cast",
+   "Death",
+   "Downed",
+   "Hit",
+   "Idle",
+   "Melee",
+   "Ranged",
+   "Recover",
+   "Walk"
+  ],
+  "extra_clips": [
+   "Brace"
+  ],
+  "clips": {
+   "Cast": {
+    "range_old": [
+     0.0,
+     42.0
+    ],
+    "range_new": [
+     0.0,
+     42.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Death": {
+    "range_old": [
+     0.0,
+     78.0
+    ],
+    "range_new": [
+     0.0,
+     78.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Downed": {
+    "range_old": [
+     0.0,
+     72.0
+    ],
+    "range_new": [
+     0.0,
+     72.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Hit": {
+    "range_old": [
+     0.0,
+     15.0
+    ],
+    "range_new": [
+     0.0,
+     15.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Idle": {
+    "range_old": [
+     0.0,
+     60.0
+    ],
+    "range_new": [
+     0.0,
+     60.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Melee": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Ranged": {
+    "range_old": [
+     0.0,
+     36.0
+    ],
+    "range_new": [
+     0.0,
+     36.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Recover": {
+    "range_old": [
+     0.0,
+     66.0
+    ],
+    "range_new": [
+     0.0,
+     66.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   },
+   "Walk": {
+    "range_old": [
+     0.0,
+     30.0
+    ],
+    "range_new": [
+     0.0,
+     30.0
+    ],
+    "same_curves": true,
+    "max_abs_key_diff": 0.0
+   }
+  },
+  "curve_count": 2250,
+  "pass": true
+ }
+}

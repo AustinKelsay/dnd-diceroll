@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "asset_id": "sk-hero-monk",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SK_Hero_Monk",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/150",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5 lead, Claude Sonnet 5.5 subagent) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused."
+  },
+  "recipe": {
+    "method": "Monk: agile body, saffron gi, golden-ochre short tabard and trousers, sash, wrapped hands, bo staff slung on the back, unarmed in hand. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py); no external motion data",
+    "approved_reference": "Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); #150 batch 2 design calls by the graphics lead (class looks, Brace clip, Rim 1.6 and Fill 1.25)",
+    "parameters": {
+      "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)",
+      "units": "metres, +X forward, Z up, foot pivot at origin",
+      "fps": 30,
+      "atlas": "1024x1024, 1 material",
+      "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
+      "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
+      "clips": "ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop)",
+      "blender_validation": {
+        "tris": {
+          "LOD1": {
+            "tris": 1515,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD2": {
+            "tris": 756,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD0": {
+            "tris": 3128
+          }
+        },
+        "lod_ratio": {
+          "LOD1": 0.484,
+          "LOD2": 0.242,
+          "LOD0": 1.0
+        },
+        "body_height_m": 1.806,
+        "seam_mm_idle_walk": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (contact sheets only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_source.blend",
+      "sha256": "e5da28b0e5027014131e145d1c1307953ecd899aa17fe927f53debd90f1ca7c3"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/README_BATCH2.md",
+      "sha256": "31757ab69f42644ff63792811fea378313cf8a7b651ec709dbd46575e10654e9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
+      "sha256": "eeeb0bbebb6fca6e4e449546a226c5c62dc8ed0005d5801c5b7ce81e1998fe3f"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/brace.py",
+      "sha256": "faed12c79e0bbee5ea873bcdd6bc527d800a6f30139f6c4dcabb1f4a21462a08"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/build2.py",
+      "sha256": "d00068658baaff15de9d2ba03905fb5fbaa4a71b5306dfae673c0b64fef36cb8"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review2.py",
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/make_records2.py",
+      "sha256": "9d89ba8b13a7f895701f7aa4d46578d2c9f4dff020265f74e4305da946b2fce0"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/README.md",
+      "sha256": "79cc252119037ca002c61166af063012fbee3a00563abfd2381fb57b3acc47da"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/rigkit.py",
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/clips.py",
+      "sha256": "d9f898e7fbdd1e5fa270c4323c0aafab36c4721f851e09b911c04ca3ab350a59"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/characters.py",
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-monk/r001/SK_Hero_Monk.glb",
+      "sha256": "825d78afe408da14c3de253a8d93302090af50e9129b20562da34796400e3063"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_LOD1.glb",
+      "sha256": "4ae5b30f6651310f19e501517572f6126a406fe17c0e7eb52cf642cfcc12250b"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-monk/r001/SK_Hero_Monk_LOD2.glb",
+      "sha256": "92c5e1d74f578b48148d9c2904b3fc0d889eb825153abe498ea0048bc6a6a73c"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-rigged-character",
+    "version": 1,
+    "settings": {
+      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and no clips are imported for this character",
+      "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
+      "nanite": "off, set explicitly (gate 1 pipeline rule)",
+      "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
+      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the other clips baked into this glb are not imported",
+      "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
+      "texture_filter": "trilinear, anisotropic 8",
+      "collision": "none (presentation only)"
+    }
+  },
+  "validation": {
+    "state": "passed",
+    "evidence": [
+      "Art/rig-pilot/cast/metrics/validate_monk.json",
+      "Art/rig-pilot/cast/metrics/build_monk.json",
+      "Art/rig-pilot/cast/previews/sheet_07_batch2_turnaround.png",
+      "Art/rig-pilot/cast/previews/sheet_09_monk_clips.png",
+      "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
+    ]
+  }
+}

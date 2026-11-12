@@ -1,9 +1,11 @@
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/OverviewLayout.h"
 #include "Combat/ActionFacts.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/FoeLook.h"
 #include "Presentation/HitFlash.h"
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
@@ -95,7 +97,7 @@ FGrade GradeFor(EBoardTheme Theme)
     switch (Theme)
     {
     case EBoardTheme::Ruins: return {0.20f, 0.22f, 0.014f, 0.16f};
-    case EBoardTheme::Vault: return {0.25f, 0.28f, 0.020f, 0.09f};
+    case EBoardTheme::Vault: return {0.25f, 0.28f, 0.020f, 0.10f};
     default: return {0.15f, 0.15f, 0.010f, 0.26f};
     }
 }
@@ -110,6 +112,13 @@ constexpr float FogStartReference = 3600.0f;
 
 // The dark-fantasy worlds carry their own baked light; the sun only adds direction and the
 // fog sells depth. Ruins and the vault share the Drowned Vigil world with different grades.
+// The Vault's apse Waystone (#149): its distance behind the board centre (cm, the world is authored at the true metric), how far the floating shard stands in front of
+// the monolith (toward the board), and the gain on the Waystone light there, tuned so the apse leads the composition without blowing out.
+constexpr float VaultApseOffsetCm = 1355.0f;
+constexpr float VaultApseShardOffsetCm = 150.0f;
+constexpr float VaultWaystoneGain = 0.25f;
+constexpr float VaultShardGlow = 0.08f;   // the apse shard's emissive colour is scaled by this, so the halo and shard do not clip against the bloom
+
 FPalette ThemedPaletteFor(EBoardTheme Theme)
 {
     FPalette Palette = PaletteFor(Theme);
@@ -119,8 +128,10 @@ FPalette ThemedPaletteFor(EBoardTheme Theme)
         Palette.Sun = {0.6f, 0.68f, 1.0f}; Palette.SunIntensity = 2.4f; Palette.SunPitch = -50.0f; Palette.SunYaw = 60.0f;
         Palette.Fog = {0.1f, 0.13f, 0.26f}; Palette.FogDensity = 0.035f; break;
     case EBoardTheme::Vault:
-        Palette.Sun = {0.45f, 0.5f, 0.9f}; Palette.SunIntensity = 1.3f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
-        Palette.Fog = {0.05f, 0.06f, 0.14f}; Palette.FogDensity = 0.045f; break;
+        // The Vault world (#149) carries its own baked cold light; the sun is a pale, low-saturation moonlight so the dark basalt stays grey-blue and the
+        // cyan accent is the only strong colour.
+        Palette.Sun = {0.62f, 0.7f, 0.95f}; Palette.SunIntensity = 1.5f; Palette.SunPitch = -60.0f; Palette.SunYaw = 120.0f;
+        Palette.Fog = {0.05f, 0.065f, 0.12f}; Palette.FogDensity = 0.04f; break;
     default:
         Palette.Sun = {1.0f, 0.86f, 0.62f}; Palette.SunIntensity = 3.2f; Palette.SunPitch = -48.0f; Palette.SunYaw = -30.0f;
         Palette.Fog = {0.22f, 0.3f, 0.2f}; Palette.FogDensity = 0.03f; break;
@@ -672,6 +683,26 @@ void AExpeditionBattleView::BeginPlay()
     }
     // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
+    // -ExpeditionFoeLooks=Skirmisher,Brute,Archer draws the enemies, in encounter order, as those looks (capture only; see SetFoeLooks).
+    FString FoeLooks;
+    if (FParse::Value(FCommandLine::Get(), TEXT("ExpeditionFoeLooks="), FoeLooks, false))
+    {
+        TArray<FString> Names;
+        FoeLooks.ParseIntoArray(Names, TEXT(","), true);
+        for (const FString& Name : Names)
+        {
+            bool bKnown = false;
+            for (int32 Look = 0; Look < ExpeditionFoe::Count && !bKnown; ++Look)
+            {
+                if (Name.Equals(ExpeditionFoe::RigKey(static_cast<EFoeLook>(Look)).ToString(), ESearchCase::IgnoreCase)) { FoeLookOrder.Add(static_cast<EFoeLook>(Look)); bKnown = true; }
+            }
+            if (!bKnown) { FoeLookOrder.Add(EFoeLook::Scout); UE_LOG(LogTemp, Warning, TEXT("-ExpeditionFoeLooks: unknown look \"%s\" (Scout, Raider, Archer, Skirmisher, Brute, Warden); drawing a scout"), *Name); }
+        }
+    }
+    // -ExpeditionNoPalettes keeps the rigged figures in their class colours (the baseline the subclass palettes are measured against).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
+    // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -680,7 +711,7 @@ void AExpeditionBattleView::BeginPlay()
         Theme = ThemeAsset.LoadSynchronous();
         ThemeMaterial = Theme && !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
         if (!ThemeMaterial) { Theme = nullptr; }
-        OverviewTable = Theme ? UDiceRollTheme::Load(Theme->Tabletop) : nullptr;
+        LoadOverviewSet();
     }
     // The translucent material for the contextual grid and (themed) footprint rings is optional; without it they draw as
     // dimmed opaque lines. Created by Content/Python/create_board_overlay_material.py.
@@ -725,7 +756,7 @@ void AExpeditionBattleView::ClearPresentation()
     CampLight = nullptr; WaystoneLight = nullptr;
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
-    bVigilKit = false; bRootKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
+    bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
 }
 
 void AExpeditionBattleView::RebuildBoard()
@@ -752,6 +783,7 @@ void AExpeditionBattleView::RebuildBoard()
     else
     {
         BuildScenery(Encounter, Recipe, Seed);
+        PartyAccents = ExpeditionPalette::AccentSlots(Encounter.Combatants);
         for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     }
     BuildEffects(Encounter);
@@ -834,10 +866,10 @@ void AExpeditionBattleView::SnapCamera(float InYaw, float InDistance)
     UpdateCamera(0.0f);
 }
 
-void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+void AExpeditionBattleView::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment, EAdventurerRole Shooter)
 {
     ImpactTargetId = TargetId;
-    Show.PreviewImpact(TargetId, Effect, From, Moment);
+    Show.PreviewImpact(TargetId, Effect, From, Moment, Shooter);
 }
 
 void AExpeditionBattleView::ClearImpactPreview()
@@ -845,6 +877,32 @@ void AExpeditionBattleView::ClearImpactPreview()
     if (ImpactTargetId == INDEX_NONE) { return; }
     Show.ReleaseImpact(ImpactTargetId);
     ImpactTargetId = INDEX_NONE;
+}
+
+bool AExpeditionBattleView::PreviewPose(int32 UnitId, EUnitPose Pose, float Seconds)
+{
+    for (FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId || !Rig.Skin) { continue; }
+        UAnimSequence* Clip = Rig.Clips.IsValidIndex(static_cast<int32>(Pose)) ? Rig.Clips[static_cast<int32>(Pose)].Get() : nullptr;
+        if (!Clip) { return false; }
+        ShowPose(Rig, Pose, false);
+        Rig.bPosePreview = true;
+        Rig.PoseTime = FMath::Clamp(Seconds, 0.0f, Clip->GetPlayLength());
+        Rig.Skin->SetPosition(Rig.PoseTime, false);
+        return true;
+    }
+    return false;
+}
+
+void AExpeditionBattleView::ClearPosePreview()
+{
+    for (FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (!Rig.bPosePreview) { continue; }
+        Rig.bPosePreview = false;
+        Rig.PoseSerial = -1; // the next update shows the pose playback holds
+    }
 }
 
 FTransform AExpeditionBattleView::CameraTransform() const { return Camera->GetComponentTransform(); }
@@ -860,6 +918,27 @@ void AExpeditionBattleView::UseStaticFigures()
 {
     bSkeletalFigures = false;
     RebuildBoard();
+}
+
+void AExpeditionBattleView::SetFoeLooks(const TArray<EFoeLook>& Looks)
+{
+    FoeLookOrder = Looks;
+    RebuildBoard();
+}
+
+EFoeLook AExpeditionBattleView::FoeLookFor(const FCombatantState& Unit) const
+{
+    if (!FoeLookOrder.IsEmpty() && Unit.Side == ECombatSide::Enemy)
+    {
+        int32 Index = 0;
+        for (const FCombatantState& Other : Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Other.Side != ECombatSide::Enemy) { continue; }
+            if (Other.Id == Unit.Id) { return FoeLookOrder.IsValidIndex(Index) ? FoeLookOrder[Index] : ExpeditionFoe::LookOf(Unit); }
+            ++Index;
+        }
+    }
+    return ExpeditionFoe::LookOf(Unit);
 }
 
 int32 AExpeditionBattleView::SkeletalFigureCount() const
@@ -894,14 +973,14 @@ void AExpeditionBattleView::UseTheme(UDiceRollTheme* Value)
     Theme = Value;
     ThemeMaterial = !Theme->TintMaterial.IsNull() ? Theme->TintMaterial.LoadSynchronous() : nullptr;
     if (!ThemeMaterial) { UsePrimitives(); return; }
-    OverviewTable = UDiceRollTheme::Load(Theme->Tabletop);
+    LoadOverviewSet();
     BoardMetric = FBoardMetric(Theme->CellSize, Theme->FigureHeight);
     RebuildBoard();
 }
 
 void AExpeditionBattleView::UsePrimitives()
 {
-    Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr;
+    Theme = nullptr; ThemeMaterial = nullptr; OverviewTable = nullptr; OverviewRoot = nullptr; OverviewVigil = nullptr; OverviewVault = nullptr; bOverviewR002 = false;
     BoardMetric = FBoardMetric();
     RebuildBoard();
 }
@@ -961,7 +1040,8 @@ void AExpeditionBattleView::ApplyTheme()
     if (Theme)
     {
         // Darker, cooler and less saturated than the primitive look; candles carry the warmth.
-        Settings.ColorSaturation = FVector4(0.95f, 0.95f, 0.95f, 1.0f);
+        const float Saturation = BoardTheme == EBoardTheme::Vault && !bOverview ? 0.8f : 0.95f;
+        Settings.ColorSaturation = FVector4(Saturation, Saturation, Saturation, 1.0f);
         Settings.ColorContrast = FVector4(1.12f, 1.12f, 1.12f, 1.0f);
         Settings.VignetteIntensity = bOverview ? 0.85f : 0.6f;
         Settings.AutoExposureBias = bOverview ? -0.8f : BoardTheme == EBoardTheme::Vault ? -1.4f : -1.0f;
@@ -984,6 +1064,29 @@ void AExpeditionBattleView::ApplyTheme()
         Settings.bOverride_DepthOfFieldFocalDistance = true;
         Settings.DepthOfFieldFocalDistance = 0.0f;
     }
+    AppliedFarGrade = -1.0f;
+}
+
+// The Vault's far-zoom grade (#149, gate 2 found the far view dim and flat): from the default zoom out to the far stop the exposure lifts by up
+// to 0.7 stop (the luminance band divides by the lift), the vignette eases off and the contrast rises a little, so the floor reads against the walls and the dark beyond them. The Vigil and
+// the Root keep their grade (play happens at the figure-sized default; their far views were measured and left alone, see docs/architecture.md).
+void AExpeditionBattleView::UpdateFarGrade()
+{
+    if (!Theme || bOverview || BoardTheme != EBoardTheme::Vault || !HasRun()) { return; }
+    const float Default = FramedDistance(Yaw);
+    const float Far = FarFramedDistance(Yaw);
+    const float T = Far > Default + 1.0f ? FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((Distance - Default) / (Far - Default), 0.0f, 1.0f)) : 0.0f;
+    if (FMath::Abs(T - AppliedFarGrade) < 0.01f) { return; }
+    AppliedFarGrade = T;
+    const FGrade Biome = GradeFor(BoardTheme);
+    FPostProcessSettings& Settings = Grade->Settings;
+    const float Lift = 1.0f + 0.62f * T;
+    // Exposure is the inverse of the luminance the band clamps the scene to, so a brighter far view needs a lower band, not a higher one.
+    Settings.AutoExposureMinBrightness = Biome.Luminance / Lift / ExposureBand;
+    Settings.AutoExposureMaxBrightness = Biome.Luminance / Lift * ExposureBand;
+    Settings.VignetteIntensity = Biome.Vignette * (1.0f - 0.6f * T);
+    const float Contrast = FMath::Lerp(1.12f, 1.2f, T);
+    Settings.ColorContrast = FVector4(Contrast, Contrast, Contrast, 1.0f);
 }
 
 void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
@@ -1459,10 +1562,14 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
     // The Waystone floats above its pedestal in the vault until the finale is won.
     if (BoardTheme == EBoardTheme::Vault)
     {
-        // The far-right corner keeps the Waystone clear of the initiative strip.
-        const FVector Pedestal = SceneBoard(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -RefTop + 6.0f);
+        // The legacy pedestal stands in the far-right corner, clear of the initiative strip. On a Vault-kit board the world's own Waystone in the apse
+        // leads the composition instead: no pedestal, and the same floating shard and light (with their intensity and artifact behaviour) stand at the apse.
+        const bool bApse = bVaultKit;
+        const FVector Pedestal = bApse ? ApseLocal + FVector(0.0f, -VaultApseShardOffsetCm / SceneScale(), 0.0f) : SceneBoard(FVector2D(Encounter.Width - 0.3f, Encounter.Height + 0.1f), -RefTop + 6.0f);
+        WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * 4.0f, FRotator(45, 45, 0), true));
+        if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
     }
 }
@@ -1539,17 +1646,12 @@ void AExpeditionBattleView::UpdateRigs()
 const FDiceRollCharacter* AExpeditionBattleView::UnitRigged(const FCombatantState& Unit) const
 {
     if (!Theme || !bSkeletalFigures) { return nullptr; }
-    if (Unit.Side == ECombatSide::Party)
-    {
-        switch (Unit.AdventurerRole)
-        {
-        case EAdventurerRole::Fighter: return &Theme->FighterRig;
-        case EAdventurerRole::Wizard: return &Theme->WizardRig;
-        default: return nullptr;
-        }
-    }
-    // The same roster rule as UnitMesh: ranged foes are archers, the rest are raiders or scouts.
-    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? &Theme->RaiderRig : nullptr;
+    // A party hero is rigged by class (#150); a class without an entry has no rig and keeps its static figure. Entries are data, so
+    // a later cast batch adds a class without touching this code.
+    if (Unit.Side == ECombatSide::Party) { return Theme->RigForClass(Unit.AdventurerRole); }
+    // A foe is rigged by its look (FoeLook.h): ranged foes are archers; by name, a warden, a brute, a skirmisher or a raider; the rest are scouts. A look with
+    // no FoeRigs entry has no rig and keeps its static figure (UnitMesh).
+    return Theme->RigForFoe(ExpeditionFoe::RigKey(FoeLookFor(Unit)));
 }
 
 bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit)
@@ -1570,7 +1672,11 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
     // The mesh origin is at the feet. Fit it to the metric's figure height (the rig root already carries the cell scale),
     // exactly as static figures are fitted.
     const float MeshHeight = static_cast<float>(Mesh->GetBounds().GetBox().Max.Z);
-    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.0f;
+    // The stature is data (HeightScale); a value outside [0.5, 1.5] or not finite is brought back at use, with a warning, so it can never hide, invert or balloon a figure.
+    bool bScaleAdjusted = false;
+    const float Stature = Definition->ResolvedHeightScale(&bScaleAdjusted);
+    if (bScaleAdjusted) { UE_LOG(LogTemp, Warning, TEXT("%s: HeightScale %f is outside [%.1f, %.1f] or not finite; using %.2f"), *Mesh->GetName(), Definition->HeightScale, FDiceRollCharacter::MinHeightScale, FDiceRollCharacter::MaxHeightScale, Stature); }
+    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm * Stature / BoardMetric.Scale() / MeshHeight : 1.0f;
     Skin->SetRelativeScale3D(FVector(Fit));
     Skin->SetRelativeRotation(FRotator(0.0f, Definition->YawOffset, 0.0f));
     // One tintable instance per slot, like static figures: Flash and Glow reach the figure through "Color".
@@ -1583,6 +1689,14 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
         Look.Base = FLinearColor::White;
         Skin->SetMaterial(Slot, Look.Material);
         Look.SetColor(Look.Base);
+        // The subclass palette and, for a class that appears more than once in the party, its party-slot accent (#150 batch 4): material parameters
+        // chosen from the build id and the party order. Presentation only: no snapshot, checkpoint or random draw is read or written.
+        if (bPalettes && Unit.Side == ECombatSide::Party)
+        {
+            ExpeditionPalette::FPalette Palette = ExpeditionPalette::ForUnit(Unit);
+            if (const int32* Accent = bAccents ? PartyAccents.Find(Unit.Id) : nullptr) { ExpeditionPalette::SetAccent(Palette, ExpeditionPalette::ClassKeyOf(Unit), *Accent); }
+            if (Palette.bKnownClass) { ExpeditionPalette::Apply(Look.Material, Palette); }
+        }
         Rig.Parts.Add(Look);
     }
     Skin->RegisterComponent();
@@ -1614,6 +1728,7 @@ void AExpeditionBattleView::ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bo
 
 void AExpeditionBattleView::UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit)
 {
+    if (Rig.bPosePreview) { Rig.Stamp = Clock; return; }
     const float Delta = FMath::Max(0.0f, Clock - Rig.Stamp) * Show.Speed;
     Rig.Stamp = Clock;
     if (Unit.PoseSerial != Rig.PoseSerial)
@@ -1772,7 +1887,7 @@ void AExpeditionBattleView::UpdateEffects()
         const float Rise = bClaimed ? 60.0f + 20.0f * FMath::Sin(Clock * 1.5f) : 10.0f * FMath::Sin(Clock * 1.8f);
         const FVector Base = WaystoneSlots[0].Location;
         SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Clock * 40.0f, 45), WaystoneSlots[1].Scale, WaystoneSlots[1].Colour);
-        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
+        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
     }
 }
 
@@ -1953,6 +2068,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
     Camera->SetWorldLocation(Eye);
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
     Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
+    UpdateFarGrade();
 }
 
 // The tabletop is a fixed, composed view; orbit, zoom and pan belong to battles.
@@ -2333,9 +2449,13 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
         default: return nullptr;
         }
     }
-    if (Unit.Range > 1) { return ThemeMesh(Theme->Archer); }
-    const bool bRaider = Unit.Name.Contains(TEXT("raider"));
-    return ThemeMesh(bRaider ? Theme->Raider : Theme->Scout);
+    // The static fallback of a rigged look: today's archer, raider and scout meshes. The heavy new looks (brute, warden) stand in as the raider and the skirmisher as the scout.
+    switch (FoeLookFor(Unit))
+    {
+    case EFoeLook::Archer: return ThemeMesh(Theme->Archer);
+    case EFoeLook::Raider: case EFoeLook::Brute: case EFoeLook::Warden: return ThemeMesh(Theme->Raider);
+    default: return ThemeMesh(Theme->Scout);
+    }
 }
 
 bool AExpeditionBattleView::WantsOverview() const
@@ -2343,11 +2463,37 @@ bool AExpeditionBattleView::WantsOverview() const
     return OverviewTable && (!HasRun() || Progress().Phase == EExpeditionPhase::Route);
 }
 
+EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)
+{
+    return Theme == EBoardTheme::Meadow ? EDiceRollKit::Root : Theme == EBoardTheme::Vault ? EDiceRollKit::Vault : EDiceRollKit::Vigil;
+}
+
+bool AExpeditionBattleView::VaultPiecesLoad(const FDiceRollWorldKit& Kit) const
+{
+    auto Loads = [this](const TArray<TSoftObjectPtr<UStaticMesh>>& Entries)
+    {
+        for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { if (!ThemeMesh(Entry)) { return false; } }
+        return true;
+    };
+    return ThemeMesh(*Kit.World) && ThemeMesh(*Kit.Occluders) && ThemeMesh(*Kit.Arch)
+        && Loads(*Kit.Pillars) && Loads(*Kit.Walls) && Loads(*Kit.Stones) && Loads(*Kit.Scatter) && Loads(*Kit.Mist) && Loads(*Kit.Shafts);
+}
+
+FVector AExpeditionBattleView::WaystoneLightLocation() const
+{
+    return WaystoneLight ? WaystoneLight->GetComponentLocation() : FVector::ZeroVector;
+}
+
 bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
 {
-    const bool bForest = BoardTheme == EBoardTheme::Meadow;
-    UStaticMesh* World = ThemeMesh(bForest ? Theme->RootWorld : Theme->VigilWorld);
+    // The kit the board wants. The finale asks for the Vault kit and gets the Vigil kit, as before the Vault existed, when any Vault
+    // entry is missing from the theme or its world does not load (#149).
+    FDiceRollWorldKit Kit = Theme->KitFor(KitKindFor(BoardTheme));
+    UStaticMesh* World = ThemeMesh(*Kit.World);
+    // Atomic: every Vault piece loads before anything is placed, or the whole finale draws the Vigil kit (a dangling or unloadable piece never leaves a half kit).
+    if (Kit.Kind == EDiceRollKit::Vault && !(World && VaultPiecesLoad(Kit))) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
+    const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
     // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).
     const float Ground = RefTop;
@@ -2358,13 +2504,17 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // The r001 art (110 cm) keeps the root's scale. A world uses its r002 mesh, occluders and dressing only when its own kit is
     // switched on (the Vigil kit on Vigil boards, #145; the Root kit on forest boards, #149). bMetric is the Vigil flag: it also
     // says the shared r001 obstacle packages (Theme->Pillar, Wall, Stones) now hold r002 variant A at the true metric.
-    const FDiceRollWorldKit Kit = Theme->KitFor(bForest);
     const bool bMetric = Theme->bMetricKit;
     const bool bWorldKit = Kit.bMetric;
     const FVector MetricScale(1.0f / SceneScale());
     WorldProp = PlaceProp(World, FVector(Center.X, Center.Y, Ground), bWorldKit ? MetricScale : FVector::OneVector, bWorldKit ? KitTint(World) : FLinearColor::White);
-    bVigilKit = bWorldKit && !bForest;
-    bRootKit = bWorldKit && bForest;
+    bVigilKit = bWorldKit && Kit.Kind == EDiceRollKit::Vigil;
+    bRootKit = bWorldKit && Kit.Kind == EDiceRollKit::Root;
+    bVaultKit = bWorldKit && Kit.Kind == EDiceRollKit::Vault;
+    // The apse Waystone stands 13.55 m behind the board centre on the far (+Y) side (the world is authored at the true metric, placed at 1 / scale).
+    ApseLocal = Center + FVector(0.0f, VaultApseOffsetCm / SceneScale(), 0.0f);
+    // Obstacles and dressing are drawn from the kit's decoration seed, a private hash that never reads rules state or a random stream.
+    const int32 DecorationSeed = VigilKit::KitSeed(Seed, Encounter.Width, Encounter.Height, static_cast<int32>(Kit.Kind));
     if (bWorldKit)
     {
         if (UStaticMesh* Near = ThemeMesh(*Kit.Occluders))
@@ -2384,8 +2534,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
     // consumed by the r001 path, so the kit never changes what the fallback draws. A world kit places its own variants (and
     // arches over pillar and wall recipes). Without one, the Vigil kit's variants still serve every board once it is on, as before.
-    bool bBuilt = bWorldKit && BuildKitObstacles(Encounter, Kind, Seed, VigilKit::ArchesFor(Kind), Kit);
-    if (!bBuilt && bMetric && bForest) { bBuilt = BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(false)); }
+    bool bBuilt = bWorldKit && BuildKitObstacles(Encounter, Kind, DecorationSeed, VigilKit::ArchesFor(Kind), Kit);
+    if (!bBuilt && bMetric && bForest) { bBuilt = BuildKitObstacles(Encounter, Kind, Seed, false, Theme->KitFor(EDiceRollKit::Vigil)); }
     if (!bBuilt)
     {
         UStaticMesh* Obstacle = ThemeMesh(Kind == 1 ? Theme->Pillar : Kind == 2 ? Theme->Wall : Theme->Stones);
@@ -2401,7 +2551,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // follows the board and not the world. The kit's scatter keeps clear of them. Banners mark the far edge; flames flicker,
     // banners sway.
     const TArray<BrazierRing::FBrazier> Ring = BrazierRing::Plan(Encounter.Width, Encounter.Height, Seed);
-    if (bWorldKit) { BuildKitDressing(Encounter, Seed, Kit, BrazierRing::Cells(Ring)); }
+    if (bWorldKit) { BuildKitDressing(Encounter, DecorationSeed, Kit, BrazierRing::Cells(Ring)); }
     UStaticMesh* Brazier = ThemeMesh(Theme->Brazier);
     UStaticMesh* Flame = ThemeMesh(Theme->Flame);
     UStaticMesh* Banner = ThemeMesh(Theme->Banner);
@@ -2422,8 +2572,8 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
         FlameStrength.SetNum(Flames.Num());
         FlameStrength.Last() = Strength;
     }
-    // Iron cages hang on chains from the cathedral's unseen vault and swing slowly.
-    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest)
+    // Iron cages hang on chains from the cathedral's unseen vault and swing slowly. The Vault world has its own chains and no cathedral roof.
+    if (UStaticMesh* Cage = ThemeMesh(Theme->Cage); Cage && !bForest && !bVaultKit)
     {
         for (const FVector2D Spot : {FVector2D(-1.6f, H * 0.3f), FVector2D(W + 0.6f, H * 0.65f)})
         {
@@ -2610,6 +2760,13 @@ void AExpeditionBattleView::UpdateOccluder()
     }
 }
 
+void AExpeditionBattleView::LoadOverviewSet()
+{
+    const FDiceRollOverview Set = Theme ? Theme->LoadOverview() : FDiceRollOverview();
+    OverviewTable = Set.Table; OverviewRoot = Set.Root; OverviewVigil = Set.Vigil; OverviewVault = Set.Vault;
+    bOverviewR002 = Set.bR002 && Set.Table;
+}
+
 void AExpeditionBattleView::BuildOverview()
 {
     // The table stands on a dark floor raised over the sandbox floor (top at Z=0); everything
@@ -2618,24 +2775,27 @@ void AExpeditionBattleView::BuildOverview()
     Scenery.Add(MakePart(Cube, nullptr, FVector(0, 0, 5.0f), FVector(300.0f, 300.0f, 0.1f), FLinearColor(0.008f, 0.006f, 0.005f)));
     // Assets face +X; the camera looks from -Y, so turn everything to face it.
     const FRotator Toward(0.0f, -90.0f, 0.0f);
+    OverviewDrawnMeshes.Reset();
+    OverviewDrawnLights.Reset();
     Scenery.Add(MakePart(OverviewTable, nullptr, Lift, FVector::OneVector, FLinearColor::White, Toward));
-    // One low-detail diorama per offered road: the forest for guarded roads, the drowned
-    // cathedral for dangerous roads and the finale. The title shows both.
-    TArray<bool> Cathedral;
+    OverviewDrawnMeshes.Add(OverviewTable->GetFName());
+    // One diorama per offered road (OverviewLayout::Kinds): the forest for guarded roads, the drowned cathedral for dangerous roads and,
+    // with the r002 set, the Vault for the finale. The title shows the first two worlds.
+    TArray<bool> Dangerous;
+    bool bFinale = false;
     if (HasRun())
     {
-        const bool bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
-        for (const FExpeditionRoute& Route : Progress().Offers) { Cathedral.Add(Route.bDangerous || bFinale); }
+        bFinale = Progress().EncountersCompleted + 1 >= FExpeditionRun::EncounterCount;
+        for (const FExpeditionRoute& Route : Progress().Offers) { Dangerous.Add(Route.bDangerous); }
     }
-    else { Cathedral = {false, true}; }
-    for (int32 Index = 0; Index < Cathedral.Num(); ++Index)
+    const TArray<OverviewLayout::EDiorama> Kinds = OverviewLayout::Kinds(HasRun(), bFinale, Dangerous, OverviewVault != nullptr);
+    for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, bOverviewR002, HasRun()))
     {
-        UStaticMesh* Diorama = ThemeMesh(Cathedral[Index] ? Theme->VigilDiorama : Theme->RootDiorama);
+        UStaticMesh* Diorama = Spot.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault : Spot.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil : OverviewRoot;
         if (!Diorama) { continue; }
         // The camera looks along +Y, so world +X is screen-left: offer 0 sits left, under its card.
-        const float X = Cathedral.Num() == 1 ? 0.0f : Index == 0 ? 52.0f : -52.0f;
-        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(X, 22.0f, 0.0f), FVector::OneVector, FLinearColor::White,
-            Toward + FRotator(0.0f, Index == 0 ? -10.0f : 10.0f, 0.0f)));
+        Scenery.Add(MakePart(Diorama, nullptr, Lift + FVector(Spot.Offset.X, Spot.Offset.Y, 0.0f), FVector(Spot.Scale), FLinearColor::White, Toward + FRotator(0.0f, Spot.Yaw, 0.0f)));
+        OverviewDrawnMeshes.Add(Diorama->GetFName());
     }
     // The surviving party stands on the map as painted miniatures.
     int32 Slot = 0;
@@ -2648,11 +2808,14 @@ void AExpeditionBattleView::BuildOverview()
         }
         ++Slot;
     }
-    for (const FVector& Candle : {FVector(-100, 30, 40), FVector(100, 34, 40), FVector(0, -70, 70)})
+    const TArray<FVector> Candles = OverviewLayout::Candles(bOverviewR002);
+    const TArray<float> Strengths = OverviewLayout::CandleStrengths(bOverviewR002);
+    for (int32 Index = 0; Index < Candles.Num(); ++Index)
     {
-        Flames.Add(MakeLight(nullptr, Lift + Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 380.0f));
+        Flames.Add(MakeLight(nullptr, Lift + Candles[Index], FLinearColor(1.0f, 0.62f, 0.32f), Strengths[Index], 380.0f));
         FlameStrength.SetNum(Flames.Num());
-        FlameStrength.Last() = 16.0f;
+        FlameStrength.Last() = Strengths[Index];
+        OverviewDrawnLights.Add(Candles[Index]);
     }
 }
 
@@ -2786,6 +2949,16 @@ bool AExpeditionBattleView::UnitShownColors(int32 UnitId, TArray<FLinearColor>& 
         for (const FExpeditionPart& Part : Rig.Parts) { OutParts.Add(Part.Shown); }
         OutRing = RingStates.IsValidIndex(Rig.Ring.RingSlot) ? RingStates[Rig.Ring.RingSlot].Colour : Rig.Ring.Shown;
         return true;
+    }
+    return false;
+}
+
+bool AExpeditionBattleView::UnitPalette(int32 UnitId, ExpeditionPalette::FPalette& OutPalette) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId) { continue; }
+        return Rig.Skin && Rig.Parts.Num() > 0 && ExpeditionPalette::Read(Rig.Parts[0].Material, OutPalette);
     }
     return false;
 }

@@ -11,15 +11,20 @@ enum class EExpeditionCue : uint8
     PartyTurn, EnemyTurn, Victory, Defeat, Spell, Bow, Swing, Camp, Loot, Route
 };
 
-/** What a capture-mode impact preview shows on the struck unit (#189): a plain hit, or a spell bolt (Cleric radiant, Wizard fire, or three Magic Missiles) arriving as well. */
-enum class EImpactPreview : uint8 { Hit, Spell, Fire, Missile };
+/**
+ * What a capture-mode impact preview shows on the struck unit (#189): a plain hit, or a spell bolt (Cleric radiant, Wizard fire, or three Magic Missiles)
+ * arriving as well. Arrow (#198) is a non-spell ranged attack's arrow as AddAttack throws it (a Ranger's, Rogue's or foe archer's: no light). Bolt is what
+ * a Ranger's attack threw before #198, a spell bolt in the arrow's colour with its point light at the shooter, kept so the blowout it caused can be measured again.
+ */
+enum class EImpactPreview : uint8 { Hit, Spell, Fire, Missile, Arrow, Bolt };
 
 /**
  * When a capture-mode impact preview is taken (#189). Landing: the hit itself with its flash (for Magic Missile the final bolt landing, as the
  * production impact step begins while the last bolt is still arriving). Flight: the bolt half way along its path, no hit. FirstLanding and
- * SecondLanding: Magic Missile only, the first or second bolt landing while the others are still in flight, before the hit.
+ * SecondLanding: Magic Missile only, the first or second bolt landing while the others are still in flight, before the hit. Release (#198, spells in
+ * batch 3): any bolt, the moment the shot leaves the shooter (the Ranged clip's release frame for an arrow or a Ranger's old bolt, the Cast clip's for a spell), no hit.
  */
-enum class EImpactMoment : uint8 { Landing, Flight, FirstLanding, SecondLanding };
+enum class EImpactMoment : uint8 { Landing, Flight, FirstLanding, SecondLanding, Release };
 
 /** What a combatant looks like right now. Lags behind the rules while results play. */
 struct DNDDICEROLL_API FUnitDisplay
@@ -139,11 +144,15 @@ public:
      * (a cell), aged to Moment. Only Landing shows the hit; the other moments show bolts alone (no flash, flinch or text).
      * Presentation only: no hit points change. HoldImpact keeps the moment on screen; ReleaseImpact lets it go.
      */
-    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing);
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing, EAdventurerRole Shooter = EAdventurerRole::None);
 
     /** Seconds a Magic Missile bolt takes to arrive, and the delay between its three bolts (production and preview share these). */
     static constexpr float MissileFlight = 0.38f;
     static constexpr float MissileStagger = 0.09f;
+    /** Seconds from the start of a Ranged clip to its release frame (frame 26 at 30 fps, shared and the ranger's own): the arrow leaves then. */
+    static constexpr float RangedReleaseSeconds = 26.0f / 30.0f;
+    /** Seconds from the start of a Cast clip to its release frame (frame 22 at 30 fps: the thrust, the staff or focus pointing at the target): a spell bolt leaves then. */
+    static constexpr float CastReleaseSeconds = 22.0f / 30.0f;
     /** The three Magic Missile bolts as AddAttack throws them: the second and third start later (negative Age), and arc to either side. */
     static TArray<FPlaybackProjectile> MagicMissileBolts(FVector2D From, FVector2D To);
     /** The bolt of a ranged attack by a role: a rogue's or an enemy archer's arrow, a Cleric's radiant bolt, a Wizard's fire bolt. */

@@ -1,0 +1,130 @@
+{
+ "name": "SK_Foe_Archer",
+ "asset_id": "sk-foe-archer",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3790,
+   "verts": 2955,
+   "height_m": 1.842,
+   "zmax": 1.841,
+   "zmin": -0.001,
+   "glow_verts": 56
+  },
+  "LOD1": {
+   "tris": 1935,
+   "verts": 1809,
+   "height_m": 1.842,
+   "zmax": 1.841,
+   "zmin": -0.001,
+   "glow_verts": 48
+  },
+  "LOD2": {
+   "tris": 1085,
+   "verts": 917,
+   "height_m": 1.842,
+   "zmax": 1.841,
+   "zmin": -0.001,
+   "glow_verts": 48
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  },
+  "Brace": {
+   "frames": [
+    0,
+    24
+   ],
+   "seconds": 0.8,
+   "loop": false
+  }
+ },
+ "override": {
+  "clip": "Ranged",
+  "action": "Ranged_Archer",
+  "frames": [
+   0,
+   36
+  ],
+  "worst_residual_cm": 7.02
+ },
+ "glb_bytes": {
+  "SK_Foe_Archer.glb": 1713840,
+  "SK_Foe_Archer_LOD1.glb": 779580,
+  "SK_Foe_Archer_LOD2.glb": 658552
+ }
+}

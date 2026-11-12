@@ -227,12 +227,21 @@ TArray<FPlaybackProjectile> FExpeditionPlayback::MagicMissileBolts(FVector2D Fro
 
 FPlaybackProjectile FExpeditionPlayback::RangedBolt(FVector2D From, FVector2D To, EAdventurerRole Role, bool bArrow)
 {
+    // A caster's bolt takes the colour of its magic, spread round the hue wheel so any two side by side read as different colours (sRGB hue, #150 batch 4, the lead's call
+    // after the batch 3 and 4 on-screen passes): the Wizard's orange fire (32), the Cleric's gold (48), the Druid's leaf green (110), the Bard's teal (170), the Warlock's eldritch
+    // violet (275; its hand sigil and orb stay green on the figure) and the Sorcerer's crimson-magenta ember (329). The Artificer's blue-cyan (195) is for its spell specials only: its basic
+    // attack is a crossbow bolt, an arrow. Any other shooter's arrow is the pale arrow colour.
     const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
-        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) : FLinearColor(0.85f, 0.75f, 0.6f);
+        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.74f, 0.12f) :
+        Role == EAdventurerRole::Druid ? FLinearColor(0.16f, 0.89f, 0.09f) :
+        Role == EAdventurerRole::Bard ? FLinearColor(0.03f, 0.83f, 0.6f) :
+        Role == EAdventurerRole::Warlock ? FLinearColor(0.27f, 0.065f, 0.5f) :
+        Role == EAdventurerRole::Sorcerer ? FLinearColor(0.89f, 0.07f, 0.35f) :
+        Role == EAdventurerRole::Artificer ? FLinearColor(0.25f, 0.75f, 1.0f) : FLinearColor(0.85f, 0.75f, 0.6f);
     return {From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow};
 }
 
-void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment)
+void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment, EAdventurerRole Shooter)
 {
     FUnitDisplay* Target = Displays.Find(TargetId);
     if (!Target) { return; }
@@ -249,11 +258,18 @@ void FExpeditionPlayback::PreviewImpact(int32 TargetId, EImpactPreview Effect, F
     HeldShots.Reset();
     const FVector2D To = Target->Position;
     if (Effect == EImpactPreview::Missile) { HeldShots = MagicMissileBolts(From, To); }
-    else if (Effect != EImpactPreview::Hit) { HeldShots.Add(RangedBolt(From, To, Effect == EImpactPreview::Fire ? EAdventurerRole::Wizard : EAdventurerRole::Cleric, false)); }
+    else if (Effect == EImpactPreview::Arrow) { HeldShots.Add(RangedBolt(From, To, EAdventurerRole::Ranger, true)); }
+    else if (Effect == EImpactPreview::Bolt) { HeldShots.Add(RangedBolt(From, To, EAdventurerRole::Ranger, false)); }
+    else if (Effect != EImpactPreview::Hit)
+    {
+        // A named shooter's bolt has its class colour; without one the effect says which (Fire is the Wizard's, Spell the Cleric's).
+        const EAdventurerRole Role = Shooter != EAdventurerRole::None ? Shooter : Effect == EImpactPreview::Fire ? EAdventurerRole::Wizard : EAdventurerRole::Cleric;
+        HeldShots.Add(RangedBolt(From, To, Role, false));
+    }
     const float Duration = HeldShots.IsEmpty() ? 0.0f : HeldShots[0].Duration;
     const int32 Landing = Moment == EImpactMoment::FirstLanding ? 0 : Moment == EImpactMoment::SecondLanding ? 1 : Effect == EImpactPreview::Missile ? 2 : 0;
     // Seconds since the first bolt left.
-    const float Time = Moment == EImpactMoment::Flight ? 0.5f * Duration : 0.92f * Duration + MissileStagger * (Effect == EImpactPreview::Missile ? Landing : 0);
+    const float Time = Moment == EImpactMoment::Release ? 0.03f : Moment == EImpactMoment::Flight ? 0.5f * Duration : 0.92f * Duration + MissileStagger * (Effect == EImpactPreview::Missile ? Landing : 0);
     for (FPlaybackProjectile& Shot : HeldShots) { Shot.Age += Time; }
     HeldShots.RemoveAll([](const FPlaybackProjectile& Shot) { return Shot.Age > Shot.Duration; });
     Shots = HeldShots;
@@ -318,10 +334,29 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
         {
             for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*SpecialActor)) { if (Ability.Command == Result.Type) { bSpell = Ability.bSpell; } }
         }
+        bool bBoltThrown = false;
         for (const auto& Effect : Result.Effects)
         {
             const bool bFar = SpecialActor && FMath::Abs(SpecialActor->Cell.X - Effect.Cell.X) + FMath::Abs(SpecialActor->Cell.Y - Effect.Cell.Y) > 1;
-            const EUnitPose ActorPose = ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
+            // A Mitigation entry is the "Prevented N" note on a victim of a damaging special, not the actor's own effect: the ability's own entry poses the actor.
+            const EUnitPose ActorPose = Effect.Effect == EAbilityEffect::Mitigation ? EUnitPose::Idle : ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
+            // The artificer's spell special aimed at an enemy from range throws a cyan bolt (#150 batch 4), once per special, at the Cast clip's release frame, before the
+            // hit lands; every other special is as before. The target must be a standing enemy and the effect one that damages it.
+            const FCombatantState* BoltTarget = ExpeditionStyle::FindUnit(After, Effect.TargetId);
+            const bool bDamages = Effect.Effect == EAbilityEffect::Strike || Effect.Effect == EAbilityEffect::Area || Effect.Effect == EAbilityEffect::Push ||
+                Effect.Effect == EAbilityEffect::Surge || Effect.Effect == EAbilityEffect::Missile;
+            if (!bBoltThrown && bSpell && bFar && bDamages && SpecialActor && SpecialActor->AdventurerRole == EAdventurerRole::Artificer && BoltTarget && BoltTarget->Side == ECombatSide::Enemy)
+            {
+                bBoltThrown = true;
+                const int32 BoltActorId = Result.ActorId;
+                const FVector2D BoltFrom = CellOf(SpecialActor->Cell), BoltTo = CellOf(Effect.Cell);
+                Add(CastReleaseSeconds, [this, BoltActorId, ActorPose]() { if (FUnitDisplay* Actor = Displays.Find(BoltActorId)) { SetPose(*Actor, ActorPose); } });
+                Add(0.3f, [this, BoltFrom, BoltTo]()
+                {
+                    Cue(EExpeditionCue::Spell);
+                    Shots.Add(RangedBolt(BoltFrom, BoltTo, EAdventurerRole::Artificer, false));
+                });
+            }
             Add(0.45f, [this, Effect, Result, ActorPose]()
             {
                 auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }
@@ -413,7 +448,10 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     const FString ActorName = Actor->Name, TargetName = Target->Name;
     const EAdventurerRole Role = Actor->AdventurerRole;
     const EUnitPose ActorPose = ExpeditionPose::ForCommand(Result.Type, bRanged, ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged));
-    const bool bArrow = Role == EAdventurerRole::Rogue || (Actor->Side == ECombatSide::Enemy && bRanged);
+    // Every ranged attack that is not a spell is an arrow (the Ranger's bow included): it carries no light and nothing flashes the shooter.
+    // A spell bolt throws a point light from the shooter's cell, which blew the whole ranger and the floor out at release (#198); it now leaves at the
+    // Cast clip's release frame and its light ramps in over the first stretch of flight (ExpeditionFlash::BoltRampEnd, #150 batch 3).
+    const bool bArrow = !ExpeditionPose::IsSpellAttack(Result.Type, Role, bRanged);
 
     // Wind up while the d20 (or spell dice) tumble.
     Add(bMissile ? 0.3f : FDiceTray::TumbleSeconds + 0.05f, [=, this]()
@@ -459,18 +497,32 @@ void FExpeditionPlayback::AddAttack(const FCombatResult& Result, const FCombatSn
     // Deliver the blow: a lunge in melee, a projectile at range.
     if (bMissile)
     {
-        Add(0.5f, [=, this]()
+        // The cast plays out before the bolts leave: the clip's release frame is the thrust, with the focus pointing at the target.
+        Add(CastReleaseSeconds, [=, this]()
         {
             if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
+        });
+        Add(0.5f, [=, this]()
+        {
             Cue(EExpeditionCue::Spell);
             Shots.Append(MagicMissileBolts(From, To));
         });
     }
     else if (bRanged)
     {
+        // A bow draw plays out before the arrow leaves: the clip's release frame is when the string lets go (the Ranged clips key it at frame 26).
+        const bool bDraw = ActorPose == EUnitPose::Ranged;
+        const bool bCast = ActorPose == EUnitPose::Cast;
+        if (bDraw || bCast)
+        {
+            Add(bCast ? CastReleaseSeconds : RangedReleaseSeconds, [=, this]()
+            {
+                if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
+            });
+        }
         Add(0.3f, [=, this]()
         {
-            if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); }
+            if (!bDraw && !bCast) { if (FUnitDisplay* Unit = Displays.Find(ActorId)) { SetPose(*Unit, ActorPose); } }
             Cue(bArrow ? EExpeditionCue::Bow : EExpeditionCue::Spell);
             Shots.Add(RangedBolt(From, To, Role, bArrow));
         });

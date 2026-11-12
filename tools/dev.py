@@ -80,16 +80,19 @@ CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relau
 
 # Capture gallery: fixtures written by `test --filter Project.Tools.CaptureFixtures`, rendered by the
 # game's own capture mode (-ExpeditionCapture). Pose rules mirror ExpeditionCapture::ParsePoses.
-GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "board-vigil-pillars", "board-vigil-walls", "board-root-r002", "default-seed-route")
+GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "board-vigil-pillars", "board-vigil-walls", "board-root-r002", "board-vault", "default-seed-route")
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
-CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", "roll", "impact")
+CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", "roll", "impact", "pose")
+CAPTURE_CLIPS = ("idle", "walk", "melee", "ranged", "cast", "hit", "downed", "death", "recover", "brace")
 CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 CAPTURE_HINTS = ("move", "resources", "rescue", "endturn")
-CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile")
-CAPTURE_PHASES = ("landing", "flight", "landing-first", "landing-second")
+CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile", "arrow", "bolt")
+CAPTURE_PHASES = ("landing", "flight", "release", "landing-first", "landing-second")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 6400)
+# A fixture sidecar can name the looks its enemies are drawn as (#150 foe batch: -ExpeditionFoeLooks), a comma list of the FoeRigs keys.
+FOE_LOOKS_PATTERN = re.compile(r"(Scout|Raider|Archer|Skirmisher|Brute|Warden)(,(Scout|Raider|Archer|Skirmisher|Brute|Warden))*")
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
 
@@ -155,15 +158,32 @@ def load_poses(path):
             if "phase" in shot and shot["phase"] not in CAPTURE_PHASES:
                 raise ValueError(f"{name} needs a \"phase\" of {', '.join(CAPTURE_PHASES)}")
             if shot.get("phase", "landing") != "landing" and shot.get("effect", "hit") == "hit":
-                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire or missile)")
+                raise ValueError(f"{name} has a bolt phase but no bolt (\"effect\" spell, fire, missile, arrow or bolt)")
             if shot.get("phase") in ("landing-first", "landing-second") and shot.get("effect") != "missile":
                 raise ValueError(f"{name} lands a first or second bolt, which only \"effect\" missile has")
+            if shot.get("phase") == "release" and shot.get("effect", "hit") == "hit":
+                raise ValueError(f"{name} shows a release, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
+            if "role" in shot:
+                if shot.get("effect", "hit") == "hit":
+                    raise ValueError(f"{name} names a shooter, which needs a bolt (\"effect\" arrow, bolt, spell, fire or missile)")
+                if not isinstance(shot["role"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", shot["role"]):
+                    raise ValueError(f"{name} needs a \"role\" (a class name such as Ranger)")
             frames = shot.get("frames", 4)
             if isinstance(frames, bool) or not isinstance(frames, int) or not 1 <= frames <= min(60, settle):
                 raise ValueError(f"{name} needs \"frames\" as a whole number from 1 to 60, within settleFrames")
         elif "effect" in shot or "frames" in shot or "phase" in shot:
             raise ValueError(f"{name} may give \"effect\", \"phase\" or \"frames\" on an impact shot only")
-        if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact"):
+        if shot["mode"] == "pose":
+            if not isinstance(shot.get("role"), str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", shot["role"]):
+                raise ValueError(f"{name} needs a \"role\" (a class name such as Rogue)")
+            if not isinstance(shot.get("pose"), str) or shot["pose"].lower() not in CAPTURE_CLIPS:
+                raise ValueError(f"{name} needs a \"pose\" of {', '.join(CAPTURE_CLIPS)}")
+            seconds = shot.get("time", 0)
+            if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 10:
+                raise ValueError(f"{name} needs \"time\" in seconds from 0 to 10")
+        elif "pose" in shot or "time" in shot or ("role" in shot and shot["mode"] != "impact"):
+            raise ValueError(f"{name} may give \"role\", \"pose\" or \"time\" on a pose shot only (an impact shot of an arrow or bolt may name a \"role\")")
+        if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact", "pose"):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:
                 raise ValueError(f"{name} needs a \"yaw\" from -360 to 360")
@@ -762,7 +782,7 @@ class Dev:
                     raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
                 raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
 
-    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300):
+    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, static_figures=False, no_palettes=False, no_accents=False):
         fixtures = list(dict.fromkeys(fixtures or GALLERY_FIXTURES))
         resolutions = list(dict.fromkeys(resolutions or GALLERY_RESOLUTIONS))
         sizes = {text: parse_resolution(text) for text in resolutions}
@@ -804,8 +824,10 @@ class Dev:
                     command = [self.editor, self.w.project, "-game", "-windowed", "-ForceRes", f"-ResX={width}", f"-ResY={height}", *self.layout["headless"],
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
-                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []), *self.native_limits()]
-                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}")
+                               f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []),
+                               *(["-ExpeditionStaticFigures"] if static_figures else []), *(["-ExpeditionNoPalettes"] if no_palettes else []), *(["-ExpeditionNoAccents"] if no_accents else []),
+                               *([f"-ExpeditionFoeLooks={info['foeLooks']}"] if FOE_LOOKS_PATTERN.fullmatch(str(info.get("foeLooks", ""))) else []), *self.native_limits()]
+                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}{' (static figures)' if static_figures else ''}{' (no palettes)' if no_palettes else ''}{' (no accents)' if no_accents else ''}")
                     crashes_before = crash_folders(self.w.root)
                     code = self.run_game(command, target / "console.log", timeout)
                     lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root, who="Game")
@@ -813,7 +835,7 @@ class Dev:
                         raise RuntimeError(f"Failed lifecycle for {name} at {text}: {'; '.join(lifecycle)}; inspect {log}")
                     manifest = verify_capture(target / "manifest.json", shots, (width, height), target)
                     runs.append({"fixture": name, "seed": manifest.get("seed", info.get("seed")), "board": [manifest.get("boardWidth"), manifest.get("boardHeight")],
-                                 "fixture_info": info, "resolution": text, "primitives": primitives, "themed": manifest.get("themed"),
+                                 "fixture_info": info, "resolution": text, "primitives": primitives, "static_figures": static_figures, "themed": manifest.get("themed"), "no_palettes": no_palettes, "no_accents": no_accents,
                                  "directory": str(target.relative_to(output)), "shots": manifest["shots"]})
         write_json(output / "index.json", {"commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
                                           "poses": str(poses_path), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
@@ -1307,6 +1329,9 @@ def main():
     gallery.add_argument("--fixture", action="append", help="Fixture folder under Saved/CaptureFixtures (repeatable); default: " + ", ".join(GALLERY_FIXTURES))
     gallery.add_argument("--res", action="append", type=resolution_argument, help="Window size WIDTHxHEIGHT (repeatable); default: " + ", ".join(GALLERY_RESOLUTIONS))
     gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
+    gallery.add_argument("--static-figures", action="store_true", help="Themed look with the static r001 figures instead of the rigged ones (a before/after baseline for a cast batch)")
+    gallery.add_argument("--no-palettes", action="store_true", help="Rigged figures in the class colours, with no subclass palette or party accent (a before/after baseline for the palettes, #150 batch 4)")
+    gallery.add_argument("--no-accents", action="store_true", help="Subclass palettes without the party-slot accent on duplicated classes (the baseline the accent region is measured against, #150 batch 4)")
     gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
     gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
     perf = commands.add_parser("perf", help="Measure one autoplay fight against the #148 performance budgets; evidence under .local/perf/")
@@ -1346,7 +1371,7 @@ def main():
         elif args.command == "test":
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
         elif args.command == "gallery":
-            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout)
+            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures, no_palettes=args.no_palettes, no_accents=args.no_accents)
         elif args.command == "perf":
             report = dev.perf(args.package, args.editor, args.script, args.res, args.csv_frames, args.timeout, not args.no_warmup,
                               args.offscreen, args.vsync, not args.no_sound, args.transition_pad, args.only, args.run)

@@ -1,0 +1,121 @@
+{
+ "name": "SK_Hero_Monk",
+ "asset_id": "sk-hero-monk",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3128,
+   "verts": 2599,
+   "height_m": 1.806,
+   "zmax": 1.805,
+   "zmin": -0.001,
+   "glow_verts": 24
+  },
+  "LOD1": {
+   "tris": 1515,
+   "verts": 1568,
+   "height_m": 1.806,
+   "zmax": 1.805,
+   "zmin": -0.001,
+   "glow_verts": 24
+  },
+  "LOD2": {
+   "tris": 756,
+   "verts": 744,
+   "height_m": 1.806,
+   "zmax": 1.805,
+   "zmin": -0.001,
+   "glow_verts": 0
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  },
+  "Brace": {
+   "frames": [
+    0,
+    24
+   ],
+   "seconds": 0.8,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Hero_Monk.glb": 1515340,
+  "SK_Hero_Monk_LOD1.glb": 683536,
+  "SK_Hero_Monk_LOD2.glb": 580212
+ }
+}

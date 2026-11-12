@@ -6,8 +6,8 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact and Roll need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact };
+/** What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact, Roll and Pose need an encounter; Overview needs the tabletop; Start leaves the run. */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact, Pose };
 
 /** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
 enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };
@@ -26,6 +26,9 @@ struct DNDDICEROLL_API FCaptureShot
     bool bHasCamera = false;
     float Yaw = 0.0f;
     float Distance = 0.0f;
+    /** Optional pan (#149): the view pans this far right and away from the camera, in reference cm like Distance, then the pan bound applies. A large value reaches the pan stop. Camera shots only. */
+    bool bHasPan = false;
+    FVector2D Pan = FVector2D::ZeroVector;
     /** Tooltip shots only. */
     ECaptureAction Action = ECaptureAction::Attack;
     /** Hint shots only. */
@@ -36,6 +39,10 @@ struct DNDDICEROLL_API FCaptureShot
     EImpactMoment Moment = EImpactMoment::Landing;
     /** Impact shots only: rendered frames between the hit and the screenshot (the flash is held at its peak throughout). */
     int32 Frames = DefaultImpactFrames;
+    /** Pose shots only (#150): a party hero of this class (the role's enum name, "Rogue") or a foe of this look (the FoeRigs key, "Brute"; ExpeditionFoe::RigKey) held in this clip at this time in seconds, with no command and no rules change. */
+    FString Role;
+    EUnitPose Pose = EUnitPose::Idle;
+    float Time = 0.0f;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
 };
@@ -113,7 +120,25 @@ private:
         FVector2D ImpactFrom = FVector2D::ZeroVector;
         bool bHasBolt = false;
         FIntRect Bolt;
+        /** Impact shots with a "role" (#198): the shooter, a party hero of that class, held in its Ranged clip, and its footprint box (the shot's measured subject). */
+        int32 ShooterId = INDEX_NONE;
+        FString ShooterName;
+        /** The shooter's own cell (the manifest records it as shooter.cellX/cellY, so a shooter result is not reported at the target's cell) and its class. */
+        FIntPoint ShooterCell = FIntPoint::ZeroValue;
+        EAdventurerRole ShooterRole = EAdventurerRole::None;
+        bool bHasShooterBox = false;
+        FIntRect ShooterBox;
         bool bImpactFired = false;
+        /** Battle and targeting shots (#150): every figure on the board with its projected footprint box in screenshot pixels, so a tool can
+         * measure one class's figure against the ground behind it (tools/figure_contrast.py). Units whose box is off screen are left out. */
+        struct FUnitBox
+        {
+            int32 Id = INDEX_NONE;
+            FString Name, Role;
+            bool bParty = false, bRigged = false;
+            FIntRect Box;
+        };
+        TArray<FUnitBox> Units;
     };
 
     TWeakObjectPtr<AExpeditionPlayerController> Controller;
