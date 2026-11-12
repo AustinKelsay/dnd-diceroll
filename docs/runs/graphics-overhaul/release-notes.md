@@ -33,7 +33,7 @@ Nothing here changes rules, saves, the dice or the balance. The look is all pres
 - Caster bolts, one hue each: [the strip](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr203-cast4/pr203-cast4/03_caster_bolt_tint_strip.png)
 - The foes in the Vault: [brute, warden and archer beside the Waystone](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr205-foes/pr205-foes/combat/foes-vault-finale-yaw000-default.png) and [on the Vigil](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr205-foes/pr205-foes/combat/foes-vigil-b-yaw000-default.png)
 - Gate 2's rough edges, for comparison: [the slice report](https://github.com/AustinKelsay/dnd-diceroll/tree/evidence/onscreen-slice-871185a)
-- Acceptance run (perf reports, gallery indexes, a few captures): @@EVIDENCE@@
+- Acceptance run (perf reports, gallery indexes, a few captures): [perf reports, gallery indexes and a few captures](https://github.com/AustinKelsay/dnd-diceroll/tree/evidence/pr207-acceptance/pr207-acceptance)
 
 ## What was decided
 
@@ -53,7 +53,7 @@ Nothing here changes rules, saves, the dice or the balance. The look is all pres
 
 ## How it was checked (at `f09abfe`)
 
-Build with 0 warnings; 323 Expedition tests and 332 project tests passing with 0 warnings; the capture-fixture test; 235 helper tests on Python 3.11 and 3.14; the repository check; a Linux Development package; the full capture gallery (@@GALLERYSHORT@@); and the perf gate three times. #205 and #206 were merged back to back and both touched the same test fixture file, so their combination was built and tested first (clean). Details and numbers are in [Integrated acceptance](README.md#integrated-acceptance-152).
+Build with 0 warnings; 323 Expedition tests and 332 project tests passing with 0 warnings; the capture-fixture test; 235 helper tests on Python 3.11 and 3.14; the repository check; a Linux Development package; the full capture gallery (132 runs and 2,708 pictures, with all 70 palettes and the duplicate-class parties inside their readability gates); and the perf gate three times. #205 and #206 were merged back to back and both touched the same test fixture file, so their combination was built and tested first (clean). Details and numbers are in [Integrated acceptance](README.md#integrated-acceptance-152).
 
 ## Next
 
