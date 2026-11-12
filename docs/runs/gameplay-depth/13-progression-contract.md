@@ -275,12 +275,16 @@ P2 is inconclusive when it would be met if every small or tied class it needs we
 Rules:
 - The slice 3/4 holds in P4 each use a statistic suited to their kind:
   - **win-rate holds** (rotation 55–90%, every representative party at least 35%): the point estimate with its Wilson interval, as in contracts 09 and 11;
-  - **Dangerous at least 1.5x Guarded HP**: a ratio of sums (gross HP taken over all Dangerous fights divided by all Guarded fights, pooled across stages and routes) with a seed-cluster bootstrap interval, using the same fixed resample seed and resampling whole seeds. A resample with a zero Guarded denominator is redrawn, and the count of redraws is reported;
+  - **Dangerous at least 1.5x Guarded HP**: the metric inherited unchanged from contract 09 T4 and report 12. For **each fight 1–5**, take the mean **net** HP lost per fight on Dangerous routes divided by the same mean on Guarded routes (report 12: 1.6x at fight 5 to 3.3x at fight 4). Each fight's ratio gets a seed-cluster bootstrap interval, using the same fixed resample seed and resampling whole seeds. The hold is **met only when every fight's lower bound is at least 1.5**. A pooled total never stands in for it, because a strong fight can hide a failing one. Undefined denominators are bounded:
+    - a resample whose Guarded mean is 0 while its Dangerous mean is positive counts as above the threshold;
+    - a resample where both means are 0 counts as below it (conservative);
+    - the number of such resamples per fight is reported.
+    A fight with no Guarded or no Dangerous encounters in the full sample is reported as **not evaluable (not met)**.
   - **finale has the highest defeat share**: for each other stage, the bootstrap interval of (finale share − that stage's share), with shares pooled over routes and a seed-cluster bootstrap. The hold is met when every difference is above 0.
   A hold whose interval straddles its threshold is marked **borderline**.
 - If any of P2–P5 is inconclusive, or a P4 target is borderline, the report adds **exactly one extra fixed-seed batch**. That batch is seeds `20261141 + i` for `i = 0 … 31`, with the same parties and the same route-pattern rule, for all five measurements. Every verdict is then made on the 64 pooled seeds.
 - A target still inconclusive after the extra batch, or a P4 hold still borderline after it, is reported as **inconclusive (not met)** with its intervals. A borderline hold is never passed on its point estimate. There are no further batches, and stopping is not optional.
-- `tools/balance_report.py` implements these statistics, and its helper tests cover a met, a missed and a borderline case for each hold kind, plus a zero-denominator resample.
+- `tools/balance_report.py` implements these statistics, and its helper tests cover a met, a missed and a borderline case for each hold kind, plus a zero-denominator resample, and a case where a pooled ratio passes while one fight fails (the per-fight rule must report it missed).
 
 **Dominance.** Meeting P2 on the fixed sample does not establish by itself that "no card strictly dominates". The report claims non-dominance only when every one of `gear`, `reserve` and `honed` has at least one class where another strategy is clear against it. Otherwise it says which strategy was not beaten anywhere.
 
