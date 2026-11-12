@@ -1,0 +1,28 @@
+{
+ "MaterialExpressionPower_0": {
+  "consumers": [
+   "MaterialExpressionDivide:MaterialExpressionDivide_0",
+   "MaterialExpressionDivide:MaterialExpressionDivide_2",
+   "MaterialExpressionDivide:MaterialExpressionDivide_4",
+   "MaterialExpressionDivide:MaterialExpressionDivide_6",
+   "MaterialExpressionDivide:MaterialExpressionDivide_8"
+  ],
+  "wired_inputs": [
+   null,
+   null
+  ]
+ },
+ "MaterialExpressionPower_1": {
+  "consumers": [
+   "MaterialExpressionDivide:MaterialExpressionDivide_10",
+   "MaterialExpressionDivide:MaterialExpressionDivide_12",
+   "MaterialExpressionDivide:MaterialExpressionDivide_14",
+   "MaterialExpressionDivide:MaterialExpressionDivide_16",
+   "MaterialExpressionDivide:MaterialExpressionDivide_18"
+  ],
+  "wired_inputs": [
+   "MaterialExpressionConstant",
+   "MaterialExpressionAdd"
+  ]
+ }
+}

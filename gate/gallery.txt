@@ -1,0 +1,5 @@
+Capturing default-seed-battle at 1920x1080
+Capturing board-vigil-pillars at 1920x1080
+Capturing board-root-r002 at 1920x1080
+Capturing board-vault at 1920x1080
+Gallery: 4 run(s), 172 picture(s), 16 skipped as not applicable; index: <worktree>/.local/gallery/20261112T220635680112Z/index.json

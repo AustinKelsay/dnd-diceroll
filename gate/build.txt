@@ -1,0 +1,4 @@
+Total execution time: 52.42 seconds
+Trace written to file ~/.config/Epic/UnrealBuildTool/Trace.uba with size 8.2kb
+Build passed with 0 warnings; log: <worktree>/.local/build/20261112T212528477662Z.log
+exit=0

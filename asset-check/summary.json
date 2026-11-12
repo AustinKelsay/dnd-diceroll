@@ -1,0 +1,119 @@
+{
+ "asset": "/Game/DnDDiceRoll/Theme/Materials/M_DiceRollTheme",
+ "variants": {
+  "head (9dee48de)": {
+   "lfs_sha256": "3315e1918e6ee2112b341282f3c6dd5de7b93b7eb5cffbfd7ccbbbd2845373cd",
+   "revision_tag": "dice-theme-7",
+   "nanite_usage": true,
+   "skeletal_mesh_usage": true,
+   "instanced_static_mesh_usage": true,
+   "num_expressions": 215,
+   "parameter_count": 40,
+   "power_nodes": [
+    {
+     "inputs_wired": [
+      null,
+      null
+     ]
+    },
+    {
+     "inputs_wired": [
+      "MaterialExpressionConstant",
+      "MaterialExpressionAdd"
+     ]
+    }
+   ],
+   "child_instances": 96,
+   "child_instances_with_nanite": 96,
+   "property_inputs": {
+    "MP_AMBIENT_OCCLUSION": null,
+    "MP_BASE_COLOR": "MaterialExpressionMultiply",
+    "MP_EMISSIVE_COLOR": "MaterialExpressionAdd",
+    "MP_METALLIC": null,
+    "MP_NORMAL": null,
+    "MP_OPACITY": null,
+    "MP_OPACITY_MASK": "MaterialExpressionShadowReplace",
+    "MP_ROUGHNESS": "MaterialExpressionScalarParameter",
+    "MP_SPECULAR": "MaterialExpressionConstant",
+    "MP_WORLD_POSITION_OFFSET": null
+   }
+  },
+  "staging (14e1384d)": {
+   "lfs_sha256": "c54ba6a4639811f9c179c4fd8276603f09788cad423f0a66e10ace1926252348",
+   "revision_tag": "dice-theme-7",
+   "nanite_usage": false,
+   "skeletal_mesh_usage": true,
+   "instanced_static_mesh_usage": true,
+   "num_expressions": 215,
+   "parameter_count": 40,
+   "power_nodes": [
+    {
+     "inputs_wired": [
+      null,
+      null
+     ]
+    },
+    {
+     "inputs_wired": [
+      "MaterialExpressionConstant",
+      "MaterialExpressionAdd"
+     ]
+    }
+   ],
+   "child_instances": 96,
+   "child_instances_with_nanite": 0,
+   "property_inputs": {
+    "MP_AMBIENT_OCCLUSION": null,
+    "MP_BASE_COLOR": "MaterialExpressionMultiply",
+    "MP_EMISSIVE_COLOR": "MaterialExpressionAdd",
+    "MP_METALLIC": null,
+    "MP_NORMAL": null,
+    "MP_OPACITY": null,
+    "MP_OPACITY_MASK": "MaterialExpressionShadowReplace",
+    "MP_ROUGHNESS": "MaterialExpressionScalarParameter",
+    "MP_SPECULAR": "MaterialExpressionConstant",
+    "MP_WORLD_POSITION_OFFSET": null
+   }
+  },
+  "gate/193 (6539e123)": {
+   "lfs_sha256": "8a73299871d163ce2d654bc328ae88679abea89c3da691e1228a7e2e3223fdcb",
+   "revision_tag": "dice-theme-7",
+   "nanite_usage": true,
+   "skeletal_mesh_usage": true,
+   "instanced_static_mesh_usage": true,
+   "num_expressions": 215,
+   "parameter_count": 40,
+   "power_nodes": [
+    {
+     "inputs_wired": [
+      null,
+      null
+     ]
+    },
+    {
+     "inputs_wired": [
+      "MaterialExpressionConstant",
+      "MaterialExpressionAdd"
+     ]
+    }
+   ],
+   "child_instances": 96,
+   "child_instances_with_nanite": 96,
+   "property_inputs": {
+    "MP_AMBIENT_OCCLUSION": null,
+    "MP_BASE_COLOR": "MaterialExpressionMultiply",
+    "MP_EMISSIVE_COLOR": "MaterialExpressionAdd",
+    "MP_METALLIC": null,
+    "MP_NORMAL": null,
+    "MP_OPACITY": null,
+    "MP_OPACITY_MASK": "MaterialExpressionShadowReplace",
+    "MP_ROUGHNESS": "MaterialExpressionScalarParameter",
+    "MP_SPECULAR": "MaterialExpressionConstant",
+    "MP_WORLD_POSITION_OFFSET": null
+   }
+  }
+ },
+ "graph_identical_head_vs_staging": true,
+ "graph_identical_head_vs_gate193": true,
+ "graph_signature_note": "per-node class, parameter name/default, input classes and wired counts, with memory addresses stripped; 215 nodes"
+}

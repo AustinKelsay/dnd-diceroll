@@ -1,0 +1,2 @@
+Checking the Git index (stage intended changes to include them).
+PASS check

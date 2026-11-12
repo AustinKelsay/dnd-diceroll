@@ -1,0 +1,2 @@
+Automation passed: {'tests': 332, 'passed': 332, 'warnings': 0}; warning lines: 0; evidence: <worktree>/.local/automation/20261112T213038907408Z
+exit=0

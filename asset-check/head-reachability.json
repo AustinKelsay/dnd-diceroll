@@ -1,0 +1,39 @@
+{
+ "power_reachable": {
+  "MaterialExpressionPower_0": false,
+  "MaterialExpressionPower_1": true
+ },
+ "reachable": 130,
+ "roots": {
+  "MP_BASE_COLOR": "MaterialExpressionMultiply_39",
+  "MP_EMISSIVE_COLOR": "MaterialExpressionAdd_12",
+  "MP_OPACITY_MASK": "MaterialExpressionShadowReplace_0",
+  "MP_ROUGHNESS": "MaterialExpressionScalarParameter_26",
+  "MP_SPECULAR": "MaterialExpressionConstant_40"
+ },
+ "total": 215,
+ "unreachable": 85,
+ "unreachable_by_class": {
+  "MaterialExpressionAdd": 2,
+  "MaterialExpressionComponentMask": 8,
+  "MaterialExpressionConstant": 11,
+  "MaterialExpressionConstant3Vector": 1,
+  "MaterialExpressionDistance": 1,
+  "MaterialExpressionDivide": 10,
+  "MaterialExpressionFloor": 1,
+  "MaterialExpressionFresnel": 1,
+  "MaterialExpressionMin": 5,
+  "MaterialExpressionMultiply": 15,
+  "MaterialExpressionPerInstanceCustomData": 1,
+  "MaterialExpressionPixelNormalWS": 2,
+  "MaterialExpressionPower": 1,
+  "MaterialExpressionSaturate": 2,
+  "MaterialExpressionScalarParameter": 11,
+  "MaterialExpressionShadowReplace": 1,
+  "MaterialExpressionSubtract": 1,
+  "MaterialExpressionTextureSampleParameter2D": 1,
+  "MaterialExpressionVectorParameter": 7,
+  "MaterialExpressionVertexColor": 1,
+  "MaterialExpressionWorldPosition": 2
+ }
+}
