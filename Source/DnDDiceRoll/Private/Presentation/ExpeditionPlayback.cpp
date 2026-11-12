@@ -233,7 +233,7 @@ FPlaybackProjectile FExpeditionPlayback::RangedBolt(FVector2D From, FVector2D To
     const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
         Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) :
         Role == EAdventurerRole::Sorcerer ? FLinearColor(0.95f, 0.07f, 0.38f) :
-        Role == EAdventurerRole::Warlock ? FLinearColor(0.5f, 1.0f, 0.3f) :
+        Role == EAdventurerRole::Warlock ? FLinearColor(0.35f, 1.0f, 0.3f) :
         Role == EAdventurerRole::Druid ? FLinearColor(0.75f, 0.95f, 0.22f) :
         Role == EAdventurerRole::Bard ? FLinearColor(0.15f, 0.95f, 0.65f) :
         Role == EAdventurerRole::Artificer ? FLinearColor(0.25f, 0.75f, 1.0f) : FLinearColor(0.85f, 0.75f, 0.6f);
