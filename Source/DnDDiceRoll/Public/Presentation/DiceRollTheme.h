@@ -48,6 +48,12 @@ struct DNDDICEROLL_API FDiceRollCharacter
      * (or an entry with no clip set) plays the shared clip in Animations; an entry whose clip fails to load makes the whole definition incomplete.
      */
     UPROPERTY(EditAnywhere, Category = "Character") TMap<FName, TSoftObjectPtr<UAnimSequence>> Overrides;
+    /**
+     * How tall this character stands as a multiple of the theme's FigureHeight (#150 foe batch). Every rig is fitted to FigureHeight by its mesh bounds, so a
+     * horned brute or a crowned warden would stand as short as a scout; a bigger figure carries its stature here as data (1.0, the default, is the fitted
+     * height every earlier rig keeps). The multiple applies to the bounds, crest and horns included.
+     */
+    UPROPERTY(EditAnywhere, Category = "Character", meta = (ClampMin = "0.5", ClampMax = "1.5")) float HeightScale = 1.0f;
 
     /** Loads the mesh and all ten clips (indexed by EUnitPose), each the class's override when it has one and the shared clip otherwise. False, with nothing returned, when any is missing. */
     bool Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const;
@@ -129,7 +135,7 @@ public:
      * to load does too (FDiceRollCharacter::Load).
      */
     UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> ClassRigs;
-    /** Rigged foes by archetype name ("Raider"; the scout and archer follow in a later batch). */
+    /** Rigged foes by archetype name (ExpeditionFoe::RigKey: "Raider", "Scout", "Archer", and from #188 "Skirmisher", "Brute", "Warden"; see FoeLook.h). */
     UPROPERTY(EditDefaultsOnly, Category = "Rigged Characters") TMap<FName, FDiceRollCharacter> FoeRigs;
 
     /**

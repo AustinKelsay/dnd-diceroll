@@ -91,6 +91,8 @@ CAPTURE_EFFECTS = ("hit", "spell", "fire", "missile", "arrow", "bolt")
 CAPTURE_PHASES = ("landing", "flight", "release", "landing-first", "landing-second")
 # Reference units: cm of the 110 cm r001 cell. The game scales them by the board metric (cell / 110).
 CAMERA_DISTANCE = (900, 6400)
+# A fixture sidecar can name the looks its enemies are drawn as (#150 foe batch: -ExpeditionFoeLooks), a comma list of the FoeRigs keys.
+FOE_LOOKS_PATTERN = re.compile(r"(Scout|Raider|Archer|Skirmisher|Brute|Warden)(,(Scout|Raider|Archer|Skirmisher|Brute|Warden))*")
 FIXTURE_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 FIXTURE_HINT = "run `python3 tools/dev.py --cores 2 test --filter Project.Tools.CaptureFixtures` to write them"
 
@@ -823,7 +825,8 @@ class Dev:
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
                                f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []),
-                               *(["-ExpeditionStaticFigures"] if static_figures else []), *self.native_limits()]
+                               *(["-ExpeditionStaticFigures"] if static_figures else []),
+                               *([f"-ExpeditionFoeLooks={info['foeLooks']}"] if FOE_LOOKS_PATTERN.fullmatch(str(info.get("foeLooks", ""))) else []), *self.native_limits()]
                     print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}{' (static figures)' if static_figures else ''}")
                     crashes_before = crash_folders(self.w.root)
                     code = self.run_game(command, target / "console.log", timeout)

@@ -3,6 +3,7 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/CombatHints.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/FoeLook.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
@@ -458,11 +459,16 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
-            // A party hero of the class, held in the clip at the time: no command is submitted and the battle is untouched (UpdateAnimation leaves the figure alone).
+            // A party hero of the class, or a foe of the look (Scout, Raider, Archer, Skirmisher, Brute, Warden), held in the clip at the time: no command is submitted and the
+            // battle is untouched (UpdateAnimation leaves the figure alone).
             const FCombatantState* Hero = nullptr;
             for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
-            { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Hero = &Unit; break; } }
-            if (!Hero) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+            {
+                const bool bMatch = Unit.Side == ECombatSide::Party ? UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role
+                    : ExpeditionFoe::RigKey(Board->FoeLookFor(Unit)).ToString() == Shot.Role;
+                if (bMatch) { Hero = &Unit; break; }
+            }
+            if (!Hero) { Skip = FString::Printf(TEXT("no %s on the board"), *Shot.Role); return false; }
             if (!Board->PreviewPose(Hero->Id, Shot.Pose, Shot.Time)) { Skip = FString::Printf(TEXT("the %s is not a rigged figure"), *Shot.Role); return false; }
             Pending.TargetId = Hero->Id;
             Pending.TargetName = Hero->Name;
@@ -710,7 +716,7 @@ void FExpeditionCaptureDirector::Tick()
                     Entry.Id = Combatant.Id;
                     Entry.Name = Combatant.Name;
                     Entry.bParty = Combatant.Side == ECombatSide::Party;
-                    Entry.Role = Entry.bParty && RoleEnum ? RoleEnum->GetNameStringByValue(static_cast<int64>(Combatant.AdventurerRole)) : TEXT("Foe");
+                    Entry.Role = Entry.bParty ? (RoleEnum ? RoleEnum->GetNameStringByValue(static_cast<int64>(Combatant.AdventurerRole)) : FString()) : ExpeditionFoe::RigKey(Board->FoeLookFor(Combatant)).ToString();
                     Entry.bRigged = Board->UnitAnimation(Combatant.Id).bSkeletal;
                     Pending.Units.Add(Entry);
                 }

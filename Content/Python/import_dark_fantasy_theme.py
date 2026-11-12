@@ -1008,7 +1008,14 @@ BRACE_SOURCE = ("sk-hero-fighter", "SK_Hero_Fighter", "r002")
 CLIP_OVERRIDES = {
     "class:Barbarian": {"Melee": ("A_Barbarian_Melee", "Melee_Barbarian")},
     "class:Ranger": {"Ranged": ("A_Ranger_Ranged", "Ranged_Ranger")},
+    # The foe batch (#150): the archer's own bow draw (the ranger's timing, so the arrow leaves at the same release frame) and the brute's two-handed maul swing.
+    "foe:Archer": {"Ranged": ("A_Archer_Ranged", "Ranged_Archer")},
+    "foe:Brute": {"Melee": ("A_Brute_Melee", "Melee_Brute")},
 }
+# How tall a rig stands as a multiple of the theme's FigureHeight (FDiceRollCharacter::HeightScale, #150 foe batch). Every rig is fitted to FigureHeight by its mesh
+# bounds, so the foes that are bigger than the 175 to 185 cm cast carry their stature here: the brute's horns and the warden's crest are part of their bounds
+# (Blender 204.6 cm each), so 1.08 gives a 194 cm brute and 1.12 a 202 cm warden. Unlisted rigs keep 1.0, the fitted height every earlier rig has.
+HEIGHT_SCALE = {"foe:Brute": 1.08, "foe:Warden": 1.12}
 # asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit). The static r001 characters keep Rim 1.6 and Fill 1.25 (#148, tuned for
 # their dark figures); the rigged ones, whose palettes are already bright, take Rim 1.2 and Fill 1.0 (#150: the lowest pair of 1.2/1.0 and 1.0/0.9 that
 # keeps every rigged class at a mean region contrast of 2.3 or more and a worst shot of 1.4 or more on Vigil, Root and the Vault; see docs/assets.md).
@@ -1030,6 +1037,12 @@ RIG = [
     ("sk-hero-sorcerer", "SK_Hero_Sorcerer", "class:Sorcerer", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-warlock", "SK_Hero_Warlock", "class:Warlock", (0.6, 1.2, 1.0, 1.0, 0.0)),
     ("sk-hero-druid", "SK_Hero_Druid", "class:Druid", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    # The foe batch (#150): scout and archer replace the static foe meshes, skirmisher, brute and warden are the #188 roles (presentation names them in FoeLook.h).
+    ("sk-foe-scout", "SK_Foe_Scout", "foe:Scout", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-archer", "SK_Foe_Archer", "foe:Archer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-skirmisher", "SK_Foe_Skirmisher", "foe:Skirmisher", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-brute", "SK_Foe_Brute", "foe:Brute", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-warden", "SK_Foe_Warden", "foe:Warden", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
 CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
 # The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.
@@ -1227,18 +1240,19 @@ def rig_target(key):
     return (CLASS_RIGS if kind == "class" else FOE_RIGS), entry
 
 
-def rig_matches(definition, mesh, clips, overrides=None):
+def rig_matches(definition, mesh, clips, overrides=None, height_scale=1.0):
     animations = definition.get_editor_property("animations")
     held = {str(k): path_of(v) for k, v in definition.get_editor_property("overrides").items()}
     wanted = {clip: path_of(asset) for clip, asset in (overrides or {}).items()}
-    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and held == wanted and all(
+    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and held == wanted and abs(definition.get_editor_property("height_scale") - height_scale) < 1e-4 and all(
         path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items())
 
 
-def new_rig_definition(mesh, clips, yaw, overrides=None):
+def new_rig_definition(mesh, clips, yaw, overrides=None, height_scale=1.0):
     definition = unreal.DiceRollCharacter()
     definition.set_editor_property("mesh", mesh)
     definition.set_editor_property("yaw_offset", yaw)
+    definition.set_editor_property("height_scale", height_scale)
     definition.set_editor_property("overrides", {unreal.Name(clip): asset for clip, asset in (overrides or {}).items()})
     animation_set = unreal.DiceRollAnimSet()
     for clip, asset in clips.items():
@@ -1261,10 +1275,11 @@ def assign_rig(theme, key, name):
     pilot_set = pilot is not None and pilot.get_editor_property("mesh") is not None
     changed = []
     current = entries.get(entry)
-    if current is None or not rig_matches(current, mesh, clips, overrides):
+    height_scale = HEIGHT_SCALE.get(key, 1.0)
+    if current is None or not rig_matches(current, mesh, clips, overrides, height_scale):
         source = current if current is not None else pilot
         yaw = source.get_editor_property("yaw_offset") if source is not None else 0.0
-        entries[entry] = new_rig_definition(mesh, clips, yaw, overrides)
+        entries[entry] = new_rig_definition(mesh, clips, yaw, overrides, height_scale)
         theme.set_editor_property(prop, {unreal.Name(k): v for k, v in entries.items()})
         changed.append("assigned")
     if pilot_set:
