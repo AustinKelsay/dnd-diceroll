@@ -18,7 +18,7 @@
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
- * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
+ * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-four-rogues-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
@@ -371,7 +371,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     // Root recipe 2, the plain-road Vault finale). Each party starts a run at the seed the default party's board uses and takes the first seed from there
     // that gives the same recipe with its own heroes acting first, so most parties share the board and every board has the same recipe and size class.
     // Parties are four distinct classes (no accent), formed greedily from the classes with the most builds left; a short last party is filled with builds
-    // that were already covered. Fixtures: `pal-NN-vigil|root|vault`, palette-parties.json naming each party, and `dup-four-fighters-*` and
+    // that were already covered. Fixtures: `pal-NN-vigil|root|vault`, palette-parties.json naming each party, and `dup-four-fighters-*`, `dup-four-paladins-*`, `dup-four-rogues-*` and
     // `dup-two-pairs-*` for the duplicate accents.
     {
         const TCHAR* BoardNames[3] = {TEXT("vigil"), TEXT("root"), TEXT("vault")};
@@ -489,6 +489,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         TArray<TPair<FString, TArray<FString>>> Duplicates;
         Duplicates.Emplace(TEXT("dup-four-fighters"), TArray<FString>{TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion")});
         Duplicates.Emplace(TEXT("dup-four-paladins"), TArray<FString>{TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion")});
+        Duplicates.Emplace(TEXT("dup-four-rogues"), TArray<FString>{TEXT("rogue.thief"), TEXT("rogue.thief"), TEXT("rogue.thief"), TEXT("rogue.thief")});
         Duplicates.Emplace(TEXT("dup-two-pairs"), TArray<FString>{TEXT("cleric.life"), TEXT("rogue.thief"), TEXT("cleric.war"), TEXT("rogue.thief")});
         for (const TPair<FString, TArray<FString>>& Duplicate : Duplicates)
         { for (int32 Board = 0; Board < 3; ++Board) { WriteBoard(FString::Printf(TEXT("%s-%s"), *Duplicate.Key, BoardNames[Board]), Duplicate.Value, Board); } }

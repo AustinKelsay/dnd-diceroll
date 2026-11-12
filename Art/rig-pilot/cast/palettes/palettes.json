@@ -58,7 +58,8 @@
      "rune"
     ],
     "X": [
-     "trim"
+     "emblem",
+     "accent"
     ]
    },
    "default": {},
@@ -175,15 +176,15 @@
      "rune"
     ],
     "X": [
-     "trim",
-     "accent"
+     "emblem2",
+     "leather"
     ]
    },
    "default": {},
    "accent": {
     "luminance": [
-     0.3,
-     0.3
+     0.36,
+     0.36
     ],
     "saturation": 1.0
    }

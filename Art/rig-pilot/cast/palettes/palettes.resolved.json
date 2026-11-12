@@ -147,12 +147,13 @@
     },
     "X": {
      "tiles": [
-      "trim"
+      "emblem",
+      "accent"
      ],
-     "mask": 2,
-     "default_hex": "#e8ddb7",
-     "default_luma": 0.8636,
-     "reference": 0.7249
+     "mask": 2560,
+     "default_hex": "#e3b385",
+     "default_luma": 0.7369,
+     "reference": 0.50149
     }
    },
    "accent": [
@@ -603,53 +604,53 @@
     },
     "X": {
      "tiles": [
-      "trim",
-      "accent"
+      "emblem2",
+      "leather"
      ],
-     "mask": 514,
-     "default_hex": "#e8b95b",
-     "default_luma": 0.7387,
-     "reference": 0.52614
+     "mask": 4104,
+     "default_hex": "#663e6e",
+     "default_luma": 0.3108,
+     "reference": 0.07361
     }
    },
    "accent": [
     {
-     "hex": "#dc1200",
+     "hex": "#ff1a05",
      "linear": [
-      0.71481,
-      0.0062,
-      0.0
+      1.0,
+      0.01007,
+      0.00143
      ]
     },
     {
-     "hex": "#0059d5",
+     "hex": "#016bff",
+     "linear": [
+      0.00017,
+      0.1458,
+      1.0
+     ]
+    },
+    {
+     "hex": "#009719",
      "linear": [
       0.0,
-      0.09965,
-      0.66778
+      0.31166,
+      0.00987
      ]
     },
     {
-     "hex": "#007e15",
+     "hex": "#776000",
      "linear": [
-      0.0,
-      0.20949,
-      0.00752
-     ]
-    },
-    {
-     "hex": "#645000",
-     "linear": [
-      0.12618,
-      0.07945,
+      0.18594,
+      0.11583,
       0.0
      ]
     }
    ],
    "accent_override": {
     "luminance": [
-     0.3,
-     0.3
+     0.36,
+     0.36
     ],
     "saturation": 1.0
    },
