@@ -1,0 +1,3949 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 3645,
+      "peakLuma": 248.79,
+      "p99Luma": 246.7,
+      "meanLuma": 72.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        985,
+        504,
+        1030,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 255.0,
+      "p99Luma": 254.78,
+      "meanLuma": 155.15,
+      "whiteFraction": 0.05078125,
+      "clippedFraction": 0.029947916666666668,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        865,
+        200,
+        897,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2485,
+      "peakLuma": 248.56,
+      "p99Luma": 241.26,
+      "meanLuma": 78.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        962,
+        166,
+        997,
+        237
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 254.93,
+      "p99Luma": 254.07,
+      "meanLuma": 151.23,
+      "whiteFraction": 0.014957264957264958,
+      "clippedFraction": 0.01014957264957265,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        555,
+        200,
+        581,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1407,
+      "peakLuma": 248.56,
+      "p99Luma": 237.97,
+      "meanLuma": 77.24,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        630,
+        34,
+        651,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2025,
+      "peakLuma": 252.37,
+      "p99Luma": 247.16,
+      "meanLuma": 175.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        690,
+        262,
+        717,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2156,
+      "peakLuma": 249.34,
+      "p99Luma": 246.7,
+      "meanLuma": 81.47,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        574,
+        344,
+        602,
+        421
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3116,
+      "peakLuma": 254.86,
+      "p99Luma": 254.28,
+      "meanLuma": 154.4,
+      "whiteFraction": 0.004492939666238768,
+      "clippedFraction": 0.010590500641848523,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1021,
+        302,
+        1062,
+        378
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 248.56,
+      "p99Luma": 247.77,
+      "meanLuma": 83.12,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2160,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 167.23,
+      "whiteFraction": 0.06944444444444445,
+      "clippedFraction": 0.040740740740740744,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        806,
+        200,
+        836,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.63,
+      "p99Luma": 239.58,
+      "meanLuma": 77.51,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 255.0,
+      "p99Luma": 251.92,
+      "meanLuma": 175.06,
+      "whiteFraction": 0.007007007007007007,
+      "clippedFraction": 0.002002002002002002,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        552,
+        236,
+        579,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 248.56,
+      "p99Luma": 240.47,
+      "meanLuma": 85.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2175,
+      "peakLuma": 254.49,
+      "p99Luma": 248.73,
+      "meanLuma": 148.75,
+      "whiteFraction": 0.0004597701149425287,
+      "clippedFraction": 0.001379310344827586,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        752,
+        262,
+        781,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.91,
+      "meanLuma": 93.66,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2925,
+      "peakLuma": 255.0,
+      "p99Luma": 253.14,
+      "meanLuma": 168.45,
+      "whiteFraction": 0.017094017094017096,
+      "clippedFraction": 0.006153846153846154,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1011,
+        262,
+        1050,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 248.56,
+      "p99Luma": 247.77,
+      "meanLuma": 83.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 178.73,
+      "whiteFraction": 0.04811507936507937,
+      "clippedFraction": 0.10416666666666667,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        747,
+        200,
+        775,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.56,
+      "p99Luma": 238.66,
+      "meanLuma": 77.09,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 254.93,
+      "p99Luma": 254.64,
+      "meanLuma": 174.75,
+      "whiteFraction": 0.017619047619047618,
+      "clippedFraction": 0.02095238095238095,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        550,
+        275,
+        578,
+        350
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 248.56,
+      "p99Luma": 239.7,
+      "meanLuma": 86.69,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2400,
+      "peakLuma": 252.78,
+      "p99Luma": 250.16,
+      "meanLuma": 186.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        813,
+        262,
+        845,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.98,
+      "meanLuma": 93.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2701,
+      "peakLuma": 255.0,
+      "p99Luma": 254.64,
+      "meanLuma": 177.21,
+      "whiteFraction": 0.019622362088115512,
+      "clippedFraction": 0.02850796001480933,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1002,
+        225,
+        1039,
+        298
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3645,
+      "peakLuma": 248.79,
+      "p99Luma": 246.65,
+      "meanLuma": 73.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        985,
+        504,
+        1030,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 249.73,
+      "p99Luma": 245.96,
+      "meanLuma": 101.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        865,
+        200,
+        897,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 150.52,
+      "whiteFraction": 0.06566104702750665,
+      "clippedFraction": 0.037622005323868675,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 249.27,
+      "p99Luma": 247.77,
+      "meanLuma": 84.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2160,
+      "peakLuma": 254.57,
+      "p99Luma": 251.51,
+      "meanLuma": 119.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0032407407407407406,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        806,
+        200,
+        836,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 154.19,
+      "whiteFraction": 0.0644927536231884,
+      "clippedFraction": 0.04730848861283644,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 83.85,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 252.78,
+      "p99Luma": 248.49,
+      "meanLuma": 121.8,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        747,
+        200,
+        775,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 8372,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 167.0,
+      "whiteFraction": 0.08767319636884854,
+      "clippedFraction": 0.12087912087912088,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        617,
+        165,
+        669,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 248.56,
+      "p99Luma": 248.48,
+      "meanLuma": 83.94,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 194.25,
+      "whiteFraction": 0.1543803418803419,
+      "clippedFraction": 0.10363247863247864,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        688,
+        200,
+        714,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1280x720/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 8174,
+      "peakLuma": 248.86,
+      "p99Luma": 247.56,
+      "meanLuma": 72.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1478,
+        756,
+        1545,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 155.31,
+      "whiteFraction": 0.056540583136327816,
+      "clippedFraction": 0.03644602048857368,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1298,
+        300,
+        1345,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 5512,
+      "peakLuma": 248.56,
+      "p99Luma": 244.98,
+      "meanLuma": 78.08,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1444,
+        249,
+        1496,
+        355
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 254.93,
+      "p99Luma": 254.07,
+      "meanLuma": 149.66,
+      "whiteFraction": 0.014482431149097816,
+      "clippedFraction": 0.010208926875593542,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        832,
+        300,
+        871,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3069,
+      "peakLuma": 248.56,
+      "p99Luma": 243.12,
+      "meanLuma": 76.56,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        945,
+        52,
+        976,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 252.37,
+      "p99Luma": 247.09,
+      "meanLuma": 173.05,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1036,
+        394,
+        1075,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4830,
+      "peakLuma": 249.34,
+      "p99Luma": 248.56,
+      "meanLuma": 80.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        861,
+        517,
+        903,
+        632
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6893,
+      "peakLuma": 255.0,
+      "p99Luma": 254.57,
+      "meanLuma": 153.2,
+      "whiteFraction": 0.00493254025823299,
+      "clippedFraction": 0.014072247207311766,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1532,
+        453,
+        1593,
+        566
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 247.77,
+      "meanLuma": 82.21,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4860,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 166.83,
+      "whiteFraction": 0.07160493827160494,
+      "clippedFraction": 0.0448559670781893,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1209,
+        300,
+        1254,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 248.56,
+      "p99Luma": 245.7,
+      "meanLuma": 77.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 254.93,
+      "p99Luma": 252.5,
+      "meanLuma": 174.79,
+      "whiteFraction": 0.006590909090909091,
+      "clippedFraction": 0.0013636363636363637,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        829,
+        355,
+        869,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.48,
+      "p99Luma": 243.12,
+      "meanLuma": 88.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4773,
+      "peakLuma": 254.64,
+      "p99Luma": 249.22,
+      "meanLuma": 146.9,
+      "whiteFraction": 0.001466582861931699,
+      "clippedFraction": 0.001466582861931699,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1128,
+        394,
+        1171,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 93.39,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6438,
+      "peakLuma": 255.0,
+      "p99Luma": 253.63,
+      "meanLuma": 167.23,
+      "whiteFraction": 0.017241379310344827,
+      "clippedFraction": 0.008232370301335818,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1517,
+        394,
+        1575,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.27,
+      "p99Luma": 247.77,
+      "meanLuma": 82.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4428,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 179.35,
+      "whiteFraction": 0.06074977416440831,
+      "clippedFraction": 0.08581752484191509,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1121,
+        300,
+        1162,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 249.34,
+      "p99Luma": 245.7,
+      "meanLuma": 77.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4551,
+      "peakLuma": 255.0,
+      "p99Luma": 254.57,
+      "meanLuma": 172.83,
+      "whiteFraction": 0.020874533069655022,
+      "clippedFraction": 0.01911667765326302,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        825,
+        413,
+        866,
+        524
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.56,
+      "p99Luma": 244.91,
+      "meanLuma": 86.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 5217,
+      "peakLuma": 253.49,
+      "p99Luma": 250.56,
+      "meanLuma": 186.81,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1220,
+        394,
+        1267,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.56,
+      "meanLuma": 93.37,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6104,
+      "peakLuma": 255.0,
+      "p99Luma": 254.71,
+      "meanLuma": 176.68,
+      "whiteFraction": 0.023591087811271297,
+      "clippedFraction": 0.02703145478374836,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1503,
+        337,
+        1559,
+        446
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 8174,
+      "peakLuma": 248.86,
+      "p99Luma": 247.77,
+      "meanLuma": 73.13,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1478,
+        756,
+        1545,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 252.58,
+      "p99Luma": 248.09,
+      "meanLuma": 101.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1298,
+        300,
+        1345,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 150.01,
+      "whiteFraction": 0.06780794962613144,
+      "clippedFraction": 0.04006296733569461,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 250.13,
+      "p99Luma": 248.48,
+      "meanLuma": 83.02,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4860,
+      "peakLuma": 254.64,
+      "p99Luma": 251.51,
+      "meanLuma": 116.97,
+      "whiteFraction": 0.001440329218106996,
+      "clippedFraction": 0.004526748971193415,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1209,
+        300,
+        1254,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 153.75,
+      "whiteFraction": 0.06490853375429473,
+      "clippedFraction": 0.04833317856811217,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 82.66,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4428,
+      "peakLuma": 252.78,
+      "p99Luma": 249.52,
+      "meanLuma": 121.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1121,
+        300,
+        1162,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 18876,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 166.23,
+      "whiteFraction": 0.08290951472769655,
+      "clippedFraction": 0.11739775376139013,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        925,
+        247,
+        1003,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.42,
+      "p99Luma": 248.48,
+      "meanLuma": 82.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 194.21,
+      "whiteFraction": 0.16203703703703703,
+      "clippedFraction": 0.10623781676413255,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1032,
+        300,
+        1070,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-board-vault/1920x1080/manifest.json",
+      "fixture": "cast3-board-vault"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.57,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2376,
+      "peakLuma": 255.0,
+      "p99Luma": 254.57,
+      "meanLuma": 166.93,
+      "whiteFraction": 0.007575757575757576,
+      "clippedFraction": 0.01936026936026936,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        895,
+        201,
+        928,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.96,
+      "meanLuma": 89.58,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1775,
+      "peakLuma": 254.93,
+      "p99Luma": 252.27,
+      "meanLuma": 156.56,
+      "whiteFraction": 0.0005633802816901409,
+      "clippedFraction": 0.0022535211267605635,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        558,
+        166,
+        583,
+        237
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.18,
+      "p99Luma": 225.67,
+      "meanLuma": 81.48,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 246.47,
+      "p99Luma": 242.32,
+      "meanLuma": 176.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        659,
+        262,
+        685,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.97,
+      "p99Luma": 235.44,
+      "meanLuma": 88.16,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3116,
+      "peakLuma": 254.78,
+      "p99Luma": 246.76,
+      "meanLuma": 163.07,
+      "whiteFraction": 0.0016046213093709885,
+      "clippedFraction": 0.0016046213093709885,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1024,
+        317,
+        1065,
+        393
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2232,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 173.4,
+      "whiteFraction": 0.030017921146953404,
+      "clippedFraction": 0.024193548387096774,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        836,
+        201,
+        867,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 229.31,
+      "meanLuma": 89.61,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 253.05,
+      "p99Luma": 244.45,
+      "meanLuma": 172.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        555,
+        201,
+        581,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.25,
+      "p99Luma": 229.03,
+      "meanLuma": 81.39,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 244.73,
+      "p99Luma": 240.47,
+      "meanLuma": 139.63,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        721,
+        262,
+        749,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 87.88,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2925,
+      "peakLuma": 255.0,
+      "p99Luma": 250.92,
+      "meanLuma": 171.81,
+      "whiteFraction": 0.006837606837606838,
+      "clippedFraction": 0.002393162393162393,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1014,
+        276,
+        1053,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.53,
+      "meanLuma": 80.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 254.93,
+      "p99Luma": 254.57,
+      "meanLuma": 175.43,
+      "whiteFraction": 0.00992063492063492,
+      "clippedFraction": 0.03373015873015873,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.89,
+      "meanLuma": 89.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 254.71,
+      "p99Luma": 253.34,
+      "meanLuma": 178.38,
+      "whiteFraction": 0.0015015015015015015,
+      "clippedFraction": 0.005005005005005005,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        553,
+        237,
+        580,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.97,
+      "p99Luma": 227.52,
+      "meanLuma": 81.3,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2325,
+      "peakLuma": 250.91,
+      "p99Luma": 247.2,
+      "meanLuma": 152.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        782,
+        262,
+        813,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.25,
+      "p99Luma": 236.32,
+      "meanLuma": 88.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2812,
+      "peakLuma": 255.0,
+      "p99Luma": 254.35,
+      "meanLuma": 176.44,
+      "whiteFraction": 0.007112375533428165,
+      "clippedFraction": 0.02240398293029872,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1004,
+        237,
+        1042,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.61,
+      "meanLuma": 80.05,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2376,
+      "peakLuma": 244.39,
+      "p99Luma": 243.04,
+      "meanLuma": 104.91,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        895,
+        201,
+        928,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 242.51,
+      "p99Luma": 233.51,
+      "meanLuma": 57.72,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 12719,
+      "peakLuma": 255.0,
+      "p99Luma": 254.64,
+      "meanLuma": 153.84,
+      "whiteFraction": 0.013129963047409387,
+      "clippedFraction": 0.02468747543045837,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        998,
+        165,
+        1077,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.53,
+      "meanLuma": 79.88,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2232,
+      "peakLuma": 244.52,
+      "p99Luma": 240.4,
+      "meanLuma": 92.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        836,
+        201,
+        867,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 236.73,
+      "meanLuma": 57.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 166.32,
+      "whiteFraction": 0.04640638864241349,
+      "clippedFraction": 0.03735581188997338,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.25,
+      "p99Luma": 234.53,
+      "meanLuma": 79.9,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 250.77,
+      "p99Luma": 246.41,
+      "meanLuma": 107.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 233.59,
+      "meanLuma": 56.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 164.63,
+      "whiteFraction": 0.030952380952380953,
+      "clippedFraction": 0.0536231884057971,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 81.99,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 174.1,
+      "whiteFraction": 0.05298353909465021,
+      "clippedFraction": 0.04681069958847737,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.45,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5400,
+      "peakLuma": 255.0,
+      "p99Luma": 254.49,
+      "meanLuma": 167.61,
+      "whiteFraction": 0.008703703703703703,
+      "clippedFraction": 0.02148148148148148,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1342,
+        302,
+        1392,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3922,
+      "peakLuma": 254.78,
+      "p99Luma": 252.99,
+      "meanLuma": 157.65,
+      "whiteFraction": 0.0007649158592554819,
+      "clippedFraction": 0.0056093829678735335,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        837,
+        250,
+        874,
+        356
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.75,
+      "meanLuma": 82.56,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4218,
+      "peakLuma": 246.97,
+      "p99Luma": 242.66,
+      "meanLuma": 174.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        989,
+        394,
+        1027,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.58,
+      "p99Luma": 237.11,
+      "meanLuma": 88.18,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 7006,
+      "peakLuma": 254.93,
+      "p99Luma": 248.55,
+      "meanLuma": 161.66,
+      "whiteFraction": 0.0021410219811590064,
+      "clippedFraction": 0.0027119611761347415,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1536,
+        476,
+        1598,
+        589
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.56,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4968,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 174.44,
+      "whiteFraction": 0.0320048309178744,
+      "clippedFraction": 0.02395330112721417,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1254,
+        302,
+        1300,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.93,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 253.78,
+      "p99Luma": 244.45,
+      "meanLuma": 171.7,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        833,
+        302,
+        872,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.46,
+      "meanLuma": 82.08,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4662,
+      "peakLuma": 245.64,
+      "p99Luma": 241.44,
+      "meanLuma": 141.43,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1081,
+        394,
+        1123,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.58,
+      "p99Luma": 237.18,
+      "meanLuma": 88.26,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6608,
+      "peakLuma": 255.0,
+      "p99Luma": 251.21,
+      "meanLuma": 170.57,
+      "whiteFraction": 0.007112590799031477,
+      "clippedFraction": 0.0031779661016949155,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1521,
+        414,
+        1580,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.18,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 254.93,
+      "p99Luma": 254.64,
+      "meanLuma": 174.55,
+      "whiteFraction": 0.012489233419465978,
+      "clippedFraction": 0.03617571059431524,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 254.64,
+      "p99Luma": 253.06,
+      "meanLuma": 177.03,
+      "whiteFraction": 0.00022727272727272727,
+      "clippedFraction": 0.004090909090909091,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        830,
+        356,
+        870,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.18,
+      "p99Luma": 233.46,
+      "meanLuma": 82.04,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4995,
+      "peakLuma": 250.91,
+      "p99Luma": 247.2,
+      "meanLuma": 152.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1174,
+        394,
+        1219,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.66,
+      "p99Luma": 237.18,
+      "meanLuma": 88.21,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6270,
+      "peakLuma": 254.93,
+      "p99Luma": 254.49,
+      "meanLuma": 176.33,
+      "whiteFraction": 0.00733652312599681,
+      "clippedFraction": 0.025677830940988834,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1506,
+        356,
+        1563,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5400,
+      "peakLuma": 244.61,
+      "p99Luma": 242.76,
+      "meanLuma": 104.61,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1342,
+        302,
+        1392,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 242.51,
+      "p99Luma": 235.51,
+      "meanLuma": 57.65,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 28798,
+      "peakLuma": 255.0,
+      "p99Luma": 254.71,
+      "meanLuma": 152.86,
+      "whiteFraction": 0.014375998333217585,
+      "clippedFraction": 0.024446142093200916,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1497,
+        247,
+        1616,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 239.04,
+      "p99Luma": 237.11,
+      "meanLuma": 79.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4968,
+      "peakLuma": 244.8,
+      "p99Luma": 242.02,
+      "meanLuma": 92.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1254,
+        302,
+        1300,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 239.66,
+      "meanLuma": 57.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 166.04,
+      "whiteFraction": 0.047619047619047616,
+      "clippedFraction": 0.03711137347500984,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.18,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 250.91,
+      "p99Luma": 247.2,
+      "meanLuma": 104.72,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 235.44,
+      "meanLuma": 56.58,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 255.0,
+      "p99Luma": 254.93,
+      "meanLuma": 164.73,
+      "whiteFraction": 0.02966849289627635,
+      "clippedFraction": 0.053208283034636455,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.39,
+      "meanLuma": 80.81,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 173.98,
+      "whiteFraction": 0.05578703703703704,
+      "clippedFraction": 0.04560185185185185,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035324118178Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    }
+  ]
+}

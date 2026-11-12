@@ -1,0 +1,2275 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 83.54,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 197.48,
+      "whiteFraction": 0.16933760683760685,
+      "clippedFraction": 0.10897435897435898,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        688,
+        200,
+        714,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.56,
+      "p99Luma": 240.47,
+      "meanLuma": 77.16,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2233,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 189.16,
+      "whiteFraction": 0.11330049261083744,
+      "clippedFraction": 0.07881773399014778,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        547,
+        315,
+        576,
+        392
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 247.77,
+      "p99Luma": 238.76,
+      "meanLuma": 85.72,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2550,
+      "peakLuma": 252.51,
+      "p99Luma": 248.51,
+      "meanLuma": 162.7,
+      "whiteFraction": 0.000392156862745098,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        875,
+        262,
+        909,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.91,
+      "meanLuma": 94.28,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2664,
+      "peakLuma": 255.0,
+      "p99Luma": 254.86,
+      "meanLuma": 172.27,
+      "whiteFraction": 0.06381381381381382,
+      "clippedFraction": 0.017267267267267267,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        992,
+        189,
+        1029,
+        261
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 248.56,
+      "p99Luma": 247.77,
+      "meanLuma": 83.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 200.02,
+      "whiteFraction": 0.28846153846153844,
+      "clippedFraction": 0.18108974358974358,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        688,
+        200,
+        714,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 247.77,
+      "meanLuma": 83.69,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 190.98,
+      "whiteFraction": 0.3244047619047619,
+      "clippedFraction": 0.3209325396825397,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        747,
+        200,
+        775,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.56,
+      "p99Luma": 240.47,
+      "meanLuma": 77.42,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 198.16,
+      "whiteFraction": 0.07142857142857142,
+      "clippedFraction": 0.06904761904761905,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        550,
+        275,
+        578,
+        350
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 248.48,
+      "p99Luma": 238.58,
+      "meanLuma": 87.24,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2400,
+      "peakLuma": 252.78,
+      "p99Luma": 248.85,
+      "meanLuma": 203.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        813,
+        262,
+        845,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.12,
+      "meanLuma": 93.92,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2701,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 193.53,
+      "whiteFraction": 0.09366901147723065,
+      "clippedFraction": 0.07293594964827842,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1002,
+        225,
+        1039,
+        298
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 9499,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 185.66,
+      "whiteFraction": 0.1631750710601116,
+      "clippedFraction": 0.10685335298452468,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        481,
+        165,
+        540,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 8372,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 181.27,
+      "whiteFraction": 0.35152890587673197,
+      "clippedFraction": 0.3477066411849021,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        617,
+        165,
+        669,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 247.77,
+      "meanLuma": 82.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 196.71,
+      "whiteFraction": 0.16666666666666666,
+      "clippedFraction": 0.10623781676413255,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1032,
+        300,
+        1070,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 249.34,
+      "p99Luma": 245.7,
+      "meanLuma": 77.29,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4788,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 188.36,
+      "whiteFraction": 0.10401002506265664,
+      "clippedFraction": 0.07769423558897243,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        821,
+        473,
+        863,
+        587
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.56,
+      "p99Luma": 243.12,
+      "meanLuma": 85.98,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5550,
+      "peakLuma": 253.43,
+      "p99Luma": 250.44,
+      "meanLuma": 160.4,
+      "whiteFraction": 0.00036036036036036037,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1313,
+        394,
+        1363,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 93.35,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5832,
+      "peakLuma": 255.0,
+      "p99Luma": 254.86,
+      "meanLuma": 169.95,
+      "whiteFraction": 0.0644718792866941,
+      "clippedFraction": 0.016975308641975308,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1489,
+        283,
+        1543,
+        391
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 247.77,
+      "meanLuma": 82.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 199.84,
+      "whiteFraction": 0.28094541910331383,
+      "clippedFraction": 0.175682261208577,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1032,
+        300,
+        1070,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 82.45,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4428,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 191.02,
+      "whiteFraction": 0.3335591689250226,
+      "clippedFraction": 0.32475158084914185,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1121,
+        300,
+        1162,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 249.34,
+      "p99Luma": 245.7,
+      "meanLuma": 77.78,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4551,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 196.58,
+      "whiteFraction": 0.06877609316633707,
+      "clippedFraction": 0.06679850582289606,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        825,
+        413,
+        866,
+        524
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.56,
+      "p99Luma": 243.91,
+      "meanLuma": 88.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5217,
+      "peakLuma": 253.57,
+      "p99Luma": 250.85,
+      "meanLuma": 204.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1220,
+        394,
+        1267,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 93.23,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6104,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 192.41,
+      "whiteFraction": 0.09551114023591088,
+      "clippedFraction": 0.08011140235910878,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1503,
+        337,
+        1559,
+        446
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 184.74,
+      "whiteFraction": 0.16217847525304113,
+      "clippedFraction": 0.10497724951248956,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        721,
+        247,
+        810,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 18876,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 180.51,
+      "whiteFraction": 0.34747827929646113,
+      "clippedFraction": 0.3443526170798898,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        925,
+        247,
+        1003,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 82.13,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 174.4,
+      "whiteFraction": 0.05401234567901234,
+      "clippedFraction": 0.046296296296296294,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2550,
+      "peakLuma": 238.25,
+      "p99Luma": 231.03,
+      "meanLuma": 88.39,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        865,
+        276,
+        899,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2025,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 196.33,
+      "whiteFraction": 0.03901234567901234,
+      "clippedFraction": 0.03259259259259259,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        551,
+        276,
+        578,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1932,
+      "peakLuma": 237.39,
+      "p99Luma": 220.16,
+      "meanLuma": 87.73,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        820,
+        91,
+        848,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2475,
+      "peakLuma": 247.21,
+      "p99Luma": 240.85,
+      "meanLuma": 162.46,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        844,
+        262,
+        877,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 238.97,
+      "p99Luma": 231.96,
+      "meanLuma": 88.44,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        699,
+        201,
+        725,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2664,
+      "peakLuma": 255.0,
+      "p99Luma": 251.21,
+      "meanLuma": 153.6,
+      "whiteFraction": 0.009384384384384385,
+      "clippedFraction": 0.0033783783783783786,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        995,
+        201,
+        1032,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 236.32,
+      "meanLuma": 81.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 178.61,
+      "whiteFraction": 0.13734567901234568,
+      "clippedFraction": 0.09722222222222222,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 189.73,
+      "whiteFraction": 0.18353174603174602,
+      "clippedFraction": 0.21676587301587302,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.97,
+      "p99Luma": 231.89,
+      "meanLuma": 88.61,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 193.32,
+      "whiteFraction": 0.04054054054054054,
+      "clippedFraction": 0.043043043043043044,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        553,
+        237,
+        580,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.25,
+      "p99Luma": 226.67,
+      "meanLuma": 81.56,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2325,
+      "peakLuma": 251.05,
+      "p99Luma": 246.84,
+      "meanLuma": 180.48,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        782,
+        262,
+        813,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.25,
+      "p99Luma": 234.53,
+      "meanLuma": 88.91,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2812,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 189.64,
+      "whiteFraction": 0.06685633001422475,
+      "clippedFraction": 0.07147937411095306,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1004,
+        237,
+        1042,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6840,
+      "peakLuma": 226.23,
+      "p99Luma": 205.63,
+      "meanLuma": 53.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        606,
+        630,
+        682,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 8372,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 168.59,
+      "whiteFraction": 0.06856187290969899,
+      "clippedFraction": 0.058886765408504536,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        617,
+        165,
+        669,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 238.58,
+      "meanLuma": 55.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 179.84,
+      "whiteFraction": 0.16935817805383022,
+      "clippedFraction": 0.21935817805383023,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.39,
+      "meanLuma": 81.01,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 174.44,
+      "whiteFraction": 0.05324074074074074,
+      "clippedFraction": 0.046064814814814815,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5712,
+      "peakLuma": 238.25,
+      "p99Luma": 236.32,
+      "meanLuma": 87.81,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1298,
+        414,
+        1349,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 194.72,
+      "whiteFraction": 0.04137630662020906,
+      "clippedFraction": 0.03702090592334495,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        826,
+        414,
+        867,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4182,
+      "peakLuma": 238.25,
+      "p99Luma": 230.81,
+      "meanLuma": 89.42,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1231,
+        137,
+        1272,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5439,
+      "peakLuma": 248.21,
+      "p99Luma": 241.36,
+      "meanLuma": 159.9,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1266,
+        394,
+        1315,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 239.76,
+      "p99Luma": 235.61,
+      "meanLuma": 87.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1049,
+        302,
+        1088,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5940,
+      "peakLuma": 255.0,
+      "p99Luma": 251.35,
+      "meanLuma": 153.4,
+      "whiteFraction": 0.011111111111111112,
+      "clippedFraction": 0.003872053872053872,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1492,
+        302,
+        1547,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.18,
+      "meanLuma": 80.91,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 179.28,
+      "whiteFraction": 0.13194444444444445,
+      "clippedFraction": 0.09259259259259259,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 238.18,
+      "meanLuma": 79.5,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 189.28,
+      "whiteFraction": 0.17549526270456503,
+      "clippedFraction": 0.2157622739018088,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.25,
+      "p99Luma": 235.39,
+      "meanLuma": 89.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 193.08,
+      "whiteFraction": 0.04477272727272727,
+      "clippedFraction": 0.04840909090909091,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        830,
+        356,
+        870,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.67,
+      "meanLuma": 82.16,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4995,
+      "peakLuma": 251.13,
+      "p99Luma": 246.92,
+      "meanLuma": 180.46,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1174,
+        394,
+        1219,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 241.58,
+      "p99Luma": 237.18,
+      "meanLuma": 88.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6270,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 189.27,
+      "whiteFraction": 0.06921850079744817,
+      "clippedFraction": 0.07767145135566188,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1506,
+        356,
+        1563,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 15008,
+      "peakLuma": 230.37,
+      "p99Luma": 207.31,
+      "meanLuma": 54.19,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        910,
+        946,
+        1022,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 18876,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 167.72,
+      "whiteFraction": 0.0674931129476584,
+      "clippedFraction": 0.05801017164653528,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        925,
+        247,
+        1003,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 239.87,
+      "meanLuma": 56.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 255.0,
+      "p99Luma": 255.0,
+      "meanLuma": 179.87,
+      "whiteFraction": 0.16826074844460953,
+      "clippedFraction": 0.2162224904819389,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": ".local/gallery/20261112T035226932718Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    }
+  ]
+}

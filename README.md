@@ -1,0 +1,15 @@
+# Evidence for PR #201 (#150 rigged cast batch 3: sorcerer, warlock, druid; spell-bolt release)
+
+Head: see the PR (PlebDev Ultra, UE 5.8.4), `origin/staging` `2c141a1` merged in. Files regenerated at the final palettes (the warlock and sorcerer were lifted after the contrast gate).
+
+- `sheet_17`-`sheet_22`: Blender preview sheets (`Art/rig-pilot/cast/previews/`): bind and Idle beside the wizard, ranger and cleric (`17`), turnaround of the three (`18`), all ten clips for the sorcerer, warlock and druid (`19`, `20`, `21`), the party on dark stone beside the wizard, ranger and rogue (`22`).
+- `10-pose-sheet-near.png`, `11-pose-sheet-default.png`: in-game `pose` shots (`tools/capture/cast3-poses.json`, fixture `cast3-default-seed-battle`): Melee, Ranged, Cast, Brace, Hit, Downed, Death for the three classes, near and default zoom (the crops are centred on each held hero; neighbours are the other party members).
+- `20-*-rigged-1.2-1.0.png`, `21-*-primitive-fallback.png`: default-zoom battle shots (yaw 0 and 180) on the default seed, Vigil, Root and the Vault with a party of the three classes and a wizard; the second set is `gallery --primitives` (these classes have no static r001 figure). `readability_default_zoom.png`: the four yaw-0 rigged shots stacked.
+- `contrast.json`: every default-zoom 1920x1080 measurement of the three classes, rigged and as primitives, with the per-board means and the gate (mean at least 2.3, worst at least 1.4, every per-board mean at least 2.0). Image-region statistics, no figure masks.
+- `50-builder-*`: start-screen builder shots that select `sorcerer.draconic-bloodline`, `warlock.fiend` and `druid.land`, 1920x1080 and 1280x720 (a card UI over the tabletop; no figure for the selected class).
+
+## Spell-bolt release (lead's follow-up from the #198 on-screen pass)
+
+- `60-spell-release-before-after-a.jpg`: the caster's footprint at the release frame, left: the full 50 cd light (before), right: the ramped-in light (after). Rows: the Wizard's Fire Bolt on the Vault, the Cleric's radiant bolt on the Vault, the Wizard's Fire Bolt on the default seed; default zoom, yaw 0, 1920x1080. `61-spell-release-before-after-b.jpg`: the sorcerer, warlock and druid on the Vault (`cast3-release-poses.json`; in production their attack is an arrow, so this is the light's worst case on their rigs).
+- `62-spell-release-luma.md`: the table per caster and per shot (peak, mean luma, pure-white share before and after, both resolutions). `62-raw-impact-flash-*.json`: the raw `tools/impact_flash.py --json` output of the four runs (before: ramp off, `before_a` = `spell-release-poses.json` on `default-seed-battle` and `board-vault`, `before_b` = `cast3-release-poses.json` on the cast3 fixtures; after: `fin_a`, `fin_b`).
+- The pure-white share is under 1% in all 108 boxes (largest 0.65%; it reached 35.2% before). The peak luma stays at 251 to 254.6 in 71 of them, which is the floor of these boxes: the no-light arrow-release controls (a sorcerer, warlock and druid shooting arrows) read 244 to 254.6 from board-grid lines, HP bars and the figures' pale trim.
