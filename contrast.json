@@ -3,42 +3,42 @@
  "rigged": {
   "Sorcerer": {
    "n": 20,
-   "mean": 2.4298,
+   "mean": 2.42995,
    "worst": 1.493,
    "worst_shot": "cast3-default-seed-battle battle-yaw000-default",
    "boards": {
     "cast3-board-root-r002": 2.132,
-    "cast3-board-vault": 2.8868,
-    "cast3-board-vigil-pillars": 2.5912,
-    "cast3-default-seed-battle": 2.1092
+    "cast3-board-vault": 2.8874,
+    "cast3-board-vigil-pillars": 2.591,
+    "cast3-default-seed-battle": 2.1094
    },
-   "merge": 0.109245
+   "merge": 0.10916
   },
   "Warlock": {
    "n": 20,
-   "mean": 3.0122,
+   "mean": 3.0122999999999998,
    "worst": 1.513,
    "worst_shot": "cast3-default-seed-battle battle-yaw000-default",
    "boards": {
     "cast3-board-root-r002": 2.759,
-    "cast3-board-vault": 3.9334000000000002,
+    "cast3-board-vault": 3.9336,
     "cast3-board-vigil-pillars": 2.6506,
-    "cast3-default-seed-battle": 2.7058
+    "cast3-default-seed-battle": 2.706
    },
-   "merge": 0.099515
+   "merge": 0.09943
   },
   "Druid": {
    "n": 20,
-   "mean": 2.6971,
+   "mean": 2.69705,
    "worst": 1.445,
    "worst_shot": "cast3-board-root-r002 battle-yaw000-default",
    "boards": {
     "cast3-board-root-r002": 2.4958,
-    "cast3-board-vault": 3.0412,
+    "cast3-board-vault": 3.041,
     "cast3-board-vigil-pillars": 2.6757999999999997,
     "cast3-default-seed-battle": 2.5756
    },
-   "merge": 0.061470000000000004
+   "merge": 0.06139
   }
  },
  "primitive_fallback": {
@@ -86,9 +86,9 @@
   "rigged_Sorcerer": [
    {
     "contrastRatio": 2.532,
-    "mergeFraction": 0.1085,
-    "figureLuma": 128.9,
-    "groundLuma": 58.55,
+    "mergeFraction": 0.1077,
+    "figureLuma": 128.91,
+    "groundLuma": 58.56,
     "figurePixels": 2460,
     "groundPixels": 10004,
     "fixture": "cast3-board-root-r002",
@@ -200,10 +200,10 @@
     ]
    },
    {
-    "contrastRatio": 3.792,
-    "mergeFraction": 0.0519,
-    "figureLuma": 146.17,
-    "groundLuma": 42.88,
+    "contrastRatio": 3.793,
+    "mergeFraction": 0.0514,
+    "figureLuma": 146.18,
+    "groundLuma": 42.86,
     "figurePixels": 2430,
     "groundPixels": 9882,
     "fixture": "cast3-board-vault",
@@ -223,9 +223,9 @@
     ]
    },
    {
-    "contrastRatio": 3.059,
+    "contrastRatio": 3.06,
     "mergeFraction": 0.1068,
-    "figureLuma": 135.9,
+    "figureLuma": 135.89,
     "groundLuma": 48.98,
     "figurePixels": 1872,
     "groundPixels": 7332,
@@ -269,7 +269,7 @@
     ]
    },
    {
-    "contrastRatio": 2.38,
+    "contrastRatio": 2.381,
     "mergeFraction": 0.095,
     "figureLuma": 132.28,
     "groundLuma": 55.55,
@@ -315,9 +315,9 @@
     ]
    },
    {
-    "contrastRatio": 3.49,
-    "mergeFraction": 0.1389,
-    "figureLuma": 144.98,
+    "contrastRatio": 3.489,
+    "mergeFraction": 0.1385,
+    "figureLuma": 144.96,
     "groundLuma": 49.88,
     "figurePixels": 2542,
     "groundPixels": 10168,
@@ -430,9 +430,9 @@
     ]
    },
    {
-    "contrastRatio": 2.671,
+    "contrastRatio": 2.672,
     "mergeFraction": 0.1446,
-    "figureLuma": 118.41,
+    "figureLuma": 118.43,
     "groundLuma": 46.32,
     "figurePixels": 2511,
     "groundPixels": 10044,
@@ -548,8 +548,8 @@
   "rigged_Warlock": [
    {
     "contrastRatio": 3.318,
-    "mergeFraction": 0.1,
-    "figureLuma": 154.5,
+    "mergeFraction": 0.0996,
+    "figureLuma": 154.48,
     "groundLuma": 53.95,
     "figurePixels": 2430,
     "groundPixels": 9558,
@@ -663,7 +663,7 @@
    },
    {
     "contrastRatio": 5.182,
-    "mergeFraction": 0.0366,
+    "mergeFraction": 0.0353,
     "figureLuma": 180.8,
     "groundLuma": 45.81,
     "figurePixels": 2320,
@@ -754,9 +754,9 @@
     ]
    },
    {
-    "contrastRatio": 5.356,
-    "mergeFraction": 0.0319,
-    "figureLuma": 184.98,
+    "contrastRatio": 5.357,
+    "mergeFraction": 0.0323,
+    "figureLuma": 184.99,
     "groundLuma": 45.58,
     "figurePixels": 2320,
     "groundPixels": 9280,
@@ -778,9 +778,9 @@
    },
    {
     "contrastRatio": 4.353,
-    "mergeFraction": 0.0671,
-    "figureLuma": 179.89,
-    "groundLuma": 50.92,
+    "mergeFraction": 0.0667,
+    "figureLuma": 179.86,
+    "groundLuma": 50.91,
     "figurePixels": 2430,
     "groundPixels": 9720,
     "fixture": "cast3-board-vigil-pillars",
@@ -892,10 +892,10 @@
     ]
    },
    {
-    "contrastRatio": 3.573,
+    "contrastRatio": 3.574,
     "mergeFraction": 0.0239,
-    "figureLuma": 163.89,
-    "groundLuma": 42.06,
+    "figureLuma": 163.87,
+    "groundLuma": 42.05,
     "figurePixels": 2430,
     "groundPixels": 9558,
     "fixture": "cast3-default-seed-battle",
@@ -1011,8 +1011,8 @@
    {
     "contrastRatio": 2.822,
     "mergeFraction": 0.0781,
-    "figureLuma": 146.18,
-    "groundLuma": 53.37,
+    "figureLuma": 146.17,
+    "groundLuma": 53.38,
     "figurePixels": 2240,
     "groundPixels": 9120,
     "fixture": "cast3-board-root-r002",
@@ -1124,8 +1124,8 @@
     ]
    },
    {
-    "contrastRatio": 3.847,
-    "mergeFraction": 0.0457,
+    "contrastRatio": 3.846,
+    "mergeFraction": 0.0443,
     "figureLuma": 178.16,
     "groundLuma": 56.37,
     "figurePixels": 2212,
@@ -1148,7 +1148,7 @@
    },
    {
     "contrastRatio": 2.189,
-    "mergeFraction": 0.0519,
+    "mergeFraction": 0.0526,
     "figureLuma": 144.19,
     "groundLuma": 64.55,
     "figurePixels": 1560,
@@ -1194,7 +1194,7 @@
    },
    {
     "contrastRatio": 2.722,
-    "mergeFraction": 0.0589,
+    "mergeFraction": 0.0594,
     "figureLuma": 160.89,
     "groundLuma": 61.89,
     "figurePixels": 1920,
@@ -1217,8 +1217,8 @@
    },
    {
     "contrastRatio": 3.8,
-    "mergeFraction": 0.0393,
-    "figureLuma": 177.48,
+    "mergeFraction": 0.0389,
+    "figureLuma": 177.49,
     "groundLuma": 56.76,
     "figurePixels": 2212,
     "groundPixels": 8848,
@@ -1240,9 +1240,9 @@
    },
    {
     "contrastRatio": 3.733,
-    "mergeFraction": 0.0164,
-    "figureLuma": 189.87,
-    "groundLuma": 52.04,
+    "mergeFraction": 0.0159,
+    "figureLuma": 189.86,
+    "groundLuma": 52.03,
     "figurePixels": 2320,
     "groundPixels": 9280,
     "fixture": "cast3-board-vigil-pillars",
@@ -1355,8 +1355,8 @@
    },
    {
     "contrastRatio": 2.861,
-    "mergeFraction": 0.0451,
-    "figureLuma": 150.11,
+    "mergeFraction": 0.0446,
+    "figureLuma": 150.1,
     "groundLuma": 49.46,
     "figurePixels": 2240,
     "groundPixels": 9120,

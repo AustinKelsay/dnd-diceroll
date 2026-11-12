@@ -27,14 +27,14 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
       "pixels": 1872,
       "peakLuma": 247.28,
       "p99Luma": 239.46,
-      "meanLuma": 162.54,
+      "meanLuma": 162.53,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "fire-release-wizard-yaw000-default:shooter",
@@ -54,7 +54,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -81,7 +81,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -107,8 +107,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -135,7 +135,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -161,8 +161,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -189,7 +189,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -215,8 +215,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -243,14 +243,14 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
       "pixels": 1872,
       "peakLuma": 249.28,
       "p99Luma": 244.38,
-      "meanLuma": 162.19,
+      "meanLuma": 162.2,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "missile-release-wizard-yaw000-default:shooter",
@@ -270,14 +270,14 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
       "pixels": 3078,
       "peakLuma": 249.34,
       "p99Luma": 248.48,
-      "meanLuma": 84.16,
+      "meanLuma": 84.17,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-cleric-yaw000-default",
@@ -297,7 +297,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -323,8 +323,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -351,7 +351,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -378,7 +378,7 @@
         720
       ],
       "pass": false,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -405,7 +405,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -431,8 +431,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -459,7 +459,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -485,8 +485,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -512,8 +512,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -539,8 +539,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1280x720/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -567,7 +567,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -593,8 +593,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -621,7 +621,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -647,8 +647,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -675,7 +675,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -701,8 +701,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -729,7 +729,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -755,8 +755,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -783,7 +783,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -809,8 +809,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -837,7 +837,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -863,8 +863,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -891,7 +891,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -918,7 +918,7 @@
         1080
       ],
       "pass": false,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -945,7 +945,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -971,8 +971,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -999,7 +999,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -1025,8 +1025,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -1052,8 +1052,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
@@ -1079,15 +1079,15 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/board-vault/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/board-vault/1920x1080/manifest.json",
       "fixture": "board-vault"
     },
     {
       "pixels": 2449,
       "peakLuma": 238.97,
       "p99Luma": 235.61,
-      "meanLuma": 81.72,
+      "meanLuma": 81.7,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "fire-release-wizard-yaw000-default",
@@ -1107,12 +1107,12 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
       "pixels": 1944,
-      "peakLuma": 240.28,
+      "peakLuma": 240.07,
       "p99Luma": 232.07,
       "meanLuma": 123.7,
       "whiteFraction": 0.0,
@@ -1134,7 +1134,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1161,7 +1161,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1187,8 +1187,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1215,7 +1215,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1242,7 +1242,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1269,7 +1269,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1296,7 +1296,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1323,7 +1323,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1350,7 +1350,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1377,7 +1377,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1404,7 +1404,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1431,7 +1431,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1457,8 +1457,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1485,7 +1485,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1511,8 +1511,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1539,7 +1539,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1565,8 +1565,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1593,7 +1593,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1619,8 +1619,8 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1647,7 +1647,7 @@
         720
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1673,15 +1673,15 @@
         1280,
         720
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1280x720/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1280x720/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
       "pixels": 5546,
       "peakLuma": 239.04,
       "p99Luma": 237.39,
-      "meanLuma": 80.65,
+      "meanLuma": 80.61,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "fire-release-wizard-yaw000-default",
@@ -1701,14 +1701,14 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
       "pixels": 4320,
       "peakLuma": 242.0,
-      "p99Luma": 231.36,
-      "meanLuma": 123.64,
+      "p99Luma": 231.42,
+      "meanLuma": 123.59,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "fire-release-wizard-yaw000-default:shooter",
@@ -1728,7 +1728,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1755,7 +1755,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1781,8 +1781,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1809,7 +1809,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1836,7 +1836,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1863,7 +1863,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1890,7 +1890,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1917,7 +1917,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1944,7 +1944,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1971,7 +1971,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -1997,8 +1997,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2025,7 +2025,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2052,7 +2052,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2079,7 +2079,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2105,8 +2105,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2133,7 +2133,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2159,8 +2159,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2187,7 +2187,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2213,8 +2213,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2241,7 +2241,7 @@
         1080
       ],
       "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     },
     {
@@ -2267,8 +2267,8 @@
         1920,
         1080
       ],
-      "pass": true,
-      "manifest": ".local/gallery/20261112T040045025463Z/default-seed-battle/1920x1080/manifest.json",
+      "pass": false,
+      "manifest": ".local/gallery/20261112T045147361855Z/default-seed-battle/1920x1080/manifest.json",
       "fixture": "default-seed-battle"
     }
   ]
