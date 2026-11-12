@@ -1,0 +1,104 @@
+{
+	"group": "Fixed",
+	"policy_version": 1,
+	"ruleset": "Compact",
+	"catalog_revision": 9,
+	"base_seed": 20261109,
+	"seeds": 32,
+	"runs": 288,
+	"max_rounds": 60,
+	"max_steps": 16,
+	"seconds": 3.1729288939968683,
+	"parties": [
+		{
+			"id": "familiar",
+			"archetype": "mixed",
+			"builds": [
+				"fighter.champion",
+				"rogue.thief",
+				"cleric.life",
+				"wizard.evocation"
+			]
+		},
+		{
+			"id": "melee",
+			"archetype": "melee",
+			"builds": [
+				"barbarian.berserker",
+				"fighter.battle-master",
+				"paladin.devotion",
+				"monk.open-hand"
+			]
+		},
+		{
+			"id": "ranged",
+			"archetype": "ranged",
+			"builds": [
+				"ranger.hunter",
+				"wizard.evocation",
+				"warlock.fiend",
+				"sorcerer.draconic-bloodline"
+			]
+		},
+		{
+			"id": "support-poor",
+			"archetype": "support-poor",
+			"builds": [
+				"rogue.assassin",
+				"barbarian.beast",
+				"sorcerer.wild-magic",
+				"ranger.fey-wanderer"
+			]
+		},
+		{
+			"id": "support-heavy",
+			"archetype": "support-heavy",
+			"builds": [
+				"paladin.devotion",
+				"cleric.life",
+				"druid.stars",
+				"bard.lore"
+			]
+		},
+		{
+			"id": "mixed",
+			"archetype": "mixed",
+			"builds": [
+				"paladin.watchers",
+				"ranger.beast-master",
+				"cleric.peace",
+				"artificer.artillerist"
+			]
+		},
+		{
+			"id": "dup-fighter",
+			"archetype": "duplicate",
+			"builds": [
+				"fighter.champion",
+				"fighter.champion",
+				"fighter.champion",
+				"fighter.champion"
+			]
+		},
+		{
+			"id": "dup-cleric",
+			"archetype": "duplicate",
+			"builds": [
+				"cleric.life",
+				"cleric.life",
+				"cleric.life",
+				"cleric.life"
+			]
+		},
+		{
+			"id": "dup-wizard",
+			"archetype": "duplicate",
+			"builds": [
+				"wizard.evocation",
+				"wizard.evocation",
+				"wizard.evocation",
+				"wizard.evocation"
+			]
+		}
+	]
+}

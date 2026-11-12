@@ -1,0 +1,197 @@
+﻿{
+	"devices": [
+		{
+			"deviceName": "plebdev-ultra",
+			"instance": "01A1D21A859C720CB30744EAAC45480A",
+			"instanceName": "plebdev-ultra-931886",
+			"platform": "LinuxEditor",
+			"oSVersion": "Omarchy 7.2.15-1-omarchy",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 4080 SUPER (NVIDIA UNIX Open Kernel Module for x86_64  615.78.08  Release Build  (root@plebdev-ultra))",
+			"cPUModel": "Intel(R) Core(TM) i9-14900K",
+			"rAMInGB": 16,
+			"renderMode": "Vulkan_SM5",
+			"rHI": "Vulkan (SM5)",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.11.12-23.32.53",
+	"succeeded": 6,
+	"succeededWithWarnings": 0,
+	"failed": 0,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 35.160320281982422,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "Fixed",
+			"fullTestPath": "Balance.Baseline.Fixed",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 3.214693546295166,
+			"dateTime": "2026.11.12-23.32.17",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Fixed (catalog revision 9): 288 runs, 242 victories, 0 stalls (0 deadlocks), 3.2 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Fixed",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.21"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Rotation1",
+			"fullTestPath": "Balance.Baseline.Rotation1",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 6.3705358505249023,
+			"dateTime": "2026.11.12-23.32.21",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Rotation1 (catalog revision 9): 576 runs, 447 victories, 0 stalls (0 deadlocks), 6.3 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Rotation1",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.27"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Rotation2",
+			"fullTestPath": "Balance.Baseline.Rotation2",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 6.4002938270568848,
+			"dateTime": "2026.11.12-23.32.27",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Rotation2 (catalog revision 9): 576 runs, 442 victories, 0 stalls (0 deadlocks), 6.3 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Rotation2",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.33"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Rotation3",
+			"fullTestPath": "Balance.Baseline.Rotation3",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 6.3999629020690918,
+			"dateTime": "2026.11.12-23.32.34",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Rotation3 (catalog revision 9): 576 runs, 450 victories, 0 stalls (0 deadlocks), 6.3 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Rotation3",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.40"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Rotation4",
+			"fullTestPath": "Balance.Baseline.Rotation4",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 6.400874137878418,
+			"dateTime": "2026.11.12-23.32.40",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Rotation4 (catalog revision 9): 576 runs, 460 victories, 0 stalls (0 deadlocks), 6.3 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Rotation4",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.46"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Rotation5",
+			"fullTestPath": "Balance.Baseline.Rotation5",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D21A859C720CB30744EAAC45480A"
+			],
+			"duration": 6.3739595413208008,
+			"dateTime": "2026.11.12-23.32.46",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Balance group Rotation5 (catalog revision 9): 576 runs, 450 victories, 0 stalls (0 deadlocks), 6.3 s -> /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-8330d9ee-0cbc67180a4d8667/.local/balance/final2/Rotation5",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.11.12-23.32.53"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}

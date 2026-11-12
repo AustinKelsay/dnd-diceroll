@@ -1,0 +1,194 @@
+{
+	"group": "Rotation5",
+	"policy_version": 1,
+	"ruleset": "Compact",
+	"catalog_revision": 9,
+	"base_seed": 20261109,
+	"seeds": 32,
+	"runs": 576,
+	"max_rounds": 60,
+	"max_steps": 16,
+	"seconds": 6.2853993039461784,
+	"parties": [
+		{
+			"id": "rot5-01",
+			"archetype": "rotation",
+			"builds": [
+				"fighter.eldritch-knight",
+				"warlock.great-old-one",
+				"druid.moon",
+				"rogue.soulknife"
+			]
+		},
+		{
+			"id": "rot5-02",
+			"archetype": "rotation",
+			"builds": [
+				"warlock.fiend",
+				"druid.land",
+				"rogue.phantom",
+				"warlock.archfey"
+			]
+		},
+		{
+			"id": "rot5-03",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.twilight",
+				"rogue.arcane-trickster",
+				"sorcerer.clockwork-soul",
+				"cleric.peace"
+			]
+		},
+		{
+			"id": "rot5-04",
+			"archetype": "rotation",
+			"builds": [
+				"rogue.assassin",
+				"sorcerer.aberrant-mind",
+				"cleric.order",
+				"barbarian.wild-magic"
+			]
+		},
+		{
+			"id": "rot5-05",
+			"archetype": "rotation",
+			"builds": [
+				"sorcerer.wild-magic",
+				"cleric.war",
+				"barbarian.beast",
+				"sorcerer.draconic-bloodline"
+			]
+		},
+		{
+			"id": "rot5-06",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.trickery",
+				"barbarian.totem-warrior",
+				"ranger.swarmkeeper",
+				"cleric.tempest"
+			]
+		},
+		{
+			"id": "rot5-07",
+			"archetype": "rotation",
+			"builds": [
+				"barbarian.berserker",
+				"ranger.fey-wanderer",
+				"cleric.nature",
+				"cleric.life"
+			]
+		},
+		{
+			"id": "rot5-08",
+			"archetype": "rotation",
+			"builds": [
+				"ranger.beast-master",
+				"cleric.light",
+				"rogue.thief",
+				"ranger.hunter"
+			]
+		},
+		{
+			"id": "rot5-09",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.knowledge",
+				"fighter.battle-master",
+				"paladin.watchers",
+				"wizard.order-of-scribes"
+			]
+		},
+		{
+			"id": "rot5-10",
+			"archetype": "rotation",
+			"builds": [
+				"fighter.champion",
+				"paladin.glory",
+				"wizard.bladesinging",
+				"artificer.battle-smith"
+			]
+		},
+		{
+			"id": "rot5-11",
+			"archetype": "rotation",
+			"builds": [
+				"paladin.vengeance",
+				"wizard.transmutation",
+				"artificer.artillerist",
+				"paladin.ancients"
+			]
+		},
+		{
+			"id": "rot5-12",
+			"archetype": "rotation",
+			"builds": [
+				"wizard.necromancy",
+				"artificer.armorer",
+				"paladin.devotion",
+				"wizard.illusion"
+			]
+		},
+		{
+			"id": "rot5-13",
+			"archetype": "rotation",
+			"builds": [
+				"artificer.alchemist",
+				"monk.astral-self",
+				"wizard.evocation",
+				"bard.eloquence"
+			]
+		},
+		{
+			"id": "rot5-14",
+			"archetype": "rotation",
+			"builds": [
+				"monk.mercy",
+				"wizard.enchantment",
+				"bard.creation",
+				"monk.four-elements"
+			]
+		},
+		{
+			"id": "rot5-15",
+			"archetype": "rotation",
+			"builds": [
+				"wizard.divination",
+				"bard.valor",
+				"monk.shadow",
+				"wizard.conjuration"
+			]
+		},
+		{
+			"id": "rot5-16",
+			"archetype": "rotation",
+			"builds": [
+				"bard.lore",
+				"monk.open-hand",
+				"wizard.abjuration",
+				"druid.wildfire"
+			]
+		},
+		{
+			"id": "rot5-17",
+			"archetype": "rotation",
+			"builds": [
+				"fighter.rune-knight",
+				"warlock.genie",
+				"druid.stars",
+				"fighter.psi-warrior"
+			]
+		},
+		{
+			"id": "rot5-18",
+			"archetype": "rotation",
+			"builds": [
+				"warlock.fathomless",
+				"druid.spores",
+				"fighter.eldritch-knight",
+				"warlock.great-old-one"
+			]
+		}
+	]
+}
