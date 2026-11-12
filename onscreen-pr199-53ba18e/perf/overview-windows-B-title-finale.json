@@ -1,0 +1,28 @@
+{
+ "title": {
+  "frames": 5748,
+  "seconds": 12.5,
+  "frame_p50": 2.1967,
+  "frame_p95": 2.677465,
+  "frame_max": 5.5128,
+  "gpu_p50": 1.948,
+  "gpu_p95": 2.127,
+  "gpu_max": 5.139,
+  "game_p50": 0.921,
+  "game_p95": 1.112,
+  "game_max": 2.416
+ },
+ "finale": {
+  "frames": 8627,
+  "seconds": 19.0,
+  "frame_p50": 2.2151,
+  "frame_p95": 2.7296500000000004,
+  "frame_max": 5.3681,
+  "gpu_p50": 1.969,
+  "gpu_p95": 2.141,
+  "gpu_max": 5.068,
+  "game_p50": 0.83,
+  "game_p95": 1.1847000000000008,
+  "game_max": 2.535
+ }
+}

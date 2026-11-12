@@ -1,0 +1,41 @@
+{
+ "title": {
+  "frames": 11315,
+  "seconds": 24.6,
+  "frame_p50": 2.1893,
+  "frame_p95": 2.65143,
+  "frame_max": 5.944,
+  "gpu_p50": 1.942,
+  "gpu_p95": 2.117,
+  "gpu_max": 5.156,
+  "game_p50": 0.931,
+  "game_p95": 1.247,
+  "game_max": 2.339
+ },
+ "route1": {
+  "frames": 8606,
+  "seconds": 19.0,
+  "frame_p50": 2.1942,
+  "frame_p95": 2.589575,
+  "frame_max": 4.6757,
+  "gpu_p50": 1.946,
+  "gpu_p95": 2.12,
+  "gpu_max": 4.922,
+  "game_p50": 0.788,
+  "game_p95": 1.0035,
+  "game_max": 3.417
+ },
+ "hover": {
+  "frames": 5309,
+  "seconds": 11.8,
+  "frame_p50": 2.1938,
+  "frame_p95": 2.5435400000000006,
+  "frame_max": 5.8114,
+  "gpu_p50": 1.947,
+  "gpu_p95": 2.122,
+  "gpu_max": 5.069,
+  "game_p50": 0.786,
+  "game_p95": 1.085,
+  "game_max": 2.293
+ }
+}
