@@ -27,7 +27,7 @@ Why it works this way:
 - **Same count, same moment.** The run still has four rewards, and the reward is still the one point between fights where the player decides. There is no new phase, no extra screen per hero, and no extra stop between fights.
 - **A trade.** Each card replaces the +1 gear the reward gives today, so a run gains four upgrades as before. That keeps the power budget near #188's measured balance, and the harness checks it (section 6).
 - **Real decisions.** The player chooses between basic damage, more uses of a special, or stronger specials, and chooses which hero carries the upgrade. The cards read the same for all 70 kits, so the choice is quick to learn.
-- **No hidden draws.** Offers come from state, never from random numbers. So `GenerationRandomState`, combat RNG and every revision 9 board stay as they are, and a rejected or failed claim cannot change RNG.
+- **No additional draws.** Offers come from state, never from random numbers. A successful claim after fights 2–4 still calls `OfferRoutes`, which draws the next routes from `GenerationRandomState` exactly as today's claim does. The cards add no draw to either stream. Queries, rejected claims and failed commits advance neither stream. So every revision 9 board, encounter seed and combat roll stays as it is.
 - **Old habits still work.** The card focus starts on Gear, so the familiar flow (pick a survivor with 1–4, then L) gives exactly today's reward.
 
 Only **Compact runs created under catalog revision 10** offer Reserve and Honed (section 5). SRD runs and older revisions take Gear only, for their whole lifetime.
@@ -61,16 +61,85 @@ No new specials, passives or slots: the cards change the facts of the specials a
 
 Reserve is the only card that adds a use. It is a reward the player chooses in place of gear, like the potions the same reward already gives. It does not refill spent uses: a hero at Kit 0/2 goes to 1/3. Camp's +1 recovery fills up to the new cap. Nothing else gains a use.
 
-**One seam for every reader** (ADR-0001: the HUD formats facts and never decides):
-- **Honed** applies inside `FBuildCatalog::Abilities(Hero)`. It returns the honed `Amount`, `Range` and a truthful `Description`. The constant-based commands (Second Wind, Precision Strike, Magic Missile, Cure Wounds, Rage) read one catalog function for their bonus.
-- **Reserve** comes from a new per-hero cap query, `FBuildCatalog::Caps(Hero)`. It replaces every direct read of `FBuildDefinition::{Kit,Slot,Wind,Maneuver,Rage}Cap` and the hard-coded caps in combat validation (`ManeuverUses > 2`, `SecondWindUses > 2`, `SpellSlots > 2`, `GuardAmount > 4`, the untouched-pool checks of the bonus-budget rule). That covers combat validation, `ValidResources`, `SurgeCap`, `FActionFactsQuery` caps and usage tags, `FPartyContinuity::Recover` and the HUD resource groups.
-- **Forecast, legality and resolution read the same facts**, so a honed forecast always equals the committed result.
+### One seam for every reader
+
+ADR-0001 applies: the HUD formats facts and never decides them.
+- **Honed** applies inside `FBuildCatalog::Abilities(Hero)`, which returns the honed `Amount`, `Range` and a truthful `Description`. The commands whose numbers are constants rather than ability facts read one catalog function, `FBuildCatalog::HonedBonus(Hero, Command)`.
+- **Reserve** comes from a new per-hero cap query, `FBuildCatalog::Caps(Hero)`.
+- **Forecast, legality, resolution, status text and presentation all read these two seams.** So a honed forecast always equals the committed result, and the text always matches the rule.
+
+The two inventories below list every reader to move, found in staging `5bc0746` (line numbers are from that commit). PR A reruns both greps on its own base, after #214. Any new hit goes in its as-built section, either moved to the seam or explained.
+
+### Honed consumers
+
+The audit grep is:
+
+```sh
+grep -rnE 'GuardAmount > 0|: 3\)|RageTurns > 0|PrecisionBonus|WindDie|FighterLevel|HealingModifier|CureDie|MissileDarts|DartBonus' Source/DnDDiceRoll --include=*.cpp --include=*.h | grep -v -e /Tests/ -e /Rules/
+```
+
+A second pass reads the string literals in `Presentation/` for amounts written next to ability text. At `5bc0746` that finds:
+- `ExpeditionPlayback.cpp:69`, listed below;
+- the reward panel's gear line (`ExpeditionHUD.cpp:1416`), which PR B replaces;
+- a fixed roll card in a capture fixture (`ExpeditionCapture.cpp:550`), which is not a rule reader.
+
+Grep hits that are neither readers nor amounts are listed under "Fixed, never honed" or are kit-style tests:
+- the `BuildRules` constants themselves (`BuildCatalog.h:22`–`:24`);
+- `Abilities` `:212`, the kit-style test;
+- the Kit guard's turn rule (`CombatBattle.cpp:117`);
+- Rage's own lifetime (`:130`, `:940`, `:956`);
+- `ActionFacts.cpp:233` and `ExpeditionHUD.cpp:752`, which test the raging stance.
+
+| Effect | Hard-coded readers that move to the honed seam |
+| --- | --- |
+| **Shelter** (Totem Warrior, Rage-paid ally Protect, amount 3) | Kit-paid Protect stores its amount in `GuardAmount`. Shelter leaves `GuardAmount` at 0, so every reader falls back to a literal 3:<br>- `ProtectionFor` (`CombatBattle.cpp:961`), which is the actual reduction and the source of `FCombatBattle::Protection`;<br>- the committed protect effect (`:698`, `A.Amount > 0 ? A.Amount : 3`);<br>- `FBuildCatalog::Status` (`BuildCatalog.cpp:233`);<br>- the hero-details protection line (`ExpeditionHUD.cpp:811`). |
+| **Rage** | the +2 basic damage in `FBuildCatalog::AttackModifier` (`BuildCatalog.cpp:239`);<br>the catalog text "+2 basic damage, reduce damage by 1";<br>the playback preview "Rage: +2 basic damage, -1 taken" (`ExpeditionPlayback.cpp:69`). |
+| **Second Wind** | `WindDie`/`FighterLevel` in `DescribeAction` (`CombatBattle.cpp:233`), the forecast (`:541`) and resolution (`:825`). |
+| **Cure Wounds** | `HealingModifier` in `DescribeAction` (`:235`), the forecast (`:489`, `:542`) and both resolution paths (`:665` catalog, `:826` fixture);<br>the Life description "heal 2d8+3" (`BuildCatalog.cpp:159`). |
+| **Magic Missile** | `MissileDarts * DartBonus` in `DescribeAction` (`:237`), the forecast (`:540`) and resolution (`:797`–`:812`), plus its feedback (`:819`);<br>the Evocation description "guaranteed 3d4+3". |
+| **Precision Strike** | `PrecisionBonus` in accuracy (`:456`), forecast damage (`:535`) and resolution (`:708`). |
+| **Kit abilities** (Strike, Push, Area, Surge, Healing, Protect, Swap) | already read `Abilities(Hero)`:<br>- legality (`:338`–`:344`) and range (`:399`);<br>- forecast (`:472`–`:495`);<br>- resolution (`:651`–`:700`);<br>- protection validation (`:123`);<br>- the playback preview (`ExpeditionPlayback.cpp:71`).<br>Their descriptions come from the catalog's `Ability` formatter, which re-runs with honed values. |
+
+**Shelter keeps its Rage lifetime.** The guard still ends when its Barbarian's Rage ends (`CombatBattle.cpp:940`), and the restore rule for a Rage guard with no `GuardTurns` (`:132`) is unchanged.
+- **Amount.** One function, `FBuildCatalog::GuardAmount(Guard)`, gives the amount: `GuardAmount` when the guard is Kit-paid, otherwise the guard's own Rage-paid Protect fact, honed when `bHoned` is set. The four readers above call it. No new saved field is needed: `bHoned` cannot change during a battle, because claims only happen between fights. So a checkpoint saved with Shelter active resumes with the same amount.
+- **Text.** The status and hero-details text say the guard lasts while raging, not "until next own turn".
+
+**Fixed, never honed** (listed so that a reviewer can tell an omission from a decision):
+- the Potion's 2d4+2 and Rescue's 1 HP;
+- `TouchRange` for Potion and Rescue, and Magic Missile's range 6;
+- the Sneak Attack die;
+- Rage's −1 incoming damage and its two-turn duration (the `2` in the Rage effect at `:698` is a turn count).
+
+### Cap consumers
+
+The audit grep is:
+
+```sh
+grep -rnE 'KitCap|SlotCap|WindCap|ManeuverCap|RageCap|ResourceCap|> 2 \|\||SecondWindUses > 1' Source/DnDDiceRoll --include=*.cpp --include=*.h
+```
+
+| Reader | What moves to `Caps(Hero)` |
+| --- | --- |
+| Combat validation, `CombatBattle.cpp` | `ManeuverUses > 2` (`:79`); `SecondWindUses > 2` and `SpellSlots > 2` (`:101`); `KitUses > KitCap` and `GuardAmount > 4`, which becomes the honed Protect maximum (`:116`); the untouched Kit pool (`:118`); `RageUses > RageCap` (`:128`); the untouched Rage pool (`:130`). In the bonus-budget rule, `KitUses >= KitCap` and `SecondWindUses > 1` (`:1209`–`:1213`) mean "untouched", so they become `== Caps(Hero)`. |
+| Catalog, `BuildCatalog.cpp` | `ValidResources` (`:192`); `SurgeCap` (the `KitUses < KitCap` and `RageUses < RageCap` tests). |
+| Facts, `ActionFacts.cpp` | `ResourceCost` caps (`:37`–`:41`), which the usage tags and tooltips read. |
+| Camp, `PartyContinuity.cpp` | `Recover` (the `B->XCap` minimums). The fixture-only `ResourceCap = 2` path keeps its meaning for heroes with no build. |
+| Camp text | `RecoveryDescription` (`:58`–`:63`) prints `caps: max HP/2`, and the camp panel shows that string. Because Reserve at reward 1 comes just before the one camp, the text becomes `Survivors: +10 HP, +1 Wind/slot/Rage/Kit up to each hero's own cap. No revival or potions.`, which is true for every ruleset and revision. In PR B the camp panel also lists each survivor's before → after values from `FProgressionQuery` (`Kit 1/3 → 2/3`). |
+| HUD, `ExpeditionHUD.cpp` | the party-card resource groups (`:745`–`:749`). |
+| Harness, `BalanceHarness.cpp` | `kit_cap` … `rage_cap` are read from the build at run start (`:612`–`:613`). They become `Caps(Hero)` at the end of the run, so the exported caps agree with play. |
+
+These stay on `FBuildDefinition`, because they are not live per-hero caps:
+- the catalog's base-cap definitions and camp recovery amounts;
+- the kit-style tests (`KitCap > 0` or `B->KitCap` meaning "a Kit build"): `Abilities` `:212`, `Status` `:228`–`:232`, `ActionFacts::IsRageStyle` `:50`, and validation `:111` and `:118`. `:118` reads both a style test and an untouched pool; only the pool moves;
+- the catalog's definitions of caps and recoveries (`BuildCatalog.cpp:22`–`:68`, `:137`, `:159`, and `BuildCatalog.h:10`–`:14`);
+- fixtures in tests that build unupgraded heroes.
 
 ## 4. Level gains made visible
 
 Levels keep today's rule and effect (+1 basic damage, no HP or refill). A new const query, `FProgressionQuery::For(const FExpeditionRun&)`, reports what presentation shows. It uses no RNG and is derived only from saved state:
 - **per hero:** level, the level before the last victory, whether it levelled, basic damage and its parts (build base, levels, gear, Rage), gear rank, Reserve, Honed, and the per-hero caps;
-- **in the Reward phase, per survivor:** the three cards, each with availability, a precise blocker (`Already honed`, `Reserve taken`, `Gear at rank 3: potions only`, `Fallen`, `Gear only in this run`), and before → after values (basic damage 6 → 7; `Kit 1/2 → 2/3`; `Volley 4 → 5 · Hunter's Finish 4 → 6`).
+- **in the Reward phase, per survivor:** the three cards, each with availability, a precise blocker (`Already honed`, `Reserve taken`, `Gear at rank 3: potions only`, `Fallen`, `Gear only in this run`), and before → after values (basic damage 6 → 7; `Kit 1/2 → 2/3`; `Volley 4 → 5 · Hunter's Finish 4 → 6`);
+- **in the Recovery phase, per survivor:** HP and every pool before → after the camp, each at the hero's own cap.
 
 Presentation (PR B, section 8) shows level gains in four places:
 - **The reward panel title:** `VICTORY 2 OF 5 · SURVIVORS REACH LEVEL 3`.
@@ -98,7 +167,21 @@ The battle log gains one line at each of victories 1–4: `Level 3: +1 basic dam
 - dead heroes keep their upgrades and their death level;
 - no card changes `MaxHP`, HP or any other profile field.
 
-**Catalog revision 10.** New runs are created under revision 10, and restore accepts 7 to 10. Revisions 7–9 keep their generation, enemies, previews and gear-only rewards for life, exactly as #186 and #188 did. Revision 10's generation is revision 9's exactly: this slice changes rewards, not encounters. Unknown revisions are still refused by name and preserved. `NewRun` keeps its explicit older revision for tests and the harness.
+**Catalog revision 10.**
+- New runs are created under revision 10, and restore accepts 7 to 10.
+- Revisions 7–9 keep their generation, enemies, previews and gear-only rewards for life, exactly as #186 and #188 did.
+- Revision 10's **board generation and RNG** are revision 9's exactly: the same recipes, sizes, encounter seeds, rosters, enemy stats and draws in the same order. This slice changes rewards, not encounters.
+- Unknown revisions are still refused by name and preserved. `NewRun` keeps its explicit older revision for tests and the harness.
+
+**Route reward previews.** #188's `DescribeRoute` promises `+1 gear, +N potion(s)`, which a revision 10 Compact run no longer guarantees. So the reward line becomes revision-aware, and this is the one deliberate text change:
+
+| Run | Reward line on routes 1–4 | Finale |
+| --- | --- | --- |
+| Compact, revision 10 | `1 upgrade choice, +N potion(s)`, keeping ` (secured supplies)` | `Recover the artifact; no loot`, unchanged |
+| Compact, revision 9 | `+1 gear, +N potion(s)` (#188's wording, unchanged) | unchanged |
+| Compact, revisions 7–8, and every SRD run | today's wording for that run, unchanged byte for byte | unchanged |
+
+Restore already rebuilds each saved route with `DescribeRoute` and compares the whole struct. It now passes the run's revision and ruleset, so each run validates against its own wording. Comparisons between revisions 9 and 10 exclude the `Preview` strings and nothing else (section 7, `GearOnlyRevision10MatchesRevision9`).
 
 **Save schema 6.**
 - Staging and #188 are both on schema 5 (`FExpeditionSave::Version`, from #60).
@@ -119,54 +202,144 @@ The battle log gains one line at each of victories 1–4: `Level 3: +1 basic dam
 - `reserve` and `honed`: that card when it is available, otherwise Gear. The recipient is the survivor with the fewest upgrades (gear rank + Reserve + Honed), then the lowest ID. Under gear-only play that is version 1's rule.
 - `mixed` (the default): Reserve when the recipient's special pools hold at most one use and Reserve is free; otherwise Honed when it is free; otherwise Gear.
 
-**Runs**, each a full `Balance.Baseline.` under the machine lock at `--cores 2`:
-- **Before:** revision 9 on this build (`DND_BALANCE_REVISION=9`). Its CSVs must equal #188's kept after-run, which proves the revision 9 path is untouched.
+**Runs.** Each run is a full `Balance.Baseline.` under the machine lock at `--cores 2`:
+- **Before:** revision 9 on this build (`DND_BALANCE_REVISION=9 DND_BALANCE_REWARD=gear`; a revision 9 run can only take Gear).
 - **After:** revision 10 under each of `gear`, `reserve`, `honed` and `mixed`.
 
-Five measurements of 3,168 runs each, about 45 s of locked wall time apiece.
+That is five measurements of 3,168 runs each, about 45 s of locked wall time apiece. The baseline is #214 as merged: if #214's pending soft-lock revision changes report 12's numbers, the before-run is compared against the after-run that #214 finally retains.
 
-**Harness additions:**
-- per hero: `reward_cards` (for example `G,R,H,G`) and the per-hero caps at the end of the run;
-- per encounter: specials used by stage;
-- in `group.json`: `reward_strategy` and `policy_version`;
-- in `tools/balance_report.py`: a strategy table, the best strategy by class, and specials per fight by stage.
+**Harness additions.** Columns are only ever appended, after the existing ones:
+- `heroes.csv` gains `reward_cards` (in claim order, `G`, `R` or `H` joined by `;`, empty when none), `reserve` (0/1) and `honed` (0/1). The existing `kit_cap` … `rage_cap` columns are now read from `Caps(Hero)` at the end of the run.
+- `runs.csv` and `encounters.csv` gain no columns. Specials per fight by stage already come from `encounters.csv` (`stage`, `specials_used`).
+- `group.json` gains `reward_strategy`. `policy_version` becomes 2.
+- `tools/balance_report.py` gains:
+  - the strategy tables and paired differences below;
+  - specials per fight by stage;
+  - a `compare` command that implements the projections below and exits non-zero on any difference. It has helper tests for match, mismatch, missing rows and extra rows.
 
-**Targets** (design proposals, judged met or missed against the evidence):
+### CSV comparisons
+
+**Row keys:**
+- `runs.csv` by (`party`, `seed`);
+- `encounters.csv` by (`party`, `seed`, `stage`);
+- `heroes.csv` by (`party`, `seed`, `slot`).
+
+Row order is not compared, but the key sets must be equal: a missing or extra row fails.
+
+**C1, before-run against #214's retained revision 9 after-run** (this proves the revision 9 path is untouched):
+- Every column in #214's header for each file must be equal, with values compared as exact strings.
+- Excluded: only the columns this slice appends (`reward_cards`, `reserve`, `honed`). Those are checked separately: every before-run row must hold `G` repeated once per reward claimed, `0` and `0`.
+- `group.json`: equal party list, seeds, run count and `catalog_revision`. Excluded: the elapsed time, `policy_version` (1 → 2) and the new `reward_strategy`.
+
+**C2 (target P1), revision 10 `gear` against the before-run:** both come from this build, so every column of all three CSVs must be equal, the new columns included. That covers outcomes, rounds, damage, healing, protection, resources left and their caps, potions, commands and blockers. `group.json` differs only in `catalog_revision` (9 → 10) and the elapsed time. `reward_strategy` is `gear` in both.
+
+Neither comparison has an ad hoc exclusion: a column that differs and is not listed above fails the check.
+
+**New fields under card strategies** are validated on their own:
+- for each hero, `reward_cards` matches the reward recipients in history: one card per claim, at most one `R` and one `H`, and gear rank = min(3, the number of `G`);
+- `reserve` and `honed` agree with the cards;
+- the end-of-run caps equal the build caps plus `reserve`.
+
+### Statistics
+
+Every strategy plays the same 99 parties on the same 32 seeds and route patterns, so outcomes are **paired by (party, seed)**. A pair is identical until the first claim in which the strategies differ.
+
+**Counting:**
+- A run is one (party, seed).
+- A class's win rate in the rotation is over the runs of the rotation parties that contain at least one hero of that class. Each run counts once for a class, even with duplicates.
+- Representative parties are reported separately and not pooled into class rates.
+- A class win rate is a **party-policy outcome**: the strategy applies to every claim the party makes. It is not the causal value of one card to that class, and the report says so.
+
+**Paired difference.** For strategies A and B over a set of runs, d is the mean of (win_A − win_B), in points. Its 95% interval is a paired bootstrap:
+- resample the seeds with replacement, keeping every party of a drawn seed together (seeds are the shared unit);
+- 10,000 resamples, from a fixed bootstrap seed `20261112`, with Python's `random.Random`;
+- take the percentile interval.
+
+The same method gives intervals for the specials-per-fight ratio (P5) and the rotation gaps (P3, P4).
+
+**Verdicts for one difference:**
+- **clear** when the interval excludes 0 and |d| ≥ 5 points;
+- **small** when the interval excludes 0 but |d| < 5;
+- **tie** when the interval includes 0.
+
+A strategy is the **best for a class** only when it is clear against both other single-card strategies there. Otherwise the class is recorded as a tie (or small) and counts for no strategy.
+
+**Inconclusive.** A threshold target is inconclusive when its interval straddles the threshold:
+- P3, a gap whose interval contains 10;
+- P4, a rise whose interval contains 8;
+- P5, a ratio whose interval contains 1.5.
+
+P2 is inconclusive when it would be met if every small or tied class it needs went its way, but is not met on clear classes alone.
+
+Rules:
+- A slice 3/4 target in P4 is judged on its point estimate with its Wilson interval, as in contracts 09 and 11. When that interval straddles the threshold it is marked **borderline**.
+- If any of P2–P5 is inconclusive, or a P4 target is borderline, the report adds **exactly one extra fixed-seed batch**. That batch is seeds `20261141 + i` for `i = 0 … 31`, with the same parties and the same route-pattern rule, for all five measurements. Every verdict is then made on the 64 pooled seeds.
+- A target still inconclusive after the extra batch is reported as **inconclusive (not met)**, with its intervals. There are no further batches, and stopping is not optional.
+
+**Dominance.** Meeting P2 on the fixed sample does not establish by itself that "no card strictly dominates". The report claims non-dominance only when every one of `gear`, `reserve` and `honed` has at least one class where another strategy is clear against it. Otherwise it says which strategy was not beaten anywhere.
+
+### Targets
+
+These are design proposals, judged met, missed or inconclusive against the evidence under the rules above:
 
 | # | Target | Why |
 | --- | --- | --- |
-| P1 | **Gear is revision 9:** under `gear`, the revision 10 CSVs equal the before-run except for the revision column | the choice is opt-in and changes nothing else |
-| P2 | **Choices are real:** each of `gear`, `reserve` and `honed` is the best of the three for at least two of the 13 classes (class win rate in the rotation) | no card strictly dominates |
-| P3 | **No trap card:** the rotation win rates of `gear`, `reserve` and `honed` are within 10 points of each other | every card is a sensible pick |
-| P4 | **Bounded power:** the `mixed` rotation win rate is at most 8 points above the before-run's, and the slice 3/4 targets #188 met still hold (rotation 55–90%, every representative party at least 35%, finale highest defeat share, Dangerous at least 1.5x Guarded HP) | no power creep; do not undo slices 3–4 |
+| P1 | **Gear is revision 9:** comparison C2 passes | the choice is opt-in and changes nothing else |
+| P2 | **Choices are real:** each of `gear`, `reserve` and `honed` is the best (clear against both others) for at least two of the 13 classes in the rotation | every card has a use |
+| P3 | **No trap card:** the largest paired gap between the rotation win rates of `gear`, `reserve` and `honed` is at most 10 points | every card is a sensible pick |
+| P4 | **Bounded power:** the paired rise of `mixed` over the before-run in rotation win rate is at most 8 points, and the slice 3/4 targets #188 met still hold (rotation 55–90%, every representative party at least 35%, finale highest defeat share, Dangerous at least 1.5x Guarded HP) | no power creep; do not undo slices 3–4 |
 | P5 | **Specials reach the finale:** under `reserve`, specials per fight in fights 4–5 are at least 1.5x the before-run's | #187 item 3, for the player who chooses it |
 | P6 | Gates zero (policy errors, illegal proposals, passive ends, protection mismatches), same seed same results, and no more stalls than the before-run | contract 07 |
 
-**Levers**, smallest first: the Honed amounts and Reserve's +1, within the bounds of section 3. **Enemy numbers and catalog base numbers are not levers here.** If P3 or P4 cannot be met within the bounds, the report says missed and records a follow-up. #188's two misses (victories that lose a hero, and the melee party's gap) are reported, not targeted.
+**Levers**, smallest first: the Honed amounts and Reserve's +1, within the bounds of section 3. **Enemy numbers and catalog base numbers are not levers here.**
+- If P3 or P4 cannot be met within the bounds, the report says missed and records a follow-up.
+- Every lever step reruns all five measurements on the base 32 seeds. The extra batch is used only for the kept step's verdicts.
+- #188's two misses (victories that lose a hero, and the melee party's gap) are reported, not targeted.
 
 ## 7. Tests (public seams; each red before green)
 
 **Run and catalog** (`Project.Expedition.`):
 - `Run.RewardCardsApplyOnce`: each card's effect, limit and potion supply on a revision 10 run; Gear at rank 3 gives potions only.
 - `Run.RewardCardRejectionsLeaveStateUnchanged`: every rejection above, with full snapshot and RNG equality.
-- `Run.GearOnlyRevision10MatchesRevision9`: identical fingerprints apart from the revision.
+- `Run.GearOnlyRevision10MatchesRevision9`: a revision 10 run claiming Gear at every reward, compared with a revision 9 run of the same seed and party, command for command through Victory or Defeat. Every snapshot field is equal (boards, encounter seeds, recipes, sizes, enemies, party, history, both RNG states, `RewardCard`, `bReserve`, `bHoned`) except two: `CatalogRevision`, and the `Preview` strings of offers and history. For those strings, the only difference is that the reward phrase reads `1 upgrade choice` instead of `+1 gear`.
+- `Run.RewardPreviewsFollowRevision`:
+  - revision 10 Compact offers say `1 upgrade choice, +N potion(s)`, with secured supplies kept;
+  - revision 9, revisions 7–8, SRD and every finale preview are byte-identical to the base;
+  - restore accepts each run's own wording, and rejects revision 9 wording on a revision 10 run and revision 10 wording on a revision 9 or SRD run.
 - `Run.OlderRevisionsAndSrdRewardGearOnly`.
+- `Run.ReserveBeforeCampRecoversToTheNewCap`: Reserve at reward 1 on a hero with a spent pool, then camp, for Kit, Kit + Slot, Rage and Wind + Maneuver builds in one mixed party. Each pool goes to min(cap + 1, held + 1 + 1). Heroes without Reserve stop at their own cap. `RecoveryDescription` says recovery stops at each hero's own cap.
 - `Run.LevelGainsAreFactsOnly`: `FProgressionQuery` values; levels change no HP or pool; dead heroes keep their death level and upgrades.
-- `Catalog.HonedFactsMatchForecastAndResolution`: all 70 kits, every honed special. Facts equal forecast equals the committed result, and the description is truthful.
+- `Catalog.HonedFactsMatchForecastAndResolution`: all 70 kits, every honed special. Facts equal forecast equals the committed result, and the description is truthful. For Protect and Rage, the check goes beyond damage and healing fields: the committed protect effect, `FCombatBattle::Protection` (amount and source) and the `DamagePrevented` of a real enemy hit all equal the honed amount, and Rage's basic-damage forecast and hit use the honed bonus.
+- `Catalog.HonedShelterProtectsThroughRage`: a Totem Warrior that claimed Honed rages and casts Shelter on an ally. Then:
+  - `Protection(ally)` is 4 and names the Barbarian;
+  - an actual enemy hit on the ally prevents 4;
+  - the status and hero-details text show 4 and the Rage lifetime;
+  - a checkpoint written with Shelter active resumes with the same protection and continues identically;
+  - the guard ends when Rage ends, as before;
+  - an unhoned Totem Warrior still prevents exactly 3.
 - `Catalog.ReserveCapsEverywhere`: per-hero caps in facts, validation, camp and usage tags, for Kit, Kit + Slot, Rage, Wind and Wind + Maneuver builds.
 
 **Persistence:**
 - `Persistence.Schema5LoadsAsGearOnly`: **real schema 5 fixtures** written by unmodified staging after #214 (revision 8 and 9; route, mid-battle and reward phase) under `Tests/Fixtures/Schema5/`, with a README as for Schema4. Each resumes and continues exactly as staging's own continuation.
 - `Persistence.UpgradeChoicesRoundTrip`: Reserve and Honed picks through write, read and Resume in every phase, continuing identically.
-- `Persistence.RestoreRejectsUnearnedUpgrades`: flags without history; history without flags; two Reserve claims; a non-Gear claim on revision 9 or SRD; pools above `Caps`; a schema 6 document missing a field; a fractional version; version 7 refused, then preserved by New Run.
+- `Persistence.RestoreRejectsUnearnedUpgrades`: flags without history; history without flags; two Reserve claims; a non-Gear claim on revision 9 or SRD; pools above `Caps`; a route preview in the wrong revision's wording; a schema 6 document missing a field; a fractional version; version 7 refused, then preserved by New Run.
 - `Persistence.FailedUpgradeClaimIsAtomic`: a failed write leaves the live state, the RNG and the file bytes unchanged.
 
 **Presentation (PR B):**
 - `Presentation.RewardCardsShowProgressionFacts`: card text equals the query, including every blocker.
+- `Presentation.CampTextUsesEachHerosCap`: the camp panel's text and per-survivor lines equal the query in a mixed party where one hero took Reserve at reward 1.
 - `PartyDetailsKeepClearOfPhasePanels`: run with the new reward panel size.
 - An input-harness test: the keyboard picks a card and claims it. Hints and Help do not leak input, and Return to menu at the reward writes nothing.
 
-**Balance:** `Project.Balance.RewardStrategiesSubmitOnlyLegalClaims`, and the `gear` strategy reproduces policy 1's rows.
+**Balance:**
+- `Project.Balance.RewardStrategiesSubmitOnlyLegalClaims`;
+- `Project.Balance.GearStrategyIsPolicyOne`: comparison C2 on two parties and two seeds;
+- `Project.Balance.ExportedCapsMatchPlay`: `kit_cap` … `rage_cap` equal `Caps(Hero)` for Reserve heroes.
+
+Helper tests cover `tools/balance_report.py`:
+- `compare` (keys, projections, missing and extra rows);
+- the paired seed bootstrap (a fixed bootstrap seed gives a fixed interval);
+- the clear / small / tie and inconclusive verdicts, and the best-for-class rule with ties.
 
 **Kept, with intent preserved:**
 - `Schema4LoadsAsCompact` and `OlderRevisionsResumeWithTheirOwnEnemies`, unchanged;
@@ -187,12 +360,14 @@ A full-run test whose seed changes outcome under revision 10 takes `FirstSeedWhe
 - 1–4 or a click picks the survivor, as today;
 - a click, Left/Right or Tab, or a letter key picks a card. The letter keys are chosen against the bindings live in the Reward phase and listed in Help;
 - L or Enter claims;
-- focus starts on Gear;
-- the card focus is presentation state and is not saved. Resume at a reward shows Gear focused.
+- focus starts on Gear at the start of **every** Reward phase and after Resume. The card focus is presentation state and is not saved;
+- card selection keeps the existing overlay and focus gating: no card input while Help, Records, a hint or the Return-to-menu confirmation is open, and Tab keeps its per-screen focus order (#129).
 
 **Elsewhere:**
 - the `+1 Lv` markers, hero details and the battle-log line (section 4);
-- the action dock's usage tags and tooltips use the per-hero caps and honed amounts in the next fight (`Kit 3/3`, `Volley 5`);
+- the action dock's usage tags and tooltips use the per-hero caps and honed amounts in the next fight (`Kit 3/3`, `Volley 5`), and so do the party-card resource groups;
+- the camp panel shows the new `RecoveryDescription` and each survivor's before → after values from the query;
+- route cards show the revision-aware reward line;
 - `RewardPanelRect` grows to fit the cards, and #200's placement rule must still hold.
 
 **Captures** (`tools/capture/`, a `reward` pose set; gallery fixtures `reward-choice-*`):
@@ -201,11 +376,14 @@ A full-run test whose seed changes outcome under revision 10 takes `FirstSeedWhe
 - every card taken;
 - Reserve on a Life cleric (Kit + Slot), a Barbarian (Rage) and a Battle Master (Wind + Maneuver);
 - a fallen hero;
+- the camp after Reserve at reward 1;
+- a route card under revision 10;
 - each at 1280x720, 1920x1080 and 1600x600, inspected.
 
 **On-screen pass** on a packaged build before PR B merges, with a real keyboard and pointer:
 - claim each card;
-- see the dock and tooltips change in the next fight;
+- take Reserve at reward 1 and check the camp text and values;
+- see the dock, tooltips and party cards change in the next fight, including a honed Shelter;
 - Resume at the reward and just after a claim;
 - Return to menu at the reward;
 - Help;
@@ -215,7 +393,14 @@ No new assets. A reward-claim sound cue belongs to slice 6.
 
 ## 9. Delivery and as built
 
-- **PR A (rules, no `Presentation/`, `Content/` or `Config/`):** cards, catalogue, `Caps`, `FProgressionQuery`, revision 10, schema 6 with fixtures, harness policy 2, `14-progression-report.md`, and the rules reference, glossary (Reward card, Gear, Reserve, Honed, Progression facts) and current-state updates.
+- **PR A (rules, no `Presentation/`, `Content/` or `Config/`):**
+  - cards, catalogue and the two seams, with both inventories moved (section 3) and the rerun greps recorded;
+  - the revision-aware previews and the new `RecoveryDescription`;
+  - `FProgressionQuery`, revision 10, and schema 6 with its fixtures;
+  - harness policy 2, the `compare` command and the statistics, plus `14-progression-report.md`;
+  - updates to the rules reference, the glossary (Reward card, Gear, Reserve, Honed, Progression facts) and current state.
+
+  Because the presentation readers (`ExpeditionHUD.cpp:745`–`:749` and `:811`, `ExpeditionPlayback.cpp:69`) live in `Presentation/`, they move in PR B. Until then, the game's only claim path is the Gear overload (the HUD's `Loot`), so no player can hold a honed or Reserve hero that these readers would misdescribe. PR B must not merge without them.
 - **PR B (stacked on A):** section 8.
 - **Gates for each PR:** build with 0 warnings, full `Project.` with 0 warnings, helpers on Python 3.11, `contribute.py check`, and two-axis review. PR A also needs the `Balance.Baseline.` before and after runs and an evidence branch. PR B also needs inspected captures and the on-screen pass before merge.
 - **As built:** filled in by PR A (numbers, deviations, targets met or missed) and PR B (presentation), as in contracts 09 and 11.
