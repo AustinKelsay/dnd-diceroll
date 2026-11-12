@@ -1,0 +1,193 @@
+cast2-board-vault 1280x720 arrow-release-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1280x720 arrow-landing-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1280x720 bolt-release-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1280x720 arrow-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1280x720 arrow-landing-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1280x720 bolt-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 arrow-release-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 arrow-landing-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 bolt-release-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 arrow-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 arrow-landing-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault 1920x1080 bolt-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1280x720 arrow-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1280x720 arrow-landing-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1280x720 bolt-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1920x1080 arrow-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1920x1080 arrow-landing-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-default-seed-battle 1920x1080 bolt-release-yaw090-near: no footprint box (the target is off screen at this zoom), not measured
+cast2-board-vault        1280x720   arrow-release-yaw000-default         peak  249.3  p99  248.5  mean   83.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-release-yaw000-default:shooter peak  250.9  p99  247.2  mean  124.0  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw000-default          peak  249.3  p99  248.5  mean   84.1  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-flight-yaw000-default:bolt     peak  251.9  p99  250.9  mean   18.7  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw000-default:shooter  peak  250.0  p99  246.9  mean  123.1  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw000-default         peak  249.3  p99  248.5  mean   91.1  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-landing-yaw000-default:shooter peak  250.0  p99  246.9  mean  125.6  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw000-default          peak  248.6  p99  248.5  mean   83.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   bolt-release-yaw000-default:shooter  peak  255.0  p99  254.9  mean  191.3  white  6.46%  clipped  9.51%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-release-yaw090-default         peak  248.6  p99  240.6  mean   77.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-release-yaw090-default:shooter peak  253.6  p99  249.7  mean  120.8  white  0.09%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw090-default          peak  248.6  p99  240.5  mean   77.7  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-flight-yaw090-default:bolt     peak  251.9  p99  221.6  mean   31.8  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw090-default:shooter  peak  253.8  p99  250.0  mean  121.0  white  0.09%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw090-default         peak  248.6  p99  243.1  mean   81.3  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-landing-yaw090-default:shooter peak  253.0  p99  251.4  mean  117.7  white  0.13%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw090-default          peak  248.6  p99  239.6  mean   76.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   bolt-release-yaw090-default:shooter  peak  255.0  p99  255.0  mean  188.7  white  7.30%  clipped  6.40%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-release-yaw180-default         peak  248.6  p99  240.7  mean   85.5  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-release-yaw180-default:shooter peak  252.2  p99  250.0  mean  105.2  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw180-default          peak  248.6  p99  239.7  mean   86.9  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-flight-yaw180-default:bolt     peak  245.2  p99  193.4  mean   19.4  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-flight-yaw180-default:shooter  peak  252.2  p99  250.0  mean  103.5  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw180-default         peak  248.5  p99  240.4  mean   91.5  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-landing-yaw180-default:shooter peak  251.9  p99  250.9  mean  108.9  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw180-default          peak  247.8  p99  238.7  mean   86.4  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   bolt-release-yaw180-default:shooter  peak  252.2  p99  249.7  mean  181.7  white  0.04%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-release-yaw270-default         peak  249.3  p99  246.6  mean   93.4  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-release-yaw270-default:shooter peak  252.1  p99  248.8  mean  132.9  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw270-default          peak  250.1  p99  245.7  mean   93.7  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-flight-yaw270-default:bolt     peak  225.1  p99  145.0  mean   32.4  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-flight-yaw270-default:shooter  peak  251.2  p99  248.3  mean  136.5  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw270-default         peak  249.3  p99  246.6  mean   97.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1280x720   arrow-landing-yaw270-default:shooter peak  251.9  p99  248.6  mean  139.4  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw270-default          peak  250.1  p99  244.1  mean   94.3  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw270-default:shooter  peak  255.0  p99  254.6  mean  172.6  white  3.45%  clipped  2.10%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-release-yaw000-near:shooter    peak  252.4  p99  251.9  mean  118.0  white  1.23%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw000-near:shooter    peak  252.4  p99  252.1  mean  118.2  white  1.26%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw000-near:shooter     peak  255.0  p99  254.9  mean  185.2  white  9.67%  clipped 11.34%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-release-yaw090-near:shooter    peak  254.6  p99  253.8  mean  122.7  white  1.87%  clipped  0.79%  BLOWN OUT
+cast2-board-vault        1280x720   arrow-landing-yaw090-near:shooter    peak  254.6  p99  253.8  mean  124.5  white  2.03%  clipped  0.88%  BLOWN OUT
+cast2-board-vault        1280x720   bolt-release-yaw090-near:shooter     peak  255.0  p99  255.0  mean  182.2  white  3.56%  clipped  3.53%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw000-default         peak  249.3  p99  247.8  mean   82.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-release-yaw000-default:shooter peak  252.4  p99  250.0  mean  124.0  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw000-default          peak  249.3  p99  248.6  mean   83.0  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw000-default:bolt     peak  252.2  p99  227.8  mean   19.4  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw000-default:shooter  peak  252.4  p99  250.0  mean  123.7  white  0.07%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw000-default         peak  249.3  p99  248.6  mean   89.2  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-landing-yaw000-default:shooter peak  251.9  p99  249.2  mean  125.2  white  0.05%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw000-default          peak  249.3  p99  248.6  mean   82.9  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  bolt-release-yaw000-default:shooter  peak  255.0  p99  254.9  mean  191.2  white  6.21%  clipped  9.19%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw090-default         peak  249.3  p99  246.0  mean   78.1  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-release-yaw090-default:shooter peak  253.8  p99  250.8  mean  122.8  white  0.17%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw090-default          peak  249.3  p99  245.9  mean   77.4  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw090-default:bolt     peak  252.2  p99  212.8  mean   31.5  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw090-default:shooter  peak  253.8  p99  250.9  mean  124.3  white  0.25%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw090-default         peak  249.3  p99  245.7  mean   80.0  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-landing-yaw090-default:shooter peak  252.8  p99  250.7  mean  117.1  white  0.27%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw090-default          peak  249.3  p99  246.0  mean   76.7  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  bolt-release-yaw090-default:shooter  peak  255.0  p99  255.0  mean  189.5  white  7.66%  clipped  6.58%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw180-default         peak  248.6  p99  244.0  mean   85.7  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-release-yaw180-default:shooter peak  252.2  p99  250.0  mean  105.8  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw180-default          peak  248.6  p99  244.1  mean   85.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw180-default:bolt     peak  245.2  p99  198.7  mean   19.1  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw180-default:shooter  peak  252.2  p99  250.0  mean  103.1  white  0.05%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw180-default         peak  248.6  p99  244.9  mean   92.1  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-landing-yaw180-default:shooter peak  252.5  p99  250.0  mean  108.7  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw180-default          peak  248.6  p99  244.1  mean   88.0  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  bolt-release-yaw180-default:shooter  peak  254.0  p99  250.0  mean  181.3  white  0.11%  clipped  0.02%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw270-default         peak  249.3  p99  248.5  mean   93.0  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-release-yaw270-default:shooter peak  251.9  p99  249.0  mean  133.4  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-flight-yaw270-default          peak  249.3  p99  248.6  mean   93.2  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw270-default:bolt     peak  231.1  p99  129.2  mean   32.5  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-flight-yaw270-default:shooter  peak  252.1  p99  249.8  mean  136.2  white  0.02%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw270-default         peak  249.3  p99  248.6  mean   97.2  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  arrow-landing-yaw270-default:shooter peak  252.1  p99  250.0  mean  139.0  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw270-default          peak  249.3  p99  248.6  mean   93.8  white  0.00%  clipped  0.00%  ok
+cast2-board-vault        1920x1080  bolt-release-yaw270-default:shooter  peak  255.0  p99  254.7  mean  171.3  white  3.91%  clipped  2.52%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw000-near:shooter    peak  252.9  p99  251.0  mean  116.8  white  1.26%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw000-near:shooter    peak  252.4  p99  251.0  mean  117.1  white  1.41%  clipped  0.00%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw000-near:shooter     peak  255.0  p99  254.9  mean  183.9  white  9.64%  clipped 11.38%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-release-yaw090-near:shooter    peak  254.6  p99  253.8  mean  122.5  white  2.05%  clipped  0.80%  BLOWN OUT
+cast2-board-vault        1920x1080  arrow-landing-yaw090-near:shooter    peak  254.6  p99  254.4  mean  124.3  white  2.31%  clipped  1.01%  BLOWN OUT
+cast2-board-vault        1920x1080  bolt-release-yaw090-near:shooter     peak  255.0  p99  255.0  mean  182.1  white  3.74%  clipped  3.75%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-release-yaw000-default         peak  239.0  p99  235.6  mean   81.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw000-default:shooter peak  244.7  p99  241.3  mean   95.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw000-default          peak  238.9  p99  234.6  mean   81.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw000-default:bolt     peak  243.6  p99  228.5  mean   46.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw000-default:shooter  peak  244.7  p99  241.2  mean   93.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw000-default         peak  239.0  p99  235.5  mean   85.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw000-default:shooter peak  244.5  p99  243.2  mean   95.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw000-default          peak  239.0  p99  236.4  mean   82.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw000-default:shooter  peak  254.9  p99  254.7  mean  175.7  white  2.67%  clipped  4.89%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-release-yaw090-default         peak  238.2  p99  229.3  mean   89.0  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw090-default:shooter peak  250.9  p99  247.6  mean  128.4  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-flight-yaw090-default          peak  239.0  p99  230.2  mean   88.3  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw090-default:bolt     peak  244.4  p99  244.0  mean   57.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw090-default:shooter  peak  250.8  p99  246.1  mean  129.8  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-landing-yaw090-default         peak  238.2  p99  233.4  mean   91.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw090-default:shooter peak  251.0  p99  248.5  mean  127.7  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1280x720   bolt-release-yaw090-default          peak  239.0  p99  231.9  mean   88.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw090-default:shooter  peak  255.0  p99  255.0  mean  194.4  white  5.19%  clipped  4.64%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-release-yaw180-default         peak  238.2  p99  223.8  mean   87.9  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw180-default:shooter peak  244.2  p99  241.0  mean  113.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw180-default          peak  238.2  p99  221.2  mean   87.9  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw180-default:bolt     peak  244.5  p99  228.4  mean   63.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw180-default:shooter  peak  244.4  p99  240.3  mean  111.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw180-default         peak  238.2  p99  227.4  mean   92.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw180-default:shooter peak  244.4  p99  243.2  mean  115.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw180-default          peak  238.0  p99  220.2  mean   87.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw180-default:shooter  peak  244.7  p99  240.2  mean  173.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw270-default         peak  238.2  p99  232.0  mean   88.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw270-default:shooter peak  248.1  p99  243.2  mean  121.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw270-default          peak  238.2  p99  230.9  mean   88.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw270-default:bolt     peak  244.4  p99  242.8  mean   39.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-flight-yaw270-default:shooter  peak  249.1  p99  243.3  mean  123.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw270-default         peak  239.0  p99  232.7  mean   92.0  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw270-default:shooter peak  248.1  p99  243.2  mean  124.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw270-default          peak  238.2  p99  230.1  mean   88.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw270-default:shooter  peak  254.9  p99  252.0  mean  164.8  white  0.30%  clipped  0.60%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-release-yaw000-near            peak  222.1  p99  198.8  mean   53.0  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-release-yaw000-near:shooter    peak  245.0  p99  244.4  mean   92.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw000-near            peak  232.3  p99  211.9  mean   54.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   arrow-landing-yaw000-near:shooter    peak  246.0  p99  244.5  mean   92.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw000-near             peak  224.2  p99  200.1  mean   54.0  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1280x720   bolt-release-yaw000-near:shooter     peak  255.0  p99  254.9  mean  176.8  white  5.04%  clipped  8.48%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-release-yaw090-near:shooter    peak  251.1  p99  250.8  mean  121.4  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1280x720   arrow-landing-yaw090-near:shooter    peak  251.2  p99  250.8  mean  124.0  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1280x720   bolt-release-yaw090-near:shooter     peak  255.0  p99  254.9  mean  182.0  white  2.32%  clipped  1.76%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-release-yaw000-default         peak  239.0  p99  237.4  mean   80.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw000-default:shooter peak  244.5  p99  241.0  mean   94.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw000-default          peak  239.0  p99  238.2  mean   80.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw000-default:bolt     peak  243.7  p99  231.3  mean   45.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw000-default:shooter  peak  244.7  p99  241.3  mean   93.3  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw000-default         peak  239.1  p99  238.2  mean   84.0  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw000-default:shooter peak  244.7  p99  241.3  mean   94.6  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw000-default          peak  239.0  p99  238.2  mean   81.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw000-default:shooter  peak  255.0  p99  254.7  mean  176.5  white  2.38%  clipped  4.93%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-release-yaw090-default         peak  239.0  p99  236.4  mean   88.6  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw090-default:shooter peak  251.1  p99  247.2  mean  126.6  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw090-default          peak  239.1  p99  237.2  mean   87.9  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw090-default:bolt     peak  244.8  p99  244.0  mean   56.6  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw090-default:shooter  peak  251.2  p99  247.1  mean  128.1  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw090-default         peak  239.0  p99  237.1  mean   90.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw090-default:shooter peak  251.1  p99  248.1  mean  125.8  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  bolt-release-yaw090-default          peak  239.0  p99  237.2  mean   87.8  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw090-default:shooter  peak  255.0  p99  255.0  mean  193.4  white  5.16%  clipped  5.07%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-release-yaw180-default         peak  239.0  p99  230.0  mean   89.3  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw180-default:shooter peak  244.7  p99  241.2  mean  113.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw180-default          peak  239.2  p99  230.9  mean   89.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw180-default:bolt     peak  244.2  p99  243.2  mean   63.3  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw180-default:shooter  peak  244.9  p99  241.2  mean  111.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw180-default         peak  239.9  p99  232.5  mean   95.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw180-default:shooter peak  244.9  p99  242.0  mean  115.6  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw180-default          peak  239.0  p99  230.9  mean   88.9  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw180-default:shooter  peak  246.2  p99  241.0  mean  173.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw270-default         peak  239.0  p99  236.4  mean   87.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw270-default:shooter peak  249.1  p99  243.2  mean  121.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw270-default          peak  239.0  p99  237.2  mean   87.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw270-default:bolt     peak  244.5  p99  243.0  mean   38.6  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-flight-yaw270-default:shooter  peak  250.1  p99  243.2  mean  121.9  white  0.02%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw270-default         peak  239.8  p99  238.0  mean   91.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw270-default:shooter peak  249.1  p99  243.5  mean  123.7  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw270-default          peak  239.0  p99  237.2  mean   87.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw270-default:shooter  peak  254.9  p99  252.8  mean  165.2  white  0.54%  clipped  0.71%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-release-yaw000-near            peak  224.1  p99  199.3  mean   53.2  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-release-yaw000-near:shooter    peak  245.9  p99  242.5  mean   91.5  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw000-near            peak  238.0  p99  215.0  mean   54.4  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw000-near:shooter    peak  246.0  p99  242.2  mean   92.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw000-near             peak  225.1  p99  200.7  mean   54.1  white  0.00%  clipped  0.00%  ok
+cast2-default-seed-battle 1920x1080  bolt-release-yaw000-near:shooter     peak  255.0  p99  254.9  mean  175.8  white  5.03%  clipped  8.48%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-release-yaw090-near:shooter    peak  251.1  p99  250.8  mean  120.7  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  arrow-landing-yaw090-near:shooter    peak  252.3  p99  250.8  mean  123.2  white  0.00%  clipped  0.00%  BLOWN OUT
+cast2-default-seed-battle 1920x1080  bolt-release-yaw090-near:shooter     peak  255.0  p99  254.9  mean  181.2  white  2.35%  clipped  1.97%  BLOWN OUT
+103 of 174 impact boxes stay below peak 250 with under 1% pure white
