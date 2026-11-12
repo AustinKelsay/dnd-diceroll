@@ -25,7 +25,7 @@ Nothing here changes rules, saves, the dice or the balance. The look is all pres
 
 ## Screenshots
 
-- The Vault finale world, three zoom levels: [contact sheet](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr197-vault/vault-contact-sheet-1080-default.jpg)
+- The Vault finale world at default zoom (near and far sheets sit beside it): [contact sheet](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr197-vault/vault-contact-sheet-1080-default.jpg)
 - Root of the World: [forest clearing](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr197-vault/themes/board-root-r002-yawm90-default.jpg); the Drowned Vigil: [nave with broken walls](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr197-vault/themes/board-vigil-walls-yawm90-default.jpg)
 - The war table: [the finale screen](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr199-tabletop/blender/game_finale.jpg) and the [Vault diorama close-up](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr199-tabletop/closeups/finale-left-diorama-vault.jpg)
 - The cast: [barbarian, monk, paladin and ranger poses](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr198-cast2/11-pose-sheet-default.png) and [all 13 classes with their palettes](https://github.com/AustinKelsay/dnd-diceroll/blob/evidence/pr203-cast4/pr203-cast4/01_palette_contact_sheet_all_13_classes.png)
