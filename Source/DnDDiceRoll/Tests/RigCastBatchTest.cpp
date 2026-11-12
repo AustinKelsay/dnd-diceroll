@@ -135,8 +135,8 @@ bool FCastBatchClipsTest::RunTest(const FString& Parameters)
                 const EUnitPose Pose = ForEffect(Ability.Effect, bFar, Ability.bSpell);
                 if (Ability.bSpell)
                 {
-                    // A spell casts whatever its normalized effect, except a swap, which has no clip.
-                    TestEqual(*(Label + TEXT(" casts")), Pose, Ability.Effect == EAbilityEffect::Swap ? EUnitPose::Idle : EUnitPose::Cast);
+                    // A spell casts whatever its normalized effect, a swap included (#150 batch 2: the spell check comes first).
+                    TestEqual(*(Label + TEXT(" casts")), Pose, EUnitPose::Cast);
                 }
                 else if (Ability.Effect == EAbilityEffect::Strike || Ability.Effect == EAbilityEffect::WeaponAttack || Ability.Effect == EAbilityEffect::Area || Ability.Effect == EAbilityEffect::Push)
                 {

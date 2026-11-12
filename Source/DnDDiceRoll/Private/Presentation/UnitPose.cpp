@@ -49,7 +49,8 @@ EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool bSpellAttack)
 
 EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell)
 {
-    if (Effect == EAbilityEffect::Swap || Effect == EAbilityEffect::Mitigation) { return EUnitPose::Idle; }
+    // The lead's order (#150): a spell casts, whatever its effect; a non-spell attack swings or shoots; a non-spell self or ally effect, a swap and an
+    // actively used mitigation included, braces; anything else has no clip.
     if (bSpell) { return EUnitPose::Cast; }
     switch (Effect)
     {
@@ -61,7 +62,9 @@ EUnitPose ForEffect(EAbilityEffect Effect, bool bRanged, bool bSpell)
     case EAbilityEffect::Missile: return bRanged ? EUnitPose::Ranged : EUnitPose::Melee;
     case EAbilityEffect::Rage:
     case EAbilityEffect::Protect:
-    case EAbilityEffect::Healing: return EUnitPose::Brace;
+    case EAbilityEffect::Healing:
+    case EAbilityEffect::Swap:
+    case EAbilityEffect::Mitigation: return EUnitPose::Brace;
     default: return EUnitPose::Idle;
     }
 }

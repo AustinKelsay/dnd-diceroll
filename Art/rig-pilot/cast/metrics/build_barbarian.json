@@ -113,8 +113,17 @@
    "loop": false
   }
  },
+ "override": {
+  "clip": "Melee",
+  "action": "Melee_Barbarian",
+  "frames": [
+   0,
+   30
+  ],
+  "worst_residual_cm": 33.64
+ },
  "glb_bytes": {
-  "SK_Hero_Barbarian.glb": 1655448,
+  "SK_Hero_Barbarian.glb": 1701444,
   "SK_Hero_Barbarian_LOD1.glb": 709708,
   "SK_Hero_Barbarian_LOD2.glb": 594588
  }

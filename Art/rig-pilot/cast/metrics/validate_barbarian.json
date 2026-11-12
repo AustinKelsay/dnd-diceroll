@@ -33,6 +33,10 @@
    0.0,
    30.0
   ],
+  "Melee_Barbarian": [
+   0.0,
+   30.0
+  ],
   "Ranged": [
    0.0,
    36.0
@@ -191,5 +195,33 @@
   "LOD1": 0.436,
   "LOD2": 0.237,
   "LOD0": 1.0
- }
+ },
+ "checks": {
+  "bones: 25 and the contract": true,
+  "clips: all ten with their frame ranges": true,
+  "lods: same bone names, LOD1 and LOD2": true,
+  "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+  "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+  "root drift 0.01 mm or less in every clip": true,
+  "at most 4 influences per vertex": true,
+  "one material on a 1024x1024 atlas": true,
+  "glow alpha present on runes and gems": true,
+  "height 175 to 185 cm excluding held items": true,
+  "LOD0 3,000 to 6,000 triangles": true,
+  "override Melee_Barbarian: present with frames 0 to 30": true,
+  "override Melee_Barbarian: starts and ends on Idle frame 0 (0.01 mm)": true,
+  "override Melee_Barbarian: root drift 0": true
+ },
+ "override": {
+  "present": true,
+  "range": [
+   0.0,
+   30.0
+  ],
+  "first_vs_idle0_mm": 0.0,
+  "last_vs_idle0_mm": 0.0,
+  "root_drift_mm": 0.0
+ },
+ "pass": true,
+ "failures": []
 }

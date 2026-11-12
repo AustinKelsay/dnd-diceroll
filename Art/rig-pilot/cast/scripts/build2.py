@@ -28,6 +28,7 @@ bpy.context.preferences.filepaths.save_version = 0
 import cast_characters as C   # also puts the r001 scripts on sys.path
 import cast_batch2 as B2      # registers the batch 2 classes and the Brace clip
 import clips as CL
+import overrides as OV
 import rigkit as K
 
 args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -74,6 +75,28 @@ def build_one(key):
         K.author(ao, rig, cname, frames, fn, ground=True, loop=loop)
         clips.append(cname)
     metrics['clips'] = {c: dict(frames=[0, CL.CLIPS[c][0]], seconds=round(CL.CLIPS[c][0] / K.FPS, 3), loop=CL.CLIPS[c][1]) for c in clips}
+    if key in OV.OVERRIDES and REV == 'r001':          # a per-class clip override (overrides.py), exported beside the shared clips
+        shared, action, frames = OV.OVERRIDES[key]
+        if key == 'ranger':
+            pose_at, scale_at, state = OV.ranger_pose_fn(rig)
+        else:
+            g0 = OV.grip(rig, M0, 'R')
+            pose_at, state = OV.barbarian_pose_fn(rig, g0 - OV.AX_IDLE * OV.HAFT_FROM_GRIP)
+            scale_at = None
+        act = K.author(ao, rig, action, frames, pose_at, ground=True, loop=False)
+        if scale_at:                                    # the short blade vanishes from the hand while the bow is out
+            ao.animation_data.action = act
+            bpy.context.view_layer.objects.active = ao
+            bpy.ops.object.mode_set(mode='POSE')
+            pb = ao.pose.bones['weapon_socket']
+            for f in range(frames + 1):
+                s_ = scale_at(f)
+                pb.scale = (s_, s_, s_)
+                pb.keyframe_insert('scale', frame=f)
+            bpy.ops.object.mode_set(mode='OBJECT')
+        clips.append(action)
+        metrics['override'] = dict(clip=shared, action=action, frames=[0, frames], worst_residual_cm=round(max(state.get('worst', 0), state.get('worstR', 0)) * 100, 2))
+        print('OVERRIDE', key, action, metrics['override'])
     ao.animation_data_create()
     for lod in (1, 2):
         objs[lod].hide_render = True

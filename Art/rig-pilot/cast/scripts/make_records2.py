@@ -10,6 +10,7 @@
 import copy
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -29,6 +30,32 @@ ISSUE = 'https://github.com/AustinKelsay/dnd-diceroll/issues/150'
 
 def sha(p):
     return hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
+
+
+def require_passed():
+    """No record says `passed` unless every validation JSON says so: each carries `pass` (review2.py's gate) and the r002 compare passes. Exits 1 otherwise."""
+    problems = []
+    for key in [v[1] for v in NEW.values()]:
+        p = ROOT / CAST / 'metrics' / f'validate_{key}.json'
+        d = json.loads(p.read_text()) if p.exists() else {}
+        if d.get('pass') is not True:
+            problems.append(f'{p.name}: ' + ('missing' if not d else 'no `pass` (run review2.py validate)' if 'pass' not in d else 'failed: ' + '; '.join(d.get('failures', []))))
+    for key in [v[1] for v in OLD.values()]:
+        p = ROOT / CAST / 'metrics' / f'validate_{key}_r002.json'
+        d = json.loads(p.read_text()) if p.exists() else {}
+        if d.get('pass') is not True:
+            problems.append(f'{p.name}: ' + ('missing' if not d else 'no `pass` (run review2.py validate --r002)' if 'pass' not in d else 'failed: ' + '; '.join(d.get('failures', []))))
+    p = ROOT / CAST / 'metrics' / 'compare_r002.json'
+    d = json.loads(p.read_text()) if p.exists() else {}
+    for key in [v[1] for v in OLD.values()]:
+        if not d.get(key, {}).get('pass'):
+            problems.append(f'compare_r002.json: {key} ' + ('missing' if key not in d else 'failed'))
+    if problems:
+        print('Refusing to write asset records marked passed:\n  ' + '\n  '.join(problems))
+        sys.exit(1)
+
+
+require_passed()
 
 
 def load(p):

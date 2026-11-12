@@ -5,24 +5,24 @@
  "fps": 30,
  "lods": {
   "LOD0": {
-   "tris": 3514,
-   "verts": 2596,
+   "tris": 3522,
+   "verts": 2601,
    "height_m": 1.81,
    "zmax": 1.809,
    "zmin": -0.001,
    "glow_verts": 56
   },
   "LOD1": {
-   "tris": 1671,
-   "verts": 1456,
+   "tris": 1679,
+   "verts": 1461,
    "height_m": 1.81,
    "zmax": 1.809,
    "zmin": -0.001,
    "glow_verts": 48
   },
   "LOD2": {
-   "tris": 1017,
-   "verts": 890,
+   "tris": 1025,
+   "verts": 895,
    "height_m": 1.81,
    "zmax": 1.809,
    "zmin": -0.001,
@@ -113,9 +113,18 @@
    "loop": false
   }
  },
+ "override": {
+  "clip": "Ranged",
+  "action": "Ranged_Ranger",
+  "frames": [
+   0,
+   36
+  ],
+  "worst_residual_cm": 7.02
+ },
  "glb_bytes": {
-  "SK_Hero_Ranger.glb": 1616772,
-  "SK_Hero_Ranger_LOD1.glb": 738456,
-  "SK_Hero_Ranger_LOD2.glb": 636908
+  "SK_Hero_Ranger.glb": 1670996,
+  "SK_Hero_Ranger_LOD1.glb": 740544,
+  "SK_Hero_Ranger_LOD2.glb": 639296
  }
 }

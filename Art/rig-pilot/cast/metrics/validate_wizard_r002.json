@@ -191,5 +191,20 @@
   "LOD1": 0.469,
   "LOD2": 0.219,
   "LOD0": 1.0
- }
+ },
+ "checks": {
+  "bones: 25 and the contract": true,
+  "clips: all ten with their frame ranges": true,
+  "lods: same bone names, LOD1 and LOD2": true,
+  "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+  "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+  "root drift 0.01 mm or less in every clip": true,
+  "at most 4 influences per vertex": true,
+  "one material on a 1024x1024 atlas": true,
+  "glow alpha present on runes and gems": true,
+  "height 175 to 185 cm excluding held items": true,
+  "LOD0 3,000 to 6,000 triangles": true
+ },
+ "pass": true,
+ "failures": []
 }
