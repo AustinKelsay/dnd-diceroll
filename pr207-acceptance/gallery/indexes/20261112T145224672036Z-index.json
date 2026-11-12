@@ -1,0 +1,924 @@
+{
+  "commit": "e8778e20fb076ca470ea26eb331af8a3de21a036",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/tools/capture/spell-release-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "fire-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1093,
+              "y0": 609,
+              "x1": 1140,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1076,
+              "y0": 302,
+              "x1": 1116,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw090-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1298,
+              "y0": 414,
+              "x1": 1349,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 826,
+              "y0": 414,
+              "x1": 867,
+              "y1": 526
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw180-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1231,
+              "y0": 137,
+              "x1": 1272,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1266,
+              "y0": 394,
+              "x1": 1315,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw270-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1049,
+              "y0": 302,
+              "x1": 1088,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1492,
+              "y0": 302,
+              "x1": 1547,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "missile-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1093,
+              "y0": 609,
+              "x1": 1140,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1076,
+              "y0": 302,
+              "x1": 1116,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "missile-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Sera",
+            "role": "Cleric",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1165,
+              "y0": 302,
+              "x1": 1208,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-cleric-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Sera",
+            "role": "Cleric",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 830,
+              "y0": 356,
+              "x1": 870,
+              "y1": 466
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-cleric-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Sera",
+            "role": "Cleric",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1174,
+              "y0": 394,
+              "x1": 1219,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-cleric-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Sera",
+            "role": "Cleric",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1506,
+              "y0": 356,
+              "x1": 1563,
+              "y1": 466
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-cleric-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw000-near",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 910,
+              "y0": 946,
+              "x1": 1022,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Ivo",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 925,
+              "y0": 247,
+              "x1": 1003,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Sera",
+            "role": "Cleric",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-cleric-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "cast3-default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "cast3-default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "fire-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1093,
+              "y0": 609,
+              "x1": 1140,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1076,
+              "y0": 302,
+              "x1": 1116,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw090-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1298,
+              "y0": 414,
+              "x1": 1349,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 826,
+              "y0": 414,
+              "x1": 867,
+              "y1": 526
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw180-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1231,
+              "y0": 137,
+              "x1": 1272,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1266,
+              "y0": 394,
+              "x1": 1315,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw270-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1049,
+              "y0": 302,
+              "x1": 1088,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1492,
+              "y0": 302,
+              "x1": 1547,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "missile-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "missile",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1093,
+              "y0": 609,
+              "x1": 1140,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1076,
+              "y0": 302,
+              "x1": 1116,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "missile-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw000-default",
+          "mode": "impact",
+          "status": "skipped",
+          "reason": "no Cleric on the board"
+        },
+        {
+          "name": "spell-release-cleric-yaw090-default",
+          "mode": "impact",
+          "status": "skipped",
+          "reason": "no Cleric on the board"
+        },
+        {
+          "name": "spell-release-cleric-yaw180-default",
+          "mode": "impact",
+          "status": "skipped",
+          "reason": "no Cleric on the board"
+        },
+        {
+          "name": "spell-release-cleric-yaw270-default",
+          "mode": "impact",
+          "status": "skipped",
+          "reason": "no Cleric on the board"
+        },
+        {
+          "name": "fire-release-wizard-yaw000-near",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 910,
+              "y0": 946,
+              "x1": 1022,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 925,
+              "y0": 247,
+              "x1": 1003,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-cleric-yaw000-near",
+          "mode": "impact",
+          "status": "skipped",
+          "reason": "no Cleric on the board"
+        }
+      ]
+    }
+  ]
+}

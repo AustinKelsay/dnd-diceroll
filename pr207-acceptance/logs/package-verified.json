@@ -1,0 +1,13 @@
+{
+  "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/Builds/20261112T142733539369Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "commit": "f09abfe0fdae499db7a31511c43dc07229de8e11",
+  "dirty": true,
+  "startup_map": "/Game/DnDDiceRoll/Maps/L_AgentSandbox",
+  "launched_at": "20261112T142915155289Z",
+  "exit_code": 143,
+  "normal_exit_logged": true,
+  "errors": [],
+  "warnings": [],
+  "package_warnings": [],
+  "package_errors": []
+}

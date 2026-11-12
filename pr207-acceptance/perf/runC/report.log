@@ -1,0 +1,16 @@
+  p95 FrameTime: 3.36 (limit 16.7) ok
+  p95 GPUTime: 2.69 (limit 12.0) ok
+  p95 GameThreadTime: 1.20 (limit 4.0) ok
+  max RSS: 1243.20 (limit 5120.0) ok
+  transition plan [measured]: worst frame 22.7 ms, 23 ms over 1 frames
+  transition start->route [measured]: worst frame 6.6 ms, 2268 ms over 1018 frames
+  transition route->battle [measured]: worst frame 61.5 ms, 151 ms over 31 frames
+  transition battle->reward [measured]: worst frame 5.8 ms, 5513 ms over 1967 frames
+  transition quit [measured]: worst frame 4.1 ms, 72 ms over 31 frames
+  transition resume [resume]: worst frame 59.7 ms, 2090 ms over 707 frames
+  transition reward->route [resume]: worst frame 4.6 ms, 2387 ms over 857 frames
+  gap warmup -> measured: 0 s
+  gap measured -> resume: 1 s
+Performance gate PASSED; report: /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/.local/perf/20261112T143541515356Z/report.md
+EXIT 0
+DONE

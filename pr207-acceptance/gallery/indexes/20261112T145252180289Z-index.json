@@ -1,0 +1,2877 @@
+{
+  "commit": "e8778e20fb076ca470ea26eb331af8a3de21a036",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/tools/capture/cast3-release-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "cast3-default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "cast3-default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "spell-release-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1342,
+              "y0": 302,
+              "x1": 1392,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 250,
+              "x1": 874,
+              "y1": 356
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 989,
+              "y0": 394,
+              "x1": 1027,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1536,
+              "y0": 476,
+              "x1": 1598,
+              "y1": 589
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1254,
+              "y0": 302,
+              "x1": 1300,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 833,
+              "y0": 302,
+              "x1": 872,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1081,
+              "y0": 394,
+              "x1": 1123,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1521,
+              "y0": 414,
+              "x1": 1580,
+              "y1": 526
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1165,
+              "y0": 302,
+              "x1": 1208,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 830,
+              "y0": 356,
+              "x1": 870,
+              "y1": 466
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1174,
+              "y0": 394,
+              "x1": 1219,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1506,
+              "y0": 356,
+              "x1": 1563,
+              "y1": 466
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1342,
+              "y0": 302,
+              "x1": 1392,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1497,
+              "y0": 247,
+              "x1": 1616,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1254,
+              "y0": 302,
+              "x1": 1300,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1165,
+              "y0": 302,
+              "x1": 1208,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 9,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1093,
+              "y0": 609,
+              "x1": 1140,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1076,
+              "y0": 302,
+              "x1": 1116,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            },
+            "bolt": {
+              "x0": 1300,
+              "y0": 439,
+              "x1": 1396,
+              "y1": 552
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1342,
+              "y0": 302,
+              "x1": 1392,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1039,
+              "y0": 272,
+              "x1": 1117,
+              "y1": 375
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 250,
+              "x1": 874,
+              "y1": 356
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            },
+            "bolt": {
+              "x0": 1428,
+              "y0": 524,
+              "x1": 1680,
+              "y1": 793
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1497,
+              "y0": 247,
+              "x1": 1616,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            },
+            "bolt": {
+              "x0": 1253,
+              "y0": 439,
+              "x1": 1347,
+              "y1": 552
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1254,
+              "y0": 302,
+              "x1": 1300,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1040,
+              "y0": 298,
+              "x1": 1119,
+              "y1": 403
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 833,
+              "y0": 302,
+              "x1": 872,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            },
+            "bolt": {
+              "x0": 1317,
+              "y0": 524,
+              "x1": 1557,
+              "y1": 793
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            },
+            "bolt": {
+              "x0": 1205,
+              "y0": 439,
+              "x1": 1298,
+              "y1": 552
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1165,
+              "y0": 302,
+              "x1": 1208,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1041,
+              "y0": 325,
+              "x1": 1122,
+              "y1": 431
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 830,
+              "y0": 356,
+              "x1": 870,
+              "y1": 466
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            },
+            "bolt": {
+              "x0": 1206,
+              "y0": 524,
+              "x1": 1434,
+              "y1": 793
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "cast3-board-vault",
+      "seed": 4,
+      "board": [
+        18,
+        12
+      ],
+      "fixture_info": {
+        "seed": 4,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 12
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "cast3-board-vault/1920x1080",
+      "shots": [
+        {
+          "name": "spell-release-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1478,
+              "y0": 756,
+              "x1": 1545,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1298,
+              "y0": 300,
+              "x1": 1345,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1444,
+              "y0": 249,
+              "x1": 1496,
+              "y1": 355
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 832,
+              "y0": 300,
+              "x1": 871,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 945,
+              "y0": 52,
+              "x1": 976,
+              "y1": 151
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1036,
+              "y0": 394,
+              "x1": 1075,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": -2673.539736436286,
+              "y": 448.4385594982032,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.84576358878564,
+              "yaw": 5.008955930921608e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 861,
+              "y0": 517,
+              "x1": 903,
+              "y1": 632
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1532,
+              "y0": 453,
+              "x1": 1593,
+              "y1": 566
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 1533.1810837333423,
+              "y": -2523.539760194178,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 90.00000068324539,
+              "roll": 4.204452845036052e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1209,
+              "y0": 300,
+              "x1": 1254,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1469,
+              "y0": 355,
+              "x1": 1524,
+              "y1": 465
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 829,
+              "y0": 355,
+              "x1": 869,
+              "y1": 465
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1102,
+              "y0": 52,
+              "x1": 1137,
+              "y1": 151
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1128,
+              "y0": 394,
+              "x1": 1171,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": -2673.539736436286,
+              "y": 448.4385594982032,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.84576358878564,
+              "yaw": 5.008955930921608e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 867,
+              "y0": 394,
+              "x1": 906,
+              "y1": 505
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1517,
+              "y0": 394,
+              "x1": 1575,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 1533.1810837333423,
+              "y": -2523.539760194178,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 90.00000068324539,
+              "roll": 4.204452845036052e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1121,
+              "y0": 300,
+              "x1": 1162,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1469,
+              "y0": 355,
+              "x1": 1524,
+              "y1": 465
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 825,
+              "y0": 413,
+              "x1": 866,
+              "y1": 524
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1102,
+              "y0": 52,
+              "x1": 1137,
+              "y1": 151
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1220,
+              "y0": 394,
+              "x1": 1267,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": -2673.539736436286,
+              "y": 448.4385594982032,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.84576358878564,
+              "yaw": 5.008955930921608e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 867,
+              "y0": 394,
+              "x1": 906,
+              "y1": 505
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1503,
+              "y0": 337,
+              "x1": 1559,
+              "y1": 446
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 1533.1810837333423,
+              "y": -2523.539760194178,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 90.00000068324539,
+              "roll": 4.204452845036052e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1478,
+              "y0": 756,
+              "x1": 1545,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1298,
+              "y0": 300,
+              "x1": 1345,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-sorcerer-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-sorcerer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1209,
+              "y0": 300,
+              "x1": 1254,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-warlock-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-warlock-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1121,
+              "y0": 300,
+              "x1": 1162,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-druid-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 925,
+              "y0": 247,
+              "x1": 1003,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-druid-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "fire-release-wizard-yaw000-default",
+          "mode": "impact",
+          "effect": "fire",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            }
+          },
+          "shooter": {
+            "id": 4,
+            "name": "Hero 4",
+            "role": "Wizard",
+            "cellX": 4,
+            "cellY": 7,
+            "footprint": {
+              "x0": 1032,
+              "y0": 300,
+              "x1": 1070,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "fire-release-wizard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1478,
+              "y0": 756,
+              "x1": 1545,
+              "y1": 878
+            },
+            "bolt": {
+              "x0": 1358,
+              "y0": 499,
+              "x1": 1459,
+              "y1": 615
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1298,
+              "y0": 300,
+              "x1": 1345,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1444,
+              "y0": 249,
+              "x1": 1496,
+              "y1": 355
+            },
+            "bolt": {
+              "x0": 1125,
+              "y0": 271,
+              "x1": 1207,
+              "y1": 374
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 832,
+              "y0": 300,
+              "x1": 871,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-sorcerer-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "bolt": {
+              "x0": 1463,
+              "y0": 666,
+              "x1": 1740,
+              "y1": 958
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Sorcerer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-sorcerer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            },
+            "bolt": {
+              "x0": 1212,
+              "y0": 499,
+              "x1": 1307,
+              "y1": 615
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1209,
+              "y0": 300,
+              "x1": 1254,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1469,
+              "y0": 355,
+              "x1": 1524,
+              "y1": 465
+            },
+            "bolt": {
+              "x0": 1131,
+              "y0": 351,
+              "x1": 1217,
+              "y1": 458
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 829,
+              "y0": 355,
+              "x1": 869,
+              "y1": 465
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-warlock-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "bolt": {
+              "x0": 1105,
+              "y0": 666,
+              "x1": 1341,
+              "y1": 958
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Warlock",
+            "cellX": 4,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-warlock-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1263,
+              "y0": 756,
+              "x1": 1320,
+              "y1": 878
+            },
+            "bolt": {
+              "x0": 1164,
+              "y0": 499,
+              "x1": 1257,
+              "y1": 615
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 1121,
+              "y0": 300,
+              "x1": 1162,
+              "y1": 408
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 4125.07183811343,
+              "y": 1201.5610536497456,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "footprint": {
+              "x0": 1469,
+              "y0": 355,
+              "x1": 1524,
+              "y1": 465
+            },
+            "bolt": {
+              "x0": 1133,
+              "y0": 379,
+              "x1": 1220,
+              "y1": 488
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 825,
+              "y0": 413,
+              "x1": 866,
+              "y1": 524
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2672.9833984375,
+          "camera": {
+            "location": {
+              "x": 780.0587302393687,
+              "y": 4125.071885324304,
+              "z": 2772.1649522296543
+            },
+            "rotation": {
+              "pitch": -40.845763588785765,
+              "yaw": -89.99999749552207,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-druid-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 21,
+            "name": "Vault bow",
+            "cellX": 11,
+            "cellY": 5,
+            "bolt": {
+              "x0": 986,
+              "y0": 666,
+              "x1": 1208,
+              "y1": 958
+            }
+          },
+          "shooter": {
+            "id": 3,
+            "name": "Hero 3",
+            "role": "Druid",
+            "cellX": 4,
+            "cellY": 6,
+            "footprint": {
+              "x0": 925,
+              "y0": 247,
+              "x1": 1003,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-druid-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    }
+  ]
+}

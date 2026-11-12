@@ -1,0 +1,51 @@
+{
+  "gate": {
+    "mean": 2.3,
+    "worst": 1.4,
+    "board": 2.0
+  },
+  "duplicates": {
+    "fighter": {
+      "build": "dup-four-fighters",
+      "mean": 2.829,
+      "worst": 1.782,
+      "boardMeans": {
+        "vigil": 2.83,
+        "root": 2.54,
+        "vault": 3.117
+      },
+      "measurements": 60,
+      "mergeMean": 0.0657,
+      "failures": [],
+      "pass": true
+    },
+    "paladin": {
+      "build": "dup-four-paladins",
+      "mean": 3.245,
+      "worst": 1.609,
+      "boardMeans": {
+        "vigil": 3.139,
+        "root": 2.93,
+        "vault": 3.666
+      },
+      "measurements": 60,
+      "mergeMean": 0.0618,
+      "failures": [],
+      "pass": true
+    },
+    "rogue": {
+      "build": "dup-four-rogues",
+      "mean": 2.63,
+      "worst": 1.67,
+      "boardMeans": {
+        "vigil": 2.628,
+        "root": 2.33,
+        "vault": 2.931
+      },
+      "measurements": 60,
+      "mergeMean": 0.0965,
+      "failures": [],
+      "pass": true
+    }
+  }
+}

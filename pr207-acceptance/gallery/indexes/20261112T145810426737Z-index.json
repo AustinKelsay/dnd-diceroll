@@ -1,0 +1,139 @@
+{
+  "commit": "e8778e20fb076ca470ea26eb331af8a3de21a036",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/tools/capture/overview-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "default-seed-route",
+      "seed": 20261030,
+      "board": [
+        0,
+        0
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": -1,
+        "phase": "route",
+        "boardWidth": 0,
+        "boardHeight": 0
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "default-seed-route/1920x1080",
+      "shots": [
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "captured",
+          "file": "overview.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "final-route",
+      "seed": 1,
+      "board": [
+        0,
+        0
+      ],
+      "fixture_info": {},
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "final-route/1920x1080",
+      "shots": [
+        {
+          "name": "overview",
+          "mode": "overview",
+          "status": "captured",
+          "file": "overview.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        },
+        {
+          "name": "start-screen",
+          "mode": "start",
+          "status": "captured",
+          "file": "start-screen.png",
+          "yaw": -90,
+          "distance": 300,
+          "camera": {
+            "location": {
+              "x": -1.9670125766424462e-05,
+              "y": -420,
+              "z": 288
+            },
+            "rotation": {
+              "pitch": -32.07400087529402,
+              "yaw": 89.99999749552181,
+              "roll": -3.753473782870369e-15
+            },
+            "fov": 50
+          }
+        }
+      ]
+    }
+  ]
+}

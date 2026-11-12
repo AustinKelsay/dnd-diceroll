@@ -1,0 +1,1353 @@
+{
+  "commit": "e8778e20fb076ca470ea26eb331af8a3de21a036",
+  "dirty": false,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-a4c2828b-5b874f44a5078c4c/tools/capture/cast4-release-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "cast4-default-seed-battle",
+      "seed": 20261030,
+      "board": [
+        18,
+        11
+      ],
+      "fixture_info": {
+        "seed": 20261030,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 18,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "cast4-default-seed-battle/1920x1080",
+      "shots": [
+        {
+          "name": "spell-release-bard-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1342,
+              "y0": 302,
+              "x1": 1392,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 250,
+              "x1": 874,
+              "y1": 356
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 989,
+              "y0": 394,
+              "x1": 1027,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1536,
+              "y0": 476,
+              "x1": 1598,
+              "y1": 589
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1497,
+              "y0": 247,
+              "x1": 1616,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            },
+            "bolt": {
+              "x0": 1300,
+              "y0": 439,
+              "x1": 1396,
+              "y1": 552
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1342,
+              "y0": 302,
+              "x1": 1392,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            },
+            "bolt": {
+              "x0": 1039,
+              "y0": 272,
+              "x1": 1117,
+              "y1": 375
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 250,
+              "x1": 874,
+              "y1": 356
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            },
+            "bolt": {
+              "x0": 1428,
+              "y0": 524,
+              "x1": 1680,
+              "y1": 793
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1497,
+              "y0": 247,
+              "x1": 1616,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1296,
+              "y0": 609,
+              "x1": 1351,
+              "y1": 727
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1254,
+              "y0": 302,
+              "x1": 1300,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 4112.134443713042,
+              "y": 1125.8338130987609,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 180,
+              "roll": -4.674391542142196e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw090-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1281,
+              "y0": 302,
+              "x1": 1328,
+              "y1": 410
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 833,
+              "y0": 302,
+              "x1": 872,
+              "y1": 410
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 777.9728468847807,
+              "y": 4112.134490832737,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052899,
+              "yaw": -89.99999749552198,
+              "roll": -4.210317601475076e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw180-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1067,
+              "y0": 137,
+              "x1": 1103,
+              "y1": 239
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1081,
+              "y0": 394,
+              "x1": 1123,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": -2665.0334407226383,
+              "y": 374.1658011802069,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052893,
+              "yaw": 5.008955983926778e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw270-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1054,
+              "y0": 414,
+              "x1": 1095,
+              "y1": 526
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1521,
+              "y0": 414,
+              "x1": 1580,
+              "y1": 526
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2669.68017578125,
+          "camera": {
+            "location": {
+              "x": 1529.6407185569951,
+              "y": -2612.13445656774,
+              "z": 2773.998305039115
+            },
+            "rotation": {
+              "pitch": -40.93798948052905,
+              "yaw": 90.00000068324532,
+              "roll": -4.210317601475078e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw000-near",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 9,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1453,
+              "y0": 946,
+              "x1": 1621,
+              "y1": 1080
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 903.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "cast4-board-vault",
+      "seed": 6,
+      "board": [
+        16,
+        11
+      ],
+      "fixture_info": {
+        "seed": 6,
+        "offer": 0,
+        "phase": "combat",
+        "boardWidth": 16,
+        "boardHeight": 11
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "cast4-board-vault/1920x1080",
+      "shots": [
+        {
+          "name": "spell-release-bard-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1346,
+              "y0": 314,
+              "x1": 1396,
+              "y1": 423
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 847,
+              "y0": 259,
+              "x1": 885,
+              "y1": 367
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw180-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 981,
+              "y0": 39,
+              "x1": 1013,
+              "y1": 139
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 985,
+              "y0": 393,
+              "x1": 1023,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": -2582.9707223762543,
+              "y": 381.1089140735735,
+              "z": 2790.2254637616547
+            },
+            "rotation": {
+              "pitch": -41.82464128280435,
+              "yaw": 5.0089565259502265e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw270-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 455,
+              "x1": 878,
+              "y1": 569
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1515,
+              "y0": 455,
+              "x1": 1576,
+              "y1": 569
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 1493.8907621449202,
+              "y": -2582.9707458194193,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.82464128280452,
+              "yaw": 90.00000068324539,
+              "roll": 4.268116560351341e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-release-bard-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-release-bard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw000-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            },
+            "bolt": {
+              "x0": 1362,
+              "y0": 523,
+              "x1": 1466,
+              "y1": 641
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1346,
+              "y0": 314,
+              "x1": 1396,
+              "y1": 423
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw090-default",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            },
+            "bolt": {
+              "x0": 1140,
+              "y0": 255,
+              "x1": 1224,
+              "y1": 360
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 847,
+              "y0": 259,
+              "x1": 885,
+              "y1": 367
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "spell-flight-bard-yaw000-near",
+          "mode": "impact",
+          "effect": "spell",
+          "frames": 4,
+          "phase": "flight",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "bolt": {
+              "x0": 1344,
+              "y0": 666,
+              "x1": 1607,
+              "y1": 958
+            }
+          },
+          "shooter": {
+            "id": 1,
+            "name": "Hero 1",
+            "role": "Bard",
+            "cellX": 4,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1307,
+              "y0": 247,
+              "x1": 1412,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "spell-flight-bard-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw000-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1430,
+              "y0": 794,
+              "x1": 1496,
+              "y1": 917
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1255,
+              "y0": 314,
+              "x1": 1303,
+              "y1": 423
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw000-default.png",
+          "yaw": 0,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 3988.6159256867077,
+              "y": 1118.8907110036853,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": 180,
+              "roll": -4.738561277085981e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw090-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 1468,
+              "y0": 259,
+              "x1": 1522,
+              "y1": 367
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 844,
+              "y0": 314,
+              "x1": 883,
+              "y1": 423
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw090-default.png",
+          "yaw": 90,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 756.1091015349439,
+              "y": 3988.6159719359275,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.824641282804464,
+              "yaw": -89.99999749552171,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw180-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 981,
+              "y0": 39,
+              "x1": 1013,
+              "y1": 139
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1079,
+              "y0": 393,
+              "x1": 1121,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw180-default.png",
+          "yaw": 180,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": -2582.9707223762543,
+              "y": 381.1089140735735,
+              "z": 2790.2254637616547
+            },
+            "rotation": {
+              "pitch": -41.82464128280435,
+              "yaw": 5.0089565259502265e-06,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw270-default",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3,
+            "footprint": {
+              "x0": 837,
+              "y0": 455,
+              "x1": 878,
+              "y1": 569
+            }
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1500,
+              "y0": 393,
+              "x1": 1559,
+              "y1": 505
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw270-default.png",
+          "yaw": 270,
+          "distance": 2637.5732421875,
+          "camera": {
+            "location": {
+              "x": 1493.8907621449202,
+              "y": -2582.9707458194193,
+              "z": 2790.225463761655
+            },
+            "rotation": {
+              "pitch": -41.82464128280452,
+              "yaw": 90.00000068324539,
+              "roll": 4.268116560351341e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "arrow-release-artificer-yaw000-near",
+          "mode": "impact",
+          "effect": "arrow",
+          "frames": 4,
+          "phase": "release",
+          "target": {
+            "id": 20,
+            "name": "Scout 1",
+            "cellX": 11,
+            "cellY": 3
+          },
+          "shooter": {
+            "id": 2,
+            "name": "Hero 2",
+            "role": "Artificer",
+            "cellX": 4,
+            "cellY": 4,
+            "footprint": {
+              "x0": 1118,
+              "y0": 247,
+              "x1": 1207,
+              "y1": 489
+            }
+          },
+          "status": "captured",
+          "file": "arrow-release-artificer-yaw000-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559772,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        }
+      ]
+    }
+  ]
+}
