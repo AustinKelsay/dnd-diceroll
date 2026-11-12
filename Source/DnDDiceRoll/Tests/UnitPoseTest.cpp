@@ -1940,6 +1940,7 @@ bool FCastBatch2OverridesTest::RunTest(const FString& Parameters)
             Broken.Overrides.Add(FName(bRanger ? TEXT("Ranged") : TEXT("Melee")), TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Characters/Animations/A_Nobody.A_Nobody"))));
             USkeletalMesh* Mesh = nullptr;
             TArray<UAnimSequence*> Clips;
+            AddExpectedMessage(TEXT("A_Nobody"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 0);       // the missing asset is the point of the case
             TestFalse(Class.Who + FString(TEXT(": an override that cannot load makes the definition incomplete")), Broken.Load(Mesh, Clips));
         }
     }
