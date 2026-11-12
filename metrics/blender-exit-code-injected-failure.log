@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-cb958d59-03bd0b480f4da877/Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py", line 119, in run_guarded
+    entry()
+    ~~~~~^^
+  File "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-cb958d59-03bd0b480f4da877/Art/dark-fantasy-sources/r002-rose/scripts/validate_rose_vigil.py", line 55, in main
+    sa, da = R.atlas_of(os.path.join(R.ROOT, src)), R.atlas_of(os.path.join(R.ROOT, dst))
+             ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-cb958d59-03bd0b480f4da877/Art/dark-fantasy-sources/r002-rose/scripts/rose_lib.py", line 146, in atlas_of
+    return png_decode(bytes(view_bytes(js, binary, js['images'][0]['bufferView'])))
+  File "/tmp/claude-1000/-home-plebdev--t3-worktrees-dnd-diceroll-t3-t3-cb958d59-03bd0b480f4da877/0ac8279e-da8b-4018-add9-1a5f422bc159/scratchpad/inject.py", line 5, in boom
+    raise ValueError('injected GLB decode failure')
+ValueError: injected GLB decode failure
+Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:35:05)
+exit 1

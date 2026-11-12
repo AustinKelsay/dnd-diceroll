@@ -1,0 +1,4 @@
+Exit-code proof (blender -b --python-exit-code 1, review round 1 item 1):
+  injected GLB decode ValueError in validate_rose_vigil.py: exit 1 (traceback printed)
+  the real validate_rose_vigil.py: exit 0
+  blender -b --python-exit-code 1 --python-expr "raise ValueError(1)": exit 1
