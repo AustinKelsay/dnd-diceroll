@@ -1,0 +1,42 @@
+58 of 58 impact boxes stay below peak 254 with under 1% pure white
+58 of 58 impact boxes stay below peak 254 with under 1% pure white
+cast4-board-vault 1280x720 spell-release-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1280x720 spell-flight-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1280x720 arrow-release-artificer-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 spell-release-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 spell-flight-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 arrow-release-artificer-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault        1280x720   spell-release-bard-yaw270-default:shooter peak  254.6  p99  253.5  mean  108.5  white  0.42%  clipped  0.32%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw000-default:shooter peak  254.6  p99  253.6  mean  126.9  white  0.21%  clipped  0.51%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw180-default:shooter peak  254.6  p99  252.5  mean  151.8  white  0.14%  clipped  0.33%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw270-default:shooter peak  254.6  p99  252.0  mean  155.5  white  0.00%  clipped  0.34%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw000-near:shooter peak  254.6  p99  254.4  mean  132.9  white  0.83%  clipped  1.27%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-release-bard-yaw270-default:shooter peak  254.6  p99  253.5  mean  107.2  white  0.50%  clipped  0.40%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-release-bard-yaw000-near:shooter peak  254.5  p99  251.6  mean  117.9  white  0.11%  clipped  0.01%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-flight-bard-yaw000-near:shooter peak  254.5  p99  250.7  mean  102.1  white  0.07%  clipped  0.01%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw000-default:shooter peak  254.6  p99  253.7  mean  126.6  white  0.17%  clipped  0.61%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw090-default:shooter peak  254.5  p99  251.5  mean  176.6  white  0.02%  clipped  0.02%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw180-default:shooter peak  254.6  p99  252.6  mean  150.3  white  0.17%  clipped  0.53%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw270-default:shooter peak  254.6  p99  252.2  mean  154.1  white  0.00%  clipped  0.26%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw000-near:shooter peak  254.6  p99  254.2  mean  132.1  white  0.92%  clipped  1.30%  BLOWN OUT
+39 of 52 impact boxes stay below peak 254 with under 1% pure white
+cast4-board-vault 1280x720 spell-release-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1280x720 spell-flight-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1280x720 arrow-release-artificer-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 spell-release-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 spell-flight-bard-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault 1920x1080 arrow-release-artificer-yaw000-near: no footprint box (the target is off screen at this zoom), not measured
+cast4-board-vault        1280x720   spell-release-bard-yaw270-default:shooter peak  254.6  p99  253.5  mean  108.5  white  0.42%  clipped  0.32%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw000-default:shooter peak  254.6  p99  253.6  mean  126.9  white  0.21%  clipped  0.51%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw180-default:shooter peak  254.6  p99  252.5  mean  151.8  white  0.14%  clipped  0.33%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw270-default:shooter peak  254.6  p99  252.0  mean  155.5  white  0.00%  clipped  0.34%  BLOWN OUT
+cast4-board-vault        1280x720   arrow-release-artificer-yaw000-near:shooter peak  254.6  p99  254.4  mean  132.9  white  0.83%  clipped  1.27%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-release-bard-yaw270-default:shooter peak  254.6  p99  253.5  mean  107.2  white  0.50%  clipped  0.40%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-release-bard-yaw000-near:shooter peak  254.5  p99  251.6  mean  117.9  white  0.11%  clipped  0.01%  BLOWN OUT
+cast4-board-vault        1920x1080  spell-flight-bard-yaw000-near:shooter peak  254.5  p99  250.7  mean  102.1  white  0.07%  clipped  0.01%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw000-default:shooter peak  254.6  p99  253.7  mean  126.6  white  0.17%  clipped  0.61%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw090-default:shooter peak  254.5  p99  251.5  mean  176.6  white  0.02%  clipped  0.02%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw180-default:shooter peak  254.6  p99  252.6  mean  150.3  white  0.17%  clipped  0.53%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw270-default:shooter peak  254.6  p99  252.2  mean  154.1  white  0.00%  clipped  0.26%  BLOWN OUT
+cast4-board-vault        1920x1080  arrow-release-artificer-yaw000-near:shooter peak  254.6  p99  254.2  mean  132.1  white  0.92%  clipped  1.30%  BLOWN OUT
+39 of 52 impact boxes stay below peak 254 with under 1% pure white

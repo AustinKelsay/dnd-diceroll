@@ -1,0 +1,186 @@
+{
+ "before": [
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 3.82,
+   "mergeFraction": 0.0591
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 2.33,
+   "mergeFraction": 0.0403
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.533,
+   "mergeFraction": 0.0222
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.508,
+   "mergeFraction": 0.0655
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 3.294,
+   "mergeFraction": 0.075
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 3.287,
+   "mergeFraction": 0.0969
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 1.961,
+   "mergeFraction": 0.042
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.582,
+   "mergeFraction": 0.0112
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.577,
+   "mergeFraction": 0.0725
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 3.162,
+   "mergeFraction": 0.096
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 4.53,
+   "mergeFraction": 0.0294
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 3.011,
+   "mergeFraction": 0.0513
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.87,
+   "mergeFraction": 0.0069
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.169,
+   "mergeFraction": 0.0755
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 4.444,
+   "mergeFraction": 0.0271
+  }
+ ],
+ "after": [
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 3.885,
+   "mergeFraction": 0.0582
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 2.408,
+   "mergeFraction": 0.0374
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.589,
+   "mergeFraction": 0.0177
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.509,
+   "mergeFraction": 0.0655
+  },
+  {
+   "fixture": "pal-00-vigil",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 3.334,
+   "mergeFraction": 0.0759
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 3.351,
+   "mergeFraction": 0.0915
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 2.038,
+   "mergeFraction": 0.0403
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.669,
+   "mergeFraction": 0.0088
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.611,
+   "mergeFraction": 0.0719
+  },
+  {
+   "fixture": "pal-00-root",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 3.236,
+   "mergeFraction": 0.0888
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yawm90-default",
+   "contrastRatio": 4.557,
+   "mergeFraction": 0.0294
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw000-default",
+   "contrastRatio": 3.101,
+   "mergeFraction": 0.05
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw090-default",
+   "contrastRatio": 2.928,
+   "mergeFraction": 0.0112
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "battle-yaw180-default",
+   "contrastRatio": 2.202,
+   "mergeFraction": 0.0745
+  },
+  {
+   "fixture": "pal-00-vault",
+   "shot": "targeting-yawm90-default",
+   "contrastRatio": 4.521,
+   "mergeFraction": 0.0262
+  }
+ ]
+}
