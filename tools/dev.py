@@ -158,6 +158,8 @@ def load_poses(path):
             raise ValueError(f"{name} needs a \"mode\" of {', '.join(CAPTURE_MODES)}")
         if "build" in shot and (shot["mode"] != "start" or not isinstance(shot["build"], str) or not re.fullmatch(r"[a-z0-9.-]{1,64}", shot["build"])):
             raise ValueError(f"{name} may give a \"build\" of lowercase letters, digits, '.' and '-' on a start shot only")
+        if "hero" in shot and (shot["mode"] != "overview" or isinstance(shot["hero"], bool) or not isinstance(shot["hero"], int) or not 1 <= shot["hero"] <= 4):
+            raise ValueError(f"{name} may give a \"hero\" party slot from 1 to 4 on an overview shot only")
         if shot["mode"] == "tooltip" and shot.get("action") not in CAPTURE_ACTIONS:
             raise ValueError(f"{name} needs an \"action\" of {', '.join(CAPTURE_ACTIONS)}")
         if shot["mode"] == "hint" and shot.get("hint") not in CAPTURE_HINTS:

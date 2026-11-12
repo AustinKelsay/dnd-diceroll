@@ -437,6 +437,8 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-poses.json")), 34)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/route-poses.json")), 4)
+        self.assertEqual(len(load_poses(self.poses([{"name": "route-hero", "mode": "overview", "hero": 4}]))), 1)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
@@ -465,6 +467,10 @@ class GalleryTests(unittest.TestCase):
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "tips", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "hint", "hint": "move", "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "start", "build": "Wizard"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": 0}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": 5}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "overview", "hero": "2"}]},
+               {"version": 1, "shots": [{"name": "a", "mode": "start", "hero": 2}]},
                {"version": 1, "shots": [{"name": "a", "mode": "battle", "build": "wizard.evocation", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "effect": "burn", "yaw": 0, "distance": 1300}]},
                {"version": 1, "shots": [{"name": "a", "mode": "impact", "frames": 0, "yaw": 0, "distance": 1300}]},
