@@ -1,0 +1,15 @@
+{
+  "pixels": 12296,
+  "peakLuma": 237.07,
+  "p99Luma": 227.9,
+  "meanLuma": 59.21,
+  "whiteFraction": 0.0,
+  "clippedFraction": 0.0,
+  "box": [
+    1414,
+    408,
+    1530,
+    514
+  ],
+  "pass": true
+}

@@ -1,6 +1,6 @@
 {
- "triangles": 33178,
- "vertices": 38767,
+ "triangles": 36481,
+ "vertices": 41708,
  "bbox_min_m": [
   -1.05,
   -3.1,
@@ -32,7 +32,7 @@
   ]
  ],
  "materials": 1,
- "bytes": 2543348,
+ "bytes": 2680812,
  "extensions": [],
  "glow_tris": 304,
  "atlas_px": 2048,
@@ -135,8 +135,8 @@
    0.3
   ],
   "cluster": [
-   1.55,
-   0.95,
+   0.9,
+   0.55,
    0.12
   ]
  },
