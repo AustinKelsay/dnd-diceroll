@@ -42,6 +42,37 @@ inline Rect LogRect(double W, double H, int Lines = LogMaxLines)
 // and the board bounds both read these.
 constexpr double PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
 
+// The route screen (DrawRoutes): the "Choose your path" banner and the two route cards, centred, the cards side by side. DrawRoutes and the tabletop overview's layout
+// (OverviewLayout.h, #149) both read these, so the dioramas cannot be placed under the HUD they are meant to show beside.
+constexpr double RouteCardWidth = 340, RouteCardHeight = 250, RouteCardGap = 30;
+constexpr double RouteBannerWidth = 740, RouteBannerHeight = 76, RouteBannerAbove = 84;
+inline double RouteTop(double H) { return H * 0.5 - RouteCardHeight * 0.5 - 10; }
+inline Rect RouteBannerRect(double W, double H)
+{
+    const double Top = RouteTop(H) - RouteBannerAbove;
+    return {W * 0.5 - RouteBannerWidth * 0.5, Top, W * 0.5 + RouteBannerWidth * 0.5, Top + RouteBannerHeight};
+}
+inline Rect RouteCardRect(double W, double H, int Index)
+{
+    const double X = W * 0.5 + (Index == 0 ? -RouteCardWidth - RouteCardGap * 0.5 : RouteCardGap * 0.5);
+    return {X, RouteTop(H), X + RouteCardWidth, RouteTop(H) + RouteCardHeight};
+}
+
+// The hero details that follow a hovered or selected party card (DrawPartyDetail): 320 wide, right of the card column, top level with the card, 14 plus 17 per wrapped
+// line high (never fewer than the HUD's MinDetailLines). PartyDetailMaxLines is the bound the tabletop overview's layout keeps clear of: the name and build (at most 2 wrapped
+// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed.
+constexpr double PartyDetailWidth = 320, PartyDetailGap = 8, PartyDetailPad = 14, PartyDetailLineHeight = 17;
+constexpr int PartyDetailMaxLines = 8;
+inline Rect PartyDetailRect(int Slot, int Lines)
+{
+    const double X = PartyCardX + PartyCardWidth + PartyDetailGap, Y = PartyCardTop + Slot * PartyCardPitch;
+    return {X, Y, X + PartyDetailWidth, Y + PartyDetailPad + Lines * PartyDetailLineHeight};
+}
+
+// The title screen's two drawers (DrawTitle): the party, class and subclass on the left; on the right the build's details and the actions, which share the column
+// (the details panel grows with the build's abilities down to the actions panel at the foot), so the whole column is the HUD's.
+constexpr double TitleMargin = 12, TitleLeftWidth = 300, TitleRightWidth = 380;
+
 // Where the d20 roll card sits (#190): the strip of the left margin below the party cards and above the combat log. The camera keeps
 // the board inside BoardBounds, to the right of this strip (BoardLeft), and the top band belongs to the status strip and the Menu, so a
 // card here never covers the active unit, its target or their cells, whichever way the board is turned. The strip is as wide as the margin

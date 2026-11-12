@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "vigil-window-a",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": 400,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vigil-window-d",
+      "mode": "battle",
+      "yaw": -120,
+      "distance": "default",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vigil-window-e",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": -400,
+        "away": -99999
+      }
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "asset_id": "overview-tabletop",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Overview/SM_Overview_Tabletop",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS from the r002 world kits (diorama crops) and procedural geometry and textures (table); no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored from scratch by script: a deep war table (planks at 256 texels/m, 3.4 x 2.65 m) with a bookcase of leather spines behind it, a hand-drawn vellum map of the five-stop route held by stone weights with five glowing route markers, a candlestick, a pillar candle and a candle cluster (vertex-alpha flame glow), a tankard, dagger, dice, coins, pouch, inkwell and quill, scrolls and an hourglass; conforming subdivision (3.5 cm near props), ray-cast ambient occlusion and a warm candle bake",
+    "approved_reference": "#138 look (candlelit tabletop overview); #149 lead calls; the r002 standard of #145, the Root and the Vault",
+    "parameters": {
+      "units": "metres",
+      "pivot": "middle of the table top; the table occupies x -0.60 to +2.05 (front toward +X) and y +-1.70",
+      "triangles": 36481,
+      "size_m": [
+        3.1,
+        6.2,
+        1.9
+      ],
+      "atlas_px": 2048,
+      "atlas_fill": 0.373,
+      "glow_triangles": 304,
+      "texel_density_per_m": {
+        "table top (planks)": 256,
+        "vellum map": 610,
+        "bookcase spines": 1067
+      },
+      "candle_flames_m": {
+        "candelabra": [
+          -0.3,
+          1.0,
+          0.43
+        ],
+        "pillar": [
+          -0.34,
+          -1.0,
+          0.3
+        ],
+        "cluster": [
+          0.9,
+          0.55,
+          0.12
+        ]
+      },
+      "route_markers_xy_m": [
+        [
+          1.819,
+          -0.37
+        ],
+        [
+          1.724,
+          -0.237
+        ],
+        [
+          1.589,
+          -0.049
+        ],
+        [
+          1.732,
+          0.108
+        ],
+        [
+          1.676,
+          0.354
+        ]
+      ],
+      "replaces": "SM_Tabletop (r001) stays as the fallback"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/glass.py",
+      "sha256": "b3b67f79d80acea7ee8c87a52ea00d9f40ed9d585e6eaa6cc15145caece92bf2"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/vault_lib.py",
+      "sha256": "822d5e2a0977c5497c973c91dd2a325eafc07c71030a5af169a1687ddb223684"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/lod_r002.py",
+      "sha256": "9d3d7733820e7deda02ec49da2cb8c841df3f046460c95ec950d802a58e5ba53"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-overview/scripts/ov_lib.py",
+      "sha256": "7e6633b388a08eeb433c566c2e6706e1d0aff9862fe5f276a9a27324c6181a40"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-overview/scripts/build_tabletop_r002.py",
+      "sha256": "df98cc1d8531a2665771e245b80875ebf50654ba5cead080fe958a578998bbc5"
+    },
+    {
+      "role": "export",
+      "path": "Art/overview-tabletop/r001/SM_Overview_Tabletop.glb",
+      "sha256": "2daa8eac8655c26e812f9367bbd081db7b30cc0bfb2aa6c88e30aefcd837e679"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed import (#149 overview set)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "none: one low-count mesh drawn by the overview only (the table is placed once, the dioramas at most twice)",
+      "collision": "none (presentation only)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB baked light, A glow mask: flames and route markers)",
+      "axes": "metres, the asset faces +X (the overview turns it -90 degrees about Z toward the camera), +Y is the viewer's right, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}
