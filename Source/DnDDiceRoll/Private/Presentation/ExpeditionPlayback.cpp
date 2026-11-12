@@ -227,13 +227,17 @@ TArray<FPlaybackProjectile> FExpeditionPlayback::MagicMissileBolts(FVector2D Fro
 
 FPlaybackProjectile FExpeditionPlayback::RangedBolt(FVector2D From, FVector2D To, EAdventurerRole Role, bool bArrow)
 {
-    // A caster's bolt takes the colour of its magic (#150 batch 3 adds the last three): the Wizard's orange fire, the Cleric's gold, the Sorcerer's ember red, the
-    // Warlock's eldritch green (its glow-mask colour) and the Druid's leaf-gold thorn flame. Any other shooter's arrow is the pale arrow colour.
+    // A caster's bolt takes the colour of its magic, spread round the hue wheel so any two side by side read as different colours (sRGB hue, #150 batch 4, the lead's call
+    // after the batch 3 and 4 on-screen passes): the Wizard's orange fire (32), the Cleric's gold (48), the Druid's leaf green (110), the Bard's teal (170), the Warlock's eldritch
+    // violet (275; its hand sigil and orb stay green on the figure) and the Sorcerer's crimson-magenta ember (329). The Artificer's blue-cyan (195) is for its spell specials only: its basic
+    // attack is a crossbow bolt, an arrow. Any other shooter's arrow is the pale arrow colour.
     const FLinearColor Color = Role == EAdventurerRole::Wizard ? FLinearColor(1.0f, 0.45f, 0.1f) :
-        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.68f, 0.2f) :
-        Role == EAdventurerRole::Sorcerer ? FLinearColor(1.0f, 0.22f, 0.12f) :
-        Role == EAdventurerRole::Warlock ? FLinearColor(0.5f, 1.0f, 0.3f) :
-        Role == EAdventurerRole::Druid ? FLinearColor(0.75f, 0.95f, 0.22f) : FLinearColor(0.85f, 0.75f, 0.6f);
+        Role == EAdventurerRole::Cleric ? FLinearColor(1.0f, 0.74f, 0.12f) :
+        Role == EAdventurerRole::Druid ? FLinearColor(0.16f, 0.89f, 0.09f) :
+        Role == EAdventurerRole::Bard ? FLinearColor(0.03f, 0.83f, 0.6f) :
+        Role == EAdventurerRole::Warlock ? FLinearColor(0.27f, 0.065f, 0.5f) :
+        Role == EAdventurerRole::Sorcerer ? FLinearColor(0.89f, 0.07f, 0.35f) :
+        Role == EAdventurerRole::Artificer ? FLinearColor(0.25f, 0.75f, 1.0f) : FLinearColor(0.85f, 0.75f, 0.6f);
     return {From, To, 0.0f, 0.3f, bArrow ? 40.0f : 20.0f, bArrow ? 0.1f : 0.2f, Color, bArrow};
 }
 
@@ -330,11 +334,29 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
         {
             for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(*SpecialActor)) { if (Ability.Command == Result.Type) { bSpell = Ability.bSpell; } }
         }
+        bool bBoltThrown = false;
         for (const auto& Effect : Result.Effects)
         {
             const bool bFar = SpecialActor && FMath::Abs(SpecialActor->Cell.X - Effect.Cell.X) + FMath::Abs(SpecialActor->Cell.Y - Effect.Cell.Y) > 1;
             // A Mitigation entry is the "Prevented N" note on a victim of a damaging special, not the actor's own effect: the ability's own entry poses the actor.
             const EUnitPose ActorPose = Effect.Effect == EAbilityEffect::Mitigation ? EUnitPose::Idle : ExpeditionPose::ForEffect(Effect.Effect, bFar, bSpell);
+            // The artificer's spell special aimed at an enemy from range throws a cyan bolt (#150 batch 4), once per special, at the Cast clip's release frame, before the
+            // hit lands; every other special is as before. The target must be a standing enemy and the effect one that damages it.
+            const FCombatantState* BoltTarget = ExpeditionStyle::FindUnit(After, Effect.TargetId);
+            const bool bDamages = Effect.Effect == EAbilityEffect::Strike || Effect.Effect == EAbilityEffect::Area || Effect.Effect == EAbilityEffect::Push ||
+                Effect.Effect == EAbilityEffect::Surge || Effect.Effect == EAbilityEffect::Missile;
+            if (!bBoltThrown && bSpell && bFar && bDamages && SpecialActor && SpecialActor->AdventurerRole == EAdventurerRole::Artificer && BoltTarget && BoltTarget->Side == ECombatSide::Enemy)
+            {
+                bBoltThrown = true;
+                const int32 BoltActorId = Result.ActorId;
+                const FVector2D BoltFrom = CellOf(SpecialActor->Cell), BoltTo = CellOf(Effect.Cell);
+                Add(CastReleaseSeconds, [this, BoltActorId, ActorPose]() { if (FUnitDisplay* Actor = Displays.Find(BoltActorId)) { SetPose(*Actor, ActorPose); } });
+                Add(0.3f, [this, BoltFrom, BoltTo]()
+                {
+                    Cue(EExpeditionCue::Spell);
+                    Shots.Add(RangedBolt(BoltFrom, BoltTo, EAdventurerRole::Artificer, false));
+                });
+            }
             Add(0.45f, [this, Effect, Result, ActorPose]()
             {
                 auto* Unit = Displays.Find(Effect.TargetId); if (!Unit) { return; }

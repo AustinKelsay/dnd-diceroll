@@ -682,6 +682,10 @@ void AExpeditionBattleView::BeginPlay()
     }
     // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
+    // -ExpeditionNoPalettes keeps the rigged figures in their class colours (the baseline the subclass palettes are measured against).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
+    // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -762,6 +766,7 @@ void AExpeditionBattleView::RebuildBoard()
     else
     {
         BuildScenery(Encounter, Recipe, Seed);
+        PartyAccents = ExpeditionPalette::AccentSlots(Encounter.Combatants);
         for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     }
     BuildEffects(Encounter);
@@ -1641,6 +1646,14 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
         Look.Base = FLinearColor::White;
         Skin->SetMaterial(Slot, Look.Material);
         Look.SetColor(Look.Base);
+        // The subclass palette and, for a class that appears more than once in the party, its party-slot accent (#150 batch 4): material parameters
+        // chosen from the build id and the party order. Presentation only: no snapshot, checkpoint or random draw is read or written.
+        if (bPalettes && Unit.Side == ECombatSide::Party)
+        {
+            ExpeditionPalette::FPalette Palette = ExpeditionPalette::ForUnit(Unit);
+            if (const int32* Accent = bAccents ? PartyAccents.Find(Unit.Id) : nullptr) { ExpeditionPalette::SetAccent(Palette, ExpeditionPalette::ClassKeyOf(Unit), *Accent); }
+            if (Palette.bKnownClass) { ExpeditionPalette::Apply(Look.Material, Palette); }
+        }
         Rig.Parts.Add(Look);
     }
     Skin->RegisterComponent();
@@ -2889,6 +2902,16 @@ bool AExpeditionBattleView::UnitShownColors(int32 UnitId, TArray<FLinearColor>& 
         for (const FExpeditionPart& Part : Rig.Parts) { OutParts.Add(Part.Shown); }
         OutRing = RingStates.IsValidIndex(Rig.Ring.RingSlot) ? RingStates[Rig.Ring.RingSlot].Colour : Rig.Ring.Shown;
         return true;
+    }
+    return false;
+}
+
+bool AExpeditionBattleView::UnitPalette(int32 UnitId, ExpeditionPalette::FPalette& OutPalette) const
+{
+    for (const FExpeditionUnitRig& Rig : Rigs)
+    {
+        if (Rig.Id != UnitId) { continue; }
+        return Rig.Skin && Rig.Parts.Num() > 0 && ExpeditionPalette::Read(Rig.Parts[0].Material, OutPalette);
     }
     return false;
 }
