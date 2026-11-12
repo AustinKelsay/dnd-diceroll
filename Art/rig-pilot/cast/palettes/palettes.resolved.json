@@ -86,6 +86,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {
      "A": {
@@ -156,38 +157,45 @@
    },
    "accent": [
     {
-     "hex": "#ff776a",
+     "hex": "#ff5e4f",
      "linear": [
       1.0,
-      0.18375,
-      0.14528
+      0.11116,
+      0.07824
      ]
     },
     {
-     "hex": "#68a7ff",
+     "hex": "#4c97ff",
      "linear": [
-      0.13823,
-      0.38579,
+      0.07246,
+      0.30786,
       1.0
      ]
     },
     {
-     "hex": "#24ee45",
+     "hex": "#00e727",
      "linear": [
-      0.01735,
-      0.85262,
-      0.06008
+      0.0,
+      0.80252,
+      0.0199
      ]
     },
     {
-     "hex": "#c5a31e",
+     "hex": "#b69200",
      "linear": [
-      0.55714,
-      0.36801,
-      0.01265
+      0.47051,
+      0.28735,
+      0.0
      ]
     }
    ],
+   "accent_override": {
+    "luminance": [
+     0.55,
+     0.55
+    ],
+    "saturation": 1.0
+   },
    "default": {
     "slots": {}
    }
@@ -278,6 +286,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -366,6 +375,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -454,6 +464,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -543,6 +554,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -602,38 +614,45 @@
    },
    "accent": [
     {
-     "hex": "#ff776a",
+     "hex": "#dc1200",
      "linear": [
-      1.0,
-      0.18375,
-      0.14528
+      0.71481,
+      0.0062,
+      0.0
      ]
     },
     {
-     "hex": "#68a7ff",
+     "hex": "#0059d5",
      "linear": [
-      0.13823,
-      0.38579,
-      1.0
+      0.0,
+      0.09965,
+      0.66778
      ]
     },
     {
-     "hex": "#24ee45",
+     "hex": "#007e15",
      "linear": [
-      0.01735,
-      0.85262,
-      0.06008
+      0.0,
+      0.20949,
+      0.00752
      ]
     },
     {
-     "hex": "#c5a31e",
+     "hex": "#645000",
      "linear": [
-      0.55714,
-      0.36801,
-      0.01265
+      0.12618,
+      0.07945,
+      0.0
      ]
     }
    ],
+   "accent_override": {
+    "luminance": [
+     0.3,
+     0.3
+    ],
+    "saturation": 1.0
+   },
    "default": {
     "slots": {}
    }
@@ -724,6 +743,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -813,6 +833,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -903,6 +924,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -993,6 +1015,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -1081,6 +1104,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {}
    }
@@ -1170,6 +1194,7 @@
      ]
     }
    ],
+   "accent_override": {},
    "default": {
     "slots": {
      "A": {
@@ -3507,64 +3532,64 @@
   },
   "ranger.swarmkeeper": {
    "name": "Swarmkeeper",
-   "note": "Yellow-green cloak, straw tunic, amber trim",
+   "note": "Honey-gold cloak over a dark brown tunic with amber trim and a gold glow: a swarm motif against the Hunter's forest green (the first yellow-green read as the Hunter)",
    "slots": {
     "A": {
      "spec": [
-      60,
-      0.65,
-      1.1
+      44,
+      0.88,
+      1.4
      ],
-     "hex": "#83832e",
+     "hex": "#ca9b18",
      "linear": [
-      0.2257,
-      0.2257,
-      0.02703
+      0.59117,
+      0.32621,
+      0.00928
      ],
-     "luma": 0.4744,
-     "luma_ratio": 1.1
+     "luma": 0.6038,
+     "luma_ratio": 1.4
     },
     "B": {
      "spec": [
-      45,
-      0.4,
-      0.96
+      28,
+      0.5,
+      0.84
      ],
-     "hex": "#84764f",
+     "hex": "#836042",
      "linear": [
-      0.22932,
-      0.18269,
-      0.07814
+      0.22759,
+      0.11745,
+      0.0538
      ],
-     "luma": 0.4623,
-     "luma_ratio": 0.96
+     "luma": 0.4045,
+     "luma_ratio": 0.84
     },
     "C": {
      "spec": [
-      40,
-      0.9,
-      1.1
+      38,
+      0.95,
+      1.15
      ],
-     "hex": "#b07b12",
+     "hex": "#c17e0a",
      "linear": [
-      0.4327,
-      0.19812,
-      0.00586
+      0.53224,
+      0.20743,
+      0.00293
      ],
-     "luma": 0.4971,
-     "luma_ratio": 1.1
+     "luma": 0.5197,
+     "luma_ratio": 1.15
     },
     "G": {
      "spec": [
-      50,
-      0.9,
+      48,
+      0.95,
       1.0
      ],
-     "hex": "#ffe978",
+     "hex": "#ffe684",
      "linear": [
       1.0,
-      0.81113,
-      0.18842
+      0.79376,
+      0.22914
      ],
      "luma": 0.888,
      "luma_ratio": 1.0

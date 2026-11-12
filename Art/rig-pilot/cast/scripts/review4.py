@@ -1,7 +1,7 @@
 """Fresh-process review of the batch 4 exports (#150): validation numbers and contact sheets for the bard and artificer.
 
-    blender -b --python Art/rig-pilot/cast/scripts/review4.py -- validate <bard|artificer>
-    blender -b --python Art/rig-pilot/cast/scripts/review4.py -- sheet4 bind|turn|clips|stone
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review4.py -- validate <bard|artificer>
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review4.py -- sheet4 bind|turn|clips|stone
 
 review.py, review2.py and review3.py (batches 1 to 3) are not edited by batch 4: this script loads review2.py (and through it review.py and the r001
 review functions) into its own namespace after registering the batch 4 classes, so validate expects the ten clips. validate runs review2's

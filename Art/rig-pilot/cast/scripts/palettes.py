@@ -96,13 +96,17 @@ def resolve():
             d = tuple(t[c['tiles'][s][0]]['rgb']) if s == 'G' else slot_default(t, c['tiles'][s])
             slots[s] = dict(tiles=c['tiles'][s], mask=tile_mask(c['tiles'][s]), default_hex=hexof(d), default_luma=round(luma(d), 4),
                             reference=round(luma_lin(d), 5))
-        lo, hi = acc['luminance_min'], acc['luminance_max']
+        # A class may override the accent's luminance range and saturation (a class whose accent tiles are small and sit on a pale or a dark figure needs a darker or
+        # a brighter, more saturated colour to separate at the default zoom); the hues are always the party slots'.
+        over = c.get('accent', {})
+        lo, hi = over.get('luminance', [acc['luminance_min'], acc['luminance_max']])
+        sat = over.get('saturation', acc['saturation'])
         xl = min(max(slots['X']['default_luma'], lo), hi)
         accents = []
         for h in acc['hues']:
-            rgb = fit(h, acc['saturation'], xl)
+            rgb = fit(h, sat, xl)
             accents.append(dict(hex=hexof(rgb), linear=[round(lin(x), 5) for x in rgb]))
-        out['classes'][key] = dict(role=ROLE[key], slots=slots, accent=accents, default=c['default'])
+        out['classes'][key] = dict(role=ROLE[key], slots=slots, accent=accents, accent_override=over, default=c['default'])
     for bid, b in src['builds'].items():
         key = bid.split('.')[0]
         cl = out['classes'][key]

@@ -76,7 +76,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH4.md",
-      "sha256": "5f5e2566901930b7286bea33f6ea7e94c21c530a6c306d02b8ff6e6d6b892e12"
+      "sha256": "d1fd38db0c08904460bca7dccbb37987a8af5379e9f8a2d0e8fda0a8f90ff103"
     },
     {
       "role": "source",
@@ -105,18 +105,33 @@
     },
     {
       "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/overrides.py",
+      "sha256": "1e3626a5f53ec1e0f27abaecba7109d8eb2c458b28ed1f66e4d0d88a3d15101c"
+    },
+    {
+      "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build4.py",
-      "sha256": "ee1df866cc69942183509b73e3cc59391346675441ba681d9cf7d5ab5a696eaf"
+      "sha256": "70fd4e137a0836141dd6cbdbea44bddfd86385d5c148f2bf85d36aa1a51a2f65"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review.py",
+      "sha256": "339402deec49f756a2b80927aa363723d336186c80b8d5448dcf9c5eabd2f08a"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review2.py",
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review4.py",
-      "sha256": "cbe2c89fdd64ec53a19b0b51cb4f05447bbdee9c848ca95e7f6fad4b5dcf04b5"
+      "sha256": "af6905f5567907039cc883d7af677b5fde04ba317d71d11a165ca84a1a802d2c"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records4.py",
-      "sha256": "0d100c614d12447ec6598d5b220c42dad30a7c3a612c115952232042fbbdbdd5"
+      "sha256": "4997d1d65bf360df11e725b66538c931ff61081a326c7569821e668ea4a35a0c"
     },
     {
       "role": "source",
@@ -137,6 +152,11 @@
       "role": "source",
       "path": "Art/rig-pilot/r001/scripts/characters.py",
       "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/review.py",
+      "sha256": "b415c12e22f73cec08713bbb08975dde335a574cc9cd0f36589eddba9dd05370"
     },
     {
       "role": "export",

@@ -235,7 +235,8 @@ bool FPaletteBoardTest::RunTest(const FString& Parameters)
     // Every catalog build, four to a party, reaches its figure's material as its palette; a class appearing twice also carries the accent.
     TArray<FString> Ids;
     for (const FBuildDefinition& Build : FBuildCatalog::All()) { Ids.Add(Build.Id); }
-    int32 Rigged = 0, Checked = 0;
+    TSet<FString> CheckedBuilds, RiggedClasses;
+    int32 Heroes = 0, Checked = 0;
     for (int32 Start = 0; Start < Ids.Num(); Start += 4)
     {
         TArray<const TCHAR*> Builds;
@@ -244,27 +245,35 @@ bool FPaletteBoardTest::RunTest(const FString& Parameters)
         for (const FString& Id : Keep) { Builds.Add(*Id); }
         FExpeditionSaveData Data;
         AExpeditionBattleView* View = ResumeParty(*this, Builds, FPaths::Combine(Directory, FString::FromInt(Start), TEXT("current.json")), Data);
-        if (!View) { continue; }
+        if (!TestNotNull(*FString::Printf(TEXT("The party starting at build %d resumes"), Start), View)) { continue; }
         TestTrue(TEXT("The shipped theme loads"), View->UsesTheme());
         const TArray<FCombatantState>& Combatants = View->Rules().Snapshot().Encounter.Combatants;
         const TMap<int32, int32> Accents = AccentSlots(Combatants);
         for (const FCombatantState& Unit : Combatants)
         {
             if (Unit.Side != ECombatSide::Party) { continue; }
-            FPalette Held;
-            if (!View->UnitAnimation(Unit.Id).bSkeletal) { continue; }   // a class without a rig keeps its static figure and has no palette
-            ++Rigged;
+            ++Heroes;
             const FString Label = Unit.BuildId;
+            // Every hero of every class is a rigged figure (all thirteen classes are rigged): a missing rig fails here instead of being skipped.
+            if (!TestTrue(*(Label + TEXT(" is a rigged figure (run import_dark_fantasy_theme.py)")), View->UnitAnimation(Unit.Id).bSkeletal)) { continue; }
+            RiggedClasses.Add(ClassKeyOf(Unit));
+            FPalette Held;
             if (!TestTrue(*(Label + TEXT(": the figure's material carries the palette parameters (run import_dark_fantasy_theme.py)")), View->UnitPalette(Unit.Id, Held))) { continue; }
             FPalette Expected = ForUnit(Unit);
             if (const int32* Slot = Accents.Find(Unit.Id)) { SetAccent(Expected, ClassKeyOf(Unit), *Slot); }
             TestTrue(*(Label + TEXT(": the figure shows its build's palette")), SamePalette(Held, Expected));
+            CheckedBuilds.Add(Label);
             ++Checked;
         }
         Release(View);
     }
-    TestTrue(TEXT("At least the shipped rigged party was checked"), Checked > 0);
-    AddInfo(FString::Printf(TEXT("%d rigged heroes checked of %d"), Checked, Rigged));
+    // The sweep must have covered everything: all 70 builds (18 parties of four, the last two heroes repeating builds), thirteen rigged classes, every hero checked.
+    TestEqual(TEXT("Every catalog build was checked on a rigged figure"), CheckedBuilds.Num(), 70);
+    for (const FString& Id : Ids) { TestTrue(*(Id + TEXT(" was checked")), CheckedBuilds.Contains(Id)); }
+    TestEqual(TEXT("All thirteen classes have a rigged figure"), RiggedClasses.Num(), 13);
+    TestEqual(TEXT("Every hero of every party was checked"), Checked, Heroes);
+    TestEqual(TEXT("Eighteen parties of four heroes were built"), Heroes, 72);
+    AddInfo(FString::Printf(TEXT("%d rigged heroes checked, %d builds, %d classes"), Checked, CheckedBuilds.Num(), RiggedClasses.Num()));
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

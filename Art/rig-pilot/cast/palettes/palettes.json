@@ -61,7 +61,14 @@
      "trim"
     ]
    },
-   "default": {}
+   "default": {},
+   "accent": {
+    "luminance": [
+     0.55,
+     0.55
+    ],
+    "saturation": 1.0
+   }
   },
   "cleric": {
    "tiles": {
@@ -172,7 +179,14 @@
      "accent"
     ]
    },
-   "default": {}
+   "default": {},
+   "accent": {
+    "luminance": [
+     0.3,
+     0.3
+    ],
+    "saturation": 1.0
+   }
   },
   "ranger": {
    "tiles": {
@@ -1186,25 +1200,25 @@
   },
   "ranger.swarmkeeper": {
    "name": "Swarmkeeper",
-   "note": "Yellow-green cloak, straw tunic, amber trim",
+   "note": "Honey-gold cloak over a dark brown tunic with amber trim and a gold glow: a swarm motif against the Hunter's forest green (the first yellow-green read as the Hunter)",
    "A": [
-    60,
-    0.65,
-    1.1
+    44,
+    0.88,
+    1.4
    ],
    "B": [
-    45,
-    0.4,
-    0.96
+    28,
+    0.5,
+    0.84
    ],
    "C": [
-    40,
-    0.9,
-    1.1
+    38,
+    0.95,
+    1.15
    ],
    "G": [
-    50,
-    0.9,
+    48,
+    0.95,
     1.0
    ]
   },

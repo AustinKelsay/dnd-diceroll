@@ -13,8 +13,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 CAST = 'Art/rig-pilot/cast'
-SHARED = [f'{CAST}/README_BATCH4.md'] + [f'{CAST}/scripts/{n}' for n in ('cast_characters.py', 'cast_batch2.py', 'cast_batch3.py', 'cast_batch4.py', 'brace.py', 'build4.py', 'review4.py', 'make_records4.py')] + \
-    ['Art/rig-pilot/r001/README.md'] + [f'Art/rig-pilot/r001/scripts/{n}' for n in ('rigkit.py', 'clips.py', 'characters.py')]
+# Every file batch 4's build and review load, transitively (build4 and review4 import cast_batch4 -> cast_batch3 -> cast_batch2 -> cast_characters, brace and overrides, and
+# review4 executes review2, which executes the batch 1 review, which executes the r001 review): tools/tests/test_cast_records.py checks this list against the imports.
+CAST_SCRIPTS = ('cast_characters.py', 'cast_batch2.py', 'cast_batch3.py', 'cast_batch4.py', 'brace.py', 'overrides.py', 'build4.py', 'review.py', 'review2.py', 'review4.py', 'make_records4.py')
+R001_SCRIPTS = ('rigkit.py', 'clips.py', 'characters.py', 'review.py')
+SHARED = [f'{CAST}/README_BATCH4.md'] + [f'{CAST}/scripts/{n}' for n in CAST_SCRIPTS] + ['Art/rig-pilot/r001/README.md'] + [f'Art/rig-pilot/r001/scripts/{n}' for n in R001_SCRIPTS]
 NEW = {
     'sk-hero-bard': ('SK_Hero_Bard', 'bard', 'Bard: agile body in a wine doublet with gold frogging and cream puffed sleeves, teal hose, short teal cape lined in wine, feathered cap, a lute slung across the back on a strap, rapier on weapon_socket', 25),
     'sk-hero-artificer': ('SK_Hero_Artificer', 'artificer', 'Artificer: heavy body in a soot-grey canvas coat (no plate), leather apron with tools, goggles on the brow, brass boiler backpack with copper pipes, brass left gauntlet carrying a cyan crystal in a cage, light hammer on weapon_socket', 26),
