@@ -1,6 +1,6 @@
 # PR #203 evidence: rigged cast batch 4 (bard, artificer, 70 subclass palettes, accents)
 
-Head `b57c919` (second round, after the lead's spot check: small accents, the bolt hue spread). All images are rendered by the game (offscreen `gallery`, 1920x1080) unless noted.
+Head `2aba698` (review round 1: strict gates, stronger paladin and rogue accents, a distinct Swarmkeeper).
 
 | File | What it shows |
 | --- | --- |
@@ -28,11 +28,11 @@ Head `b57c919` (second round, after the lead's spot check: small accents, the bo
 
 ## Contrast gate (rigged Rim 1.2 / Fill 1.0, 15 default-zoom shots per build, Vigil/Root/Vault)
 
-All 70 builds pass: mean >= 2.3 (lowest 2.46), worst shot >= 1.4 (lowest 1.44), every per-board mean >= 2.0 (lowest 2.10). See `contrast_per_build.md`.
+All 70 builds pass with every build x board x shot present (15 each; the report now fails on anything missing): mean >= 2.3 (lowest 2.46), worst shot >= 1.4 (lowest 1.44), every per-board mean >= 2.0 (lowest 2.10). The Swarmkeeper (honey-gold cloak over a dark tunic) 2.95 / 1.91 against the Hunter's forest green. See `contrast_per_build.md`.
 
 ## Accent region (lead's call: a small accent, never a base tile)
 
-`tools/accent_share.py` on `acc-<class>-root` (four heroes of one build of each class), `gallery` with and without `--no-accents`, 20 default-zoom hero views per class: changed pixels over the figure's visible pixels. Class means: artificer 7.0%, barbarian 4.1%, bard 6.6%, cleric 6.2%, druid 8.0%, fighter 7.7%, monk 4.4%, paladin 6.6%, ranger 4.0%, rogue 5.3%, sorcerer 8.2%, warlock 6.3%, wizard 5.5%. Largest single-yaw class mean 14.5% (sorcerer); largest single hero view 17.7% (sorcerer). The tile lists exclude plate, cloth and skin and are asserted in `tools/tests/test_palettes.py`. Duplicate parties on Vigil, Root and the Vault keep the gate: fighters mean 2.83 (worst 1.78), paladins 3.26 (1.63), clerics 3.53 (1.98), rogues 2.67 (1.60).
+`tools/accent_share.py` on `acc-<class>-root` (four heroes of one build of each class), `gallery` with and without `--no-accents`, 20 default-zoom hero views per class: changed pixels over the figure's visible pixels. Class means: artificer 7.0%, barbarian 3.9%, bard 6.6%, cleric 6.2%, druid 7.9%, fighter 7.9%, monk 4.4%, paladin 8.1%, ranger 4.1%, rogue 5.6%, sorcerer 8.2%, warlock 6.3%, wizard 5.7%. Largest single hero view 17.7% (sorcerer, accepted). The tool now fails on any missing class, run, shot or hero. The tile lists exclude plate, cloth and skin and are asserted in `tools/tests/test_palettes.py`. Duplicate parties on Vigil, Root and the Vault keep the gate: fighters mean 2.83 (worst 1.78), paladins 3.23 (1.62), clerics 3.54 (1.98), rogues 2.66 (1.60). The paladin's accent is dark and fully saturated and the rogue's deep and vivid, inside the same small regions.
 
 ## Fighter
 

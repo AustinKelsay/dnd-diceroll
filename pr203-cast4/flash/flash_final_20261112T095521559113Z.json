@@ -1,0 +1,1411 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 3608,
+      "peakLuma": 248.56,
+      "p99Luma": 247.48,
+      "meanLuma": 75.74,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        953,
+        529,
+        997,
+        611
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2482,
+      "peakLuma": 250.95,
+      "p99Luma": 247.16,
+      "meanLuma": 119.76,
+      "whiteFraction": 0.00040290088638195,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        897,
+        209,
+        931,
+        282
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2628,
+      "peakLuma": 248.63,
+      "p99Luma": 239.47,
+      "meanLuma": 76.44,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        979,
+        172,
+        1015,
+        245
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1825,
+      "peakLuma": 249.73,
+      "p99Luma": 248.31,
+      "meanLuma": 154.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        565,
+        172,
+        590,
+        245
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1474,
+      "peakLuma": 248.48,
+      "p99Luma": 237.35,
+      "meanLuma": 77.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        654,
+        26,
+        676,
+        93
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1875,
+      "peakLuma": 249.3,
+      "p99Luma": 244.38,
+      "meanLuma": 124.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        657,
+        262,
+        682,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2128,
+      "peakLuma": 249.34,
+      "p99Luma": 247.56,
+      "meanLuma": 82.69,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        558,
+        303,
+        586,
+        379
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3116,
+      "peakLuma": 254.64,
+      "p99Luma": 253.51,
+      "meanLuma": 108.28,
+      "whiteFraction": 0.0038510911424903724,
+      "clippedFraction": 0.003209242618741977,
+      "shot": "spell-release-bard-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1010,
+        303,
+        1051,
+        379
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 252.99,
+      "p99Luma": 251.37,
+      "meanLuma": 116.93,
+      "whiteFraction": 0.0006211180124223603,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3608,
+      "peakLuma": 247.77,
+      "p99Luma": 246.77,
+      "meanLuma": 80.35,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        953,
+        529,
+        997,
+        611
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5520,
+      "peakLuma": 251.16,
+      "p99Luma": 241.39,
+      "meanLuma": 74.87,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        908,
+        348,
+        977,
+        428
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2482,
+      "peakLuma": 250.79,
+      "p99Luma": 247.5,
+      "meanLuma": 106.21,
+      "whiteFraction": 0.0008058017727639,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        897,
+        209,
+        931,
+        282
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2628,
+      "peakLuma": 248.56,
+      "p99Luma": 238.69,
+      "meanLuma": 75.24,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        979,
+        172,
+        1015,
+        245
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3920,
+      "peakLuma": 244.1,
+      "p99Luma": 223.23,
+      "meanLuma": 72.5,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        760,
+        170,
+        816,
+        240
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1825,
+      "peakLuma": 250.66,
+      "p99Luma": 248.38,
+      "meanLuma": 154.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        565,
+        172,
+        590,
+        245
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 34125,
+      "peakLuma": 252.16,
+      "p99Luma": 251.16,
+      "meanLuma": 76.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        896,
+        444,
+        1071,
+        639
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 252.71,
+      "p99Luma": 251.16,
+      "meanLuma": 103.04,
+      "whiteFraction": 0.00044365572315882877,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3608,
+      "peakLuma": 247.79,
+      "p99Luma": 247.48,
+      "meanLuma": 75.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        953,
+        529,
+        997,
+        611
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2336,
+      "peakLuma": 254.57,
+      "p99Luma": 253.56,
+      "meanLuma": 126.93,
+      "whiteFraction": 0.0021404109589041095,
+      "clippedFraction": 0.005136986301369863,
+      "shot": "arrow-release-artificer-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        837,
+        209,
+        869,
+        282
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2628,
+      "peakLuma": 248.63,
+      "p99Luma": 240.55,
+      "meanLuma": 76.5,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        979,
+        172,
+        1015,
+        245
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1898,
+      "peakLuma": 252.72,
+      "p99Luma": 250.58,
+      "meanLuma": 177.74,
+      "whiteFraction": 0.0005268703898840885,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        563,
+        209,
+        589,
+        282
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 1474,
+      "peakLuma": 248.56,
+      "p99Luma": 238.76,
+      "meanLuma": 77.46,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        654,
+        26,
+        676,
+        93
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 254.64,
+      "p99Luma": 252.51,
+      "meanLuma": 151.78,
+      "whiteFraction": 0.0014285714285714286,
+      "clippedFraction": 0.0033333333333333335,
+      "shot": "arrow-release-artificer-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        719,
+        262,
+        747,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2128,
+      "peakLuma": 249.34,
+      "p99Luma": 247.56,
+      "meanLuma": 82.91,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        558,
+        303,
+        586,
+        379
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 2925,
+      "peakLuma": 254.57,
+      "p99Luma": 251.99,
+      "meanLuma": 155.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.003418803418803419,
+      "shot": "arrow-release-artificer-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1000,
+        262,
+        1039,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 254.64,
+      "p99Luma": 254.36,
+      "meanLuma": 132.87,
+      "whiteFraction": 0.008281573498964804,
+      "clippedFraction": 0.012732919254658385,
+      "shot": "arrow-release-artificer-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1280x720/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 8118,
+      "peakLuma": 248.79,
+      "p99Luma": 247.56,
+      "meanLuma": 75.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1430,
+        794,
+        1496,
+        917
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5450,
+      "peakLuma": 251.87,
+      "p99Luma": 248.38,
+      "meanLuma": 119.37,
+      "whiteFraction": 0.0007339449541284404,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1346,
+        314,
+        1396,
+        423
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5832,
+      "peakLuma": 248.56,
+      "p99Luma": 244.91,
+      "meanLuma": 76.8,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1468,
+        259,
+        1522,
+        367
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 252.16,
+      "p99Luma": 249.52,
+      "meanLuma": 155.54,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        847,
+        259,
+        885,
+        367
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3200,
+      "peakLuma": 248.56,
+      "p99Luma": 245.98,
+      "meanLuma": 77.52,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        981,
+        39,
+        1013,
+        139
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4256,
+      "peakLuma": 252.37,
+      "p99Luma": 249.3,
+      "meanLuma": 121.89,
+      "whiteFraction": 0.00023496240601503758,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        985,
+        393,
+        1023,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4674,
+      "peakLuma": 249.34,
+      "p99Luma": 248.56,
+      "meanLuma": 83.19,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-bard-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        837,
+        455,
+        878,
+        569
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 254.57,
+      "p99Luma": 253.51,
+      "meanLuma": 106.97,
+      "whiteFraction": 0.005033074489502445,
+      "clippedFraction": 0.004026459591601955,
+      "shot": "spell-release-bard-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1515,
+        455,
+        1576,
+        569
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 254.49,
+      "p99Luma": 251.58,
+      "meanLuma": 116.66,
+      "whiteFraction": 0.0009445100354191264,
+      "clippedFraction": 7.870916961826053e-05,
+      "shot": "spell-release-bard-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 8118,
+      "peakLuma": 247.77,
+      "p99Luma": 246.77,
+      "meanLuma": 79.68,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1430,
+        794,
+        1496,
+        917
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 12272,
+      "peakLuma": 251.16,
+      "p99Luma": 249.73,
+      "meanLuma": 73.29,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1362,
+        523,
+        1466,
+        641
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5450,
+      "peakLuma": 250.95,
+      "p99Luma": 248.5,
+      "meanLuma": 105.21,
+      "whiteFraction": 0.0009174311926605505,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1346,
+        314,
+        1396,
+        423
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5832,
+      "peakLuma": 248.56,
+      "p99Luma": 244.91,
+      "meanLuma": 75.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1468,
+        259,
+        1522,
+        367
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 8820,
+      "peakLuma": 243.81,
+      "p99Luma": 224.17,
+      "meanLuma": 72.16,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1140,
+        255,
+        1224,
+        360
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 252.16,
+      "p99Luma": 249.3,
+      "meanLuma": 155.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        847,
+        259,
+        885,
+        367
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 76796,
+      "peakLuma": 252.16,
+      "p99Luma": 250.73,
+      "meanLuma": 76.25,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-bard-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1344,
+        666,
+        1607,
+        958
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 254.49,
+      "p99Luma": 250.79,
+      "meanLuma": 102.22,
+      "whiteFraction": 0.0007477371113734751,
+      "clippedFraction": 0.0001180637544273908,
+      "shot": "spell-flight-bard-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 8118,
+      "peakLuma": 248.56,
+      "p99Luma": 247.48,
+      "meanLuma": 75.01,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1430,
+        794,
+        1496,
+        917
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5232,
+      "peakLuma": 254.57,
+      "p99Luma": 253.71,
+      "meanLuma": 126.54,
+      "whiteFraction": 0.0017201834862385322,
+      "clippedFraction": 0.0061162079510703364,
+      "shot": "arrow-release-artificer-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1255,
+        314,
+        1303,
+        423
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 5832,
+      "peakLuma": 248.56,
+      "p99Luma": 244.91,
+      "meanLuma": 76.93,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        1468,
+        259,
+        1522,
+        367
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4251,
+      "peakLuma": 254.49,
+      "p99Luma": 251.51,
+      "meanLuma": 176.62,
+      "whiteFraction": 0.0002352387673488591,
+      "clippedFraction": 0.0002352387673488591,
+      "shot": "arrow-release-artificer-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        844,
+        314,
+        883,
+        423
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 3200,
+      "peakLuma": 248.56,
+      "p99Luma": 245.7,
+      "meanLuma": 77.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        981,
+        39,
+        1013,
+        139
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4704,
+      "peakLuma": 254.64,
+      "p99Luma": 252.56,
+      "meanLuma": 150.33,
+      "whiteFraction": 0.0017006802721088435,
+      "clippedFraction": 0.005314625850340136,
+      "shot": "arrow-release-artificer-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1079,
+        393,
+        1121,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 4674,
+      "peakLuma": 249.34,
+      "p99Luma": 248.56,
+      "meanLuma": 83.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-artificer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        11,
+        3
+      ],
+      "box": [
+        837,
+        455,
+        878,
+        569
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 6608,
+      "peakLuma": 254.57,
+      "p99Luma": 252.16,
+      "meanLuma": 154.11,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.002572639225181598,
+      "shot": "arrow-release-artificer-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1500,
+        393,
+        1559,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 254.64,
+      "p99Luma": 254.15,
+      "meanLuma": 132.13,
+      "whiteFraction": 0.009193054136874362,
+      "clippedFraction": 0.012953849011050237,
+      "shot": "arrow-release-artificer-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T095521559113Z/cast4-board-vault/1920x1080/manifest.json",
+      "fixture": "cast4-board-vault"
+    }
+  ]
+}

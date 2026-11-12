@@ -1,13 +1,14 @@
 artificer   20 measurements  accent share of the figure: mean   7.0%  worst  12.0%
-barbarian   20 measurements  accent share of the figure: mean   4.1%  worst   9.2%
+barbarian   20 measurements  accent share of the figure: mean   3.9%  worst   9.2%
 bard        20 measurements  accent share of the figure: mean   6.6%  worst  11.8%
 cleric      20 measurements  accent share of the figure: mean   6.2%  worst  13.9%
-druid       20 measurements  accent share of the figure: mean   8.0%  worst  13.4%
-fighter     20 measurements  accent share of the figure: mean   7.7%  worst  14.5%
-monk        20 measurements  accent share of the figure: mean   4.4%  worst   8.0%
-paladin     20 measurements  accent share of the figure: mean   6.6%  worst  13.2%
-ranger      20 measurements  accent share of the figure: mean   4.0%  worst   8.5%
-rogue       20 measurements  accent share of the figure: mean   5.3%  worst   7.8%
+druid       20 measurements  accent share of the figure: mean   7.9%  worst  13.4%
+fighter     20 measurements  accent share of the figure: mean   7.9%  worst  14.8%
+monk        20 measurements  accent share of the figure: mean   4.4%  worst   7.8%
+paladin     20 measurements  accent share of the figure: mean   8.1%  worst  15.4%
+ranger      20 measurements  accent share of the figure: mean   4.1%  worst   8.5%
+rogue       20 measurements  accent share of the figure: mean   5.6%  worst   8.1%
 sorcerer    20 measurements  accent share of the figure: mean   8.2%  worst  17.7%
 warlock     20 measurements  accent share of the figure: mean   6.3%  worst  14.8%
-wizard      20 measurements  accent share of the figure: mean   5.5%  worst   7.5%
+wizard      20 measurements  accent share of the figure: mean   5.7%  worst   8.3%
+accent_share exit=0

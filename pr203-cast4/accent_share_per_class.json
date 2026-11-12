@@ -1,37 +1,9 @@
 {
  "artificer": {
   "units": 20,
-  "mean": 0.0699,
+  "mean": 0.07,
   "worst": 0.1204,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 241,
-    "figure": 2342,
-    "share": 0.1029
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 212,
-    "figure": 2177,
-    "share": 0.0974
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 125,
-    "figure": 2007,
-    "share": 0.0623
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 164,
-    "figure": 1975,
-    "share": 0.083
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -117,6 +89,34 @@
     "share": 0.0825
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 240,
+    "figure": 2340,
+    "share": 0.1026
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 211,
+    "figure": 2176,
+    "share": 0.097
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 128,
+    "figure": 2007,
+    "share": 0.0638
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 165,
+    "figure": 1986,
+    "share": 0.0831
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 223,
@@ -148,37 +148,9 @@
  },
  "barbarian": {
   "units": 20,
-  "mean": 0.0406,
+  "mean": 0.039,
   "worst": 0.0921,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 108,
-    "figure": 2289,
-    "share": 0.0472
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 114,
-    "figure": 2210,
-    "share": 0.0516
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 94,
-    "figure": 2084,
-    "share": 0.0451
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 25,
-    "figure": 1910,
-    "share": 0.0131
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -264,6 +236,34 @@
     "share": 0.0127
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 92,
+    "figure": 2284,
+    "share": 0.0403
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 94,
+    "figure": 2208,
+    "share": 0.0426
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 71,
+    "figure": 2087,
+    "share": 0.034
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 16,
+    "figure": 1910,
+    "share": 0.0084
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 49,
@@ -295,37 +295,9 @@
  },
  "bard": {
   "units": 20,
-  "mean": 0.0658,
+  "mean": 0.0657,
   "worst": 0.1185,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 94,
-    "figure": 2232,
-    "share": 0.0421
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 167,
-    "figure": 1986,
-    "share": 0.0841
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 125,
-    "figure": 1877,
-    "share": 0.0666
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 76,
-    "figure": 1811,
-    "share": 0.042
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -411,6 +383,34 @@
     "share": 0.0512
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 95,
+    "figure": 2230,
+    "share": 0.0426
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 164,
+    "figure": 1989,
+    "share": 0.0825
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 123,
+    "figure": 1879,
+    "share": 0.0655
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 76,
+    "figure": 1814,
+    "share": 0.0419
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 95,
@@ -443,36 +443,8 @@
  "cleric": {
   "units": 20,
   "mean": 0.0617,
-  "worst": 0.1391,
+  "worst": 0.1394,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 331,
-    "figure": 2383,
-    "share": 0.1389
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 217,
-    "figure": 2386,
-    "share": 0.0909
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 262,
-    "figure": 2210,
-    "share": 0.1186
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 283,
-    "figure": 2034,
-    "share": 0.1391
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -558,6 +530,34 @@
     "share": 0.0
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 333,
+    "figure": 2388,
+    "share": 0.1394
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 220,
+    "figure": 2383,
+    "share": 0.0923
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 261,
+    "figure": 2209,
+    "share": 0.1182
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 282,
+    "figure": 2047,
+    "share": 0.1378
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 299,
@@ -589,37 +589,9 @@
  },
  "druid": {
   "units": 20,
-  "mean": 0.0795,
+  "mean": 0.0793,
   "worst": 0.1339,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 207,
-    "figure": 2317,
-    "share": 0.0893
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 207,
-    "figure": 2186,
-    "share": 0.0947
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 106,
-    "figure": 2027,
-    "share": 0.0523
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 75,
-    "figure": 1835,
-    "share": 0.0409
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -705,6 +677,34 @@
     "share": 0.0771
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 185,
+    "figure": 2307,
+    "share": 0.0802
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 208,
+    "figure": 2188,
+    "share": 0.0951
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 114,
+    "figure": 2028,
+    "share": 0.0562
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 77,
+    "figure": 1828,
+    "share": 0.0421
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 119,
@@ -736,37 +736,9 @@
  },
  "fighter": {
   "units": 20,
-  "mean": 0.0772,
-  "worst": 0.1449,
+  "mean": 0.0785,
+  "worst": 0.1481,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 304,
-    "figure": 2306,
-    "share": 0.1318
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 256,
-    "figure": 2223,
-    "share": 0.1152
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 229,
-    "figure": 2064,
-    "share": 0.1109
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 278,
-    "figure": 1919,
-    "share": 0.1449
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -852,6 +824,34 @@
     "share": 0.0303
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 327,
+    "figure": 2296,
+    "share": 0.1424
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 265,
+    "figure": 2216,
+    "share": 0.1196
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 246,
+    "figure": 2058,
+    "share": 0.1195
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 283,
+    "figure": 1911,
+    "share": 0.1481
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 291,
@@ -883,37 +883,9 @@
  },
  "monk": {
   "units": 20,
-  "mean": 0.0443,
-  "worst": 0.0798,
+  "mean": 0.0437,
+  "worst": 0.078,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 186,
-    "figure": 2331,
-    "share": 0.0798
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 137,
-    "figure": 2100,
-    "share": 0.0652
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 119,
-    "figure": 1949,
-    "share": 0.0611
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 115,
-    "figure": 1796,
-    "share": 0.064
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -999,6 +971,34 @@
     "share": 0.0343
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 182,
+    "figure": 2332,
+    "share": 0.078
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 135,
+    "figure": 2105,
+    "share": 0.0641
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 103,
+    "figure": 1947,
+    "share": 0.0529
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 116,
+    "figure": 1802,
+    "share": 0.0644
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 140,
@@ -1030,184 +1030,156 @@
  },
  "paladin": {
   "units": 20,
-  "mean": 0.0658,
-  "worst": 0.1322,
+  "mean": 0.0814,
+  "worst": 0.1536,
   "rows": [
    {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 125,
-    "figure": 2270,
-    "share": 0.0551
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 190,
-    "figure": 2286,
-    "share": 0.0831
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 152,
-    "figure": 2137,
-    "share": 0.0711
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 119,
-    "figure": 1989,
-    "share": 0.0598
-   },
-   {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
-    "changed": 69,
+    "changed": 87,
     "figure": 1826,
-    "share": 0.0378
+    "share": 0.0476
    },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 2",
-    "changed": 76,
+    "changed": 90,
     "figure": 1714,
-    "share": 0.0443
+    "share": 0.0525
    },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 3",
-    "changed": 75,
+    "changed": 80,
     "figure": 1568,
-    "share": 0.0478
+    "share": 0.051
    },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 4",
-    "changed": 44,
+    "changed": 68,
     "figure": 1425,
-    "share": 0.0309
+    "share": 0.0477
    },
    {
     "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 195,
+    "figure": 1406,
+    "share": 0.1387
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 235,
+    "figure": 1530,
+    "share": 0.1536
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 239,
+    "figure": 1581,
+    "share": 0.1512
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 225,
+    "figure": 1476,
+    "share": 0.1524
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 63,
+    "figure": 1471,
+    "share": 0.0428
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 81,
+    "figure": 1687,
+    "share": 0.048
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 72,
+    "figure": 1723,
+    "share": 0.0418
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 69,
+    "figure": 1940,
+    "share": 0.0356
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 161,
+    "figure": 2298,
+    "share": 0.0701
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 204,
+    "figure": 2285,
+    "share": 0.0893
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 181,
+    "figure": 2135,
+    "share": 0.0848
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 171,
+    "figure": 1989,
+    "share": 0.086
+   },
+   {
+    "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 152,
-    "figure": 1406,
-    "share": 0.1081
-   },
-   {
-    "shot": "battle-yaw090-default",
-    "unit": "Hero 2",
-    "changed": 200,
-    "figure": 1530,
-    "share": 0.1307
-   },
-   {
-    "shot": "battle-yaw090-default",
-    "unit": "Hero 3",
-    "changed": 209,
-    "figure": 1581,
-    "share": 0.1322
-   },
-   {
-    "shot": "battle-yaw090-default",
-    "unit": "Hero 4",
-    "changed": 149,
-    "figure": 1476,
-    "share": 0.1009
-   },
-   {
-    "shot": "battle-yaw180-default",
-    "unit": "Hero 1",
-    "changed": 59,
-    "figure": 1471,
-    "share": 0.0401
-   },
-   {
-    "shot": "battle-yaw180-default",
-    "unit": "Hero 2",
-    "changed": 80,
-    "figure": 1687,
-    "share": 0.0474
-   },
-   {
-    "shot": "battle-yaw180-default",
-    "unit": "Hero 3",
-    "changed": 67,
-    "figure": 1723,
-    "share": 0.0389
-   },
-   {
-    "shot": "battle-yaw180-default",
-    "unit": "Hero 4",
-    "changed": 59,
-    "figure": 1940,
-    "share": 0.0304
-   },
-   {
-    "shot": "targeting-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 117,
     "figure": 2283,
-    "share": 0.0512
+    "share": 0.0666
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 2",
-    "changed": 189,
+    "changed": 220,
     "figure": 2314,
-    "share": 0.0817
+    "share": 0.0951
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 3",
-    "changed": 151,
+    "changed": 179,
     "figure": 2126,
-    "share": 0.071
+    "share": 0.0842
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 4",
-    "changed": 106,
+    "changed": 174,
     "figure": 1966,
-    "share": 0.0539
+    "share": 0.0885
    }
   ]
  },
  "ranger": {
   "units": 20,
-  "mean": 0.0398,
+  "mean": 0.0407,
   "worst": 0.085,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 79,
-    "figure": 2237,
-    "share": 0.0353
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 134,
-    "figure": 2100,
-    "share": 0.0638
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 83,
-    "figure": 1937,
-    "share": 0.0428
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 39,
-    "figure": 1781,
-    "share": 0.0219
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -1293,6 +1265,34 @@
     "share": 0.0117
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 107,
+    "figure": 2252,
+    "share": 0.0475
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 153,
+    "figure": 2106,
+    "share": 0.0726
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 85,
+    "figure": 1936,
+    "share": 0.0439
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 34,
+    "figure": 1779,
+    "share": 0.0191
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 75,
@@ -1324,57 +1324,29 @@
  },
  "rogue": {
   "units": 20,
-  "mean": 0.0529,
-  "worst": 0.0777,
+  "mean": 0.0564,
+  "worst": 0.0807,
   "rows": [
    {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 129,
-    "figure": 2282,
-    "share": 0.0565
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 97,
-    "figure": 2054,
-    "share": 0.0472
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 75,
-    "figure": 1906,
-    "share": 0.0393
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 78,
-    "figure": 1744,
-    "share": 0.0447
-   },
-   {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
-    "changed": 113,
+    "changed": 115,
     "figure": 1650,
-    "share": 0.0685
+    "share": 0.0697
    },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 2",
-    "changed": 89,
+    "changed": 99,
     "figure": 1519,
-    "share": 0.0586
+    "share": 0.0652
    },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 3",
-    "changed": 127,
+    "changed": 132,
     "figure": 1635,
-    "share": 0.0777
+    "share": 0.0807
    },
    {
     "shot": "battle-yaw000-default",
@@ -1386,122 +1358,122 @@
    {
     "shot": "battle-yaw090-default",
     "unit": "Hero 1",
-    "changed": 63,
+    "changed": 75,
     "figure": 1372,
-    "share": 0.0459
+    "share": 0.0547
    },
    {
     "shot": "battle-yaw090-default",
     "unit": "Hero 2",
-    "changed": 64,
+    "changed": 73,
     "figure": 1476,
-    "share": 0.0434
+    "share": 0.0495
    },
    {
     "shot": "battle-yaw090-default",
     "unit": "Hero 3",
-    "changed": 78,
+    "changed": 86,
     "figure": 1560,
-    "share": 0.05
+    "share": 0.0551
    },
    {
     "shot": "battle-yaw090-default",
     "unit": "Hero 4",
-    "changed": 83,
+    "changed": 88,
     "figure": 1423,
-    "share": 0.0583
+    "share": 0.0618
    },
    {
     "shot": "battle-yaw180-default",
     "unit": "Hero 1",
-    "changed": 73,
+    "changed": 90,
     "figure": 1468,
+    "share": 0.0613
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 120,
+    "figure": 1683,
+    "share": 0.0713
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 108,
+    "figure": 1728,
+    "share": 0.0625
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 113,
+    "figure": 1915,
+    "share": 0.059
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 135,
+    "figure": 2265,
+    "share": 0.0596
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 102,
+    "figure": 2054,
     "share": 0.0497
    },
    {
-    "shot": "battle-yaw180-default",
-    "unit": "Hero 2",
-    "changed": 114,
-    "figure": 1683,
-    "share": 0.0677
-   },
-   {
-    "shot": "battle-yaw180-default",
+    "shot": "battle-yawm90-default",
     "unit": "Hero 3",
-    "changed": 105,
-    "figure": 1728,
-    "share": 0.0608
+    "changed": 76,
+    "figure": 1901,
+    "share": 0.04
    },
    {
-    "shot": "battle-yaw180-default",
+    "shot": "battle-yawm90-default",
     "unit": "Hero 4",
-    "changed": 106,
-    "figure": 1915,
-    "share": 0.0554
+    "changed": 74,
+    "figure": 1724,
+    "share": 0.0429
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
-    "changed": 69,
+    "changed": 78,
     "figure": 2267,
-    "share": 0.0304
+    "share": 0.0344
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 2",
-    "changed": 86,
+    "changed": 93,
     "figure": 2066,
-    "share": 0.0416
+    "share": 0.045
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 3",
-    "changed": 86,
+    "changed": 85,
     "figure": 1885,
-    "share": 0.0456
+    "share": 0.0451
    },
    {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 4",
-    "changed": 80,
+    "changed": 85,
     "figure": 1724,
-    "share": 0.0464
+    "share": 0.0493
    }
   ]
  },
  "sorcerer": {
   "units": 20,
-  "mean": 0.0819,
+  "mean": 0.0825,
   "worst": 0.1766,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 155,
-    "figure": 2166,
-    "share": 0.0716
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 156,
-    "figure": 1857,
-    "share": 0.084
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 104,
-    "figure": 1734,
-    "share": 0.06
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 107,
-    "figure": 1614,
-    "share": 0.0663
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -1587,6 +1559,34 @@
     "share": 0.0314
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 161,
+    "figure": 2162,
+    "share": 0.0745
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 166,
+    "figure": 1853,
+    "share": 0.0896
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 111,
+    "figure": 1732,
+    "share": 0.0641
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 104,
+    "figure": 1602,
+    "share": 0.0649
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 150,
@@ -1618,37 +1618,9 @@
  },
  "warlock": {
   "units": 20,
-  "mean": 0.063,
-  "worst": 0.148,
+  "mean": 0.0627,
+  "worst": 0.1476,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 232,
-    "figure": 2289,
-    "share": 0.1014
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 324,
-    "figure": 2189,
-    "share": 0.148
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 262,
-    "figure": 2061,
-    "share": 0.1271
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 196,
-    "figure": 1919,
-    "share": 0.1021
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -1734,6 +1706,34 @@
     "share": 0.0124
    },
    {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 234,
+    "figure": 2291,
+    "share": 0.1021
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 323,
+    "figure": 2189,
+    "share": 0.1476
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 253,
+    "figure": 2062,
+    "share": 0.1227
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 192,
+    "figure": 1925,
+    "share": 0.0997
+   },
+   {
     "shot": "targeting-yawm90-default",
     "unit": "Hero 1",
     "changed": 227,
@@ -1765,37 +1765,9 @@
  },
  "wizard": {
   "units": 20,
-  "mean": 0.0546,
-  "worst": 0.0749,
+  "mean": 0.0569,
+  "worst": 0.0833,
   "rows": [
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 1",
-    "changed": 172,
-    "figure": 2295,
-    "share": 0.0749
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 2",
-    "changed": 142,
-    "figure": 2308,
-    "share": 0.0615
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 3",
-    "changed": 126,
-    "figure": 2137,
-    "share": 0.059
-   },
-   {
-    "shot": "battle-yawm90-default",
-    "unit": "Hero 4",
-    "changed": 132,
-    "figure": 1979,
-    "share": 0.0667
-   },
    {
     "shot": "battle-yaw000-default",
     "unit": "Hero 1",
@@ -1879,6 +1851,34 @@
     "changed": 55,
     "figure": 1921,
     "share": 0.0286
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 192,
+    "figure": 2304,
+    "share": 0.0833
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 164,
+    "figure": 2308,
+    "share": 0.0711
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 159,
+    "figure": 2136,
+    "share": 0.0744
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 158,
+    "figure": 1978,
+    "share": 0.0799
    },
    {
     "shot": "targeting-yawm90-default",

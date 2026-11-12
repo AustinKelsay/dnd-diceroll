@@ -9,29 +9,29 @@
   }
  },
  "Paladin": {
-  "mean": 3.26,
-  "worst": 1.63,
+  "mean": 3.23,
+  "worst": 1.62,
   "boards": {
-   "vigil": 3.15,
-   "root": 2.95,
-   "vault": 3.69
+   "vigil": 3.12,
+   "root": 2.92,
+   "vault": 3.66
   }
  },
  "Cleric": {
-  "mean": 3.53,
+  "mean": 3.54,
   "worst": 1.98,
   "boards": {
    "vigil": 3.39,
-   "root": 3.14,
-   "vault": 4.06
+   "root": 3.15,
+   "vault": 4.07
   }
  },
  "Rogue": {
-  "mean": 2.67,
+  "mean": 2.66,
   "worst": 1.6,
   "boards": {
-   "vigil": 2.74,
-   "root": 2.38,
+   "vigil": 2.73,
+   "root": 2.37,
    "vault": 2.89
   }
  }
