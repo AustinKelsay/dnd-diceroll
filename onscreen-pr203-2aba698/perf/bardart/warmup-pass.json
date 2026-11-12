@@ -1,0 +1,34 @@
+{
+  "name": "warmup",
+  "commit": "2aba698641b2b8406af5913fce95e7c30478bd58",
+  "dirty": false,
+  "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-5a9f36a5-b99da026f38cd4bd/Builds/20261112T101525699750Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "binary_sha256": "96b4f135e1af64a88691fb0ef3e102c61ff0e30f1c9310bc6c9e41af96af6972",
+  "mode": "packaged Development",
+  "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-5a9f36a5-b99da026f38cd4bd/.local/pr203/perf/bardart/autoplay-script.json",
+  "script_sha256": "9f507824482e3c9059528cc870744ab18055930cf5aecc38a739d8ff59bb4e09",
+  "package_commit": "2aba698641b2b8406af5913fce95e7c30478bd58",
+  "cores": 2,
+  "flags": {
+    "vsync": false,
+    "sound": true,
+    "offscreen": false,
+    "csv_frames": 200000,
+    "resolution": "1920x1080"
+  },
+  "exit_code": 0,
+  "log": "warmup/game.log",
+  "csv": null,
+  "rss": {
+    "samples": 230,
+    "interval_s": 0.5,
+    "max_sampled_mb": 1248.1,
+    "peak_hwm_mb": 1244.9,
+    "max_mb": 1248.1
+  },
+  "retried": null,
+  "started": 1794478869.010047,
+  "ended": 1794478983.708004,
+  "started_at": "2026-11-12T10:21:09.010047+00:00",
+  "ended_at": "2026-11-12T10:23:03.708004+00:00"
+}

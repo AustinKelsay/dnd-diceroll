@@ -1,0 +1,42 @@
+{
+  "name": "measured",
+  "commit": "2aba698641b2b8406af5913fce95e7c30478bd58",
+  "dirty": false,
+  "binary": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-5a9f36a5-b99da026f38cd4bd/Builds/20261112T101525699750Z/Linux/DnDDiceRoll/Binaries/Linux/DnDDiceRoll",
+  "binary_sha256": "96b4f135e1af64a88691fb0ef3e102c61ff0e30f1c9310bc6c9e41af96af6972",
+  "mode": "packaged Development",
+  "script": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-5a9f36a5-b99da026f38cd4bd/.local/pr203/perf/fighters/autoplay-script.json",
+  "script_sha256": "9b5f89d668a8e90d87a7bd91927b05d05889a21c1544c7d094685c63709e3b06",
+  "package_commit": "2aba698641b2b8406af5913fce95e7c30478bd58",
+  "cores": 2,
+  "flags": {
+    "vsync": false,
+    "sound": true,
+    "offscreen": false,
+    "csv_frames": 200000,
+    "resolution": "1920x1080"
+  },
+  "exit_code": 0,
+  "log": "measured/game.log",
+  "csv": "measured/measured.csv",
+  "rss": {
+    "samples": 224,
+    "interval_s": 0.5,
+    "max_sampled_mb": 1234.7,
+    "peak_hwm_mb": 1229.8,
+    "max_mb": 1234.7
+  },
+  "retried": null,
+  "started": 1794479218.89513,
+  "ended": 1794479330.5484383,
+  "started_at": "2026-11-12T10:26:58.895130+00:00",
+  "ended_at": "2026-11-12T10:28:50.548438+00:00",
+  "csv_source": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-5a9f36a5-b99da026f38cd4bd/Builds/20261112T101525699750Z/Linux/DnDDiceRoll/Saved/Profiling/CSV/Profile(20261112_042658).csv",
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) i9-14900K",
+    "logical_cpus": 32,
+    "memory_total_mb": 15736,
+    "kernel": "7.2.15-1-omarchy",
+    "gpu": "NVIDIA GeForce RTX 4080 SUPER, 615.78.08, 16376 MiB"
+  }
+}
