@@ -1,0 +1,77 @@
+{
+ "hold": {
+  "frames": 16011,
+  "duration_ms": 45003.862,
+  "frame_p50_ms": 2.765,
+  "frame_p95_ms": 3.377,
+  "frame_max_ms": 6.396,
+  "gpu_p50_ms": 2.455,
+  "gpu_p95_ms": 2.647,
+  "gpu_max_ms": 5.702,
+  "game_p50_ms": 0.892,
+  "game_p95_ms": 1.227,
+  "game_max_ms": 3.573,
+  "window": "hold"
+ },
+ "play": {
+  "frames": 26555,
+  "duration_ms": 74597.919,
+  "frame_p50_ms": 2.767,
+  "frame_p95_ms": 3.385,
+  "frame_max_ms": 7.092,
+  "gpu_p50_ms": 2.457,
+  "gpu_p95_ms": 2.646,
+  "gpu_max_ms": 6.053,
+  "game_p50_ms": 0.893,
+  "game_p95_ms": 1.248,
+  "game_max_ms": 3.016,
+  "window": "play"
+ },
+ "hold+play": {
+  "frames": 42566,
+  "duration_ms": 119601.78,
+  "frame_p50_ms": 2.766,
+  "frame_p95_ms": 3.382,
+  "frame_max_ms": 7.092,
+  "gpu_p50_ms": 2.456,
+  "gpu_p95_ms": 2.647,
+  "gpu_max_ms": 6.053,
+  "game_p50_ms": 0.893,
+  "game_p95_ms": 1.241,
+  "game_max_ms": 3.573,
+  "window": "hold+play"
+ },
+ "resume_hitch_ms": 68.8,
+ "top_gpu": [
+  {
+   "stat": "GPU/TemporalSuperResolution",
+   "p95_ms": 0.84,
+   "mean_ms": 0.69
+  },
+  {
+   "stat": "GPU/ShadowDepths",
+   "p95_ms": 0.326,
+   "mean_ms": 0.327
+  },
+  {
+   "stat": "GPU/Postprocessing",
+   "p95_ms": 0.265,
+   "mean_ms": 0.267
+  },
+  {
+   "stat": "GPU/SSAO",
+   "p95_ms": 0.208,
+   "mean_ms": 0.204
+  },
+  {
+   "stat": "GPU/Unaccounted",
+   "p95_ms": 0.205,
+   "mean_ms": 0.196
+  },
+  {
+   "stat": "GPU/Lights",
+   "p95_ms": 0.182,
+   "mean_ms": 0.179
+  }
+ ]
+}

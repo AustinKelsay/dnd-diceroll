@@ -1,0 +1,8 @@
+{
+  "seed": 2,
+  "offer": 0,
+  "phase": "combat",
+  "boardWidth": 16,
+  "boardHeight": 12,
+  "foeLooks": "Warden,Archer"
+}

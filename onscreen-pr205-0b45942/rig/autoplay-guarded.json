@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "name": "watchtower-road",
+  "seed": 20261030,
+  "party": [
+    "fighter.champion",
+    "rogue.thief",
+    "cleric.life",
+    "wizard.evocation"
+  ],
+  "route": "guarded",
+  "bootFrames": 180,
+  "thinkFrames": 24,
+  "settleFrames": 30,
+  "stageSeconds": 240,
+  "fightSeconds": 1800,
+  "variants": [
+    {
+      "bait": 0,
+      "advance": true,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 1,
+      "advance": true,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 2,
+      "advance": true,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 3,
+      "advance": true,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 0,
+      "advance": false,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 1,
+      "advance": false,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 2,
+      "advance": false,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 3,
+      "advance": false,
+      "fallBack": false,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 0,
+      "advance": true,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 1,
+      "advance": true,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 2,
+      "advance": true,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 3,
+      "advance": true,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 0,
+      "advance": false,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 1,
+      "advance": false,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 2,
+      "advance": false,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    },
+    {
+      "bait": 3,
+      "advance": false,
+      "fallBack": true,
+      "retreat": true,
+      "maxRounds": 40
+    }
+  ]
+}

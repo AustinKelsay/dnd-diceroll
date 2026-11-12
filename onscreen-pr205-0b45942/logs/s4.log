@@ -1,0 +1,60 @@
+up d-vigil-b pid 364031 try 1
+round 1 turn Fighter(1) move 4 act True bonus True | 1:Figh3
+snap d-vigil-b-default
+snap d-vigil-b-zoom1
+closed
+errors: 0
+up d-vigil-a pid 364338 try 1
+round 1 turn Fighter(1) move 4 act True bonus True | 1:Figh3
+snap d-vigil-a-default
+snap d-vigil-a-zoom1
+closed
+errors: 0
+up d-vault-finale pid 364642 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh0/3
+snap d-vault-finale-default
+snap d-vault-finale-zoom1
+closed
+errors: 0
+up d-root-b pid 364912 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh30/
+snap d-root-b-default
+snap d-root-b-zoom1
+closed
+errors: 0
+up iso-vigil-b pid 366011 try 1
+round 1 turn Wizard(4) move 4 act True bonus True | 1:Figh30
+snap iso-vigil-b-default
+snap iso-vigil-b-zoom1
+closed
+errors: 0
+up iso-vault-finale pid 367567 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh0/3
+snap iso-vault-finale-default
+snap iso-vault-finale-zoom1
+closed
+errors: 0
+up iso-root-b pid 368358 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh30/
+snap iso-root-b-default
+snap iso-root-b-zoom1
+closed
+errors: 0
+up reg-default pid 369156 try 1
+round 1 turn Cleric(3) move 4 act True bonus True | 1:Figh30
+snap reg-default-default
+snap reg-default-zoom1
+closed
+errors: 0
+up reg-vault-raiders pid 369448 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh0/3
+snap reg-vault-raiders-default
+snap reg-vault-raiders-zoom1
+closed
+errors: 0
+up swing pid 370122 try 1
+round 1 turn Wizard(4) move 4 act True bonus True | 1:Figh30
+snap swing-end
+closed
+errors: 0
+S4-DONE

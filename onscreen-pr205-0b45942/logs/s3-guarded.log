@@ -1,0 +1,28 @@
+exited
+frames 2308
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 0 (bait 0, advance 1, fall back 0, retreat 1): every beat, 62 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 1 (bait 1, advance 1, fall back 0, retreat 1): every beat, 55 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 2 (bait 2, advance 1, fall back 0, retreat 1): every beat, 50 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 3 (bait 3, advance 1, fall back 0, retreat 1): every beat, 46 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 4 (bait 0, advance 0, fall back 0, retreat 1): every beat, 52 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 5 (bait 1, advance 0, fall back 0, retreat 1): every beat, 55 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 6 (bait 2, advance 0, fall back 0, retreat 1): every beat, 55 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 7 (bait 3, advance 0, fall back 0, retreat 1): every beat, 55 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 8 (bait 0, advance 1, fall back 1, retreat 1): every beat, 65 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 9 (bait 1, advance 1, fall back 1, retreat 1): every beat, 48 command(s), ro
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 10 (bait 2, advance 1, fall back 1, retreat 1): every beat, 50 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 11 (bait 3, advance 1, fall back 1, retreat 1): every beat, 46 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 12 (bait 0, advance 0, fall back 1, retreat 1): every beat, 67 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 13 (bait 1, advance 0, fall back 1, retreat 1): every beat, 48 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 14 (bait 2, advance 0, fall back 1, retreat 1): every beat, 42 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN variant 15 (bait 3, advance 0, fall back 1, retreat 1): every beat, 54 command(s), r
+[2026.11.12-14.07.33:396][182]LogExpeditionAutoplay: Display: AUTOPLAY_PLAN chosen variant=14 commands=42 survivors=4 downed=3 round=6
+[2026.11.12-14.07.36:018][307]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT special frame=1307 t=3.128 step=1 type=10 actor=3 target=1
+[2026.11.12-14.07.39:480][531]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT move frame=2531 t=6.590 step=4 type=0 actor=1 target=-1
+[2026.11.12-14.07.44:317][243]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT attack frame=4243 t=11.428 step=8 type=1 actor=3 target=20
+[2026.11.12-14.07.59:896][649]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT downing frame=9649 t=27.007 unit=3 name=Sera
+[2026.11.12-14.08.11:925][834]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT rescue frame=13834 t=39.036 step=27 type=6 actor=4 target=3
+[2026.11.12-14.08.31:034][455]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT victory frame=20455 t=58.145
+[2026.11.12-14.08.35:803][123]LogExpeditionAutoplay: Display: AUTOPLAY_BEAT quit frame=22123 t=62.914 checkpoint=~/.t3/worktrees/dnd-diceroll-t3/t3-
+[2026.11.12-14.08.35:803][123]LogExpeditionAutoplay: Display: AUTOPLAY_DONE ok frame=22123 t=62.914 pass=fresh beats=move,attack,special,downing,rescue,victory,
+errors: 0

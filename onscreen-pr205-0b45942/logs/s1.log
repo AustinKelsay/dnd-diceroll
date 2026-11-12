@@ -1,0 +1,58 @@
+up s1-foes-vigil-a pid 329824 try 1
+round 1 turn Wizard(4) move 4 act True bonus True | 1:Figh30/30@4,3 2:Rogu22/22@4,4 3:Cler22/22@4,5 4:Wiza22/22@4,6 20:Raid24/24@9,4 21:Raid24/24@9,6 22:Arch24/24@9,8 phase 1
+snap s1-foes-vigil-a-default
+snap s1-foes-vigil-a-zoom1
+snap s1-foes-vigil-a-zoom2
+closed
+errors: 0
+up s1-foes-vigil-b pid 330032 try 1
+round 1 turn Wizard(4) move 4 act True bonus True | 1:Figh30/30@4,3 2:Rogu22/22@4,4 3:Cler22/22@4,5 4:Wiza22/22@4,6 20:Raid24/24@9,4 21:Raid24/24@9,6 22:Arch24/24@9,8 phase 1
+snap s1-foes-vigil-b-default
+snap s1-foes-vigil-b-zoom1
+snap s1-foes-vigil-b-zoom2
+closed
+errors: 0
+up s1-foes-root-a pid 331068 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh30/30@4,4 2:Rogu22/22@4,5 3:Cler22/22@4,6 4:Wiza22/22@4,7 20:Raid20/20@10,3 21:Arch20/20@10,5 phase 1
+snap s1-foes-root-a-default
+snap s1-foes-root-a-zoom1
+snap s1-foes-root-a-zoom2
+closed
+errors: 0
+up s1-foes-root-b pid 331377 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh30/30@4,4 2:Rogu22/22@4,5 3:Cler22/22@4,6 4:Wiza22/22@4,7 20:Raid20/20@10,3 21:Arch20/20@10,5 phase 1
+snap s1-foes-root-b-default
+snap s1-foes-root-b-zoom1
+snap s1-foes-root-b-zoom2
+closed
+errors: 0
+up s1-foes-root-c pid 331599 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh30/30@4,4 2:Rogu22/22@4,5 3:Cler22/22@4,6 4:Wiza22/22@4,7 20:Raid20/20@10,3 21:Arch20/20@10,5 phase 1
+snap s1-foes-root-c-default
+snap s1-foes-root-c-zoom1
+snap s1-foes-root-c-zoom2
+closed
+errors: 0
+up s1-foes-vault-a pid 331922 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh0/30L2@4,4 2:Rogu14/22@4,5 3:Cler22/22@4,6 4:Wiza19/22@4,7 20:Raid40/40@11,3 21:Raid40/40@11,5 22:Arch40/40@11,7 phase 1
+snap s1-foes-vault-a-default
+snap s1-foes-vault-a-zoom1
+snap s1-foes-vault-a-zoom2
+closed
+errors: 0
+up s1-foes-vault-finale pid 332313 try 1
+round 1 turn Rogue(2) move 4 act True bonus True | 1:Figh0/30L2@4,4 2:Rogu14/22@4,5 3:Cler22/22@4,6 4:Wiza19/22@4,7 20:Raid40/40@11,3 21:Raid40/40@8,10 22:Arch40/40@11,7 phase 1
+snap s1-foes-vault-finale-default
+snap s1-foes-vault-finale-zoom1
+snap s1-foes-vault-finale-zoom2
+closed
+errors: 0
+~/.t3/worktrees/dnd-diceroll-t3/t3-641aa874-26d2aed68b01116a/.local/onscreen/lib.sh: line 18: 332576 Floating point exception   (core dumped) setsid "$BIN" -windowed -ResX=$w -ResY=$h -ForceRes -corelimit=2 -UserDir=$P/$n/runtime -ExpeditionSaveRoot=$sv -abslog=$P/$n/game.log -stdout -FullStdOutLogOutput "$@" > $P/$n/stdout.log 2>&1
+startup race try 1
+up s1-p720 pid 332781 try 2
+round 1 turn Wizard(4) move 4 act True bonus True | 1:Figh30/30@4,3 2:Rogu22/22@4,4 3:Cler22/22@4,5 4:Wiza22/22@4,6 20:Raid24/24@9,4 21:Raid24/24@9,6 22:Arch24/24@9,8 phase 1
+snap s1-p720-default
+snap s1-p720-zoom1
+closed
+errors: 0
+S1-DONE
