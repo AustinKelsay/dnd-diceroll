@@ -149,6 +149,30 @@ bool FEncounterIdentityLayoutsTest::RunTest(const FString& Parameters)
                                 }
                             }
                             TestEqual(Where + TEXT(": all open floor connected"), Floor.Num(), Width * Height - Layout.BlockedCells.Num());
+                            if (Recipe >= 3)
+                            {
+                                // No pocket (#188): every open cell has at least three open neighbours, except a board corner with no obstacle beside it.
+                                // Equivalently, obstacle neighbours plus off-board sides are at most one: no cell beside two obstacles, and no obstacle on
+                                // the edge ring. Bodies occupy cells, so a cell with two open neighbours (a 1-wide gap, an edge corridor, an inside corner)
+                                // could be sealed by two bodies; three bodies next to one obstacle remain possible, exactly as along any board edge (#217).
+                                for (int32 Y = 0; Y < Height; ++Y)
+                                {
+                                    for (int32 X = 0; X < Width; ++X)
+                                    {
+                                        const FIntPoint Cell(X, Y);
+                                        if (Layout.BlockedCells.Contains(Cell)) { continue; }
+                                        int32 Open = 0, Obstacles = 0;
+                                        for (const FIntPoint Offset : {FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1)})
+                                        {
+                                            const FIntPoint Next = Cell + Offset;
+                                            if (Next.X < 0 || Next.Y < 0 || Next.X >= Width || Next.Y >= Height) { continue; }
+                                            if (Layout.BlockedCells.Contains(Next)) { ++Obstacles; } else { ++Open; }
+                                        }
+                                        const bool bCorner = (X == 0 || X == Width - 1) && (Y == 0 || Y == Height - 1);
+                                        TestTrue(FString::Printf(TEXT("%s: (%d, %d) is no pocket (%d open neighbours)"), *Where, X, Y, Open), Open >= 3 || (bCorner && Obstacles == 0));
+                                    }
+                                }
+                            }
                             if (Recipe == 6)
                             {
                                 // Front to back: the party along the front row, the guardians at the back by the Waystone.
@@ -160,6 +184,22 @@ bool FEncounterIdentityLayoutsTest::RunTest(const FString& Parameters)
                         }
                     }
                 }
+            }
+        }
+    }
+    // The soft lock of PR #214's first head (trace rot2-03:20261119:10, fight 4, the Dangerous sunken causeway): the last hero at (7, 8) with terrain at
+    // (7, 9) below it and bodies at (7, 7), (6, 8) and (8, 8); the brute at (6, 6) could never reach it. On the corrected causeway that hero cell is
+    // the lower wall itself at every board size, so the configuration cannot arise; and no causeway cell has terrain on two sides.
+    for (int32 Width = 16; Width <= 18; ++Width)
+    {
+        for (int32 Height = 11; Height <= 12; ++Height)
+        {
+            for (int32 Stage : {2, 3})
+            {
+                FCombatEncounter Causeway;
+                if (!TestTrue(TEXT("Causeway generates"), FExpeditionRun::EncounterLayout(MakeRoute(Stage, true, 4, Width, Height), Stage, ERuleset::Compact, 9, Causeway))) { continue; }
+                TestTrue(FString::Printf(TEXT("%dx%d fight %d: the trapped hero's cell (7, 8) is terrain now"), Width, Height, Stage + 1), Causeway.BlockedCells.Contains(FIntPoint(7, 8)));
+                TestFalse(FString::Printf(TEXT("%dx%d fight %d: (7, 9) is open floor"), Width, Height, Stage + 1), Causeway.BlockedCells.Contains(FIntPoint(7, 9)));
             }
         }
     }
@@ -187,7 +227,7 @@ bool FEncounterIdentityRolesTest::RunTest(const FString& Parameters)
 {
     // Revision 9 rosters, names, saved roles, ranges and speeds by stage and route, and the stats as built (contract 11 section 6): the
     // revision 8 base for the route and stage (HP 20/24 + 4s, armour 12/13, attack min(5, 4 + s/2), die d6/d8, damage bonus 3 + s/3), with
-    // 75% of that HP in fights 3-4 and 90% in fight 5 and a damage bonus of 3 there; then the role: skirmisher 60% HP, +1 armour, d4,
+    // 70% of that HP in fights 3-4 and 90% in fight 5 and a damage bonus of 3 there; then the role: skirmisher 60% HP, +1 armour, d4,
     // speed 6; brute 110% HP, -1 armour, d10, speed 3; warden 175% HP, +1 armour, +2 damage.
     struct FTuning { int32 HpPercent, Armor, Die, Damage; };
     auto Tuning = [](const FString& Role, int32 BaseDie) -> FTuning
@@ -207,7 +247,7 @@ bool FEncounterIdentityRolesTest::RunTest(const FString& Parameters)
             const TArray<FRole> Roster = ExpectedRoster(Stage, bDangerous);
             if (!TestEqual(Where + TEXT(": roster size"), Layout.Combatants.Num() - 4, Roster.Num())) { continue; }
             const int32 Revision8HP = (bDangerous ? 24 : 20) + 4 * Stage, BaseArmor = bDangerous ? 13 : 12, BaseDie = bDangerous ? 8 : 6;
-            const int32 BaseHP = Stage < 2 ? Revision8HP : Revision8HP * (Stage == 4 ? 90 : 75) / 100;
+            const int32 BaseHP = Stage < 2 ? Revision8HP : Revision8HP * (Stage == 4 ? 90 : 70) / 100;
             const int32 BaseDamage = Stage < 2 ? 3 + Stage / 3 : 3;
             for (int32 I = 0; I < Roster.Num(); ++I)
             {
@@ -452,8 +492,9 @@ bool FCompactRevision9FingerprintTest::RunTest(const FString& Parameters)
     const FString Fingerprint = FString::Printf(TEXT("rng=%d|gen=%d|partyHp=%d|alive=%d|phase=%d|fights=%d|rounds=%d|turn=%d"), Run.Battle().Snapshot().RandomState,
         Run.Progress().GenerationRandomState, PartyHp, Alive, static_cast<int32>(Run.Progress().Phase), Run.Progress().History.Num(), Run.Battle().Snapshot().Round, Run.Battle().Snapshot().TurnIndex);
     AddInfo(TEXT("Revision 9 seed 42 fingerprint: ") + Fingerprint);
-    // Captured on the #188 head: the scripted party wins fights 1-4 and falls in the vault sanctum (phase 5, Defeat) in round 8.
-    TestEqual(TEXT("Revision 9 seed 42 golden"), Fingerprint, FString(TEXT("rng=-1266537499|gen=-1390404750|partyHp=0|alive=0|phase=5|fights=5|rounds=8|turn=5")));
+    // Captured on the #188 head (pocket-free layouts, pressure base 70%): the scripted party wins all five fights, the vault sanctum in round 9
+    // with two heroes standing (phase 4, Victory).
+    TestEqual(TEXT("Revision 9 seed 42 golden"), Fingerprint, FString(TEXT("rng=-480627795|gen=-1390404750|partyHp=29|alive=2|phase=4|fights=5|rounds=9|turn=3")));
     return !HasAnyErrors();
 }
 #endif

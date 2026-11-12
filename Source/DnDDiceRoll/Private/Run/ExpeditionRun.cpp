@@ -37,14 +37,16 @@ const FEncounterRecipe Recipes[] = {
     {TEXT("split stones"), TEXT("open flanks"), {{6, 2}, {7, 2}, {6, 3}, {8, 6}, {8, 7}, {7, 7}, {12, 1}, {13, 1}, {2, 9}, {3, 9}, {13, 5}, {15, 8}}, 10, 3, 0, false},
     {TEXT("ruined pillars"), TEXT("broken sight lines"), {{6, 2}, {6, 8}, {7, 5}, {11, 3}, {11, 7}, {13, 1}, {14, 9}, {1, 1}, {1, 9}, {2, 5}}, 9, 4, 1, false},
     {TEXT("broken wall"), TEXT("narrow gaps"), {{7, 1}, {7, 2}, {7, 3}, {7, 5}, {7, 6}, {7, 8}, {7, 9}, {13, 1}, {14, 1}, {15, 1}, {13, 9}, {14, 9}}, 11, 3, 2, false},
+    // Revision 9's layouts keep every open cell beside at least three open cells (a board corner excepted): obstacles stay off the edge ring
+    // and never sit one cell apart or diagonally, so no 1-wide gap, edge corridor or inside corner can be sealed by a couple of bodies (#188).
     // Staggered single pillars break sight lines across the middle, which favours closing in over shooting.
-    {TEXT("fallen colonnade"), TEXT("pillars block shots"), {{6, 2}, {6, 8}, {8, 4}, {8, 6}, {12, 2}, {12, 8}, {13, 5}, {2, 1}, {2, 9}, {14, 10}}, 10, 3, 1, false},
-    // A walled causeway with a central block splits the approach into two lanes: a chokepoint fight.
-    {TEXT("sunken causeway"), TEXT("two lanes"), {{6, 1}, {7, 1}, {8, 1}, {9, 1}, {10, 1}, {6, 9}, {7, 9}, {8, 9}, {9, 9}, {10, 9}, {8, 3}, {8, 4}, {8, 5}, {8, 6}, {8, 7}}, 11, 3, 2, false},
+    {TEXT("fallen colonnade"), TEXT("pillars block shots"), {{6, 2}, {6, 5}, {6, 8}, {8, 3}, {8, 7}, {11, 2}, {11, 5}, {11, 8}, {13, 4}, {2, 2}, {2, 8}}, 10, 3, 1, false},
+    // Two walled lanes and a central wall: four two-cell lanes, a chokepoint fight.
+    {TEXT("sunken causeway"), TEXT("two lanes"), {{6, 2}, {7, 2}, {8, 2}, {9, 2}, {10, 2}, {6, 8}, {7, 8}, {8, 8}, {9, 8}, {10, 8}, {7, 5}, {8, 5}, {9, 5}}, 11, 3, 2, false},
     // Scattered cover: ranged duels around the cairns.
-    {TEXT("cairn field"), TEXT("scattered cover"), {{6, 2}, {6, 6}, {7, 4}, {7, 8}, {8, 1}, {9, 6}, {12, 4}, {12, 9}, {13, 2}, {14, 7}, {2, 2}, {2, 8}}, 10, 3, 0, false},
+    {TEXT("cairn field"), TEXT("scattered cover"), {{6, 2}, {6, 6}, {7, 4}, {7, 8}, {9, 2}, {9, 6}, {12, 4}, {11, 8}, {13, 2}, {13, 7}, {2, 2}, {2, 8}}, 10, 3, 0, false},
     // Pillars line an aisle from the open front to the guardians at the back, by the Vault world's Waystone (#149).
-    {TEXT("vault sanctum"), TEXT("an aisle to the warden"), {{-4, 3}, {-4, 5}, {-4, 7}, {4, 3}, {4, 5}, {4, 7}, {-6, 5}, {6, 5}}, 0, 0, 1, true}
+    {TEXT("vault sanctum"), TEXT("an aisle to the warden"), {{-3, 2}, {-3, 5}, {-3, 8}, {3, 2}, {3, 5}, {3, 8}, {-5, 3}, {-5, 7}, {5, 3}, {5, 7}}, 0, 0, 1, true}
 };
 // Every revision draws a recipe from the first three, so revision 9 keeps revision 8's random numbers (and fights 1-2 their boards).
 constexpr int32 DrawnRecipes = 3, PressureRecipe = 3, FinaleRecipe = 6;
@@ -164,7 +166,7 @@ struct FEnemyStats { int32 HP = 0, ArmorClass = 0, AttackBonus = 0, DamageDie = 
 
 /** Revision 9's base for the pressure fights (3-4) and the finale (5): this share of the revision 8 HP, and a damage bonus of 3
  * (revision 8 rises to 4 from fight 4). */
-constexpr int32 PressureBaseHpPercent = 75, FinaleBaseHpPercent = 90, LaterBaseDamageBonus = 3;
+constexpr int32 PressureBaseHpPercent = 70, FinaleBaseHpPercent = 90, LaterBaseDamageBonus = 3;
 
 /** Revision 9 role adjustments to the revision 8 base for the route and stage (contract 11, tuned in report 12). */
 struct FRoleTuning { int32 HpPercent; int32 ArmorDelta; int32 DamageDie; int32 DamageDelta; int32 Speed; };

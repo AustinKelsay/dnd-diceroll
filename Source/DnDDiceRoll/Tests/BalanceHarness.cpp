@@ -684,6 +684,8 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     if (Stall.IsEmpty() && End != EExpeditionPhase::Victory && End != EExpeditionPhase::Defeat) { Stall = TEXT("run did not finish"); }
     Stats.Outcome = !Stall.IsEmpty() ? TEXT("Stall") : End == EExpeditionPhase::Victory ? TEXT("Victory") : TEXT("Defeat");
     Stats.StallReason = Stall;
+    Stats.bDeadlock = !Stall.IsEmpty() && End == EExpeditionPhase::Combat && Deadlocked(Run.Battle().Snapshot());
+    if (Stats.bDeadlock) { Stats.StallReason += TEXT(" (deadlock: no unit can reach an opponent)"); }
     if (!Stall.IsEmpty() && !Stats.Encounters.IsEmpty() && Stats.Encounters.Last().Outcome.IsEmpty()) { Stats.Encounters.Last().Outcome = TEXT("Stall"); }
     for (auto& Hero : Stats.Heroes)
     {
@@ -699,6 +701,35 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     if (OutFinal) { *OutFinal = Run.Snapshot(); }
     if (Trace) { *Trace += FString::Printf(TEXT("== %s %s\n"), *Stats.Outcome, *Stats.StallReason) + Board(Run.Battle().Snapshot()); }
     return Stats;
+}
+
+bool Deadlocked(const FCombatSnapshot& S)
+{
+    const FCombatEncounter& E = S.Encounter;
+    auto Blocked = [&E](FIntPoint C)
+    {
+        return C.X < 0 || C.Y < 0 || C.X >= E.Width || C.Y >= E.Height || E.BlockedCells.Contains(C) ||
+            E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C && U.Life != ECombatLife::Conscious; });
+    };
+    for (const FCombatantState& Unit : E.Combatants)
+    {
+        if (Unit.Life != ECombatLife::Conscious) { continue; }
+        TArray<FIntPoint> Queue = {Unit.Cell};
+        TSet<FIntPoint> Seen = {Unit.Cell};
+        for (int32 I = 0; I < Queue.Num(); ++I)
+        {
+            const FIntPoint Cell = Queue[I];
+            const bool bInRange = E.Combatants.ContainsByPredicate([&](const FCombatantState& Other)
+            { return Other.Side != Unit.Side && Other.Life == ECombatLife::Conscious && Policy::Manhattan(Cell, Other.Cell) <= Unit.Range; });
+            if (bInRange) { return false; }
+            for (const FIntPoint Offset : {FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1)})
+            {
+                const FIntPoint Next = Cell + Offset;
+                if (!Seen.Contains(Next) && !Blocked(Next)) { Seen.Add(Next); Queue.Add(Next); }
+            }
+        }
+    }
+    return true;
 }
 
 FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision)

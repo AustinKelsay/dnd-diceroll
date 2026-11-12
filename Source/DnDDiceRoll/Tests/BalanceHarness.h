@@ -86,6 +86,8 @@ struct FRunStats
     /** Victory, Defeat or Stall. */
     FString Outcome;
     FString StallReason;
+    /** A stall in which no conscious unit can ever reach an opponent (Deadlocked): a soft lock in the real game, not a policy loop (#188). */
+    bool bDeadlock = false;
     int32 EncountersWon = 0, Rounds = 0, Deaths = 0, Survivors = 0;
     int32 Damage = 0, DamageTaken = 0, Healing = 0, Protection = 0, SpecialsUsed = 0, PotionsUsed = 0, Commands = 0;
     /** Commands the run rejected (gate zero). */
@@ -104,6 +106,12 @@ struct FRunStats
  * is created under (FExpeditionRun::NewRun); an unsupported one makes the run a Stall. */
 FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal = nullptr, FString* OutTrace = nullptr,
     int32 Revision = FBuildCatalog::Revision);
+/**
+ * True when no conscious unit of either side can ever bring an opponent within its range: from its cell it walks over open floor (bodies and
+ * Downed heroes block, conscious units are treated as able to move aside) and no reachable cell lies within Range (Manhattan; sight ignored, so it
+ * errs toward "not deadlocked") of a conscious opponent. A fight in this state can never end (#188, #217).
+ */
+bool Deadlocked(const FCombatSnapshot& Snapshot);
 /** Text board and command log for one run, for reproducing a stall or outlier by seed. */
 FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision = FBuildCatalog::Revision);
 /** DND_BALANCE_REVISION when it names a supported revision (the before-run of a revision change), otherwise the current one;
