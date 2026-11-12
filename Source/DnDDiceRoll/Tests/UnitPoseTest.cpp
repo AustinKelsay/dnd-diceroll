@@ -11,6 +11,7 @@
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionPalette.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/UnitPose.h"
 #include "Run/ExpeditionRun.h"
@@ -3097,6 +3098,12 @@ bool FFoeRigsShippedTest::RunTest(const FString& Parameters)
         }
     }
     TestEqual(TEXT("The foes share the cast's one skeleton"), Skeletons.Num(), 1);
+    // The stature field is data for the foes only: every party class keeps the fitted height (the default party's figures are unchanged).
+    for (int32 Role = 1; Role <= 13; ++Role)
+    {
+        const FDiceRollCharacter* Rig = Shipped->RigForClass(static_cast<EAdventurerRole>(Role));
+        if (TestNotNull(*FString::Printf(TEXT("Class %d has a rig"), Role), Rig)) { TestTrue(*FString::Printf(TEXT("Class %d keeps the fitted height (%.2f)"), Role, Rig->HeightScale), FMath::IsNearlyEqual(Rig->HeightScale, 1.0f, 1.0e-4f)); }
+    }
     return !HasAnyErrors();
 }
 
@@ -3239,6 +3246,10 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
                 FLinearColor SkinRing;
                 TestTrue(*(Who + TEXT("'s skin has a tintable slot")), View->UnitShownColors(Foe->Id, SkinColors, SkinRing) && SkinColors.Num() == 1);
                 TestEqual(*(Who + TEXT("'s skin carries the enemy silhouette stencil")), View->FigureStencil(Foe->Id), AExpeditionBattleView::EnemyStencil);
+                // Subclass palettes and party accents (batch 4) are for the party: a foe's material carries every palette mask at 0, its own colours.
+                ExpeditionPalette::FPalette FoePalette;
+                if (TestTrue(*(Who + TEXT(" has the palette parameters (the master's)")), View->UnitPalette(Foe->Id, FoePalette)))
+                { for (int32 Slot = 0; Slot < ExpeditionPalette::SlotCount; ++Slot) { TestEqual(*FString::Printf(TEXT("%s has no palette in slot %d"), *Who, Slot), static_cast<int32>(FoePalette.Slots[Slot].Mask), 0); } }
                 for (const EUnitPose Pose : {EUnitPose::Ranged, EUnitPose::Melee})
                 {
                     if (!TestTrue(*(Who + TEXT(" can be held in a clip")), View->PreviewPose(Foe->Id, Pose, 0.5f))) { continue; }

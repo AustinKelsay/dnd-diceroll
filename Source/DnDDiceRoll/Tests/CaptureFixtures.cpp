@@ -297,7 +297,8 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             FExpeditionRun Run;
             if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
             WriteLooks(TEXT("foes-vault-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
-            // The back of the board is the high-Y row, opposite the camera's home side; the warden stands on the first free cell of the board's middle column from the back.
+            // The Vault's Waystone apse is on the high-row wall (the left of the home yaw, measured on this fixture's captures), a little on the party's side of the arches, so the warden
+            // stands on the enemy side of the wall line (column 8), on the first free cell from that wall: the guardian at the back by the Waystone, as #188's layout will place it.
             FExpeditionSnapshot Snapshot = Run.Snapshot();
             const FCombatEncounter& Encounter = Snapshot.Battle.Encounter;
             FCombatantState* Warden = nullptr;
@@ -307,7 +308,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             FIntPoint Back = Warden->Cell;
             for (int32 Row = Encounter.Height - 2; Row >= 0; --Row)
             {
-                const FIntPoint Cell(Encounter.Width / 2, Row);
+                const FIntPoint Cell(8, Row);
                 bool bFree = !Encounter.BlockedCells.Contains(Cell);
                 for (const FCombatantState& Other : Encounter.Combatants) { bFree = bFree && (Other.Id == Warden->Id || Other.Life == ECombatLife::Dead || Other.Cell != Cell); }
                 if (bFree) { Back = Cell; break; }
