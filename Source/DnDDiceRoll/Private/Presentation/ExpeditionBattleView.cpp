@@ -685,7 +685,7 @@ void AExpeditionBattleView::BeginPlay()
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
     // -ExpeditionFoeLooks=Skirmisher,Brute,Archer draws the enemies, in encounter order, as those looks (capture only; see SetFoeLooks).
     FString FoeLooks;
-    if (FParse::Value(FCommandLine::Get(), TEXT("ExpeditionFoeLooks="), FoeLooks))
+    if (FParse::Value(FCommandLine::Get(), TEXT("ExpeditionFoeLooks="), FoeLooks, false))
     {
         TArray<FString> Names;
         FoeLooks.ParseIntoArray(Names, TEXT(","), true);

@@ -1818,7 +1818,9 @@ bool FCastBatch2FiguresTest::RunTest(const FString& Parameters)
             View->Tick(0.016f);
         }
     }
-    TestEqual(TEXT("Exactly the four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("Exactly the four are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 2 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -2257,7 +2259,9 @@ bool FCastBatch3FiguresTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestEqual(TEXT("Exactly the four (three classes and the wizard) are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("Exactly the four (three classes and the wizard) are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 3 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -2851,7 +2855,9 @@ bool FCastBatch4FiguresTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestEqual(TEXT("All four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("All four are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 4 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -3204,6 +3210,9 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
             View->NewRun();
             View->ChooseRoute(Route);
             View->Tick(0.016f);
+            // A normal run has no look override (the flag and SetFoeLooks are capture and dev only): every enemy keeps the look its name gives.
+            for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+            { if (Unit.Side == ECombatSide::Enemy) { TestEqual(*FString::Printf(TEXT("%s: no override without the flag"), *Unit.Name), LookIndex(View->FoeLookFor(Unit)), LookIndex(ExpeditionFoe::LookOf(Unit))); } }
             const TArray<int32> Foes = EnemyIds(*View);
             const TArray<EFoeLook> Wanted = Arrangement(Foes.Num(), bSecond);
             if (!TestEqual(*(Label + TEXT(": the road has the expected enemies")), Foes.Num(), Wanted.Num())) { ReleaseView(View); continue; }
@@ -3299,6 +3308,10 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         View->Save();
         TestTrue(*(Label + TEXT(": the checkpoint file was written")), IFileManager::Get().FileExists(*Path));
+        // Capture and dev only: the looks are never saved, so a checkpoint made under SetFoeLooks holds nothing of them.
+        FString SavedText;
+        TestTrue(*(Label + TEXT(": the checkpoint reads back")), FFileHelper::LoadFileToString(SavedText, *Path));
+        for (const TCHAR* Word : {TEXT("Skirmisher"), TEXT("Brute"), TEXT("Warden"), TEXT("foeLooks"), TEXT("FoeLook")}) { TestFalse(*(Label + FString::Printf(TEXT(": the checkpoint does not hold \"%s\""), Word)), SavedText.Contains(Word)); }
         const int32 OriginalRigs = View->SkeletalFigureCount();
         FExpeditionSnapshot Original;
         Original.Progress = View->Progress();
@@ -3337,6 +3350,54 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         ReleaseView(View);
     }
     AddInfo(FString::Printf(TEXT("%d of 4 endings resumed with a fallen rigged foe"), Fallen));
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeLooksFlagTest, "Project.Expedition.Presentation.FoeLooksFlagIsCaptureOnly",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeLooksFlagTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // -ExpeditionFoeLooks is read in BeginPlay, like -ExpeditionPrimitives: with it the enemies are drawn as the named looks in encounter order, without it as their names say,
+    // and in neither case does the run change.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeLooksFlag"), FGuid::NewGuid().ToString());
+    const FString Original = FCommandLine::Get();
+    const auto Looks3 = [](const AExpeditionBattleView& View)
+    {
+        TArray<int32> Out;
+        for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Out.Add(LookIndex(View.FoeLookFor(Unit))); } }
+        return Out;
+    };
+    FCommandLine::Set(*(Original + TEXT(" -ExpeditionFoeLooks=Brute,Warden,Archer")));
+    AExpeditionBattleView* Flagged = MakeView(nullptr, FPaths::Combine(Directory, TEXT("flag"), TEXT("current.json")), EView::Rigged);
+    FCommandLine::Set(*Original);
+    if (TestNotNull(TEXT("Flagged view"), Flagged))
+    {
+        Flagged->NewRun();
+        Flagged->ChooseRoute(1);
+        Flagged->Tick(0.016f);
+        TestEqual(TEXT("With the flag the enemies are the named looks, in order"), Looks3(*Flagged), TArray<int32>({LookIndex(EFoeLook::Brute), LookIndex(EFoeLook::Warden), LookIndex(EFoeLook::Archer)}));
+        for (const FCombatantState& Unit : Flagged->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Enemy) { TestTrue(*FString::Printf(TEXT("%s is a rigged figure under the flag"), *Unit.Name), Flagged->UnitAnimation(Unit.Id).bSkeletal); } }
+        // The party is untouched by the flag.
+        for (const FCombatantState& Unit : Flagged->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Party) { TestEqual(*FString::Printf(TEXT("%s keeps its class look"), *Unit.Name), LookIndex(Flagged->FoeLookFor(Unit)), LookIndex(ExpeditionFoe::LookOf(Unit))); } }
+        ReleaseView(Flagged);
+    }
+    AExpeditionBattleView* Plain = MakeView(nullptr, FPaths::Combine(Directory, TEXT("plain"), TEXT("current.json")), EView::Rigged);
+    if (TestNotNull(TEXT("Plain view"), Plain))
+    {
+        Plain->NewRun();
+        Plain->ChooseRoute(1);
+        Plain->Tick(0.016f);
+        TArray<int32> Named;
+        for (const FCombatantState& Unit : Plain->Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Named.Add(LookIndex(ExpeditionFoe::LookOf(Unit))); } }
+        TestEqual(TEXT("Without the flag the enemies are drawn as their names say"), Looks3(*Plain), Named);
+        TestEqual(TEXT("A dangerous first fight is two raiders and the archer"), Named, TArray<int32>({LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Archer)}));
+        ReleaseView(Plain);
+    }
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
