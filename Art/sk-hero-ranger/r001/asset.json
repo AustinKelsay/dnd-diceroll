@@ -58,12 +58,12 @@
     {
       "role": "source",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger_source.blend",
-      "sha256": "2e5177b972f5fe9a0c37329affc517722263b291c7927b01600d8d6a5855026e"
+      "sha256": "f1062204fcb266c12a9ab1a37468d7b3b09e77126db57ddde2b8c41bfe478596"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH2.md",
-      "sha256": "21b1c98f14e9c16b6d1c744ec5fdf2c6b55b7176512efde355979a14af781cf0"
+      "sha256": "31757ab69f42644ff63792811fea378313cf8a7b651ec709dbd46575e10654e9"
     },
     {
       "role": "source",
@@ -88,7 +88,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "539aa82b9bc242239cf99fd25e9e11d9d566fbc8e958dd124e664794a14b6068"
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
     },
     {
       "role": "source",
@@ -118,12 +118,12 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/overrides.py",
-      "sha256": "9f9154df8669c7bbf6207ec1841990e2675d110033834ad9de3805b127064b8e"
+      "sha256": "1e3626a5f53ec1e0f27abaecba7109d8eb2c458b28ed1f66e4d0d88a3d15101c"
     },
     {
       "role": "export",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger.glb",
-      "sha256": "33929436004ea5d9960a89e8c8868643de12f770f26af337e12d05ac109b1e7a"
+      "sha256": "259732ff878a359c8fb942d95791da3442a2a6b3920dc2c67b3b7cc562c9e3da"
     },
     {
       "role": "export",

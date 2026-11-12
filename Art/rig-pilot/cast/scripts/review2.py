@@ -61,10 +61,19 @@ def override_checks(key, rev):
     r0 = np.array(ao.pose.bones['root'].matrix.translation)
     set_pose(ao, action, frames)
     last = eval_pts(ob)
+    scale = {}
+    if key == 'ranger':
+        # Every vertex weighted to weapon_socket (the short blade, guard, pommel and rune) rides that bone, so its scale is the blade's: the ranger's
+        # Ranged hides it from frame 2 until frame 31 and shows it again by frame 35 (#198: no blade while the bow is out).
+        for f in range(frames + 1):
+            set_pose(ao, action, f)
+            scale[f] = round(float(ao.pose.bones['weapon_socket'].matrix.to_scale().x), 4)
     out = dict(present=True, range=[round(a.frame_range[0], 2), round(a.frame_range[1], 2)],
                first_vs_idle0_mm=round(float(np.linalg.norm(first - idle0, axis=1).max()) * 1000, 3),
                last_vs_idle0_mm=round(float(np.linalg.norm(last - idle0, axis=1).max()) * 1000, 3),
                root_drift_mm=round(float(np.linalg.norm(np.array(ao.pose.bones['root'].matrix.translation) - r0)) * 1000, 3))
+    if scale:
+        out['blade_scale_by_frame'] = scale
     return out
 
 
@@ -98,6 +107,10 @@ def gate(key, rev, path):
         check(f'override {action}: present with frames 0 to {frames}', ov.get('present') and ov.get('range') == [0.0, float(frames)], str(ov))
         check(f'override {action}: starts and ends on Idle frame 0 (0.01 mm)', ov.get('present') and ov['first_vs_idle0_mm'] <= 0.01 and ov['last_vs_idle0_mm'] <= 0.01, str(ov))
         check(f'override {action}: root drift 0', ov.get('present') and ov['root_drift_mm'] <= 0.01, str(ov))
+        if key == 'ranger':
+            bs = ov.get('blade_scale_by_frame', {})
+            check(f'override {action}: the blade is hidden (scale 0.01 or less) from frame 2 to 31, full size at frame 0 and from frame 35',
+                  bool(bs) and bs[0] >= 0.999 and all(bs[f] <= 0.01 for f in range(2, 32)) and all(bs[f] >= 0.999 for f in range(35, frames + 1)), str(bs))
     d['pass'] = not fails
     d['failures'] = fails
     with open(path, 'w') as fh:
@@ -322,7 +335,7 @@ def sheet2_override():
     """The two per-class clips (overrides.py) beside the shared clip they replace: the ranger's Ranged_Ranger and the barbarian's Melee_Barbarian,
     seen from the three-quarter view and from the front (the string and the haft are easiest to read from there). Writes sheet_15 and sheet_16."""
     tmp = tempfile.mkdtemp(prefix='cast150_', dir=os.path.join(R, '.local', 'scratch'))
-    spec = (('ranger', 'Ranged_Ranger', 'Ranged', (0, 5, 9, 14, 20, 23, 27, 29, 32, 36), 15), ('barbarian', 'Melee_Barbarian', 'Melee', (0, 4, 7, 9, 11, 13, 16, 20, 24, 30), 16))
+    spec = (('ranger', 'Ranged_Ranger', 'Ranged', (0, 1, 2, 5, 14, 20, 23, 27, 32, 36), 15), ('barbarian', 'Melee_Barbarian', 'Melee', (0, 4, 7, 9, 11, 13, 16, 20, 24, 30), 16))
     for key, action, shared, frames, n in spec:
         fresh()
         setup_render(220, 330)

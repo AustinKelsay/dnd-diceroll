@@ -120,6 +120,11 @@ private:
         FVector2D ImpactFrom = FVector2D::ZeroVector;
         bool bHasBolt = false;
         FIntRect Bolt;
+        /** Impact shots with a "role" (#198): the shooter, a party hero of that class, held in its Ranged clip, and its footprint box (the shot's measured subject). */
+        int32 ShooterId = INDEX_NONE;
+        FString ShooterName;
+        bool bHasShooterBox = false;
+        FIntRect ShooterBox;
         bool bImpactFired = false;
         /** Battle and targeting shots (#150): every figure on the board with its projected footprint box in screenshot pixels, so a tool can
          * measure one class's figure against the ground behind it (tools/figure_contrast.py). Units whose box is off screen are left out. */

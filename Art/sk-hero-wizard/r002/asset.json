@@ -106,7 +106,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH2.md",
-      "sha256": "21b1c98f14e9c16b6d1c744ec5fdf2c6b55b7176512efde355979a14af781cf0"
+      "sha256": "31757ab69f42644ff63792811fea378313cf8a7b651ec709dbd46575e10654e9"
     },
     {
       "role": "source",
@@ -131,7 +131,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "539aa82b9bc242239cf99fd25e9e11d9d566fbc8e958dd124e664794a14b6068"
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
     },
     {
       "role": "source",
