@@ -14,7 +14,8 @@
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
  * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
- * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
+ * recipes, which show the Vault kit r002 once it is imported; every finale fixture here is a catalog revision 8 run, which still draws those
+ * recipes for fight 5, whereas a revision 9 run's finale is always the vault sanctum (#188)), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
@@ -192,7 +193,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
         {
             FExpeditionRun Run;
-            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast)) { continue; }
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast, false, 8)) { continue; }
             Write(*(Group + TEXT("-board-vault")), Run);
             Describe(*(Group + TEXT("-board-vault")), Run, Seed, 0);
             bVault = true;
@@ -210,7 +211,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         for (int32 Seed = 1; Seed < 400; ++Seed)
         {
             FExpeditionRun Run;
-            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe)) { continue; }
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe, true, nullptr, false, 8)) { continue; }
             Write(Name, Run);
             Describe(Name, Run, Seed, 0);
             return;
@@ -225,7 +226,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         for (int32 Seed = 1; Seed < 400 && !bFound; ++Seed)
         {
             FExpeditionRun Run;
-            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true, 8)) { continue; }
             Write(TEXT("board-vault-raiders"), Run);
             Describe(TEXT("board-vault-raiders"), Run, Seed, 1);
             bFound = true;
@@ -295,7 +296,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
         {
             FExpeditionRun Run;
-            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true, 8)) { continue; }
             WriteLooks(TEXT("foes-vault-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
             // The Vault's Waystone apse is on the high-row wall (the left of the home yaw, measured on this fixture's captures), a little on the party's side of the arches, so the warden
             // stands on the enemy side of the wall line (column 8), on the first free cell from that wall: the guardian at the back by the Waystone, as #188's layout will place it.
@@ -492,7 +493,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             return INDEX_NONE;
         };
         int32 VaultBase = INDEX_NONE;
-        for (int32 Seed = 1; Seed < 400 && VaultBase == INDEX_NONE; ++Seed) { FExpeditionRun Run; if (ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true)) { VaultBase = Seed; } }
+        for (int32 Seed = 1; Seed < 400 && VaultBase == INDEX_NONE; ++Seed) { FExpeditionRun Run; if (ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, false, 8)) { VaultBase = Seed; } }
         const int32 Bases[3] = {BaseSeed(1, true, 1), BaseSeed(0, false, 2), VaultBase};
         if (!TestTrue(TEXT("The three palette boards are found with the default party first"), Bases[0] != INDEX_NONE && Bases[1] != INDEX_NONE && Bases[2] != INDEX_NONE)) { return false; }
         // One fixture: the party's own run on the board (0 Vigil pillars, 1 Root recipe 2, 2 the Vault finale), from the base seed upward.
@@ -506,7 +507,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
                 FExpeditionRun Run;
                 if (Board == 2)
                 {
-                    if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Party)) { continue; }
+                    if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Party, false, 8)) { continue; }
                 }
                 else
                 {

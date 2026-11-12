@@ -429,6 +429,7 @@ struct FTracker
     void PartyCommand(const FCombatCommand& Command, const FCombatSnapshot& Before, const FCombatSnapshot& After, EBattlePhase Phase)
     {
         FHeroStats* Actor = Hero(Command.ActorId);
+        const FCombatantState* ActorBefore = Before.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& U) { return U.Id == Command.ActorId; });
         ++Run.Commands;
         for (int32 I = 0; I < After.Encounter.Combatants.Num() && I < Before.Encounter.Combatants.Num(); ++I)
         {
@@ -438,6 +439,8 @@ struct FTracker
             {
                 const int32 Lost = FMath::Max(0, Was.HP - Now.HP);
                 Actor->Damage += Lost; Encounter().Damage += Lost; Run.Damage += Lost;
+                // Melee: the actor stood next to this enemy when the command began (a hit after moving in counts as the move's own step).
+                if (ActorBefore && Policy::Manhattan(ActorBefore->Cell, Was.Cell) <= 1) { Encounter().MeleeDamage += Lost; }
                 if (Was.Life != ECombatLife::Dead && Now.Life == ECombatLife::Dead) { ++Actor->Kills; }
             }
             else
@@ -586,11 +589,11 @@ FString Board(const FCombatSnapshot& S)
 }
 }
 
-FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal, FString* Trace)
+FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal, FString* Trace, int32 Revision)
 {
     FRunStats Stats;
     Stats.PartyId = Party.Id; Stats.Archetype = Party.Archetype; Stats.Builds = Party.Builds;
-    Stats.Seed = Seed; Stats.RoutePattern = RoutePattern;
+    Stats.Seed = Seed; Stats.RoutePattern = RoutePattern; Stats.Revision = Revision;
     FTracker Tracker(Stats);
     TArray<FPartyBuildSelection> Selection;
     for (int32 I = 0; I < Party.Builds.Num(); ++I)
@@ -600,7 +603,7 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     }
     FExpeditionRun Run;
     FString Error;
-    if (!Run.NewRun(Seed, Selection, Error, FString::Printf(TEXT("balance-%s-%d"), *Party.Id, Seed), ERuleset::Compact))
+    if (!Run.NewRun(Seed, Selection, Error, FString::Printf(TEXT("balance-%s-%d"), *Party.Id, Seed), ERuleset::Compact, Revision))
     {
         Stats.Outcome = TEXT("Stall"); Stats.StallReason = TEXT("NewRun rejected: ") + Error; return Stats;
     }
@@ -698,11 +701,26 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     return Stats;
 }
 
-FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern)
+FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision)
 {
     FString Trace;
-    PlayRun(Party, Seed, RoutePattern, nullptr, &Trace);
+    PlayRun(Party, Seed, RoutePattern, nullptr, &Trace, Revision);
     return Trace;
+}
+
+bool RevisionFromEnvironment(int32& OutRevision, FString& Error)
+{
+    const FString Value = FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_REVISION"));
+    OutRevision = FBuildCatalog::Revision;
+    if (Value.IsEmpty()) { return true; }
+    const int32 Revision = FCString::Atoi(*Value);
+    if (!Value.IsNumeric() || Revision < FBuildCatalog::MinimumRevision || Revision > FBuildCatalog::Revision)
+    {
+        Error = FString::Printf(TEXT("DND_BALANCE_REVISION=%s is not a supported catalog revision (%d to %d)"), *Value, FBuildCatalog::MinimumRevision, FBuildCatalog::Revision);
+        return false;
+    }
+    OutRevision = Revision;
+    return true;
 }
 
 const FPartySpec* FindParty(const FString& Id)
@@ -716,12 +734,12 @@ const FPartySpec* FindParty(const FString& Id)
     return All.FindByPredicate([&Id](const FPartySpec& Party) { return Party.Id == Id; });
 }
 
-TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds)
+TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds, int32 Revision)
 {
     TArray<FRunStats> Runs;
     for (const auto& Party : Parties)
     {
-        for (int32 I = 0; I < Seeds; ++I) { Runs.Add(PlayRun(Party, BaseSeed + I, I)); }
+        for (int32 I = 0; I < Seeds; ++I) { Runs.Add(PlayRun(Party, BaseSeed + I, I, nullptr, nullptr, Revision)); }
     }
     return Runs;
 }
@@ -822,14 +840,14 @@ FString RunsCsv(const TArray<FRunStats>& Runs)
 
 FString EncountersCsv(const TArray<FRunStats>& Runs)
 {
-    FString Out = TEXT("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,damage_taken,healing,protection,downs,deaths,revives,specials_used\n");
+    FString Out = TEXT("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,damage_taken,healing,protection,downs,deaths,revives,specials_used,melee_damage\n");
     for (const auto& R : Runs)
     {
         for (const auto& E : R.Encounters)
         {
-            Out += FString::Printf(TEXT("%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, R.Seed, E.Stage,
+            Out += FString::Printf(TEXT("%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, R.Seed, E.Stage,
                 E.bDangerous ? TEXT("dangerous") : TEXT("guarded"), E.Recipe, E.Width, E.Height, E.Enemies, *E.Outcome, E.Rounds, E.ConsciousStart,
-                E.HpStart, E.HpLow, E.HpEnd, E.HpMax, E.Damage, E.DamageTaken, E.Healing, E.Protection, E.Downs, E.Deaths, E.Revives, E.SpecialsUsed);
+                E.HpStart, E.HpLow, E.HpEnd, E.HpMax, E.Damage, E.DamageTaken, E.Healing, E.Protection, E.Downs, E.Deaths, E.Revives, E.SpecialsUsed, E.MeleeDamage);
         }
     }
     return Out;
@@ -957,7 +975,8 @@ bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FParty
     Meta->SetStringField(TEXT("group"), Group);
     Meta->SetNumberField(TEXT("policy_version"), PolicyVersion);
     Meta->SetStringField(TEXT("ruleset"), TEXT("Compact"));
-    Meta->SetNumberField(TEXT("catalog_revision"), FBuildCatalog::Revision);
+    // The revision the runs were created under (all of a group's runs share it; DND_BALANCE_REVISION picks it).
+    Meta->SetNumberField(TEXT("catalog_revision"), Runs.IsEmpty() ? FBuildCatalog::Revision : Runs[0].Revision);
     Meta->SetNumberField(TEXT("base_seed"), BaseSeed);
     Meta->SetNumberField(TEXT("seeds"), Parties.IsEmpty() ? 0 : Runs.Num() / Parties.Num());
     Meta->SetNumberField(TEXT("runs"), Runs.Num());

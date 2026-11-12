@@ -2973,6 +2973,7 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
         TestEqual(*FString::Printf(TEXT("\"%s\" (range %d) is drawn as the expected look"), Case.Name, Case.Range), LookIndex(LookFromName(Case.Name, Case.Range)), LookIndex(Case.Look));
     }
     // Today's enemies map exactly as before: every enemy of real runs (both roads of the first fight on three seeds, the plain and the dangerous finale) and the tutorial encounter.
+    // The finales are revision 8 runs: since revision 9 (#188) a new run's finale holds the warden and the brute, which the saved-role seam below covers.
     TArray<FCombatantState> Foes;
     for (const FCombatantState& Unit : FCombatBattle::TutorialEncounter().Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } }
     for (const int32 Seed : {7, 11, 13})
@@ -2987,7 +2988,7 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
         for (const bool bDangerous : {false, true})
         {
             FExpeditionRun Finale;
-            if (ExpeditionTestSupport::ReachFinale(Finale, Seed, -1, false, nullptr, bDangerous))
+            if (ExpeditionTestSupport::ReachFinale(Finale, Seed, -1, false, nullptr, bDangerous, 8))
             { for (const FCombatantState& Unit : Finale.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } } }
         }
     }

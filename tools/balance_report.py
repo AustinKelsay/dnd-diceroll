@@ -21,6 +21,14 @@ WIN_RATE_GAP = 0.15
 RARE = 0.10
 # Results and summaries live only under the checkout's ignored .local/ folder.
 LOCAL_ROOT = Path(__file__).resolve().parents[1] / ".local"
+# Encounter recipes by id (Run/ExpeditionRun.cpp): 0-2 every revision's, 3-6 revision 9's pressure layouts and finale (#188).
+LAYOUTS = {0: "split stones", 1: "ruined pillars", 2: "broken wall", 3: "fallen colonnade", 4: "sunken causeway", 5: "cairn field", 6: "vault sanctum"}
+# Fights 1-2, 3-4 and 5, and the revision 9 risk word each stage and route shows (contract 11). Earlier revisions show no risk word;
+# their rows still sort into the same tiers, so a before-run can be compared with an after-run.
+STAGE_KINDS = {1: "approach", 2: "approach", 3: "pressure", 4: "pressure", 5: "finale"}
+RISK = {("approach", "guarded"): "low", ("pressure", "guarded"): "moderate", ("finale", "guarded"): "high",
+        ("approach", "dangerous"): "high", ("pressure", "dangerous"): "severe", ("finale", "dangerous"): "severe"}
+RISK_ORDER = ("low", "moderate", "high", "severe")
 
 
 def wilson(successes, trials, z=1.96):
@@ -187,6 +195,10 @@ def summarize(data):
     summary["outliers"] = outliers(kits, rotation_rate)
     summary["signatures"] = signatures(kits)
     summary["encounters"] = encounter_blocks(data["encounters"])
+    summary["catalog_revisions"] = sorted({g.get("catalog_revision") for g in data["groups"] if g.get("catalog_revision") is not None})
+    summary["layouts"] = layout_blocks(data["encounters"])
+    summary["stage_kinds"] = stage_kind_blocks(data["encounters"])
+    summary["risk"] = risk_blocks(data["encounters"])
     summary["stalls"] = [{"party": r["party"], "seed": r["seed"], "reason": r["stall_reason"]} for r in runs if r["outcome"] == "Stall"]
     summary["long_fights"] = long_fights(data["encounters"])
     deaths = sorted((h for h in data["heroes"] if h["survived"] == "0"), key=lambda h: (h["party"], int(h["seed"]), int(h["slot"])))
@@ -259,6 +271,54 @@ def encounter_blocks(rows):
     return blocks
 
 
+def fight_block(group):
+    """Finished fights of `group`: count, defeats, rounds, HP lost and the melee share of party damage."""
+    finished = [r for r in group if r["outcome"] in ("Victory", "Defeat")]
+    damage = sum(number(r, "damage") for r in finished)
+    return dict(rate(sum(1 for r in finished if r["outcome"] == "Defeat"), len(finished)), **{
+        "rounds": mean([number(r, "rounds") for r in finished]),
+        "hp_lost_fraction": mean([(number(r, "hp_start") - number(r, "hp_end")) / max(1, number(r, "hp_max")) for r in finished]),
+        "melee_share": sum(number(r, "melee_damage") for r in finished) / damage if damage else 0.0,
+    })
+
+
+def layout_blocks(rows):
+    """Per recipe and route (#188 target E2): fights, defeat share, rounds, HP lost, melee share of damage."""
+    blocks = {}
+    for (recipe, route), group in sorted(group_by_pair(rows, "recipe", "route").items(), key=lambda item: (int(item[0][0]), item[0][1])):
+        stages = sorted({int(r["stage"]) for r in group})
+        blocks[f"{recipe}-{route}"] = dict(fight_block(group), recipe=int(recipe), layout=LAYOUTS.get(int(recipe), f"recipe {recipe}"), route=route, stages=stages)
+    return blocks
+
+
+def stage_kind_blocks(rows):
+    """Approach, pressure and finale per route (#188 target E1)."""
+    groups = defaultdict(list)
+    for r in rows:
+        groups[(STAGE_KINDS.get(int(r["stage"]), "other"), r["route"])].append(r)
+    order = {"approach": 0, "pressure": 1, "finale": 2}
+    return {f"{kind}-{route}": dict(fight_block(group), kind=kind, route=route)
+            for (kind, route), group in sorted(groups.items(), key=lambda item: (item[0][1], order.get(item[0][0], 3)))}
+
+
+def risk_blocks(rows):
+    """Fights by the risk word their stage and route show, and whether every higher word costs more HP and loses more often (#188 E3)."""
+    groups = defaultdict(list)
+    for r in rows:
+        word = RISK.get((STAGE_KINDS.get(int(r["stage"]), ""), r["route"]))
+        if word:
+            groups[word].append(r)
+    tiers = {word: dict(fight_block(groups[word]), risk=word) for word in RISK_ORDER if groups[word]}
+    pairs = []
+    words = [w for w in RISK_ORDER if w in tiers]
+    for i, low in enumerate(words):
+        for high in words[i + 1:]:
+            pairs.append({"lower": low, "higher": high,
+                          "costs_more": tiers[high]["hp_lost_fraction"] > tiers[low]["hp_lost_fraction"],
+                          "loses_more": tiers[high]["rate"] > tiers[low]["rate"]})
+    return {"tiers": tiers, "pairs": pairs, "ordered": all(p["costs_more"] and p["loses_more"] for p in pairs)}
+
+
 def group_by_pair(rows, a, b):
     result = defaultdict(list)
     for row in rows:
@@ -286,7 +346,8 @@ def interval(block):
 def markdown(summary):
     lines = ["# Balance baseline summary", ""]
     o = summary["overall"]
-    lines += [f"Groups: {', '.join(summary['groups'])}. Policy version {summary['policy_version']}. {o['n']} runs in {summary['seconds']:.1f} s.", "",
+    revisions = summary.get("catalog_revisions") or ["unrecorded"]
+    lines += [f"Groups: {', '.join(summary['groups'])}. Policy version {summary['policy_version']}. Catalog revision {', '.join(str(r) for r in revisions)}. {o['n']} runs in {summary['seconds']:.1f} s.", "",
               f"Overall win rate {interval(o)}; {o['stalls']} stalls; {o['fights_won']:.2f} fights won per run; {o['rounds_per_fight']:.1f} rounds per fight; {o['deaths_per_run']:.2f} deaths per run.", "",
               f"Gates: policy errors {summary['gates']['policy_errors']}, illegal proposals {summary['gates']['illegal_proposals']}, passive ends {summary['gates']['passive_ends']}, protection mismatches {summary['gates']['protection_mismatches']}.", ""]
     lines += ["## Parties", "", "| Party | Archetype | Win rate (95% CI) | Fights won | Rounds/fight | Deaths/run | Damage | Taken | Healing | Protection | Specials | Potions |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -322,6 +383,19 @@ def markdown(summary):
     lines += ["", "## Encounters by stage and route", "", "| Stage | Route | Fights | Win rate | Rounds | HP lost | Lowest party HP (mean / worst) | Downs | Deaths | Heroes standing at start |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for e in summary["encounters"].values():
         lines.append(f"| {e['stage']} | {e['route']} | {e['n']} | {interval(e)} | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['hp_low_fraction'])} / {percent(e['hp_low_min'])} | {e['downs']:.2f} | {e['deaths']:.2f} | {e['conscious_start']:.2f} |")
+    lines += ["", "## Stages by route (fights 1-2 approach, 3-4 pressure, 5 finale)", "", "| Stage | Route | Fights | Defeats | Rounds | HP lost | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- |"]
+    for e in summary["stage_kinds"].values():
+        lines.append(f"| {e['kind']} | {e['route']} | {e['n']} | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['melee_share'])} |")
+    lines += ["", "## Layouts by route", "", "| Recipe | Layout | Route | Fights (stages) | Defeats | Rounds | HP lost | Melee share of damage |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for e in summary["layouts"].values():
+        lines.append(f"| {e['recipe']} | {e['layout']} | {e['route']} | {e['n']} ({', '.join(str(s) for s in e['stages'])}) | {100 * e['rate']:.1f}% | {e['rounds']:.1f} | {percent(e['hp_lost_fraction'])} | {percent(e['melee_share'])} |")
+    risk = summary["risk"]
+    lines += ["", "## Risk words (revision 9 table by stage and route)", "", "| Risk | Fights | Defeats | HP lost | Rounds |", "| --- | --- | --- | --- | --- |"]
+    for t in risk["tiers"].values():
+        lines.append(f"| {t['risk']} | {t['n']} | {100 * t['rate']:.1f}% | {percent(t['hp_lost_fraction'])} | {t['rounds']:.1f} |")
+    lines += ["", "Every higher word costs more HP and loses more often: " + ("yes" if risk["ordered"] else "no, " + "; ".join(
+        f"{p['higher']} vs {p['lower']}" + ("" if p["costs_more"] else " costs no more") + ("" if p["loses_more"] else " loses no more often")
+        for p in risk["pairs"] if not (p["costs_more"] and p["loses_more"]))) + "."]
     lines += ["", "## Outliers", ""]
     lines += [f"- {o['kit']}: {o['metric']} {o['value']:.3f}" + (f" (robust z {o['z']:.1f})" if o["z"] is not None else "") for o in summary["outliers"]] or ["None."]
     lines += ["", "## Special signatures", ""]

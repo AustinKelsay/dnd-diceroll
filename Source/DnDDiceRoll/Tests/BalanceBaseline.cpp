@@ -19,7 +19,11 @@ class FPlayGroupCommand : public IAutomationLatentCommand
 {
 public:
     FPlayGroupCommand(FAutomationTestBase& InTest, FString InGroup, TArray<BalanceHarness::FPartySpec> InParties)
-        : Test(InTest), Group(MoveTemp(InGroup)), Parties(MoveTemp(InParties)) {}
+        : Test(InTest), Group(MoveTemp(InGroup)), Parties(MoveTemp(InParties))
+    {
+        FString Error;
+        if (!BalanceHarness::RevisionFromEnvironment(Revision, Error)) { Test.AddError(Error); Next = Parties.Num(); }
+    }
 
     virtual bool Update() override
     {
@@ -27,7 +31,7 @@ public:
         if (Next < Parties.Num())
         {
             const double Start = FPlatformTime::Seconds();
-            Runs.Append(PlayGroup({Parties[Next++]}));
+            Runs.Append(PlayGroup({Parties[Next++]}, SeedCount, Revision));
             Seconds += FPlatformTime::Seconds() - Start;
             return false;
         }
@@ -47,7 +51,7 @@ public:
         Test.TestEqual(TEXT("No passive end"), Passive, 0);
         Test.TestEqual(TEXT("Every committed prevention equals the protection query"), Mismatches, 0);
         // Stalls are findings, reported by the summary, not test failures.
-        Test.AddInfo(FString::Printf(TEXT("Balance group %s: %d runs, %d victories, %d stalls, %.1f s -> %s"), *Group, Runs.Num(), Wins, Stalls, Seconds, *Folder));
+        Test.AddInfo(FString::Printf(TEXT("Balance group %s (catalog revision %d): %d runs, %d victories, %d stalls, %.1f s -> %s"), *Group, Revision, Runs.Num(), Wins, Stalls, Seconds, *Folder));
         return true;
     }
 
@@ -58,6 +62,8 @@ private:
     TArray<BalanceHarness::FRunStats> Runs;
     int32 Next = 0;
     double Seconds = 0.0;
+    /** DND_BALANCE_REVISION (#188's before-run is revision 8), or the current revision. */
+    int32 Revision = FBuildCatalog::Revision;
 };
 
 bool RunGroup(FAutomationTestBase& Test, const FString& Group, const TArray<BalanceHarness::FPartySpec>& Parties)
@@ -93,7 +99,9 @@ bool FBalanceTrace::RunTest(const FString& Parameters)
     const FString Folder = BalanceHarness::GroupFolder(TEXT("trace"), Error);
     if (!TestTrue(TEXT("Trace folder inside .local/ ") + Error, BalanceHarness::EnsureFolder(Folder, Error))) { return false; }
     const FString Path = FPaths::Combine(Folder, FString::Printf(TEXT("%s-%s-%s.txt"), *Parts[0], *Parts[1], *Parts[2]));
-    TestTrue(TEXT("Trace written to ") + Path, FFileHelper::SaveStringToFile(BalanceHarness::TraceRun(*Party, FCString::Atoi(*Parts[1]), FCString::Atoi(*Parts[2])), *Path));
+    int32 Revision = FBuildCatalog::Revision;
+    if (!TestTrue(TEXT("DND_BALANCE_REVISION ") + Error, BalanceHarness::RevisionFromEnvironment(Revision, Error))) { return false; }
+    TestTrue(TEXT("Trace written to ") + Path, FFileHelper::SaveStringToFile(BalanceHarness::TraceRun(*Party, FCString::Atoi(*Parts[1]), FCString::Atoi(*Parts[2]), Revision), *Path));
     return !HasAnyErrors();
 }
 #endif
