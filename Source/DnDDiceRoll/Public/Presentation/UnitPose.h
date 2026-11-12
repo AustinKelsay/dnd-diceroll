@@ -29,7 +29,7 @@ DNDDICEROLL_API EUnitPose ForCommand(ECombatCommandType Type, bool bRanged, bool
 /** Presentation: whether a basic Attack is a spell, from the rules reference's fixed profiles. The wizard's basic attack is
  * Fire Bolt at any distance; the cleric's ranged attack is Sacred Flame (a save in SRD, an attack roll in Compact; a spell in
  * both). #150 batch 3 names the sorcerer, warlock and druid the same way as the cleric: their ranged basic attack is a spell bolt (an ember bolt, an
- * eldritch bolt, a thorn flame) and they swing a weapon up close. A presentation mapping keyed by class: nothing in the catalog, rules, save or RNG changes.
+ * eldritch bolt, a thorn flame), and #150 batch 4 the bard (a dissonant teal bolt); the artificer keeps a crossbow bolt (a lightless arrow) for its basic attack and they swing a weapon up close. A presentation mapping keyed by class: nothing in the catalog, rules, save or RNG changes.
  * Other roles' basic attacks are weapon attacks, and only Attack is affected (Precision Strike is a weapon maneuver). */
 DNDDICEROLL_API bool IsSpellAttack(ECombatCommandType Type, EAdventurerRole Role, bool bRanged);
 /** The actor's clip for one effect of a Special1 or Special2 command (#150 batch 2), in this order:

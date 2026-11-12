@@ -80,7 +80,8 @@ bool FRigLookupTest::RunTest(const FString& Parameters)
     const TPair<EAdventurerRole, const TCHAR*> Cast[] = {{EAdventurerRole::Fighter, TEXT("SK_Hero_Fighter")}, {EAdventurerRole::Rogue, TEXT("SK_Hero_Rogue")},
         {EAdventurerRole::Cleric, TEXT("SK_Hero_Cleric")}, {EAdventurerRole::Wizard, TEXT("SK_Hero_Wizard")}, {EAdventurerRole::Barbarian, TEXT("SK_Hero_Barbarian")},
         {EAdventurerRole::Monk, TEXT("SK_Hero_Monk")}, {EAdventurerRole::Paladin, TEXT("SK_Hero_Paladin")}, {EAdventurerRole::Ranger, TEXT("SK_Hero_Ranger")},
-        {EAdventurerRole::Sorcerer, TEXT("SK_Hero_Sorcerer")}, {EAdventurerRole::Warlock, TEXT("SK_Hero_Warlock")}, {EAdventurerRole::Druid, TEXT("SK_Hero_Druid")}};
+        {EAdventurerRole::Sorcerer, TEXT("SK_Hero_Sorcerer")}, {EAdventurerRole::Warlock, TEXT("SK_Hero_Warlock")}, {EAdventurerRole::Druid, TEXT("SK_Hero_Druid")},
+        {EAdventurerRole::Bard, TEXT("SK_Hero_Bard")}, {EAdventurerRole::Artificer, TEXT("SK_Hero_Artificer")}};
     TSet<const USkeleton*> Skeletons;
     for (const TPair<EAdventurerRole, const TCHAR*>& Entry : Cast)
     {

@@ -430,6 +430,9 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/ranged-release-poses.json")), 22)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/spell-release-poses.json")), 11)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast3-release-poses.json")), 28)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-poses.json")), 34)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
                                                     {"name": "bolt-flight", "mode": "impact", "effect": "missile", "phase": "flight", "yaw": 0, "distance": "default"},
@@ -583,8 +586,10 @@ class GalleryTests(unittest.TestCase):
     def test_gallery_takes_cores_and_the_operation_lock_like_other_commands(self):
         self.assertIn("gallery", dev_module.CORE_COMMANDS)
         source = Path(dev_module.__file__).read_text()
-        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures)', source)
+        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures, no_palettes=args.no_palettes, no_accents=args.no_accents)', source)
         self.assertIn('"-ExpeditionStaticFigures"', source)
+        self.assertIn('"-ExpeditionNoPalettes"', source)
+        self.assertIn('"-ExpeditionNoAccents"', source)
 
 
 class EvidenceTests(unittest.TestCase):

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
@@ -435,6 +436,12 @@ public:
      * footprint ring, as the materials hold it. False when the combatant has no figure. A ring-bank ring reports the bank's colour for its slot.
      */
     bool UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const;
+    /**
+     * Test-only (#150 batch 4): the palette a rigged party figure's skin material holds right now (its subclass slots and, when its class appears more
+     * than once in the party, the accent slot), read back from the material parameters. False when the combatant is not a rigged figure or its material
+     * does not carry the palette parameters.
+     */
+    bool UnitPalette(int32 UnitId, ExpeditionPalette::FPalette& OutPalette) const;
     /** Test-only (#189): the intensity (candelas) each spell bolt's point light was last set to, in bolt order (zero for an idle light or an arrow). */
     TArray<float> BoltLightIntensities() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
@@ -516,6 +523,12 @@ private:
     bool bSkeletalFigures = true;
     /** SetFoeLooks: the look of each enemy in encounter order; empty uses the names. */
     TArray<EFoeLook> FoeLookOrder;
+    /** The accent slot of each party member whose class appears more than once in the party (ExpeditionPalette::AccentSlots), built with the rigs. */
+    TMap<int32, int32> PartyAccents;
+    /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */
+    bool bPalettes = true;
+    /** Party-slot accents on the palettes (off with -ExpeditionNoAccents: the same palettes without the accent, a measurement baseline). */
+    bool bAccents = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
