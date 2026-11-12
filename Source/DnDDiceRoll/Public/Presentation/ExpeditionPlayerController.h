@@ -158,6 +158,18 @@ private:
     /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
     static constexpr float PoseSlopCm = 0.5f;
     static constexpr float PoseSlopDegrees = 0.02f;
+    /**
+     * A board click is a press and a release that leave everything as they found it (#220): Click only arms it, from the cell the last frame previewed and the camera that
+     * preview was found with, and ClickReleased acts if the camera is still that camera, the pointer has not dragged past ClickSlop and the same cell is still previewed.
+     * A press the camera or the pointer moved under is spent (bPressVoided) and its release commits nothing.
+     */
+    static constexpr float ClickSlop = 6.0f;
+    bool bPressArmed = false, bPressVoided = false;
+    FIntPoint PressCell = FIntPoint::ZeroValue;
+    FVector2D PressPointer = FVector2D::ZeroVector;
+    FTransform PressPose;
+    /** True while the camera is still the one the armed press was made with and the pointer is within the click slop of where it went down. */
+    bool PressHolds() const;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;
     FIntPoint KeyboardPreview = FIntPoint::ZeroValue;
@@ -239,6 +251,8 @@ private:
     void BattleMaster();
     void ManeuverMode();
     void Click();
+    /** The left button's release: acts on the cell Click armed, if nothing moved since the press (#220). */
+    void ClickReleased();
     void AttackMode();
     void RoleMode();
     void RescueMode();

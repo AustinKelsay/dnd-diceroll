@@ -63,6 +63,7 @@ void AExpeditionPlayerController::SetupInputComponent()
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
+    InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AExpeditionPlayerController::ClickReleased);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
     InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
@@ -163,6 +164,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
     }
     else { bPointerSeen = false; }
+    // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
+    if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -603,6 +606,7 @@ void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 
 void AExpeditionPlayerController::Click()
 {
+    bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
@@ -629,7 +633,12 @@ void AExpeditionPlayerController::Click()
         const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
             FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
             FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
-        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        // The click is the press and its release: this only arms it (#220), so a camera that moves or a pointer that drags while the button is down spends it.
+        if (bCameraStill && HoverCell(Under) && Under == Cell)
+        {
+            bPressArmed = true; bPressVoided = false;
+            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressPose = Pose;
+        }
         return;
     }
     // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
@@ -638,6 +647,31 @@ void AExpeditionPlayerController::Click()
         for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
         { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
     }
+}
+
+bool AExpeditionPlayerController::PressHolds() const
+{
+    float MouseX = 0, MouseY = 0;
+    FTransform Pose;
+    if (!bPressArmed || bPressVoided || !PointerPosition(MouseX, MouseY) || !ProjectionPose(Pose)) { return false; }
+    return FVector2D::DistSquared(FVector2D(MouseX, MouseY), PressPointer) <= ClickSlop * ClickSlop &&
+        FVector::Dist(Pose.GetLocation(), PressPose.GetLocation()) <= PoseSlopCm &&
+        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PressPose.GetRotation())) <= PoseSlopDegrees;
+}
+
+void AExpeditionPlayerController::ClickReleased()
+{
+    const bool bHeld = PressHolds();
+    const bool bWasArmed = bPressArmed;
+    bPressArmed = false;
+    if (!bWasArmed || !bHeld || !IsValid(BattleView)) { return; }
+    // The release acts on what the last frame still shows under the pointer: the cell the press found, previewed now with the camera still that camera.
+    FIntPoint Cell, Under;
+    FTransform Pose;
+    const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+        FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+    if (bCameraStill && PreviewedPointerCell(Cell) && Cell == PressCell && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
