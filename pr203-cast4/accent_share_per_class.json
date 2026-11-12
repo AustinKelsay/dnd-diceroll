@@ -1,0 +1,1913 @@
+{
+ "artificer": {
+  "units": 20,
+  "mean": 0.0699,
+  "worst": 0.1204,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 241,
+    "figure": 2342,
+    "share": 0.1029
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 212,
+    "figure": 2177,
+    "share": 0.0974
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 125,
+    "figure": 2007,
+    "share": 0.0623
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 164,
+    "figure": 1975,
+    "share": 0.083
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 57,
+    "figure": 1408,
+    "share": 0.0405
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 42,
+    "figure": 1140,
+    "share": 0.0368
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 25,
+    "figure": 1237,
+    "share": 0.0202
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 25,
+    "figure": 1509,
+    "share": 0.0166
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 108,
+    "figure": 1359,
+    "share": 0.0795
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 88,
+    "figure": 1496,
+    "share": 0.0588
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 48,
+    "figure": 1552,
+    "share": 0.0309
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 98,
+    "figure": 1475,
+    "share": 0.0664
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 181,
+    "figure": 1503,
+    "share": 0.1204
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 161,
+    "figure": 1681,
+    "share": 0.0958
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 114,
+    "figure": 1719,
+    "share": 0.0663
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 156,
+    "figure": 1890,
+    "share": 0.0825
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 223,
+    "figure": 2342,
+    "share": 0.0952
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 226,
+    "figure": 2188,
+    "share": 0.1033
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 118,
+    "figure": 2005,
+    "share": 0.0589
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 162,
+    "figure": 1995,
+    "share": 0.0812
+   }
+  ]
+ },
+ "barbarian": {
+  "units": 20,
+  "mean": 0.0406,
+  "worst": 0.0921,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 108,
+    "figure": 2289,
+    "share": 0.0472
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 114,
+    "figure": 2210,
+    "share": 0.0516
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 94,
+    "figure": 2084,
+    "share": 0.0451
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 25,
+    "figure": 1910,
+    "share": 0.0131
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 96,
+    "figure": 1794,
+    "share": 0.0535
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 149,
+    "figure": 1618,
+    "share": 0.0921
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 114,
+    "figure": 1541,
+    "share": 0.074
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 23,
+    "figure": 1395,
+    "share": 0.0165
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 62,
+    "figure": 1317,
+    "share": 0.0471
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 89,
+    "figure": 1479,
+    "share": 0.0602
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 50,
+    "figure": 1502,
+    "share": 0.0333
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 19,
+    "figure": 1584,
+    "share": 0.012
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 47,
+    "figure": 1486,
+    "share": 0.0316
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 78,
+    "figure": 1689,
+    "share": 0.0462
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 78,
+    "figure": 1720,
+    "share": 0.0453
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 24,
+    "figure": 1894,
+    "share": 0.0127
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 49,
+    "figure": 2268,
+    "share": 0.0216
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 97,
+    "figure": 2244,
+    "share": 0.0432
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 106,
+    "figure": 2034,
+    "share": 0.0521
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 26,
+    "figure": 1936,
+    "share": 0.0134
+   }
+  ]
+ },
+ "bard": {
+  "units": 20,
+  "mean": 0.0658,
+  "worst": 0.1185,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 94,
+    "figure": 2232,
+    "share": 0.0421
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 167,
+    "figure": 1986,
+    "share": 0.0841
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 125,
+    "figure": 1877,
+    "share": 0.0666
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 76,
+    "figure": 1811,
+    "share": 0.042
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 139,
+    "figure": 1732,
+    "share": 0.0803
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 179,
+    "figure": 1643,
+    "share": 0.1089
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 180,
+    "figure": 1519,
+    "share": 0.1185
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 105,
+    "figure": 1392,
+    "share": 0.0754
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 43,
+    "figure": 1349,
+    "share": 0.0319
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 103,
+    "figure": 1484,
+    "share": 0.0694
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 103,
+    "figure": 1560,
+    "share": 0.066
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 67,
+    "figure": 1462,
+    "share": 0.0458
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 80,
+    "figure": 1487,
+    "share": 0.0538
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 96,
+    "figure": 1672,
+    "share": 0.0574
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 140,
+    "figure": 1696,
+    "share": 0.0825
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 96,
+    "figure": 1875,
+    "share": 0.0512
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 95,
+    "figure": 2230,
+    "share": 0.0426
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 190,
+    "figure": 1996,
+    "share": 0.0952
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 122,
+    "figure": 1890,
+    "share": 0.0646
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 69,
+    "figure": 1832,
+    "share": 0.0377
+   }
+  ]
+ },
+ "cleric": {
+  "units": 20,
+  "mean": 0.0617,
+  "worst": 0.1391,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 331,
+    "figure": 2383,
+    "share": 0.1389
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 217,
+    "figure": 2386,
+    "share": 0.0909
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 262,
+    "figure": 2210,
+    "share": 0.1186
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 283,
+    "figure": 2034,
+    "share": 0.1391
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 98,
+    "figure": 1673,
+    "share": 0.0586
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 98,
+    "figure": 1754,
+    "share": 0.0559
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 99,
+    "figure": 1382,
+    "share": 0.0716
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 95,
+    "figure": 1404,
+    "share": 0.0677
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 14,
+    "figure": 1412,
+    "share": 0.0099
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 15,
+    "figure": 1545,
+    "share": 0.0097
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 17,
+    "figure": 1596,
+    "share": 0.0107
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 5,
+    "figure": 1618,
+    "share": 0.0031
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 0,
+    "figure": 1480,
+    "share": 0.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 0,
+    "figure": 1683,
+    "share": 0.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 0,
+    "figure": 1732,
+    "share": 0.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 0,
+    "figure": 1941,
+    "share": 0.0
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 299,
+    "figure": 2266,
+    "share": 0.132
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 179,
+    "figure": 2386,
+    "share": 0.075
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 255,
+    "figure": 2206,
+    "share": 0.1156
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 280,
+    "figure": 2052,
+    "share": 0.1365
+   }
+  ]
+ },
+ "druid": {
+  "units": 20,
+  "mean": 0.0795,
+  "worst": 0.1339,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 207,
+    "figure": 2317,
+    "share": 0.0893
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 207,
+    "figure": 2186,
+    "share": 0.0947
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 106,
+    "figure": 2027,
+    "share": 0.0523
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 75,
+    "figure": 1835,
+    "share": 0.0409
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 188,
+    "figure": 1795,
+    "share": 0.1047
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 225,
+    "figure": 1680,
+    "share": 0.1339
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 173,
+    "figure": 1566,
+    "share": 0.1105
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 107,
+    "figure": 1217,
+    "share": 0.0879
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 51,
+    "figure": 1353,
+    "share": 0.0377
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 105,
+    "figure": 1496,
+    "share": 0.0702
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 97,
+    "figure": 1578,
+    "share": 0.0615
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 63,
+    "figure": 1617,
+    "share": 0.039
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 165,
+    "figure": 1492,
+    "share": 0.1106
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 212,
+    "figure": 1679,
+    "share": 0.1263
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 202,
+    "figure": 1751,
+    "share": 0.1154
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 147,
+    "figure": 1907,
+    "share": 0.0771
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 119,
+    "figure": 2223,
+    "share": 0.0535
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 164,
+    "figure": 2213,
+    "share": 0.0741
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 149,
+    "figure": 2038,
+    "share": 0.0731
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 70,
+    "figure": 1870,
+    "share": 0.0374
+   }
+  ]
+ },
+ "fighter": {
+  "units": 20,
+  "mean": 0.0772,
+  "worst": 0.1449,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 304,
+    "figure": 2306,
+    "share": 0.1318
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 256,
+    "figure": 2223,
+    "share": 0.1152
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 229,
+    "figure": 2064,
+    "share": 0.1109
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 278,
+    "figure": 1919,
+    "share": 0.1449
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 58,
+    "figure": 1841,
+    "share": 0.0315
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 49,
+    "figure": 1771,
+    "share": 0.0277
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 68,
+    "figure": 1638,
+    "share": 0.0415
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 63,
+    "figure": 1505,
+    "share": 0.0419
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 105,
+    "figure": 1363,
+    "share": 0.077
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 120,
+    "figure": 1496,
+    "share": 0.0802
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 114,
+    "figure": 1582,
+    "share": 0.0721
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 70,
+    "figure": 1503,
+    "share": 0.0466
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 42,
+    "figure": 1470,
+    "share": 0.0286
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 40,
+    "figure": 1691,
+    "share": 0.0237
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 61,
+    "figure": 1724,
+    "share": 0.0354
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 58,
+    "figure": 1916,
+    "share": 0.0303
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 291,
+    "figure": 2281,
+    "share": 0.1276
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 278,
+    "figure": 2251,
+    "share": 0.1235
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 238,
+    "figure": 2063,
+    "share": 0.1154
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 264,
+    "figure": 1913,
+    "share": 0.138
+   }
+  ]
+ },
+ "monk": {
+  "units": 20,
+  "mean": 0.0443,
+  "worst": 0.0798,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 186,
+    "figure": 2331,
+    "share": 0.0798
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 137,
+    "figure": 2100,
+    "share": 0.0652
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 119,
+    "figure": 1949,
+    "share": 0.0611
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 115,
+    "figure": 1796,
+    "share": 0.064
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 42,
+    "figure": 1811,
+    "share": 0.0232
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 14,
+    "figure": 1735,
+    "share": 0.0081
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 51,
+    "figure": 1591,
+    "share": 0.0321
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 47,
+    "figure": 1345,
+    "share": 0.0349
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 36,
+    "figure": 1346,
+    "share": 0.0267
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 37,
+    "figure": 1456,
+    "share": 0.0254
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 66,
+    "figure": 1560,
+    "share": 0.0423
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 81,
+    "figure": 1450,
+    "share": 0.0559
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 54,
+    "figure": 1445,
+    "share": 0.0374
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 35,
+    "figure": 1669,
+    "share": 0.021
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 60,
+    "figure": 1612,
+    "share": 0.0372
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 64,
+    "figure": 1864,
+    "share": 0.0343
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 140,
+    "figure": 2309,
+    "share": 0.0606
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 135,
+    "figure": 2119,
+    "share": 0.0637
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 99,
+    "figure": 1947,
+    "share": 0.0508
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 113,
+    "figure": 1827,
+    "share": 0.0619
+   }
+  ]
+ },
+ "paladin": {
+  "units": 20,
+  "mean": 0.0658,
+  "worst": 0.1322,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 125,
+    "figure": 2270,
+    "share": 0.0551
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 190,
+    "figure": 2286,
+    "share": 0.0831
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 152,
+    "figure": 2137,
+    "share": 0.0711
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 119,
+    "figure": 1989,
+    "share": 0.0598
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 69,
+    "figure": 1826,
+    "share": 0.0378
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 76,
+    "figure": 1714,
+    "share": 0.0443
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 75,
+    "figure": 1568,
+    "share": 0.0478
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 44,
+    "figure": 1425,
+    "share": 0.0309
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 152,
+    "figure": 1406,
+    "share": 0.1081
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 200,
+    "figure": 1530,
+    "share": 0.1307
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 209,
+    "figure": 1581,
+    "share": 0.1322
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 149,
+    "figure": 1476,
+    "share": 0.1009
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 59,
+    "figure": 1471,
+    "share": 0.0401
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 80,
+    "figure": 1687,
+    "share": 0.0474
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 67,
+    "figure": 1723,
+    "share": 0.0389
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 59,
+    "figure": 1940,
+    "share": 0.0304
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 117,
+    "figure": 2283,
+    "share": 0.0512
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 189,
+    "figure": 2314,
+    "share": 0.0817
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 151,
+    "figure": 2126,
+    "share": 0.071
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 106,
+    "figure": 1966,
+    "share": 0.0539
+   }
+  ]
+ },
+ "ranger": {
+  "units": 20,
+  "mean": 0.0398,
+  "worst": 0.085,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 79,
+    "figure": 2237,
+    "share": 0.0353
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 134,
+    "figure": 2100,
+    "share": 0.0638
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 83,
+    "figure": 1937,
+    "share": 0.0428
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 39,
+    "figure": 1781,
+    "share": 0.0219
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 89,
+    "figure": 1770,
+    "share": 0.0503
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 137,
+    "figure": 1612,
+    "share": 0.085
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 122,
+    "figure": 1598,
+    "share": 0.0763
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 36,
+    "figure": 1455,
+    "share": 0.0247
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 23,
+    "figure": 1333,
+    "share": 0.0173
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 51,
+    "figure": 1484,
+    "share": 0.0344
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 41,
+    "figure": 1555,
+    "share": 0.0264
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 16,
+    "figure": 1403,
+    "share": 0.0114
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 44,
+    "figure": 1451,
+    "share": 0.0303
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 94,
+    "figure": 1684,
+    "share": 0.0558
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 81,
+    "figure": 1683,
+    "share": 0.0481
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 22,
+    "figure": 1879,
+    "share": 0.0117
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 75,
+    "figure": 2274,
+    "share": 0.033
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 140,
+    "figure": 2125,
+    "share": 0.0659
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 83,
+    "figure": 1944,
+    "share": 0.0427
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 33,
+    "figure": 1788,
+    "share": 0.0185
+   }
+  ]
+ },
+ "rogue": {
+  "units": 20,
+  "mean": 0.0529,
+  "worst": 0.0777,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 129,
+    "figure": 2282,
+    "share": 0.0565
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 97,
+    "figure": 2054,
+    "share": 0.0472
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 75,
+    "figure": 1906,
+    "share": 0.0393
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 78,
+    "figure": 1744,
+    "share": 0.0447
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 113,
+    "figure": 1650,
+    "share": 0.0685
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 89,
+    "figure": 1519,
+    "share": 0.0586
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 127,
+    "figure": 1635,
+    "share": 0.0777
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 105,
+    "figure": 1494,
+    "share": 0.0703
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 63,
+    "figure": 1372,
+    "share": 0.0459
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 64,
+    "figure": 1476,
+    "share": 0.0434
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 78,
+    "figure": 1560,
+    "share": 0.05
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 83,
+    "figure": 1423,
+    "share": 0.0583
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 73,
+    "figure": 1468,
+    "share": 0.0497
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 114,
+    "figure": 1683,
+    "share": 0.0677
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 105,
+    "figure": 1728,
+    "share": 0.0608
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 106,
+    "figure": 1915,
+    "share": 0.0554
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 69,
+    "figure": 2267,
+    "share": 0.0304
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 86,
+    "figure": 2066,
+    "share": 0.0416
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 86,
+    "figure": 1885,
+    "share": 0.0456
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 80,
+    "figure": 1724,
+    "share": 0.0464
+   }
+  ]
+ },
+ "sorcerer": {
+  "units": 20,
+  "mean": 0.0819,
+  "worst": 0.1766,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 155,
+    "figure": 2166,
+    "share": 0.0716
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 156,
+    "figure": 1857,
+    "share": 0.084
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 104,
+    "figure": 1734,
+    "share": 0.06
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 107,
+    "figure": 1614,
+    "share": 0.0663
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 145,
+    "figure": 1690,
+    "share": 0.0858
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 130,
+    "figure": 1622,
+    "share": 0.0801
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 107,
+    "figure": 1432,
+    "share": 0.0747
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 76,
+    "figure": 1322,
+    "share": 0.0575
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 217,
+    "figure": 1319,
+    "share": 0.1645
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 250,
+    "figure": 1416,
+    "share": 0.1766
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 231,
+    "figure": 1476,
+    "share": 0.1565
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 126,
+    "figure": 1547,
+    "share": 0.0814
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 112,
+    "figure": 1444,
+    "share": 0.0776
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 72,
+    "figure": 1664,
+    "share": 0.0433
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 90,
+    "figure": 1670,
+    "share": 0.0539
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 58,
+    "figure": 1847,
+    "share": 0.0314
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 150,
+    "figure": 2121,
+    "share": 0.0707
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 176,
+    "figure": 1893,
+    "share": 0.093
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 101,
+    "figure": 1771,
+    "share": 0.057
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 86,
+    "figure": 1630,
+    "share": 0.0528
+   }
+  ]
+ },
+ "warlock": {
+  "units": 20,
+  "mean": 0.063,
+  "worst": 0.148,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 232,
+    "figure": 2289,
+    "share": 0.1014
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 324,
+    "figure": 2189,
+    "share": 0.148
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 262,
+    "figure": 2061,
+    "share": 0.1271
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 196,
+    "figure": 1919,
+    "share": 0.1021
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 49,
+    "figure": 1948,
+    "share": 0.0252
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 48,
+    "figure": 1808,
+    "share": 0.0265
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 72,
+    "figure": 1709,
+    "share": 0.0421
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 45,
+    "figure": 1516,
+    "share": 0.0297
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 32,
+    "figure": 1380,
+    "share": 0.0232
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 48,
+    "figure": 1507,
+    "share": 0.0319
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 67,
+    "figure": 1568,
+    "share": 0.0427
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 61,
+    "figure": 1424,
+    "share": 0.0428
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 0,
+    "figure": 1462,
+    "share": 0.0
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 8,
+    "figure": 1682,
+    "share": 0.0048
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 19,
+    "figure": 1714,
+    "share": 0.0111
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 24,
+    "figure": 1940,
+    "share": 0.0124
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 227,
+    "figure": 2288,
+    "share": 0.0992
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 320,
+    "figure": 2225,
+    "share": 0.1438
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 277,
+    "figure": 2050,
+    "share": 0.1351
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 211,
+    "figure": 1907,
+    "share": 0.1106
+   }
+  ]
+ },
+ "wizard": {
+  "units": 20,
+  "mean": 0.0546,
+  "worst": 0.0749,
+  "rows": [
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 172,
+    "figure": 2295,
+    "share": 0.0749
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 142,
+    "figure": 2308,
+    "share": 0.0615
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 126,
+    "figure": 2137,
+    "share": 0.059
+   },
+   {
+    "shot": "battle-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 132,
+    "figure": 1979,
+    "share": 0.0667
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 1",
+    "changed": 121,
+    "figure": 1755,
+    "share": 0.0689
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 2",
+    "changed": 113,
+    "figure": 1670,
+    "share": 0.0677
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 3",
+    "changed": 112,
+    "figure": 1573,
+    "share": 0.0712
+   },
+   {
+    "shot": "battle-yaw000-default",
+    "unit": "Hero 4",
+    "changed": 102,
+    "figure": 1399,
+    "share": 0.0729
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 1",
+    "changed": 74,
+    "figure": 1391,
+    "share": 0.0532
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 2",
+    "changed": 89,
+    "figure": 1511,
+    "share": 0.0589
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 3",
+    "changed": 81,
+    "figure": 1587,
+    "share": 0.051
+   },
+   {
+    "shot": "battle-yaw090-default",
+    "unit": "Hero 4",
+    "changed": 49,
+    "figure": 1616,
+    "share": 0.0303
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 1",
+    "changed": 37,
+    "figure": 1493,
+    "share": 0.0248
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 2",
+    "changed": 52,
+    "figure": 1685,
+    "share": 0.0309
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 3",
+    "changed": 65,
+    "figure": 1761,
+    "share": 0.0369
+   },
+   {
+    "shot": "battle-yaw180-default",
+    "unit": "Hero 4",
+    "changed": 55,
+    "figure": 1921,
+    "share": 0.0286
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 1",
+    "changed": 129,
+    "figure": 2185,
+    "share": 0.059
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 2",
+    "changed": 159,
+    "figure": 2330,
+    "share": 0.0682
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 3",
+    "changed": 98,
+    "figure": 2130,
+    "share": 0.046
+   },
+   {
+    "shot": "targeting-yawm90-default",
+    "unit": "Hero 4",
+    "changed": 121,
+    "figure": 1971,
+    "share": 0.0614
+   }
+  ]
+ }
+}

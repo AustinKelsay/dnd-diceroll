@@ -1,0 +1,1195 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 81.7,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 240.07,
+      "p99Luma": 232.58,
+      "meanLuma": 132.23,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2550,
+      "peakLuma": 238.25,
+      "p99Luma": 231.03,
+      "meanLuma": 88.38,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        865,
+        276,
+        899,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2025,
+      "peakLuma": 250.91,
+      "p99Luma": 245.41,
+      "meanLuma": 181.85,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        551,
+        276,
+        578,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1932,
+      "peakLuma": 237.39,
+      "p99Luma": 220.16,
+      "meanLuma": 87.72,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        820,
+        91,
+        848,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2475,
+      "peakLuma": 246.43,
+      "p99Luma": 239.92,
+      "meanLuma": 148.51,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        844,
+        262,
+        877,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 238.97,
+      "p99Luma": 231.96,
+      "meanLuma": 88.43,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        699,
+        201,
+        725,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2664,
+      "peakLuma": 247.07,
+      "p99Luma": 243.07,
+      "meanLuma": 134.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        995,
+        201,
+        1032,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 236.32,
+      "meanLuma": 81.32,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 243.25,
+      "p99Luma": 233.19,
+      "meanLuma": 121.21,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.12,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 249.98,
+      "p99Luma": 243.07,
+      "meanLuma": 146.48,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.97,
+      "p99Luma": 231.89,
+      "meanLuma": 88.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 250.2,
+      "p99Luma": 247.21,
+      "meanLuma": 171.73,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        553,
+        237,
+        580,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.25,
+      "p99Luma": 226.67,
+      "meanLuma": 81.54,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2325,
+      "peakLuma": 251.05,
+      "p99Luma": 246.41,
+      "meanLuma": 157.08,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        782,
+        262,
+        813,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.25,
+      "p99Luma": 234.53,
+      "meanLuma": 88.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 2812,
+      "peakLuma": 250.84,
+      "p99Luma": 245.27,
+      "meanLuma": 158.3,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1004,
+        237,
+        1042,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6840,
+      "peakLuma": 226.23,
+      "p99Luma": 205.63,
+      "meanLuma": 53.32,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        606,
+        630,
+        682,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 8372,
+      "peakLuma": 251.0,
+      "p99Luma": 242.0,
+      "meanLuma": 122.63,
+      "whiteFraction": 0.00011944577161968466,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        617,
+        165,
+        669,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 238.58,
+      "meanLuma": 55.51,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 251.13,
+      "p99Luma": 247.27,
+      "meanLuma": 133.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1280x720/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.39,
+      "meanLuma": 80.65,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 243.68,
+      "p99Luma": 233.37,
+      "meanLuma": 131.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5712,
+      "peakLuma": 238.25,
+      "p99Luma": 236.32,
+      "meanLuma": 87.8,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1298,
+        414,
+        1349,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 251.13,
+      "p99Luma": 246.76,
+      "meanLuma": 180.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        826,
+        414,
+        867,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4182,
+      "peakLuma": 238.25,
+      "p99Luma": 230.81,
+      "meanLuma": 89.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1231,
+        137,
+        1272,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5439,
+      "peakLuma": 248.21,
+      "p99Luma": 243.5,
+      "meanLuma": 147.9,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1266,
+        394,
+        1315,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 239.76,
+      "p99Luma": 235.61,
+      "meanLuma": 87.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1049,
+        302,
+        1088,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5940,
+      "peakLuma": 249.0,
+      "p99Luma": 244.36,
+      "meanLuma": 133.52,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1492,
+        302,
+        1547,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.18,
+      "meanLuma": 80.64,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 241.92,
+      "p99Luma": 230.28,
+      "meanLuma": 120.13,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 238.18,
+      "meanLuma": 79.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 250.84,
+      "p99Luma": 246.48,
+      "meanLuma": 145.22,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.25,
+      "p99Luma": 235.39,
+      "meanLuma": 89.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 250.2,
+      "p99Luma": 247.15,
+      "meanLuma": 172.0,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        830,
+        356,
+        870,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.67,
+      "meanLuma": 82.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4995,
+      "peakLuma": 251.13,
+      "p99Luma": 246.92,
+      "meanLuma": 158.69,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1174,
+        394,
+        1219,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 241.58,
+      "p99Luma": 237.18,
+      "meanLuma": 88.87,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 6270,
+      "peakLuma": 250.84,
+      "p99Luma": 246.43,
+      "meanLuma": 157.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1506,
+        356,
+        1563,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 15008,
+      "peakLuma": 230.37,
+      "p99Luma": 207.31,
+      "meanLuma": 53.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        910,
+        946,
+        1022,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 18876,
+      "peakLuma": 251.07,
+      "p99Luma": 242.0,
+      "meanLuma": 121.74,
+      "whiteFraction": 0.00026488662852299215,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        925,
+        247,
+        1003,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 239.87,
+      "meanLuma": 55.66,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 251.13,
+      "p99Luma": 247.27,
+      "meanLuma": 132.67,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090730761520Z/default-seed-battle/1920x1080/manifest.json",
+      "fixture": "default-seed-battle"
+    }
+  ]
+}

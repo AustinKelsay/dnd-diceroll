@@ -1,0 +1,1087 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 83.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 247.28,
+      "p99Luma": 241.16,
+      "meanLuma": 169.32,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        688,
+        200,
+        714,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.56,
+      "p99Luma": 240.51,
+      "meanLuma": 77.44,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2233,
+      "peakLuma": 252.85,
+      "p99Luma": 249.22,
+      "meanLuma": 173.62,
+      "whiteFraction": 0.0044782803403493054,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        547,
+        315,
+        576,
+        392
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 247.77,
+      "p99Luma": 238.76,
+      "meanLuma": 85.7,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2550,
+      "peakLuma": 252.37,
+      "p99Luma": 248.72,
+      "meanLuma": 141.01,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        875,
+        262,
+        909,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.91,
+      "meanLuma": 94.27,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2664,
+      "peakLuma": 251.95,
+      "p99Luma": 249.0,
+      "meanLuma": 155.5,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        992,
+        189,
+        1029,
+        261
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 83.81,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 249.21,
+      "p99Luma": 242.64,
+      "meanLuma": 167.29,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        688,
+        200,
+        714,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3078,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 84.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        842,
+        504,
+        880,
+        585
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 252.78,
+      "p99Luma": 247.86,
+      "meanLuma": 159.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        747,
+        200,
+        775,
+        272
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2738,
+      "peakLuma": 248.56,
+      "p99Luma": 240.55,
+      "meanLuma": 77.58,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        979,
+        236,
+        1016,
+        310
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 254.64,
+      "p99Luma": 252.85,
+      "meanLuma": 178.0,
+      "whiteFraction": 0.0004761904761904762,
+      "clippedFraction": 0.002380952380952381,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        550,
+        275,
+        578,
+        350
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1608,
+      "peakLuma": 248.48,
+      "p99Luma": 238.58,
+      "meanLuma": 87.21,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        734,
+        34,
+        758,
+        101
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2400,
+      "peakLuma": 252.78,
+      "p99Luma": 249.02,
+      "meanLuma": 153.3,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        813,
+        262,
+        845,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 249.34,
+      "p99Luma": 244.12,
+      "meanLuma": 93.91,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        578,
+        262,
+        604,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 2701,
+      "peakLuma": 252.78,
+      "p99Luma": 249.0,
+      "meanLuma": 171.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1002,
+        225,
+        1039,
+        298
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 9499,
+      "peakLuma": 254.21,
+      "p99Luma": 251.37,
+      "meanLuma": 154.11,
+      "whiteFraction": 0.007369196757553427,
+      "clippedFraction": 0.00031582271818086113,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        481,
+        165,
+        540,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 8372,
+      "peakLuma": 253.85,
+      "p99Luma": 253.78,
+      "meanLuma": 159.05,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        617,
+        165,
+        669,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1280x720/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 247.77,
+      "meanLuma": 82.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 252.16,
+      "p99Luma": 245.36,
+      "meanLuma": 167.36,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1032,
+        300,
+        1070,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 249.34,
+      "p99Luma": 245.77,
+      "meanLuma": 77.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4788,
+      "peakLuma": 252.71,
+      "p99Luma": 249.43,
+      "meanLuma": 174.26,
+      "whiteFraction": 0.004177109440267335,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw090-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        821,
+        473,
+        863,
+        587
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.56,
+      "p99Luma": 243.12,
+      "meanLuma": 85.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5550,
+      "peakLuma": 252.37,
+      "p99Luma": 251.37,
+      "meanLuma": 141.3,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw180-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1313,
+        394,
+        1363,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 93.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5832,
+      "peakLuma": 252.16,
+      "p99Luma": 249.52,
+      "meanLuma": 153.07,
+      "whiteFraction": 0.00051440329218107,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw270-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1489,
+        283,
+        1543,
+        391
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 82.77,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4104,
+      "peakLuma": 252.37,
+      "p99Luma": 242.17,
+      "meanLuma": 164.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "missile-release-wizard-yaw000-default:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        1032,
+        300,
+        1070,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6954,
+      "peakLuma": 249.34,
+      "p99Luma": 248.56,
+      "meanLuma": 82.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1263,
+        756,
+        1320,
+        878
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4428,
+      "peakLuma": 252.78,
+      "p99Luma": 250.56,
+      "meanLuma": 159.7,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1121,
+        300,
+        1162,
+        408
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6050,
+      "peakLuma": 249.34,
+      "p99Luma": 245.7,
+      "meanLuma": 77.98,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw090-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1469,
+        355,
+        1524,
+        465
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4551,
+      "peakLuma": 254.64,
+      "p99Luma": 252.78,
+      "meanLuma": 177.17,
+      "whiteFraction": 0.004174906613931004,
+      "clippedFraction": 0.004394638540980004,
+      "shot": "spell-release-cleric-yaw090-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        825,
+        413,
+        866,
+        524
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 3465,
+      "peakLuma": 248.56,
+      "p99Luma": 243.19,
+      "meanLuma": 88.57,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        1102,
+        52,
+        1137,
+        151
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 5217,
+      "peakLuma": 252.78,
+      "p99Luma": 250.92,
+      "meanLuma": 154.93,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw180-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1220,
+        394,
+        1267,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 4329,
+      "peakLuma": 249.34,
+      "p99Luma": 248.48,
+      "meanLuma": 93.21,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default",
+      "target": "Vault bow",
+      "cell": [
+        11,
+        5
+      ],
+      "box": [
+        867,
+        394,
+        906,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 6104,
+      "peakLuma": 252.78,
+      "p99Luma": 250.95,
+      "meanLuma": 169.77,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw270-default:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1503,
+        337,
+        1559,
+        446
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 254.21,
+      "p99Luma": 251.58,
+      "meanLuma": 153.07,
+      "whiteFraction": 0.008171603677221655,
+      "clippedFraction": 0.00027857739808710187,
+      "shot": "fire-release-wizard-yaw000-near:shooter",
+      "target": "Ivo",
+      "cell": [
+        4,
+        7
+      ],
+      "box": [
+        721,
+        247,
+        810,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": false,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    },
+    {
+      "pixels": 18876,
+      "peakLuma": 253.78,
+      "p99Luma": 253.78,
+      "meanLuma": 158.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-cleric-yaw000-near:shooter",
+      "target": "Sera",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        925,
+        247,
+        1003,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090758328627Z/board-vault/1920x1080/manifest.json",
+      "fixture": "board-vault"
+    }
+  ]
+}

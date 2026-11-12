@@ -1,0 +1,38 @@
+{
+ "Fighter": {
+  "mean": 2.83,
+  "worst": 1.78,
+  "boards": {
+   "vigil": 2.83,
+   "root": 2.54,
+   "vault": 3.12
+  }
+ },
+ "Paladin": {
+  "mean": 3.26,
+  "worst": 1.63,
+  "boards": {
+   "vigil": 3.15,
+   "root": 2.95,
+   "vault": 3.69
+  }
+ },
+ "Cleric": {
+  "mean": 3.53,
+  "worst": 1.98,
+  "boards": {
+   "vigil": 3.39,
+   "root": 3.14,
+   "vault": 4.06
+  }
+ },
+ "Rogue": {
+  "mean": 2.67,
+  "worst": 1.6,
+  "boards": {
+   "vigil": 2.74,
+   "root": 2.38,
+   "vault": 2.89
+  }
+ }
+}

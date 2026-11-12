@@ -5,8 +5,8 @@
   "shots": [
     {
       "pixels": 3608,
-      "peakLuma": 248.48,
-      "p99Luma": 246.86,
+      "peakLuma": 248.56,
+      "p99Luma": 247.48,
       "meanLuma": 75.73,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
@@ -27,14 +27,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 2482,
       "peakLuma": 251.16,
       "p99Luma": 247.16,
-      "meanLuma": 120.79,
+      "meanLuma": 119.77,
       "whiteFraction": 0.00040290088638195,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw000-default:shooter",
@@ -54,7 +54,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -81,14 +81,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 1825,
       "peakLuma": 249.73,
       "p99Luma": 248.31,
-      "meanLuma": 154.96,
+      "meanLuma": 154.89,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw090-default:shooter",
@@ -108,7 +108,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -135,14 +135,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 1875,
       "peakLuma": 249.3,
       "p99Luma": 244.38,
-      "meanLuma": 125.11,
+      "meanLuma": 124.54,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw180-default:shooter",
@@ -162,7 +162,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -189,15 +189,15 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 3116,
       "peakLuma": 254.64,
       "p99Luma": 253.51,
-      "meanLuma": 108.49,
-      "whiteFraction": 0.00417201540436457,
+      "meanLuma": 108.28,
+      "whiteFraction": 0.0038510911424903724,
       "clippedFraction": 0.003209242618741977,
       "shot": "spell-release-bard-yaw270-default:shooter",
       "target": "Hero 1",
@@ -216,15 +216,15 @@
         720
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 11270,
       "peakLuma": 253.71,
       "p99Luma": 251.37,
-      "meanLuma": 118.19,
-      "whiteFraction": 0.0007985803016858918,
+      "meanLuma": 116.94,
+      "whiteFraction": 0.0006211180124223603,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw000-near:shooter",
       "target": "Hero 1",
@@ -243,14 +243,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 3608,
       "peakLuma": 247.77,
-      "p99Luma": 246.7,
-      "meanLuma": 81.24,
+      "p99Luma": 246.77,
+      "meanLuma": 80.35,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default",
@@ -270,14 +270,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5520,
       "peakLuma": 251.16,
-      "p99Luma": 241.18,
-      "meanLuma": 79.78,
+      "p99Luma": 241.39,
+      "meanLuma": 74.87,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default:bolt",
@@ -297,14 +297,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 2482,
       "peakLuma": 250.79,
       "p99Luma": 247.5,
-      "meanLuma": 106.39,
+      "meanLuma": 106.2,
       "whiteFraction": 0.0008058017727639,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default:shooter",
@@ -324,14 +324,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 2628,
       "peakLuma": 248.56,
       "p99Luma": 238.69,
-      "meanLuma": 75.15,
+      "meanLuma": 75.24,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default",
@@ -351,14 +351,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 3920,
       "peakLuma": 244.1,
-      "p99Luma": 229.63,
-      "meanLuma": 76.2,
+      "p99Luma": 223.23,
+      "meanLuma": 72.5,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default:bolt",
@@ -378,14 +378,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 1825,
       "peakLuma": 250.66,
-      "p99Luma": 248.3,
-      "meanLuma": 154.38,
+      "p99Luma": 248.38,
+      "meanLuma": 154.41,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default:shooter",
@@ -405,14 +405,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 34125,
-      "peakLuma": 252.09,
+      "peakLuma": 252.16,
       "p99Luma": 251.16,
-      "meanLuma": 81.21,
+      "meanLuma": 76.55,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-near:bolt",
@@ -432,14 +432,14 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 11270,
-      "peakLuma": 251.92,
-      "p99Luma": 250.95,
-      "meanLuma": 102.94,
+      "peakLuma": 252.71,
+      "p99Luma": 251.16,
+      "meanLuma": 103.04,
       "whiteFraction": 0.00044365572315882877,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-near:shooter",
@@ -459,7 +459,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -486,7 +486,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -513,7 +513,7 @@
         720
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -540,13 +540,13 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 1898,
       "peakLuma": 252.72,
-      "p99Luma": 250.51,
+      "p99Luma": 250.58,
       "meanLuma": 177.74,
       "whiteFraction": 0.0005268703898840885,
       "clippedFraction": 0.0,
@@ -567,7 +567,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -594,7 +594,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -621,7 +621,7 @@
         720
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -648,7 +648,7 @@
         720
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -675,7 +675,7 @@
         720
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -702,14 +702,14 @@
         720
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1280x720/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1280x720/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 8118,
       "peakLuma": 248.79,
       "p99Luma": 247.56,
-      "meanLuma": 75.19,
+      "meanLuma": 75.2,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw000-default",
@@ -729,14 +729,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5450,
       "peakLuma": 251.87,
       "p99Luma": 248.38,
-      "meanLuma": 120.41,
+      "meanLuma": 119.36,
       "whiteFraction": 0.0007339449541284404,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw000-default:shooter",
@@ -756,14 +756,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5832,
       "peakLuma": 248.56,
       "p99Luma": 244.91,
-      "meanLuma": 76.8,
+      "meanLuma": 76.81,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw090-default",
@@ -783,14 +783,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 4104,
       "peakLuma": 252.16,
       "p99Luma": 249.52,
-      "meanLuma": 155.61,
+      "meanLuma": 155.53,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw090-default:shooter",
@@ -810,14 +810,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 3200,
       "peakLuma": 248.56,
       "p99Luma": 245.98,
-      "meanLuma": 77.51,
+      "meanLuma": 77.52,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw180-default",
@@ -837,14 +837,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 4256,
       "peakLuma": 252.37,
       "p99Luma": 249.3,
-      "meanLuma": 122.48,
+      "meanLuma": 121.9,
       "whiteFraction": 0.00023496240601503758,
       "clippedFraction": 0.0,
       "shot": "spell-release-bard-yaw180-default:shooter",
@@ -864,7 +864,7 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -891,14 +891,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 6954,
       "peakLuma": 254.57,
       "p99Luma": 253.51,
-      "meanLuma": 107.16,
+      "meanLuma": 106.97,
       "whiteFraction": 0.005033074489502445,
       "clippedFraction": 0.004026459591601955,
       "shot": "spell-release-bard-yaw270-default:shooter",
@@ -918,15 +918,15 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 25410,
       "peakLuma": 254.49,
       "p99Luma": 251.58,
-      "meanLuma": 117.88,
-      "whiteFraction": 0.0011412829594647776,
+      "meanLuma": 116.66,
+      "whiteFraction": 0.0009445100354191264,
       "clippedFraction": 7.870916961826053e-05,
       "shot": "spell-release-bard-yaw000-near:shooter",
       "target": "Hero 1",
@@ -945,14 +945,14 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 8118,
-      "peakLuma": 247.77,
+      "peakLuma": 247.86,
       "p99Luma": 246.77,
-      "meanLuma": 80.53,
+      "meanLuma": 79.69,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default",
@@ -972,14 +972,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 12272,
       "peakLuma": 251.16,
       "p99Luma": 249.73,
-      "meanLuma": 78.18,
+      "meanLuma": 73.3,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default:bolt",
@@ -999,14 +999,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5450,
       "peakLuma": 250.95,
-      "p99Luma": 248.51,
-      "meanLuma": 105.33,
+      "p99Luma": 248.5,
+      "meanLuma": 105.22,
       "whiteFraction": 0.0009174311926605505,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-default:shooter",
@@ -1026,14 +1026,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5832,
       "peakLuma": 248.56,
       "p99Luma": 244.91,
-      "meanLuma": 75.08,
+      "meanLuma": 75.16,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default",
@@ -1053,14 +1053,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 8820,
       "peakLuma": 243.81,
-      "p99Luma": 229.93,
-      "meanLuma": 75.82,
+      "p99Luma": 224.17,
+      "meanLuma": 72.16,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default:bolt",
@@ -1080,14 +1080,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 4104,
       "peakLuma": 252.16,
       "p99Luma": 249.3,
-      "meanLuma": 155.37,
+      "meanLuma": 155.42,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw090-default:shooter",
@@ -1107,14 +1107,14 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 76796,
-      "peakLuma": 251.95,
+      "peakLuma": 252.16,
       "p99Luma": 250.73,
-      "meanLuma": 80.93,
+      "meanLuma": 76.25,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "spell-flight-bard-yaw000-near:bolt",
@@ -1134,16 +1134,16 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 25410,
       "peakLuma": 254.49,
-      "p99Luma": 250.73,
-      "meanLuma": 102.13,
+      "p99Luma": 250.79,
+      "meanLuma": 102.22,
       "whiteFraction": 0.0007477371113734751,
-      "clippedFraction": 7.870916961826053e-05,
+      "clippedFraction": 0.0001180637544273908,
       "shot": "spell-flight-bard-yaw000-near:shooter",
       "target": "Hero 1",
       "cell": [
@@ -1161,7 +1161,7 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1188,15 +1188,15 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5232,
       "peakLuma": 254.57,
       "p99Luma": 253.71,
-      "meanLuma": 126.56,
-      "whiteFraction": 0.0017201834862385322,
+      "meanLuma": 126.55,
+      "whiteFraction": 0.0015290519877675841,
       "clippedFraction": 0.0061162079510703364,
       "shot": "arrow-release-artificer-yaw000-default:shooter",
       "target": "Hero 2",
@@ -1215,14 +1215,14 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
       "pixels": 5832,
       "peakLuma": 248.56,
       "p99Luma": 244.91,
-      "meanLuma": 76.94,
+      "meanLuma": 76.92,
       "whiteFraction": 0.0,
       "clippedFraction": 0.0,
       "shot": "arrow-release-artificer-yaw090-default",
@@ -1242,7 +1242,7 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1269,7 +1269,7 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1296,7 +1296,7 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1323,7 +1323,7 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1350,7 +1350,7 @@
         1080
       ],
       "pass": true,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1377,7 +1377,7 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     },
     {
@@ -1404,7 +1404,7 @@
         1080
       ],
       "pass": false,
-      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T074242463571Z/cast4-board-vault/1920x1080/manifest.json",
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090644467944Z/cast4-board-vault/1920x1080/manifest.json",
       "fixture": "cast4-board-vault"
     }
   ]

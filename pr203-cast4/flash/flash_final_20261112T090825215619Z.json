@@ -1,0 +1,3517 @@
+{
+  "whiteLevel": 250,
+  "clipLevel": 254.0,
+  "maxWhiteFraction": 0.02,
+  "shots": [
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.11,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2376,
+      "peakLuma": 243.97,
+      "p99Luma": 238.97,
+      "meanLuma": 113.25,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        895,
+        201,
+        928,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.96,
+      "meanLuma": 89.57,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1775,
+      "peakLuma": 248.85,
+      "p99Luma": 244.08,
+      "meanLuma": 135.76,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        558,
+        166,
+        583,
+        237
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.18,
+      "p99Luma": 225.67,
+      "meanLuma": 81.46,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1950,
+      "peakLuma": 244.68,
+      "p99Luma": 239.28,
+      "meanLuma": 121.96,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        659,
+        262,
+        685,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.97,
+      "p99Luma": 235.44,
+      "meanLuma": 88.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3116,
+      "peakLuma": 244.73,
+      "p99Luma": 239.03,
+      "meanLuma": 101.87,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1024,
+        317,
+        1065,
+        393
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 80.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2232,
+      "peakLuma": 244.52,
+      "p99Luma": 241.05,
+      "meanLuma": 131.11,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        836,
+        201,
+        867,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 229.31,
+      "meanLuma": 89.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 248.64,
+      "p99Luma": 246.35,
+      "meanLuma": 155.27,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        555,
+        201,
+        581,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.25,
+      "p99Luma": 229.03,
+      "meanLuma": 81.38,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 248.49,
+      "p99Luma": 245.06,
+      "meanLuma": 166.59,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        721,
+        262,
+        749,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 87.86,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2925,
+      "peakLuma": 250.84,
+      "p99Luma": 247.34,
+      "meanLuma": 135.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1014,
+        276,
+        1053,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.53,
+      "meanLuma": 80.31,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 249.84,
+      "p99Luma": 245.05,
+      "meanLuma": 118.04,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.89,
+      "meanLuma": 89.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 250.99,
+      "p99Luma": 244.64,
+      "meanLuma": 159.18,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        553,
+        237,
+        580,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1725,
+      "peakLuma": 238.97,
+      "p99Luma": 227.52,
+      "meanLuma": 81.29,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        711,
+        91,
+        736,
+        160
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2325,
+      "peakLuma": 250.91,
+      "p99Luma": 247.2,
+      "meanLuma": 120.4,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        782,
+        262,
+        813,
+        337
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2100,
+      "peakLuma": 238.25,
+      "p99Luma": 236.32,
+      "meanLuma": 88.12,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        702,
+        276,
+        730,
+        351
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2812,
+      "peakLuma": 249.98,
+      "p99Luma": 243.97,
+      "meanLuma": 139.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1004,
+        237,
+        1042,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.61,
+      "meanLuma": 80.05,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2376,
+      "peakLuma": 244.61,
+      "p99Luma": 243.04,
+      "meanLuma": 106.95,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        895,
+        201,
+        928,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 242.51,
+      "p99Luma": 233.51,
+      "meanLuma": 56.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 12719,
+      "peakLuma": 247.19,
+      "p99Luma": 244.18,
+      "meanLuma": 103.09,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        998,
+        165,
+        1077,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.53,
+      "meanLuma": 79.87,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2232,
+      "peakLuma": 244.52,
+      "p99Luma": 240.05,
+      "meanLuma": 127.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        836,
+        201,
+        867,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 236.73,
+      "meanLuma": 55.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 247.85,
+      "p99Luma": 244.52,
+      "meanLuma": 125.8,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.25,
+      "p99Luma": 234.53,
+      "meanLuma": 79.9,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 250.77,
+      "p99Luma": 246.41,
+      "meanLuma": 106.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.8,
+      "p99Luma": 233.59,
+      "meanLuma": 56.11,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 251.13,
+      "p99Luma": 247.27,
+      "meanLuma": 103.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2449,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 81.56,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        729,
+        406,
+        760,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1944,
+      "peakLuma": 244.61,
+      "p99Luma": 240.68,
+      "meanLuma": 132.74,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        717,
+        201,
+        744,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.53,
+      "meanLuma": 88.51,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4875,
+      "peakLuma": 244.47,
+      "p99Luma": 240.95,
+      "meanLuma": 99.69,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        866,
+        293,
+        931,
+        368
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2376,
+      "peakLuma": 244.18,
+      "p99Luma": 239.04,
+      "meanLuma": 113.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        895,
+        201,
+        928,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.89,
+      "meanLuma": 90.95,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3657,
+      "peakLuma": 244.82,
+      "p99Luma": 243.04,
+      "meanLuma": 80.18,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        692,
+        181,
+        745,
+        250
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1775,
+      "peakLuma": 248.06,
+      "p99Luma": 243.27,
+      "meanLuma": 137.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        558,
+        166,
+        583,
+        237
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 242.72,
+      "p99Luma": 234.01,
+      "meanLuma": 74.05,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 30240,
+      "peakLuma": 244.61,
+      "p99Luma": 243.39,
+      "meanLuma": 94.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        952,
+        349,
+        1120,
+        529
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 12719,
+      "peakLuma": 246.34,
+      "p99Luma": 244.18,
+      "meanLuma": 103.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        998,
+        165,
+        1077,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 235.61,
+      "meanLuma": 84.31,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4725,
+      "peakLuma": 244.47,
+      "p99Luma": 239.52,
+      "meanLuma": 89.43,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        835,
+        293,
+        898,
+        368
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2232,
+      "peakLuma": 245.2,
+      "p99Luma": 240.52,
+      "meanLuma": 136.39,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        836,
+        201,
+        867,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.89,
+      "meanLuma": 89.63,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3763,
+      "peakLuma": 244.39,
+      "p99Luma": 242.76,
+      "meanLuma": 83.35,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        693,
+        198,
+        746,
+        269
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1872,
+      "peakLuma": 249.64,
+      "p99Luma": 246.28,
+      "meanLuma": 155.88,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        555,
+        201,
+        581,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 241.87,
+      "p99Luma": 233.59,
+      "meanLuma": 65.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 28800,
+      "peakLuma": 244.47,
+      "p99Luma": 242.88,
+      "meanLuma": 83.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        878,
+        349,
+        1038,
+        529
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 11270,
+      "peakLuma": 247.78,
+      "p99Luma": 244.73,
+      "meanLuma": 132.65,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        871,
+        165,
+        941,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2923,
+      "peakLuma": 238.97,
+      "p99Luma": 234.61,
+      "meanLuma": 96.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        864,
+        406,
+        901,
+        485
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4650,
+      "peakLuma": 244.47,
+      "p99Luma": 239.96,
+      "meanLuma": 81.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        803,
+        293,
+        865,
+        368
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2016,
+      "peakLuma": 249.98,
+      "p99Luma": 245.62,
+      "meanLuma": 123.75,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        777,
+        201,
+        805,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 2304,
+      "peakLuma": 238.25,
+      "p99Luma": 230.89,
+      "meanLuma": 91.57,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        854,
+        201,
+        886,
+        273
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3834,
+      "peakLuma": 245.1,
+      "p99Luma": 243.31,
+      "meanLuma": 123.5,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        694,
+        216,
+        748,
+        287
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 1998,
+      "peakLuma": 250.84,
+      "p99Luma": 245.48,
+      "meanLuma": 161.4,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        553,
+        237,
+        580,
+        311
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10170,
+      "peakLuma": 244.15,
+      "p99Luma": 238.09,
+      "meanLuma": 87.73,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        968,
+        630,
+        1081,
+        720
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 27360,
+      "peakLuma": 244.81,
+      "p99Luma": 243.59,
+      "meanLuma": 76.27,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        804,
+        349,
+        956,
+        529
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 9660,
+      "peakLuma": 251.13,
+      "p99Luma": 249.98,
+      "meanLuma": 112.35,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        745,
+        165,
+        805,
+        326
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1280x720/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5400,
+      "peakLuma": 244.47,
+      "p99Luma": 240.74,
+      "meanLuma": 112.76,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1342,
+        302,
+        1392,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.88,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3922,
+      "peakLuma": 248.71,
+      "p99Luma": 243.77,
+      "meanLuma": 136.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        837,
+        250,
+        874,
+        356
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.75,
+      "meanLuma": 82.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4218,
+      "peakLuma": 244.68,
+      "p99Luma": 239.25,
+      "meanLuma": 121.46,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw180-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        989,
+        394,
+        1027,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.58,
+      "p99Luma": 237.11,
+      "meanLuma": 88.17,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 7006,
+      "peakLuma": 244.18,
+      "p99Luma": 242.76,
+      "meanLuma": 99.89,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw270-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1536,
+        476,
+        1598,
+        589
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.15,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4968,
+      "peakLuma": 245.35,
+      "p99Luma": 242.84,
+      "meanLuma": 131.61,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1254,
+        302,
+        1300,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.92,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 249.57,
+      "p99Luma": 246.35,
+      "meanLuma": 154.83,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        833,
+        302,
+        872,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.25,
+      "p99Luma": 233.46,
+      "meanLuma": 82.07,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4662,
+      "peakLuma": 248.57,
+      "p99Luma": 244.8,
+      "meanLuma": 167.63,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw180-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1081,
+        394,
+        1123,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.58,
+      "p99Luma": 237.18,
+      "meanLuma": 88.25,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6608,
+      "peakLuma": 251.28,
+      "p99Luma": 248.48,
+      "meanLuma": 134.61,
+      "whiteFraction": 0.0003026634382566586,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw270-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1521,
+        414,
+        1580,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 250.84,
+      "p99Luma": 246.2,
+      "meanLuma": 115.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.97,
+      "p99Luma": 235.53,
+      "meanLuma": 89.95,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 249.34,
+      "p99Luma": 245.14,
+      "meanLuma": 158.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        830,
+        356,
+        870,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3672,
+      "peakLuma": 238.18,
+      "p99Luma": 233.46,
+      "meanLuma": 82.03,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1067,
+        137,
+        1103,
+        239
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4995,
+      "peakLuma": 250.84,
+      "p99Luma": 247.2,
+      "meanLuma": 121.98,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw180-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1174,
+        394,
+        1219,
+        505
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4592,
+      "peakLuma": 239.66,
+      "p99Luma": 237.18,
+      "meanLuma": 88.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1054,
+        414,
+        1095,
+        526
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6270,
+      "peakLuma": 250.84,
+      "p99Luma": 244.27,
+      "meanLuma": 138.01,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw270-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1506,
+        356,
+        1563,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.04,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5400,
+      "peakLuma": 244.61,
+      "p99Luma": 242.76,
+      "meanLuma": 106.55,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1342,
+        302,
+        1392,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 242.51,
+      "p99Luma": 235.44,
+      "meanLuma": 56.22,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 28798,
+      "peakLuma": 247.76,
+      "p99Luma": 244.18,
+      "meanLuma": 101.99,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1497,
+        247,
+        1616,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 239.04,
+      "p99Luma": 237.11,
+      "meanLuma": 79.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4968,
+      "peakLuma": 244.8,
+      "p99Luma": 241.74,
+      "meanLuma": 127.64,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1254,
+        302,
+        1300,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 239.8,
+      "meanLuma": 55.75,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 247.85,
+      "p99Luma": 244.52,
+      "meanLuma": 125.64,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 79.14,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 250.91,
+      "p99Luma": 247.2,
+      "meanLuma": 104.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "arrow-release-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 242.51,
+      "p99Luma": 235.51,
+      "meanLuma": 56.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 251.13,
+      "p99Luma": 247.27,
+      "meanLuma": 103.61,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-release-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5546,
+      "peakLuma": 239.04,
+      "p99Luma": 237.39,
+      "meanLuma": 80.41,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default",
+      "target": "Vault bow",
+      "cell": [
+        9,
+        6
+      ],
+      "box": [
+        1093,
+        609,
+        1140,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4320,
+      "peakLuma": 242.0,
+      "p99Luma": 232.65,
+      "meanLuma": 131.23,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "fire-release-wizard-yaw000-default:shooter",
+      "target": "Hero 4",
+      "cell": [
+        4,
+        6
+      ],
+      "box": [
+        1076,
+        302,
+        1116,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 239.76,
+      "p99Luma": 238.18,
+      "meanLuma": 87.31,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10848,
+      "peakLuma": 244.89,
+      "p99Luma": 242.88,
+      "meanLuma": 99.45,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1300,
+        439,
+        1396,
+        552
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5400,
+      "peakLuma": 244.47,
+      "p99Luma": 241.45,
+      "meanLuma": 112.63,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1342,
+        302,
+        1392,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.25,
+      "p99Luma": 235.32,
+      "meanLuma": 91.2,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 8034,
+      "peakLuma": 244.68,
+      "p99Luma": 242.04,
+      "meanLuma": 80.78,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1039,
+        272,
+        1117,
+        375
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 3922,
+      "peakLuma": 249.64,
+      "p99Luma": 243.28,
+      "meanLuma": 137.75,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw090-default:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        837,
+        250,
+        874,
+        356
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 242.94,
+      "p99Luma": 235.65,
+      "meanLuma": 74.06,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 67788,
+      "peakLuma": 244.68,
+      "p99Luma": 242.88,
+      "meanLuma": 93.76,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1428,
+        524,
+        1680,
+        793
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 28798,
+      "peakLuma": 247.12,
+      "p99Luma": 244.18,
+      "meanLuma": 102.53,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-sorcerer-yaw000-near:shooter",
+      "target": "Hero 1",
+      "cell": [
+        4,
+        3
+      ],
+      "box": [
+        1497,
+        247,
+        1616,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 239.04,
+      "p99Luma": 237.18,
+      "meanLuma": 83.34,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10622,
+      "peakLuma": 244.47,
+      "p99Luma": 241.66,
+      "meanLuma": 89.33,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1253,
+        439,
+        1347,
+        552
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4968,
+      "peakLuma": 247.85,
+      "p99Luma": 244.02,
+      "meanLuma": 135.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1254,
+        302,
+        1300,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.25,
+      "p99Luma": 235.32,
+      "meanLuma": 89.74,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 8295,
+      "peakLuma": 244.47,
+      "p99Luma": 242.66,
+      "meanLuma": 83.6,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1040,
+        298,
+        1119,
+        403
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4212,
+      "peakLuma": 249.57,
+      "p99Luma": 246.35,
+      "meanLuma": 155.19,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw090-default:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        833,
+        302,
+        872,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 241.8,
+      "p99Luma": 234.73,
+      "meanLuma": 65.49,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 64560,
+      "peakLuma": 244.68,
+      "p99Luma": 242.88,
+      "meanLuma": 83.71,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1317,
+        524,
+        1557,
+        793
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 25410,
+      "peakLuma": 247.35,
+      "p99Luma": 244.73,
+      "meanLuma": 131.97,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-warlock-yaw000-near:shooter",
+      "target": "Hero 2",
+      "cell": [
+        4,
+        4
+      ],
+      "box": [
+        1307,
+        247,
+        1412,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 6490,
+      "peakLuma": 238.97,
+      "p99Luma": 237.18,
+      "meanLuma": 95.79,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1296,
+        609,
+        1351,
+        727
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 10509,
+      "peakLuma": 244.47,
+      "p99Luma": 240.17,
+      "meanLuma": 82.31,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1205,
+        439,
+        1298,
+        552
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4644,
+      "peakLuma": 250.84,
+      "p99Luma": 246.41,
+      "meanLuma": 122.09,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1165,
+        302,
+        1208,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 5076,
+      "peakLuma": 238.25,
+      "p99Luma": 235.32,
+      "meanLuma": 91.82,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1281,
+        302,
+        1328,
+        410
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 8586,
+      "peakLuma": 244.89,
+      "p99Luma": 243.25,
+      "meanLuma": 123.36,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1041,
+        325,
+        1122,
+        431
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 4400,
+      "peakLuma": 250.84,
+      "p99Luma": 244.73,
+      "meanLuma": 160.8,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw090-default:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        830,
+        356,
+        870,
+        466
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 22512,
+      "peakLuma": 243.44,
+      "p99Luma": 241.23,
+      "meanLuma": 87.76,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1453,
+        946,
+        1621,
+        1080
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 61332,
+      "peakLuma": 244.89,
+      "p99Luma": 243.59,
+      "meanLuma": 76.02,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near:bolt",
+      "target": "Scout 1",
+      "cell": [
+        9,
+        4
+      ],
+      "box": [
+        1206,
+        524,
+        1434,
+        793
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    },
+    {
+      "pixels": 21538,
+      "peakLuma": 251.13,
+      "p99Luma": 249.91,
+      "meanLuma": 111.9,
+      "whiteFraction": 0.0,
+      "clippedFraction": 0.0,
+      "shot": "spell-flight-druid-yaw000-near:shooter",
+      "target": "Hero 3",
+      "cell": [
+        4,
+        5
+      ],
+      "box": [
+        1118,
+        247,
+        1207,
+        489
+      ],
+      "size": [
+        1920,
+        1080
+      ],
+      "pass": true,
+      "manifest": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-0167b649-eb51f9fb7e8154e9/.local/gallery/20261112T090825215619Z/cast3-default-seed-battle/1920x1080/manifest.json",
+      "fixture": "cast3-default-seed-battle"
+    }
+  ]
+}
