@@ -773,7 +773,7 @@ class Dev:
                     raise RuntimeError(f"Game PID {process.pid} timed out after {timeout}s and ignored one SIGTERM; left running. Inspect {log}") from None
                 raise RuntimeError(f"Game timed out after {timeout}s and was asked to exit; inspect {log}") from None
 
-    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, static_figures=False):
+    def gallery(self, fixtures=None, resolutions=None, primitives=False, poses=None, timeout=300, static_figures=False, no_palettes=False):
         fixtures = list(dict.fromkeys(fixtures or GALLERY_FIXTURES))
         resolutions = list(dict.fromkeys(resolutions or GALLERY_RESOLUTIONS))
         sizes = {text: parse_resolution(text) for text in resolutions}
@@ -816,8 +816,9 @@ class Dev:
                                "-unattended", "-nosound", "-nosplash", "-UseFixedTimeStep", "-FPS=30", f"-abslog={log}",
                                f"-ExpeditionSaveRoot={save}", f"-ExpeditionCapture={poses_path}", f"-ExpeditionCaptureOut={target}",
                                f"-ExpeditionCaptureFixture={name}", *(["-ExpeditionPrimitives"] if primitives else []),
-                               *(["-ExpeditionStaticFigures"] if static_figures else []), *self.native_limits()]
-                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}{' (static figures)' if static_figures else ''}")
+                               *(["-ExpeditionStaticFigures"] if static_figures else []), *(["-ExpeditionNoPalettes"] if no_palettes else []),
+                               *self.native_limits()]
+                    print(f"Capturing {name} at {text}{' (primitives)' if primitives else ''}{' (static figures)' if static_figures else ''}{' (no palettes)' if no_palettes else ''}")
                     crashes_before = crash_folders(self.w.root)
                     code = self.run_game(command, target / "console.log", timeout)
                     lifecycle = lifecycle_problems(code, crash_folders(self.w.root) - crashes_before, self.w.root, who="Game")
@@ -825,7 +826,7 @@ class Dev:
                         raise RuntimeError(f"Failed lifecycle for {name} at {text}: {'; '.join(lifecycle)}; inspect {log}")
                     manifest = verify_capture(target / "manifest.json", shots, (width, height), target)
                     runs.append({"fixture": name, "seed": manifest.get("seed", info.get("seed")), "board": [manifest.get("boardWidth"), manifest.get("boardHeight")],
-                                 "fixture_info": info, "resolution": text, "primitives": primitives, "static_figures": static_figures, "themed": manifest.get("themed"),
+                                 "fixture_info": info, "resolution": text, "primitives": primitives, "static_figures": static_figures, "themed": manifest.get("themed"), "no_palettes": no_palettes,
                                  "directory": str(target.relative_to(output)), "shots": manifest["shots"]})
         write_json(output / "index.json", {"commit": head, "dirty": dirty, "engine": self.w.versions["unreal_engine"], "changelist": self.w.versions["unreal_changelist"],
                                           "poses": str(poses_path), "settle_args": ["-UseFixedTimeStep", "-FPS=30"], "runs": runs})
@@ -1320,6 +1321,7 @@ def main():
     gallery.add_argument("--res", action="append", type=resolution_argument, help="Window size WIDTHxHEIGHT (repeatable); default: " + ", ".join(GALLERY_RESOLUTIONS))
     gallery.add_argument("--primitives", action="store_true", help="Render the engine-primitive presentation instead of the theme")
     gallery.add_argument("--static-figures", action="store_true", help="Themed look with the static r001 figures instead of the rigged ones (a before/after baseline for a cast batch)")
+    gallery.add_argument("--no-palettes", action="store_true", help="Rigged figures in the class colours, with no subclass palette or party accent (a before/after baseline for the palettes, #150 batch 4)")
     gallery.add_argument("--poses", help="Poses file; default " + str(GALLERY_POSES))
     gallery.add_argument("--timeout", type=int, default=300, help="Seconds allowed for each game run")
     perf = commands.add_parser("perf", help="Measure one autoplay fight against the #148 performance budgets; evidence under .local/perf/")
@@ -1359,7 +1361,7 @@ def main():
         elif args.command == "test":
             dev.test(args.filter or dev.w.settings["automation_filter"], args.allow_warnings)
         elif args.command == "gallery":
-            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures)
+            dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures, no_palettes=args.no_palettes)
         elif args.command == "perf":
             report = dev.perf(args.package, args.editor, args.script, args.res, args.csv_frames, args.timeout, not args.no_warmup,
                               args.offscreen, args.vsync, not args.no_sound, args.transition_pad, args.only, args.run)

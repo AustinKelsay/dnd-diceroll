@@ -508,6 +508,8 @@ private:
     bool bSkeletalFigures = true;
     /** The accent slot of each party member whose class appears more than once in the party (ExpeditionPalette::AccentSlots), built with the rigs. */
     TMap<int32, int32> PartyAccents;
+    /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */
+    bool bPalettes = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;

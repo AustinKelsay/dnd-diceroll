@@ -569,8 +569,9 @@ class GalleryTests(unittest.TestCase):
     def test_gallery_takes_cores_and_the_operation_lock_like_other_commands(self):
         self.assertIn("gallery", dev_module.CORE_COMMANDS)
         source = Path(dev_module.__file__).read_text()
-        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures)', source)
+        self.assertIn('dev.gallery(args.fixture, args.res, args.primitives, args.poses, args.timeout, static_figures=args.static_figures, no_palettes=args.no_palettes)', source)
         self.assertIn('"-ExpeditionStaticFigures"', source)
+        self.assertIn('"-ExpeditionNoPalettes"', source)
 
 
 class EvidenceTests(unittest.TestCase):
