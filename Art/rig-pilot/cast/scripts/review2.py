@@ -1,8 +1,10 @@
 """Fresh-process review of the batch 2 exports (#150): validation numbers and contact sheets for barbarian, monk, paladin, ranger and the
 r002 re-exports of the five earlier characters (ten clips).
 
-    blender -b --python Art/rig-pilot/cast/scripts/review2.py -- validate <key> [--r002]
-    blender -b --python Art/rig-pilot/cast/scripts/review2.py -- sheet2 bind|turn|clips|brace|stone
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review2.py -- validate <key> [--r002]
+    blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/review2.py -- sheet2 bind|turn|clips|brace|stone|override
+
+Every command takes `--python-exit-code 1`: Blender then exits 1 when the script raises (an uncaught exception otherwise still exits 0, so a failed validation could read as success). The gates also exit 1 themselves.
 
 review.py (batch 1) is not edited, so the batch 1 asset records that hash it stay valid: this script loads it (and through it the r001
 review functions) into its own namespace after registering the batch 2 classes and the Brace clip, so validate expects ten clips.

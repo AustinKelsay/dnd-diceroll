@@ -10,7 +10,7 @@
     "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused."
   },
   "recipe": {
-    "method": "Ranger: agile body, hooded cape, quiver, short blade on weapon_socket, longbow on shield_socket. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py); no external motion data",
+    "method": "Ranger: agile body, hooded cape, quiver, short blade on weapon_socket, longbow on shield_socket. Procedural meshes, atlas and skin weights from Art/rig-pilot/cast/scripts (build2.py, cast_batch2.py) on the r001 skeleton; the nine shared hand-keyed clips of Art/rig-pilot/r001/scripts/clips.py plus the tenth, Brace (brace.py); one per-class override of the shared Ranged clip, Ranged_Ranger (36 frames), authored on the shared skeleton by overrides.py with a small IK over rigkit's FK (the ranger's bow, whose string nock is skinned to hand.R, is authored there too); no external motion data",
     "approved_reference": "Gate 1 decision on #140 (25-bone skeleton); #147 pilot contract (Art/rig-pilot/r001/README.md); #150 batch 2 design calls by the graphics lead (class looks, Brace clip, Rim 1.6 and Fill 1.25)",
     "parameters": {
       "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md (unchanged)",
@@ -19,7 +19,7 @@
       "atlas": "1024x1024, 1 material",
       "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
       "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
-      "clips": "ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop)",
+      "clips": "ten: Idle, Walk, Melee, Ranged, Cast, Hit, Downed, Death, Recover, Brace (24 frames, 0.8 s, not a loop); plus the override action Ranged_Ranger in this glb (0 to 36 frames, starts and ends on Idle frame 0)",
       "blender_validation": {
         "tris": {
           "LOD1": {
@@ -63,7 +63,7 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/README_BATCH2.md",
-      "sha256": "36c2e8c33d1108123c347a5d8c48162e879e2f9004adbf3003f73a1d6bfc2125"
+      "sha256": "21b1c98f14e9c16b6d1c744ec5fdf2c6b55b7176512efde355979a14af781cf0"
     },
     {
       "role": "source",
@@ -83,17 +83,17 @@
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/build2.py",
-      "sha256": "809389c26f25b62dc4e11c49c7f4099e5feeb198c108a0e3ea61c0ab69e2f314"
+      "sha256": "d00068658baaff15de9d2ba03905fb5fbaa4a71b5306dfae673c0b64fef36cb8"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/review2.py",
-      "sha256": "a251fcb623756f198ce7777702d68b807c6fb2f2cded236007c4d1b560c7c7ec"
+      "sha256": "539aa82b9bc242239cf99fd25e9e11d9d566fbc8e958dd124e664794a14b6068"
     },
     {
       "role": "source",
       "path": "Art/rig-pilot/cast/scripts/make_records2.py",
-      "sha256": "d57e2ffad84b5ca7203ad3cc549b4978614238a14a57b354e43e5e2539b1a722"
+      "sha256": "9d89ba8b13a7f895701f7aa4d46578d2c9f4dff020265f74e4305da946b2fce0"
     },
     {
       "role": "source",
@@ -116,6 +116,11 @@
       "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
     },
     {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/overrides.py",
+      "sha256": "9f9154df8669c7bbf6207ec1841990e2675d110033834ad9de3805b127064b8e"
+    },
+    {
       "role": "export",
       "path": "Art/sk-hero-ranger/r001/SK_Hero_Ranger.glb",
       "sha256": "33929436004ea5d9960a89e8c8868643de12f770f26af337e12d05ac109b1e7a"
@@ -135,14 +140,24 @@
     "name": "dnd-diceroll-rigged-character",
     "version": 1,
     "settings": {
-      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and no clips are imported for this character",
+      "importer": "glTF skeletal mesh; reuse the existing shared skeleton (SKEL_Humanoid from the #147 fighter import); no new skeleton and, apart from the one override clip named under override_clip, no clips are imported for this character",
       "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
       "nanite": "off, set explicitly (gate 1 pipeline rule)",
       "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
-      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the clips baked into this glb are not imported",
+      "animations": "the shared A_Humanoid_* clips are reused (nine from #147, A_Humanoid_Brace from #150 batch 2); the other clips baked into this glb are not imported (the baked shared Ranged is not used for this class: its override replaces it)",
       "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
       "texture_filter": "trilinear, anisotropic 8",
-      "collision": "none (presentation only)"
+      "collision": "none (presentation only)",
+      "override_clip": {
+        "source_action": "Ranged_Ranger",
+        "source_file": "Art/sk-hero-ranger/r001/SK_Hero_Ranger.glb (the LOD0 export, the same file the mesh is imported from)",
+        "shared_clip_replaced": "Ranged",
+        "destination_package": "/Game/DnDDiceRoll/Theme/Characters/Animations/A_Ranger_Ranged",
+        "skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid (the shared one: the glb is imported onto it, the sequence is checked to be on it, nothing else of that import is kept)",
+        "policy": "import once: an existing destination package is kept and never replaced or deleted; the staging import is deleted after the sequence is moved",
+        "theme_entry": "ClassRigs[Ranger].Overrides[Ranged] (data, UDiceRollTheme / FDiceRollCharacter::Overrides); a class with no entry plays the shared clip",
+        "script": "Content/Python/import_dark_fantasy_theme.py, CLIP_OVERRIDES and import_override_clips"
+      }
     }
   },
   "validation": {
@@ -152,6 +167,7 @@
       "Art/rig-pilot/cast/metrics/build_ranger.json",
       "Art/rig-pilot/cast/previews/sheet_07_batch2_turnaround.png",
       "Art/rig-pilot/cast/previews/sheet_11_ranger_clips.png",
+      "Art/rig-pilot/cast/previews/sheet_15_ranger_override_clip.png",
       "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
     ]
   }

@@ -44,14 +44,16 @@ One material per character on its own 1024x1024 atlas (the same 13 tiles). Atlas
 
 ## Scripts (repository root, one Blender process at a time, under the machine lock)
 
+**Every Blender command takes `--python-exit-code 1`**: Blender then exits 1 when the script raises (an uncaught exception otherwise still exits 0, so a failed build or validation could read as success in a pipeline); the gates in `review2.py` and `compare_r002.py` exit 1 themselves as well. The `...` in the rows below stands for `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/`.
+
 | Script | Does |
 | --- | --- |
-| `blender -b --python Art/rig-pilot/cast/scripts/build2.py [-- barbarian monk paladin ranger]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
+| `blender -b --python-exit-code 1 --python Art/rig-pilot/cast/scripts/build2.py [-- barbarian monk paladin ranger]` | builds meshes, atlas, weights, ten clips; exports glbs and `*_source.blend` into `Art/<asset-id>/r001/`; writes `metrics/build_*.json` |
 | `... build2.py -- --r002 fighter wizard raider rogue cleric` | re-exports the five earlier characters with ten clips into `Art/<asset-id>/r002/` |
-| `... review2.py -- validate <key> [--r002]` | fresh process: re-imports the glbs and writes `metrics/validate_<key>[_r002].json` (bones, ten clips, seams, LOD bone names, influences, glow alpha, root drift) |
-| `... compare_r002.py -- <dir with the old glbs> fighter wizard raider rogue cleric` | proves the re-exports changed nothing but the extra clip |
-| `... review2.py -- sheet2 bind\|turn\|clips\|brace\|stone` | renders `previews/sheet_06..14` (ImageMagick 7) |
-| `python3 Art/rig-pilot/cast/scripts/make_records2.py` | writes the four r001 records and the five r002 records |
+| `... review2.py -- validate <key> [--r002]` | fresh process: re-imports the glbs and writes `metrics/validate_<key>[_r002].json` (bones, ten clips, seams, LOD bone names, influences, glow alpha, root drift, height, triangles, the override clips) and **exits 1 on any failed predicate** |
+| `... compare_r002.py -- <dir with the old glbs> fighter wizard raider rogue cleric` | proves the re-exports changed nothing but the extra clip; exits 1 otherwise |
+| `... review2.py -- sheet2 bind\|turn\|clips\|brace\|stone\|override` | renders `previews/sheet_06..16` (ImageMagick 7; `override` is the two per-class clips beside the shared clips they replace) |
+| `python3 Art/rig-pilot/cast/scripts/make_records2.py` | writes the four r001 records and the five r002 records; refuses (exit 1) unless every validation JSON and the r002 comparison pass |
 
 ## Known roughness
 
