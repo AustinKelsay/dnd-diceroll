@@ -129,6 +129,13 @@ const TSoftObjectPtr<UAnimSequence>& FDiceRollAnimSet::For(EUnitPose Pose) const
     }
 }
 
+float FDiceRollCharacter::ResolvedHeightScale(bool* bOutAdjusted) const
+{
+    const float Resolved = FMath::IsFinite(HeightScale) ? FMath::Clamp(HeightScale, MinHeightScale, MaxHeightScale) : 1.0f;
+    if (bOutAdjusted) { *bOutAdjusted = !FMath::IsFinite(HeightScale) || Resolved != HeightScale; }
+    return Resolved;
+}
+
 bool FDiceRollCharacter::Load(USkeletalMesh*& OutMesh, TArray<UAnimSequence*>& OutClips) const
 {
     OutMesh = nullptr;

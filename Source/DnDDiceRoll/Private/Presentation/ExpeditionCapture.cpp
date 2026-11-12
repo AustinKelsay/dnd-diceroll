@@ -3,6 +3,7 @@
 #include "Presentation/ExpeditionPlayerController.h"
 #include "Presentation/CombatHints.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/FoeLook.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
@@ -458,11 +459,16 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         if (Shot.Mode == ECaptureMode::Battle) { return true; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
-            // A party hero of the class, held in the clip at the time: no command is submitted and the battle is untouched (UpdateAnimation leaves the figure alone).
+            // A party hero of the class, or a foe of the look (Scout, Raider, Archer, Skirmisher, Brute, Warden), held in the clip at the time: no command is submitted and the
+            // battle is untouched (UpdateAnimation leaves the figure alone).
             const FCombatantState* Hero = nullptr;
             for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
-            { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Hero = &Unit; break; } }
-            if (!Hero) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+            {
+                const bool bMatch = Unit.Side == ECombatSide::Party ? UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role
+                    : ExpeditionFoe::RigKey(Board->FoeLookFor(Unit)).ToString() == Shot.Role;
+                if (bMatch) { Hero = &Unit; break; }
+            }
+            if (!Hero) { Skip = FString::Printf(TEXT("no %s on the board"), *Shot.Role); return false; }
             if (!Board->PreviewPose(Hero->Id, Shot.Pose, Shot.Time)) { Skip = FString::Printf(TEXT("the %s is not a rigged figure"), *Shot.Role); return false; }
             Pending.TargetId = Hero->Id;
             Pending.TargetName = Hero->Name;
@@ -488,16 +494,21 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
             Pending.ImpactFrom = FVector2D(Holder->Cell.X, Holder->Cell.Y);
             if (!Shot.Role.IsEmpty())
             {
-                // A named shooter instead of whoever holds the turn: the party hero of that class, against the nearest standing foe.
+                // A named shooter instead of whoever holds the turn: the party hero of that class, or (#150 foe batch) the foe of that look (Archer), against the nearest standing
+                // opponent on the other side.
                 const FCombatantState* Shooter = nullptr;
                 for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
-                { if (Unit.Side == ECombatSide::Party && UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role) { Shooter = &Unit; break; } }
-                if (!Shooter) { Skip = FString::Printf(TEXT("no %s in the party"), *Shot.Role); return false; }
+                {
+                    const bool bMatch = Unit.Side == ECombatSide::Party ? UDiceRollTheme::ClassKey(Unit.AdventurerRole).ToString() == Shot.Role
+                        : ExpeditionFoe::RigKey(Board->FoeLookFor(Unit)).ToString() == Shot.Role;
+                    if (bMatch) { Shooter = &Unit; break; }
+                }
+                if (!Shooter) { Skip = FString::Printf(TEXT("no %s on the board"), *Shot.Role); return false; }
                 Struck = nullptr; Nearest = MAX_int32;
                 for (const FCombatantState& Unit : Board->Rules().Snapshot().Encounter.Combatants)
                 {
                     const int32 Distance = FMath::Abs(Unit.Cell.X - Shooter->Cell.X) + FMath::Abs(Unit.Cell.Y - Shooter->Cell.Y);
-                    if (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
+                    if (Unit.Side != Shooter->Side && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; Struck = &Unit; }
                 }
                 if (!Struck) { Skip = TEXT("no standing opponent to strike"); return false; }
                 Pending.TargetId = Struck->Id;
@@ -710,7 +721,7 @@ void FExpeditionCaptureDirector::Tick()
                     Entry.Id = Combatant.Id;
                     Entry.Name = Combatant.Name;
                     Entry.bParty = Combatant.Side == ECombatSide::Party;
-                    Entry.Role = Entry.bParty && RoleEnum ? RoleEnum->GetNameStringByValue(static_cast<int64>(Combatant.AdventurerRole)) : TEXT("Foe");
+                    Entry.Role = Entry.bParty ? (RoleEnum ? RoleEnum->GetNameStringByValue(static_cast<int64>(Combatant.AdventurerRole)) : FString()) : ExpeditionFoe::RigKey(Board->FoeLookFor(Combatant)).ToString();
                     Entry.bRigged = Board->UnitAnimation(Combatant.Id).bSkeletal;
                     Pending.Units.Add(Entry);
                 }

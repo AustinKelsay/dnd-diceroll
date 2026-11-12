@@ -7,6 +7,7 @@
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
+#include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -455,6 +456,15 @@ public:
     void SetBoardMetric(const FBoardMetric& Value);
     /** Draws the static r001 meshes instead of the rigged characters (what -ExpeditionStaticFigures does at startup) and rebuilds. */
     void UseStaticFigures();
+    /**
+     * Capture and test support (#150 foe batch): draws the board's enemies, in encounter order, as these looks instead of the ones their names give, and rebuilds.
+     * A checkpoint cannot carry a renamed enemy (a restored run is checked against the generated roster), and the skirmisher, brute and warden are not generated
+     * until #188, so the gallery shows them through this: presentation only, nothing is written to the run, the rules or the RNG. -ExpeditionFoeLooks=Skirmisher,Brute,Archer
+     * does the same at startup (the FoeRigs keys, ExpeditionFoe::RigKey); an empty array restores the names' own looks.
+     */
+    void SetFoeLooks(const TArray<EFoeLook>& Looks);
+    /** The look an enemy is drawn as: the override of its place in the encounter when there is one, otherwise ExpeditionFoe::LookOf. */
+    EFoeLook FoeLookFor(const FCombatantState& Unit) const;
     /** How many figures on the board are rigged characters. */
     int32 SkeletalFigureCount() const;
     /** The animation shown on a combatant's figure; bSkeletal is false for static and primitive figures. */
@@ -511,6 +521,8 @@ private:
     int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
     bool bSkeletalFigures = true;
+    /** SetFoeLooks: the look of each enemy in encounter order; empty uses the names. */
+    TArray<EFoeLook> FoeLookOrder;
     /** The accent slot of each party member whose class appears more than once in the party (ExpeditionPalette::AccentSlots), built with the rigs. */
     TMap<int32, int32> PartyAccents;
     /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */

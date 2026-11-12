@@ -39,7 +39,7 @@ struct DNDDICEROLL_API FCaptureShot
     EImpactMoment Moment = EImpactMoment::Landing;
     /** Impact shots only: rendered frames between the hit and the screenshot (the flash is held at its peak throughout). */
     int32 Frames = DefaultImpactFrames;
-    /** Pose shots only (#150): a party hero of this class (the role's enum name, "Rogue") held in this clip at this time in seconds, with no command and no rules change. */
+    /** Pose shots only (#150): a party hero of this class (the role's enum name, "Rogue") or a foe of this look (the FoeRigs key, "Brute"; ExpeditionFoe::RigKey) held in this clip at this time in seconds, with no command and no rules change. */
     FString Role;
     EUnitPose Pose = EUnitPose::Idle;
     float Time = 0.0f;

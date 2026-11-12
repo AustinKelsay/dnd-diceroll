@@ -232,6 +232,96 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         }
         if (!bFound) { AddError(TEXT("No seed below 400 reaches the dangerous broken-wall finale with the party first")); }
     }
+    // The foe batch (#150): the five rigged foes on the three boards they are judged on. A checkpoint cannot carry a renamed enemy (a restored run is checked against
+    // the generated roster) and the skirmisher, brute and warden are not generated until #188, so each fixture is an ordinary checkpoint whose sidecar names the looks its
+    // enemies are drawn as, in encounter order (the gallery passes them as -ExpeditionFoeLooks; presentation only, the run, the rules and the RNG are untouched). The last
+    // enemy is the archer (Range 4) on every board, so the looks always end with Archer. `foes-vigil-a` and `-b` (the dangerous Watchtower road, three enemies),
+    // `foes-root-a` to `-c` (the Stream trail, two enemies) and `foes-vault-a` and `foes-vault-finale` (the dangerous finale; the finale has the warden moved to the back
+    // of the board, by the Vault's Waystone, as #188's front-to-back layout will place it). Render with `gallery --fixture foes-vigil-a ...`; the pose sheet is foes-poses.json.
+    {
+        const auto DescribeLooks = [&](const TCHAR* Name, const FExpeditionRun& Run, int32 Seed, int32 Offer, const TCHAR* Looks)
+        {
+            const FCombatEncounter& Encounter = Run.Battle().Snapshot().Encounter;
+            const FString Info = FString::Printf(TEXT("{\n  \"seed\": %d,\n  \"offer\": %d,\n  \"phase\": \"combat\",\n  \"boardWidth\": %d,\n  \"boardHeight\": %d,\n  \"foeLooks\": \"%s\"\n}\n"),
+                Seed, Offer, Encounter.Width, Encounter.Height, Looks);
+            TestTrue(FString::Printf(TEXT("Fixture %s writes its sidecar"), Name), FFileHelper::SaveStringToFile(Info, *FPaths::Combine(Root, Name, TEXT("fixture.json"))));
+        };
+        const auto WriteLooks = [&](const TCHAR* Name, const FExpeditionRun& Run, int32 Seed, int32 Offer, const TCHAR* Looks)
+        {
+            int32 Enemies = 0;
+            for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { Enemies += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+            TArray<FString> Parts;
+            FString(Looks).ParseIntoArray(Parts, TEXT(","), true);
+            TestEqual(*FString::Printf(TEXT("Fixture %s names a look for each of its enemies"), Name), Parts.Num(), Enemies);
+            TestTrue(*FString::Printf(TEXT("Fixture %s ends with the archer, the one enemy the rules give a bow"), Name), !Parts.IsEmpty() && Parts.Last() == TEXT("Archer"));
+            Write(Name, Run);
+            DescribeLooks(Name, Run, Seed, Offer, Looks);
+        };
+        // Vigil: the dangerous road of a first fight, three enemies, party first.
+        bool bVigil = false;
+        for (int32 Seed = 1; Seed < 2000 && !bVigil; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[1];
+            if (!Route.bDangerous || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            WriteLooks(TEXT("foes-vigil-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
+            WriteLooks(TEXT("foes-vigil-b"), Run, Seed, 1, TEXT("Brute,Warden,Archer"));
+            bVigil = true;
+        }
+        if (!bVigil) { AddError(TEXT("No seed below 2000 gives a dangerous first fight with the party first")); }
+        // Root: the guarded Stream trail, two enemies, party first.
+        bool bRoot = false;
+        for (int32 Seed = 1; Seed < 2000 && !bRoot; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[0];
+            if (Route.bDangerous || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            WriteLooks(TEXT("foes-root-a"), Run, Seed, 0, TEXT("Skirmisher,Archer"));
+            WriteLooks(TEXT("foes-root-b"), Run, Seed, 0, TEXT("Brute,Archer"));
+            WriteLooks(TEXT("foes-root-c"), Run, Seed, 0, TEXT("Warden,Archer"));
+            bRoot = true;
+        }
+        if (!bRoot) { AddError(TEXT("No seed below 2000 gives a guarded first fight with the party first")); }
+        // Vault: the dangerous broken-wall finale (three enemies), and the same finale with its second enemy, the warden, moved to the back of the board.
+        bool bVault = false;
+        for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            WriteLooks(TEXT("foes-vault-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
+            // The Vault's Waystone apse is on the high-row wall (the left of the home yaw, measured on this fixture's captures), a little on the party's side of the arches, so the warden
+            // stands on the enemy side of the wall line (column 8), on the first free cell from that wall: the guardian at the back by the Waystone, as #188's layout will place it.
+            FExpeditionSnapshot Snapshot = Run.Snapshot();
+            const FCombatEncounter& Encounter = Snapshot.Battle.Encounter;
+            FCombatantState* Warden = nullptr;
+            int32 Order = 0;
+            for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy && Order++ == 1) { Warden = &Unit; } }
+            if (!Warden) { continue; }
+            FIntPoint Back = Warden->Cell;
+            for (int32 Row = Encounter.Height - 2; Row >= 0; --Row)
+            {
+                const FIntPoint Cell(8, Row);
+                bool bFree = !Encounter.BlockedCells.Contains(Cell);
+                for (const FCombatantState& Other : Encounter.Combatants) { bFree = bFree && (Other.Id == Warden->Id || Other.Life == ECombatLife::Dead || Other.Cell != Cell); }
+                if (bFree) { Back = Cell; break; }
+            }
+            Warden->Cell = Back;
+            FString Error;
+            FExpeditionRun Finale;
+            if (!TestTrue(*FString::Printf(TEXT("The finale with its warden at the back restores as a valid checkpoint (%s)"), *Error), Finale.Restore(Snapshot, Error))) { continue; }
+            WriteLooks(TEXT("foes-vault-finale"), Finale, Seed, 1, TEXT("Brute,Warden,Archer"));
+            bVault = true;
+        }
+        if (!bVault) { AddError(TEXT("No seed below 400 reaches the dangerous broken-wall finale with the party first")); }
+    }
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)

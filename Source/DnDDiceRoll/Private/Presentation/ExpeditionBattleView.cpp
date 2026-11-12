@@ -5,6 +5,7 @@
 #include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/FoeLook.h"
 #include "Presentation/HitFlash.h"
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
@@ -682,6 +683,22 @@ void AExpeditionBattleView::BeginPlay()
     }
     // -ExpeditionStaticFigures draws the static r001 figures instead of the rigged characters.
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionStaticFigures"))) { bSkeletalFigures = false; }
+    // -ExpeditionFoeLooks=Skirmisher,Brute,Archer draws the enemies, in encounter order, as those looks (capture only; see SetFoeLooks).
+    FString FoeLooks;
+    if (FParse::Value(FCommandLine::Get(), TEXT("ExpeditionFoeLooks="), FoeLooks, false))
+    {
+        TArray<FString> Names;
+        FoeLooks.ParseIntoArray(Names, TEXT(","), true);
+        for (const FString& Name : Names)
+        {
+            bool bKnown = false;
+            for (int32 Look = 0; Look < ExpeditionFoe::Count && !bKnown; ++Look)
+            {
+                if (Name.Equals(ExpeditionFoe::RigKey(static_cast<EFoeLook>(Look)).ToString(), ESearchCase::IgnoreCase)) { FoeLookOrder.Add(static_cast<EFoeLook>(Look)); bKnown = true; }
+            }
+            if (!bKnown) { FoeLookOrder.Add(EFoeLook::Scout); UE_LOG(LogTemp, Warning, TEXT("-ExpeditionFoeLooks: unknown look \"%s\" (Scout, Raider, Archer, Skirmisher, Brute, Warden); drawing a scout"), *Name); }
+        }
+    }
     // -ExpeditionNoPalettes keeps the rigged figures in their class colours (the baseline the subclass palettes are measured against).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
     // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
@@ -901,6 +918,27 @@ void AExpeditionBattleView::UseStaticFigures()
 {
     bSkeletalFigures = false;
     RebuildBoard();
+}
+
+void AExpeditionBattleView::SetFoeLooks(const TArray<EFoeLook>& Looks)
+{
+    FoeLookOrder = Looks;
+    RebuildBoard();
+}
+
+EFoeLook AExpeditionBattleView::FoeLookFor(const FCombatantState& Unit) const
+{
+    if (!FoeLookOrder.IsEmpty() && Unit.Side == ECombatSide::Enemy)
+    {
+        int32 Index = 0;
+        for (const FCombatantState& Other : Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Other.Side != ECombatSide::Enemy) { continue; }
+            if (Other.Id == Unit.Id) { return FoeLookOrder.IsValidIndex(Index) ? FoeLookOrder[Index] : ExpeditionFoe::LookOf(Unit); }
+            ++Index;
+        }
+    }
+    return ExpeditionFoe::LookOf(Unit);
 }
 
 int32 AExpeditionBattleView::SkeletalFigureCount() const
@@ -1611,8 +1649,9 @@ const FDiceRollCharacter* AExpeditionBattleView::UnitRigged(const FCombatantStat
     // A party hero is rigged by class (#150); a class without an entry has no rig and keeps its static figure. Entries are data, so
     // a later cast batch adds a class without touching this code.
     if (Unit.Side == ECombatSide::Party) { return Theme->RigForClass(Unit.AdventurerRole); }
-    // The same roster rule as UnitMesh: ranged foes are archers, the rest are raiders or scouts.
-    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider")) ? Theme->RigForFoe(FName(TEXT("Raider"))) : nullptr;
+    // A foe is rigged by its look (FoeLook.h): ranged foes are archers; by name, a warden, a brute, a skirmisher or a raider; the rest are scouts. A look with
+    // no FoeRigs entry has no rig and keeps its static figure (UnitMesh).
+    return Theme->RigForFoe(ExpeditionFoe::RigKey(FoeLookFor(Unit)));
 }
 
 bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneComponent* Body, const FCombatantState& Unit)
@@ -1633,7 +1672,11 @@ bool AExpeditionBattleView::BuildSkeletalFigure(FExpeditionUnitRig& Rig, USceneC
     // The mesh origin is at the feet. Fit it to the metric's figure height (the rig root already carries the cell scale),
     // exactly as static figures are fitted.
     const float MeshHeight = static_cast<float>(Mesh->GetBounds().GetBox().Max.Z);
-    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm / BoardMetric.Scale() / MeshHeight : 1.0f;
+    // The stature is data (HeightScale); a value outside [0.5, 1.5] or not finite is brought back at use, with a warning, so it can never hide, invert or balloon a figure.
+    bool bScaleAdjusted = false;
+    const float Stature = Definition->ResolvedHeightScale(&bScaleAdjusted);
+    if (bScaleAdjusted) { UE_LOG(LogTemp, Warning, TEXT("%s: HeightScale %f is outside [%.1f, %.1f] or not finite; using %.2f"), *Mesh->GetName(), Definition->HeightScale, FDiceRollCharacter::MinHeightScale, FDiceRollCharacter::MaxHeightScale, Stature); }
+    const float Fit = MeshHeight > 1.0f ? BoardMetric.FigureCm * Stature / BoardMetric.Scale() / MeshHeight : 1.0f;
     Skin->SetRelativeScale3D(FVector(Fit));
     Skin->SetRelativeRotation(FRotator(0.0f, Definition->YawOffset, 0.0f));
     // One tintable instance per slot, like static figures: Flash and Glow reach the figure through "Color".
@@ -2406,9 +2449,13 @@ UStaticMesh* AExpeditionBattleView::UnitMesh(const FCombatantState& Unit) const
         default: return nullptr;
         }
     }
-    if (Unit.Range > 1) { return ThemeMesh(Theme->Archer); }
-    const bool bRaider = Unit.Name.Contains(TEXT("raider"));
-    return ThemeMesh(bRaider ? Theme->Raider : Theme->Scout);
+    // The static fallback of a rigged look: today's archer, raider and scout meshes. The heavy new looks (brute, warden) stand in as the raider and the skirmisher as the scout.
+    switch (FoeLookFor(Unit))
+    {
+    case EFoeLook::Archer: return ThemeMesh(Theme->Archer);
+    case EFoeLook::Raider: case EFoeLook::Brute: case EFoeLook::Warden: return ThemeMesh(Theme->Raider);
+    default: return ThemeMesh(Theme->Scout);
+    }
 }
 
 bool AExpeditionBattleView::WantsOverview() const

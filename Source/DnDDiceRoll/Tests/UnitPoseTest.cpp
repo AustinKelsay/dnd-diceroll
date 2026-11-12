@@ -4,6 +4,9 @@
 #include "UObject/GarbageCollection.h"
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include <limits>
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -11,6 +14,7 @@
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/ExpeditionBattleView.h"
+#include "Presentation/ExpeditionPalette.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/UnitPose.h"
 #include "Run/ExpeditionRun.h"
@@ -527,9 +531,10 @@ double FigureHeight(const AExpeditionBattleView& View, USceneComponent* RigRoot)
 bool ExpectsRig(const FCombatantState& Unit)
 {
     // Every party class is rigged (#147 fighter and wizard, #150 batch 1 rogue and cleric, batch 2 barbarian, monk, paladin and ranger, batch 3 sorcerer,
-    // warlock and druid, batch 4 bard and artificer); of the foes only the raider is.
+    // warlock and druid, batch 4 bard and artificer); every foe is rigged since the foe batch: scouts, raiders and archers by the roster rule, and the #188 roles
+    // when a look names them (FoeLook.h).
     if (Unit.Side == ECombatSide::Party) { return Unit.AdventurerRole != EAdventurerRole::None; }
-    return Unit.Range <= 1 && Unit.Name.Contains(TEXT("raider"));
+    return true;
 }
 
 // Every rigged figure shows the committed pose: Death and Downed at the end of their clip, Idle as Idle.
@@ -1817,7 +1822,9 @@ bool FCastBatch2FiguresTest::RunTest(const FString& Parameters)
             View->Tick(0.016f);
         }
     }
-    TestEqual(TEXT("Exactly the four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("Exactly the four are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 2 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -2256,7 +2263,9 @@ bool FCastBatch3FiguresTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestEqual(TEXT("Exactly the four (three classes and the wizard) are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("Exactly the four (three classes and the wizard) are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 3 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -2850,7 +2859,9 @@ bool FCastBatch4FiguresTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestEqual(TEXT("All four are rigged on this board"), View->SkeletalFigureCount(), 4);
+    int32 Foes = 0;
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants) { Foes += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+    TestEqual(TEXT("All four are rigged on this board, and so is every foe (the foe batch)"), View->SkeletalFigureCount(), 4 + Foes);
     ExpectFiguresConverged(*this, *View, TEXT("the batch 4 party at rest"));
     ReleaseView(View);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
@@ -2913,6 +2924,673 @@ bool FCastBatch4FallenTest::RunTest(const FString& Parameters)
             ReleaseView(View);
         }
     }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+// ------------------------------------------------------------------ the foe batch (#150): scout, archer, skirmisher, brute, warden
+namespace FoeBatch
+{
+struct FLook { EFoeLook Look; const TCHAR* Name; int32 Range; const TCHAR* Key; const TCHAR* Mesh; };
+// An exemplar name for each look: today's scout, raider and archer, and the names the #188 contract gives the new roles.
+const FLook Looks[] = {
+    {EFoeLook::Scout, TEXT("Scout 2"), 1, TEXT("Scout"), TEXT("SK_Foe_Scout")},
+    {EFoeLook::Raider, TEXT("Raider 1"), 1, TEXT("Raider"), TEXT("SK_Foe_Raider")},
+    {EFoeLook::Archer, TEXT("Vault bow"), 4, TEXT("Archer"), TEXT("SK_Foe_Archer")},
+    {EFoeLook::Skirmisher, TEXT("Skirmisher"), 1, TEXT("Skirmisher"), TEXT("SK_Foe_Skirmisher")},
+    {EFoeLook::Brute, TEXT("Raider brute"), 1, TEXT("Brute"), TEXT("SK_Foe_Brute")},
+    {EFoeLook::Warden, TEXT("Vault warden"), 1, TEXT("Warden"), TEXT("SK_Foe_Warden")},
+};
+
+// The rule the battle view used before the foe batch (ExpeditionBattleView.cpp UnitRigged and UnitMesh): ranged foes are archers, names holding "raider" are raiders, the rest scouts.
+EFoeLook Before(const FString& Name, int32 Range)
+{
+    return Range > 1 ? EFoeLook::Archer : Name.Contains(TEXT("raider")) ? EFoeLook::Raider : EFoeLook::Scout;
+}
+
+int32 LookIndex(EFoeLook Look) { return static_cast<int32>(Look); }
+
+const TCHAR* ThemeAssetPath = TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme");
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeLookMappingTest, "Project.Expedition.Presentation.FoeLookMapping",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeLookMappingTest::RunTest(const FString& Parameters)
+{
+    using namespace FoeBatch;
+    using ExpeditionFoe::LookFromName;
+    using ExpeditionFoe::LookFromSavedRole;
+    using ExpeditionFoe::LookOf;
+    using ExpeditionFoe::RigKey;
+    // The #188 names map to their new looks; a ranged foe is an archer first; names are matched anywhere and in any case; anything unknown is a scout.
+    struct FCase { const TCHAR* Name; int32 Range; EFoeLook Look; };
+    for (const FCase& Case : {FCase{TEXT("Skirmisher"), 1, EFoeLook::Skirmisher}, FCase{TEXT("skirmisher"), 1, EFoeLook::Skirmisher}, FCase{TEXT("Raider brute"), 1, EFoeLook::Brute},
+                              FCase{TEXT("Raider brute 2"), 1, EFoeLook::Brute}, FCase{TEXT("Vault warden"), 1, EFoeLook::Warden}, FCase{TEXT("VAULT WARDEN"), 1, EFoeLook::Warden},
+                              FCase{TEXT("Vault bow"), 4, EFoeLook::Archer}, FCase{TEXT("Vault warden"), 4, EFoeLook::Archer}, FCase{TEXT("Skirmisher"), 4, EFoeLook::Archer},
+                              FCase{TEXT("Cave raider"), 1, EFoeLook::Raider}, FCase{TEXT("Ghoul"), 1, EFoeLook::Scout}, FCase{TEXT(""), 1, EFoeLook::Scout},
+                              FCase{TEXT("Scout 1"), 1, EFoeLook::Scout}, FCase{TEXT("Raider 3"), 1, EFoeLook::Raider}, FCase{TEXT("Moss archer"), 4, EFoeLook::Archer}})
+    {
+        TestEqual(*FString::Printf(TEXT("\"%s\" (range %d) is drawn as the expected look"), Case.Name, Case.Range), LookIndex(LookFromName(Case.Name, Case.Range)), LookIndex(Case.Look));
+    }
+    // Today's enemies map exactly as before: every enemy of real runs (both roads of the first fight on three seeds, the plain and the dangerous finale) and the tutorial encounter.
+    TArray<FCombatantState> Foes;
+    for (const FCombatantState& Unit : FCombatBattle::TutorialEncounter().Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } }
+    for (const int32 Seed : {7, 11, 13})
+    {
+        for (int32 Offer = 0; Offer < 2; ++Offer)
+        {
+            FExpeditionRun Run;
+            FString Error;
+            if (!Run.NewRun(Seed, Error, TEXT("foe-look-mapping")) || !Run.ChooseRoute(Run.Progress().Offers[Offer].Id, Error)) { continue; }
+            for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } }
+        }
+        for (const bool bDangerous : {false, true})
+        {
+            FExpeditionRun Finale;
+            if (ExpeditionTestSupport::ReachFinale(Finale, Seed, -1, false, nullptr, bDangerous))
+            { for (const FCombatantState& Unit : Finale.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } } }
+        }
+    }
+    TestTrue(TEXT("Real enemies were checked"), Foes.Num() >= 12);
+    TSet<FString> Names;
+    for (const FCombatantState& Unit : Foes)
+    {
+        Names.Add(Unit.Name);
+        TestEqual(*FString::Printf(TEXT("%s (range %d, role %s) keeps today's look"), *Unit.Name, Unit.Range, *Unit.Role), LookIndex(LookOf(Unit)), LookIndex(Before(Unit.Name, Unit.Range)));
+        TestTrue(*FString::Printf(TEXT("%s is not one of the #188 roles"), *Unit.Name), LookOf(Unit) == EFoeLook::Scout || LookOf(Unit) == EFoeLook::Raider || LookOf(Unit) == EFoeLook::Archer);
+    }
+    TestTrue(TEXT("Scouts, raiders and the Vault bow were among them"), Names.Contains(TEXT("Scout 1")) && Names.Contains(TEXT("Raider 1")) && Names.Contains(TEXT("Vault bow")));
+
+    // The seam for #188: a saved Role that names a new role outright decides; "Raider" and "Archer" (what every saved run holds today) and anything else do not.
+    EFoeLook Saved = EFoeLook::Scout;
+    for (const FLook& Entry : {Looks[3], Looks[4], Looks[5]})
+    {
+        TestTrue(*FString::Printf(TEXT("Role \"%s\" names a look"), Entry.Key), LookFromSavedRole(Entry.Key, Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
+        TestTrue(*FString::Printf(TEXT("Role \"%s\" is case-insensitive"), Entry.Key), LookFromSavedRole(FString(Entry.Key).ToUpper(), Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
+    }
+    for (const TCHAR* Role : {TEXT("Raider"), TEXT("Archer"), TEXT(""), TEXT("Scout"), TEXT("Fighter")}) { TestFalse(*FString::Printf(TEXT("Role \"%s\" is not decided by the saved role"), Role), LookFromSavedRole(Role, Saved)); }
+    FCombatantState Unit;
+    Unit.Side = ECombatSide::Enemy;
+    Unit.Name = TEXT("Raider 1"); Unit.Role = TEXT("Warden"); Unit.Range = 1;
+    TestEqual(TEXT("A saved Warden role wins over a raider's name"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Warden));
+    Unit.Range = 4;
+    TestEqual(TEXT("A ranged foe is an archer whatever its saved role"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Archer));
+    Unit.Range = 1; Unit.Role = TEXT("Raider"); Unit.Name = TEXT("Scout 1");
+    TestEqual(TEXT("Today's saved role \"Raider\" leaves the name to decide: a scout"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Scout));
+
+    // The keys are the FoeRigs archetype names, each its own; the theme looks them up by exactly that name and never leaks one rig to another look.
+    UDiceRollTheme* Theme = NewObject<UDiceRollTheme>(GetTransientPackage());
+    if (!TestNotNull(TEXT("A transient theme"), Theme)) { return false; }
+    TSet<FName> Keys;
+    for (const FLook& Entry : Looks)
+    {
+        TestEqual(*FString::Printf(TEXT("%s key"), Entry.Key), RigKey(Entry.Look), FName(Entry.Key));
+        Keys.Add(RigKey(Entry.Look));
+        TestNull(TEXT("An empty theme has no foe rig"), Theme->RigForFoe(RigKey(Entry.Look)));
+    }
+    TestEqual(TEXT("Six looks, six keys"), Keys.Num(), ExpeditionFoe::Count);
+    FDiceRollCharacter Entry;
+    Entry.Mesh = TSoftObjectPtr<USkeletalMesh>(FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Characters/SK_Foe_Brute")));
+    Theme->FoeRigs.Add(RigKey(EFoeLook::Brute), Entry);
+    TestNotNull(TEXT("The brute entry resolves"), Theme->RigForFoe(RigKey(EFoeLook::Brute)));
+    for (const FLook& Other : Looks) { if (Other.Look != EFoeLook::Brute) { TestNull(TEXT("Another look stays unrigged"), Theme->RigForFoe(RigKey(Other.Look))); } }
+
+    // Presentation only: reading looks never changes a run.
+    FExpeditionRun Run;
+    FString Error;
+    if (TestTrue(TEXT("A run starts"), Run.NewRun(7, Error, TEXT("foe-look-state")) && Run.ChooseRoute(Run.Progress().Offers[1].Id, Error)))
+    {
+        const FExpeditionSnapshot Original = Run.Snapshot();
+        for (const FCombatantState& Combatant : Run.Battle().Snapshot().Encounter.Combatants) { if (Combatant.Side == ECombatSide::Enemy) { (void)LookOf(Combatant); } }
+        TestTrue(TEXT("The run is untouched by the lookups"), ExpeditionTestSupport::SameRun(Original, Run.Snapshot()));
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeRigsShippedTest, "Project.Expedition.Presentation.FoeRigsShipped",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeRigsShippedTest::RunTest(const FString& Parameters)
+{
+    using namespace FoeBatch;
+    const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(ThemeAssetPath)).LoadSynchronous();
+    if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
+    TSet<const USkeleton*> Skeletons;
+    for (const FLook& Entry : Looks)
+    {
+        const FString Label = Entry.Mesh;
+        const FDiceRollCharacter* Rig = Shipped->RigForFoe(ExpeditionFoe::RigKey(Entry.Look));
+        if (!TestNotNull(*(Label + TEXT(" has a shipped rig (run import_dark_fantasy_theme.py)")), Rig)) { continue; }
+        USkeletalMesh* Mesh = nullptr;
+        TArray<UAnimSequence*> Clips;
+        if (!TestTrue(*(Label + TEXT(" loads its mesh and all ten clips")), Rig->Load(Mesh, Clips)) || !Mesh) { continue; }
+        TestEqual(*(Label + TEXT(" is its own mesh")), Mesh->GetName(), Label);
+        TestEqual(*(Label + TEXT(" has ten clips")), Clips.Num(), ExpeditionPose::Count);
+        TestEqual(*(Label + TEXT(" has three LODs")), Mesh->GetLODNum(), 3);
+        TestEqual(*(Label + TEXT(" has one material slot")), Mesh->GetMaterials().Num(), 1);
+        if (Mesh->GetMaterials().Num() == 1) { TestNotNull(*(Label + TEXT(" has its material")), Mesh->GetMaterials()[0].MaterialInterface.Get()); }
+        Skeletons.Add(Mesh->GetSkeleton());
+        for (const UAnimSequence* Clip : Clips) { TestTrue(*(Label + TEXT(" clip is on the shared skeleton")), Clip && Clip->GetSkeleton() == Mesh->GetSkeleton()); }
+        // The archer draws its own bow and the brute swings its maul in both hands; every other clip, and every other foe, is the shared one.
+        for (int32 Slot = 0; Slot < ExpeditionPose::Count; ++Slot)
+        {
+            const EUnitPose Pose = static_cast<EUnitPose>(Slot);
+            FString Want = FString::Printf(TEXT("A_Humanoid_%s"), ExpeditionPose::ClipName(Pose));
+            if (Entry.Look == EFoeLook::Archer && Pose == EUnitPose::Ranged) { Want = TEXT("A_Archer_Ranged"); }
+            if (Entry.Look == EFoeLook::Brute && Pose == EUnitPose::Melee) { Want = TEXT("A_Brute_Melee"); }
+            TestEqual(*FString::Printf(TEXT("%s plays %s for %s"), *Label, *Want, ExpeditionPose::ClipName(Pose)), Clips.IsValidIndex(Slot) && Clips[Slot] ? Clips[Slot]->GetName() : FString(), Want);
+        }
+        const int32 Overrides = Entry.Look == EFoeLook::Archer || Entry.Look == EFoeLook::Brute ? 1 : 0;
+        TestEqual(*(Label + TEXT(" override count")), Rig->Overrides.Num(), Overrides);
+        // Stature is data: the brute and the warden stand taller than the 180 cm fit, the rest are fitted to the figure height.
+        const float Scale = Entry.Look == EFoeLook::Brute ? 1.08f : Entry.Look == EFoeLook::Warden ? 1.12f : 1.0f;
+        TestTrue(*FString::Printf(TEXT("%s stands %.2f of the figure height (has %.2f)"), *Label, Scale, Rig->HeightScale), FMath::IsNearlyEqual(Rig->HeightScale, Scale, 1.0e-3f));
+        if (Entry.Look == EFoeLook::Archer)
+        {
+            // The release frame the arrow leaves at (frame 26) lies inside the archer's 36-frame draw, as it does inside the ranger's.
+            const UAnimSequence* Draw = Clips.IsValidIndex(static_cast<int32>(EUnitPose::Ranged)) ? Clips[static_cast<int32>(EUnitPose::Ranged)] : nullptr;
+            if (TestNotNull(TEXT("The archer's draw is loaded"), Draw))
+            {
+                TestTrue(*FString::Printf(TEXT("The archer's draw is %.3f s, release at %.3f s"), Draw->GetPlayLength(), FExpeditionPlayback::RangedReleaseSeconds),
+                    FMath::IsNearlyEqual(Draw->GetPlayLength(), 36.0f / 30.0f, 0.02f) && FExpeditionPlayback::RangedReleaseSeconds < Draw->GetPlayLength() - 0.2f);
+            }
+        }
+        if (Entry.Look == EFoeLook::Brute)
+        {
+            const UAnimSequence* Swing = Clips.IsValidIndex(static_cast<int32>(EUnitPose::Melee)) ? Clips[static_cast<int32>(EUnitPose::Melee)] : nullptr;
+            if (TestNotNull(TEXT("The brute's swing is loaded"), Swing)) { TestTrue(TEXT("The brute's swing is 30 frames"), FMath::IsNearlyEqual(Swing->GetPlayLength(), 1.0f, 0.02f)); }
+        }
+    }
+    TestEqual(TEXT("The foes share the cast's one skeleton"), Skeletons.Num(), 1);
+    // The stature field is data for the foes only: every party class keeps the fitted height (the default party's figures are unchanged).
+    for (int32 Role = 1; Role <= 13; ++Role)
+    {
+        const FDiceRollCharacter* Rig = Shipped->RigForClass(static_cast<EAdventurerRole>(Role));
+        if (TestNotNull(*FString::Printf(TEXT("Class %d has a rig"), Role), Rig)) { TestTrue(*FString::Printf(TEXT("Class %d keeps the fitted height (%.2f)"), Role, Rig->HeightScale), FMath::IsNearlyEqual(Rig->HeightScale, 1.0f, 1.0e-4f)); }
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeBatchPlaybackTest, "Project.Expedition.Presentation.FoeBatchPlaybackConverges",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeBatchPlaybackTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // Each look as the acting foe (a swing up close, or the archer's shot), as the struck foe (a flinch) and as the slain foe (Death), played at 1x, 2x, to the end with
+    // Finish() and skipped mid-way (RunScene): every ending leaves every figure on the pose the committed state implies. A foe has no Downed state (a foe at 0 HP is Dead).
+    for (const FLook& Entry : Looks)
+    {
+        const bool bArcher = Entry.Look == EFoeLook::Archer;
+        const int32 FoeX = bArcher ? 7 : 3;
+        const FString Who = Entry.Key;
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, FoeX))) { return false; }
+            FCombatantState* Foe = S.Unit(S.Before, S.Foe);
+            Foe->Name = Entry.Name; Foe->Range = Entry.Range;
+            TestEqual(*(Who + TEXT(": the scene's foe is drawn as this look")), LookIndex(ExpeditionFoe::LookOf(*Foe)), LookIndex(Entry.Look));
+            S.After = S.Before;
+            S.Unit(S.After, S.Hero)->HP = S.Unit(S.Before, S.Hero)->HP - 2;
+            FCombatResult Strike = MakeResult(ECombatCommandType::Attack, S.Foe, S.Hero);
+            Strike.bHit = true;
+            Strike.Damage = 2;
+            RunScene(*this, *(Who + TEXT(" attacks")), S, Strike, [&](const FString& Label, const FSeen& Seen)
+            {
+                TestTrue(Label + (bArcher ? TEXT(": the archer draws") : TEXT(": the foe swings")), Seen.Saw(S.Foe, bArcher ? EUnitPose::Ranged : EUnitPose::Melee));
+                TestFalse(Label + TEXT(": the other weapon clip is not played"), Seen.Saw(S.Foe, bArcher ? EUnitPose::Melee : EUnitPose::Ranged));
+                TestFalse(Label + TEXT(": a foe never casts a spell"), Seen.Saw(S.Foe, EUnitPose::Cast));
+                TestTrue(Label + TEXT(": the hero flinches"), Seen.Saw(S.Hero, EUnitPose::Hit));
+            });
+        }
+        for (const bool bFatal : {false, true})
+        {
+            FPoseScene S;
+            if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, 3))) { return false; }
+            FCombatantState* Foe = S.Unit(S.Before, S.Foe);
+            Foe->Name = Entry.Name; Foe->Range = Entry.Range;
+            S.After = S.Before;
+            FCombatantState* After = S.Unit(S.After, S.Foe);
+            After->HP = bFatal ? 0 : After->HP - 3;
+            if (bFatal) { After->Life = ECombatLife::Dead; }
+            FCombatResult Strike = MakeResult(ECombatCommandType::Attack, S.Hero, S.Foe);
+            Strike.bHit = true;
+            Strike.Damage = bFatal ? 99 : 3;
+            if (bFatal) { Strike.Died = {S.Foe}; }
+            RunScene(*this, *(Who + (bFatal ? TEXT(" is slain") : TEXT(" is struck"))), S, Strike, [&](const FString& Label, const FSeen& Seen)
+            {
+                if (bFatal)
+                {
+                    TestTrue(Label + TEXT(": the foe falls to Death"), Seen.Saw(S.Foe, EUnitPose::Death));
+                    TestFalse(Label + TEXT(": a foe is never Downed"), Seen.Saw(S.Foe, EUnitPose::Downed));
+                }
+                else
+                {
+                    TestTrue(Label + TEXT(": the foe flinches"), Seen.Saw(S.Foe, EUnitPose::Hit));
+                    TestFalse(Label + TEXT(": the foe does not fall"), Seen.Saw(S.Foe, EUnitPose::Death) || Seen.Saw(S.Foe, EUnitPose::Downed));
+                }
+            });
+        }
+    }
+    return !HasAnyErrors();
+}
+
+namespace FoeBatch
+{
+// The looks of a board's enemies, in encounter order: three on the dangerous road, two on the plain one (the last is always the archer).
+TArray<EFoeLook> Arrangement(int32 Enemies, bool bSecond)
+{
+    if (Enemies == 3) { return bSecond ? TArray<EFoeLook>{EFoeLook::Brute, EFoeLook::Warden, EFoeLook::Archer} : TArray<EFoeLook>{EFoeLook::Scout, EFoeLook::Skirmisher, EFoeLook::Archer}; }
+    return bSecond ? TArray<EFoeLook>{EFoeLook::Warden, EFoeLook::Archer} : TArray<EFoeLook>{EFoeLook::Brute, EFoeLook::Archer};
+}
+
+bool FoeFallenRigged(const AExpeditionBattleView& View)
+{
+    for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Enemy && Unit.Life != ECombatLife::Conscious && View.UnitAnimation(Unit.Id).bSkeletal) { return true; } }
+    return false;
+}
+
+TArray<int32> EnemyIds(const AExpeditionBattleView& View)
+{
+    TArray<int32> Ids;
+    for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Ids.Add(Unit.Id); } }
+    return Ids;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeBatchFiguresTest, "Project.Expedition.Presentation.FoeBatchRiggedFigures",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeBatchFigures"), FGuid::NewGuid().ToString());
+    const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(ThemeAssetPath)).LoadSynchronous();
+    if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
+
+    // Every look on a board is a rigged figure standing at its height (175 to 185 cm times the rig's stature), the archer and the brute play their own clips, and
+    // handing the looks back to the names leaves the run exactly as it was.
+    for (const int32 Route : {1, 0})
+    {
+        for (const bool bSecond : {false, true})
+        {
+            const FString Label = FString::Printf(TEXT("%s road, arrangement %d"), Route == 1 ? TEXT("dangerous") : TEXT("plain"), bSecond ? 2 : 1);
+            AExpeditionBattleView* View = MakeView(nullptr, FPaths::Combine(Directory, FString::Printf(TEXT("stand-%d-%d"), Route, bSecond ? 1 : 0), TEXT("current.json")), EView::Rigged);
+            if (!TestNotNull(*(Label + TEXT(": battle view")), View)) { continue; }
+            View->NewRun();
+            View->ChooseRoute(Route);
+            View->Tick(0.016f);
+            // A normal run has no look override (the flag and SetFoeLooks are capture and dev only): every enemy keeps the look its name gives.
+            for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+            { if (Unit.Side == ECombatSide::Enemy) { TestEqual(*FString::Printf(TEXT("%s: no override without the flag"), *Unit.Name), LookIndex(View->FoeLookFor(Unit)), LookIndex(ExpeditionFoe::LookOf(Unit))); } }
+            const TArray<int32> Foes = EnemyIds(*View);
+            const TArray<EFoeLook> Wanted = Arrangement(Foes.Num(), bSecond);
+            if (!TestEqual(*(Label + TEXT(": the road has the expected enemies")), Foes.Num(), Wanted.Num())) { ReleaseView(View); continue; }
+            FExpeditionSnapshot Original;
+            Original.Progress = View->Progress();
+            Original.Battle = View->Rules().Snapshot();
+            View->SetFoeLooks(Wanted);
+            View->Tick(0.016f);
+            for (int32 Index = 0; Index < Foes.Num(); ++Index)
+            {
+                const FLook* Entry = nullptr;
+                for (const FLook& Candidate : Looks) { if (Candidate.Look == Wanted[Index]) { Entry = &Candidate; } }
+                const FString Who = FString::Printf(TEXT("%s: %s"), *Label, Entry->Key);
+                const FCombatantState* Foe = View->Rules().Find(Foes[Index]);
+                if (!TestNotNull(*(Who + TEXT(" is on the board")), Foe)) { continue; }
+                TestEqual(*(Who + TEXT(": the view draws it as this look")), LookIndex(View->FoeLookFor(*Foe)), LookIndex(Wanted[Index]));
+                const FUnitAnimationState State = View->UnitAnimation(Foe->Id);
+                if (!TestTrue(*(Who + TEXT(" is a rigged figure (run import_dark_fantasy_theme.py)")), State.bSkeletal)) { continue; }
+                const FDiceRollCharacter* Rig = Shipped->RigForFoe(ExpeditionFoe::RigKey(Wanted[Index]));
+                const double Scale = Rig ? Rig->HeightScale : 1.0;
+                const double Height = FigureHeight(*View, View->UnitRigRoot(Foe->Id));
+                TestTrue(*(Who + FString::Printf(TEXT(" stands %.0f to %.0f cm (measured %.1f)"), 175.0 * Scale, 185.0 * Scale, Height)), Height >= 175.0 * Scale && Height <= 185.0 * Scale);
+                TArray<FLinearColor> SkinColors;
+                FLinearColor SkinRing;
+                TestTrue(*(Who + TEXT("'s skin has a tintable slot")), View->UnitShownColors(Foe->Id, SkinColors, SkinRing) && SkinColors.Num() == 1);
+                TestEqual(*(Who + TEXT("'s skin carries the enemy silhouette stencil")), View->FigureStencil(Foe->Id), AExpeditionBattleView::EnemyStencil);
+                // Subclass palettes and party accents (batch 4) are for the party: a foe's material carries every palette mask at 0, its own colours.
+                ExpeditionPalette::FPalette FoePalette;
+                if (TestTrue(*(Who + TEXT(" has the palette parameters (the master's)")), View->UnitPalette(Foe->Id, FoePalette)))
+                { for (int32 Slot = 0; Slot < ExpeditionPalette::SlotCount; ++Slot) { TestEqual(*FString::Printf(TEXT("%s has no palette in slot %d"), *Who, Slot), static_cast<int32>(FoePalette.Slots[Slot].Mask), 0); } }
+                for (const EUnitPose Pose : {EUnitPose::Ranged, EUnitPose::Melee})
+                {
+                    if (!TestTrue(*(Who + TEXT(" can be held in a clip")), View->PreviewPose(Foe->Id, Pose, 0.5f))) { continue; }
+                    View->Tick(0.016f);
+                    const FUnitAnimationState Held = View->UnitAnimation(Foe->Id);
+                    ExpectPose(*this, Who, Held.Pose, Pose);
+                    const bool bOwn = (Wanted[Index] == EFoeLook::Archer && Pose == EUnitPose::Ranged) || (Wanted[Index] == EFoeLook::Brute && Pose == EUnitPose::Melee);
+                    const FString Want = bOwn ? (Wanted[Index] == EFoeLook::Archer ? FString(TEXT("A_Archer_Ranged")) : FString(TEXT("A_Brute_Melee"))) : FString::Printf(TEXT("A_Humanoid_%s"), ExpeditionPose::ClipName(Pose));
+                    TestTrue(*(Who + FString::Printf(TEXT(" %s plays %s (%s)"), ExpeditionPose::ClipName(Pose), *Want, *Held.Clip)), Held.Clip.Contains(Want));
+                    View->ClearPosePreview();
+                    View->Tick(0.016f);
+                    ExpectFiguresConverged(*this, *View, Who + TEXT(" after the clip"));
+                }
+            }
+            TestEqual(*(Label + TEXT(": every enemy and the party's rigged heroes are skinned")), View->SkeletalFigureCount() >= Foes.Num() ? 1 : 0, 1);
+            ExpectFiguresConverged(*this, *View, Label);
+            View->SetFoeLooks(TArray<EFoeLook>());
+            View->Tick(0.016f);
+            FExpeditionSnapshot After;
+            After.Progress = View->Progress();
+            After.Battle = View->Rules().Snapshot();
+            TestTrue(*(Label + TEXT(": the looks never touched the run")), ExpeditionTestSupport::SameRun(Original, After));
+            for (const int32 Id : Foes)
+            { TestTrue(*FString::Printf(TEXT("%s: the names' own looks are rigged too (%d)"), *Label, Id), View->UnitAnimation(Id).bSkeletal); }
+            ReleaseView(View);
+        }
+    }
+
+    // Playback drives the foe rigs: at every speed, and when skipped mid-animation, the figures converge on the committed state (a fallen foe lies at the end of Death),
+    // and a fresh Resume of the checkpoint with the same looks restores every figure to the committed pose.
+    int32 Fallen = 0;
+    for (const EEnd End : {EEnd::Normal, EEnd::Fast, EEnd::Instant, EEnd::SkipMid})
+    {
+        const FString Label = FString::Printf(TEXT("foes, ending %d"), static_cast<int32>(End));
+        const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("play-%d"), static_cast<int32>(End)), TEXT("current.json"));
+        AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+        if (!TestNotNull(*(Label + TEXT(": battle view")), View)) { continue; }
+        View->NewRun();
+        View->ChooseRoute(1);
+        if (End == EEnd::Fast) { View->CycleSpeed(); }
+        else if (End == EEnd::Instant) { View->CycleSpeed(); View->CycleSpeed(); }
+        const TArray<EFoeLook> Looks3 = Arrangement(EnemyIds(*View).Num(), End == EEnd::Fast || End == EEnd::SkipMid);
+        View->SetFoeLooks(Looks3);
+        int32 LastId = INDEX_NONE, Stage = 0, Skips = 0, Moving = 0;
+        for (int32 Frame = 0; Frame < 3000 && View->InCombat(); ++Frame)
+        {
+            View->Tick(0.05f);
+            if (!View->IsPresenting() && Moving > 0 && (End != EEnd::SkipMid || Skips > 0) && FoeFallenRigged(*View)) { break; }
+            const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+            if (View->IsPresenting())
+            {
+                for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+                { Moving += View->UnitAnimation(Unit.Id).Pose != EUnitPose::Idle && View->UnitAnimation(Unit.Id).bSkeletal ? 1 : 0; }
+                if (End == EEnd::SkipMid && Frame % 7 == 0)
+                {
+                    View->SkipPresentation();
+                    View->Tick(0.001f);
+                    ExpectFiguresConverged(*this, *View, Label + TEXT(" after a skip"));
+                    ++Skips;
+                }
+            }
+            else if (Active && Active->Side == ECombatSide::Party) { PartyStep(*View, LastId, Stage); }
+        }
+        if (End == EEnd::SkipMid) { View->SkipPresentation(); View->Tick(0.001f); }
+        else { for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); } for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); } }
+        TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
+        if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
+        View->Save();
+        TestTrue(*(Label + TEXT(": the checkpoint file was written")), IFileManager::Get().FileExists(*Path));
+        // Capture and dev only: the looks are never saved, so a checkpoint made under SetFoeLooks holds nothing of them.
+        FString SavedText;
+        TestTrue(*(Label + TEXT(": the checkpoint reads back")), FFileHelper::LoadFileToString(SavedText, *Path));
+        for (const TCHAR* Word : {TEXT("Skirmisher"), TEXT("Brute"), TEXT("Warden"), TEXT("foeLooks"), TEXT("FoeLook")}) { TestFalse(*(Label + FString::Printf(TEXT(": the checkpoint does not hold \"%s\""), Word)), SavedText.Contains(Word)); }
+        const int32 OriginalRigs = View->SkeletalFigureCount();
+        FExpeditionSnapshot Original;
+        Original.Progress = View->Progress();
+        Original.Battle = View->Rules().Snapshot();
+        const bool bFoeFallen = FoeFallenRigged(*View);
+        AExpeditionBattleView* Resumed = MakeView(nullptr, Path, EView::Rigged);
+        if (TestNotNull(*(Label + TEXT(": resumed view")), Resumed))
+        {
+            Resumed->SetFoeLooks(Looks3);
+            Resumed->Resume();
+            Resumed->Tick(0.016f);
+            TestTrue(*(Label + TEXT(": the resumed view restored a run")), Resumed->HasRun());
+            if (Resumed->HasRun())
+            {
+                FExpeditionSnapshot Restored;
+                Restored.Progress = Resumed->Progress();
+                Restored.Battle = Resumed->Rules().Snapshot();
+                TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
+            }
+            const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
+            TestEqual(*(Label + TEXT(": the resumed rig count matches the original view")), Inspected, OriginalRigs);
+            if (bFoeFallen)
+            {
+                ++Fallen;
+                TestTrue(*(Label + TEXT(": a fallen rigged foe was resumed")), FoeFallenRigged(*Resumed));
+                for (const FCombatantState& Unit : Resumed->Rules().Snapshot().Encounter.Combatants)
+                {
+                    if (Unit.Side != ECombatSide::Enemy || Unit.Life != ECombatLife::Dead) { continue; }
+                    const FUnitAnimationState State = Resumed->UnitAnimation(Unit.Id);
+                    ExpectPose(*this, FString::Printf(TEXT("%s resumed: %s"), *Label, *Unit.Name), State.Pose, EUnitPose::Death);
+                    TestTrue(*FString::Printf(TEXT("%s resumed: %s holds the last frame of Death"), *Label, *Unit.Name), State.Length > 0.0f && FMath::IsNearlyEqual(State.Time, State.Length, 1.0e-3f));
+                }
+            }
+            ReleaseView(Resumed);
+        }
+        ReleaseView(View);
+    }
+    AddInfo(FString::Printf(TEXT("%d of 4 endings resumed with a fallen rigged foe"), Fallen));
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeLooksFlagTest, "Project.Expedition.Presentation.FoeLooksFlagIsCaptureOnly",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeLooksFlagTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // -ExpeditionFoeLooks is read in BeginPlay, like -ExpeditionPrimitives: with it the enemies are drawn as the named looks in encounter order, without it as their names say,
+    // and in neither case does the run change.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeLooksFlag"), FGuid::NewGuid().ToString());
+    const FString Original = FCommandLine::Get();
+    const auto Looks3 = [](const AExpeditionBattleView& View)
+    {
+        TArray<int32> Out;
+        for (const FCombatantState& Unit : View.Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Out.Add(LookIndex(View.FoeLookFor(Unit))); } }
+        return Out;
+    };
+    FCommandLine::Set(*(Original + TEXT(" -ExpeditionFoeLooks=Brute,Warden,Archer")));
+    AExpeditionBattleView* Flagged = MakeView(nullptr, FPaths::Combine(Directory, TEXT("flag"), TEXT("current.json")), EView::Rigged);
+    FCommandLine::Set(*Original);
+    if (TestNotNull(TEXT("Flagged view"), Flagged))
+    {
+        Flagged->NewRun();
+        Flagged->ChooseRoute(1);
+        Flagged->Tick(0.016f);
+        TestEqual(TEXT("With the flag the enemies are the named looks, in order"), Looks3(*Flagged), TArray<int32>({LookIndex(EFoeLook::Brute), LookIndex(EFoeLook::Warden), LookIndex(EFoeLook::Archer)}));
+        for (const FCombatantState& Unit : Flagged->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Enemy) { TestTrue(*FString::Printf(TEXT("%s is a rigged figure under the flag"), *Unit.Name), Flagged->UnitAnimation(Unit.Id).bSkeletal); } }
+        // The party is untouched by the flag.
+        for (const FCombatantState& Unit : Flagged->Rules().Snapshot().Encounter.Combatants)
+        { if (Unit.Side == ECombatSide::Party) { TestEqual(*FString::Printf(TEXT("%s keeps its class look"), *Unit.Name), LookIndex(Flagged->FoeLookFor(Unit)), LookIndex(ExpeditionFoe::LookOf(Unit))); } }
+        ReleaseView(Flagged);
+    }
+    AExpeditionBattleView* Plain = MakeView(nullptr, FPaths::Combine(Directory, TEXT("plain"), TEXT("current.json")), EView::Rigged);
+    if (TestNotNull(TEXT("Plain view"), Plain))
+    {
+        Plain->NewRun();
+        Plain->ChooseRoute(1);
+        Plain->Tick(0.016f);
+        TArray<int32> Named;
+        for (const FCombatantState& Unit : Plain->Rules().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Named.Add(LookIndex(ExpeditionFoe::LookOf(Unit))); } }
+        TestEqual(TEXT("Without the flag the enemies are drawn as their names say"), Looks3(*Plain), Named);
+        TestEqual(TEXT("A dangerous first fight is two raiders and the archer"), Named, TArray<int32>({LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Raider), LookIndex(EFoeLook::Archer)}));
+        ReleaseView(Plain);
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHeightScaleResolvedTest, "Project.Expedition.Presentation.HeightScaleIsResolvedAtUse",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHeightScaleResolvedTest::RunTest(const FString& Parameters)
+{
+    // The metadata clamp only guides the editor: a value set through Python, C++ or a saved asset reaches the view as it is, so the view resolves it at use.
+    struct FCase { const TCHAR* Name; float Value; float Want; bool bAdjusted; };
+    const float NaN = std::numeric_limits<float>::quiet_NaN();
+    const float Inf = std::numeric_limits<float>::infinity();
+    for (const FCase& Case : {FCase{TEXT("the default"), 1.0f, 1.0f, false}, FCase{TEXT("the brute"), 1.08f, 1.08f, false}, FCase{TEXT("the warden"), 1.12f, 1.12f, false},
+                              FCase{TEXT("the lowest allowed"), 0.5f, 0.5f, false}, FCase{TEXT("the highest allowed"), 1.5f, 1.5f, false},
+                              FCase{TEXT("zero"), 0.0f, 0.5f, true}, FCase{TEXT("negative"), -1.0f, 0.5f, true}, FCase{TEXT("just under the floor"), 0.49f, 0.5f, true},
+                              FCase{TEXT("huge"), 40.0f, 1.5f, true}, FCase{TEXT("just over the ceiling"), 1.51f, 1.5f, true},
+                              FCase{TEXT("not a number"), NaN, 1.0f, true}, FCase{TEXT("infinite"), Inf, 1.0f, true}, FCase{TEXT("negative infinity"), -Inf, 1.0f, true}})
+    {
+        FDiceRollCharacter Entry;
+        Entry.HeightScale = Case.Value;
+        bool bAdjusted = !Case.bAdjusted;
+        const float Resolved = Entry.ResolvedHeightScale(&bAdjusted);
+        TestTrue(*FString::Printf(TEXT("%s resolves to %.2f (got %.2f)"), Case.Name, Case.Want, Resolved), FMath::IsFinite(Resolved) && FMath::IsNearlyEqual(Resolved, Case.Want, 1.0e-4f));
+        TestEqual(*FString::Printf(TEXT("%s is %sreported as adjusted"), Case.Name, Case.bAdjusted ? TEXT("") : TEXT("not ")), bAdjusted, Case.bAdjusted);
+        TestTrue(*FString::Printf(TEXT("%s stays inside the bounds"), Case.Name), Resolved >= FDiceRollCharacter::MinHeightScale && Resolved <= FDiceRollCharacter::MaxHeightScale);
+        TestEqual(*FString::Printf(TEXT("%s resolves the same without the flag"), Case.Name), Entry.ResolvedHeightScale(), Resolved);
+    }
+    // The shipped theme needs no adjusting: every entry's stored stature is inside the bounds.
+    const UDiceRollTheme* Shipped = TSoftObjectPtr<UDiceRollTheme>(FSoftObjectPath(FoeBatch::ThemeAssetPath)).LoadSynchronous();
+    if (TestNotNull(TEXT("The shipped theme loads"), Shipped))
+    {
+        int32 Entries = 0;
+        for (const TPair<FName, FDiceRollCharacter>& Pair : Shipped->ClassRigs) { bool bAdjusted = true; Pair.Value.ResolvedHeightScale(&bAdjusted); TestFalse(*(Pair.Key.ToString() + TEXT(" needs no adjusting")), bAdjusted); ++Entries; }
+        for (const TPair<FName, FDiceRollCharacter>& Pair : Shipped->FoeRigs) { bool bAdjusted = true; Pair.Value.ResolvedHeightScale(&bAdjusted); TestFalse(*(Pair.Key.ToString() + TEXT(" needs no adjusting")), bAdjusted); ++Entries; }
+        TestEqual(TEXT("Thirteen classes and six foes were checked"), Entries, 19);
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeArcherArrowTest, "Project.Expedition.Presentation.FoeArcherArrowReleasesLightless",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeArcherArrowTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // The rigged foe archer (the Vault bow) shoots through the production projectile construction: an arrow carries no light at release, in flight or on landing, the shooter is not
+    // flashed, and the shooter held at the release frame is in its own Ranged_Archer draw, 26 frames in, inside a 36-frame clip.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeArcherArrow"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = MakeView(nullptr, FPaths::Combine(Directory, TEXT("current.json")), EView::Rigged);
+    if (!TestNotNull(TEXT("Battle view"), View)) { return false; }
+    View->NewRun();
+    View->ChooseRoute(1);
+    View->HoldEnemyTurns(true);
+    View->Tick(0.016f);
+    View->Tick(0.016f);
+    int32 ShooterId = INDEX_NONE, TargetId = INDEX_NONE, Nearest = MAX_int32;
+    FIntPoint ShooterCell(0, 0);
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+    { if (Unit.Side == ECombatSide::Enemy && View->FoeLookFor(Unit) == EFoeLook::Archer) { ShooterId = Unit.Id; ShooterCell = Unit.Cell; } }
+    for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+    {
+        const int32 Distance = FMath::Abs(Unit.Cell.X - ShooterCell.X) + FMath::Abs(Unit.Cell.Y - ShooterCell.Y);
+        if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious && Distance < Nearest) { Nearest = Distance; TargetId = Unit.Id; }
+    }
+    if (TestTrue(TEXT("An archer and a hero to shoot"), ShooterId != INDEX_NONE && TargetId != INDEX_NONE) && TestTrue(TEXT("The archer is a rigged figure"), View->UnitAnimation(ShooterId).bSkeletal))
+    {
+        TArray<FLinearColor> Idle;
+        FLinearColor IdleRing;
+        TestTrue(TEXT("The shooter's figure can be read"), View->UnitShownColors(ShooterId, Idle, IdleRing));
+        struct FMoment { const TCHAR* Name; EImpactMoment Moment; };
+        for (const FMoment& Moment : {FMoment{TEXT("release"), EImpactMoment::Release}, FMoment{TEXT("flight"), EImpactMoment::Flight}, FMoment{TEXT("landing"), EImpactMoment::Landing}})
+        {
+            View->ClearImpactPreview();
+            View->PreviewImpact(TargetId, EImpactPreview::Arrow, FVector2D(ShooterCell.X, ShooterCell.Y), Moment.Moment);
+            View->Tick(0.016f);
+            const TArray<FPlaybackProjectile>& Shots = View->Playback().Projectiles();
+            TestTrue(FString::Printf(TEXT("foe archer arrow %s: one arrow in the air"), Moment.Name), Shots.Num() == 1 && Shots[0].bArrow);
+            float Total = 0.0f;
+            for (const float Light : View->BoltLightIntensities()) { Total += Light; }
+            TestTrue(FString::Printf(TEXT("foe archer arrow %s: %.2f cd in all, none (an arrow carries no light)"), Moment.Name, Total), Total == 0.0f);
+            TArray<FLinearColor> Shown;
+            FLinearColor Ring;
+            if (View->UnitShownColors(ShooterId, Shown, Ring) && TestEqual(*FString::Printf(TEXT("foe archer arrow %s: the shooter has the same parts"), Moment.Name), Shown.Num(), Idle.Num()))
+            { for (int32 Part = 0; Part < Shown.Num(); ++Part) { TestTrue(*FString::Printf(TEXT("foe archer arrow %s: the shooter's part %d is not flashed"), Moment.Name, Part), Shown[Part].Equals(Idle[Part], 0.01f)); } }
+        }
+        View->ClearImpactPreview();
+        // The release: the arrow leaves when the held draw reaches the release frame, which is inside the archer's own clip.
+        if (TestTrue(TEXT("The archer can be held at the release frame"), View->PreviewPose(ShooterId, EUnitPose::Ranged, FExpeditionPlayback::RangedReleaseSeconds)))
+        {
+            View->Tick(0.016f);
+            const FUnitAnimationState Held = View->UnitAnimation(ShooterId);
+            TestTrue(*(FString::Printf(TEXT("The held clip is the archer's own draw (%s)"), *Held.Clip)), Held.Clip.Contains(TEXT("A_Archer_Ranged")));
+            TestTrue(*FString::Printf(TEXT("It is held at the release frame, %.3f s of %.3f s"), Held.Time, Held.Length), FMath::IsNearlyEqual(Held.Time, FExpeditionPlayback::RangedReleaseSeconds, 0.04f) && Held.Length > Held.Time + 0.2f);
+            View->ClearPosePreview();
+        }
+    }
+    ReleaseView(View);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeFallenResumeTest, "Project.Expedition.Presentation.FoeFallenRigsResumeAtDeath",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FFoeFallenResumeTest::RunTest(const FString& Parameters)
+{
+    using namespace RigPoseTest;
+    using namespace FoeBatch;
+    // Deterministic, not combat luck: for each of the six looks a checkpoint of a real fight is edited so that exactly that foe is dead (HP 0, Life Dead, put through the run's restore
+    // validation like any saved state), written, and resumed in a fresh world and view. The fallen foe must be drawn with its own rig, lie at the last frame of Death, and every other
+    // figure must stand. Every one of the six cases must run: the count is asserted.
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/FoeFallenResume"), FGuid::NewGuid().ToString());
+    int32 Checked = 0;
+    for (const FLook& Entry : Looks)
+    {
+        const FString Label = FString::Printf(TEXT("fallen %s"), Entry.Key);
+        const int32 Slot = Entry.Look == EFoeLook::Archer ? 2 : 0;       // a dangerous road has three enemies, the last of them the archer
+        TArray<EFoeLook> Order = {EFoeLook::Raider, EFoeLook::Scout, EFoeLook::Archer};
+        Order[Slot] = Entry.Look;
+        FExpeditionRun Run;
+        FString Error;
+        const FExpeditionRoute* Offer = nullptr;
+        if (!TestTrue(*(Label + TEXT(": a run starts")), Run.NewRun(7, Error, TEXT("foe-fallen-resume")))) { continue; }
+        Offer = Run.Progress().Offers.FindByPredicate([](const FExpeditionRoute& Route) { return Route.bDangerous; });
+        if (!TestTrue(*(Label + TEXT(": the dangerous road starts a fight")), Offer && Run.ChooseRoute(Offer->Id, Error))) { continue; }
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        int32 FallenId = INDEX_NONE, Order3 = 0;
+        for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+        {
+            if (Unit.Side != ECombatSide::Enemy) { continue; }
+            if (Order3++ == Slot) { Unit.HP = 0; Unit.Life = ECombatLife::Dead; FallenId = Unit.Id; }
+        }
+        FExpeditionRun Checkpoint;
+        if (!TestTrue(*FString::Printf(TEXT("%s: the checkpoint is a valid run (%s)"), *Label, *Error), FallenId != INDEX_NONE && Checkpoint.Restore(Snapshot, Error))) { continue; }
+        const FString Path = FPaths::Combine(Directory, Entry.Key, TEXT("current.json"));
+        FExpeditionSaveData Data;
+        Data.Current = Checkpoint.Snapshot();
+        if (!TestTrue(*(Label + TEXT(": the checkpoint writes")), FExpeditionSave::Write(Path, Data, Error))) { AddError(Error); continue; }
+        AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
+        if (!TestNotNull(*(Label + TEXT(": resumed view")), View)) { continue; }
+        View->SetFoeLooks(Order);
+        View->Resume();
+        View->Tick(0.016f);
+        FExpeditionSnapshot Restored;
+        Restored.Progress = View->Progress();
+        Restored.Battle = View->Rules().Snapshot();
+        TestTrue(*(Label + TEXT(": the resumed run is the checkpoint")), View->HasRun() && ExpeditionTestSupport::SameRun(Data.Current, Restored));
+        const FCombatantState* Fallen = View->Rules().Find(FallenId);
+        if (TestNotNull(*(Label + TEXT(": the fallen foe is in the encounter")), Fallen))
+        {
+            TestTrue(*(Label + TEXT(": it is dead")), Fallen->Life == ECombatLife::Dead);
+            TestEqual(*(Label + TEXT(": it is drawn as this look")), LookIndex(View->FoeLookFor(*Fallen)), LookIndex(Entry.Look));
+            const FUnitAnimationState State = View->UnitAnimation(FallenId);
+            if (TestTrue(*(Label + TEXT(": it is a rigged figure")), State.bSkeletal))
+            {
+                ExpectPose(*this, Label, State.Pose, EUnitPose::Death);
+                TestTrue(*(Label + TEXT(": the clip is Death")), State.Clip.Contains(ExpeditionPose::ClipName(EUnitPose::Death)));
+                TestTrue(*FString::Printf(TEXT("%s: it holds the last frame of Death (%.3f of %.3f s)"), *Label, State.Time, State.Length), State.Length > 0.1f && FMath::IsNearlyEqual(State.Time, State.Length, 1.0e-3f));
+            }
+            // The right rig: the skinned mesh under its rig root is this look's own.
+            FString MeshName;
+            if (USceneComponent* Root = View->UnitRigRoot(FallenId))
+            {
+                TArray<USceneComponent*> Children;
+                Root->GetChildrenComponents(true, Children);
+                for (USceneComponent* Child : Children)
+                { if (const USkeletalMeshComponent* Skin = Cast<USkeletalMeshComponent>(Child)) { MeshName = Skin->GetSkeletalMeshAsset() ? Skin->GetSkeletalMeshAsset()->GetName() : FString(); } }
+            }
+            TestEqual(*(Label + TEXT(": the rig is its own mesh")), MeshName, FString(Entry.Mesh));
+        }
+        for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
+        {
+            if (Unit.Id == FallenId) { continue; }
+            TestTrue(*FString::Printf(TEXT("%s: %s still stands"), *Label, *Unit.Name), Unit.Life == ECombatLife::Conscious && ExpeditionPose::Rest(Unit.Life) == EUnitPose::Idle);
+        }
+        ExpectFiguresConverged(*this, *View, Label + TEXT(" resumed"));
+        ++Checked;
+        ReleaseView(View);
+    }
+    TestEqual(TEXT("All six looks (scout, raider, archer, skirmisher, brute, warden) were resumed with a fallen foe"), Checked, 6);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
