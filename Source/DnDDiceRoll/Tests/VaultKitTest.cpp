@@ -10,6 +10,7 @@
 #include "Presentation/BoardMetric.h"
 #include "Presentation/BrazierRing.h"
 #include "Presentation/DiceRollTheme.h"
+#include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/VigilKit.h"
 #include "RenderingThread.h"
@@ -491,6 +492,119 @@ bool FVaultThemeChoiceTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("The same commands were accepted"), Outcomes[Variant].Commands, Outcomes[0].Commands);
         TestTrue(TEXT("The authoritative snapshot is identical"), FCombatSnapshot::StaticStruct()->CompareScriptStruct(&Outcomes[Variant].Battle, &Outcomes[0].Battle, 0));
         TestEqual(TEXT("The checkpoint bytes are identical"), Outcomes[Variant].Checkpoint, Outcomes[0].Checkpoint);
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+/**
+ * #209: the Vault's near wall (3 m high, 2 to 3 cells outside the board) covered a quarter of the view at some yaws and never
+ * dithered, because its pixels land on the floor between the wall and the board, outside the board rectangle the fade used.
+ * The Vault's board fade now reaches 2.5 cells past the board at the default zoom and eases out over 1.5 more, so a near wall dithers;
+ * toward the far pose it narrows back to the ordinary fade, so the walls enclose the whole hall in view.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVaultNearWallFadesTest, "Project.Expedition.Presentation.VaultNearWallFadesLikeTheOtherOccluders",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVaultNearWallFadesTest::RunTest(const FString& Parameters)
+{
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultNearWall"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Path, -1))) { return false; }
+    UWorld* World = MakeVaultWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
+    {
+        if (TestTrue(TEXT("The finale draws the Vault kit with its occluder"), View->UsesVaultKit() && View->HasOccluder()))
+        {
+            for (const float Yaw : {-90.0f, 0.0f, 45.0f, 90.0f, 180.0f})
+            {
+                for (const bool bFar : {false, true})
+                {
+                    View->SnapCamera(Yaw, bFar ? View->FarFramedDistance(Yaw) : View->FramedDistance(Yaw));
+                    View->Tick(0.016f);
+                    const FString Label = FString::Printf(TEXT("Yaw %.0f at the %s pose"), Yaw, bFar ? TEXT("far") : TEXT("default"));
+                    TestEqual(*(Label + TEXT(": the fade follows the zoom")), View->FarZoomFraction(), bFar ? 1.0f : 0.0f, 0.01f);
+                    const float Margin = View->OccluderMarginCells(), Ramp = View->OccluderRampCells();
+                    TestEqual(*(Label + TEXT(": the margin")), Margin, bFar ? OccluderFade::BoardMarginCells : OccluderFade::VaultBoardMarginCells, 0.01f);
+                    TestEqual(*(Label + TEXT(": the ramp")), Ramp, bFar ? OccluderFade::BoardRampCells : OccluderFade::VaultBoardRampCells, 0.01f);
+                    FVector2D Min, Max;
+                    float PlaneZ = 0.0f;
+                    View->OccluderBoard(Min, Max, PlaneZ);
+                    const double Cell = View->Metric().CellCm;
+                    const FVector Eye = View->CameraTransform().GetLocation();
+                    const double Edge = Max.X - Margin * Cell;   // the board's own edge in world X
+                    const double Y = 0.5 * (Min.Y + Max.Y);
+                    auto Fade = [&](double CellsPast)
+                    {
+                        const FVector Ground(Edge + CellsPast * Cell, Y, PlaneZ);
+                        return View->OccluderBoardOpacityAt(Eye + (Ground - Eye) * 0.5);
+                    };
+                    TestEqual(*(Label + TEXT(": something over the board's edge is faded")), Fade(0.0), OccluderFade::MinOpacity, 0.001f);
+                    TestEqual(*(Label + TEXT(": the fade holds to the edge of the grown rectangle")), Fade(Margin), OccluderFade::MinOpacity, 0.001f);
+                    float Last = 0.0f;
+                    for (double Past = Margin; Past <= Margin + Ramp + 0.5; Past += 0.125)
+                    {
+                        const float Opacity = Fade(Past);
+                        TestTrue(*(Label + TEXT(": the fade eases back to opaque past the rectangle")), Opacity >= Last - 0.0001f);
+                        Last = Opacity;
+                    }
+                    TestEqual(*(Label + TEXT(": it is opaque a full ramp past the rectangle")), Last, 1.0f, 0.0001f);
+                    TestEqual(*(Label + TEXT(": ground well outside is opaque")), Fade(20.0), 1.0f, 0.001f);
+                    if (bFar) { TestEqual(*(Label + TEXT(": the floor behind a side or back wall (1.5 cells past the board) is opaque at the far pose")), Fade(1.5), 1.0f, 0.001f); }
+                    else { TestEqual(*(Label + TEXT(": the floor 2 cells past the board, behind a near wall, is faded at the default zoom")), Fade(2.0), OccluderFade::MinOpacity, 0.001f); }
+                }
+            }
+        }
+        DestroyVaultWorld(World);
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+/**
+ * #209: at the zoom maximum (6400) the Vault is a hall floating in a dark void. The wheel now stops at the far pose, the nearest zoom
+ * at which the whole board is in view, so the board stays whole in view and the dark around the hall is no more than that pose shows.
+ * Orbiting from the far zoom keeps the cap of the new yaw. The Vigil and the Root keep the full range.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVaultZoomCapTest, "Project.Expedition.Presentation.VaultWheelStopsAtTheFarPose",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVaultZoomCapTest::RunTest(const FString& Parameters)
+{
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultZoomCap"), FGuid::NewGuid().ToString());
+    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
+    if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Path, -1))) { return false; }
+    UWorld* World = MakeVaultWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
+    {
+        if (TestTrue(TEXT("The finale draws the Vault kit"), View->UsesVaultKit()))
+        {
+            bool bCapped = false;
+            for (const float Yaw : {-90.0f, 0.0f, 45.0f, 90.0f, 180.0f})
+            {
+                View->SnapCamera(Yaw, View->FramedDistance(Yaw));
+                View->Tick(0.016f);
+                const FString Label = FString::Printf(TEXT("Yaw %.0f"), Yaw);
+                const float Far = View->FarFramedDistance(Yaw);
+                TestEqual(*(Label + TEXT(": the wheel's limit is the far pose")), View->MaxZoomFor(Yaw), FMath::Min(Far, ExpeditionCameraRig::MaxDistance), 0.01f);
+                for (int32 Notch = 0; Notch < 200; ++Notch) { View->Zoom(120.0f); }
+                TestEqual(*(Label + TEXT(": wheeling out stops at the far pose")), View->CameraDistance(), View->MaxZoomFor(Yaw), 0.01f);
+                bCapped |= View->CameraDistance() < ExpeditionCameraRig::MaxDistance - 1.0f;
+                View->Tick(5.0f);
+                TestTrue(*(Label + TEXT(": the whole board is in view at that zoom")), View->WholeBoardInView());
+                TestTrue(*(Label + TEXT(": the far pose is not nearer than the default")), View->CameraDistance() >= View->FramedDistance(Yaw) - 1.0f);
+                // Orbiting from the far zoom keeps the new yaw's cap.
+                View->Orbit(45.0f);
+                TestTrue(*(Label + TEXT(": after an orbit the zoom is inside the new yaw's cap")), View->CameraDistance() <= View->MaxZoomFor(Yaw + 45.0f) + 0.01f);
+                View->Orbit(-45.0f);
+                // A closer zoom is not touched.
+                View->SnapCamera(Yaw, 1500.0f);
+                View->Zoom(120.0f);
+                TestEqual(*(Label + TEXT(": a closer zoom still steps by a notch")), View->CameraDistance(), 1620.0f, 0.01f);
+            }
+            TestTrue(TEXT("The cap is below the zoom maximum on some yaw (it does something)"), bCapped);
+        }
+        DestroyVaultWorld(World);
     }
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();

@@ -25,6 +25,21 @@ constexpr float RadiusCells = 2.0f;
 constexpr float BoardMarginCells = 0.5f;
 /** Past the grown rectangle the board fade eases back to opaque over this many cells. */
 constexpr float BoardRampCells = 0.5f;
+/**
+ * The walled worlds have near walls 3 m high that stand 2 to 3 cells outside the board. At the 45 degree default pitch such a wall hides
+ * the floor from its base inward for about 2 cells, and the fade only reached half a cell past the board, so the Vault's near wall
+ * covered a quarter of the view at some yaws and the Vigil's ledge and stained-glass rose filled the bottom of the frame behind the
+ * action bar, without dithering (#209). Their board fade is wider: the grown rectangle reaches the margin past the board and eases
+ * back to opaque over the ramp, so a near wall dithers like the occluders always did.
+ *  - The Vault: 2.5 cells and a 1.5 cell ramp at the default zoom, easing back to BoardMarginCells and BoardRampCells at the far pose
+ *    (`AExpeditionBattleView::FarZoomFraction`), where the whole hall is in view and its walls should enclose it, not fade.
+ *  - The Vigil: 2.5 cells and half a cell at every zoom; its occluders are its columns, arches and the rose, which are there to be seen through.
+ * The Root's forest keeps BoardMarginCells and BoardRampCells.
+ */
+constexpr float VaultBoardMarginCells = 2.5f;
+constexpr float VaultBoardRampCells = 1.5f;
+constexpr float VigilBoardMarginCells = 2.5f;
+constexpr float VigilBoardRampCells = 0.5f;
 
 /**
  * Opacity of a point of the occluder for one sight line from Eye to Target. Points before the eye or beyond the target

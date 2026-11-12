@@ -33,6 +33,13 @@ namespace ExpeditionCameraRig
     constexpr float ArmLength = 1.1768f;
     /** How far past the board's outer tile edge the visible ground may reach when panning, in cells (was 2 cells past the outer cell centres, #148 gate 2). */
     constexpr float PanMarginCells = 1.5f;
+    /**
+     * The Drowned Vigil's pan margin in cells (#209): the stained-glass rose window stands on the wall behind the home side, and the 1.5 cell
+     * margin let the near pan show it, with the ledge under it, behind the action bar. 0.75 cells is as far as the brazier ring (1.25 cells
+     * outside the playable edge, 0.75 past the outer tile edge), so the view ends at the ring. The margin is the same on every side, so a locked axis
+     * still centres on the board and the bound stays continuous across the lock.
+     */
+    constexpr float VigilPanMarginCells = 0.75f;
     /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */
     // 88 px nominal: rendered figures read at about 0.8 of a nominal 180 cm projection (the on-screen pass measured ~50 px
     // where the nominal height was ~62), so this gives about 72 px on screen at 1080 (#148 gate 2).
@@ -333,7 +340,7 @@ namespace ExpeditionCameraRig
     };
 
     /**
-     * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within PanMarginCells of the
+     * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within MarginCells (default PanMarginCells) of the
      * board's outer tile edge on every side. Per board axis: when the board plus its margins is smaller than the view the
      * axis is locked with the view's bounding box centred on the board (the pan has nothing to reach); otherwise the focus is
      * clamped to the interval that keeps the view inside. The locked focus is the midpoint of that (empty) interval, the point
@@ -341,10 +348,10 @@ namespace ExpeditionCameraRig
      * box, so it never shows more than asked at any yaw.
      */
     inline FPanBound ClampPan(const FVector2D& Wanted, int32 Width, int32 Height, const FBoardMetric& Metric,
-        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float MarginCells = PanMarginCells)
     {
         const double C = Metric.CellCm;
-        const double Margin = (0.5 + PanMarginCells) * C;
+        const double Margin = (0.5 + MarginCells) * C;
         const double LowerX = -Margin, UpperX = (Width - 1) * C + Margin;
         const double LowerY = -Margin, UpperY = (Height - 1) * C + Margin;
         FPanBound Result;
@@ -376,9 +383,9 @@ namespace ExpeditionCameraRig
      * clamped like a pan. The height part is dropped while the bound applies, because a rising camera widens the view.
      */
     inline FVector2D ShakenFocus(const FVector2D& Focus, const FVector& Shake, int32 Width, int32 Height, const FBoardMetric& Metric,
-        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float MarginCells = PanMarginCells)
     {
-        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe).Focus;
+        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe, MarginCells).Focus;
     }
 
     /** Whether a unit's tile (corners at the board top) and head project inside the safe rect shrunk to InFill, from a focus on the ground. */

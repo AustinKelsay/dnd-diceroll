@@ -438,4 +438,85 @@ bool FVigilThemeDataTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+/**
+ * #209: the Vigil's rose window stands on the wall behind the home side, and the near pan used to show it under the action bar.
+ * Through the real camera the visible ground now stops 0.75 cells past the board on every side (the brazier ring) wherever an axis can pan, and
+ * the near ledge and the rose dither where they hide the floor close to the board.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVigilPanMarginLiveTest, "Project.Expedition.Presentation.VigilPanStopsAtTheBraziers",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVigilPanMarginLiveTest::RunTest(const FString& Parameters)
+{
+    using namespace ExpeditionCameraRig;
+    UWorld* World = MakeKitWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VigilPanMargin"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = StartVigilBoard(*this, World, Directory);
+    if (TestNotNull(TEXT("A Vigil board"), View) && TestTrue(TEXT("It draws the Vigil kit"), View->UsesVigilKit()))
+    {
+        TestEqual(TEXT("The Vigil pans 0.75 cells past the board"), View->ActivePanMarginCells(), VigilPanMarginCells);
+        const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
+        const double Cell = View->Metric().CellCm;
+        const double Lower = -(0.5 + VigilPanMarginCells) * Cell;
+        const double UpperX = (Encounter.Width - 1 + 0.5 + VigilPanMarginCells) * Cell, UpperY = (Encounter.Height - 1 + 0.5 + VigilPanMarginCells) * Cell;
+        int32 Panned = 0;
+        for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f, 33.0f})
+        {
+            for (const FVector2D Direction : {FVector2D(0, -1), FVector2D(0, 1), FVector2D(-1, 0), FVector2D(1, 0)})
+            {
+                View->SnapCamera(Yaw, View->FramedDistance(Yaw));
+                View->Tick(0.016f);
+                if (View->WholeBoardInView()) { continue; }
+                View->Pan(static_cast<float>(Direction.X) * 1.0e5f, static_cast<float>(Direction.Y) * 1.0e5f);
+                View->Tick(5.0f);
+                const FSafeRect Rect = View->SafeRect();
+                const FTransform Camera = View->CameraTransform();
+                const FTransform Actor = View->GetActorTransform();
+                const double PlaneZ = Actor.GetLocation().Z + View->Metric().BoardTop();
+                double MinX = TNumericLimits<double>::Max(), MaxX = TNumericLimits<double>::Lowest(), MinY = MinX, MaxY = MaxX;
+                const FVector2D Corners[4] = {FVector2D(Rect.Left, Rect.Top), FVector2D(1.0 - Rect.Right, Rect.Top), FVector2D(Rect.Left, 1.0 - Rect.Bottom), FVector2D(1.0 - Rect.Right, 1.0 - Rect.Bottom)};
+                bool bGround = true;
+                for (const FVector2D& Corner : Corners)
+                {
+                    FVector2D Ground;
+                    if (!Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(PlaneZ), Ground)) { bGround = false; break; }
+                    const FVector InView = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, PlaneZ));
+                    MinX = FMath::Min(MinX, InView.X); MaxX = FMath::Max(MaxX, InView.X);
+                    MinY = FMath::Min(MinY, InView.Y); MaxY = FMath::Max(MaxY, InView.Y);
+                }
+                const FString Label = FString::Printf(TEXT("Yaw %.0f panned (%.0f, %.0f)"), Yaw, Direction.X, Direction.Y);
+                if (!TestTrue(*(Label + TEXT(": the safe rect corners have ground")), bGround)) { continue; }
+                ++Panned;
+                // The pan is on the rendered pose; an axis wider than the bound is locked on the board and is not asked to fit.
+                if (MaxX - MinX <= UpperX - Lower) { TestTrue(*(Label + TEXT(": the view stays within 0.75 cells of the board in X")), MinX >= Lower - 1.0 && MaxX <= UpperX + 1.0); }
+                if (MaxY - MinY <= UpperY - Lower) { TestTrue(*(Label + TEXT(": the view stays within 0.75 cells of the board in Y")), MinY >= Lower - 1.0 && MaxY <= UpperY + 1.0); }
+            }
+        }
+        TestTrue(TEXT("Some pans had room to move, so the bound was exercised"), Panned > 0);
+        // The same walls: the near ledge and the rose dither where they hide the floor within two and a half cells of the board, and ground
+        // well past that is not touched.
+        if (View->HasOccluder())
+        {
+            TestEqual(TEXT("The Vigil's board fade reaches 2.5 cells and ramps over half a cell"), View->OccluderMarginCells(), OccluderFade::VigilBoardMarginCells);
+            TestEqual(TEXT("... and ramps over half a cell"), View->OccluderRampCells(), OccluderFade::VigilBoardRampCells);
+            View->SnapCamera(-90.0f, View->FramedDistance(-90.0f));
+            View->Tick(0.016f);
+            FVector2D Min, Max;
+            float PlaneZ = 0.0f;
+            View->OccluderBoard(Min, Max, PlaneZ);
+            const FVector Eye = View->CameraTransform().GetLocation();
+            const double Edge = Max.X - OccluderFade::VigilBoardMarginCells * Cell;
+            const double Y = 0.5 * (Min.Y + Max.Y);
+            auto Fade = [&](double CellsPast) { const FVector Ground(Edge + CellsPast * Cell, Y, PlaneZ); return View->OccluderBoardOpacityAt(Eye + (Ground - Eye) * 0.5); };
+            TestEqual(TEXT("Something over the floor one cell past the board is faded"), Fade(1.0), OccluderFade::MinOpacity, 0.001f);
+            TestEqual(TEXT("Something over the floor 2 cells past the board is faded"), Fade(2.0), OccluderFade::MinOpacity, 0.001f);
+            TestEqual(TEXT("Something over the floor a full ramp past the grown rectangle is opaque"), Fade(OccluderFade::VigilBoardMarginCells + OccluderFade::VigilBoardRampCells), 1.0f, 0.001f);
+            TestEqual(TEXT("Something over ground well beside the board is opaque"), Fade(20.0), 1.0f, 0.001f);
+        }
+    }
+    DestroyKitWorld(World);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
 #endif

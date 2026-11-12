@@ -418,6 +418,12 @@ public:
     float OccluderBoardOpacityAt(const FVector& WorldPoint) const;
     /** What the shader is given: the board rectangle grown by OccluderFade::BoardMarginCells (world XY, min and max) and the board-top height. */
     void OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const;
+    /** How far past the grown board rectangle the board fade eases back to opaque, in cells (wider on the Vigil's and, at the default zoom, the Vault's walls, #209). */
+    float OccluderRampCells() const;
+    /** How far past the board the board fade reaches, in cells: 0.5 by default, 2.5 on the Vigil, and on the Vault 2.5 at the default zoom easing to 0.5 at the far pose (#209). */
+    float OccluderMarginCells() const;
+    /** 0 at the default zoom of the rendered yaw, 1 at its far pose, smooth between: the Vault's far grade and board fade follow it. */
+    float FarZoomFraction() const;
     /** World points the occluder protects: the camera, the camera focus and the active unit's chest. */
     void OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const;
     /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
@@ -755,6 +761,12 @@ private:
      * and otherwise re-pinned to the bound so a held key does not wind up past it.
      */
     FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
+public:
+    /** How far past the board's outer tile edge the pan may show, in cells, for the world drawn now: 1.5, and 0.75 on the Vigil (#209). */
+    float ActivePanMarginCells() const;
+    /** The farthest zoom the wheel reaches at a yaw: the zoom maximum, and on the Vault the far pose (whole board in view), so it never shows the dark around the hall (#209). */
+    float MaxZoomFor(float ForYaw) const;
+private:
     /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
     FVector2D HoldUnit(const FVector2D& Wanted) const;
     /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */

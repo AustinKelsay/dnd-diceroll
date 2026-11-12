@@ -1073,9 +1073,7 @@ void AExpeditionBattleView::ApplyTheme()
 void AExpeditionBattleView::UpdateFarGrade()
 {
     if (!Theme || bOverview || BoardTheme != EBoardTheme::Vault || !HasRun()) { return; }
-    const float Default = FramedDistance(Yaw);
-    const float Far = FarFramedDistance(Yaw);
-    const float T = Far > Default + 1.0f ? FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((Distance - Default) / (Far - Default), 0.0f, 1.0f)) : 0.0f;
+    const float T = FarZoomFraction();
     if (FMath::Abs(T - AppliedFarGrade) < 0.01f) { return; }
     AppliedFarGrade = T;
     const FGrade Biome = GradeFor(BoardTheme);
@@ -1084,7 +1082,8 @@ void AExpeditionBattleView::UpdateFarGrade()
     // Exposure is the inverse of the luminance the band clamps the scene to, so a brighter far view needs a lower band, not a higher one.
     Settings.AutoExposureMinBrightness = Biome.Luminance / Lift / ExposureBand;
     Settings.AutoExposureMaxBrightness = Biome.Luminance / Lift * ExposureBand;
-    Settings.VignetteIntensity = Biome.Vignette * (1.0f - 0.6f * T);
+    // The vignette deepens toward the far stop instead of easing off (#209): the dark beyond the hall falls away at the screen's edges, so the far view reads as a lit hall in the dark, not a hall in a navy void.
+    Settings.VignetteIntensity = FMath::Min(1.0f, Biome.Vignette * (1.0f + 0.35f * T));
     const float Contrast = FMath::Lerp(1.12f, 1.2f, T);
     Settings.ColorContrast = FVector4(Contrast, Contrast, Contrast, 1.0f);
 }
@@ -1936,12 +1935,18 @@ FVector AExpeditionBattleView::BaseFocus() const
     return Base;
 }
 
+float AExpeditionBattleView::ActivePanMarginCells() const
+{
+    // The Vigil's rose window and the ledge under it stay out of the view at the default zoom (#209).
+    return bVigilKit ? ExpeditionCameraRig::VigilPanMarginCells : ExpeditionCameraRig::PanMarginCells;
+}
+
 FVector2D AExpeditionBattleView::LimitPan(const FVector2D& Base, FVector2D& Offset) const
 {
     if (WholeBoardInView()) { Offset = FVector2D::ZeroVector; return Base; } // nothing to pan to
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-    const ExpeditionCameraRig::FPanBound Bound = ExpeditionCameraRig::ClampPan(Base + Offset, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+    const ExpeditionCameraRig::FPanBound Bound = ExpeditionCameraRig::ClampPan(Base + Offset, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells());
     if (!Offset.IsNearlyZero())
     {
         // The player's pan stays at the bound instead of winding up past it; a locked axis keeps no pan.
@@ -2031,7 +2036,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         // The pan bound belongs to the rendered pose, not only the target: zooming out or orbiting from a pan stop eases through
         // poses that see more ground than the one the target was clamped for (four unprojections per frame).
         const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe).Focus;
+        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells()).Focus;
         Focus.X = Bounded.X; Focus.Y = Bounded.Y;
     }
     if (!bOverview && PanOffset.IsNearlyZero())
@@ -2061,7 +2066,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         // A shake moves the view too: the shaken pose keeps the pan bound (level, so it does not widen the view), and unpanned the
         // acting unit still wins.
         const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
+        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells());
         if (PanOffset.IsNearlyZero()) { Shaken = HoldUnit(Shaken); }
         Eye = GetActorTransform().TransformPosition(FVector(Shaken.X, Shaken.Y, Focus.Z)) + Offset + Framing;
     }
@@ -2082,8 +2087,20 @@ void AExpeditionBattleView::Orbit(float Degrees)
     bFramed = AtFramedZoom();
     TargetYaw += Degrees;
     if (bFramed) { TargetDistance = FramedDistance(TargetYaw); }
+    else { TargetDistance = FMath::Min(TargetDistance, MaxZoomFor(TargetYaw)); }
 }
-void AExpeditionBattleView::Zoom(float Amount) { if (bOverview) { return; } bFramed = false; TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, ExpeditionCameraRig::MaxDistance); }
+float AExpeditionBattleView::MaxZoomFor(float ForYaw) const
+{
+    // The Vault is one fixed hall in the dark: past its far pose (the whole board in view) the wheel only shows the dark around it (#209).
+    return bVaultKit && HasRun() ? FMath::Min(ExpeditionCameraRig::MaxDistance, FarFramedDistance(ForYaw)) : ExpeditionCameraRig::MaxDistance;
+}
+
+void AExpeditionBattleView::Zoom(float Amount)
+{
+    if (bOverview) { return; }
+    bFramed = false;
+    TargetDistance = FMath::Clamp(TargetDistance + Amount, ExpeditionCameraRig::MinDistance, MaxZoomFor(TargetYaw));
+}
 
 void AExpeditionBattleView::Pan(float Right, float Away)
 {
@@ -2713,10 +2730,31 @@ float AExpeditionBattleView::OccluderOpacityAt(const FVector& WorldPoint) const
     return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells);
 }
 
+float AExpeditionBattleView::OccluderMarginCells() const
+{
+    if (bVigilKit) { return OccluderFade::VigilBoardMarginCells; }
+    if (!bVaultKit) { return OccluderFade::BoardMarginCells; }
+    return FMath::Lerp(OccluderFade::VaultBoardMarginCells, OccluderFade::BoardMarginCells, FarZoomFraction());
+}
+
+float AExpeditionBattleView::OccluderRampCells() const
+{
+    if (bVigilKit) { return OccluderFade::VigilBoardRampCells; }
+    if (!bVaultKit) { return OccluderFade::BoardRampCells; }
+    return FMath::Lerp(OccluderFade::VaultBoardRampCells, OccluderFade::BoardRampCells, FarZoomFraction());
+}
+
+float AExpeditionBattleView::FarZoomFraction() const
+{
+    const float Default = FramedDistance(Yaw);
+    const float Far = FarFramedDistance(Yaw);
+    return Far > Default + 1.0f ? FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((Distance - Default) / (Far - Default), 0.0f, 1.0f)) : 0.0f;
+}
+
 void AExpeditionBattleView::OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const
 {
     const FCombatEncounter& Board = Rules().Snapshot().Encounter;
-    const float Margin = OccluderFade::BoardMarginCells;
+    const float Margin = OccluderMarginCells();
     const FTransform ActorSpace = GetActorTransform();
     const FVector Low = ActorSpace.TransformPosition(BoardPosition(FVector2D(-0.5f - Margin, -0.5f - Margin)));
     const FVector High = ActorSpace.TransformPosition(BoardPosition(FVector2D(Board.Width - 0.5f + Margin, Board.Height - 0.5f + Margin)));
@@ -2732,7 +2770,7 @@ float AExpeditionBattleView::OccluderBoardOpacityAt(const FVector& WorldPoint) c
     FVector2D Min, Max;
     float PlaneZ = 0.0f;
     OccluderBoard(Min, Max, PlaneZ);
-    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderFade::BoardRampCells);
+    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderRampCells());
 }
 
 void AExpeditionBattleView::UpdateOccluder()
@@ -2755,7 +2793,7 @@ void AExpeditionBattleView::UpdateOccluder()
     {
         Occluder.Material->SetVectorParameterValue(TEXT("BoardRect"), FLinearColor(static_cast<float>(Min.X), static_cast<float>(Min.Y), static_cast<float>(Max.X), static_cast<float>(Max.Y)));
         Occluder.Material->SetScalarParameterValue(TEXT("BoardZ"), PlaneZ);
-        Occluder.Material->SetScalarParameterValue(TEXT("BoardRamp"), BoardMetric.CellCm * OccluderFade::BoardRampCells);
+        Occluder.Material->SetScalarParameterValue(TEXT("BoardRamp"), BoardMetric.CellCm * OccluderRampCells());
         OccluderBoardSent = Rect; OccluderPlaneSent = PlaneZ; bOccluderBoardSent = true;
     }
 }

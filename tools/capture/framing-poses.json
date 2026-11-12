@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "framing-yawm090-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yawm090-far",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yawm045-default",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yawm045-far",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yaw000-default",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yaw000-far",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yaw045-default",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yaw045-far",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yaw090-default",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yaw090-far",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yaw135-default",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yaw135-far",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yaw180-default",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yaw180-far",
+      "mode": "battle",
+      "yaw": 180,
+      "distance": "far"
+    },
+    {
+      "name": "framing-yawm135-default",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": "default"
+    },
+    {
+      "name": "framing-yawm135-far",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": "far"
+    },
+    {
+      "name": "framing-pan-near-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-pan-far-edge-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "framing-pan-left-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "framing-pan-right-default",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "default",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "framing-wheel-max-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 6400
+    },
+    {
+      "name": "framing-wheel-max-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": 6400
+    }
+  ]
+}

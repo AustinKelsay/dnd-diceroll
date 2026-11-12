@@ -950,4 +950,78 @@ bool FFigureSilhouetteTest::RunTest(const FString& Parameters)
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
+
+/**
+ * #209: the pan margin belongs to the world. The Vigil's is 0.75 cells (the stained-glass rose behind its home side is out of the
+ * view at the default zoom); a narrower margin is still a bound on the rendered ground, still pushed to when asked for more, and a
+ * locked axis still centres on the board.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPanMarginPerWorldTest, "Project.Expedition.Presentation.PanMarginBelongsToTheWorld",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPanMarginPerWorldTest::RunTest(const FString& Parameters)
+{
+    using namespace ExpeditionCameraRig;
+    using namespace CameraLightingTestSupport;
+    TestEqual(TEXT("The Vigil's pan margin is 0.75 cells"), VigilPanMarginCells, 0.75f);
+    TestTrue(TEXT("It is narrower than the default"), VigilPanMarginCells < PanMarginCells);
+    const FBoardMetric Metric(150.0f, 180.0f);
+    const double C = Metric.CellCm;
+    int32 Pushed = 0, Locked = 0;
+    for (const FViewportSize& Size : Viewports)
+    {
+        const FSafeRect Safe = FSafeRect::ForViewport(Size.X, Size.Y);
+        for (const TPair<int32, int32>& Board : {TPair<int32, int32>(16, 11), TPair<int32, int32>(18, 12), TPair<int32, int32>(17, 12)})
+        {
+            const float Anchor = FMath::Clamp(FitDistance(Board.Key, Board.Value, Metric, HomeYaw, 0.0f, Safe).Distance, MinFramed, MaxFramed);
+            const FVector2D Centre = BoardCentre(Board.Key, Board.Value, Metric);
+            const double Lower = -(0.5 + VigilPanMarginCells) * C;
+            for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f, 33.0f})
+            {
+                for (const float Distance : {1300.0f, FigureDistance(Metric, Anchor, Safe), FarStop(Anchor)})
+                {
+                    const FString Label = FString::Printf(TEXT("%dx%d at %dx%d yaw %.0f distance %.0f"), Board.Key, Board.Value, Size.X, Size.Y, Yaw, Distance);
+                    const float Pitch = PitchFor(Distance, Anchor);
+                    FVector2D Ground[4];
+                    if (!TestTrue(*(Label + TEXT(": ground under the safe rect corners")), VisibleGround(Yaw, Distance, Pitch, Metric, Safe, Ground))) { continue; }
+                    double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+                    for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
+                    const double UpperX = (Board.Key - 1 + 0.5 + VigilPanMarginCells) * C, UpperY = (Board.Value - 1 + 0.5 + VigilPanMarginCells) * C;
+                    for (const FVector2D Wanted : {FVector2D(1.0e6, 1.0e6), FVector2D(-1.0e6, -1.0e6), FVector2D(1.0e6, -1.0e6), FVector2D(-1.0e6, 1.0e6)})
+                    {
+                        const FPanBound Narrow = ClampPan(Wanted, Board.Key, Board.Value, Metric, Yaw, Distance, Pitch, Safe, VigilPanMarginCells);
+                        const FPanBound Wide = ClampPan(Wanted, Board.Key, Board.Value, Metric, Yaw, Distance, Pitch, Safe);
+                        if (Narrow.bLockedX) { ++Locked; TestTrue(*(Label + TEXT(": a locked X axis centres the view on the board")), FMath::Abs(Narrow.Focus.X + 0.5 * (MinX + MaxX) - Centre.X) < 0.01); }
+                        else
+                        {
+                            TestTrue(*(Label + TEXT(": the view stays within 0.75 cells of the board in X")), Narrow.Focus.X + MinX >= Lower - 0.5 && Narrow.Focus.X + MaxX <= UpperX + 0.5);
+                            TestTrue(*(Label + TEXT(": and rests on the bound when pushed (X)")), FMath::Abs(Narrow.Focus.X + MaxX - UpperX) < 0.5 || FMath::Abs(Narrow.Focus.X + MinX - Lower) < 0.5);
+                            ++Pushed;
+                        }
+                        if (Narrow.bLockedY) { ++Locked; TestTrue(*(Label + TEXT(": a locked Y axis centres the view on the board")), FMath::Abs(Narrow.Focus.Y + 0.5 * (MinY + MaxY) - Centre.Y) < 0.01); }
+                        else
+                        {
+                            TestTrue(*(Label + TEXT(": the view stays within 0.75 cells of the board in Y")), Narrow.Focus.Y + MinY >= Lower - 0.5 && Narrow.Focus.Y + MaxY <= UpperY + 0.5);
+                            TestTrue(*(Label + TEXT(": and rests on the bound when pushed (Y)")), FMath::Abs(Narrow.Focus.Y + MaxY - UpperY) < 0.5 || FMath::Abs(Narrow.Focus.Y + MinY - Lower) < 0.5);
+                            ++Pushed;
+                        }
+                        // Never farther than the default margin allows: the narrower bound is inside the wider one.
+                        if (!Wide.bLockedX && !Narrow.bLockedX) { TestTrue(*(Label + TEXT(": the narrow margin shows no more than the wide one (X)")), Narrow.Focus.X + MaxX <= Wide.Focus.X + MaxX + 0.5 || Narrow.Focus.X + MinX >= Wide.Focus.X + MinX - 0.5); }
+                    }
+                }
+            }
+        }
+    }
+    TestTrue(TEXT("Some poses have room to pan, so the narrow bound is exercised"), Pushed > 0);
+    TestTrue(TEXT("Some poses lock an axis"), Locked > 0);
+    // The default margin is untouched by the parameter.
+    {
+        const FSafeRect Safe = FSafeRect::ForViewport(1920, 1080);
+        const float Anchor = FMath::Clamp(FitDistance(18, 12, Metric, HomeYaw, 0.0f, Safe).Distance, MinFramed, MaxFramed);
+        const FVector2D Want(-1.0e6, -1.0e6);
+        const FPanBound Default = ClampPan(Want, 18, 12, Metric, -90.0f, 1300.0f, PitchFor(1300.0f, Anchor), Safe);
+        const FPanBound Explicit = ClampPan(Want, 18, 12, Metric, -90.0f, 1300.0f, PitchFor(1300.0f, Anchor), Safe, PanMarginCells);
+        TestTrue(TEXT("Omitting the margin means the default 1.5 cells"), Default.Focus.Equals(Explicit.Focus, 0.001));
+    }
+    return !HasAnyErrors();
+}
 #endif
