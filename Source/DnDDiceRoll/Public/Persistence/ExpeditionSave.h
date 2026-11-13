@@ -23,7 +23,7 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 5;
+    UPROPERTY() int32 Version = 6;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
@@ -33,8 +33,9 @@ struct DNDDICEROLL_API FExpeditionSaveData
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    // Version 5 persists ERuleset. Schema 4 loads as Compact; older than 4 remains unsupported.
-    static constexpr int32 Version = 5;
+    // Version 5 persists ERuleset; version 6 (#218) the reward card of each claim and each hero's Reserve and Honed. Older documents
+    // decode through explicit step migrations, 4 -> 5 (Compact) and 5 -> 6 (gear only); older than 4, and any unknown version, is refused.
+    static constexpr int32 Version = 6;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);
@@ -60,6 +61,8 @@ public:
     bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr, EFighterSubclass Subclass = EFighterSubclass::Champion);
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);
+    /** The run's card claim (#218), committed before it is installed: a failed write rejects it and leaves state, RNG and file unchanged. */
+    bool ClaimReward(int32 Id, ERewardCard Card, FString& Error);
     bool Recover(bool bTake, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();

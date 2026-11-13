@@ -24,8 +24,19 @@ inline constexpr int32 MaxSteps = 16;
 inline constexpr int32 MaxLookAheads = 16;
 /** Guard on harness loop iterations per run; only a harness bug could reach it. */
 inline constexpr int32 RunStepGuard = 100000;
-/** Bump when a policy rule changes, so result folders say which policy produced them. */
-inline constexpr int32 PolicyVersion = 1;
+/** Bump when a policy rule changes, so result folders say which policy produced them. 2 (#218): version 1 plus the reward-card rule;
+ * with the gear strategy it is version 1 exactly. */
+inline constexpr int32 PolicyVersion = 2;
+/** The extra fixed-seed batch of contract 13 section 6 (seeds 20261141 + i), chosen with DND_BALANCE_SEED_BASE. */
+inline constexpr int32 ExtraBatchSeed = 20261141;
+
+/**
+ * Which reward card the policy takes (DND_BALANCE_REWARD, contract 13 section 6). Gear: version 1 (Gear to the survivor with the lowest gear
+ * rank, then the lowest id). Reserve and Honed: that card when it is available, otherwise Gear, for the survivor with the fewest upgrades
+ * (gear rank + Reserve + Honed), then the lowest id. Mixed (the default): the same recipient; Reserve when each of its special pools holds at
+ * most one use (per pool, at claim time) and Reserve is free, otherwise Honed when free, otherwise Gear.
+ */
+enum class ERewardStrategy : uint8 { Gear, Reserve, Honed, Mixed };
 
 struct FPartySpec
 {
@@ -56,8 +67,12 @@ struct FHeroStats
     int32 Turns = 0, IdleTurns = 0;
     int32 Damage = 0, Kills = 0, Healing = 0, Protection = 0, DamageTaken = 0, Downs = 0, Revives = 0, PotionsUsed = 0;
     TArray<FSpecialStats> Specials;
+    /** Caps are FBuildCatalog::Caps of the hero at the end of the run (#218), so a Reserve hero's are its own. */
     int32 KitLeft = 0, KitCap = 0, SlotLeft = 0, SlotCap = 0, WindLeft = 0, WindCap = 0;
     int32 ManeuverLeft = 0, ManeuverCap = 0, RageLeft = 0, RageCap = 0, PotionsLeft = 0;
+    /** The cards this hero claimed, in claim order: G, R or H (#218). */
+    TArray<FString> RewardCards;
+    bool bReserve = false, bHoned = false;
 };
 
 struct FEncounterStats
@@ -83,6 +98,7 @@ struct FRunStats
     int32 RoutePattern = 0;
     /** The catalog revision the run was created under (#188: the before-run plays revision 8). */
     int32 Revision = 0;
+    ERewardStrategy Strategy = ERewardStrategy::Mixed;
     /** Victory, Defeat or Stall. */
     FString Outcome;
     FString StallReason;
@@ -105,7 +121,9 @@ struct FRunStats
 /** Plays one complete Compact expedition. RoutePattern bit s picks the Dangerous road at stage s. Revision is the catalog revision the run
  * is created under (FExpeditionRun::NewRun); an unsupported one makes the run a Stall. */
 FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal = nullptr, FString* OutTrace = nullptr,
-    int32 Revision = FBuildCatalog::Revision);
+    int32 Revision = FBuildCatalog::Revision, ERewardStrategy Strategy = ERewardStrategy::Mixed);
+/** The reward claim policy version 2 makes in a Reward phase: the recipient and its card. False when no survivor can take one. */
+bool ChooseReward(const FExpeditionRun& Run, ERewardStrategy Strategy, int32& OutRecipient, ERewardCard& OutCard);
 /**
  * True when no conscious unit of either side can ever bring an opponent within its range: from its cell it walks over open floor (bodies and
  * Downed heroes block, conscious units are treated as able to move aside) and no reachable cell lies within Range (Manhattan; sight ignored, so it
@@ -113,14 +131,20 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
  */
 bool Deadlocked(const FCombatSnapshot& Snapshot);
 /** Text board and command log for one run, for reproducing a stall or outlier by seed. */
-FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision = FBuildCatalog::Revision);
+FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision = FBuildCatalog::Revision, ERewardStrategy Strategy = ERewardStrategy::Mixed);
 /** DND_BALANCE_REVISION when it names a supported revision (the before-run of a revision change), otherwise the current one;
  * false with Error when it is set to anything else. */
 bool RevisionFromEnvironment(int32& OutRevision, FString& Error);
+/** DND_BALANCE_REWARD: gear, reserve, honed or mixed (the default when unset); false with Error for anything else. */
+bool StrategyFromEnvironment(ERewardStrategy& OutStrategy, FString& Error);
+/** DND_BALANCE_SEED_BASE: BaseSeed when unset, or ExtraBatchSeed for the extra batch; false with Error for anything else. */
+bool SeedBaseFromEnvironment(int32& OutSeedBase, FString& Error);
+const TCHAR* StrategyName(ERewardStrategy Strategy);
 /** A representative or rotation party by id, or nullptr. */
 const FPartySpec* FindParty(const FString& Id);
-/** Plays every party on seeds BaseSeed + i, i < Seeds, with route pattern i, under Revision. */
-TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds = SeedCount, int32 Revision = FBuildCatalog::Revision);
+/** Plays every party on seeds SeedBase + i, i < Seeds, with route pattern i, under Revision and Strategy. */
+TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds = SeedCount, int32 Revision = FBuildCatalog::Revision, ERewardStrategy Strategy = ERewardStrategy::Mixed,
+    int32 SeedBase = BaseSeed);
 
 TArray<FPartySpec> RepresentativeParties();
 /** Pass 0 .. RotationPasses - 1 of the kit rotation (18 parties each). */
@@ -146,6 +170,7 @@ FString GroupFolderFor(const FString& Requested, const FString& Group, FString& 
 FString GroupFolder(const FString& Group, FString& Error);
 /** Creates Folder after checking it is InsideLocal, and checks again once it exists. */
 bool EnsureFolder(const FString& Folder, FString& Error);
-bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error);
+bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error,
+    int32 SeedBase = BaseSeed);
 }
 #endif

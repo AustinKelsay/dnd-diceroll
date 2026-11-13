@@ -34,6 +34,9 @@ struct DNDDICEROLL_API FExpeditionEncounterRecord
     UPROPERTY() EBattlePhase Outcome = EBattlePhase::Fighting;
     UPROPERTY() int32 RewardRecipient = INDEX_NONE;
     UPROPERTY() int32 Survivors = 4;
+    /** Schema 6 (#218): the card the recipient took, the authoritative record of the claim. Gear on every record without a reward, and on
+     * every record of an SRD run or a run created before catalog revision 10. */
+    UPROPERTY() ERewardCard RewardCard = ERewardCard::Gear;
 };
 
 /** Selection is fixed for a run; instance identity does not imply a class. */
@@ -111,7 +114,13 @@ public:
     /** Validates a detached candidate in full, then installs without rolling. */
     bool Restore(const FExpeditionSnapshot& Snapshot, FString& Error);
     bool ChooseRoute(int32 RouteId, FString& Error);
+    /** The Gear card (every reward before #218, and the only card of SRD and older-revision runs). */
     bool ClaimReward(int32 RecipientId, FString& Error);
+    /** Gives the reward to a conscious survivor with one card (#218). Named rejections (wrong phase, a card out of range, a recipient that is
+     * not a conscious survivor, "Gear only in this run", "Reserve taken", "Already honed") leave the full snapshot unchanged. */
+    bool ClaimReward(int32 RecipientId, ERewardCard Card, FString& Error);
+    /** True when runs of Ruleset created under Revision offer Reserve and Honed: Compact runs from catalog revision 10. */
+    static bool OffersUpgradeCards(ERuleset Ruleset, int32 Revision);
     bool Recover(bool bTakeRecovery, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();

@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -239,3 +240,164 @@ class BalanceReportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProgressionStatisticsTests(unittest.TestCase):
+    """#218, contract 13 section 6: compare, the paired seed bootstrap, verdicts and the holds."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.local = Path(self.temp.name) / ".local"
+        self.local.mkdir()
+
+    def measurement(self, name, appended=True, cards="G", edit=None, strategy="gear", revision=9):
+        """Two parties on two seeds, one group; appended adds the #218 hero columns."""
+        folder = self.local / name / "Fixed"
+        folder.mkdir(parents=True)
+        heroes = HERO_FIELDS + (["reward_cards", "reserve", "honed"] if appended else [])
+        runs, encounters, hero_rows = [], [], []
+        for party in ("p1", "p2"):
+            for seed in ("1", "2"):
+                runs.append({"party": party, "archetype": "rotation", "builds": "a.x", "seed": seed, "outcome": "Victory", "stall_reason": "", "encounters_won": 1})
+                encounters.append({"party": party, "seed": seed, "stage": 1, "route": "guarded", "outcome": "Victory", "hp_start": 10, "hp_end": 5, "hp_max": 10})
+                row = {"party": party, "archetype": "rotation", "seed": seed, "outcome": "Victory", "slot": 1, "build": "a.x", "class": "a", "s1_blockers": "", "s2_blockers": "", "kit_cap": 2}
+                if appended:
+                    row.update({"reward_cards": cards, "reserve": 1 if "R" in cards else 0, "honed": 1 if "H" in cards else 0, "kit_cap": 3 if "R" in cards else 2})
+                hero_rows.append(row)
+        if edit:
+            edit(runs, encounters, hero_rows)
+        write(folder / "runs.csv", RUN_FIELDS, runs)
+        write(folder / "encounters.csv", ENCOUNTER_FIELDS, encounters)
+        write(folder / "heroes.csv", heroes, hero_rows)
+        meta = {"group": "Fixed", "policy_version": 2 if appended else 1, "seconds": 1.0, "catalog_revision": revision, "seeds": 2, "runs": 4, "parties": ["p1", "p2"]}
+        if appended:
+            meta["reward_strategy"] = strategy
+        (folder / "group.json").write_text(json.dumps(meta), encoding="utf-8")
+        return self.local / name
+
+    def test_compare_c1_match(self):
+        self.assertEqual(balance_report.compare(self.measurement("old", appended=False), self.measurement("new"), "c1"), [])
+
+    def test_compare_c1_mismatch_missing_and_extra_rows(self):
+        base = self.measurement("old", appended=False)
+        changed = self.measurement("changed", edit=lambda r, e, h: r[0].update({"rounds": 99}))
+        self.assertTrue(any("rounds" in p for p in balance_report.compare(base, changed, "c1")))
+        missing = self.measurement("missing", edit=lambda r, e, h: e.pop())
+        self.assertTrue(any("missing" in p for p in balance_report.compare(base, missing, "c1")))
+        extra = self.measurement("extra", edit=lambda r, e, h: e.append(dict(e[0], stage=2)))
+        self.assertTrue(any("extra row" in p for p in balance_report.compare(base, extra, "c1")))
+        upgraded = self.measurement("upgraded", cards="R")
+        self.assertTrue(any("not gear-only" in p for p in balance_report.compare(base, upgraded, "c1")))
+        unclaimed = self.measurement("unclaimed", cards="")
+        self.assertTrue(any("claims for" in p for p in balance_report.compare(base, unclaimed, "c1")))
+
+    def test_compare_c2_every_column_and_group_json(self):
+        before = self.measurement("before")
+        self.assertEqual(balance_report.compare(before, self.measurement("gear", revision=10), "c2"), [])
+        self.assertTrue(any("reward_cards" in p for p in balance_report.compare(before, self.measurement("cards", revision=10, cards="G;G"), "c2")))
+        self.assertTrue(any("reward_strategy" in p for p in balance_report.compare(before, self.measurement("mixed", revision=10, strategy="mixed"), "c2")))
+        self.assertTrue(any("catalog revisions" in p for p in balance_report.compare(before, self.measurement("same", revision=9), "c2")))
+        self.assertTrue(any("headers differ" in p for p in balance_report.compare(before, self.measurement("old", appended=False, revision=10), "c2")))
+
+    def test_check_cards(self):
+        gear = self.measurement("gear")
+        self.assertEqual(balance_report.check_cards(self.measurement("reserve", cards="R"), gear), [])
+        bad = self.measurement("bad", edit=lambda r, e, h: h[0].update({"reward_cards": "R;R", "reserve": 1, "kit_cap": 3}))
+        self.assertTrue(any("cards" in p for p in balance_report.check_cards(bad, gear)))
+        caps = self.measurement("caps", cards="R", edit=lambda r, e, h: h[0].update({"kit_cap": 2}))
+        self.assertTrue(any("kit_cap" in p for p in balance_report.check_cards(caps, gear)))
+
+    def test_bootstrap_is_fixed_by_its_seed(self):
+        a = {("p", str(s)): 1 if s % 3 else 0 for s in range(32)}
+        b = {("p", str(s)): 1 if s % 4 else 0 for s in range(32)}
+        draws = balance_report.resamples([str(s) for s in range(32)], count=500)
+        first = balance_report.paired_difference(a, b, list(a), draws)
+        second = balance_report.paired_difference(a, b, list(a), balance_report.resamples([str(s) for s in range(32)], count=500))
+        self.assertEqual(first, second)
+        self.assertLess(first["low"], first["d"])
+        self.assertGreater(first["high"], first["d"])
+        self.assertNotEqual(balance_report.resamples([str(s) for s in range(32)], count=5, seed=1), balance_report.resamples([str(s) for s in range(32)], count=5))
+
+    def test_verdicts(self):
+        self.assertEqual(balance_report.verdict({"d": 7.0, "low": 2.0, "high": 12.0}), "clear")
+        self.assertEqual(balance_report.verdict({"d": -6.0, "low": -9.0, "high": -1.0}), "clear")
+        self.assertEqual(balance_report.verdict({"d": 3.0, "low": 1.0, "high": 5.0}), "small")
+        self.assertEqual(balance_report.verdict({"d": 4.0, "low": -1.0, "high": 9.0}), "tie")
+        self.assertEqual(balance_report.threshold((2.0, 7.0), 8.0, above_is_met=False), "met")
+        self.assertEqual(balance_report.threshold((6.0, 9.0), 8.0, above_is_met=False), "inconclusive")
+        self.assertEqual(balance_report.threshold((9.0, 12.0), 8.0, above_is_met=False), "missed")
+        self.assertEqual(balance_report.threshold((1.6, 2.0), 1.5, above_is_met=True), "met")
+        self.assertEqual(balance_report.threshold((1.2, 1.4), 1.5, above_is_met=True), "missed")
+
+    def test_best_for_class_with_ties(self):
+        # Each strategy best (clear) for two classes: met. A tie that could go either way: possible but not best.
+        self.assertTrue(balance_report.best_assignment({"a": ["gear"], "b": ["gear"], "c": ["reserve"], "d": ["reserve"], "e": ["honed"], "f": ["honed"]}))
+        self.assertFalse(balance_report.best_assignment({"a": ["gear"], "b": ["gear"], "c": ["reserve"], "d": ["reserve"], "e": ["honed"], "f": []}))
+        # One tied class cannot count for two strategies.
+        self.assertFalse(balance_report.best_assignment({"a": ["gear"], "b": ["gear"], "c": ["reserve"], "d": ["honed"], "e": ["reserve", "honed"]}))
+        self.assertTrue(balance_report.best_assignment({"a": ["gear"], "b": ["gear"], "c": ["reserve"], "d": ["honed"], "e": ["reserve", "honed"], "f": ["honed", "reserve"]}))
+
+    def test_holds_met_missed_borderline(self):
+        self.assertEqual(balance_report.hold(0.60, 0.80, 0.55, 0.90), "met")
+        self.assertEqual(balance_report.hold(0.40, 0.50, 0.55, 0.90), "missed")
+        self.assertEqual(balance_report.hold(0.50, 0.60, 0.55, 0.90), "borderline")
+        self.assertEqual(balance_report.hold(0.85, 0.95, 0.55, 0.90), "borderline")
+        self.assertEqual(balance_report.hold(0.36, 0.60, 0.35, None), "met")
+        self.assertEqual(balance_report.hold(0.20, 0.30, 0.35, None), "missed")
+        self.assertEqual(balance_report.hold(0.30, 0.40, 0.35, None), "borderline")
+
+    def ratio(self, d, g, n=8):
+        """Every seed with the same Dangerous and Guarded means d and g."""
+        seeds = [str(i) for i in range(n)]
+        draws = balance_report.resamples(seeds, count=200)
+        return balance_report.ratio_interval({s: (d, 1) for s in seeds}, {s: (g, 1) for s in seeds}, draws, 1.5)
+
+    def test_ratio_sign_rule_fixtures(self):
+        self.assertEqual(self.ratio(0.2, 0.0)["low"], math.inf)          # G = 0, D > 0: above
+        self.assertEqual(self.ratio(0.0, 0.0)["low"], -math.inf)         # G = 0, D = 0: below
+        self.assertEqual(self.ratio(-0.2, -0.1)["low"], -math.inf)       # both negative: below, never 2.0
+        self.assertEqual(self.ratio(-0.2, 0.1)["low"], -math.inf)        # G > 0, D < 0: below
+        self.assertEqual(self.ratio(0.2, -0.1)["low"], math.inf)         # G < 0, D > 0: above
+        self.assertEqual(self.ratio(-0.2, 0.0)["sign_decided"], 200)
+        self.assertAlmostEqual(self.ratio(0.3, 0.1)["low"], 3.0)
+        self.assertEqual(self.ratio(0.3, 0.1)["sign_decided"], 0)
+
+    def test_zero_denominator_resample(self):
+        # Only seed 0 has Guarded HP lost; resamples without it are decided by the sign rule (D > 0, G = 0: above).
+        seeds = [str(i) for i in range(6)]
+        draws = balance_report.resamples(seeds, count=400)
+        den = {s: (0.1 if s == "0" else 0.0, 1) for s in seeds}
+        r = balance_report.ratio_interval({s: (0.2, 1) for s in seeds}, den, draws, 1.5)
+        self.assertGreater(r["sign_decided"], 0)
+        self.assertEqual(r["high"], math.inf)
+
+    def per_fight_data(self, guarded, dangerous, seeds=8):
+        """Encounter rows with net HP lost fractions per fight and route; one fight per (party, seed, stage)."""
+        runs, encounters = [], []
+        for i in range(seeds):
+            seed = str(i)
+            runs.append({"party": "p", "archetype": "rotation", "seed": seed, "outcome": "Victory"})
+            for stage in range(1, 6):
+                route = "guarded" if i % 2 else "dangerous"
+                lost = (guarded if route == "guarded" else dangerous)[stage - 1]
+                encounters.append({"party": "p", "seed": seed, "stage": str(stage), "route": route, "outcome": "Defeat" if stage == 5 and i < 2 else "Victory",
+                                   "hp_start": "100", "hp_end": str(100 - lost), "hp_max": "100"})
+        return {"runs": runs, "encounters": encounters, "heroes": []}
+
+    def test_dangerous_hold_is_per_fight(self):
+        draws = balance_report.resamples([str(i) for i in range(8)], count=300)
+        met = balance_report.slice_holds(self.per_fight_data([10] * 5, [30] * 5), draws)["dangerous_1_5x"]
+        self.assertEqual(met["verdict"], "met")
+        # Pooled over fights the ratio passes (130 / 50 = 2.6x), but fight 3 alone is 1.0x: missed.
+        one_fails = balance_report.slice_holds(self.per_fight_data([10, 10, 10, 10, 10], [30, 30, 10, 30, 30]), draws)["dangerous_1_5x"]
+        self.assertEqual(one_fails["fights"]["3"]["verdict"], "missed")
+        self.assertEqual(one_fails["verdict"], "missed")
+
+    def test_borderline_dangerous_and_finale_holds(self):
+        draws = balance_report.resamples([str(i) for i in range(8)], count=300)
+        data = self.per_fight_data([10] * 5, [15] * 5)
+        # Every seed alternates routes, so a resample can draw only one route's seeds: the ratio straddles 1.5 when the point sits on it.
+        holds = balance_report.slice_holds(data, draws)
+        self.assertIn(holds["dangerous_1_5x"]["fights"]["1"]["verdict"], ("borderline", "met"))
+        self.assertIn(holds["finale_highest"]["verdict"], ("met", "borderline"))

@@ -35,6 +35,16 @@ _Avoid_: pawn when discussing game rules
 
 **Milestone level**: An adventurer's earned tier within the current expedition, retained until that expedition ends.
 
+**Reward card**: The upgrade a survivor takes with a victory reward, beside the route's potions: Gear, Reserve or Honed. Compact runs from catalog revision 10 offer all three; other runs offer Gear only.
+
+**Gear**: The reward card that adds one gear rank (+1 basic damage, cap 3); at rank 3 it gives the potions only.
+
+**Reserve**: The once-per-hero reward card that adds one cap and one use to each pool the hero's specials spend. It never refills.
+
+**Honed**: The once-per-hero reward card that improves both of a hero's specials by a fixed row per effect.
+
+**Progression facts**: What the game shows about level gains, basic damage, reward cards and the camp, derived from saved state by one read-only query that never rolls (`FProgressionQuery`).
+
 **Fighter subclass**: The Fighter's chosen combat specialization, fixed for an expedition.
 
 **Precision Strike**: A Battle Master attack that spends a limited maneuver use for improved accuracy and damage.
