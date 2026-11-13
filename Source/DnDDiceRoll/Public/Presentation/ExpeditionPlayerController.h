@@ -21,6 +21,10 @@ public:
     virtual void BeginPlay() override;
     virtual void SetupInputComponent() override;
     virtual void PlayerTick(float DeltaTime) override;
+    /** Any other key or button pressed while the left button is down spends the press (#220); everything else is the engine's. */
+    virtual bool InputKey(const FInputKeyEventArgs& Params) override;
+    /** The game window lost focus: an armed left press can never become a click (#220). PlayerTick calls it when the viewport has no focus. */
+    void NotifyWindowFocusLost() { bPressVoided = true; }
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
     /** Who acts on the next command: the active adventurer in combat, else the selection. */
@@ -168,7 +172,13 @@ private:
     FIntPoint PressCell = FIntPoint::ZeroValue;
     FVector2D PressPointer = FVector2D::ZeroVector;
     FTransform PressPose;
-    /** True while the camera is still the one the armed press was made with and the pointer is within the click slop of where it went down. */
+    /** What the press was made in (PressContext): a change of it, however briefly, spends the press for good. */
+    uint32 PressContextStamp = 0;
+    /** Bumped by every mode change, so a mode that is changed and changed back mid-press still spends it. */
+    uint32 ContextSerial = 0;
+    /** The targeting stamp (mode, actor, battle state, presentation revision) with the screen's ownership: overlays, the Menu, playback, the run and its phase. */
+    uint32 PressContext() const;
+    /** True while the press is armed and unspent: the camera is still the one the armed press was made with and the pointer is within the click slop of where it went down. */
     bool PressHolds() const;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;

@@ -166,6 +166,12 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     else { bPointerSeen = false; }
     // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
     if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
+    if (bPressArmed && !bPressVoided)
+    {
+        // The window lost focus with the button down: the release will never come as the press began (#220).
+        const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+        if (Client && Client->Viewport && !Client->Viewport->HasFocus()) { NotifyWindowFocusLost(); }
+    }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -637,7 +643,7 @@ void AExpeditionPlayerController::Click()
         if (bCameraStill && HoverCell(Under) && Under == Cell)
         {
             bPressArmed = true; bPressVoided = false;
-            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressPose = Pose;
+            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressPose = Pose; PressContextStamp = PressContext();
         }
         return;
     }
@@ -649,22 +655,50 @@ void AExpeditionPlayerController::Click()
     }
 }
 
+uint32 AExpeditionPlayerController::PressContext() const
+{
+    uint32 Stamp = HashCombine(TargetingStamp(), GetTypeHash(ContextSerial));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(OverlayOpen()) | uint32(ShowingMenu()) << 1 | uint32(ShowsTargeting()) << 2 | uint32(bKeyboardCursor) << 3));
+    if (IsValid(BattleView))
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(uint32(BattleView->HasRun()) | uint32(BattleView->InCombat()) << 1 | uint32(BattleView->IsPresenting()) << 2));
+        if (BattleView->HasRun()) { Stamp = HashCombine(Stamp, GetTypeHash(int32(BattleView->Progress().Phase))); }
+    }
+    return Stamp;
+}
+
 bool AExpeditionPlayerController::PressHolds() const
 {
     float MouseX = 0, MouseY = 0;
     FTransform Pose;
-    if (!bPressArmed || bPressVoided || !PointerPosition(MouseX, MouseY) || !ProjectionPose(Pose)) { return false; }
+    if (!bPressArmed || bPressVoided || !PointerPosition(MouseX, MouseY) || !ProjectionPose(Pose) || PressContext() != PressContextStamp) { return false; }
     return FVector2D::DistSquared(FVector2D(MouseX, MouseY), PressPointer) <= ClickSlop * ClickSlop &&
         FVector::Dist(Pose.GetLocation(), PressPose.GetLocation()) <= PoseSlopCm &&
         FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PressPose.GetRotation())) <= PoseSlopDegrees;
 }
 
+bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
+{
+    if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
+    return Super::InputKey(Params);
+}
+
 void AExpeditionPlayerController::ClickReleased()
 {
-    const bool bHeld = PressHolds();
     const bool bWasArmed = bPressArmed;
+    const bool bHeld = PressHolds();
     bPressArmed = false;
     if (!bWasArmed || !bHeld || !IsValid(BattleView)) { return; }
+    // The release is a click on the board only where the press was: not on a HUD button or panel the pointer slipped onto, not with the Menu or an overlay open, and not
+    // with the keyboard cursor showing. It never dispatches a HUD action: those act at the press.
+    float MouseX = 0, MouseY = 0;
+    if (!PointerPosition(MouseX, MouseY)) { return; }
+    if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()))
+    {
+        FName Button;
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button) || Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
+    }
+    if (ShowingMenu() || OverlayOpen() || bKeyboardCursor) { return; }
     // The release acts on what the last frame still shows under the pointer: the cell the press found, previewed now with the camera still that camera.
     FIntPoint Cell, Under;
     FTransform Pose;
@@ -812,6 +846,7 @@ void AExpeditionPlayerController::StepBuild(int32 Direction)
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 {
     if (!AllowsGameplayInput()) { return; }
+    ++ContextSerial;
     SelectedAction = Action;
     bModeTip = false;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }

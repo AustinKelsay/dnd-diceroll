@@ -71,6 +71,17 @@ Several agents use Ultra at once, and only one Unreal job may run at a time. A m
 
 Never stop, signal, or force-quit another agent's process or editor, and never touch another checkout.
 
+## Pointer input: a left click on the board (#171, #220)
+
+One rule covers every action a board click can take (a move, an attack, both specials, a rescue and a potion), and `Project.Expedition.Presentation.LeftClickActsOnReleaseForEveryAction` holds each one to it. A left click is a **press and its release**:
+
+- **Arming.** The press only arms the click, and only on the board: a cell the last frame previewed under the pointer (no keyboard cursor, panel, overlay or playback owns the board), with the camera still the camera that preview was found with (0.5 cm, 0.02 degrees). It records that cell, the pointer, the camera and the press's **context**: the mode, the acting hero, the battle state and presentation revision, whether an overlay or the Menu is open, whether targeting is showing, the run and its phase.
+- **Release.** The release acts only if the press still holds: the camera is still that camera, the pointer is within **6 viewport pixels** of where it went down (`ClickSlop`; the pixels the mouse reports, not HUD design units), the context is the same, and the pointer is not over a HUD button or panel, the Menu or an overlay, with the same cell still previewed under it. A release over the HUD never dispatches a HUD action.
+- **Cancellation is permanent.** Any of these while the button is down spends the press, even if the pointer, camera or context comes back before the release: an orbit key, the wheel, a pan or a drag (the camera moving by any means), the pointer moving past 6 px, any other key or button pressed, a mode change (also changed back), an overlay, the Menu or the Return to menu question opening, a change of battle state, playback, an enemy turn, Resume or Return to menu, and the window losing focus (`NotifyWindowFocusLost`, called from `PlayerTick` when the viewport has no focus). `LeftPressIsSpentByAContextChange` tests each.
+- **Still on the press.** HUD buttons (End Turn, the dock modes, party cards, Menu items), closing an open Menu, a press on a panel, and the first click or Enter that only hands the board back from the keyboard cursor act or do nothing at the press, as before. `LeftReleaseAtAHudEdgeCommitsNothing` covers a press and release either side of a HUD edge.
+
+Autoplay and the keyboard (Enter on the cursor cell) call `ActAtCell` directly and are not clicks.
+
 ## Capture gallery
 
 `python3 tools/dev.py --cores 2 gallery` renders a repeatable set of PNGs of the game itself, so later graphics slices compare against the same framings. It replaces driving a packaged window through the compositor: the game has a presentation-only capture mode and the helper only launches it.
