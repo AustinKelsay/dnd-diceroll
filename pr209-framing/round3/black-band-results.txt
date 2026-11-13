@@ -1,0 +1,12 @@
+== 1920x1080 (round 3 head)
+48 shot(s) measured, 0 with a black band of 3% of the height or more
+== 1920x1080 (round 2 head, 34c4b506, yaw 90 only)
+board-vault    vault-far-yaw090                   1920x1080  black run   49 rows ( 4.5%) from row 912
+== 1280x720 (round 3 head)
+48 shot(s) measured, 0 with a black band of 3% of the height or more
+== 1280x720 (round 2 head, 34c4b506, yaw 90 only)
+board-vault    vault-far-yaw090                   1280x720  black run   32 rows ( 4.4%) from row 608
+== 2560x1080 (round 3 head)
+48 shot(s) measured, 0 with a black band of 3% of the height or more
+== 2560x1080 (round 2 head, 34c4b506, yaw 90 only)
+board-vault    vault-far-yaw090                   2560x1080  black run    0 rows ( 0.0%) from row 486
