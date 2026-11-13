@@ -1,4 +1,5 @@
 #include "Rules/AbilityRules.h"
+#include "Rules/MonsterRules.h"
 #include "Combat/CombatBattle.h"
 
 int32 FAbilityScores::Get(EAbility Ability) const
@@ -62,15 +63,17 @@ FAbilityScores FAbilityRules::PrebuiltScores(EAdventurerRole Role)
     }
 }
 
-FAbilityScores FAbilityRules::EnemyScores(const FString& Role)
+
+FAbilityScores FAbilityRules::EnemyScores(const FString& Role, bool bDangerous)
 {
+    if (const FMonsterStatBlock* Block = FMonsterRules::Find(Role)) { return Block->Scores; }
+    if (const FMonsterStatBlock* Mapped = FMonsterRules::ResolveExpeditionRole(Role, bDangerous)) { return Mapped->Scores; }
     // Generic bandit-style foes; archers and scouts lean on Dexterity. Original values, not a stat block copy.
     FAbilityScores Scores;
     Scores.Strength = 12; Scores.Dexterity = 12; Scores.Constitution = 12;
     if (Role.Contains(TEXT("Archer")) || Role.Contains(TEXT("Scout"))) { Scores.Strength = 10; Scores.Dexterity = 14; Scores.Wisdom = 12; }
     return Scores;
 }
-
 EAbility FAbilityRules::AttackAbility(EAdventurerRole Role)
 {
     switch (Role)

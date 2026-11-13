@@ -1,16 +1,10 @@
 #include "Rules/RestRules.h"
+#include "Rules/AdvancementRules.h"
 #include "Combat/CombatBattle.h"
 
 int32 FRestRules::HitDieSides(EAdventurerRole Role)
 {
-    switch (Role)
-    {
-    case EAdventurerRole::Fighter: return 10;
-    case EAdventurerRole::Rogue: return 8;
-    case EAdventurerRole::Cleric: return 8;
-    case EAdventurerRole::Wizard: return 6;
-    default: return 0;
-    }
+    return FAdvancementRules::HitDieSides(Role);
 }
 
 int32 FRestRules::HitDieHealing(int32 Roll, int32 ConstitutionModifier) { return FMath::Max(0, Roll + ConstitutionModifier); }

@@ -3,12 +3,41 @@
 
 bool FSpellcastingRules::IsSpellcaster(EAdventurerRole Role)
 {
-    return Role == EAdventurerRole::Cleric || Role == EAdventurerRole::Wizard;
+    switch (Role)
+    {
+    case EAdventurerRole::Bard:
+    case EAdventurerRole::Cleric:
+    case EAdventurerRole::Druid:
+    case EAdventurerRole::Paladin:
+    case EAdventurerRole::Ranger:
+    case EAdventurerRole::Sorcerer:
+    case EAdventurerRole::Warlock:
+    case EAdventurerRole::Wizard:
+    case EAdventurerRole::Artificer:
+        return true;
+    default:
+        return false;
+    }
 }
 
 EAbility FSpellcastingRules::SpellcastingAbility(EAdventurerRole Role)
 {
-    return Role == EAdventurerRole::Cleric ? EAbility::Wisdom : EAbility::Intelligence;
+    switch (Role)
+    {
+    case EAdventurerRole::Cleric:
+    case EAdventurerRole::Druid:
+    case EAdventurerRole::Ranger:
+        return EAbility::Wisdom;
+    case EAdventurerRole::Bard:
+    case EAdventurerRole::Paladin:
+    case EAdventurerRole::Sorcerer:
+    case EAdventurerRole::Warlock:
+        return EAbility::Charisma;
+    case EAdventurerRole::Wizard:
+    case EAdventurerRole::Artificer:
+    default:
+        return EAbility::Intelligence;
+    }
 }
 
 int32 FSpellcastingRules::SaveDc(int32 ProficiencyBonus, int32 AbilityModifier) { return 8 + ProficiencyBonus + AbilityModifier; }

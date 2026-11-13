@@ -30,4 +30,23 @@ bool FClassFeatureRulesTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Arcane Recovery 1 at level 1"), FClassFeatureRules::ArcaneRecoveryLevels(1), 1);
     return !HasAnyErrors();
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FClassFeatureCatalogTest, "Project.Expedition.Rules.ClassFeatureCatalog",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FClassFeatureCatalogTest::RunTest(const FString& Parameters)
+{
+	const TArray<FClassFeature> Fighter1 = FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 1);
+	TestTrue(TEXT("Fighter 1 has Second Wind"), Fighter1.ContainsByPredicate([](const FClassFeature& F) { return FString(F.Name) == TEXT("Second Wind") && F.bPlayable; }));
+	const TArray<FClassFeature> Fighter2 = FClassFeatureRules::FeaturesThrough(EAdventurerRole::Fighter, 2);
+	TestTrue(TEXT("Fighter 2 has Action Surge"), Fighter2.ContainsByPredicate([](const FClassFeature& F) { return FString(F.Name) == TEXT("Action Surge"); }));
+	const TArray<FClassFeature> Rogue2 = FClassFeatureRules::FeaturesThrough(EAdventurerRole::Rogue, 2);
+	TestTrue(TEXT("Rogue 2 has Cunning Action"), Rogue2.ContainsByPredicate([](const FClassFeature& F) { return FString(F.Name) == TEXT("Cunning Action"); }));
+	const TArray<FClassFeature> Cap = FClassFeatureRules::FeaturesThrough(EAdventurerRole::Warlock, 20);
+	TestTrue(TEXT("FeaturesThrough clamps to engine cap"), Cap.ContainsByPredicate([](const FClassFeature& F) { return F.Level <= FClassFeatureRules::EngineLevelCap; }));
+	TestFalse(TEXT("FeaturesThrough omits L6+"), Cap.ContainsByPredicate([](const FClassFeature& F) { return F.Level > FClassFeatureRules::EngineLevelCap; }));
+	const TArray<FClassFeature> Data = FClassFeatureRules::DataFeaturesThrough(EAdventurerRole::Warlock, 20);
+	TestTrue(TEXT("DataFeaturesThrough keeps L6+"), Data.ContainsByPredicate([](const FClassFeature& F) { return F.Level >= 6; }));
+	TestTrue(TEXT("Summary names Second Wind"), FClassFeatureRules::FeatureSummary(EAdventurerRole::Fighter, 1).Contains(TEXT("Second Wind")));
+	return true;
+}
 #endif

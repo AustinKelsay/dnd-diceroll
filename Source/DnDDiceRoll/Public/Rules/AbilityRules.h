@@ -36,8 +36,8 @@ struct DNDDICEROLL_API FAbilityRules
      * level 1: key attack ability modifier + proficiency equals the prebuilt attack bonus.
      */
     static FAbilityScores PrebuiltScores(EAdventurerRole Role);
-    /** Generic enemy scores keyed by the display role ("Archer", "Scout", ...). */
-    static FAbilityScores EnemyScores(const FString& Role);
+    /** Generic enemy scores keyed by the display role ("Archer", "Scout", "Raider", ...). bDangerous selects Thug over Bandit for Raider aliases. */
+    static FAbilityScores EnemyScores(const FString& Role, bool bDangerous = false);
     /** Ability that drives the role's basic attack (Fighter STR, Rogue DEX, Cleric WIS, Wizard INT). */
     static EAbility AttackAbility(EAdventurerRole Role);
 };

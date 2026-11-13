@@ -26,8 +26,16 @@ struct DNDDICEROLL_API FSpellFacts
     bool bMaterial = false;
     bool bConcentration = false;
     const TCHAR* Duration = TEXT("Instantaneous");
+    /** SRD 5.2.1 class lists that include this spell (tags only; Artificer included for the in-game roster). */
+    bool bBard = false;
     bool bCleric = false;
+    bool bDruid = false;
+    bool bPaladin = false;
+    bool bRanger = false;
+    bool bSorcerer = false;
+    bool bWarlock = false;
     bool bWizard = false;
+    bool bArtificer = false;
     /** Base effect dice (per dart for Magic Missile). */
     int32 DieCount = 0;
     int32 DieSides = 0;
@@ -49,13 +57,21 @@ struct DNDDICEROLL_API FSpellFacts
 struct DNDDICEROLL_API FSpellRules
 {
     static constexpr int32 MaxSpellLevel = 3;
+    static constexpr int32 EngineLevelCap = 5;
     static const FSpellFacts& Facts(ESpell Spell);
     static const TCHAR* SchoolName(ESpellSchool School);
-    /** Full-caster slot table (Cleric, Wizard) for character levels 1-5; others have none. */
+    /**
+     * Slot count for a spell level at character level 1-5.
+     * Full casters (Bard/Cleric/Druid/Sorcerer/Wizard), half casters (Paladin/Ranger;
+     * SRD 5.2.1: two 1st-level slots at level 1), Artificer (same single-class band as
+     * Paladin/Ranger), Warlock pact slots (count lives only at MaxSlotLevel).
+     */
     static int32 SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel);
-    /** Highest spell level with a slot; 0 when none. */
+    /** Highest spell level with a slot; 0 when none. Warlock: current pact slot level. */
     static int32 MaxSlotLevel(EAdventurerRole Role, int32 CharacterLevel);
     static bool OnClassList(EAdventurerRole Role, ESpell Spell);
+    /** Spells on a class list with spell Level <= MaxSpellLevelFilter (0 = cantrips only when filter is 0). */
+    static TArray<ESpell> SpellsOnList(EAdventurerRole Role, int32 MaxSpellLevelFilter = 9);
     /** Dice (or darts) when cast with a slot of SlotLevel; 0 when the slot is too low. Cantrips ignore SlotLevel. */
     static int32 UpcastDiceCount(ESpell Spell, int32 SlotLevel);
     /** Tooltip line: "1st-level evocation | 1 action | 120 ft | V, S | Instantaneous". */
