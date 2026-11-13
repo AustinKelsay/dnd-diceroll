@@ -672,6 +672,8 @@ constexpr float PartyCardX = ExpeditionLayout::PartyCardX, PartyCardTop = Expedi
 void AExpeditionHUD::DrawParty()
 {
     int32 Index = 0;
+    HoveredParty = INDEX_NONE;
+    for (int32 Slot = 0; Slot < 4; ++Slot) { if (Hovered(PartyCardX, PartyCardTop + Slot * PartyCardPitch, PartyCardWidth, PartyCardHeight)) { HoveredParty = Slot; break; } }
     for (const FCombatantState& Unit : View->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side != ECombatSide::Party) { continue; }
@@ -753,7 +755,10 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Buttons.Add({FName(*FString::Printf(TEXT("Party%d"), Index)), FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S), true});
     // Full status prose on hover, on selecting a hero who is not the one acting, or when the player
     // inspects the acting hero by choosing them again (number key or card), so it is keyboard reachable.
-    if (bHover || (bSelected && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + ExpeditionLayout::PartyDetailGap, Y); }
+    // Outside combat the details are placed clear of the screen's own panel, and two of them would take the same free spot, so a hovered card's details are the only ones
+    // shown while the pointer is on a card: the selected hero's step aside for them (#200). In combat the panels stack beside their own cards as before.
+    const bool bOtherHovered = !View->InCombat() && HoveredParty != INDEX_NONE && HoveredParty != Index;
+    if (bHover || (bSelected && !bOtherHovered && (!bActive || Player->Inspected() == Unit.Id))) { DrawPartyDetail(Unit, X + Width + ExpeditionLayout::PartyDetailGap, Y); }
 }
 
 void AExpeditionHUD::DrawHint()
@@ -815,6 +820,20 @@ void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float
     const float Height = ExpeditionLayout::PartyDetailPad + Wrapped.Num() * ExpeditionLayout::PartyDetailLineHeight;
     X = FMath::Min(X, W - Width - 8);
     Y = FMath::Min(Y, H - Height - 90);
+    // The route, reward and camp screens centre a panel that is drawn after the party cards, so a hero's details that would lie under it move to the nearest free
+    // spot (ExpeditionLayout::PartyDetailClearOf, shared with the overview's HUD rectangles) instead of being hidden by it (#200).
+    if (!View->InCombat() && !View->IsPresenting() && !View->ShowingRecords())
+    {
+        const EExpeditionPhase Phase = View->Progress().Phase;
+        const bool bRoute = Phase == EExpeditionPhase::Route;
+        if (bRoute || Phase == EExpeditionPhase::Reward || Phase == EExpeditionPhase::Recovery)
+        {
+            const ExpeditionLayout::Rect Block = bRoute ? ExpeditionLayout::RouteBlockRect(W, H) : Phase == EExpeditionPhase::Reward ? ExpeditionLayout::RewardPanelRect(W, H) : ExpeditionLayout::CampPanelRect(W, H);
+            const ExpeditionLayout::Rect Placed = ExpeditionLayout::PartyDetailClearOf({X, Y, X + Width, Y + Height}, Block, W, H);
+            X = static_cast<float>(Placed.Left);
+            Y = static_cast<float>(Placed.Top);
+        }
+    }
     // The roll card shares the left margin: a status panel that would reach over it moves up clear of it (or right of it when there is
     // no room above), so neither hides the other's text (#190).
     if (bDiceRequested && FBox2D(FVector2D(X, Y), FVector2D(X + Width, Y + Height)).Intersect(DiceDesign))
@@ -1384,8 +1403,10 @@ void AExpeditionHUD::DrawReward()
 {
     const FExpeditionProgress& Run = View->Progress();
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 720, Height = 240;
-    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
+    // The footprint comes from ExpeditionLayout::RewardPanelRect, which the party cards' hero details keep clear of (#200).
+    const ExpeditionLayout::Rect Box = ExpeditionLayout::RewardPanelRect(W, H);
+    const float Width = static_cast<float>(Box.Right - Box.Left), Height = static_cast<float>(Box.Bottom - Box.Top);
+    const float X = static_cast<float>(Box.Left), Y = static_cast<float>(Box.Top);
     Panel(X, Y, Width, Height, Gold, 0.95f);
     Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
     const int32 Potions = Run.History.IsEmpty() ? 0 : Run.History.Last().Route.RewardPotions;
@@ -1404,8 +1425,9 @@ void AExpeditionHUD::DrawReward()
 void AExpeditionHUD::DrawCamp()
 {
     const FCombatBattle& Rules = View->Rules();
-    const float Width = 720, Height = 300;
-    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f - 30;
+    const ExpeditionLayout::Rect Box = ExpeditionLayout::CampPanelRect(W, H);   // as DrawReward: the hero details keep clear of it (#200)
+    const float Width = static_cast<float>(Box.Right - Box.Left), Height = static_cast<float>(Box.Bottom - Box.Top);
+    const float X = static_cast<float>(Box.Left), Y = static_cast<float>(Box.Top);
     Panel(X, Y, Width, Height, FLinearColor(1.0f, 0.6f, 0.3f), 0.94f);
     Text(TEXT("MAKE CAMP?"), W * 0.5f, Y + 16, FLinearColor(1.0f, 0.7f, 0.4f), 1.4f, EAlign::Center);
     Text(TEXT("Once per expedition. If you press on, the chance is gone."), W * 0.5f, Y + 56, Muted, 0.76f, EAlign::Center);

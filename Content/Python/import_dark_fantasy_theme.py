@@ -340,6 +340,21 @@ def master_material():
     return material
 
 
+def ensure_nanite_usage(material):
+    """Persist Nanite usage on the shared master even when the importer runs on SM5 (#105)."""
+    usage = unreal.MaterialUsage.MATUSAGE_NANITE
+    if mel.has_material_usage(material, usage):
+        return False
+    mel.set_base_material_usage(material, usage, True)
+    errors = mel.recompile_material(material)
+    if errors:
+        raise RuntimeError("Material compile reported errors after enabling Nanite usage for {}: {}".format(material.get_name(), errors))
+    if not mel.has_material_usage(material, usage):
+        raise RuntimeError("Nanite usage was not enabled for " + material.get_name())
+    unreal.log("THEME_MATERIAL_USAGE {} Nanite set".format(material.get_name()))
+    return True
+
+
 def ensure_skeletal_usage(material):
     """Skinned meshes need their own shader permutation (#147); without the flag a skeletal mesh draws the default material.
 
@@ -1568,6 +1583,7 @@ def main():
     unreal.log("THEME_PLAN replace={} fix_r001_nanite={}".format(sorted(replacements) or "none", fix_r001_nanite))
     master = master_material()
     ensure_skeletal_usage(master)
+    ensure_nanite_usage(master)
     occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current, OCCLUDER_GRAPH_REVISION)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
     effect_parent = ensure_material(EFFECT_MATERIAL, build_effect_material, effect_is_current, EFFECT_GRAPH_REVISION)
