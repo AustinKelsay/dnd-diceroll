@@ -18,7 +18,7 @@
  * recipes for fight 5, whereas a revision 9 run's finale is always the vault sanctum (#188)), the action dock's kit-barbarian-battle, kit-wizard-battle,
  * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
- * board-vault-raiders, the dangerous Vault finale against rigged raiders, r9-pressure-guarded|dangerous and r9-finale-guarded|dangerous (revision 9 encounters with the skirmisher, brute and warden, #188), and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
+ * board-vault-raiders, the dangerous Vault finale against rigged raiders, r9-pressure-guarded|dangerous, r9-finale-guarded|dangerous (the vault sanctum), r9-colonnade, r9-causeway and r9-cairn (revision 9 encounters with the skirmisher, brute and warden on each new layout, #188), and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
  * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-four-rogues-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
  * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
@@ -237,7 +237,7 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     // `r9-pressure-dangerous` (fight 3: skirmisher, scout, archer; brute, skirmisher, raider, archer) and `r9-finale-guarded` and `r9-finale-dangerous` (the
     // front-to-back vault sanctum with the warden). The first seeds from 1 on that the scripted player takes there with the party acting first; render them with
     // `gallery --fixture r9-finale-dangerous --poses tools/capture/foes-poses.json` and the like.
-    auto FindRevision9 = [&](const TCHAR* Name, int32 Stage, bool bDangerous)
+    auto FindRevision9 = [&](const TCHAR* Name, int32 Stage, bool bDangerous, int32 Recipe = -1)
     {
         for (int32 Seed = 1; Seed < 400; ++Seed)
         {
@@ -254,7 +254,9 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
                     if (Recipient == INDEX_NONE || !Run.ClaimReward(Recipient, Error)) { break; }
                     if (Run.Progress().Phase == EExpeditionPhase::Recovery && !Run.Recover(true, Error)) { break; }
                 }
-                if (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted == Stage && Run.ChooseRoute(Run.Progress().Offers[bDangerous ? 1 : 0].Id, Error))
+                const FExpeditionRoute* Offer = Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted == Stage ? &Run.Progress().Offers[bDangerous ? 1 : 0] : nullptr;
+                if (Offer && Recipe >= 0 && Offer->Recipe != Recipe) { Offer = nullptr; }
+                if (Offer && Run.ChooseRoute(Offer->Id, Error))
                 {
                     const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
                     bReached = Active && Active->Side == ECombatSide::Party;
@@ -271,6 +273,10 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     FindRevision9(TEXT("r9-pressure-dangerous"), 2, true);
     FindRevision9(TEXT("r9-finale-guarded"), FExpeditionRun::EncounterCount - 1, false);
     FindRevision9(TEXT("r9-finale-dangerous"), FExpeditionRun::EncounterCount - 1, true);
+    // One fixture per new pressure layout (dangerous road, fight 3), so each draws its own obstacle kind: colonnade pillars, causeway walls, cairn stones.
+    FindRevision9(TEXT("r9-colonnade"), 2, true, 3);
+    FindRevision9(TEXT("r9-causeway"), 2, true, 4);
+    FindRevision9(TEXT("r9-cairn"), 2, true, 5);
     // The foe batch (#150): the five rigged foes on the three boards they are judged on. A checkpoint cannot carry a renamed enemy (a restored run is checked against
     // the generated roster) and the skirmisher, brute and warden are not generated until #188, so each fixture is an ordinary checkpoint whose sidecar names the looks its
     // enemies are drawn as, in encounter order (the gallery passes them as -ExpeditionFoeLooks; presentation only, the run, the rules and the RNG are untouched). The last

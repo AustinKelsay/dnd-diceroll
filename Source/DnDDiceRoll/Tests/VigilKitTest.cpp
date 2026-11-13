@@ -144,8 +144,9 @@ bool FVigilVariantChoiceTest::RunTest(const FString& Parameters)
             // Every blocked cell is covered by exactly one piece, and every piece sits on its cell through the metric.
             const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
             const FBoardMetric& Metric = View->Metric();
-            const int32 Recipe = View->Progress().History.IsEmpty() ? 0 : View->Progress().History.Last().Route.Recipe;
-            if (!VigilKit::ArchesFor(Recipe)) { TestEqual(TEXT("A stones board places no arches"), View->PlacedArches(), 0); }
+            const int32 Kind = View->Progress().History.IsEmpty() ? 0 : FExpeditionRun::Encounter(View->Progress(), View->Progress().History.Last().Route).ObstacleKind;
+            TestEqual(TEXT("The board draws the encounter's obstacle kind"), View->DrawnObstacleKind(), Kind);
+            if (!VigilKit::ArchesFor(Kind)) { TestEqual(TEXT("A stones board places no arches"), View->PlacedArches(), 0); }
             else { TestTrue(TEXT("Arches only stand over adjacent blocked pairs"), View->PlacedArches() <= VigilKit::ArchPairs(Encounter.BlockedCells).Num()); }
             for (const FIntPoint& Cell : Encounter.BlockedCells)
             {

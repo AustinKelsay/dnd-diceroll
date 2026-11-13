@@ -495,4 +495,56 @@ bool FVaultThemeChoiceTest::RunTest(const FString& Parameters)
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEncounterObstacleKindTest, "Project.Expedition.Presentation.BoardDrawsEncounterObstacleKind",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FEncounterObstacleKindTest::RunTest(const FString& Parameters)
+{
+    // #188: revision 9's layouts draw their own obstacle kind from FExpeditionRun::Encounter (colonnade and sanctum pillars, causeway walls, cairn
+    // stones), and the theme stays chosen by stage (the finale's vault sanctum is the Vault). Each case is a real revision 9 checkpoint resumed.
+    struct FCase { int32 Stage; int32 Recipe; int32 Kind; };
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/EncounterObstacleKind"), FGuid::NewGuid().ToString());
+    for (const FCase& Case : {FCase{2, 3, 1}, FCase{2, 4, 2}, FCase{2, 5, 0}, FCase{4, 6, 1}})
+    {
+        bool bWritten = false;
+        FString Path;
+        for (int32 Seed = 1; Seed < 300 && !bWritten; ++Seed)
+        {
+            FExpeditionRun Run;
+            FString Error;
+            if (Case.Stage == FExpeditionRun::EncounterCount - 1) { if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Case.Recipe, false)) { continue; } }
+            else
+            {
+                if (!Run.NewRun(Seed, Error, TEXT("obstacle-kind"))) { continue; }
+                while (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted < Case.Stage)
+                {
+                    if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !ExpeditionTestSupport::FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { break; }
+                    int32 Survivor = 1;
+                    while (Survivor <= 4 && Run.Battle().Find(Survivor)->Life != ECombatLife::Conscious) { ++Survivor; }
+                    if (Survivor > 4 || !Run.ClaimReward(Survivor, Error)) { break; }
+                    if (Run.Progress().Phase == EExpeditionPhase::Recovery && !Run.Recover(true, Error)) { break; }
+                }
+                if (Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != Case.Stage) { continue; }
+                const FExpeditionRoute* Offer = Run.Progress().Offers.FindByPredicate([&Case](const FExpeditionRoute& R) { return R.Recipe == Case.Recipe; });
+                if (!Offer || !Run.ChooseRoute(Offer->Id, Error)) { continue; }
+            }
+            FExpeditionSaveData Data;
+            Data.Current = Run.Snapshot();
+            Path = FPaths::Combine(Directory, FString::FromInt(Case.Recipe), TEXT("current.json"));
+            bWritten = FExpeditionSave::Write(Path, Data, Error);
+        }
+        if (!TestTrue(FString::Printf(TEXT("A revision 9 checkpoint on recipe %d"), Case.Recipe), bWritten)) { continue; }
+        UWorld* World = MakeVaultWorld();
+        if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+        if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
+        {
+            TestEqual(FString::Printf(TEXT("Recipe %d is on the board"), Case.Recipe), VaultRouteRecipe(*View), Case.Recipe);
+            TestEqual(FString::Printf(TEXT("Recipe %d draws obstacle kind %d"), Case.Recipe, Case.Kind), View->DrawnObstacleKind(), Case.Kind);
+            const bool bFinale = Case.Stage == FExpeditionRun::EncounterCount - 1;
+            TestTrue(FString::Printf(TEXT("Recipe %d keeps its stage's theme"), Case.Recipe), bFinale ? View->DrawnBoardTheme() == EBoardTheme::Vault : View->DrawnBoardTheme() != EBoardTheme::Vault);
+        }
+        DestroyVaultWorld(World);
+    }
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
 #endif
