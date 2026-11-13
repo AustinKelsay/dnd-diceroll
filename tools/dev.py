@@ -30,6 +30,10 @@ from workspace import Workspace, automation_result, entered_world, log_events, p
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = "EditorToolset.EditorAppToolset"
+
+# tools/dev.py test only: skip the editor home screen so its generate_204
+# connectivity probe cannot time out and fail the zero-warning gate (#222).
+AUTOMATION_DISABLE_HOME_SCREEN = '-ini:Engine:[ConsoleVariables]:HomeScreen.EnableHomeScreen=0'
 SCENE = "editor_toolset.toolsets.scene.SceneTools"
 STATUS = "unreal_starter.status.StarterWorkspaceTools"
 
@@ -784,7 +788,7 @@ class Dev:
 
     def automation_command(self, pattern, output, log):
         return [self.cmd, self.w.project, f"-ReportExportPath={output}", f"-abslog={log}", "-unattended", "-nosound", "-nosplash",
-                *self.layout["automation"](pattern), *self.native_limits()]
+                AUTOMATION_DISABLE_HOME_SCREEN, *self.layout["automation"](pattern), *self.native_limits()]
 
     def test(self, pattern, allow_warnings=False):
         self.require_engine()
