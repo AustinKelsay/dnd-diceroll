@@ -65,8 +65,8 @@ FString TargetChip(const FCombatBattle& Rules, int32 ActorId, ECombatCommandType
     for (const auto& A : FBuildCatalog::Abilities(*Actor))
     {
         if (A.Command != Action) { continue; }
-        // Rage's +2 applies to basic attacks only (the catalog says "+2 basic damage").
-        if (A.Effect == EAbilityEffect::Rage) { return TEXT("Rage: +2 basic damage, -1 taken"); }
+        // Rage's bonus applies to basic attacks only; Honed raises it (#218, FBuildCatalog::HonedBonus).
+        if (A.Effect == EAbilityEffect::Rage) { return FString::Printf(TEXT("Rage: +%d basic damage, -1 taken"), BuildRules::RageBonus + FBuildCatalog::HonedBonus(*Actor, A.Command)); }
         if (A.Effect == EAbilityEffect::Swap) { return TEXT("Swap positions"); }
         if (A.Effect == EAbilityEffect::Protect) { return FString::Printf(TEXT("Protect -%d / next turn"), A.Amount); }
     }

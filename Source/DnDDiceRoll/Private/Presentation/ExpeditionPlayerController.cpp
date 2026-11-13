@@ -107,6 +107,8 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::R, &AExpeditionPlayerController::RescueMode);
     Bind(EKeys::P, &AExpeditionPlayerController::PotionMode);
     Bind(EKeys::L, &AExpeditionPlayerController::Loot);
+    // Reward cards (#218): G Gear, R Reserve, U Honed (H is Records). G and R are inert on the Reward screen otherwise (the builder preset, Rescue mode).
+    Bind(EKeys::U, &AExpeditionPlayerController::HonedCard);
     Bind(EKeys::Z, &AExpeditionPlayerController::FirstRoute);
     Bind(EKeys::X, &AExpeditionPlayerController::SecondRoute);
     Bind(EKeys::C, &AExpeditionPlayerController::Camp);
@@ -181,6 +183,10 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     // Loot goes to a living survivor; keep the selection on one.
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward)
     {
+        // Every Reward phase, and every Resume (a new presentation revision), starts on Gear (#218).
+        const uint32 Screen = uint32(BattleView->PresentationRevision()) * 8 + uint32(BattleView->Progress().EncountersCompleted);
+        // The focus goes back with the card: the screen's own focus rule puts it on the Gear card again (#218 review).
+        if (Screen != RewardScreen) { RewardScreen = Screen; SelectedCard = ERewardCard::Gear; Focus = FMenuFocus(); }
         const FCombatantState* Selected = Rules.Find(SelectedId);
         if (!Selected || Selected->Life != ECombatLife::Conscious)
         {
@@ -523,8 +529,29 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
 }
 void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
 void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
-void AExpeditionPlayerController::CursorLeft() { MoveCursor({-1, 0}); }
-void AExpeditionPlayerController::CursorRight() { MoveCursor({1, 0}); }
+void AExpeditionPlayerController::CursorLeft() { if (OnRewardScreen()) { StepRewardCard(-1); } else { MoveCursor({-1, 0}); } }
+void AExpeditionPlayerController::CursorRight() { if (OnRewardScreen()) { StepRewardCard(1); } else { MoveCursor({1, 0}); } }
+bool AExpeditionPlayerController::OnRewardScreen() const
+{
+    return AllowsGameplayInput() && !ShowingMenu() && BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward && !ShowingBuilder();
+}
+void AExpeditionPlayerController::SelectRewardCard(ERewardCard Card)
+{
+    if (!OnRewardScreen()) { return; }
+    SelectedCard = Card;
+    // The card's button takes the focus too, as an explicit choice for this screen (like Tab's), so it stays on later frames, Tab continues from it,
+    // Enter claims it and Help or Records give it back (#218 review).
+    Focus.Id = FName(Card == ERewardCard::Reserve ? TEXT("CardReserve") : Card == ERewardCard::Honed ? TEXT("CardHoned") : TEXT("CardGear"));
+    Focus.Screen = MenuScreenKey();
+    Focus.bTabChosen = true;
+}
+void AExpeditionPlayerController::StepRewardCard(int32 Direction)
+{
+    SelectRewardCard(static_cast<ERewardCard>((static_cast<int32>(SelectedCard) + 3 + Direction) % 3));
+}
+void AExpeditionPlayerController::GearCard() { SelectRewardCard(ERewardCard::Gear); }
+void AExpeditionPlayerController::ReserveCard() { SelectRewardCard(ERewardCard::Reserve); }
+void AExpeditionPlayerController::HonedCard() { SelectRewardCard(ERewardCard::Honed); }
 uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
@@ -563,6 +590,14 @@ void AExpeditionPlayerController::CycleMenuFocus(int32 Direction)
     const int32 Index = Items.IndexOfByKey(Focus.Id);
     Focus.Id = Index == INDEX_NONE ? Items[Direction > 0 ? 0 : Items.Num() - 1] : Items[(Index + Items.Num() + Direction) % Items.Num()];
     Focus.bTabChosen = true;
+    // Tab onto a reward card chooses it (#218), keeping the screen's own focus order (#129).
+    if (OnRewardScreen())
+    {
+        const FString Id = Focus.Id.ToString();
+        if (Id == TEXT("CardGear")) { SelectedCard = ERewardCard::Gear; }
+        else if (Id == TEXT("CardReserve")) { SelectedCard = ERewardCard::Reserve; }
+        else if (Id == TEXT("CardHoned")) { SelectedCard = ERewardCard::Honed; }
+    }
 }
 void AExpeditionPlayerController::RestoreOverlayFocus()
 {
@@ -596,7 +631,7 @@ void AExpeditionPlayerController::UpdateMenuFocus()
         switch (BattleView->Progress().Phase)
         {
         case EExpeditionPhase::Route: Preferred = TEXT("Route0"); break;
-        case EExpeditionPhase::Reward: Preferred = TEXT("Claim"); break;
+        case EExpeditionPhase::Reward: Preferred = TEXT("CardGear"); break;
         case EExpeditionPhase::Recovery: Preferred = TEXT("Camp"); break;
         default: break;
         }
@@ -611,6 +646,8 @@ void AExpeditionPlayerController::ConfirmCell()
     if (!BattleView->InCombat() || !AllowsGameplayInput() || ShowingMenu())
     {
         const auto* Hud = Cast<AExpeditionHUD>(GetHUD());
+        // On the Reward screen Enter claims the chosen card, whether the focus is on a card or on Claim (#218).
+        if (OnRewardScreen() && (Focus.Id == NAME_None || Focus.Id.ToString().StartsWith(TEXT("Card")) || Focus.Id == TEXT("Claim"))) { Loot(); return; }
         if (Hud && Hud->MenuButtons().Contains(Focus.Id)) { HandleButton(Focus.Id); }
         return;
     }
@@ -824,6 +861,9 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Route0")) { FirstRoute(); }
     else if (Name == TEXT("Route1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
+    else if (Name == TEXT("CardGear")) { SelectRewardCard(ERewardCard::Gear); }
+    else if (Name == TEXT("CardReserve")) { SelectRewardCard(ERewardCard::Reserve); }
+    else if (Name == TEXT("CardHoned")) { SelectRewardCard(ERewardCard::Honed); }
     else if (Name == TEXT("Camp")) { Camp(); }
     else if (Name == TEXT("SkipCamp")) { SkipCamp(); }
     else if (Name == TEXT("ModeAttack")) { SetMode(ECombatCommandType::Attack); }
@@ -884,6 +924,7 @@ EFighterSubclass AExpeditionPlayerController::StartupSubclass() const
 }
 void AExpeditionPlayerController::Preset()
 {
+    if (IsValid(BattleView) && OnRewardScreen()) { GearCard(); return; }
     if (IsValid(BattleView) && !CanSelectSubclass()) { return; }
     Party.Reset();
     const TCHAR* Names[] = {TEXT("Arden"), TEXT("Nix"), TEXT("Sera"), TEXT("Ivo")};
@@ -956,10 +997,10 @@ void AExpeditionPlayerController::AttackKey()
     if (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)) { return; }
     AttackMode();
 }
-void AExpeditionPlayerController::RescueMode() { KeyMode(ECombatCommandType::Rescue); }
+void AExpeditionPlayerController::RescueMode() { if (OnRewardScreen()) { ReserveCard(); return; } KeyMode(ECombatCommandType::Rescue); }
 void AExpeditionPlayerController::PotionMode() { KeyMode(ECombatCommandType::Potion); }
 void AExpeditionPlayerController::RoleMode() { KeyMode(RoleAction()); }
-void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId); } }
+void AExpeditionPlayerController::Loot() { if (AllowsGameplayInput()) { BattleView->ClaimReward(SelectedId, SelectedCard); } }
 void AExpeditionPlayerController::FirstRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(0); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::SecondRoute() { if (AllowsGameplayInput()) { BattleView->ChooseRoute(1); LastActiveId = INDEX_NONE; } }
 void AExpeditionPlayerController::Camp() { if (AllowsGameplayInput()) { BattleView->Recover(true); } }

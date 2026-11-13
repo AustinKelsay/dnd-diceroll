@@ -64,7 +64,8 @@ bool FPhaseFocusTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::Escape);
     Game.Settle();
     TestFalse(TEXT("Help closed"), Player->ShowingHelp());
-    TestEqual(TEXT("Reward focuses Claim"), Player->MenuFocus(), FName(TEXT("Claim")));
+    // #218: the reward focuses its first card, Gear; Enter on it claims, as Enter on Claim did.
+    TestEqual(TEXT("Reward focuses the Gear card"), Player->MenuFocus(), FName(TEXT("CardGear")));
 
     Game.Press(EKeys::One);
     Game.Press(EKeys::L);
@@ -138,7 +139,7 @@ bool FEndingFocusTest::RunTest(const FString& Parameters)
         Won.NewRun(Seed, Error, FString::Printf(TEXT("phase-focus-%d"), Seed));
         Won.ChooseRoute(Won.Progress().Offers[0].Id, Error);
         if (!ExpeditionTestSupport::FinishCombat(Won) || Won.Progress().Phase != EExpeditionPhase::Reward) { continue; }
-        Cases.Add({TEXT("reward"), Won.Snapshot(), TEXT("Claim")});
+        Cases.Add({TEXT("reward"), Won.Snapshot(), TEXT("CardGear")});
         for (const FCombatantState& Unit : Won.Battle().Snapshot().Encounter.Combatants)
         { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Won.ClaimReward(Unit.Id, Error); break; } }
         if (Won.Progress().Phase == EExpeditionPhase::Recovery) { Cases.Add({TEXT("recovery"), Won.Snapshot(), TEXT("Camp")}); }

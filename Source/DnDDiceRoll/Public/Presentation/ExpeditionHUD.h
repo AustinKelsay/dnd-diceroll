@@ -4,6 +4,7 @@
 #include "Combat/ActionFacts.h"
 #include "Combat/CombatBattle.h"
 #include "Presentation/CombatHints.h"
+#include "Run/ProgressionQuery.h"
 #include "GameFramework/HUD.h"
 #include "ExpeditionHUD.generated.h"
 
@@ -117,12 +118,31 @@ public:
     void PreviewDetailLines(int32 Lines) { MinDetailLines = Lines; }
     /** Every full status panel the last draw showed, in viewport pixels (#171). */
     const TArray<FBox2D>& PartyDetailRects() const { return DetailRects; }
+    /** What the last draw showed of progression (#218), for tests: each reward card's title and lines, the Claim label, the reward title, the camp lines,
+     * and each party card's level marker and gain line. Cleared every frame. */
+    struct FProgressionDrawn
+    {
+        FString RewardTitle;
+        TArray<ERewardCard> Cards;
+        TArray<TArray<FString>> CardLines;
+        TArray<bool> CardAvailable;
+        FString Claim;
+        bool bClaimEnabled = false;
+        TArray<FString> CampLines;
+        TArray<FString> PartyMarkers;
+        TArray<FString> DetailLines;
+    };
+    const FProgressionDrawn& ProgressionDrawn() const { return Drawn; }
 private:
     int32 DetailUnitId = INDEX_NONE;
     TArray<int32> DetailUnitIds;
     /** The party slot under the pointer this frame, or INDEX_NONE (set by DrawParty): on the route, reward and camp screens a hovered card's details replace the selected hero's (#200). */
     int32 HoveredParty = INDEX_NONE;
     TArray<FBox2D> DetailRects;
+    /** The progression facts this frame (#218); empty in combat. */
+    FProgressionFacts Progression;
+    FProgressionDrawn Drawn;
+    const FHeroProgressFacts* HeroProgress(int32 Id) const;
     FBox2D LegendBox = FBox2D(ForceInit);
     bool bLegendRequested = false;
     FBox2D DiceBox = FBox2D(ForceInit), DiceRow = FBox2D(ForceInit), DiceDrawn = FBox2D(ForceInit);
