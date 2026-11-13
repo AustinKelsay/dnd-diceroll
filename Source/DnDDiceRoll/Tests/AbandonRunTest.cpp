@@ -78,6 +78,17 @@ bool FAbandonRunSessionTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("The run is still unfinished"), Failing.HasUnfinishedCheckpoint());
         TestTrue(TEXT("It still resumes"), Failing.Resume(Error) && ExpeditionTestSupport::SameRun(Saved, Failing.Run().Snapshot()));
     }
+    {
+        // A stale marker naming another run is ignored: the checkpoint stays unfinished, New Run still refuses it, and it still resumes.
+        FExpeditionSession Stale(Path);
+        TestTrue(TEXT("A stale marker writes"), FFileHelper::SaveStringToFile(FString(TEXT("some-other-run")), *Stale.AbandonMarkerPath()));
+        TestTrue(TEXT("A stale marker leaves the checkpoint unfinished"), Stale.HasUnfinishedCheckpoint());
+        TestFalse(TEXT("A stale marker does not unlock New Run"), Stale.NewRun(43, Error));
+        TestTrue(TEXT("The refusal leaves the bytes unchanged"), Bytes(Path) == Original);
+        FExpeditionSession Resumer(Path);
+        TestTrue(TEXT("A stale marker does not block Resume"), Resumer.Resume(Error) && ExpeditionTestSupport::SameRun(Saved, Resumer.Run().Snapshot()));
+        IFileManager::Get().Delete(*Stale.AbandonMarkerPath());
+    }
     FExpeditionSession Session(Path);
     TestTrue(TEXT("The checkpoint is unfinished"), Session.HasUnfinishedCheckpoint());
     TestFalse(TEXT("New Run still refuses it before an abandon"), Session.NewRun(43, Error));
@@ -90,6 +101,12 @@ bool FAbandonRunSessionTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("The abandoned run cannot be resumed"), Other.Resume(Error));
         TestTrue(TEXT("Resume names the abandon: ") + Error, Error.Contains(TEXT("abandoned")));
         TestFalse(TEXT("A later start screen sees no unfinished checkpoint"), Other.HasUnfinishedCheckpoint());
+        // Resume and refusal stay consistent: the refused Resume keeps the checkpoint bytes and the marker, and Abandon cannot repeat.
+        TestTrue(TEXT("The refused Resume keeps the checkpoint bytes"), Bytes(Path) == Original);
+        TestTrue(TEXT("The refused Resume keeps the marker"), FPaths::FileExists(Other.AbandonMarkerPath()));
+        TestFalse(TEXT("Resume is refused again"), Other.Resume(Error) || Other.HasRun());
+        TestFalse(TEXT("A second session cannot abandon it again"), Other.Abandon(Error));
+        TestTrue(TEXT("Still the same bytes and marker"), Bytes(Path) == Original && FPaths::FileExists(Other.AbandonMarkerPath()));
     }
     TestTrue(TEXT("New Run then starts a fresh run: ") + Error, Session.NewRun(43, Error, TEXT("abandon-test-next")));
     TestTrue(TEXT("The fresh run is at its first route"), Session.HasRun() && Session.Run().Progress().Phase == EExpeditionPhase::Route && Session.Run().Progress().EncountersCompleted == 0);

@@ -1517,7 +1517,7 @@ void AExpeditionHUD::DrawHelp()
             TEXT("G restores the familiar party. N begins the expedition."),
             TEXT("O resumes the exact saved party, keeping its spent resources."),
             TEXT("Backspace during an expedition returns here; Resume continues it."),
-            TEXT("An unfinished saved expedition must be resumed before starting anew.")
+            TEXT("To start anew, resume an unfinished saved expedition or give it up with Abandon run.")
         } : TArray<FString>{
             TEXT("Z / X chooses a route. Compare danger and promised rewards."),
             TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
