@@ -2448,6 +2448,19 @@ void AExpeditionBattleView::ReturnToMenu()
     PlayCue(EExpeditionCue::Click);
 }
 
+void AExpeditionBattleView::AbandonRun()
+{
+    if (!CanAbandonRun()) { return; }
+    FString Error;
+    if (Session.Abandon(Error))
+    {
+        bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
+        Record({true, TEXT("Run abandoned. It is not recorded, and your records of finished runs are kept. Begin a new expedition when ready.")});
+        PlayCue(EExpeditionCue::Click);
+    }
+    else { Record({false, Error}); }
+}
+
 void AExpeditionBattleView::ToggleRecords()
 {
     if (bShowRecords) { bShowRecords = false; return; }

@@ -232,4 +232,5 @@ private:
     void DrawRecords();
     void DrawHelp();
     void DrawReturnConfirm();
+    void DrawAbandonConfirm();
 };

@@ -491,7 +491,7 @@ uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
     const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | Phase << 5;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | uint32(bConfirmAbandon) << 5 | Phase << 6;
 }
 void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
 bool AExpeditionPlayerController::MenuAvailable() const
@@ -547,6 +547,8 @@ void AExpeditionPlayerController::UpdateMenuFocus()
     // nothing is focused, so Enter cannot fall through to a system button such as Help.
     FName Preferred = TEXT("Builder");
     if (bConfirmReturn) { Preferred = TEXT("ReturnConfirm"); }
+    // Abandon run defaults to keeping the run (#224).
+    else if (bConfirmAbandon) { Preferred = TEXT("AbandonCancel"); }
     else if (OverlayOpen()) { Preferred = TEXT("Close"); }
     else if (ShowingMenu()) { Preferred = TEXT("Save"); }
     // With an unfinished checkpoint New Run would be refused, so the start screen's primary choice is Resume.
@@ -651,6 +653,12 @@ void AExpeditionPlayerController::HandleButton(FName Id)
         else if (Name == TEXT("KeepPlaying")) { CloseOverlays(); }
         return;
     }
+    if (bConfirmAbandon)
+    {
+        if (Name == TEXT("AbandonConfirm")) { ConfirmAbandon(); }
+        else if (Name == TEXT("AbandonCancel")) { CloseOverlays(); }
+        return;
+    }
     if (Name == TEXT("ReplayTips")) { ReplayHints(); return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
     // The hint's own buttons: they act on the hint and nothing else, and only while it is visible.
@@ -679,6 +687,7 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Maneuver")) { SetMode(SpecialAction(1)); }
     else if (Name == TEXT("Save")) { Save(); }
     else if (Name == TEXT("Resume")) { Resume(); }
+    else if (Name == TEXT("Abandon")) { RequestAbandon(); }
     else if (Name == TEXT("MenuToggle")) { ToggleMenu(); }
     else if (Name == TEXT("Menu")) { RequestReturnToMenu(); }
     else if (Name == TEXT("Records")) { History(); }
@@ -804,7 +813,7 @@ bool AExpeditionPlayerController::ShowsTargeting() const
 
 bool AExpeditionPlayerController::OverlayOpen() const
 {
-    return bShowHelp || bConfirmReturn || (IsValid(BattleView) && BattleView->ShowingRecords());
+    return bShowHelp || bConfirmReturn || bConfirmAbandon || (IsValid(BattleView) && BattleView->ShowingRecords());
 }
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
@@ -901,6 +910,23 @@ void AExpeditionPlayerController::ConfirmReturn()
     // Defensive: the question only opens on the party's turn, so the run cannot end under it.
     if (IsValid(BattleView) && BattleView->CanReturnToMenu()) { LeaveExpedition(); } else { RestoreOverlayFocus(); }
 }
+void AExpeditionPlayerController::RequestAbandon()
+{
+    CloseMenu();
+    if (!AllowsGameplayInput() || !ShowingBuilder() || !BattleView->CanAbandonRun()) { return; }
+    SaveOverlayFocus();
+    bConfirmAbandon = true;
+    bDragging = false; bPanning = false;
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
+void AExpeditionPlayerController::ConfirmAbandon()
+{
+    if (!bConfirmAbandon) { return; }
+    bConfirmAbandon = false;
+    BattleView->AbandonRun();
+    // Abandoned: the start screen's primary choice is New again. Refused: Resume keeps the focus it had.
+    if (BattleView->HasUnfinishedCheckpoint()) { RestoreOverlayFocus(); } else { Focus = FMenuFocus(); }
+}
 void AExpeditionPlayerController::LeaveExpedition()
 {
     // The rebuilt board's new revision resets selection, action and cursor in PlayerTick.
@@ -959,6 +985,7 @@ void AExpeditionPlayerController::CloseOverlays()
 {
     if (bShowMenu) { CloseMenu(); return; }
     if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
+    if (bConfirmAbandon) { bConfirmAbandon = false; RestoreOverlayFocus(); BattleView->PlayCue(EExpeditionCue::Click); return; }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
         if (bReturnPending) { bReturnPending = false; return; }
