@@ -2950,6 +2950,9 @@ EFoeLook Before(const FString& Name, int32 Range)
 
 int32 LookIndex(EFoeLook Look) { return static_cast<int32>(Look); }
 
+/** The FCombatantState::Role a run saves for a look (#188): its rig key, except a scout, which is saved as a Raider. */
+FString SavedRole(EFoeLook Look) { return Look == EFoeLook::Scout ? FString(TEXT("Raider")) : ExpeditionFoe::RigKey(Look).ToString(); }
+
 const TCHAR* ThemeAssetPath = TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme");
 }
 
@@ -2958,21 +2961,25 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFoeLookMappingTest, "Project.Expedition.Presen
 bool FFoeLookMappingTest::RunTest(const FString& Parameters)
 {
     using namespace FoeBatch;
-    using ExpeditionFoe::LookFromName;
     using ExpeditionFoe::LookFromSavedRole;
     using ExpeditionFoe::LookOf;
     using ExpeditionFoe::RigKey;
-    // The #188 names map to their new looks; a ranged foe is an archer first; names are matched anywhere and in any case; anything unknown is a scout.
-    struct FCase { const TCHAR* Name; int32 Range; EFoeLook Look; };
-    for (const FCase& Case : {FCase{TEXT("Skirmisher"), 1, EFoeLook::Skirmisher}, FCase{TEXT("skirmisher"), 1, EFoeLook::Skirmisher}, FCase{TEXT("Raider brute"), 1, EFoeLook::Brute},
-                              FCase{TEXT("Raider brute 2"), 1, EFoeLook::Brute}, FCase{TEXT("Vault warden"), 1, EFoeLook::Warden}, FCase{TEXT("VAULT WARDEN"), 1, EFoeLook::Warden},
-                              FCase{TEXT("Vault bow"), 4, EFoeLook::Archer}, FCase{TEXT("Vault warden"), 4, EFoeLook::Archer}, FCase{TEXT("Skirmisher"), 4, EFoeLook::Archer},
-                              FCase{TEXT("Cave raider"), 1, EFoeLook::Raider}, FCase{TEXT("Ghoul"), 1, EFoeLook::Scout}, FCase{TEXT(""), 1, EFoeLook::Scout},
-                              FCase{TEXT("Scout 1"), 1, EFoeLook::Scout}, FCase{TEXT("Raider 3"), 1, EFoeLook::Raider}, FCase{TEXT("Moss archer"), 4, EFoeLook::Archer}})
+    // #188: the saved Role decides; a ranged foe is an archer first; a Raider named as a scout is a scout; an unknown role is a scout.
+    struct FCase { const TCHAR* Role; const TCHAR* Name; int32 Range; EFoeLook Look; };
+    for (const FCase& Case : {FCase{TEXT("Skirmisher"), TEXT("Skirmisher"), 1, EFoeLook::Skirmisher}, FCase{TEXT("skirmisher"), TEXT("Anything"), 1, EFoeLook::Skirmisher},
+                              FCase{TEXT("Brute"), TEXT("Raider brute"), 1, EFoeLook::Brute}, FCase{TEXT("Warden"), TEXT("Vault warden"), 1, EFoeLook::Warden},
+                              FCase{TEXT("WARDEN"), TEXT("Raider 1"), 1, EFoeLook::Warden}, FCase{TEXT("Warden"), TEXT("Vault warden"), 4, EFoeLook::Archer},
+                              FCase{TEXT("Archer"), TEXT("Vault bow"), 4, EFoeLook::Archer}, FCase{TEXT("Archer"), TEXT("Archer"), 4, EFoeLook::Archer},
+                              FCase{TEXT("Raider"), TEXT("Raider 2"), 1, EFoeLook::Raider}, FCase{TEXT("Raider"), TEXT("Briar raider"), 1, EFoeLook::Raider},
+                              FCase{TEXT("Raider"), TEXT("Scout 1"), 1, EFoeLook::Scout}, FCase{TEXT("Raider"), TEXT("SCOUT 2"), 1, EFoeLook::Scout},
+                              FCase{TEXT("Ghoul"), TEXT("Ghoul"), 1, EFoeLook::Scout}, FCase{TEXT(""), TEXT("Raider brute"), 1, EFoeLook::Scout}})
     {
-        TestEqual(*FString::Printf(TEXT("\"%s\" (range %d) is drawn as the expected look"), Case.Name, Case.Range), LookIndex(LookFromName(Case.Name, Case.Range)), LookIndex(Case.Look));
+        FCombatantState Unit;
+        Unit.Side = ECombatSide::Enemy; Unit.Role = Case.Role; Unit.Name = Case.Name; Unit.Range = Case.Range;
+        TestEqual(*FString::Printf(TEXT("Role \"%s\" named \"%s\" (range %d) is drawn as the expected look"), Case.Role, Case.Name, Case.Range), LookIndex(LookOf(Unit)), LookIndex(Case.Look));
     }
-    // Today's enemies map exactly as before: every enemy of real runs (both roads of the first fight on three seeds, the plain and the dangerous finale) and the tutorial encounter.
+    // Every enemy of real runs: revision 8 runs (both roads of the first fight on three seeds and their finales) and the tutorial keep exactly the looks
+    // they had before #188 (the old name rule, Before); revision 9 runs draw every stage's roster by its saved role.
     TArray<FCombatantState> Foes;
     for (const FCombatantState& Unit : FCombatBattle::TutorialEncounter().Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } }
     for (const int32 Seed : {7, 11, 13})
@@ -2981,13 +2988,13 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
         {
             FExpeditionRun Run;
             FString Error;
-            if (!Run.NewRun(Seed, Error, TEXT("foe-look-mapping")) || !Run.ChooseRoute(Run.Progress().Offers[Offer].Id, Error)) { continue; }
+            if (!Run.NewRun(Seed, Error, TEXT("foe-look-mapping"), EFighterSubclass::Champion, ERuleset::Compact, 8) || !Run.ChooseRoute(Run.Progress().Offers[Offer].Id, Error)) { continue; }
             for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } }
         }
         for (const bool bDangerous : {false, true})
         {
             FExpeditionRun Finale;
-            if (ExpeditionTestSupport::ReachFinale(Finale, Seed, -1, false, nullptr, bDangerous))
+            if (ExpeditionTestSupport::ReachFinale(Finale, Seed, -1, false, nullptr, bDangerous, 8))
             { for (const FCombatantState& Unit : Finale.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy) { Foes.Add(Unit); } } }
         }
     }
@@ -2996,27 +3003,39 @@ bool FFoeLookMappingTest::RunTest(const FString& Parameters)
     for (const FCombatantState& Unit : Foes)
     {
         Names.Add(Unit.Name);
-        TestEqual(*FString::Printf(TEXT("%s (range %d, role %s) keeps today's look"), *Unit.Name, Unit.Range, *Unit.Role), LookIndex(LookOf(Unit)), LookIndex(Before(Unit.Name, Unit.Range)));
-        TestTrue(*FString::Printf(TEXT("%s is not one of the #188 roles"), *Unit.Name), LookOf(Unit) == EFoeLook::Scout || LookOf(Unit) == EFoeLook::Raider || LookOf(Unit) == EFoeLook::Archer);
+        TestEqual(*FString::Printf(TEXT("%s (range %d, role %s) keeps its look"), *Unit.Name, Unit.Range, *Unit.Role), LookIndex(LookOf(Unit)), LookIndex(Before(Unit.Name, Unit.Range)));
     }
     TestTrue(TEXT("Scouts, raiders and the Vault bow were among them"), Names.Contains(TEXT("Scout 1")) && Names.Contains(TEXT("Raider 1")) && Names.Contains(TEXT("Vault bow")));
-
-    // The seam for #188: a saved Role that names a new role outright decides; "Raider" and "Archer" (what every saved run holds today) and anything else do not.
-    EFoeLook Saved = EFoeLook::Scout;
-    for (const FLook& Entry : {Looks[3], Looks[4], Looks[5]})
+    TSet<int32> Revision9Looks;
+    for (int32 Stage = 0; Stage < FExpeditionRun::EncounterCount; ++Stage)
     {
+        for (const bool bDangerous : {false, true})
+        {
+            FExpeditionRoute Route; Route.Id = Stage * 2 + (bDangerous ? 2 : 1); Route.bDangerous = bDangerous; Route.Recipe = Stage < 2 ? 0 : Stage < 4 ? 3 : 6; Route.Width = 16; Route.Height = 11;
+            FCombatEncounter Layout;
+            if (!TestTrue(TEXT("Revision 9 layout"), FExpeditionRun::EncounterLayout(Route, Stage, ERuleset::Compact, 9, Layout))) { continue; }
+            for (const FCombatantState& Unit : Layout.Combatants)
+            {
+                if (Unit.Side != ECombatSide::Enemy) { continue; }
+                EFoeLook Expected = EFoeLook::Scout;
+                TestTrue(*FString::Printf(TEXT("%s's saved role %s names a look"), *Unit.Name, *Unit.Role), LookFromSavedRole(Unit.Role, Expected));
+                if (Expected == EFoeLook::Raider && !bDangerous) { Expected = EFoeLook::Scout; }
+                TestEqual(*FString::Printf(TEXT("Revision 9 fight %d %s: %s draws as its role"), Stage + 1, bDangerous ? TEXT("dangerous") : TEXT("guarded"), *Unit.Name), LookIndex(LookOf(Unit)), LookIndex(Expected));
+                Revision9Looks.Add(LookIndex(LookOf(Unit)));
+            }
+        }
+    }
+    TestEqual(TEXT("Revision 9 runs field all six looks"), Revision9Looks.Num(), ExpeditionFoe::Count);
+
+    // The saved roles are the rig keys of their looks, case-insensitively; "Scout" is a look, not a saved role.
+    EFoeLook Saved = EFoeLook::Scout;
+    for (const FLook& Entry : Looks)
+    {
+        if (Entry.Look == EFoeLook::Scout) { continue; }
         TestTrue(*FString::Printf(TEXT("Role \"%s\" names a look"), Entry.Key), LookFromSavedRole(Entry.Key, Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
         TestTrue(*FString::Printf(TEXT("Role \"%s\" is case-insensitive"), Entry.Key), LookFromSavedRole(FString(Entry.Key).ToUpper(), Saved) && LookIndex(Saved) == LookIndex(Entry.Look));
     }
-    for (const TCHAR* Role : {TEXT("Raider"), TEXT("Archer"), TEXT(""), TEXT("Scout"), TEXT("Fighter")}) { TestFalse(*FString::Printf(TEXT("Role \"%s\" is not decided by the saved role"), Role), LookFromSavedRole(Role, Saved)); }
-    FCombatantState Unit;
-    Unit.Side = ECombatSide::Enemy;
-    Unit.Name = TEXT("Raider 1"); Unit.Role = TEXT("Warden"); Unit.Range = 1;
-    TestEqual(TEXT("A saved Warden role wins over a raider's name"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Warden));
-    Unit.Range = 4;
-    TestEqual(TEXT("A ranged foe is an archer whatever its saved role"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Archer));
-    Unit.Range = 1; Unit.Role = TEXT("Raider"); Unit.Name = TEXT("Scout 1");
-    TestEqual(TEXT("Today's saved role \"Raider\" leaves the name to decide: a scout"), LookIndex(LookOf(Unit)), LookIndex(EFoeLook::Scout));
+    for (const TCHAR* Role : {TEXT(""), TEXT("Scout"), TEXT("Fighter"), TEXT("Raiders")}) { TestFalse(*FString::Printf(TEXT("Role \"%s\" names no look"), Role), LookFromSavedRole(Role, Saved)); }
 
     // The keys are the FoeRigs archetype names, each its own; the theme looks them up by exactly that name and never leaks one rig to another look.
     UDiceRollTheme* Theme = NewObject<UDiceRollTheme>(GetTransientPackage());
@@ -3127,7 +3146,7 @@ bool FFoeBatchPlaybackTest::RunTest(const FString& Parameters)
             FPoseScene S;
             if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, FoeX))) { return false; }
             FCombatantState* Foe = S.Unit(S.Before, S.Foe);
-            Foe->Name = Entry.Name; Foe->Range = Entry.Range;
+            Foe->Name = Entry.Name; Foe->Range = Entry.Range; Foe->Role = SavedRole(Entry.Look);
             TestEqual(*(Who + TEXT(": the scene's foe is drawn as this look")), LookIndex(ExpeditionFoe::LookOf(*Foe)), LookIndex(Entry.Look));
             S.After = S.Before;
             S.Unit(S.After, S.Hero)->HP = S.Unit(S.Before, S.Hero)->HP - 2;
@@ -3147,7 +3166,7 @@ bool FFoeBatchPlaybackTest::RunTest(const FString& Parameters)
             FPoseScene S;
             if (!TestTrue(Who + TEXT(": scene builds"), MakeScene(S, 3))) { return false; }
             FCombatantState* Foe = S.Unit(S.Before, S.Foe);
-            Foe->Name = Entry.Name; Foe->Range = Entry.Range;
+            Foe->Name = Entry.Name; Foe->Range = Entry.Range; Foe->Role = SavedRole(Entry.Look);
             S.After = S.Before;
             FCombatantState* After = S.Unit(S.After, S.Foe);
             After->HP = bFatal ? 0 : After->HP - 3;

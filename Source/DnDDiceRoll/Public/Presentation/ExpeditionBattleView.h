@@ -403,6 +403,10 @@ public:
     /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
     int32 PlacedObstacles() const { return ObstaclePieces; }
     int32 PlacedArches() const { return ArchPieces; }
+    /** The obstacle kind the last build drew (0 stones, 1 pillars, 2 walls), from FExpeditionRun::Encounter for the current route (#188). */
+    int32 DrawnObstacleKind() const { return DrawnKind; }
+    /** The board theme the last build chose: the Vault for the finale stage, otherwise by road. */
+    EBoardTheme DrawnBoardTheme() const { return BoardTheme; }
     /** Per blocked cell, the variant index its obstacle used (kit boards only; -1 for a cell under an arch). */
     const TMap<FIntPoint, int32>& ObstacleVariants() const { return VariantsByCell; }
     /** Where each kit obstacle piece stands in the view actor's space: per blocked cell, or the shared-edge midpoint for both cells of an arch. */
@@ -525,6 +529,7 @@ private:
     float Clock = 0.0f;
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
+    int32 DrawnKind = 0;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
     /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
@@ -712,8 +717,8 @@ private:
     void SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data);
     int32 AddRingSlot(const FLinearColor& Color);
     void SetRing(int32 Slot, bool bVisible, const FVector& Centre, float Scale, const FLinearColor& Color);
-    void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
-    void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
+    void BuildScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed);
+    void BuildObstacle(FIntPoint Cell, int32 ObstacleKind, FRandomStream& Random);
     void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);
     void BuildRig(const FCombatantState& Unit);
     UStaticMesh* ThemeMesh(const TSoftObjectPtr<UStaticMesh>& Entry) const;
@@ -724,9 +729,9 @@ private:
     void ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bool bSnap);
     void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
-    bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed);
     /** The r002 obstacles of a world kit: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (pillar and wall recipes of a world kit; see VigilKit::ArchesFor). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
-    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
     /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing; the Root kit uses the same plan). */
     void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit, const TArray<FVector2D>& Braziers);
     /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */

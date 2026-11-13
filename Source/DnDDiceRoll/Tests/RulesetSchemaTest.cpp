@@ -71,7 +71,7 @@ bool FSchema4LoadsAsCompactTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
-// The 4 -> 5 upgrade on current runs (#184): a catalog revision 8 run written as format 4 (the fields format 5 added
+// The 4 -> 5 upgrade on current runs (#184; since #188 revision 8 and revision 9 runs): a run written as format 4 (the fields format 5 added
 // removed) decodes with the Compact defaults, restores exactly and continues identically. The fixtures above cover
 // real format 4 files, which are revision 7.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema4UpgradeRoundTripTest, "Project.Expedition.Persistence.Schema4UpgradeRoundTripsCurrentRuns",
@@ -79,19 +79,28 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema4UpgradeRoundTripTest, "Project.Expediti
 bool FSchema4UpgradeRoundTripTest::RunTest(const FString& Parameters)
 {
     FString Error;
-    // A revision 8 run, mid-battle (after enemy turns and one party move) and between battles (reward and camp taken).
-    FExpeditionRun Mid; Mid.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact);
-    Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error);
-    while (Mid.Battle().Find(Mid.Battle().ActiveId())->Side == ECombatSide::Enemy) { Mid.PlayEnemyTurn(); }
-    const int32 Mover = Mid.Battle().ActiveId();
-    const TArray<FIntPoint> Moves = Mid.Battle().LegalMoves(Mover);
-    if (TestFalse(TEXT("The first hero can move"), Moves.IsEmpty())) { TestTrue(TEXT("One party move"), Mid.Submit({ECombatCommandType::Move, Mover, Moves[0]}).bAccepted); }
-    FExpeditionRun Between; Between.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact);
-    Between.ChooseRoute(Between.Progress().Offers[0].Id, Error);
-    if (!TestTrue(TEXT("First encounter won"), FinishCombat(Between) && Between.Progress().Phase == EExpeditionPhase::Reward)) { return false; }
-    TestTrue(TEXT("Reward"), Between.ClaimReward(1, Error)); TestTrue(TEXT("Camp"), Between.Recover(true, Error));
-    for (FExpeditionRun* Original : {&Mid, &Between})
+    // A revision 8 run and a current-revision run (9 since #188), each mid-battle (after enemy turns and one party move) and
+    // between battles (reward and camp taken).
+    TArray<FExpeditionRun> Runs;
+    for (const int32 Revision : {8, FBuildCatalog::Revision})
     {
+        FExpeditionRun Mid; Mid.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, Revision);
+        Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error);
+        while (Mid.Battle().Find(Mid.Battle().ActiveId())->Side == ECombatSide::Enemy) { Mid.PlayEnemyTurn(); }
+        const int32 Mover = Mid.Battle().ActiveId();
+        const TArray<FIntPoint> Moves = Mid.Battle().LegalMoves(Mover);
+        if (TestFalse(TEXT("The first hero can move"), Moves.IsEmpty())) { TestTrue(TEXT("One party move"), Mid.Submit({ECombatCommandType::Move, Mover, Moves[0]}).bAccepted); }
+        FExpeditionRun Between; Between.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, Revision);
+        Between.ChooseRoute(Between.Progress().Offers[0].Id, Error);
+        if (!TestTrue(TEXT("First encounter won"), FinishCombat(Between) && Between.Progress().Phase == EExpeditionPhase::Reward)) { return false; }
+        TestTrue(TEXT("Reward"), Between.ClaimReward(1, Error)); TestTrue(TEXT("Camp"), Between.Recover(true, Error));
+        TestEqual(TEXT("Mid-battle run keeps its revision"), Mid.Progress().CatalogRevision, Revision);
+        TestEqual(TEXT("Between-battles run keeps its revision"), Between.Progress().CatalogRevision, Revision);
+        Runs.Add(Mid); Runs.Add(Between);
+    }
+    for (FExpeditionRun& Run : Runs)
+    {
+        FExpeditionRun* Original = &Run;
         FExpeditionSaveData Data; Data.Current = Original->Snapshot();
         FString Json;
         if (!TestTrue(TEXT("Encode format 5"), FExpeditionSave::Encode(Data, Json, Error))) { return false; }
@@ -160,8 +169,10 @@ bool FCompactSeedRegressionTest::RunTest(const FString& Parameters)
 {
     // Compact full-run seed 42 — same policy as FiveVictoriesRecoverArtifact.
     // Proves the Compact path still reaches Victory and pins its battle math to a golden fingerprint.
+    // A revision 8 run, created explicitly since revision 9 (#188): the golden below is unchanged, which proves the revision 8
+    // path is byte-identical. Project.Expedition.Run.CompactRevision9SeedFingerprint pins the revision 9 run of the same seed.
     FExpeditionRun Run; FString Error;
-    TestTrue(TEXT("Compact NewRun"), Run.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact));
+    TestTrue(TEXT("Compact NewRun"), Run.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, 8));
     TestTrue(TEXT("Ruleset Compact"), Run.Progress().Ruleset == ERuleset::Compact);
     for (int32 Encounter = 0; Encounter < 5; ++Encounter)
     {
@@ -203,7 +214,7 @@ bool FCompactSeedRegressionTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Victory Encode without Ending records fails"), FExpeditionSave::Encode(BareVictory, BareJson, BareError));
     TestTrue(TEXT("Bare Victory Encode names incomplete ending records"), BareError.Contains(TEXT("ending records")));
     FExpeditionRun Twin; FString TwinError;
-    TestTrue(TEXT("Twin Compact NewRun"), Twin.NewRun(42, TwinError, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact));
+    TestTrue(TEXT("Twin Compact NewRun"), Twin.NewRun(42, TwinError, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, 8));
     for (int32 Encounter = 0; Encounter < 5; ++Encounter)
     {
         TestTrue(TEXT("Twin choose"), Twin.ChooseRoute(Twin.Progress().Offers[0].Id, TwinError));
@@ -240,8 +251,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSrdRevision7ResumeTest, "Project.Expedition.Pe
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FSrdRevision7ResumeTest::RunTest(const FString& Parameters)
 {
-    // An SRD checkpoint saved under catalog revision 7 resumes through the session and plays exactly as a revision 8 SRD
-    // run (#184: SRD numbers are the same in both revisions); it keeps its revision.
+    // An SRD checkpoint saved under catalog revision 7 resumes through the session and plays exactly as a current-revision SRD
+    // run (#184, #188: SRD numbers and generation are the same in every revision); it keeps its revision.
     FString Error;
     FExpeditionRun Original;
     if (!TestTrue(TEXT("SRD NewRun"), Original.NewRun(42, Error, TEXT("srd-revision-7"), EFighterSubclass::Champion, ERuleset::SRD))) { return false; }
@@ -262,7 +273,7 @@ bool FSrdRevision7ResumeTest::RunTest(const FString& Parameters)
     FinishRunScripted(Original); FinishRunScripted(Resumed);
     TestEqual(TEXT("Still revision 7 at the end"), Resumed.Progress().CatalogRevision, 7);
     FExpeditionSnapshot Compared = Resumed.Snapshot(); Compared.Progress.CatalogRevision = Original.Progress().CatalogRevision;
-    TestTrue(TEXT("Revision 7 and revision 8 SRD runs play identically"), SameRun(Original.Snapshot(), Compared));
+    TestTrue(TEXT("Revision 7 and current-revision SRD runs play identically"), SameRun(Original.Snapshot(), Compared));
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

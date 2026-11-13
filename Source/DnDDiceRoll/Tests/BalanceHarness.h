@@ -70,6 +70,8 @@ struct FEncounterStats
     /** Lowest party HP (living heroes) after any enemy turn of the fight: the closest call. */
     int32 HpLow = 0;
     int32 Damage = 0, DamageTaken = 0, Healing = 0, Protection = 0, Downs = 0, Deaths = 0, Revives = 0, SpecialsUsed = 0;
+    /** Enemy HP removed by party commands whose actor stood next to (Manhattan 1) the enemy that lost it (#188, layout identity). */
+    int32 MeleeDamage = 0;
 };
 
 struct FRunStats
@@ -79,9 +81,13 @@ struct FRunStats
     TArray<FString> Builds;
     int32 Seed = 0;
     int32 RoutePattern = 0;
+    /** The catalog revision the run was created under (#188: the before-run plays revision 8). */
+    int32 Revision = 0;
     /** Victory, Defeat or Stall. */
     FString Outcome;
     FString StallReason;
+    /** A stall in which no conscious unit can ever reach an opponent (Deadlocked): a soft lock in the real game, not a policy loop (#188). */
+    bool bDeadlock = false;
     int32 EncountersWon = 0, Rounds = 0, Deaths = 0, Survivors = 0;
     int32 Damage = 0, DamageTaken = 0, Healing = 0, Protection = 0, SpecialsUsed = 0, PotionsUsed = 0, Commands = 0;
     /** Commands the run rejected (gate zero). */
@@ -96,14 +102,25 @@ struct FRunStats
     TArray<FEncounterStats> Encounters;
 };
 
-/** Plays one complete Compact expedition. RoutePattern bit s picks the Dangerous road at stage s. */
-FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal = nullptr, FString* OutTrace = nullptr);
+/** Plays one complete Compact expedition. RoutePattern bit s picks the Dangerous road at stage s. Revision is the catalog revision the run
+ * is created under (FExpeditionRun::NewRun); an unsupported one makes the run a Stall. */
+FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal = nullptr, FString* OutTrace = nullptr,
+    int32 Revision = FBuildCatalog::Revision);
+/**
+ * True when no conscious unit of either side can ever bring an opponent within its range: from its cell it walks over open floor (bodies and
+ * Downed heroes block, conscious units are treated as able to move aside) and no reachable cell lies within Range (Manhattan; sight ignored, so it
+ * errs toward "not deadlocked") of a conscious opponent. A fight in this state can never end (#188, #217).
+ */
+bool Deadlocked(const FCombatSnapshot& Snapshot);
 /** Text board and command log for one run, for reproducing a stall or outlier by seed. */
-FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern);
+FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision = FBuildCatalog::Revision);
+/** DND_BALANCE_REVISION when it names a supported revision (the before-run of a revision change), otherwise the current one;
+ * false with Error when it is set to anything else. */
+bool RevisionFromEnvironment(int32& OutRevision, FString& Error);
 /** A representative or rotation party by id, or nullptr. */
 const FPartySpec* FindParty(const FString& Id);
-/** Plays every party on seeds BaseSeed + i, i < Seeds, with route pattern i. */
-TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds = SeedCount);
+/** Plays every party on seeds BaseSeed + i, i < Seeds, with route pattern i, under Revision. */
+TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds = SeedCount, int32 Revision = FBuildCatalog::Revision);
 
 TArray<FPartySpec> RepresentativeParties();
 /** Pass 0 .. RotationPasses - 1 of the kit rotation (18 parties each). */

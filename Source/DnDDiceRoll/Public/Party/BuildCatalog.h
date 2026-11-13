@@ -26,10 +26,11 @@ inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
 class DNDDICEROLL_API FBuildCatalog
 {
 public:
-    /** The revision new runs are created under. 8 (#184): Compact enemy tuning. */
-    static constexpr int32 Revision = 8;
+    /** The revision new runs are created under. 8 (#184): Compact enemy tuning. 9 (#188): Compact encounter identity (stages,
+     * layouts, enemy roles and previews). */
+    static constexpr int32 Revision = 9;
     /** The oldest revision that still restores. A run keeps the revision it was created under for its whole lifetime
-     * (revision 7 Compact runs keep revision 7 enemies); any other revision is refused by name. */
+     * (revision 7 Compact runs keep revision 7 enemies, revision 8 runs revision 8 generation); any other revision is refused by name. */
     static constexpr int32 MinimumRevision = 7;
     static const TArray<FBuildDefinition>& All();
     static const FBuildDefinition* Find(const FString& BuildId);
