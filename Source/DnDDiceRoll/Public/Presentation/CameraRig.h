@@ -474,22 +474,68 @@ namespace ExpeditionCameraRig
         return Low;
     }
 
+    /** ViewportGround that also gives the eye (view-space cm, relative to the focus), for the walls' shadows. */
+    inline bool ViewportGroundEye(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, const FVector& Shake, FVector2D (&Out)[4], FVector& EyeOut)
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        EyeOut = Pose.Offset + Pose.Framing + Shake;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        int32 Index = 0;
+        for (const double X : {0.0, 1.0})
+        {
+            for (const double Y : {0.0, 1.0})
+            {
+                if (!Unproject(FVector2D(X, Y), EyeOut, Forward, Safe.Aspect, Metric.BoardTop(), Out[Index++])) { return false; }
+            }
+        }
+        return true;
+    }
+
     /**
-     * Clamps a focus (view-space cm) so the viewport's ground stays inside the set: HalfCm each way from Centre, per axis the focus
-     * interval that keeps the footprint inside (the midpoint when the footprint is wider than the set, which SetCoverDistance prevents).
+     * Whether a pose's ground is inside the set: the ground under the four viewport corners (offsets from the focus), around FocusXY, is within HalfCm of
+     * Centre on both axes. (Eye is the eye relative to the focus; the camera-side wall is not part of this: it is faded, not framed out, see
+     * `OccluderSideMargins`.)
      */
-    inline FVector2D ClampSet(const FVector2D& Focus, float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe,
+    inline bool SetContainsGround(const FVector2D& FocusXY, const FVector& Eye, const FVector2D (&Ground)[4], const FBoardMetric& Metric, const FVector2D& Centre, float HalfCm)
+    {
+        (void)Eye; (void)Metric;
+        for (const FVector2D& Point : Ground)
+        {
+            const FVector2D At = FocusXY + Point - Centre;
+            if (FMath::Abs(At.X) > HalfCm || FMath::Abs(At.Y) > HalfCm) { return false; }
+        }
+        return true;
+    }
+
+    /** Whether the viewport's ground, from a camera whose focus is at Focus (view-space cm), is inside the set. */
+    inline bool SetContainsAt(const FVector2D& Focus, float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe,
         const FVector2D& Centre, float HalfCm)
     {
         FVector2D Ground[4];
-        if (!ViewportGround(Yaw, Distance, Pitch, Metric, Safe, Ground)) { return Focus; }
-        double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
-        for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
-        auto Axis = [HalfCm](double Value, double Centre1, double GroundMin, double GroundMax)
+        FVector Eye;
+        if (!ViewportGroundEye(Yaw, Distance, Pitch, Metric, Safe, FVector::ZeroVector, Ground, Eye)) { return false; }
+        return SetContainsGround(Focus, Eye, Ground, Metric, Centre, HalfCm);
+    }
+
+    /**
+     * The farthest zoom in [Low, High] at which the viewport's ground, around the given focus and from Yaw, is inside the set (the pitch follows the zoom,
+     * anchored at Anchor). The focus is decided by the pan bound, the unit hold and the locked-axis centring and is never moved to satisfy the set: a
+     * nearer pose always sees less ground, so the zoom gives way instead. Never nearer than Low (the default zoom): where even Low does not fit at this
+     * focus, Low is returned and the caller reports it (`bFits` false). The footprint grows with the distance, so the bisection is exact.
+     */
+    inline float SetCoverDistanceAt(const FVector2D& Focus, float Yaw, float Anchor, const FBoardMetric& Metric, const FSafeRect& Safe,
+        const FVector2D& Centre, float HalfCm, float Low, float High, bool& bFits)
+    {
+        auto Fits = [&](float D) { return SetContainsAt(Focus, Yaw, D, PitchFor(D, Anchor), Metric, Safe, Centre, HalfCm); };
+        bFits = true;
+        if (High <= Low) { bFits = Fits(High); return High; }
+        if (Fits(High)) { return High; }
+        if (!Fits(Low)) { bFits = false; return Low; }
+        for (int32 Iteration = 0; Iteration < 24 && High - Low > 0.01f; ++Iteration)
         {
-            const double Low = Centre1 - HalfCm - GroundMin, High = Centre1 + HalfCm - GroundMax;
-            return Low > High ? 0.5 * (Low + High) : FMath::Clamp(Value, Low, High);
-        };
-        return FVector2D(Axis(Focus.X, Centre.X, MinX, MaxX), Axis(Focus.Y, Centre.Y, MinY, MaxY));
+            const float Mid = 0.5f * (Low + High);
+            (Fits(Mid) ? Low : High) = Mid;
+        }
+        return Low;
     }
 }

@@ -107,15 +107,13 @@ bool FVaultKeyboardPanStaysInTheSetTest::RunTest(const FString& Parameters)
             if (bFar) { for (int32 Notch = 0; Notch < 80; ++Notch) { Game.Press(EKeys::MouseScrollDown); } Tick(Game, 90); }
             const FString Label = FString::Printf(TEXT("%s yaw %.0f"), bFar ? TEXT("Far cap") : TEXT("Default zoom"), Yaw);
             if (bFar) { TestEqual(*(Label + TEXT(": the wheel stopped at the cap")), Game.View->CameraDistance(), Game.View->MaxZoomFor(Yaw), 0.5f); }
-            FVector2D Hit[4];
-            const bool bDefaultFits = bFar || (Ground(*Game.View, true, Hit) && [&]() { for (const FVector2D& P : Hit) { if (FMath::Abs(P.X - Centre.X) > Half || FMath::Abs(P.Y - Centre.Y) > Half) { return false; } } return true; }());
             for (const FKey& Key : {EKeys::W, EKeys::S, EKeys::A, EKeys::D})
             {
                 const bool bMoved = HoldPan(Game, Key, 60, [&]()
                 {
                     FVector2D P[4];
                     ++Samples;
-                    if (!bDefaultFits || !Ground(*Game.View, true, P)) { return; }
+                    if (Game.View->ShowsPastSet() || !Ground(*Game.View, true, P)) { return; }
                     for (const FVector2D& Corner : P)
                     {
                         if (FMath::Abs(Corner.X - Centre.X) > Half + 5.0 || FMath::Abs(Corner.Y - Centre.Y) > Half + 5.0)

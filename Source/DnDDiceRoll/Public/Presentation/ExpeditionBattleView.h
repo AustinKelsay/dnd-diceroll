@@ -786,9 +786,18 @@ private:
         float Value = 0.0f;
     };
     mutable FZoomCap ZoomCap;
+    bool bSetShowsPast = false;
 public:
     /** Whether the camera is bounded by an authored set (the Vault's): the rendered focus stays where the viewport's ground is inside it. */
     bool BoundsSet() const;
+    /**
+     * True when the rendered pose still shows ground past the Vault's set: the focus (decided by the pan bound, the locked axes and the unit hold) is
+     * so far from the board centre that even the default zoom does not fit. The focus is never moved to make it fit (#148), so the pose stays at the
+     * default and this says so; false outside the Vault.
+     */
+    bool ShowsPastSet() const { return bSetShowsPast; }
+    /** The rendered focus (view-space cm), after the lean, the pan bound, the locked axes and the unit hold. */
+    FVector2D RenderedFocus() const { return FVector2D(Focus.X, Focus.Y); }
     /** The yaw and distance the camera renders this frame (the eased pose), not the targets. */
     float RenderedYaw() const { return Yaw; }
     float RenderedDistance() const { return Distance; }
