@@ -15,7 +15,6 @@
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
-#include "Misc/App.h"
 #include "Framework/Application/SlateApplication.h"
 // The Linux platform application's focus window is read in game builds only: it is an engine-internal class used through its header, and the editor's PIE does not give the
 // controller the same object (reading it there crashed the PIE test).
@@ -731,8 +730,9 @@ bool AExpeditionPlayerController::KeyboardFocusLost() const
 
 bool AExpeditionPlayerController::WindowHasFocus() const
 {
-    const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-    return !Client || !Client->Viewport || (Client->Viewport->HasFocus() && FApp::HasFocus() && !KeyboardFocusLost());
+    // Only a loss TRANSITION counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no window ever has SDL
+    // keyboard focus), and ordinary clicks must still work there. KeyboardFocusLost() is false until the window has had keyboard focus once.
+    return !KeyboardFocusLost();
 }
 
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)

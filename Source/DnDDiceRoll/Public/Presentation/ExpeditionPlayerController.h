@@ -46,7 +46,7 @@ public:
      */
     bool KeyboardFocusLost() const;
     mutable bool bSawKeyboardFocus = false;
-    /** False when a game viewport exists and the window or the application has no focus. With no viewport (an automation world) there is nothing to lose. */
+    /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
