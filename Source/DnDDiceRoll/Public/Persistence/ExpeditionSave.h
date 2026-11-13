@@ -23,7 +23,7 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 7;
+    UPROPERTY() int32 Version = 5;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
@@ -33,8 +33,8 @@ struct DNDDICEROLL_API FExpeditionSaveData
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    // Version 7: ExperiencePoints, bLevelUpAvailable, ClassLevels, PactSlots/PactSlotLevel (Warlock pact pool). Schema 4/5/6/7 migrate up; Compact keeps auto-level and XP/pact at 0.
-    static constexpr int32 Version = 7;
+    // Version 5 persists ERuleset. Schema 4 loads as Compact; older than 4 remains unsupported.
+    static constexpr int32 Version = 5;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);
@@ -61,7 +61,6 @@ public:
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);
     bool Recover(bool bTake, FString& Error);
-    bool ApplyLevelUp(int32 AdventurerId, EAdventurerRole ClassToAdvance, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     bool Save(FString& Error);

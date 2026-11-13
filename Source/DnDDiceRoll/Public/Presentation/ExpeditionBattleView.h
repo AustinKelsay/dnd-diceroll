@@ -158,8 +158,6 @@ public:
     void ChooseRoute(int32 Index);
     void ClaimReward(int32 RecipientId);
     void Recover(bool bTake);
-    /** SRD: Level Up selected adventurer between battles (class = AdventurerRole for now). */
-    void ApplyLevelUp(int32 AdventurerId);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
     void Save();

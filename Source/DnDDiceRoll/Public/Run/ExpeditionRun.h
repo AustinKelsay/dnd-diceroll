@@ -90,8 +90,6 @@ public:
     bool ChooseRoute(int32 RouteId, FString& Error);
     bool ClaimReward(int32 RecipientId, FString& Error);
     bool Recover(bool bTakeRecovery, FString& Error);
-    /** SRD between battles: spend one pending level into ClassToAdvance (hit die rolled from battle RNG). */
-    bool ApplyLevelUp(int32 AdventurerId, EAdventurerRole ClassToAdvance, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
     const FCombatBattle& Battle() const { return Combat; }

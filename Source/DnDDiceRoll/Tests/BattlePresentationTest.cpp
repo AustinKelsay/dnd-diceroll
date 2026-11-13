@@ -546,44 +546,4 @@ bool FPartyBuilderInputTest::RunTest(const FString& Parameters)
     World->DestroyWorld(false); IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpHudCommitsTest, "Project.Expedition.Presentation.LevelUpHudCommits",
-    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-bool FLevelUpHudCommitsTest::RunTest(const FString& Parameters)
-{
-    FString Error;
-    FExpeditionSaveData Data;
-    FExpeditionRun Run;
-    if (!TestTrue(TEXT("SRD run"), Run.NewRun(1, Error, TEXT("levelup-hud"), EFighterSubclass::Champion, ERuleset::SRD))) { return false; }
-    if (!TestTrue(TEXT("Route"), Run.ChooseRoute(Run.Progress().Offers[0].Id, Error))) { return false; }
-    if (!TestTrue(TEXT("Finish combat"), ExpeditionTestSupport::FinishCombat(Run))) { return false; }
-    Data.Current = Run.Snapshot();
-    for (auto& Hero : Data.Current.Battle.Encounter.Combatants)
-    {
-        if (Hero.Side == ECombatSide::Party && Hero.Life == ECombatLife::Conscious)
-        { Hero.ExperiencePoints = 300; Hero.bLevelUpAvailable = true; }
-    }
-    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/LevelUpHud"), FGuid::NewGuid().ToString());
-    const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
-    if (!TestTrue(TEXT("Write isolated checkpoint"), FExpeditionSave::Write(Path, Data, Error))) { return false; }
-    const UWorld::InitializationValues Values = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
-    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Values);
-    auto* Player = World->SpawnActor<AExpeditionPlayerController>();
-    Player->DispatchBeginPlay();
-    auto* View = Player->GetBattleView();
-    View->ConfigureStorage(Path); View->DispatchBeginPlay();
-    Player->HandleButton(TEXT("Resume"));
-    const int32 BeforeHP = View->Rules().Find(1)->MaxHP;
-    Player->HandleButton(TEXT("Party0"));
-    Player->HandleButton(TEXT("LevelUp"));
-    TestEqual(TEXT("HUD button commits L2"), View->Rules().Find(1)->Level, 2);
-    TestTrue(TEXT("Rolled fighter HP gained"), View->Rules().Find(1)->MaxHP > BeforeHP);
-    TestFalse(TEXT("Selected hero tag clears"), View->Rules().Find(1)->bLevelUpAvailable);
-    TestTrue(TEXT("Other pending heroes unchanged"), View->Rules().Find(2)->bLevelUpAvailable);
-    const FUnitDisplay* Display = View->Playback().Unit(1);
-    TestTrue(TEXT("Class-color pulse is active"), Display && Display->LevelUpGlow > 0.9f && Display->LevelUpColor.R > Display->LevelUpColor.B);
-    Player->HandleButton(TEXT("Resume"));
-    TestEqual(TEXT("L2 persists after resume"), View->Rules().Find(1)->Level, 2);
-    World->DestroyWorld(false); IFileManager::Get().DeleteDirectory(*Directory, false, true);
-    return !HasAnyErrors();
-}
 #endif

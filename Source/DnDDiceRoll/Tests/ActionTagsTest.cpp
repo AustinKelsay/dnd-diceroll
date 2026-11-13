@@ -113,12 +113,6 @@ FActionTooltipRequest ExpectedTooltip(const FCombatBattle& Rules, EC Command, co
 
 FKey KeyFor(FName ButtonId)
 {
-    if (ButtonId == TEXT("ModeDash")) { return EKeys::D; }
-    if (ButtonId == TEXT("ModeDisengage")) { return EKeys::W; }
-    if (ButtonId == TEXT("ModeGrapple")) { return EKeys::G; }
-    if (ButtonId == TEXT("ModeShove")) { return EKeys::B; }
-    if (ButtonId == TEXT("ModeEscape")) { return EKeys::J; }
-    if (ButtonId == TEXT("ModeSurge")) { return EKeys::C; }
     if (ButtonId == TEXT("ModeAttack")) { return EKeys::A; }
     if (ButtonId == TEXT("ModeRole")) { return EKeys::F; }
     if (ButtonId == TEXT("Maneuver")) { return EKeys::M; }
@@ -420,13 +414,6 @@ bool FActionTextFromFactsTest::RunTest(const FString& Parameters)
     Facts.Cost = EActionCostKind::None;
     TestTrue(TEXT("No cost means no tags"), CostPillText(Facts).IsEmpty() && UsageTagText(Facts).IsEmpty() && UsageLines(Facts).IsEmpty());
 
-    FActionFacts Free; Free.Command = EC::ActionSurge; Free.Cost = EActionCostKind::Free;
-    Free.Resources = {Spend(EActionResource::Surge,1,1,1,INDEX_NONE)};
-    TestEqual(TEXT("A resource-paid free feature has an explicit tag"),CostPillText(Free),FString(TEXT("Free")));
-    TestEqual(TEXT("Action Surge is not falsely at will"),UsageTagText(Free),FString(TEXT("Surge 1/1")));
-    const auto Missing = FActionFactsQuery::ForBuild(FCombatantState(),EC::Grapple);
-    TestEqual(TEXT("Unknown build command retains its identity"),Missing.Command,EC::Grapple);
-    TestTrue(TEXT("Unknown command has no invented cost"),Missing.Cost==EActionCostKind::None && Missing.Resources.IsEmpty());
     // Blockers become the tooltip's reasons, in order and unchanged; an available action has none.
     FActionFacts Blocked;
     Blocked.Command = EC::MagicMissile; Blocked.Cost = EActionCostKind::Action;
@@ -557,10 +544,11 @@ bool FRejectedCommandTest::RunTest(const FString& Parameters)
 
 /** What the build picker should say for a kit: each ability's name, then its cost and usage from the facts without a battle. */
 /**
- * SRD actions use the same #167 tags/tooltips and have unique, working controls.
- * Compact geometry/keys remain unchanged; bounds, minimum text size and hover/key parity still apply.
+ * An SRD run uses the same dock. The fact query knows only the Compact commands, so Grapple, Shove and Escape have no
+ * button and no facts (SRD facts belong to the rules work); everything the dock does draw must still come from the facts,
+ * and a rejected SRD-only command must keep the rules' own text rather than a wrong fact reason.
  */
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionDockSrdTest, "Project.Expedition.Presentation.ActionDockSrdFactsAreInteractive",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FActionDockSrdTest, "Project.Expedition.Presentation.ActionDockDegradesInSrdMode",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FActionDockSrdTest::RunTest(const FString& Parameters)
 {
@@ -583,27 +571,19 @@ bool FActionDockSrdTest::RunTest(const FString& Parameters)
         const int32 Id = Rules.ActiveId();
         TestTrue(TEXT("The SRD dock draws tags that follow the facts"), CheckTags(*this, Game, TEXT("SRD")) > 0);
         CheckTooltips(*this, Game, TEXT("SRD"), Parity);
-        TSet<FName> Ids;
+        // No dock button stands for the SRD-only commands.
         for (const FActionTagRequest& Tag : Game.Hud->ActionTagsRequested())
-        {
-            TestFalse(TEXT("Every dock button has a unique identity"),Ids.Contains(Tag.ButtonId)); Ids.Add(Tag.ButtonId);
-            const auto Facts = FActionFactsQuery::For(Rules, Id, Tag.Command);
-            if (Facts.bAvailable && Tag.Command != EC::EndTurn)
-            {
-                const auto Before = Game.Live(); Game.Player->HandleButton(Tag.ButtonId);
-                TestEqual(TEXT("The actual button selects its own command"),Game.Player->Action(),Tag.Command);
-                TestTrue(TEXT("Choosing a mode is not a game command"),ExpeditionTestSupport::SameRun(Before,Game.Live()));
-            }
-        }
+        { TestFalse(TEXT("No dock button is a Grapple, Shove or Escape"), Tag.Command == EC::Grapple || Tag.Command == EC::Shove || Tag.Command == EC::Escape); }
+        // The facts for them degrade to "not in this kit", with no cost and no text that pretends otherwise.
         for (const EC Command : {EC::Grapple, EC::Shove, EC::Escape})
         {
-            const auto Facts = FActionFactsQuery::For(Rules,Id,Command);
-            TestEqual(TEXT("SRD unarmed/escape cost is supplied by facts"),Facts.Cost,EActionCostKind::Action);
-            TestFalse(TEXT("These are known SRD commands"),Facts.Blocks(EActionBlocker::NotInKit));
-            TestEqual(TEXT("Availability is the authoritative query"),Facts.bAvailable,!Rules.LegalTargets(Id,Command).IsEmpty());
-            TestTrue(TEXT("The dock contains the SRD command"),Game.Hud->ActionTagsRequested().ContainsByPredicate([Command](const FActionTagRequest& Tag){return Tag.Command==Command;}));
+            const FActionFacts Facts = FActionFactsQuery::For(Rules, Id, Command);
+            TestFalse(TEXT("An SRD-only command is not reported available"), Facts.bAvailable);
+            TestTrue(TEXT("It has no cost and no resources"), Facts.Cost == EActionCostKind::None && Facts.Resources.IsEmpty());
+            TestTrue(TEXT("It reports one blocker, with text"), Facts.Blockers.Num() == 1 && Facts.Blockers[0].Reason == EActionBlocker::NotInKit && !ExpeditionStyle::BlockerText(Facts.Blockers[0]).IsEmpty());
+            TestTrue(TEXT("Its tags are empty"), ExpeditionStyle::CostPillText(Facts).IsEmpty() && ExpeditionStyle::UsageTagText(Facts).IsEmpty());
         }
-        // A rejected target is explained through the same typed facts where possible.
+        // A rejected Grapple keeps the rules' own message.
         const FCombatantState* Foe = nullptr;
         for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy && Unit.HP > 0) { Foe = &Unit; break; } }
         if (Foe && ExpeditionTestSupport::Distance(Rules.Find(Id)->Cell, Foe->Cell) > 1)
@@ -613,7 +593,7 @@ bool FActionDockSrdTest::RunTest(const FString& Parameters)
             if (!Game.View->Messages().IsEmpty())
             {
                 const FString Message = Game.View->Messages().Last();
-                TestTrue(TEXT("The log explains the rejected SRD command"), Message.StartsWith(TEXT("Cannot act: ")) && !Message.Contains(TEXT("Not in this kit")));
+                TestTrue(TEXT("The log keeps the rules' text"), Message.StartsWith(TEXT("Cannot act: ")) && !Message.Contains(TEXT("Not in this kit")));
                 AddInfo(TEXT("SRD Grapple rejection reads: ") + Message);
             }
             TestTrue(TEXT("The rejection changed nothing"), ExpeditionTestSupport::SameRun(Before, Game.Live()));
@@ -746,7 +726,7 @@ bool FDescriptionsNoCostWordsTest::RunTest(const FString& Parameters)
         // Kits without authored abilities are described from DescribeAction.
         for (const FAbilityFacts& Ability : FBuildCatalog::Abilities(Build.Profile)) { Check(Build.Id + TEXT(" / ") + Ability.Name + TEXT(" (as the HUD reads it)"), Ability.Description); }
     }
-    for (const EC Command : {EC::Attack, EC::Move, EC::SecondWind, EC::CureWounds, EC::MagicMissile, EC::Rescue, EC::Potion, EC::PrecisionStrike, EC::Special1, EC::Special2, EC::Dash, EC::Disengage, EC::Grapple, EC::Shove, EC::Escape, EC::ActionSurge})
+    for (const EC Command : {EC::Attack, EC::Move, EC::SecondWind, EC::CureWounds, EC::MagicMissile, EC::Rescue, EC::Potion, EC::PrecisionStrike, EC::Special1, EC::Special2})
     { Check(FString::Printf(TEXT("DescribeAction(%d)"), static_cast<int32>(Command)), FCombatBattle::DescribeAction(Command)); }
     AddInfo(FString::Printf(TEXT("Checked %d description texts"), Texts));
     TestTrue(TEXT("Every kit's descriptions were read"), Texts > 70 * 2);

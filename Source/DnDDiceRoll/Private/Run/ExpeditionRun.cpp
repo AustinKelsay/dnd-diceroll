@@ -1,11 +1,7 @@
 #include "Run/ExpeditionRun.h"
 #include "Party/PartyContinuity.h"
-#include "Rules/AdvancementRules.h"
 #include "Party/BuildCatalog.h"
-#include "Rules/MonsterRules.h"
 #include "Rules/AbilityRules.h"
-#include "Rules/ClassFeatureRules.h"
-#include "Rules/SpellRules.h"
 
 namespace
 {
@@ -99,19 +95,8 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
         if (Slot.Id != I + 1 || !FBuildCatalog::Create(Slot.BuildId, Slot.Id, Slot.Name, Party.Combatants[I]))
         { Error = TEXT("Choose a valid build and name for each independent slot 1–4."); return false; }
         Party.Combatants[I].Cell = Cell;
-        if (Ruleset == ERuleset::SRD)
-        {
-            if (Party.Combatants[I].AdventurerRole == EAdventurerRole::Fighter)
-            {
-                Party.Combatants[I].ActionSurgeUses = FClassFeatureRules::ActionSurgeUses(Party.Combatants[I].Level);
-            }
-            Party.Combatants[I].SpellSlot1 = FSpellRules::SlotsFor(Party.Combatants[I].AdventurerRole, Party.Combatants[I].Level, 1);
-            Party.Combatants[I].SpellSlot2 = FSpellRules::SlotsFor(Party.Combatants[I].AdventurerRole, Party.Combatants[I].Level, 2);
-            Party.Combatants[I].SpellSlot3 = FSpellRules::SlotsFor(Party.Combatants[I].AdventurerRole, Party.Combatants[I].Level, 3);
-        }
     }
     Candidate.State.Party = Selection;
-    Party.Ruleset = Ruleset;
     if (!Candidate.Combat.Start(Party, Seed, Error)) { return false; }
     Candidate.bStarted = true;
     Candidate.OfferRoutes();
@@ -195,22 +180,6 @@ FCombatEncounter FExpeditionRun::Generate(const FExpeditionRoute& Route) const
         Enemy.DamageDie = Route.bDangerous ? 6 : 4;
         Enemy.DamageBonus = 1;
         Enemy.InitiativeBonus = 1;
-        // SRD mode: map Compact aliases onto SRD 5.1 blocks (CC-BY-4.0). Compact keeps scaled HP.
-        if (State.Ruleset == ERuleset::SRD)
-        {
-            if (const FMonsterStatBlock* Block = FMonsterRules::ResolveExpeditionRole(Enemy.Role, Route.bDangerous))
-            {
-                Enemy.Role = Block->Name;
-                Enemy.Name = Block->Name;
-                Enemy.ArmorClass = Block->ArmorClass;
-                Enemy.MaxHP = Enemy.HP = FMonsterRules::HitPoints(*Block);
-                Enemy.AttackBonus = FMonsterRules::AttackBonus(*Block);
-                Enemy.DamageDie = Block->DamageDieSides;
-                Enemy.DamageBonus = FMonsterRules::DamageBonus(*Block);
-                Enemy.Range = Block->Range;
-                Enemy.InitiativeBonus = FAbilityRules::Modifier(Block->Scores.Dexterity);
-            }
-        }
         Layout.Combatants.Add(Enemy);
     }
     return Layout;
@@ -243,12 +212,7 @@ void FExpeditionRun::ResolveCombat()
     Record.Survivors = CountSurvivors(Combat);
     if (Outcome == EBattlePhase::Defeat) { State.Phase = EExpeditionPhase::Defeat; return; }
     ++State.EncountersCompleted;
-    if (State.Ruleset == ERuleset::SRD)
-    {
-        // SRD: award XP; Level Up is player-driven between battles (not auto).
-        FPartyContinuity::AwardEncounterExperience(Combat);
-    }
-    else if (State.EncountersCompleted < EncounterCount)
+    if (State.EncountersCompleted < EncounterCount)
     {
         for (auto& Unit : Combat.State.Encounter.Combatants)
         {
@@ -283,21 +247,6 @@ bool FExpeditionRun::Recover(bool bTakeRecovery, FString& Error)
     State.bCampUsed = bTakeRecovery;
     OfferRoutes();
     return true;
-}
-
-bool FExpeditionRun::ApplyLevelUp(int32 AdventurerId, EAdventurerRole ClassToAdvance, FString& Error)
-{
-    Error.Reset();
-    if (!bStarted) { Error = TEXT("Start or resume an expedition first."); return false; }
-    if (State.Ruleset != ERuleset::SRD) { Error = TEXT("Level Up applies in SRD mode only."); return false; }
-    if (State.Phase == EExpeditionPhase::Combat || State.Phase == EExpeditionPhase::Defeat)
-    { Error = TEXT("Level Up is only available between battles."); return false; }
-    const FCombatantState* Hero = Combat.Find(AdventurerId);
-    if (!Hero) { Error = TEXT("Unknown adventurer."); return false; }
-    const int32 Sides = FAdvancementRules::HitDieSides(ClassToAdvance);
-    if (Sides < 1) { Error = TEXT("That class has no hit die."); return false; }
-    const int32 HitDieRoll = Combat.Roll(Sides);
-    return FPartyContinuity::ApplyLevelUp(Combat, AdventurerId, ClassToAdvance, HitDieRoll, Error);
 }
 
 bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error)
@@ -391,54 +340,36 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             const auto Spawn = Base.Cell;
             Base = Build->Profile; Base.Id = U.Id; Base.Name = U.Name; Base.Cell = Spawn;
             // Names are instance values; detached combat validation bounds them.
-            if (P.Ruleset == ERuleset::Compact)
+            const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
+            int32 MinimumLevel = 1;
+            for (int32 Stage = 0; Stage < P.History.Num(); ++Stage)
             {
-                const int32 ExpectedLevel = FMath::Min(5, P.EncountersCompleted + 1);
-                int32 MinimumLevel = 1;
-                for (int32 Stage = 0; Stage < P.History.Num(); ++Stage)
+                const auto& Record = P.History[Stage];
+                // Four survivors prove everyone reached this stage. A named loot
+                // recipient also proves that adventurer earned its victory level.
+                if (Record.Survivors == 4 || Record.RewardRecipient == U.Id)
                 {
-                    const auto& Record = P.History[Stage];
-                    // Four survivors prove everyone reached this stage. A named loot
-                    // recipient also proves that adventurer earned its victory level.
-                    if (Record.Survivors == 4 || Record.RewardRecipient == U.Id)
-                    {
-                        const int32 EarnedLevel = Stage + 1 + (Record.Outcome == EBattlePhase::Victory ? 1 : 0);
-                        MinimumLevel = FMath::Max(MinimumLevel, FMath::Min(5, EarnedLevel));
-                    }
+                    const int32 EarnedLevel = Stage + 1 + (Record.Outcome == EBattlePhase::Victory ? 1 : 0);
+                    MinimumLevel = FMath::Max(MinimumLevel, FMath::Min(5, EarnedLevel));
                 }
-                if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel)) { return Reject(); }
             }
-            else
-            {
-                // SRD: Level is XP-driven (1..XpTableCap); Compact encounter auto-level does not apply.
-                if (U.Level < 1 || U.Level > FAdvancementRules::XpTableCap || U.ExperiencePoints < 0) { return Reject(); }
-                if (FAdvancementRules::LevelFromTotalXp(U.ExperiencePoints) < U.Level && U.Life != ECombatLife::Dead) { return Reject(); }
-            }
+            if (U.Level < MinimumLevel || U.Level > ExpectedLevel || (U.Life == ECombatLife::Dead && U.Level > FMath::Max(1, P.EncountersCompleted + ((bCombat || bDefeat) ? 1 : 0))) || (U.Life != ECombatLife::Dead && U.Level != ExpectedLevel)) { return Reject(); }
             // Each permanent loss belongs to the level of the encounter where it
             // occurred; matching the distribution also bounds unidentified deaths.
             if (U.Life == ECombatLife::Dead && --DeathsByLevel[U.Level] < 0) { return Reject(); }
             Base.DamageBonus = FBuildCatalog::BasicDamage(*Build, U.Level);
         }
-        // SRD Start overwrites InitiativeBonus with DEX modifier (Compact Rogue keeps profile +1).
-        const int32 ExpectedInitiative = (P.Ruleset == ERuleset::SRD)
-            ? FAbilityRules::Modifier((U.AdventurerRole != EAdventurerRole::None
-                ? FAbilityRules::PrebuiltScores(U.AdventurerRole)
-                : FAbilityRules::EnemyScores(U.Role)).Dexterity)
-            : Base.InitiativeBonus;
-        const bool bStatsOk = (U.Id == Base.Id && U.Side == Base.Side && U.AdventurerRole == Base.AdventurerRole && U.Name == Base.Name && U.Role == Base.Role &&
-            U.ArmorClass == Base.ArmorClass && U.AttackBonus == Base.AttackBonus && U.DamageDie == Base.DamageDie &&
-            U.Range == Base.Range && U.Speed == Base.Speed && U.InitiativeBonus == ExpectedInitiative && U.bSneakWeapon == Base.bSneakWeapon);
-        const bool bHpOk = P.Ruleset == ERuleset::SRD
-            ? (U.Side != ECombatSide::Party || (U.MaxHP >= Base.MaxHP && U.HP >= 0 && U.HP <= U.MaxHP))
-            : (U.MaxHP == Base.MaxHP);
-        const bool bDamageOk = P.Ruleset == ERuleset::SRD && U.Side == ECombatSide::Party
-            ? (U.DamageBonus == FBuildCatalog::BasicDamage(*FBuildCatalog::Find(U.BuildId), U.Level))
-            : (U.DamageBonus == Base.DamageBonus);
-        if (!bStatsOk || !bHpOk || !bDamageOk ||
+        // SRD Start replaces the profile initiative bonus with the DEX modifier.
+        if (Snapshot.Battle.Encounter.Ruleset == ERuleset::SRD)
+        {
+            const FAbilityScores Scores = Base.AdventurerRole != EAdventurerRole::None ? FAbilityRules::PrebuiltScores(Base.AdventurerRole) : FAbilityRules::EnemyScores(Base.Role);
+            Base.InitiativeBonus = FAbilityRules::Modifier(Scores.Dexterity);
+        }
+        if (U.Id != Base.Id || U.Side != Base.Side || U.AdventurerRole != Base.AdventurerRole || U.Name != Base.Name || U.Role != Base.Role ||
+            U.MaxHP != Base.MaxHP || U.ArmorClass != Base.ArmorClass || U.AttackBonus != Base.AttackBonus || U.DamageDie != Base.DamageDie ||
+            U.DamageBonus != Base.DamageBonus || U.Range != Base.Range || U.Speed != Base.Speed || U.InitiativeBonus != Base.InitiativeBonus || U.bSneakWeapon != Base.bSneakWeapon ||
             (U.AdventurerRole != EAdventurerRole::Fighter && U.SecondWindUses != 0) ||
-            (U.AdventurerRole != EAdventurerRole::Fighter && U.ActionSurgeUses != 0) ||
             (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && U.SpellSlots != 0) ||
-            (U.AdventurerRole != EAdventurerRole::Cleric && U.AdventurerRole != EAdventurerRole::Wizard && (U.SpellSlot1 != 0 || U.SpellSlot2 != 0 || U.SpellSlot3 != 0)) ||
             (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
@@ -448,7 +379,7 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         }
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
             U.KitUses != Base.KitUses || U.GuardTurns != 0 || U.GuardAmount != 0 || U.RageUses != Base.RageUses || U.RageTurns != 0 || U.GuardTargetId != INDEX_NONE || U.LastSurge != 0 ||
-            U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses || U.ActionSurgeUses != Base.ActionSurgeUses)) { return Reject(); }
+            U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }
     }
     for (int32 Deaths : DeathsByLevel) { if (Deaths != 0) { return Reject(); } }
     if (P.History.IsEmpty() && (Snapshot.Battle.Round != 1 || !Snapshot.Battle.bActionAvailable || !Snapshot.Battle.bBonusActionAvailable ||
