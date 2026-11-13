@@ -149,6 +149,106 @@
       "mode": "battle",
       "yaw": 0,
       "distance": 6400
+    },
+    {
+      "name": "framing-rose-pan-near-900",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 900,
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-1300",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 1300,
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-far",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-6400",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": 6400,
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-1300-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": 1300,
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-default-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "default",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-far-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-1300-yawm135",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": 1300,
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-default-yawm135",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": "default",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "framing-rose-pan-near-far-yawm135",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
     }
   ]
 }
