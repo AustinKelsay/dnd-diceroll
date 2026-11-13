@@ -51,6 +51,8 @@ const FEncounterRecipe Recipes[] = {
 // Every revision draws a recipe from the first three, so revision 9 keeps revision 8's random numbers (and fights 1-2 their boards).
 constexpr int32 DrawnRecipes = 3, PressureRecipe = 3, FinaleRecipe = 6;
 constexpr int32 IdentityRevision = 9;
+/** Revision 10 (#218): Compact rewards offer Reserve and Honed beside Gear. Generation is revision 9's exactly. */
+constexpr int32 UpgradeRevision = 10;
 
 /** The saved FCombatantState::Role values (#188). Revisions 7 and 8 only ever use Raider and Archer. */
 enum class EFoeRole : uint8 { Raider, Archer, Skirmisher, Brute, Warden };
@@ -120,8 +122,9 @@ const TCHAR* RiskWord(int32 Stage, bool bDangerous)
     }
 }
 
-// One profile supplies generated facts, truthful text and restore validation.
-void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSecuredSupplies, bool bIdentity)
+// One profile supplies generated facts, truthful text and restore validation. bUpgradeCards (revision 10 Compact, #218) changes only the
+// reward phrase of routes 1-4: a reward card is a choice, no longer a guaranteed +1 gear.
+void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSecuredSupplies, bool bIdentity, bool bUpgradeCards)
 {
     Route.Id = Stage * 2 + Choice + 1;
     Route.bDangerous = Choice == 1;
@@ -138,7 +141,7 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
         for (const EFoeRole Role : Foes) { Words.Add(RoleWord(Role, Route.bDangerous)); }
         Route.EnemyCount = Foes.Num();
         if (bFinale) { Route.RewardPotions = 0; Route.Name = TEXT("Artifact vault: ") + Route.Name; }
-        const FString Rewards = bFinale ? FString(TEXT("Recover the artifact; no loot")) : FString::Printf(TEXT("+1 gear, +%d potion%s%s"),
+        const FString Rewards = bFinale ? FString(TEXT("Recover the artifact; no loot")) : FString::Printf(TEXT("%s, +%d potion%s%s"), bUpgradeCards ? TEXT("1 upgrade choice") : TEXT("+1 gear"),
             Route.RewardPotions, Route.RewardPotions == 1 ? TEXT("") : TEXT("s"), Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
         Route.Preview = FString::Printf(TEXT("%s | %d foes: %s | %s: %s | Risk: %s | %s"), Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"),
             Route.EnemyCount, *FString::Join(Words, TEXT(", ")), Recipe.Terrain, Recipe.Note, RiskWord(Stage, Route.bDangerous), *Rewards);
@@ -287,6 +290,7 @@ void FExpeditionRun::OfferRoutes()
     State.Offers.Reset();
     const bool bSecuredSupplies = !State.History.IsEmpty() && State.History.Last().Route.bDangerous;
     const bool bIdentity = HasIdentity(State.Ruleset, State.CatalogRevision);
+    const bool bUpgradeCards = OffersUpgradeCards(State.Ruleset, State.CatalogRevision);
     const EEncounterStage Stage = StageOf(State.EncountersCompleted);
     for (int32 Index = 0; Index < 2; ++Index)
     {
@@ -299,7 +303,7 @@ void FExpeditionRun::OfferRoutes()
         if (bIdentity && Stage == EEncounterStage::Finale) { Route.Recipe = FinaleRecipe; }
         Route.Width = Random.RandRange(MinWidth, MaxWidth);
         Route.Height = Random.RandRange(MinHeight, MaxHeight);
-        DescribeRoute(Route, State.EncountersCompleted, Index, bSecuredSupplies, bIdentity);
+        DescribeRoute(Route, State.EncountersCompleted, Index, bSecuredSupplies, bIdentity, bUpgradeCards);
         State.Offers.Add(Route);
     }
     State.GenerationRandomState = Random.GetCurrentSeed();
@@ -464,13 +468,26 @@ void FExpeditionRun::ResolveCombat()
     State.Phase = State.bArtifactRecovered ? EExpeditionPhase::Victory : EExpeditionPhase::Reward;
 }
 
-bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error)
+bool FExpeditionRun::OffersUpgradeCards(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= UpgradeRevision; }
+
+bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error) { return ClaimReward(RecipientId, ERewardCard::Gear, Error); }
+
+bool FExpeditionRun::ClaimReward(int32 RecipientId, ERewardCard Card, FString& Error)
 {
     Error.Reset();
     if (!bStarted || State.Phase != EExpeditionPhase::Reward)
     { Error = TEXT("Loot can be claimed once after each of the first four victories."); return false; }
-    if (!FPartyContinuity::Reward(Combat, RecipientId, State.History.Last().Route.RewardPotions, Error)) { return false; }
+    if (Card != ERewardCard::Gear && Card != ERewardCard::Reserve && Card != ERewardCard::Honed) { Error = TEXT("Choose Gear, Reserve or Honed."); return false; }
+    const FCombatantState* Recipient = Combat.Find(RecipientId);
+    if (!Recipient || Recipient->Side != ECombatSide::Party || Recipient->Life != ECombatLife::Conscious)
+    { Error = TEXT("Select a conscious survivor for the victory reward."); return false; }
+    if (Card != ERewardCard::Gear && !OffersUpgradeCards(State.Ruleset, State.CatalogRevision)) { Error = TEXT("Gear only in this run."); return false; }
+    // The cards draw no random numbers; a rejection changes nothing. The candidate battle is installed only when the claim is whole.
+    FCombatBattle Candidate = Combat;
+    if (!FPartyContinuity::Reward(Candidate, RecipientId, State.History.Last().Route.RewardPotions, Card, Error)) { return false; }
+    Combat = MoveTemp(Candidate);
     State.History.Last().RewardRecipient = RecipientId;
+    State.History.Last().RewardCard = Card;
     if (State.EncountersCompleted == 1) { State.Phase = EExpeditionPhase::Recovery; }
     else { OfferRoutes(); }
     return true;
@@ -528,13 +545,14 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
         P.bCampResolved != (P.EncountersCompleted >= 1 && !bRecovery && !(bReward && P.EncountersCompleted == 1))) { return Reject(); }
     // Every retained route uses the same bounded recipe/preview facts as generation, under the run's own revision.
     const bool bIdentity = HasIdentity(P.Ruleset, P.CatalogRevision);
-    auto ValidRoute = [&P, bIdentity](const FExpeditionRoute& R, int32 Stage, int32 Choice)
+    const bool bUpgradeCards = OffersUpgradeCards(P.Ruleset, P.CatalogRevision);
+    auto ValidRoute = [&P, bIdentity, bUpgradeCards](const FExpeditionRoute& R, int32 Stage, int32 Choice)
     {
         const bool bSupplies = Stage > 0 && P.History[Stage - 1].Route.bDangerous;
         if (R.EncounterSeed < 0 || R.EncounterSeed >= MAX_int32 || !AllowedRecipe(bIdentity, Stage, R.Recipe) ||
             R.Width < MinWidth || R.Width > MaxWidth || R.Height < MinHeight || R.Height > MaxHeight) { return false; }
         auto Expected = R;
-        DescribeRoute(Expected, Stage, Choice, bSupplies, bIdentity);
+        DescribeRoute(Expected, Stage, Choice, bSupplies, bIdentity, bUpgradeCards);
         return FExpeditionRoute::StaticStruct()->CompareScriptStruct(&R, &Expected, 0);
     };
     for (int32 I = 0; I < P.Offers.Num(); ++I) { if (!ValidRoute(P.Offers[I], P.EncountersCompleted, I)) { return Reject(); } }
@@ -552,7 +570,9 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             H.Outcome != (bUnfinished ? EBattlePhase::Fighting : bLost ? EBattlePhase::Defeat : EBattlePhase::Victory) ||
             H.Survivors < (bLost ? 0 : 1) || H.Survivors > PreviousSurvivors || (bLost && H.Survivors != 0) ||
             (bUnfinished && H.Survivors != PreviousSurvivors) ||
-            (bHasReward ? H.RewardRecipient < 1 || H.RewardRecipient > 4 : H.RewardRecipient != INDEX_NONE)) { return Reject(); }
+            (bHasReward ? H.RewardRecipient < 1 || H.RewardRecipient > 4 : H.RewardRecipient != INDEX_NONE) ||
+            // A non-Gear card only on a rewarded record of a run that offers the cards (#218); a record without a reward holds Gear.
+            (H.RewardCard != ERewardCard::Gear && (!bHasReward || !bUpgradeCards || (H.RewardCard != ERewardCard::Reserve && H.RewardCard != ERewardCard::Honed)))) { return Reject(); }
         if (!bUnfinished) { DeathsByLevel[I + 1] = PreviousSurvivors - H.Survivors; }
         PreviousSurvivors = H.Survivors;
     }
@@ -622,10 +642,18 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
             (U.Side == ECombatSide::Enemy && (!U.BuildId.IsEmpty() || !U.ClassId.IsEmpty() || !U.SubclassId.IsEmpty() || U.Level != 1 || U.FighterSubclass != EFighterSubclass::None || U.Potions != 0 || U.WeaponRank != 0))) { return Reject(); }
         if (U.Side == ECombatSide::Party)
         {
-            int32 Gear = 0, SuppliedPotions = 1;
-            for (const auto& H : P.History) { if (H.RewardRecipient == U.Id) { ++Gear; SuppliedPotions += H.Route.RewardPotions; } }
-            if (U.WeaponRank != FMath::Min(3, Gear) || U.Potions > SuppliedPotions) { return Reject(); }
+            // Every derived reward fact against history (#218): the gear rank counts Gear claims; Reserve and Honed are held exactly when
+            // history holds that claim, at most once each. Dead heroes keep theirs. Every card supplies the route's potions.
+            int32 Gear = 0, Reserves = 0, Honings = 0, SuppliedPotions = 1;
+            for (const auto& H : P.History)
+            {
+                if (H.RewardRecipient != U.Id) { continue; }
+                SuppliedPotions += H.Route.RewardPotions;
+                Gear += H.RewardCard == ERewardCard::Gear ? 1 : 0; Reserves += H.RewardCard == ERewardCard::Reserve ? 1 : 0; Honings += H.RewardCard == ERewardCard::Honed ? 1 : 0;
+            }
+            if (U.WeaponRank != FMath::Min(3, Gear) || U.Potions > SuppliedPotions || Reserves > 1 || Honings > 1 || U.bReserve != (Reserves == 1) || U.bHoned != (Honings == 1)) { return Reject(); }
         }
+        else if (U.bReserve || U.bHoned) { return Reject(); }
         if (P.History.IsEmpty() && (U.Cell != Base.Cell || U.HP != Base.HP || U.Life != Base.Life || U.Potions != Base.Potions ||
             U.KitUses != Base.KitUses || U.GuardTurns != 0 || U.GuardAmount != 0 || U.RageUses != Base.RageUses || U.RageTurns != 0 || U.GuardTargetId != INDEX_NONE || U.LastSurge != 0 ||
             U.ManeuverUses != (U.FighterSubclass == EFighterSubclass::BattleMaster ? 2 : 0) || U.WeaponRank != 0 || U.SpellSlots != Base.SpellSlots || U.SecondWindUses != Base.SecondWindUses)) { return Reject(); }

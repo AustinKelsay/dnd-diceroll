@@ -82,7 +82,8 @@ bool FSchema4UpgradeRoundTripTest::RunTest(const FString& Parameters)
     // A revision 8 run and a current-revision run (9 since #188), each mid-battle (after enemy turns and one party move) and
     // between battles (reward and camp taken).
     TArray<FExpeditionRun> Runs;
-    for (const int32 Revision : {8, FBuildCatalog::Revision})
+    // #218: and revision 10, through 4 -> 5 -> 6.
+    for (const int32 Revision : {8, 9, FBuildCatalog::Revision})
     {
         FExpeditionRun Mid; Mid.NewRun(42, Error, TEXT("seeded-fixture"), EFighterSubclass::Champion, ERuleset::Compact, Revision);
         Mid.ChooseRoute(Mid.Progress().Offers[0].Id, Error);
@@ -110,12 +111,14 @@ bool FSchema4UpgradeRoundTripTest::RunTest(const FString& Parameters)
         Object->SetNumberField(TEXT("Version"), 4);
         const TSharedPtr<FJsonObject> Current = Object->GetObjectField(TEXT("Current"));
         Current->GetObjectField(TEXT("Progress"))->RemoveField(TEXT("Ruleset"));
+        // ... and none of the fields the 5 -> 6 upgrade adds (#218).
+        for (const auto& Record : Current->GetObjectField(TEXT("Progress"))->GetArrayField(TEXT("History"))) { Record->AsObject()->RemoveField(TEXT("RewardCard")); }
         const TSharedPtr<FJsonObject> Encounter = Current->GetObjectField(TEXT("Battle"))->GetObjectField(TEXT("Encounter"));
         for (const TCHAR* Field : {TEXT("Ruleset"), TEXT("bAmbush"), TEXT("AmbushStealthTotals")}) { Encounter->RemoveField(Field); }
         for (const auto& Unit : Encounter->GetArrayField(TEXT("Combatants")))
         {
             for (const TCHAR* Field : {TEXT("bReactionAvailable"), TEXT("DeathSaveSuccesses"), TEXT("DeathSaveFailures"), TEXT("TemporaryHP"), TEXT("bConcentrating"),
-                TEXT("Size"), TEXT("bSurprised"), TEXT("bDisengaged"), TEXT("bProne"), TEXT("GrapplerId")}) { Unit->AsObject()->RemoveField(Field); }
+                TEXT("Size"), TEXT("bSurprised"), TEXT("bDisengaged"), TEXT("bProne"), TEXT("GrapplerId"), TEXT("bReserve"), TEXT("bHoned")}) { Unit->AsObject()->RemoveField(Field); }
         }
         FString Format4; FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Format4));
         FExpeditionSaveData Loaded;

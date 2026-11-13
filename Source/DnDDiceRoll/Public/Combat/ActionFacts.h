@@ -25,7 +25,7 @@ enum class EActionBlocker : uint8
     Count
 };
 
-/** One resource an action spends. Cap and CampRecovery come from the catalog build; INDEX_NONE when unknown. */
+/** One resource an action spends. Cap is the hero's own (FBuildCatalog::Caps, Reserve included); CampRecovery is the build's. INDEX_NONE when unknown. */
 struct DNDDICEROLL_API FActionResourceCost
 {
     EActionResource Resource = EActionResource::None;

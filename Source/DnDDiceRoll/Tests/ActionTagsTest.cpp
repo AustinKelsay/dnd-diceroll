@@ -731,8 +731,8 @@ bool FDescriptionsNoCostWordsTest::RunTest(const FString& Parameters)
     AddInfo(FString::Printf(TEXT("Checked %d description texts"), Texts));
     TestTrue(TEXT("Every kit's descriptions were read"), Texts > 70 * 2);
     // Catalog text only: descriptions do not move the revision saves carry (8 since the #184 Compact enemy tuning, 9 since the
-    // #188 encounter identity).
-    TestEqual(TEXT("The catalog revision is the tuning's, not the text's"), FBuildCatalog::Revision, 9);
+    // #188 encounter identity, 10 since the #218 reward cards).
+    TestEqual(TEXT("The catalog revision is the tuning's, not the text's"), FBuildCatalog::Revision, 10);
     return !HasAnyErrors();
 }
 
