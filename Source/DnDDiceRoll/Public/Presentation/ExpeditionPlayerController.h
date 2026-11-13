@@ -19,6 +19,8 @@ class DNDDICEROLL_API AExpeditionPlayerController : public APlayerController
     GENERATED_BODY()
 public:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    virtual void BeginDestroy() override;
     virtual void SetupInputComponent() override;
     virtual void PlayerTick(float DeltaTime) override;
     /** Any other key or button pressed while the left button is down spends the press (#220); everything else is the engine's. */
@@ -30,7 +32,14 @@ public:
     virtual void FlushPressedKeys() override;
     /** Spends an armed left press for good: its release can never click, however the window comes back (#220). */
     void NotifyWindowFocusLost() { bPressVoided = true; }
-    /** False when a game viewport exists and has no window focus. With no viewport (an automation world) there is nothing to lose. */
+    /**
+     * The application losing activation (Slate's OnApplicationActivationStateChanged(false), which on Linux follows the window losing keyboard focus to another client): the
+     * press is spent at that moment, not when the button is released. On that platform an input event after the loss re-activates the application, so a poll at release is too late (#220).
+     */
+    void OnApplicationActivation(bool bActive);
+    FDelegateHandle ActivationHandle;
+    void StopListeningForActivation();
+    /** False when a game viewport exists and the window or the application has no focus. With no viewport (an automation world) there is nothing to lose. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }

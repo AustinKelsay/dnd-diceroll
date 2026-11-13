@@ -6,6 +6,6 @@ public class DnDDiceRoll : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "Json" });
-        PrivateDependencyModuleNames.AddRange(new[] { "RenderCore" });
+        PrivateDependencyModuleNames.AddRange(new[] { "RenderCore", "Slate", "SlateCore" });
     }
 }

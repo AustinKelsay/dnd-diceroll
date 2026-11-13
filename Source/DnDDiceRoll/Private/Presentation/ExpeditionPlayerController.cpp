@@ -15,10 +15,13 @@
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
+#include "Misc/App.h"
+#include "Framework/Application/SlateApplication.h"
 
 void AExpeditionPlayerController::BeginPlay()
 {
     Super::BeginPlay();
+    if (FSlateApplication::IsInitialized() && !ActivationHandle.IsValid()) { ActivationHandle = FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject(this, &AExpeditionPlayerController::OnApplicationActivation); }
     Preset();
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
@@ -119,6 +122,29 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::Escape, &AExpeditionPlayerController::CloseOverlays);
     // Return to menu (#132). Not Esc: Esc closes what is open and must never leave a run.
     Bind(EKeys::BackSpace, &AExpeditionPlayerController::RequestReturnToMenu);
+}
+
+void AExpeditionPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    StopListeningForActivation();
+    Super::EndPlay(EndPlayReason);
+}
+
+void AExpeditionPlayerController::BeginDestroy()
+{
+    StopListeningForActivation();
+    Super::BeginDestroy();
+}
+
+void AExpeditionPlayerController::StopListeningForActivation()
+{
+    if (ActivationHandle.IsValid() && FSlateApplication::IsInitialized()) { FSlateApplication::Get().OnApplicationActivationStateChanged().Remove(ActivationHandle); }
+    ActivationHandle.Reset();
+}
+
+void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
+{
+    if (!bActive) { NotifyWindowFocusLost(); }
 }
 
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
@@ -682,7 +708,7 @@ void AExpeditionPlayerController::FlushPressedKeys()
 bool AExpeditionPlayerController::WindowHasFocus() const
 {
     const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-    return !Client || !Client->Viewport || Client->Viewport->HasFocus();
+    return !Client || !Client->Viewport || (Client->Viewport->HasFocus() && FApp::HasFocus());
 }
 
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)

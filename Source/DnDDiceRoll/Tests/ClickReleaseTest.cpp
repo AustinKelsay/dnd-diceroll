@@ -1,5 +1,11 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
+#include "Engine/Engine.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerInput.h"
+#include "KeyState.h"
+#include "UObject/StrongObjectPtr.h"
 
 /**
  * #220: a left click on the board is a press and its release, and the release acts only if nothing changed under the press. These tests drive the real controller (the
@@ -345,40 +351,105 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftPressSpentByFocusLossTest, "Project.Expedi
 bool FLeftPressSpentByFocusLossTest::RunTest(const FString& Parameters)
 {
     using namespace ClickReleaseTest;
-    // The engine's own focus-loss path: UGameViewportClient::LostFocus calls APlayerController::FlushPressedKeys, which queues a synthetic release for every held key, and the
-    // next PlayerTick delivers it inside Super::PlayerTick. This test calls that engine entry point, never the cancellation seam, with a legal board press held and the pointer
-    // and camera still: the release must not click, in each order the loss and the release can arrive.
+    // The engine's own focus-loss path: UGameViewportClient::LostFocus calls APlayerController::FlushPressedKeys, which (for a controller with a local player) queues a synthetic
+    // IE_Released for every held key; the next PlayerTick delivers it inside Super::PlayerTick. The harness controller has no local player, so one is given to it for the flush
+    // (as the viewport's controller has), and the test then checks that the engine really generated the synthetic release and delivered it. It calls the engine entry point,
+    // never the cancellation seam, with a legal board press held and the pointer and camera still.
     FExpeditionSaveData Data;
     if (!TestTrue(TEXT("A fight checkpoint exists"), Fight(Data, -1, false))) { return false; }
-    struct FOrder { const TCHAR* Name; bool bTickBeforeRelease; bool bRegainFirst; };
+    enum class EOrder : uint8 { TickDeliversTheSyntheticRelease, RealReleaseBeforeAnyTick, FlushedTwiceThenTicks };
+    struct FOrder { const TCHAR* Name; EOrder Order; };
     const FOrder Orders[] = {
-        {TEXT("the synthetic release delivered by the next tick"), true, false},
-        {TEXT("the real release arriving after the window is back, no tick between"), false, true},
-        {TEXT("ticks pass with the window back, then the real release"), true, true},
+        {TEXT("the next tick delivers the synthetic release"), EOrder::TickDeliversTheSyntheticRelease},
+        {TEXT("the real release arrives before any tick, then the synthetic one is delivered too"), EOrder::RealReleaseBeforeAnyTick},
+        {TEXT("two focus losses back to back, then the ticks"), EOrder::FlushedTwiceThenTicks},
     };
-    for (const FOrder& Order : Orders)
+    for (const FOrder& Case : Orders)
     {
+        const FString Name = Case.Name;
         TUniquePtr<FHarness> Game = Resumed(*this, Data);
-        if (!TestTrue(FString(Order.Name) + TEXT(": the party holds the turn"), Game.IsValid())) { continue; }
+        if (!TestTrue(Name + TEXT(": the party holds the turn"), Game.IsValid())) { continue; }
         FIntPoint Cell;
-        if (!TestTrue(FString(Order.Name) + TEXT(": the hero has a cell to walk to"), FreeMove(*Game, Cell))) { continue; }
+        if (!TestTrue(Name + TEXT(": the hero has a cell to walk to"), FreeMove(*Game, Cell))) { continue; }
+        TStrongObjectPtr<ULocalPlayer> LocalPlayer(NewObject<ULocalPlayer>(GEngine, GEngine->LocalPlayerClass));
+        if (!TestTrue(Name + TEXT(": a local player exists"), LocalPlayer.IsValid())) { continue; }
         Point(*Game, Aim, Cell);
         Frames(*Game, 3);
         const FStamp Was = Stamp(*Game);
         Down(*Game, EKeys::LeftMouseButton);
         Game->Frame(1.0f / 30.0f);
+        TestTrue(Name + TEXT(": the left button is held"), Game->Player->IsInputKeyDown(EKeys::LeftMouseButton));
+
         // The window loses focus: the engine flushes the held keys.
+        Game->Player->Player = LocalPlayer.Get();
         Game->Player->FlushPressedKeys();
-        if (Order.bTickBeforeRelease) { Frames(*Game, 3); }
-        TestTrue(FString(Order.Name) + TEXT(": the flush's release committed nothing"), Same(Was, Stamp(*Game)));
-        // The window comes back and the button is let go for real.
+        if (Case.Order == EOrder::FlushedTwiceThenTicks) { Game->Player->FlushPressedKeys(); }
+        Game->Player->Player = nullptr;
+        const FKeyState* State = Game->Player->PlayerInput->GetKeyState(EKeys::LeftMouseButton);
+        const bool bGenerated = State && State->EventAccumulator[IE_Released].Num() > 0;
+        TestTrue(Name + TEXT(": the flush queued a synthetic release for the held button"), bGenerated);
+        TestFalse(Name + TEXT(": the engine no longer counts the button as held"), Game->Player->IsInputKeyDown(EKeys::LeftMouseButton));
+        TestTrue(Name + TEXT(": nothing is committed by the flush itself"), Same(Was, Stamp(*Game)));
+
+        if (Case.Order == EOrder::RealReleaseBeforeAnyTick) { Up(*Game, EKeys::LeftMouseButton); }
+        // The next tick dispatches the queued release into the controller's bindings (ClickReleased): the engine's path, with no explicit release of ours.
+        Game->Frame(1.0f / 30.0f);
+        TestTrue(Name + TEXT(": the release was dispatched by the tick"), Game->Player->WasInputKeyJustReleased(EKeys::LeftMouseButton));
+        TestTrue(Name + TEXT(": the dispatched release committed nothing (before any explicit release)"), Same(Was, Stamp(*Game)));
+        Frames(*Game, 3);
+        Game->Settle();
+        TestTrue(Name + TEXT(": nothing committed once the window was back"), Same(Was, Stamp(*Game)));
+        // A fresh click afterwards works.
+        Game->Player->PreviewMode(ECombatCommandType::Attack);
+        TestTrue(Name + TEXT(": a fresh click afterwards commits"), PlainClick(*Game, Aim, Cell));
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftPressSpentByDeactivationTest, "Project.Expedition.Presentation.LeftPressIsSpentByApplicationDeactivation",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLeftPressSpentByDeactivationTest::RunTest(const FString& Parameters)
+{
+    using namespace ClickReleaseTest;
+    // On Linux the window losing keyboard focus to another client reaches the game as Slate's application activation event (FLinuxApplication::DeactivateApplication, about 0.1 s
+    // after WM_KILLFOCUS), and NOT as the viewport losing focus or a FlushPressedKeys; an input event that follows (the button's release) re-activates the application. The press
+    // must be spent by the deactivation itself. This test broadcasts the engine's own event, never the cancellation seam, with a legal board press held and the pointer and camera
+    // still, and releases the button for real.
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("A fight checkpoint exists"), Fight(Data, -1, false))) { return false; }
+    if (!TestTrue(TEXT("The Slate application exists"), FSlateApplication::IsInitialized())) { return false; }
+    enum class EOrder : uint8 { ReleasedWhileInactive, ReleasedAfterReactivation, ReactivatedByTheRelease };
+    struct FOrder { const TCHAR* Name; EOrder Order; };
+    const FOrder Orders[] = {
+        {TEXT("released while the application is still inactive"), EOrder::ReleasedWhileInactive},
+        {TEXT("the application re-activated, then released"), EOrder::ReleasedAfterReactivation},
+        {TEXT("the release itself re-activates the application first, as on Linux"), EOrder::ReactivatedByTheRelease},
+    };
+    for (const FOrder& Case : Orders)
+    {
+        const FString Name = Case.Name;
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(Name + TEXT(": the party holds the turn"), Game.IsValid())) { continue; }
+        FIntPoint Cell;
+        if (!TestTrue(Name + TEXT(": the hero has a cell to walk to"), FreeMove(*Game, Cell))) { continue; }
+        Point(*Game, Aim, Cell);
+        Frames(*Game, 3);
+        const FStamp Was = Stamp(*Game);
+        Down(*Game, EKeys::LeftMouseButton);
+        Game->Frame(1.0f / 30.0f);
+        // Another client takes keyboard focus: the engine deactivates the application.
+        FSlateApplication::Get().OnApplicationActivationStateChanged().Broadcast(false);
+        Game->Frame(1.0f / 30.0f);
+        TestTrue(Name + TEXT(": nothing is committed by the deactivation"), Same(Was, Stamp(*Game)));
+        if (Case.Order == EOrder::ReleasedAfterReactivation || Case.Order == EOrder::ReactivatedByTheRelease) { FSlateApplication::Get().OnApplicationActivationStateChanged().Broadcast(true); }
+        if (Case.Order == EOrder::ReleasedAfterReactivation) { Frames(*Game, 3); }
         Up(*Game, EKeys::LeftMouseButton);
         Frames(*Game, 3);
         Game->Settle();
-        TestTrue(FString(Order.Name) + TEXT(": nothing committed after the window came back"), Same(Was, Stamp(*Game)));
+        TestTrue(Name + TEXT(": the release committed nothing"), Same(Was, Stamp(*Game)));
         // A fresh click afterwards works.
         Game->Player->PreviewMode(ECombatCommandType::Attack);
-        TestTrue(FString(Order.Name) + TEXT(": a fresh click afterwards commits"), PlainClick(*Game, Aim, Cell));
+        TestTrue(Name + TEXT(": a fresh click afterwards commits"), PlainClick(*Game, Aim, Cell));
     }
     return !HasAnyErrors();
 }
