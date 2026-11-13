@@ -149,7 +149,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     {
         // Every Reward phase, and every Resume (a new presentation revision), starts on Gear (#218).
         const uint32 Screen = uint32(BattleView->PresentationRevision()) * 8 + uint32(BattleView->Progress().EncountersCompleted);
-        if (Screen != RewardScreen) { RewardScreen = Screen; SelectedCard = ERewardCard::Gear; }
+        // The focus goes back with the card: the screen's own focus rule puts it on the Gear card again (#218 review).
+        if (Screen != RewardScreen) { RewardScreen = Screen; SelectedCard = ERewardCard::Gear; Focus = FMenuFocus(); }
         const FCombatantState* Selected = Rules.Find(SelectedId);
         if (!Selected || Selected->Life != ECombatLife::Conscious)
         {
@@ -500,8 +501,11 @@ void AExpeditionPlayerController::SelectRewardCard(ERewardCard Card)
 {
     if (!OnRewardScreen()) { return; }
     SelectedCard = Card;
-    // The card's button takes the focus too, so Tab continues from it and Enter claims it.
+    // The card's button takes the focus too, as an explicit choice for this screen (like Tab's), so it stays on later frames, Tab continues from it,
+    // Enter claims it and Help or Records give it back (#218 review).
     Focus.Id = FName(Card == ERewardCard::Reserve ? TEXT("CardReserve") : Card == ERewardCard::Honed ? TEXT("CardHoned") : TEXT("CardGear"));
+    Focus.Screen = MenuScreenKey();
+    Focus.bTabChosen = true;
 }
 void AExpeditionPlayerController::StepRewardCard(int32 Direction)
 {

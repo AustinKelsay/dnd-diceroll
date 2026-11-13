@@ -282,8 +282,9 @@ void AExpeditionHUD::DrawHUD()
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
-    // Progression facts (#218) for the party cards, the hero details and the reward and camp screens; combat never needs them.
-    if (View->HasRun() && !View->InCombat()) { Progression = FProgressionQuery::For(View->CurrentRun()); }
+    // Progression facts (#218) for the party cards, the hero details (in combat too: the basic-damage breakdown with an active Rage, and the upgrades) and
+    // the reward and camp screens. In combat the query builds no cards or camp lines and marks no level gain, so it stays cheap.
+    if (View->HasRun()) { Progression = FProgressionQuery::For(View->CurrentRun()); }
     S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;

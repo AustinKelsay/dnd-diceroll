@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
 #include "Presentation/ProgressionText.h"
+#include "Presentation/TargetChipLayout.h"
 #include "Run/ProgressionQuery.h"
 
 /**
@@ -176,6 +177,17 @@ bool FRewardCardKeysTest::RunTest(const FString& Parameters)
     Game.Press(EKeys::Right); TestTrue(TEXT("Right moves to Honed"), Game.Player->RewardCard() == ERewardCard::Honed);
     Game.Press(EKeys::Right); TestTrue(TEXT("and wraps to Gear"), Game.Player->RewardCard() == ERewardCard::Gear);
     Game.Press(EKeys::Left); TestTrue(TEXT("Left goes back to Honed"), Game.Player->RewardCard() == ERewardCard::Honed);
+    // An explicit card keeps the focus on later frames, so the outline, Tab and Enter all follow it (#218 review): by letter, by arrow and by click.
+    auto Holds = [&](const TCHAR* How, const TCHAR* Card, ERewardCard Expected)
+    {
+        Game.Frame(0.0f); Game.Frame(0.0f);
+        TestTrue(FString(How) + TEXT(": the chosen card keeps the focus on later frames"), Game.Player->MenuFocus() == FName(Card) && Game.Player->RewardCard() == Expected);
+    };
+    Holds(TEXT("Left"), TEXT("CardHoned"), ERewardCard::Honed);
+    Game.Press(EKeys::R); Holds(TEXT("R"), TEXT("CardReserve"), ERewardCard::Reserve);
+    Game.Press(EKeys::Tab); Holds(TEXT("Tab from Reserve"), TEXT("CardHoned"), ERewardCard::Honed);
+    Game.Player->HandleButton(TEXT("CardReserve")); Holds(TEXT("A click on Reserve"), TEXT("CardReserve"), ERewardCard::Reserve);
+    Game.Press(EKeys::Slash); Game.Frame(0.0f); Game.Press(EKeys::Escape); Holds(TEXT("Help opened and closed"), TEXT("CardReserve"), ERewardCard::Reserve);
     Game.Press(EKeys::G); Game.Frame(0.0f);
     Game.Press(EKeys::Tab); Game.Frame(0.0f);
     TestTrue(TEXT("Tab keeps the screen's focus order: Gear, then Reserve"), Game.Player->MenuFocus() == FName(TEXT("CardReserve")) && Game.Player->RewardCard() == ERewardCard::Reserve);
@@ -201,6 +213,70 @@ bool FRewardCardKeysTest::RunTest(const FString& Parameters)
     const FExpeditionProgress& P = Game.View->Progress();
     TestTrue(TEXT("Enter claims the chosen card for the chosen hero"), P.History.Num() >= 1 && P.History[0].RewardCard == ERewardCard::Honed && P.History[0].RewardRecipient == 4);
     TestTrue(TEXT("and the claim is committed"), Game.CheckpointBytes() != Bytes && Game.View->Rules().Find(4)->bHoned);
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHeroDetailsInCombatTest, "Project.Expedition.Presentation.HeroDetailsShowProgressionInCombat",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FHeroDetailsInCombatTest::RunTest(const FString& Parameters)
+{
+    using namespace ProgressionPresentationTest;
+    // A Totem Warrior (hero 4) takes Honed at reward 1, then rages and shelters an ally in fight 2: the next fight, resumed from its checkpoint, still shows
+    // its basic-damage breakdown with the Rage part and its upgrades beside the protection line, on screen at every size (#218 review).
+    const TCHAR* Builds[] = {TEXT("rogue.thief"), TEXT("cleric.life"), TEXT("fighter.champion"), TEXT("barbarian.totem-warrior")};
+    TArray<FPartyBuildSelection> Selection;
+    for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection Slot; Slot.Id = I + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), I + 1); Slot.BuildId = Builds[I]; Selection.Add(Slot); }
+    auto Play = [&](FExpeditionRun& Run, int32 Seed) -> bool
+    {
+        FString E;
+        if (!Run.NewRun(Seed, Selection, E, TEXT("details-in-combat")) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, E) || !FinishCombat(Run) ||
+            Run.Progress().Phase != EExpeditionPhase::Reward || !Alive(Run, 4) || !Run.ClaimReward(4, ERewardCard::Honed, E) || !Run.Recover(true, E) ||
+            !Run.ChooseRoute(Run.Progress().Offers[0].Id, E)) { return false; }
+        for (int32 Steps = 0; Steps < 400 && Run.Progress().Phase == EExpeditionPhase::Combat; ++Steps)
+        {
+            const int32 Id = Run.Battle().ActiveId();
+            if (Run.Battle().Find(Id)->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); continue; }
+            if (Id == 4)
+            {
+                if (Run.Battle().LegalTargets(4, ECombatCommandType::Special1).Contains(4)) { Run.Submit({ECombatCommandType::Special1, 4, {}, 4}); }
+                const TArray<int32> Allies = Run.Battle().LegalTargets(4, ECombatCommandType::Special2);
+                if (!Allies.IsEmpty()) { return Run.Submit({ECombatCommandType::Special2, 4, {}, Allies[0]}).bAccepted; }
+            }
+            Run.Submit({ECombatCommandType::EndTurn, Id});
+        }
+        return false;
+    };
+    const int32 Seed = FirstSeedWhere([&](int32 S) { FExpeditionRun Probe; return Play(Probe, S); }, 42, 300);
+    FExpeditionRun Run;
+    if (!TestTrue(TEXT("A seed where a honed Totem Warrior rages and shelters in fight 2"), Seed != INDEX_NONE && Play(Run, Seed))) { return false; }
+    // The checkpoint is the Totem Warrior's own turn, with Rage and Shelter up.
+    const FExpeditionSaveData Data = Checkpoint(Run);
+    ExpeditionInputHarness::FHarness Game(*this, TEXT("DetailsInCombat"), &Data);
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    Game.Press(EKeys::O);
+    Game.Settle();
+    if (!TestTrue(TEXT("The fight resumes"), Game.View->HasRun() && Game.View->InCombat())) { return false; }
+    const FCombatantState& Totem = *Game.View->Rules().Find(4);
+    TestTrue(TEXT("The Totem Warrior is honed, raging and guarding"), Totem.bHoned && Totem.RageTurns > 0 && Totem.GuardTargetId != INDEX_NONE);
+    FHeroProgressFacts Expected;
+    for (const FHeroProgressFacts& Hero : FProgressionQuery::For(Game.View->CurrentRun()).Heroes) { if (Hero.Id == 4) { Expected = Hero; } }
+    for (const FIntPoint Size : {FIntPoint(1920, 1080), FIntPoint(1280, 720), FIntPoint(1600, 600)})
+    {
+        Game.Target.Size = Size;
+        const double Scale = ExpeditionLayout::ViewScale(Size.X, Size.Y);
+        Game.Player->SimulatePointer(FVector2D(108.0, ExpeditionLayout::PartyCardTop + 3 * ExpeditionLayout::PartyCardPitch + 32.0) * Scale, FIntPoint(0, 0));
+        Game.Frame(0.0f); Game.Frame(0.0f);
+        const FString Where = FString::Printf(TEXT("%dx%d"), Size.X, Size.Y);
+        const TArray<FString>& Lines = Game.Hud->ProgressionDrawn().DetailLines;
+        TestTrue(Where + TEXT(": the breakdown shows the Rage part in combat"), Lines.Contains(ProgressionText::DamageBreakdown(Expected)) && Expected.Damage.Rage > 0);
+        TestTrue(Where + TEXT(": the upgrades show in combat"), Lines.Contains(TEXT("Upgrades: Honed")));
+        TestTrue(Where + TEXT(": no level marker during a fight"), Game.Hud->ProgressionDrawn().PartyMarkers.IsEmpty());
+        for (const FBox2D& Panel : Game.Hud->PartyDetailRects())
+        { TestTrue(Where + TEXT(": the details, with the protection line, stay on screen"), Panel.Min.X >= 0 && Panel.Min.Y >= 0 && Panel.Max.X <= Size.X && Panel.Max.Y <= Size.Y); }
+        TestFalse(Where + TEXT(": a details panel is drawn"), Game.Hud->PartyDetailRects().IsEmpty());
+    }
+    Game.Player->ReleaseSimulatedPointer();
     return !HasAnyErrors();
 }
 #endif
