@@ -767,14 +767,18 @@ void AExpeditionBattleView::RebuildBoard()
     bInstancedParts = Theme && !bLooseParts;
     bInstancedEffects = bInstancedParts && EffectMaterial;
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
-    int32 Recipe = 0, Seed = 7;
+    // The obstacle kind (0 stones, 1 pillars, 2 walls) picks the kit pieces; everything downstream that took the recipe id keys on it, and for
+    // recipes 0-2 the kind equals the recipe. It and the stage come from the rules' encounter identity (#188), never from presentation guesses.
+    int32 ObstacleKind = 0, Seed = 7;
     BoardTheme = EBoardTheme::Meadow;
     if (HasRun() && !Progress().History.IsEmpty())
     {
         const FExpeditionRoute& Route = Progress().History.Last().Route;
-        Recipe = Route.Recipe;
+        const FEncounterIdentity Identity = FExpeditionRun::Encounter(Progress(), Route);
+        ObstacleKind = Identity.ObstacleKind;
         Seed = Route.EncounterSeed;
-        BoardTheme = Progress().History.Num() >= FExpeditionRun::EncounterCount ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
+        // The theme stays chosen by stage: the finale is the Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
+        BoardTheme = Identity.Stage == EEncounterStage::Finale ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
     bOverview = WantsOverview();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
@@ -782,7 +786,8 @@ void AExpeditionBattleView::RebuildBoard()
     if (bOverview) { BuildOverview(); }
     else
     {
-        BuildScenery(Encounter, Recipe, Seed);
+        DrawnKind = ObstacleKind;
+        BuildScenery(Encounter, ObstacleKind, Seed);
         PartyAccents = ExpeditionPalette::AccentSlots(Encounter.Combatants);
         for (const FCombatantState& Unit : Encounter.Combatants) { BuildRig(Unit); }
     }
@@ -1089,9 +1094,9 @@ void AExpeditionBattleView::UpdateFarGrade()
     Settings.ColorContrast = FVector4(Contrast, Contrast, Contrast, 1.0f);
 }
 
-void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
+void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed)
 {
-    if (Theme && BuildThemedScenery(Encounter, Recipe, Seed)) { return; }
+    if (Theme && BuildThemedScenery(Encounter, ObstacleKind, Seed)) { return; }
     const FPalette Palette = PaletteFor(BoardTheme);
     const FVector Center = SceneBoard(FVector2D((Encounter.Width - 1) * 0.5f, (Encounter.Height - 1) * 0.5f));
     // Ground hides the starter floor; a raised slab makes the board read as a tabletop.
@@ -1114,11 +1119,11 @@ void AExpeditionBattleView::BuildScenery(const FCombatEncounter& Encounter, int3
         }
     }
     FRandomStream Random(Seed);
-    for (const FIntPoint& Cell : Encounter.BlockedCells) { BuildObstacle(Cell, HasRun() && !Progress().History.IsEmpty() ? Recipe : 0, Random); }
+    for (const FIntPoint& Cell : Encounter.BlockedCells) { BuildObstacle(Cell, HasRun() && !Progress().History.IsEmpty() ? ObstacleKind : 0, Random); }
     BuildDecor(Encounter, Random);
 }
 
-void AExpeditionBattleView::BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random)
+void AExpeditionBattleView::BuildObstacle(FIntPoint Cell, int32 ObstacleKind, FRandomStream& Random)
 {
     const FPalette Palette = PaletteFor(BoardTheme);
     const FVector Base = SceneBoard(FVector2D(Cell.X, Cell.Y));
@@ -1132,7 +1137,7 @@ void AExpeditionBattleView::BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomS
                 FVector(Size, Size * 1.2f, Size * 0.6f), Shade(Palette.RockDark, Random.FRandRange(0.8f, 1.1f))));
         }
     };
-    if (Recipe == 1)
+    if (ObstacleKind == 1)
     {
         // Ruined pillar: plinth, shaft of uneven height and a fallen capital.
         const float Height = Random.FRandRange(1.0f, 1.6f);
@@ -1142,7 +1147,7 @@ void AExpeditionBattleView::BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomS
             FRotator(Random.FRandRange(-8, 8), Random.FRandRange(0, 90), Random.FRandRange(-8, 8))));
         Rubble(3);
     }
-    else if (Recipe == 2)
+    else if (ObstacleKind == 2)
     {
         // Broken wall segment with a ragged top.
         Scenery.Add(MakePart(Cube, nullptr, Floor + FVector(0, 0, 45), FVector(1.08f, 0.42f, 0.9f), Palette.Rock));
@@ -2484,7 +2489,7 @@ FVector AExpeditionBattleView::WaystoneLightLocation() const
     return WaystoneLight ? WaystoneLight->GetComponentLocation() : FVector::ZeroVector;
 }
 
-bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed)
+bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed)
 {
     // The kit the board wants. The finale asks for the Vault kit and gets the Vigil kit, as before the Vault existed, when any Vault
     // entry is missing from the theme or its world does not load (#149).
@@ -2530,7 +2535,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
             FVector(Encounter.Width * RefCell / 100.0f + 0.2f, Encounter.Height * RefCell / 100.0f + 0.2f, 0.02f), FLinearColor(0.07f, 0.07f, 0.08f));
     }
     FRandomStream Random(Seed);
-    const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? Recipe : 0;
+    const int32 Kind = HasRun() && !Progress().History.IsEmpty() ? ObstacleKind : 0;
     // r002 obstacles choose a variant from the seed and the cell with a private hash; the random stream below is only
     // consumed by the r001 path, so the kit never changes what the fallback draws. A world kit places its own variants (and
     // arches over pillar and wall recipes). Without one, the Vigil kit's variants still serve every board once it is on, as before.
@@ -2602,9 +2607,9 @@ FExpeditionPart AExpeditionBattleView::MakeOwnMaterialPart(UStaticMesh* Mesh, FV
     return Part;
 }
 
-bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit)
+bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit)
 {
-    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Kit.Variants(Recipe);
+    const TArray<TSoftObjectPtr<UStaticMesh>>& Entries = Kit.Variants(ObstacleKind);
     TArray<UStaticMesh*> Variants;
     bool bAny = false;
     for (const TSoftObjectPtr<UStaticMesh>& Entry : Entries) { Variants.Add(ThemeMesh(Entry)); bAny = bAny || Variants.Last() != nullptr; }
@@ -2627,12 +2632,12 @@ bool AExpeditionBattleView::BuildKitObstacles(const FCombatEncounter& Encounter,
     {
         if (Covered.Contains(Cell)) { continue; }
         // The chosen variant, or the next one that loaded.
-        const int32 Wanted = VigilKit::VariantIndex(Seed, Recipe, Cell, Variants.Num());
+        const int32 Wanted = VigilKit::VariantIndex(Seed, ObstacleKind, Cell, Variants.Num());
         int32 Index = INDEX_NONE;
         for (int32 Step = 0; Step < Variants.Num() && Index == INDEX_NONE; ++Step)
         { if (Variants[(Wanted + Step) % Variants.Num()]) { Index = (Wanted + Step) % Variants.Num(); } }
         if (Index == INDEX_NONE) { continue; }
-        const float Turn = 90.0f * static_cast<float>(VigilKit::Hash(Seed, 2, Cell) % 4u) + (Recipe == 0 ? (VigilKit::Unit(Seed, 3, Cell) - 0.5f) * 40.0f : 0.0f);
+        const float Turn = 90.0f * static_cast<float>(VigilKit::Hash(Seed, 2, Cell) % 4u) + (ObstacleKind == 0 ? (VigilKit::Unit(Seed, 3, Cell) - 0.5f) * 40.0f : 0.0f);
         const float Tint = 0.85f + 0.15f * VigilKit::Unit(Seed, 4, Cell);
         const FExpeditionProp Piece = PlaceProp(Variants[Index], SceneBoard(FVector2D(Cell.X, Cell.Y)), MetricScale, KitTint(Variants[Index]) * Tint, FRotator(0.0f, Turn, 0.0f));
         VariantsByCell.Add(Cell, Index);
