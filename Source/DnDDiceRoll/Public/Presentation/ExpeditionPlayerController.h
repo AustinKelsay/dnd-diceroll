@@ -23,8 +23,15 @@ public:
     virtual void PlayerTick(float DeltaTime) override;
     /** Any other key or button pressed while the left button is down spends the press (#220); everything else is the engine's. */
     virtual bool InputKey(const FInputKeyEventArgs& Params) override;
-    /** The game window lost focus: an armed left press can never become a click (#220). PlayerTick calls it when the viewport has no focus. */
+    /**
+     * The viewport losing focus (UGameViewportClient::LostFocus) calls this to flush held keys, which queues a release for every one, and PlayerTick delivers those releases
+     * inside Super::PlayerTick. An armed left press is spent here, before that flush, so the synthetic release can never click (#220).
+     */
+    virtual void FlushPressedKeys() override;
+    /** Spends an armed left press for good: its release can never click, however the window comes back (#220). */
     void NotifyWindowFocusLost() { bPressVoided = true; }
+    /** False when a game viewport exists and has no window focus. With no viewport (an automation world) there is nothing to lose. */
+    bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
     /** Who acts on the next command: the active adventurer in combat, else the selection. */

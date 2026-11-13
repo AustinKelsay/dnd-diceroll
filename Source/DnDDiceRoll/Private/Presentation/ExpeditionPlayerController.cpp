@@ -123,6 +123,8 @@ void AExpeditionPlayerController::SetupInputComponent()
 
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
+    // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
+    if (bPressArmed && !WindowHasFocus()) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -166,12 +168,6 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     else { bPointerSeen = false; }
     // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
     if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
-    if (bPressArmed && !bPressVoided)
-    {
-        // The window lost focus with the button down: the release will never come as the press began (#220).
-        const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-        if (Client && Client->Viewport && !Client->Viewport->HasFocus()) { NotifyWindowFocusLost(); }
-    }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -677,6 +673,18 @@ bool AExpeditionPlayerController::PressHolds() const
         FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PressPose.GetRotation())) <= PoseSlopDegrees;
 }
 
+void AExpeditionPlayerController::FlushPressedKeys()
+{
+    NotifyWindowFocusLost();
+    Super::FlushPressedKeys();
+}
+
+bool AExpeditionPlayerController::WindowHasFocus() const
+{
+    const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+    return !Client || !Client->Viewport || Client->Viewport->HasFocus();
+}
+
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
 {
     if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
@@ -688,7 +696,7 @@ void AExpeditionPlayerController::ClickReleased()
     const bool bWasArmed = bPressArmed;
     const bool bHeld = PressHolds();
     bPressArmed = false;
-    if (!bWasArmed || !bHeld || !IsValid(BattleView)) { return; }
+    if (!bWasArmed || !bHeld || !IsValid(BattleView) || !WindowHasFocus()) { return; }
     // The release is a click on the board only where the press was: not on a HUD button or panel the pointer slipped onto, not with the Menu or an overlay open, and not
     // with the keyboard cursor showing. It never dispatches a HUD action: those act at the press.
     float MouseX = 0, MouseY = 0;

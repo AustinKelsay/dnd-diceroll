@@ -307,7 +307,6 @@ bool FLeftPressSpentByContextTest::RunTest(const FString& Parameters)
             }},
         {TEXT("Resume"), [](FHarness& G, FVector2D, FIntPoint) { G.View->Resume(); G.Settle(); }},
         {TEXT("Return to menu then Resume"), [](FHarness& G, FVector2D, FIntPoint) { if (G.View->CanReturnToMenu()) { G.View->ReturnToMenu(); } G.View->Resume(); G.Settle(); }},
-        {TEXT("the window losing focus"), [](FHarness& G, FVector2D, FIntPoint) { G.Player->NotifyWindowFocusLost(); }},
     };
     for (const FCase& Case : Cases)
     {
@@ -337,6 +336,49 @@ bool FLeftPressSpentByContextTest::RunTest(const FString& Parameters)
         Frames(*Game, 3);
         FIntPoint Next;
         if (FreeMove(*Game, Next)) { TestTrue(FString(Case.Name) + TEXT(": a plain click afterwards commits"), PlainClick(*Game, Aim, Next)); }
+    }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftPressSpentByFocusLossTest, "Project.Expedition.Presentation.LeftPressIsSpentByFocusLoss",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLeftPressSpentByFocusLossTest::RunTest(const FString& Parameters)
+{
+    using namespace ClickReleaseTest;
+    // The engine's own focus-loss path: UGameViewportClient::LostFocus calls APlayerController::FlushPressedKeys, which queues a synthetic release for every held key, and the
+    // next PlayerTick delivers it inside Super::PlayerTick. This test calls that engine entry point, never the cancellation seam, with a legal board press held and the pointer
+    // and camera still: the release must not click, in each order the loss and the release can arrive.
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("A fight checkpoint exists"), Fight(Data, -1, false))) { return false; }
+    struct FOrder { const TCHAR* Name; bool bTickBeforeRelease; bool bRegainFirst; };
+    const FOrder Orders[] = {
+        {TEXT("the synthetic release delivered by the next tick"), true, false},
+        {TEXT("the real release arriving after the window is back, no tick between"), false, true},
+        {TEXT("ticks pass with the window back, then the real release"), true, true},
+    };
+    for (const FOrder& Order : Orders)
+    {
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(FString(Order.Name) + TEXT(": the party holds the turn"), Game.IsValid())) { continue; }
+        FIntPoint Cell;
+        if (!TestTrue(FString(Order.Name) + TEXT(": the hero has a cell to walk to"), FreeMove(*Game, Cell))) { continue; }
+        Point(*Game, Aim, Cell);
+        Frames(*Game, 3);
+        const FStamp Was = Stamp(*Game);
+        Down(*Game, EKeys::LeftMouseButton);
+        Game->Frame(1.0f / 30.0f);
+        // The window loses focus: the engine flushes the held keys.
+        Game->Player->FlushPressedKeys();
+        if (Order.bTickBeforeRelease) { Frames(*Game, 3); }
+        TestTrue(FString(Order.Name) + TEXT(": the flush's release committed nothing"), Same(Was, Stamp(*Game)));
+        // The window comes back and the button is let go for real.
+        Up(*Game, EKeys::LeftMouseButton);
+        Frames(*Game, 3);
+        Game->Settle();
+        TestTrue(FString(Order.Name) + TEXT(": nothing committed after the window came back"), Same(Was, Stamp(*Game)));
+        // A fresh click afterwards works.
+        Game->Player->PreviewMode(ECombatCommandType::Attack);
+        TestTrue(FString(Order.Name) + TEXT(": a fresh click afterwards commits"), PlainClick(*Game, Aim, Cell));
     }
     return !HasAnyErrors();
 }
