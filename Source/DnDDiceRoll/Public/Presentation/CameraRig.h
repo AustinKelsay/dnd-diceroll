@@ -36,7 +36,7 @@ namespace ExpeditionCameraRig
     /**
      * The Vault's authored set ends where its far-hall ring begins, 28 m from the board centre (the hall inside it, the dressed ground and the
      * ring itself), and the exterior beyond it is a bare dark plane. The camera never shows ground farther than this from the board centre
-     * (#209): SetHalfExtentCells cells (18 at the 150 cm cell, 27 m) each way, solved by SetCoverDistance and enforced by ClampSet.
+     * (#209): SetHalfExtentCells cells (18 at the 150 cm cell, 27 m) each way, bounded per yaw by SetCoverDistance and met per focus by SetCoverDistanceAt, by the zoom alone.
      */
     constexpr float SetHalfExtentCells = 18.0f;
     /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */

@@ -581,7 +581,7 @@ namespace
  * means that wall's outer face is the first thing a ray meets, and it is black, so a ray that hits the box before the ground and is not dithered by the occluder
  * fade (OccluderBoardOpacityAt, the CPU mirror of the shader's parameters) fills the screen with it (on-screen D1).
  */
-bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
+bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why, bool bCheckGround = true)
 {
     using namespace ExpeditionCameraRig;
     const FSafeRect Rect = View.SafeRect();
@@ -609,6 +609,9 @@ bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
         T0 = FMath::Max(T0, A); T1 = FMath::Min(T1, B);
         return T0 <= T1;
     };
+    // The view's passes stop at a 0.01 step and six rounds, so while the yaw, the zoom and the focus are all easing the footprint can sit a few cm past the bound (the set
+    // has a metre of slack before the far-hall ring): residuals up to 20 cm (0.7% of 27 m) are tolerated, a real overshoot is not.
+    constexpr double ResidualCm = 20.0;
     constexpr int32 Columns = 24, Rows = 14;
     for (int32 Row = 0; Row <= Rows; ++Row)
     {
@@ -620,7 +623,8 @@ bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
             FVector2D Ground;
             if (!Unproject(Screen, Camera.GetLocation(), Forward, Rect.Aspect, static_cast<float>(PlaneZ), Ground)) { Why = TEXT("a viewport ray has no ground"); return false; }
             const FVector Hit = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, PlaneZ));
-            if (FMath::Abs(Hit.X - Centre.X) > HalfCm + 5.0 || FMath::Abs(Hit.Y - Centre.Y) > HalfCm + 5.0)
+            // Ground coverage: only where the default zoom itself fits (a verified default-fit failure is reported by the view and excused); the walls below never are.
+            if (bCheckGround && (FMath::Abs(Hit.X - Centre.X) > HalfCm + ResidualCm || FMath::Abs(Hit.Y - Centre.Y) > HalfCm + ResidualCm))
             { Why = FString::Printf(TEXT("the ray at screen (%.2f, %.2f) lands %.0f, %.0f cm from the board centre (set %.0f)"), Screen.X, Screen.Y, Hit.X - Centre.X, Hit.Y - Centre.Y, HalfCm); return false; }
             const FVector Direction = Hit - Eye;
             for (int32 Index = 0; Index < 3; ++Index)
@@ -652,7 +656,7 @@ bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
         }
         // A band is a row of the frame, not a few grazing pixels: at least half the row meets an opaque camera-side wall.
         if (Opaque * 2 > Columns)
-        { Why = FString::Printf(TEXT("%d of %d rays in the row at screen y %.2f meet an opaque camera-side wall (a black band): %s"), Opaque, Columns + 1, static_cast<double>(Row) / Rows, *First); return false; }
+        { Why = FString::Printf(TEXT("%d of %d rays in the row at screen y %.2f meet an opaque camera-side wall (a black band)%s: %s"), Opaque, Columns + 1, static_cast<double>(Row) / Rows, View.ShowsPastSet() ? TEXT(" [in a reported default-fit exception pose]") : TEXT(""), *First); return false; }
     }
     return true;
 }
@@ -701,7 +705,7 @@ bool FVaultZoomCapTest::RunTest(const FString& Parameters)
                         if (Frame < 100) { View->Zoom(120.0f); }
                         View->Tick(1.0f / 30.0f); ++Frames;
                         TestTrue(*(Label + TEXT(": the rendered distance never passes the rendered yaw's cap")), View->RenderedDistance() <= View->MaxZoomFor(View->RenderedYaw()) + 0.5f);
-                        if (!View->ShowsPastSet() && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(" wheeling out, frame %d: %s"), Frame, *Why)); break; }
+                        if (!ViewportInsideSet(*View, Half, Why, !View->ShowsPastSet())) { AddError(Label + FString::Printf(TEXT(" wheeling out, frame %d: %s"), Frame, *Why)); break; }
                     }
                     TestEqual(*(Label + TEXT(": the wheel stops at the cap")), View->CameraDistance(), Cap, 0.5f);
                     TestTrue(*(Label + TEXT(": and the rendered pose is at or inside it (the focus can lower it)")), View->RenderedDistance() <= Cap + 0.5f);
@@ -712,7 +716,7 @@ bool FVaultZoomCapTest::RunTest(const FString& Parameters)
                         for (int32 Frame = 0; Frame < 30; ++Frame)
                         {
                             View->Tick(1.0f / 30.0f); ++Frames;
-                            if (!View->ShowsPastSet() && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(" panned (%.0f, %.0f), frame %d: %s"), Direction.X, Direction.Y, Frame, *Why)); break; }
+                            if (!ViewportInsideSet(*View, Half, Why, !View->ShowsPastSet())) { AddError(Label + FString::Printf(TEXT(" panned (%.0f, %.0f), frame %d: %s"), Direction.X, Direction.Y, Frame, *Why)); break; }
                         }
                     }
                     View->SnapCamera(Yaw, 1500.0f);
@@ -736,7 +740,7 @@ bool FVaultZoomCapTest::RunTest(const FString& Parameters)
                             View->Tick(1.0f / 30.0f); ++Frames;
                             const float Cap = View->MaxZoomFor(View->RenderedYaw());
                             if (View->RenderedDistance() > Cap + 0.5f) { AddError(Label + FString::Printf(TEXT(", frame %d: rendered distance %.1f is past the cap %.1f of rendered yaw %.1f"), Frame, View->RenderedDistance(), Cap, View->RenderedYaw())); break; }
-                            if (!View->ShowsPastSet() && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); break; }
+                            if (!ViewportInsideSet(*View, Half, Why, !View->ShowsPastSet())) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); break; }
                         }
                     }
                 }
@@ -796,6 +800,25 @@ bool ActiveUnitVisible(AExpeditionBattleView& View, float InFill = 1.0f)
     return UnitInside(Unit, View.Metric(), View.RenderedFocus(), View.RenderedYaw(), View.RenderedDistance(), PitchFor(View.RenderedDistance(), View.FramedDistance()), View.SafeRect(), InFill);
 }
 
+/** Whether the acting unit's tile and head project inside the safe rect through the camera as it actually renders (its eased pose and any shake). */
+bool ActiveUnitVisibleThroughCamera(AExpeditionBattleView& View, float InFill = 1.0f)
+{
+    using namespace ExpeditionCameraRig;
+    const FTransform Camera = View.CameraTransform();
+    const FTransform Actor = View.GetActorTransform();
+    const FSafeRect Rect = View.SafeRect();
+    const FVector2D Unit(View.UnitPosition(View.Rules().ActiveId(), -View.Metric().BoardTop()));
+    const double Half = 0.5 * View.Metric().CellCm, Z = View.Metric().BoardTop();
+    const FVector Local[5] = {FVector(Unit.X - Half, Unit.Y - Half, Z), FVector(Unit.X + Half, Unit.Y - Half, Z), FVector(Unit.X - Half, Unit.Y + Half, Z), FVector(Unit.X + Half, Unit.Y + Half, Z),
+        FVector(Unit.X, Unit.Y, Z + View.Metric().FigureCm)};
+    for (const FVector& Point : Local)
+    {
+        FVector2D Screen;
+        if (!Project(Actor.TransformPosition(Point), Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, Screen) || !Rect.Holds(Screen, InFill)) { return false; }
+    }
+    return true;
+}
+
 /**
  * #148's locked-axis rule on the rendered pose: where the safe rect's ground is wider than the pan bound on an axis, the view is centred on the board
  * exactly, the one exception being the unit hold, which moves the focus from the centring focus toward the acting unit and keeps it in view.
@@ -853,7 +876,7 @@ bool FVaultEdgeUnitTest::RunTest(const FString& Parameters)
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultEdgeUnit"), FGuid::NewGuid().ToString());
     const TArray<FFinale> Finales = FinaleSizes(4);
     if (!TestTrue(TEXT("Finales of at least two board sizes exist"), Finales.Num() >= 2)) { return false; }
-    int32 Frames = 0, Poses = 0, Reported = 0, Capped = 0;
+    int32 Frames = 0, Poses = 0, Reported = 0, Capped = 0, StagingFarPast = 0;
     TSet<FIntPoint> Sizes;
     for (const FFinale& Finale : Finales)
     {
@@ -891,10 +914,23 @@ bool FVaultEdgeUnitTest::RunTest(const FString& Parameters)
                                 FString Why;
                                 if (!ActiveUnitVisible(*View)) { AddError(Label + FString::Printf(TEXT(", frame %d: the acting unit is outside the safe rect"), Frame)); bFailed = true; }
                                 else if (!LockedAxesCentred(*View, Why)) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); bFailed = true; }
-                                else if (!View->ShowsPastSet() && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); bFailed = true; }
+                                else if (!ViewportInsideSet(*View, Half, Why, !View->ShowsPastSet())) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); bFailed = true; }
+                                else if (View->ShowsPastSet())
+                                {
+                                    // A reported exception is a verified default-fit failure: the pose is at the default and the default does not fit around this focus.
+                                    const float Default = View->FramedDistance(View->RenderedYaw());
+                                    if (View->RenderedDistance() > Default + 0.5f) { AddError(Label + FString::Printf(TEXT(", frame %d: a reported exception is above the default zoom (%.1f against %.1f)"), Frame, View->RenderedDistance(), Default)); bFailed = true; }
+                                    else if (SetContainsAt(View->RenderedFocus(), View->RenderedYaw(), Default, PitchFor(Default, View->FramedDistance()), View->Metric(), View->SafeRect(), BoardCentre(View->Rules().Snapshot().Encounter.Width, View->Rules().Snapshot().Encounter.Height, View->Metric()), Half))
+                                    { AddError(Label + FString::Printf(TEXT(", frame %d: a reported exception, but the default zoom fits around this focus"), Frame)); bFailed = true; }
+                                }
                             }
                             ++Poses;
                             Reported += View->ShowsPastSet() ? 1 : 0;
+                            {
+                                // What staging would show at the same pose: its far pose (the yaw's FarFramedDistance, no set bound) around the same focus.
+                                const float Far = View->FarFramedDistance(View->RenderedYaw());
+                                StagingFarPast += SetContainsAt(View->RenderedFocus(), View->RenderedYaw(), Far, PitchFor(Far, View->FramedDistance()), View->Metric(), View->SafeRect(), BoardCentre(View->Rules().Snapshot().Encounter.Width, View->Rules().Snapshot().Encounter.Height, View->Metric()), Half) ? 0 : 1;
+                            }
                             Capped += View->RenderedDistance() < View->MaxZoomFor(Yaw) - 1.0f ? 1 : 0;
                         }
                     }
@@ -903,7 +939,7 @@ bool FVaultEdgeUnitTest::RunTest(const FString& Parameters)
             }
         }
     }
-    AddInfo(FString::Printf(TEXT("%d board sizes, %d settled poses, %d rendered frames; %d poses sat below the yaw's cap because of the focus; %d report that even the default zoom shows past the set at that focus"), Sizes.Num(), Poses, Frames, Capped, Reported));
+    AddInfo(FString::Printf(TEXT("%d board sizes, %d settled poses, %d rendered frames; %d poses sat below the yaw's cap because of the focus; %d report a verified default-fit failure (the default zoom, which is staging's own pose there, shows past the set around that focus); staging's far pose would show past the set around the same focus in %d"), Sizes.Num(), Poses, Frames, Capped, Reported, StagingFarPast));
     TestTrue(TEXT("Corner units exercised the focus-dependent cap"), Capped > 0);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
@@ -922,7 +958,43 @@ bool FVaultShakeTest::RunTest(const FString& Parameters)
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultShake"), FGuid::NewGuid().ToString());
     const TArray<FFinale> Finales = FinaleSizes(2);
     if (!TestTrue(TEXT("A finale exists"), Finales.Num() >= 1)) { return false; }
-    int32 Frames = 0, Shaken = 0;
+    int32 Frames = 0, Displaced = 0;
+    // The control: at an ordinary fitting pose (the default zoom, the acting unit where the generator put it) the camera stands still without a shake and moves
+    // measurably with one, so the displacement below can only come from a shake that survives the set check.
+    {
+        const FString Path = FPaths::Combine(Directory, TEXT("control"), TEXT("current.json"));
+        FString Error;
+        if (TestTrue(TEXT("The control checkpoint writes"), FExpeditionSave::Write(Path, Finales[0].Data, Error)))
+        {
+            UWorld* World = MakeVaultWorld();
+            if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+            if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
+            {
+                View->SetSafeRect(FSafeRect::ForViewport(1920, 1080));
+                for (const float Yaw : {-90.0f, 0.0f, 90.0f, 180.0f})
+                {
+                    const FString Label = FString::Printf(TEXT("Control, yaw %.0f"), Yaw);
+                    View->SnapCamera(Yaw, View->FramedDistance(Yaw));
+                    for (int32 Frame = 0; Frame < 90; ++Frame) { View->Tick(1.0f / 30.0f); }
+                    if (View->ShowsPastSet()) { continue; }
+                    const FVector Still = View->CameraTransform().GetLocation();
+                    double Drift = 0.0, Displacement = 0.0;
+                    for (int32 Frame = 0; Frame < 10; ++Frame) { View->Tick(1.0f / 30.0f); Drift = FMath::Max(Drift, FVector::Dist(Still, View->CameraTransform().GetLocation())); }
+                    TestTrue(*(Label + TEXT(": without a shake the camera stands still")), Drift < 0.5);
+                    for (int32 Frame = 0; Frame < 30; ++Frame)
+                    {
+                        View->Shake(1.0f);
+                        View->Tick(1.0f / 30.0f); ++Frames;
+                        Displacement = FMath::Max(Displacement, FVector::Dist(Still, View->CameraTransform().GetLocation()));
+                    }
+                    TestTrue(*FString::Printf(TEXT("%s: a shake moves the rendered camera measurably (%.1f cm against a still control)"), *Label, Displacement), Displacement > 3.0);
+                    if (Displacement > 3.0) { ++Displaced; }
+                }
+                DestroyVaultWorld(World);
+            }
+        }
+    }
+    TestTrue(TEXT("The shake was measured at two or more ordinary fitting poses"), Displaced >= 2);
     for (const FFinale& Finale : Finales)
     {
         const FIntPoint Corners[4] = {FIntPoint(0, 0), FIntPoint(Finale.Width - 1, 0), FIntPoint(0, Finale.Height - 1), FIntPoint(Finale.Width - 1, Finale.Height - 1)};
@@ -952,17 +1024,15 @@ bool FVaultShakeTest::RunTest(const FString& Parameters)
                         if (Frame % 17 == 0 && Frame < 120) { View->Zoom(120.0f); }
                         View->Tick(1.0f / 30.0f); ++Frames;
                         FString Why;
-                        if (!View->ShowsPastSet() && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(", frame %d, shaking: %s"), Frame, *Why)); bFailed = true; }
-                        else if (!ActiveUnitVisible(*View, 1.0f)) { AddError(Label + FString::Printf(TEXT(", frame %d, shaking: the acting unit is outside the safe rect"), Frame)); bFailed = true; }
-                        Shaken += 1;
+                        if (!ViewportInsideSet(*View, Half, Why, !View->ShowsPastSet())) { AddError(Label + FString::Printf(TEXT(", frame %d, shaking: %s"), Frame, *Why)); bFailed = true; }
+                        else if (!ActiveUnitVisibleThroughCamera(*View, 1.0f)) { AddError(Label + FString::Printf(TEXT(", frame %d, shaking: the acting unit is outside the safe rect through the shaken camera"), Frame)); bFailed = true; }
                     }
                 }
                 DestroyVaultWorld(World);
             }
         }
     }
-    AddInfo(FString::Printf(TEXT("%d rendered frames sampled under a constant shake"), Frames));
-    TestTrue(TEXT("The shake ran"), Shaken > 0);
+    AddInfo(FString::Printf(TEXT("%d rendered frames sampled under a constant shake; the shake displaced the camera at %d ordinary poses"), Frames, Displaced));
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

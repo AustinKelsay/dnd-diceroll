@@ -788,12 +788,13 @@ private:
     mutable FZoomCap ZoomCap;
     bool bSetShowsPast = false;
 public:
-    /** Whether the camera is bounded by an authored set (the Vault's): the rendered focus stays where the viewport's ground is inside it. */
+    /** Whether the camera is bounded by an authored set (the Vault's): the zoom is limited (never the focus moved) so the viewport's ground stays inside it. */
     bool BoundsSet() const;
     /**
-     * True when the rendered pose still shows ground past the Vault's set: the focus (decided by the pan bound, the locked axes and the unit hold) is
-     * so far from the board centre that even the default zoom does not fit. The focus is never moved to make it fit (#148), so the pose stays at the
-     * default and this says so; false outside the Vault.
+     * True only for a verified default-fit failure: the rendered pose is at (or nearer than) the default zoom, the viewport's ground around the focus
+     * (decided by the pan bound, the locked axes and the unit hold, and never moved to fit) still shows past the Vault's set, and the default zoom does not fit
+     * around that focus either, so the zoom has nothing left to give. A pose above the default that is a hair outside is a solver residual and is not
+     * reported. False outside the Vault.
      */
     bool ShowsPastSet() const { return bSetShowsPast; }
     /** The rendered focus (view-space cm), after the lean, the pan bound, the locked axes and the unit hold. */

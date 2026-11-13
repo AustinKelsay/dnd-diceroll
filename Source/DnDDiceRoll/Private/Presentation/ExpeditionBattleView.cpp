@@ -2076,7 +2076,13 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
             Distance = Cap;
             ResolveFocus();
         }
-        bSetShowsPast = !ExpeditionCameraRig::SetContainsAt(FVector2D(Focus), Yaw, Distance, ExpeditionCameraRig::PitchFor(Distance, FramedDistance()), BoardMetric, Safe, SetCentre, SetHalf);
+        // Only a verified default-fit failure is reported: the pose is at (or nearer than) the default zoom, it does not fit, and the default does not
+        // fit around this focus either. A pose above the default that is a hair outside is a convergence residual of the passes above (a few cm at
+        // most; the six passes and the 0.01 early exits do not guarantee an exact fit), not an exception, and is not reported.
+        const FVector2D FocusXY(Focus);
+        bSetShowsPast = Distance <= Default + 0.5f
+            && !ExpeditionCameraRig::SetContainsAt(FocusXY, Yaw, Distance, ExpeditionCameraRig::PitchFor(Distance, FramedDistance()), BoardMetric, Safe, SetCentre, SetHalf)
+            && !ExpeditionCameraRig::SetContainsAt(FocusXY, Yaw, Default, ExpeditionCameraRig::PitchFor(Default, FramedDistance()), BoardMetric, Safe, SetCentre, SetHalf);
     }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
     const FVector Shake = ShakeAmount > 0.0f ? FVector(FMath::Sin(Clock * 61.0f), FMath::Sin(Clock * 47.0f + 1.0f), FMath::Sin(Clock * 53.0f + 2.0f)) * ShakeAmount * 14.0f * SceneScale() : FVector::ZeroVector;
