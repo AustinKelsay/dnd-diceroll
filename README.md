@@ -1,0 +1,34 @@
+# Targeted on-screen re-check at `d02c134` (PR #221, fix for #220): a left click acts on release
+
+**Evidence only. Never merge this branch.** Agent pass on the maintainer's behalf, PlebDev Ultra (Linux), 2026-11-12, under `flock /home/plebdev/.t3/ultra-unreal.lock` (held 01:30:49Z to about 01:42Z UTC on 2026-11-13, released).
+
+**Result: PASS on all 7 items. No defect found.** One game launch per scene (two launches), no crash, no SDL SIGFPE, `Error:` count 0 in both game logs. Follows the full pass at `a1bb9a6` (`evidence/onscreen-pr221-a1bb9a6`).
+
+## What was run
+- **Package:** Development package of head `d02c134c` (`verified.json`: commit `d02c134cc6cae3b7b3842d1f7efb6e8d4447bbbd`, dirty false, no errors or warnings), `Builds/20261113T012615876589Z` in worktree `t3-2905ef20`, read-only, not rebuilt. Binary SHA-256 in `binary.sha256`.
+- **Rig** (as the a1bb9a6 pass; scripts in `rig/`): own nested headless Hyprland (`wayland-2`, `LIBSEAT_BACKEND=noop`, pid 1069342 identified by its lock file; every `hyprctl`, `wtype`, pointer and `grim` call set `HYPRLAND_INSTANCE_SIGNATURE` and `WAYLAND_DISPLAY` explicitly; the owner's pid 1623 on `wayland-1` was never targeted). My instance first listed HDMI-A-1 and DP-2 as stubs and no headless output; I created `HEADLESS-1` and disabled the two stubs in my own instance only, and the `safe` check in `lib.sh` (abort unless only a HEADLESS monitor) passed before every session. Isolated `-UserDir` and `-ExpeditionSaveRoot` under `.local/`. Pointer: `zwlr_virtual_pointer` client `ptr2`; keys with `wtype`; `grim` at 1920x1080.
+- **Board:** `default-seed-battle` fixture (seed 20261030, 18x11), 1920x1080, Sera's party turn. State read from the checkpoint JSON before and after every trial (`drv.py state`) plus full-size `grim` captures (all opened and inspected). Every trial wiggles 15 px, moves to the target and settles 700 ms before the press. Contact sheets of the captures are in `shots/` (full-size originals stay in the worktree's `.local/run221d/shots/`).
+
+## Checklist
+
+| # | Item | Result | Evidence |
+| --- | --- | --- | --- |
+| 1 | Plain click on a legal move cell moves; a click on an enemy in attack mode attacks; Sanctuary and Magic Missile special clicks work | **PASS** | `i1a-move`: Sera 4,5 to 6,4, movement 4 to 1. `i1b-move-attack`: a second scene, same click, same move; then Sera attacks Scout 1 (action True to False, "d20 3+5+8 vs AC 12, MISS"). `i1d-sanct-mm`: Sanctuary on Arden (bonus True to False, Kit 2/2 to 1/2); Ivo's Magic Missile on the Vault bow (Archer 20 to 11, action True to False, "never misses"). |
+| 2 | Press on a move cell, press a mode key before release: no action | **PASS** | `i2a-modeA`: `A` held-press (action dock tooltip updates, so the key registered); Sera 4,5, movement 4, action and bonus True, all HP unchanged. `i2b-modeM`: `M` (Sanctuary) pressed during the press; Sanctuary is armed afterwards, state identical to before. The same pixel plain-clicked in `i1a-move`. |
+| 3 | Press, open Help (`/`) while held, close it (Esc), release: no action | **PASS** | `i3-help`: left panel before, middle panel captured while the button is held (the "How to play" overlay is open), right panel after release: Sera 4,5, movement 4, action and bonus True, HP unchanged; the pointer is back on the same cell, which still shows "Move 3 squares". |
+| 4 | Press on a board cell near a HUD element, slide onto the HUD element, release: no board action, no HUD action | **PASS** | Zoomed two wheel notches so a legal cell ("Move 4 squares, 0 left after") touches the top edge of the action dock. Pressed at (1400, 967), 3 px above the dock edge (y about 970), slid to y 972, which is on the dock's "Sera's turn" strip (middle panel of `i4-dock`), released. State identical (Sera 4,5, movement 4, action and bonus True), and the dock stays inert (no End Turn, no mode change). Control `i4-control`: a plain click at that same pixel (967) moves Sera 4,5 to 1,6, movement 4 to 0, so the press pixel was a legal cell. |
+| 5 | Press, `Q` orbit, release: no action (the original bug) | **PASS** | `i5-orbit`: before, mid (camera orbited while held), after; Sera 4,5, movement 4, action and bonus True, HP unchanged. After `E` the camera was restored and the plain click in item 4's control moved her. |
+| 6 | End Turn and Menu still act on press | **PASS** | `i6-endturn`: with the button still held on End Turn the "IVO'S TURN" banner is up and the turn has passed (Sera to Ivo). `i6-menu`: with the button still held on Menu the menu (Save, Resume, Records, Speed, Help, Return to start) is already open. |
+| 7 | One full turn, then Return to menu and Resume | **PASS** | Round 1 played: Sera move, attack (miss), Sanctuary, End Turn by button; Ivo Magic Missile, End Turn by button; the enemy turn (Raider closed in on Sera, HP 22 to 17); Arden moved, Nix ended his turn, round 2 began on Sera. `i7-return-resume`: Backspace gives "Return to menu?", Enter gives the start screen ("Expedition kept at its last checkpoint"), clicking "Resume saved party" returns to round 2, Sera's turn. Checkpoint state before and after are identical (Arden 8,3, Raider 7,4, Archer 11/20, Sera 17/22). |
+
+For every "no action" check (2 to 5), the checkpoint JSON before and after is identical, with unit positions, HP and budget (movement, action, bonus) unchanged. The `before:` and `after:` lines are in the run transcript; the `i` sheets show them visually.
+
+## Notes
+- **First click after keyboard use is consumed.** After `Q` and `E` (keyboard use) the first click with pointer motion did nothing; the second click moved Sera (the #171 hand-back, seen in the a1bb9a6 pass as N4). It was not caused by the PR (the same happened with the previous head), and it happened in neither item 1's first scene (control click came after a long hover) nor in the negative trials.
+- **Pointer wake-up.** After launch the board ignored the pointer until the window was focused and a key (`Q`, `E`) was sent; the rig now does that before each scene.
+- **Mid-hold capture:** the middle panels in items 3, 4, 5, 6 are `grim` captures taken while the left button is held.
+- **Middle-drag pan was too weak** to bring a legal cell beside a HUD element, so zoom (wheel) and orbit were used to place the legal cell at the dock edge for item 4; the slide there is 5 px, and the release point is visibly on the dock.
+- **Not done:** Cure Wounds, Rescue, Potion and Sculpted Burst (no wounded or downed hero and no foe in range); the Menu or Help release over a HUD button other than the dock; 1280x720; a physical mouse.
+
+## Files
+`shots/` 12 contact sheets (before / during / after left to right or top to bottom as named), `rig/` scripts (`lib.sh`, `ptr2.c`, `start.sh`, `hyprland.conf`, `drv.py`, `k_a.sh`, `g_mid.sh`), `binary.sha256`.
