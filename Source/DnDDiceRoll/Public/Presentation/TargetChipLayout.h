@@ -60,7 +60,8 @@ inline Rect RouteCardRect(double W, double H, int Index)
 
 // The hero details that follow a hovered or selected party card (DrawPartyDetail): 320 wide, right of the card column, top level with the card, 14 plus 17 per wrapped
 // line high (never fewer than the HUD's MinDetailLines). PartyDetailMaxLines is the bound the tabletop overview's layout keeps clear of: the name and build (at most 2 wrapped
-// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed.
+// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed. Outside combat no guard is up, and the
+// progression lines (#218: the basic-damage breakdown and the upgrades, one each) take the Protection line's two.
 constexpr double PartyDetailWidth = 320, PartyDetailGap = 8, PartyDetailPad = 14, PartyDetailLineHeight = 17;
 constexpr int PartyDetailMaxLines = 8;
 inline Rect PartyDetailRect(int Slot, int Lines)
@@ -118,9 +119,10 @@ inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
         A.Top < B.Bottom + Gap && A.Bottom + Gap > B.Top;
 }
 
-// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 344 or 320 high, a little above the middle. They share these with the party
-// cards' hero details, which would otherwise be drawn under them (#200). #218 grew both: three reward cards, and one camp line per survivor.
-constexpr double RewardPanelWidth = 720, RewardPanelHeight = 344, CampPanelHeight = 320, PhasePanelLift = 30;
+// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 312 or 320 high, a little above the middle. They share these with the party
+// cards' hero details, which would otherwise be drawn under them (#200). #218 grew both (three reward cards; one camp line per survivor) to at most 328, the
+// tallest that still leaves the tallest details panel a free spot under or above them at the 720 design height.
+constexpr double RewardPanelWidth = 720, RewardPanelHeight = 312, CampPanelHeight = 320, PhasePanelLift = 30;
 inline Rect CentredPanelRect(double W, double H, double Height)
 {
     const double Top = H * 0.5 - Height * 0.5 - PhasePanelLift;

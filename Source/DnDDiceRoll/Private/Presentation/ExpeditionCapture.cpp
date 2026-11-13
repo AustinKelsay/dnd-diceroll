@@ -620,7 +620,9 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         return true;
     }
     case ECaptureMode::Overview:
-        if (!Board->ShowingOverview()) { Skip = TEXT("the checkpoint is not at the route table"); return false; }
+        // The route table, or (#218) the reward and camp screens, which are drawn over the board of the fight just won.
+        if (!Board->ShowingOverview() && !(Board->HasRun() && (Board->Progress().Phase == EExpeditionPhase::Reward || Board->Progress().Phase == EExpeditionPhase::Recovery)))
+        { Skip = TEXT("the checkpoint is not at the route table, the reward or the camp"); return false; }
         if (Shot.Hero > 0) { Player->SelectPartyIndex(Shot.Hero - 1, false); }
         if (Shot.Card >= 0)
         {

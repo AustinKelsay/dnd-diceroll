@@ -181,11 +181,11 @@ bool FRewardCardKeysTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Tab keeps the screen's focus order: Gear, then Reserve"), Game.Player->MenuFocus() == FName(TEXT("CardReserve")) && Game.Player->RewardCard() == ERewardCard::Reserve);
     // Help and Records own the keys: no card changes under them, and nothing is claimed.
     const TArray<uint8> Bytes = Game.CheckpointBytes();
-    for (const FKey Overlay : {EKeys::Slash, EKeys::H})
+    for (const FKey& Overlay : {EKeys::Slash, EKeys::H})
     {
         Game.Press(Overlay); Game.Frame(0.0f);
         TestTrue(TEXT("The overlay is open"), Game.Player->OverlayOpen());
-        for (const FKey Key : {EKeys::G, EKeys::U, EKeys::Left, EKeys::L, EKeys::Enter}) { Game.Press(Key); Game.Frame(0.0f); }
+        for (const FKey& Key : {EKeys::G, EKeys::U, EKeys::Left, EKeys::L, EKeys::Enter}) { Game.Press(Key); Game.Frame(0.0f); }
         TestTrue(TEXT("No card input leaks under the overlay"), Game.Player->RewardCard() == ERewardCard::Reserve);
         TestTrue(TEXT("Nothing is claimed under it"), Game.View->Progress().Phase == EExpeditionPhase::Reward && Game.CheckpointBytes() == Bytes);
         Game.Press(EKeys::Escape); Game.Frame(0.0f);

@@ -266,8 +266,7 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitIds.Reset();
     DetailRects.Reset();
     Drawn = FProgressionDrawn();
-    // Progression facts (#218) for the party cards, the hero details and the reward and camp screens; combat never needs them.
-    Progression = View->HasRun() && !View->InCombat() ? FProgressionQuery::For(View->CurrentRun()) : FProgressionFacts();
+    Progression = FProgressionFacts();
     bLegendRequested = false;
     bDiceRequested = false;
     DiceDesign = FBox2D(ForceInit); DiceRow = FBox2D(ForceInit); DiceDrawn = FBox2D(ForceInit);
@@ -283,6 +282,8 @@ void AExpeditionHUD::DrawHUD()
     Player = Cast<AExpeditionPlayerController>(GetOwningPlayerController());
     View = Player.IsValid() ? Player->GetBattleView() : nullptr;
     if (!Player.IsValid() || !View.IsValid() || !Canvas) { return; }
+    // Progression facts (#218) for the party cards, the hero details and the reward and camp screens; combat never needs them.
+    if (View->HasRun() && !View->InCombat()) { Progression = FProgressionQuery::For(View->CurrentRun()); }
     S = ExpeditionLayout::ViewScale(Canvas->SizeX, Canvas->SizeY);
     W = Canvas->SizeX / S;
     H = Canvas->SizeY / S;
@@ -1447,13 +1448,11 @@ void AExpeditionHUD::DrawReward()
     Drawn.RewardTitle = ProgressionText::RewardTitle(Progression);
     Text(Drawn.RewardTitle, W * 0.5f, Y + 14, Gold, 1.0f, EAlign::Center, Width - 32);
     Text(ProgressionText::PotionLine(Progression), W * 0.5f, Y + 46, Parchment, 0.8f, EAlign::Center, Width - 32);
-    TArray<FString> Lost;
-    for (const FHeroProgressFacts& Hero : Progression.Heroes) { if (Hero.Life == ECombatLife::Dead) { Lost.Add(FString::Printf(TEXT("%s (%s)"), *Hero.Name, *ProgressionText::FallenLine(Hero))); } }
-    if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 68, FLinearColor(0.85f, 0.5f, 0.45f), 0.7f, EAlign::Center, Width - 32); }
-    Text(TEXT("1-4 or a hero card chooses who  ·  G / R / U, Left / Right or a click chooses the card  ·  L or Enter claims"), W * 0.5f, Y + 90, Muted, 0.64f, EAlign::Center, Width - 24);
+    // Fallen heroes say "fell at LvN" on their own party cards.
+    Text(TEXT("1-4 or a hero card chooses who  ·  G / R / U, Left / Right or a click chooses the card  ·  L or Enter claims"), W * 0.5f, Y + 64, Muted, 0.64f, EAlign::Center, Width - 24);
     const FHeroProgressFacts* Hero = HeroProgress(Player->Selection());
     const ERewardCard Chosen = Player->RewardCard();
-    constexpr float Gap = 10, CardTop = 114, CardHeight = 152;
+    constexpr float Gap = 10, CardTop = 88, CardHeight = 150;
     const float CardWidth = (Width - 32 - 2 * Gap) / 3;
     for (int32 Index = 0; Index < 3; ++Index)
     {
@@ -1467,17 +1466,17 @@ void AExpeditionHUD::DrawReward()
         Panel(CX, CY, CardWidth, CardHeight, bChosen ? Gold : Accent, bAvailable ? 0.92f : 0.6f);
         if (bChosen) { Frame(WithAlpha(Gold, 0.9f), CX - 2, CY - 2, CardWidth + 4, CardHeight + 4, 2.0f); }
         if (Player->MenuFocus() == Id) { Frame(Parchment, CX - 5, CY - 5, CardWidth + 10, CardHeight + 10, 1.5f); }
-        const FLinearColor Ink = bAvailable ? Parchment : Muted;
+        const FLinearColor CardInk = bAvailable ? Parchment : Muted;
         const TCHAR* Key = Card == ERewardCard::Reserve ? TEXT("R") : Card == ERewardCard::Honed ? TEXT("U") : TEXT("G");
         Text(ProgressionText::CardName(Card), CX + 10, CY + 8, bAvailable ? Gold : Muted, 0.92f);
         Text(Key, CX + CardWidth - 10, CY + 10, Muted, 0.6f, EAlign::Right);
-        Text(ProgressionText::CardRule(Card), CX + 10, CY + 32, Ink, 0.6f, EAlign::Left, CardWidth - 20);
+        Text(ProgressionText::CardRule(Card), CX + 10, CY + 32, CardInk, 0.6f, EAlign::Left, CardWidth - 20);
         TArray<FString> Lines = Facts ? ProgressionText::CardLines(*Facts) : TArray<FString>();
         const FString Note = Facts ? ProgressionText::NoteText(Facts->Note) : FString();
         float LineY = CY + 54;
         for (const FString& Line : Lines)
         {
-            for (const FString& Part : Wrap(Line, CardWidth - 20, 0.62f)) { if (LineY < CY + CardHeight - 34) { Text(Part, CX + 10, LineY, Ink, 0.62f); LineY += 16; } }
+            for (const FString& Part : Wrap(Line, CardWidth - 20, 0.62f)) { if (LineY < CY + CardHeight - 34) { Text(Part, CX + 10, LineY, CardInk, 0.62f); LineY += 16; } }
         }
         if (!Note.IsEmpty()) { Text(Note, CX + 10, CY + CardHeight - 24, bAvailable ? Gold : Danger, 0.64f, EAlign::Left, CardWidth - 20); Lines.Add(Note); }
         Buttons.Add({Id, FBox2D(FVector2D(CX, CY) * S, FVector2D(CX + CardWidth, CY + CardHeight) * S), true});
@@ -1487,7 +1486,7 @@ void AExpeditionHUD::DrawReward()
     const bool bReady = ChosenFacts && ChosenFacts->bAvailable;
     Drawn.Claim = !Hero || Hero->Life != ECombatLife::Conscious ? FString(TEXT("Select a survivor")) : ProgressionText::ClaimLabel(*Hero, *ChosenFacts);
     Drawn.bClaimEnabled = bReady;
-    Button(TEXT("Claim"), Drawn.Claim, TEXT("L / Enter"), W * 0.5f - 150, Y + CardTop + CardHeight + 14, 300, 50, bReady, false, Gold);
+    Button(TEXT("Claim"), Drawn.Claim, TEXT("L / Enter"), W * 0.5f - 150, Y + CardTop + CardHeight + 12, 300, 48, bReady, false, Gold);
 }
 
 void AExpeditionHUD::DrawCamp()
