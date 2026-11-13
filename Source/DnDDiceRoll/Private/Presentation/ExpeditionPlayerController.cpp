@@ -17,7 +17,10 @@
 #include "Party/BuildCatalog.h"
 #include "Misc/App.h"
 #include "Framework/Application/SlateApplication.h"
-#if PLATFORM_LINUX && !UE_SERVER
+// The Linux platform application's focus window is read in game builds only: it is an engine-internal class used through its header, and the editor's PIE does not give the
+// controller the same object (reading it there crashed the PIE test).
+#define EXPEDITION_LINUX_FOCUS_POLL (PLATFORM_LINUX && !UE_SERVER && !WITH_EDITOR)
+#if EXPEDITION_LINUX_FOCUS_POLL
 #include "Linux/LinuxApplication.h"
 #endif
 
@@ -712,7 +715,7 @@ void AExpeditionPlayerController::FlushPressedKeys()
 
 bool AExpeditionPlayerController::KeyboardFocusLost() const
 {
-#if PLATFORM_LINUX && !UE_SERVER
+#if EXPEDITION_LINUX_FOCUS_POLL
     // Only a running game window has the Linux platform application; an automation world has no viewport.
     const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
     if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return false; }
