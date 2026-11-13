@@ -1,51 +1,51 @@
 # Performance gate: PASS
 
-Resolution 1920x1080; mode packaged Development; commit b2d747581bcd10f02b3cf1593028a0722683b9d1; engine 5.8.4.
+Resolution 1920x1080; mode packaged Development; commit 34c4b506e25c97ada5f735ca213eb8ff174db70f; engine 5.8.4.
 
 ## Budgets
 
 | Budget | Measured | Limit | Result |
 | --- | --- | --- | --- |
-| p95 FrameTime | 3.35 ms | 16.7 ms | pass |
+| p95 FrameTime | 3.40 ms | 16.7 ms | pass |
 | p95 GPUTime | 2.55 ms | 12.0 ms | pass |
-| p95 GameThreadTime | 1.17 ms | 4.0 ms | pass |
-| max RSS | 1261.3 MiB | 5120.0 MiB | pass |
+| p95 GameThreadTime | 1.22 ms | 4.0 ms | pass |
+| max RSS | 1234.9 MiB | 5120.0 MiB | pass |
 
 ## Steady state (transition windows excluded)
 
 | Frames | Set | FrameTime p50 | p95 | max | GPUTime p95 | GameThreadTime p95 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 25246 | measured pass, gate | 2.79 ms | 3.35 ms | 7.78 ms | 2.55 ms | 1.17 ms |
-| 25184 | measured pass, fight only | 2.79 ms | 3.35 ms | 7.78 ms | 2.56 ms | 1.17 ms |
-| 20 | resume pass | 2.75 ms | 3.55 ms | 3.67 ms | 2.49 ms | 1.04 ms |
+| 25280 | measured pass, gate | 2.78 ms | 3.40 ms | 6.52 ms | 2.55 ms | 1.22 ms |
+| 25218 | measured pass, fight only | 2.78 ms | 3.40 ms | 6.52 ms | 2.55 ms | 1.21 ms |
+| 20 | resume pass | 2.79 ms | 2.81 ms | 2.87 ms | 2.49 ms | 0.85 ms |
 
 ## Transition hitches (reported separately; not in the steady state)
 
 | Transition | Pass | Worst frame | Duration | Frames | Worst GPU | Worst game thread |
 | --- | --- | --- | --- | --- | --- | --- |
-| plan | measured | 22.7 ms (frame 183) | 23 ms | 1 | 2.0 ms | 22.7 ms |
-| start->route | measured | 9.3 ms (frame 207) | 2268 ms | 1020 | 3.6 ms | 9.5 ms |
-| route->battle | measured | 61.8 ms (frame 1250) | 151 ms | 31 | 4.7 ms | 61.0 ms |
-| battle->reward | measured | 5.8 ms (frame 26973) | 5506 ms | 1965 | 5.2 ms | 2.9 ms |
-| quit | measured | 2.8 ms (frame 28456) | 67 ms | 31 | 2.5 ms | 2.0 ms |
-| resume | resume | 55.2 ms (frame 181) | 2085 ms | 722 | 5.2 ms | 54.8 ms |
-| reward->route | resume | 5.9 ms (frame 1122) | 2386 ms | 851 | 5.0 ms | 3.9 ms |
+| plan | measured | 22.6 ms (frame 183) | 23 ms | 1 | 2.0 ms | 22.6 ms |
+| start->route | measured | 7.2 ms (frame 207) | 2267 ms | 995 | 4.1 ms | 7.9 ms |
+| route->battle | measured | 56.8 ms (frame 1225) | 147 ms | 31 | 4.5 ms | 56.1 ms |
+| battle->reward | measured | 5.3 ms (frame 26922) | 5508 ms | 1976 | 5.2 ms | 2.8 ms |
+| quit | measured | 3.2 ms (frame 28477) | 66 ms | 31 | 2.5 ms | 1.6 ms |
+| resume | resume | 56.6 ms (frame 181) | 2087 ms | 726 | 4.4 ms | 55.4 ms |
+| reward->route | resume | 5.7 ms (frame 1045) | 2387 ms | 852 | 5.7 ms | 4.0 ms |
 
 ## Memory
 
-VmRSS sampled every 0.5 s (177 samples): max 1261.3 MiB; kernel high-water mark (VmHWM) 1256.6 MiB. The budget uses the larger.
+VmRSS sampled every 0.5 s (177 samples): max 1234.9 MiB; kernel high-water mark (VmHWM) 1231.9 MiB. The budget uses the larger.
 
 ## Most expensive GPU passes (steady state, -csvGpuStats)
 
 | Pass | p95 | mean |
 | --- | --- | --- |
-| GPU/TemporalSuperResolution | 0.70 ms | 0.69 ms |
+| GPU/TemporalSuperResolution | 0.69 ms | 0.69 ms |
 | GPU/ShadowDepths | 0.33 ms | 0.33 ms |
 | GPU/Postprocessing | 0.26 ms | 0.26 ms |
-| GPU/SSAO | 0.20 ms | 0.20 ms |
+| GPU/SSAO | 0.21 ms | 0.20 ms |
 | GPU/Unaccounted | 0.20 ms | 0.19 ms |
-| GPU/Lights | 0.19 ms | 0.19 ms |
-| GPU/Basepass | 0.13 ms | 0.13 ms |
+| GPU/Lights | 0.19 ms | 0.18 ms |
+| GPU/Basepass | 0.14 ms | 0.13 ms |
 | GPU/BuildRenderingCommandsDeferred | 0.08 ms | 0.08 ms |
 
 ## Run
