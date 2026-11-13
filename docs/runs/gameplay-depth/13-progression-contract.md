@@ -103,7 +103,7 @@ Grep hits that are neither readers nor amounts are listed under "Fixed, never ho
 
 **Shelter keeps its Rage lifetime.** The guard still ends when its Barbarian's Rage ends (`CombatBattle.cpp:940`), and the restore rule for a Rage guard with no `GuardTurns` (`:132`) is unchanged.
 - **Amount.** One function, `FBuildCatalog::GuardAmount(Guard)`, gives the amount: `GuardAmount` when the guard is Kit-paid, otherwise the guard's own Rage-paid Protect fact, honed when `bHoned` is set. The four readers above call it. No new saved field is needed: `bHoned` cannot change during a battle, because claims only happen between fights. So a checkpoint saved with Shelter active resumes with the same amount.
-- **Text.** The status and hero-details text say the guard lasts while raging, not "until next own turn".
+- **Text.** The ability text says "until its next turn or its fury ends" and the status and hero-details text "until next own turn or Rage ends": the guard ends at its Barbarian's next own turn, or sooner when that Rage ends. *(Corrected in #218 PR A with the lead's approval; the #58 cost-word lint keeps resource names out of ability descriptions, hence "fury".)*
 
 **Fixed, never honed** (listed so that a reviewer can tell an omission from a decision):
 - the Potion's 2d4+2 and Rescue's 1 HP;
@@ -415,7 +415,7 @@ No new assets. A reward-claim sound cue belongs to slice 6.
 - **PR B (stacked on A):** section 8.
 - **Gates for each PR:** build with 0 warnings, full `Project.` with 0 warnings, helpers on Python 3.11, `contribute.py check`, and two-axis review. PR A also needs the `Balance.Baseline.` before and after runs and an evidence branch. PR B also needs inspected captures and the on-screen pass before merge.
 - **As built:** filled in by PR A (numbers, deviations, targets met or missed) and PR B (presentation), as in contracts 09 and 11.
-  - **PR A ([#218](https://github.com/AustinKelsay/dnd-diceroll/issues/218)):** see [14-progression-report.md](14-progression-report.md), "As built" and "Targets". Honed rows are at their bounds (Strike/Push +3, Area +2, Surge +2, Missile +3, Precision +2; the others as written). P1, P3, P4 and P5 are met. P2 is missed. P6 is missed on one #217 deadlock, accepted for the release by the maintainer on 2026-11-13. Two lead-approved corrections are in this file: Shelter's lifetime text (section 3) and the `mixed` rule (section 6).
+  - **PR A ([#218](https://github.com/AustinKelsay/dnd-diceroll/issues/218)):** see [14-progression-report.md](14-progression-report.md), "As built" and "Targets". Honed rows are at their bounds (Strike/Push +3, Area +2, Surge +2, Missile +3, Precision +2; the others as written). P1, P3, P4 and P5 are met. P2 is missed (accepted by the lead on 2026-11-13; follow-up #228). P6 is missed on one #217 deadlock, accepted for the release by the maintainer on 2026-11-13. Two lead-approved corrections are in this file: Shelter's lifetime text (section 3) and the `mixed` rule (section 6).
 
 ## 10. Non-goals
 

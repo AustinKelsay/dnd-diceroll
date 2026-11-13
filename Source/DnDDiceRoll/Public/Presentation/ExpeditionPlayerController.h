@@ -52,6 +52,8 @@ public:
     bool ShowingHelp() const { return bShowHelp; }
     /** True while the mid-encounter "Return to menu?" question is open. */
     bool ConfirmingReturn() const { return bConfirmReturn; }
+    /** The Abandon run question (#224) is open: it defaults to keeping the run and owns every click and key. */
+    bool ConfirmingAbandon() const { return bConfirmAbandon; }
     /** True while a requested return waits for the party's turn and playback to finish. */
     bool ReturnPending() const { return bReturnPending; }
     /**
@@ -218,6 +220,7 @@ private:
     bool bShowHelp = false;
     bool bShowMenu = false;
     bool bConfirmReturn = false;
+    bool bConfirmAbandon = false;
     bool bReturnPending = false;
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
     EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
@@ -270,6 +273,9 @@ private:
     void RequestReturnToMenu();
     void ResolvePendingReturn();
     void ConfirmReturn();
+    /** Opens the Abandon run question, only on the start screen with an unfinished checkpoint. */
+    void RequestAbandon();
+    void ConfirmAbandon();
     void LeaveExpedition();
     void History();
     void OlderRecords();

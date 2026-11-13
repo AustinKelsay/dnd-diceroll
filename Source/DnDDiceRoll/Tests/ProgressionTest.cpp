@@ -546,9 +546,10 @@ bool FLevelGainsAreFactsOnlyTest::RunTest(const FString& Parameters)
         // The battle the last command produced, without the run's level-ups: a level adds +1 basic damage and nothing else.
         FCombatBattle Plain = Before;
         Plain.Submit(Last);
+        const FExpeditionSnapshot BeforeQuery = Run.Snapshot();
         const FProgressionFacts Facts = FProgressionQuery::For(Run);
         TestEqual(TEXT("Survivors reach the next level"), Facts.SurvivorLevel, Victories + 1);
-        TestTrue(TEXT("Facts are a pure query"), SameRun(Run.Snapshot(), Run.Snapshot()));
+        TestTrue(TEXT("Facts are a pure query: the run, both random streams included, is unchanged"), SameRun(BeforeQuery, Run.Snapshot()));
         for (const FHeroProgressFacts& H : Facts.Heroes)
         {
             const FCombatantState& U = *Run.Battle().Find(H.Id);

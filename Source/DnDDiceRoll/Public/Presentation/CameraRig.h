@@ -33,6 +33,12 @@ namespace ExpeditionCameraRig
     constexpr float ArmLength = 1.1768f;
     /** How far past the board's outer tile edge the visible ground may reach when panning, in cells (was 2 cells past the outer cell centres, #148 gate 2). */
     constexpr float PanMarginCells = 1.5f;
+    /**
+     * The Vault's authored set ends where its far-hall ring begins, 28 m from the board centre (the hall inside it, the dressed ground and the
+     * ring itself), and the exterior beyond it is a bare dark plane. The camera never shows ground farther than this from the board centre
+     * (#209): SetHalfExtentCells cells (18 at the 150 cm cell, 27 m) each way, bounded per yaw by SetCoverDistance and met per focus by SetCoverDistanceAt, by the zoom alone.
+     */
+    constexpr float SetHalfExtentCells = 18.0f;
     /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */
     // 88 px nominal: rendered figures read at about 0.8 of a nominal 180 cm projection (the on-screen pass measured ~50 px
     // where the nominal height was ~62), so this gives about 72 px on screen at 1080 (#148 gate 2).
@@ -418,5 +424,118 @@ namespace ExpeditionCameraRig
             (Inside(Focus + (Unit - Focus) * Mid) ? High : Low) = Mid;
         }
         return Focus + (Unit - Focus) * High;
+    }
+
+    /**
+     * The ground (view-space cm on the board-top plane) under the four corners of the whole viewport, as offsets from the focus: what the
+     * camera can show at all, HUD or not. Translating the camera translates these rigidly.
+     */
+    inline bool ViewportGround(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, FVector2D (&Out)[4])
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        const FVector Eye = Pose.Offset + Pose.Framing;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        int32 Index = 0;
+        for (const double X : {0.0, 1.0})
+        {
+            for (const double Y : {0.0, 1.0})
+            {
+                if (!Unproject(FVector2D(X, Y), Eye, Forward, Safe.Aspect, Metric.BoardTop(), Out[Index++])) { return false; }
+            }
+        }
+        return true;
+    }
+
+    /** Whether the viewport's ground, wherever the focus is, is no wider than the set in either axis (HalfCm each way from its centre). */
+    inline bool SetCovers(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, float HalfCm)
+    {
+        FVector2D Ground[4];
+        if (!ViewportGround(Yaw, Distance, Pitch, Metric, Safe, Ground)) { return false; }
+        double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+        for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
+        return MaxX - MinX <= 2.0 * HalfCm && MaxY - MinY <= 2.0 * HalfCm;
+    }
+
+    /**
+     * The farthest zoom in [Low, High] at which the viewport's ground still fits the set from Yaw, at the pitch the zoom implies (anchored at
+     * Anchor, the home-yaw default). Low when even that shows more than the set: a zoom out never goes nearer than the default, and the
+     * ground there is what the default framing has always shown. The footprint grows with the distance, so the bisection is exact.
+     */
+    inline float SetCoverDistance(float Yaw, float Anchor, const FBoardMetric& Metric, const FSafeRect& Safe, float HalfCm, float Low, float High)
+    {
+        auto Fits = [&](float D) { return SetCovers(Yaw, D, PitchFor(D, Anchor), Metric, Safe, HalfCm); };
+        if (High <= Low || !Fits(Low)) { return Low; }
+        if (Fits(High)) { return High; }
+        for (int32 Iteration = 0; Iteration < 24 && High - Low > 0.01f; ++Iteration)
+        {
+            const float Mid = 0.5f * (Low + High);
+            (Fits(Mid) ? Low : High) = Mid;
+        }
+        return Low;
+    }
+
+    /** ViewportGround that also gives the eye (view-space cm, relative to the focus), for the walls' shadows. */
+    inline bool ViewportGroundEye(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, const FVector& Shake, FVector2D (&Out)[4], FVector& EyeOut)
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        EyeOut = Pose.Offset + Pose.Framing + Shake;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        int32 Index = 0;
+        for (const double X : {0.0, 1.0})
+        {
+            for (const double Y : {0.0, 1.0})
+            {
+                if (!Unproject(FVector2D(X, Y), EyeOut, Forward, Safe.Aspect, Metric.BoardTop(), Out[Index++])) { return false; }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether a pose's ground is inside the set: the ground under the four viewport corners (offsets from the focus), around FocusXY, is within HalfCm of
+     * Centre on both axes. (Eye is the eye relative to the focus; the camera-side wall is not part of this: it is faded, not framed out, see
+     * `OccluderSideMargins`.)
+     */
+    inline bool SetContainsGround(const FVector2D& FocusXY, const FVector& Eye, const FVector2D (&Ground)[4], const FBoardMetric& Metric, const FVector2D& Centre, float HalfCm)
+    {
+        (void)Eye; (void)Metric;
+        for (const FVector2D& Point : Ground)
+        {
+            const FVector2D At = FocusXY + Point - Centre;
+            if (FMath::Abs(At.X) > HalfCm || FMath::Abs(At.Y) > HalfCm) { return false; }
+        }
+        return true;
+    }
+
+    /** Whether the viewport's ground, from a camera whose focus is at Focus (view-space cm), is inside the set. */
+    inline bool SetContainsAt(const FVector2D& Focus, float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe,
+        const FVector2D& Centre, float HalfCm)
+    {
+        FVector2D Ground[4];
+        FVector Eye;
+        if (!ViewportGroundEye(Yaw, Distance, Pitch, Metric, Safe, FVector::ZeroVector, Ground, Eye)) { return false; }
+        return SetContainsGround(Focus, Eye, Ground, Metric, Centre, HalfCm);
+    }
+
+    /**
+     * The farthest zoom in [Low, High] at which the viewport's ground, around the given focus and from Yaw, is inside the set (the pitch follows the zoom,
+     * anchored at Anchor). The focus is decided by the pan bound, the unit hold and the locked-axis centring and is never moved to satisfy the set: a
+     * nearer pose always sees less ground, so the zoom gives way instead. Never nearer than Low (the default zoom): where even Low does not fit at this
+     * focus, Low is returned and the caller reports it (`bFits` false). The footprint grows with the distance, so the bisection is exact.
+     */
+    inline float SetCoverDistanceAt(const FVector2D& Focus, float Yaw, float Anchor, const FBoardMetric& Metric, const FSafeRect& Safe,
+        const FVector2D& Centre, float HalfCm, float Low, float High, bool& bFits)
+    {
+        auto Fits = [&](float D) { return SetContainsAt(Focus, Yaw, D, PitchFor(D, Anchor), Metric, Safe, Centre, HalfCm); };
+        bFits = true;
+        if (High <= Low) { bFits = Fits(High); return High; }
+        if (Fits(High)) { return High; }
+        if (!Fits(Low)) { bFits = false; return Low; }
+        for (int32 Iteration = 0; Iteration < 24 && High - Low > 0.01f; ++Iteration)
+        {
+            const float Mid = 0.5f * (Low + High);
+            (Fits(Mid) ? Low : High) = Mid;
+        }
+        return Low;
     }
 }
