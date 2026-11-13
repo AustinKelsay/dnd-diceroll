@@ -45,7 +45,9 @@ _Avoid_: pawn when discussing game rules
 
 **Next party**: Four ordered build selections edited at startup or after an ending, used only by explicit New Run. Resume retains the saved party.
 
-**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it.
+**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it until the run ends or is abandoned.
+
+**Abandon run**: The start screen's way to give up an unfinished expedition ([#224](https://github.com/AustinKelsay/dnd-diceroll/issues/224)), offered only while one is saved. It asks first and defaults to keeping the run; Resume stays the focused choice. A confirmed abandon writes a small marker beside the checkpoint (never the checkpoint itself), after which Resume refuses that run and New Run replaces it as after an ending, keeping the records of finished runs. The abandoned run is not recorded, and a failed write changes nothing and says so.
 
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.
 

@@ -69,11 +69,23 @@ public:
     /** Puts the live run away without writing anything. The checkpoint stays exactly as
      * last committed, so Resume continues the run and New Run still refuses to replace it. */
     void Close();
-    /** True when the checkpoint holds a readable, unfinished run, so New Run would refuse. Read-only. */
+    /** True when the checkpoint holds a readable, unfinished run that has not been abandoned, so New Run would refuse. Read-only. */
     bool HasUnfinishedCheckpoint() const;
+    /**
+     * Abandon the unfinished checkpoint from the start screen (#224): only with no live run and a readable, unfinished checkpoint. It writes one
+     * small marker beside the checkpoint naming that run, atomically; the checkpoint itself is never written, so on failure (or cancel) its bytes
+     * are unchanged. While the marker names the checkpoint's run, Resume refuses it, HasUnfinishedCheckpoint is false and New Run replaces it
+     * exactly as after an ending, keeping the records of finished runs. The abandoned run is not recorded: the records format can only hold
+     * victories and defeats, and the save schema does not change for this.
+     */
+    bool Abandon(FString& Error);
+    /** The marker's path: the checkpoint path plus ".abandoned". */
+    FString AbandonMarkerPath() const { return SavePath + TEXT(".abandoned"); }
 private:
     FString SavePath;
     FExpeditionRun Current;
     bool bHasRun = false;
     bool Commit(FExpeditionRun&& Candidate, FString& Error);
+    /** True when the abandon marker names RunId. */
+    bool IsAbandoned(const FString& RunId) const;
 };

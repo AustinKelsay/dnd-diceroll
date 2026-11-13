@@ -258,6 +258,10 @@ public:
     void ReturnToMenu();
     /** With no run in play: the checkpoint holds an unfinished run (checked at startup and on return). */
     bool HasUnfinishedCheckpoint() const { return bUnfinishedCheckpoint; }
+    /** The start screen may offer Abandon run (#224): no run in play and an unfinished checkpoint. */
+    bool CanAbandonRun() const { return !HasRun() && bUnfinishedCheckpoint; }
+    /** Abandons the unfinished checkpoint (FExpeditionSession::Abandon) and reports the result; a failure changes nothing and says so. */
+    void AbandonRun();
     /** A checkpoint write failed; enemy turns are held until the player saves or resumes. */
     bool CheckpointBlocked() const { return bCheckpointBlocked; }
     void ToggleRecords();
