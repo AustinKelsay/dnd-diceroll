@@ -337,7 +337,7 @@ bool FVigilOccluderFadeTest::RunTest(const FString& Parameters)
             View->OccluderSight(LiveEye, LiveFocus, LiveUnit);
             const float Live = View->Metric().CellCm * OccluderFade::RadiusCells;
             const FVector Between = LiveEye + (LiveFocus - LiveEye) * 0.5f;
-            TestEqual(TEXT("Something between the camera and the focus is faded"), View->OccluderOpacityAt(Between), OccluderFade::MinOpacity, 0.001f);
+            TestEqual(TEXT("Something between the camera and the focus is faded"), View->OccluderOpacityAt(Between), View->OccluderMinOpacity(), 0.001f);
             TestTrue(TEXT("It is dithered, not hidden"), View->OccluderOpacityAt(Between) > 0.0f);
             TestEqual(TEXT("Something far to the side of the line is opaque"), View->OccluderOpacityAt(Between + FVector(0.0f, 0.0f, 4.0f * Live)), 1.0f, 0.001f);
             TestEqual(TEXT("Something past the focus is opaque"), View->OccluderOpacityAt(LiveFocus + (LiveFocus - LiveEye) * 0.3f), 1.0f, 0.001f);
@@ -347,7 +347,7 @@ bool FVigilOccluderFadeTest::RunTest(const FString& Parameters)
             View->OccluderBoard(BoardMin, BoardMax, PlaneZ);
             const FVector BoardCentre((BoardMin.X + BoardMax.X) * 0.5f, (BoardMin.Y + BoardMax.Y) * 0.5f, PlaneZ);
             TestTrue(TEXT("The camera is above the board plane"), LiveEye.Z > PlaneZ);
-            TestEqual(TEXT("Something between the camera and a board cell is faded"), View->OccluderBoardOpacityAt(LiveEye + (BoardCentre - LiveEye) * 0.5f), OccluderFade::MinOpacity, 0.001f);
+            TestEqual(TEXT("Something between the camera and a board cell is faded"), View->OccluderBoardOpacityAt(LiveEye + (BoardCentre - LiveEye) * 0.5f), View->OccluderMinOpacity(), 0.001f);
             const FVector Outside(BoardMax.X + 20.0f * View->Metric().CellCm, BoardCentre.Y, PlaneZ);
             TestEqual(TEXT("Something over ground well beside the board is opaque"), View->OccluderBoardOpacityAt(LiveEye + (Outside - LiveEye) * 0.5f), 1.0f, 0.001f);
             // Turning the camera around the board moves the line: the old spot no longer blocks it.
@@ -443,6 +443,130 @@ bool FVigilThemeDataTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("A kit set has its full variant count"), Set.Key->Num(), Set.Value);
         for (const TSoftObjectPtr<UStaticMesh>& Entry : *Set.Key) { TestNotNull(TEXT("A kit mesh loads"), UDiceRollTheme::Load(Entry)); }
     }
+    return !HasAnyErrors();
+}
+
+/**
+ * #209: the Vigil's stained-glass rose hangs on the home-side wall, about 8 cells past the board, and from a camera on that side its pixels'
+ * rays land about 5 cells past the board's near edge, where the board fade did not reach, so it filled the bottom of the frame behind the action
+ * bar. The fade now reaches 7.5 cells on the side(s) the camera is on, at every yaw, and stays at half a cell on the others, so the geometry
+ * between the camera and the board dithers and the rose stays opaque from the sides and when it is behind the board.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVigilNearSideFadeTest, "Project.Expedition.Presentation.VigilNearSideGeometryFades",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVigilNearSideFadeTest::RunTest(const FString& Parameters)
+{
+    UWorld* World = MakeKitWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VigilNearSide"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = StartVigilBoard(*this, World, Directory);
+    if (TestNotNull(TEXT("A Vigil board"), View) && TestTrue(TEXT("It draws the Vigil kit with its occluder"), View->UsesVigilKit() && View->HasOccluder()))
+    {
+        TestEqual(TEXT("The Vigil's ramp is a cell"), View->OccluderRampCells(), OccluderFade::VigilBoardRampCells);
+        const double Cell = View->Metric().CellCm;
+        // Yaw -90 puts the camera on the low-Y side, 90 the high-Y side, 0 the high-X side, 180 the low-X side; the sides it is not on keep the base margin.
+        struct FCase { float Yaw; int32 Wide; };
+        for (const FCase& Case : {FCase{-90.0f, 2}, FCase{90.0f, 3}, FCase{0.0f, 1}, FCase{180.0f, 0}})
+        {
+            View->SnapCamera(Case.Yaw, View->FramedDistance(Case.Yaw));
+            View->Tick(0.016f);
+            float Margins[4];
+            View->OccluderSideMargins(Margins);
+            const FString Label = FString::Printf(TEXT("Yaw %.0f"), Case.Yaw);
+            for (int32 Side = 0; Side < 4; ++Side)
+            {
+                if (Side == Case.Wide) { TestEqual(*FString::Printf(TEXT("%s: the camera's side (%d) reaches the near margin"), *Label, Side), Margins[Side], OccluderFade::VigilNearMarginCells, 0.01f); }
+                else { TestEqual(*FString::Printf(TEXT("%s: side %d keeps the base margin"), *Label, Side), Margins[Side], OccluderFade::BoardMarginCells, 0.01f); }
+            }
+            // The rect the shader and the CPU query share: a point whose view ray lands 5 cells past the camera-side edge is faded, 8 cells past is not.
+            FVector2D Min, Max;
+            float PlaneZ = 0.0f;
+            View->OccluderBoard(Min, Max, PlaneZ);
+            const FVector Eye = View->CameraTransform().GetLocation();
+            const FCombatEncounter& Board = View->Rules().Snapshot().Encounter;
+            const FVector Centre = View->GetActorTransform().TransformPosition(View->BoardPosition(FVector2D((Board.Width - 1) * 0.5f, (Board.Height - 1) * 0.5f)));
+            const FVector2D Toward = Case.Wide == 0 ? FVector2D(-1, 0) : Case.Wide == 1 ? FVector2D(1, 0) : Case.Wide == 2 ? FVector2D(0, -1) : FVector2D(0, 1);
+            const double Half = (Case.Wide < 2 ? Board.Width : Board.Height) * 0.5 * Cell;
+            auto Fade = [&](double CellsPast, FVector2D Direction)
+            {
+                const FVector Ground(Centre.X + Direction.X * (Half + CellsPast * Cell), Centre.Y + Direction.Y * (Half + CellsPast * Cell), PlaneZ);
+                return View->OccluderBoardOpacityAt(Eye + (Ground - Eye) * 0.5);
+            };
+            TestEqual(*(Label + TEXT(": the floor 5 cells past the camera-side edge is faded (where the rose's rays land)")), Fade(5.0, Toward), View->OccluderMinOpacity(), 0.001f);
+            TestEqual(*(Label + TEXT(": the floor past the margin and its ramp is opaque")), Fade(OccluderFade::VigilNearMarginCells + OccluderFade::VigilBoardRampCells + 0.5, Toward), 1.0f, 0.001f);
+            TestEqual(*(Label + TEXT(": the floor 3 cells past the far edge is opaque")), Fade(3.0, -Toward), 1.0f, 0.001f);
+        }
+        // Between the axes both sides the camera is on reach out.
+        View->SnapCamera(-45.0f, View->FramedDistance(-45.0f));
+        View->Tick(0.016f);
+        float Diagonal[4];
+        View->OccluderSideMargins(Diagonal);
+        TestTrue(TEXT("At a diagonal yaw both camera-side margins are wider than the base"), Diagonal[1] > OccluderFade::BoardMarginCells + 0.5f && Diagonal[2] > OccluderFade::BoardMarginCells + 0.5f);
+    }
+    DestroyKitWorld(World);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
+    return !HasAnyErrors();
+}
+
+/**
+ * #209, on-screen note 3: the stained-glass rose (on the home-side wall, 21.75 m from the board centre, 5.8 to 13.7 m up, 7.9 m wide: the extents of
+ * its triangles in SM_World_Vigil_Occluders) must not fill the bottom of the frame behind the action bar at any zoom the camera allows. Every
+ * point of a grid over the rose that projects into the bottom third of the viewport over the action bar and its flanks (the middle 60% of the width) is faded to the Vigil's floor opacity, at zooms from the nearest
+ * to the farthest, yaws within 45 degrees either side of the home yaw, unpanned and panned to the near stop.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVigilRoseFadesBehindTheDockTest, "Project.Expedition.Presentation.VigilRoseFadesBehindTheDockAtEveryZoom",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FVigilRoseFadesBehindTheDockTest::RunTest(const FString& Parameters)
+{
+    using namespace ExpeditionCameraRig;
+    UWorld* World = MakeKitWorld();
+    if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
+    const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VigilRose"), FGuid::NewGuid().ToString());
+    AExpeditionBattleView* View = StartVigilBoard(*this, World, Directory);
+    if (TestNotNull(TEXT("A Vigil board"), View) && TestTrue(TEXT("It draws the Vigil kit with its occluder"), View->UsesVigilKit() && View->HasOccluder()))
+    {
+        View->SetSafeRect(FSafeRect::ForViewport(1920, 1080));
+        const FCombatEncounter& Board = View->Rules().Snapshot().Encounter;
+        const FVector Centre = View->GetActorTransform().TransformPosition(View->BoardPosition(FVector2D((Board.Width - 1) * 0.5f, (Board.Height - 1) * 0.5f)));
+        FVector2D Min, Max;
+        float PlaneZ = 0.0f;
+        View->OccluderBoard(Min, Max, PlaneZ);
+        TArray<FVector> Rose;
+        for (const double X : {-390.0, -195.0, 0.0, 195.0, 390.0}) for (const double Up : {580.0, 840.0, 1100.0, 1370.0})
+        { Rose.Add(FVector(Centre.X + X, Centre.Y - 2175.0, PlaneZ + Up)); }
+        int32 Checked = 0, Zooms = 0;
+        const float Floor = View->OccluderMinOpacity();
+        for (const float Zoom : {MinDistance, 1100.0f, NearDistance, 2000.0f, -1.0f, 3500.0f, 5000.0f, MaxDistance})
+        {
+            for (const float Yaw : {-90.0f, -60.0f, -120.0f, -45.0f, -135.0f})
+            {
+                for (const bool bPanned : {false, true})
+                {
+                    const float Distance = Zoom < 0.0f ? View->FramedDistance(Yaw) : Zoom;
+                    View->SnapCamera(Yaw, Distance);
+                    View->Tick(0.016f);
+                    if (bPanned) { View->Pan(0.0f, -1.0e5f); View->Pan(0.0f, -1.0e5f); View->Tick(5.0f); }
+                    const FTransform Camera = View->CameraTransform();
+                    const FString Label = FString::Printf(TEXT("Zoom %.0f yaw %.0f%s"), Distance, Yaw, bPanned ? TEXT(" panned to the near stop") : TEXT(""));
+                    for (const FVector& Point : Rose)
+                    {
+                        FVector2D Screen;
+                        if (!Project(Point, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), View->SafeRect().Aspect, Screen)) { continue; }
+                        if (Screen.X < 0.2 || Screen.X > 0.8 || Screen.Y < 0.66 || Screen.Y > 1.0) { continue; }
+                        ++Checked;
+                        const float Opacity = View->OccluderBoardOpacityAt(Point);
+                        if (Opacity > Floor + 0.001f)
+                        { AddError(FString::Printf(TEXT("%s: a point of the rose at screen (%.2f, %.2f) in the bottom third has opacity %.2f, not %.2f"), *Label, Screen.X, Screen.Y, Opacity, Floor)); }
+                    }
+                }
+            }
+            ++Zooms;
+        }
+        AddInfo(FString::Printf(TEXT("%d rose points sampled in the bottom third over %d zooms"), Checked, Zooms));
+        TestTrue(TEXT("Some rose points reached the bottom third, so the check is exercised"), Checked > 0);
+    }
+    DestroyKitWorld(World);
+    IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
 #endif
