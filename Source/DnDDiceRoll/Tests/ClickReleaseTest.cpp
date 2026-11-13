@@ -187,7 +187,7 @@ void Disturb(FHarness& Game, EDisturb Kind, FVector2D Pixel, FIntPoint Cell)
 }
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftClickEveryActionTest, "Project.Expedition.Presentation.LeftClickActsOnReleaseForEveryAction",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftClickEveryActionTest, "Project.Expedition.Presentation.LeftReleaseActsForEveryAction",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FLeftClickEveryActionTest::RunTest(const FString& Parameters)
 {

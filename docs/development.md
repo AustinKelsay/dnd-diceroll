@@ -73,7 +73,7 @@ Never stop, signal, or force-quit another agent's process or editor, and never t
 
 ## Pointer input: a left click on the board (#171, #220)
 
-One rule covers every action a board click can take (a move, an attack, both specials, a rescue and a potion), and `Project.Expedition.Presentation.LeftClickActsOnReleaseForEveryAction` holds each one to it. A left click is a **press and its release**:
+One rule covers every action a board click can take (a move, an attack, both specials, a rescue and a potion), and `Project.Expedition.Presentation.LeftReleaseActsForEveryAction` holds each one to it. A left click is a **press and its release**:
 
 - **Arming.** The press only arms the click, and only on the board: a cell the last frame previewed under the pointer (no keyboard cursor, panel, overlay or playback owns the board), with the camera still the camera that preview was found with (0.5 cm, 0.02 degrees). It records that cell, the pointer, the camera and the press's **context**: the mode, the acting hero, the battle state and presentation revision, whether an overlay or the Menu is open, whether targeting is showing, the run and its phase.
 - **Release.** The release acts only if the press still holds: the camera is still that camera, the pointer is within **6 viewport pixels** of where it went down (`ClickSlop`; the pixels the mouse reports, not HUD design units), the context is the same, and the pointer is not over a HUD button or panel, the Menu or an overlay, with the same cell still previewed under it. A release over the HUD never dispatches a HUD action.
