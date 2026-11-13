@@ -332,6 +332,7 @@ void AExpeditionHUD::DrawHUD()
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
     if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
+    if (Player->ConfirmingAbandon()) { DrawAbandonConfirm(); }
     Player->UpdateMenuFocus();
 }
 
@@ -1338,9 +1339,13 @@ void AExpeditionHUD::DrawTitle()
     Panel(RightX, ActionsTop, RightWidth, Bottom + 12 - ActionsTop, Gold, 0.94f);
     Button(TEXT("New"), TEXT("Begin expedition"), TEXT("N"), InnerX, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
     Button(TEXT("Resume"), TEXT("Resume saved party"), TEXT("O"), InnerX + Half + 6, BigY, Half, 48, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.85f);
-    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), InnerX, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
-    Button(TEXT("Records"), TEXT("Records"), TEXT("H"), InnerX + Third + 6, SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
-    Button(TEXT("Help"), TEXT("Help"), TEXT("?"), InnerX + 2 * (Third + 6), SmallY, Third, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    // Abandon run (#224) joins the small row only while an unfinished checkpoint exists; Resume stays the big, focused choice.
+    const bool bAbandon = View->CanAbandonRun();
+    const float Small = bAbandon ? (InnerWidth - 18) / 4.0f : Third;
+    Button(TEXT("Preset"), TEXT("Familiar party"), TEXT("G"), InnerX, SmallY, Small, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    Button(TEXT("Records"), TEXT("Records"), TEXT("H"), InnerX + Small + 6, SmallY, Small, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    Button(TEXT("Help"), TEXT("Help"), TEXT("?"), InnerX + 2 * (Small + 6), SmallY, Small, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
+    if (bAbandon) { Button(TEXT("Abandon"), TEXT("Abandon run"), TEXT(""), InnerX + 3 * (Small + 6), SmallY, Small, 40, true, false, Danger, 0.8f); }
     float HintY = BigY - 8 - Hint.Num() * 15.0f;
     for (const auto& Line : Hint) { Text(Line, InnerX, HintY, Muted, 0.6f); HintY += 15; }
     if (!View->Messages().IsEmpty())
@@ -1512,7 +1517,7 @@ void AExpeditionHUD::DrawHelp()
             TEXT("G restores the familiar party. N begins the expedition."),
             TEXT("O resumes the exact saved party, keeping its spent resources."),
             TEXT("Backspace during an expedition returns here; Resume continues it."),
-            TEXT("An unfinished saved expedition must be resumed before starting anew.")
+            TEXT("To start anew, resume an unfinished saved expedition or give it up with Abandon run.")
         } : TArray<FString>{
             TEXT("Z / X chooses a route. Compare danger and promised rewards."),
             TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
@@ -1563,6 +1568,25 @@ void AExpeditionHUD::DrawReturnConfirm()
     }
     Button(TEXT("ReturnConfirm"), TEXT("Return to menu"), TEXT("Enter"), X + 24, Y + Height - 70, 270, 50, true, false, Gold);
     Button(TEXT("KeepPlaying"), TEXT("Keep playing"), TEXT("Esc"), X + Width - 294, Y + Height - 70, 270, 50, true, false, Sky);
+    Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+void AExpeditionHUD::DrawAbandonConfirm()
+{
+    const float Width = 620, Height = 250;
+    const float X = W * 0.5f - Width * 0.5f, Y = H * 0.5f - Height * 0.5f;
+    Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
+    Panel(X, Y, Width, Height, Danger, 0.98f);
+    Text(TEXT("ABANDON THIS RUN?"), X + 24, Y + 18, Danger, 1.2f);
+    float Row = Y + 62;
+    for (const TCHAR* Line : {TEXT("The saved expedition ends here and can no longer be resumed. It is not added to your records."),
+        TEXT("Your records of finished runs are kept. Keep the run to return to the start screen with nothing changed.")})
+    {
+        for (const auto& Part : Wrap(Line, Width - 48, 0.85f)) { Text(Part, X + 24, Row, Parchment, 0.85f); Row += 24; }
+    }
+    // Keeping the run is the default (focused) choice.
+    Button(TEXT("AbandonCancel"), TEXT("Keep the run"), TEXT("Esc"), X + 24, Y + Height - 70, 270, 50, true, false, Sky);
+    Button(TEXT("AbandonConfirm"), TEXT("Abandon run"), TEXT(""), X + Width - 294, Y + Height - 70, 270, 50, true, false, Danger);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
 

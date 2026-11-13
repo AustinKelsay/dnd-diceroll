@@ -1,0 +1,60 @@
+#if WITH_DEV_AUTOMATION_TESTS
+#include "Misc/AutomationTest.h"
+#include "Persistence/ExpeditionSave.h"
+#include "ExpeditionTestSupport.h"
+#include "Misc/FileHelper.h"
+using namespace ExpeditionTestSupport;
+// Temporary capture test (#218): real save format 5 checkpoints from unmodified staging, kept as
+// Source/DnDDiceRoll/Tests/Fixtures/Schema5/capture-harness.cpp.txt. Not part of the game's tests.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSchema5CaptureTest, "Project.Tools.Schema5Baseline", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSchema5CaptureTest::RunTest(const FString& Parameters)
+{
+    FString Error;
+    const FString Out = FPaths::ProjectSavedDir() / TEXT("Schema5Baseline");
+    auto Write = [&](const FExpeditionRun& Run, const FString& Name)
+    {
+        FExpeditionSaveData Data; Data.Current = Run.Snapshot();
+        if (Run.Progress().Phase == EExpeditionPhase::Victory || Run.Progress().Phase == EExpeditionPhase::Defeat) { Data.Records.Add(FExpeditionSave::Ending(Run)); }
+        return TestTrue(Name + TEXT(" ") + Error, FExpeditionSave::Write(Out / Name, Data, Error));
+    };
+    // The fixture and staging's own continuation of it with the scripted player (FinishRunScripted).
+    auto Capture = [&](const FExpeditionRun& Run, const FString& Name)
+    {
+        FExpeditionRun Continued = Run;
+        FinishRunScripted(Continued);
+        return Write(Run, Name + TEXT("-v5.json")) && Write(Continued, TEXT("expected-") + Name + TEXT("-v5.json"));
+    };
+    auto FirstSurvivor = [](const FExpeditionRun& Run) -> int32
+    {
+        for (const auto& U : Run.Battle().Snapshot().Encounter.Combatants) { if (U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious) { return U.Id; } }
+        return INDEX_NONE;
+    };
+    // Fight 1 on the Guarded road, reward to the first survivor and the camp (route phase); fight 2 on the Dangerous road (reward phase);
+    // its reward, then fight 3 on the Guarded road with the enemies' opening turns and one party move (mid-battle).
+    auto Play = [&](FExpeditionRun& Run, int32 Seed, int32 Revision, TFunctionRef<bool(const FExpeditionRun&, const TCHAR*)> At)
+    {
+        if (!Run.NewRun(Seed, Error, TEXT("schema5-fixture"), EFighterSubclass::Champion, ERuleset::Compact, Revision)) { return false; }
+        if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { return false; }
+        if (!Run.ClaimReward(FirstSurvivor(Run), Error) || !Run.Recover(true, Error) || !At(Run, TEXT("route"))) { return false; }
+        if (!Run.ChooseRoute(Run.Progress().Offers[1].Id, Error) || !FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward || !At(Run, TEXT("reward"))) { return false; }
+        if (!Run.ClaimReward(FirstSurvivor(Run), Error) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { return false; }
+        for (int32 Guard = 0; Guard < 8 && Run.Battle().Find(Run.Battle().ActiveId())->Side == ECombatSide::Enemy; ++Guard) { Run.PlayEnemyTurn(); }
+        if (Run.Progress().Phase != EExpeditionPhase::Combat) { return false; }
+        const int32 Id = Run.Battle().ActiveId();
+        const auto Moves = Run.Battle().LegalMoves(Id);
+        return !Moves.IsEmpty() && Run.Submit({ECombatCommandType::Move, Id, Moves[0]}).bAccepted && At(Run, TEXT("mid-battle"));
+    };
+    FString Manifest;
+    for (const int32 Revision : {8, 9})
+    {
+        const int32 Seed = FirstSeedWhere([&](int32 S) { FExpeditionRun Probe; return Play(Probe, S, Revision, [](const FExpeditionRun&, const TCHAR*) { return true; }); });
+        if (!TestTrue(FString::Printf(TEXT("A seed reaches fight 3 under revision %d"), Revision), Seed != INDEX_NONE)) { return false; }
+        FExpeditionRun Run;
+        const bool bPlayed = Play(Run, Seed, Revision, [&](const FExpeditionRun& At, const TCHAR* Phase) { return Capture(At, FString::Printf(TEXT("%s-r%d"), Phase, Revision)); });
+        if (!TestTrue(FString::Printf(TEXT("Captured revision %d"), Revision), bPlayed)) { return false; }
+        Manifest += FString::Printf(TEXT("revision %d: seed %d, identity schema5-fixture\n"), Revision, Seed);
+    }
+    TestTrue(TEXT("Write manifest"), FFileHelper::SaveStringToFile(Manifest, *(Out / TEXT("manifest.txt")), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM));
+    return !HasAnyErrors();
+}
+#endif

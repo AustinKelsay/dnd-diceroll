@@ -76,7 +76,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
     for (const FCombatantState& Unit : Encounter.Combatants)
     {
         if (Unit.Id < 0 || Ids.Contains(Unit.Id) || !Inside(Unit.Cell) || Occupied.Contains(Unit.Cell) ||
-            Unit.Level < 1 || Unit.Level > 5 || Unit.ManeuverUses < 0 || Unit.ManeuverUses > 2 ||
+            Unit.Level < 1 || Unit.Level > 5 || Unit.ManeuverUses < 0 || Unit.ManeuverUses > FBuildCatalog::Caps(Unit).Maneuver ||
             static_cast<uint8>(Unit.FighterSubclass) > static_cast<uint8>(EFighterSubclass::BattleMaster) ||
             (Unit.FighterSubclass != EFighterSubclass::BattleMaster && Unit.ManeuverUses != 0) ||
             (Unit.AdventurerRole != EAdventurerRole::Fighter && Unit.FighterSubclass != EFighterSubclass::None) ||
@@ -98,7 +98,7 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             // SRD death-save counts exist only while Downed.
             (Encounter.Ruleset == ERuleset::SRD && Unit.Life != ECombatLife::Downed && (Unit.DeathSaveSuccesses != 0 || Unit.DeathSaveFailures != 0)) ||
             (Unit.Life == ECombatLife::Dead && Unit.RescueTurnsLeft != 0) ||
-            Unit.SecondWindUses < 0 || Unit.SecondWindUses > 2 || Unit.SpellSlots < 0 || Unit.SpellSlots > 2 ||
+            Unit.SecondWindUses < 0 || Unit.SecondWindUses > FBuildCatalog::Caps(Unit).Wind || Unit.SpellSlots < 0 || Unit.SpellSlots > FBuildCatalog::Caps(Unit).Slot ||
             Unit.Potions < 0 || Unit.Potions > 9 || Unit.WeaponRank < 0 || Unit.WeaponRank > 3 ||
             (Unit.Side != ECombatSide::Party && Unit.Side != ECombatSide::Enemy))
         {
@@ -107,15 +107,20 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
         const auto* Build = FBuildCatalog::Find(Unit.BuildId);
         if (Build && !FBuildCatalog::ValidResources(Unit))
         { return Reject(TEXT("Resources do not belong to the selected build.")); }
+        // Reward upgrades (#218) belong only to Compact party heroes with a catalog build.
+        if ((Unit.bReserve || Unit.bHoned) && (!Build || Unit.Side != ECombatSide::Party || Encounter.Ruleset != ERuleset::Compact))
+        { return Reject(TEXT("Reward upgrades belong only to Compact party heroes.")); }
+        const FResourceCaps Caps = FBuildCatalog::Caps(Unit);
         const bool bBarbarian = Unit.AdventurerRole == EAdventurerRole::Barbarian && Unit.Side == ECombatSide::Party && Build && Build->Profile.AdventurerRole == EAdventurerRole::Barbarian;
         if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Kit resources require their compatible party build.")); }
         if (static_cast<uint8>(Unit.AdventurerRole) >= static_cast<uint8>(EAdventurerRole::Monk) &&
             (!Build || Build->Profile.AdventurerRole != Unit.AdventurerRole || Unit.Side != ECombatSide::Party))
         { return Reject(TEXT("Martial role requires a compatible build.")); }
-        if (Unit.KitUses < 0 || Unit.KitUses > (Build ? Build->KitCap : 0) || Unit.GuardTurns < 0 || Unit.GuardTurns > 1 || Unit.GuardAmount < 0 || Unit.GuardAmount > 4 ||
+        // A Kit-paid guard's stored amount is at most the strongest honed Protect; it needs a spent Kit use (the pool is not untouched).
+        if (Unit.KitUses < 0 || Unit.KitUses > Caps.Kit || Unit.GuardTurns < 0 || Unit.GuardTurns > 1 || Unit.GuardAmount < 0 || Unit.GuardAmount > UpgradeRules::MaxProtect ||
             ((Unit.GuardTurns > 0) != (Unit.GuardAmount > 0)) ||
-            (Unit.GuardTurns > 0 && (Unit.Life != ECombatLife::Conscious || Unit.GuardTargetId == INDEX_NONE || !Build || Build->KitCap == 0 || Unit.KitUses == Build->KitCap)))
+            (Unit.GuardTurns > 0 && (Unit.Life != ECombatLife::Conscious || Unit.GuardTargetId == INDEX_NONE || !Build || Build->KitCap == 0 || Unit.KitUses == Caps.Kit)))
         { return Reject(TEXT("Invalid kit resource or protection duration.")); }
         if (Unit.GuardTurns > 0)
         {
@@ -125,9 +130,9 @@ bool FCombatBattle::ValidateEncounter(const FCombatEncounter& Encounter, FString
             if (!Compatible) { return Reject(TEXT("Protection does not belong to build.")); }
         }
         if (Unit.AdventurerRole == EAdventurerRole::Barbarian && !bBarbarian) { return Reject(TEXT("Barbarian requires a compatible build.")); }
-        if (Unit.RageUses < 0 || Unit.RageUses > (bBarbarian ? Build->RageCap : 0) || Unit.RageTurns < 0 || Unit.RageTurns > (bBarbarian ? 2 : 0) ||
+        if (Unit.RageUses < 0 || Unit.RageUses > (bBarbarian ? Caps.Rage : 0) || Unit.RageTurns < 0 || Unit.RageTurns > (bBarbarian ? 2 : 0) ||
             Unit.LastSurge < 0 || Unit.LastSurge > FBuildCatalog::SurgeCap(Unit) ||
-            (Unit.RageTurns > 0 && (Unit.RageUses == Build->RageCap || Unit.Life != ECombatLife::Conscious)) ||
+            (Unit.RageTurns > 0 && (Unit.RageUses == Caps.Rage || Unit.Life != ECombatLife::Conscious)) ||
             (Unit.LastSurge > 0 && Unit.Life != ECombatLife::Conscious) ||
             (Unit.GuardTargetId != INDEX_NONE && Unit.GuardTurns == 0 && (Unit.BuildId != TEXT("barbarian.totem-warrior") || Unit.RageTurns == 0)))
         { return Reject(TEXT("Invalid owned ability state.")); }
@@ -222,19 +227,19 @@ int32 FCombatBattle::RollDice(int32 Count, int32 Sides)
     return Total;
 }
 
-FString FCombatBattle::DescribeAction(ECombatCommandType Action)
+FString FCombatBattle::DescribeAction(ECombatCommandType Action, int32 HonedBonus)
 {
     // What the action does. What it costs and spends comes from FActionFactsQuery (#58), never from here.
     switch (Action)
     {
     case ECombatCommandType::PrecisionStrike:
-        return TEXT("Enemy in reach; an attack with +2 to hit and +2 damage");
+        return FString::Printf(TEXT("Enemy in reach; an attack with +%d to hit and +%d damage"), PrecisionBonus + HonedBonus, PrecisionBonus + HonedBonus);
     case ECombatCommandType::SecondWind:
-        return FString::Printf(TEXT("Self; heal d%d+%d"), WindDie, FighterLevel);
+        return FString::Printf(TEXT("Self; heal d%d+%d"), WindDie, FighterLevel + HonedBonus);
     case ECombatCommandType::CureWounds:
-        return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, CureDice, CureDie, HealingModifier);
+        return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, CureDice, CureDie, HealingModifier + HonedBonus);
     case ECombatCommandType::MagicMissile:
-        return FString::Printf(TEXT("Enemy, %d cells + sight; %dd%d+%d, never misses"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
+        return FString::Printf(TEXT("Enemy, %d cells + sight; %dd%d+%d, never misses"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus + HonedBonus);
     case ECombatCommandType::Rescue:
         return FString::Printf(TEXT("Downed ally, %d cell; restore 1 HP"), TouchRange);
     case ECombatCommandType::Potion:
@@ -453,7 +458,7 @@ FCombatBattle::FAttackSetup FCombatBattle::AttackSetup(const FCombatantState& Ac
         Setup.Modifier = SaveBonusOf(Target, EAbility::Dexterity);
         return Setup;
     }
-    Setup.Modifier = Actor.AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0);
+    Setup.Modifier = Actor.AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus + FBuildCatalog::HonedBonus(Actor, Action) : 0);
     Setup.TargetNumber = Target.ArmorClass + (IsSrd() ? CoverAcBonus(Actor.Id, Target.Id) : 0);
     Setup.bAdvantage = IsSrd() && Target.Life == ECombatLife::Downed;
     Setup.bAutoCritical = Setup.bAdvantage && GridDistance(Actor.Cell, Target.Cell) <= 1;
@@ -486,7 +491,7 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
                 }
             }
             if (A.Effect == EAbilityEffect::Healing)
-            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { Forecast.MinAmount = FMath::Min(CureDice + HealingModifier,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(CureDice * CureDie + HealingModifier,Target->MaxHP-Target->HP); } }
+            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { const int32 Modifier = HealingModifier + FBuildCatalog::HonedBonus(*Actor, Action); Forecast.MinAmount = FMath::Min(CureDice + Modifier,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(CureDice * CureDie + Modifier,Target->MaxHP-Target->HP); } }
             Forecast.bDiscreteAmounts = A.Effect == EAbilityEffect::Surge;
             if (A.Effect == EAbilityEffect::Strike || A.Effect == EAbilityEffect::Surge || A.Effect == EAbilityEffect::Push || A.Effect == EAbilityEffect::Area)
             {
@@ -532,14 +537,14 @@ FActionForecast FCombatBattle::Forecast(int32 ActorId, ECombatCommandType Action
         Forecast.HitChancePercent = Setup.bAdvantage ? (400 - (20 - Hits) * (20 - Hits) + 2) / 4 : Hits * 5;
         // A hit that is always critical doubles the weapon and Sneak Attack dice.
         const int32 WeaponDice = Setup.bAutoCritical ? 2 : 1;
-        Effect(WeaponDice, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+        Effect(WeaponDice, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus + FBuildCatalog::HonedBonus(*Actor, Action) : 0));
         Forecast.bSneakAttack = SneakAttackApplies(*Actor, *Target);
         if (Forecast.bSneakAttack) { Forecast.MinAmount += WeaponDice; Forecast.MaxAmount += WeaponDice * SneakDie; Forecast.Formula += FString::Printf(TEXT(" +%dd%d sneak"), WeaponDice, SneakDie); }
         break;
     }
-    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
-    case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel); break;
-    case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
+    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus + FBuildCatalog::HonedBonus(*Actor, Action)); break;
+    case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel + FBuildCatalog::HonedBonus(*Actor, Action)); break;
+    case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier + FBuildCatalog::HonedBonus(*Actor, Action)); break;
     case ECombatCommandType::Potion: Effect(PotionDice, PotionDie, PotionBonus); break;
     case ECombatCommandType::Rescue: Forecast.MinAmount = Forecast.MaxAmount = 1; Forecast.Formula = TEXT("1"); break;
     default: Forecast.bValid = false; return Forecast;
@@ -662,7 +667,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             else if (A.Effect == EAbilityEffect::Healing)
             {
                 int32 Amount = A.Amount;
-                if (A.bCureDice) { --User->SpellSlots; DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice,CureDie)+HealingModifier; DiceLog = nullptr; }
+                if (A.bCureDice) { --User->SpellSlots; DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier + FBuildCatalog::HonedBonus(*User, A.Command); Amount = RollDice(CureDice,CureDie)+Result.EffectModifier; DiceLog = nullptr; }
                 Result.Healing = FMath::Min(Amount, Target->MaxHP - Target->HP); Target->HP += Result.Healing;
                 Result.Effects.Add({Target->Id, A.Effect, Result.Healing, Target->Cell});
             }
@@ -694,8 +699,9 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
                     }
                 }
             }
+            // The committed protection is the seam's amount (Kit-paid: stored as cast; Shelter: the Rage-paid fact); Rage's 2 is its turn count.
             if (A.Effect == EAbilityEffect::Protect || A.Effect == EAbilityEffect::Rage)
-            { Result.Effects.Add({Target->Id, A.Effect, A.Effect == EAbilityEffect::Protect ? (A.Amount > 0 ? A.Amount : 3) : 2, Target->Cell}); }
+            { Result.Effects.Add({Target->Id, A.Effect, A.Effect == EAbilityEffect::Protect ? FBuildCatalog::GuardAmount(*User) : 2, Target->Cell}); }
             if (A.bBonus) { State.bBonusActionAvailable = false; } else { State.bActionAvailable = false; }
             Result.Feedback = A.Name + TEXT(": ") + A.Description + FString::Printf(TEXT(" | committed HP loss %d, heal %d, prevented %d"), Result.Damage, Result.Healing, Result.DamagePrevented);
         }
@@ -705,7 +711,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
     {
         if (!LegalTargets(Command.ActorId, Command.Type).Contains(Command.TargetId)) { return Reject(TEXT("No attack available, or target is inactive, friendly, out of range, or obscured.")); }
         FCombatantState* Target = State.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& Unit) { return Unit.Id == Command.TargetId; });
-        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
+        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus + FBuildCatalog::HonedBonus(*Actor, Command.Type) : 0;
         if (ManeuverBonus) { --MutableFind(Command.ActorId)->ManeuverUses; }
         const FAttackSetup Setup = AttackSetup(*Actor, Command.Type, *Target);
         if (Setup.bSave)
@@ -808,7 +814,7 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
             else
             {
                 DiceLog = &Result.EffectDice;
-                Result.EffectModifier = MissileDarts * DartBonus;
+                Result.EffectModifier = MissileDarts * DartBonus + FBuildCatalog::HonedBonus(*User, Command.Type);
                 Result.Damage = RollDice(MissileDarts, MissileDie) + Result.EffectModifier;
                 DiceLog = nullptr;
                 const int32 Protection = ProtectionFor(*Target);
@@ -822,8 +828,8 @@ FCombatResult FCombatBattle::Resolve(const FCombatCommand& Command)
         {
             int32 Amount = 1;
             DiceLog = &Result.EffectDice;
-            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
-            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
+            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel + FBuildCatalog::HonedBonus(*User, Command.Type); Amount = Roll(WindDie) + Result.EffectModifier; Ability = TEXT("Second Wind (bonus, 1 use)"); }
+            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Result.EffectModifier = HealingModifier + FBuildCatalog::HonedBonus(*User, Command.Type); Amount = RollDice(CureDice, CureDie) + Result.EffectModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
             else if (Command.Type == ECombatCommandType::Potion) { --User->Potions; Result.EffectModifier = PotionBonus; Amount = RollDice(PotionDice, PotionDie) + PotionBonus; Ability = TEXT("Potion (1 bottle)"); }
             else { Result.EffectModifier = 1; }
             DiceLog = nullptr;
@@ -958,7 +964,7 @@ int32 FCombatBattle::ProtectionFor(const FCombatantState& Target, int32* OutSour
     for (const auto& U : State.Encounter.Combatants)
     {
         if (U.GuardTargetId != Target.Id) { continue; }
-        const int32 Amount = U.GuardAmount > 0 ? U.GuardAmount : 3;
+        const int32 Amount = FBuildCatalog::GuardAmount(U);
         if (Amount > Protection) { Protection = Amount; Source = U.Id; }
     }
     if (OutSourceId) { *OutSourceId = Source; }
@@ -1206,11 +1212,12 @@ bool FCombatBattle::Restore(const FCombatSnapshot& Snapshot, FString& Error)
         (!Snapshot.bBonusActionAvailable && ([&]()
         {
             const auto* Build = FBuildCatalog::Find(Active->BuildId);
+            // A spent Bonus Action needs a spent pool: an untouched pool is a full one, at the hero's own cap (Reserve included).
             if (Build && Build->KitCap > 0)
-            { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses >= Build->KitCap) || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
+            { return (Snapshot.Phase == EBattlePhase::Fighting && Active->KitUses == FBuildCatalog::Caps(*Active).Kit) || !FBuildCatalog::Abilities(*Active).ContainsByPredicate([](const auto& A) { return A.bBonus; }); }
             if (Active->AdventurerRole == EAdventurerRole::Barbarian)
             { return Snapshot.Phase == EBattlePhase::Fighting && Active->RageTurns == 0; }
-            return Active->AdventurerRole != EAdventurerRole::Fighter || (Snapshot.Phase == EBattlePhase::Fighting && Active->SecondWindUses > 1);
+            return Active->AdventurerRole != EAdventurerRole::Fighter || (Snapshot.Phase == EBattlePhase::Fighting && Active->SecondWindUses == FBuildCatalog::Caps(*Active).Wind);
         })())) { return Reject(); }
     *this = MoveTemp(Candidate);
     Error.Reset(); return true;

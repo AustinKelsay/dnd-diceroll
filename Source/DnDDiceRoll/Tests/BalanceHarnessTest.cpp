@@ -78,6 +78,103 @@ bool FBalancePolicyActsTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+// #218: policy version 2's reward strategies submit only legal claims, and the exported cards, flags and caps agree with the run's history.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceRewardStrategiesTest, "Project.Balance.RewardStrategiesSubmitOnlyLegalClaims",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceRewardStrategiesTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    int32 Claims = 0, Upgrades = 0;
+    for (const ERewardStrategy Strategy : {ERewardStrategy::Gear, ERewardStrategy::Reserve, ERewardStrategy::Honed, ERewardStrategy::Mixed})
+    {
+        for (const auto& Party : BalanceHarnessTest::SampleParties())
+        {
+            for (const int32 Seed : {BaseSeed, BaseSeed + 5})
+            {
+                FExpeditionSnapshot Final;
+                const FRunStats Run = PlayRun(Party, Seed, Seed & 31, &Final, nullptr, FBuildCatalog::Revision, Strategy);
+                const FString Where = FString::Printf(TEXT("%s %s seed %d"), StrategyName(Strategy), *Party.Id, Seed);
+                TestTrue(Where + TEXT(": no rejected claim (") + Run.StallReason + TEXT(")"), !Run.StallReason.StartsWith(TEXT("reward rejected")));
+                TestTrue(Where + TEXT(": gates zero"), Run.PolicyErrors == 0 && Run.IllegalProposals == 0 && Run.PassiveEnds == 0 && Run.ProtectionMismatches == 0);
+                for (const FHeroStats& Hero : Run.Heroes)
+                {
+                    TArray<FString> History;
+                    for (const auto& H : Final.Progress.History)
+                    {
+                        if (H.RewardRecipient != Hero.Slot) { continue; }
+                        History.Add(H.RewardCard == ERewardCard::Reserve ? TEXT("R") : H.RewardCard == ERewardCard::Honed ? TEXT("H") : TEXT("G"));
+                    }
+                    const FCombatantState* U = Final.Battle.Encounter.Combatants.FindByPredicate([&Hero](const FCombatantState& C) { return C.Id == Hero.Slot; });
+                    if (!TestNotNull(Where + TEXT(": hero"), U)) { continue; }
+                    const int32 Gear = History.FilterByPredicate([](const FString& C) { return C == TEXT("G"); }).Num();
+                    TestTrue(Where + TEXT(": one card per claim, in claim order"), Hero.RewardCards == History);
+                    TestTrue(Where + TEXT(": at most one Reserve and one Honed"), History.FilterByPredicate([](const FString& C) { return C == TEXT("R"); }).Num() <= 1 && History.FilterByPredicate([](const FString& C) { return C == TEXT("H"); }).Num() <= 1);
+                    TestEqual(Where + TEXT(": gear rank counts the Gear cards"), U->WeaponRank, FMath::Min(3, Gear));
+                    TestTrue(Where + TEXT(": flags agree with the cards"), Hero.bReserve == History.Contains(TEXT("R")) && Hero.bHoned == History.Contains(TEXT("H")));
+                    if (Strategy == ERewardStrategy::Gear) { TestEqual(Where + TEXT(": gear plays Gear only"), Gear, History.Num()); }
+                    Claims += History.Num(); Upgrades += History.Num() - Gear;
+                }
+            }
+        }
+    }
+    TestTrue(TEXT("Claims were made"), Claims > 100);
+    TestTrue(TEXT("Upgrade cards were claimed"), Upgrades > 20);
+    return !HasAnyErrors();
+}
+
+// #218 comparison C2 in small: revision 10 under the gear strategy is revision 9 (policy 1), column for column.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceGearIsPolicyOneTest, "Project.Balance.GearStrategyIsPolicyOne",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceGearIsPolicyOneTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    for (const auto& Party : {RepresentativeParties()[0], RotationParties(1)[4]})
+    {
+        for (const int32 Seed : {BaseSeed + 2, BaseSeed + 17})
+        {
+            const TArray<FRunStats> New = {PlayRun(Party, Seed, Seed & 31, nullptr, nullptr, 10, ERewardStrategy::Gear)};
+            const TArray<FRunStats> Old = {PlayRun(Party, Seed, Seed & 31, nullptr, nullptr, 9, ERewardStrategy::Gear)};
+            const FString Where = FString::Printf(TEXT("%s seed %d"), *Party.Id, Seed);
+            TestEqual(Where + TEXT(": runs.csv"), RunsCsv(New), RunsCsv(Old));
+            TestEqual(Where + TEXT(": encounters.csv"), EncountersCsv(New), EncountersCsv(Old));
+            TestEqual(Where + TEXT(": heroes.csv"), HeroesCsv(New), HeroesCsv(Old));
+        }
+    }
+    return !HasAnyErrors();
+}
+
+// #218: the exported kit_cap .. rage_cap are the caps the heroes play with (FBuildCatalog::Caps), Reserve included.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceExportedCapsTest, "Project.Balance.ExportedCapsMatchPlay",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceExportedCapsTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    int32 Reserved = 0;
+    for (const auto& Party : BalanceHarnessTest::SampleParties())
+    {
+        FExpeditionSnapshot Final;
+        const FRunStats Run = PlayRun(Party, BaseSeed, 0, &Final, nullptr, FBuildCatalog::Revision, ERewardStrategy::Reserve);
+        for (const FHeroStats& Hero : Run.Heroes)
+        {
+            const FCombatantState* U = Final.Battle.Encounter.Combatants.FindByPredicate([&Hero](const FCombatantState& C) { return C.Id == Hero.Slot; });
+            const FBuildDefinition* Build = FBuildCatalog::Find(Hero.Build);
+            if (!U || !Build) { continue; }
+            const FResourceCaps Caps = FBuildCatalog::Caps(*U);
+            const FString Where = Party.Id + TEXT(" ") + Hero.Build;
+            TestTrue(Where + TEXT(": exported caps are Caps(Hero)"), Hero.KitCap == Caps.Kit && Hero.SlotCap == Caps.Slot && Hero.WindCap == Caps.Wind && Hero.ManeuverCap == Caps.Maneuver && Hero.RageCap == Caps.Rage);
+            const int32 Extra = Hero.bReserve ? 1 : 0;
+            auto Expect = [Extra](int32 Cap) { return Cap > 0 ? Cap + Extra : 0; };
+            TestTrue(Where + TEXT(": the build's caps plus reserve"), Hero.KitCap == Expect(Build->KitCap) && Hero.SlotCap == Expect(Build->SlotCap) && Hero.WindCap == Expect(Build->WindCap) &&
+                Hero.ManeuverCap == Expect(Build->ManeuverCap) && Hero.RageCap == Expect(Build->RageCap));
+            Reserved += Extra;
+        }
+        const FString Csv = HeroesCsv({Run});
+        TestTrue(Party.Id + TEXT(": the new columns are appended"), Csv.StartsWith(TEXT("party,")) && Csv.Contains(TEXT(",potions_left,reward_cards,reserve,honed\n")));
+    }
+    TestTrue(TEXT("Reserve heroes were exported"), Reserved > 3);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceDeterminismTest, "Project.Balance.SameSeedSameResults",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FBalanceDeterminismTest::RunTest(const FString& Parameters)
@@ -229,6 +326,35 @@ bool FBalanceOutputTest::RunTest(const FString& Parameters)
 #else
     AddInfo(TEXT("Physical (symlink) containment is checked on Unix only; this platform has the lexical check."));
 #endif
+    return !HasAnyErrors();
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceDeadlockTest, "Project.Balance.DeadlockedStallIsRecognised",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceDeadlockTest::RunTest(const FString& Parameters)
+{
+    // The soft lock of PR #214's first head (trace rot2-03:20261119:10, fight 4): the last hero at (7, 8) with terrain at (7, 9), bodies at (7, 7),
+    // (6, 8) and (8, 8), the brute at (6, 6). Nothing can ever reach anything: a deadlock. Open the terrain cell, or turn a body into a live ally,
+    // and a path exists again. The sweep (Balance.Baseline.*) fails on any deadlocked run.
+    FCombatSnapshot S;
+    S.Encounter.Width = 16; S.Encounter.Height = 11;
+    S.Encounter.BlockedCells = {FIntPoint(7, 9)};
+    auto Add = [&S](int32 Id, ECombatSide Side, FIntPoint Cell, ECombatLife Life, int32 Range)
+    {
+        FCombatantState U; U.Id = Id; U.Side = Side; U.Cell = Cell; U.Life = Life; U.Range = Range; U.HP = Life == ECombatLife::Conscious ? 10 : 0;
+        S.Encounter.Combatants.Add(U);
+    };
+    Add(4, ECombatSide::Party, {7, 8}, ECombatLife::Conscious, 1);
+    Add(21, ECombatSide::Enemy, {7, 7}, ECombatLife::Dead, 1);
+    Add(22, ECombatSide::Enemy, {6, 8}, ECombatLife::Dead, 1);
+    Add(23, ECombatSide::Enemy, {8, 8}, ECombatLife::Dead, 4);
+    Add(20, ECombatSide::Enemy, {6, 6}, ECombatLife::Conscious, 1);
+    TestTrue(TEXT("The traced configuration is a deadlock"), BalanceHarness::Deadlocked(S));
+    FCombatSnapshot Open = S; Open.Encounter.BlockedCells.Reset();
+    TestFalse(TEXT("Without the terrain cell the hero can walk out"), BalanceHarness::Deadlocked(Open));
+    FCombatSnapshot Live = S; Live.Encounter.Combatants[1].Life = ECombatLife::Conscious; Live.Encounter.Combatants[1].HP = 5; Live.Encounter.Combatants[1].Side = ECombatSide::Party;
+    TestFalse(TEXT("A live unit is not a wall"), BalanceHarness::Deadlocked(Live));
+    FCombatSnapshot Ranged = S; Ranged.Encounter.Combatants[0].Range = 3;
+    TestFalse(TEXT("A ranged hero reaches the brute from where it stands"), BalanceHarness::Deadlocked(Ranged));
     return !HasAnyErrors();
 }
 #endif

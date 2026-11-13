@@ -77,7 +77,23 @@ bool FFiveEncounterRunTest::RunTest(const FString& Parameters)
 {
     FExpeditionRun Run;
     FString Error;
-    Run.NewRun(42, Error, TEXT("seeded-fixture"));
+    // The subject is a completed five-fight run: since revision 9 (#188) the scripted player loses seed 42's harder finale, so this takes
+    // the first seed from 42 on that it wins with these exact choices (FirstSeedWhere, asserted to exist), as #184 did for other full runs.
+    auto Plays = [](FExpeditionRun& Played, int32 Candidate)
+    {
+        FString Ignored;
+        if (!Played.NewRun(Candidate, Ignored, TEXT("seeded-fixture"))) { return false; }
+        for (int32 Encounter = 0; Encounter < 5; ++Encounter)
+        {
+            if (!Played.ChooseRoute(Played.Progress().Offers[0].Id, Ignored) || !FinishCombat(Played)) { return false; }
+            if (Encounter < 4 && (Played.Progress().Phase != EExpeditionPhase::Reward || !Played.ClaimReward(1, Ignored))) { return false; }
+            if (Encounter == 0 && !Played.Recover(true, Ignored)) { return false; }
+        }
+        return Played.Progress().Phase == EExpeditionPhase::Victory;
+    };
+    const int32 Seed = FirstSeedWhere([&Plays](int32 Candidate) { FExpeditionRun Probe; return Plays(Probe, Candidate); }, 42, 200);
+    if (!TestTrue(TEXT("Some seed lets the scripted player win all five fights"), Seed != INDEX_NONE)) { return false; }
+    Run.NewRun(Seed, Error, TEXT("seeded-fixture"));
     for (int32 Encounter = 0; Encounter < 5; ++Encounter)
     {
         if (Encounter == 4)
@@ -110,7 +126,7 @@ bool FFiveEncounterRunTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("No terminal recovery"), Run.Recover(true, Error));
     Run.Submit({ECombatCommandType::EndTurn,1}); Run.PlayEnemyTurn();
     TestTrue(TEXT("Victory terminal is atomic"), SameRun(Won, Run.Snapshot()));
-    FExpeditionRun Fresh; Fresh.NewRun(42, Error, TEXT("seeded-fixture")); Run.NewRun(42, Error, TEXT("seeded-fixture"));
+    FExpeditionRun Fresh; Fresh.NewRun(Seed, Error, TEXT("seeded-fixture")); Run.NewRun(Seed, Error, TEXT("seeded-fixture"));
     TestTrue(TEXT("New run resets earned power, resources, history and RNG to fresh seed"), SameRun(Fresh.Snapshot(), Run.Snapshot()));
     return !HasAnyErrors();
 }
@@ -368,6 +384,8 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
 {
     // Catalog revision 8 (#184): the Compact enemy stats by stage, for each route, as the run generates them. Counts,
     // roles and ranges are unchanged; SRD keeps revision 7 (Project.Expedition.Run.SrdSeedUnchangedByCompactTuning).
+    // Since revision 9 (#188) new runs have encounter identity, so these are revision 8 runs, created explicitly: a revision 8
+    // run keeps exactly these enemies for its whole lifetime (Project.Expedition.Run.EncounterIdentityRolesAndStats covers 9).
     struct FExpected { int32 HP, AttackBonus, DamageBonus; };
     const FExpected Guarded[] = {{20, 4, 3}, {24, 4, 3}, {28, 5, 3}, {32, 5, 4}, {36, 5, 4}};
     const FExpected Dangerous[] = {{24, 4, 3}, {28, 4, 3}, {32, 5, 3}, {36, 5, 4}, {40, 5, 4}};
@@ -376,7 +394,7 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
         // The enemies of every fight, taking route Choice each time; a run that falls before fight 5 records fewer.
         auto Play = [Choice](int32 Seed, TArray<TArray<FCombatantState>>& Fights)
         {
-            FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("tuning-fixture"));
+            FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("tuning-fixture"), EFighterSubclass::Champion, ERuleset::Compact, 8);
             for (int32 Guard = 0; Guard < 64; ++Guard)
             {
                 const auto Phase = Run.Progress().Phase;
@@ -413,6 +431,8 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
                 TestEqual(Where + TEXT(": damage die"), U.DamageDie, Choice == 1 ? 8 : 6);
                 TestEqual(Where + TEXT(": damage bonus"), U.DamageBonus, E.DamageBonus);
                 TestEqual(Where + TEXT(": the last enemy is the archer, the rest raiders"), U.Range, I == Fights[Stage].Num() - 1 ? 4 : 1);
+                TestEqual(Where + TEXT(": revision 8 roles"), U.Role, FString(I == Fights[Stage].Num() - 1 ? TEXT("Archer") : TEXT("Raider")));
+                TestEqual(Where + TEXT(": revision 8 speed"), U.Speed, 4);
             }
         }
     }
@@ -433,16 +453,16 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
         }
         TestEqual(TEXT("Still revision 7"), Old.Progress().CatalogRevision, 7);
     }
-    // New runs are revision 8; a revision outside 7..8 is refused by name and changes nothing.
+    // New runs are revision 10 (#218); a revision outside 7..10 is refused by name and changes nothing.
     FExpeditionRun Run; Run.NewRun(42, Error, TEXT("tuning-fixture"));
-    TestEqual(TEXT("New runs use revision 8"), Run.Progress().CatalogRevision, 8);
+    TestEqual(TEXT("New runs use revision 10"), Run.Progress().CatalogRevision, 10);
     const FExpeditionSnapshot Before = Run.Snapshot();
-    for (const int32 Revision : {6, 9})
+    for (const int32 Revision : {6, 11})
     {
         FExpeditionSnapshot Unknown = Run.Snapshot(); Unknown.Progress.CatalogRevision = Revision;
         TestFalse(FString::Printf(TEXT("Revision %d refused"), Revision), Run.Restore(Unknown, Error));
         TestTrue(TEXT("The refusal names the revision and the supported ones: ") + Error,
-            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 8")));
+            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 10")));
         TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
     }
     return !HasAnyErrors();

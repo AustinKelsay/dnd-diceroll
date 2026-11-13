@@ -950,4 +950,69 @@ bool FFigureSilhouetteTest::RunTest(const FString& Parameters)
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }
+
+/**
+ * #209: the camera never shows ground beyond an authored set, by zoom alone. SetCovers and SetCoverDistance give the upper bound for a yaw (the footprint
+ * is no wider than the set); SetCoverDistanceAt gives, for a focus the pan bound, the locked axes and the unit hold already decided, the farthest zoom at
+ * which the ground around that focus fits, never nearer than the default and never moving the focus. Pure rig, at the aspects the game runs at.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSetBoundRigTest, "Project.Expedition.Presentation.CameraRigKeepsTheViewInsideTheSet",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSetBoundRigTest::RunTest(const FString& Parameters)
+{
+    using namespace ExpeditionCameraRig;
+    using namespace CameraLightingTestSupport;
+    const FBoardMetric Metric(150.0f, 180.0f);
+    const float Half = SetHalfExtentCells * Metric.CellCm;
+    int32 Capped = 0, Free = 0, Reported = 0, Moved = 0;
+    for (const FViewportSize& Size : Viewports)
+    {
+        const FSafeRect Safe = FSafeRect::ForViewport(Size.X, Size.Y);
+        for (const TPair<int32, int32>& Board : {TPair<int32, int32>(16, 11), TPair<int32, int32>(18, 12)})
+        {
+            const float Anchor = FMath::Clamp(FitDistance(Board.Key, Board.Value, Metric, HomeYaw, 0.0f, Safe).Distance, MinFramed, MaxFramed);
+            const FVector2D Centre = BoardCentre(Board.Key, Board.Value, Metric);
+            // The centre, and a focus at each board corner (where a unit at the edge puts it).
+            const FVector2D Foci[5] = {Centre, FVector2D(0, 0), FVector2D((Board.Key - 1) * Metric.CellCm, 0), FVector2D(0, (Board.Value - 1) * Metric.CellCm),
+                FVector2D((Board.Key - 1) * Metric.CellCm, (Board.Value - 1) * Metric.CellCm)};
+            for (float Yaw = -180.0f; Yaw <= 180.0f; Yaw += 15.0f)
+            {
+                const FString Label = FString::Printf(TEXT("%dx%d at %dx%d yaw %.0f"), Board.Key, Board.Value, Size.X, Size.Y, Yaw);
+                const float Default = DefaultDistance(FitBoard(Board.Key, Board.Value, Metric, Yaw, Safe).Distance, FigureDistance(Metric, Anchor, Safe));
+                const float Far = FMath::Min(MaxDistance, FMath::Max(FarStop(Anchor), FitDistance(Board.Key, Board.Value, Metric, Yaw, Anchor, Safe).Distance));
+                const float Cover = SetCoverDistance(Yaw, Anchor, Metric, Safe, Half, Default, Far);
+                TestTrue(*(Label + TEXT(": the yaw's cover is between the default and the far pose")), Cover >= Default - 0.01f && Cover <= Far + 0.01f);
+                for (const FVector2D& Focus : Foci)
+                {
+                    bool bFits = true;
+                    const float At = SetCoverDistanceAt(Focus, Yaw, Anchor, Metric, Safe, Centre, Half, Default, Far, bFits);
+                    TestTrue(*(Label + TEXT(": the cover at a focus is between the default and the far pose")), At >= Default - 0.01f && At <= Far + 0.01f);
+                    TestTrue(*(Label + TEXT(": a focus never allows more than the yaw's own cover (the bound is on the footprint's size)")), At <= FMath::Max(Cover, Default) + 0.5f);
+                    if (bFits)
+                    {
+                        TestTrue(*(Label + TEXT(": the ground around the focus fits at the cover")), SetContainsAt(Focus, Yaw, At, PitchFor(At, Anchor), Metric, Safe, Centre, Half));
+                        if (At < Far - 0.5f)
+                        {
+                            ++Capped;
+                            TestFalse(*(Label + TEXT(": and does not a little farther")), SetContainsAt(Focus, Yaw, At + 2.0f, PitchFor(At + 2.0f, Anchor), Metric, Safe, Centre, Half));
+                        }
+                        else { ++Free; }
+                        if (!(Focus - Centre).IsNearlyZero() && At < Cover - 0.5f) { ++Moved; }
+                    }
+                    else
+                    {
+                        // Even the default shows more than the set around this focus: the cover is the default, to be reported, and the focus is not asked to move.
+                        ++Reported;
+                        TestEqual(*(Label + TEXT(": where even the default does not fit at the focus the cover is the default")), At, Default, 0.01f);
+                        TestFalse(*(Label + TEXT(": and it really does not fit")), SetContainsAt(Focus, Yaw, Default, PitchFor(Default, Anchor), Metric, Safe, Centre, Half));
+                    }
+                }
+            }
+        }
+    }
+    TestTrue(TEXT("Some poses are capped below the far pose"), Capped > 0);
+    TestTrue(TEXT("An off-centre focus lowers the cover for some yaw"), Moved > 0);
+    AddInfo(FString::Printf(TEXT("%d focus and yaw cases fit as far as the far pose, %d are capped, %d report that even the default does not fit"), Free, Capped, Reported));
+    return !HasAnyErrors();
+}
 #endif
