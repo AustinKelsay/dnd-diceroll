@@ -36,6 +36,17 @@ bool FCapturePosesTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("A start shot can name a build"), Poses.Shots[5].Build, FString(TEXT("barbarian.berserker")));
         TestTrue(TEXT("A tooltip shot carries a camera"), Poses.Shots[4].bHasCamera && Poses.Shots[4].Mode == ECaptureMode::Tooltip);
     }
+    // An overview shot may name the hero whose details panel the route screen shows (#200): a whole party slot from 1 to 4, on that mode only.
+    {
+        FCapturePoses Heroes;
+        TestTrue(TEXT("An overview shot with a hero parses"), ExpeditionCapture::ParsePoses(TEXT("{\"version\":1,\"shots\":[{\"name\":\"a\",\"mode\":\"overview\",\"hero\":3},{\"name\":\"b\",\"mode\":\"overview\"}]}"), Heroes, Error));
+        if (Heroes.Shots.Num() == 2) { TestEqual(TEXT("The hero is read"), Heroes.Shots[0].Hero, 3); TestEqual(TEXT("No hero leaves the selection"), Heroes.Shots[1].Hero, 0); }
+        for (const TCHAR* Bad : {TEXT("0"), TEXT("5"), TEXT("2.5"), TEXT("\"2\"")})
+        {
+            FCapturePoses Rejected;
+            TestFalse(FString::Printf(TEXT("A hero of %s is refused"), Bad), ExpeditionCapture::ParsePoses(FString::Printf(TEXT("{\"version\":1,\"shots\":[{\"name\":\"a\",\"mode\":\"overview\",\"hero\":%s}]}"), Bad), Rejected, Error));
+        }
+    }
     // A hint shot (#158) names its hint and carries a camera.
     {
         FCapturePoses Hinted;
