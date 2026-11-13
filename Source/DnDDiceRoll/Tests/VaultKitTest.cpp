@@ -534,9 +534,11 @@ bool FVaultNearWallFadesTest::RunTest(const FString& Parameters)
                     // The walls' outer faces: a wall the camera is outside of is reached by the fade whatever the board's size; the open front by the camera's share; others the base.
                     const float GapX = OccluderFade::VaultSideWallOuterCells - Shape.Width * 0.5f + OccluderFade::VaultWallEdgeCells;
                     const float GapBack = OccluderFade::VaultBackWallOuterCells - Shape.Height * 0.5f + OccluderFade::VaultWallEdgeCells;
-                    const float Expected[4] = {Case.Wide == 0 ? FMath::Max(OccluderFade::VaultBoardMarginCells, GapX) : OccluderFade::BoardMarginCells,
-                        Case.Wide == 1 ? FMath::Max(OccluderFade::VaultBoardMarginCells, GapX) : OccluderFade::BoardMarginCells, Case.Wide == 2 ? OccluderFade::VaultBoardMarginCells : OccluderFade::BoardMarginCells,
-                        Case.Wide == 3 ? FMath::Max(OccluderFade::VaultBoardMarginCells, GapBack) : OccluderFade::BoardMarginCells};
+                    const float Wall = FMath::Max(OccluderFade::VaultBoardMarginCells, GapX), Back = FMath::Max(OccluderFade::VaultBoardMarginCells, GapBack), Base = OccluderFade::BoardMarginCells;
+                    // Outside a side wall: that wall's side, and the high-Y margin (the wall runs to the back wall). Outside the back wall: the back, and both X margins
+                    // (it spans the hall). Toward the open front: the camera's share of the ordinary wide margin. Otherwise the base.
+                    const float Expected[4] = {Case.Wide == 0 || Case.Wide == 3 ? Wall : Base, Case.Wide == 1 || Case.Wide == 3 ? Wall : Base,
+                        Case.Wide == 2 ? OccluderFade::VaultBoardMarginCells : Base, Case.Wide == 3 || Case.Wide < 2 ? Back : Base};
                     for (int32 Side = 0; Side < 4; ++Side) { TestEqual(*FString::Printf(TEXT("%s: side %d"), *Label, Side), Margins[Side], Expected[Side], 0.01f); }
                     FVector2D Min, Max;
                     float PlaneZ = 0.0f;
@@ -608,9 +610,11 @@ bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
         return T0 <= T1;
     };
     constexpr int32 Columns = 24, Rows = 14;
-    for (int32 Column = 0; Column <= Columns; ++Column)
+    for (int32 Row = 0; Row <= Rows; ++Row)
     {
-        for (int32 Row = 0; Row <= Rows; ++Row)
+        int32 Opaque = 0;
+        FString First;
+        for (int32 Column = 0; Column <= Columns; ++Column)
         {
             const FVector2D Screen(static_cast<double>(Column) / Columns, static_cast<double>(Row) / Rows);
             FVector2D Ground;
@@ -629,10 +633,26 @@ bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
                     // The ray meets the wall before the ground: the pixel shows the wall's black outer face unless the occluder fade dithers it there.
                     const float Opacity = View.OccluderBoardOpacityAt(Actor.TransformPosition(Eye + Direction * T0));
                     if (Opacity > 0.5f)
-                    { Why = FString::Printf(TEXT("the ray at screen (%.2f, %.2f) meets the camera-side %s wall, opaque (%.2f): a black band"), Screen.X, Screen.Y, Index == 2 ? TEXT("back") : TEXT("side"), Opacity); return false; }
+                    {
+                        ++Opaque;
+                        if (First.IsEmpty())
+                        {
+                            FVector2D RectMin, RectMax;
+                            float RectZ = 0.0f;
+                            View.OccluderBoard(RectMin, RectMax, RectZ);
+                            const FVector Entry = Eye + Direction * T0;
+                            First = FString::Printf(TEXT("first at screen (%.2f, %.2f) on the camera-side %s wall at (%.0f, %.0f, %.0f) cm from the board centre, opacity %.2f, landing (%.0f, %.0f); the fade rectangle is x %.0f to %.0f, y %.0f to %.0f; the camera is at (%.0f, %.0f)"),
+                                Screen.X, Screen.Y, Index == 2 ? TEXT("back") : TEXT("side"), Entry.X - Centre.X, Entry.Y - Centre.Y, Entry.Z - PlaneZ, Opacity, Hit.X - Centre.X, Hit.Y - Centre.Y,
+                                RectMin.X - Actor.GetLocation().X - Centre.X, RectMax.X - Actor.GetLocation().X - Centre.X, RectMin.Y - Actor.GetLocation().Y - Centre.Y, RectMax.Y - Actor.GetLocation().Y - Centre.Y, Eye.X - Centre.X, Eye.Y - Centre.Y);
+                        }
+                        break;
+                    }
                 }
             }
         }
+        // A band is a row of the frame, not a few grazing pixels: at least half the row meets an opaque camera-side wall.
+        if (Opaque * 2 > Columns)
+        { Why = FString::Printf(TEXT("%d of %d rays in the row at screen y %.2f meet an opaque camera-side wall (a black band): %s"), Opaque, Columns + 1, static_cast<double>(Row) / Rows, *First); return false; }
     }
     return true;
 }

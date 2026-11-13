@@ -2852,10 +2852,14 @@ void AExpeditionBattleView::OccluderSideMargins(float (&Out)[4]) const
         const float GapX = OccluderFade::VaultSideWallOuterCells - Board.Width * 0.5f + OccluderFade::VaultWallEdgeCells;
         const float GapBack = OccluderFade::VaultBackWallOuterCells - Board.Height * 0.5f + OccluderFade::VaultWallEdgeCells;
         const float Wall = OccluderFade::VaultBoardMarginCells;
+        const bool bSide = FMath::Abs(Dx) > OccluderFade::VaultSideWallCells * Cell, bBack = Dy > OccluderFade::VaultBackWallCells * Cell;
         if (Dx > OccluderFade::VaultSideWallCells * Cell) { Out[1] = FMath::Max(Wall, GapX); }
         else if (Dx < -OccluderFade::VaultSideWallCells * Cell) { Out[0] = FMath::Max(Wall, GapX); }
-        if (Dy > OccluderFade::VaultBackWallCells * Cell) { Out[3] = FMath::Max(Wall, GapBack); }
-        else if (Dy < 0.0) { Out[2] += (Wall - Margin) * Weight(FMath::Abs(Dy) / Length); }
+        // A side wall runs back to the back wall and the back wall spans the hall: the far end of one and the corners of the other are in the frame
+        // too, so their margins reach the wall's whole extent (their rays land displaced along the view direction).
+        if (bBack || bSide) { Out[3] = FMath::Max(Wall, GapBack); }
+        if (bBack) { Out[0] = FMath::Max(Out[0], FMath::Max(Wall, GapX)); Out[1] = FMath::Max(Out[1], FMath::Max(Wall, GapX)); }
+        if (!bBack && Dy < 0.0) { Out[2] += (Wall - Margin) * Weight(FMath::Abs(Dy) / Length); }
         return;
     }
     const float Extra = FMath::Lerp(OccluderFade::VigilNearMarginCells, OccluderFade::VigilFarNearMarginCells, FarZoomFraction()) - Margin;
