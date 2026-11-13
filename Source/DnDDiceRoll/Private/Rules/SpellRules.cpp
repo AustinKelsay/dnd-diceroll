@@ -37,8 +37,9 @@ namespace SpellTable
 
     // Full casters (Bard, Cleric, Druid, Sorcerer, Wizard): character levels 1-5.
     static const int32 FullCaster[5][3] = { {2, 0, 0}, {3, 0, 0}, {4, 2, 0}, {4, 3, 0}, {4, 3, 2} };
-    // Half casters (Paladin, Ranger): no slots at 1; 2nd-level slots from 5.
-    static const int32 HalfCaster[5][3] = { {0, 0, 0}, {2, 0, 0}, {3, 0, 0}, {3, 0, 0}, {4, 2, 0} };
+    // Half casters (Paladin, Ranger) in SRD 5.2.1 pp. 53 and 58: two 1st-level slots
+    // at level 1; 2nd-level slots from 5. Distinct from the Multiclass Spellcaster table.
+    static const int32 HalfCaster[5][3] = { {2, 0, 0}, {2, 0, 0}, {3, 0, 0}, {3, 0, 0}, {4, 2, 0} };
     // Artificer: half-caster that starts at level 1.
     static const int32 ArtificerCaster[5][3] = { {2, 0, 0}, {2, 0, 0}, {3, 0, 0}, {3, 0, 0}, {4, 2, 0} };
     // Warlock pact: count and slot level by character level (slots live only at MaxSlotLevel).

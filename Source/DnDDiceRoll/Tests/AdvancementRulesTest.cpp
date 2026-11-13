@@ -54,6 +54,27 @@ bool FAdvancementXpHpGatesTest::RunTest(const FString& Parameters)
     FClassLevels Half;
     Half.Set(EAdventurerRole::Paladin, 4);
     TestEqual(TEXT("Paladin 4 -> caster 2"), FAdvancementRules::MulticlassSpellcasterLevel(Half), 2);
+    FClassLevels Pal1;
+    Pal1.Set(EAdventurerRole::Paladin, 1);
+    TestEqual(TEXT("Paladin 1 -> caster 1 (half rounded up)"), FAdvancementRules::MulticlassSpellcasterLevel(Pal1), 1);
+    FClassLevels Mix;
+    Mix.Set(EAdventurerRole::Wizard, 1);
+    Mix.Set(EAdventurerRole::Paladin, 1);
+    TestEqual(TEXT("Wizard 1 / Paladin 1 -> caster 2 (SRD 5.2.1 p. 25)"), FAdvancementRules::MulticlassSpellcasterLevel(Mix), 2);
+    TestEqual(TEXT("Wizard 1 / Paladin 1 uses the multiclass table (3 first, not Paladin's 2)"), FAdvancementRules::MulticlassSlotsFor(Mix, 1), 3);
+    TestEqual(TEXT("Wizard 1 / Paladin 1 has no 2nd-level slots"), FAdvancementRules::MulticlassSlotsFor(Mix, 2), 0);
+    FClassLevels BothHalf;
+    BothHalf.Set(EAdventurerRole::Paladin, 3);
+    BothHalf.Set(EAdventurerRole::Ranger, 3);
+    TestEqual(TEXT("Paladin 3 / Ranger 3 -> caster 4 (each half rounded up)"), FAdvancementRules::MulticlassSpellcasterLevel(BothHalf), 4);
+    FClassLevels Pal3Wiz3;
+    Pal3Wiz3.Set(EAdventurerRole::Paladin, 3);
+    Pal3Wiz3.Set(EAdventurerRole::Wizard, 3);
+    TestEqual(TEXT("Paladin 3 / Wizard 3 -> caster 5"), FAdvancementRules::MulticlassSpellcasterLevel(Pal3Wiz3), 5);
+    FClassLevels SrdExample;
+    SrdExample.Set(EAdventurerRole::Ranger, 4);
+    SrdExample.Set(EAdventurerRole::Sorcerer, 3);
+    TestEqual(TEXT("Ranger 4 / Sorcerer 3 -> caster 5 (SRD 5.2.1 example)"), FAdvancementRules::MulticlassSpellcasterLevel(SrdExample), 5);
     FClassLevels Art;
     Art.Set(EAdventurerRole::Artificer, 1);
     TestEqual(TEXT("Artificer 1 -> caster 1 (round up)"), FAdvancementRules::MulticlassSpellcasterLevel(Art), 1);
@@ -61,15 +82,6 @@ bool FAdvancementXpHpGatesTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Multiclass Fighter gains martial weapons"), FAdvancementRules::MulticlassProficienciesGained(EAdventurerRole::Fighter).Contains(TEXT("Martial weapons")));
     TestEqual(TEXT("Sorcerer multiclass proficiencies empty"), FAdvancementRules::MulticlassProficienciesGained(EAdventurerRole::Sorcerer).Num(), 0);
 
-    const FClassAuraColor Wiz = FAdvancementRules::ClassColor(EAdventurerRole::Wizard);
-    TestTrue(TEXT("Wizard blue-ish"), Wiz.B > Wiz.R && Wiz.B > Wiz.G);
-    FClassLevels BlendLevels;
-    BlendLevels.Set(EAdventurerRole::Wizard, 1);
-    BlendLevels.Set(EAdventurerRole::Cleric, 1);
-    const FClassAuraColor Blend = FAdvancementRules::BlendClassColors(BlendLevels);
-    const FClassAuraColor Cleric = FAdvancementRules::ClassColor(EAdventurerRole::Cleric);
-    TestTrue(TEXT("Blend between wizard and cleric"), Blend.R != Wiz.R || Blend.B != Wiz.B);
-    TestTrue(TEXT("Blend not identical to cleric alone"), Blend.R != Cleric.R || Blend.B != Cleric.B || Blend.G != Cleric.G);
     return !HasAnyErrors();
 }
 #endif

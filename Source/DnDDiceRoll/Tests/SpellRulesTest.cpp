@@ -37,12 +37,17 @@ bool FSpellFactsSlotsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Sorcerer 3: two 2nd"), FSpellRules::SlotsFor(EAdventurerRole::Sorcerer, 3, 2), 2);
     TestEqual(TEXT("Druid 2: three 1st"), FSpellRules::SlotsFor(EAdventurerRole::Druid, 2, 1), 3);
 
-    // Half casters L1-5
-    TestEqual(TEXT("Paladin 1: no slots"), FSpellRules::SlotsFor(EAdventurerRole::Paladin, 1, 1), 0);
+    // Half casters L1-5 — SRD 5.2.1 pp. 53 (Paladin) and 58 (Ranger). Single-class table,
+    // not the Multiclass Spellcaster table (Paladin 2 still has two 1st-level slots).
+    TestEqual(TEXT("Paladin 1: two 1st (SRD 5.2.1 p. 53)"), FSpellRules::SlotsFor(EAdventurerRole::Paladin, 1, 1), 2);
+    TestEqual(TEXT("Paladin 1: no 2nd"), FSpellRules::SlotsFor(EAdventurerRole::Paladin, 1, 2), 0);
+    TestEqual(TEXT("Ranger 1: two 1st (SRD 5.2.1 p. 58)"), FSpellRules::SlotsFor(EAdventurerRole::Ranger, 1, 1), 2);
     TestEqual(TEXT("Paladin 2: two 1st"), FSpellRules::SlotsFor(EAdventurerRole::Paladin, 2, 1), 2);
+    TestEqual(TEXT("Paladin 3: three 1st"), FSpellRules::SlotsFor(EAdventurerRole::Paladin, 3, 1), 3);
     TestEqual(TEXT("Ranger 5: four 1st"), FSpellRules::SlotsFor(EAdventurerRole::Ranger, 5, 1), 4);
     TestEqual(TEXT("Ranger 5: two 2nd"), FSpellRules::SlotsFor(EAdventurerRole::Ranger, 5, 2), 2);
     TestEqual(TEXT("Ranger 5: no 3rd"), FSpellRules::SlotsFor(EAdventurerRole::Ranger, 5, 3), 0);
+    TestEqual(TEXT("Max slot level, Paladin 1"), FSpellRules::MaxSlotLevel(EAdventurerRole::Paladin, 1), 1);
     TestEqual(TEXT("Artificer 1: two 1st"), FSpellRules::SlotsFor(EAdventurerRole::Artificer, 1, 1), 2);
     TestEqual(TEXT("Artificer 5: four 1st two 2nd"), FSpellRules::SlotsFor(EAdventurerRole::Artificer, 5, 1), 4);
     TestEqual(TEXT("Artificer 5: two 2nd"), FSpellRules::SlotsFor(EAdventurerRole::Artificer, 5, 2), 2);

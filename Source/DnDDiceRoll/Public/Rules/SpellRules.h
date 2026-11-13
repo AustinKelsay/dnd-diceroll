@@ -62,8 +62,9 @@ struct DNDDICEROLL_API FSpellRules
     static const TCHAR* SchoolName(ESpellSchool School);
     /**
      * Slot count for a spell level at character level 1-5.
-     * Full casters (Bard/Cleric/Druid/Sorcerer/Wizard), half casters (Paladin/Ranger),
-     * Artificer (half-caster starting at 1), Warlock pact slots (count lives only at MaxSlotLevel).
+     * Full casters (Bard/Cleric/Druid/Sorcerer/Wizard), half casters (Paladin/Ranger;
+     * SRD 5.2.1: two 1st-level slots at level 1), Artificer (same single-class band as
+     * Paladin/Ranger), Warlock pact slots (count lives only at MaxSlotLevel).
      */
     static int32 SlotsFor(EAdventurerRole Role, int32 CharacterLevel, int32 SpellLevel);
     /** Highest spell level with a slot; 0 when none. Warlock: current pact slot level. */

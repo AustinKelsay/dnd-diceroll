@@ -29,14 +29,6 @@ struct DNDDICEROLL_API FClassLevels
     TArray<EAdventurerRole> ClassesTaken() const;
 };
 
-/** RGB 0-255 candlelight tint for level-up aura (blend when multiclassed). */
-struct DNDDICEROLL_API FClassAuraColor
-{
-    uint8 R = 255;
-    uint8 G = 200;
-    uint8 B = 80;
-};
-
 /**
  * Pure SRD advancement math (ADR-0001): XP, rolled HP, multiclass gates/slots, class aura colors.
  * Feats: data-driven hook reserved; do not ship feat rows until licensing is settled — ASI-only for now.
@@ -92,8 +84,4 @@ struct DNDDICEROLL_API FAdvancementRules
     static int32 MulticlassSpellcasterLevel(const FClassLevels& Levels);
     /** Slots from the full-caster table at MulticlassSpellcasterLevel (levels 1-3 only in engine band). */
     static int32 MulticlassSlotsFor(const FClassLevels& Levels, int32 SpellLevel);
-
-    static FClassAuraColor ClassColor(EAdventurerRole Role);
-    /** Equal-weight blend of colors for classes taken; single-class returns that color. */
-    static FClassAuraColor BlendClassColors(const FClassLevels& Levels);
 };

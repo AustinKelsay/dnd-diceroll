@@ -293,11 +293,12 @@ TArray<FString> FAdvancementRules::MulticlassProficienciesGained(EAdventurerRole
 
 int32 FAdvancementRules::MulticlassSpellcasterLevel(const FClassLevels& Levels)
 {
-    // SRD: full casters contribute fully; Paladin/Ranger half (floor); Artificer half rounded up; Warlock excluded (pact).
+    // SRD 5.2.1 p. 25: full casters contribute fully; Paladin and Ranger each contribute
+    // half their levels rounded up; Artificer half rounded up; Warlock excluded (pact).
     const int32 Full = Levels.Bard + Levels.Cleric + Levels.Druid + Levels.Sorcerer + Levels.Wizard;
-    const int32 HalfFloor = (Levels.Paladin + Levels.Ranger) / 2;
-    const int32 Art = (Levels.Artificer + 1) / 2; // round up
-    return Full + HalfFloor + Art;
+    const int32 HalfUp = (Levels.Paladin + 1) / 2 + (Levels.Ranger + 1) / 2;
+    const int32 Art = (Levels.Artificer + 1) / 2;
+    return Full + HalfUp + Art;
 }
 
 int32 FAdvancementRules::MulticlassSlotsFor(const FClassLevels& Levels, int32 SpellLevel)
@@ -307,45 +308,4 @@ int32 FAdvancementRules::MulticlassSlotsFor(const FClassLevels& Levels, int32 Sp
     if (CasterLevel < 1) { return 0; }
     const int32 Row = FMath::Clamp(CasterLevel, 1, FSpellRules::EngineLevelCap) - 1;
     return AdvancementTable::FullCaster[Row][SpellLevel - 1];
-}
-
-FClassAuraColor FAdvancementRules::ClassColor(EAdventurerRole Role)
-{
-    // Candlelit low-poly tints per class (RGB).
-    switch (Role)
-    {
-    case EAdventurerRole::Fighter: return { 200, 80, 60 };      // ember red
-    case EAdventurerRole::Rogue: return { 120, 200, 90 };       // green
-    case EAdventurerRole::Cleric: return { 240, 220, 120 };     // holy gold
-    case EAdventurerRole::Wizard: return { 90, 140, 255 };      // arcane blue
-    case EAdventurerRole::Barbarian: return { 220, 100, 40 };   // rage orange
-    case EAdventurerRole::Monk: return { 180, 240, 255 };       // pale sky
-    case EAdventurerRole::Paladin: return { 255, 210, 90 };     // bright gold
-    case EAdventurerRole::Ranger: return { 70, 160, 90 };       // forest
-    case EAdventurerRole::Sorcerer: return { 200, 90, 220 };    // magenta
-    case EAdventurerRole::Warlock: return { 140, 70, 200 };     // violet
-    case EAdventurerRole::Druid: return { 100, 180, 70 };       // leaf
-    case EAdventurerRole::Bard: return { 255, 140, 180 };       // rose
-    case EAdventurerRole::Artificer: return { 180, 160, 100 };  // brass
-    default: return { 255, 200, 80 };
-    }
-}
-
-FClassAuraColor FAdvancementRules::BlendClassColors(const FClassLevels& Levels)
-{
-    const TArray<EAdventurerRole> Taken = Levels.ClassesTaken();
-    if (Taken.Num() == 0) { return { 255, 200, 80 }; }
-    if (Taken.Num() == 1) { return ClassColor(Taken[0]); }
-    int32 SumR = 0, SumG = 0, SumB = 0, Weight = 0;
-    for (EAdventurerRole Role : Taken)
-    {
-        const int32 W = Levels.Get(Role);
-        const FClassAuraColor C = ClassColor(Role);
-        SumR += int32(C.R) * W;
-        SumG += int32(C.G) * W;
-        SumB += int32(C.B) * W;
-        Weight += W;
-    }
-    if (Weight <= 0) { return { 255, 200, 80 }; }
-    return { uint8(SumR / Weight), uint8(SumG / Weight), uint8(SumB / Weight) };
 }
