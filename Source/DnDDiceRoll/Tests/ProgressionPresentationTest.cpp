@@ -186,7 +186,21 @@ bool FRewardCardKeysTest::RunTest(const FString& Parameters)
     Holds(TEXT("Left"), TEXT("CardHoned"), ERewardCard::Honed);
     Game.Press(EKeys::R); Holds(TEXT("R"), TEXT("CardReserve"), ERewardCard::Reserve);
     Game.Press(EKeys::Tab); Holds(TEXT("Tab from Reserve"), TEXT("CardHoned"), ERewardCard::Honed);
-    Game.Player->HandleButton(TEXT("CardReserve")); Holds(TEXT("A click on Reserve"), TEXT("CardReserve"), ERewardCard::Reserve);
+    // A real pointer click on the Reserve card: a HUD button acts at the press and its release dispatches nothing (#221's rules), and claims nothing.
+    {
+        const double Scale = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
+        const double W = Game.Target.Size.X / Scale, H = Game.Target.Size.Y / Scale;
+        const ExpeditionLayout::Rect Panel = ExpeditionLayout::RewardPanelRect(W, H);
+        // The middle of the panel's second card (DrawReward: 16 in, cards 10 apart, from 88 below the top, 150 high).
+        const double CardWidth = (Panel.Right - Panel.Left - 32 - 20) / 3;
+        Game.Player->SimulatePointer(FVector2D(Panel.Left + 16 + CardWidth + 10 + CardWidth * 0.5, Panel.Top + 88 + 75) * Scale, FIntPoint(0, 0));
+        Game.Frame(0.0f);
+        const TArray<uint8> BeforeClick = Game.CheckpointBytes();
+        Game.Press(EKeys::LeftMouseButton);
+        Game.Player->ReleaseSimulatedPointer();
+        TestTrue(TEXT("The click claimed nothing"), Game.View->Progress().Phase == EExpeditionPhase::Reward && Game.CheckpointBytes() == BeforeClick);
+    }
+    Holds(TEXT("A click on Reserve"), TEXT("CardReserve"), ERewardCard::Reserve);
     Game.Press(EKeys::Slash); Game.Frame(0.0f); Game.Press(EKeys::Escape); Holds(TEXT("Help opened and closed"), TEXT("CardReserve"), ERewardCard::Reserve);
     Game.Press(EKeys::G); Game.Frame(0.0f);
     Game.Press(EKeys::Tab); Game.Frame(0.0f);
