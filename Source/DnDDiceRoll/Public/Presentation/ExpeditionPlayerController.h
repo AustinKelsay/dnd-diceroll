@@ -19,8 +19,35 @@ class DNDDICEROLL_API AExpeditionPlayerController : public APlayerController
     GENERATED_BODY()
 public:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    virtual void BeginDestroy() override;
     virtual void SetupInputComponent() override;
     virtual void PlayerTick(float DeltaTime) override;
+    /** Any other key or button pressed while the left button is down spends the press (#220); everything else is the engine's. */
+    virtual bool InputKey(const FInputKeyEventArgs& Params) override;
+    /**
+     * The viewport losing focus (UGameViewportClient::LostFocus) calls this to flush held keys, which queues a release for every one, and PlayerTick delivers those releases
+     * inside Super::PlayerTick. An armed left press is spent here, before that flush, so the synthetic release can never click (#220).
+     */
+    virtual void FlushPressedKeys() override;
+    /** Spends an armed left press for good: its release can never click, however the window comes back (#220). */
+    void NotifyWindowFocusLost() { bPressVoided = true; }
+    /**
+     * The application losing activation (Slate's OnApplicationActivationStateChanged(false), which on Linux follows the window losing keyboard focus to another client): the
+     * press is spent at that moment, not when the button is released. On that platform an input event after the loss re-activates the application, so a poll at release is too late (#220).
+     */
+    void OnApplicationActivation(bool bActive);
+    FDelegateHandle ActivationHandle;
+    void StopListeningForActivation();
+    /**
+     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) and no longer has it. While the left button is held the engine does NOT deactivate
+     * the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither Slate's activation event nor FApp::HasFocus
+     * reports it; this is the signal that does. Always false on other platforms, and before the window first had focus (a seat with no keyboard never gives it).
+     */
+    bool KeyboardFocusLost() const;
+    mutable bool bSawKeyboardFocus = false;
+    /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
+    bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
     /** Who acts on the next command: the active adventurer in combat, else the selection. */
@@ -160,6 +187,24 @@ private:
     /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
     static constexpr float PoseSlopCm = 0.5f;
     static constexpr float PoseSlopDegrees = 0.02f;
+    /**
+     * A board click is a press and a release that leave everything as they found it (#220): Click only arms it, from the cell the last frame previewed and the camera that
+     * preview was found with, and ClickReleased acts if the camera is still that camera, the pointer has not dragged past ClickSlop and the same cell is still previewed.
+     * A press the camera or the pointer moved under is spent (bPressVoided) and its release commits nothing.
+     */
+    static constexpr float ClickSlop = 6.0f;
+    bool bPressArmed = false, bPressVoided = false;
+    FIntPoint PressCell = FIntPoint::ZeroValue;
+    FVector2D PressPointer = FVector2D::ZeroVector;
+    FTransform PressPose;
+    /** What the press was made in (PressContext): a change of it, however briefly, spends the press for good. */
+    uint32 PressContextStamp = 0;
+    /** Bumped by every mode change, so a mode that is changed and changed back mid-press still spends it. */
+    uint32 ContextSerial = 0;
+    /** The targeting stamp (mode, actor, battle state, presentation revision) with the screen's ownership: overlays, the Menu, playback, the run and its phase. */
+    uint32 PressContext() const;
+    /** True while the press is armed and unspent: the camera is still the one the armed press was made with and the pointer is within the click slop of where it went down. */
+    bool PressHolds() const;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;
     FIntPoint KeyboardPreview = FIntPoint::ZeroValue;
@@ -242,6 +287,8 @@ private:
     void BattleMaster();
     void ManeuverMode();
     void Click();
+    /** The left button's release: acts on the cell Click armed, if nothing moved since the press (#220). */
+    void ClickReleased();
     void AttackMode();
     void RoleMode();
     void RescueMode();

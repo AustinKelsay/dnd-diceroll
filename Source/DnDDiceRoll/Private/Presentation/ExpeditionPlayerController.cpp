@@ -15,10 +15,18 @@
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
+#include "Framework/Application/SlateApplication.h"
+// The Linux platform application's focus window is read in game builds only: it is an engine-internal class used through its header, and the editor's PIE does not give the
+// controller the same object (reading it there crashed the PIE test).
+#define EXPEDITION_LINUX_FOCUS_POLL (PLATFORM_LINUX && !UE_SERVER && !WITH_EDITOR)
+#if EXPEDITION_LINUX_FOCUS_POLL
+#include "Linux/LinuxApplication.h"
+#endif
 
 void AExpeditionPlayerController::BeginPlay()
 {
     Super::BeginPlay();
+    if (FSlateApplication::IsInitialized() && !ActivationHandle.IsValid()) { ActivationHandle = FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject(this, &AExpeditionPlayerController::OnApplicationActivation); }
     Preset();
     BattleView = GetWorld()->SpawnActor<AExpeditionBattleView>();
     if (!IsValid(BattleView)) { return; }
@@ -63,6 +71,7 @@ void AExpeditionPlayerController::SetupInputComponent()
     auto Bind = [this](FKey Key, void (AExpeditionPlayerController::*Handler)())
     { InputComponent->BindKey(Key, IE_Pressed, this, Handler); };
     Bind(EKeys::LeftMouseButton, &AExpeditionPlayerController::Click);
+    InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AExpeditionPlayerController::ClickReleased);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginDrag);
     InputComponent->BindKey(EKeys::RightMouseButton, IE_Released, this, &AExpeditionPlayerController::EndDrag);
     InputComponent->BindKey(EKeys::MiddleMouseButton, IE_Pressed, this, &AExpeditionPlayerController::BeginPan);
@@ -120,8 +129,35 @@ void AExpeditionPlayerController::SetupInputComponent()
     Bind(EKeys::BackSpace, &AExpeditionPlayerController::RequestReturnToMenu);
 }
 
+void AExpeditionPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    StopListeningForActivation();
+    Super::EndPlay(EndPlayReason);
+}
+
+void AExpeditionPlayerController::BeginDestroy()
+{
+    StopListeningForActivation();
+    Super::BeginDestroy();
+}
+
+void AExpeditionPlayerController::StopListeningForActivation()
+{
+    if (ActivationHandle.IsValid() && FSlateApplication::IsInitialized()) { FSlateApplication::Get().OnApplicationActivationStateChanged().Remove(ActivationHandle); }
+    ActivationHandle.Reset();
+}
+
+void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
+{
+    if (!bActive) { NotifyWindowFocusLost(); }
+}
+
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
+    // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
+    // (Polled every tick, armed or not, so the keyboard-focus latch sees the window have focus before it can lose it.)
+    const bool bFocusLost = !WindowHasFocus();
+    if (bPressArmed && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -163,6 +199,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         else if (FVector2D::DistSquared(Pointer, PointerAnchor) > PointerMoveSlop * PointerMoveSlop) { PointerAnchor = Pointer; bKeyboardCursor = false; }
     }
     else { bPointerSeen = false; }
+    // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
+    if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -605,6 +643,7 @@ void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 
 void AExpeditionPlayerController::Click()
 {
+    bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
@@ -631,7 +670,12 @@ void AExpeditionPlayerController::Click()
         const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
             FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
             FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
-        if (bCameraStill && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
+        // The click is the press and its release: this only arms it (#220), so a camera that moves or a pointer that drags while the button is down spends it.
+        if (bCameraStill && HoverCell(Under) && Under == Cell)
+        {
+            bPressArmed = true; bPressVoided = false;
+            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressPose = Pose; PressContextStamp = PressContext();
+        }
         return;
     }
     // Nothing is previewed (playback, an enemy turn): a click may still choose an ally to inspect, which commits nothing.
@@ -640,6 +684,88 @@ void AExpeditionPlayerController::Click()
         for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
         { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
     }
+}
+
+uint32 AExpeditionPlayerController::PressContext() const
+{
+    uint32 Stamp = HashCombine(TargetingStamp(), GetTypeHash(ContextSerial));
+    Stamp = HashCombine(Stamp, GetTypeHash(uint32(OverlayOpen()) | uint32(ShowingMenu()) << 1 | uint32(ShowsTargeting()) << 2 | uint32(bKeyboardCursor) << 3));
+    if (IsValid(BattleView))
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(uint32(BattleView->HasRun()) | uint32(BattleView->InCombat()) << 1 | uint32(BattleView->IsPresenting()) << 2));
+        if (BattleView->HasRun()) { Stamp = HashCombine(Stamp, GetTypeHash(int32(BattleView->Progress().Phase))); }
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PressHolds() const
+{
+    float MouseX = 0, MouseY = 0;
+    FTransform Pose;
+    if (!bPressArmed || bPressVoided || !PointerPosition(MouseX, MouseY) || !ProjectionPose(Pose) || PressContext() != PressContextStamp) { return false; }
+    return FVector2D::DistSquared(FVector2D(MouseX, MouseY), PressPointer) <= ClickSlop * ClickSlop &&
+        FVector::Dist(Pose.GetLocation(), PressPose.GetLocation()) <= PoseSlopCm &&
+        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PressPose.GetRotation())) <= PoseSlopDegrees;
+}
+
+void AExpeditionPlayerController::FlushPressedKeys()
+{
+    NotifyWindowFocusLost();
+    Super::FlushPressedKeys();
+}
+
+bool AExpeditionPlayerController::KeyboardFocusLost() const
+{
+#if EXPEDITION_LINUX_FOCUS_POLL
+    // Only a running game window has the Linux platform application; an automation world has no viewport.
+    const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return false; }
+    const TSharedPtr<GenericApplication> Platform = FSlateApplication::Get().GetPlatformApplication();
+    if (!Platform.IsValid()) { return false; }
+    const TSharedPtr<FLinuxWindow> FocusWindow = static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow();
+    if (FocusWindow.IsValid()) { bSawKeyboardFocus = true; return false; }
+    return bSawKeyboardFocus;
+#else
+    return false;
+#endif
+}
+
+bool AExpeditionPlayerController::WindowHasFocus() const
+{
+    // Only a loss TRANSITION counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no window ever has SDL
+    // keyboard focus), and ordinary clicks must still work there. KeyboardFocusLost() is false until the window has had keyboard focus once.
+    return !KeyboardFocusLost();
+}
+
+bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
+{
+    if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
+    return Super::InputKey(Params);
+}
+
+void AExpeditionPlayerController::ClickReleased()
+{
+    const bool bWasArmed = bPressArmed;
+    const bool bHeld = PressHolds();
+    bPressArmed = false;
+    if (!bWasArmed || !bHeld || !IsValid(BattleView) || !WindowHasFocus()) { return; }
+    // The release is a click on the board only where the press was: not on a HUD button or panel the pointer slipped onto, not with the Menu or an overlay open, and not
+    // with the keyboard cursor showing. It never dispatches a HUD action: those act at the press.
+    float MouseX = 0, MouseY = 0;
+    if (!PointerPosition(MouseX, MouseY)) { return; }
+    if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()))
+    {
+        FName Button;
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button) || Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
+    }
+    if (ShowingMenu() || OverlayOpen() || bKeyboardCursor) { return; }
+    // The release acts on what the last frame still shows under the pointer: the cell the press found, previewed now with the camera still that camera.
+    FIntPoint Cell, Under;
+    FTransform Pose;
+    const bool bCameraStill = bPreviewPoseValid && ProjectionPose(Pose) &&
+        FVector::Dist(Pose.GetLocation(), PreviewPose.GetLocation()) <= PoseSlopCm &&
+        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PreviewPose.GetRotation())) <= PoseSlopDegrees;
+    if (bCameraStill && PreviewedPointerCell(Cell) && Cell == PressCell && HoverCell(Under) && Under == Cell) { ActAtCell(Cell); }
 }
 
 void AExpeditionPlayerController::HandleButton(FName Id)
@@ -787,6 +913,7 @@ void AExpeditionPlayerController::StepBuild(int32 Direction)
 void AExpeditionPlayerController::SetMode(ECombatCommandType Action)
 {
     if (!AllowsGameplayInput()) { return; }
+    ++ContextSerial;
     SelectedAction = Action;
     bModeTip = false;
     if (IsValid(BattleView)) { BattleView->PlayCue(EExpeditionCue::Click); }
