@@ -1,0 +1,34 @@
+Source/DnDDiceRoll/Private/Combat/ActionFacts.cpp:233:    if (Facts.bForbidsRage && Unit->RageTurns > 0) { Block(EActionBlocker::StanceBlocks); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:212:    for (auto& A : Result) { A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:233:    if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Protection -> %d (%d, until next own turn) / "), Hero.GuardTargetId, Hero.GuardAmount > 0 ? Hero.GuardAmount : 3); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:239:    return Hero.DamageBonus + Hero.WeaponRank + (Hero.RageTurns > 0 ? 2 : 0);
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:22:inline constexpr int32 TouchRange = 1, MissileRange = 6, MissileDarts = 3, MissileDie = 4, DartBonus = 1;
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:23:inline constexpr int32 CureDice = 2, CureDie = 8, HealingModifier = 3, WindDie = 10, FighterLevel = 1;
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:24:inline constexpr int32 SneakDie = 6, PrecisionBonus = 2;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:117:            ((Unit.GuardTurns > 0) != (Unit.GuardAmount > 0)) ||
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:130:            (Unit.RageTurns > 0 && (Unit.RageUses == Build->RageCap || Unit.Life != ECombatLife::Conscious)) ||
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:233:        return FString::Printf(TEXT("Self; heal d%d+%d"), WindDie, FighterLevel);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:235:        return FString::Printf(TEXT("Self or ally, %d cell; heal %dd%d+%d"), TouchRange, CureDice, CureDie, HealingModifier);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:237:        return FString::Printf(TEXT("Enemy, %d cells + sight; %dd%d+%d, never misses"), MissileRange, MissileDarts, MissileDie, MissileDarts * DartBonus);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:456:    Setup.Modifier = Actor.AttackBonus + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:489:            { Forecast.bHealing = true; Forecast.MinAmount = Forecast.MaxAmount = FMath::Min(A.Amount, Target->MaxHP - Target->HP); if (A.bCureDice) { Forecast.MinAmount = FMath::Min(CureDice + HealingModifier,Target->MaxHP-Target->HP); Forecast.MaxAmount = FMath::Min(CureDice * CureDie + HealingModifier,Target->MaxHP-Target->HP); } }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:535:        Effect(WeaponDice, Actor->DamageDie, FBuildCatalog::AttackModifier(*Actor) + (Action == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0));
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:540:    case ECombatCommandType::MagicMissile: Forecast.HitChancePercent = 100; Effect(MissileDarts, MissileDie, MissileDarts * DartBonus); break;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:541:    case ECombatCommandType::SecondWind: Effect(1, WindDie, FighterLevel); break;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:542:    case ECombatCommandType::CureWounds: Effect(CureDice, CureDie, HealingModifier); break;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:665:                if (A.bCureDice) { --User->SpellSlots; DiceLog = &Result.EffectDice; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice,CureDie)+HealingModifier; DiceLog = nullptr; }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:698:            { Result.Effects.Add({Target->Id, A.Effect, A.Effect == EAbilityEffect::Protect ? (A.Amount > 0 ? A.Amount : 3) : 2, Target->Cell}); }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:708:        const int32 ManeuverBonus = Command.Type == ECombatCommandType::PrecisionStrike ? PrecisionBonus : 0;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:795:                for (int32 Dart = 0; Dart < MissileDarts; ++Dart)
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:797:                    const int32 Raw = Roll(MissileDie) + DartBonus;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:801:                Result.EffectModifier = MissileDarts * DartBonus;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:811:                Result.EffectModifier = MissileDarts * DartBonus;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:812:                Result.Damage = RollDice(MissileDarts, MissileDie) + Result.EffectModifier;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:819:            Ability = FString::Printf(TEXT("Magic Missile (%d darts, 1 slot)"), MissileDarts);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:825:            if (Command.Type == ECombatCommandType::SecondWind) { --User->SecondWindUses; Result.EffectModifier = FighterLevel; Amount = Roll(WindDie) + FighterLevel; Ability = TEXT("Second Wind (bonus, 1 use)"); }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:826:            else if (Command.Type == ECombatCommandType::CureWounds) { --User->SpellSlots; Result.EffectModifier = HealingModifier; Amount = RollDice(CureDice, CureDie) + HealingModifier; Ability = TEXT("Cure Wounds (1 slot)"); }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:940:        if (User->RageTurns > 0 && --User->RageTurns == 0) { User->GuardTargetId = INDEX_NONE; }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:956:    int32 Protection = Target.RageTurns > 0 ? 1 : 0;
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:961:        const int32 Amount = U.GuardAmount > 0 ? U.GuardAmount : 3;
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:752:    if (Unit.RageTurns > 0) { Gear += TEXT("  ·  Raging"); }
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:811:            Lines.Add({FString::Printf(TEXT("Protect %s: -%d damage until next own turn"), *Label, Unit.GuardAmount > 0 ? Unit.GuardAmount : 3), Sky});

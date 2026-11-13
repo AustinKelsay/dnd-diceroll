@@ -1,0 +1,195 @@
+{
+	"group": "Rotation1",
+	"policy_version": 2,
+	"ruleset": "Compact",
+	"catalog_revision": 10,
+	"base_seed": 20261109,
+	"reward_strategy": "gear",
+	"seeds": 32,
+	"runs": 576,
+	"max_rounds": 60,
+	"max_steps": 16,
+	"seconds": 6.4192808550433256,
+	"parties": [
+		{
+			"id": "rot1-01",
+			"archetype": "rotation",
+			"builds": [
+				"fighter.champion",
+				"rogue.soulknife",
+				"paladin.vengeance",
+				"warlock.archfey"
+			]
+		},
+		{
+			"id": "rot1-02",
+			"archetype": "rotation",
+			"builds": [
+				"wizard.necromancy",
+				"cleric.peace",
+				"artificer.alchemist",
+				"barbarian.wild-magic"
+			]
+		},
+		{
+			"id": "rot1-03",
+			"archetype": "rotation",
+			"builds": [
+				"monk.mercy",
+				"sorcerer.draconic-bloodline",
+				"wizard.divination",
+				"cleric.tempest"
+			]
+		},
+		{
+			"id": "rot1-04",
+			"archetype": "rotation",
+			"builds": [
+				"bard.lore",
+				"cleric.life",
+				"fighter.rune-knight",
+				"ranger.hunter"
+			]
+		},
+		{
+			"id": "rot1-05",
+			"archetype": "rotation",
+			"builds": [
+				"warlock.fathomless",
+				"wizard.order-of-scribes",
+				"druid.moon",
+				"artificer.battle-smith"
+			]
+		},
+		{
+			"id": "rot1-06",
+			"archetype": "rotation",
+			"builds": [
+				"rogue.phantom",
+				"paladin.ancients",
+				"sorcerer.clockwork-soul",
+				"wizard.illusion"
+			]
+		},
+		{
+			"id": "rot1-07",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.order",
+				"bard.eloquence",
+				"barbarian.beast",
+				"monk.four-elements"
+			]
+		},
+		{
+			"id": "rot1-08",
+			"archetype": "rotation",
+			"builds": [
+				"ranger.swarmkeeper",
+				"wizard.conjuration",
+				"cleric.nature",
+				"druid.wildfire"
+			]
+		},
+		{
+			"id": "rot1-09",
+			"archetype": "rotation",
+			"builds": [
+				"rogue.thief",
+				"fighter.psi-warrior",
+				"paladin.watchers",
+				"warlock.great-old-one"
+			]
+		},
+		{
+			"id": "rot1-10",
+			"archetype": "rotation",
+			"builds": [
+				"wizard.bladesinging",
+				"druid.land",
+				"artificer.artillerist",
+				"rogue.arcane-trickster"
+			]
+		},
+		{
+			"id": "rot1-11",
+			"archetype": "rotation",
+			"builds": [
+				"paladin.devotion",
+				"sorcerer.aberrant-mind",
+				"wizard.evocation",
+				"cleric.war"
+			]
+		},
+		{
+			"id": "rot1-12",
+			"archetype": "rotation",
+			"builds": [
+				"bard.creation",
+				"barbarian.totem-warrior",
+				"monk.shadow",
+				"ranger.fey-wanderer"
+			]
+		},
+		{
+			"id": "rot1-13",
+			"archetype": "rotation",
+			"builds": [
+				"wizard.abjuration",
+				"cleric.light",
+				"druid.stars",
+				"fighter.battle-master"
+			]
+		},
+		{
+			"id": "rot1-14",
+			"archetype": "rotation",
+			"builds": [
+				"fighter.eldritch-knight",
+				"paladin.glory",
+				"warlock.fiend",
+				"wizard.transmutation"
+			]
+		},
+		{
+			"id": "rot1-15",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.twilight",
+				"artificer.armorer",
+				"rogue.assassin",
+				"monk.astral-self"
+			]
+		},
+		{
+			"id": "rot1-16",
+			"archetype": "rotation",
+			"builds": [
+				"sorcerer.wild-magic",
+				"wizard.enchantment",
+				"cleric.trickery",
+				"bard.valor"
+			]
+		},
+		{
+			"id": "rot1-17",
+			"archetype": "rotation",
+			"builds": [
+				"barbarian.berserker",
+				"monk.open-hand",
+				"ranger.beast-master",
+				"warlock.genie"
+			]
+		},
+		{
+			"id": "rot1-18",
+			"archetype": "rotation",
+			"builds": [
+				"cleric.knowledge",
+				"druid.spores",
+				"fighter.champion",
+				"rogue.soulknife"
+			]
+		}
+	]
+}

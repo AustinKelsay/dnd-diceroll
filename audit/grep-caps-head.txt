@@ -1,0 +1,75 @@
+Source/DnDDiceRoll/Private/Party/PartyContinuity.cpp:64:        const FResourceCaps Before = FBuildCatalog::Caps(*Survivor);
+Source/DnDDiceRoll/Private/Party/PartyContinuity.cpp:85:constexpr int32 ResourceCap = 2;
+Source/DnDDiceRoll/Private/Party/PartyContinuity.cpp:104:            const FResourceCaps Cap = FBuildCatalog::Caps(Survivor);
+Source/DnDDiceRoll/Private/Party/PartyContinuity.cpp:113:            if (Survivor.AdventurerRole == EAdventurerRole::Fighter) { Survivor.SecondWindUses = FMath::Min(ResourceCap, Survivor.SecondWindUses + CampResource); }
+Source/DnDDiceRoll/Private/Party/PartyContinuity.cpp:115:            { Survivor.SpellSlots = FMath::Min(ResourceCap, Survivor.SpellSlots + CampResource); }
+Source/DnDDiceRoll/Private/Combat/ActionFacts.cpp:36:        const FResourceCaps Caps = FBuildCatalog::Caps(Unit);
+Source/DnDDiceRoll/Private/Combat/ActionFacts.cpp:52:bool IsRageStyle(const FBuildDefinition* Build) { return Build && !Build->Abilities.IsEmpty() && Build->KitCap == 0; }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:73:        Champion.WindCap = Champion.Profile.SecondWindUses = 2; Champion.WindRecovery = 1;
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:79:        Master.ManeuverCap = Master.Profile.ManeuverUses = 2; Master.Specials.Add(ECombatCommandType::PrecisionStrike);
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:84:        Cleric.SlotCap = Cleric.Profile.SpellSlots = 2; Cleric.SlotRecovery = 1; Cleric.Specials = {ECombatCommandType::CureWounds}; Result.Add(Cleric);
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:86:        Wizard.MissileKitCost = 1; Wizard.SlotCap = Wizard.Profile.SpellSlots = 2; Wizard.SlotRecovery = 1; Wizard.Specials = {ECombatCommandType::MagicMissile};
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:91:            B.RageCap = B.Profile.RageUses = 2; B.RageRecovery = 1;
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:116:            B.KitCap = B.Profile.KitUses = 2; B.KitRecovery = 1;
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:185:        for (auto& B : Result) { if (B.Profile.ClassId == TEXT("wizard") && B.Id != TEXT("wizard.evocation")) { B.MissileKitCost = B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:207:        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = Describe(B.Abilities[0], 0); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:241:    const FResourceCaps Cap = Caps(Hero);
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:247:FResourceCaps FBuildCatalog::Caps(const FCombatantState& Hero)
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:251:    if (!B) { FResourceCaps Fixture; Fixture.Slot = Fixture.Wind = Fixture.Maneuver = 2; return Fixture; }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:255:    FResourceCaps Result;
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:256:    Result.Kit = Up(B->KitCap); Result.Slot = Up(B->SlotCap); Result.Wind = Up(B->WindCap); Result.Maneuver = Up(B->ManeuverCap); Result.Rage = Up(B->RageCap);
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:300:        A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0;
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:320:    if (B->KitCap) { Text += FString::Printf(TEXT("Kit %d / "), Hero.KitUses); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:321:    if (B->WindCap) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:322:    if (B->SlotCap) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:323:    if (B->ManeuverCap) { Text += FString::Printf(TEXT("Maneuvers %d / "), Hero.ManeuverUses); }
+Source/DnDDiceRoll/Private/Party/BuildCatalog.cpp:324:    if (B->RageCap) { Text += FString::Printf(TEXT("Rage %d; %d own turn ends / "), Hero.RageUses, Hero.RageTurns); }
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:96:                    ? (Unit.RescueTurnsLeft != 0 || Unit.DeathSaveFailures > 2 || (Unit.DeathSaveSuccesses == 3 && Unit.DeathSaveFailures != 0))
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:113:        const FResourceCaps Caps = FBuildCatalog::Caps(Unit);
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:115:        if (Build && Build->KitCap > 0 && (Unit.AdventurerRole != Build->Profile.AdventurerRole || Unit.Side != ECombatSide::Party))
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:123:            (Unit.GuardTurns > 0 && (Unit.Life != ECombatLife::Conscious || Unit.GuardTargetId == INDEX_NONE || !Build || Build->KitCap == 0 || Unit.KitUses == Caps.Kit)))
+Source/DnDDiceRoll/Private/Combat/CombatBattle.cpp:1216:            if (Build && Build->KitCap > 0)
+Source/DnDDiceRoll/Private/Run/ProgressionQuery.cpp:13:    const FResourceCaps Caps = FBuildCatalog::Caps(Hero);
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:10:    int32 WindCap = 0, SlotCap = 0, ManeuverCap = 0;
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:13:    int32 KitCap = 0, KitRecovery = 0;
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:14:    int32 RageCap = 0, RageRecovery = 0;
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:56:struct DNDDICEROLL_API FResourceCaps
+Source/DnDDiceRoll/Public/Party/BuildCatalog.h:77:    static FResourceCaps Caps(const FCombatantState& Hero);
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:745:        Group(TEXT("K"), Unit.KitUses, Build->KitCap, Gold);
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:746:        Group(TEXT("W"), Unit.SecondWindUses, Build->WindCap, Safe);
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:747:        Group(TEXT("S"), Unit.SpellSlots, Build->SlotCap, Sky);
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:748:        Group(TEXT("M"), Unit.ManeuverUses, Build->ManeuverCap, Gold);
+Source/DnDDiceRoll/Private/Presentation/ExpeditionHUD.cpp:749:        Group(TEXT("R"), Unit.RageUses, Build->RageCap, Danger);
+Source/DnDDiceRoll/Public/Run/ProgressionQuery.h:79:    FResourceCaps Caps;
+Source/DnDDiceRoll/Tests/ArtificerKitsTest.cpp:166:    for(const auto& B:FBuildCatalog::All()) { Classes.Add(B.Profile.ClassId); if(B.Profile.ClassId==TEXT("artificer")) { ++Artificers; TestEqual(TEXT("Appended stable role"),static_cast<int32>(B.Profile.AdventurerRole),13); TestEqual(TEXT("Two bounded commands"),B.Specials.Num(),2); TestEqual(TEXT("No spellbook pool"),B.SlotCap,0); } }
+Source/DnDDiceRoll/Tests/BalanceHarness.h:71:    int32 KitLeft = 0, KitCap = 0, SlotLeft = 0, SlotCap = 0, WindLeft = 0, WindCap = 0;
+Source/DnDDiceRoll/Tests/BalanceHarness.h:72:    int32 ManeuverLeft = 0, ManeuverCap = 0, RageLeft = 0, RageCap = 0, PotionsLeft = 0;
+Source/DnDDiceRoll/Tests/BalanceHarnessTest.cpp:162:            const FResourceCaps Caps = FBuildCatalog::Caps(*U);
+Source/DnDDiceRoll/Tests/BalanceHarnessTest.cpp:164:            TestTrue(Where + TEXT(": exported caps are Caps(Hero)"), Hero.KitCap == Caps.Kit && Hero.SlotCap == Caps.Slot && Hero.WindCap == Caps.Wind && Hero.ManeuverCap == Caps.Maneuver && Hero.RageCap == Caps.Rage);
+Source/DnDDiceRoll/Tests/BalanceHarnessTest.cpp:167:            TestTrue(Where + TEXT(": the build's caps plus reserve"), Hero.KitCap == Expect(Build->KitCap) && Hero.SlotCap == Expect(Build->SlotCap) && Hero.WindCap == Expect(Build->WindCap) &&
+Source/DnDDiceRoll/Tests/BalanceHarnessTest.cpp:168:                Hero.ManeuverCap == Expect(Build->ManeuverCap) && Hero.RageCap == Expect(Build->RageCap));
+Source/DnDDiceRoll/Tests/BalanceHarness.cpp:616:        const FResourceCaps Caps = FBuildCatalog::Caps(*Best);
+Source/DnDDiceRoll/Tests/BalanceHarness.cpp:728:        const FResourceCaps Caps = FBuildCatalog::Caps(*U);
+Source/DnDDiceRoll/Tests/BalanceHarness.cpp:729:        Hero.KitCap = Caps.Kit; Hero.SlotCap = Caps.Slot; Hero.WindCap = Caps.Wind; Hero.ManeuverCap = Caps.Maneuver; Hero.RageCap = Caps.Rage;
+Source/DnDDiceRoll/Tests/BalanceHarness.cpp:980:            Out += FString::Printf(TEXT(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d\n"), H.KitLeft, H.KitCap, H.SlotLeft, H.SlotCap, H.WindLeft, H.WindCap,
+Source/DnDDiceRoll/Tests/BalanceHarness.cpp:981:                H.ManeuverLeft, H.ManeuverCap, H.RageLeft, H.RageCap, H.PotionsLeft, *FString::Join(H.RewardCards, TEXT(";")), H.bReserve ? 1 : 0, H.bHoned ? 1 : 0);
+Source/DnDDiceRoll/Tests/CombatHintsTest.cpp:788:            { Unit.KitUses = Build->KitCap; Unit.SecondWindUses = Build->WindCap; Unit.SpellSlots = Build->SlotCap; Unit.ManeuverUses = Build->ManeuverCap; Unit.RageUses = Build->RageCap; }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:149:    const FResourceCaps C = FBuildCatalog::Caps(U);
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:161:    const FResourceCaps C = FBuildCatalog::Caps(U);
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:470:            const FResourceCaps C = FBuildCatalog::Caps(U);
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:484:        if (B.KitCap) { TestEqual(Build + TEXT(": Kit"), After.KitUses, FMath::Min(3, 1 + B.KitRecovery)); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:485:        if (B.SlotCap) { TestEqual(Build + TEXT(": Slot"), After.SpellSlots, FMath::Min(3, 1 + B.SlotRecovery)); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:486:        if (B.RageCap) { TestEqual(Build + TEXT(": Rage"), After.RageUses, FMath::Min(3, 1 + B.RageRecovery)); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:487:        if (B.WindCap) { TestEqual(Build + TEXT(": Wind"), After.SecondWindUses, FMath::Min(3, 1 + B.WindRecovery)); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:488:        if (B.ManeuverCap) { TestEqual(Build + TEXT(": Maneuver stays 1/3"), After.ManeuverUses, 1); TestEqual(TEXT("Maneuver recovers 0"), B.ManeuverRecovery, 0); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:676:                const bool bRageSpecial = Build.RageCap > 0 && A.Effect != EAbilityEffect::Rage;
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:767:                    if (Build.RageCap > 0) { Unit(Plain2, 10).RageUses = 1; Unit(Plain2, 10).RageTurns = 2; }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:910:        if (Build.KitCap) { Pools.Add(EActionResource::Kit); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:911:        if (Build.SlotCap) { Pools.Add(EActionResource::Slot); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:912:        if (Build.WindCap) { Pools.Add(EActionResource::Wind); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:913:        if (Build.ManeuverCap) { Pools.Add(EActionResource::Maneuver); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:914:        if (Build.RageCap) { Pools.Add(EActionResource::Rage); }
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:921:        const FResourceCaps C = FBuildCatalog::Caps(Reserved), Plain = FBuildCatalog::Caps(Build.Profile);
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:922:        TestTrue(FString(Id) + TEXT(": +1 on each pool, none elsewhere"), C.Kit == (Build.KitCap ? Build.KitCap + 1 : 0) && C.Slot == (Build.SlotCap ? Build.SlotCap + 1 : 0) &&
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:923:            C.Wind == (Build.WindCap ? Build.WindCap + 1 : 0) && C.Maneuver == (Build.ManeuverCap ? Build.ManeuverCap + 1 : 0) && C.Rage == (Build.RageCap ? Build.RageCap + 1 : 0));
+Source/DnDDiceRoll/Tests/ProgressionTest.cpp:924:        TestTrue(FString(Id) + TEXT(": unreserved caps are the build's"), Plain.Kit == Build.KitCap && Plain.Slot == Build.SlotCap && Plain.Wind == Build.WindCap && Plain.Maneuver == Build.ManeuverCap && Plain.Rage == Build.RageCap);

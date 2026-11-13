@@ -1,0 +1,676 @@
+== fight 1: Watchtower road, recipe 0
+round 1, active 1, move 4, action 1, bonus 1
+................
+............##..
+......##........
+....1.#...A.....
+....2...........
+....3.....B..#..
+....4...#.......
+.......##.C.....
+...............#
+..##............
+................
+  1 Hero 1 rogue.assassin hp 22/22 at (4,3) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (4,4) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,6) range 1 
+  20 Raider 1  hp 24/24 at (10,3) range 1 
+  21 Raider 2  hp 24/24 at (10,5) range 1 
+  22 Archer  hp 24/24 at (10,7) range 4 
+round 1, active 1, move 4, action 1, bonus 1
+................
+............##..
+......##........
+....1.#...A.....
+....2...........
+....3.....B..#..
+....4...#.......
+.......##.C.....
+...............#
+..##............
+................
+  1 Hero 1 rogue.assassin hp 22/22 at (4,3) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (4,4) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,6) range 1 
+  20 Raider 1  hp 24/24 at (10,3) range 1 
+  21 Raider 2  hp 24/24 at (10,5) range 1 
+  22 Archer  hp 24/24 at (10,7) range 4 
+  hero 1 Move -> (7,4) target -1: Hero 1 moves 4 cells (0 left).
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Special2 -> (0,0) target 1: Telepathic Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (2) | committed HP loss 0, heal 0, prevented 0
+  hero 2 Move -> (6,5) target -1: Hero 2 moves 3 cells (1 left).
+  hero 2 Special1 -> (0,0) target 21: Mind Thrust: Enemy range 4 + sight; damage, then push one open cell away; blocked push stays put (5) | committed HP loss 5, heal 0, prevented 0
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Move -> (7,5) target -1: Hero 4 moves 4 cells (0 left).
+  hero 4 Special1 -> (0,0) target 4: Rage: Self; +2 basic damage, reduce damage by 1 through next own turn | committed HP loss 0, heal 0, prevented 0
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 21 Move: Raider 2 moves 3 cells (1 left).
+  enemy 21 Attack: Raider 2 > Hero 4: d20 6 + 4 = 10 vs AC 14 | MISS | 0 damage. HP 34/34
+  enemy 21 EndTurn: Raider 2 ends turn.
+  enemy 20 Move: Raider 1 moves 3 cells (1 left).
+  enemy 20 Attack: Raider 1 > Hero 1: d20 7 + 4 = 11 vs AC 13 | MISS | 0 damage. HP 22/22
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 3 Special2 -> (0,0) target 1: Voice of Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (3) | committed HP loss 0, heal 0, prevented 0
+  hero 3 Move -> (5,5) target -1: Hero 3 moves 1 cells (3 left).
+  hero 3 Attack -> (0,0) target 21: Hero 3 > Raider 2: d20 1 + 5 = 6 vs AC 13 | MISS | 0 damage. HP 19/24
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Move: Archer moves 2 cells (2 left).
+  enemy 22 Attack: Archer > Hero 1: d20 13 + 4 = 17 vs AC 13 | HIT | 1 damage. HP 21/22 | protection prevented 3 damage
+  enemy 22 EndTurn: Archer ends turn.
+round 2, active 1, move 4, action 1, bonus 1
+................
+............##..
+......##........
+......#A........
+.......1........
+.....324B.C..#..
+........#.......
+.......##.......
+...............#
+..##............
+................
+  1 Hero 1 rogue.assassin hp 21/22 at (7,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (6,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (5,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (7,5) range 1 
+  20 Raider 1  hp 24/24 at (7,3) range 1 
+  21 Raider 2  hp 19/24 at (8,5) range 1 
+  22 Archer  hp 24/24 at (10,5) range 4 
+  hero 1 Special1 -> (0,0) target 20: Ambush: Enemy range 1 + sight; guaranteed damage (9) | committed HP loss 9, heal 0, prevented 0
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Attack -> (0,0) target 20: Hero 2 > Raider 1: d20 11 + 5 = 16 vs AC 13 | HIT | 6 damage. HP 9/24
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Attack -> (0,0) target 21: Hero 4 > Raider 2: d20 13 + 5 = 18 vs AC 13 | HIT | 9 damage. HP 10/24
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 21 Attack: Raider 2 > Hero 4: d20 7 + 4 = 11 vs AC 14 | MISS | 0 damage. HP 34/34
+  enemy 21 EndTurn: Raider 2 ends turn.
+  enemy 20 Attack: Raider 1 > Hero 1: d20 18 + 4 = 22 vs AC 13 | HIT | 3 damage. HP 18/22 | protection prevented 3 damage
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 3 Special2 -> (0,0) target 1: Voice of Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (3) | committed HP loss 0, heal 0, prevented 0
+  hero 3 Attack -> (0,0) target 21: Hero 3 > Raider 2: d20 19 + 5 = 24 vs AC 13 | HIT | 7 damage. HP 3/24
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 20 + 4 = 24 vs AC 13 | CRITICAL | 11 damage. HP 7/22 | protection prevented 3 damage
+  enemy 22 EndTurn: Archer ends turn.
+round 3, active 1, move 4, action 1, bonus 1
+................
+............##..
+......##........
+......#A........
+.......1........
+.....324B.C..#..
+........#.......
+.......##.......
+...............#
+..##............
+................
+  1 Hero 1 rogue.assassin hp 7/22 at (7,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (6,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (5,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (7,5) range 1 
+  20 Raider 1  hp 9/24 at (7,3) range 1 
+  21 Raider 2  hp 3/24 at (8,5) range 1 
+  22 Archer  hp 24/24 at (10,5) range 4 
+  hero 1 Potion -> (0,0) target 1: Hero 1: Potion (1 bottle) > Hero 1 | heal 7, damage 0 | HP 14/22
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Attack -> (0,0) target 21: Hero 2 > Raider 2: d20 10 + 5 = 15 vs AC 13 | HIT | 3 damage. HP 0/24 DEAD
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Special1 -> (0,0) target 4: Rage: Self; +2 basic damage, reduce damage by 1 through next own turn | committed HP loss 0, heal 0, prevented 0
+  hero 4 Special2 -> (0,0) target 20: Wild Bolt: Enemy range 3; seeded outcome 1: 4 damage or 2: 8 damage | committed HP loss 4, heal 0, prevented 0
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 Attack: Raider 1 > Hero 1: d20 9 + 4 = 13 vs AC 13 | HIT | 3 damage. HP 11/22 | protection prevented 3 damage
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 3 Move -> (7,6) target -1: Hero 3 moves 3 cells (1 left).
+  hero 3 Attack -> (0,0) target 20: Hero 3 > Raider 1: d20 8 + 5 = 13 vs AC 13 | HIT | 5 damage. HP 0/24 DEAD
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 6 + 4 = 10 vs AC 13 | MISS | 0 damage. HP 11/22
+  enemy 22 EndTurn: Archer ends turn.
+round 4, active 1, move 4, action 1, bonus 1
+................
+............##..
+......##........
+......#a........
+.......1........
+......24b.C..#..
+.......3#.......
+.......##.......
+...............#
+..##............
+................
+  1 Hero 1 rogue.assassin hp 11/22 at (7,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (6,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (7,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (7,5) range 1 
+  20 Raider 1  hp 0/24 at (7,3) range 1 DEAD
+  21 Raider 2  hp 0/24 at (8,5) range 1 DEAD
+  22 Archer  hp 24/24 at (10,5) range 4 
+  hero 1 Move -> (8,4) target -1: Hero 1 moves 1 cells (3 left).
+  hero 1 Attack -> (0,0) target 22: Hero 1 > Archer: d20 17 + 5 = 22 vs AC 13 | HIT | 9 damage. HP 15/24
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Attack -> (0,0) target 22: Hero 2 > Archer: d20 3 + 5 = 8 vs AC 13 | MISS | 0 damage. HP 15/24
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Special2 -> (0,0) target 22: Wild Bolt: Enemy range 3; seeded outcome 1: 4 damage or 2: 8 damage | committed HP loss 4, heal 0, prevented 0
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Move -> (7,8) target -1: Hero 3 moves 4 cells (0 left).
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 11 + 4 = 15 vs AC 13 | HIT | 11 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 22 EndTurn: Archer ends turn.
+  hero 2 Move -> (7,4) target -1: Hero 2 moves 2 cells (2 left).
+  hero 2 Potion -> (0,0) target 1: Hero 2: Potion (1 bottle) > Hero 1 | heal 4, damage 0 | HP 4/22
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Move -> (6,8) target -1: Hero 4 moves 4 cells (0 left).
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Move -> (9,7) target -1: Hero 3 moves 3 cells (1 left).
+  hero 3 Attack -> (0,0) target 22: Hero 3 > Archer: d20 6 + 5 = 11 vs AC 13 | MISS | 0 damage. HP 11/24
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 9 + 4 = 13 vs AC 13 | HIT | 11 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 22 EndTurn: Archer ends turn.
+  hero 2 Rescue -> (0,0) target 1: Hero 2: Rescue > Hero 1 | heal 1, damage 0 | HP 1/22
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Move -> (10,8) target -1: Hero 4 moves 4 cells (0 left).
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Attack -> (0,0) target 22: Hero 3 > Archer: d20 16 + 5 = 21 vs AC 13 | HIT | 9 damage. HP 2/24
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 11 + 4 = 15 vs AC 13 | HIT | 9 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 22 EndTurn: Archer ends turn.
+  hero 2 Rescue -> (0,0) target 1: Hero 2: Rescue > Hero 1 | heal 1, damage 0 | HP 1/22
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  hero 4 Move -> (10,6) target -1: Hero 4 moves 2 cells (2 left).
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Archer: d20 9 + 5 = 14 vs AC 13 | HIT | 8 damage. HP 0/24 DEAD
+== reward: hero 1 takes Reserve
+== fight 2: Watchtower road, recipe 0
+round 1, active 1, move 4, action 1, bonus 1
+..................
+............##....
+......##..........
+......#...A.......
+....1.............
+....2.....B..#....
+....3...#.........
+....4..##.C.......
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 11/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,7) range 1 
+  20 Raider 1  hp 28/28 at (10,3) range 1 
+  21 Raider 2  hp 28/28 at (10,5) range 1 
+  22 Archer  hp 28/28 at (10,7) range 4 
+round 1, active 1, move 4, action 1, bonus 1
+..................
+............##....
+......##..........
+......#...A.......
+....1.............
+....2.....B..#....
+....3...#.........
+....4..##.C.......
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 11/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 22/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,7) range 1 
+  20 Raider 1  hp 28/28 at (10,3) range 1 
+  21 Raider 2  hp 28/28 at (10,5) range 1 
+  22 Archer  hp 28/28 at (10,7) range 4 
+  hero 1 Potion -> (0,0) target 1: Hero 1: Potion (1 bottle) > Hero 1 | heal 7, damage 0 | HP 18/22
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  enemy 20 Move: Raider 1 moves 4 cells (0 left).
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 2 Special2 -> (0,0) target 1: Telepathic Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (2) | committed HP loss 0, heal 0, prevented 0
+  hero 2 Attack -> (0,0) target 20: Hero 2 > Raider 1: d20 14 + 5 = 19 vs AC 13 | HIT | 5 damage. HP 23/28
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 21 Move: Raider 2 moves 4 cells (0 left).
+  enemy 21 EndTurn: Raider 2 ends turn.
+  enemy 22 Move: Archer moves 4 cells (0 left).
+  enemy 22 Attack: Archer > Hero 2: d20 12 + 4 = 16 vs AC 13 | HIT | 5 damage. HP 17/22
+  enemy 22 EndTurn: Archer ends turn.
+  hero 4 Special1 -> (0,0) target 4: Rage: Self; +2 basic damage, reduce damage by 1 through next own turn | committed HP loss 0, heal 0, prevented 0
+  hero 4 Move -> (5,5) target -1: Hero 4 moves 3 cells (1 left).
+  hero 4 Attack -> (0,0) target 21: Hero 4 > Raider 2: d20 10 + 5 = 15 vs AC 13 | HIT | 9 damage. HP 19/28
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Special2 -> (0,0) target 2: Voice of Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (3) | committed HP loss 0, heal 0, prevented 0
+  hero 3 Attack -> (0,0) target 21: Hero 3 > Raider 2: d20 12 + 5 = 17 vs AC 13 | HIT | 8 damage. HP 11/28
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+round 2, active 1, move 4, action 1, bonus 1
+..................
+............##....
+......##..........
+......#...........
+....1..A..........
+....24B.C....#....
+....3...#.........
+.......##.........
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 18/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 17/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (5,5) range 1 
+  20 Raider 1  hp 23/28 at (7,4) range 1 
+  21 Raider 2  hp 11/28 at (6,5) range 1 
+  22 Archer  hp 28/28 at (8,5) range 4 
+  hero 1 Attack -> (0,0) target 21: Hero 1 > Raider 2: d20 18 + 5 = 23 vs AC 13 | HIT | 12 damage. HP 0/28 DEAD SNEAK +d6
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  enemy 20 Move: Raider 1 moves 2 cells (2 left).
+  enemy 20 Attack: Raider 1 > Hero 1: d20 6 + 4 = 10 vs AC 13 | MISS | 0 damage. HP 18/22
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 2 Attack -> (0,0) target 20: Hero 2 > Raider 1: d20 16 + 5 = 21 vs AC 13 | HIT | 4 damage. HP 19/28
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 22 Attack: Archer > Hero 2: d20 18 + 4 = 22 vs AC 13 | HIT | 4 damage. HP 13/22 | protection prevented 3 damage
+  enemy 22 EndTurn: Archer ends turn.
+  hero 4 Attack -> (0,0) target 20: Hero 4 > Raider 1: d20 4 + 5 = 9 vs AC 13 | MISS | 0 damage. HP 19/28
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Attack -> (0,0) target 20: Hero 3 > Raider 1: d20 20 + 5 = 25 vs AC 13 | CRITICAL | 7 damage. HP 12/28
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+round 3, active 1, move 4, action 1, bonus 1
+..................
+............##....
+......##..........
+......#...........
+....1A............
+....24b.C....#....
+....3...#.........
+.......##.........
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 18/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (5,5) range 1 
+  20 Raider 1  hp 12/28 at (5,4) range 1 
+  21 Raider 2  hp 0/28 at (6,5) range 1 DEAD
+  22 Archer  hp 28/28 at (8,5) range 4 
+  hero 1 Special1 -> (0,0) target 20: Ambush: Enemy range 1 + sight; guaranteed damage (9) | committed HP loss 9, heal 0, prevented 0
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  enemy 20 Attack: Raider 1 > Hero 1: d20 10 + 4 = 14 vs AC 13 | HIT | 4 damage. HP 14/22
+  enemy 20 EndTurn: Raider 1 ends turn.
+  hero 2 Attack -> (0,0) target 20: Hero 2 > Raider 1: d20 16 + 5 = 21 vs AC 13 | HIT | 4 damage. HP 0/28 DEAD
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 22 Attack: Archer > Hero 2: d20 5 + 4 = 9 vs AC 13 | MISS | 0 damage. HP 13/22
+  enemy 22 EndTurn: Archer ends turn.
+  hero 4 Move -> (7,5) target -1: Hero 4 moves 4 cells (0 left).
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Archer: d20 3 + 5 = 8 vs AC 13 | MISS | 0 damage. HP 28/28
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Move -> (5,5) target -1: Hero 3 moves 2 cells (2 left).
+  hero 3 Attack -> (0,0) target 22: Hero 3 > Archer: d20 2 + 5 = 7 vs AC 13 | MISS | 0 damage. HP 28/28
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+round 4, active 1, move 4, action 1, bonus 1
+..................
+............##....
+......##..........
+......#...........
+....1a............
+....23b4C....#....
+........#.........
+.......##.........
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 14/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (5,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (7,5) range 1 
+  20 Raider 1  hp 0/28 at (5,4) range 1 DEAD
+  21 Raider 2  hp 0/28 at (6,5) range 1 DEAD
+  22 Archer  hp 28/28 at (8,5) range 4 
+  hero 1 Move -> (5,1) target -1: Hero 1 moves 4 cells (0 left).
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Attack -> (0,0) target 22: Hero 2 > Archer: d20 3 + 5 = 8 vs AC 13 | MISS | 0 damage. HP 28/28
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 22 Attack: Archer > Hero 2: d20 3 + 4 = 7 vs AC 13 | MISS | 0 damage. HP 13/22
+  enemy 22 EndTurn: Archer ends turn.
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Archer: d20 3 + 5 = 8 vs AC 13 | MISS | 0 damage. HP 28/28
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Attack -> (0,0) target 22: Hero 3 > Archer: d20 9 + 5 = 14 vs AC 13 | HIT | 10 damage. HP 18/28
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+round 5, active 1, move 4, action 1, bonus 1
+..................
+.....1......##....
+......##..........
+......#...........
+.....a............
+....23b4C....#....
+........#.........
+.......##.........
+...............#..
+..##..............
+..................
+..................
+  1 Hero 1 rogue.assassin hp 14/22 at (5,1) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (5,5) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (7,5) range 1 
+  20 Raider 1  hp 0/28 at (5,4) range 1 DEAD
+  21 Raider 2  hp 0/28 at (6,5) range 1 DEAD
+  22 Archer  hp 18/28 at (8,5) range 4 
+  hero 1 Move -> (8,2) target -1: Hero 1 moves 4 cells (0 left).
+  hero 1 Attack -> (0,0) target 22: Hero 1 > Archer: d20 10 + 5 = 15 vs AC 13 | HIT | 10 damage. HP 8/28 SNEAK +d6
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 2 Attack -> (0,0) target 22: Hero 2 > Archer: d20 4 + 5 = 9 vs AC 13 | MISS | 0 damage. HP 8/28
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 22 Attack: Archer > Hero 1: d20 20 + 4 = 24 vs AC 13 | CRITICAL | 10 damage. HP 4/22
+  enemy 22 EndTurn: Archer ends turn.
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Archer: d20 20 + 5 = 25 vs AC 13 | CRITICAL | 16 damage. HP 0/28 DEAD
+== reward: hero 2 takes Reserve
+== fight 3: Watchtower road, recipe 5
+round 1, active 23, move 4, action 1, bonus 1
+................
+................
+..#...#..#...#..
+..........A.....
+....1..#....#...
+....2.....B.....
+....3.#..#......
+....4.....C..#..
+..#....#...#....
+..........D.....
+................
+................
+  1 Hero 1 rogue.assassin hp 4/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,7) range 1 
+  20 Raider brute  hp 24/24 at (10,3) range 1 
+  21 Skirmisher  hp 13/13 at (10,5) range 1 
+  22 Raider 1  hp 22/22 at (10,7) range 1 
+  23 Archer  hp 22/22 at (10,9) range 4 
+round 1, active 23, move 4, action 1, bonus 1
+................
+................
+..#...#..#...#..
+..........A.....
+....1..#....#...
+....2.....B.....
+....3.#..#......
+....4.....C..#..
+..#....#...#....
+..........D.....
+................
+................
+  1 Hero 1 rogue.assassin hp 4/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (4,6) range 3 
+  4 Hero 4 barbarian.wild-magic hp 34/34 at (4,7) range 1 
+  20 Raider brute  hp 24/24 at (10,3) range 1 
+  21 Skirmisher  hp 13/13 at (10,5) range 1 
+  22 Raider 1  hp 22/22 at (10,7) range 1 
+  23 Archer  hp 22/22 at (10,9) range 4 
+  enemy 23 Move: Archer moves 4 cells (0 left).
+  enemy 23 Attack: Archer > Hero 4: d20 17 + 5 = 22 vs AC 14 | HIT | 9 damage. HP 25/34
+  enemy 23 EndTurn: Archer ends turn.
+  hero 2 Potion -> (0,0) target 1: Hero 2: Potion (1 bottle) > Hero 1 | heal 7, damage 0 | HP 11/22
+  hero 2 Special2 -> (0,0) target 1: Telepathic Shelter: Other ally range 4 + sight; protect target until next own turn; strongest reduction wins (2) | committed HP loss 0, heal 0, prevented 0
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 20 Move: Raider brute moves 3 cells (0 left).
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Move: Raider 1 moves 4 cells (0 left).
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 1 Potion -> (0,0) target 1: Hero 1: Potion (1 bottle) > Hero 1 | heal 9, damage 0 | HP 20/22
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 4 Move -> (7,7) target -1: Hero 4 moves 3 cells (1 left).
+  hero 4 Attack -> (0,0) target 23: Hero 4 > Archer: d20 3 + 5 = 8 vs AC 13 | MISS | 0 damage. HP 22/22
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Move -> (5,7) target -1: Hero 3 moves 2 cells (2 left).
+  hero 3 Attack -> (0,0) target 23: Hero 3 > Archer: d20 10 + 5 = 15 vs AC 13 | HIT | 7 damage. HP 15/22
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 21 Move: Skirmisher moves 4 cells (2 left).
+  enemy 21 Attack: Skirmisher > Hero 4: d20 13 + 5 = 18 vs AC 14 | HIT | 4 damage. HP 21/34
+  enemy 21 EndTurn: Skirmisher ends turn.
+round 2, active 23, move 4, action 1, bonus 1
+................
+................
+..#...#..#...#..
+.......A........
+....1..#....#...
+....2...........
+......#B.#......
+.....3.4D....#..
+..#....#...#....
+........C.......
+................
+................
+  1 Hero 1 rogue.assassin hp 20/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,5) range 4 
+  3 Hero 3 cleric.order hp 22/22 at (5,7) range 3 
+  4 Hero 4 barbarian.wild-magic hp 21/34 at (7,7) range 1 
+  20 Raider brute  hp 24/24 at (7,3) range 1 
+  21 Skirmisher  hp 13/13 at (7,6) range 1 
+  22 Raider 1  hp 22/22 at (8,9) range 1 
+  23 Archer  hp 15/22 at (8,7) range 4 
+  enemy 23 Attack: Archer > Hero 3: d20 18 + 5 = 23 vs AC 13 | HIT | 11 damage. HP 11/22
+  enemy 23 EndTurn: Archer ends turn.
+  hero 2 Move -> (4,7) target -1: Hero 2 moves 2 cells (2 left).
+  hero 2 Potion -> (0,0) target 3: Hero 2: Potion (1 bottle) > Hero 3 | heal 6, damage 0 | HP 17/22
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 20 Move: Raider brute moves 3 cells (0 left).
+  enemy 20 Attack: Raider brute > Hero 1: d20 8 + 5 = 13 vs AC 13 | HIT | 8 damage. HP 12/22
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Move: Raider 1 moves 4 cells (0 left).
+  enemy 22 Attack: Raider 1 > Hero 3: d20 10 + 5 = 15 vs AC 13 | HIT | 5 damage. HP 12/22
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 1 Special1 -> (0,0) target 20: Ambush: Enemy range 1 + sight; guaranteed damage (9) | committed HP loss 9, heal 0, prevented 0
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 4 Attack -> (0,0) target 21: Hero 4 > Skirmisher: d20 9 + 5 = 14 vs AC 14 | HIT | 12 damage. HP 1/13
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Attack -> (0,0) target 23: Hero 3 > Archer: d20 11 + 5 = 16 vs AC 13 | HIT | 8 damage. HP 7/22
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+  enemy 21 Attack: Skirmisher > Hero 4: d20 3 + 5 = 8 vs AC 14 | MISS | 0 damage. HP 21/34
+  enemy 21 EndTurn: Skirmisher ends turn.
+round 3, active 23, move 4, action 1, bonus 1
+................
+................
+..#...#..#...#..
+....A...........
+....1..#....#...
+................
+......#B.#......
+....23C4D....#..
+..#....#...#....
+................
+................
+................
+  1 Hero 1 rogue.assassin hp 12/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 13/22 at (4,7) range 4 
+  3 Hero 3 cleric.order hp 12/22 at (5,7) range 3 
+  4 Hero 4 barbarian.wild-magic hp 21/34 at (7,7) range 1 
+  20 Raider brute  hp 15/24 at (4,3) range 1 
+  21 Skirmisher  hp 1/13 at (7,6) range 1 
+  22 Raider 1  hp 22/22 at (6,7) range 1 
+  23 Archer  hp 7/22 at (8,7) range 4 
+  enemy 23 Attack: Archer > Hero 2: d20 19 + 5 = 24 vs AC 13 | HIT | 11 damage. HP 2/22
+  enemy 23 EndTurn: Archer ends turn.
+  hero 2 Attack -> (0,0) target 23: Hero 2 > Archer: d20 11 + 5 = 16 vs AC 13 | HIT | 5 damage. HP 2/22
+  hero 2 EndTurn -> (0,0) target -1: Hero 2 ends turn.
+  enemy 20 Attack: Raider brute > Hero 1: d20 8 + 5 = 13 vs AC 13 | HIT | 8 damage. HP 4/22
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Attack: Raider 1 > Hero 3: d20 7 + 5 = 12 vs AC 13 | MISS | 0 damage. HP 12/22
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 1 Special1 -> (0,0) target 20: Ambush: Enemy range 1 + sight; guaranteed damage (9) | committed HP loss 9, heal 0, prevented 0
+  hero 1 EndTurn -> (0,0) target -1: Hero 1 ends turn.
+  hero 4 Attack -> (0,0) target 21: Hero 4 > Skirmisher: d20 13 + 5 = 18 vs AC 14 | HIT | 9 damage. HP 0/13 DEAD
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  hero 3 Potion -> (0,0) target 2: Hero 3: Potion (1 bottle) > Hero 2 | heal 5, damage 0 | HP 7/22
+  hero 3 EndTurn -> (0,0) target -1: Hero 3 ends turn.
+round 4, active 23, move 4, action 1, bonus 1
+................
+................
+..#...#..#...#..
+....A...........
+....1..#....#...
+................
+......#b.#......
+....23C4D....#..
+..#....#...#....
+................
+................
+................
+  1 Hero 1 rogue.assassin hp 4/22 at (4,4) range 3 
+  2 Hero 2 sorcerer.aberrant-mind hp 7/22 at (4,7) range 4 
+  3 Hero 3 cleric.order hp 12/22 at (5,7) range 3 
+  4 Hero 4 barbarian.wild-magic hp 21/34 at (7,7) range 1 
+  20 Raider brute  hp 6/24 at (4,3) range 1 
+  21 Skirmisher  hp 0/13 at (7,6) range 1 DEAD
+  22 Raider 1  hp 22/22 at (6,7) range 1 
+  23 Archer  hp 2/22 at (8,7) range 4 
+  enemy 23 Attack: Archer > Hero 2: d20 14 + 5 = 19 vs AC 13 | HIT | 8 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 23 EndTurn: Archer ends turn.
+  enemy 20 Attack: Raider brute > Hero 1: d20 16 + 5 = 21 vs AC 13 | HIT | 12 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Attack: Raider 1 > Hero 3: d20 20 + 5 = 25 vs AC 13 | CRITICAL | 12 damage. HP 0/22 DOWNED (3 rescue turns)
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 4 Attack -> (0,0) target 23: Hero 4 > Archer: d20 9 + 5 = 14 vs AC 13 | HIT | 9 damage. HP 0/22 DEAD
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Attack: Raider 1 > Hero 4: d20 14 + 5 = 19 vs AC 14 | HIT | 6 damage. HP 15/34
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 4 Potion -> (0,0) target 4: Hero 4: Potion (1 bottle) > Hero 4 | heal 8, damage 0 | HP 23/34
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Attack: Raider 1 > Hero 4: d20 12 + 5 = 17 vs AC 14 | HIT | 6 damage. HP 17/34
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Raider 1: d20 14 + 5 = 19 vs AC 13 | HIT | 9 damage. HP 13/22
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  enemy 22 Attack: Raider 1 > Hero 4: d20 7 + 5 = 12 vs AC 14 | MISS | 0 damage. HP 17/34
+  enemy 22 EndTurn: Raider 1 ends turn.
+  hero 4 Attack -> (0,0) target 22: Hero 4 > Raider 1: d20 12 + 5 = 17 vs AC 13 | HIT | 13 damage. HP 0/22 DEAD
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+  enemy 20 EndTurn: Raider brute ends turn.
+  hero 4 EndTurn -> (0,0) target -1: Hero 4 ends turn.
+== Stall fight 3 reached round 60 (deadlock: no unit can reach an opponent)
+round 60, active 20, move 3, action 1, bonus 1
+................
+................
+..#...#..#...#..
+....A...........
+....1..#....#...
+................
+......#b.#......
+....23c4d....#..
+..#....#...#....
+................
+................
+................
+  1 Hero 1 rogue.assassin hp 0/22 at (4,4) range 3 DEAD
+  2 Hero 2 sorcerer.aberrant-mind hp 0/22 at (4,7) range 4 DEAD
+  3 Hero 3 cleric.order hp 0/22 at (5,7) range 3 DEAD
+  4 Hero 4 barbarian.wild-magic hp 17/34 at (7,7) range 1 
+  20 Raider brute  hp 6/24 at (4,3) range 1 
+  21 Skirmisher  hp 0/13 at (7,6) range 1 DEAD
+  22 Raider 1  hp 0/22 at (6,7) range 1 DEAD
+  23 Archer  hp 0/22 at (8,7) range 4 DEAD

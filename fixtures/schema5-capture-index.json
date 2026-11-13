@@ -1,0 +1,44 @@
+﻿{
+	"devices": [
+		{
+			"deviceName": "plebdev-ultra",
+			"instance": "01A1D5B285BE76E090783EADA62E1121",
+			"instanceName": "plebdev-ultra-1412546",
+			"platform": "LinuxEditor",
+			"oSVersion": "Omarchy 7.2.15-1-omarchy",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 4080 SUPER (NVIDIA UNIX Open Kernel Module for x86_64  615.78.08  Release Build  (root@plebdev-ultra))",
+			"cPUModel": "Intel(R) Core(TM) i9-14900K",
+			"rAMInGB": 16,
+			"renderMode": "Vulkan_SM5",
+			"rHI": "Vulkan (SM5)",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.11.13-16.17.09",
+	"succeeded": 1,
+	"succeededWithWarnings": 0,
+	"failed": 0,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 0.024818319827318192,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "Schema5Baseline",
+			"fullTestPath": "Project.Tools.Schema5Baseline",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"01A1D5B285BE76E090783EADA62E1121"
+			],
+			"duration": 0.024818319827318192,
+			"dateTime": "2026.11.13-16.17.09",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}

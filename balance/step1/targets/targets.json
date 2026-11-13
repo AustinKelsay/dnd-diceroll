@@ -1,0 +1,676 @@
+{
+ "P1": {
+  "differences": [],
+  "verdict": "met"
+ },
+ "P2": {
+  "best": {
+   "gear": 0,
+   "honed": 0,
+   "reserve": 0
+  },
+  "classes": {
+   "artificer": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.21875,
+      "high": 7.96875,
+      "low": 0.9375,
+      "n": 640,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 2.5,
+      "high": 5.46875,
+      "low": -0.3125,
+      "n": 640,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -1.71875,
+      "high": 1.40625,
+      "low": -5.0,
+      "n": 640,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 640
+   },
+   "barbarian": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 3.7202380952380953,
+      "high": 7.142857142857143,
+      "low": 0.44642857142857145,
+      "n": 672,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 0.7440476190476191,
+      "high": 3.4226190476190474,
+      "low": -1.7857142857142858,
+      "n": 672,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -2.9761904761904763,
+      "high": 0.0,
+      "low": -6.25,
+      "n": 672,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 672
+   },
+   "bard": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.53125,
+      "high": 8.75,
+      "low": 0.625,
+      "n": 640,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 1.875,
+      "high": 5.15625,
+      "low": -0.9375,
+      "n": 640,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -2.65625,
+      "high": 1.5625,
+      "low": -7.03125,
+      "n": 640,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 640
+   },
+   "cleric": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.279891304347826,
+      "high": 6.929347826086956,
+      "low": 1.8342391304347827,
+      "n": 1472,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 0.1358695652173913,
+      "high": 2.8532608695652173,
+      "low": -2.717391304347826,
+      "n": 1472,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -4.144021739130435,
+      "high": -2.0380434782608696,
+      "low": -6.385869565217392,
+      "n": 1472,
+      "verdict": "small"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 1472
+   },
+   "druid": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 3.5,
+      "high": 6.25,
+      "low": 0.7468750000000028,
+      "n": 800,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -3.25,
+      "high": -0.125,
+      "low": -6.75,
+      "n": 800,
+      "verdict": "small"
+     },
+     "honed-reserve": {
+      "d": -6.75,
+      "high": -3.875,
+      "low": -9.625,
+      "n": 800,
+      "verdict": "clear"
+     }
+    },
+    "possible": [
+     "reserve"
+    ],
+    "runs": 800
+   },
+   "fighter": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 3.5,
+      "high": 6.75,
+      "low": 0.25,
+      "n": 800,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -0.125,
+      "high": 2.5,
+      "low": -2.625,
+      "n": 800,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -3.625,
+      "high": -0.125,
+      "low": -7.375,
+      "n": 800,
+      "verdict": "small"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 800
+   },
+   "monk": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 3.75,
+      "high": 7.25,
+      "low": 0.625,
+      "n": 800,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -0.375,
+      "high": 2.5031249999999545,
+      "low": -3.5,
+      "n": 800,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -4.125,
+      "high": -1.25,
+      "low": -7.0,
+      "n": 800,
+      "verdict": "small"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 800
+   },
+   "paladin": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 2.0,
+      "high": 4.375,
+      "low": -0.25,
+      "n": 800,
+      "verdict": "tie"
+     },
+     "gear-reserve": {
+      "d": -0.375,
+      "high": 2.5,
+      "low": -3.25,
+      "n": 800,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -2.375,
+      "high": 0.5,
+      "low": -5.5,
+      "n": 800,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve",
+     "honed"
+    ],
+    "runs": 800
+   },
+   "ranger": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.0625,
+      "high": 7.03125,
+      "low": 1.25,
+      "n": 640,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -1.25,
+      "high": 1.25,
+      "low": -3.90625,
+      "n": 640,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -5.3125,
+      "high": -2.5,
+      "low": -8.125,
+      "n": 640,
+      "verdict": "clear"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 640
+   },
+   "rogue": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.282407407407407,
+      "high": 6.828703703703703,
+      "low": 1.8518518518518519,
+      "n": 864,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -0.6944444444444444,
+      "high": 2.4334490740740318,
+      "low": -4.050925925925926,
+      "n": 864,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -4.976851851851852,
+      "high": -1.9675925925925926,
+      "low": -8.449074074074074,
+      "n": 864,
+      "verdict": "small"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 864
+   },
+   "sorcerer": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.276315789473684,
+      "high": 7.894736842105263,
+      "low": 0.8223684210526315,
+      "n": 608,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 3.6184210526315788,
+      "high": 7.401315789473684,
+      "low": 0.16447368421052633,
+      "n": 608,
+      "verdict": "small"
+     },
+     "honed-reserve": {
+      "d": -0.6578947368421053,
+      "high": 2.4671052631578947,
+      "low": -3.7828947368421053,
+      "n": 608,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear"
+    ],
+    "runs": 608
+   },
+   "warlock": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 2.734375,
+      "high": 5.338541666666667,
+      "low": 0.2604166666666667,
+      "n": 768,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": -0.78125,
+      "high": 2.734375,
+      "low": -4.166666666666667,
+      "n": 768,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -3.515625,
+      "high": 0.0,
+      "low": -7.161458333333333,
+      "n": 768,
+      "verdict": "tie"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 768
+   },
+   "wizard": {
+    "best": null,
+    "pairs": {
+     "gear-honed": {
+      "d": 4.166666666666667,
+      "high": 6.575520833333333,
+      "low": 1.6927083333333333,
+      "n": 1536,
+      "verdict": "small"
+     },
+     "gear-reserve": {
+      "d": 0.13020833333333334,
+      "high": 2.2135416666666665,
+      "low": -1.8880208333333333,
+      "n": 1536,
+      "verdict": "tie"
+     },
+     "honed-reserve": {
+      "d": -4.036458333333333,
+      "high": -1.8880208333333333,
+      "low": -6.25,
+      "n": 1536,
+      "verdict": "small"
+     }
+    },
+    "possible": [
+     "gear",
+     "reserve"
+    ],
+    "runs": 1536
+   }
+  },
+  "verdict": "missed"
+ },
+ "P3": {
+  "largest": 3.8194444444444446,
+  "pairs": {
+   "gear-honed": {
+    "d": 3.8194444444444446,
+    "high": 5.763888888888889,
+    "low": 2.048611111111111,
+    "n": 2880,
+    "verdict": "met"
+   },
+   "gear-reserve": {
+    "d": 0.20833333333333334,
+    "high": 1.8402777777777777,
+    "low": -1.3541666666666667,
+    "n": 2880,
+    "verdict": "met"
+   },
+   "honed-reserve": {
+    "d": -3.611111111111111,
+    "high": -1.8402777777777777,
+    "low": -5.452256944444444,
+    "n": 2880,
+    "verdict": "met"
+   }
+  },
+  "verdict": "met"
+ },
+ "P4": {
+  "holds": {
+   "dangerous_1_5x": {
+    "fights": {
+     "1": {
+      "high": 2.750307659286586,
+      "limit": 1.5,
+      "low": 1.970942188279142,
+      "ratio": 2.309796994865641,
+      "sign_decided": 0,
+      "verdict": "met"
+     },
+     "2": {
+      "high": 2.978272498972907,
+      "limit": 1.5,
+      "low": 1.9313714898035914,
+      "ratio": 2.3785031521762545,
+      "sign_decided": 0,
+      "verdict": "met"
+     },
+     "3": {
+      "high": 2.8123440785355647,
+      "limit": 1.5,
+      "low": 1.9987055796110675,
+      "ratio": 2.3699280216256646,
+      "sign_decided": 0,
+      "verdict": "met"
+     },
+     "4": {
+      "high": 5.429931623658645,
+      "limit": 1.5,
+      "low": 3.1089440926721026,
+      "ratio": 3.9692717416614407,
+      "sign_decided": 0,
+      "verdict": "met"
+     },
+     "5": {
+      "high": 2.1977326719947152,
+      "limit": 1.5,
+      "low": 1.5532195871040864,
+      "ratio": 1.845423915354487,
+      "sign_decided": 0,
+      "verdict": "met"
+     }
+    },
+    "verdict": "met"
+   },
+   "finale_highest": {
+    "stages": {
+     "1": {
+      "d": 0.17018240576579516,
+      "high": 0.22280349292892085,
+      "low": 0.12297601373453122,
+      "verdict": "met"
+     },
+     "2": {
+      "d": 0.1698661509880748,
+      "high": 0.2226997220243455,
+      "low": 0.12210250167996757,
+      "verdict": "met"
+     },
+     "3": {
+      "d": 0.15753098644929045,
+      "high": 0.20870646113104346,
+      "low": 0.1114913151278263,
+      "verdict": "met"
+     },
+     "4": {
+      "d": 0.12401884710223648,
+      "high": 0.1683542415802841,
+      "low": 0.08283589219892254,
+      "verdict": "met"
+     }
+    },
+    "verdict": "met"
+   },
+   "representatives_35": {
+    "parties": {
+     "dup-cleric": {
+      "high": 0.9111057606383721,
+      "low": 0.6469050424507756,
+      "rate": 0.8125,
+      "verdict": "met"
+     },
+     "dup-fighter": {
+      "high": 0.9944622826374491,
+      "low": 0.8425539219962727,
+      "rate": 0.96875,
+      "verdict": "met"
+     },
+     "dup-wizard": {
+      "high": 0.9111057606383721,
+      "low": 0.6469050424507756,
+      "rate": 0.8125,
+      "verdict": "met"
+     },
+     "familiar": {
+      "high": 0.9944622826374491,
+      "low": 0.8425539219962727,
+      "rate": 0.96875,
+      "verdict": "met"
+     },
+     "melee": {
+      "high": 0.8674775601737845,
+      "low": 0.5789310822975338,
+      "rate": 0.75,
+      "verdict": "met"
+     },
+     "mixed": {
+      "high": 0.9111057606383721,
+      "low": 0.6469050424507756,
+      "rate": 0.8125,
+      "verdict": "met"
+     },
+     "ranged": {
+      "high": 0.8897630306846815,
+      "low": 0.6124466920955516,
+      "rate": 0.78125,
+      "verdict": "met"
+     },
+     "support-heavy": {
+      "high": 0.8674775601737845,
+      "low": 0.5789310822975338,
+      "rate": 0.75,
+      "verdict": "met"
+     },
+     "support-poor": {
+      "high": 0.8204764788338126,
+      "low": 0.514330003019676,
+      "rate": 0.6875,
+      "verdict": "met"
+     }
+    },
+    "verdict": "met"
+   },
+   "rotation_55_90": {
+    "high": 0.7895406017020166,
+    "low": 0.7590332173315946,
+    "rate": 0.7746527777777777,
+    "verdict": "met"
+   }
+  },
+  "rise": {
+   "d": -0.625,
+   "high": 1.3194444444444444,
+   "low": -2.7083333333333335,
+   "n": 2880,
+   "verdict": "met"
+  },
+  "verdict": "met"
+ },
+ "P5": {
+  "high": 4.376515986801946,
+  "limit": 1.5,
+  "low": 3.6101311974787933,
+  "ratio": 3.953487486118159,
+  "sign_decided": 0,
+  "verdict": "met"
+ },
+ "P6": {
+  "gates": {
+   "before": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "gear": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "honed": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "mixed": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   },
+   "reserve": {
+    "illegal_proposals": 0,
+    "passive_ends": 0,
+    "policy_errors": 0,
+    "protection_mismatches": 0
+   }
+  },
+  "stalls": {
+   "before": 0,
+   "gear": 0,
+   "honed": 0,
+   "mixed": 1,
+   "reserve": 1
+  },
+  "verdict": "missed"
+ },
+ "dominance": {
+  "gear": [],
+  "honed": [
+   "druid",
+   "ranger"
+  ],
+  "reserve": []
+ },
+ "extra_batch_needed": false,
+ "non_dominance": false,
+ "resamples": 10000,
+ "rotation": {
+  "before": {
+   "win_rate": 0.7809027777777777
+  },
+  "gear": {
+   "win_rate": 0.7809027777777777
+  },
+  "honed": {
+   "win_rate": 0.7427083333333333
+  },
+  "mixed": {
+   "win_rate": 0.7746527777777777
+  },
+  "reserve": {
+   "win_rate": 0.7788194444444444
+  }
+ },
+ "runs": 3168,
+ "seeds": 32
+}
