@@ -730,8 +730,9 @@ bool FDescriptionsNoCostWordsTest::RunTest(const FString& Parameters)
     { Check(FString::Printf(TEXT("DescribeAction(%d)"), static_cast<int32>(Command)), FCombatBattle::DescribeAction(Command)); }
     AddInfo(FString::Printf(TEXT("Checked %d description texts"), Texts));
     TestTrue(TEXT("Every kit's descriptions were read"), Texts > 70 * 2);
-    // Catalog text only: descriptions do not move the revision saves carry (8 since the #184 Compact enemy tuning).
-    TestEqual(TEXT("The catalog revision is the tuning's, not the text's"), FBuildCatalog::Revision, 8);
+    // Catalog text only: descriptions do not move the revision saves carry (8 since the #184 Compact enemy tuning, 9 since the
+    // #188 encounter identity).
+    TestEqual(TEXT("The catalog revision is the tuning's, not the text's"), FBuildCatalog::Revision, 9);
     return !HasAnyErrors();
 }
 

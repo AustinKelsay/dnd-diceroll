@@ -73,7 +73,7 @@ bool WriteFinaleCheckpoint(const FString& Path, int32 Recipe, int32* FoundSeed =
     for (int32 Seed = 1; Seed < 200; ++Seed)
     {
         FExpeditionRun Run;
-        if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe)) { continue; }
+        if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe, true, nullptr, false, 8)) { continue; }
         FExpeditionSaveData Data;
         Data.Current = Run.Snapshot();
         FString Error;

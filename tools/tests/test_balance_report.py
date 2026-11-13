@@ -16,7 +16,7 @@ import balance_report
 RUN_FIELDS = ("party,archetype,builds,seed,route_pattern,outcome,stall_reason,encounters_won,rounds,deaths,survivors,damage,damage_taken,"
               "healing,protection,specials_used,potions_used,commands,policy_errors,illegal_proposals,passive_ends,protection_mismatches").split(",")
 ENCOUNTER_FIELDS = ("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,"
-                    "damage_taken,healing,protection,downs,deaths,revives,specials_used").split(",")
+                    "damage_taken,healing,protection,downs,deaths,revives,specials_used,melee_damage").split(",")
 HERO_FIELDS = ("party,archetype,seed,outcome,slot,build,class,survived,death_stage,death_cause,level,turns,idle_turns,damage,kills,healing,"
                "protection,damage_taken,downs,revives,potions_used,s1_command,s1_available_turns,s1_uses,s1_blockers,"
                "s2_command,s2_available_turns,s2_uses,s2_blockers,kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,"
@@ -109,6 +109,50 @@ class BalanceReportTests(unittest.TestCase):
         self.assertEqual(summary["deaths"]["count"], 4)
         self.assertEqual(summary["deaths"]["causes"], {"wipe": 4})
         self.assertEqual(summary["deaths"]["list"][0]["seed"], "2")
+
+    def test_layouts_stage_kinds_and_risk_words(self):
+        """#188: per-layout, per-stage and risk-word tables, with the melee share of damage and the risk ordering check."""
+        folder = self.root / "G"
+        folder.mkdir()
+        rows = []
+        # (stage, route, recipe, outcome, hp lost of 100, damage, melee damage, rounds)
+        fights = [(1, "guarded", 0, "Victory", 10, 50, 10, 4), (2, "guarded", 1, "Victory", 12, 50, 40, 6),
+                  (3, "guarded", 3, "Victory", 20, 60, 30, 5), (1, "dangerous", 2, "Victory", 30, 80, 20, 5),
+                  (5, "guarded", 6, "Defeat", 40, 70, 35, 9), (3, "dangerous", 4, "Defeat", 60, 90, 45, 8), (5, "dangerous", 6, "Stall", 99, 1, 1, 60)]
+        for i, (stage, route, recipe, outcome, lost, damage, melee, rounds) in enumerate(fights):
+            rows.append({"party": "p", "seed": i, "stage": stage, "route": route, "recipe": recipe, "outcome": outcome, "rounds": rounds,
+                         "hp_start": 100, "hp_end": 100 - lost, "hp_max": 100, "damage": damage, "melee_damage": melee, "damage_taken": lost + 10})
+        write(folder / "runs.csv", RUN_FIELDS, [{"party": "p", "archetype": "rotation", "builds": "fighter.champion", "seed": 0, "outcome": "Victory"}])
+        write(folder / "encounters.csv", ENCOUNTER_FIELDS, rows)
+        write(folder / "heroes.csv", HERO_FIELDS, [])
+        (folder / "group.json").write_text(json.dumps({"group": "G", "policy_version": 1, "seconds": 1, "catalog_revision": 9}), encoding="utf-8")
+        summary = balance_report.summarize(balance_report.load(self.root))
+        self.assertEqual(summary["catalog_revisions"], [9])
+        colonnade = summary["layouts"]["3-guarded"]
+        self.assertEqual((colonnade["layout"], colonnade["n"], colonnade["stages"]), ("fallen colonnade", 1, [3]))
+        self.assertAlmostEqual(colonnade["melee_share"], 0.5)
+        self.assertAlmostEqual(summary["layouts"]["1-guarded"]["melee_share"], 0.8)
+        # The stall is not a finished fight.
+        self.assertEqual(summary["layouts"]["6-dangerous"]["n"], 0)
+        self.assertAlmostEqual(summary["stage_kinds"]["approach-guarded"]["hp_lost_fraction"], 0.11)
+        self.assertAlmostEqual(summary["stage_kinds"]["approach-guarded"]["rounds"], 5)
+        self.assertEqual(summary["stage_kinds"]["finale-guarded"]["rate"], 1.0)
+        tiers = summary["risk"]["tiers"]
+        self.assertEqual(list(tiers), ["low", "moderate", "high", "severe"])
+        # high: approach dangerous (30, won) and finale guarded (40, lost).
+        self.assertEqual((tiers["high"]["n"], tiers["high"]["wins"]), (2, 1))
+        self.assertAlmostEqual(tiers["high"]["hp_lost_fraction"], 0.35)
+        # moderate (pressure guarded) never lost, as low never did: that pair is not ordered.
+        self.assertFalse(summary["risk"]["ordered"])
+        failing = [(p["lower"], p["higher"]) for p in summary["risk"]["pairs"] if not p["loses_more"]]
+        self.assertEqual(failing, [("low", "moderate")])
+        text = balance_report.markdown(summary)
+        self.assertIn("| 3 | fallen colonnade | guarded | 1 (3) | 0.0% | 5.0 | 20% | 30% | 50% |", text)
+        self.assertIn("Every higher word costs more HP (net) and loses more often: no, moderate vs low loses no more often.", text)
+        self.assertIn("Every higher word takes more HP (gross) and loses more often: no, moderate vs low loses no more often.", text)
+        self.assertAlmostEqual(colonnade["hp_taken_fraction"], 0.3)
+        self.assertTrue(all(p["takes_more"] for p in summary["risk"]["pairs"]))
+        self.assertIn("Catalog revision 9.", text)
 
     def test_writes_summary_files(self):
         self.group("A", [("p1", 1, "Victory", 5, [("fighter.champion", True, 40)] * 4)])
