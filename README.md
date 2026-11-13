@@ -8,3 +8,5 @@
 - `traces/`: the soft lock of the first head (rot2-03:20261119:10, fight 4) and step 8's policy-loop stall (rot2-14:20261132:23, fight 3).
 
 Victories with a death: rotation 16.0% (before) -> 11.8% (first head) -> 11.3% (this head); all parties 16.1% -> 11.7% -> 11.1%.
+
+Integrated head f9dab473 (staging cbda465 merged): gate/project-342-f9dab473 (342/342) and gate/sweep-f9dab473 (CSVs byte-identical to final2/step10).
