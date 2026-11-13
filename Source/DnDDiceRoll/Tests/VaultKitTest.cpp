@@ -16,6 +16,7 @@
 #include "UObject/GarbageCollection.h"
 #include "UObject/StrongObjectPtr.h"
 #include "ExpeditionTestSupport.h"
+#include "KitPlacementSupport.h"
 
 /**
  * The Vault world kit r002 (#149), the finale's own world, mirroring RootKitTest: which kit a board theme asks for, the Vault kit's
@@ -499,19 +500,26 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEncounterObstacleKindTest, "Project.Expedition
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FEncounterObstacleKindTest::RunTest(const FString& Parameters)
 {
-    // #188: revision 9's layouts draw their own obstacle kind from FExpeditionRun::Encounter (colonnade and sanctum pillars, causeway walls, cairn
-    // stones), and the theme stays chosen by stage (the finale's vault sanctum is the Vault). Each case is a real revision 9 checkpoint resumed.
-    struct FCase { int32 Stage; int32 Recipe; int32 Kind; };
+    // #188: revision 9's layouts draw their own obstacle family (colonnade and sanctum pillars, causeway walls with arches over adjacent wall
+    // cells, cairn stones) from the theme's world kit for the stage: the Root on the Stream trail, the Vigil on the Watchtower road, the Vault in
+    // the finale. Each case is a real revision 9 checkpoint resumed, and the check reads the meshes the board actually placed on every obstacle
+    // cell (KitPlacementSupport), not what the view says it meant to draw.
+    const UDiceRollTheme* Shipped = VaultShippedTheme();
+    if (!TestNotNull(TEXT("The shipped theme loads"), Shipped)) { return false; }
+    struct FCase { int32 Stage; int32 Recipe; bool bDangerous; int32 Kind; };
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/EncounterObstacleKind"), FGuid::NewGuid().ToString());
-    for (const FCase& Case : {FCase{2, 3, 1}, FCase{2, 4, 2}, FCase{2, 5, 0}, FCase{4, 6, 1}})
+    int32 CausewayArches = 0;
+    for (const FCase& Case : {FCase{2, 3, false, 1}, FCase{2, 3, true, 1}, FCase{2, 4, false, 2}, FCase{2, 4, true, 2}, FCase{2, 5, false, 0}, FCase{2, 5, true, 0},
+                              FCase{4, 6, false, 1}, FCase{4, 6, true, 1}})
     {
+        const FString Where = FString::Printf(TEXT("Recipe %d on the %s road"), Case.Recipe, Case.bDangerous ? TEXT("dangerous") : TEXT("guarded"));
         bool bWritten = false;
         FString Path;
-        for (int32 Seed = 1; Seed < 300 && !bWritten; ++Seed)
+        for (int32 Seed = 1; Seed < 400 && !bWritten; ++Seed)
         {
             FExpeditionRun Run;
             FString Error;
-            if (Case.Stage == FExpeditionRun::EncounterCount - 1) { if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Case.Recipe, false)) { continue; } }
+            if (Case.Stage == FExpeditionRun::EncounterCount - 1) { if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Case.Recipe, false, nullptr, Case.bDangerous)) { continue; } }
             else
             {
                 if (!Run.NewRun(Seed, Error, TEXT("obstacle-kind"))) { continue; }
@@ -524,26 +532,42 @@ bool FEncounterObstacleKindTest::RunTest(const FString& Parameters)
                     if (Run.Progress().Phase == EExpeditionPhase::Recovery && !Run.Recover(true, Error)) { break; }
                 }
                 if (Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != Case.Stage) { continue; }
-                const FExpeditionRoute* Offer = Run.Progress().Offers.FindByPredicate([&Case](const FExpeditionRoute& R) { return R.Recipe == Case.Recipe; });
-                if (!Offer || !Run.ChooseRoute(Offer->Id, Error)) { continue; }
+                const FExpeditionRoute& Offer = Run.Progress().Offers[Case.bDangerous ? 1 : 0];
+                if (Offer.Recipe != Case.Recipe || !Run.ChooseRoute(Offer.Id, Error)) { continue; }
             }
             FExpeditionSaveData Data;
             Data.Current = Run.Snapshot();
-            Path = FPaths::Combine(Directory, FString::FromInt(Case.Recipe), TEXT("current.json"));
+            Path = FPaths::Combine(Directory, FString::Printf(TEXT("%d-%d"), Case.Recipe, Case.bDangerous ? 1 : 0), TEXT("current.json"));
             bWritten = FExpeditionSave::Write(Path, Data, Error);
         }
-        if (!TestTrue(FString::Printf(TEXT("A revision 9 checkpoint on recipe %d"), Case.Recipe), bWritten)) { continue; }
+        if (!TestTrue(Where + TEXT(": a revision 9 checkpoint exists"), bWritten)) { continue; }
         UWorld* World = MakeVaultWorld();
         if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
         if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
         {
-            TestEqual(FString::Printf(TEXT("Recipe %d is on the board"), Case.Recipe), VaultRouteRecipe(*View), Case.Recipe);
-            TestEqual(FString::Printf(TEXT("Recipe %d draws obstacle kind %d"), Case.Recipe, Case.Kind), View->DrawnObstacleKind(), Case.Kind);
+            TestEqual(Where + TEXT(": the recipe is on the board"), VaultRouteRecipe(*View), Case.Recipe);
+            // The theme and kit by stage and road, exactly.
             const bool bFinale = Case.Stage == FExpeditionRun::EncounterCount - 1;
-            TestTrue(FString::Printf(TEXT("Recipe %d keeps its stage's theme"), Case.Recipe), bFinale ? View->DrawnBoardTheme() == EBoardTheme::Vault : View->DrawnBoardTheme() != EBoardTheme::Vault);
+            const EBoardTheme Theme = bFinale ? EBoardTheme::Vault : Case.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
+            const EDiceRollKit KitKind = bFinale ? EDiceRollKit::Vault : Case.bDangerous ? EDiceRollKit::Vigil : EDiceRollKit::Root;
+            TestTrue(Where + TEXT(": the stage's board theme"), View->DrawnBoardTheme() == Theme);
+            TestTrue(Where + TEXT(": the theme asks for the stage's kit"), AExpeditionBattleView::KitKindFor(Theme) == KitKind);
+            TestEqual(Where + TEXT(": the Vault kit draws only the finale"), View->UsesVaultKit(), KitKind == EDiceRollKit::Vault);
+            TestEqual(Where + TEXT(": the Root kit draws only the Stream trail"), View->UsesRootKit(), KitKind == EDiceRollKit::Root);
+            TestEqual(Where + TEXT(": the Vigil kit draws only the Watchtower road"), View->UsesVigilKit(), KitKind == EDiceRollKit::Vigil);
+            const FDiceRollWorldKit Kit = Shipped->KitFor(KitKind);
+            TestTrue(Where + TEXT(": the shipped kit is that kit (run the theme import)"), Kit.Kind == KitKind && Kit.bMetric);
+            // The placed meshes: the family's own variants on every obstacle cell, and the walls' arches.
+            const int32 Arches = KitPlacementSupport::CheckObstacles(*this, Where, *View, Kit, Case.Kind);
+            if (Case.Recipe == 4)
+            {
+                CausewayArches += Arches;
+                TestTrue(Where + TEXT(": the causeway's wall runs carry arches"), Arches > 0);
+            }
         }
         DestroyVaultWorld(World);
     }
+    TestTrue(TEXT("Arches were placed on the causeway"), CausewayArches > 0);
     IFileManager::Get().DeleteDirectory(*Directory, false, true);
     return !HasAnyErrors();
 }

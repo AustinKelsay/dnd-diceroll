@@ -7,6 +7,7 @@
 #include "Presentation/DiceRollTheme.h"
 #include "Presentation/OccluderFade.h"
 #include "Presentation/VigilKit.h"
+#include "KitPlacementSupport.h"
 
 /**
  * The Drowned Vigil world kit r002 (#145): deterministic variant choice, arches, dressing placement, the occluder's
@@ -144,10 +145,15 @@ bool FVigilVariantChoiceTest::RunTest(const FString& Parameters)
             // Every blocked cell is covered by exactly one piece, and every piece sits on its cell through the metric.
             const FCombatEncounter& Encounter = View->Rules().Snapshot().Encounter;
             const FBoardMetric& Metric = View->Metric();
+            // The family comes from the rules' encounter identity; the check reads the meshes actually placed on every obstacle cell (#188 review).
             const int32 Kind = View->Progress().History.IsEmpty() ? 0 : FExpeditionRun::Encounter(View->Progress(), View->Progress().History.Last().Route).ObstacleKind;
-            TestEqual(TEXT("The board draws the encounter's obstacle kind"), View->DrawnObstacleKind(), Kind);
-            if (!VigilKit::ArchesFor(Kind)) { TestEqual(TEXT("A stones board places no arches"), View->PlacedArches(), 0); }
-            else { TestTrue(TEXT("Arches only stand over adjacent blocked pairs"), View->PlacedArches() <= VigilKit::ArchPairs(Encounter.BlockedCells).Num()); }
+            if (const UDiceRollTheme* Theme = LoadObject<UDiceRollTheme>(nullptr, TEXT("/Game/DnDDiceRoll/Theme/DA_DiceRollTheme.DA_DiceRollTheme"), nullptr, LOAD_Quiet | LOAD_NoWarn))
+            {
+                const int32 Arches = KitPlacementSupport::CheckObstacles(*this, TEXT("The dangerous first fight"), *View, Theme->KitFor(EDiceRollKit::Vigil), Kind);
+                if (!VigilKit::ArchesFor(Kind)) { TestEqual(TEXT("A stones board places no arches"), Arches, 0); }
+                else { TestEqual(TEXT("Every adjacent blocked pair carries an arch"), Arches, VigilKit::ArchPairs(Encounter.BlockedCells).Num()); }
+            }
+            else { AddError(TEXT("The shipped theme does not load")); }
             for (const FIntPoint& Cell : Encounter.BlockedCells)
             {
                 const FVector* Spot = View->ObstacleSpots().Find(Cell);
