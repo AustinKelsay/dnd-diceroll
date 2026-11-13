@@ -76,6 +76,18 @@ Completion: acceptance is demonstrated, unrelated work is excluded, and failures
 
 Arrange independent review against the fixed baseline on two axes: **Standards** (repo rules) and **Spec** (approved outcome/acceptance). Use fresh reviewer sessions or another person; an author's self-check is not independent review. A harness may run axes in parallel or a fresh reviewer may do both sequentially. Fix valid findings, explain declined ones, rerun affected checks, and refresh review for substantive changes. CodeRabbit is an optional additional reviewer; unavailable tools do not count as approval or block an available independent fallback.
 
+**Merge bar.** A finding blocks a merge only if it is a defect in what the game does:
+- wrong behaviour a player can see or trigger;
+- a rules, RNG or save correctness problem;
+- a build warning, a failing test or red CI;
+- new behaviour with no test at all.
+
+A finding about the quality of an existing test does not block. Examples: it would still pass if something broke, it skips a case, or a count or report is imprecise. If the fix is quick, the author makes it in the same PR and runs the final gate once, then the merger reads the diff. Otherwise it becomes a follow-up issue.
+
+"Substantive changes" above means fixes for blocking findings. A PR gets one full review, then at most one re-check limited to those fixes; after that, the merger reads the diff and decides. A later-round finding on code that round did not touch becomes a follow-up issue unless it is player-visible. Keep tests and docs proportional to the change, and add capture or checker tooling only when the acceptance needs it.
+
+**On-screen checks.** A PR that changes what the player sees gets an on-screen pass on a package before it merges. One pass on a combined build of `staging` plus several PR heads may cover all of them. It must run before any of them merges and cover each PR's checklist. A later fix that leaves on-screen behaviour unchanged doesn't need the pass rerun.
+
 Commit each completed slice with its issue reference; record commit and review outcomes. Push the owned feature branch with LFS hooks active and open a non-draft PR targeting `staging` using the PR template. Check its final base-to-head diff, scope, CI, review comments, and evidence freshness. CI checks repository hygiene; local Unreal evidence establishes game claims. A maintainer (or agent with explicit recorded authorization) merges only after gates pass. Close implementation issues explicitly after staging integration; GitHub default-branch closing behavior is not the completion signal. Keep a parent spec open until its accepted work is integrated. `main` promotion is separate.
 
 At interruption, leave enough state on the issue/PR for another session: branch/head, last completed step, unfinished work, editor ownership, checks/reviews, and next action. Multi-ticket features use [the run template](../templates/feature-run.md), one owner per feature directory. Local metadata never proves current editor state.

@@ -415,7 +415,7 @@ No new assets. A reward-claim sound cue belongs to slice 6.
 - **PR B (stacked on A):** section 8.
 - **Gates for each PR:** build with 0 warnings, full `Project.` with 0 warnings, helpers on Python 3.11, `contribute.py check`, and two-axis review. PR A also needs the `Balance.Baseline.` before and after runs and an evidence branch. PR B also needs inspected captures and the on-screen pass before merge.
 - **As built:** filled in by PR A (numbers, deviations, targets met or missed) and PR B (presentation), as in contracts 09 and 11.
-  - **PR A ([#218](https://github.com/AustinKelsay/dnd-diceroll/issues/218)):** see [14-progression-report.md](14-progression-report.md), "As built" and "Targets". Honed rows are at their bounds (Strike/Push +3, Area +2, Surge +2, Missile +3, Precision +2; the others as written). P1, P3, P4 and P5 are met. P2 is missed. P6 is missed on one #217 deadlock, accepted for the release by the maintainer on 2026-11-13. Two lead-approved corrections are in this file: Shelter's lifetime text (section 3) and the `mixed` rule (section 6).
+  - **PR A ([#218](https://github.com/AustinKelsay/dnd-diceroll/issues/218)):** see [14-progression-report.md](14-progression-report.md), "As built" and "Targets". Honed rows are at their bounds (Strike/Push +3, Area +2, Surge +2, Missile +3, Precision +2; the others as written). P1, P3, P4 and P5 are met. P2 is missed (accepted by the lead on 2026-11-13; follow-up #228). P6 is missed on one #217 deadlock, accepted for the release by the maintainer on 2026-11-13. Two lead-approved corrections are in this file: Shelter's lifetime text (section 3) and the `mixed` rule (section 6).
 
 ## 10. Non-goals
 

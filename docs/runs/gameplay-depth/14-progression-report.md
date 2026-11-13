@@ -41,7 +41,7 @@ The revision 9 path is byte-identical to #214's, and Gear under revision 10 is p
 | # | Target | Result (step 1, 32 seeds) | Verdict |
 | --- | --- | --- | --- |
 | P1 | Gear is revision 9 (C2) | C2 passes | **met** |
-| P2 | Each of `gear`, `reserve`, `honed` is best (clear against both others) for at least two of the 13 classes | No class has a clear best. Gear and Reserve tie in 10 classes. Gear is small-ahead of Reserve for the sorcerer and small-behind for the druid. Honed trails Gear in 12 classes (+2.0 to +4.5 points, small) and trails Reserve clearly for the druid and ranger. | **missed.** Honed is never even possibly best, so the extra batch cannot change it. |
+| P2 | Each of `gear`, `reserve`, `honed` is best (clear against both others) for at least two of the 13 classes | No class has a clear best. Gear and Reserve tie in 10 classes. Gear is small-ahead of Reserve for the sorcerer and small-behind for the druid. Honed trails Gear in 12 classes (+2.0 to +4.5 points, small) and trails Reserve clearly for the druid and ranger. | **missed, accepted by the lead 2026-11-13, follow-up [#228](https://github.com/AustinKelsay/dnd-diceroll/issues/228).** Honed is never even possibly best, so the extra batch cannot change it. |
 | P3 | Largest paired gap between the rotation win rates of the three single-card strategies at most 10 points | gear − honed +3.8 (+2.0 to +5.8); honed − reserve −3.6 (−5.5 to −1.8); gear − reserve +0.2 (−1.4 to +1.8) | **met** |
 | P4 | `mixed` rises at most 8 points over the before-run, and #188's slice 3/4 targets still hold | See the P4 breakdown below. | **met** |
 | P5 | Under `reserve`, specials per fight in fights 4–5 at least 1.5x the before-run's | 3.95x (3.61 to 4.38) | **met** |
@@ -96,7 +96,7 @@ This is [#217](https://github.com/AustinKelsay/dnd-diceroll/issues/217)'s known 
 
 ## Follow-ups
 
-1. **P2 missed: make the cards real choices** (follow-up to #112). Under this policy Gear and Reserve are near-equivalent, and Honed is behind everywhere, even at its bounds. A Honed that matters needs specials that are still being cast in the late fights: Reserve plus Honed together, a policy that saves uses, or larger Honed bounds. Any of those is a new contract decision. The class table above shows where each card stands.
+1. **P2 missed: make the cards real choices** ([#228](https://github.com/AustinKelsay/dnd-diceroll/issues/228); the miss was accepted by the lead for the #112 release on 2026-11-13). Under this policy Gear and Reserve are near-equivalent, and Honed is behind everywhere, even at its bounds. A Honed that matters needs specials that are still being cast in the late fights: Reserve plus Honed together, a policy that saves uses, or larger Honed bounds. Any of those is a new contract decision. The class table above shows where each card stands.
 2. **#217:** bodies can seal a hero in; see P6.
 3. **Presentation (PR B):** reward cards, the `+1 Lv` markers, hero details, and the dock and party cards using per-hero caps and honed amounts. Until then the game's only claim path is Gear.
 
