@@ -10,6 +10,7 @@
 #include "Party/BuildCatalog.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/CameraRig.h"
+#include "Presentation/ProgressionText.h"
 #include "Presentation/HudCoverage.h"
 #include "Presentation/TargetChipLayout.h"
 
@@ -264,6 +265,9 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitId = INDEX_NONE;
     DetailUnitIds.Reset();
     DetailRects.Reset();
+    Drawn = FProgressionDrawn();
+    // Progression facts (#218) for the party cards, the hero details and the reward and camp screens; combat never needs them.
+    Progression = View->HasRun() && !View->InCombat() ? FProgressionQuery::For(View->CurrentRun()) : FProgressionFacts();
     bLegendRequested = false;
     bDiceRequested = false;
     DiceDesign = FBox2D(ForceInit); DiceRow = FBox2D(ForceInit); DiceDrawn = FBox2D(ForceInit);
@@ -705,9 +709,19 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     Text(FString::FromInt(Index + 1), X + 9, Y + 4, Muted, 0.5f);
     Text(Unit.Name, X + 48, Y + 4, Life == ECombatLife::Dead ? Muted : Color, 0.8f, EAlign::Left, 100);
     Text(FString::Printf(TEXT("Lv%d"), Unit.Level), X + Width - 8, Y + 6, Muted, 0.52f, EAlign::Right);
+    // A level gained at the last victory (#218): "+1 Lv" beside the level, and the basic damage it added on the card's last line.
+    const FHeroProgressFacts* Gains = HeroProgress(Unit.Id);
+    const bool bLevelled = Gains && Gains->bLevelled && Life != ECombatLife::Dead;
+    if (bLevelled)
+    {
+        Text(TEXT("+1 Lv"), X + Width - 8 - Measure(FString::Printf(TEXT("Lv%d"), Unit.Level), 0.52f).X - 6, Y + 6, Gold, 0.52f, EAlign::Right);
+        Drawn.PartyMarkers.Add(FString::Printf(TEXT("%s +1 Lv %s"), *Unit.Name, *ProgressionText::LevelGainLine(*Gains)));
+    }
     if (Life == ECombatLife::Dead)
     {
-        Text(TEXT("Fallen  ·  lost"), X + 48, Y + 21, FLinearColor(0.75f, 0.45f, 0.4f), 0.62f, EAlign::Left, 144);
+        const FString Fell = Gains ? TEXT("Fallen  ·  ") + ProgressionText::FallenLine(*Gains) : FString(TEXT("Fallen  ·  lost"));
+        Text(Fell, X + 48, Y + 21, FLinearColor(0.75f, 0.45f, 0.4f), 0.62f, EAlign::Left, 144);
+        if (Gains) { Drawn.PartyMarkers.Add(Unit.Name + TEXT(" ") + ProgressionText::FallenLine(*Gains)); }
     }
     else if (Life == ECombatLife::Downed)
     {
@@ -742,13 +756,16 @@ void AExpeditionHUD::DrawPartyCard(const FCombatantState& Unit, int32 Index, flo
     };
     if (Build && Life != ECombatLife::Dead)
     {
-        Group(TEXT("K"), Unit.KitUses, Build->KitCap, Gold);
-        Group(TEXT("W"), Unit.SecondWindUses, Build->WindCap, Safe);
-        Group(TEXT("S"), Unit.SpellSlots, Build->SlotCap, Sky);
-        Group(TEXT("M"), Unit.ManeuverUses, Build->ManeuverCap, Gold);
-        Group(TEXT("R"), Unit.RageUses, Build->RageCap, Danger);
+        // Each hero's own caps (#218: Reserve adds one).
+        const FResourceCaps Caps = FBuildCatalog::Caps(Unit);
+        Group(TEXT("K"), Unit.KitUses, Caps.Kit, Gold);
+        Group(TEXT("W"), Unit.SecondWindUses, Caps.Wind, Safe);
+        Group(TEXT("S"), Unit.SpellSlots, Caps.Slot, Sky);
+        Group(TEXT("M"), Unit.ManeuverUses, Caps.Maneuver, Gold);
+        Group(TEXT("R"), Unit.RageUses, Caps.Rage, Danger);
     }
-    FString Gear = FString::Printf(TEXT("Potion %d  ·  Gear +%d"), Unit.Potions, Unit.WeaponRank);
+    FString Gear = bLevelled ? FString::Printf(TEXT("Potion %d  ·  Gear +%d  ·  %s"), Unit.Potions, Unit.WeaponRank, *ProgressionText::LevelGainLine(*Gains)) :
+        FString::Printf(TEXT("Potion %d  ·  Gear +%d"), Unit.Potions, Unit.WeaponRank);
     if (Unit.RageTurns > 0) { Gear += TEXT("  ·  Raging"); }
     if (Unit.GuardTargetId != INDEX_NONE) { Gear += TEXT("  ·  Guarding"); }
     Text(Gear, X + 48, Y + 50, Muted, 0.5f, EAlign::Left, Width - 54);
@@ -808,12 +825,22 @@ void AExpeditionHUD::DrawPartyDetail(const FCombatantState& Unit, float X, float
         {
             const auto* Target = View->Rules().Find(Unit.GuardTargetId);
             const FString Label = Target ? FString::Printf(TEXT("%s [%d]"), *Target->Name, Target->Id) : TEXT("unavailable target");
-            Lines.Add({FString::Printf(TEXT("Protect %s: -%d damage until next own turn"), *Label, Unit.GuardAmount > 0 ? Unit.GuardAmount : 3), Sky});
+            // The seam's amount and the guard's real lifetime (#218): Shelter, paid by Rage, also ends with that Rage.
+            Lines.Add({FString::Printf(TEXT("Protect %s: -%d damage %s"), *Label, FBuildCatalog::GuardAmount(Unit),
+                Unit.GuardTurns > 0 ? TEXT("until next own turn") : TEXT("until next own turn or Rage ends")), Sky});
         }
         else { Resources += (Resources.IsEmpty() ? TEXT("") : TEXT(" / ")) + Part; }
     }
     Resources += FString::Printf(TEXT("%sPotion %d / Gear +%d"), Resources.IsEmpty() ? TEXT("") : TEXT(" / "), Unit.Potions, Unit.WeaponRank);
     Lines.Add({Resources, Parchment});
+    // Progression (#218): the basic damage and where it comes from, and the hero's upgrades. Outside combat only (the facts are not built in a fight).
+    if (const FHeroProgressFacts* Hero = HeroProgress(Unit.Id))
+    {
+        Lines.Add({ProgressionText::DamageBreakdown(*Hero), Parchment});
+        Drawn.DetailLines.Add(ProgressionText::DamageBreakdown(*Hero));
+        const FString Upgrades = ProgressionText::UpgradesLine(*Hero);
+        if (!Upgrades.IsEmpty()) { Lines.Add({Upgrades, Gold}); Drawn.DetailLines.Add(Upgrades); }
+    }
     TArray<TPair<FString, FLinearColor>> Wrapped;
     for (const auto& Entry : Lines) { for (const auto& Line : Wrap(Entry.Key, Width - 24, 0.68f)) { Wrapped.Add({Line, Entry.Value}); } }
     while (Wrapped.Num() < MinDetailLines) { Wrapped.Add({TEXT(" "), Muted}); }
@@ -1390,7 +1417,7 @@ void AExpeditionHUD::DrawRoutes()
         float FactY = Y + 126;
         for (int32 Fact = 1; Fact < Facts.Num(); ++Fact)
         {
-            const bool bReward = Facts[Fact].Contains(TEXT("gear")) || Facts[Fact].Contains(TEXT("artifact"));
+            const bool bReward = Facts[Fact].Contains(TEXT("gear")) || Facts[Fact].Contains(TEXT("upgrade choice")) || Facts[Fact].Contains(TEXT("artifact"));
             Text(Facts[Fact], X + 16, FactY, bReward ? Gold : Parchment, 0.8f, EAlign::Left, CardWidth - 32);
             FactY += 24;
         }
@@ -1399,32 +1426,67 @@ void AExpeditionHUD::DrawRoutes()
     }
 }
 
+const FHeroProgressFacts* AExpeditionHUD::HeroProgress(int32 Id) const
+{
+    return Progression.Heroes.FindByPredicate([Id](const FHeroProgressFacts& Hero) { return Hero.Id == Id; });
+}
+
 void AExpeditionHUD::DrawReward()
 {
-    const FExpeditionProgress& Run = View->Progress();
-    const FCombatBattle& Rules = View->Rules();
     // The footprint comes from ExpeditionLayout::RewardPanelRect, which the party cards' hero details keep clear of (#200).
     const ExpeditionLayout::Rect Box = ExpeditionLayout::RewardPanelRect(W, H);
     const float Width = static_cast<float>(Box.Right - Box.Left), Height = static_cast<float>(Box.Bottom - Box.Top);
     const float X = static_cast<float>(Box.Left), Y = static_cast<float>(Box.Top);
     Panel(X, Y, Width, Height, Gold, 0.95f);
-    Text(TEXT("VICTORY: SURVIVORS GAINED A LEVEL"), W * 0.5f, Y + 16, Gold, 1.05f, EAlign::Center, Width - 32);
-    const int32 Potions = Run.History.IsEmpty() ? 0 : Run.History.Last().Route.RewardPotions;
-    const FCombatantState* Selected = Rules.Find(Player->Selection());
-    const bool bReady = Selected && Selected->Life == ECombatLife::Conscious;
-    const bool bGearCapped = bReady && Selected->WeaponRank >= 3;
-    const FString Gear = bGearCapped ? TEXT("Gear rank 3 cap: no extra damage") : TEXT("+1 gear rank (+1 damage; max rank 3)");
-    Text(FString::Printf(TEXT("%s   ·   +%d healing potion%s"), *Gear, Potions, Potions == 1 ? TEXT("") : TEXT("s")), W * 0.5f, Y + 58, Parchment, 0.86f, EAlign::Center, Width - 32);
+    // Every word below formats FProgressionQuery (#218): the level reached, the potions, and the three cards for the selected survivor.
+    Drawn.RewardTitle = ProgressionText::RewardTitle(Progression);
+    Text(Drawn.RewardTitle, W * 0.5f, Y + 14, Gold, 1.0f, EAlign::Center, Width - 32);
+    Text(ProgressionText::PotionLine(Progression), W * 0.5f, Y + 46, Parchment, 0.8f, EAlign::Center, Width - 32);
     TArray<FString> Lost;
-    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Dead) { Lost.Add(Unit.Name); } }
-    if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 84, FLinearColor(0.85f, 0.5f, 0.45f), 0.76f, EAlign::Center); }
-    Text(TEXT("Choose who carries it  —  click a survivor's card or press 1-4"), W * 0.5f, Y + 110, Muted, 0.74f, EAlign::Center);
-    Button(TEXT("Claim"), bReady ? FString::Printf(TEXT("Give to %s"), *Selected->Name) : TEXT("Select a survivor"), TEXT("L"), W * 0.5f - 130, Y + 170, 260, 52, bReady, false, Gold);
+    for (const FHeroProgressFacts& Hero : Progression.Heroes) { if (Hero.Life == ECombatLife::Dead) { Lost.Add(FString::Printf(TEXT("%s (%s)"), *Hero.Name, *ProgressionText::FallenLine(Hero))); } }
+    if (!Lost.IsEmpty()) { Text(TEXT("Fallen: ") + FString::Join(Lost, TEXT(", ")), W * 0.5f, Y + 68, FLinearColor(0.85f, 0.5f, 0.45f), 0.7f, EAlign::Center, Width - 32); }
+    Text(TEXT("1-4 or a hero card chooses who  ·  G / R / U, Left / Right or a click chooses the card  ·  L or Enter claims"), W * 0.5f, Y + 90, Muted, 0.64f, EAlign::Center, Width - 24);
+    const FHeroProgressFacts* Hero = HeroProgress(Player->Selection());
+    const ERewardCard Chosen = Player->RewardCard();
+    constexpr float Gap = 10, CardTop = 114, CardHeight = 152;
+    const float CardWidth = (Width - 32 - 2 * Gap) / 3;
+    for (int32 Index = 0; Index < 3; ++Index)
+    {
+        const ERewardCard Card = static_cast<ERewardCard>(Index);
+        const FRewardCardFacts* Facts = Hero && Hero->Cards.IsValidIndex(Index) ? &Hero->Cards[Index] : nullptr;
+        const bool bAvailable = Facts && Facts->bAvailable;
+        const bool bChosen = Card == Chosen;
+        const float CX = X + 16 + Index * (CardWidth + Gap), CY = Y + CardTop;
+        const FName Id(Card == ERewardCard::Reserve ? TEXT("CardReserve") : Card == ERewardCard::Honed ? TEXT("CardHoned") : TEXT("CardGear"));
+        const FLinearColor Accent = bAvailable ? Gold : Muted;
+        Panel(CX, CY, CardWidth, CardHeight, bChosen ? Gold : Accent, bAvailable ? 0.92f : 0.6f);
+        if (bChosen) { Frame(WithAlpha(Gold, 0.9f), CX - 2, CY - 2, CardWidth + 4, CardHeight + 4, 2.0f); }
+        if (Player->MenuFocus() == Id) { Frame(Parchment, CX - 5, CY - 5, CardWidth + 10, CardHeight + 10, 1.5f); }
+        const FLinearColor Ink = bAvailable ? Parchment : Muted;
+        const TCHAR* Key = Card == ERewardCard::Reserve ? TEXT("R") : Card == ERewardCard::Honed ? TEXT("U") : TEXT("G");
+        Text(ProgressionText::CardName(Card), CX + 10, CY + 8, bAvailable ? Gold : Muted, 0.92f);
+        Text(Key, CX + CardWidth - 10, CY + 10, Muted, 0.6f, EAlign::Right);
+        Text(ProgressionText::CardRule(Card), CX + 10, CY + 32, Ink, 0.6f, EAlign::Left, CardWidth - 20);
+        TArray<FString> Lines = Facts ? ProgressionText::CardLines(*Facts) : TArray<FString>();
+        const FString Note = Facts ? ProgressionText::NoteText(Facts->Note) : FString();
+        float LineY = CY + 54;
+        for (const FString& Line : Lines)
+        {
+            for (const FString& Part : Wrap(Line, CardWidth - 20, 0.62f)) { if (LineY < CY + CardHeight - 34) { Text(Part, CX + 10, LineY, Ink, 0.62f); LineY += 16; } }
+        }
+        if (!Note.IsEmpty()) { Text(Note, CX + 10, CY + CardHeight - 24, bAvailable ? Gold : Danger, 0.64f, EAlign::Left, CardWidth - 20); Lines.Add(Note); }
+        Buttons.Add({Id, FBox2D(FVector2D(CX, CY) * S, FVector2D(CX + CardWidth, CY + CardHeight) * S), true});
+        Drawn.Cards.Add(Card); Drawn.CardLines.Add(Lines); Drawn.CardAvailable.Add(bAvailable);
+    }
+    const FRewardCardFacts* ChosenFacts = Hero && Hero->Cards.IsValidIndex(static_cast<int32>(Chosen)) ? &Hero->Cards[static_cast<int32>(Chosen)] : nullptr;
+    const bool bReady = ChosenFacts && ChosenFacts->bAvailable;
+    Drawn.Claim = !Hero || Hero->Life != ECombatLife::Conscious ? FString(TEXT("Select a survivor")) : ProgressionText::ClaimLabel(*Hero, *ChosenFacts);
+    Drawn.bClaimEnabled = bReady;
+    Button(TEXT("Claim"), Drawn.Claim, TEXT("L / Enter"), W * 0.5f - 150, Y + CardTop + CardHeight + 14, 300, 50, bReady, false, Gold);
 }
 
 void AExpeditionHUD::DrawCamp()
 {
-    const FCombatBattle& Rules = View->Rules();
     const ExpeditionLayout::Rect Box = ExpeditionLayout::CampPanelRect(W, H);   // as DrawReward: the hero details keep clear of it (#200)
     const float Width = static_cast<float>(Box.Right - Box.Left), Height = static_cast<float>(Box.Bottom - Box.Top);
     const float X = static_cast<float>(Box.Left), Y = static_cast<float>(Box.Top);
@@ -1433,16 +1495,17 @@ void AExpeditionHUD::DrawCamp()
     Text(TEXT("Once per expedition. If you press on, the chance is gone."), W * 0.5f, Y + 56, Muted, 0.76f, EAlign::Center);
     float DescriptionY=Y+82;
     for (const auto& Line : Wrap(FExpeditionRun::RecoveryDescription(),Width-48,0.88f)) { Text(Line,X+24,DescriptionY,Parchment,0.88f); DescriptionY+=24; }
-    float Row = Y + 162;
-    FString Status;
-    for (const FCombatantState& Unit : Rules.Snapshot().Encounter.Combatants)
+    // Each survivor's HP and pools before -> after the camp, at that hero's own cap (#218, FProgressionQuery).
+    float Row = Y + 140;
+    for (const FHeroProgressFacts& Hero : Progression.Heroes)
     {
-        if (Unit.Side != ECombatSide::Party) { continue; }
-        Status += (Status.IsEmpty() ? TEXT("") : TEXT("    ")) + (Unit.Life == ECombatLife::Dead ? Unit.Name + TEXT(" (fallen)") : FString::Printf(TEXT("%s %d/%d"), *Unit.Name, Unit.HP, Unit.MaxHP));
+        const FString Line = Hero.bCamp ? ProgressionText::CampLine(Hero) : Hero.Name + TEXT("  (fallen)");
+        if (Hero.bCamp) { Drawn.CampLines.Add(Line); }
+        Text(Line, X + 24, Row, Hero.bCamp ? Parchment : Muted, 0.7f, EAlign::Left, Width - 48);
+        Row += 21;
     }
-    Text(Status, W * 0.5f, Row, Parchment, 0.76f, EAlign::Center, Width - 40);
-    Button(TEXT("Camp"), TEXT("Rest by the fire"), TEXT("C"), W * 0.5f - 250, Y + 220, 240, 56, true, false, FLinearColor(1.0f, 0.6f, 0.3f));
-    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V  ·  forfeit the rest"), W * 0.5f + 10, Y + 220, 240, 56, true, false, Muted);
+    Button(TEXT("Camp"), TEXT("Rest by the fire"), TEXT("C"), W * 0.5f - 250, Y + Height - 76, 240, 56, true, false, FLinearColor(1.0f, 0.6f, 0.3f));
+    Button(TEXT("SkipCamp"), TEXT("Press on"), TEXT("V  ·  forfeit the rest"), W * 0.5f + 10, Y + Height - 76, 240, 56, true, false, Muted);
 }
 
 void AExpeditionHUD::DrawEnding()
@@ -1515,8 +1578,8 @@ void AExpeditionHUD::DrawHelp()
             TEXT("An unfinished saved expedition must be resumed before starting anew.")
         } : TArray<FString>{
             TEXT("Z / X chooses a route. Compare danger and promised rewards."),
-            TEXT("1-4 chooses a reward recipient; L confirms. Fallen heroes cannot receive it."),
-            TEXT("Gear caps at rank 3. Potions remain useful at the gear cap."),
+            TEXT("1-4 chooses a reward recipient; G / R / U (or Left / Right) chooses Gear, Reserve or Honed; L or Enter confirms."),
+            TEXT("Gear caps at rank 3. Reserve and Honed are once per hero. Fallen heroes cannot receive a reward."),
             TEXT("C takes the one recovery opportunity; V forfeits it."),
             TEXT("Backspace or Menu > Return to start leaves; O resumes from there."),
             TEXT("Deaths are permanent. Recovery never resurrects fallen heroes."),
@@ -1533,7 +1596,7 @@ void AExpeditionHUD::DrawHelp()
         TEXT("Arrows + Enter  Keyboard cursor"), TEXT("Hold Alt  Show the whole grid"), TEXT("D  Dismiss the tip on screen")};
     const TCHAR* Right[] = {
         TEXT("Right-drag or Q/E  Rotate"), TEXT("Wheel  Zoom"), TEXT("Tab  Skip the current animation"), TEXT("T  Animation speed"),
-        TEXT("Z / X  Choose route"), TEXT("L  Give loot to the selected survivor"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
+        TEXT("Z / X  Choose route"), TEXT("L  Claim the chosen reward card"), TEXT("C / V  Camp or press on"), TEXT("K / O  Save / resume"),
         TEXT("H  Records  ·  ?  Help  ·  I  Menu"), TEXT("Esc  Close Help, Records or the Menu"), TEXT("Replay tips  Show the four tips again")};
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
     {

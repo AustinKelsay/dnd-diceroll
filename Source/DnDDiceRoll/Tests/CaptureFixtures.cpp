@@ -623,6 +623,52 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         bVictoryWritten = true;
     }
     TestTrue(TEXT("A seed reaches victory"), bVictoryWritten);
+    {
+        // Reward cards (#218): revision 10 runs of a Kit, a Kit + Slot (Life), a Rage and a Wind + Maneuver hero, captured by tools/capture/reward-poses.json.
+        // reward-choice-first: reward 1, nothing taken. -upgraded: reward 3 after hero 4 took Reserve and Honed. -gear-cap: reward 4 after three Gear to
+        // hero 4. -fallen: the first reward with a fallen hero. -camp: the camp after Reserve at reward 1 to hero 4. -route: the route after that camp.
+        TArray<FPartyBuildSelection> Cards;
+        const TCHAR* Builds[] = {TEXT("rogue.thief"), TEXT("cleric.life"), TEXT("barbarian.berserker"), TEXT("fighter.battle-master")};
+        const TCHAR* Names[] = {TEXT("Aria"), TEXT("Bram"), TEXT("Cass"), TEXT("Dain")};
+        for (int32 I = 0; I < 4; ++I) { FPartyBuildSelection Slot; Slot.Id = I + 1; Slot.Name = Names[I]; Slot.BuildId = Builds[I]; Cards.Add(Slot); }
+        auto Alive = [](const FExpeditionRun& R, int32 Id) { const FCombatantState* U = R.Battle().Find(Id); return U && U->Life == ECombatLife::Conscious; };
+        auto Fallen = [](const FExpeditionRun& R) { return R.Battle().Snapshot().Encounter.Combatants.ContainsByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Party && U.Life == ECombatLife::Dead; }); };
+        bool bFirst = false, bUpgraded = false, bCap = false, bFallen = false, bCamp = false;
+        for (int32 Seed = 42; Seed < 342 && !(bFirst && bUpgraded && bCap && bFallen && bCamp); ++Seed)
+        {
+            for (const bool bGear : {false, true})
+            {
+                FExpeditionRun Run; FString E;
+                Run.NewRun(Seed, Cards, E, FString::Printf(TEXT("reward-choice-%d"), Seed));
+                for (int32 Guard = 0; Guard < 12; ++Guard)
+                {
+                    if (Run.Progress().Phase == EExpeditionPhase::Recovery)
+                    {
+                        const bool bWrite = !bGear && !bCamp && Run.Battle().Find(4)->bReserve;
+                        if (bWrite) { Write(TEXT("reward-choice-camp"), Run); }
+                        Run.Recover(true, E);
+                        if (bWrite) { Write(TEXT("reward-choice-route"), Run); bCamp = true; }
+                    }
+                    if (Run.Progress().Phase != EExpeditionPhase::Route || !Run.ChooseRoute(Run.Progress().Offers[0].Id, E) || !ExpeditionTestSupport::FinishCombat(Run) ||
+                        Run.Progress().Phase != EExpeditionPhase::Reward) { break; }
+                    const int32 Victory = Run.Progress().EncountersCompleted;
+                    if (!bFallen && Fallen(Run)) { Write(TEXT("reward-choice-fallen"), Run); bFallen = true; }
+                    if (!Alive(Run, 4)) { break; }
+                    if (bGear)
+                    {
+                        if (Victory == 4 && !bCap && Run.Battle().Find(4)->WeaponRank == 3) { Write(TEXT("reward-choice-gear-cap"), Run); bCap = true; }
+                        if (!Run.ClaimReward(4, ERewardCard::Gear, E)) { break; }
+                        continue;
+                    }
+                    if (Victory == 1 && !bFirst) { Write(TEXT("reward-choice-first"), Run); }
+                    if (Victory == 3 && !bUpgraded) { Write(TEXT("reward-choice-upgraded"), Run); bUpgraded = true; }
+                    if (!Run.ClaimReward(4, Victory == 1 ? ERewardCard::Reserve : Victory == 2 ? ERewardCard::Honed : ERewardCard::Gear, E)) { break; }
+                    if (Victory == 1) { bFirst = true; }
+                }
+            }
+        }
+        TestTrue(TEXT("The reward-choice fixtures were found"), bFirst && bUpgraded && bCap && bFallen && bCamp);
+    }
     FString Error;
     FExpeditionRun Lost;
     Lost.NewRun(3, Error, TEXT("capture-defeat"));

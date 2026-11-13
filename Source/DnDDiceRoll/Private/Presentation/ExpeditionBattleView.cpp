@@ -1,6 +1,7 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/OverviewLayout.h"
 #include "Combat/ActionFacts.h"
+#include "Run/ProgressionQuery.h"
 #include "Presentation/ActionText.h"
 #include "Presentation/BrazierRing.h"
 #include "Presentation/ExpeditionAudio.h"
@@ -2161,6 +2162,16 @@ void AExpeditionBattleView::Record(const FCombatResult& Result)
     if (Feedback.Num() > 6) { Feedback.RemoveAt(0); }
 }
 
+void AExpeditionBattleView::RecordLevelGain()
+{
+    // After victories 1-4 (#218): "Level 3: +1 basic damage (Aria, Bram, Cass)", from the progression facts.
+    if (!Session.HasRun() || Progress().Phase != EExpeditionPhase::Reward) { return; }
+    const FProgressionFacts Facts = FProgressionQuery::For(Session.Run());
+    TArray<FString> Names;
+    for (const FHeroProgressFacts& Hero : Facts.Heroes) { if (Hero.bLevelled) { Names.Add(Hero.Name); } }
+    if (!Names.IsEmpty()) { Record({true, FString::Printf(TEXT("Level %d: +1 basic damage (%s)"), Facts.SurvivorLevel, *FString::Join(Names, TEXT(", ")))}); }
+}
+
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
     Show.Enqueue(Results, Rules().Snapshot());
@@ -2192,6 +2203,7 @@ bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
         if (Facts.Cost != EActionCostKind::None && !Facts.Blockers.IsEmpty()) { Result.Feedback = ExpeditionStyle::BlockerText(Facts.Blockers[0]); }
     }
     Record(Result);
+    if (Result.bAccepted) { RecordLevelGain(); }
     // An accepted order completes whatever is still being shown (already resolved), then plays.
     // Rejected input leaves playback untouched, so stray clicks never skip animation.
     if (Result.bAccepted) { Show.Finish(); Present({Result}); }
@@ -2217,21 +2229,24 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
-void AExpeditionBattleView::ClaimReward(int32 RecipientId)
+void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
 {
     if (bShowRecords) { return; }
     FString Error;
     const FCombatantState* Before = Rules().Find(RecipientId);
     const FCombatantState Previous = Before ? *Before : FCombatantState();
-    if (Session.ClaimReward(RecipientId, Error))
+    if (Session.ClaimReward(RecipientId, Card, Error))
     {
         Show.Finish();
-        Record({true, TEXT("Reward claimed once for selected survivor. Continue at camp or choose the next route.")});
+        const TCHAR* CardName = Card == ERewardCard::Reserve ? TEXT("Reserve") : Card == ERewardCard::Honed ? TEXT("Honed") : TEXT("Gear");
+        Record({true, FString::Printf(TEXT("%s takes %s. Continue at camp or choose the next route."), *Previous.Name, CardName)});
         Show.Sync(Rules().Snapshot());
         if (const FCombatantState* After = Rules().Find(RecipientId))
         {
             const FVector2D Cell(After->Cell.X, After->Cell.Y);
-            Show.ShowText(Cell, FString::Printf(TEXT("+%d GEAR"), After->WeaponRank - Previous.WeaponRank), FLinearColor(1.0f, 0.82f, 0.3f), 1.2f, 2.2f);
+            const FString Gain = Card == ERewardCard::Reserve ? FString(TEXT("RESERVE")) : Card == ERewardCard::Honed ? FString(TEXT("HONED")) :
+                FString::Printf(TEXT("+%d GEAR"), After->WeaponRank - Previous.WeaponRank);
+            Show.ShowText(Cell, Gain, FLinearColor(1.0f, 0.82f, 0.3f), 1.2f, 2.2f);
             Show.ShowText(Cell, FString::Printf(TEXT("+%d POTIONS"), After->Potions - Previous.Potions), FLinearColor(0.5f, 1.0f, 0.6f), 1.0f, 2.2f);
             Show.ShowSparkles(Cell, FLinearColor(1.0f, 0.82f, 0.3f), 12);
         }

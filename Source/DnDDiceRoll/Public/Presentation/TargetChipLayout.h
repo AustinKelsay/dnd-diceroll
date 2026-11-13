@@ -118,9 +118,9 @@ inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
         A.Top < B.Bottom + Gap && A.Bottom + Gap > B.Top;
 }
 
-// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 240 or 300 high, a little above the middle. They share these with the party
-// cards' hero details, which would otherwise be drawn under them (#200).
-constexpr double RewardPanelWidth = 720, RewardPanelHeight = 240, CampPanelHeight = 300, PhasePanelLift = 30;
+// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 344 or 320 high, a little above the middle. They share these with the party
+// cards' hero details, which would otherwise be drawn under them (#200). #218 grew both: three reward cards, and one camp line per survivor.
+constexpr double RewardPanelWidth = 720, RewardPanelHeight = 344, CampPanelHeight = 320, PhasePanelLift = 30;
 inline Rect CentredPanelRect(double W, double H, double Height)
 {
     const double Top = H * 0.5 - Height * 0.5 - PhasePanelLift;

@@ -239,6 +239,8 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     const FCombatBattle& Rules() const { return Session.Run().Battle(); }
     const FExpeditionProgress& Progress() const { return Session.Run().Progress(); }
+    /** The whole run, for const queries such as FProgressionQuery (#218). */
+    const FExpeditionRun& CurrentRun() const { return Session.Run(); }
     const TArray<FString>& Messages() const { return Feedback; }
     /**
      * Submits a party command and plays it. Returns whether the rules accepted it. A rejection is explained in the log by
@@ -246,7 +248,10 @@ public:
      */
     bool Execute(const FCombatCommand& Command);
     void ChooseRoute(int32 Index);
-    void ClaimReward(int32 RecipientId);
+    /** Claims the reward for RecipientId with Card (#218); every rejection is logged by name and changes nothing. */
+    void ClaimReward(int32 RecipientId, ERewardCard Card = ERewardCard::Gear);
+    /** Logs the level the last victory's survivors reached (#218); nothing outside the Reward phase. */
+    void RecordLevelGain();
     void Recover(bool bTake);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);

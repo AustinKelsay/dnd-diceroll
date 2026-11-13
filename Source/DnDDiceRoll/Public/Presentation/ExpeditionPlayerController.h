@@ -23,6 +23,10 @@ public:
     virtual void PlayerTick(float DeltaTime) override;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
+    /** The reward card the Reward screen has chosen (#218): presentation state, never saved. Gear at the start of every Reward phase and after Resume. */
+    ERewardCard RewardCard() const { return SelectedCard; }
+    /** Chooses a reward card (Reward phase only; ignored under an overlay). */
+    void SelectRewardCard(ERewardCard Card);
     /** Who acts on the next command: the active adventurer in combat, else the selection. */
     int32 Actor() const;
     bool HoverCell(FIntPoint& Cell) const;
@@ -172,6 +176,14 @@ private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
+    ERewardCard SelectedCard = ERewardCard::Gear;
+    /** The Reward screen the card choice belongs to: a new reward, or a Resume, starts again on Gear. */
+    uint32 RewardScreen = 0;
+    void GearCard();
+    void ReserveCard();
+    void HonedCard();
+    bool OnRewardScreen() const;
+    void StepRewardCard(int32 Direction);
     int32 InspectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
     int32 LastRevision = INDEX_NONE;
