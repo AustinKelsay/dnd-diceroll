@@ -34,12 +34,11 @@ namespace ExpeditionCameraRig
     /** How far past the board's outer tile edge the visible ground may reach when panning, in cells (was 2 cells past the outer cell centres, #148 gate 2). */
     constexpr float PanMarginCells = 1.5f;
     /**
-     * The Drowned Vigil's pan margin in cells (#209): the stained-glass rose window stands on the wall behind the home side, and the 1.5 cell
-     * margin let the near pan show it, with the ledge under it, behind the action bar. 0.75 cells is as far as the brazier ring (1.25 cells
-     * outside the playable edge, 0.75 past the outer tile edge), so the view ends at the ring. The margin is the same on every side, so a locked axis
-     * still centres on the board and the bound stays continuous across the lock.
+     * The Vault's authored set ends where its far-hall ring begins, 28 m from the board centre (the hall inside it, the dressed ground and the
+     * ring itself), and the exterior beyond it is a bare dark plane. The camera never shows ground farther than this from the board centre
+     * (#209): SetHalfExtentCells cells (18 at the 150 cm cell, 27 m) each way, solved by SetCoverDistance and enforced by ClampSet.
      */
-    constexpr float VigilPanMarginCells = 0.75f;
+    constexpr float SetHalfExtentCells = 18.0f;
     /** The default zoom makes a standing figure at the focus this many pixels tall at FigureTargetViewportHeight pixels of viewport height (#148 gate 2); it scales with the viewport. */
     // 88 px nominal: rendered figures read at about 0.8 of a nominal 180 cm projection (the on-screen pass measured ~50 px
     // where the nominal height was ~62), so this gives about 72 px on screen at 1080 (#148 gate 2).
@@ -340,7 +339,7 @@ namespace ExpeditionCameraRig
     };
 
     /**
-     * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within MarginCells (default PanMarginCells) of the
+     * Clamps a focus (view-space cm) so the visible ground (VisibleGround of the pose) stays within PanMarginCells of the
      * board's outer tile edge on every side. Per board axis: when the board plus its margins is smaller than the view the
      * axis is locked with the view's bounding box centred on the board (the pan has nothing to reach); otherwise the focus is
      * clamped to the interval that keeps the view inside. The locked focus is the midpoint of that (empty) interval, the point
@@ -348,10 +347,10 @@ namespace ExpeditionCameraRig
      * box, so it never shows more than asked at any yaw.
      */
     inline FPanBound ClampPan(const FVector2D& Wanted, int32 Width, int32 Height, const FBoardMetric& Metric,
-        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float MarginCells = PanMarginCells)
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
     {
         const double C = Metric.CellCm;
-        const double Margin = (0.5 + MarginCells) * C;
+        const double Margin = (0.5 + PanMarginCells) * C;
         const double LowerX = -Margin, UpperX = (Width - 1) * C + Margin;
         const double LowerY = -Margin, UpperY = (Height - 1) * C + Margin;
         FPanBound Result;
@@ -383,9 +382,9 @@ namespace ExpeditionCameraRig
      * clamped like a pan. The height part is dropped while the bound applies, because a rising camera widens the view.
      */
     inline FVector2D ShakenFocus(const FVector2D& Focus, const FVector& Shake, int32 Width, int32 Height, const FBoardMetric& Metric,
-        float Yaw, float Distance, float Pitch, const FSafeRect& Safe, float MarginCells = PanMarginCells)
+        float Yaw, float Distance, float Pitch, const FSafeRect& Safe)
     {
-        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe, MarginCells).Focus;
+        return ClampPan(Focus + FVector2D(Shake.X, Shake.Y), Width, Height, Metric, Yaw, Distance, Pitch, Safe).Focus;
     }
 
     /** Whether a unit's tile (corners at the board top) and head project inside the safe rect shrunk to InFill, from a focus on the ground. */
@@ -425,5 +424,72 @@ namespace ExpeditionCameraRig
             (Inside(Focus + (Unit - Focus) * Mid) ? High : Low) = Mid;
         }
         return Focus + (Unit - Focus) * High;
+    }
+
+    /**
+     * The ground (view-space cm on the board-top plane) under the four corners of the whole viewport, as offsets from the focus: what the
+     * camera can show at all, HUD or not. Translating the camera translates these rigidly.
+     */
+    inline bool ViewportGround(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, FVector2D (&Out)[4])
+    {
+        const FArm Pose = Arm(Yaw, Distance, Pitch, Metric.Scale(), Safe);
+        const FVector Eye = Pose.Offset + Pose.Framing;
+        const FVector Forward = -Pose.Offset.GetSafeNormal();
+        int32 Index = 0;
+        for (const double X : {0.0, 1.0})
+        {
+            for (const double Y : {0.0, 1.0})
+            {
+                if (!Unproject(FVector2D(X, Y), Eye, Forward, Safe.Aspect, Metric.BoardTop(), Out[Index++])) { return false; }
+            }
+        }
+        return true;
+    }
+
+    /** Whether the viewport's ground, wherever the focus is, is no wider than the set in either axis (HalfCm each way from its centre). */
+    inline bool SetCovers(float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe, float HalfCm)
+    {
+        FVector2D Ground[4];
+        if (!ViewportGround(Yaw, Distance, Pitch, Metric, Safe, Ground)) { return false; }
+        double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+        for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
+        return MaxX - MinX <= 2.0 * HalfCm && MaxY - MinY <= 2.0 * HalfCm;
+    }
+
+    /**
+     * The farthest zoom in [Low, High] at which the viewport's ground still fits the set from Yaw, at the pitch the zoom implies (anchored at
+     * Anchor, the home-yaw default). Low when even that shows more than the set: a zoom out never goes nearer than the default, and the
+     * ground there is what the default framing has always shown. The footprint grows with the distance, so the bisection is exact.
+     */
+    inline float SetCoverDistance(float Yaw, float Anchor, const FBoardMetric& Metric, const FSafeRect& Safe, float HalfCm, float Low, float High)
+    {
+        auto Fits = [&](float D) { return SetCovers(Yaw, D, PitchFor(D, Anchor), Metric, Safe, HalfCm); };
+        if (High <= Low || !Fits(Low)) { return Low; }
+        if (Fits(High)) { return High; }
+        for (int32 Iteration = 0; Iteration < 24 && High - Low > 0.01f; ++Iteration)
+        {
+            const float Mid = 0.5f * (Low + High);
+            (Fits(Mid) ? Low : High) = Mid;
+        }
+        return Low;
+    }
+
+    /**
+     * Clamps a focus (view-space cm) so the viewport's ground stays inside the set: HalfCm each way from Centre, per axis the focus
+     * interval that keeps the footprint inside (the midpoint when the footprint is wider than the set, which SetCoverDistance prevents).
+     */
+    inline FVector2D ClampSet(const FVector2D& Focus, float Yaw, float Distance, float Pitch, const FBoardMetric& Metric, const FSafeRect& Safe,
+        const FVector2D& Centre, float HalfCm)
+    {
+        FVector2D Ground[4];
+        if (!ViewportGround(Yaw, Distance, Pitch, Metric, Safe, Ground)) { return Focus; }
+        double MinX = Ground[0].X, MaxX = Ground[0].X, MinY = Ground[0].Y, MaxY = Ground[0].Y;
+        for (const FVector2D& Point : Ground) { MinX = FMath::Min(MinX, Point.X); MaxX = FMath::Max(MaxX, Point.X); MinY = FMath::Min(MinY, Point.Y); MaxY = FMath::Max(MaxY, Point.Y); }
+        auto Axis = [HalfCm](double Value, double Centre1, double GroundMin, double GroundMax)
+        {
+            const double Low = Centre1 - HalfCm - GroundMin, High = Centre1 + HalfCm - GroundMax;
+            return Low > High ? 0.5 * (Low + High) : FMath::Clamp(Value, Low, High);
+        };
+        return FVector2D(Axis(Focus.X, Centre.X, MinX, MaxX), Axis(Focus.Y, Centre.Y, MinY, MaxY));
     }
 }

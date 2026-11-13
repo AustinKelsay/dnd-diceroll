@@ -1935,18 +1935,12 @@ FVector AExpeditionBattleView::BaseFocus() const
     return Base;
 }
 
-float AExpeditionBattleView::ActivePanMarginCells() const
-{
-    // The Vigil's rose window and the ledge under it stay out of the view at the default zoom (#209).
-    return bVigilKit ? ExpeditionCameraRig::VigilPanMarginCells : ExpeditionCameraRig::PanMarginCells;
-}
-
 FVector2D AExpeditionBattleView::LimitPan(const FVector2D& Base, FVector2D& Offset) const
 {
     if (WholeBoardInView()) { Offset = FVector2D::ZeroVector; return Base; } // nothing to pan to
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-    const ExpeditionCameraRig::FPanBound Bound = ExpeditionCameraRig::ClampPan(Base + Offset, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells());
+    const ExpeditionCameraRig::FPanBound Bound = ExpeditionCameraRig::ClampPan(Base + Offset, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
     if (!Offset.IsNearlyZero())
     {
         // The player's pan stays at the bound instead of winding up past it; a locked axis keeps no pan.
@@ -2002,6 +1996,9 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
             Distance = FMath::Max(Distance, FramedDistance(Yaw));
         }
     }
+    // The rendered pose obeys the cap of the rendered yaw, as the pan bound binds the rendered focus: easing yaw and distance independently
+    // (or a wheel notch during an orbit) would otherwise pass through poses beyond the cap (#209).
+    if (BoundsSet()) { Distance = FMath::Min(Distance, MaxZoomFor(Yaw)); }
     FVector Desired = FVector(0.0f, 30.0f, OverviewHeight + 22.0f);
     if (!bOverview)
     {
@@ -2036,13 +2033,22 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         // The pan bound belongs to the rendered pose, not only the target: zooming out or orbiting from a pan stop eases through
         // poses that see more ground than the one the target was clamped for (four unprojections per frame).
         const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells()).Focus;
+        const FVector2D Bounded = ExpeditionCameraRig::ClampPan(FVector2D(Focus), Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe).Focus;
         Focus.X = Bounded.X; Focus.Y = Bounded.Y;
     }
     if (!bOverview && PanOffset.IsNearlyZero())
     {
         // Where the whole board is not in view, the eased focus (and a snap onto a clamped target) never leaves the acting unit outside the safe rect.
         const FVector2D Held = HoldUnit(FVector2D(Focus));
+        Focus.X = Held.X; Focus.Y = Held.Y;
+    }
+    if (BoundsSet())
+    {
+        // The viewport's ground never leaves the authored set (#209): the unit hold and the pan bound keep the unit and the board in view, this keeps the set.
+        const FCombatEncounter& Board = Rules().Snapshot().Encounter;
+        const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
+        const FVector2D Held = ExpeditionCameraRig::ClampSet(FVector2D(Focus), Yaw, Distance, Pitch, BoardMetric, Safe,
+            ExpeditionCameraRig::BoardCentre(Board.Width, Board.Height, BoardMetric), ExpeditionCameraRig::SetHalfExtentCells * BoardMetric.CellCm);
         Focus.X = Held.X; Focus.Y = Held.Y;
     }
     ShakeAmount = FMath::Max(0.0f, ShakeAmount - DeltaSeconds * 1.8f);
@@ -2066,7 +2072,7 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         // A shake moves the view too: the shaken pose keeps the pan bound (level, so it does not widen the view), and unpanned the
         // acting unit still wins.
         const float Pitch = ExpeditionCameraRig::PitchFor(Distance, FramedDistance());
-        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe, ActivePanMarginCells());
+        FVector2D Shaken = ExpeditionCameraRig::ShakenFocus(FVector2D(Focus), Shake, Encounter.Width, Encounter.Height, BoardMetric, Yaw, Distance, Pitch, Safe);
         if (PanOffset.IsNearlyZero()) { Shaken = HoldUnit(Shaken); }
         Eye = GetActorTransform().TransformPosition(FVector(Shaken.X, Shaken.Y, Focus.Z)) + Offset + Framing;
     }
@@ -2089,10 +2095,22 @@ void AExpeditionBattleView::Orbit(float Degrees)
     if (bFramed) { TargetDistance = FramedDistance(TargetYaw); }
     else { TargetDistance = FMath::Min(TargetDistance, MaxZoomFor(TargetYaw)); }
 }
+bool AExpeditionBattleView::BoundsSet() const { return bVaultKit && HasRun() && !bOverview; }
+
 float AExpeditionBattleView::MaxZoomFor(float ForYaw) const
 {
-    // The Vault is one fixed hall in the dark: past its far pose (the whole board in view) the wheel only shows the dark around it (#209).
-    return bVaultKit && HasRun() ? FMath::Min(ExpeditionCameraRig::MaxDistance, FarFramedDistance(ForYaw)) : ExpeditionCameraRig::MaxDistance;
+    if (!BoundsSet()) { return ExpeditionCameraRig::MaxDistance; }
+    // The Vault is one fixed hall in the dark: past its far pose the wheel only shows the dark around it, and from a diagonal yaw the far pose shows
+    // more than the set (#209). The cap is the far pose, or the nearest zoom at which the viewport's ground stays inside the set. It is asked
+    // several times a frame, so the last answer is kept for the yaw, board and safe rect it was solved for.
+    const FCombatEncounter& Board = Rules().Snapshot().Encounter;
+    if (ZoomCap.bValid && ZoomCap.Yaw == ForYaw && ZoomCap.Width == Board.Width && ZoomCap.Height == Board.Height && ZoomCap.CellCm == BoardMetric.CellCm && ZoomCap.Rect == Safe)
+    { return ZoomCap.Value; }
+    const float Framed = FramedDistance(ForYaw);
+    const float Far = FMath::Min(ExpeditionCameraRig::MaxDistance, FarFramedDistance(ForYaw));
+    const float Reach = ExpeditionCameraRig::SetCoverDistance(ForYaw, FramedDistance(), BoardMetric, Safe, ExpeditionCameraRig::SetHalfExtentCells * BoardMetric.CellCm, Framed, Far);
+    ZoomCap = {true, ForYaw, Board.Width, Board.Height, BoardMetric.CellCm, Safe, FMath::Min(Far, Reach)};
+    return ZoomCap.Value;
 }
 
 void AExpeditionBattleView::Zoom(float Amount)
@@ -2727,14 +2745,18 @@ float AExpeditionBattleView::OccluderOpacityAt(const FVector& WorldPoint) const
     if (!HasOccluder()) { return 1.0f; }
     FVector Eye, FocusPoint, UnitPoint;
     OccluderSight(Eye, FocusPoint, UnitPoint);
-    return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells);
+    return OccluderFade::Lowest(WorldPoint, Eye, FocusPoint, UnitPoint, BoardMetric.CellCm * OccluderFade::RadiusCells, OccluderMinOpacity());
 }
 
 float AExpeditionBattleView::OccluderMarginCells() const
 {
-    if (bVigilKit) { return OccluderFade::VigilBoardMarginCells; }
     if (!bVaultKit) { return OccluderFade::BoardMarginCells; }
     return FMath::Lerp(OccluderFade::VaultBoardMarginCells, OccluderFade::BoardMarginCells, FarZoomFraction());
+}
+
+float AExpeditionBattleView::OccluderMinOpacity() const
+{
+    return bVigilKit ? OccluderFade::VigilMinOpacity : OccluderFade::MinOpacity;
 }
 
 float AExpeditionBattleView::OccluderRampCells() const
@@ -2747,17 +2769,38 @@ float AExpeditionBattleView::OccluderRampCells() const
 float AExpeditionBattleView::FarZoomFraction() const
 {
     const float Default = FramedDistance(Yaw);
-    const float Far = FarFramedDistance(Yaw);
+    const float Far = BoundsSet() ? MaxZoomFor(Yaw) : FarFramedDistance(Yaw);
     return Far > Default + 1.0f ? FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((Distance - Default) / (Far - Default), 0.0f, 1.0f)) : 0.0f;
+}
+
+void AExpeditionBattleView::OccluderSideMargins(float (&Out)[4]) const
+{
+    // Low X, high X, low Y, high Y, in cells past the board's outer tile edge.
+    const float Margin = OccluderMarginCells();
+    Out[0] = Out[1] = Out[2] = Out[3] = Margin;
+    if (!bVigilKit || !Camera) { return; }
+    // The Vigil's rose and ledge are scenery between a camera outside the hall and the board: the side(s) the camera is on reach VigilNearMarginCells.
+    const FCombatEncounter& Board = Rules().Snapshot().Encounter;
+    const FTransform ActorSpace = GetActorTransform();
+    const FVector Eye = ActorSpace.InverseTransformPosition(Camera->GetComponentLocation());
+    const FVector Centre = BoardPosition(FVector2D((Board.Width - 1) * 0.5f, (Board.Height - 1) * 0.5f));
+    const double Dx = Eye.X - Centre.X, Dy = Eye.Y - Centre.Y;
+    const double Length = FMath::Sqrt(Dx * Dx + Dy * Dy);
+    if (Length < 1.0) { return; }
+    auto Weight = [](double Share) { return static_cast<float>(FMath::Clamp((Share - 0.25) / 0.35, 0.0, 1.0)); };
+    const float Extra = FMath::Lerp(OccluderFade::VigilNearMarginCells, OccluderFade::VigilFarNearMarginCells, FarZoomFraction()) - Margin;
+    (Dx < 0.0 ? Out[0] : Out[1]) += Extra * Weight(FMath::Abs(Dx) / Length);
+    (Dy < 0.0 ? Out[2] : Out[3]) += Extra * Weight(FMath::Abs(Dy) / Length);
 }
 
 void AExpeditionBattleView::OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const
 {
     const FCombatEncounter& Board = Rules().Snapshot().Encounter;
-    const float Margin = OccluderMarginCells();
+    float Margins[4];
+    OccluderSideMargins(Margins);
     const FTransform ActorSpace = GetActorTransform();
-    const FVector Low = ActorSpace.TransformPosition(BoardPosition(FVector2D(-0.5f - Margin, -0.5f - Margin)));
-    const FVector High = ActorSpace.TransformPosition(BoardPosition(FVector2D(Board.Width - 0.5f + Margin, Board.Height - 0.5f + Margin)));
+    const FVector Low = ActorSpace.TransformPosition(BoardPosition(FVector2D(-0.5f - Margins[0], -0.5f - Margins[2])));
+    const FVector High = ActorSpace.TransformPosition(BoardPosition(FVector2D(Board.Width - 0.5f + Margins[1], Board.Height - 0.5f + Margins[3])));
     // The axis-aligned bounds of the two corners, so a view actor turned a quarter circle still gives a min and a max.
     Min = FVector2D(FMath::Min(Low.X, High.X), FMath::Min(Low.Y, High.Y));
     Max = FVector2D(FMath::Max(Low.X, High.X), FMath::Max(Low.Y, High.Y));
@@ -2770,7 +2813,7 @@ float AExpeditionBattleView::OccluderBoardOpacityAt(const FVector& WorldPoint) c
     FVector2D Min, Max;
     float PlaneZ = 0.0f;
     OccluderBoard(Min, Max, PlaneZ);
-    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderRampCells());
+    return OccluderFade::Board(WorldPoint, Camera->GetComponentLocation(), Min, Max, PlaneZ, BoardMetric.CellCm * OccluderRampCells(), OccluderMinOpacity());
 }
 
 void AExpeditionBattleView::UpdateOccluder()
@@ -2783,7 +2826,7 @@ void AExpeditionBattleView::UpdateOccluder()
     Occluder.Material->SetVectorParameterValue(TEXT("SightFocus"), Point(FocusPoint));
     Occluder.Material->SetVectorParameterValue(TEXT("SightUnit"), Point(UnitPoint));
     Occluder.Material->SetScalarParameterValue(TEXT("FadeRadius"), BoardMetric.CellCm * OccluderFade::RadiusCells);
-    Occluder.Material->SetScalarParameterValue(TEXT("FadeMin"), OccluderFade::MinOpacity);
+    Occluder.Material->SetScalarParameterValue(TEXT("FadeMin"), OccluderMinOpacity());
     // The board rectangle only changes with the board, its metric or the view actor's transform: push it when it does.
     FVector2D Min, Max;
     float PlaneZ = 0.0f;

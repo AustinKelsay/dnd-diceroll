@@ -520,7 +520,7 @@ bool FVaultNearWallFadesTest::RunTest(const FString& Parameters)
             {
                 for (const bool bFar : {false, true})
                 {
-                    View->SnapCamera(Yaw, bFar ? View->FarFramedDistance(Yaw) : View->FramedDistance(Yaw));
+                    View->SnapCamera(Yaw, bFar ? View->MaxZoomFor(Yaw) : View->FramedDistance(Yaw));
                     View->Tick(0.016f);
                     const FString Label = FString::Printf(TEXT("Yaw %.0f at the %s pose"), Yaw, bFar ? TEXT("far") : TEXT("default"));
                     TestEqual(*(Label + TEXT(": the fade follows the zoom")), View->FarZoomFraction(), bFar ? 1.0f : 0.0f, 0.01f);
@@ -561,15 +561,43 @@ bool FVaultNearWallFadesTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+namespace
+{
+/** Whether the ground under the four corners of the whole viewport, through the real eased camera, is inside the Vault's set (HalfCm each way from the board centre). */
+bool ViewportInsideSet(AExpeditionBattleView& View, float HalfCm, FString& Why)
+{
+    using namespace ExpeditionCameraRig;
+    const FSafeRect Rect = View.SafeRect();
+    const FTransform Camera = View.CameraTransform();
+    const FTransform Actor = View.GetActorTransform();
+    const double PlaneZ = Actor.GetLocation().Z + View.Metric().BoardTop();
+    const FCombatEncounter& Board = View.Rules().Snapshot().Encounter;
+    const FVector2D Centre = BoardCentre(Board.Width, Board.Height, View.Metric());
+    for (const FVector2D Corner : {FVector2D(0, 0), FVector2D(1, 0), FVector2D(0, 1), FVector2D(1, 1)})
+    {
+        FVector2D Ground;
+        if (!Unproject(Corner, Camera.GetLocation(), Camera.GetRotation().GetForwardVector(), Rect.Aspect, static_cast<float>(PlaneZ), Ground)) { Why = TEXT("a viewport corner has no ground"); return false; }
+        const FVector InView = Actor.InverseTransformPosition(FVector(Ground.X, Ground.Y, PlaneZ));
+        if (FMath::Abs(InView.X - Centre.X) > HalfCm + 5.0 || FMath::Abs(InView.Y - Centre.Y) > HalfCm + 5.0)
+        { Why = FString::Printf(TEXT("corner (%.0f, %.0f) lands %.0f, %.0f cm from the board centre (set %.0f)"), Corner.X, Corner.Y, InView.X - Centre.X, InView.Y - Centre.Y, HalfCm); return false; }
+    }
+    return true;
+}
+}
+
 /**
- * #209: at the zoom maximum (6400) the Vault is a hall floating in a dark void. The wheel now stops at the far pose, the nearest zoom
- * at which the whole board is in view, so the board stays whole in view and the dark around the hall is no more than that pose shows.
- * Orbiting from the far zoom keeps the cap of the new yaw. The Vigil and the Root keep the full range.
+ * #209: the Vault's camera shows no more than the authored set (the hall, its dressed ground and the far-hall ring, 27 m each way from the
+ * board centre) at any legal pose. At the zoom maximum (6400) the hall floated in the dark, and the far pose from a diagonal yaw shows
+ * far past the ring. The wheel stops at MaxZoomFor(yaw); the rendered pose obeys the cap of the rendered yaw every frame (an orbit eases yaw and
+ * distance separately and used to pass through poses beyond it); and the focus stays where the viewport's ground is inside the set. Sampled on
+ * the rendered camera at 30 Hz, at several aspects, at every 15 degrees of yaw, panned to the stops, through orbits in both directions
+ * from a far zoom and with wheel notches during the easing. The Vigil and the Root keep the full range.
  */
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVaultZoomCapTest, "Project.Expedition.Presentation.VaultWheelStopsAtTheFarPose",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVaultZoomCapTest, "Project.Expedition.Presentation.VaultNeverShowsPastTheSet",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FVaultZoomCapTest::RunTest(const FString& Parameters)
 {
+    using namespace ExpeditionCameraRig;
     const FString Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation/VaultZoomCap"), FGuid::NewGuid().ToString());
     const FString Path = FPaths::Combine(Directory, TEXT("current.json"));
     if (!TestTrue(TEXT("A seed reaches the finale"), WriteFinaleCheckpoint(Path, -1))) { return false; }
@@ -577,32 +605,73 @@ bool FVaultZoomCapTest::RunTest(const FString& Parameters)
     if (!TestNotNull(TEXT("Transient world"), World)) { return false; }
     if (AExpeditionBattleView* View = VaultResumeBoard(*this, World, Path))
     {
-        if (TestTrue(TEXT("The finale draws the Vault kit"), View->UsesVaultKit()))
+        if (TestTrue(TEXT("The finale draws the Vault kit, which bounds the camera by its set"), View->UsesVaultKit() && View->BoundsSet()))
         {
-            bool bCapped = false;
-            for (const float Yaw : {-90.0f, 0.0f, 45.0f, 90.0f, 180.0f})
+            const float Half = SetHalfExtentCells * View->Metric().CellCm;
+            int32 Capped = 0, Frames = 0;
+            struct FSize { int32 X, Y; };
+            for (const FSize Size : {FSize{1920, 1080}, FSize{1280, 720}, FSize{2560, 1080}})
             {
-                View->SnapCamera(Yaw, View->FramedDistance(Yaw));
-                View->Tick(0.016f);
-                const FString Label = FString::Printf(TEXT("Yaw %.0f"), Yaw);
-                const float Far = View->FarFramedDistance(Yaw);
-                TestEqual(*(Label + TEXT(": the wheel's limit is the far pose")), View->MaxZoomFor(Yaw), FMath::Min(Far, ExpeditionCameraRig::MaxDistance), 0.01f);
-                for (int32 Notch = 0; Notch < 200; ++Notch) { View->Zoom(120.0f); }
-                TestEqual(*(Label + TEXT(": wheeling out stops at the far pose")), View->CameraDistance(), View->MaxZoomFor(Yaw), 0.01f);
-                bCapped |= View->CameraDistance() < ExpeditionCameraRig::MaxDistance - 1.0f;
-                View->Tick(5.0f);
-                TestTrue(*(Label + TEXT(": the whole board is in view at that zoom")), View->WholeBoardInView());
-                TestTrue(*(Label + TEXT(": the far pose is not nearer than the default")), View->CameraDistance() >= View->FramedDistance(Yaw) - 1.0f);
-                // Orbiting from the far zoom keeps the new yaw's cap.
-                View->Orbit(45.0f);
-                TestTrue(*(Label + TEXT(": after an orbit the zoom is inside the new yaw's cap")), View->CameraDistance() <= View->MaxZoomFor(Yaw + 45.0f) + 0.01f);
-                View->Orbit(-45.0f);
-                // A closer zoom is not touched.
-                View->SnapCamera(Yaw, 1500.0f);
-                View->Zoom(120.0f);
-                TestEqual(*(Label + TEXT(": a closer zoom still steps by a notch")), View->CameraDistance(), 1620.0f, 0.01f);
+                View->SetSafeRect(FSafeRect::ForViewport(Size.X, Size.Y));
+                View->SnapCameraToTargets();
+                for (float Yaw = -180.0f; Yaw <= 180.0f; Yaw += 15.0f)
+                {
+                    const FString Label = FString::Printf(TEXT("%dx%d yaw %.0f"), Size.X, Size.Y, Yaw);
+                    View->SnapCamera(Yaw, View->FramedDistance(Yaw));
+                    View->Tick(1.0f / 30.0f);
+                    FString Why;
+                    const bool bDefaultFits = ViewportInsideSet(*View, Half, Why);
+                    const float Cap = View->MaxZoomFor(Yaw);
+                    TestTrue(*(Label + TEXT(": the cap is inside the zoom range and not nearer than the default")), Cap <= MaxDistance + 0.01f && Cap >= View->FramedDistance(Yaw) - 0.01f);
+                    // Wheel out to the stop, a notch a frame, then pan to each stop; whenever the default framing fits the set, every rendered frame does.
+                    for (int32 Frame = 0; Frame < 140; ++Frame)
+                    {
+                        if (Frame < 100) { View->Zoom(120.0f); }
+                        View->Tick(1.0f / 30.0f); ++Frames;
+                        TestTrue(*(Label + TEXT(": the rendered distance never passes the rendered yaw's cap")), View->RenderedDistance() <= View->MaxZoomFor(View->RenderedYaw()) + 0.5f);
+                        if (bDefaultFits && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(" wheeling out, frame %d: %s"), Frame, *Why)); break; }
+                    }
+                    TestEqual(*(Label + TEXT(": the wheel stops at the cap")), View->CameraDistance(), Cap, 0.5f);
+                    TestEqual(*(Label + TEXT(": and the rendered pose reaches it")), View->RenderedDistance(), Cap, 0.5f);
+                    Capped += Cap < MaxDistance - 1.0f ? 1 : 0;
+                    for (const FVector2D Direction : {FVector2D(0, 1), FVector2D(0, -1), FVector2D(1, 0), FVector2D(-1, 0)})
+                    {
+                        View->Pan(static_cast<float>(Direction.X) * 1.0e5f, static_cast<float>(Direction.Y) * 1.0e5f);
+                        for (int32 Frame = 0; Frame < 30; ++Frame)
+                        {
+                            View->Tick(1.0f / 30.0f); ++Frames;
+                            if (bDefaultFits && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(" panned (%.0f, %.0f), frame %d: %s"), Direction.X, Direction.Y, Frame, *Why)); break; }
+                        }
+                    }
+                    View->SnapCamera(Yaw, 1500.0f);
+                    View->Tick(1.0f / 30.0f);
+                    View->Zoom(120.0f);
+                    TestEqual(*(Label + TEXT(": a closer zoom still steps by a notch")), View->CameraDistance(), 1620.0f, 0.01f);
+                }
+                // Orbits from a far zoom in both directions, a quarter turn at a time, 30 Hz, with a wheel notch during the easing.
+                for (const float Start : {-45.0f, 45.0f, 135.0f, -135.0f, 0.0f, 90.0f})
+                {
+                    for (const float Turn : {-45.0f, 45.0f, 90.0f, -90.0f})
+                    {
+                        const FString Label = FString::Printf(TEXT("%dx%d orbit from yaw %.0f by %.0f"), Size.X, Size.Y, Start, Turn);
+                        View->SnapCamera(Start, View->MaxZoomFor(Start));
+                        View->Tick(1.0f / 30.0f);
+                        FString Why;
+                        const bool bFits = ViewportInsideSet(*View, Half, Why);
+                        View->Orbit(Turn);
+                        for (int32 Frame = 0; Frame < 90; ++Frame)
+                        {
+                            if (Frame == 3 || Frame == 9) { View->Zoom(120.0f); }
+                            View->Tick(1.0f / 30.0f); ++Frames;
+                            const float Cap = View->MaxZoomFor(View->RenderedYaw());
+                            if (View->RenderedDistance() > Cap + 0.5f) { AddError(Label + FString::Printf(TEXT(", frame %d: rendered distance %.1f is past the cap %.1f of rendered yaw %.1f"), Frame, View->RenderedDistance(), Cap, View->RenderedYaw())); break; }
+                            if (bFits && !ViewportInsideSet(*View, Half, Why)) { AddError(Label + FString::Printf(TEXT(", frame %d: %s"), Frame, *Why)); break; }
+                        }
+                    }
+                }
             }
-            TestTrue(TEXT("The cap is below the zoom maximum on some yaw (it does something)"), bCapped);
+            AddInfo(FString::Printf(TEXT("%d rendered frames sampled; %d yaw and aspect combinations capped below the zoom maximum"), Frames, Capped));
+            TestTrue(TEXT("The cap does something"), Capped > 0);
         }
         DestroyVaultWorld(World);
     }

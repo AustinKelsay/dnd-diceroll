@@ -416,11 +416,15 @@ public:
     float OccluderOpacityAt(const FVector& WorldPoint) const;
     /** The same for the board part: the point covers the board when the camera's ray through it lands on the grown board rectangle. */
     float OccluderBoardOpacityAt(const FVector& WorldPoint) const;
-    /** What the shader is given: the board rectangle grown by OccluderFade::BoardMarginCells (world XY, min and max) and the board-top height. */
+    /** What the shader is given: the board rectangle grown by OccluderSideMargins (world XY, min and max) and the board-top height. */
     void OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const;
     /** How far past the grown board rectangle the board fade eases back to opaque, in cells (wider on the Vigil's and, at the default zoom, the Vault's walls, #209). */
     float OccluderRampCells() const;
-    /** How far past the board the board fade reaches, in cells: 0.5 by default, 2.5 on the Vigil, and on the Vault 2.5 at the default zoom easing to 0.5 at the far pose (#209). */
+    /** The opacity a faded piece dithers to: 0.15, and 0.04 on the Vigil (#209). The material's FadeMin and the CPU queries use it. */
+    float OccluderMinOpacity() const;
+    /** The board fade's margin on each side (low X, high X, low Y, high Y), in cells: OccluderMarginCells, and on the Vigil the side(s) the camera is on reach VigilNearMarginCells. */
+    void OccluderSideMargins(float (&Out)[4]) const;
+    /** How far past the board the board fade reaches, in cells, on the sides away from the camera: 0.5, and on the Vault 2.5 at the default zoom easing to 0.5 at the far pose (#209). */
     float OccluderMarginCells() const;
     /** 0 at the default zoom of the rendered yaw, 1 at its far pose, smooth between: the Vault's far grade and board fade follow it. */
     float FarZoomFraction() const;
@@ -762,10 +766,32 @@ private:
      */
     FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
 public:
-    /** How far past the board's outer tile edge the pan may show, in cells, for the world drawn now: 1.5, and 0.75 on the Vigil (#209). */
-    float ActivePanMarginCells() const;
-    /** The farthest zoom the wheel reaches at a yaw: the zoom maximum, and on the Vault the far pose (whole board in view), so it never shows the dark around the hall (#209). */
+    /**
+     * The farthest zoom the wheel and the rendered pose reach at a yaw: the zoom maximum, and on the Vault the far pose or, where the
+     * viewport's ground would show more than the authored set from that yaw (the hall, its dressed ground and the far-hall ring, 27 m each way
+     * from the board centre), the nearest zoom at which it does not (but never nearer than the default). Per yaw, so a diagonal far pose is nearer
+     * than a square one. `UpdateCamera` clamps the rendered distance against the rendered yaw's cap every frame, as the pan bound clamps the
+     * rendered focus, so an orbit from a far zoom never renders past the cap of the yaw it is easing through (#209).
+     */
     float MaxZoomFor(float ForYaw) const;
+private:
+    /** The last MaxZoomFor answer and what it was solved for. */
+    struct FZoomCap
+    {
+        bool bValid = false;
+        float Yaw = 0.0f;
+        int32 Width = 0, Height = 0;
+        float CellCm = 0.0f;
+        ExpeditionCameraRig::FSafeRect Rect;
+        float Value = 0.0f;
+    };
+    mutable FZoomCap ZoomCap;
+public:
+    /** Whether the camera is bounded by an authored set (the Vault's): the rendered focus stays where the viewport's ground is inside it. */
+    bool BoundsSet() const;
+    /** The yaw and distance the camera renders this frame (the eased pose), not the targets. */
+    float RenderedYaw() const { return Yaw; }
+    float RenderedDistance() const { return Distance; }
 private:
     /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
     FVector2D HoldUnit(const FVector2D& Wanted) const;

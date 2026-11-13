@@ -26,20 +26,30 @@ constexpr float BoardMarginCells = 0.5f;
 /** Past the grown rectangle the board fade eases back to opaque over this many cells. */
 constexpr float BoardRampCells = 0.5f;
 /**
- * The walled worlds have near walls 3 m high that stand 2 to 3 cells outside the board. At the 45 degree default pitch such a wall hides
- * the floor from its base inward for about 2 cells, and the fade only reached half a cell past the board, so the Vault's near wall
- * covered a quarter of the view at some yaws and the Vigil's ledge and stained-glass rose filled the bottom of the frame behind the
- * action bar, without dithering (#209). Their board fade is wider: the grown rectangle reaches the margin past the board and eases
- * back to opaque over the ramp, so a near wall dithers like the occluders always did.
+ * The walled worlds have near walls 3 m high that stand 2 to 3 cells outside the board, and the Vigil's rose window hangs on the home-side wall
+ * 8 cells out. Seen from a camera outside, a near wall hides the floor from its base inward for a couple of cells, and the fade only reached half
+ * a cell past the board, so the Vault's near wall covered a quarter of the view at some yaws and the Vigil's ledge and stained-glass rose
+ * filled the bottom of the frame behind the action bar, without dithering (#209). Their board fade is wider.
  *  - The Vault: 2.5 cells and a 1.5 cell ramp at the default zoom, easing back to BoardMarginCells and BoardRampCells at the far pose
  *    (`AExpeditionBattleView::FarZoomFraction`), where the whole hall is in view and its walls should enclose it, not fade.
- *  - The Vigil: 2.5 cells and half a cell at every zoom; its occluders are its columns, arches and the rose, which are there to be seen through.
+ *  - The Vigil: BoardMarginCells on the sides away from the camera, and VigilNearMarginCells on the side(s) the camera is on, with a ramp of
+ *    VigilBoardRampCells. A pixel of the rose looks over the near wall and its ray lands about 5 cells past the board's near edge at the default
+ *    zoom (farther as the camera rises), so the wide side reaches 7.5 (a diagonal yaw lengthens the ray), easing to VigilFarNearMarginCells at the far pose; the geometry between the camera and the board on the camera's side dithers, whatever the yaw, and the
+ *    rose stays opaque on the far side and from the sides.
  * The Root's forest keeps BoardMarginCells and BoardRampCells.
  */
 constexpr float VaultBoardMarginCells = 2.5f;
 constexpr float VaultBoardRampCells = 1.5f;
-constexpr float VigilBoardMarginCells = 2.5f;
-constexpr float VigilBoardRampCells = 0.5f;
+constexpr float VigilNearMarginCells = 7.5f;
+/** The Vigil's near-side margin at the far pose: the camera is higher, so the rose's rays land farther past the board (about 7 to 8 cells at the farthest zoom). It eases from VigilNearMarginCells with the zoom. */
+constexpr float VigilFarNearMarginCells = 11.0f;
+/**
+ * The Vigil's occluders fade to this, not to MinOpacity: at the close zoom the stained-glass rose and the ledge fill the bottom third of the
+ * frame, and at 15% their dither is still a coloured stipple behind the action bar (on-screen pass of #215). At 4% a faded piece is a few specks:
+ * still dithered, not hidden. The Vault and the Root keep MinOpacity.
+ */
+constexpr float VigilMinOpacity = 0.04f;
+constexpr float VigilBoardRampCells = 1.0f;
 
 /**
  * Opacity of a point of the occluder for one sight line from Eye to Target. Points before the eye or beyond the target
