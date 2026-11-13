@@ -1,0 +1,244 @@
+{
+	"version": 1,
+	"status": "ok",
+	"fixture": "reward-choice-first",
+	"poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-9b3a1759-prB/tools/capture/reward-poses.json",
+	"settleFrames": 60,
+	"primitives": false,
+	"themed": true,
+	"cellCm": 150,
+	"resolution":
+	{
+		"width": 1280,
+		"height": 720
+	},
+	"seed": 42,
+	"boardWidth": 0,
+	"boardHeight": 0,
+	"shots": [
+		{
+			"name": "reward-gear",
+			"mode": "overview",
+			"hero": 1,
+			"status": "captured",
+			"file": "reward-gear.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-reserve",
+			"mode": "overview",
+			"hero": 1,
+			"status": "captured",
+			"file": "reward-reserve.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-honed",
+			"mode": "overview",
+			"hero": 1,
+			"status": "captured",
+			"file": "reward-honed.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-reserve-life",
+			"mode": "overview",
+			"hero": 2,
+			"status": "captured",
+			"file": "reward-reserve-life.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-reserve-barbarian",
+			"mode": "overview",
+			"hero": 3,
+			"status": "captured",
+			"file": "reward-reserve-barbarian.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-reserve-battle-master",
+			"mode": "overview",
+			"hero": 4,
+			"status": "captured",
+			"file": "reward-reserve-battle-master.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-taken-reserve",
+			"mode": "overview",
+			"hero": 4,
+			"status": "captured",
+			"file": "reward-taken-reserve.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "reward-taken-honed",
+			"mode": "overview",
+			"hero": 4,
+			"status": "captured",
+			"file": "reward-taken-honed.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "overview",
+			"mode": "overview",
+			"status": "captured",
+			"file": "overview.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		}
+	]
+}

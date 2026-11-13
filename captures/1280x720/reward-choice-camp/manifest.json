@@ -1,0 +1,100 @@
+{
+	"version": 1,
+	"status": "ok",
+	"fixture": "reward-choice-camp",
+	"poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-9b3a1759-prB/tools/capture/reward-poses.json",
+	"settleFrames": 60,
+	"primitives": false,
+	"themed": true,
+	"cellCm": 150,
+	"resolution":
+	{
+		"width": 1280,
+		"height": 720
+	},
+	"seed": 42,
+	"boardWidth": 0,
+	"boardHeight": 0,
+	"shots": [
+		{
+			"name": "reward-gear",
+			"mode": "overview",
+			"hero": 1,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-reserve",
+			"mode": "overview",
+			"hero": 1,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-honed",
+			"mode": "overview",
+			"hero": 1,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-reserve-life",
+			"mode": "overview",
+			"hero": 2,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-reserve-barbarian",
+			"mode": "overview",
+			"hero": 3,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-reserve-battle-master",
+			"mode": "overview",
+			"hero": 4,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-taken-reserve",
+			"mode": "overview",
+			"hero": 4,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "reward-taken-honed",
+			"mode": "overview",
+			"hero": 4,
+			"status": "skipped",
+			"reason": "a card needs a Reward-phase checkpoint"
+		},
+		{
+			"name": "overview",
+			"mode": "overview",
+			"status": "captured",
+			"file": "overview.png",
+			"yaw": -90,
+			"distance": 2658.61376953125,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1517.8670129106915,
+					"y": -2419.1086285892379,
+					"z": 2779.9157166135537
+				},
+				"rotation":
+				{
+					"pitch": -41.245591768560985,
+					"yaw": 89.99999749552201,
+					"roll": -4.2300767694315524e-15
+				},
+				"fov": 40
+			}
+		}
+	]
+}
