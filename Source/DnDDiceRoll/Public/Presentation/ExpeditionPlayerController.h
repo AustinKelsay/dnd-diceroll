@@ -39,6 +39,13 @@ public:
     void OnApplicationActivation(bool bActive);
     FDelegateHandle ActivationHandle;
     void StopListeningForActivation();
+    /**
+     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) and no longer has it. While the left button is held the engine does NOT deactivate
+     * the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither Slate's activation event nor FApp::HasFocus
+     * reports it; this is the signal that does. Always false on other platforms, and before the window first had focus (a seat with no keyboard never gives it).
+     */
+    bool KeyboardFocusLost() const;
+    mutable bool bSawKeyboardFocus = false;
     /** False when a game viewport exists and the window or the application has no focus. With no viewport (an automation world) there is nothing to lose. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }

@@ -17,6 +17,9 @@
 #include "Party/BuildCatalog.h"
 #include "Misc/App.h"
 #include "Framework/Application/SlateApplication.h"
+#if PLATFORM_LINUX && !UE_SERVER
+#include "Linux/LinuxApplication.h"
+#endif
 
 void AExpeditionPlayerController::BeginPlay()
 {
@@ -150,7 +153,9 @@ void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
     // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
-    if (bPressArmed && !WindowHasFocus()) { NotifyWindowFocusLost(); }
+    // (Polled every tick, armed or not, so the keyboard-focus latch sees the window have focus before it can lose it.)
+    const bool bFocusLost = !WindowHasFocus();
+    if (bPressArmed && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -705,10 +710,26 @@ void AExpeditionPlayerController::FlushPressedKeys()
     Super::FlushPressedKeys();
 }
 
+bool AExpeditionPlayerController::KeyboardFocusLost() const
+{
+#if PLATFORM_LINUX && !UE_SERVER
+    // Only a running game window has the Linux platform application; an automation world has no viewport.
+    const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return false; }
+    const TSharedPtr<GenericApplication> Platform = FSlateApplication::Get().GetPlatformApplication();
+    if (!Platform.IsValid()) { return false; }
+    const TSharedPtr<FLinuxWindow> FocusWindow = static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow();
+    if (FocusWindow.IsValid()) { bSawKeyboardFocus = true; return false; }
+    return bSawKeyboardFocus;
+#else
+    return false;
+#endif
+}
+
 bool AExpeditionPlayerController::WindowHasFocus() const
 {
     const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-    return !Client || !Client->Viewport || (Client->Viewport->HasFocus() && FApp::HasFocus());
+    return !Client || !Client->Viewport || (Client->Viewport->HasFocus() && FApp::HasFocus() && !KeyboardFocusLost());
 }
 
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
