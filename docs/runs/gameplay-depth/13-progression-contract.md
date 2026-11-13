@@ -103,7 +103,7 @@ Grep hits that are neither readers nor amounts are listed under "Fixed, never ho
 
 **Shelter keeps its Rage lifetime.** The guard still ends when its Barbarian's Rage ends (`CombatBattle.cpp:940`), and the restore rule for a Rage guard with no `GuardTurns` (`:132`) is unchanged.
 - **Amount.** One function, `FBuildCatalog::GuardAmount(Guard)`, gives the amount: `GuardAmount` when the guard is Kit-paid, otherwise the guard's own Rage-paid Protect fact, honed when `bHoned` is set. The four readers above call it. No new saved field is needed: `bHoned` cannot change during a battle, because claims only happen between fights. So a checkpoint saved with Shelter active resumes with the same amount.
-- **Text.** The status and hero-details text say the guard lasts while raging, not "until next own turn".
+- **Text.** The ability text says "until its next turn or its fury ends" and the status and hero-details text "until next own turn or Rage ends": the guard ends at its Barbarian's next own turn, or sooner when that Rage ends. *(Corrected in #218 PR A with the lead's approval; the #58 cost-word lint keeps resource names out of ability descriptions, hence "fury".)*
 
 **Fixed, never honed** (listed so that a reviewer can tell an omission from a decision):
 - the Potion's 2d4+2 and Rescue's 1 HP;
