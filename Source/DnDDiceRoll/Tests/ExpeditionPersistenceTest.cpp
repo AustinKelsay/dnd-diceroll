@@ -8,6 +8,7 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "ExpeditionTestSupport.h"
+#include "Party/BuildCatalog.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExactRestoreTest, "Project.Expedition.Persistence.ExactRestoreWithoutRolls",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
@@ -91,9 +92,33 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResumeEveryPhaseTest, "Project.Expedition.Pers
 bool FResumeEveryPhaseTest::RunTest(const FString& Parameters)
 {
     TSet<EExpeditionPhase> Phases; bool bSpentAction=false, bPartialMove=false, bBonus=false, bDowned=false, bDead=false;
+    // #184: the fighting run must reach Victory to serialize that phase. Take the first seed from 42 on where this
+    // test's own player (same choices, without the save round trips) wins; the passive run then loses on the same seed.
+    auto EndPhase = [](int32 Seed)
+    {
+        FExpeditionRun Run; FString Error; Run.NewRun(Seed, Error, TEXT("phase-fixture"));
+        for (int32 Step=0; Step<1600; ++Step)
+        {
+            const auto Phase=Run.Progress().Phase; const auto& B=Run.Battle(); const auto* A=B.Find(B.ActiveId());
+            if (Phase==EExpeditionPhase::Victory || Phase==EExpeditionPhase::Defeat) { break; }
+            if (Phase==EExpeditionPhase::Route) { Run.ChooseRoute(Run.Progress().Offers[0].Id,Error); }
+            else if (Phase==EExpeditionPhase::Reward)
+            {
+                int32 Recipient=INDEX_NONE;
+                for (const auto& U:B.Snapshot().Encounter.Combatants) { if (U.Side==ECombatSide::Party && U.Life==ECombatLife::Conscious) { Recipient=U.Id; break; } }
+                Run.ClaimReward(Recipient,Error);
+            }
+            else if (Phase==EExpeditionPhase::Recovery) { Run.Recover(true,Error); }
+            else if (A->Side==ECombatSide::Enemy) { Run.PlayEnemyTurn(); }
+            else { Run.Submit(NextPartyCommand(Run,true)); }
+        }
+        return Run.Progress().Phase;
+    };
+    const int32 Seed = ExpeditionTestSupport::FirstSeedWhere([&EndPhase](int32 Candidate) { return EndPhase(Candidate)==EExpeditionPhase::Victory; });
+    if (!TestTrue(TEXT("Some seed lets the fighting run win"), Seed!=INDEX_NONE)) { return false; }
     for (bool bFight : {true, false})
     {
-        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(42, Error, TEXT("phase-fixture"));
+        FExpeditionRun Run, Resumed; FString Error; Run.NewRun(Seed, Error, TEXT("phase-fixture"));
         for (int32 Step=0; Step<1600; ++Step)
         {
             if (!TestTrue(*Error, Roundtrip(Run, Resumed, Error))) { return false; }
@@ -322,13 +347,19 @@ bool FUnreadableStartupRecoveryTest::RunTest(const FString& Parameters)
     Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version + 1); // future schema: unreadable, preserve on NewRun
     FString Incompatible;
     FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Incompatible));
-    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible})
+    // #184: a checkpoint from an unsupported rules revision (current schema) is refused by name and preserved the same way.
+    Object->SetNumberField(TEXT("Version"), FExpeditionSave::Version);
+    Object->GetObjectField(TEXT("Current"))->GetObjectField(TEXT("Progress"))->SetNumberField(TEXT("CatalogRevision"), FBuildCatalog::Revision + 1);
+    FString OlderRevision;
+    FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&OlderRevision));
+    for (const FString& Unreadable : TArray<FString>{Json.Left(Json.Len()/2), Incompatible, OlderRevision})
     {
         FSaveFixture Fixture;
         IFileManager::Get().MakeDirectory(*Fixture.Directory, true);
         FFileHelper::SaveStringToFile(Unreadable, *Fixture.Path);
         FExpeditionSession Session(Fixture.Path);
         TestFalse(TEXT("Resume rejects unreadable save"), Session.Resume(Error));
+        if (Unreadable == OlderRevision) { TestTrue(TEXT("Resume names the unsupported rules revision: ") + Error, Error.Contains(TEXT("rules revision"))); }
         if (!TestTrue(TEXT("Explicit fresh start can recover"), Session.NewRun(43, Error))) { continue; }
         TArray<FString> Preserved;
         IFileManager::Get().FindFiles(Preserved, *(Fixture.Path + TEXT(".unreadable-*")), true, false);

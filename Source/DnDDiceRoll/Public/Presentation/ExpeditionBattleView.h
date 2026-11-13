@@ -3,9 +3,11 @@
 #include "CoreMinimal.h"
 #include "Persistence/ExpeditionSave.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
 #include "Presentation/ExpeditionPlayback.h"
+#include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
@@ -26,7 +28,9 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
+enum class EDiceRollKit : uint8;
 struct FDiceRollCharacter;
+struct FDiceRollWorldKit;
 
 UENUM()
 enum class EBoardTheme : uint8 { Meadow, Ruins, Vault };
@@ -43,7 +47,88 @@ struct FExpeditionPart
     UPROPERTY() TObjectPtr<UMaterialInstanceDynamic> Material;
     UPROPERTY() FLinearColor Base = FLinearColor::White;
     FLinearColor Shown = FLinearColor::Transparent;
+    /** Footprint rings and markers drawn from the shared ring bank (#144) have no component of their own: the bank slot. */
+    int32 RingSlot = INDEX_NONE;
     void SetColor(const FLinearColor& Color);
+    /**
+     * A hit's flash on the figure's rim (#189): the material's "RimColor" turns toward a warm white (ExpeditionFlash::RimColor). Materials without
+     * "Rim" and "RimColor" (the engine primitives) are left alone. The first call remembers the look the material had.
+     */
+    void SetFlash(float Flash);
+    /** The rim look the material had before any flash, read on the first SetFlash. */
+    float BaseRim = 0.0f;
+    FLinearColor BaseRimColor = FLinearColor::White;
+    float ShownFlash = 0.0f;
+    enum class ERim : uint8 { Unread, Present, Absent } RimState = ERim::Unread;
+};
+
+/**
+ * One instanced group (#144): every instance shares a mesh and a material, so the group is one component and one draw.
+ * Tint and glow ride in per-instance custom data (CustomFloats floats per instance), not in per-part material instances.
+ */
+USTRUCT()
+struct FExpeditionGroup
+{
+    GENERATED_BODY()
+    UPROPERTY() TObjectPtr<UStaticMesh> Mesh;
+    UPROPERTY() TObjectPtr<UMaterialInterface> Material;
+    UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> Component;
+    bool bCastShadow = true;
+    int32 CustomFloats = 0;
+    /** A plain group (engine shape, BasicShapeMaterial, no custom data) is keyed by the one colour its material instance carries. */
+    bool bPlain = false;
+    FLinearColor Colour = FLinearColor::White;
+    /** Instances changed since the last flush; the render thread is told once per frame. */
+    bool bDirty = false;
+    /** Instances moved continuously this frame and last frame. Their previous transforms give the renderer motion vectors (TSR
+     * reprojects them like moving loose components); an instance that stops moving has its previous transform reset at flush. */
+    TArray<int32> Moved;
+    TArray<int32> MovedLast;
+};
+
+/** Where an instance lives: its group and its index in the group's component. */
+struct FExpeditionInstance
+{
+    int32 Group = INDEX_NONE;
+    int32 Index = INDEX_NONE;
+    bool IsValid() const { return Group != INDEX_NONE && Index != INDEX_NONE; }
+};
+
+/**
+ * A placed prop: an instance in a group, or a loose component when instancing is off (primitive look, tests comparing the two).
+ * Local is the transform under the scenery root, so a position never needs the component.
+ */
+struct FExpeditionProp
+{
+    FExpeditionInstance Instance;
+    UStaticMeshComponent* Loose = nullptr;
+    FTransform Local;
+    FRotator Rotation = FRotator::ZeroRotator;
+};
+
+/** One pooled effect piece (a spark, a shot, a camp stone): a loose part, or an instance in a shared group. */
+USTRUCT()
+struct FExpeditionSlot
+{
+    GENERATED_BODY()
+    UPROPERTY() FExpeditionPart Loose;
+    FExpeditionInstance Instance;
+    FVector Location = FVector::ZeroVector;
+    FRotator Rotation = FRotator::ZeroRotator;
+    FVector Scale = FVector::OneVector;
+    FLinearColor Colour = FLinearColor::Transparent;
+    bool bVisible = false;
+    bool bPlaced = false;
+};
+
+/** The shared footprint-ring and marker bank (#144): 24 bars per ring slot in one component, colour per instance. */
+struct FExpeditionRingState
+{
+    FVector Centre = FVector::ZeroVector;
+    float Scale = 0.0f;
+    FLinearColor Colour = FLinearColor::Transparent;
+    bool bVisible = false;
+    bool bPlaced = false;
 };
 
 USTRUCT()
@@ -59,7 +144,7 @@ struct FExpeditionUnitRig
     bool bSilhouette = false;
     /** The hollow footprint ring on the board plane under the figure; it stays flat when the figure falls. */
     UPROPERTY() FExpeditionPart Ring;
-    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its nine clips by EUnitPose. */
+    /** Rigged figures only (#147): the skinned mesh, driven by single-node animation, and its ten clips by EUnitPose. */
     UPROPERTY() TObjectPtr<USkeletalMeshComponent> Skin;
     UPROPERTY() TArray<TObjectPtr<UAnimSequence>> Clips;
     /** The clip on the figure and its time. The view advances the time itself (at playback speed), so poses are deterministic. */
@@ -69,6 +154,8 @@ struct FExpeditionUnitRig
     int32 PoseSerial = -1;
     /** A natural return to Idle waits for a one-shot clip that is still playing. */
     bool bIdleAfter = false;
+    /** Capture support (#150): the clip and time are held by PreviewPose, so UpdateAnimation leaves the figure alone. */
+    bool bPosePreview = false;
 };
 
 /** What a figure's animation shows right now (tests and tools). */
@@ -97,6 +184,9 @@ struct FExpeditionSway
 {
     GENERATED_BODY()
     UPROPERTY() TObjectPtr<USceneComponent> Component;
+    /** Instanced props (#144) sway through their instance transform instead; Location is where it stands under the scenery root. */
+    FExpeditionInstance Instance;
+    FVector Location = FVector::ZeroVector;
     FRotator Base = FRotator::ZeroRotator;
     FVector Scale = FVector::OneVector;
     float Phase = 0.0f;
@@ -176,6 +266,11 @@ public:
     bool InCombat() const;
     /** True while the tabletop mission overview is shown instead of a battle board. */
     bool ShowingOverview() const { return bOverview; }
+    /** The overview scene as last built (#149): the table and each diorama by mesh name, and the candle light positions in table cm; empty off the tabletop. */
+    const TArray<FName>& OverviewMeshes() const { return OverviewDrawnMeshes; }
+    const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
+    /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
+    bool OverviewIsR002() const { return bOverview && bOverviewR002; }
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -186,6 +281,11 @@ public:
 
     // Presentation.
     const FExpeditionPlayback& Playback() const { return Show; }
+    /** Capture and test support (#190): a landed roll card that stays up until cleared. */
+    void PreviewRoll(const FDiceTray& Tray, float Age = FDiceTray::TumbleSeconds + 0.5f) { Show.PreviewTray(Tray, Age); }
+    /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
+    bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
+    void ClearRollPreview() { Show.ClearTrayPreview(); }
     bool IsPresenting() const { return Show.IsBusy(); }
     void SkipPresentation();
     void CycleSpeed();
@@ -198,12 +298,18 @@ public:
     void Orbit(float Degrees);
     void Zoom(float Amount);
     /**
-     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The focus is
-     * clamped to the board plus a margin, and returns to the active unit when the turn changes.
+     * Moves the camera focus in screen terms: Right and Away are reference cm (scaled by the metric). The view may
+     * show at most PanMarginCells (1.5) past the board's outer tile edge, so an axis on which the view is wider than the
+     * board stays at the board centre, and nothing pans while the whole board is in view. The pan returns to the active
+     * unit when the turn changes.
      */
     void Pan(float Right, float Away);
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
+    /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
+    bool WholeBoardInView() const;
+    /** Shakes the camera (hits and crits call this through playback); it decays over about Amount / 1.8 seconds. */
+    void Shake(float Amount) { ShakeAmount = FMath::Max(ShakeAmount, Amount); }
     /** The camera pitch below horizontal, in degrees, for the current zoom. */
     float CameraPitch() const;
     /** The screen area the HUD leaves free; the board is fitted and centred in it. */
@@ -219,26 +325,50 @@ public:
     /**
      * Camera distances are in reference units: cm for the 110 cm r001 cell. The camera multiplies them by
      * the board metric's scale, so framing and the zoom clamp (900 to 6400) look the same at any cell size.
-     * Where the camera frames the whole board by default: the nearest zoom at which the board's four corners sit
-     * inside the HUD-safe rect from the home yaw (-90), at 45 degrees. This is the pitch anchor.
+     * FramedDistance() is the pitch anchor: the nearest zoom at which the board's four corners sit inside the
+     * HUD-safe rect from the home yaw (-90), at 45 degrees. It no longer is the default zoom (see below), but the pitch
+     * ramp (35 / 45 / 60 degrees) and the far stop stay tied to it.
      */
     float FramedDistance() const;
-    /** The default zoom for a board seen from another yaw: its corners fit the safe rect there too (clamped to the zoom range). */
+    /**
+     * The default zoom for a board seen from a yaw (#148 gate 2): the closer of the whole-board fit (WholeBoardDistance) and
+     * the distance at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (FigureDistance), clamped to
+     * the zoom range. A board that fits at the closer figure distance keeps its whole-board fit.
+     */
     float FramedDistance(float ForYaw) const;
-    /** Whether the default zoom for a yaw really contains the board inside the zoom range (false only for a board too large to fit). */
+    /** The nearest zoom from a yaw at which the board's corners fit the safe rect (clamped to the zoom range); the old default, and where the far pose starts. */
+    float WholeBoardDistance(float ForYaw) const;
+    /** The zoom at which a standing figure at the focus is 88 px tall at 1080 viewport pixels (about 59 px at 720), on the zoom-tied pitch curve. */
+    float FigureDistance() const;
+    /** The far pose: the end of the pitch ramp (FarStop of the anchor), never nearer than the whole-board fit from that yaw. */
+    float FarFramedDistance(float ForYaw) const;
+    /** Whether the whole-board fit from a yaw lies inside the zoom range (false only for a board too large to fit). */
     bool FramedFits(float ForYaw) const;
-    /** Whether the zoom rests at the default fit for the current yaw. Orbit keeps such a camera fitted; a zoom the player chose is left alone. */
+    /** Whether the zoom rests at the default for the current yaw. Orbit keeps such a camera at the default; a zoom the player chose is left alone. */
     bool AtFramedZoom() const;
     float CameraDistance() const { return TargetDistance; }
     /** Capture support: put the camera at a pose at once, with no interpolation from the last one. */
     void SnapCamera(float InYaw, float InDistance);
+    /**
+     * Capture support (#189): shows a hit on a combatant with no command and no rules change (see FExpeditionPlayback::PreviewImpact)
+     * and holds its flash at the peak every tick until ClearImpactPreview, so a capture frame is the worst case, not a decaying one.
+     */
+    void PreviewImpact(int32 TargetId, EImpactPreview Effect, FVector2D From, EImpactMoment Moment = EImpactMoment::Landing, EAdventurerRole Shooter = EAdventurerRole::None);
+    void ClearImpactPreview();
+    /**
+     * Capture support (#150): holds a rigged figure in a clip at a time (seconds, clamped to the clip) with no command and no rules
+     * change, until ClearPosePreview hands it back to playback. False when the unit has no skinned figure.
+     */
+    bool PreviewPose(int32 UnitId, EUnitPose Pose, float Seconds);
+    void ClearPosePreview();
+    int32 ImpactPreviewId() const { return ImpactTargetId; }
     /** Capture support: settle the camera on its current targets at once. */
     void SnapCameraToTargets() { bCameraPlaced = false; }
     FTransform CameraTransform() const;
     float CameraFieldOfView() const;
     bool UsesTheme() const { return Theme != nullptr; }
     /** True when this board draws the contextual grid (themed battle boards); primitive boards tint cube tiles instead. */
-    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty(); }
+    bool DrawsContextualGrid() const { return !OverlaySets.IsEmpty() || OverlayBase != INDEX_NONE; }
     /** The per-cell state the contextual grid was last built from (also kept on primitive boards, where only the tiles show it). */
     const BoardOverlay::FMask& OverlayMask() const { return OverlayState; }
     /** Bars drawn for a style in the last overlay update; zero when the board has no contextual grid. */
@@ -247,8 +377,29 @@ public:
     bool ShowingFullGrid() const { return bFullGridShown; }
     /** True when this board is built from the Drowned Vigil world kit r002 (a Vigil board of a theme whose kit is switched on). */
     bool UsesVigilKit() const { return bVigilKit; }
+    /** True when this board is built from the Root of the World kit r002 (#149): a forest board of a theme whose Root kit is switched on. */
+    bool UsesRootKit() const { return bRootKit; }
+    /** True when this board is built from the Vault world kit r002 (#149): the finale of a theme whose Vault kit is switched on and complete. */
+    bool UsesVaultKit() const { return bVaultKit; }
+    /** The world kit a board theme asks for: the Root on Meadow, the Vigil on Ruins, the Vault on the finale (UDiceRollTheme::KitFor falls back to the Vigil kit when the Vault is incomplete). */
+    static EDiceRollKit KitKindFor(EBoardTheme Theme);
+    /** The Waystone's light: the number of lights (0 or 1), where it stands in world space, and whether the legacy pedestal is drawn. On a Vault-kit board the light stands at the apse Waystone and there is no pedestal. */
+    int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
+    FVector WaystoneLightLocation() const;
+    bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
+    /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
+    void UseTheme(UDiceRollTheme* Value);
+    /**
+     * The world mesh's scale in world space: 1 for an r002 world kit, which is authored at the true 150 cm cell and placed
+     * unscaled; the board metric's scale (cell / 110 cm) for the r001 art. Zero when the board has no themed world.
+     */
+    float WorldMeshScale() const;
+    /** The instance tint to draw a kit mesh with: white when instanced (its material instance applies it), the instance Color when loose. */
+    FLinearColor KitTint(const UStaticMesh* Mesh) const;
     /** What the kit dressed this board with: scatter, mist and shaft pieces actually placed, with their cells and view-space positions. */
     const TArray<FPlacedDressing>& PlacedDressing() const { return Dressing; }
+    /** The braziers the themed board placed (#148), in board cells; empty on the primitive look and the tabletop. */
+    const TArray<FVector2D>& PlacedBraziers() const { return BrazierCells; }
     /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
     int32 PlacedObstacles() const { return ObstaclePieces; }
     int32 PlacedArches() const { return ArchPieces; }
@@ -280,6 +431,19 @@ public:
     int32 FigureStencil(int32 UnitId) const;
     /** Whether the silhouette post-process material is in the grade's blendables (it is optional; absent when the asset does not exist). */
     bool HasSilhouetteBlendable() const;
+    /**
+     * Test-only (#189): the tint last pushed to each of a combatant's figure parts (for a rigged figure, one per skin material slot) and to its
+     * footprint ring, as the materials hold it. False when the combatant has no figure. A ring-bank ring reports the bank's colour for its slot.
+     */
+    bool UnitShownColors(int32 UnitId, TArray<FLinearColor>& OutParts, FLinearColor& OutRing) const;
+    /**
+     * Test-only (#150 batch 4): the palette a rigged party figure's skin material holds right now (its subclass slots and, when its class appears more
+     * than once in the party, the accent slot), read back from the material parameters. False when the combatant is not a rigged figure or its material
+     * does not carry the palette parameters.
+     */
+    bool UnitPalette(int32 UnitId, ExpeditionPalette::FPalette& OutPalette) const;
+    /** Test-only (#189): the intensity (candelas) each spell bolt's point light was last set to, in bolt order (zero for an idle light or an arrow). */
+    TArray<float> BoltLightIntensities() const;
     /** The root component of a combatant's figure (body and parts hang below it), or null if it has none. */
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
@@ -292,12 +456,42 @@ public:
     void SetBoardMetric(const FBoardMetric& Value);
     /** Draws the static r001 meshes instead of the rigged characters (what -ExpeditionStaticFigures does at startup) and rebuilds. */
     void UseStaticFigures();
+    /**
+     * Capture and test support (#150 foe batch): draws the board's enemies, in encounter order, as these looks instead of the ones their names give, and rebuilds.
+     * A checkpoint cannot carry a renamed enemy (a restored run is checked against the generated roster), and the skirmisher, brute and warden are not generated
+     * until #188, so the gallery shows them through this: presentation only, nothing is written to the run, the rules or the RNG. -ExpeditionFoeLooks=Skirmisher,Brute,Archer
+     * does the same at startup (the FoeRigs keys, ExpeditionFoe::RigKey); an empty array restores the names' own looks.
+     */
+    void SetFoeLooks(const TArray<EFoeLook>& Looks);
+    /** The look an enemy is drawn as: the override of its place in the encounter when there is one, otherwise ExpeditionFoe::LookOf. */
+    EFoeLook FoeLookFor(const FCombatantState& Unit) const;
     /** How many figures on the board are rigged characters. */
     int32 SkeletalFigureCount() const;
     /** The animation shown on a combatant's figure; bSkeletal is false for static and primitive figures. */
     FUnitAnimationState UnitAnimation(int32 UnitId) const;
     /** Switches to the engine-primitive presentation (what -ExpeditionPrimitives does at startup) and rebuilds. */
     void UsePrimitives();
+    /**
+     * Test-only presentation data (#144). Draws every static part as its own component again (what the primitive look always does)
+     * instead of instancing, and rebuilds; false restores the instanced groups. Only the number of components differs.
+     */
+    void SetLooseParts(bool bLoose);
+    /** True when themed parts are drawn from shared instanced groups (the default for a themed board with the instancing materials). */
+    bool UsesInstancedParts() const { return bInstancedParts; }
+    /** The shared effect material (sparks, shots, camp, waystone) was found, so those pieces are instanced. */
+    bool UsesInstancedEffects() const { return bInstancedEffects; }
+    /** The footprint rings and markers are drawn from one shared ring bank. */
+    bool UsesRingBank() const { return RingBank != nullptr; }
+    /**
+     * Test-only: every primitive component (static, instanced and skeletal meshes) this board built, the contextual grid included.
+     * InstancedGroupCount is how many of them are shared instanced groups.
+     */
+    int32 PresentationComponentCount() const;
+    int32 InstancedGroupCount() const { return Groups.Num(); }
+    /** Test-only: the logical parts of the board (props, figure parts, rings and pooled effect pieces), the same whether instanced or loose. */
+    int32 LogicalPartCount() const { return LogicalParts; }
+    /** Test-only: logical scenery props only (everything placed through the prop path), the same whether instanced or loose. */
+    int32 LogicalPropCount() const { return LogicalProps; }
     FVector CellPosition(FIntPoint Cell) const;
     FVector BoardPosition(FVector2D Cell, float Height = 0.0f) const;
     /** Where a combatant currently appears, including playback motion. */
@@ -323,8 +517,18 @@ private:
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
+    int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
     bool bSkeletalFigures = true;
+    /** SetFoeLooks: the look of each enemy in encounter order; empty uses the names. */
+    TArray<EFoeLook> FoeLookOrder;
+    /** The accent slot of each party member whose class appears more than once in the party (ExpeditionPalette::AccentSlots), built with the rigs. */
+    TMap<int32, int32> PartyAccents;
+    /** Subclass palettes and party accents on rigged party figures (off with -ExpeditionNoPalettes: the class colours, a measurement baseline). */
+    bool bPalettes = true;
+    /** Party-slot accents on the palettes (off with -ExpeditionNoAccents: the same palettes without the accent, a measurement baseline). */
+    bool bAccents = true;
 
     /** Art set; unset or incomplete sets fall back to the primitive presentation. */
     UPROPERTY(EditDefaultsOnly, Category = "Theme") TSoftObjectPtr<UDiceRollTheme> ThemeAsset;
@@ -335,7 +539,23 @@ private:
     FBoardMetric BoardMetric;
     /** Loaded once with the theme; the overview needs it, so a failed load keeps primitive boards. */
     UPROPERTY() TObjectPtr<UStaticMesh> OverviewTable;
+    /** The rest of the overview set (#149), loaded with the table: the dioramas, and whether the set is the r002 one. */
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewRoot;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVigil;
+    UPROPERTY() TObjectPtr<UStaticMesh> OverviewVault;
+    bool bOverviewR002 = false;
+    /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
+    TArray<FName> OverviewDrawnMeshes;
+    TArray<FVector> OverviewDrawnLights;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    void LoadOverviewSet();
     UPROPERTY() TArray<FExpeditionSway> Swaying;
+    /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
+    bool bLooseParts = false;
+    bool bInstancedParts = false;
+    bool bInstancedEffects = false;
+    int32 LogicalParts = 0;
+    int32 LogicalProps = 0;
 
     float Yaw = -90.0f;
     float TargetYaw = -90.0f;
@@ -372,6 +592,24 @@ private:
     UPROPERTY() TArray<FExpeditionPart> OverlaySets;
     /** Translucent unlit "Color" x "Opacity" material for the contextual grid; absent until created in the editor. */
     UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
+    /** Lit opaque material that takes its colour from per-instance custom data (sparks, shots, camp, waystone, plain props); optional. */
+    UPROPERTY() TObjectPtr<UMaterialInterface> EffectMaterial;
+    /** Every instanced group of this board; one component each. */
+    UPROPERTY() TArray<FExpeditionGroup> Groups;
+    /**
+     * The shared bar bank: one component holding every footprint ring and marker (24 bars each, first) and then the contextual grid's
+     * bars (all nine styles, after OverlayBase). Null when rings are loose.
+     */
+    UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> RingBank;
+    int32 RingGroup = INDEX_NONE;
+    /** First instance of the grid's bars in the bank, or INDEX_NONE when the grid draws as one bar set per style. */
+    int32 OverlayBase = INDEX_NONE;
+    TArray<FExpeditionRingState> RingStates;
+    /** Pooled effect pieces: instances in shared groups with the effect material, loose parts without it (and in the primitive look). */
+    UPROPERTY() TArray<FExpeditionSlot> ShotSlots;
+    UPROPERTY() TArray<FExpeditionSlot> SparkSlots;
+    UPROPERTY() TArray<FExpeditionSlot> CampSlots;
+    UPROPERTY() TArray<FExpeditionSlot> WaystoneSlots;
     BoardOverlay::FMask OverlayState;
     /** The inputs the mask was last built from, and reusable scratch for this frame's victims; an unchanged frame allocates nothing. */
     FBoardHighlights OverlayInput;
@@ -389,7 +627,22 @@ private:
     float OccluderPlaneSent = 0.0f;
     bool bOccluderBoardSent = false;
     bool bVigilKit = false;
+    bool bRootKit = false;
+    bool bVaultKit = false;
+    /** The far-zoom grade last applied (0 at the default zoom, 1 at the far stop); negative until the first update. Vault boards only. */
+    float AppliedFarGrade = -1.0f;
+    void UpdateFarGrade();
+    /** True when every piece of the Vault kit loads; checked before anything is placed. */
+    bool VaultPiecesLoad(const FDiceRollWorldKit& Kit) const;
+    /** Where the apse Waystone stands in scenery-local space (a Vault-kit board), and the light's gain there. */
+    FVector ApseLocal = FVector::ZeroVector;
+    float WaystoneGain = 1.0f;
+    /** The world mesh of the last themed build. */
+    /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
+    FExpeditionProp WorldProp;
     TArray<FPlacedDressing> Dressing;
+    /** Where the themed board's braziers stand, in board cells (BrazierRing::Plan), in placement order. */
+    TArray<FVector2D> BrazierCells;
     TMap<FIntPoint, int32> VariantsByCell;
     TMap<FIntPoint, FVector> SpotsByCell;
     int32 ObstaclePieces = 0;
@@ -398,12 +651,8 @@ private:
     /** Per-flame base candela for themed lights; zero keeps the primitive torch strength. */
     TArray<float> FlameStrength;
     UPROPERTY() TArray<FExpeditionPart> Markers;     // 0 active, 1 selected, rest targets.
-    UPROPERTY() TArray<FExpeditionPart> ShotMeshes;
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
-    UPROPERTY() TArray<FExpeditionPart> SparkMeshes;
-    UPROPERTY() TArray<FExpeditionPart> CampParts;
     UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
-    UPROPERTY() TArray<FExpeditionPart> WaystoneParts;
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
@@ -418,6 +667,41 @@ private:
     FVector SceneBoard(FVector2D Cell, float ReferenceHeight = 0.0f) const { return BoardMetric.ReferencePosition(Cell, ReferenceHeight); }
     void ClearPresentation();
     void RebuildBoard();
+    // Instanced groups (#144).
+    /** The group for a mesh and material, created on first use (under Parent, the scenery root by default). */
+    int32 GroupFor(UStaticMesh* Mesh, UMaterialInterface* Material, bool bCastShadow, int32 CustomFloats, USceneComponent* Parent = nullptr);
+    /** The group of an engine shape in one colour (BasicShapeMaterial cannot read custom data, so one material instance per colour). */
+    int32 PlainGroupFor(UStaticMesh* Mesh, const FLinearColor& Colour, bool bCastShadow);
+    FExpeditionInstance PlaceInstance(int32 Group, const FTransform& Local, TConstArrayView<float> Data);
+    /** Rewrites an instance's transform and custom data; marks the group for the end-of-frame flush. */
+    /** bMotion: the instance moved continuously since last frame (it draws a velocity); false for show, hide or a reuse elsewhere. */
+    void UpdateInstance(const FExpeditionInstance& Instance, const FTransform& Local, TConstArrayView<float> Data, bool bMotion = true);
+    /** Moves instances of a group. bMotion: continuous movement, so the previous transform is the current one (a motion vector);
+     * otherwise a jump (show, hide, reuse), so previous = new and no velocity is drawn. */
+    void MoveInstances(int32 GroupIndex, int32 Start, TConstArrayView<FTransform> Transforms, bool bMotion);
+    /** Reused buffers for MoveInstances, so a frame of sway allocates nothing once warm. */
+    TArray<FTransform> MoveNew, MovePrev;
+    void FlushGroups();
+    /**
+     * A static themed prop at a scenery-local transform. Instanced into the (mesh, material) group when the board is instanced, a
+     * loose MakePart otherwise. Theme meshes tint through custom data (one float), plain shapes through the effect material (rgb).
+     */
+    FExpeditionProp PlaceProp(UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator, bool bCastShadow = true, bool bOwnMaterial = false);
+    /** The occluder: one instance with its own material instance (the sight lines go to that material). */
+    FExpeditionPart PlaceOccluder(UStaticMesh* Mesh, FVector Location, FVector Scale);
+    /** A scenery-local transform in the view actor's space (the same for an instance and a loose part). */
+    FVector PropActorPosition(const FExpeditionProp& Prop) const;
+    void AddSway(const FExpeditionProp& Prop, float Degrees, float Flicker);
+    // Pooled effect pieces: a slot is a loose part or an instance; SetSlot moves and tints it and hides it with a zero scale.
+    FExpeditionSlot MakeSlot(UStaticMesh* Mesh, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation, bool bCastShadow);
+    void SetSlot(FExpeditionSlot& Slot, bool bVisible, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color);
+    // Ring bank.
+    bool CanBankRings() const;
+    void EnsureBank();
+    /** Writes the grid's bars (transforms and rgba custom data, in style order) into the bank, growing it when needed and hiding what is left over. */
+    void SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data);
+    int32 AddRingSlot(const FLinearColor& Color);
+    void SetRing(int32 Slot, bool bVisible, const FVector& Centre, float Scale, const FLinearColor& Color);
     void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
     void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
     void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);
@@ -431,10 +715,10 @@ private:
     void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
     bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
-    /** The r002 obstacles: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (Vigil boards, pillar and wall recipes). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
-    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches);
-    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing). */
-    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed);
+    /** The r002 obstacles of a world kit: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (pillar and wall recipes of a world kit; see VigilKit::ArchesFor). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
+    /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing; the Root kit uses the same plan). */
+    void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit, const TArray<FVector2D>& Braziers);
     /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
     FExpeditionPart MakeOwnMaterialPart(UStaticMesh* Mesh, FVector Location, FVector Scale, FRotator Rotation);
     /** Pushes the sight lines to the occluder material. */
@@ -458,8 +742,21 @@ private:
     void UpdateMarkers();
     void UpdateEffects();
     void UpdateCamera(float DeltaSeconds);
-    /** The unpanned focus: the board centre leaned toward the acting unit (view space). */
+    /**
+     * The unpanned focus (view space). While the whole board is in view from the rendered pose: the board centre leaned toward
+     * the acting unit, as far as the board stays inside the safe rect. Otherwise: the acting unit itself.
+     */
     FVector BaseFocus() const;
+    /** The unit the camera follows: the presented focus during playback, else the active combatant; INDEX_NONE outside combat. */
+    int32 CameraFocusId() const;
+    /**
+     * Clamps Base + Offset to the pan bound for the pose rendered this frame (CameraRig.h ClampPan) and returns the focus.
+     * Offset is the player's pan: it is cleared while the whole board is in view and on axes locked to the board centre,
+     * and otherwise re-pinned to the bound so a held key does not wind up past it.
+     */
+    FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
+    /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
+    FVector2D HoldUnit(const FVector2D& Wanted) const;
     /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */
     void SelectShadowLights();
     void Record(const FCombatResult& Result);

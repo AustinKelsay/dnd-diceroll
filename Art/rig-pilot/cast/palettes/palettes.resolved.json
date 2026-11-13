@@ -1,0 +1,4731 @@
+{
+ "version": 1,
+ "classes": {
+  "fighter": {
+   "role": "Fighter",
+   "slots": {
+    "A": {
+     "tiles": [
+      "plate"
+     ],
+     "mask": 1,
+     "default_hex": "#687bad",
+     "default_luma": 0.4829,
+     "reference": 0.20208
+    },
+    "B": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#bb2c2f",
+     "default_luma": 0.3427,
+     "reference": 0.12622
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#ecb444",
+     "default_luma": 0.7221,
+     "reference": 0.50975
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fcb747",
+     "default_luma": 0.7493,
+     "reference": 0.5514
+    },
+    "X": {
+     "tiles": [
+      "accent",
+      "emblem2"
+     ],
+     "mask": 4608,
+     "default_hex": "#9ea3b5",
+     "default_luma": 0.6403,
+     "reference": 0.36654
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {
+     "A": {
+      "spec": [
+       38,
+       0.06,
+       1.12
+      ],
+      "hex": "#8d8a84",
+      "linear": [
+       0.2651,
+       0.25255,
+       0.2317
+      ]
+     }
+    }
+   }
+  },
+  "rogue": {
+   "role": "Rogue",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#547655",
+     "default_luma": 0.4083,
+     "reference": 0.15514
+    },
+    "B": {
+     "tiles": [
+      "emblem"
+     ],
+     "mask": 2048,
+     "default_hex": "#d27f3a",
+     "default_luma": 0.5649,
+     "reference": 0.29237
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#e8ddb7",
+     "default_luma": 0.8636,
+     "reference": 0.7249
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#8cfcc7",
+     "default_luma": 0.8342,
+     "reference": 0.79598
+    },
+    "X": {
+     "tiles": [
+      "emblem",
+      "accent"
+     ],
+     "mask": 2560,
+     "default_hex": "#e3b385",
+     "default_luma": 0.7369,
+     "reference": 0.50149
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff5e4f",
+     "linear": [
+      1.0,
+      0.11116,
+      0.07824
+     ]
+    },
+    {
+     "hex": "#4c97ff",
+     "linear": [
+      0.07246,
+      0.30786,
+      1.0
+     ]
+    },
+    {
+     "hex": "#00e727",
+     "linear": [
+      0.0,
+      0.80252,
+      0.0199
+     ]
+    },
+    {
+     "hex": "#b69200",
+     "linear": [
+      0.47051,
+      0.28735,
+      0.0
+     ]
+    }
+   ],
+   "accent_override": {
+    "luminance": [
+     0.55,
+     0.55
+    ],
+    "saturation": 1.0
+   },
+   "default": {
+    "slots": {}
+   }
+  },
+  "cleric": {
+   "role": "Cleric",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#d2caae",
+     "default_luma": 0.7895,
+     "reference": 0.59104
+    },
+    "B": {
+     "tiles": [
+      "emblem",
+      "emblem2"
+     ],
+     "mask": 6144,
+     "default_hex": "#43798f",
+     "default_luma": 0.4221,
+     "reference": 0.16954
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#efc24c",
+     "default_luma": 0.7605,
+     "reference": 0.57338
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fce680",
+     "default_luma": 0.8813,
+     "reference": 0.78641
+    },
+    "X": {
+     "tiles": [
+      "emblem2",
+      "accent"
+     ],
+     "mask": 4608,
+     "default_hex": "#99b1b5",
+     "default_luma": 0.6692,
+     "reference": 0.41758
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "wizard": {
+   "role": "Wizard",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#6457c1",
+     "default_luma": 0.4034,
+     "reference": 0.13345
+    },
+    "B": {
+     "tiles": [
+      "emblem"
+     ],
+     "mask": 2048,
+     "default_hex": "#c3b6e9",
+     "default_luma": 0.7508,
+     "reference": 0.50761
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#eebb4d",
+     "default_luma": 0.743,
+     "reference": 0.54091
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#9ef3fd",
+     "default_luma": 0.857,
+     "reference": 0.782
+    },
+    "X": {
+     "tiles": [
+      "accent"
+     ],
+     "mask": 512,
+     "default_hex": "#f3f3fd",
+     "default_luma": 0.9557,
+     "reference": 0.89861
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "barbarian": {
+   "role": "Barbarian",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#936537",
+     "default_luma": 0.4282,
+     "reference": 0.15694
+    },
+    "B": {
+     "tiles": [
+      "leather"
+     ],
+     "mask": 8,
+     "default_hex": "#6a4223",
+     "default_luma": 0.291,
+     "reference": 0.07032
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#ca8538",
+     "default_luma": 0.5677,
+     "reference": 0.29573
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fd8038",
+     "default_luma": 0.6152,
+     "reference": 0.3647
+    },
+    "X": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#ca8538",
+     "default_luma": 0.5677,
+     "reference": 0.29573
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff6456",
+     "linear": [
+      1.0,
+      0.12753,
+      0.09294
+     ]
+    },
+    {
+     "hex": "#539bff",
+     "linear": [
+      0.08679,
+      0.3266,
+      1.0
+     ]
+    },
+    {
+     "hex": "#21da3f",
+     "linear": [
+      0.01494,
+      0.69862,
+      0.05046
+     ]
+    },
+    {
+     "hex": "#b4961b",
+     "linear": [
+      0.45759,
+      0.30309,
+      0.01098
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "monk": {
+   "role": "Monk",
+   "slots": {
+    "A": {
+     "tiles": [
+      "plate"
+     ],
+     "mask": 1,
+     "default_hex": "#d79c34",
+     "default_luma": 0.6351,
+     "reference": 0.38573
+    },
+    "B": {
+     "tiles": [
+      "cloth",
+      "emblem"
+     ],
+     "mask": 2052,
+     "default_hex": "#aa530f",
+     "default_luma": 0.3985,
+     "reference": 0.14877
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#493126",
+     "default_luma": 0.2157,
+     "reference": 0.03767
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fcda60",
+     "default_luma": 0.8404,
+     "reference": 0.71692
+    },
+    "X": {
+     "tiles": [
+      "accent"
+     ],
+     "mask": 512,
+     "default_hex": "#f6eccb",
+     "default_luma": 0.9214,
+     "reference": 0.83643
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "paladin": {
+   "role": "Paladin",
+   "slots": {
+    "A": {
+     "tiles": [
+      "plate"
+     ],
+     "mask": 1,
+     "default_hex": "#dbe0ec",
+     "default_luma": 0.8781,
+     "reference": 0.74423
+    },
+    "B": {
+     "tiles": [
+      "emblem",
+      "emblem2",
+      "cloth"
+     ],
+     "mask": 6148,
+     "default_hex": "#b38bbd",
+     "default_luma": 0.6134,
+     "reference": 0.31613
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#f0c552",
+     "default_luma": 0.773,
+     "reference": 0.59318
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#ebd2fd",
+     "default_luma": 0.8715,
+     "reference": 0.70698
+    },
+    "X": {
+     "tiles": [
+      "emblem2",
+      "leather"
+     ],
+     "mask": 4104,
+     "default_hex": "#663e6e",
+     "default_luma": 0.3108,
+     "reference": 0.07361
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff1a05",
+     "linear": [
+      1.0,
+      0.01007,
+      0.00143
+     ]
+    },
+    {
+     "hex": "#016bff",
+     "linear": [
+      0.00017,
+      0.1458,
+      1.0
+     ]
+    },
+    {
+     "hex": "#009719",
+     "linear": [
+      0.0,
+      0.31166,
+      0.00987
+     ]
+    },
+    {
+     "hex": "#776000",
+     "linear": [
+      0.18594,
+      0.11583,
+      0.0
+     ]
+    }
+   ],
+   "accent_override": {
+    "luminance": [
+     0.36,
+     0.36
+    ],
+    "saturation": 1.0
+   },
+   "default": {
+    "slots": {}
+   }
+  },
+  "ranger": {
+   "role": "Ranger",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#6a7d2d",
+     "default_luma": 0.4313,
+     "reference": 0.17834
+    },
+    "B": {
+     "tiles": [
+      "plate",
+      "emblem"
+     ],
+     "mask": 2049,
+     "default_hex": "#8c7e3f",
+     "default_luma": 0.4816,
+     "reference": 0.20777
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#b46127",
+     "default_luma": 0.4519,
+     "reference": 0.18414
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#dcfd6b",
+     "default_luma": 0.888,
+     "reference": 0.8648
+    },
+    "X": {
+     "tiles": [
+      "accent",
+      "trim"
+     ],
+     "mask": 514,
+     "default_hex": "#ca925e",
+     "default_luma": 0.6155,
+     "reference": 0.33969
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff7569",
+     "linear": [
+      1.0,
+      0.17844,
+      0.14024
+     ]
+    },
+    {
+     "hex": "#66a6ff",
+     "linear": [
+      0.13325,
+      0.38047,
+      1.0
+     ]
+    },
+    {
+     "hex": "#23ec45",
+     "linear": [
+      0.01714,
+      0.83866,
+      0.05922
+     ]
+    },
+    {
+     "hex": "#c3a21d",
+     "linear": [
+      0.54812,
+      0.36213,
+      0.0125
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "sorcerer": {
+   "role": "Sorcerer",
+   "slots": {
+    "A": {
+     "tiles": [
+      "emblem"
+     ],
+     "mask": 2048,
+     "default_hex": "#c6292e",
+     "default_luma": 0.3469,
+     "reference": 0.13743
+    },
+    "B": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#6a4d6b",
+     "default_luma": 0.3487,
+     "reference": 0.094
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#f2ab4a",
+     "default_luma": 0.7104,
+     "reference": 0.48484
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fda84c",
+     "default_luma": 0.7179,
+     "reference": 0.49472
+    },
+    "X": {
+     "tiles": [
+      "glow",
+      "emblem2"
+     ],
+     "mask": 4128,
+     "default_hex": "#895a36",
+     "default_luma": 0.3918,
+     "reference": 0.12879
+    }
+   },
+   "accent": [
+    {
+     "hex": "#e53322",
+     "linear": [
+      0.78229,
+      0.03254,
+      0.01626
+     ]
+    },
+    {
+     "hex": "#2271e0",
+     "linear": [
+      0.01571,
+      0.16536,
+      0.74748
+     ]
+    },
+    {
+     "hex": "#17992d",
+     "linear": [
+      0.00857,
+      0.3202,
+      0.02595
+     ]
+    },
+    {
+     "hex": "#7f6913",
+     "linear": [
+      0.21214,
+      0.14237,
+      0.00653
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "warlock": {
+   "role": "Warlock",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#9b5ebc",
+     "default_luma": 0.4835,
+     "reference": 0.18716
+    },
+    "B": {
+     "tiles": [
+      "plate",
+      "dark",
+      "emblem"
+     ],
+     "mask": 3073,
+     "default_hex": "#8c51af",
+     "default_luma": 0.4285,
+     "reference": 0.14537
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#dfd3ef",
+     "default_luma": 0.8547,
+     "reference": 0.6862
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#9efc56",
+     "default_luma": 0.8049,
+     "reference": 0.77836
+    },
+    "X": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#dfd3ef",
+     "default_luma": 0.8547,
+     "reference": 0.6862
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "druid": {
+   "role": "Druid",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth",
+      "emblem"
+     ],
+     "mask": 2052,
+     "default_hex": "#699037",
+     "default_luma": 0.4794,
+     "reference": 0.23275
+    },
+    "B": {
+     "tiles": [
+      "leather"
+     ],
+     "mask": 8,
+     "default_hex": "#5f4125",
+     "default_luma": 0.2779,
+     "reference": 0.06368
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#eca93b",
+     "default_luma": 0.6924,
+     "reference": 0.46578
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fdbd38",
+     "default_luma": 0.7574,
+     "reference": 0.5765
+    },
+    "X": {
+     "tiles": [
+      "emblem",
+      "trim"
+     ],
+     "mask": 2050,
+     "default_hex": "#c1af40",
+     "default_luma": 0.6578,
+     "reference": 0.42353
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "bard": {
+   "role": "Bard",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#9a314a",
+     "default_luma": 0.3272,
+     "reference": 0.09587
+    },
+    "B": {
+     "tiles": [
+      "emblem"
+     ],
+     "mask": 2048,
+     "default_hex": "#28827a",
+     "default_luma": 0.3996,
+     "reference": 0.17697
+    },
+    "C": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#f0ba4c",
+     "default_luma": 0.7447,
+     "reference": 0.54335
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#fdd66b",
+     "default_luma": 0.8379,
+     "reference": 0.70215
+    },
+    "X": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#f0ba4c",
+     "default_luma": 0.7447,
+     "reference": 0.54335
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff776a",
+     "linear": [
+      1.0,
+      0.18375,
+      0.14528
+     ]
+    },
+    {
+     "hex": "#68a7ff",
+     "linear": [
+      0.13823,
+      0.38579,
+      1.0
+     ]
+    },
+    {
+     "hex": "#24ee45",
+     "linear": [
+      0.01735,
+      0.85262,
+      0.06008
+     ]
+    },
+    {
+     "hex": "#c5a31e",
+     "linear": [
+      0.55714,
+      0.36801,
+      0.01265
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {}
+   }
+  },
+  "artificer": {
+   "role": "Artificer",
+   "slots": {
+    "A": {
+     "tiles": [
+      "cloth"
+     ],
+     "mask": 4,
+     "default_hex": "#747885",
+     "default_luma": 0.47,
+     "reference": 0.18698
+    },
+    "B": {
+     "tiles": [
+      "leather"
+     ],
+     "mask": 8,
+     "default_hex": "#9b673d",
+     "default_luma": 0.4456,
+     "reference": 0.16963
+    },
+    "C": {
+     "tiles": [
+      "plate",
+      "trim"
+     ],
+     "mask": 3,
+     "default_hex": "#d3863d",
+     "default_luma": 0.584,
+     "reference": 0.31322
+    },
+    "G": {
+     "tiles": [
+      "glow",
+      "rune"
+     ],
+     "mask": 96,
+     "default_hex": "#73fdfd",
+     "default_luma": 0.8292,
+     "reference": 0.80765
+    },
+    "X": {
+     "tiles": [
+      "trim"
+     ],
+     "mask": 2,
+     "default_hex": "#c26336",
+     "default_luma": 0.4804,
+     "reference": 0.20748
+    }
+   },
+   "accent": [
+    {
+     "hex": "#ff4534",
+     "linear": [
+      1.0,
+      0.05907,
+      0.0341
+     ]
+    },
+    {
+     "hex": "#3087ff",
+     "linear": [
+      0.03005,
+      0.24034,
+      1.0
+     ]
+    },
+    {
+     "hex": "#1cb836",
+     "linear": [
+      0.01137,
+      0.4804,
+      0.03653
+     ]
+    },
+    {
+     "hex": "#987f17",
+     "linear": [
+      0.31625,
+      0.21069,
+      0.0085
+     ]
+    }
+   ],
+   "accent_override": {},
+   "default": {
+    "slots": {
+     "A": {
+      "spec": [
+       30,
+       0.1,
+       1.4
+      ],
+      "hex": "#afa69d",
+      "linear": [
+       0.42824,
+       0.3822,
+       0.33918
+      ]
+     }
+    }
+   }
+  }
+ },
+ "builds": {
+  "fighter.champion": {
+   "name": "Champion",
+   "note": "Steel and crimson (the class look), the steel warmed to silver so it stops merging with the blue Vault stone",
+   "slots": {
+    "A": {
+     "spec": [
+      38,
+      0.06,
+      1.12
+     ],
+     "hex": "#8d8a84",
+     "linear": [
+      0.2651,
+      0.25255,
+      0.2317
+     ],
+     "luma": 0.5408,
+     "luma_ratio": 1.12
+    }
+   }
+  },
+  "fighter.battle-master": {
+   "name": "Battle Master",
+   "note": "Green-grey steel, forest cape: the tactician",
+   "slots": {
+    "A": {
+     "spec": [
+      165,
+      0.1,
+      1.15
+     ],
+     "hex": "#84928f",
+     "linear": [
+      0.22985,
+      0.28919,
+      0.27361
+     ],
+     "luma": 0.5553,
+     "luma_ratio": 1.15
+    },
+    "B": {
+     "spec": [
+      150,
+      0.6,
+      1.05
+     ],
+     "hex": "#2f7552",
+     "linear": [
+      0.02806,
+      0.17685,
+      0.0837
+     ],
+     "luma": 0.3598,
+     "luma_ratio": 1.05
+    }
+   }
+  },
+  "fighter.eldritch-knight": {
+   "name": "Eldritch Knight",
+   "note": "Violet-silver steel, arcane violet cape, cyan trim and glow",
+   "slots": {
+    "A": {
+     "spec": [
+      270,
+      0.18,
+      1.12
+     ],
+     "hex": "#91829f",
+     "linear": [
+      0.2818,
+      0.22463,
+      0.34668
+     ],
+     "luma": 0.5408,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      265,
+      0.65,
+      1.2
+     ],
+     "hex": "#8149d0",
+     "linear": [
+      0.21916,
+      0.06602,
+      0.62819
+     ],
+     "luma": 0.4112,
+     "luma_ratio": 1.2
+    },
+    "C": {
+     "spec": [
+      200,
+      0.5,
+      1.0
+     ],
+     "hex": "#7accf5",
+     "linear": [
+      0.19573,
+      0.60296,
+      0.91009
+     ],
+     "luma": 0.7221,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      190,
+      0.8,
+      1.0
+     ],
+     "hex": "#5ee4ff",
+     "linear": [
+      0.11169,
+      0.77698,
+      1.0
+     ],
+     "luma": 0.7493,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "fighter.psi-warrior": {
+   "name": "Psi Warrior",
+   "note": "Pale cold steel, teal cape and trim, aqua glow",
+   "slots": {
+    "A": {
+     "spec": [
+      200,
+      0.1,
+      1.15
+     ],
+     "hex": "#869095",
+     "linear": [
+      0.23871,
+      0.27895,
+      0.30046
+     ],
+     "luma": 0.5553,
+     "luma_ratio": 1.15
+    },
+    "B": {
+     "spec": [
+      190,
+      0.7,
+      1.1
+     ],
+     "hex": "#287685",
+     "linear": [
+      0.02115,
+      0.17976,
+      0.23494
+     ],
+     "luma": 0.377,
+     "luma_ratio": 1.1
+    },
+    "C": {
+     "spec": [
+      185,
+      0.4,
+      1.0
+     ],
+     "hex": "#80cfd6",
+     "linear": [
+      0.21711,
+      0.62243,
+      0.67176
+     ],
+     "luma": 0.7221,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      170,
+      0.8,
+      1.0
+     ],
+     "hex": "#36ffdd",
+     "linear": [
+      0.03685,
+      1.0,
+      0.72671
+     ],
+     "luma": 0.7493,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "fighter.rune-knight": {
+   "name": "Rune Knight",
+   "note": "Bronze-stone armour, ochre cape, amber runes",
+   "slots": {
+    "A": {
+     "spec": [
+      28,
+      0.22,
+      1.2
+     ],
+     "hex": "#a3907f",
+     "linear": [
+      0.3667,
+      0.2787,
+      0.21299
+     ],
+     "luma": 0.5795,
+     "luma_ratio": 1.2
+    },
+    "B": {
+     "spec": [
+      15,
+      0.55,
+      1.1
+     ],
+     "hex": "#8a513e",
+     "linear": [
+      0.25528,
+      0.08278,
+      0.04852
+     ],
+     "luma": 0.377,
+     "luma_ratio": 1.1
+    },
+    "C": {
+     "spec": [
+      35,
+      0.7,
+      0.95
+     ],
+     "hex": "#eaa546",
+     "linear": [
+      0.81923,
+      0.37845,
+      0.06136
+     ],
+     "luma": 0.686,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      28,
+      0.9,
+      1.1
+     ],
+     "hex": "#ffc796",
+     "linear": [
+      1.0,
+      0.57129,
+      0.3052
+     ],
+     "luma": 0.8242,
+     "luma_ratio": 1.1
+    }
+   }
+  },
+  "rogue.thief": {
+   "name": "Thief",
+   "note": "The class look: sage cloak, copper sash",
+   "slots": {}
+  },
+  "rogue.assassin": {
+   "name": "Assassin",
+   "note": "Dim crimson cloak, ash-pale trim",
+   "slots": {
+    "A": {
+     "spec": [
+      355,
+      0.5,
+      0.95
+     ],
+     "hex": "#974c52",
+     "linear": [
+      0.31029,
+      0.07149,
+      0.08414
+     ],
+     "luma": 0.3879,
+     "luma_ratio": 0.95
+    },
+    "B": {
+     "spec": [
+      40,
+      0.2,
+      0.92
+     ],
+     "hex": "#8d8471",
+     "linear": [
+      0.26749,
+      0.2302,
+      0.1652
+     ],
+     "luma": 0.5197,
+     "luma_ratio": 0.92
+    },
+    "C": {
+     "spec": [
+      0,
+      0.05,
+      0.92
+     ],
+     "hex": "#d2c7c7",
+     "linear": [
+      0.6442,
+      0.5741,
+      0.5741
+     ],
+     "luma": 0.7945,
+     "luma_ratio": 0.92
+    },
+    "G": {
+     "spec": [
+      0,
+      0.8,
+      1.0
+     ],
+     "hex": "#ffc3c3",
+     "linear": [
+      1.0,
+      0.54377,
+      0.54377
+     ],
+     "luma": 0.8342,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "rogue.arcane-trickster": {
+   "name": "Arcane Trickster",
+   "note": "Rose-magenta cloak, violet sash, violet glow (the violet cloak merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      335,
+      0.5,
+      1.2
+     ],
+     "hex": "#ba5d83",
+     "linear": [
+      0.48853,
+      0.10894,
+      0.22866
+     ],
+     "luma": 0.49,
+     "luma_ratio": 1.2
+    },
+    "B": {
+     "spec": [
+      275,
+      0.5,
+      1.1
+     ],
+     "hex": "#c37bf6",
+     "linear": [
+      0.544,
+      0.19801,
+      0.92131
+     ],
+     "luma": 0.6214,
+     "luma_ratio": 1.1
+    },
+    "G": {
+     "spec": [
+      300,
+      0.8,
+      1.0
+     ],
+     "hex": "#ffb7ff",
+     "linear": [
+      1.0,
+      0.47338,
+      1.0
+     ],
+     "luma": 0.8342,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "rogue.phantom": {
+   "name": "Phantom",
+   "note": "Pale spectral blue-grey cloak and sash",
+   "slots": {
+    "A": {
+     "spec": [
+      200,
+      0.18,
+      1.18
+     ],
+     "hex": "#6f7f87",
+     "linear": [
+      0.15771,
+      0.21142,
+      0.24176
+     ],
+     "luma": 0.4818,
+     "luma_ratio": 1.18
+    },
+    "B": {
+     "spec": [
+      190,
+      0.3,
+      1.1
+     ],
+     "hex": "#7eabb4",
+     "linear": [
+      0.20831,
+      0.40658,
+      0.45566
+     ],
+     "luma": 0.6214,
+     "luma_ratio": 1.1
+    },
+    "C": {
+     "spec": [
+      200,
+      0.1,
+      1.0
+     ],
+     "hex": "#d1e0e8",
+     "linear": [
+      0.63424,
+      0.74507,
+      0.80442
+     ],
+     "luma": 0.8636,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      185,
+      0.7,
+      1.0
+     ],
+     "hex": "#85f5ff",
+     "linear": [
+      0.23639,
+      0.91203,
+      1.0
+     ],
+     "luma": 0.8342,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "rogue.soulknife": {
+   "name": "Soulknife",
+   "note": "Indigo cloak, teal sash, psychic violet glow",
+   "slots": {
+    "A": {
+     "spec": [
+      245,
+      0.35,
+      1.12
+     ],
+     "hex": "#716ca7",
+     "linear": [
+      0.16627,
+      0.15142,
+      0.386
+     ],
+     "luma": 0.4573,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      175,
+      0.5,
+      1.0
+     ],
+     "hex": "#55aaa3",
+     "linear": [
+      0.0912,
+      0.40367,
+      0.36737
+     ],
+     "luma": 0.5649,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      265,
+      0.8,
+      1.0
+     ],
+     "hex": "#dfc7ff",
+     "linear": [
+      0.735,
+      0.57417,
+      1.0
+     ],
+     "luma": 0.8342,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.knowledge": {
+   "name": "Knowledge",
+   "note": "Pale blue-grey cassock, blue tabard",
+   "slots": {
+    "A": {
+     "spec": [
+      220,
+      0.14,
+      1.0
+     ],
+     "hex": "#c0cadf",
+     "linear": [
+      0.52503,
+      0.59102,
+      0.73687
+     ],
+     "luma": 0.7895,
+     "luma_ratio": 1.0
+    },
+    "B": {
+     "spec": [
+      225,
+      0.55,
+      1.15
+     ],
+     "hex": "#5e7bd1",
+     "linear": [
+      0.1116,
+      0.1965,
+      0.6348
+     ],
+     "luma": 0.4854,
+     "luma_ratio": 1.15
+    },
+    "G": {
+     "spec": [
+      215,
+      0.6,
+      1.0
+     ],
+     "hex": "#d0e3ff",
+     "linear": [
+      0.62946,
+      0.77177,
+      1.0
+     ],
+     "luma": 0.8813,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.life": {
+   "name": "Life",
+   "note": "The class look: ivory cassock, teal tabard",
+   "slots": {}
+  },
+  "cleric.light": {
+   "name": "Light",
+   "note": "Warm cream-gold cassock, amber tabard",
+   "slots": {
+    "A": {
+     "spec": [
+      48,
+      0.22,
+      1.05
+     ],
+     "hex": "#dfd5ae",
+     "linear": [
+      0.73587,
+      0.66488,
+      0.4218
+     ],
+     "luma": 0.829,
+     "luma_ratio": 1.05
+    },
+    "B": {
+     "spec": [
+      38,
+      0.7,
+      1.3
+     ],
+     "hex": "#b68737",
+     "linear": [
+      0.46682,
+      0.24291,
+      0.03761
+     ],
+     "luma": 0.5487,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      45,
+      0.8,
+      1.0
+     ],
+     "hex": "#f5c431",
+     "linear": [
+      0.91347,
+      0.55223,
+      0.03072
+     ],
+     "luma": 0.7605,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      48,
+      0.9,
+      1.0
+     ],
+     "hex": "#ffe57c",
+     "linear": [
+      1.0,
+      0.78229,
+      0.20224
+     ],
+     "luma": 0.8813,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.nature": {
+   "name": "Nature",
+   "note": "Pale sage cassock, green tabard",
+   "slots": {
+    "A": {
+     "spec": [
+      95,
+      0.18,
+      0.98
+     ],
+     "hex": "#bad0ab",
+     "linear": [
+      0.49249,
+      0.63144,
+      0.40535
+     ],
+     "luma": 0.7737,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      120,
+      0.5,
+      1.1
+     ],
+     "hex": "#4b954b",
+     "linear": [
+      0.06961,
+      0.30148,
+      0.06961
+     ],
+     "luma": 0.4643,
+     "luma_ratio": 1.1
+    },
+    "C": {
+     "spec": [
+      75,
+      0.6,
+      0.95
+     ],
+     "hex": "#b1d053",
+     "linear": [
+      0.43743,
+      0.62912,
+      0.08672
+     ],
+     "luma": 0.7225,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      110,
+      0.7,
+      1.0
+     ],
+     "hex": "#baffac",
+     "linear": [
+      0.48834,
+      1.0,
+      0.4107
+     ],
+     "luma": 0.8813,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.tempest": {
+   "name": "Tempest",
+   "note": "Storm-grey cassock, lightning-gold tabard, cyan trim and glow (the blue tabard merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      215,
+      0.12,
+      0.98
+     ],
+     "hex": "#bcc7d6",
+     "linear": [
+      0.50347,
+      0.56975,
+      0.67066
+     ],
+     "luma": 0.7737,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      50,
+      0.8,
+      1.45
+     ],
+     "hex": "#bca326",
+     "linear": [
+      0.50239,
+      0.36557,
+      0.01901
+     ],
+     "luma": 0.612,
+     "luma_ratio": 1.45
+    },
+    "C": {
+     "spec": [
+      195,
+      0.35,
+      1.05
+     ],
+     "hex": "#9ddcf1",
+     "linear": [
+      0.33632,
+      0.71682,
+      0.88181
+     ],
+     "luma": 0.7985,
+     "luma_ratio": 1.05
+    },
+    "G": {
+     "spec": [
+      195,
+      0.8,
+      1.0
+     ],
+     "hex": "#bbeeff",
+     "linear": [
+      0.4975,
+      0.85519,
+      1.0
+     ],
+     "luma": 0.8813,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.trickery": {
+   "name": "Trickery",
+   "note": "Lilac cassock, hot rose tabard (the violet tabard merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      275,
+      0.14,
+      0.98
+     ],
+     "hex": "#cebcdb",
+     "linear": [
+      0.61952,
+      0.50557,
+      0.70929
+     ],
+     "luma": 0.7737,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      335,
+      0.6,
+      1.4
+     ],
+     "hex": "#f863a1",
+     "linear": [
+      0.9377,
+      0.12518,
+      0.35701
+     ],
+     "luma": 0.5909,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      300,
+      0.5,
+      1.0
+     ],
+     "hex": "#ff97ff",
+     "linear": [
+      1.0,
+      0.30928,
+      1.0
+     ],
+     "luma": 0.7605,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      320,
+      0.7,
+      1.0
+     ],
+     "hex": "#ffcfef",
+     "linear": [
+      1.0,
+      0.62105,
+      0.86199
+     ],
+     "luma": 0.8813,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.war": {
+   "name": "War",
+   "note": "Warm white cassock, crimson tabard",
+   "slots": {
+    "A": {
+     "spec": [
+      20,
+      0.12,
+      0.95
+     ],
+     "hex": "#ccbbb3",
+     "linear": [
+      0.60119,
+      0.4988,
+      0.45174
+     ],
+     "luma": 0.75,
+     "luma_ratio": 0.95
+    },
+    "B": {
+     "spec": [
+      5,
+      0.7,
+      1.4
+     ],
+     "hex": "#ff6c5f",
+     "linear": [
+      1.0,
+      0.15104,
+      0.11452
+     ],
+     "luma": 0.5909,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      30,
+      0.8,
+      0.95
+     ],
+     "hex": "#ffa851",
+     "linear": [
+      1.0,
+      0.39244,
+      0.08298
+     ],
+     "luma": 0.7225,
+     "luma_ratio": 0.95
+    }
+   }
+  },
+  "cleric.order": {
+   "name": "Order",
+   "note": "Cream cassock, royal violet tabard, gold",
+   "slots": {
+    "A": {
+     "spec": [
+      40,
+      0.1,
+      0.98
+     ],
+     "hex": "#ccc5b7",
+     "linear": [
+      0.60118,
+      0.55716,
+      0.47492
+     ],
+     "luma": 0.7737,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      265,
+      0.45,
+      1.3
+     ],
+     "hex": "#9d75d5",
+     "linear": [
+      0.33709,
+      0.17813,
+      0.6644
+     ],
+     "luma": 0.5487,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      50,
+      0.8,
+      1.0
+     ],
+     "hex": "#e9ca2f",
+     "linear": [
+      0.81879,
+      0.59301,
+      0.02809
+     ],
+     "luma": 0.7605,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.peace": {
+   "name": "Peace",
+   "note": "Soft cream cassock, aqua tabard",
+   "slots": {
+    "A": {
+     "spec": [
+      60,
+      0.15,
+      1.0
+     ],
+     "hex": "#cdcdae",
+     "linear": [
+      0.60933,
+      0.60933,
+      0.42381
+     ],
+     "luma": 0.7895,
+     "luma_ratio": 1.0
+    },
+    "B": {
+     "spec": [
+      170,
+      0.35,
+      1.2
+     ],
+     "hex": "#5e9189",
+     "linear": [
+      0.11311,
+      0.2846,
+      0.2496
+     ],
+     "luma": 0.5065,
+     "luma_ratio": 1.2
+    },
+    "C": {
+     "spec": [
+      50,
+      0.6,
+      1.0
+     ],
+     "hex": "#dec859",
+     "linear": [
+      0.73168,
+      0.57724,
+      0.09959
+     ],
+     "luma": 0.7605,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "cleric.twilight": {
+   "name": "Twilight",
+   "note": "Dusk lavender-grey cassock, violet tabard, amber trim",
+   "slots": {
+    "A": {
+     "spec": [
+      250,
+      0.2,
+      0.92
+     ],
+     "hex": "#b9b2de",
+     "linear": [
+      0.48716,
+      0.44481,
+      0.73352
+     ],
+     "luma": 0.7263,
+     "luma_ratio": 0.92
+    },
+    "B": {
+     "spec": [
+      265,
+      0.5,
+      1.0
+     ],
+     "hex": "#7b57ae",
+     "linear": [
+      0.19846,
+      0.09509,
+      0.42221
+     ],
+     "luma": 0.4221,
+     "luma_ratio": 1.0
+    },
+    "C": {
+     "spec": [
+      30,
+      0.7,
+      0.95
+     ],
+     "hex": "#ffa851",
+     "linear": [
+      1.0,
+      0.39244,
+      0.08298
+     ],
+     "luma": 0.7225,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      260,
+      0.6,
+      1.1
+     ],
+     "hex": "#f8f5ff",
+     "linear": [
+      0.94205,
+      0.91383,
+      1.0
+     ],
+     "luma": 0.9694,
+     "luma_ratio": 1.1
+    }
+   }
+  },
+  "wizard.abjuration": {
+   "name": "Abjuration",
+   "note": "The class look: indigo robe, lavender panels",
+   "slots": {}
+  },
+  "wizard.conjuration": {
+   "name": "Conjuration",
+   "note": "Teal robe, pale green panels",
+   "slots": {
+    "A": {
+     "spec": [
+      175,
+      0.5,
+      1.08
+     ],
+     "hex": "#42837e",
+     "linear": [
+      0.05396,
+      0.22831,
+      0.20823
+     ],
+     "luma": 0.4357,
+     "luma_ratio": 1.08
+    },
+    "B": {
+     "spec": [
+      160,
+      0.3,
+      1.0
+     ],
+     "hex": "#95d5c0",
+     "linear": [
+      0.30095,
+      0.6653,
+      0.5252
+     ],
+     "luma": 0.7508,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      170,
+      0.8,
+      1.0
+     ],
+     "hex": "#8cffec",
+     "linear": [
+      0.2636,
+      1.0,
+      0.8379
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.divination": {
+   "name": "Divination",
+   "note": "Blue robe, pale gold panels, silver trim, gold glow",
+   "slots": {
+    "A": {
+     "spec": [
+      215,
+      0.55,
+      1.08
+     ],
+     "hex": "#4d75ac",
+     "linear": [
+      0.07469,
+      0.17652,
+      0.41069
+     ],
+     "luma": 0.4357,
+     "luma_ratio": 1.08
+    },
+    "B": {
+     "spec": [
+      45,
+      0.35,
+      0.95
+     ],
+     "hex": "#c8b782",
+     "linear": [
+      0.57853,
+      0.47143,
+      0.22358
+     ],
+     "luma": 0.7133,
+     "luma_ratio": 0.95
+    },
+    "C": {
+     "spec": [
+      210,
+      0.15,
+      1.15
+     ],
+     "hex": "#cbddef",
+     "linear": [
+      0.59897,
+      0.72455,
+      0.86429
+     ],
+     "luma": 0.8545,
+     "luma_ratio": 1.15
+    },
+    "G": {
+     "spec": [
+      50,
+      0.8,
+      1.0
+     ],
+     "hex": "#ffe253",
+     "linear": [
+      1.0,
+      0.76288,
+      0.0862
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.enchantment": {
+   "name": "Enchantment",
+   "note": "Orchid-pink robe and panels",
+   "slots": {
+    "A": {
+     "spec": [
+      320,
+      0.45,
+      1.12
+     ],
+     "hex": "#a05888",
+     "linear": [
+      0.35296,
+      0.09796,
+      0.24719
+     ],
+     "luma": 0.4518,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      330,
+      0.3,
+      1.0
+     ],
+     "hex": "#eda6ca",
+     "linear": [
+      0.84931,
+      0.38189,
+      0.58869
+     ],
+     "luma": 0.7508,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      325,
+      0.7,
+      1.0
+     ],
+     "hex": "#ffc6e7",
+     "linear": [
+      1.0,
+      0.56171,
+      0.79953
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.evocation": {
+   "name": "Evocation",
+   "note": "Flame-red robe, cream-amber panels, ember glow",
+   "slots": {
+    "A": {
+     "spec": [
+      18,
+      0.7,
+      1.28
+     ],
+     "hex": "#d06a3e",
+     "linear": [
+      0.63178,
+      0.14458,
+      0.04885
+     ],
+     "luma": 0.5164,
+     "luma_ratio": 1.28
+    },
+    "B": {
+     "spec": [
+      35,
+      0.35,
+      1.0
+     ],
+     "hex": "#dbbb8e",
+     "linear": [
+      0.70787,
+      0.49695,
+      0.27177
+     ],
+     "luma": 0.7508,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      25,
+      0.9,
+      1.1
+     ],
+     "hex": "#ffecdf",
+     "linear": [
+      1.0,
+      0.84142,
+      0.73781
+     ],
+     "luma": 0.9427,
+     "luma_ratio": 1.1
+    }
+   }
+  },
+  "wizard.illusion": {
+   "name": "Illusion",
+   "note": "Orchid-violet robe, pale violet panels",
+   "slots": {
+    "A": {
+     "spec": [
+      300,
+      0.4,
+      1.2
+     ],
+     "hex": "#a161a1",
+     "linear": [
+      0.35796,
+      0.119,
+      0.35796
+     ],
+     "luma": 0.4841,
+     "luma_ratio": 1.2
+    },
+    "B": {
+     "spec": [
+      260,
+      0.3,
+      1.05
+     ],
+     "hex": "#d1baff",
+     "linear": [
+      0.63925,
+      0.49315,
+      1.0
+     ],
+     "luma": 0.7883,
+     "luma_ratio": 1.05
+    },
+    "G": {
+     "spec": [
+      290,
+      0.7,
+      1.0
+     ],
+     "hex": "#f5c6ff",
+     "linear": [
+      0.91697,
+      0.56305,
+      1.0
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.necromancy": {
+   "name": "Necromancy",
+   "note": "Sickly green robe, bone panels, green glow",
+   "slots": {
+    "A": {
+     "spec": [
+      150,
+      0.35,
+      0.98
+     ],
+     "hex": "#4b735f",
+     "linear": [
+      0.07008,
+      0.17195,
+      0.11445
+     ],
+     "luma": 0.3953,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      75,
+      0.2,
+      0.92
+     ],
+     "hex": "#aeb792",
+     "linear": [
+      0.4227,
+      0.47381,
+      0.28933
+     ],
+     "luma": 0.6907,
+     "luma_ratio": 0.92
+    },
+    "C": {
+     "spec": [
+      75,
+      0.3,
+      1.0
+     ],
+     "hex": "#bac98d",
+     "linear": [
+      0.48969,
+      0.58302,
+      0.26465
+     ],
+     "luma": 0.743,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      135,
+      0.9,
+      1.0
+     ],
+     "hex": "#a0ffb8",
+     "linear": [
+      0.35232,
+      1.0,
+      0.47858
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.transmutation": {
+   "name": "Transmutation",
+   "note": "Amber-brown robe, steel panels",
+   "slots": {
+    "A": {
+     "spec": [
+      38,
+      0.55,
+      1.12
+     ],
+     "hex": "#8d703f",
+     "linear": [
+      0.26506,
+      0.163,
+      0.05019
+     ],
+     "luma": 0.4518,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      190,
+      0.3,
+      1.0
+     ],
+     "hex": "#98ced9",
+     "linear": [
+      0.31457,
+      0.62031,
+      0.69623
+     ],
+     "luma": 0.7508,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      40,
+      0.8,
+      1.0
+     ],
+     "hex": "#ffd889",
+     "linear": [
+      1.0,
+      0.68488,
+      0.25113
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.bladesinging": {
+   "name": "Bladesinging",
+   "note": "Silver-blue robe, silver panels and trim",
+   "slots": {
+    "A": {
+     "spec": [
+      195,
+      0.5,
+      1.08
+     ],
+     "hex": "#477d8f",
+     "linear": [
+      0.06387,
+      0.20539,
+      0.2745
+     ],
+     "luma": 0.4357,
+     "luma_ratio": 1.08
+    },
+    "B": {
+     "spec": [
+      210,
+      0.1,
+      1.18
+     ],
+     "hex": "#d8e4f0",
+     "linear": [
+      0.68762,
+      0.77688,
+      0.87256
+     ],
+     "luma": 0.8859,
+     "luma_ratio": 1.18
+    },
+    "C": {
+     "spec": [
+      200,
+      0.2,
+      1.22
+     ],
+     "hex": "#cfefff",
+     "linear": [
+      0.62247,
+      0.86256,
+      1.0
+     ],
+     "luma": 0.9065,
+     "luma_ratio": 1.22
+    },
+    "G": {
+     "spec": [
+      190,
+      0.7,
+      1.0
+     ],
+     "hex": "#a3f0ff",
+     "linear": [
+      0.3668,
+      0.86878,
+      1.0
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "wizard.order-of-scribes": {
+   "name": "Order of Scribes",
+   "note": "Parchment-brown robe, parchment panels, ink trim",
+   "slots": {
+    "A": {
+     "spec": [
+      30,
+      0.3,
+      1.02
+     ],
+     "hex": "#786654",
+     "linear": [
+      0.18627,
+      0.13179,
+      0.08795
+     ],
+     "luma": 0.4115,
+     "luma_ratio": 1.02
+    },
+    "B": {
+     "spec": [
+      45,
+      0.25,
+      1.1
+     ],
+     "hex": "#e1d3a9",
+     "linear": [
+      0.7551,
+      0.65283,
+      0.39657
+     ],
+     "luma": 0.8259,
+     "luma_ratio": 1.1
+    },
+    "C": {
+     "spec": [
+      25,
+      0.6,
+      0.95
+     ],
+     "hex": "#f8a163",
+     "linear": [
+      0.93758,
+      0.35697,
+      0.12517
+     ],
+     "luma": 0.7058,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      28,
+      0.7,
+      1.0
+     ],
+     "hex": "#ffd1aa",
+     "linear": [
+      1.0,
+      0.64077,
+      0.39996
+     ],
+     "luma": 0.857,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "barbarian.berserker": {
+   "name": "Berserker",
+   "note": "Russet-red fur and bands, ember runes",
+   "slots": {
+    "A": {
+     "spec": [
+      15,
+      0.55,
+      1.12
+     ],
+     "hex": "#b0674f",
+     "linear": [
+      0.43372,
+      0.13662,
+      0.07852
+     ],
+     "luma": 0.4796,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      10,
+      0.5,
+      1.08
+     ],
+     "hex": "#734339",
+     "linear": [
+      0.17064,
+      0.05602,
+      0.04143
+     ],
+     "luma": 0.3143,
+     "luma_ratio": 1.08
+    },
+    "G": {
+     "spec": [
+      10,
+      0.9,
+      1.0
+     ],
+     "hex": "#ff775c",
+     "linear": [
+      1.0,
+      0.18592,
+      0.1078
+     ],
+     "luma": 0.6152,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "barbarian.totem-warrior": {
+   "name": "Totem Warrior",
+   "note": "Mossy fur, verdigris bronze",
+   "slots": {
+    "A": {
+     "spec": [
+      100,
+      0.3,
+      1.08
+     ],
+     "hex": "#68825b",
+     "linear": [
+      0.1388,
+      0.22383,
+      0.10489
+     ],
+     "luma": 0.4625,
+     "luma_ratio": 1.08
+    },
+    "B": {
+     "spec": [
+      35,
+      0.3,
+      1.12
+     ],
+     "hex": "#5d5141",
+     "linear": [
+      0.10978,
+      0.0833,
+      0.05317
+     ],
+     "luma": 0.3259,
+     "luma_ratio": 1.12
+    },
+    "C": {
+     "spec": [
+      175,
+      0.45,
+      1.08
+     ],
+     "hex": "#64b6af",
+     "linear": [
+      0.12704,
+      0.4652,
+      0.42728
+     ],
+     "luma": 0.6131,
+     "luma_ratio": 1.08
+    },
+    "G": {
+     "spec": [
+      170,
+      0.7,
+      1.0
+     ],
+     "hex": "#3dcab2",
+     "linear": [
+      0.04598,
+      0.58928,
+      0.44661
+     ],
+     "luma": 0.6152,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "barbarian.beast": {
+   "name": "Beast",
+   "note": "The class look: tawny fur",
+   "slots": {}
+  },
+  "barbarian.wild-magic": {
+   "name": "Wild Magic",
+   "note": "Heather fur, sea-green wraps, gold trim, magenta glow",
+   "slots": {
+    "A": {
+     "spec": [
+      285,
+      0.35,
+      1.12
+     ],
+     "hex": "#91679f",
+     "linear": [
+      0.28413,
+      0.13689,
+      0.34746
+     ],
+     "luma": 0.4796,
+     "luma_ratio": 1.12
+    },
+    "B": {
+     "spec": [
+      160,
+      0.35,
+      1.15
+     ],
+     "hex": "#3f6155",
+     "linear": [
+      0.04953,
+      0.11889,
+      0.09186
+     ],
+     "luma": 0.3346,
+     "luma_ratio": 1.15
+    },
+    "C": {
+     "spec": [
+      55,
+      0.8,
+      1.0
+     ],
+     "hex": "#a69b21",
+     "linear": [
+      0.38366,
+      0.32946,
+      0.01544
+     ],
+     "luma": 0.5677,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      300,
+      0.8,
+      1.0
+     ],
+     "hex": "#ff58ff",
+     "linear": [
+      1.0,
+      0.09722,
+      1.0
+     ],
+     "luma": 0.6152,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "monk.open-hand": {
+   "name": "Open Hand",
+   "note": "The class look: saffron gi, rust sash",
+   "slots": {}
+  },
+  "monk.shadow": {
+   "name": "Shadow",
+   "note": "Dusk-indigo gi, violet sash",
+   "slots": {
+    "A": {
+     "spec": [
+      250,
+      0.25,
+      0.92
+     ],
+     "hex": "#958dbc",
+     "linear": [
+      0.30111,
+      0.26751,
+      0.50511
+     ],
+     "luma": 0.5843,
+     "luma_ratio": 0.92
+    },
+    "B": {
+     "spec": [
+      265,
+      0.4,
+      1.25
+     ],
+     "hex": "#8c6eb7",
+     "linear": [
+      0.26238,
+      0.15469,
+      0.47152
+     ],
+     "luma": 0.4981,
+     "luma_ratio": 1.25
+    },
+    "C": {
+     "spec": [
+      270,
+      0.2,
+      1.6
+     ],
+     "hex": "#5d5367",
+     "linear": [
+      0.10919,
+      0.08558,
+      0.13621
+     ],
+     "luma": 0.3451,
+     "luma_ratio": 1.6
+    }
+   }
+  },
+  "monk.four-elements": {
+   "name": "Four Elements",
+   "note": "Water-cyan gi, ember sash",
+   "slots": {
+    "A": {
+     "spec": [
+      195,
+      0.55,
+      0.98
+     ],
+     "hex": "#5fb5d2",
+     "linear": [
+      0.11347,
+      0.46406,
+      0.64627
+     ],
+     "luma": 0.6224,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      15,
+      0.6,
+      1.3
+     ],
+     "hex": "#c66d4f",
+     "linear": [
+      0.56421,
+      0.1525,
+      0.07853
+     ],
+     "luma": 0.518,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      200,
+      0.2,
+      1.6
+     ],
+     "hex": "#4e5b62",
+     "linear": [
+      0.07645,
+      0.10499,
+      0.12127
+     ],
+     "luma": 0.3451,
+     "luma_ratio": 1.6
+    },
+    "G": {
+     "spec": [
+      195,
+      0.7,
+      1.0
+     ],
+     "hex": "#a4e8ff",
+     "linear": [
+      0.36973,
+      0.80833,
+      1.0
+     ],
+     "luma": 0.8404,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "monk.mercy": {
+   "name": "Mercy",
+   "note": "Soft peach gi, rose sash, pale trim (the pale green merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      35,
+      0.3,
+      1.3
+     ],
+     "hex": "#eccea5",
+     "linear": [
+      0.83811,
+      0.62007,
+      0.37697
+     ],
+     "luma": 0.8256,
+     "luma_ratio": 1.3
+    },
+    "B": {
+     "spec": [
+      350,
+      0.35,
+      1.4
+     ],
+     "hex": "#bb7984",
+     "linear": [
+      0.49616,
+      0.19279,
+      0.23213
+     ],
+     "luma": 0.5579,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      30,
+      0.15,
+      1.7
+     ],
+     "hex": "#645c55",
+     "linear": [
+      0.12635,
+      0.10732,
+      0.09008
+     ],
+     "luma": 0.3667,
+     "luma_ratio": 1.7
+    }
+   }
+  },
+  "monk.astral-self": {
+   "name": "Astral Self",
+   "note": "Violet gi, blue sash, blue glow",
+   "slots": {
+    "A": {
+     "spec": [
+      265,
+      0.4,
+      1.02
+     ],
+     "hex": "#b68fee",
+     "linear": [
+      0.46841,
+      0.27267,
+      0.85121
+     ],
+     "luma": 0.6478,
+     "luma_ratio": 1.02
+    },
+    "B": {
+     "spec": [
+      220,
+      0.45,
+      1.3
+     ],
+     "hex": "#6986c0",
+     "linear": [
+      0.1424,
+      0.23895,
+      0.52487
+     ],
+     "luma": 0.5181,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      225,
+      0.2,
+      1.8
+     ],
+     "hex": "#5d6374",
+     "linear": [
+      0.10933,
+      0.12413,
+      0.17524
+     ],
+     "luma": 0.3883,
+     "luma_ratio": 1.8
+    },
+    "G": {
+     "spec": [
+      220,
+      0.8,
+      1.0
+     ],
+     "hex": "#c4d8ff",
+     "linear": [
+      0.5523,
+      0.68452,
+      1.0
+     ],
+     "luma": 0.8404,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "paladin.devotion": {
+   "name": "Devotion",
+   "note": "The class look: silver plate, purple tabard",
+   "slots": {}
+  },
+  "paladin.ancients": {
+   "name": "Ancients",
+   "note": "Sage-silver plate, green tabard and cape",
+   "slots": {
+    "A": {
+     "spec": [
+      110,
+      0.12,
+      0.92
+     ],
+     "hex": "#c2d7be",
+     "linear": [
+      0.53855,
+      0.68232,
+      0.51215
+     ],
+     "luma": 0.8079,
+     "luma_ratio": 0.92
+    },
+    "B": {
+     "spec": [
+      125,
+      0.55,
+      1.25
+     ],
+     "hex": "#71fb7d",
+     "linear": [
+      0.16538,
+      0.96721,
+      0.20366
+     ],
+     "luma": 0.7667,
+     "luma_ratio": 1.25
+    },
+    "C": {
+     "spec": [
+      60,
+      0.6,
+      0.95
+     ],
+     "hex": "#c9c950",
+     "linear": [
+      0.58413,
+      0.58413,
+      0.08105
+     ],
+     "luma": 0.7344,
+     "luma_ratio": 0.95
+    }
+   }
+  },
+  "paladin.vengeance": {
+   "name": "Vengeance",
+   "note": "Warm iron plate, crimson tabard and cape (the dark neutral plate merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      15,
+      0.06,
+      1.0
+     ],
+     "hex": "#e8ddda",
+     "linear": [
+      0.80395,
+      0.7245,
+      0.69908
+     ],
+     "luma": 0.8781,
+     "luma_ratio": 1.0
+    },
+    "B": {
+     "spec": [
+      355,
+      0.7,
+      1.3
+     ],
+     "hex": "#ffb4bb",
+     "linear": [
+      1.0,
+      0.45808,
+      0.4941
+     ],
+     "luma": 0.7974,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      20,
+      0.5,
+      0.92
+     ],
+     "hex": "#f3a279",
+     "linear": [
+      0.8934,
+      0.36018,
+      0.19232
+     ],
+     "luma": 0.7112,
+     "luma_ratio": 0.92
+    }
+   }
+  },
+  "paladin.glory": {
+   "name": "Glory",
+   "note": "Gold-silver plate, blue tabard and cape",
+   "slots": {
+    "A": {
+     "spec": [
+      48,
+      0.35,
+      0.96
+     ],
+     "hex": "#eada98",
+     "linear": [
+      0.82201,
+      0.69769,
+      0.31416
+     ],
+     "luma": 0.843,
+     "luma_ratio": 0.96
+    },
+    "B": {
+     "spec": [
+      210,
+      0.6,
+      1.4
+     ],
+     "hex": "#c2e1ff",
+     "linear": [
+      0.54081,
+      0.74997,
+      1.0
+     ],
+     "luma": 0.8588,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      48,
+      0.9,
+      1.0
+     ],
+     "hex": "#f9cc19",
+     "linear": [
+      0.947,
+      0.60483,
+      0.00966
+     ],
+     "luma": 0.773,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "paladin.watchers": {
+   "name": "Watchers",
+   "note": "Steel plate, teal-steel tabard and cape",
+   "slots": {
+    "A": {
+     "spec": [
+      215,
+      0.12,
+      0.94
+     ],
+     "hex": "#c9d4e4",
+     "linear": [
+      0.58192,
+      0.65886,
+      0.77607
+     ],
+     "luma": 0.8254,
+     "luma_ratio": 0.94
+    },
+    "B": {
+     "spec": [
+      185,
+      0.5,
+      1.3
+     ],
+     "hex": "#7becf6",
+     "linear": [
+      0.19835,
+      0.83806,
+      0.92298
+     ],
+     "luma": 0.7974,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      200,
+      0.2,
+      1.1
+     ],
+     "hex": "#c1e1f1",
+     "linear": [
+      0.53023,
+      0.74985,
+      0.87659
+     ],
+     "luma": 0.8503,
+     "luma_ratio": 1.1
+    }
+   }
+  },
+  "ranger.hunter": {
+   "name": "Hunter",
+   "note": "The class look: moss cloak, olive-tan tunic",
+   "slots": {}
+  },
+  "ranger.beast-master": {
+   "name": "Beast Master",
+   "note": "Brown cloak, tan tunic, russet trim",
+   "slots": {
+    "A": {
+     "spec": [
+      30,
+      0.6,
+      0.98
+     ],
+     "hex": "#8f6439",
+     "linear": [
+      0.27326,
+      0.12707,
+      0.04101
+     ],
+     "luma": 0.4227,
+     "luma_ratio": 0.98
+    },
+    "B": {
+     "spec": [
+      35,
+      0.4,
+      0.96
+     ],
+     "hex": "#8a7353",
+     "linear": [
+      0.2527,
+      0.17048,
+      0.08561
+     ],
+     "luma": 0.4623,
+     "luma_ratio": 0.96
+    },
+    "C": {
+     "spec": [
+      25,
+      0.8,
+      1.0
+     ],
+     "hex": "#b66124",
+     "linear": [
+      0.46498,
+      0.11904,
+      0.0179
+     ],
+     "luma": 0.4519,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "ranger.fey-wanderer": {
+   "name": "Fey Wanderer",
+   "note": "Heather cloak, sea-green tunic, pink trim, pink glow",
+   "slots": {
+    "A": {
+     "spec": [
+      300,
+      0.35,
+      1.2
+     ],
+     "hex": "#a66ca6",
+     "linear": [
+      0.38185,
+      0.14986,
+      0.38185
+     ],
+     "luma": 0.5176,
+     "luma_ratio": 1.2
+    },
+    "B": {
+     "spec": [
+      150,
+      0.35,
+      1.05
+     ],
+     "hex": "#60937a",
+     "linear": [
+      0.11632,
+      0.29309,
+      0.19299
+     ],
+     "luma": 0.5057,
+     "luma_ratio": 1.05
+    },
+    "C": {
+     "spec": [
+      320,
+      0.5,
+      1.1
+     ],
+     "hex": "#b85c9a",
+     "linear": [
+      0.4815,
+      0.10748,
+      0.32151
+     ],
+     "luma": 0.4971,
+     "luma_ratio": 1.1
+    },
+    "G": {
+     "spec": [
+      310,
+      0.8,
+      1.0
+     ],
+     "hex": "#ffd0f7",
+     "linear": [
+      1.0,
+      0.62988,
+      0.93135
+     ],
+     "luma": 0.888,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "ranger.swarmkeeper": {
+   "name": "Swarmkeeper",
+   "note": "Honey-gold cloak over a dark brown tunic with amber trim and a gold glow: a swarm motif against the Hunter's forest green (the first yellow-green read as the Hunter)",
+   "slots": {
+    "A": {
+     "spec": [
+      44,
+      0.88,
+      1.4
+     ],
+     "hex": "#ca9b18",
+     "linear": [
+      0.59117,
+      0.32621,
+      0.00928
+     ],
+     "luma": 0.6038,
+     "luma_ratio": 1.4
+    },
+    "B": {
+     "spec": [
+      28,
+      0.5,
+      0.84
+     ],
+     "hex": "#836042",
+     "linear": [
+      0.22759,
+      0.11745,
+      0.0538
+     ],
+     "luma": 0.4045,
+     "luma_ratio": 0.84
+    },
+    "C": {
+     "spec": [
+      38,
+      0.95,
+      1.15
+     ],
+     "hex": "#c17e0a",
+     "linear": [
+      0.53224,
+      0.20743,
+      0.00293
+     ],
+     "luma": 0.5197,
+     "luma_ratio": 1.15
+    },
+    "G": {
+     "spec": [
+      48,
+      0.95,
+      1.0
+     ],
+     "hex": "#ffe684",
+     "linear": [
+      1.0,
+      0.79376,
+      0.22914
+     ],
+     "luma": 0.888,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "sorcerer.draconic-bloodline": {
+   "name": "Draconic Bloodline",
+   "note": "The class look: crimson coat, black-violet mantle",
+   "slots": {}
+  },
+  "sorcerer.wild-magic": {
+   "name": "Wild Magic",
+   "note": "Magenta coat, sea-teal mantle, gold trim, magenta glow",
+   "slots": {
+    "A": {
+     "spec": [
+      290,
+      0.6,
+      1.35
+     ],
+     "hex": "#ae4dc1",
+     "linear": [
+      0.42295,
+      0.07482,
+      0.53494
+     ],
+     "luma": 0.4683,
+     "luma_ratio": 1.35
+    },
+    "B": {
+     "spec": [
+      170,
+      0.4,
+      1.4
+     ],
+     "hex": "#568f85",
+     "linear": [
+      0.09212,
+      0.27312,
+      0.23501
+     ],
+     "luma": 0.4882,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      55,
+      0.7,
+      1.0
+     ],
+     "hex": "#ccc13d",
+     "linear": [
+      0.60696,
+      0.53045,
+      0.04718
+     ],
+     "luma": 0.7104,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      300,
+      0.9,
+      1.0
+     ],
+     "hex": "#ff84ff",
+     "linear": [
+      1.0,
+      0.23246,
+      1.0
+     ],
+     "luma": 0.7179,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "sorcerer.aberrant-mind": {
+   "name": "Aberrant Mind",
+   "note": "Violet coat, teal mantle and trim, teal glow",
+   "slots": {
+    "A": {
+     "spec": [
+      265,
+      0.45,
+      1.42
+     ],
+     "hex": "#8d69bf",
+     "linear": [
+      0.26605,
+      0.14154,
+      0.52152
+     ],
+     "luma": 0.4926,
+     "luma_ratio": 1.42
+    },
+    "B": {
+     "spec": [
+      170,
+      0.3,
+      1.3
+     ],
+     "hex": "#598079",
+     "linear": [
+      0.10095,
+      0.21508,
+      0.19255
+     ],
+     "luma": 0.4533,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      165,
+      0.5,
+      1.0
+     ],
+     "hex": "#6cd9be",
+     "linear": [
+      0.15088,
+      0.69117,
+      0.51217
+     ],
+     "luma": 0.7104,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      170,
+      0.9,
+      1.0
+     ],
+     "hex": "#1dffd9",
+     "linear": [
+      0.01214,
+      1.0,
+      0.69602
+     ],
+     "luma": 0.7179,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "sorcerer.clockwork-soul": {
+   "name": "Clockwork Soul",
+   "note": "Brass coat, steel mantle, brass trim, cyan glow",
+   "slots": {
+    "A": {
+     "spec": [
+      35,
+      0.45,
+      1.55
+     ],
+     "hex": "#a3855a",
+     "linear": [
+      0.36871,
+      0.23393,
+      0.10206
+     ],
+     "luma": 0.5377,
+     "luma_ratio": 1.55
+    },
+    "B": {
+     "spec": [
+      210,
+      0.15,
+      1.5
+     ],
+     "hex": "#7c8792",
+     "linear": [
+      0.20307,
+      0.24388,
+      0.28912
+     ],
+     "luma": 0.5231,
+     "luma_ratio": 1.5
+    },
+    "C": {
+     "spec": [
+      40,
+      0.8,
+      1.0
+     ],
+     "hex": "#f1b130",
+     "linear": [
+      0.87804,
+      0.43741,
+      0.02974
+     ],
+     "luma": 0.7104,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      195,
+      0.9,
+      1.0
+     ],
+     "hex": "#5ed7ff",
+     "linear": [
+      0.11099,
+      0.67709,
+      1.0
+     ],
+     "luma": 0.7179,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "warlock.archfey": {
+   "name": "Archfey",
+   "note": "Sea-green coat and lining, lime glow",
+   "slots": {
+    "A": {
+     "spec": [
+      150,
+      0.4,
+      1.6
+     ],
+     "hex": "#8ae6b8",
+     "linear": [
+      0.25421,
+      0.79148,
+      0.47943
+     ],
+     "luma": 0.7736,
+     "luma_ratio": 1.6
+    },
+    "B": {
+     "spec": [
+      165,
+      0.4,
+      1.8
+     ],
+     "hex": "#88e2cc",
+     "linear": [
+      0.24541,
+      0.76304,
+      0.60182
+     ],
+     "luma": 0.7713,
+     "luma_ratio": 1.8
+    },
+    "C": {
+     "spec": [
+      60,
+      0.3,
+      1.0
+     ],
+     "hex": "#e2e29e",
+     "linear": [
+      0.75799,
+      0.75799,
+      0.34175
+     ],
+     "luma": 0.8547,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      75,
+      0.8,
+      1.0
+     ],
+     "hex": "#c1f230",
+     "linear": [
+      0.53577,
+      0.88588,
+      0.02996
+     ],
+     "luma": 0.8049,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "warlock.fiend": {
+   "name": "Fiend",
+   "note": "Infernal red coat, ash trim, ember glow",
+   "slots": {
+    "A": {
+     "spec": [
+      5,
+      0.65,
+      1.7
+     ],
+     "hex": "#ffbfb9",
+     "linear": [
+      1.0,
+      0.52206,
+      0.48733
+     ],
+     "luma": 0.822,
+     "luma_ratio": 1.7
+    },
+    "B": {
+     "spec": [
+      10,
+      0.55,
+      1.8
+     ],
+     "hex": "#ffae9e",
+     "linear": [
+      1.0,
+      0.42558,
+      0.34341
+     ],
+     "luma": 0.7713,
+     "luma_ratio": 1.8
+    },
+    "C": {
+     "spec": [
+      30,
+      0.3,
+      0.95
+     ],
+     "hex": "#ecc9a5",
+     "linear": [
+      0.8379,
+      0.58086,
+      0.37688
+     ],
+     "luma": 0.812,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      15,
+      0.9,
+      1.0
+     ],
+     "hex": "#ffbca5",
+     "linear": [
+      1.0,
+      0.50097,
+      0.37746
+     ],
+     "luma": 0.8049,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "warlock.great-old-one": {
+   "name": "Great Old One",
+   "note": "The class look: plum coat, green glow",
+   "slots": {}
+  },
+  "warlock.fathomless": {
+   "name": "Fathomless",
+   "note": "Deep-sea blue coat, sea trim, sea glow",
+   "slots": {
+    "A": {
+     "spec": [
+      195,
+      0.6,
+      1.5
+     ],
+     "hex": "#65d7fc",
+     "linear": [
+      0.13009,
+      0.67663,
+      0.97748
+     ],
+     "luma": 0.7252,
+     "luma_ratio": 1.5
+    },
+    "B": {
+     "spec": [
+      205,
+      0.5,
+      1.7
+     ],
+     "hex": "#80caff",
+     "linear": [
+      0.21445,
+      0.59011,
+      1.0
+     ],
+     "luma": 0.7284,
+     "luma_ratio": 1.7
+    },
+    "C": {
+     "spec": [
+      180,
+      0.3,
+      0.95
+     ],
+     "hex": "#9fe3e3",
+     "linear": [
+      0.34775,
+      0.77163,
+      0.77163
+     ],
+     "luma": 0.812,
+     "luma_ratio": 0.95
+    },
+    "G": {
+     "spec": [
+      180,
+      0.9,
+      1.0
+     ],
+     "hex": "#59ffff",
+     "linear": [
+      0.09899,
+      1.0,
+      1.0
+     ],
+     "luma": 0.8049,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "warlock.genie": {
+   "name": "Genie",
+   "note": "Blue coat, gold lining, gold glow",
+   "slots": {
+    "A": {
+     "spec": [
+      210,
+      0.55,
+      1.5
+     ],
+     "hex": "#89c4ff",
+     "linear": [
+      0.24918,
+      0.55123,
+      1.0
+     ],
+     "luma": 0.7253,
+     "luma_ratio": 1.5
+    },
+    "B": {
+     "spec": [
+      45,
+      0.5,
+      1.8
+     ],
+     "hex": "#e2c671",
+     "linear": [
+      0.7618,
+      0.56405,
+      0.16539
+     ],
+     "luma": 0.7713,
+     "luma_ratio": 1.8
+    },
+    "C": {
+     "spec": [
+      45,
+      0.7,
+      0.92
+     ],
+     "hex": "#f5ca4a",
+     "linear": [
+      0.91549,
+      0.59297,
+      0.06771
+     ],
+     "luma": 0.7863,
+     "luma_ratio": 0.92
+    },
+    "G": {
+     "spec": [
+      40,
+      0.9,
+      1.0
+     ],
+     "hex": "#ffc95e",
+     "linear": [
+      1.0,
+      0.587,
+      0.11278
+     ],
+     "luma": 0.8049,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "druid.land": {
+   "name": "Land",
+   "note": "The class look: moss robe, bark tunic",
+   "slots": {}
+  },
+  "druid.moon": {
+   "name": "Moon",
+   "note": "Silver-blue robe, pale bark tunic, cool glow",
+   "slots": {
+    "A": {
+     "spec": [
+      215,
+      0.3,
+      1.2
+     ],
+     "hex": "#7f96b6",
+     "linear": [
+      0.21279,
+      0.30437,
+      0.46578
+     ],
+     "luma": 0.5753,
+     "luma_ratio": 1.2
+    },
+    "B": {
+     "spec": [
+      220,
+      0.2,
+      1.38
+     ],
+     "hex": "#5b6271",
+     "linear": [
+      0.10406,
+      0.123,
+      0.16656
+     ],
+     "luma": 0.3835,
+     "luma_ratio": 1.38
+    },
+    "C": {
+     "spec": [
+      200,
+      0.2,
+      1.15
+     ],
+     "hex": "#b4d2e1",
+     "linear": [
+      0.45795,
+      0.64667,
+      0.75551
+     ],
+     "luma": 0.7963,
+     "luma_ratio": 1.15
+    },
+    "G": {
+     "spec": [
+      200,
+      0.5,
+      1.2
+     ],
+     "hex": "#d0efff",
+     "linear": [
+      0.63095,
+      0.86596,
+      1.0
+     ],
+     "luma": 0.9089,
+     "luma_ratio": 1.2
+    }
+   }
+  },
+  "druid.spores": {
+   "name": "Spores",
+   "note": "Mushroom tan-red robe, mauve tunic, mauve glow",
+   "slots": {
+    "A": {
+     "spec": [
+      20,
+      0.35,
+      1.05
+     ],
+     "hex": "#9c7865",
+     "linear": [
+      0.33217,
+      0.18632,
+      0.13112
+     ],
+     "luma": 0.5034,
+     "luma_ratio": 1.05
+    },
+    "B": {
+     "spec": [
+      330,
+      0.25,
+      1.3
+     ],
+     "hex": "#6e5260",
+     "linear": [
+      0.15533,
+      0.08512,
+      0.11717
+     ],
+     "luma": 0.3613,
+     "luma_ratio": 1.3
+    },
+    "C": {
+     "spec": [
+      335,
+      0.4,
+      1.05
+     ],
+     "hex": "#fb97c0",
+     "linear": [
+      0.9647,
+      0.30768,
+      0.52979
+     ],
+     "luma": 0.727,
+     "luma_ratio": 1.05
+    },
+    "G": {
+     "spec": [
+      310,
+      0.7,
+      1.0
+     ],
+     "hex": "#ff99ee",
+     "linear": [
+      1.0,
+      0.31816,
+      0.85488
+     ],
+     "luma": 0.7574,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "druid.stars": {
+   "name": "Stars",
+   "note": "Night-violet robe, indigo tunic, gold trim and glow",
+   "slots": {
+    "A": {
+     "spec": [
+      255,
+      0.4,
+      1.22
+     ],
+     "hex": "#9b84dd",
+     "linear": [
+      0.32569,
+      0.23253,
+      0.72148
+     ],
+     "luma": 0.5849,
+     "luma_ratio": 1.22
+    },
+    "B": {
+     "spec": [
+      240,
+      0.35,
+      1.4
+     ],
+     "hex": "#5d5d90",
+     "linear": [
+      0.11063,
+      0.11063,
+      0.27806
+     ],
+     "luma": 0.3891,
+     "luma_ratio": 1.4
+    },
+    "C": {
+     "spec": [
+      50,
+      0.6,
+      1.1
+     ],
+     "hex": "#dec859",
+     "linear": [
+      0.73416,
+      0.57919,
+      0.0999
+     ],
+     "luma": 0.7616,
+     "luma_ratio": 1.1
+    },
+    "G": {
+     "spec": [
+      55,
+      0.8,
+      1.0
+     ],
+     "hex": "#decf2c",
+     "linear": [
+      0.73107,
+      0.62583,
+      0.02562
+     ],
+     "luma": 0.7574,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "druid.wildfire": {
+   "name": "Wildfire",
+   "note": "Ember-orange robe, ash tunic, amber trim, fire glow",
+   "slots": {
+    "A": {
+     "spec": [
+      20,
+      0.65,
+      1.05
+     ],
+     "hex": "#bf6c43",
+     "linear": [
+      0.52187,
+      0.15089,
+      0.05596
+     ],
+     "luma": 0.5034,
+     "luma_ratio": 1.05
+    },
+    "B": {
+     "spec": [
+      15,
+      0.4,
+      1.25
+     ],
+     "hex": "#725044",
+     "linear": [
+      0.16768,
+      0.07954,
+      0.05829
+     ],
+     "luma": 0.3474,
+     "luma_ratio": 1.25
+    },
+    "C": {
+     "spec": [
+      35,
+      0.9,
+      1.0
+     ],
+     "hex": "#ffa424",
+     "linear": [
+      1.0,
+      0.37052,
+      0.01786
+     ],
+     "luma": 0.6924,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      20,
+      0.95,
+      1.0
+     ],
+     "hex": "#ffad85",
+     "linear": [
+      1.0,
+      0.41996,
+      0.23295
+     ],
+     "luma": 0.7574,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "bard.lore": {
+   "name": "Lore",
+   "note": "The class look: wine doublet, teal cape",
+   "slots": {}
+  },
+  "bard.valor": {
+   "name": "Valor",
+   "note": "Scarlet doublet, straw-gold cape",
+   "slots": {
+    "A": {
+     "spec": [
+      5,
+      0.7,
+      1.45
+     ],
+     "hex": "#df5043",
+     "linear": [
+      0.73479,
+      0.07973,
+      0.05575
+     ],
+     "luma": 0.4744,
+     "luma_ratio": 1.45
+    },
+    "B": {
+     "spec": [
+      45,
+      0.35,
+      1.0
+     ],
+     "hex": "#706649",
+     "linear": [
+      0.16244,
+      0.13375,
+      0.06642
+     ],
+     "luma": 0.3996,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "bard.creation": {
+   "name": "Creation",
+   "note": "Violet doublet, gold cape and trim, violet glow",
+   "slots": {
+    "A": {
+     "spec": [
+      280,
+      0.45,
+      1.5
+     ],
+     "hex": "#9a64b5",
+     "linear": [
+      0.32292,
+      0.12641,
+      0.46276
+     ],
+     "luma": 0.4908,
+     "luma_ratio": 1.5
+    },
+    "B": {
+     "spec": [
+      40,
+      0.55,
+      1.2
+     ],
+     "hex": "#937842",
+     "linear": [
+      0.29342,
+      0.18903,
+      0.05501
+     ],
+     "luma": 0.4795,
+     "luma_ratio": 1.2
+    },
+    "C": {
+     "spec": [
+      48,
+      0.5,
+      1.0
+     ],
+     "hex": "#d7c16b",
+     "linear": [
+      0.67772,
+      0.53495,
+      0.14811
+     ],
+     "luma": 0.7447,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      275,
+      0.8,
+      1.0
+     ],
+     "hex": "#e7c5ff",
+     "linear": [
+      0.79751,
+      0.55777,
+      1.0
+     ],
+     "luma": 0.8379,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "bard.eloquence": {
+   "name": "Eloquence",
+   "note": "Rose doublet, cream-gold cape, silver trim, rose glow (the royal blue doublet merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      350,
+      0.45,
+      1.5
+     ],
+     "hex": "#b56371",
+     "linear": [
+      0.45964,
+      0.12561,
+      0.16469
+     ],
+     "luma": 0.4908,
+     "luma_ratio": 1.5
+    },
+    "B": {
+     "spec": [
+      45,
+      0.35,
+      1.35
+     ],
+     "hex": "#978a62",
+     "linear": [
+      0.31117,
+      0.25468,
+      0.12318
+     ],
+     "luma": 0.5395,
+     "luma_ratio": 1.35
+    },
+    "C": {
+     "spec": [
+      210,
+      0.1,
+      1.1
+     ],
+     "hex": "#c8d3de",
+     "linear": [
+      0.57654,
+      0.651,
+      0.73079
+     ],
+     "luma": 0.8192,
+     "luma_ratio": 1.1
+    },
+    "G": {
+     "spec": [
+      350,
+      0.7,
+      1.0
+     ],
+     "hex": "#ffc2cc",
+     "linear": [
+      1.0,
+      0.54191,
+      0.6071
+     ],
+     "luma": 0.8379,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "artificer.alchemist": {
+   "name": "Alchemist",
+   "note": "Pale lilac-grey coat, amber apron, verdigris brass, green glow (the green coat merged with the Root)",
+   "slots": {
+    "A": {
+     "spec": [
+      310,
+      0.15,
+      1.6
+     ],
+     "hex": "#d3b3ce",
+     "linear": [
+      0.65095,
+      0.45243,
+      0.61492
+     ],
+     "luma": 0.752,
+     "luma_ratio": 1.6
+    },
+    "B": {
+     "spec": [
+      40,
+      0.5,
+      1.0
+     ],
+     "hex": "#867043",
+     "linear": [
+      0.24012,
+      0.16214,
+      0.0565
+     ],
+     "luma": 0.4456,
+     "luma_ratio": 1.0
+    },
+    "C": {
+     "spec": [
+      160,
+      0.5,
+      1.0
+     ],
+     "hex": "#5ab395",
+     "linear": [
+      0.10118,
+      0.45134,
+      0.30164
+     ],
+     "luma": 0.584,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      130,
+      0.8,
+      1.0
+     ],
+     "hex": "#90ffa3",
+     "linear": [
+      0.28083,
+      1.0,
+      0.36566
+     ],
+     "luma": 0.8292,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "artificer.armorer": {
+   "name": "Armorer",
+   "note": "Bright steel coat, blue-grey apron, silver plates, cyan glow",
+   "slots": {
+    "A": {
+     "spec": [
+      215,
+      0.1,
+      1.6
+     ],
+     "hex": "#b8c1cd",
+     "linear": [
+      0.48172,
+      0.53297,
+      0.60985
+     ],
+     "luma": 0.752,
+     "luma_ratio": 1.6
+    },
+    "B": {
+     "spec": [
+      210,
+      0.2,
+      1.0
+     ],
+     "hex": "#677481",
+     "linear": [
+      0.13597,
+      0.17469,
+      0.21917
+     ],
+     "luma": 0.4456,
+     "luma_ratio": 1.0
+    },
+    "C": {
+     "spec": [
+      210,
+      0.3,
+      1.1
+     ],
+     "hex": "#8ba9c7",
+     "linear": [
+      0.26004,
+      0.39853,
+      0.57257
+     ],
+     "luma": 0.6424,
+     "luma_ratio": 1.1
+    }
+   }
+  },
+  "artificer.artillerist": {
+   "name": "Artillerist",
+   "note": "Warm grey coat, rust apron, copper, orange glow",
+   "slots": {
+    "A": {
+     "spec": [
+      10,
+      0.25,
+      1.4
+     ],
+     "hex": "#c69c94",
+     "linear": [
+      0.56206,
+      0.33443,
+      0.29696
+     ],
+     "luma": 0.658,
+     "luma_ratio": 1.4
+    },
+    "B": {
+     "spec": [
+      15,
+      0.6,
+      0.96
+     ],
+     "hex": "#a35a41",
+     "linear": [
+      0.3684,
+      0.10198,
+      0.05346
+     ],
+     "luma": 0.4278,
+     "luma_ratio": 0.96
+    },
+    "C": {
+     "spec": [
+      20,
+      0.8,
+      1.0
+     ],
+     "hex": "#fa7532",
+     "linear": [
+      0.95578,
+      0.17677,
+      0.03189
+     ],
+     "luma": 0.584,
+     "luma_ratio": 1.0
+    },
+    "G": {
+     "spec": [
+      25,
+      0.9,
+      1.0
+     ],
+     "hex": "#ffc7a0",
+     "linear": [
+      1.0,
+      0.57328,
+      0.34947
+     ],
+     "luma": 0.8292,
+     "luma_ratio": 1.0
+    }
+   }
+  },
+  "artificer.battle-smith": {
+   "name": "Battle Smith",
+   "note": "The class look with a warm soot canvas (the blue-grey canvas merged with the Vault stone)",
+   "slots": {
+    "A": {
+     "spec": [
+      30,
+      0.1,
+      1.4
+     ],
+     "hex": "#afa69d",
+     "linear": [
+      0.42824,
+      0.3822,
+      0.33918
+     ],
+     "luma": 0.658,
+     "luma_ratio": 1.4
+    }
+   }
+  }
+ },
+ "accent": {
+  "hues": [
+   5,
+   215,
+   130,
+   48
+  ],
+  "saturation": 0.85,
+  "luminance_min": 0.4,
+  "luminance_max": 0.62,
+  "note": "party slot k (its position among the party in the encounter) tints the class accent tiles with hue k; used for every member of a class that appears more than once in the party"
+ }
+}

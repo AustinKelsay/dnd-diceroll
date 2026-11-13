@@ -1,0 +1,121 @@
+{
+ "name": "SK_Foe_Scout",
+ "asset_id": "sk-foe-scout",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3642,
+   "verts": 2916,
+   "height_m": 1.817,
+   "zmax": 1.816,
+   "zmin": -0.001,
+   "glow_verts": 32
+  },
+  "LOD1": {
+   "tris": 1881,
+   "verts": 1835,
+   "height_m": 1.817,
+   "zmax": 1.816,
+   "zmin": -0.001,
+   "glow_verts": 24
+  },
+  "LOD2": {
+   "tris": 1073,
+   "verts": 933,
+   "height_m": 1.817,
+   "zmax": 1.816,
+   "zmin": -0.001,
+   "glow_verts": 24
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  },
+  "Brace": {
+   "frames": [
+    0,
+    24
+   ],
+   "seconds": 0.8,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Foe_Scout.glb": 1618840,
+  "SK_Foe_Scout_LOD1.glb": 752296,
+  "SK_Foe_Scout_LOD2.glb": 640644
+ }
+}

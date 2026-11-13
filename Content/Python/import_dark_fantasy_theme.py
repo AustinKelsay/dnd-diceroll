@@ -18,8 +18,29 @@ Drowned Vigil world kit r002 (issue #145 phase 2) -- the reviewed reimport path,
   - One THEME_ASSET line per asset, THEME_FILE lines for every Theme file whose SHA-256 changed, and the run saves only
     dirty packages and raises if a save fails.
 
+Root of the World world kit r002 (issue #149 phase 2) goes through the same code path with its own table (theme_plan.ROOT_R002):
+  - The Root kit has 25 rows: 24 new packages (SM_World_Root_Occluders, SM_Prop_Root_* variants and arch, SM_Scatter_Root_*,
+    SM_Fx_Root_*) and the revised SM_World_Root, whose r001 package is replaced ONLY with DND_THEME_REIMPORT=world-root. Its meshes
+    are tagged DiceRollAssetRevision=root-kit-r002 and UDiceRollTheme::bRootMetricKit is set only when SM_World_Root carries it.
+  - INSTANCE_TINTS in theme_plan writes the Color tint of a kit instance (the lever for the paving value); it is written only
+    when it differs.
+Vault world kit r002 (issue #149) is a third kit through the same path (theme_plan.VAULT_R002, 25 rows, all new packages, nothing replaced):
+  - SM_World_Vault, SM_World_Vault_Occluders (LOD1 only), the nine obstacle variants and the arch, eight scatter, three mist cards and
+    two shafts, tagged DiceRollAssetRevision=vault-kit-r002. UDiceRollTheme::bVaultMetricKit is set only when SM_World_Vault carries
+    the tag; the theme falls back to the Vigil kit when any Vault entry is missing.
+Overview set r002 (issue #149, the last part) is a fourth kit through the same path (theme_plan.OVERVIEW_R002, 4 rows, all new packages, nothing replaced):
+  - SM_Overview_Tabletop and the Root, Vigil and Vault dioramas, tagged DiceRollAssetRevision=overview-r002. UDiceRollTheme::bOverviewR002 is set only when all
+    four carry the tag; the view uses the set when it is complete and loadable and the r001 SM_Tabletop and dioramas otherwise.
+  - world-vigil-occluders is replaceable too (theme_plan.ROSE_REPLACEABLE): DND_THEME_REIMPORT=world-vigil-occluders reimports the occluders and their two LODs
+    and the atlas (4096 x 2048, with the stained-glass rose at full resolution) in place and tags the mesh vigil-kit-r002-rose.
+Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
+colour for sparks, shots and the camp, and the master, occluder, card and effect materials carry the instanced-static-mesh usage flag.
+Nothing else changes: a run on a current theme only sets the missing flags.
+
 Rigged characters (#147): the same run also imports the fighter, wizard and raider as skeletal meshes on one shared
-skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). Existing rig assets are
+skeleton, with LOD1 and LOD2, the nine clips and Nanite off (see "Rigged characters" below). The full rigged cast (#150) appends
+its characters to RIG (batch 1: rogue, cleric; batch 2: barbarian, monk, paladin, ranger; batch 3: sorcerer, warlock, druid) and the tenth shared clip, Brace, is
+imported once, non-destructively, from the fighter's r002 glb (an existing A_Humanoid_Brace is kept). Existing rig assets are
 never overwritten and this script never deletes them (a force delete nulls references other assets hold). A
 THEME_RIG_REIMPORT request is validated and then refused: delete the rig assets deliberately in the editor, rerun.
 """
@@ -45,20 +66,20 @@ DATA = THEME + "/DA_DiceRollTheme"
 
 # Surface looks (#143). Per mesh: asset id, export name, folder, data-asset property, then
 #   roughness  - stone, cloth and ground high; characters and metal lower
-#   rim        - Fresnel rim strength; characters only, so dark figures read against dark ground
-#   fill       - hemisphere fill strength; strong on characters, none or a trace elsewhere
+#   rim        - Fresnel rim strength; characters only (1.6 since #148), so dark figures read against dark ground
+#   fill       - hemisphere fill strength; strong on characters (1.25 since #148), none or a trace elsewhere
 #   glow       - emissive intensity applied to the vertex-alpha mask (flames, runes, glass); used only when the
 #                mesh really has a varying vertex alpha, see has_alpha_mask()
 #   self_lit   - a constant emissive share for objects that are themselves a light source (the flame) and for the
 #                tabletop overview, which stays as it was. Zero everywhere else: there is no blanket glow any more.
 ASSETS = [
-    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.55, 1.0, 1.0, 1.0, 0.0),
-    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.65, 1.0, 1.0, 1.0, 0.0),
-    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.6, 1.0, 1.0, 1.0, 0.0),
-    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.6, 1.0, 1.0, 1.0, 0.0),
+    ("hero-fighter", "SM_Hero_Fighter", "Characters", "fighter", 0.55, 1.6, 1.25, 1.0, 0.0),
+    ("hero-rogue", "SM_Hero_Rogue", "Characters", "rogue", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("hero-cleric", "SM_Hero_Cleric", "Characters", "cleric", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("hero-wizard", "SM_Hero_Wizard", "Characters", "wizard", 0.65, 1.6, 1.25, 1.0, 0.0),
+    ("foe-raider", "SM_Foe_Raider", "Characters", "raider", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("foe-scout", "SM_Foe_Scout", "Characters", "scout", 0.6, 1.6, 1.25, 1.0, 0.0),
+    ("foe-archer", "SM_Foe_Archer", "Characters", "archer", 0.6, 1.6, 1.25, 1.0, 0.0),
     ("world-root", "SM_World_Root", "Worlds", "root_world", 0.9, 0.0, 0.0, 1.0, 0.0),
     ("world-vigil", "SM_World_Vigil", "Worlds", "vigil_world", 0.9, 0.0, 0.0, 1.0, 0.0),
     ("tile-root", "SM_Tile_Root", "Worlds", "root_tile", 0.9, 0.0, 0.0, 1.0, 0.0),
@@ -117,7 +138,7 @@ def add(material, a, b, x, y):
 
 # Bump this whenever the graph in master_material() changes: an existing master is kept only while its stored
 # revision equals it, so a structural change (not just a new parameter name) is picked up on the next import.
-MASTER_GRAPH_REVISION = "dice-theme-4"
+MASTER_GRAPH_REVISION = "dice-theme-7"
 MASTER_REVISION_TAG = "DiceRollGraphRevision"
 
 
@@ -131,6 +152,73 @@ def set_if_different(obj, prop, value):
         obj.set_editor_property(prop, value)
         return True
     return False
+
+
+PALETTE_SLOTS = ("A", "B", "C", "G", "X")
+
+
+def const(material, value, x, y):
+    return expression(material, unreal.MaterialExpressionConstant, x, y, r=value)
+
+
+def binary(material, kind, a, b, x, y, a_out="", b_out=""):
+    node = expression(material, kind, x, y)
+    mel.connect_material_expressions(a, a_out, node, "A")
+    mel.connect_material_expressions(b, b_out, node, "B")
+    return node
+
+
+def palette_block(material, tex, x, y):
+    """Subclass palettes and party accents (#150 batch 4): the atlas colour with up to five slots recoloured by atlas tile.
+
+    The character atlases have 13 tiles on a 4x4 grid (tile index = row * 4 + column, row 0 at the top, the UV's own orientation in Unreal),
+    so floor(uv * 4) names the tile of every pixel. Each slot has a scalar bit mask over the tiles ("PalMask<slot>", bit i = tile i) and a vector
+    "Pal<slot>" (RGB the target colour, A the reference luminance of the class's own colour of the slot). A pixel in a masked tile becomes
+    target x min(luminance(pixel) / reference, 1.7), so the tile keeps its folds, bands and highlights and takes the slot's hue. Every mask
+    defaults to 0, which is exactly the plain texture, so meshes with no palette (the static figures, the worlds and props) are unchanged.
+    The values are set on the figure's material instance from the build id and the party order (ExpeditionPalette in C++); the tile masks,
+    colours and reference luminances come from Art/rig-pilot/cast/palettes (palettes.py).
+    """
+    uv = expression(material, unreal.MaterialExpressionTextureCoordinate, x, y)
+    grid = mul(material, uv, const(material, 4.0, x, y + 100), x + 150, y)
+    cell = expression(material, unreal.MaterialExpressionFloor, x + 300, y)
+    mel.connect_material_expressions(grid, "", cell, "")
+    col = expression(material, unreal.MaterialExpressionComponentMask, x + 450, y - 60, r=True, g=False, b=False, a=False)
+    row = expression(material, unreal.MaterialExpressionComponentMask, x + 450, y + 60, r=False, g=True, b=False, a=False)
+    mel.connect_material_expressions(cell, "", col, "")
+    mel.connect_material_expressions(cell, "", row, "")
+    index = add(material, mul(material, row, const(material, 4.0, x + 450, y + 160), x + 600, y + 100), col, x + 750, y)
+    power = expression(material, unreal.MaterialExpressionPower, x + 900, y)
+    mel.connect_material_expressions(const(material, 2.0, x + 800, y + 100), "", power, "Base")
+    mel.connect_material_expressions(index, "", power, "Exp")          # the Power node's pins are Base and Exp (a wrong name connects nothing and leaves the exponent at its default of 2)
+    # A misnamed pin connects nothing and the graph still compiles: fail loudly if the Power node does not have both inputs wired.
+    if len([node for node in mel.get_inputs_for_material_expression(material, power) if node]) != 2:
+        raise RuntimeError("palette_block: the Power node's Base and Exp inputs are not both connected")
+    luma_weights = expression(material, unreal.MaterialExpressionConstant3Vector, x, y + 250, constant=unreal.LinearColor(0.2126, 0.7152, 0.0722, 0.0))
+    luma = binary(material, unreal.MaterialExpressionDotProduct, tex, luma_weights, x + 300, y + 250, "RGB", "")
+    current, current_out = tex, "RGB"
+    for position, slot in enumerate(PALETTE_SLOTS):
+        sy = y + 400 + position * 420
+        mask = scalar(material, "PalMask" + slot, 0.0, x, sy)
+        colour = vector(material, "Pal" + slot, unreal.LinearColor(1, 1, 1, 1), x, sy + 100)
+        shifted = binary(material, unreal.MaterialExpressionDivide, mask, power, x + 1050, sy)
+        bit = binary(material, unreal.MaterialExpressionFmod, expression_floor(material, shifted, x + 1200, sy), const(material, 2.0, x + 1200, sy + 100), x + 1350, sy)
+        reference = binary(material, unreal.MaterialExpressionMax, colour, const(material, 0.02, x + 300, sy + 150), x + 300, sy + 100, "A", "")
+        ratio = binary(material, unreal.MaterialExpressionMin, binary(material, unreal.MaterialExpressionDivide, luma, reference, x + 450, sy + 100),
+                       const(material, 1.7, x + 450, sy + 200), x + 600, sy + 100)
+        recolour = mul(material, rgb(material, colour, "", x + 450, sy + 300), ratio, x + 750, sy + 250)
+        blend = expression(material, unreal.MaterialExpressionLinearInterpolate, x + 1500, sy)
+        mel.connect_material_expressions(current, current_out, blend, "A")
+        mel.connect_material_expressions(recolour, "", blend, "B")
+        mel.connect_material_expressions(bit, "", blend, "Alpha")
+        current, current_out = blend, ""
+    return current
+
+
+def expression_floor(material, source, x, y):
+    node = expression(material, unreal.MaterialExpressionFloor, x, y)
+    mel.connect_material_expressions(source, "", node, "")
+    return node
 
 
 def camera_clip(material, x, y):
@@ -172,7 +260,8 @@ def shadow_safe(material, mask, x, y):
 def master_material():
     """Builds (or rebuilds in place) M_DiceRollTheme. The asset, its path and every instance of it survive.
 
-    base     = Tex.rgb x vertexColor.rgb x Color
+    base     = palette(Tex.rgb) x vertexColor.rgb x Color x PerInstanceCustomData[0]   (#144: tint of an instanced prop; 1 on every other mesh;
+               palette: per-tile slot recolour of the character atlases, #150 batch 4, identity while every PalMask is 0)
     emissive = base x (vertexColor.a x Glow + SelfLit)           glow only where the vertex alpha says so
              + base x Fill x hemisphere(world normal Z)           sky/ground fill, so shadowed sides keep form
              + RimColor x Rim x fresnel                           cool rim so dark figures read against dark ground
@@ -195,8 +284,15 @@ def master_material():
     tex = expression(material, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -100, parameter_name="Tex", texture=white)
     vertex = expression(material, unreal.MaterialExpressionVertexColor, -1100, 200)
     tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -1100, 400)
-    lit = mul(material, tex, rgb(material, vertex, "", -900, 200), -700, 0, "RGB", "")
-    color = mul(material, lit, rgb(material, tint, "", -900, 400), -500, 100)
+    # The atlas colour, recoloured by the palette slots (all masks 0: the plain texture), then shaded by the vertex colour.
+    palette = palette_block(material, tex, -3000, -1800)
+    lit = mul(material, palette, rgb(material, vertex, "", -900, 200), -700, 0, "", "")
+    # Instanced props (#144) share one material instance per group and carry their tint in per-instance custom data slot 0.
+    # The node returns its default (1) for every mesh that has no custom data, so meshes, skeletal figures and the tint "Color"
+    # of an ordinary component are unchanged.
+    instance_tint = expression(material, unreal.MaterialExpressionPerInstanceCustomData, -1100, 520, const_default_value=1.0, data_index=0)
+    tinted = mul(material, rgb(material, tint, "", -900, 400), instance_tint, -700, 440)
+    color = mul(material, lit, tinted, -500, 100)
 
     # Glow: vertex alpha is the mask. A mesh without a varying alpha reads as 1 everywhere, so such meshes get Glow 0.
     glow = scalar(material, "Glow", 0.0, -900, 560)
@@ -242,6 +338,21 @@ def master_material():
     unreal.EditorAssetLibrary.set_metadata_tag(material, MASTER_REVISION_TAG, MASTER_GRAPH_REVISION)
     material.modify()
     return material
+
+
+def ensure_nanite_usage(material):
+    """Persist Nanite usage on the shared master even when the importer runs on SM5 (#105)."""
+    usage = unreal.MaterialUsage.MATUSAGE_NANITE
+    if mel.has_material_usage(material, usage):
+        return False
+    mel.set_base_material_usage(material, usage, True)
+    errors = mel.recompile_material(material)
+    if errors:
+        raise RuntimeError("Material compile reported errors after enabling Nanite usage for {}: {}".format(material.get_name(), errors))
+    if not mel.has_material_usage(material, usage):
+        raise RuntimeError("Nanite usage was not enabled for " + material.get_name())
+    unreal.log("THEME_MATERIAL_USAGE {} Nanite set".format(material.get_name()))
+    return True
 
 
 def ensure_skeletal_usage(material):
@@ -295,7 +406,19 @@ def import_mesh(asset_id, name, folder):
     return unreal.load_asset(package), texture
 
 
-KIT_TAG_VALUE = "vigil-kit-r002"
+KIT_TAG_VALUE = theme_plan.VIGIL_TAG
+# The world kits this script imports through one code path: name, revision tag, table, metric gate, theme array sizes and the
+# data-asset flag the gate sets. Plain data, so nothing here touches the engine before main().
+KITS = [
+    {"name": "vigil", "tag": theme_plan.VIGIL_TAG, "rows": theme_plan.R002, "gate": theme_plan.METRIC_GATE,
+     "sizes": theme_plan.ARRAY_SIZES, "flag": "metric_kit"},
+    {"name": "root", "tag": theme_plan.ROOT_TAG, "rows": theme_plan.ROOT_R002, "gate": theme_plan.ROOT_METRIC_GATE,
+     "sizes": theme_plan.ROOT_ARRAY_SIZES, "flag": "root_metric_kit"},
+    {"name": "vault", "tag": theme_plan.VAULT_TAG, "rows": theme_plan.VAULT_R002, "gate": theme_plan.VAULT_METRIC_GATE,
+     "sizes": theme_plan.VAULT_ARRAY_SIZES, "flag": "vault_metric_kit"},
+    {"name": "overview", "tag": theme_plan.OVERVIEW_TAG, "rows": theme_plan.OVERVIEW_R002, "gate": theme_plan.OVERVIEW_METRIC_GATE,
+     "sizes": theme_plan.OVERVIEW_ARRAY_SIZES, "flag": "overview_r002"},
+]
 # A headless commandlet does not load the static mesh editor module, so its subsystem would be None.
 unreal.load_module("StaticMeshEditor")
 mesh_tools = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
@@ -597,6 +720,42 @@ def build_figure_silhouette_material(material):
     mel.connect_material_property(result, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
 
 
+def ensure_instancing_usage(material):
+    """Instanced static meshes (#144) need the usage flag in cooked builds (the editor sets it on first use, but only in memory).
+
+    Written with set_if_different and recompiled only when it changed, so a rerun leaves the material untouched.
+    """
+    if set_if_different(material, "used_with_instanced_static_meshes", True):
+        mel.recompile_material(material)
+        unreal.log("THEME_MATERIAL_USAGE {} used_with_instanced_static_meshes set".format(material.get_name()))
+
+
+EFFECT_MATERIAL = "M_DiceRollEffect"
+# Bump when build_effect_material changes.
+EFFECT_GRAPH_REVISION = "dice-effect-1"
+
+
+def effect_is_current(material):
+    return library.get_metadata_tag(material, MASTER_REVISION_TAG) == EFFECT_GRAPH_REVISION
+
+
+def build_effect_material(material):
+    """Lit, opaque colour for instanced engine shapes (#144): BaseColor = Color x PerInstanceCustomData3Vector[0], roughness Roughness.
+
+    The same look as BasicShapeMaterial (a "Color" base colour and a "Roughness", default 0.5), but the colour of each instance comes
+    from its custom data, so every spark, shot and camp piece of a shape shares one group, one material and one draw. Values above 1
+    (the effects' HDR colours) are clamped into the base colour exactly as they are on BasicShapeMaterial.
+    """
+    material.set_editor_property("used_with_instanced_static_meshes", True)
+    tint = vector(material, "Color", unreal.LinearColor(1, 1, 1, 1), -600, 0)
+    instance = expression(material, unreal.MaterialExpressionPerInstanceCustomData3Vector, -600, 200,
+                          const_default_value=unreal.LinearColor(1, 1, 1, 1), data_index=0)
+    color = mul(material, rgb(material, tint, "", -400, 0), instance, -200, 100)
+    roughness = scalar(material, "Roughness", 0.5, -300, 300)
+    mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
+
+
 def ensure_material(name, build, is_current=None, revision=None):
     """Creates a material once. An existing asset is kept; when `is_current` says its graph lacks this script's parameters
     it is rebuilt in place, so the asset, its path and every instance of it survive."""
@@ -627,8 +786,18 @@ def r001_source(asset_id, name):
     return os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
 
 
-def kit_tagged(mesh):
-    return mesh is not None and library.get_metadata_tag(mesh, theme_plan.REVISION_TAG) == KIT_TAG_VALUE
+def kit_tag(mesh):
+    """The kit revision tag a mesh carries (vigil-kit-r002, root-kit-r002 or vault-kit-r002), or None for an r001 mesh."""
+    if mesh is None:
+        return None
+    tag = library.get_metadata_tag(mesh, theme_plan.REVISION_TAG)
+    return tag if tag in theme_plan.KIT_TAGS else None
+
+
+def kit_tagged(mesh, tag=None):
+    """True when the mesh carries a kit tag: this one when `tag` is given, either kit's otherwise."""
+    found = kit_tag(mesh)
+    return found is not None and (tag is None or found == tag)
 
 
 def theme_hashes():
@@ -682,7 +851,7 @@ def import_lods(mesh, asset_id, revision, name):
         raise RuntimeError("LOD exports beside {} do not match its asset record: {} vs {}".format(name, exports, expected))
     for (index, _, digest), path in zip(expected, exports):
         if theme_plan.sha256_file(path) != digest:
-            raise RuntimeError("LOD{} of {} differs from its asset record; rerun write_records_r002.py".format(index, name))
+            raise RuntimeError("LOD{} of {} differs from its asset record; rerun write_records_r002.py (write_records_root_r002.py for the Root)".format(index, name))
         result = mesh_tools.import_lod(mesh, index, path)
         if result < 0:
             raise RuntimeError("Unable to import LOD {} of {} from {}".format(index, name, path))
@@ -764,7 +933,7 @@ def import_kit_asset(asset_id, revision, name, folder, replace):
     # Records list every export (LOD0 and any authored LODs); check the LOD0 file this import reads.
     export = [entry for entry in record["files"] if entry["role"] == "export" and os.path.basename(entry["path"]) == os.path.basename(source)]
     if record["unreal_package"] != theme_plan.package_path(folder, name) or len(export) != 1 or export[0]["sha256"] != theme_plan.sha256_file(source):
-        raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py")
+        raise RuntimeError("Asset record " + record_path + " does not match the export or the package; rerun write_records_r002.py (write_records_root_r002.py for the Root)")
     package = theme_plan.package_path(folder, name)
     target_texture = THEME + "/Textures/T_" + name[3:]
     if library.does_asset_exist(package):
@@ -854,8 +1023,10 @@ def set_texture(texture, revision):
             texture.set_editor_property(prop, value)
 
 
-def material_instance(mesh_name, instance_name, texture_name, texture, asset_id, look, parents, kind=theme_plan.LIT, revision=1, source=None):
-    """Creates or refreshes one MI_* child of the matching parent for a mesh and returns it (shared by static and skeletal meshes)."""
+def material_instance(mesh_name, instance_name, texture_name, texture, asset_id, look, parents, kind=theme_plan.LIT, revision=1, source=None, tint=None):
+    """Creates or refreshes one MI_* child of the matching parent for a mesh and returns it (shared by static and skeletal meshes).
+
+    `tint` is an optional (r, g, b) written to the instance's `Color` parameter (the master's and the occluder's tint); None leaves it alone."""
     roughness, rim, fill, glow, self_lit = look
     path = THEME + "/Materials/" + instance_name
     instance = unreal.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
@@ -884,14 +1055,20 @@ def material_instance(mesh_name, instance_name, texture_name, texture, asset_id,
         if abs(mel.get_material_instance_scalar_parameter_value(instance, parameter) - value) > 1e-6:
             mel.set_material_instance_scalar_parameter_value(instance, parameter, value)
             changed = True
+    if tint is not None and kind != theme_plan.CARD:
+        wanted = unreal.LinearColor(tint[0], tint[1], tint[2], 1.0)
+        current = mel.get_material_instance_vector_parameter_value(instance, "Color")
+        if max(abs(current.r - wanted.r), abs(current.g - wanted.g), abs(current.b - wanted.b), abs(current.a - wanted.a)) > 1e-6:
+            mel.set_material_instance_vector_parameter_value(instance, "Color", wanted)
+            changed = True
     if changed:
         mel.update_material_instance(instance)
     unreal.log("THEME_MATERIAL {} glow={} mask={}".format(mesh_name, glow if masked and kind != theme_plan.CARD else 0.0, masked))
     return instance
 
 
-def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan.LIT, revision=1, source=None):
-    instance = material_instance(name, "MI_" + name[3:], "T_" + name[3:], texture, asset_id, look, parents, kind, revision, source)
+def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan.LIT, revision=1, source=None, tint=None):
+    instance = material_instance(name, "MI_" + name[3:], "T_" + name[3:], texture, asset_id, look, parents, kind, revision, source, tint)
     # Assign only when different, so an unchanged mesh is never dirtied (and never re-saved).
     for index in range(mesh.get_num_sections(0)):
         if mesh.get_material(index) != instance:
@@ -905,13 +1082,58 @@ def apply_material(mesh, texture, asset_id, name, look, parents, kind=theme_plan
 
 RIG_FOLDER = THEME + "/Characters"
 SKELETON = RIG_FOLDER + "/SKEL_Humanoid"
-CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
-# asset id, mesh name, data-asset property, look (roughness, rim, fill, glow, self_lit): characters get Rim and Fill 1.
+# The nine clips of the fighter's r001 glb (#147) and the tenth, Brace (#150 batch 2), which comes from the fighter's r002 glb (the same
+# meshes and clips with Brace added). Every character on the shared skeleton uses all ten.
+FIRST_CLIPS = ["Idle", "Walk", "Melee", "Ranged", "Cast", "Hit", "Downed", "Death", "Recover"]
+BRACE_CLIP = "Brace"
+CLIPS = FIRST_CLIPS + [BRACE_CLIP]
+BRACE_SOURCE = ("sk-hero-fighter", "SK_Hero_Fighter", "r002")
+# Per-class clip overrides (#150 batch 2 review): rig key -> {shared clip: (clip package name, action name in that class's LOD0 glb)}. The theme's rig
+# definition names them (FDiceRollCharacter::Overrides, data) and the game plays them instead of the shared clip for that class only.
+CLIP_OVERRIDES = {
+    "class:Barbarian": {"Melee": ("A_Barbarian_Melee", "Melee_Barbarian")},
+    "class:Ranger": {"Ranged": ("A_Ranger_Ranged", "Ranged_Ranger")},
+    # The foe batch (#150): the archer's own bow draw (the ranger's timing, so the arrow leaves at the same release frame) and the brute's two-handed maul swing.
+    "foe:Archer": {"Ranged": ("A_Archer_Ranged", "Ranged_Archer")},
+    "foe:Brute": {"Melee": ("A_Brute_Melee", "Melee_Brute")},
+}
+# How tall a rig stands as a multiple of the theme's FigureHeight (FDiceRollCharacter::HeightScale, #150 foe batch). Every rig is fitted to FigureHeight by its mesh
+# bounds, so the foes that are bigger than the 175 to 185 cm cast carry their stature here: the brute's horns and the warden's crest are part of their bounds
+# (Blender 204.6 cm each), so 1.08 gives a 194 cm brute and 1.12 a 202 cm warden. Unlisted rigs keep 1.0, the fitted height every earlier rig has.
+HEIGHT_SCALE = {"foe:Brute": 1.08, "foe:Warden": 1.12}
+# asset id, mesh name, rig key, look (roughness, rim, fill, glow, self_lit). The static r001 characters keep Rim 1.6 and Fill 1.25 (#148, tuned for
+# their dark figures); the rigged ones, whose palettes are already bright, take Rim 1.2 and Fill 1.0 (#150: the lowest pair of 1.2/1.0 and 1.0/0.9 that
+# keeps every rigged class at a mean region contrast of 2.3 or more and a worst shot of 1.4 or more on Vigil, Root and the Vault; see docs/assets.md).
+# apply_rig_material writes these scalars to the MI_SK_* instance only when they differ, so a rerun retunes the instances in place and touches
+# no mesh, texture or clip.
+# The rig key says where the data asset holds the definition (#150): "class:<Role>" is UDiceRollTheme::ClassRigs[<Role>], "foe:<Archetype>"
+# is FoeRigs[<Archetype>]. The fighter comes first because its import yields the shared skeleton and the nine clips (every later
+# character reuses them), and a cast batch appends its characters here.
 RIG = [
-    ("sk-hero-fighter", "SK_Hero_Fighter", "fighter_rig", (0.55, 1.0, 1.0, 1.0, 0.0)),
-    ("sk-hero-wizard", "SK_Hero_Wizard", "wizard_rig", (0.65, 1.0, 1.0, 1.0, 0.0)),
-    ("sk-foe-raider", "SK_Foe_Raider", "raider_rig", (0.6, 1.0, 1.0, 1.0, 0.0)),
+    ("sk-hero-fighter", "SK_Hero_Fighter", "class:Fighter", (0.55, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-wizard", "SK_Hero_Wizard", "class:Wizard", (0.65, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-raider", "SK_Foe_Raider", "foe:Raider", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-rogue", "SK_Hero_Rogue", "class:Rogue", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-cleric", "SK_Hero_Cleric", "class:Cleric", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-barbarian", "SK_Hero_Barbarian", "class:Barbarian", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-monk", "SK_Hero_Monk", "class:Monk", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-paladin", "SK_Hero_Paladin", "class:Paladin", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-ranger", "SK_Hero_Ranger", "class:Ranger", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-sorcerer", "SK_Hero_Sorcerer", "class:Sorcerer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-warlock", "SK_Hero_Warlock", "class:Warlock", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-druid", "SK_Hero_Druid", "class:Druid", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-bard", "SK_Hero_Bard", "class:Bard", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-hero-artificer", "SK_Hero_Artificer", "class:Artificer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    # The foe batch (#150): scout and archer replace the static foe meshes, skirmisher, brute and warden are the #188 roles (presentation names them in FoeLook.h).
+    ("sk-foe-scout", "SK_Foe_Scout", "foe:Scout", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-archer", "SK_Foe_Archer", "foe:Archer", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-skirmisher", "SK_Foe_Skirmisher", "foe:Skirmisher", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-brute", "SK_Foe_Brute", "foe:Brute", (0.6, 1.2, 1.0, 1.0, 0.0)),
+    ("sk-foe-warden", "SK_Foe_Warden", "foe:Warden", (0.6, 1.2, 1.0, 1.0, 0.0)),
 ]
+CLASS_RIGS, FOE_RIGS = "class_rigs", "foe_rigs"
+# The three pilot fields (#147) that a theme saved before #150 still holds; moving them into the maps clears them.
+PILOT_FIELDS = {"class:Fighter": "fighter_rig", "class:Wizard": "wizard_rig", "foe:Raider": "raider_rig"}
 # Replacement is refused (see refuse_reimport): the allow-list is only validated so the refusal can name the problem.
 REIMPORT = {token.strip() for token in os.environ.get("THEME_RIG_REIMPORT", "").split(",") if token.strip()}
 
@@ -950,8 +1172,8 @@ def refuse_reimport():
                        "rig assets deliberately in the editor (fix up references), then rerun without THEME_RIG_REIMPORT.")
 
 
-def source_glb(asset_id, name):
-    return os.path.join(ROOT, "Art", asset_id, "r001", name + ".glb")
+def source_glb(asset_id, name, revision="r001"):
+    return os.path.join(ROOT, "Art", asset_id, revision, name + ".glb")
 
 
 def import_glb(source, staging, skeleton):
@@ -1047,12 +1269,12 @@ def import_rig_mesh(asset_id, name, shared, first):
         for asset in imported:
             if isinstance(asset, unreal.AnimSequence) and clip_of(asset):
                 found.setdefault(clip_of(asset), []).append(asset)
-        if sorted(found) != sorted(CLIPS) or any(len(group) != 1 for group in found.values()):
+        if sorted(found) != sorted(FIRST_CLIPS) or any(len(group) != 1 for group in found.values()):
             raise RuntimeError("Expected exactly the nine clips {} from {}, got {}".format(
-                CLIPS, source, {clip: [a.get_name() for a in group] for clip, group in found.items()}))
+                FIRST_CLIPS, source, {clip: [a.get_name() for a in group] for clip, group in found.items()}))
         if not library.rename_asset(skeletons[0].get_path_name(), SKELETON):
             raise RuntimeError("Unable to move skeleton to " + SKELETON)
-        for clip in CLIPS:
+        for clip in FIRST_CLIPS:
             if not library.rename_asset(found[clip][0].get_path_name(), clip_path(clip)):
                 raise RuntimeError("Unable to move clip to " + clip_path(clip))
     skeleton = unreal.load_asset(SKELETON)
@@ -1099,23 +1321,117 @@ def path_of(asset):
     return asset.get_path_name() if hasattr(asset, "get_path_name") else str(asset)
 
 
-def rig_definition(theme, prop, name):
-    """The data-asset entry for a character, or None when it already matches (so an unchanged theme is not dirtied)."""
-    current = theme.get_editor_property(prop)
-    mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
-    clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
-    animations = current.get_editor_property("animations")
-    if path_of(current.get_editor_property("mesh")) == path_of(mesh) and all(
-            path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items()):
-        return None
+def rig_target(key):
+    """The data-asset map property and the entry name of a rig key ("class:Rogue" -> class_rigs, Rogue)."""
+    kind, entry = key.split(":", 1)
+    return (CLASS_RIGS if kind == "class" else FOE_RIGS), entry
+
+
+def rig_matches(definition, mesh, clips, overrides=None, height_scale=1.0):
+    animations = definition.get_editor_property("animations")
+    held = {str(k): path_of(v) for k, v in definition.get_editor_property("overrides").items()}
+    wanted = {clip: path_of(asset) for clip, asset in (overrides or {}).items()}
+    return path_of(definition.get_editor_property("mesh")) == path_of(mesh) and held == wanted and abs(definition.get_editor_property("height_scale") - height_scale) < 1e-4 and all(
+        path_of(animations.get_editor_property(clip.lower())) == path_of(asset) for clip, asset in clips.items())
+
+
+def new_rig_definition(mesh, clips, yaw, overrides=None, height_scale=1.0):
     definition = unreal.DiceRollCharacter()
     definition.set_editor_property("mesh", mesh)
-    definition.set_editor_property("yaw_offset", current.get_editor_property("yaw_offset"))
+    definition.set_editor_property("yaw_offset", yaw)
+    definition.set_editor_property("height_scale", height_scale)
+    definition.set_editor_property("overrides", {unreal.Name(clip): asset for clip, asset in (overrides or {}).items()})
     animation_set = unreal.DiceRollAnimSet()
     for clip, asset in clips.items():
         animation_set.set_editor_property(clip.lower(), asset)
     definition.set_editor_property("animations", animation_set)
     return definition
+
+
+def assign_rig(theme, key, name):
+    """Puts a character's definition in its map entry, and moves a pilot field's definition (#147) into the map. Returns the log
+    words for what changed (empty when the theme already matched, so an unchanged theme is not dirtied). Only the entry of this
+    key is written; other entries and other properties are never touched."""
+    prop, entry = rig_target(key)
+    mesh = unreal.load_asset(RIG_FOLDER + "/" + name)
+    clips = {clip: unreal.load_asset(clip_path(clip)) for clip in CLIPS}
+    overrides = {shared: unreal.load_asset(override_path(package_name)) for shared, (package_name, _) in CLIP_OVERRIDES.get(key, {}).items()}
+    entries = {str(k): v for k, v in theme.get_editor_property(prop).items()}
+    pilot_name = PILOT_FIELDS.get(key)
+    pilot = theme.get_editor_property(pilot_name) if pilot_name else None
+    pilot_set = pilot is not None and pilot.get_editor_property("mesh") is not None
+    changed = []
+    current = entries.get(entry)
+    height_scale = HEIGHT_SCALE.get(key, 1.0)
+    if current is None or not rig_matches(current, mesh, clips, overrides, height_scale):
+        source = current if current is not None else pilot
+        yaw = source.get_editor_property("yaw_offset") if source is not None else 0.0
+        entries[entry] = new_rig_definition(mesh, clips, yaw, overrides, height_scale)
+        theme.set_editor_property(prop, {unreal.Name(k): v for k, v in entries.items()})
+        changed.append("assigned")
+    if pilot_set:
+        theme.set_editor_property(pilot_name, unreal.DiceRollCharacter())
+        changed.append("pilot field cleared")
+    return changed
+
+
+def override_path(package_name):
+    return RIG_FOLDER + "/Animations/" + package_name
+
+
+def import_override_clips(asset_id, name, key):
+    """Imports a class's override clips (CLIP_OVERRIDES) when absent and never touches an existing one: the class's own r001 glb on the shared
+    skeleton into staging, the action's sequence moved to its package, the rest of staging deleted. Returns {shared clip: log word}."""
+    words = {}
+    for shared, (package_name, action) in CLIP_OVERRIDES.get(key, {}).items():
+        package = override_path(package_name)
+        if library.does_asset_exist(package):
+            words[shared] = "kept"
+            continue
+        source = source_glb(asset_id, name)
+        skeleton = unreal.load_asset(SKELETON)
+        if not os.path.isfile(source) or skeleton is None:
+            raise RuntimeError("Cannot import " + package + ": missing " + (source if not os.path.isfile(source) else SKELETON))
+        staging = THEME + "/_Import/" + package_name
+        imported = import_glb(source, staging, skeleton)
+        wanted = action.lower()
+        found = [a for a in imported if isinstance(a, unreal.AnimSequence) and a.get_name().lower().replace("|", "_").endswith(wanted)]
+        if len(found) != 1:
+            raise RuntimeError("Expected exactly one {} clip from {}, got {}".format(action, source, [a.get_name() for a in found]))
+        if found[0].get_editor_property("skeleton") != skeleton:
+            raise RuntimeError("The imported clip " + action + " is not on " + SKELETON)
+        if not library.rename_asset(found[0].get_path_name(), package):
+            raise RuntimeError("Unable to move clip to " + package)
+        remove_staging(staging)
+        words[shared] = "imported"
+    return words
+
+
+def import_brace_clip():
+    """Imports the tenth clip, Brace, into its package when it is absent, and never touches an existing one. The source is the fighter's r002
+    glb (the r001 meshes and nine clips plus Brace); it is imported on the shared skeleton into staging, the Brace sequence is moved to its
+    package, and everything else in staging (the mesh, texture and material the glb brings) is deleted again. Returns the log word."""
+    package = clip_path(BRACE_CLIP)
+    if library.does_asset_exist(package):
+        return "kept"
+    asset_id, name, revision = BRACE_SOURCE
+    source = source_glb(asset_id, name, revision)
+    if not os.path.isfile(source):
+        raise RuntimeError("Missing Brace source " + source)
+    shared = unreal.load_asset(SKELETON)
+    if shared is None:
+        raise RuntimeError("Cannot import Brace: " + SKELETON + " does not exist")
+    staging = THEME + "/_Import/Brace"
+    imported = import_glb(source, staging, shared)
+    found = [asset for asset in imported if isinstance(asset, unreal.AnimSequence) and clip_of(asset) == BRACE_CLIP]
+    if len(found) != 1:
+        raise RuntimeError("Expected exactly one Brace clip from {}, got {}".format(source, [a.get_name() for a in found]))
+    if found[0].get_editor_property("skeleton") != shared:
+        raise RuntimeError("The imported Brace clip is not on " + SKELETON)
+    if not library.rename_asset(found[0].get_path_name(), package):
+        raise RuntimeError("Unable to move clip to " + package)
+    remove_staging(staging)
+    return "imported"
 
 
 def import_rig(master, theme):
@@ -1124,14 +1440,14 @@ def import_rig(master, theme):
         return 0
     check_allow_list()
     names = [name for _, name, _, _ in RIG]
-    # The skeleton, the clips and the fighter come from one import, so they exist together or not at all.
-    bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in CLIPS]
+    # The skeleton, the nine clips and the fighter come from one import, so they exist together or not at all.
+    bundle = [SKELETON, RIG_FOLDER + "/" + names[0]] + [clip_path(clip) for clip in FIRST_CLIPS]
     present = [library.does_asset_exist(path) for path in bundle]
     if any(present) and not all(present):
         raise RuntimeError("Incomplete rig bundle, missing: {}. Delete the survivors deliberately in the editor and rerun.".format(
             [path for path, here in zip(bundle, present) if not here]))
     found = 0
-    for asset_id, name, prop, look in RIG:
+    for asset_id, name, key, look in RIG:
         package = RIG_FOLDER + "/" + name
         staging = None
         if library.does_asset_exist(package):
@@ -1147,17 +1463,19 @@ def import_rig(master, theme):
             rig_log("mesh", package, "imported", lods)
             if name == names[0]:
                 rig_log("skeleton", SKELETON, "imported")
-                for clip in CLIPS:
+                for clip in FIRST_CLIPS:
                     rig_log("clip", clip_path(clip), "imported")
+        if name == names[0]:
+            rig_log("clip", clip_path(BRACE_CLIP), import_brace_clip())     # before any rig is assigned: every definition holds all ten
         apply_rig_material(mesh, texture, asset_id, name, look, master)
         if staging:
             remove_staging(staging)
-        definition = rig_definition(theme, prop, name)
-        if definition is not None:
-            theme.set_editor_property(prop, definition)
-            rig_log("theme", prop, "assigned")
+        for shared, word in import_override_clips(asset_id, name, key).items():          # before the rig is assigned: its definition names them
+            rig_log("override", override_path(CLIP_OVERRIDES[key][shared][0]), word)
+        for status in assign_rig(theme, key, name):
+            rig_log("theme", key, status)
         found += 1
-    for clip in CLIPS:
+    for clip in FIRST_CLIPS:
         if all(present):
             rig_log("clip", clip_path(clip), "kept")
     if all(present):
@@ -1179,7 +1497,7 @@ def asset_line(asset_id, package, action, source, mesh, extra=""):
     nanite = "n/a" if mesh is None else ("on" if nanite_enabled(mesh) else "off")
     lods = "n/a" if mesh is None else mesh_tools.get_lod_count(mesh)
     shapes = "n/a" if mesh is None else collision_shapes(mesh)
-    kit = "n/a" if mesh is None else (KIT_TAG_VALUE if kit_tagged(mesh) else "r001")
+    kit = "n/a" if mesh is None else (kit_tag(mesh) or "r001")
     unreal.log("THEME_ASSET id={} package={} kit={} action={} source_tris={} source_sha256={} nanite={} lods={} collision_shapes={}{}".format(
         asset_id, package, kit, action, tris, digest, nanite, lods, shapes, (" " + extra) if extra else ""))
 
@@ -1194,6 +1512,66 @@ def set_list(theme, prop, items):
         set_if_different(theme, prop, items)
 
 
+def check_metric_gate(kit, replacements):
+    """Raises unless a kit's metric-gate packages are all (or none) tagged or being replaced in this run."""
+    gate = {}
+    for row in kit["rows"]:
+        if row[0] in kit["gate"]:
+            package = theme_plan.package_path(row[3], row[2])
+            gate[row[0]] = (library.does_asset_exist(package) and kit_tagged(unreal.load_asset(package), kit["tag"])) or row[0] in replacements
+    if any(gate.values()) and not all(gate.values()):
+        raise RuntimeError("Replace the {} metric gate together: {} (now {})".format(kit["name"], ", ".join(kit["gate"]), gate))
+
+
+def import_kit(kit, theme, parents, replacements):
+    """Imports one world kit's rows (the Vigil's, the Root's, then the Vault's) and returns (meshes loaded, whether its metric gate is met).
+
+    A row whose package holds a mesh with this kit's tag is left alone ("present"); a row whose package exists as r001 is skipped
+    unless its id is allow-listed and requested; everything else is imported, stripped of collision and Nanite, given its explicit
+    LODs and tagged. The theme's array properties and the kit's metric flag are written only when they differ."""
+    slots = {prop: [None] * count for prop, count in kit["sizes"].items()}
+    loaded = 0
+    for asset_id, revision, name, folder, kind, prop, index, look in kit["rows"]:
+        package = theme_plan.package_path(folder, name)
+        source = theme_plan.export_path(asset_id, revision, name)
+        exists = library.does_asset_exist(package)
+        replace = asset_id in replacements
+        row_tag = theme_plan.ROW_TAGS.get(asset_id, kit["tag"])      # a row with a newer revision of its own carries its own tag
+        if exists and kit_tagged(unreal.load_asset(package), row_tag):
+            mesh, texture, action = unreal.load_asset(package), None, "present"
+        elif exists and not replace:
+            reason = "older revision kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.ALL_REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
+            asset_line(asset_id, package, "skipped", source, unreal.load_asset(package), "reason=\"" + reason + "\"")
+            continue
+        else:
+            mesh, texture = import_kit_asset(asset_id, revision, name, folder, replace)
+            action = "replaced" if exists else "created"
+            mesh_tools.remove_collisions(mesh)
+            shapes = collision_shapes(mesh)
+            if shapes:
+                raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
+            import_lods(mesh, asset_id, revision, name)
+            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, row_tag)
+            mesh.modify()  # marks the package dirty so the import is saved
+        force_nanite_off(mesh)
+        check_lod_count(mesh, asset_id, revision)
+        if theme_plan.record_lods(asset_id, revision):
+            repair_lod_slots(mesh, name)
+        apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source, tint=theme_plan.INSTANCE_TINTS.get(asset_id))
+        asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
+        if index is None:
+            set_if_different(theme, prop, mesh)
+        else:
+            slots[prop][index] = mesh
+        loaded += 1
+    for prop, items in slots.items():
+        set_list(theme, prop, items)
+    metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2])), kit["tag"]) for row in kit["rows"] if row[0] in kit["gate"])
+    if bool(theme.get_editor_property(kit["flag"])) != metric:
+        set_if_different(theme, kit["flag"], metric)
+    return loaded, metric
+
+
 def main():
     # A rig replacement request is validated and refused before anything is touched: no master rebuild, no settings, no imports.
     if REIMPORT:
@@ -1205,22 +1583,22 @@ def main():
     unreal.log("THEME_PLAN replace={} fix_r001_nanite={}".format(sorted(replacements) or "none", fix_r001_nanite))
     master = master_material()
     ensure_skeletal_usage(master)
+    ensure_nanite_usage(master)
     occluder_parent = ensure_material(OCCLUDER_MATERIAL, build_occluder_material, occluder_is_current, OCCLUDER_GRAPH_REVISION)
     card_parent = ensure_material(CARD_MATERIAL, build_card_material)
+    effect_parent = ensure_material(EFFECT_MATERIAL, build_effect_material, effect_is_current, EFFECT_GRAPH_REVISION)
+    # Every material an instanced group draws needs the instancing usage flag (#144); a rerun only sets what is missing.
+    for instanced in (master, occluder_parent, card_parent, effect_parent):
+        ensure_instancing_usage(instanced)
     ensure_material(FIGURE_SILHOUETTE_MATERIAL, build_figure_silhouette_material, figure_silhouette_is_current, FIGURE_SILHOUETTE_REVISION)
     parents = {theme_plan.LIT: master, theme_plan.OCCLUDER: occluder_parent, theme_plan.CARD: card_parent}
     theme = theme_asset()
     set_if_different(theme, "tint_material", master)
 
-    # The kit's true-metric world and props replace their r001 packages together or not at all: the board scales r001 art
-    # and places r002 art unscaled, so a mix would draw one of them at the wrong size.
-    gate = {}
-    for row in theme_plan.R002:
-        if row[0] in theme_plan.METRIC_GATE:
-            package = theme_plan.package_path(row[3], row[2])
-            gate[row[0]] = (library.does_asset_exist(package) and kit_tagged(unreal.load_asset(package))) or row[0] in replacements
-    if any(gate.values()) and not all(gate.values()):
-        raise RuntimeError("Replace the metric gate together: {} (now {})".format(", ".join(theme_plan.METRIC_GATE), gate))
+    # A kit's true-metric world (and, for the Vigil, props) replaces its r001 packages together or not at all: the board scales
+    # r001 art and places r002 art unscaled, so a mix would draw one of them at the wrong size.
+    for kit in KITS:
+        check_metric_gate(kit, replacements)
 
     found = 0
     for asset_id, name, folder, prop, *look in ASSETS:
@@ -1243,45 +1621,9 @@ def main():
         asset_line(asset_id, package, "kept-r001", r001_source(asset_id, name), mesh)
         found += 1
 
-    slots = {prop: [None] * count for prop, count in theme_plan.ARRAY_SIZES.items()}
-    kit_loaded = 0
-    for asset_id, revision, name, folder, kind, prop, index, look in theme_plan.R002:
-        package = theme_plan.package_path(folder, name)
-        source = theme_plan.export_path(asset_id, revision, name)
-        exists = library.does_asset_exist(package)
-        replace = asset_id in replacements
-        if exists and kit_tagged(unreal.load_asset(package)):
-            mesh, texture, action = unreal.load_asset(package), None, "present"
-        elif exists and not replace:
-            reason = "r001 package kept (replace with {}={})".format(theme_plan.REIMPORT_ENV, asset_id) if asset_id in theme_plan.REPLACEABLE else "exists and is not tagged as the kit; remove it deliberately to import"
-            asset_line(asset_id, package, "skipped", source, unreal.load_asset(package), "reason=\"" + reason + "\"")
-            continue
-        else:
-            mesh, texture = import_kit_asset(asset_id, revision, name, folder, replace)
-            action = "replaced" if exists else "created"
-            mesh_tools.remove_collisions(mesh)
-            shapes = collision_shapes(mesh)
-            if shapes:
-                raise RuntimeError("{} still has {} simple collision shapes".format(package, shapes))
-            import_lods(mesh, asset_id, revision, name)
-            library.set_metadata_tag(mesh, theme_plan.REVISION_TAG, KIT_TAG_VALUE)
-            mesh.modify()  # marks the package dirty so the import is saved
-        force_nanite_off(mesh)
-        check_lod_count(mesh, asset_id, revision)
-        if theme_plan.record_lods(asset_id, revision):
-            repair_lod_slots(mesh, name)
-        apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source)
-        asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
-        if index is None:
-            set_if_different(theme, prop, mesh)
-        else:
-            slots[prop][index] = mesh
-        kit_loaded += 1
-    for prop, items in slots.items():
-        set_list(theme, prop, items)
-    metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2]))) for row in theme_plan.R002 if row[0] in theme_plan.METRIC_GATE)
-    if bool(theme.get_editor_property("metric_kit")) != metric:
-        set_if_different(theme, "metric_kit", metric)
+    kit_loaded, kit_metric = {}, {}
+    for kit in KITS:
+        kit_loaded[kit["name"]], kit_metric[kit["name"]] = import_kit(kit, theme, parents, replacements)
 
     rigged = import_rig(master, theme)
 
@@ -1294,7 +1636,11 @@ def main():
         state = "added" if path not in before else "removed" if path not in after else "changed"
         unreal.log("THEME_FILE {} {} sha256={}".format(state, path, after.get(path, "-")))
     unreal.log("THEME_FILES_CHANGED {}".format(len(changed)))
-    unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes, kit {}/{} meshes, metric_kit={}".format(found, len(ASSETS), kit_loaded, len(theme_plan.R002), metric))
+    unreal.log("THEME_IMPORT_COMPLETE {}/{} meshes, kit {}/{} meshes, metric_kit={}".format(
+        found, len(ASSETS), kit_loaded["vigil"], len(theme_plan.R002), kit_metric["vigil"]))
+    unreal.log("THEME_ROOT_COMPLETE root kit {}/{} meshes, root_metric_kit={}".format(kit_loaded["root"], len(theme_plan.ROOT_R002), kit_metric["root"]))
+    unreal.log("THEME_VAULT_COMPLETE vault kit {}/{} meshes, vault_metric_kit={}".format(kit_loaded["vault"], len(theme_plan.VAULT_R002), kit_metric["vault"]))
+    unreal.log("THEME_OVERVIEW_COMPLETE overview set {}/{} meshes, overview_r002={}".format(kit_loaded["overview"], len(theme_plan.OVERVIEW_R002), kit_metric["overview"]))
     unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))
 
 

@@ -1,0 +1,1014 @@
+{
+ "SM_Prop_Vault_Pillar": {
+  "triangles": 1150,
+  "vertices": 1483,
+  "bbox_min_m": [
+   -0.65,
+   -0.7923,
+   -0.0104
+  ],
+  "bbox_max_m": [
+   0.8449,
+   0.65,
+   2.9198
+  ],
+  "size_m": [
+   1.4949,
+   1.4423,
+   2.9302
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 155936,
+  "extensions": [],
+  "asset_id": "prop-vault-pillar",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Pillar",
+  "glow_tris": 7,
+  "atlas_px": 512,
+  "atlas_fill": 0.449,
+  "file": "Art/prop-vault-pillar/r001/SM_Prop_Vault_Pillar.glb"
+ },
+ "SM_Prop_Vault_Pillar_B": {
+  "triangles": 3260,
+  "vertices": 6030,
+  "bbox_min_m": [
+   -0.625,
+   -0.625,
+   0
+  ],
+  "bbox_max_m": [
+   0.625,
+   0.625,
+   3.19
+  ],
+  "size_m": [
+   1.25,
+   1.25,
+   3.19
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 363756,
+  "extensions": [],
+  "asset_id": "prop-vault-pillar-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Pillar_B",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.496,
+  "file": "Art/prop-vault-pillar-b/r001/SM_Prop_Vault_Pillar_B.glb"
+ },
+ "SM_Prop_Vault_Pillar_C": {
+  "triangles": 688,
+  "vertices": 938,
+  "bbox_min_m": [
+   -0.6,
+   -0.5912,
+   0
+  ],
+  "bbox_max_m": [
+   0.6,
+   0.5,
+   1.95
+  ],
+  "size_m": [
+   1.2,
+   1.0912,
+   1.95
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 109224,
+  "extensions": [],
+  "asset_id": "prop-vault-pillar-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Pillar_C",
+  "glow_tris": 12,
+  "atlas_px": 512,
+  "atlas_fill": 0.271,
+  "file": "Art/prop-vault-pillar-c/r001/SM_Prop_Vault_Pillar_C.glb"
+ },
+ "SM_Prop_Vault_Wall": {
+  "triangles": 1218,
+  "vertices": 1089,
+  "bbox_min_m": [
+   -0.6714,
+   -0.8,
+   0
+  ],
+  "bbox_max_m": [
+   0.7214,
+   0.754,
+   2.48
+  ],
+  "size_m": [
+   1.3928,
+   1.554,
+   2.48
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 140556,
+  "extensions": [],
+  "asset_id": "prop-vault-wall",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Wall",
+  "glow_tris": 3,
+  "atlas_px": 512,
+  "atlas_fill": 0.449,
+  "file": "Art/prop-vault-wall/r001/SM_Prop_Vault_Wall.glb"
+ },
+ "SM_Prop_Vault_Wall_B": {
+  "triangles": 1269,
+  "vertices": 1312,
+  "bbox_min_m": [
+   -0.4638,
+   -0.755,
+   0
+  ],
+  "bbox_max_m": [
+   0.5638,
+   0.8469,
+   2.24
+  ],
+  "size_m": [
+   1.0276,
+   1.6019,
+   2.24
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 149780,
+  "extensions": [],
+  "asset_id": "prop-vault-wall-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Wall_B",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.447,
+  "file": "Art/prop-vault-wall-b/r001/SM_Prop_Vault_Wall_B.glb"
+ },
+ "SM_Prop_Vault_Wall_C": {
+  "triangles": 1830,
+  "vertices": 2214,
+  "bbox_min_m": [
+   -0.35,
+   -0.75,
+   0
+  ],
+  "bbox_max_m": [
+   0.35,
+   0.75,
+   1.8391
+  ],
+  "size_m": [
+   0.7,
+   1.5,
+   1.8391
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 195816,
+  "extensions": [],
+  "asset_id": "prop-vault-wall-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Wall_C",
+  "glow_tris": 30,
+  "atlas_px": 512,
+  "atlas_fill": 0.474,
+  "file": "Art/prop-vault-wall-c/r001/SM_Prop_Vault_Wall_C.glb"
+ },
+ "SM_Prop_Vault_Stones": {
+  "triangles": 638,
+  "vertices": 1566,
+  "bbox_min_m": [
+   -0.658,
+   -0.5594,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.5718,
+   0.4853,
+   0.6072
+  ],
+  "size_m": [
+   1.2298,
+   1.0447,
+   0.6222
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 156176,
+  "extensions": [],
+  "asset_id": "prop-vault-stones",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Stones",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.447,
+  "file": "Art/prop-vault-stones/r001/SM_Prop_Vault_Stones.glb"
+ },
+ "SM_Prop_Vault_Stones_B": {
+  "triangles": 2796,
+  "vertices": 5874,
+  "bbox_min_m": [
+   -0.7023,
+   -0.5163,
+   0
+  ],
+  "bbox_max_m": [
+   0.8519,
+   0.5565,
+   0.6953
+  ],
+  "size_m": [
+   1.5541,
+   1.0728,
+   0.6953
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 305676,
+  "extensions": [],
+  "asset_id": "prop-vault-stones-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Stones_B",
+  "glow_tris": 40,
+  "atlas_px": 512,
+  "atlas_fill": 0.192,
+  "file": "Art/prop-vault-stones-b/r001/SM_Prop_Vault_Stones_B.glb"
+ },
+ "SM_Prop_Vault_Stones_C": {
+  "triangles": 463,
+  "vertices": 911,
+  "bbox_min_m": [
+   -0.75,
+   -0.7,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.6502,
+   0.9141,
+   0.8687
+  ],
+  "size_m": [
+   1.4002,
+   1.6141,
+   0.8837
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 128912,
+  "extensions": [],
+  "asset_id": "prop-vault-stones-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Stones_C",
+  "glow_tris": 0,
+  "atlas_px": 512,
+  "atlas_fill": 0.447,
+  "file": "Art/prop-vault-stones-c/r001/SM_Prop_Vault_Stones_C.glb"
+ },
+ "SM_Prop_Vault_Arch2Cell": {
+  "triangles": 1324,
+  "vertices": 1747,
+  "bbox_min_m": [
+   -0.664,
+   -1.425,
+   0
+  ],
+  "bbox_max_m": [
+   0.65,
+   1.425,
+   3.1494
+  ],
+  "size_m": [
+   1.314,
+   2.85,
+   3.1494
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 174136,
+  "extensions": [],
+  "asset_id": "prop-vault-arch-2cell",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Vault_Arch2Cell",
+  "glow_tris": 3,
+  "atlas_px": 512,
+  "atlas_fill": 0.474,
+  "file": "Art/prop-vault-arch-2cell/r001/SM_Prop_Vault_Arch2Cell.glb"
+ },
+ "SM_Scatter_Vault_Bones": {
+  "triangles": 396,
+  "vertices": 783,
+  "bbox_min_m": [
+   -0.5751,
+   -0.3372,
+   -0.0014
+  ],
+  "bbox_max_m": [
+   0.4255,
+   0.5224,
+   0.268
+  ],
+  "size_m": [
+   1.0005,
+   0.8597,
+   0.2694
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 44080,
+  "extensions": [],
+  "asset_id": "scatter-vault-bones",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Bones",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-vault-bones/r001/SM_Scatter_Vault_Bones.glb"
+ },
+ "SM_Scatter_Vault_Skulls": {
+  "triangles": 400,
+  "vertices": 856,
+  "bbox_min_m": [
+   -0.3596,
+   -0.3872,
+   0.02
+  ],
+  "bbox_max_m": [
+   0.3759,
+   0.3116,
+   0.2297
+  ],
+  "size_m": [
+   0.7354,
+   0.6988,
+   0.2097
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 59636,
+  "extensions": [],
+  "asset_id": "scatter-vault-skulls",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Skulls",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.289,
+  "file": "Art/scatter-vault-skulls/r001/SM_Scatter_Vault_Skulls.glb"
+ },
+ "SM_Scatter_Vault_Candles": {
+  "triangles": 410,
+  "vertices": 835,
+  "bbox_min_m": [
+   -0.2353,
+   -0.28,
+   0
+  ],
+  "bbox_max_m": [
+   0.2553,
+   0.23,
+   0.23
+  ],
+  "size_m": [
+   0.4905,
+   0.51,
+   0.23
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 46236,
+  "extensions": [],
+  "asset_id": "scatter-vault-candles",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Candles",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-vault-candles/r001/SM_Scatter_Vault_Candles.glb"
+ },
+ "SM_Scatter_Vault_Rubble": {
+  "triangles": 338,
+  "vertices": 736,
+  "bbox_min_m": [
+   -0.6586,
+   -0.4116,
+   -0.015
+  ],
+  "bbox_max_m": [
+   0.5551,
+   0.5787,
+   0.3074
+  ],
+  "size_m": [
+   1.2137,
+   0.9903,
+   0.3224
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 63464,
+  "extensions": [],
+  "asset_id": "scatter-vault-rubble",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Rubble",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.508,
+  "file": "Art/scatter-vault-rubble/r001/SM_Scatter_Vault_Rubble.glb"
+ },
+ "SM_Scatter_Vault_Chains": {
+  "triangles": 162,
+  "vertices": 339,
+  "bbox_min_m": [
+   -0.5214,
+   -0.0776,
+   0
+  ],
+  "bbox_max_m": [
+   0.6106,
+   0.17,
+   0.06
+  ],
+  "size_m": [
+   1.132,
+   0.2476,
+   0.06
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 24544,
+  "extensions": [],
+  "asset_id": "scatter-vault-chains",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Chains",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-vault-chains/r001/SM_Scatter_Vault_Chains.glb"
+ },
+ "SM_Scatter_Vault_Urns": {
+  "triangles": 400,
+  "vertices": 908,
+  "bbox_min_m": [
+   -0.24,
+   -0.24,
+   0
+  ],
+  "bbox_max_m": [
+   0.8605,
+   0.5607,
+   0.55
+  ],
+  "size_m": [
+   1.1005,
+   0.8007,
+   0.55
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 61528,
+  "extensions": [],
+  "asset_id": "scatter-vault-urns",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Urns",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.289,
+  "file": "Art/scatter-vault-urns/r001/SM_Scatter_Vault_Urns.glb"
+ },
+ "SM_Scatter_Vault_Relics": {
+  "triangles": 288,
+  "vertices": 447,
+  "bbox_min_m": [
+   -0.45,
+   -0.42,
+   0
+  ],
+  "bbox_max_m": [
+   0.65,
+   0.55,
+   0.15
+  ],
+  "size_m": [
+   1.1,
+   0.97,
+   0.15
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 29620,
+  "extensions": [],
+  "asset_id": "scatter-vault-relics",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Relics",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.098,
+  "file": "Art/scatter-vault-relics/r001/SM_Scatter_Vault_Relics.glb"
+ },
+ "SM_Scatter_Vault_Crystals": {
+  "triangles": 360,
+  "vertices": 646,
+  "bbox_min_m": [
+   -0.2323,
+   -0.2792,
+   0
+  ],
+  "bbox_max_m": [
+   0.3288,
+   0.2212,
+   0.4087
+  ],
+  "size_m": [
+   0.5611,
+   0.5005,
+   0.4087
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 31540,
+  "extensions": [],
+  "asset_id": "scatter-vault-crystals",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Scatter/SM_Scatter_Vault_Crystals",
+  "glow_tris": 120,
+  "atlas_px": 256,
+  "atlas_fill": 0.009,
+  "file": "Art/scatter-vault-crystals/r001/SM_Scatter_Vault_Crystals.glb"
+ },
+ "SM_Fx_Vault_MistCard": {
+  "triangles": 72,
+  "vertices": 56,
+  "bbox_min_m": [
+   -0.004,
+   -1.5,
+   0
+  ],
+  "bbox_max_m": [
+   0,
+   1.5,
+   1.1
+  ],
+  "size_m": [
+   0.004,
+   3.0,
+   1.1
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 25920,
+  "extensions": [],
+  "asset_id": "fx-vault-mist-card",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Vault_MistCard",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-vault-mist-card/r001/SM_Fx_Vault_MistCard.glb"
+ },
+ "SM_Fx_Vault_MistCard_B": {
+  "triangles": 64,
+  "vertices": 50,
+  "bbox_min_m": [
+   -0.5739,
+   -1.1,
+   -0.001
+  ],
+  "bbox_max_m": [
+   0,
+   1.1,
+   2.12
+  ],
+  "size_m": [
+   0.5739,
+   2.2,
+   2.121
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 25688,
+  "extensions": [],
+  "asset_id": "fx-vault-mist-card-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Vault_MistCard_B",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-vault-mist-card-b/r001/SM_Fx_Vault_MistCard_B.glb"
+ },
+ "SM_Fx_Vault_MistCard_C": {
+  "triangles": 144,
+  "vertices": 98,
+  "bbox_min_m": [
+   -1.5,
+   -1.5,
+   0.116
+  ],
+  "bbox_max_m": [
+   1.5,
+   1.5,
+   0.12
+  ],
+  "size_m": [
+   3.0,
+   3.0,
+   0.004
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 28048,
+  "extensions": [],
+  "asset_id": "fx-vault-mist-card-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Vault_MistCard_C",
+  "glow_tris": 0,
+  "atlas_px": 256,
+  "atlas_fill": 0.316,
+  "file": "Art/fx-vault-mist-card-c/r001/SM_Fx_Vault_MistCard_C.glb"
+ },
+ "SM_Fx_Vault_LightShaft": {
+  "triangles": 96,
+  "vertices": 112,
+  "bbox_min_m": [
+   -2.9182,
+   -0.5303,
+   -0.0017
+  ],
+  "bbox_max_m": [
+   0.5305,
+   0.5304,
+   6.0015
+  ],
+  "size_m": [
+   3.4487,
+   1.0608,
+   6.0032
+  ],
+  "image_px": [
+   128,
+   128
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 7460,
+  "extensions": [],
+  "asset_id": "fx-vault-light-shaft",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Vault_LightShaft",
+  "glow_tris": 0,
+  "atlas_px": 128,
+  "atlas_fill": 0.117,
+  "file": "Art/fx-vault-light-shaft/r001/SM_Fx_Vault_LightShaft.glb"
+ },
+ "SM_Fx_Vault_LightShaft_B": {
+  "triangles": 48,
+  "vertices": 56,
+  "bbox_min_m": [
+   -2.35,
+   -0.55,
+   -0.0016
+  ],
+  "bbox_max_m": [
+   0.55,
+   0.55,
+   4.2
+  ],
+  "size_m": [
+   2.9,
+   1.1,
+   4.2016
+  ],
+  "image_px": [
+   128,
+   128
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 4932,
+  "extensions": [],
+  "asset_id": "fx-vault-light-shaft-b",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Fx/SM_Fx_Vault_LightShaft_B",
+  "glow_tris": 0,
+  "atlas_px": 128,
+  "atlas_fill": 0.117,
+  "file": "Art/fx-vault-light-shaft-b/r001/SM_Fx_Vault_LightShaft_B.glb"
+ }
+}

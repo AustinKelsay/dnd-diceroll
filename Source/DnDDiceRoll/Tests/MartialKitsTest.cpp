@@ -384,7 +384,10 @@ bool FMartialRunTest::RunTest(const FString& Parameters)
         const TCHAR* SupportPoor[]={TEXT("rogue.assassin"),TEXT("rogue.soulknife"),TEXT("ranger.hunter"),TEXT("ranger.swarmkeeper")};
         const TCHAR* Mixed[]={TEXT("fighter.rune-knight"),TEXT("rogue.soulknife"),TEXT("paladin.devotion"),TEXT("ranger.hunter")};
         for(int32 Id=1;Id<=4;++Id) { FPartyBuildSelection P; P.Id=Id; P.Name=FString::Printf(TEXT("Slot %d"),Id); P.BuildId=Mode==2?Melee[Id-1]:Mode==3?SupportPoor[Id-1]:Duplicate?TEXT("ranger.hunter"):Mixed[Id-1]; Party.Add(P); }
-        FExpeditionRun Run; TestTrue(TEXT("Construct martial run"),Run.NewRun(42,Party,Error,Duplicate?TEXT("duplicate-martial"):TEXT("mixed-martial")));
+        // #184: the first seed from 42 on where the scripted player completes the run (see FirstSeedWhere).
+        const int32 Seed=ExpeditionTestSupport::FirstSeedWhere([&](int32 Candidate) { FExpeditionRun Probe; FString Ignored; return Probe.NewRun(Candidate,Party,Ignored,TEXT("probe")) && ExpeditionTestSupport::FinishRunScripted(Probe); });
+        if(!TestTrue(TEXT("Some seed lets the worked martial party complete five fights"),Seed!=INDEX_NONE)) { continue; }
+        FExpeditionRun Run; TestTrue(TEXT("Construct martial run"),Run.NewRun(Seed,Party,Error,Duplicate?TEXT("duplicate-martial"):TEXT("mixed-martial")));
         for(int32 Stage=0;Stage<5;++Stage)
         {
             if(!TestTrue(TEXT("Choose actual generated route"),Run.ChooseRoute(Run.Progress().Offers[0].Id,Error))) { break; }

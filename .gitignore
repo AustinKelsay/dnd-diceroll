@@ -7,6 +7,7 @@ Builds/
 # Unreal's generated packaging templates, version counters and file-open orders
 /Build/Mac/
 /Build/Linux/
+/Build/Windows/FileOpenOrder/
 Plugins/**/Binaries/
 Plugins/**/Intermediate/
 .vs/
@@ -25,6 +26,9 @@ Plugins/**/Intermediate/
 .local/
 .venv/
 __pycache__/
+# Blender save backups (.blend1, .blend2, ...); the retained sources are the .blend files only
+*.blend1
+*.blend[0-9]
 *.pyc
 .DS_Store
 

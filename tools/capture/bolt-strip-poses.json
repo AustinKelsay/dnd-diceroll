@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "bolt-wizard-flight-near",
+      "mode": "impact",
+      "effect": "fire",
+      "role": "Wizard",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-cleric-flight-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Cleric",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-sorcerer-flight-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Sorcerer",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-warlock-flight-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Warlock",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-druid-flight-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Druid",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    },
+    {
+      "name": "bolt-bard-flight-near",
+      "mode": "impact",
+      "effect": "spell",
+      "role": "Bard",
+      "phase": "flight",
+      "yaw": 0,
+      "distance": 1300
+    }
+  ]
+}

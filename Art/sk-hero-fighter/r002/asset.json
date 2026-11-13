@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "asset_id": "sk-hero-fighter",
+  "revision": 2,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Characters/SK_Hero_Fighter",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/150",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5 lead, Claude Sonnet 5.5 subagent) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender; no third-party, downloaded, kit, AI-service or commercial-game content. The r001 look (palette, motifs) is imitated, no r001 mesh or texture is reused."
+  },
+  "recipe": {
+    "method": "Fighter: heavy body, kite shield and longsword on the sockets. Procedural meshes, atlas and skin weights from Art/rig-pilot/r001/scripts (build.py); nine hand-keyed clips in clips.py; no external motion data. Revision 2 re-exports LOD0 with the tenth clip, Brace (Art/rig-pilot/cast/scripts/brace.py, build2.py --r002); meshes, atlas, weights and the nine earlier clips are unchanged (compare_r002.json: vertices 0 mm, keyframes 0 difference)",
+    "approved_reference": "Gate 1 decision on #140 (25-bone skeleton, FOV 40 camera, readability flagged); r001 hero/foe looks",
+    "parameters": {
+      "skeleton": "25 bones, shared contract in Art/rig-pilot/r001/README.md",
+      "units": "metres, +X forward, Z up, foot pivot at origin",
+      "fps": 30,
+      "atlas": "1024x1024, 1 material",
+      "vertex_color": "COLOR_0 RGBA, alpha = glow mask",
+      "lods": "LOD0 with clips; LOD1 and LOD2 as separate skinned glbs without clips",
+      "blender_validation": {
+        "tris": {
+          "LOD1": {
+            "tris": 1681,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD2": {
+            "tris": 972,
+            "bones": 25,
+            "same_bone_names": true
+          },
+          "LOD0": {
+            "tris": 3566
+          }
+        },
+        "lod_ratio": {
+          "LOD1": 0.471,
+          "LOD2": 0.273,
+          "LOD0": 1.0
+        },
+        "body_height_m": 1.834,
+        "seam_mm_idle_walk": [
+          0.0,
+          0.0
+        ],
+        "seam_mm_brace": 0.0,
+        "unchanged_vs_r001": {
+          "max_vertex_diff_mm": 0.0,
+          "extra_clips": [
+            "Brace"
+          ],
+          "max_clip_key_diff": 0.0
+        }
+      },
+      "clips": "ten: the nine of r001 plus Brace (24 frames, 0.8 s, not a loop)"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (contact sheets only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/sk-hero-fighter/r002/SK_Hero_Fighter_source.blend",
+      "sha256": "cb0db283aa12904c82ead9ecb8bd6734392e150de77aef6e4356730006ea0d2f"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/README.md",
+      "sha256": "79cc252119037ca002c61166af063012fbee3a00563abfd2381fb57b3acc47da"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/rigkit.py",
+      "sha256": "dca7d46b4692eb2006c8166afbbc4ee259f62b7104bc8c5d4c0368c2fb0da3c5"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/clips.py",
+      "sha256": "d9f898e7fbdd1e5fa270c4323c0aafab36c4721f851e09b911c04ca3ab350a59"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/characters.py",
+      "sha256": "8c7792efc7662c3dc7ae61c8ed4f038c7ea70f60f2fc64e2894eb9bb0eec2dc9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/build.py",
+      "sha256": "df884685b57123ffc20f9a2a5b71d5a269245115154a579cf1f2652614c553fc"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/review.py",
+      "sha256": "b415c12e22f73cec08713bbb08975dde335a574cc9cd0f36589eddba9dd05370"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/r001/scripts/make_records.py",
+      "sha256": "21468fd566231e2e0d85cc4ad3d3b604d7de435dcaf90eaff0237e98ada67ff9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/README_BATCH2.md",
+      "sha256": "31757ab69f42644ff63792811fea378313cf8a7b651ec709dbd46575e10654e9"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_characters.py",
+      "sha256": "eeeb0bbebb6fca6e4e449546a226c5c62dc8ed0005d5801c5b7ce81e1998fe3f"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/cast_batch2.py",
+      "sha256": "066a4e6eff5c7300e8e93c9a0011de8abbf1f6bfb72a52be60729ea8ac9668c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/brace.py",
+      "sha256": "faed12c79e0bbee5ea873bcdd6bc527d800a6f30139f6c4dcabb1f4a21462a08"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/build2.py",
+      "sha256": "d00068658baaff15de9d2ba03905fb5fbaa4a71b5306dfae673c0b64fef36cb8"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/review2.py",
+      "sha256": "8521a372658f0ca4ed5c30c79ef9ac50a557728812f665d2437407d0eb5f5c11"
+    },
+    {
+      "role": "source",
+      "path": "Art/rig-pilot/cast/scripts/make_records2.py",
+      "sha256": "9d89ba8b13a7f895701f7aa4d46578d2c9f4dff020265f74e4305da946b2fce0"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-fighter/r002/SK_Hero_Fighter.glb",
+      "sha256": "2262ed3c541e4378501532315cd01cd5a1910420ed652ac4e69799df7f7002f3"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter_LOD1.glb",
+      "sha256": "5aa2d0c2b8913e60ba0fed8f7511879b98d418b0ec09e8cf783dbe865f30035c"
+    },
+    {
+      "role": "export",
+      "path": "Art/sk-hero-fighter/r001/SK_Hero_Fighter_LOD2.glb",
+      "sha256": "18bde36a984eefa332e8852cc0c57c661c54439a1f554ca271a3af7bb006e1bb"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-rigged-character",
+    "version": 1,
+    "settings": {
+      "importer": "glTF skeletal mesh; import SK_Hero_Fighter first to create the shared skeleton, then reuse it for the others",
+      "shared_skeleton": "/Game/DnDDiceRoll/Theme/Characters/SKEL_Humanoid",
+      "nanite": "off, set explicitly (gate 1 pipeline rule)",
+      "lods": "LOD1/LOD2 glbs imported as LOD meshes of the same skeletal mesh",
+      "animations": "import the nine clips from the LOD0 glb only; 30 fps; root stays at the origin",
+      "material": "MI_* child of M_DiceRollTheme with rim and fill terms; glow from vertex alpha only",
+      "texture_filter": "trilinear, anisotropic 8",
+      "collision": "none (presentation only)",
+      "revision_note": "r002 only adds the Brace clip to the LOD0 glb. The mesh in Unreal is not reimported from it (the r001 import stays in use, mesh identical, verified by compare_r002.json); A_Humanoid_Brace is imported from this fighter glb, the one source for the shared tenth clip"
+    }
+  },
+  "validation": {
+    "state": "passed",
+    "evidence": [
+      "Art/rig-pilot/cast/metrics/validate_fighter_r002.json",
+      "Art/rig-pilot/cast/metrics/compare_r002.json",
+      "Art/rig-pilot/cast/metrics/build_fighter_r002.json",
+      "Art/rig-pilot/cast/previews/sheet_12_brace_all_rigs_a.png",
+      "Art/rig-pilot/cast/previews/sheet_13_brace_all_rigs_b.png",
+      "https://github.com/AustinKelsay/dnd-diceroll/issues/150"
+    ]
+  }
+}

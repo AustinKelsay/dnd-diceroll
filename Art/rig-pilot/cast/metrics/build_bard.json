@@ -1,0 +1,121 @@
+{
+ "name": "SK_Hero_Bard",
+ "asset_id": "sk-hero-bard",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 4266,
+   "verts": 3452,
+   "height_m": 1.832,
+   "zmax": 1.831,
+   "zmin": -0.001,
+   "glow_verts": 74
+  },
+  "LOD1": {
+   "tris": 2069,
+   "verts": 2096,
+   "height_m": 1.821,
+   "zmax": 1.82,
+   "zmin": -0.001,
+   "glow_verts": 60
+  },
+  "LOD2": {
+   "tris": 1184,
+   "verts": 1090,
+   "height_m": 1.821,
+   "zmax": 1.82,
+   "zmin": -0.001,
+   "glow_verts": 58
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  },
+  "Brace": {
+   "frames": [
+    0,
+    24
+   ],
+   "seconds": 0.8,
+   "loop": false
+  }
+ },
+ "glb_bytes": {
+  "SK_Hero_Bard.glb": 1712196,
+  "SK_Hero_Bard_LOD1.glb": 787512,
+  "SK_Hero_Bard_LOD2.glb": 654216
+ }
+}

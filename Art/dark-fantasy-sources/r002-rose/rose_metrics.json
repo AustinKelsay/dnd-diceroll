@@ -1,0 +1,45 @@
+{
+ "old_region_px": [
+  1872,
+  464,
+  128,
+  128
+ ],
+ "new_region_px": [
+  2072,
+  24,
+  2000,
+  2000
+ ],
+ "files": {
+  "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders.glb": {
+   "rose_vertices": 262,
+   "rose_world_area_m2": 125.93,
+   "rose_diameter_m": 8.95,
+   "texels_per_m_before": 14.2,
+   "texels_per_m_after": 222.2,
+   "appearance_mean_abs_rgb_diff": 0.0572,
+   "appearance_p95": 0.3623
+  },
+  "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD1.glb": {
+   "rose_vertices": 196,
+   "rose_world_area_m2": 125.93,
+   "rose_diameter_m": 8.95,
+   "texels_per_m_before": 14.2,
+   "texels_per_m_after": 221.7,
+   "appearance_mean_abs_rgb_diff": 0.0593,
+   "appearance_p95": 0.3758
+  },
+  "Art/world-vigil-occluders/r002/SM_World_Vigil_Occluders_LOD2.glb": {
+   "rose_vertices": 196,
+   "rose_world_area_m2": 125.93,
+   "rose_diameter_m": 8.95,
+   "texels_per_m_before": 14.2,
+   "texels_per_m_after": 221.7,
+   "appearance_mean_abs_rgb_diff": 0.0658,
+   "appearance_p95": 0.4075
+  }
+ },
+ "result": "PASS",
+ "failures": []
+}

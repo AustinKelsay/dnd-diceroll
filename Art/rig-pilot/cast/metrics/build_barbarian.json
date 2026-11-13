@@ -1,0 +1,130 @@
+{
+ "name": "SK_Hero_Barbarian",
+ "asset_id": "sk-hero-barbarian",
+ "bones": 25,
+ "fps": 30,
+ "lods": {
+  "LOD0": {
+   "tris": 3946,
+   "verts": 2958,
+   "height_m": 1.771,
+   "zmax": 1.765,
+   "zmin": -0.006,
+   "glow_verts": 16
+  },
+  "LOD1": {
+   "tris": 1720,
+   "verts": 1519,
+   "height_m": 1.771,
+   "zmax": 1.765,
+   "zmin": -0.006,
+   "glow_verts": 16
+  },
+  "LOD2": {
+   "tris": 934,
+   "verts": 794,
+   "height_m": 1.771,
+   "zmax": 1.765,
+   "zmin": -0.006,
+   "glow_verts": 16
+  }
+ },
+ "materials": 1,
+ "atlas": 1024,
+ "clips": {
+  "Idle": {
+   "frames": [
+    0,
+    60
+   ],
+   "seconds": 2.0,
+   "loop": true
+  },
+  "Walk": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": true
+  },
+  "Melee": {
+   "frames": [
+    0,
+    30
+   ],
+   "seconds": 1.0,
+   "loop": false
+  },
+  "Ranged": {
+   "frames": [
+    0,
+    36
+   ],
+   "seconds": 1.2,
+   "loop": false
+  },
+  "Cast": {
+   "frames": [
+    0,
+    42
+   ],
+   "seconds": 1.4,
+   "loop": false
+  },
+  "Hit": {
+   "frames": [
+    0,
+    15
+   ],
+   "seconds": 0.5,
+   "loop": false
+  },
+  "Downed": {
+   "frames": [
+    0,
+    72
+   ],
+   "seconds": 2.4,
+   "loop": false
+  },
+  "Death": {
+   "frames": [
+    0,
+    78
+   ],
+   "seconds": 2.6,
+   "loop": false
+  },
+  "Recover": {
+   "frames": [
+    0,
+    66
+   ],
+   "seconds": 2.2,
+   "loop": false
+  },
+  "Brace": {
+   "frames": [
+    0,
+    24
+   ],
+   "seconds": 0.8,
+   "loop": false
+  }
+ },
+ "override": {
+  "clip": "Melee",
+  "action": "Melee_Barbarian",
+  "frames": [
+   0,
+   30
+  ],
+  "worst_residual_cm": 33.64
+ },
+ "glb_bytes": {
+  "SK_Hero_Barbarian.glb": 1701444,
+  "SK_Hero_Barbarian_LOD1.glb": 709708,
+  "SK_Hero_Barbarian_LOD2.glb": 594588
+ }
+}

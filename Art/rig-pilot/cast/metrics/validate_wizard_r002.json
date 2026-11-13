@@ -1,0 +1,210 @@
+{
+ "character": "wizard",
+ "file": "SK_Hero_Wizard.glb",
+ "bones": 25,
+ "bones_match_contract": true,
+ "bone_order_equal": false,
+ "clips": {
+  "Brace": [
+   0.0,
+   24.0
+  ],
+  "Cast": [
+   0.0,
+   42.0
+  ],
+  "Death": [
+   0.0,
+   78.0
+  ],
+  "Downed": [
+   0.0,
+   72.0
+  ],
+  "Hit": [
+   0.0,
+   15.0
+  ],
+  "Idle": [
+   0.0,
+   60.0
+  ],
+  "Melee": [
+   0.0,
+   30.0
+  ],
+  "Ranged": [
+   0.0,
+   36.0
+  ],
+  "Recover": [
+   0.0,
+   66.0
+  ],
+  "Walk": [
+   0.0,
+   30.0
+  ]
+ },
+ "clips_match": {
+  "Idle": true,
+  "Walk": true,
+  "Melee": true,
+  "Ranged": true,
+  "Cast": true,
+  "Hit": true,
+  "Downed": true,
+  "Death": true,
+  "Recover": true,
+  "Brace": true
+ },
+ "tris_lod0": 3750,
+ "materials": [
+  "M_Hero_Wizard"
+ ],
+ "atlas_px": [
+  [
+   1024,
+   1024
+  ]
+ ],
+ "color_attributes": [
+  [
+   "Color",
+   "BYTE_COLOR",
+   "CORNER"
+  ]
+ ],
+ "glow_alpha": {
+  "verts_alpha_gt_0": 234,
+  "verts": 11250,
+  "alpha_min": 0.0,
+  "alpha_max": 1.0,
+  "rgb_min": 0.799
+ },
+ "body_height_m_excluding_held_items": 1.829,
+ "max_influences": 3,
+ "deformation_vs_bind": {
+  "Idle@30": {
+   "max_cm": 94.3,
+   "mean_cm": 5.7,
+   "moving_verts": 6452
+  },
+  "Walk@8": {
+   "max_cm": 127.2,
+   "mean_cm": 16.0,
+   "moving_verts": 8836
+  },
+  "Walk@23": {
+   "max_cm": 67.6,
+   "mean_cm": 14.6,
+   "moving_verts": 8836
+  },
+  "Melee@11": {
+   "max_cm": 154.2,
+   "mean_cm": 37.3,
+   "moving_verts": 8836
+  },
+  "Ranged@22": {
+   "max_cm": 155.6,
+   "mean_cm": 25.1,
+   "moving_verts": 8833
+  },
+  "Cast@22": {
+   "max_cm": 98.7,
+   "mean_cm": 27.0,
+   "moving_verts": 8836
+  },
+  "Hit@3": {
+   "max_cm": 114.1,
+   "mean_cm": 19.0,
+   "moving_verts": 8836
+  },
+  "Downed@60": {
+   "max_cm": 239.1,
+   "mean_cm": 72.5,
+   "moving_verts": 8836
+  },
+  "Death@66": {
+   "max_cm": 179.4,
+   "mean_cm": 103.5,
+   "moving_verts": 8836
+  },
+  "Recover@30": {
+   "max_cm": 134.0,
+   "mean_cm": 57.4,
+   "moving_verts": 8836
+  }
+ },
+ "seam_mm_first_vs_last_max_vertex": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 2740.748,
+  "Death": 1799.916,
+  "Recover": 2740.748,
+  "Brace": 0.0
+ },
+ "root_drift_mm": {
+  "Idle": 0.0,
+  "Walk": 0.0,
+  "Melee": 0.0,
+  "Ranged": 0.0,
+  "Cast": 0.0,
+  "Hit": 0.0,
+  "Downed": 0.0,
+  "Death": 0.0,
+  "Recover": 0.0,
+  "Brace": 0.0
+ },
+ "seconds": {
+  "Idle": 2.0,
+  "Walk": 1.0,
+  "Melee": 1.0,
+  "Ranged": 1.2,
+  "Cast": 1.4,
+  "Hit": 0.5,
+  "Downed": 2.4,
+  "Death": 2.6,
+  "Recover": 2.2,
+  "Brace": 0.8
+ },
+ "lods": {
+  "LOD1": {
+   "tris": 1759,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD2": {
+   "tris": 823,
+   "bones": 25,
+   "same_bone_names": true
+  },
+  "LOD0": {
+   "tris": 3750
+  }
+ },
+ "lod_ratio": {
+  "LOD1": 0.469,
+  "LOD2": 0.219,
+  "LOD0": 1.0
+ },
+ "checks": {
+  "bones: 25 and the contract": true,
+  "clips: all ten with their frame ranges": true,
+  "lods: same bone names, LOD1 and LOD2": true,
+  "lods: LOD1 40-55% and LOD2 20-32% of LOD0": true,
+  "seams: loops and Idle-to-Idle one-shots close to 0.01 mm": true,
+  "root drift 0.01 mm or less in every clip": true,
+  "at most 4 influences per vertex": true,
+  "one material on a 1024x1024 atlas": true,
+  "glow alpha present on runes and gems": true,
+  "height 175 to 185 cm excluding held items": true,
+  "LOD0 3,000 to 6,000 triangles": true
+ },
+ "pass": true,
+ "failures": []
+}

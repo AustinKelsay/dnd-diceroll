@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop-root-wall-c",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/Props/SM_Prop_Root_Wall_C",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/149",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5, Claude Sonnet 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS, deep high fantasy with a PS1 look: the Root of the World identity (giant tree, roots, mossy flagstones, fungus, canopy light) from the owner-approved r001 Root (issue #38) and the #140 gate-1 decisions; all textures and geometry procedural; no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_kit_root_r002.py): low root tangle with rubble; conforming subdivision to 45 cm, vertex colour = ray-cast ambient occlusion x height gradient x moss tint; glow only via COLOR_0.a on fungus caps",
+    "approved_reference": "Gate 1 decision on #140 (2026-11-08); #145 r002 standard; parent #138",
+    "parameters": {
+      "units": "metres at true scale for a 150 cm cell",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of its 150 cm cell, at floor level",
+      "triangles": 1120,
+      "size_m": [
+        1.2464,
+        1.5347,
+        0.7032
+      ],
+      "bbox_min_m": [
+        -0.5939,
+        -0.6947,
+        0
+      ],
+      "bbox_max_m": [
+        0.6525,
+        0.84,
+        0.7032
+      ],
+      "atlas_px": 512,
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "theme": "Root of the World (Root encounters only; the Vigil kit is separate)",
+      "lods": {
+        "lod0_triangles": 1120,
+        "tool": "Blender collapse decimator, UV-island seams kept, 16-bit COLOR_0 and atlas unchanged, extreme vertices pinned",
+        "lods": [
+          {
+            "lod": 1,
+            "triangles": 560,
+            "fraction": 0.5,
+            "file": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C_LOD1.glb",
+            "deviation_m_p50_p95_max": [
+              0.0,
+              0.0093,
+              0.026
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0123,
+              0.0603
+            ]
+          },
+          {
+            "lod": 2,
+            "triangles": 280,
+            "fraction": 0.25,
+            "file": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C_LOD2.glb",
+            "deviation_m_p50_p95_max": [
+              0.0047,
+              0.0307,
+              0.0634
+            ],
+            "appearance_rgb_mean_p95": [
+              0.0283,
+              0.109
+            ]
+          }
+        ]
+      }
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS",
+    "imagemagick": "7 (previews only)"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/render_lib.py",
+      "sha256": "6dd9ef9437309f8e20928272d8cbb04fa57df7db9e107909949c8fa1b5d376c4"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/root_lib.py",
+      "sha256": "f08ac3ff77bbaebb086cf579665e3045dfb38002c42e7db3706c2a5bc3b52fbe"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/build_kit_root_r002.py",
+      "sha256": "2b06aeb9da5ca306f9e1c3079633f500a3819f354d3846dada49dbc380c3f985"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/lod_r002.py",
+      "sha256": "2ee2bb7f99094fa6de541c3f7079c9ab1cb205d454970b9f17d00ab989c68d1d"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/build_lods_root_r002.py",
+      "sha256": "eec645a28b26105c36335ac29345baf9f30c0b2ae3c3cc01a04eb0e1d9e18bf7"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-root/scripts/relabel_lods_root_r002.py",
+      "sha256": "cb7bd953f5b755248d064841ef7974d10877b7f585fc5e2b4c0c55a67a17c012"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C.glb",
+      "sha256": "2f37fb6e3f72d2e5df6c7013d0a4c7c7c7a6edf205a584f3fb519bde8c5cd4c3"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C_LOD1.glb",
+      "sha256": "3869b9dcd2b284f3970a8fd7b16d82ea9eb2e38b9f752e1411c1fc8013fbb5e0"
+    },
+    {
+      "role": "export",
+      "path": "Art/prop-root-wall-c/r001/SM_Prop_Root_Wall_C_LOD2.glb",
+      "sha256": "cdca814441a6c8b75f222a7818949a27c8122de017be702a7ff9ab11f36050a7"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py, explicit reviewed reimport (#149 phase 2, as #145)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "explicit LOD1 (about 50 %) and LOD2 (about 25 %, up to 40 % where the silhouette needs it) imported from <name>_LOD1.glb and <name>_LOD2.glb beside the LOD0 export",
+      "collision": "none (presentation only; blocking comes from gameplay data)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": [
+      "PR #176 (#149 phase 2) at 97670aa: headless theme import with hash diffs of Config/ and Content/ (plain run added this package; the world-root replace and an unchanged rerun verified)",
+      "PR #176 at 97670aa: Project.Expedition 231/231 (six Root kit tests on the replaced kit) and galleries board-root-r002 and board-root-pillars",
+      "Pending: the coordinator's on-screen pass on PR #176"
+    ]
+  }
+}

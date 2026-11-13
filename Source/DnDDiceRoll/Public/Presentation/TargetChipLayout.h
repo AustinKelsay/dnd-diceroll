@@ -38,6 +38,56 @@ inline Rect LogRect(double W, double H, int Lines = LogMaxLines)
     return {LogLeft, H - LogBottomMargin - Height, LogLeft + LogWidth, H - LogBottomMargin};
 }
 
+// The party cards (DrawPartyCard): a column of 200 x 64 cards, one every 68 units, from the top of the left edge. The roll card
+// and the board bounds both read these.
+constexpr double PartyCardX = 8, PartyCardTop = 54, PartyCardWidth = 200, PartyCardHeight = 64, PartyCardPitch = 68;
+
+// The route screen (DrawRoutes): the "Choose your path" banner and the two route cards, centred, the cards side by side. DrawRoutes and the tabletop overview's layout
+// (OverviewLayout.h, #149) both read these, so the dioramas cannot be placed under the HUD they are meant to show beside.
+constexpr double RouteCardWidth = 340, RouteCardHeight = 250, RouteCardGap = 30;
+constexpr double RouteBannerWidth = 740, RouteBannerHeight = 76, RouteBannerAbove = 84;
+inline double RouteTop(double H) { return H * 0.5 - RouteCardHeight * 0.5 - 10; }
+inline Rect RouteBannerRect(double W, double H)
+{
+    const double Top = RouteTop(H) - RouteBannerAbove;
+    return {W * 0.5 - RouteBannerWidth * 0.5, Top, W * 0.5 + RouteBannerWidth * 0.5, Top + RouteBannerHeight};
+}
+inline Rect RouteCardRect(double W, double H, int Index)
+{
+    const double X = W * 0.5 + (Index == 0 ? -RouteCardWidth - RouteCardGap * 0.5 : RouteCardGap * 0.5);
+    return {X, RouteTop(H), X + RouteCardWidth, RouteTop(H) + RouteCardHeight};
+}
+
+// The hero details that follow a hovered or selected party card (DrawPartyDetail): 320 wide, right of the card column, top level with the card, 14 plus 17 per wrapped
+// line high (never fewer than the HUD's MinDetailLines). PartyDetailMaxLines is the bound the tabletop overview's layout keeps clear of: the name and build (at most 2 wrapped
+// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed.
+constexpr double PartyDetailWidth = 320, PartyDetailGap = 8, PartyDetailPad = 14, PartyDetailLineHeight = 17;
+constexpr int PartyDetailMaxLines = 8;
+inline Rect PartyDetailRect(int Slot, int Lines)
+{
+    const double X = PartyCardX + PartyCardWidth + PartyDetailGap, Y = PartyCardTop + Slot * PartyCardPitch;
+    return {X, Y, X + PartyDetailWidth, Y + PartyDetailPad + Lines * PartyDetailLineHeight};
+}
+
+// The title screen's two drawers (DrawTitle): the party, class and subclass on the left; on the right the build's details and the actions, which share the column
+// (the details panel grows with the build's abilities down to the actions panel at the foot), so the whole column is the HUD's.
+constexpr double TitleMargin = 12, TitleLeftWidth = 300, TitleRightWidth = 380;
+
+// Where the d20 roll card sits (#190): the strip of the left margin below the party cards and above the combat log. The camera keeps
+// the board inside BoardBounds, to the right of this strip (BoardLeft), and the top band belongs to the status strip and the Menu, so a
+// card here never covers the active unit, its target or their cells, whichever way the board is turned. The strip is as wide as the margin
+// leaves and as tall as it can be; the card's own height follows its text.
+constexpr double RollCardLeft = 8, RollCardGap = 8;
+// Inside the card (design units from its top): the title above RollCardRowTop, the dice row between RollCardRowTop and RollCardRowBottom
+// (tumbling, landing and glowing dice are kept inside it), the verdict from RollCardVerdictTop and the detail lines from RollCardDetailTop.
+constexpr double RollCardRowTop = 26, RollCardRowBottom = 104, RollCardVerdictTop = 106, RollCardDetailTop = 138;
+inline Rect RollCardBounds(double W, double H, int PartyCount = 4)
+{
+    const Rect Log = LogRect(W, H);
+    const double Top = PartyCardTop + std::max(0, PartyCount - 1) * PartyCardPitch + PartyCardHeight + RollCardGap;
+    return {RollCardLeft, Top, BoardLeft - RollCardGap, Log.Top - RollCardGap};
+}
+
 // The board area stays clear of the party cards, strips and action bar, and also of the tallest the combat log can get:
 // where the log's columns overlap the board's, the bottom edge rises to the log's top.
 inline Rect BoardBounds(double W, double H)
@@ -66,6 +116,44 @@ inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
 {
     return A.Left < B.Right + Gap && A.Right + Gap > B.Left &&
         A.Top < B.Bottom + Gap && A.Bottom + Gap > B.Top;
+}
+
+// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 240 or 300 high, a little above the middle. They share these with the party
+// cards' hero details, which would otherwise be drawn under them (#200).
+constexpr double RewardPanelWidth = 720, RewardPanelHeight = 240, CampPanelHeight = 300, PhasePanelLift = 30;
+inline Rect CentredPanelRect(double W, double H, double Height)
+{
+    const double Top = H * 0.5 - Height * 0.5 - PhasePanelLift;
+    return {W * 0.5 - RewardPanelWidth * 0.5, Top, W * 0.5 + RewardPanelWidth * 0.5, Top + Height};
+}
+inline Rect RewardPanelRect(double W, double H) { return CentredPanelRect(W, H, RewardPanelHeight); }
+inline Rect CampPanelRect(double W, double H) { return CentredPanelRect(W, H, CampPanelHeight); }
+
+// The route screen's banner and both cards as one block: what a hero's details must keep clear of (#200).
+inline Rect RouteBlockRect(double W, double H)
+{
+    const Rect Banner = RouteBannerRect(W, H), Left = RouteCardRect(W, H, 0), Right = RouteCardRect(W, H, 1);
+    return {std::min({Banner.Left, Left.Left}), Banner.Top, std::max({Banner.Right, Right.Right}), std::max(Left.Bottom, Right.Bottom)};
+}
+
+// Where a hero's details panel (Desired, at its tallest or as drawn) sits when the phase centres a panel of its own (Block: the route block, the reward or the camp
+// panel; #200). The panel keeps its usual place beside the party card when that is clear of the block; otherwise it takes the first free spot that fits the viewport:
+// under the block, centred on it (the free band above the feedback line, between the tabletop dioramas that flank the route cards), above it, or right of it. The same clamps as DrawPartyDetail apply (right edge,
+// and the foot above the action bar's margin), and with no free spot the usual place stays, so a test can see it. All in design units for a viewport divided by its scale.
+inline Rect PartyDetailClearOf(const Rect& Desired, const Rect& Block, double W, double H)
+{
+    constexpr double Edge = 8, Gap = 6, ActionBarMargin = 90, FeedbackBand = 70;
+    const double Width = Desired.Right - Desired.Left, Height = Desired.Bottom - Desired.Top;
+    auto At = [&](double X, double Y) { return Rect{X, Y, X + Width, Y + Height}; };
+    const Rect Usual = At(std::min(Desired.Left, W - Width - Edge), std::min(Desired.Top, H - Height - ActionBarMargin));
+    const double Centred = std::clamp((Block.Left + Block.Right - Width) * 0.5, Edge, std::max(Edge, W - Width - Edge));
+    const Rect Candidates[] = {Usual, At(Centred, Block.Bottom + Gap), At(Usual.Left, Block.Top - Gap - Height), At(Block.Right + Gap, Usual.Top)};
+    for (const Rect& Candidate : Candidates)
+    {
+        const bool bFits = Candidate.Left >= Edge && Candidate.Right <= W - Edge && Candidate.Top >= Edge && Candidate.Bottom <= H - FeedbackBand;
+        if (bFits && !Overlaps(Candidate, Block, Gap)) { return Candidate; }
+    }
+    return Usual;
 }
 
 // Keep the original target-to-panel line, but omit portions hidden by HUD or
@@ -144,5 +232,17 @@ inline bool PlaceChip(Point Anchor, double Width, double Height, const Rect& Bou
         }
     }
     return Found;
+}
+
+// The path-cost number's plate (#171). It sits just above the end of the path; when a panel or chip is there it moves
+// to the nearest free spot instead, so the number is never hidden. With no free spot it stays where it would be drawn.
+// The plate is drawn last, over everything, so it also reads when a spot cannot be found.
+inline Rect PathCostPlate(Point End, double Width, double Height, const Rect& Bounds, const std::vector<Rect>& Occupied)
+{
+    constexpr double Lift = 21;
+    const Point Anchor = {End.X, End.Y - Lift};
+    Chip Placed;
+    if (PlaceChip(Anchor, Width, Height, Bounds, Occupied, Placed)) { return Placed.Panel; }
+    return {Anchor.X - Width / 2, Anchor.Y - Height / 2, Anchor.X + Width / 2, Anchor.Y + Height / 2};
 }
 }

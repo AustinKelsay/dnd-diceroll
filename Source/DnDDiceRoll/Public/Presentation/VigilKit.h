@@ -9,6 +9,12 @@
  * random stream, so the theme choice cannot change a checkpoint or a snapshot.
  *
  * Cells are board cells (the centre of cell (X, Y) is (X, Y)); the view converts them with the one board metric.
+ *
+ * The namespace keeps its #145 name but is the placement for every world kit: the Root of the World kit r002 (#149) is
+ * placed by the same functions, with its own meshes (UDiceRollTheme::KitFor). Its kit is authored to the same layout rules:
+ * dressing two cells (mist and shafts three) outside the board, shafts leaning toward -X, and 2-cell arches only over adjacent
+ * blocked pillar and wall cells. For the Root those are the spire / stump / sawn-stump pillars and the root curtain / fallen
+ * log / root tangle walls; its boulder stones are separate objects, so adjacent stones get no arch.
  */
 namespace VigilKit
 {
@@ -30,6 +36,13 @@ DNDDICEROLL_API uint32 Hash(int32 Seed, int32 Salt, FIntPoint Cell);
 DNDDICEROLL_API float Unit(int32 Seed, int32 Salt, FIntPoint Cell);
 /** The variant (0 .. Count-1) of a recipe's obstacle on a cell; 0 when Count is 1 or less. */
 DNDDICEROLL_API int32 VariantIndex(int32 Seed, int32 Recipe, FIntPoint Cell, int32 Count);
+/**
+ * The seed a world kit places its obstacle variants and dressing from (#149). The Vigil (kind 0) and the Root (kind 1) keep the encounter
+ * seed, so their shipped boards do not move. The Vault (kind 2) mixes its kind and the board size into it with the same private hash,
+ * so the finale never repeats the pattern another world would draw for the same encounter seed; a decoration seed of (Width, Height,
+ * EncounterSeed, kit kind) that never reads rules state or any random stream. The braziers keep the encounter seed.
+ */
+DNDDICEROLL_API int32 KitSeed(int32 Seed, int32 Width, int32 Height, int32 KitKind);
 /** Chebyshev distance in cells from a cell to the Width x Height board; 0 for every cell on the board. */
 DNDDICEROLL_API int32 RingDistance(FIntPoint Cell, int32 Width, int32 Height);
 
@@ -45,7 +58,7 @@ struct FArch
     float Yaw() const { return bAlongX ? 90.0f : 0.0f; }
 };
 
-/** Arches belong to the architectural recipes only: pillars (1) and walls (2). Adjacent blocked stones (0) get no arch. */
+/** Arches belong to the architectural recipes only: pillars (1) and walls (2), in both worlds. Adjacent blocked stones (0) get no arch. */
 inline bool ArchesFor(int32 Recipe) { return Recipe == 1 || Recipe == 2; }
 
 /**
@@ -80,6 +93,11 @@ struct FDressingKinds
  * The dressing of a Width x Height board: ScatterCount scatter pieces on cells 2 to 3 outside the board, MistCount mist
  * cards 3 to 5 outside it, ShaftCount light shafts on the -X side. No two share a cell, and nothing is ever on or beside
  * a playable cell. Deterministic in (Width, Height, Seed, Kinds).
+ *
+ * Scatter cells whose piece would stand (its final jittered position, not the cell centre) within AvoidRadius cells of any point
+ * in Avoid (the braziers of #148, in board cells) are not candidates, so a piece of rubble never lands inside a brazier; the next-lowest scoring cells take their place and the count is
+ * unchanged. The default (nothing to avoid) is the plan #145 shipped.
  */
-DNDDICEROLL_API TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds);
+DNDDICEROLL_API TArray<FDressing> PlanDressing(int32 Width, int32 Height, int32 Seed, const FDressingKinds& Kinds,
+    const TArray<FVector2D>& Avoid = TArray<FVector2D>(), float AvoidRadius = 0.0f);
 }

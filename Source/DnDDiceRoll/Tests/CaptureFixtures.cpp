@@ -12,8 +12,14 @@
  * under Saved/CaptureFixtures/<phase>/current-v1.json so visual QA can resume straight into
  * that screen with -ExpeditionSaveRoot=<that folder>. It also writes the gallery fixtures that
  * `tools/dev.py gallery` renders (default-seed-route/-battle/-enemy-turn, board-16x11, board-18x12, board-vigil-pillars,
- * board-vigil-walls, and the action dock's kit-barbarian-battle, kit-wizard-battle, kit-barbarian-raging, kit-wizard-all-spent,
- * sight-blocked-battle), each with a
+ * board-vigil-walls, board-root-r002 and board-root-pillars (the Stream trail forest boards with the broken-wall and ruined-pillars
+ * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
+ * recipes, which show the Vault kit r002 once it is imported), the action dock's kit-barbarian-battle, kit-wizard-battle,
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
+ * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
+ * board-vault-raiders, the dangerous Vault finale against rigged raiders, and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
+ * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-four-rogues-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
+ * each with a
  * fixture.json sidecar naming the seed and board that were found. Run it explicitly:
  *   tools/dev.py test --filter Project.Tools.CaptureFixtures
  */
@@ -116,6 +122,206 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
     };
     FindVigilRecipe(TEXT("board-vigil-pillars"), 1);
     FindVigilRecipe(TEXT("board-vigil-walls"), 2);
+    // Root of the World boards (the Stream trail, route offer 0) with the same architectural recipes (#149): the broken wall is the
+    // one whose adjacent blocked cells get the Root's 2-cell arch (`board-root-r002`, in the default gallery set); the ruined pillars
+    // show the spire and stump variants (`board-root-pillars`, render it with `gallery --fixture board-root-pillars`).
+    auto FindRootRecipe = [&](const TCHAR* Name, int32 Recipe)
+    {
+        for (int32 Seed = 1; Seed < 2000; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[0];
+            if (Route.bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 2000 gives a forest route with recipe %d and the party first"), Recipe));
+    };
+    FindRootRecipe(TEXT("board-root-r002"), 2);
+    FindRootRecipe(TEXT("board-root-pillars"), 1);
+    // Rigged cast batches 2 and 3 (#150): the same three boards the cast is judged on (the default seed, Vigil pillars, Root recipe 2) and the Vault finale with a
+    // party of the batch's classes, so those classes can be captured and measured on them: `cast2-default-seed-battle`, `cast2-board-vigil-pillars`,
+    // `cast2-board-root-r002`, `cast2-board-vault` (barbarian, monk, paladin, ranger) and the same four names with `cast3-` (sorcerer, warlock, druid and a wizard,
+    // whose Fire Bolt is the spell bolt the release is measured on). Render with `gallery --fixture <name>`; the pose sheets are cast2-poses.json and cast3-poses.json.
+    const auto WriteCastFixtures = [&](const TCHAR* Prefix, const TArray<const TCHAR*>& Builds, const TCHAR* Label)
+    {
+        TArray<FPartyBuildSelection> Cast;
+        for (int32 Index = 0; Index < Builds.Num(); ++Index)
+        {
+            FPartyBuildSelection Slot;
+            Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+            Cast.Add(Slot);
+        }
+        const FString Group = Prefix;
+        {
+            FString Error;
+            FExpeditionRun Run;
+            if (TestTrue(*FString::Printf(TEXT("The default seed starts with the %s party"), Label), Run.NewRun(DefaultSeed, Cast, Error, FString::Printf(TEXT("capture-%s-%d"), Prefix, DefaultSeed)) &&
+                Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)))
+            {
+                Write(*(Group + TEXT("-default-seed-battle")), Run);
+                Describe(*(Group + TEXT("-default-seed-battle")), Run, DefaultSeed, 0);
+            }
+        }
+        const auto FindCast = [&](const FString& Name, int32 Offer, bool bDangerous, int32 Recipe)
+        {
+            for (int32 Seed = 1; Seed < 2000; ++Seed)
+            {
+                FString Error;
+                FExpeditionRun Run;
+                if (!Run.NewRun(Seed, Cast, Error, FString::Printf(TEXT("capture-%s-%d"), Prefix, Seed))) { continue; }
+                const FExpeditionRoute& Route = Run.Progress().Offers[Offer];
+                if (Route.bDangerous != bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+                const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+                if (!Active || Active->Side != ECombatSide::Party) { continue; }
+                Write(*Name, Run);
+                Describe(*Name, Run, Seed, Offer);
+                return;
+            }
+            AddError(FString::Printf(TEXT("No seed below 2000 gives %s with the %s party first"), *Name, Label));
+        };
+        FindCast(Group + TEXT("-board-vigil-pillars"), 1, true, 1);
+        FindCast(Group + TEXT("-board-root-r002"), 0, false, 2);
+        // The Vault finale (the same scripted player as board-vault) with the batch's party, the board the cast is also judged on (#149).
+        bool bVault = false;
+        for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Cast)) { continue; }
+            Write(*(Group + TEXT("-board-vault")), Run);
+            Describe(*(Group + TEXT("-board-vault")), Run, Seed, 0);
+            bVault = true;
+        }
+        if (!bVault) { AddError(FString::Printf(TEXT("No seed below 400 reaches the broken-wall finale with the %s party first"), Label)); }
+    };
+    WriteCastFixtures(TEXT("cast2"), {TEXT("barbarian.berserker"), TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("ranger.hunter")}, TEXT("batch 2"));
+    WriteCastFixtures(TEXT("cast3"), {TEXT("sorcerer.draconic-bloodline"), TEXT("warlock.fiend"), TEXT("druid.land"), TEXT("wizard.evocation")}, TEXT("batch 3"));
+    WriteCastFixtures(TEXT("cast4"), {TEXT("bard.valor"), TEXT("artificer.battle-smith"), TEXT("fighter.champion"), TEXT("wizard.evocation")}, TEXT("batch 4"));
+    // The Vault finale (encounter 5, #149): the first seeds that reach the fifth fight with the party acting first, found by the scripted
+    // player. `board-vault` is the broken-wall finale (adjacent blocked cells get the Vault's 2-cell crypt arch; in the default gallery set),
+    // `board-vault-pillars` the ruined-pillar finale (render it with `gallery --fixture board-vault-pillars`).
+    auto FindFinale = [&](const TCHAR* Name, int32 Recipe)
+    {
+        for (int32 Seed = 1; Seed < 400; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, Recipe)) { continue; }
+            Write(Name, Run);
+            Describe(Name, Run, Seed, 0);
+            return;
+        }
+        AddError(FString::Printf(TEXT("No seed below 400 reaches the finale with recipe %d and the party first"), Recipe));
+    };
+    FindFinale(TEXT("board-vault"), 2);
+    FindFinale(TEXT("board-vault-pillars"), 1);
+    // The dangerous finale (#150): the default party against raiders on the Vault, so the rigged raider can be measured there too (`board-vault-raiders`).
+    {
+        bool bFound = false;
+        for (int32 Seed = 1; Seed < 400 && !bFound; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            Write(TEXT("board-vault-raiders"), Run);
+            Describe(TEXT("board-vault-raiders"), Run, Seed, 1);
+            bFound = true;
+        }
+        if (!bFound) { AddError(TEXT("No seed below 400 reaches the dangerous broken-wall finale with the party first")); }
+    }
+    // The foe batch (#150): the five rigged foes on the three boards they are judged on. A checkpoint cannot carry a renamed enemy (a restored run is checked against
+    // the generated roster) and the skirmisher, brute and warden are not generated until #188, so each fixture is an ordinary checkpoint whose sidecar names the looks its
+    // enemies are drawn as, in encounter order (the gallery passes them as -ExpeditionFoeLooks; presentation only, the run, the rules and the RNG are untouched). The last
+    // enemy is the archer (Range 4) on every board, so the looks always end with Archer. `foes-vigil-a` and `-b` (the dangerous Watchtower road, three enemies),
+    // `foes-root-a` to `-c` (the Stream trail, two enemies) and `foes-vault-a` and `foes-vault-finale` (the dangerous finale; the finale has the warden moved to the back
+    // of the board, by the Vault's Waystone, as #188's front-to-back layout will place it). Render with `gallery --fixture foes-vigil-a ...`; the pose sheet is foes-poses.json.
+    {
+        const auto DescribeLooks = [&](const TCHAR* Name, const FExpeditionRun& Run, int32 Seed, int32 Offer, const TCHAR* Looks)
+        {
+            const FCombatEncounter& Encounter = Run.Battle().Snapshot().Encounter;
+            const FString Info = FString::Printf(TEXT("{\n  \"seed\": %d,\n  \"offer\": %d,\n  \"phase\": \"combat\",\n  \"boardWidth\": %d,\n  \"boardHeight\": %d,\n  \"foeLooks\": \"%s\"\n}\n"),
+                Seed, Offer, Encounter.Width, Encounter.Height, Looks);
+            TestTrue(FString::Printf(TEXT("Fixture %s writes its sidecar"), Name), FFileHelper::SaveStringToFile(Info, *FPaths::Combine(Root, Name, TEXT("fixture.json"))));
+        };
+        const auto WriteLooks = [&](const TCHAR* Name, const FExpeditionRun& Run, int32 Seed, int32 Offer, const TCHAR* Looks)
+        {
+            int32 Enemies = 0;
+            for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { Enemies += Unit.Side == ECombatSide::Enemy ? 1 : 0; }
+            TArray<FString> Parts;
+            FString(Looks).ParseIntoArray(Parts, TEXT(","), true);
+            TestEqual(*FString::Printf(TEXT("Fixture %s names a look for each of its enemies"), Name), Parts.Num(), Enemies);
+            TestTrue(*FString::Printf(TEXT("Fixture %s ends with the archer, the one enemy the rules give a bow"), Name), !Parts.IsEmpty() && Parts.Last() == TEXT("Archer"));
+            Write(Name, Run);
+            DescribeLooks(Name, Run, Seed, Offer, Looks);
+        };
+        // Vigil: the dangerous road of a first fight, three enemies, party first.
+        bool bVigil = false;
+        for (int32 Seed = 1; Seed < 2000 && !bVigil; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[1];
+            if (!Route.bDangerous || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            WriteLooks(TEXT("foes-vigil-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
+            WriteLooks(TEXT("foes-vigil-b"), Run, Seed, 1, TEXT("Brute,Warden,Archer"));
+            bVigil = true;
+        }
+        if (!bVigil) { AddError(TEXT("No seed below 2000 gives a dangerous first fight with the party first")); }
+        // Root: the guarded Stream trail, two enemies, party first.
+        bool bRoot = false;
+        for (int32 Seed = 1; Seed < 2000 && !bRoot; ++Seed)
+        {
+            FString Error;
+            FExpeditionRun Run;
+            Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed));
+            const FExpeditionRoute& Route = Run.Progress().Offers[0];
+            if (Route.bDangerous || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+            const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+            if (!Active || Active->Side != ECombatSide::Party) { continue; }
+            WriteLooks(TEXT("foes-root-a"), Run, Seed, 0, TEXT("Skirmisher,Archer"));
+            WriteLooks(TEXT("foes-root-b"), Run, Seed, 0, TEXT("Brute,Archer"));
+            WriteLooks(TEXT("foes-root-c"), Run, Seed, 0, TEXT("Warden,Archer"));
+            bRoot = true;
+        }
+        if (!bRoot) { AddError(TEXT("No seed below 2000 gives a guarded first fight with the party first")); }
+        // Vault: the dangerous broken-wall finale (three enemies), and the same finale with its second enemy, the warden, moved to the back of the board.
+        bool bVault = false;
+        for (int32 Seed = 1; Seed < 400 && !bVault; ++Seed)
+        {
+            FExpeditionRun Run;
+            if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, nullptr, true)) { continue; }
+            WriteLooks(TEXT("foes-vault-a"), Run, Seed, 1, TEXT("Scout,Skirmisher,Archer"));
+            // The Vault's Waystone apse is on the high-row wall (the left of the home yaw, measured on this fixture's captures), a little on the party's side of the arches, so the warden
+            // stands on the enemy side of the wall line (column 8), on the first free cell from that wall: the guardian at the back by the Waystone, as #188's layout will place it.
+            FExpeditionSnapshot Snapshot = Run.Snapshot();
+            const FCombatEncounter& Encounter = Snapshot.Battle.Encounter;
+            FCombatantState* Warden = nullptr;
+            int32 Order = 0;
+            for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants) { if (Unit.Side == ECombatSide::Enemy && Order++ == 1) { Warden = &Unit; } }
+            if (!Warden) { continue; }
+            FIntPoint Back = Warden->Cell;
+            for (int32 Row = Encounter.Height - 2; Row >= 0; --Row)
+            {
+                const FIntPoint Cell(8, Row);
+                bool bFree = !Encounter.BlockedCells.Contains(Cell);
+                for (const FCombatantState& Other : Encounter.Combatants) { bFree = bFree && (Other.Id == Warden->Id || Other.Life == ECombatLife::Dead || Other.Cell != Cell); }
+                if (bFree) { Back = Cell; break; }
+            }
+            Warden->Cell = Back;
+            FString Error;
+            FExpeditionRun Finale;
+            if (!TestTrue(*FString::Printf(TEXT("The finale with its warden at the back restores as a valid checkpoint (%s)"), *Error), Finale.Restore(Snapshot, Error))) { continue; }
+            WriteLooks(TEXT("foes-vault-finale"), Finale, Seed, 1, TEXT("Brute,Warden,Archer"));
+            bVault = true;
+        }
+        if (!bVault) { AddError(TEXT("No seed below 400 reaches the dangerous broken-wall finale with the party first")); }
+    }
     // Action dock fixtures (#58): the first seed whose first turn belongs to the named kit, then a script of legal commands
     // (capture mode itself still only resumes and looks) that puts the hero in the state the tooltips explain.
     auto CloseIn = [](FExpeditionRun& Run, int32 Id)
@@ -165,22 +371,56 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             return Run.Submit({ECombatCommandType::Special1, Id, {}, Id}).bAccepted && Run.Battle().Find(Id)->RageTurns > 0;
         });
     // Everything spent: the Wizard closes in, bursts (Bonus, a Kit) and fires a missile (Action, a Kit and a Slot), leaving no Kit.
-    FindActing(TEXT("kit-wizard-all-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"),
-        [&CloseIn](FExpeditionRun& Run, int32 Id)
+    const auto SpendEverything = [&CloseIn](FExpeditionRun& Run, int32 Id)
+    {
+        for (int32 Step = 0; Step < 4; ++Step)
         {
-            for (int32 Step = 0; Step < 4; ++Step)
+            const TArray<int32> Burst = Run.Battle().LegalTargets(Id, ECombatCommandType::Special2);
+            const TArray<int32> Missile = Run.Battle().LegalTargets(Id, ECombatCommandType::MagicMissile);
+            if (!Burst.IsEmpty() && !Missile.IsEmpty())
             {
-                const TArray<int32> Burst = Run.Battle().LegalTargets(Id, ECombatCommandType::Special2);
-                const TArray<int32> Missile = Run.Battle().LegalTargets(Id, ECombatCommandType::MagicMissile);
-                if (!Burst.IsEmpty() && !Missile.IsEmpty())
-                {
-                    return Run.Submit({ECombatCommandType::Special2, Id, {}, Burst[0]}).bAccepted && Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Missile[0]}).bAccepted &&
-                        Run.Battle().Find(Id)->KitUses == 0 && !Run.Battle().Snapshot().bActionAvailable && !Run.Battle().Snapshot().bBonusActionAvailable;
-                }
-                if (!CloseIn(Run, Id)) { return false; }
+                return Run.Submit({ECombatCommandType::Special2, Id, {}, Burst[0]}).bAccepted && Run.Submit({ECombatCommandType::MagicMissile, Id, {}, Missile[0]}).bAccepted &&
+                    Run.Battle().Find(Id)->KitUses == 0 && !Run.Battle().Snapshot().bActionAvailable && !Run.Battle().Snapshot().bBonusActionAvailable;
             }
-            return false;
+            if (!CloseIn(Run, Id)) { return false; }
+        }
+        return false;
+    };
+    FindActing(TEXT("kit-wizard-all-spent"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"), SpendEverything);
+    // Nothing but End Turn (#158): the same Wizard, then every step of movement walked, so no action in the bar is available.
+    FindActing(TEXT("end-turn-only-battle"), {TEXT("wizard.evocation"), TEXT("fighter.battle-master"), TEXT("cleric.life"), TEXT("rogue.thief")}, TEXT("wizard.evocation"),
+        [&SpendEverything](FExpeditionRun& Run, int32 Id)
+        {
+            if (!SpendEverything(Run, Id)) { return false; }
+            for (int32 Step = 0; Step < 30 && Run.Battle().Snapshot().MovementLeft > 0; ++Step)
+            {
+                const TArray<FIntPoint> Moves = Run.Battle().LegalMoves(Id);
+                if (Moves.IsEmpty() || !Run.Submit({ECombatCommandType::Move, Id, Moves.Last()}).bAccepted) { break; }
+            }
+            for (const ECombatCommandType Command : FActionFactsQuery::BarFor(Run.Battle(), Id))
+            { if (Command != ECombatCommandType::EndTurn && FActionFactsQuery::For(Run.Battle(), Id, Command).bAvailable) { return false; } }
+            return true;
         });
+    // A Downed ally (#158): the default-seed battle with its second hero Downed, put through the snapshot's validation like any restored checkpoint.
+    {
+        FString Error;
+        FExpeditionRun Run;
+        Run.NewRun(DefaultSeed, Error, FString::Printf(TEXT("capture-%d"), DefaultSeed));
+        Run.ChooseRoute(Run.Progress().Offers[0].Id, Error);
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        const int32 ActiveId = Run.Battle().ActiveId();
+        bool bDowned = false;
+        for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+        {
+            if (!bDowned && Unit.Side == ECombatSide::Party && Unit.Id != ActiveId) { Unit.HP = 0; Unit.Life = ECombatLife::Downed; Unit.RescueTurnsLeft = 2; bDowned = true; }
+        }
+        FExpeditionRun Downed;
+        if (TestTrue(TEXT("A Downed ally restores as a valid checkpoint"), bDowned && Downed.Restore(Snapshot, Error)))
+        {
+            Write(TEXT("downed-ally-battle"), Downed);
+            Describe(TEXT("downed-ally-battle"), Downed, DefaultSeed, 0);
+        }
+    }
     // Blocked sight: a first turn where some attack or ability finds every target in range but behind an obstacle.
     {
         bool bFound = false;
@@ -216,6 +456,140 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
             }
         }
         TestTrue(TEXT("A first turn exists where an action's only targets are behind blocked sight"), bFound);
+    }
+    // Subclass palettes and duplicate accents (#150 batch 4). Every catalog build is captured on the three boards the cast is judged on (Vigil pillars,
+    // Root recipe 2, the plain-road Vault finale). Each party starts a run at the seed the default party's board uses and takes the first seed from there
+    // that gives the same recipe with its own heroes acting first, so most parties share the board and every board has the same recipe and size class.
+    // Parties are four distinct classes (no accent), formed greedily from the classes with the most builds left; a short last party is filled with builds
+    // that were already covered. Fixtures: `pal-NN-vigil|root|vault`, palette-parties.json naming each party, and `dup-four-fighters-*`, `dup-four-paladins-*`, `dup-four-rogues-*` and
+    // `dup-two-pairs-*` for the duplicate accents.
+    {
+        const TCHAR* BoardNames[3] = {TEXT("vigil"), TEXT("root"), TEXT("vault")};
+        const auto Selection = [](const TArray<FString>& Builds)
+        {
+            TArray<FPartyBuildSelection> Party;
+            for (int32 Index = 0; Index < Builds.Num(); ++Index)
+            {
+                FPartyBuildSelection Slot;
+                Slot.Id = Index + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), Index + 1); Slot.BuildId = Builds[Index];
+                Party.Add(Slot);
+            }
+            return Party;
+        };
+        // The base seeds (the default party's): where each party's search starts.
+        const auto BaseSeed = [](int32 Offer, bool bDangerous, int32 Recipe) -> int32
+        {
+            for (int32 Seed = 1; Seed < 2000; ++Seed)
+            {
+                FString Error;
+                FExpeditionRun Run;
+                if (!Run.NewRun(Seed, Error, FString::Printf(TEXT("capture-%d"), Seed))) { continue; }
+                const FExpeditionRoute& Route = Run.Progress().Offers[Offer];
+                if (Route.bDangerous != bDangerous || Route.Recipe != Recipe || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+                const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+                if (Active && Active->Side == ECombatSide::Party) { return Seed; }
+            }
+            return INDEX_NONE;
+        };
+        int32 VaultBase = INDEX_NONE;
+        for (int32 Seed = 1; Seed < 400 && VaultBase == INDEX_NONE; ++Seed) { FExpeditionRun Run; if (ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true)) { VaultBase = Seed; } }
+        const int32 Bases[3] = {BaseSeed(1, true, 1), BaseSeed(0, false, 2), VaultBase};
+        if (!TestTrue(TEXT("The three palette boards are found with the default party first"), Bases[0] != INDEX_NONE && Bases[1] != INDEX_NONE && Bases[2] != INDEX_NONE)) { return false; }
+        // One fixture: the party's own run on the board (0 Vigil pillars, 1 Root recipe 2, 2 the Vault finale), from the base seed upward.
+        const auto WriteBoard = [&](const FString& Name, const TArray<FString>& Builds, int32 Board)
+        {
+            const TArray<FPartyBuildSelection> Party = Selection(Builds);
+            for (int32 Step = 0; Step < (Board == 2 ? 400 : 2000); ++Step)
+            {
+                const int32 Seed = 1 + ((Bases[Board] - 1 + Step) % (Board == 2 ? 399 : 1999));
+                FString Error;
+                FExpeditionRun Run;
+                if (Board == 2)
+                {
+                    if (!ExpeditionTestSupport::ReachFinale(Run, Seed, 2, true, &Party)) { continue; }
+                }
+                else
+                {
+                    if (!Run.NewRun(Seed, Party, Error, FString::Printf(TEXT("capture-pal-%d"), Seed))) { continue; }
+                    const FExpeditionRoute& Route = Run.Progress().Offers[Board == 0 ? 1 : 0];
+                    if (Route.bDangerous != (Board == 0) || Route.Recipe != (Board == 0 ? 1 : 2) || !Run.ChooseRoute(Route.Id, Error)) { continue; }
+                    const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+                    if (!Active || Active->Side != ECombatSide::Party) { continue; }
+                }
+                if (Board == 2)
+                {
+                    // The scripted player reaches the finale with heroes Downed, lying under their neighbours; a look at a build wants every hero standing, so the
+                    // Downed are stood up at full health (the same kind of edit as downed-ally-battle, validated by the restore). A seed that reaches the finale with a hero Dead is skipped (a permanent loss cannot be undone).
+                    FExpeditionSnapshot Snapshot = Run.Snapshot();
+                    if (Snapshot.Battle.Encounter.Combatants.ContainsByPredicate([](const FCombatantState& Unit) { return Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Dead; })) { continue; }
+                    for (FCombatantState& Unit : Snapshot.Battle.Encounter.Combatants)
+                    {
+                        if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Downed)
+                        { Unit.Life = ECombatLife::Conscious; Unit.HP = Unit.MaxHP; Unit.RescueTurnsLeft = 0; Unit.DeathSaveSuccesses = 0; Unit.DeathSaveFailures = 0; }
+                    }
+                    FExpeditionRun Healed;
+                    if (!Healed.Restore(Snapshot, Error)) { continue; }
+                    Run = MoveTemp(Healed);
+                }
+                Write(*Name, Run);
+                Describe(*Name, Run, Seed, Board == 0 ? 1 : 0);
+                return;
+            }
+            AddError(FString::Printf(TEXT("No seed gives %s with its party first"), *Name));
+        };
+        // Greedy parties of four distinct classes over every catalog build.
+        TMap<FString, TArray<FString>> Left;
+        TArray<FString> ClassOrder;
+        for (const FBuildDefinition& Build : FBuildCatalog::All())
+        {
+            if (!Left.Contains(Build.Profile.ClassId)) { ClassOrder.Add(Build.Profile.ClassId); }
+            Left.FindOrAdd(Build.Profile.ClassId).Add(Build.Id);
+        }
+        TMap<FString, FString> First;
+        for (const FString& Class : ClassOrder) { First.Add(Class, Left[Class][0]); }
+        TArray<TArray<FString>> Parties;
+        TArray<TArray<FString>> Fillers;
+        for (;;)
+        {
+            TArray<FString> Open = ClassOrder.FilterByPredicate([&Left](const FString& Class) { return Left[Class].Num() > 0; });
+            if (Open.IsEmpty()) { break; }
+            Open.StableSort([&Left](const FString& A, const FString& B) { return Left[A].Num() > Left[B].Num(); });
+            TArray<FString> Party, Filler;
+            for (int32 Index = 0; Index < Open.Num() && Party.Num() < 4; ++Index) { Party.Add(Left[Open[Index]][0]); Left[Open[Index]].RemoveAt(0); }
+            for (const FString& Class : ClassOrder)
+            {
+                if (Party.Num() >= 4) { break; }
+                if (!Party.ContainsByPredicate([&Class](const FString& Id) { return Id.StartsWith(Class + TEXT(".")); })) { Party.Add(First[Class]); Filler.Add(First[Class]); }
+            }
+            Parties.Add(Party);
+            Fillers.Add(Filler);
+        }
+        FString Manifest = TEXT("{\n  \"parties\": [\n");
+        for (int32 PartyIndex = 0; PartyIndex < Parties.Num(); ++PartyIndex)
+        {
+            const FString Id = FString::Printf(TEXT("pal-%02d"), PartyIndex);
+            const FString Filler = Fillers[PartyIndex].IsEmpty() ? FString() : FString::Printf(TEXT("\"%s\""), *FString::Join(Fillers[PartyIndex], TEXT("\", \"")));
+            Manifest += FString::Printf(TEXT("    {\"id\": \"%s\", \"builds\": [\"%s\"], \"filler\": [%s]}%s\n"), *Id, *FString::Join(Parties[PartyIndex], TEXT("\", \"")),
+                *Filler, PartyIndex + 1 < Parties.Num() ? TEXT(",") : TEXT(""));
+            for (int32 Board = 0; Board < 3; ++Board) { WriteBoard(FString::Printf(TEXT("%s-%s"), *Id, BoardNames[Board]), Parties[PartyIndex], Board); }
+        }
+        Manifest += TEXT("  ]\n}\n");
+        TestTrue(TEXT("The palette party manifest writes"), FFileHelper::SaveStringToFile(Manifest, *FPaths::Combine(Root, TEXT("palette-parties.json"))));
+        // Duplicate parties: four of one build, and two pairs of two classes; on Vigil, Root and the Vault.
+        TArray<TPair<FString, TArray<FString>>> Duplicates;
+        Duplicates.Emplace(TEXT("dup-four-fighters"), TArray<FString>{TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion"), TEXT("fighter.champion")});
+        Duplicates.Emplace(TEXT("dup-four-paladins"), TArray<FString>{TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion"), TEXT("paladin.devotion")});
+        Duplicates.Emplace(TEXT("dup-four-rogues"), TArray<FString>{TEXT("rogue.thief"), TEXT("rogue.thief"), TEXT("rogue.thief"), TEXT("rogue.thief")});
+        Duplicates.Emplace(TEXT("dup-two-pairs"), TArray<FString>{TEXT("cleric.life"), TEXT("rogue.thief"), TEXT("cleric.war"), TEXT("rogue.thief")});
+        for (const TPair<FString, TArray<FString>>& Duplicate : Duplicates)
+        { for (int32 Board = 0; Board < 3; ++Board) { WriteBoard(FString::Printf(TEXT("%s-%s"), *Duplicate.Key, BoardNames[Board]), Duplicate.Value, Board); } }
+        // Four of one build for every class, on the Root board only: `acc-<class>-root`, the accent region of each class is measured on them (tools/accent_share.py, with
+        // and without `gallery --no-accents`).
+        for (const FString& Class : ClassOrder)
+        {
+            const TArray<FString> Four = {First[Class], First[Class], First[Class], First[Class]};
+            WriteBoard(FString::Printf(TEXT("acc-%s-root"), *Class), Four, 1);
+        }
     }
     bool bVictoryWritten = false;
     for (int32 Seed = 1; Seed < 60 && !bVictoryWritten; ++Seed)
