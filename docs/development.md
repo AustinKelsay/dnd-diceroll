@@ -2,17 +2,17 @@
 
 ## Baseline and upgrades
 
-`tools/versions.json` pins UE 5.8.4 (CL 58902052) and records the validated host, **PlebDev Ultra**: Linux x86_64 (Omarchy), the engine's bundled Clang, an NVIDIA GPU with Vulkan, and Python 3.11+. The engine is installed at `~/Applications/UnrealEngine-5.8.4`; `UE_ROOT` selects another installation. Ultra is the only host whose Unreal results count for merges. The helper keeps its old Mac paths, but Mac is no longer validated; Windows is tracked in #51. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
+`tools/versions.json` pins UE 5.8.4 (CL 58902052) and records the validated host, **PlebDev Ultra**: Linux x86_64 (Omarchy), the engine's bundled Clang, an NVIDIA GPU with Vulkan, and Python 3.11+. The engine is installed at `~/Applications/UnrealEngine-5.8.4`; `UE_ROOT` selects another installation. Ultra is the only host whose Unreal results count for merges. The helper keeps its old Mac paths, but Mac is no longer validated. Windows on Amaterasu has a completed native helper ladder, recorded as an advisory host in `tools/versions.json` (`hosts.amaterasu`) and [validation](validation.md); that evidence does not replace Ultra for merge verification. Latest stable at setup becomes a reproducible baseline. Check Epic's release notes before upgrading, then repeat build, bootstrap, automation, identity/discovery, PIE, capture, and packaged startup checks before changing the pin.
 
 Unreal MCP is experimental and bundled with the engine. `ModelContextProtocol`, `AllToolsets`, Python scripting, and Editor Scripting Utilities are editor-only. No separate community MCP bridge or Python service is required. `tools/project.json` explicitly selects the GitHub repository the contribution checks expect, the module, editor/game targets, content root, and automation prefix. The helper discovers one root `.uproject` (or requires `--project` when ambiguous) and reads `EditorStartupMap` from config. Unreal module/package identifiers use `DnDDiceRoll`.
 
 ## Commands
 
-Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is the system interpreter. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
+Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is the system interpreter, and on Windows use `py -3`. The helper prints its interpreter in `doctor` and rejects unsupported versions. Unreal's embedded Python is 3.11.8; keep `Content/Python` compatible with it and run those scripts only inside Unreal.
 
 | Command (`python3 tools/dev.py …`) | Purpose |
 | --- | --- |
-| `doctor` | Check interpreter, host tools (`git`, `ps`, `lsof`), pinned engine, and endpoint configurations; off Ultra it prints what to do instead |
+| `doctor` | Check interpreter, host tools (`git`, `ps`, `lsof` on Linux; `git`, `powershell.exe`, `dxdiag.exe` and a DirectX 12 probe on Windows), pinned engine, and endpoint configurations; off Ultra it prints that results do not count as merge verification |
 | `verify-skills` | With this checkout closed, verify project-skill discovery and Markdown readback in a headless editor |
 | `status` | Report associated processes, verified listener/project/build, map, PIE, and unsaved packages |
 | `close` | Refuse PIE/dirty state; request normal quit of the verified editor PID and wait |
@@ -31,13 +31,15 @@ Use Python **3.11+**, with no third-party dependencies; on Ultra `python3` is th
 | `gallery [--fixture NAME ...] [--res WxH ...] [--primitives] [--static-figures] [--no-palettes] [--no-accents] [--poses PATH]` | Render the fixed-pose capture gallery under `.local/gallery/<timestamp>/` (see Capture gallery) |
 | `perf [--package DIR \| --editor] [--pass P --run X]` | Play one seeded Watchtower road fight with the game's autoplay mode (warm-up, measured pass, fresh-process Resume; or one pass per locked job), sample the CSV profiler and the game's RSS, and check the #148 budgets (see Performance gate) |
 | `new-class component ExampleComponent` | Create a non-overwriting class in the configured module; also `actor` and `object` |
-| `package` | Build/cook/stage/archive a Linux Development game, start it offscreen until it enters the default map, then quit it normally |
+| `package` | Build/cook/stage/archive a Development game (Linux or Win64), start it until it enters the default map (offscreen on Linux; windowed 1280x720 on Windows so the helper can close the window normally), then quit it normally |
 
 Add `--cores 2` before the command on the shared machine (for example `python3 tools/dev.py --cores 2 build`). It caps compile actions, and engine cores for tests, bootstrap, the skill check, the editor, the cook, the packaged game and `perf` runs. Other commands refuse it. `build` fails on any compiler or build-tool warning. It only sees warnings from files it recompiles, so the merge gate builds each PR in a fresh checkout where every file compiles.
 
 Run offline helper tests with `python3 -m unittest discover -s tools/tests -v`. Unreal-free geometry checks live in `tools/tests/native/`; see its [README](../tools/tests/native/README.md) for the compile recipe. `build`, `bootstrap`, `test`, and `package` refuse when this project is open, including when MCP is unavailable. Structural C++ changes use `status` → `close` → `build` → `editor`. Live Coding exists only for Win64 x64 in the installed engine; do not use it on Linux.
 
 On Linux, `test` runs `UnrealEditor-Cmd` with `-RenderOffscreen` and `-ExecCmds="Automation RunTests <prefix>;SoftQuit"`. Do not add `-nullrhi`: it skips SDL setup and Slate then warns "Querying IsUsingWayland before SDL is initialized". Do not add `-TestExit`: on Unix it force-exits with code 1 even when tests pass. The helper also fails a build, test, bootstrap, skill check, or package run that changes any tracked file under `Config/`, even when the engine run itself failed; it reports the change and does not revert it.
+
+On Windows, the same helper commands apply (`py -3 tools/dev.py ...`). Live Coding stays off (`-NoLiveCoding` is added for editor and packaged launches). The MCP endpoint (`http://127.0.0.1:18765/mcp`) and the one-editor-owner rule are unchanged. Windows `test` uses `-nullrhi` and `SoftQuit`. Packaged Windows launches use a real window, not `-nullrhi`. Windows `perf` process launches remain unsupported. See [validation](validation.md) for the Amaterasu advisory ladder.
 
 The launcher refuses missing/stale build evidence and an occupied MCP port. A successful build records fingerprints of source, the project descriptor, module manifest, compiled binary, target, and pinned engine. Launch verifies that receipt rather than relying on timestamps; source deletions and no-action builds are handled correctly. It waits for readiness by default; `editor --no-wait` explicitly skips readiness. After an editor closes, Linux can hold the MCP port for about a minute (TIME_WAIT), and Unreal's listener cannot bind while it does. `editor` waits for the port to be free, and if Unreal still fails to bind it stops and tells you; close that editor from its window. MCP auto-start is disabled so headless automation cannot claim the editor endpoint. Only the controlled launcher passes `-ModelContextProtocolStartServer`.
 
