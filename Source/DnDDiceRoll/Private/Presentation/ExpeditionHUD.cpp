@@ -266,6 +266,7 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitIds.Reset();
     DetailRects.Reset();
     Drawn = FProgressionDrawn();
+    bBannerRequested = false;
     Progression = FProgressionFacts();
     bLegendRequested = false;
     bDiceRequested = false;
@@ -1265,8 +1266,11 @@ void AExpeditionHUD::DrawBanner()
     const float Alpha = FMath::Min(In, Out);
     const float Slide = (1.0f - In) * -60.0f + (1.0f - Out) * 60.0f;
     const float Y = H * 0.24f;
-    ChipExclusions.Add(FBox2D(FVector2D(0, Y), FVector2D(W, Y + 82)));
-    Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), 0, Y, W, 82);
+    // The dimmed band is only as wide as the banner, and never reaches the party cards on the left edge (#252): it used to span the whole width and darkened them.
+    const float Half = FMath::Min(360.0f, W * 0.5f - (ExpeditionLayout::PartyCardX + ExpeditionLayout::PartyCardWidth + 8.0f));
+    ChipExclusions.Add(FBox2D(FVector2D(W * 0.5f - Half, Y), FVector2D(W * 0.5f + Half, Y + 82)));
+    Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), W * 0.5f - Half, Y, Half * 2.0f, 82);
+    bBannerRequested = true; BannerBox = FBox2D(FVector2D(W * 0.5f - Half, Y) * S, FVector2D(W * 0.5f + Half, Y + 82) * S);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 + Slide, Y, 440, 2);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 - Slide, Y + 80, 440, 2);
     Text(Banner.Title, W * 0.5f + Slide, Y + 10, WithAlpha(Banner.Color, Alpha), 2.0f, EAlign::Center, W - 80);

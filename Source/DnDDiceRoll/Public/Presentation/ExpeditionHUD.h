@@ -133,7 +133,11 @@ public:
         TArray<FString> DetailLines;
     };
     const FProgressionDrawn& ProgressionDrawn() const { return Drawn; }
+    /** The dimmed band behind the turn banner the last draw showed, in viewport pixels, or null (#252). It keeps clear of the party cards. */
+    const FBox2D* BannerRequested() const { return bBannerRequested ? &BannerBox : nullptr; }
 private:
+    FBox2D BannerBox = FBox2D(ForceInit);
+    bool bBannerRequested = false;
     int32 DetailUnitId = INDEX_NONE;
     TArray<int32> DetailUnitIds;
     /** The party slot under the pointer this frame, or INDEX_NONE (set by DrawParty): on the route, reward and camp screens a hovered card's details replace the selected hero's (#200). */

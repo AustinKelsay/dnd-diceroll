@@ -321,7 +321,12 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
             }
         }
     });
-    Add(0.0f, [this, After]() { Sync(After); });
+    Add(0.0f, [this, After]()
+    {
+        Sync(After);
+        // The battle's floating texts (SLAIN, the last damage) belong to the fight: the reward or ending screen opens now, and none may linger on it (#252).
+        if (After.Phase != EBattlePhase::Fighting) { Floaters.Reset(); }
+    });
 }
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)
