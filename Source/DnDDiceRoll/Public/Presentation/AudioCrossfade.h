@@ -15,6 +15,11 @@ struct FAudioLayer
     float Target = 1.0f;
     /** Seconds a whole fade (0 to 1 or back) takes at the current rate. */
     float FadeSeconds = 1.0f;
+    /** Seconds into the recording this layer started at (where the same key stopped last time), and seconds it has run since. */
+    float Offset = 0.0f;
+    float Age = 0.0f;
+    /** Where the layer is in its recording, unwrapped (the player wraps it by the recording's length). */
+    float Position() const { return Offset + Age; }
     /** Equal-power gain for the level: the outgoing and incoming layers keep a steady sum of power through the overlap. */
     float Amplitude() const { return FMath::Sin(FMath::Clamp(Level, 0.0f, 1.0f) * HALF_PI); }
     bool IsFadingOut() const { return Target <= 0.0f; }
@@ -46,9 +51,16 @@ public:
     uint8 Current() const { return CurrentKey; }
     const TArray<FAudioLayer>& Layers() const { return Active; }
     const FAudioLayer* Find(uint8 Key) const { return Active.FindByPredicate([Key](const FAudioLayer& Layer) { return Layer.Key == Key; }); }
+    /**
+     * Where a key's recording stopped the last time its layer ended (0 if it never played): a new layer for that key starts there, so a
+     * track that comes back (a mid-fight Resume) fades in where it left off instead of from the top (#245).
+     */
+    float Position(uint8 Key) const { return Stopped.FindRef(Key); }
 
 private:
+    void Remember(const FAudioLayer& Layer) { Stopped.Add(Layer.Key, Layer.Position()); }
     TArray<FAudioLayer> Active;
+    TMap<uint8, float> Stopped;
     uint8 CurrentKey = 0;
     uint32 NextId = 1;
 };

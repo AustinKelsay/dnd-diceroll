@@ -12,6 +12,7 @@ import audio_beds
 
 ROOT = Path(__file__).resolve().parents[2]
 AMBIENCE = ROOT / "Art/audio-ambience/r001"
+MUSIC = ROOT / "Art/audio-music/r001"
 
 
 def declared(header, enum):
@@ -117,6 +118,51 @@ class AudioBedToolTests(unittest.TestCase):
             self.assertEqual((channels, rate), (2, 48000), name)
             self.assertAlmostEqual(len(samples) / channels / rate, self.recipe["pieces"][name]["length"], places=2)
             self.assertTrue(audio_beds.seam_report(samples, channels, rate)["ok"], name)
+
+
+class MusicRecipeTests(unittest.TestCase):
+    def setUp(self):
+        self.recipe = json.loads((MUSIC / "recipe.json").read_text())
+
+    def test_the_music_recipe_is_valid_and_matches_the_game(self):
+        names = declared("ExpeditionMusic.h", "EExpeditionMusic") + declared("ExpeditionMusic.h", "EExpeditionSting")
+        self.assertEqual(audio_beds.validate_recipe(self.recipe, names), [])
+
+    def test_tracks_loop_and_stings_play_once(self):
+        stings = declared("ExpeditionMusic.h", "EExpeditionSting")
+        for name, plan in self.recipe["pieces"].items():
+            self.assertEqual(bool(plan.get("loop")), name not in stings, name)
+            self.assertTrue((MUSIC / self.recipe["output"] / f"{name}.wav").is_file(), name)
+        for name, source in self.recipe["sources"].items():
+            self.assertIn("CC0", source["license"], name)
+
+    def test_music_sits_below_effects_and_above_ambience(self):
+        cues = json.loads((ROOT / "Art/audio-sources/r001/recipe.json").read_text())
+        ambience = json.loads((AMBIENCE / "recipe.json").read_text())
+        effects = [category["lufs"] for category in cues["categories"].values()]
+        music = self.recipe["categories"]["music"]["lufs"]
+        self.assertLessEqual(music, min(effects))
+        self.assertGreater(music, ambience["categories"]["ambience"]["lufs"])
+        self.assertLess(self.recipe["categories"]["sting"]["lufs"], max(effects))
+
+    def test_the_level_rule_is_off_only_for_music(self):
+        self.assertIsNone(self.recipe["categories"]["music"]["seam_level_db"])
+        loud_start = sine(48000, 2000)
+        for index in range(len(loud_start) - 2400, len(loud_start)):
+            loud_start[index] //= 4
+        self.assertFalse(audio_beds.seam_report(loud_start, 1, 48000)["ok"])
+        self.assertTrue(audio_beds.seam_report(loud_start, 1, 48000, None)["ok"])
+
+    def test_the_rendered_tracks_loop_cleanly(self):
+        for name, plan in self.recipe["pieces"].items():
+            path = MUSIC / self.recipe["output"] / f"{name}.wav"
+            if path.read_bytes()[:40].startswith(b"version https://git-lfs"):
+                self.skipTest("LFS pointers only (CI checks out without LFS); measured on a full checkout")
+            samples, channels, rate = audio_beds.read_wav(path)
+            self.assertEqual((channels, rate), (2, 48000), name)
+            self.assertAlmostEqual(len(samples) / channels / rate, plan["length"], places=2)
+            if plan.get("loop"):
+                self.assertTrue(audio_beds.seam_report(samples, channels, rate, None)["ok"], name)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,9 @@ fades, gain, pan, repeats and placements). ``build`` renders each piece with ffm
 
 ``measure`` prints the loudness, peak and loop-seam table of WAV files. The seam check compares the jump from the last sample to
 the first with the file's own sample-to-sample movement (the 99.9th percentile of adjacent differences) and the level of the
-50 ms either side of the seam; a loop fails when the jump is an outlier or the level steps by more than 1.5 dB.
+50 ms either side of the seam; a loop fails when the jump is an outlier or the level steps by more than its category's
+"seam_level_db" (1.5 dB unless set). The music sets it to null: its loop points sit on note onsets by design, so the level is
+reported but not checked, and folding makes the seam contiguous source audio either way.
 
 Downloaded files are untrusted data: this tool only hashes them and hands their paths to ffmpeg/ffprobe as arguments.
 
@@ -184,7 +186,7 @@ def rms_db(values):
     return 10 * math.log10(power) if power > 0 else -math.inf
 
 
-def seam_report(samples, channels, rate=RATE):
+def seam_report(samples, channels, rate=RATE, level_limit=SEAM_LEVEL_DB):
     """How the end of a loop meets its start, per channel and worst over channels (sample values as read, e.g. int16).
 
     jump: |first - last|; typical: the 99.9th percentile of |x[i+1] - x[i]| inside the file; ratio: jump / typical (at most 1 means
@@ -204,7 +206,7 @@ def seam_report(samples, channels, rate=RATE):
         if ratio >= worst["ratio"]:
             worst.update(jump=float(jump), typical=float(typical), ratio=ratio)
         worst["level_db"] = max(worst["level_db"], level)
-    worst["ok"] = worst["ratio"] <= 1.0 and worst["level_db"] <= SEAM_LEVEL_DB
+    worst["ok"] = worst["ratio"] <= 1.0 and (level_limit is None or worst["level_db"] <= level_limit)
     return worst
 
 
@@ -328,7 +330,8 @@ def measure_command(args):
         samples, channels, rate = read_wav(path)
         seam, level = "one-shot", ""
         if plan.get("loop"):
-            report = seam_report(samples, channels, rate)
+            category = recipe["categories"].get(plan.get("category"), {})
+            report = seam_report(samples, channels, rate, category.get("seam_level_db", SEAM_LEVEL_DB))
             failures += not report["ok"]
             seam = f"{report['jump']:.0f} / {report['typical']:.0f} = {report['ratio']:.2f}{'' if report['ok'] else ' FAIL'}"
             level = f"{report['level_db']:.2f}"

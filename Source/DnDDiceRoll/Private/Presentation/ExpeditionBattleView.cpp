@@ -742,6 +742,16 @@ void AExpeditionBattleView::BeginPlay()
         UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience beds recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionAmbienceCount - 1,
             Recorded.IsEmpty() ? TEXT("none; every bed is silent") : *FString::Join(Recorded, TEXT(", ")));
     }
+    // The score (#245): a track or sting with no recording is silence, never synthesis.
+    MusicBank.Load(LoadObject<UExpeditionMusicSounds>(nullptr, ExpeditionMusic::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        const USoundWave* Won = MusicBank.Sting(EExpeditionSting::Victory);
+        const USoundWave* Lost = MusicBank.Sting(EExpeditionSting::Defeat);
+        Music.SetStingLengths(Won ? Won->GetDuration() : 0.0f, Lost ? Lost->GetDuration() : 0.0f);
+        const TArray<FString> Recorded = MusicBank.RecordedPieces();
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionMusicCount - 1 + 2,
+            Recorded.IsEmpty() ? TEXT("none; the music is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -2591,10 +2601,77 @@ void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
         TObjectPtr<UAudioComponent>& Voice = AmbienceVoices.FindOrAdd(Layer.Id);
         if (!IsValid(Voice))
         {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
             Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
             if (!Voice) { AmbienceVoices.Remove(Layer.Id); continue; }
-            Voice->Play();
-            UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience voice %u plays %s"), Layer.Id, *Wave->GetPathName());
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
+        }
+        Voice->SetVolumeMultiplier(Volume);
+    }
+}
+
+FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
+{
+    FExpeditionMusicMoment Now;
+    Now.bRunInPlay = HasRun();
+    if (!Now.bRunInPlay) { return Now; }
+    Now.Phase = Progress().Phase;
+    Now.Encounter = Progress().History.Num();
+    Now.bFinale = !Progress().History.IsEmpty() && FExpeditionRun::Encounter(Progress(), Progress().History.Last().Route).World == EExpeditionWorld::Vault;
+    Now.bPresenting = IsPresenting();
+    return Now;
+}
+
+void AExpeditionBattleView::UpdateMusic(float DeltaSeconds)
+{
+    const EExpeditionMusic Before = Music.Current();
+    const TOptional<EExpeditionSting> Started = Music.Update(MusicMoment(), DeltaSeconds);
+    if (Music.Current() != Before)
+    {
+        const USoundWave* Wave = MusicBank.Track(Music.Current());
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music %s -> %s: %s"), *ExpeditionMusic::Name(Before), *ExpeditionMusic::Name(Music.Current()),
+            Music.Current() == EExpeditionMusic::None ? TEXT("silence under the sting") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    if (Started)
+    {
+        const USoundWave* Wave = MusicBank.Sting(*Started);
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music sting %s: %s"), *ExpeditionMusic::StingName(*Started), Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    // A voice whose layer has faded out stops; the crossfade remembers where that track was, so it picks up there next time.
+    for (auto It = MusicVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Music.Fade().Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    if (StingVoice && (!Music.Sting() || !IsValid(StingVoice))) { if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); } StingVoice = nullptr; }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    if (Started)
+    {
+        if (USoundWave* Wave = MusicBank.Sting(*Started))
+        {
+            if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); }
+            StingVoice = UGameplayStatics::CreateSound2D(this, Wave, MusicBank.StingVolume(*Started), 1.0f, 0.0f, nullptr, false, false);
+            if (StingVoice) { StingVoice->Play(); }
+        }
+    }
+    for (const FAudioLayer& Layer : Music.Fade().Layers())
+    {
+        const EExpeditionMusic Track = static_cast<EExpeditionMusic>(Layer.Key);
+        USoundWave* Wave = MusicBank.Track(Track);
+        if (!Wave) { continue; }
+        const float Volume = MusicBank.TrackVolume(Track) * Layer.Amplitude();
+        TObjectPtr<UAudioComponent>& Voice = MusicVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { MusicVoices.Remove(Layer.Id); continue; }
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Music voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
         }
         Voice->SetVolumeMultiplier(Volume);
     }
@@ -2622,6 +2699,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
     UpdateAmbience(DeltaSeconds);
+    UpdateMusic(DeltaSeconds);
     if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
