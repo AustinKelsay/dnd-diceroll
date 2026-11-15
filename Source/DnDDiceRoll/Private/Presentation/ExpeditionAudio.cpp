@@ -1,4 +1,7 @@
 #include "Presentation/ExpeditionAudio.h"
+#include "Misc/Parse.h"
+
+DEFINE_LOG_CATEGORY(LogExpeditionAudio);
 
 namespace
 {
@@ -79,6 +82,25 @@ float Semitone(float Base, int32 Steps) { return Base * FMath::Pow(2.0f, Steps /
 
 namespace ExpeditionAudio
 {
+int32 PickVariation(EExpeditionCue Cue, uint32 Serial, int32 Count)
+{
+    if (Count <= 1) { return 0; }
+    const uint32 Size = static_cast<uint32>(Count);
+    // One offset per block of Count plays: within a block (Offset + Serial) % Count visits every residue once.
+    const uint32 Offset = HashCombineFast(GetTypeHash(static_cast<uint8>(Cue)), GetTypeHash(Serial / Size));
+    return static_cast<int32>((Offset + Serial % Size) % Size);
+}
+
+bool UseRecordedCues(const TCHAR* CommandLine)
+{
+    return !(CommandLine && FParse::Param(CommandLine, TEXT("ExpeditionSynthAudio")));
+}
+
+FString CueName(EExpeditionCue Cue)
+{
+    return StaticEnum<EExpeditionCue>()->GetNameStringByValue(static_cast<int64>(Cue));
+}
+
 float Volume(EExpeditionCue Cue)
 {
     switch (Cue)

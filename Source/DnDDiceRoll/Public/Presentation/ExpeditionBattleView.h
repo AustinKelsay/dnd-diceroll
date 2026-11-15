@@ -6,6 +6,7 @@
 #include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
+#include "Presentation/ExpeditionCueSounds.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
@@ -686,7 +687,10 @@ private:
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
     TMap<int32, TArray<int16>> SoundCache;
-    int32 SoundVariation = 0;
+    /** The recorded cues (#242); a cue it has no recording for plays the synthesis cached above. */
+    UPROPERTY() FExpeditionCueBank CueBank;
+    /** How many times each cue has sounded: the serial its presentation-only variation hash reads. */
+    TArray<uint32> CueSerials;
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);

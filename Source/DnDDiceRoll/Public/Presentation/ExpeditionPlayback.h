@@ -2,14 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
+#include "Presentation/ExpeditionCue.h"
 #include "Presentation/UnitPose.h"
-
-/** Sounds and moments the playback asks the world to express. */
-enum class EExpeditionCue : uint8
-{
-    DiceRoll, DiceLand, Hit, Critical, Miss, Heal, Step, Click, Downed, Death,
-    PartyTurn, EnemyTurn, Victory, Defeat, Spell, Bow, Swing, Camp, Loot, Route
-};
 
 /**
  * What a capture-mode impact preview shows on the struck unit (#189): a plain hit, or a spell bolt (Cleric radiant, Wizard fire, or three Magic Missiles)

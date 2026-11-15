@@ -723,6 +723,17 @@ void AExpeditionBattleView::BeginPlay()
     AttachSilhouette();
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
+    // Recorded cues (#242). -ExpeditionSynthAudio keeps the synthesized ones for comparison; a cue whose recordings are missing falls back alone.
+    CueSerials.Init(0, ExpeditionCueCount);
+    if (ExpeditionAudio::UseRecordedCues(FCommandLine::Get()))
+    {
+        CueBank.Load(LoadObject<UExpeditionCueSounds>(nullptr, ExpeditionAudio::CueSoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+        TArray<FString> Synthesized;
+        for (EExpeditionCue Cue : CueBank.SynthesizedCues()) { Synthesized.Add(ExpeditionAudio::CueName(Cue)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Recorded cues for %d of %d cues; synthesis for: %s"), ExpeditionCueCount - Synthesized.Num(), ExpeditionCueCount,
+            Synthesized.IsEmpty() ? TEXT("none") : *FString::Join(Synthesized, TEXT(", ")));
+    }
+    else { UE_LOG(LogExpeditionAudio, Log, TEXT("-ExpeditionSynthAudio: every cue plays its synthesis")); }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -2504,24 +2515,38 @@ void AExpeditionBattleView::PageRecords(int32 Direction)
 
 void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
 {
+    // The serial counts every request, heard or not, so the variation a play gets never depends on the audio device.
+    const int32 Index = static_cast<int32>(Cue);
+    const uint32 Serial = CueSerials.IsValidIndex(Index) ? CueSerials[Index]++ : 0;
     UWorld* World = GetWorld();
     if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
-    const int32 Variation = SoundVariation++ % 4;
-    const int32 Key = static_cast<int32>(Cue) * 8 + Variation;
-    const TArray<int16>* Pcm = SoundCache.Find(Key);
-    if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Variation)); }
-    if (Pcm->IsEmpty()) { return; }
-    USoundWaveProcedural* Wave = NewObject<USoundWaveProcedural>(this);
-    Wave->SetSampleRate(ExpeditionAudio::SampleRate);
-    Wave->NumChannels = 1;
-    Wave->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
-    Wave->SoundGroup = SOUNDGROUP_Default;
-    Wave->bLooping = false;
-    Wave->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
-    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, ExpeditionAudio::Volume(Cue)))
+    const FExpeditionCuePlay Play = CueBank.Choose(Cue, Serial);
+    USoundWave* Wave = Play.Wave;
+    if (Wave)
+    {
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: %s"), *ExpeditionAudio::CueName(Cue), Serial, *Wave->GetPathName());
+    }
+    else
+    {
+        const int32 Key = Index * 8 + Play.Variation;
+        const TArray<int16>* Pcm = SoundCache.Find(Key);
+        if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Play.Variation)); }
+        if (Pcm->IsEmpty()) { return; }
+        USoundWaveProcedural* Synth = NewObject<USoundWaveProcedural>(this);
+        Synth->SetSampleRate(ExpeditionAudio::SampleRate);
+        Synth->NumChannels = 1;
+        Synth->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
+        Synth->SoundGroup = SOUNDGROUP_Default;
+        Synth->SoundClassObject = CueBank.Class();
+        Synth->bLooping = false;
+        Synth->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
+        Wave = Synth;
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: synthesis variation %d"), *ExpeditionAudio::CueName(Cue), Serial, Play.Variation);
+    }
+    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, Play.Volume))
     {
         Voices.Add(Voice);
-        VoiceEnds.Add(Clock + Wave->Duration + 0.15f);
+        VoiceEnds.Add(Clock + Wave->GetDuration() + 0.15f);
     }
 }
 
