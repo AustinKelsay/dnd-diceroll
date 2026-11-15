@@ -225,6 +225,11 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
         TestEqual(FString::Printf(TEXT("%s: three instanced groups"), Name), Piece->ComponentCount(), 3);
         // Per-frame cost while the finale is fought: nothing is rewritten.
         const int32 IntactWrites = Piece->PieceWrites();
+        // The artifact's own colour while the finale is fought: the flare scales it and every ending must come back to exactly it (#260 review).
+        const FLinearColor IntactColour = Played->ArtifactShownColour();
+        TestTrue(FString::Printf(TEXT("%s: the artifact is drawn"), Name), IntactColour.A > 0.0f || IntactColour.GetMax() > 0.0f);
+        // Within the 0.002 a loose part's tint skips (FExpeditionPart::SetColor); a compounding flare is orders of magnitude off.
+        auto SameColour = [](const FLinearColor& A, const FLinearColor& B) { return A.Equals(B, 0.0025f); };
         for (int32 Frame = 0; Frame < 60; ++Frame) { Played->Tick(1.0f / 30.0f); }
         TestEqual(FString::Printf(TEXT("%s: an intact seal writes nothing per frame"), Name), Piece->PieceWrites(), IntactWrites);
         TArray<EWaystoneCue> Cues;
@@ -233,7 +238,8 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
         TestTrue(FString::Printf(TEXT("%s: the run is won"), Name), Played->Progress().Phase == EExpeditionPhase::Victory);
         TestTrue(FString::Printf(TEXT("%s: the rules are the rules-only run's"), Name), ExpeditionTestSupport::SameRun(Played->CurrentRun().Snapshot(), Blow.Won));
         TestTrue(FString::Printf(TEXT("%s: the ending waits while the victory plays"), Name), Played->IsPresenting());
-        bool bSawPlaying = false, bSawShot = false;
+        bool bSawPlaying = false, bSawShot = false, bBounded = true;
+        const float Brightest = IntactColour.GetMax() * FMath::Sqrt(FlareGain(ShatterSeconds)) + 1e-3f;
         float LastTime = -1.0f;
         bool bMonotonic = true;
         TestTrue(FString::Printf(TEXT("%s: playback and the set piece finish"), Name), TickUntilIdle(*Played, [&]()
@@ -244,9 +250,11 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 bMonotonic &= Piece->Time() >= LastTime;
                 LastTime = Piece->Time();
                 bSawShot |= Piece->CameraWeight() > 0.5f && Piece->CameraWeight() < 1.0f;
+                bBounded &= Played->ArtifactShownColour().GetMax() <= Brightest;
             }
         }));
         TestTrue(FString::Printf(TEXT("%s: it played"), Name), bSawPlaying);
+        TestTrue(FString::Printf(TEXT("%s: the flare never brightens the artifact past its peak (no compounding)"), Name), bBounded);
         TestTrue(FString::Printf(TEXT("%s: its time only moves forward"), Name), bMonotonic);
         TestTrue(FString::Printf(TEXT("%s: the camera eased into the shot"), Name), bSawShot);
         TestTrue(FString::Printf(TEXT("%s: it settled"), Name), Piece->State() == EWaystoneSetPieceState::Settled);
@@ -258,6 +266,8 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
         TestEqual(FString::Printf(TEXT("%s: no cue after it settles"), Name), Cues.Num(), 4);
         const TArray<FTransform> Settled = Piece->PieceTransforms();
         const FTransform SettledCamera = Played->CameraTransform();
+        const FLinearColor SettledColour = Played->ArtifactShownColour();
+        TestTrue(FString::Printf(TEXT("%s: the settled artifact wears its own colour again"), Name), SameColour(SettledColour, IntactColour));
         const FString PlayedFile = ReadCheckpoint(FPaths::Combine(Base, TEXT("played/current.json")));
         TestFalse(FString::Printf(TEXT("%s: the won run was checkpointed"), Name), PlayedFile.IsEmpty());
 
@@ -271,6 +281,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestFalse(FString::Printf(TEXT("%s: a resumed victory shows the ending at once"), Name), Resumed->IsPresenting());
                 TestTrue(FString::Printf(TEXT("%s: the resumed pieces lie where the played ones did"), Name), SamePieces(Again->PieceTransforms(), Settled));
                 TestTrue(FString::Printf(TEXT("%s: the resumed camera holds the same shot"), Name), Resumed->CameraTransform().Equals(SettledCamera, 0.5));
+                TestTrue(FString::Printf(TEXT("%s: the resumed artifact has the played colour"), Name), SameColour(Resumed->ArtifactShownColour(), SettledColour));
                 TestTrue(FString::Printf(TEXT("%s: Resume writes nothing"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("resumed/current.json"))) == PlayedFile);
             }
         }
@@ -292,6 +303,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 Skipped->Tick(1.0f / 30.0f);
                 TestTrue(FString::Printf(TEXT("%s: skipped pieces lie where the played ones did"), Name), SamePieces(Mid->PieceTransforms(), Settled));
                 TestTrue(FString::Printf(TEXT("%s: the skipped camera holds the same shot"), Name), Skipped->CameraTransform().Equals(SettledCamera, 0.5));
+                TestTrue(FString::Printf(TEXT("%s: the skipped artifact has the played colour"), Name), SameColour(Skipped->ArtifactShownColour(), SettledColour));
                 TestTrue(FString::Printf(TEXT("%s: skip stops the cues"), Name), Heard == TArray<EWaystoneCue>({EWaystoneCue::Flare, EWaystoneCue::Shatter}));
                 TestTrue(FString::Printf(TEXT("%s: skipping changes no checkpoint byte"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("skipped/current.json"))) == PlayedFile);
             }
@@ -312,6 +324,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestFalse(FString::Printf(TEXT("%s: nothing is left to present"), Name), Early->IsPresenting());
                 Early->Tick(1.0f / 30.0f);
                 TestTrue(FString::Printf(TEXT("%s: converged pieces lie where the played ones did"), Name), SamePieces(Set->PieceTransforms(), Settled));
+                TestTrue(FString::Printf(TEXT("%s: the converged artifact has the played colour"), Name), SameColour(Early->ArtifactShownColour(), SettledColour));
                 TestEqual(FString::Printf(TEXT("%s: converging is silent"), Name), Heard.Num(), 0);
             }
         }
@@ -331,6 +344,7 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
                 TestTrue(FString::Printf(TEXT("%s: Instant settles it"), Name), Set->State() == EWaystoneSetPieceState::Settled);
                 TestFalse(FString::Printf(TEXT("%s: Instant shows the ending"), Name), Instant->IsPresenting());
                 TestTrue(FString::Printf(TEXT("%s: Instant pieces lie where the played ones did"), Name), SamePieces(Set->PieceTransforms(), Settled));
+                TestTrue(FString::Printf(TEXT("%s: the Instant artifact has the played colour"), Name), SameColour(Instant->ArtifactShownColour(), SettledColour));
                 TestEqual(FString::Printf(TEXT("%s: Instant is silent"), Name), Heard.Num(), 0);
                 TestTrue(FString::Printf(TEXT("%s: Instant changes no rule"), Name), ExpeditionTestSupport::SameRun(Instant->CurrentRun().Snapshot(), Blow.Won));
                 TestTrue(FString::Printf(TEXT("%s: Instant changes no checkpoint byte"), Name), ReadCheckpoint(FPaths::Combine(Base, TEXT("instant/current.json"))) == PlayedFile);
@@ -343,10 +357,40 @@ bool FWaystoneConvergenceTest::RunTest(const FString& Parameters)
             TestTrue(FString::Printf(TEXT("%s: a held moment is held"), Name), Played->HoldsSetPiece() && Piece->IsPlaying());
             Played->Tick(1.0f / 30.0f);
             TestTrue(FString::Printf(TEXT("%s: a held moment does not advance"), Name), FMath::IsNearlyEqual(Piece->Time(), ShatterSeconds + 0.3f));
+            // A held moment's colour is a function of its time alone: the same after other moments were held first.
+            const FLinearColor Held = Played->ArtifactShownColour();
+            TestTrue(FString::Printf(TEXT("%s: a held moment's artifact is its colour times the flare"), Name), SameColour(Held, IntactColour * FMath::Sqrt(FlareGain(ShatterSeconds + 0.3f))));
+            for (const float Other : {0.2f, ShatterSeconds, 3.0f})
+            {
+                Played->PreviewSetPiece(Other);
+                for (int32 Frame = 0; Frame < 4; ++Frame) { Played->Tick(1.0f / 30.0f); }
+            }
+            Played->PreviewSetPiece(ShatterSeconds + 0.3f);
+            Played->Tick(1.0f / 30.0f);
+            TestTrue(FString::Printf(TEXT("%s: held again after other moments, the artifact has the same colour"), Name), SameColour(Played->ArtifactShownColour(), Held));
             Played->ClearSetPiecePreview();
+            Played->Tick(1.0f / 30.0f);
             TestTrue(FString::Printf(TEXT("%s: released, it is settled again"), Name), Piece->State() == EWaystoneSetPieceState::Settled && SamePieces(Piece->PieceTransforms(), Settled));
+            TestTrue(FString::Printf(TEXT("%s: released, the artifact has the played colour"), Name), SameColour(Played->ArtifactShownColour(), SettledColour));
         }
         else { AddError(FString::Printf(TEXT("%s: a won finale takes a set-piece preview"), Name)); }
+    }
+
+    // An ordinary fight (the first road) never builds or plays the set piece, on either look.
+    for (const ELook Look : {ELook::Themed, ELook::Primitives})
+    {
+        AExpeditionBattleView* Road = World->SpawnActor<AExpeditionBattleView>();
+        if (!TestNotNull(TEXT("Road view"), Road)) { continue; }
+        Road->ConfigureStorage(FPaths::Combine(Directory, Look == ELook::Themed ? TEXT("road-themed") : TEXT("road-primitives"), TEXT("current.json")));
+        Road->DispatchBeginPlay();
+        if (Look == ELook::Primitives) { Road->UsePrimitives(); }
+        Road->NewRun();
+        Road->ChooseRoute(0);
+        Road->HoldEnemyTurns(true);
+        Road->Tick(1.0f / 30.0f);
+        TestTrue(TEXT("An ordinary fight is in combat"), Road->InCombat());
+        TestFalse(TEXT("An ordinary fight has no set piece"), Road->SetPiece() && Road->SetPiece()->IsBound());
+        TestFalse(TEXT("An ordinary fight owes no set piece"), Road->SetPieceBusy());
     }
 
     // A missing set-piece mesh: today's ending (no set piece, no wait, no camera move), and still the same rules and bytes.

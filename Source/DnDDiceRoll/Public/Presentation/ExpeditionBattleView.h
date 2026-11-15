@@ -403,6 +403,8 @@ public:
     int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
     FVector WaystoneLightLocation() const;
     bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
+    /** Test-only (#250): the colour the floating shard (the artifact) was last drawn with; transparent when the board has none. */
+    FLinearColor ArtifactShownColour() const;
     /**
      * The finale's set piece (#250; WaystoneSetPiece.h): bound on a finale board with the Vault kit and its meshes, or on the primitive look; Unbound
      * otherwise, and the ending is then today's. Busy while it plays and while a won finale waits for playback to let it start.
@@ -683,6 +685,8 @@ private:
     /** Where the apse Waystone stands in scenery-local space (a Vault-kit board), and the light's gain there. */
     FVector ApseLocal = FVector::ZeroVector;
     float WaystoneGain = 1.0f;
+    /** The floating shard's own colour as built; the set piece's flare scales this, never the colour last drawn. */
+    FLinearColor WaystoneShardColour = FLinearColor::White;
     /** The world mesh of the last themed build. */
     /** The world mesh as placed (loose or instanced), for WorldMeshScale. Its component is owned by Scenery or a group. */
     FExpeditionProp WorldProp;

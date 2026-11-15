@@ -32,6 +32,13 @@ void AExpeditionBattleView::OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler)
     if (SetPieceComponent) { SetPieceComponent->OnCue = MoveTemp(Handler); }
 }
 
+FLinearColor AExpeditionBattleView::ArtifactShownColour() const
+{
+    if (WaystoneSlots.Num() != 2) { return FLinearColor::Transparent; }
+    const FExpeditionSlot& Shard = WaystoneSlots[1];
+    return Shard.Instance.IsValid() ? Shard.Colour : Shard.Loose.Shown;
+}
+
 bool AExpeditionBattleView::HoldsSetPiece() const { return SetPieceComponent && SetPieceComponent->IsHeld(); }
 
 void AExpeditionBattleView::BuildSetPiece(const FVector& Pedestal, bool bApse, const FCombatEncounter& Encounter)

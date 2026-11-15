@@ -1579,7 +1579,8 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
         if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
+        WaystoneShardColour = FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f));
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), WaystoneShardColour, FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
         // The finale's set piece (#250) around this pedestal: the seal, its flight plan and the shot (ExpeditionBattleViewSetPiece.cpp).
         BuildSetPiece(Pedestal, bApse, Encounter);
@@ -1905,8 +1906,9 @@ void AExpeditionBattleView::UpdateEffects()
         const float Rise = Between(10.0f * FMath::Sin(Clock * 1.8f), 60.0f + 20.0f * FMath::Sin(Clock * 1.5f));
         const float Spin = Clock * 40.0f + (bSetPiece ? SetPieceComponent->ExtraSpin() : 0.0f);
         const FVector Base = WaystoneSlots[0].Location;
+        // The flare scales the shard's own colour, never the colour last drawn (SetSlot stores what it draws), so it cannot compound.
         SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Spin, 45), WaystoneSlots[1].Scale,
-            Flare == 1.0f ? WaystoneSlots[1].Colour : WaystoneSlots[1].Colour * FMath::Sqrt(Flare));
+            Flare == 1.0f ? WaystoneShardColour : WaystoneShardColour * FMath::Sqrt(Flare));
         WaystoneLight->SetIntensity(Between(200.0f, 320.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)) * Flare);
     }
 }
