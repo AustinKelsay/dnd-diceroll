@@ -75,8 +75,6 @@ Everything below is on `staging`. Items marked *(next release)* are not yet on `
 - **Follow-ups, not blocking:**
   - [#228](https://github.com/AustinKelsay/dnd-diceroll/issues/228): no reward card is clearly best;
   - [#230](https://github.com/AustinKelsay/dnd-diceroll/issues/230): board clicks stop committing after the seat's only keyboard disappears;
-  - outcome banners (VICTORY, DEFEAT) are drawn only in combat, so the end of a fight goes straight to the Reward screen or the end panel;
-  - the Reward claim line still suggests the camp after it has been used;
   - the first pointer click after start-up is ignored (#171 tracks the physical-mouse check).
 - **Stability.** See the [stability records](stability/README.md).
   - Mac [#32](https://github.com/AustinKelsay/dnd-diceroll/issues/32) (a scene-culling assertion after Resume) is unresolved.
