@@ -266,6 +266,7 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitIds.Reset();
     DetailRects.Reset();
     Drawn = FProgressionDrawn();
+    BannerShown.Reset();
     Progression = FProgressionFacts();
     bLegendRequested = false;
     bDiceRequested = false;
@@ -324,7 +325,8 @@ void AExpeditionHUD::DrawHUD()
         }
         else { DrawDice(); }
     }
-    if (View->InCombat()) { DrawBanner(); }
+    // The result banner outlives the fight (#251): the playback is still presenting, which keeps the reward or ending screen back for its life.
+    if (View->InCombat() || (View->IsPresenting() && View->Playback().Banner().bResult)) { DrawBanner(); }
     DrawTargetChips(); // All foreground panel bounds are known now, including the hover forecast.
     DrawPathCost(); // Over every panel and chip: the number is the point of the path preview.
     if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
@@ -1260,6 +1262,7 @@ void AExpeditionHUD::DrawBanner()
 {
     const FTurnBanner& Banner = View->Playback().Banner();
     if (Banner.Title.IsEmpty() || Banner.Age > Banner.Life) { return; }
+    BannerShown = Banner.Title;
     const float In = FMath::Clamp(Banner.Age / 0.2f, 0.0f, 1.0f);
     const float Out = FMath::Clamp((Banner.Life - Banner.Age) / 0.4f, 0.0f, 1.0f);
     const float Alpha = FMath::Min(In, Out);

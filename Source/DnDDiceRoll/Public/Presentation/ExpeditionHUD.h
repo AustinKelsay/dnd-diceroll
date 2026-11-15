@@ -133,7 +133,10 @@ public:
         TArray<FString> DetailLines;
     };
     const FProgressionDrawn& ProgressionDrawn() const { return Drawn; }
+    /** The title of the turn or result banner the last draw showed (#251), or empty. */
+    const FString& BannerDrawn() const { return BannerShown; }
 private:
+    FString BannerShown;
     int32 DetailUnitId = INDEX_NONE;
     TArray<int32> DetailUnitIds;
     /** The party slot under the pointer this frame, or INDEX_NONE (set by DrawParty): on the route, reward and camp screens a hovered card's details replace the selected hero's (#200). */
