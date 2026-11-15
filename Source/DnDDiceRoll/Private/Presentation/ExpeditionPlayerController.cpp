@@ -730,7 +730,8 @@ void AExpeditionPlayerController::Click()
         if (bCameraStill && HoverCell(Under) && Under == Cell)
         {
             bPressArmed = true; bPressVoided = false;
-            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressPose = Pose; PressContextStamp = PressContext();
+            PressCell = Cell; PressPointer = FVector2D(MouseX, MouseY); PressContextStamp = PressContext();
+            PressYaw = BattleView->RenderedYaw(); PressDistance = BattleView->RenderedDistance(); PressPans = BattleView->PlayerPans();
         }
         return;
     }
@@ -757,11 +758,12 @@ uint32 AExpeditionPlayerController::PressContext() const
 bool AExpeditionPlayerController::PressHolds() const
 {
     float MouseX = 0, MouseY = 0;
-    FTransform Pose;
-    if (!bPressArmed || bPressVoided || !PointerPosition(MouseX, MouseY) || !ProjectionPose(Pose) || PressContext() != PressContextStamp) { return false; }
+    if (!bPressArmed || bPressVoided || !IsValid(BattleView) || !PointerPosition(MouseX, MouseY) || PressContext() != PressContextStamp) { return false; }
+    // Only the camera the player moves spends the press: an orbit or a zoom (still easing or not) and a pan. The focus easing on its own toward the acting unit
+    // (after a move or a turn change) does not, so a slow deliberate click still commits (#232); the release still acts only on the cell previewed under the pointer.
     return FVector2D::DistSquared(FVector2D(MouseX, MouseY), PressPointer) <= ClickSlop * ClickSlop &&
-        FVector::Dist(Pose.GetLocation(), PressPose.GetLocation()) <= PoseSlopCm &&
-        FMath::RadiansToDegrees(Pose.GetRotation().AngularDistance(PressPose.GetRotation())) <= PoseSlopDegrees;
+        FMath::Abs(FMath::FindDeltaAngleDegrees(BattleView->RenderedYaw(), PressYaw)) <= PoseSlopDegrees &&
+        FMath::Abs(BattleView->RenderedDistance() - PressDistance) <= PoseSlopCm && BattleView->PlayerPans() == PressPans;
 }
 
 void AExpeditionPlayerController::FlushPressedKeys()

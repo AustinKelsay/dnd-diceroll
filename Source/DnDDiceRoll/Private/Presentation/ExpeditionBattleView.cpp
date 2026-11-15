@@ -2198,6 +2198,7 @@ void AExpeditionBattleView::Pan(float Right, float Away)
     const FVector Base = BaseFocus();
     FVector2D Offset = PanOffset + Step;
     LimitPan(FVector2D(Base), Offset);
+    if (!Offset.Equals(PanOffset, 0.01)) { ++PlayerPanCount; }
     PanOffset = Offset;
 }
 
