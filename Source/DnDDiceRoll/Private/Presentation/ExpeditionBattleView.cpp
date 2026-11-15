@@ -782,8 +782,9 @@ void AExpeditionBattleView::RebuildBoard()
         const FEncounterIdentity Identity = FExpeditionRun::Encounter(Progress(), Route);
         ObstacleKind = Identity.ObstacleKind;
         Seed = Route.EncounterSeed;
-        // The theme stays chosen by stage: the finale is the Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
-        BoardTheme = Identity.Stage == EEncounterStage::Finale ? EBoardTheme::Vault : Route.bDangerous ? EBoardTheme::Ruins : EBoardTheme::Meadow;
+        // The theme is the route's world, which the rules own (FExpeditionRun::WorldOf, shared with the journey query): the finale is the
+        // Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
+        BoardTheme = Identity.World == EExpeditionWorld::Vault ? EBoardTheme::Vault : Identity.World == EExpeditionWorld::Vigil ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
     bOverview = WantsOverview();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
