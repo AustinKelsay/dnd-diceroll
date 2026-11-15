@@ -16,7 +16,8 @@
  * recipes, which show the Root of the World kit r002 once it is imported), board-vault and board-vault-pillars (the finale with the same two
  * recipes, which show the Vault kit r002 once it is imported; every finale fixture here is a catalog revision 8 run, which still draws those
  * recipes for fight 5, whereas a revision 9 run's finale is always the vault sanctum (#188)), the action dock's kit-barbarian-battle, kit-wizard-battle,
- * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, and the batch 2 cast
+ * kit-barbarian-raging, kit-wizard-all-spent, sight-blocked-battle, the hint fixtures end-turn-only-battle and downed-ally-battle, move-through-battle (#240: a
+ * revision 11 battle with a body in front of the acting hero, so the targeting shot's path crosses it), and the batch 2 cast
  * fixtures cast2-default-seed-battle, cast2-board-vigil-pillars, cast2-board-root-r002 and cast2-board-vault with a party of barbarian, monk, paladin and ranger, the same four with `cast3-` for a sorcerer, warlock, druid and wizard and with `cast4-` for a bard, artificer, fighter and wizard, and
  * board-vault-raiders, the dangerous Vault finale against rigged raiders, r9-pressure-guarded|dangerous, r9-finale-guarded|dangerous (the vault sanctum), r9-colonnade, r9-causeway and r9-cairn (revision 9 encounters with the skirmisher, brute and warden on each new layout, #188), and the batch 4 palette sweep pal-NN-vigil|root|vault (every catalog build on the three
  * cast boards, four distinct classes to a party; palette-parties.json lists them) with dup-four-fighters-*, dup-four-paladins-*, dup-four-rogues-*, dup-two-pairs-* (the duplicate-accent parties) and acc-<class>-root (four of one build of each class)),
@@ -464,6 +465,15 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         {
             Write(TEXT("downed-ally-battle"), Downed);
             Describe(TEXT("downed-ally-battle"), Downed, DefaultSeed, 0);
+        }
+    }
+    // Move-through (#240): a revision 11 battle with a dead enemy in front of the acting hero, so the targeting shot's path runs through a body.
+    {
+        FExpeditionRun Run; FIntPoint Body, Beyond;
+        if (TestTrue(TEXT("A move-through battle with a body in front of the acting hero"), ExpeditionTestSupport::BodyInFrontBattle(Run, Body, Beyond)))
+        {
+            Write(TEXT("move-through-battle"), Run);
+            Describe(TEXT("move-through-battle"), Run, Run.Progress().Seed, 1);
         }
     }
     // Blocked sight: a first turn where some attack or ability finds every target in range but behind an obstacle.
