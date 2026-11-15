@@ -250,6 +250,8 @@ public:
     void ChooseRoute(int32 Index);
     /** Claims the reward for RecipientId with Card (#218); every rejection is logged by name and changes nothing. */
     void ClaimReward(int32 RecipientId, ERewardCard Card = ERewardCard::Gear);
+    /** Says that RecipientId has fallen and cannot be chosen for the reward, with the refusal cue a rejected claim plays (#231). Changes nothing. */
+    void RefuseRewardRecipient(int32 RecipientId);
     /** Logs the level the last victory's survivors reached (#218); nothing outside the Reward phase. */
     void RecordLevelGain();
     void Recover(bool bTake);
