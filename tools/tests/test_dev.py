@@ -15,7 +15,7 @@ from mcp_client import MCP, decode_response
 from scaffold import new_class
 import dev as dev_module
 import struct
-from dev import FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
+from dev import AUTOMATION_DISABLE_HOME_SCREEN, FOE_LOOKS_PATTERN, Dev, build_warnings, core_count, load_poses, parse_resolution, resolution_argument, verify_capture
 
 
 class Response(io.BytesIO):
@@ -158,6 +158,12 @@ class WorkspaceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "1 or more"): Dev(self.w, host="linux", cores=0)
         dev = Dev(self.w, host="mac", cores=2)
         self.assertIn("-corelimit=2", dev.automation_command("Project.", self.root, self.root / "a.log"))
+
+    def test_automation_command_disables_the_editor_home_screen_probe(self):
+        for host in ("linux", "windows", "mac"):
+            dev = Dev(self.w, host=host)
+            command = [str(part) for part in dev.automation_command("Project.", self.root, self.root / "a.log")]
+            self.assertIn(AUTOMATION_DISABLE_HOME_SCREEN, command)
 
     def test_doctor_reports_missing_tools_and_guides_off_ultra(self):
         dev = Dev(self.w, host="linux")
