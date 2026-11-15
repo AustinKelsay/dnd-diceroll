@@ -1,0 +1,1172 @@
+{
+	"version": 1,
+	"status": "ok",
+	"fixture": "victory",
+	"poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-f8a1c39f-b8a264d53ae46b57/tools/capture/setpiece-poses.json",
+	"settleFrames": 4,
+	"primitives": false,
+	"themed": true,
+	"cellCm": 150,
+	"resolution":
+	{
+		"width": 1920,
+		"height": 1080
+	},
+	"seed": 1,
+	"boardWidth": 0,
+	"boardHeight": 0,
+	"shots": [
+		{
+			"name": "setpiece-000",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-000.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1494.8346802624778,
+					"y": -2369.2178544799444,
+					"z": 2788.1565130725826
+				},
+				"rotation":
+				{
+					"pitch": -41.703428687649705,
+					"yaw": 89.999997495521868,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-001",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-001.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1486.220949391575,
+					"y": -2306.3510171942262,
+					"z": 2735.8481713516894
+				},
+				"rotation":
+				{
+					"pitch": -40.889713464339827,
+					"yaw": 89.999997567210443,
+					"roll": -2.2993507126986692e-08
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-002",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-002.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1462.6026572902954,
+					"y": -2133.974221500112,
+					"z": 2592.4220865791913
+				},
+				"rotation":
+				{
+					"pitch": -38.658559029701976,
+					"yaw": 89.999997757373237,
+					"roll": -7.7987126773874449e-08
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-003",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-003.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1427.3141478370751,
+					"y": -1876.4229913653121,
+					"z": 2378.1266275075127
+				},
+				"rotation":
+				{
+					"pitch": -35.324951585917127,
+					"yaw": 89.999998026479744,
+					"roll": -1.4032104657969875e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-004",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-004.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1383.6897704213159,
+					"y": -1558.0328909790162,
+					"z": 2113.2101963553559
+				},
+				"rotation":
+				{
+					"pitch": -31.203877855771619,
+					"yaw": 89.999998339471375,
+					"roll": -1.888939790657647e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-005",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-005.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1335.0638937208009,
+					"y": -1203.1396253055962,
+					"z": 1817.9213124733892
+				},
+				"rotation":
+				{
+					"pitch": -26.610326384171916,
+					"yaw": 89.999998669441482,
+					"roll": -2.1117068494740685e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-006",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-006.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1284.7708065043057,
+					"y": -836.07831609795926,
+					"z": 1512.5080099512772
+				},
+				"rotation":
+				{
+					"pitch": -21.85927816724217,
+					"yaw": 89.999998996410099,
+					"roll": -2.0342844466865981e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-007",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-007.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1236.1449077599266,
+					"y": -481.18488953861811,
+					"z": 1217.2189922042062
+				},
+				"rotation":
+				{
+					"pitch": -17.265724613219849,
+					"yaw": 89.999999304130085,
+					"roll": -1.6919051464044546e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-008",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-008.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1192.5205193222353,
+					"y": -162.79470870936211,
+					"z": 952.3024941194974
+				},
+				"rotation":
+				{
+					"pitch": -13.144649841863041,
+					"yaw": 89.99999957691351,
+					"roll": -1.1756628729085558e-07
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-009",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-009.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1157.2320622231923,
+					"y": 94.75613932137594,
+					"z": 738.00735297744177
+				},
+				"rotation":
+				{
+					"pitch": -9.8110473438318877,
+					"yaw": 89.999999797396455,
+					"roll": -6.1802665830484468e-08
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-010",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-010.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1133.6137370561164,
+					"y": 267.13317634437135,
+					"z": 594.58106740728681
+				},
+				"rotation":
+				{
+					"pitch": -7.5798897855601703,
+					"yaw": 89.999999945676251,
+					"roll": -1.7535627319386147e-08
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-011",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-011.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0000089406967,
+					"y": 329.99999351934957,
+					"z": 542.27274241953194
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-012",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-012.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0000089406967,
+					"y": 329.99999351934957,
+					"z": 542.27274241953194
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-013",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-013.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0000089406967,
+					"y": 329.99999351934957,
+					"z": 542.27274241953194
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-014",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-014.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1122.6901724729414,
+					"y": 326.88528250424929,
+					"z": 545.3154369541287
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-015",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-015.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1124.0223383462978,
+					"y": 331.74908233837982,
+					"z": 541.81305678276226
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-016",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-016.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1124.68106231305,
+					"y": 331.09623461001661,
+					"z": 540.87134719449784
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-017",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-017.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1124.9750637161546,
+					"y": 329.35982864697689,
+					"z": 541.51092529441939
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-018",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-018.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0836208729247,
+					"y": 329.6220646909394,
+					"z": 542.26701725800649
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-019",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-019.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.105781204807,
+					"y": 330.22957827039772,
+					"z": 542.53562790163028
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-020",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-020.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0932099869519,
+					"y": 330.12768356046308,
+					"z": 542.44594910211254
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-021",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-021.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0708376504563,
+					"y": 329.91929704196309,
+					"z": 542.29473344220344
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-022",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-022.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0493435369044,
+					"y": 329.95772463395929,
+					"z": 542.22801465286466
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-023",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-023.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1125.0323169018918,
+					"y": 330.0277776200403,
+					"z": 542.23662778292589
+				},
+				"rotation":
+				{
+					"pitch": -6.7661748225530678,
+					"yaw": 89.999999999999986,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-024",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-024.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1122.526758858402,
+					"y": 328.01897463700357,
+					"z": 541.76591532808106
+				},
+				"rotation":
+				{
+					"pitch": -6.7365347980045271,
+					"yaw": 90.074005159582683,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-025",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-025.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1115.4455788202729,
+					"y": 322.33746714889639,
+					"z": 540.36618752715708
+				},
+				"rotation":
+				{
+					"pitch": -6.6528707130028693,
+					"yaw": 90.285315688299534,
+					"roll": 4.002646040076706e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-026",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-026.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1104.3983291480297,
+					"y": 313.5087934127107,
+					"z": 538.15793718356497
+				},
+				"rotation":
+				{
+					"pitch": -6.5234853505191381,
+					"yaw": 90.619238418429106,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-027",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-027.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1089.9946412330585,
+					"y": 301.99573197609379,
+					"z": 535.27307340318839
+				},
+				"rotation":
+				{
+					"pitch": -6.3569807169315027,
+					"yaw": 91.062003540153952,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-028",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-028.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1072.8444820282689,
+					"y": 288.27529961291361,
+					"z": 531.84038572274267
+				},
+				"rotation":
+				{
+					"pitch": -6.1619744928575528,
+					"yaw": 91.599786943333044,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-029",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-029.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1053.5578868601488,
+					"y": 272.84450136249984,
+					"z": 527.98291027723781
+				},
+				"rotation":
+				{
+					"pitch": -5.9468622448128485,
+					"yaw": 92.217949541128945,
+					"roll": 3.9972046670788645e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-030",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-030.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1032.7452457851684,
+					"y": 256.19539802724034,
+					"z": 523.82121595705939
+				},
+				"rotation":
+				{
+					"pitch": -5.7196403159278475,
+					"yaw": 92.900470638407995,
+					"roll": 3.9955855106862169e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-031",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-031.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 1011.0169143413295,
+					"y": 238.81365278619501,
+					"z": 519.47615684220887
+				},
+				"rotation":
+				{
+					"pitch": -5.4877769500465101,
+					"yaw": 93.62961506810862,
+					"roll": 3.9939993577131709e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-032",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-032.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 988.9833911849679,
+					"y": 221.18674810218386,
+					"z": 515.06959045525252
+				},
+				"rotation":
+				{
+					"pitch": -5.2581449683390256,
+					"yaw": 94.38576874484643,
+					"roll": 1.5969976506367008e-15
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-033",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-033.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 967.25527961640773,
+					"y": 203.8040988921091,
+					"z": 510.72388145276926
+				},
+				"rotation":
+				{
+					"pitch": -5.0370041101343759,
+					"yaw": 95.147450427151796,
+					"roll": -3.9911062003367793e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-034",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-034.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 946.44308773193268,
+					"y": 187.15442232309556,
+					"z": 506.56135682605117
+				},
+				"rotation":
+				{
+					"pitch": -4.8300288069435169,
+					"yaw": 95.891461308184603,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-035",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-035.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 927.15753535110184,
+					"y": 171.7260433276067,
+					"z": 502.70422304482906
+				},
+				"rotation":
+				{
+					"pitch": -4.6423817082484788,
+					"yaw": 96.593123821403182,
+					"roll": 7.9775588197515124e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-036",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-036.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 910.00915843264681,
+					"y": 158.00732513569437,
+					"z": 499.27455896449169
+				},
+				"rotation":
+				{
+					"pitch": -4.4788143707792196,
+					"yaw": 97.226631947994804,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-037",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-037.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 895.60858747108637,
+					"y": 146.4868525975221,
+					"z": 496.39445746794837
+				},
+				"rotation":
+				{
+					"pitch": -4.3438034294607073,
+					"yaw": 97.765433688917,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-038",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-038.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 884.56645547996607,
+					"y": 137.65315073860575,
+					"z": 494.18603498658143
+				},
+				"rotation":
+				{
+					"pitch": -4.2417084704597983,
+					"yaw": 98.182699229215928,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-039",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-039.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 877.49336681727664,
+					"y": 131.99468252761062,
+					"z": 492.77141606422157
+				},
+				"rotation":
+				{
+					"pitch": -4.1769552940463086,
+					"yaw": 98.451829668744836,
+					"roll": -0
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-040",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-040.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-041",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-041.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-042",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-042.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-043",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-043.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-044",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-044.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-045",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-045.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-046",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-046.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		},
+		{
+			"name": "setpiece-settled",
+			"mode": "setpiece",
+			"status": "captured",
+			"file": "setpiece-settled.png",
+			"yaw": -90,
+			"distance": 2641.99951171875,
+			"camera":
+			{
+				"location":
+				{
+					"x": 875.00000081219241,
+					"y": 129.99998799924538,
+					"z": 492.27274124221861
+				},
+				"rotation":
+				{
+					"pitch": -4.1542478843889512,
+					"yaw": 98.547042531826094,
+					"roll": 7.9723328779073778e-16
+				},
+				"fov": 40
+			}
+		}
+	]
+}
