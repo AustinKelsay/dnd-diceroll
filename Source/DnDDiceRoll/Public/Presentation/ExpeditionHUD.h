@@ -65,6 +65,10 @@ public:
     static constexpr float MinDockLabelScale = 0.62f;
     virtual void DrawHUD() override;
     bool ButtonAt(FVector2D ScreenPosition, FName& Id) const;
+    /** The last drawn rectangle of a button, in viewport pixels (a volume bar's, for a click's position along it). */
+    bool ButtonBox(FName Id, FBox2D& Box) const;
+    /** The Settings panel as last drawn (#246), in viewport pixels; empty when it is closed. */
+    FBox2D SettingsPanel() const { return SettingsRect; }
     /** Panels that should swallow clicks instead of passing them to the board. */
     bool CoversBoard(FVector2D ScreenPosition) const;
     TArray<FName> MenuButtons() const;
@@ -251,6 +255,8 @@ private:
     void DrawEnding();
     void DrawRecords();
     void DrawHelp();
+    void DrawSettings();
+    FBox2D SettingsRect = FBox2D(ForceInit);
     void DrawReturnConfirm();
     void DrawAbandonConfirm();
 };

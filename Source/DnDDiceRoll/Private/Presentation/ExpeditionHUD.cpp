@@ -199,6 +199,12 @@ bool AExpeditionHUD::Project(const FVector& World, FVector2D& Screen) const
     return true;
 }
 
+bool AExpeditionHUD::ButtonBox(FName Id, FBox2D& Box) const
+{
+    for (int32 Index = Buttons.Num() - 1; Index >= 0; --Index) { if (Buttons[Index].Id == Id) { Box = Buttons[Index].Box; return true; } }
+    return false;
+}
+
 bool AExpeditionHUD::ButtonAt(FVector2D ScreenPosition, FName& Id) const
 {
     for (int32 Index = Buttons.Num() - 1; Index >= 0; --Index)
@@ -337,6 +343,8 @@ void AExpeditionHUD::DrawHUD()
     if (Player->ShowingMenu()) { Buttons.Reset(); DrawMenuPanel(); }
     if (View->ShowingRecords()) { DrawRecords(); }
     if (Player->ShowingHelp()) { DrawHelp(); }
+    SettingsRect = FBox2D(ForceInit);
+    if (Player->ShowingSettings()) { DrawSettings(); }
     if (Player->ConfirmingReturn()) { DrawReturnConfirm(); }
     if (Player->ConfirmingAbandon()) { DrawAbandonConfirm(); }
     Player->UpdateMenuFocus();
@@ -611,6 +619,7 @@ void AExpeditionHUD::DrawMenuPanel()
     Rows.Add({TEXT("Records"), TEXT("H  Records"), true});
     Rows.Add({TEXT("Speed"), TEXT("T  Speed ") + Speed, true});
     Rows.Add({TEXT("Help"), TEXT("?  Help"), true});
+    Rows.Add({TEXT("Settings"), TEXT("Settings: volume"), true});
     Rows.Add({TEXT("Menu"), bWaiting ? TEXT("Bksp  Return: waiting") : TEXT("Bksp  Return to start"), View->CanReturnToMenu()});
     const float Height = Pad * 2 + Rows.Num() * RowHeight + (Rows.Num() - 1) * RowGap;
     const float X = W - 8 - PanelWidth, Y = Top + StripHeight + 6;
@@ -1359,9 +1368,9 @@ void AExpeditionHUD::DrawTitle()
     }
     if (Build->SneakDie) { Text(TEXT("Passive: Sneak Attack with adjacent ally"), InnerX, Row, Safe, 0.75f); Row += 20; }
     if (Build->CriticalThreshold == 19) { Text(TEXT("Passive: critical hits on 19-20"), InnerX, Row, Safe, 0.75f); }
-    // Actions sit at the foot of the drawer.
+    // Actions sit at the foot of the drawer: the two big choices, the small row, then Settings (#246) last in Tab order.
     const float Bottom = DrawerY + DrawerHeight - 12;
-    const float SmallY = Bottom - 40, BigY = SmallY - 6 - 48;
+    const float SettingsY = Bottom - 34, SmallY = SettingsY - 6 - 40, BigY = SmallY - 6 - 48;
     const float Half = (InnerWidth - 6) * 0.5f, Third = (InnerWidth - 12) / 3.0f;
     const TArray<FString> Hint = Wrap(TEXT("1-4 slot / Up-Down class / Left-Right subclass / Tab or Shift-Tab focus / Enter activate"), InnerWidth, 0.6f);
     const float ActionsTop = BigY - 8 - Hint.Num() * 15.0f - 10;
@@ -1375,6 +1384,7 @@ void AExpeditionHUD::DrawTitle()
     Button(TEXT("Records"), TEXT("Records"), TEXT("H"), InnerX + Small + 6, SmallY, Small, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
     Button(TEXT("Help"), TEXT("Help"), TEXT("?"), InnerX + 2 * (Small + 6), SmallY, Small, 40, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
     if (bAbandon) { Button(TEXT("Abandon"), TEXT("Abandon run"), TEXT(""), InnerX + 3 * (Small + 6), SmallY, Small, 40, true, false, Danger, 0.8f); }
+    Button(TEXT("Settings"), TEXT("Settings: volume"), FString(), InnerX, SettingsY, InnerWidth, 34, true, false, FLinearColor(0.95f, 0.78f, 0.4f), 0.8f);
     float HintY = BigY - 8 - Hint.Num() * 15.0f;
     for (const auto& Line : Hint) { Text(Line, InnerX, HintY, Muted, 0.6f); HintY += 15; }
     if (!View->Messages().IsEmpty())
@@ -1613,6 +1623,45 @@ void AExpeditionHUD::DrawHelp()
     for (const auto& Line : Wrap(TEXT("Hover a hero card for full status. The combat log fades after a few seconds; hover the bottom-left corner to bring it back."), Width - 360, 0.62f)) { Text(Line, X + 32, NoteY, Muted, 0.62f); NoteY += 15; }
     Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
     Button(TEXT("ReplayTips"), TEXT("Replay tips"), FString(), X + Width - 154 - 154, Y + Height - 60, 140, 44, true, false, Gold);
+    Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
+}
+
+void AExpeditionHUD::DrawSettings()
+{
+    // A modal panel (#246): four sliders, each a focusable bar (a click sets it where it lands) with -/+ steps beside it, then Close.
+    // The bars are the Tab stops; the steps are pointer-only, so keyboard focus walks Master, Effects, Ambience, Music, Close.
+    const FExpeditionAudioSettings& Volumes = View->AudioSettings();
+    const float Width = FMath::Min(620.0f, W - 32.0f), Height = 400;
+    const float X = W * 0.5f - Width * 0.5f, Y = FMath::Max(16.0f, H * 0.5f - Height * 0.5f);
+    Rect(FLinearColor(0, 0, 0, 0.5f), 0, 0, W, H);
+    Panel(X, Y, Width, Height, Gold, 0.98f);
+    SettingsRect = FBox2D(FVector2D(X, Y) * S, FVector2D(X + Width, Y + Height) * S);
+    Text(TEXT("SETTINGS"), X + 24, Y + 18, Gold, 1.2f);
+    Text(TEXT("Volume. Saved for this computer, never in a run's save."), X + 24, Y + 52, Muted, 0.72f, EAlign::Left, Width - 48);
+    const float LabelWidth = 110, StepWidth = 40, ValueWidth = 56, Gap = 8;
+    const float BarX = X + 24 + LabelWidth, BarWidth = Width - 48 - LabelWidth - 2 * StepWidth - ValueWidth - 3 * Gap;
+    float RowY = Y + 88;
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index)
+    {
+        const EExpeditionBus Bus = static_cast<EExpeditionBus>(Index);
+        const FString Name = FExpeditionAudioSettings::BusName(Bus);
+        const float Value = Volumes.Get(Bus);
+        Text(Name, X + 24, RowY + 9, Parchment, 0.85f);
+        bFocusless = true;
+        Button(FName(*(TEXT("VolDown:") + Name)), TEXT("-"), FString(), BarX, RowY, StepWidth, 36, Value > 0.0f, false, Sky, 0.9f);
+        bFocusless = false;
+        Button(FName(*(TEXT("Vol:") + Name)), FString(), FString(), BarX + StepWidth + Gap, RowY, BarWidth, 36, true, false, Sky);
+        // The fill shows the value as length, the number says it too (colour is never the only cue).
+        Rect(WithAlpha(Gold, 0.55f), BarX + StepWidth + Gap + 4, RowY + 6, (BarWidth - 8) * Value, 24);
+        bFocusless = true;
+        Button(FName(*(TEXT("VolUp:") + Name)), TEXT("+"), FString(), BarX + StepWidth + 2 * Gap + BarWidth, RowY, StepWidth, 36, Value < 1.0f, false, Sky, 0.9f);
+        bFocusless = false;
+        Text(FExpeditionAudioSettings::Percent(Value), X + Width - 24, RowY + 9, Parchment, 0.85f, EAlign::Right);
+        RowY += 52;
+    }
+    for (const auto& Line : Wrap(TEXT("Up / Down or Tab: choose  ·  Left / Right: adjust by 5%  ·  click a bar to set it  ·  Esc: close"), Width - 48, 0.62f))
+    { Text(Line, X + 24, RowY + 2, Muted, 0.62f); RowY += 16; }
+    Button(TEXT("Close"), TEXT("Close"), TEXT("Esc"), X + Width - 154, Y + Height - 60, 130, 44, true, false, Sky);
     Blockers.Add(FBox2D(FVector2D(0, 0), FVector2D(W, H) * S));
 }
 

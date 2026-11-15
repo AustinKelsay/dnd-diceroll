@@ -514,6 +514,10 @@ These are raw engine files, not `/Game/DnDDiceRoll` packages, so they have no `a
 
 - **Import (2026-11-15):** one headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2` run of `Content/Python/import_expedition_music.py`, exit 0, `MUSIC_IMPORT_COMPLETE 4 tracks, 2 stings`, no warnings. A SHA-256 snapshot of `Content/` and `Config/` before and after: **added exactly** the 6 `SW_Mus_*`, `SC_Music` and `DA_ExpeditionMusic`; nothing changed or removed. A rerun: exit 0, all 8 `MUSIC_ASSET kept`, no file changed. A wave whose WAV later changes is reported (`MUSIC_STALE`) and replaced only with `DND_MUSIC_REIMPORT=1`.
 
+**Mix buses (issue #246).** `/Game/DnDDiceRoll/Audio/SC_Master` (new, a plain SoundClass) is the parent of `SC_Effects` (#242), `SC_Ambience` (#244) and `SC_Music` (#245): `Content/Python/setup_expedition_mix.py` sets each child's parent and the master's child list, and changes nothing else (the cue, bed and music waves keep their classes). The volumes are a transient sound mix built at runtime, so no mix asset is stored. Original work by this project's agents; no third-party content.
+
+MIX_IMPORT_PLACEHOLDER
+
 ## Board overlay material (issue #142)
 
 `/Game/DnDDiceRoll/Theme/Materials/M_BoardOverlay` is a translucent, unlit, two-sided material (emissive `Color`, opacity `Opacity`) used by the contextual grid and footprint rings. Original work by this project's agents, created by `Content/Python/create_board_overlay_material.py`; no third-party content. Created on 2026-11-09 by one headless run (`UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2`) that exited 0 with no warnings. Hashes of `Config/` and `Content/` taken before and after showed that `M_BoardOverlay.uasset` was the only added Unreal asset; the hash diff showed nothing else changed apart from three ignored `Content/Python/unreal_starter/__pycache__/*.pyc` files, which were removed. A rerun leaves an existing asset alone.

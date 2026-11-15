@@ -9,6 +9,7 @@
 #include "Presentation/AudioCrossfade.h"
 #include "Presentation/ExpeditionAmbience.h"
 #include "Presentation/ExpeditionCueSounds.h"
+#include "Presentation/ExpeditionMix.h"
 #include "Presentation/ExpeditionMusic.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
@@ -19,6 +20,8 @@
 
 class UAnimSequence;
 class UAudioComponent;
+class USoundClass;
+class USoundMix;
 class UCameraComponent;
 class UExponentialHeightFogComponent;
 class UInstancedStaticMeshComponent;
@@ -319,6 +322,22 @@ public:
     const FExpeditionMusicDirector& MusicDirector() const { return Music; }
     /** Music voices actually playing, the sting's included (zero without an audio device or a recording). */
     int32 MusicVoiceCount() const { return MusicVoices.Num() + (StingVoice ? 1 : 0); }
+    /**
+     * The volume settings (#246), read from the user settings file at BeginPlay (never from or into the run checkpoint). SetVolume clamps
+     * and snaps a slider, applies the mix and writes the file; it returns whether the slider changed.
+     */
+    const FExpeditionAudioSettings& AudioSettings() const { return VolumeSettings; }
+    bool SetVolume(EExpeditionBus Bus, float Value);
+    bool NudgeVolume(EExpeditionBus Bus, int32 Steps) { return SetVolume(Bus, VolumeSettings.Get(Bus) + Steps * FExpeditionAudioSettings::Step); }
+    /** Selects the settings file (tests and isolated runs call it before BeginPlay): loads it and applies the mix. */
+    void ConfigureSettings(const FString& Path);
+    const FString& SettingsFile() const { return SettingsPath; }
+    /** What the mix applied: the amplitude a bus's sounds play at (Master times the bus) and each class's own adjuster (Master on SC_Master). */
+    float BusVolume(EExpeditionBus Bus) const { return ExpeditionMix::BusGain(VolumeSettings, Bus); }
+    float ClassVolume(EExpeditionBus Bus) const { return AppliedClassVolumes[static_cast<int32>(Bus)]; }
+    /** The duck combat cues put on the beds and the music (1 at rest). */
+    float AmbienceDuckGain() const { return AmbienceDucker.Gain(); }
+    float MusicDuckGain() const { return MusicDucker.Gain(); }
 
     // Camera and board geometry.
     void Orbit(float Degrees);
@@ -720,6 +739,17 @@ private:
     UPROPERTY() TObjectPtr<UAudioComponent> StingVoice;
     FExpeditionMusicMoment MusicMoment() const;
     void UpdateMusic(float DeltaSeconds);
+    /** The mix (#246): the settings and their file, one sound mix holding the four class adjusters, the classes, and the ducks. */
+    FExpeditionAudioSettings VolumeSettings;
+    FString SettingsPath;
+    bool bSettingsConfigured = false;
+    float AppliedClassVolumes[ExpeditionBusCount] = {1.0f, 1.0f, 1.0f, 1.0f};
+    UPROPERTY() TObjectPtr<USoundMix> VolumeMix;
+    UPROPERTY() TObjectPtr<USoundClass> MasterClass;
+    UPROPERTY() TObjectPtr<USoundClass> EffectsClass;
+    FAudioDucker AmbienceDucker{ExpeditionMix::AmbienceDuck};
+    FAudioDucker MusicDucker{ExpeditionMix::MusicDuck};
+    void ApplyMix();
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);
