@@ -1,0 +1,493 @@
+{
+  "commit": "56e0e0def3e85dec34442c9ac4ca282e2a2fe455",
+  "dirty": true,
+  "engine": "5.8.4",
+  "changelist": 58902052,
+  "poses": "/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-4d123e29-f6d0ca036554344d/.local/m1/move-through-poses.json",
+  "settle_args": [
+    "-UseFixedTimeStep",
+    "-FPS=30"
+  ],
+  "runs": [
+    {
+      "fixture": "move-through-battle",
+      "seed": 20261032,
+      "board": [
+        17,
+        12
+      ],
+      "fixture_info": {
+        "seed": 20261032,
+        "offer": 1,
+        "phase": "combat",
+        "boardWidth": 17,
+        "boardHeight": 12
+      },
+      "resolution": "1920x1080",
+      "primitives": false,
+      "static_figures": false,
+      "themed": true,
+      "no_palettes": false,
+      "no_accents": false,
+      "directory": "move-through-battle/1920x1080",
+      "shots": [
+        {
+          "name": "targeting-yaw0-default",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1299,
+                "y0": 306,
+                "x1": 1347,
+                "y1": 414
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1210,
+                "y0": 306,
+                "x1": 1255,
+                "y1": 414
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1120,
+                "y0": 306,
+                "x1": 1162,
+                "y1": 414
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1031,
+                "y0": 306,
+                "x1": 1069,
+                "y1": 414
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1308,
+                "y0": 361,
+                "x1": 1358,
+                "y1": 472
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1144,
+                "y0": 618,
+                "x1": 1193,
+                "y1": 736
+              }
+            },
+            {
+              "id": 22,
+              "name": "Archer",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 938,
+                "y0": 618,
+                "x1": 979,
+                "y1": 736
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yaw0-default.png",
+          "yaw": 0,
+          "distance": 2658.61376953125,
+          "camera": {
+            "location": {
+              "x": 4069.108549127741,
+              "y": 1198.4153791303502,
+              "z": 2779.9157166135537
+            },
+            "rotation": {
+              "pitch": -41.24559176856105,
+              "yaw": 180,
+              "roll": 4.6963286253549134e-31
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yaw0-near",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1118,
+                "y0": 247,
+                "x1": 1207,
+                "y1": 489
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 925,
+                "y0": 247,
+                "x1": 1003,
+                "y1": 489
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 721,
+                "y0": 247,
+                "x1": 810,
+                "y1": 489
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 517,
+                "y0": 247,
+                "x1": 620,
+                "y1": 489
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1128,
+                "y0": 350,
+                "x1": 1224,
+                "y1": 604
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 610,
+                "y0": 946,
+                "x1": 747,
+                "y1": 1080
+              }
+            },
+            {
+              "id": 22,
+              "name": "Archer",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 11,
+                "y0": 946,
+                "x1": 209,
+                "y1": 1080
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yaw0-near.png",
+          "yaw": 0,
+          "distance": 1300,
+          "camera": {
+            "location": {
+              "x": 2321.1191827925154,
+              "y": 753.0453591559773,
+              "z": 1179.0707118484877
+            },
+            "rotation": {
+              "pitch": -34.99999851397421,
+              "yaw": 180,
+              "roll": 0
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "targeting-yawm90-default",
+          "mode": "targeting",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1511,
+                "y0": 393,
+                "x1": 1569,
+                "y1": 505
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1496,
+                "y0": 336,
+                "x1": 1553,
+                "y1": 446
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1483,
+                "y0": 282,
+                "x1": 1537,
+                "y1": 389
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1470,
+                "y0": 230,
+                "x1": 1523,
+                "y1": 336
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1418,
+                "y0": 393,
+                "x1": 1473,
+                "y1": 505
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1042,
+                "y0": 282,
+                "x1": 1080,
+                "y1": 389
+              }
+            },
+            {
+              "id": 22,
+              "name": "Archer",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1038,
+                "y0": 181,
+                "x1": 1074,
+                "y1": 285
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "targeting-yawm90-default.png",
+          "yaw": -90,
+          "distance": 2658.61376953125,
+          "camera": {
+            "location": {
+              "x": 1517.8670129106915,
+              "y": -2636.621346547029,
+              "z": 2779.9157166135537
+            },
+            "rotation": {
+              "pitch": -41.245591768560985,
+              "yaw": 89.99999749552201,
+              "roll": -4.2300767694315524e-15
+            },
+            "fov": 40
+          }
+        },
+        {
+          "name": "battle-yaw0-default",
+          "mode": "battle",
+          "units": [
+            {
+              "id": 1,
+              "name": "Arden",
+              "role": "Fighter",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1299,
+                "y0": 306,
+                "x1": 1347,
+                "y1": 414
+              }
+            },
+            {
+              "id": 2,
+              "name": "Nix",
+              "role": "Rogue",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1210,
+                "y0": 306,
+                "x1": 1255,
+                "y1": 414
+              }
+            },
+            {
+              "id": 3,
+              "name": "Sera",
+              "role": "Cleric",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1120,
+                "y0": 306,
+                "x1": 1162,
+                "y1": 414
+              }
+            },
+            {
+              "id": 4,
+              "name": "Ivo",
+              "role": "Wizard",
+              "side": "party",
+              "rigged": true,
+              "box": {
+                "x0": 1031,
+                "y0": 306,
+                "x1": 1069,
+                "y1": 414
+              }
+            },
+            {
+              "id": 20,
+              "name": "Raider 1",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1308,
+                "y0": 361,
+                "x1": 1358,
+                "y1": 472
+              }
+            },
+            {
+              "id": 21,
+              "name": "Raider 2",
+              "role": "Raider",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 1144,
+                "y0": 618,
+                "x1": 1193,
+                "y1": 736
+              }
+            },
+            {
+              "id": 22,
+              "name": "Archer",
+              "role": "Archer",
+              "side": "enemy",
+              "rigged": true,
+              "box": {
+                "x0": 938,
+                "y0": 618,
+                "x1": 979,
+                "y1": 736
+              }
+            }
+          ],
+          "status": "captured",
+          "file": "battle-yaw0-default.png",
+          "yaw": 0,
+          "distance": 2658.61376953125,
+          "camera": {
+            "location": {
+              "x": 4069.108549127741,
+              "y": 1198.4153791303502,
+              "z": 2779.9157166135537
+            },
+            "rotation": {
+              "pitch": -41.24559176856105,
+              "yaw": 180,
+              "roll": 4.6963286253549134e-31
+            },
+            "fov": 40
+          }
+        }
+      ]
+    }
+  ]
+}
