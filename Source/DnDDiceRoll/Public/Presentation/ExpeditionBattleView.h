@@ -313,6 +313,8 @@ public:
      * unit when the turn changes.
      */
     void Pan(float Right, float Away);
+    /** Counts the pans that moved the player's pan offset, so a click held while the player pans is spent (#232); the focus easing on its own never counts. */
+    uint32 PlayerPans() const { return PlayerPanCount; }
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
     /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
@@ -589,6 +591,7 @@ private:
     /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
     FVector FocusTarget = FVector::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;
+    uint32 PlayerPanCount = 0;
     int32 LastFocusId = INDEX_NONE;
     /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
     TOptional<bool> StarterSunShadows;

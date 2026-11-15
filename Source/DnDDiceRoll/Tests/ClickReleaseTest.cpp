@@ -545,4 +545,64 @@ bool FLeftReleaseHudBoundaryTest::RunTest(const FString& Parameters)
     if (TestTrue(TEXT("A cell is left to walk to"), FreeMove(*Game, Last))) { TestTrue(TEXT("A plain press and release on the board commits"), PlainClick(*Game, Aim, Last)); }
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftClickHeldCommitsTest, "Project.Expedition.Presentation.LeftClickHeldStillCommits",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLeftClickHeldCommitsTest::RunTest(const FString& Parameters)
+{
+    using namespace ClickReleaseTest;
+    // #232: a deliberate slow click (the button held 0.5, 1 or 2 s with the pointer and the player's camera still) on a legal move cell commits on release, with the camera
+    // settled and while its focus is still easing on its own: right after choosing a hero, right after a move and right after the turn passes to another hero.
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("A fight checkpoint exists"), Fight(Data, -1, false))) { return false; }
+    enum class EWhen : uint8 { Settled, AfterSelect, AfterMove, AfterTurn, Count };
+    const TCHAR* WhenNames[] = {TEXT("the camera settled"), TEXT("right after choosing a hero"), TEXT("right after a move"), TEXT("right after the turn passed")};
+    for (int32 When = 0; When < static_cast<int32>(EWhen::Count); ++When)
+    {
+        for (const float Seconds : {0.5f, 1.0f, 2.0f})
+        {
+            const FString Where = FString::Printf(TEXT("%s, held %.1f s"), WhenNames[When], Seconds);
+            TUniquePtr<FHarness> Game = Resumed(*this, Data);
+            if (!TestTrue(Where + TEXT(": the party holds the turn"), Game.IsValid())) { continue; }
+            switch (static_cast<EWhen>(When))
+            {
+            case EWhen::Settled: Frames(*Game, 300); break;
+            case EWhen::AfterSelect: Tap(*Game, EKeys::Two); Tap(*Game, EKeys::One); break;
+            case EWhen::AfterMove:
+            {
+                FIntPoint First;
+                if (!TestTrue(Where + TEXT(": a first move"), FreeMove(*Game, First) && PlainClick(*Game, Aim, First))) { continue; }
+                break;
+            }
+            case EWhen::AfterTurn:
+            {
+                const int32 Was = Game->View->Rules().ActiveId();
+                Game->View->Execute({ECombatCommandType::EndTurn, Game->Player->Actor()});
+                Game->PartyTurn();
+                if (!TestTrue(Where + TEXT(": another hero holds the turn"), Game->View->InCombat() && Game->View->Rules().ActiveId() != Was && Game->Player->ShowsTargeting())) { continue; }
+                break;
+            }
+            default: break;
+            }
+            FIntPoint Cell;
+            if (!TestTrue(Where + TEXT(": the hero has a cell to walk to"), FreeMove(*Game, Cell))) { continue; }
+            Point(*Game, Aim, Cell);
+            Frames(*Game, 3);
+            const FStamp Was = Stamp(*Game);
+            const FTransform AtPress = Game->View->CameraTransform();
+            Down(*Game, EKeys::LeftMouseButton);
+            Frames(*Game, FMath::RoundToInt(Seconds * 30.0f));
+            const FTransform AtRelease = Game->View->CameraTransform();
+            Up(*Game, EKeys::LeftMouseButton);
+            Frames(*Game, 3);
+            Game->Settle();
+            const bool bActed = !Same(Was, Stamp(*Game));
+            AddInfo(FString::Printf(TEXT("%s: %s; the camera moved %.2f cm and %.3f degrees under the press"), *Where, bActed ? TEXT("committed") : TEXT("NOT committed"),
+                FVector::Dist(AtPress.GetLocation(), AtRelease.GetLocation()), FMath::RadiansToDegrees(AtPress.GetRotation().AngularDistance(AtRelease.GetRotation()))));
+            TestTrue(Where + TEXT(": the release commits the move"), bActed);
+            // The case this guards: the focus still easing on its own past the old 0.5 cm pose slop while the button was down.
+            if (static_cast<EWhen>(When) == EWhen::AfterMove) { TestTrue(Where + TEXT(": the camera eased under the press"), FVector::Dist(AtPress.GetLocation(), AtRelease.GetLocation()) > 0.5); }
+        }
+    }
+    return !HasAnyErrors();
+}
 #endif

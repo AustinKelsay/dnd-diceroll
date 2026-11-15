@@ -193,14 +193,17 @@ private:
     static constexpr float PoseSlopDegrees = 0.02f;
     /**
      * A board click is a press and a release that leave everything as they found it (#220): Click only arms it, from the cell the last frame previewed and the camera that
-     * preview was found with, and ClickReleased acts if the camera is still that camera, the pointer has not dragged past ClickSlop and the same cell is still previewed.
-     * A press the camera or the pointer moved under is spent (bPressVoided) and its release commits nothing.
+     * preview was found with, and ClickReleased acts if the player has not moved the camera (its yaw, its distance, a pan), the pointer has not dragged past ClickSlop and
+     * the same cell is still previewed. The focus easing on its own toward the acting unit does not count as moving it (#232). A press the player's camera or the pointer
+     * moved under is spent (bPressVoided) and its release commits nothing.
      */
     static constexpr float ClickSlop = 6.0f;
     bool bPressArmed = false, bPressVoided = false;
     FIntPoint PressCell = FIntPoint::ZeroValue;
     FVector2D PressPointer = FVector2D::ZeroVector;
-    FTransform PressPose;
+    /** The rendered yaw and distance and the view's PlayerPans at the press: the parts of the camera the player moves (#232). */
+    float PressYaw = 0.0f, PressDistance = 0.0f;
+    uint32 PressPans = 0;
     /** What the press was made in (PressContext): a change of it, however briefly, spends the press for good. */
     uint32 PressContextStamp = 0;
     /** Bumped by every mode change, so a mode that is changed and changed back mid-press still spends it. */
