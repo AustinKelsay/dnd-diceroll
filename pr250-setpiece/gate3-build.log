@@ -1,0 +1,16 @@
+Setting up bundled DotNet SDK
+Running command : dotnet Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll DnDDiceRollEditor Linux Development /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-f8a1c39f-b8a264d53ae46b57/DnDDiceRoll.uproject -WaitMutex -NoHotReloadFromIDE -MaxParallelActions=2
+Log file: /home/plebdev/.config/Epic/UnrealBuildTool/Log.txt
+Executing up to 2 actions based on MaxProcessorCount override
+Using 'git status' to determine working set for adaptive non-unity build (/home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-f8a1c39f-b8a264d53ae46b57).
+UbaStorageServer - FileMapping backing: memfd
+UbaServer - Listening on 0.0.0.0:1345
+Target is up to date
+Using Unreal Build Accelerator local executor to run 0 action(s)
+Total time in Unreal Build Accelerator local executor: 0.10 seconds
+Output binary: /home/plebdev/Applications/UnrealEngine-5.8.4/Engine/Binaries/Linux/UnrealEditor
+
+Result: Succeeded
+Total execution time: 0.94 seconds
+Trace written to file /home/plebdev/.config/Epic/UnrealBuildTool/Trace.uba with size 2.7kb
+Build passed with 0 warnings; log: /home/plebdev/.t3/worktrees/dnd-diceroll-t3/t3-f8a1c39f-b8a264d53ae46b57/.local/build/20261115T233950736397Z.log

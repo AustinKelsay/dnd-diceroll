@@ -10,3 +10,12 @@
 - **Gate on the merged head e8b2634f:**
   - `gate2-build.log`: 0 warnings;
   - `gate2-test.log`: Project. 392/392, 0 warnings.
+
+## Review fix (head 3ac9e191)
+
+- The artifact's flare colour no longer compounds. The flare now scales the shard's colour as built.
+- `themed-fix/` and `sheet-themed-fix.png` are the themed burst re-rendered at this head: the artifact keeps its cyan shard colour through the hold and settle (before the fix it washed toward white).
+- Gate at 3ac9e191:
+  - `gate3-build.log`: 0 warnings;
+  - `gate3-test.log`: Project. 392/392, 0 warnings;
+  - `fix-test.log`: the Waystone tests, 2/2.
