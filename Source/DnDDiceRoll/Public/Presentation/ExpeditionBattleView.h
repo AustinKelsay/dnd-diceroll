@@ -28,6 +28,8 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class APlayerController;
 class UDiceRollTheme;
+class UWaystoneSetPiece;
+enum class EWaystoneCue : uint8;
 enum class EDiceRollKit : uint8;
 struct FDiceRollCharacter;
 struct FDiceRollWorldKit;
@@ -297,7 +299,8 @@ public:
     /** True from the first frame of a roll until its card is gone: the left margin is the card's, so a combat hint waits (#190). */
     bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
     void ClearRollPreview() { Show.ClearTrayPreview(); }
-    bool IsPresenting() const { return Show.IsBusy(); }
+    /** Queued playback, or the finale's set piece (#250) playing or about to play: the HUD holds the ending panel and Skip settles it. */
+    bool IsPresenting() const { return Show.IsBusy() || SetPieceBusy(); }
     void SkipPresentation();
     void CycleSpeed();
     EPlaybackSpeed Speed() const { return PlaybackSpeed; }
@@ -400,6 +403,20 @@ public:
     int32 WaystoneLightCount() const { return WaystoneLight ? 1 : 0; }
     FVector WaystoneLightLocation() const;
     bool WaystoneDrawsPedestal() const { return WaystoneSlots.Num() == 2 && WaystoneSlots[0].bVisible; }
+    /**
+     * The finale's set piece (#250; WaystoneSetPiece.h): bound on a finale board with the Vault kit and its meshes, or on the primitive look; Unbound
+     * otherwise, and the ending is then today's. Busy while it plays and while a won finale waits for playback to let it start.
+     */
+    const UWaystoneSetPiece* SetPiece() const;
+    bool SetPieceBusy() const;
+    /** The set piece's sound and music hook (#243, #245): called once per cue as it plays (never on skip, Instant or Resume). Nothing is attached today. */
+    void OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler);
+    /** Capture support: holds the set piece at a time in its timeline (a time at or past its end shows the settled state); Clear lets it settle. */
+    bool PreviewSetPiece(float Seconds);
+    void ClearSetPiecePreview();
+    bool HoldsSetPiece() const;
+    /** Test-only: builds the set piece from these mesh paths instead of WaystoneSetPiece::ThemedMeshPaths (a missing one leaves it Unbound); empty restores them. Rebuilds. */
+    void OverrideSetPieceMeshes(const TArray<FSoftObjectPath>& Paths);
     /** Builds the current board with another theme (capture and automation support: a copy of the shipped theme with the kit switched off or thinned). Null is the primitive presentation. */
     void UseTheme(UDiceRollTheme* Value);
     /**
@@ -683,6 +700,15 @@ private:
     UPROPERTY() TArray<TObjectPtr<UPointLightComponent>> ShotLights;
     UPROPERTY() TObjectPtr<UPointLightComponent> CampLight;
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
+    /** The finale's set piece (#250): a component of this actor under the scenery root, rebuilt with each board (ExpeditionBattleViewSetPiece.cpp). */
+    UPROPERTY() TObjectPtr<UWaystoneSetPiece> SetPieceComponent;
+    TArray<FSoftObjectPath> SetPieceMeshOverride;
+    /** Builds the set piece around the Waystone's pedestal (scenery-local, reference cm): the apse on a Vault-kit board, the legacy corner pedestal otherwise. */
+    void BuildSetPiece(const FVector& Pedestal, bool bApse, const FCombatEncounter& Encounter);
+    /** Once per tick: starts the set piece when a won finale's playback is done (settled at once under Instant) and advances it at playback speed. */
+    void UpdateSetPiece(float DeltaSeconds);
+    /** Skip, Finish and Instant on a won finale: the set piece converges on its settled state. */
+    void SettleSetPiece();
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> Voices;
     TArray<float> VoiceEnds;
     TMap<int32, TArray<int16>> SoundCache;
