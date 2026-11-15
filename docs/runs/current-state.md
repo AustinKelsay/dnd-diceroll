@@ -75,7 +75,7 @@ Everything below is on `staging`. Items marked *(next release)* are not yet on `
 - **Follow-ups, not blocking:**
   - [#228](https://github.com/AustinKelsay/dnd-diceroll/issues/228): no reward card is clearly best;
   - [#230](https://github.com/AustinKelsay/dnd-diceroll/issues/230): board clicks stop committing after the seat's only keyboard disappears;
-  - the first pointer click after start-up is ignored (#171 tracks the physical-mouse check).
+  - the first pointer click after start-up is ignored in the rig. #252 instrumented it: the press reaches the controller (`InputKey` and `Click` both fire) but `GetMousePosition` still reads (0,0), because the window has seen no pointer motion since launch, so the click lands on nothing. Hyprland's `follow_mouse` and giving the window keyboard focus first do not change it, and the game has no other source for the pointer position, so there is no game-side fix. #171 stays open for the physical-mouse check.
 - **Stability.** See the [stability records](stability/README.md).
   - Mac [#32](https://github.com/AustinKelsay/dnd-diceroll/issues/32) (a scene-culling assertion after Resume) is unresolved.
   - Mac [#35](https://github.com/AustinKelsay/dnd-diceroll/issues/35) (a packaged startup crash) has a likely, unvalidated explanation.

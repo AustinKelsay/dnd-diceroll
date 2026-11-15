@@ -324,7 +324,12 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
     // The battle has left Combat, so the HUD holds the reward or ending screen back while this is presenting: the result banner
     // gets the frame to itself for its life, then the screen takes over without the two fighting for the same space (#251).
     if (After.Phase == EBattlePhase::Victory || After.Phase == EBattlePhase::Defeat) { Add(FTurnBanner::ResultSeconds, nullptr); }
-    Add(0.0f, [this, After]() { Sync(After); });
+    Add(0.0f, [this, After]()
+    {
+        Sync(After);
+        // The battle's floating texts (SLAIN, the last damage) belong to the fight: the reward or ending screen opens now, and none may linger on it (#252).
+        if (After.Phase != EBattlePhase::Fighting) { Floaters.Reset(); }
+    });
 }
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)

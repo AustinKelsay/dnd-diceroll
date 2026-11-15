@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
+#include "Presentation/TargetChipLayout.h"
 
 /**
  * #251: the victory and defeat banners are drawn after the fight, on a frame of their own before the reward or ending screen, and the reward's
@@ -126,6 +127,36 @@ bool FRewardLineAfterCampTest::RunTest(const FString& Parameters)
         const FString Line = Game.View->Messages().IsEmpty() ? FString() : Game.View->Messages().Last();
         TestTrue(TEXT("and the line does not offer a camp that is spent"), !Line.IsEmpty() && !Line.Contains(TEXT("camp")) && Line.Contains(TEXT("Choose the next route")));
     }
+    return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FResultHoldSkipByClickTest, "Project.Expedition.Presentation.ResultBannerHoldIsSkippedByAClick",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FResultHoldSkipByClickTest::RunTest(const FString& Parameters)
+{
+    using namespace ResultBannerTest;
+    const FExpeditionSaveData Data = FightStart(42);
+    if (!TestTrue(TEXT("A seed reaches the first fight"), Data.Current.Progress.Phase == EExpeditionPhase::Combat)) { return false; }
+    ExpeditionInputHarness::FHarness Game(*this, TEXT("ResultSkipClick"), &Data);
+    if (!ResumeInFight(*this, Game, TEXT("Skip")) || !TestTrue(TEXT("The party wins"), Game.WinBattle())) { return false; }
+    // Let the VICTORY banner come up, then click the Skip button the HUD offers, with a real press and release.
+    for (int32 Frame = 0; Frame < 600 && Game.Hud->BannerDrawn() != TEXT("VICTORY"); ++Frame) { Game.Frame(0.05f); }
+    if (!TestTrue(TEXT("The VICTORY banner is up and still presenting"), Game.Hud->BannerDrawn() == TEXT("VICTORY") && Game.View->IsPresenting())) { return false; }
+    const double Scale = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
+    const double W = Game.Target.Size.X / Scale, H = Game.Target.Size.Y / Scale;
+    // The dock's button position (DrawSkipButton): 104 x 42, centred, 8 above the bottom.
+    const FVector2D Skip(W * 0.5, H - 8 - 21);
+    Game.Player->SimulatePointer(Skip * Scale, FIntPoint(0, 0));
+    Game.Frame(0.0f);
+    FName Under;
+    if (!TestTrue(TEXT("The pointer is on the Skip button"), Game.Hud->ButtonAt(Skip * Scale, Under) && Under == FName(TEXT("Skip")))) { return false; }
+    const TArray<uint8> Before = Game.CheckpointBytes();
+    Game.Press(EKeys::LeftMouseButton);
+    Game.Player->ReleaseSimulatedPointer();
+    TestFalse(TEXT("The click ended the hold"), Game.View->IsPresenting());
+    Game.Frame(0.0f);
+    TestTrue(TEXT("The reward screen is up, with no banner"), Game.Hud->BannerDrawn().IsEmpty() && Game.Hud->ProgressionDrawn().Cards.Num() == 3);
+    TestTrue(TEXT("The release claimed nothing on the screen that took over"), Game.View->Progress().Phase == EExpeditionPhase::Reward && Game.CheckpointBytes() == Before);
     return !HasAnyErrors();
 }
 #endif
