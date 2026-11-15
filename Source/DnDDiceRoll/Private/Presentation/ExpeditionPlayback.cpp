@@ -194,9 +194,9 @@ void FExpeditionPlayback::Shake(float Amount) const
     if (!bSkipping && OnShake) { OnShake(Amount); }
 }
 
-void FExpeditionPlayback::ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life)
+void FExpeditionPlayback::ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life, bool bResult)
 {
-    TurnBanner = {Title, Subtitle, Color, 0.0f, Life};
+    TurnBanner = {Title, Subtitle, Color, 0.0f, Life, bResult};
 }
 
 void FExpeditionPlayback::ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale, float Life)
@@ -304,11 +304,11 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
         Focus = INDEX_NONE;
         if (After.Phase == EBattlePhase::Victory)
         {
-            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), PlaybackGold, 2.4f); Cue(EExpeditionCue::Victory);
+            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), PlaybackGold, FTurnBanner::ResultSeconds, true); Cue(EExpeditionCue::Victory);
         }
         else if (After.Phase == EBattlePhase::Defeat)
         {
-            ShowBanner(TEXT("DEFEAT"), TEXT("No adventurer can continue"), Blood, 2.8f); Cue(EExpeditionCue::Defeat);
+            ShowBanner(TEXT("DEFEAT"), TEXT("No adventurer can continue"), Blood, FTurnBanner::ResultSeconds, true); Cue(EExpeditionCue::Defeat);
         }
         else if (bTurnEnded && After.TurnOrder.IsValidIndex(After.TurnIndex))
         {
@@ -321,7 +321,15 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
             }
         }
     });
-    Add(0.0f, [this, After]() { Sync(After); });
+    // The battle has left Combat, so the HUD holds the reward or ending screen back while this is presenting: the result banner
+    // gets the frame to itself for its life, then the screen takes over without the two fighting for the same space (#251).
+    if (After.Phase == EBattlePhase::Victory || After.Phase == EBattlePhase::Defeat) { Add(FTurnBanner::ResultSeconds, nullptr); }
+    Add(0.0f, [this, After]()
+    {
+        Sync(After);
+        // The battle's floating texts (SLAIN, the last damage) belong to the fight: the reward or ending screen opens now, and none may linger on it (#252).
+        if (After.Phase != EBattlePhase::Fighting) { Floaters.Reset(); }
+    });
 }
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)
