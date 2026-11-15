@@ -1,0 +1,1567 @@
+{
+ "about": "Editable source of the recorded expedition cues (#242). tools/audio_cues.py build renders every variation from these layers (times in seconds; start/dur cut the source, at places it in the cue, gain in dB, rate scales pitch and speed together) and normalises it to its category's integrated loudness (LUFS), capped at the true-peak ceiling (dBTP).",
+ "sample_rate": 48000,
+ "true_peak_ceiling": -1.0,
+ "categories": {
+  "impact": {
+   "lufs": -16.0,
+   "limit_db": 8.0
+  },
+  "weapon": {
+   "lufs": -19.0,
+   "limit_db": 8.0
+  },
+  "magic": {
+   "lufs": -19.0,
+   "limit_db": 3.0
+  },
+  "dice": {
+   "lufs": -20.0,
+   "limit_db": 6.0
+  },
+  "step": {
+   "lufs": -27.0,
+   "limit_db": 4.0
+  },
+  "ui": {
+   "lufs": -26.0,
+   "limit_db": 3.0
+  },
+  "stinger": {
+   "lufs": -21.0,
+   "limit_db": 6.0
+  },
+  "fanfare": {
+   "lufs": -17.0,
+   "limit_db": 2.0
+  },
+  "event": {
+   "lufs": -20.0,
+   "limit_db": 8.0
+  }
+ },
+ "cue_order": [
+  "DiceRoll",
+  "DiceLand",
+  "Hit",
+  "Critical",
+  "Miss",
+  "Heal",
+  "Step",
+  "Click",
+  "Downed",
+  "Death",
+  "PartyTurn",
+  "EnemyTurn",
+  "Victory",
+  "Defeat",
+  "Spell",
+  "Bow",
+  "Swing",
+  "Camp",
+  "Loot",
+  "Route"
+ ],
+ "sources": {
+  "kenney-impact": {
+   "folder": "kenney-impact-sounds",
+   "title": "Impact Sounds (1.0)",
+   "url": "https://kenney.nl/assets/impact-sounds",
+   "author": "Kenney (Kenney Vleugels, kenney.nl)",
+   "license": "CC0 1.0 Universal (stated on the page and in the pack's License.txt)",
+   "archive": "kenney_impact-sounds.zip",
+   "files": {
+    "x/Audio/footstep_concrete_000.ogg": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+    "x/Audio/footstep_concrete_001.ogg": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d",
+    "x/Audio/footstep_concrete_002.ogg": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13",
+    "x/Audio/footstep_concrete_003.ogg": "8b513c2f0316324060b9174b8f28df6c2147418c506e6a53b77f18e149a5547b",
+    "x/Audio/impactPlate_heavy_000.ogg": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa",
+    "x/Audio/impactPlate_heavy_002.ogg": "b0cab75d1befa32b4cf215d8ee7e1c400a39182e8b105963b8e310f825b198a1",
+    "x/Audio/impactPlate_medium_000.ogg": "b670d30452983369771081319c268475edaaafe782bf4e8d70bd7eef09d8823c",
+    "x/Audio/impactPlate_medium_001.ogg": "68ba7701b71ef620f498f3038e832157d71ac8db7ad59424545890b250ceb24e",
+    "x/Audio/impactPlate_medium_002.ogg": "68762e1ed49bb59ae6602fad6ce2ebac61958478ddb2668de9106f010cd4b6b0",
+    "x/Audio/impactPlate_medium_003.ogg": "964c5fcfb91e7710e2af25c2243c8b7160756b223b0984bacc9eb25bfeea057b",
+    "x/Audio/impactPunch_heavy_000.ogg": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8",
+    "x/Audio/impactPunch_heavy_001.ogg": "f92f5cb6ba4ff2766497292ffd90865654317eeca976f5652e0708dbdcdc0dd9",
+    "x/Audio/impactPunch_heavy_002.ogg": "7993dd4c156b9979ad69f17be5ebe31850b16039a3857f8477141be54dfee1b3",
+    "x/Audio/impactPunch_heavy_003.ogg": "4ab53b26f4ea575120dcc1348526c9e0db2afc6af7a442aa0489bdead2ca80b6",
+    "x/Audio/impactPunch_heavy_004.ogg": "f4c0c3eb8ab6517583b8218ed03f28923d1b687379aab4c1d5a6d4c10cf8e500",
+    "x/Audio/impactSoft_heavy_000.ogg": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+    "x/Audio/impactSoft_heavy_001.ogg": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6",
+    "x/Audio/impactSoft_heavy_002.ogg": "d130ae541951243d3f6ed963d0057450a445ffe117fbf9a084d34eb1635cb563",
+    "x/Audio/impactSoft_heavy_003.ogg": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3",
+    "x/Audio/impactWood_light_000.ogg": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+    "x/Audio/impactWood_light_001.ogg": "4b76bf3ccc8e60d19188f3165b778a7817786faa6887c55d9049bcbeef3b425f",
+    "x/Audio/impactWood_light_002.ogg": "b183cf7a5bd783817e0e4b82af34ac6658fa1927049089dadc8b15c2ecc771dc",
+    "x/Audio/impactWood_light_003.ogg": "cdfbe8af2fe7ff9ee28f337a0a989deee0f327620da456c8413644880e9d0004",
+    "x/Audio/impactWood_light_004.ogg": "e10009f67ddaeb3a59a3e1129cfc1615d84ba60ab578eae07e7092ac223f099c"
+   }
+  },
+  "kenney-rpg": {
+   "folder": "kenney-rpg-audio",
+   "title": "RPG Audio (1.0)",
+   "url": "https://kenney.nl/assets/rpg-audio",
+   "author": "Kenney (Kenney Vleugels, kenney.nl)",
+   "license": "CC0 1.0 Universal (stated on the page and in the pack's License.txt)",
+   "archive": "kenney_rpg-audio.zip",
+   "files": {
+    "x/Audio/beltHandle2.ogg": "f3b692d5c83263c25bce779805b212dbab515d18a603c695fc6a1e8650cf5366",
+    "x/Audio/bookFlip1.ogg": "fa81ac2fedc8c641661b87e349630a36c9800e795e0c800e029214efdbe26a7d",
+    "x/Audio/cloth1.ogg": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+    "x/Audio/dropLeather.ogg": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+    "x/Audio/footstep00.ogg": "6fe61ef1fc3bcf0e253bf2eb64759db6cb69e2fe452f4d88cc597ecf78a3d601",
+    "x/Audio/footstep01.ogg": "313472dba31fd0c855376069fa368bb5a198c27251cc8398ef464578b7047a4c",
+    "x/Audio/footstep02.ogg": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+    "x/Audio/footstep03.ogg": "a86756b9af9f370455ab47844239bb07fd1bee7a113068c91f0fcd9b72703fae",
+    "x/Audio/handleCoins.ogg": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab",
+    "x/Audio/handleCoins2.ogg": "4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32",
+    "x/Audio/handleSmallLeather.ogg": "ae3cbf695aa0a8b98b5a80a835be5a3ccbd5446a24db2235cd4c3cd6fc92ed96"
+   }
+  },
+  "kenney-casino": {
+   "folder": "kenney-casino-audio",
+   "title": "Casino Audio (1.0)",
+   "url": "https://kenney.nl/assets/casino-audio",
+   "author": "Kenney (Kenney Vleugels, kenney.nl)",
+   "license": "CC0 1.0 Universal (stated on the page and in the pack's License.txt)",
+   "archive": "kenney_casino-audio.zip",
+   "files": {
+    "x/Audio/chip-lay-1.ogg": "4b2111252ccb64eed67f171e061053849cfbb29873536c03948646f244a3905c",
+    "x/Audio/dice-shake-1.ogg": "ba603441c857204dbe3ff3345902c7e1c3f523bf1bd314acf088609bc6c1e4e5",
+    "x/Audio/dice-shake-2.ogg": "47e8e2cb0adb95bcd7348b58db8dc2bbfe3c553e50a4e9ef007e67891ed51ca2",
+    "x/Audio/dice-shake-3.ogg": "aecd1dd0de6e42ebb510d1f9bfe91a580a8af238dd73bdfda368b90b894b5c09",
+    "x/Audio/dice-throw-1.ogg": "4e6581c73465cdd7ec32e86a709b4ea5c682e819c9bdb7989d1df1880ba67886",
+    "x/Audio/dice-throw-2.ogg": "e0b8c370503b2c5c2a72d311cccae30fe63a6afd48f2be32e771fcf1a98585d6",
+    "x/Audio/dice-throw-3.ogg": "09c13d35a9a30bfce31a5e9bca94adc5be189ddecd0b4500237d54c7fd05227c"
+   }
+  },
+  "oga-rpg": {
+   "folder": "oga-rpg-sound-pack",
+   "title": "RPG Sound Pack",
+   "url": "https://opengameart.org/content/rpg-sound-pack",
+   "author": "artisticdude",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field)",
+   "archive": "rpg_sound_pack.zip",
+   "files": {
+    "x/RPG Sound Pack/battle/magic1.wav": "cadea162f3fe91c27666ab2a0516fa3bf156997d92d4f8145919126bca7b1e8a",
+    "x/RPG Sound Pack/battle/spell.wav": "61d79416a7cbb04e1f46618ded72386f82bb6bd9dc170170480d271f4efb3958",
+    "x/RPG Sound Pack/battle/swing2.wav": "2e4064e294d136e06c40cc562df969493907e6873f39895ca86b4a6b2e034c6e",
+    "x/RPG Sound Pack/inventory/armor-light.wav": "1600329c7607eede7a441f66152f0626dd84e4b13f84ccd07887d020ba1c6b9e",
+    "x/RPG Sound Pack/inventory/chainmail1.wav": "44d4d6b0cda8138c9d5545ba4f434f53b7817ba32d98ddfdf5bff6ae7acdefdf",
+    "x/RPG Sound Pack/inventory/chainmail2.wav": "74b5e34233ea69fd76b6f016bae74f3432d7ca1921fa403c32f6c45cab2fdfa8",
+    "x/RPG Sound Pack/inventory/cloth-heavy.wav": "73bbbd383b5bbc8b8313f6fee84040aecc1de09714afbe51ba4e5162cbac3528",
+    "x/RPG Sound Pack/inventory/coin2.wav": "4147e7fbe404d2cd97ba7b5af61e88ebe4f652626589c4ee9d570595262b8802"
+   }
+  },
+  "oga-medieval-textures": {
+   "folder": "oga-medieval-textures",
+   "title": "Medieval sound effects - Weapon Textures",
+   "url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+   "author": "Ben Jaszczak & Brian Nelson (Still North Media)",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field; the authors' statement quoted on the page: \"CC0 NO RIGHTS RESERVED\")",
+   "archive": "medieval_sfx_textures_1_of_2.7z + medieval_sfx_textures_2_of_2.7z",
+   "files": {
+    "x/Axe Swing.wav": "a27039c0778934e71e01b943cba04aa4cb788fd94e5e771b68374326494f38a4",
+    "x/English Longbow Shoot.wav": "c25684ccdab3eb13f17a0ffa637fbd175659d092665f16c0bce8510d46c4fbee",
+    "x/Katana Swing.wav": "133860f84cb4c311cf273f3a16256a45568d7d4ce468eb081dd17e4e4bfa7487",
+    "x/Scythian Recurve Arrow Pass.wav": "386ef860049508743bbae3d85674733564a1a3c055a84530c55d3f529819bef3",
+    "x/Seax Swing.wav": "2fdf7688ce88a105393fe2b1f3b3f14dbe80e42708d2e2e46246d9d40bb2a151"
+   }
+  },
+  "oga-medieval-impacts": {
+   "folder": "oga-medieval-impacts",
+   "title": "Medieval sound effects - Weapon impacts",
+   "url": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+   "author": "Ben Jaszczak & Brian Nelson (Still North Media)",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field; the authors' statement quoted on the page: \"CC0 NO RIGHTS RESERVED\")",
+   "archive": "medieval_sfx_weapon_on_weapon_1_of_2.7z + medieval_sfx_weapon_on_weapon_2_of_2.7z",
+   "files": {
+    "x/Axe Spear Haft on Haft.wav": "e21e03ed0e9901db8683f5c234790ac2f38e9ec4e2587298435dd18f49124b88",
+    "x/Mace Norse Sword Blade.wav": "e71ba7261aa8979199db44bf65b410c5efadbd10b42acd63674b88a348dcc23e",
+    "x/Spear Spear Haft on Haft.wav": "a999892e824696239961b88b7990a2fde24d37f09cc8e8a3fc57aa11d004d1b9"
+   }
+  },
+  "oga-fire": {
+   "folder": "oga-fire-crackling",
+   "title": "Fire Crackling",
+   "url": "https://opengameart.org/content/fire-crackling",
+   "author": "AntumDeluge",
+   "license": "CC0 1.0 Universal (OpenGameArt licence field and the page text)",
+   "archive": "fire-1.wav (direct)",
+   "files": {
+    "fire-1.wav": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5"
+   }
+  },
+  "vsco": {
+   "folder": "vsco-2-ce",
+   "title": "VS Chamber Orchestra: Community Edition (VSCO-2-CE) at commit 440300901dfe9275fd84e0b7763af1f8443ae62e",
+   "url": "https://github.com/sgossner/VSCO-2-CE",
+   "author": "Versilian Studios (recorded by Sam Gossner & Simon Dalzell; sample cutting by Elan Hickler/Soundemote)",
+   "license": "CC0 1.0 Universal (the repository's LICENSE)",
+   "archive": "individual files from raw.githubusercontent.com at that commit",
+   "files": {
+    "Brass/F Horn/sus/MOHorn_sus_A#1_v2_1.wav": "1a65415731a0be8a1a51ce31f7989180fde674173821acceaceef0f3511d5f35",
+    "Brass/F Horn/sus/MOHorn_sus_C3_v2_1.wav": "c0c0b157dcde094c4417b7c165d645897cde9ea6d74247bbab0c0e75355e78c3",
+    "Brass/F Horn/sus/MOHorn_sus_D2_v2_1.wav": "9155ef0c33c06ebe55daeaaaca7dec4090578af6cf3d6a028fbfa7b7f2ec876e",
+    "Brass/F Horn/sus/MOHorn_sus_F2_v2_1.wav": "2e487a49c834ff2d76aff1c9755875fc03013bf202b949a5c5fe354d0c2123c2",
+    "Brass/Tenor Trombone/sus/tenortbn_sus_D#1_v2_1.wav": "eecd696f213cda2f402ca84eb1af244d29c6006fd3f4bb7853854ab892eaeaa7",
+    "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v2_1.wav": "44939c24af3cc64bb5324830838d23ee2489ca90e4b679592e2535f86ec6418d",
+    "Brass/Tuba/sus/Tuba3_sus_A#0_v2_rr1_Mid.wav": "044f31773953d600c2591b78132e7e839cf064c29fbe41b039241de83efce777",
+    "Percussion/BellTree_Stroke1_v1_Sum.wav": "2597516c86677708c0696ab303e81158ab1d69baa109635ceef204aa68d753e3",
+    "Percussion/TB_hit_C4_v4_rr1.wav": "d11d52910e0fc03c348bec0b0969960d737a6fdd3fa7380804f5751959e422c2",
+    "Percussion/TB_hit_C5_v4_rr1.wav": "aba6ebfb36eed049d211ab86c8caa6e8dbaf292db57a2d269306c6aecb2a3ab2",
+    "Percussion/TB_hit_F5_v3_rr1.wav": "34736a3a68fad88dde3ff7d04613bdbc1ba7be0804b039fc07312089e5cb1c44",
+    "Percussion/Timpani/Timpani2_Hit_v3_rr1_Sum.wav": "69e5d604effd3f29c86117d22ad2335f73e43f5d47868dc57d8fa593975ee241",
+    "Percussion/Timpani/Timpani4_Hit_v3_rr1_Sum.wav": "05170757d30297aa680bfbc082c6e438deb1d1d72c5e757610d0b1bbd525968f",
+    "Percussion/Timpani/Timpani4_Hit_v3_rr2_Sum.wav": "ff4a34bdf6c98489dbe496c92671020bac7b3e92331f310fc8542085fb75d014",
+    "Percussion/gongHit_p.wav": "3d103e1a7af12eeb17e0c5488f11933ca92b9fbdefa39b8020b64238da2db0d0",
+    "Percussion/gongscrape_mf.wav": "3e30f51d3667cde89d3fd3424e878a554ab26ff4ea882686cfbe887aaf2267b0",
+    "Percussion/gongscrape_pp.wav": "0166526b453fa54a2d978796f2c4e696a213ac947c9cf2ec105f6af16667bd9e"
+   }
+  }
+ },
+ "cues": {
+  "DiceRoll": {
+   "category": "dice",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.8,
+     "layers": [
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-shake-1.ogg",
+       "start": 0.45,
+       "dur": 0.28,
+       "at": 0.0,
+       "gain": 0,
+       "fade_in": 0.03,
+       "fade_out": 0.08
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-throw-1.ogg",
+       "start": 0.0,
+       "dur": 0.55,
+       "at": 0.2,
+       "gain": 0.0
+      }
+     ]
+    },
+    {
+     "length": 0.8,
+     "layers": [
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-shake-2.ogg",
+       "start": 0.55,
+       "dur": 0.28,
+       "at": 0.0,
+       "gain": 0,
+       "fade_in": 0.03,
+       "fade_out": 0.08
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-throw-2.ogg",
+       "start": 0.0,
+       "dur": 0.55,
+       "at": 0.2,
+       "gain": 0.0
+      }
+     ]
+    },
+    {
+     "length": 0.8,
+     "layers": [
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-shake-3.ogg",
+       "start": 0.65,
+       "dur": 0.28,
+       "at": 0.0,
+       "gain": 0,
+       "fade_in": 0.03,
+       "fade_out": 0.08
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/dice-throw-3.ogg",
+       "start": 0.0,
+       "dur": 0.55,
+       "at": 0.2,
+       "gain": 0.0
+      }
+     ]
+    }
+   ]
+  },
+  "DiceLand": {
+   "category": "dice",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.26,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_000.ogg",
+       "start": 0.0,
+       "dur": 0.26,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.25,
+       "highpass": 200
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/chip-lay-1.ogg",
+       "start": 0.0,
+       "dur": 0.12,
+       "at": 0.0,
+       "gain": -14,
+       "highpass": 1500
+      }
+     ]
+    },
+    {
+     "length": 0.26,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_002.ogg",
+       "start": 0.0,
+       "dur": 0.26,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.25,
+       "highpass": 200
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/chip-lay-1.ogg",
+       "start": 0.0,
+       "dur": 0.12,
+       "at": 0.0,
+       "gain": -14,
+       "highpass": 1500
+      }
+     ]
+    },
+    {
+     "length": 0.26,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_004.ogg",
+       "start": 0.0,
+       "dur": 0.26,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.25,
+       "highpass": 200
+      },
+      {
+       "source": "kenney-casino",
+       "file": "x/Audio/chip-lay-1.ogg",
+       "start": 0.0,
+       "dur": 0.12,
+       "at": 0.0,
+       "gain": -14,
+       "highpass": 1500
+      }
+     ]
+    }
+   ]
+  },
+  "Hit": {
+   "category": "impact",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.6,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_000.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.9
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_medium_000.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.01,
+       "gain": -9,
+       "highpass": 400
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail1.wav",
+       "start": 0.0,
+       "dur": 0.3,
+       "at": 0.02,
+       "gain": -14,
+       "highpass": 1500,
+       "fade_out": 0.15
+      }
+     ]
+    },
+    {
+     "length": 0.6,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_001.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.9
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_medium_001.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.01,
+       "gain": -9,
+       "highpass": 400
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail1.wav",
+       "start": 0.05,
+       "dur": 0.3,
+       "at": 0.02,
+       "gain": -14,
+       "highpass": 1500,
+       "fade_out": 0.15
+      }
+     ]
+    },
+    {
+     "length": 0.6,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_002.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.9
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_medium_002.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.01,
+       "gain": -9,
+       "highpass": 400
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail1.wav",
+       "start": 0.1,
+       "dur": 0.3,
+       "at": 0.02,
+       "gain": -14,
+       "highpass": 1500,
+       "fade_out": 0.15
+      }
+     ]
+    },
+    {
+     "length": 0.6,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_003.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.9
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_medium_003.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.01,
+       "gain": -9,
+       "highpass": 400
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail1.wav",
+       "start": 0.15000000000000002,
+       "dur": 0.3,
+       "at": 0.02,
+       "gain": -14,
+       "highpass": 1500,
+       "fade_out": 0.15
+      }
+     ]
+    }
+   ]
+  },
+  "Critical": {
+   "category": "impact",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.3,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_004.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.85
+      },
+      {
+       "source": "oga-medieval-impacts",
+       "file": "x/Mace Norse Sword Blade.wav",
+       "start": 0.58,
+       "dur": 0.7,
+       "at": 0.0,
+       "gain": -5,
+       "fade_out": 0.4
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/Timpani/Timpani2_Hit_v3_rr1_Sum.wav",
+       "start": 0.0,
+       "dur": 1.3,
+       "at": 0.0,
+       "gain": -4,
+       "fade_out": 0.6
+      }
+     ]
+    },
+    {
+     "length": 1.3,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPunch_heavy_001.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.85
+      },
+      {
+       "source": "oga-medieval-impacts",
+       "file": "x/Mace Norse Sword Blade.wav",
+       "start": 5.3,
+       "dur": 0.7,
+       "at": 0.0,
+       "gain": -6,
+       "fade_out": 0.4
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/Timpani/Timpani4_Hit_v3_rr2_Sum.wav",
+       "start": 0.0,
+       "dur": 1.3,
+       "at": 0.0,
+       "gain": -3,
+       "fade_out": 0.6
+      }
+     ]
+    }
+   ]
+  },
+  "Miss": {
+   "category": "weapon",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.5,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/swing2.wav",
+       "start": 0.0,
+       "dur": 0.14,
+       "at": 0.0,
+       "gain": -6
+      },
+      {
+       "source": "oga-medieval-impacts",
+       "file": "x/Spear Spear Haft on Haft.wav",
+       "start": 1.56,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": -2,
+       "fade_out": 0.2
+      }
+     ]
+    },
+    {
+     "length": 0.5,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/swing2.wav",
+       "start": 0.0,
+       "dur": 0.14,
+       "at": 0.0,
+       "gain": -6
+      },
+      {
+       "source": "oga-medieval-impacts",
+       "file": "x/Axe Spear Haft on Haft.wav",
+       "start": 0.68,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": -2,
+       "fade_out": 0.2
+      }
+     ]
+    },
+    {
+     "length": 0.5,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/swing2.wav",
+       "start": 0.0,
+       "dur": 0.14,
+       "at": 0.0,
+       "gain": -6
+      },
+      {
+       "source": "oga-medieval-impacts",
+       "file": "x/Axe Spear Haft on Haft.wav",
+       "start": 1.38,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": -2,
+       "fade_out": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  "Heal": {
+   "category": "magic",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.5,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Percussion/TB_hit_C5_v4_rr1.wav",
+       "start": 0.0,
+       "dur": 1.5,
+       "at": 0.0,
+       "gain": -2,
+       "lowpass": 6000,
+       "fade_out": 0.9
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/BellTree_Stroke1_v1_Sum.wav",
+       "start": 0.0,
+       "dur": 1.3,
+       "at": 0.05,
+       "gain": -12,
+       "fade_out": 0.7
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_C3_v2_1.wav",
+       "start": 0.0,
+       "dur": 1.2,
+       "at": 0.1,
+       "gain": -10,
+       "fade_in": 0.25,
+       "fade_out": 0.7
+      }
+     ]
+    }
+   ]
+  },
+  "Step": {
+   "category": "step",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.28,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/footstep_concrete_000.ogg",
+       "start": 0.0,
+       "dur": 0.11,
+       "at": 0.0,
+       "gain": 0.0,
+       "lowpass": 6000
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/footstep00.ogg",
+       "start": 0.0,
+       "dur": 0.25,
+       "at": 0.0,
+       "gain": -9,
+       "lowpass": 4000,
+       "fade_out": 0.1
+      }
+     ]
+    },
+    {
+     "length": 0.28,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/footstep_concrete_001.ogg",
+       "start": 0.0,
+       "dur": 0.11,
+       "at": 0.0,
+       "gain": 0.0,
+       "lowpass": 6000
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/footstep01.ogg",
+       "start": 0.0,
+       "dur": 0.25,
+       "at": 0.0,
+       "gain": -9,
+       "lowpass": 4000,
+       "fade_out": 0.1
+      }
+     ]
+    },
+    {
+     "length": 0.28,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/footstep_concrete_002.ogg",
+       "start": 0.0,
+       "dur": 0.11,
+       "at": 0.0,
+       "gain": 0.0,
+       "lowpass": 6000
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/footstep02.ogg",
+       "start": 0.0,
+       "dur": 0.25,
+       "at": 0.0,
+       "gain": -9,
+       "lowpass": 4000,
+       "fade_out": 0.1
+      }
+     ]
+    },
+    {
+     "length": 0.28,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/footstep_concrete_003.ogg",
+       "start": 0.0,
+       "dur": 0.11,
+       "at": 0.0,
+       "gain": 0.0,
+       "lowpass": 6000
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/footstep03.ogg",
+       "start": 0.0,
+       "dur": 0.25,
+       "at": 0.0,
+       "gain": -9,
+       "lowpass": 4000,
+       "fade_out": 0.1
+      }
+     ]
+    }
+   ]
+  },
+  "Click": {
+   "category": "ui",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.16,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_001.ogg",
+       "start": 0.0,
+       "dur": 0.16,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.15,
+       "fade_out": 0.08
+      }
+     ]
+    },
+    {
+     "length": 0.16,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_003.ogg",
+       "start": 0.0,
+       "dur": 0.16,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.15,
+       "fade_out": 0.08
+      }
+     ]
+    },
+    {
+     "length": 0.16,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactWood_light_001.ogg",
+       "start": 0.0,
+       "dur": 0.16,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 1.0,
+       "fade_out": 0.08
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/handleSmallLeather.ogg",
+       "start": 0.0,
+       "dur": 0.14,
+       "at": 0.0,
+       "gain": -10,
+       "fade_out": 0.06
+      }
+     ]
+    }
+   ]
+  },
+  "Downed": {
+   "category": "impact",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.85,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactSoft_heavy_000.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.8
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail2.wav",
+       "start": 0.0,
+       "dur": 0.6,
+       "at": 0.06,
+       "gain": -8,
+       "fade_out": 0.25
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/dropLeather.ogg",
+       "start": 0.0,
+       "dur": 0.41,
+       "at": 0.12,
+       "gain": -6
+      }
+     ]
+    },
+    {
+     "length": 0.85,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactSoft_heavy_002.ogg",
+       "start": 0.0,
+       "dur": 0.55,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.8
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/armor-light.wav",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.05,
+       "gain": -7
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/cloth-heavy.wav",
+       "start": 0.0,
+       "dur": 0.4,
+       "at": 0.12,
+       "gain": -8
+      }
+     ]
+    }
+   ]
+  },
+  "Death": {
+   "category": "impact",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.8,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactSoft_heavy_001.ogg",
+       "start": 0.0,
+       "dur": 0.55,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.7
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_heavy_000.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.08,
+       "gain": -8,
+       "rate": 0.9
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/chainmail1.wav",
+       "start": 0.0,
+       "dur": 0.58,
+       "at": 0.1,
+       "gain": -9
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/TB_hit_C4_v4_rr1.wav",
+       "start": 0.0,
+       "dur": 1.5,
+       "at": 0.3,
+       "gain": -9,
+       "rate": 0.75,
+       "fade_out": 0.9
+      }
+     ]
+    },
+    {
+     "length": 1.8,
+     "layers": [
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactSoft_heavy_003.ogg",
+       "start": 0.0,
+       "dur": 0.54,
+       "at": 0.0,
+       "gain": 0.0,
+       "rate": 0.7
+      },
+      {
+       "source": "kenney-impact",
+       "file": "x/Audio/impactPlate_heavy_002.ogg",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.07,
+       "gain": -8,
+       "rate": 0.9
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/armor-light.wav",
+       "start": 0.0,
+       "dur": 0.5,
+       "at": 0.1,
+       "gain": -8
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/gongHit_p.wav",
+       "start": 0.0,
+       "dur": 1.5,
+       "at": 0.25,
+       "gain": -6,
+       "fade_out": 0.9
+      }
+     ]
+    }
+   ]
+  },
+  "PartyTurn": {
+   "category": "stinger",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_F2_v2_1.wav",
+       "start": 0.02,
+       "dur": 0.95,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_in": 0.04,
+       "fade_out": 0.5
+      }
+     ]
+    }
+   ]
+  },
+  "EnemyTurn": {
+   "category": "stinger",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.1,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Brass/Tuba/sus/Tuba3_sus_A#0_v2_rr1_Mid.wav",
+       "start": 0.02,
+       "dur": 1.1,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_in": 0.03,
+       "fade_out": 0.55
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v2_1.wav",
+       "start": 0.02,
+       "dur": 1.0,
+       "at": 0.0,
+       "gain": -6,
+       "fade_in": 0.05,
+       "fade_out": 0.5
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/Timpani/Timpani4_Hit_v3_rr1_Sum.wav",
+       "start": 0.0,
+       "dur": 1.0,
+       "at": 0.0,
+       "gain": -2,
+       "fade_out": 0.4
+      }
+     ]
+    }
+   ]
+  },
+  "Victory": {
+   "category": "fanfare",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 2.8,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_F2_v2_1.wav",
+       "start": 0.02,
+       "dur": 0.4,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_in": 0.02,
+       "fade_out": 0.08
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_F2_v2_1.wav",
+       "start": 0.02,
+       "dur": 2.4,
+       "at": 0.4,
+       "gain": -3,
+       "fade_in": 0.03,
+       "fade_out": 1.3
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_D2_v2_1.wav",
+       "start": 0.02,
+       "dur": 2.4,
+       "at": 0.4,
+       "gain": -4,
+       "fade_in": 0.03,
+       "fade_out": 1.3
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_A#1_v2_1.wav",
+       "start": 0.02,
+       "dur": 2.4,
+       "at": 0.4,
+       "gain": -4,
+       "fade_in": 0.03,
+       "fade_out": 1.3
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v2_1.wav",
+       "start": 0.02,
+       "dur": 2.4,
+       "at": 0.4,
+       "gain": -3,
+       "fade_in": 0.03,
+       "fade_out": 1.3
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/Tuba/sus/Tuba3_sus_A#0_v2_rr1_Mid.wav",
+       "start": 0.02,
+       "dur": 2.4,
+       "at": 0.4,
+       "gain": -2,
+       "fade_in": 0.03,
+       "fade_out": 1.3
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/Timpani/Timpani2_Hit_v3_rr1_Sum.wav",
+       "start": 0.0,
+       "dur": 2.0,
+       "at": 0.4,
+       "gain": -2,
+       "fade_out": 1.0
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/TB_hit_F5_v3_rr1.wav",
+       "start": 0.0,
+       "dur": 2.0,
+       "at": 0.4,
+       "gain": -14,
+       "fade_out": 1.2
+      }
+     ]
+    }
+   ]
+  },
+  "Defeat": {
+   "category": "fanfare",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 3.0,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Brass/Tuba/sus/Tuba3_sus_A#0_v2_rr1_Mid.wav",
+       "start": 0.02,
+       "dur": 2.9,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_in": 0.06,
+       "fade_out": 1.4
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v2_1.wav",
+       "start": 0.02,
+       "dur": 1.0,
+       "at": 0.0,
+       "gain": -3,
+       "fade_in": 0.06,
+       "fade_out": 0.25
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/Tenor Trombone/sus/tenortbn_sus_D#1_v2_1.wav",
+       "start": 0.02,
+       "dur": 2.0,
+       "at": 0.9,
+       "gain": -3,
+       "fade_in": 0.15,
+       "fade_out": 1.2
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/gongHit_p.wav",
+       "start": 0.0,
+       "dur": 2.1,
+       "at": 0.9,
+       "gain": -4,
+       "fade_out": 1.4
+      }
+     ]
+    }
+   ]
+  },
+  "Spell": {
+   "category": "magic",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/magic1.wav",
+       "start": 0.0,
+       "dur": 0.875,
+       "at": 0.0,
+       "gain": 0.0
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/gongscrape_pp.wav",
+       "start": 0.2,
+       "dur": 0.95,
+       "at": 0.0,
+       "gain": -6,
+       "fade_in": 0.1,
+       "fade_out": 0.4
+      }
+     ]
+    },
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/spell.wav",
+       "start": 0.0,
+       "dur": 0.95,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_out": 0.4
+      },
+      {
+       "source": "vsco",
+       "file": "Percussion/gongscrape_mf.wav",
+       "start": 0.5,
+       "dur": 0.9,
+       "at": 0.0,
+       "gain": -10,
+       "fade_in": 0.2,
+       "fade_out": 0.4
+      }
+     ]
+    },
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "vsco",
+       "file": "Percussion/gongHit_p.wav",
+       "start": 0.0,
+       "dur": 0.7,
+       "at": 0.0,
+       "gain": 0,
+       "reverse": true,
+       "fade_in": 0.2,
+       "fade_out": 0.05
+      },
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/battle/magic1.wav",
+       "start": 0.0,
+       "dur": 0.6,
+       "at": 0.55,
+       "gain": -4,
+       "rate": 0.8,
+       "fade_out": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  "Bow": {
+   "category": "weapon",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.75,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/English Longbow Shoot.wav",
+       "start": 1.24,
+       "dur": 0.6,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_out": 0.3
+      },
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Scythian Recurve Arrow Pass.wav",
+       "start": 0.6,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": 0,
+       "highpass": 300,
+       "fade_in": 0.05,
+       "fade_out": 0.2
+      }
+     ]
+    },
+    {
+     "length": 0.75,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/English Longbow Shoot.wav",
+       "start": 3.19,
+       "dur": 0.6,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_out": 0.3
+      },
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Scythian Recurve Arrow Pass.wav",
+       "start": 1.0,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": 0,
+       "highpass": 300,
+       "fade_in": 0.05,
+       "fade_out": 0.2
+      }
+     ]
+    },
+    {
+     "length": 0.75,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/English Longbow Shoot.wav",
+       "start": 0.0,
+       "dur": 0.6,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_out": 0.3
+      },
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Scythian Recurve Arrow Pass.wav",
+       "start": 0.8,
+       "dur": 0.4,
+       "at": 0.06,
+       "gain": 0,
+       "highpass": 300,
+       "fade_in": 0.05,
+       "fade_out": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  "Swing": {
+   "category": "weapon",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.45,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Axe Swing.wav",
+       "start": 1.5,
+       "dur": 0.42,
+       "at": 0.0,
+       "gain": 0.0,
+       "highpass": 120,
+       "fade_in": 0.01,
+       "fade_out": 0.12
+      }
+     ]
+    },
+    {
+     "length": 0.45,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Seax Swing.wav",
+       "start": 3.15,
+       "dur": 0.42,
+       "at": 0.0,
+       "gain": 0.0,
+       "highpass": 120,
+       "fade_in": 0.01,
+       "fade_out": 0.12
+      }
+     ]
+    },
+    {
+     "length": 0.45,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Katana Swing.wav",
+       "start": 5.58,
+       "dur": 0.45,
+       "at": 0.0,
+       "gain": 0.0,
+       "highpass": 120,
+       "fade_in": 0.01,
+       "fade_out": 0.12
+      }
+     ]
+    },
+    {
+     "length": 0.45,
+     "layers": [
+      {
+       "source": "oga-medieval-textures",
+       "file": "x/Axe Swing.wav",
+       "start": 5.9,
+       "dur": 0.42,
+       "at": 0.0,
+       "gain": 0.0,
+       "highpass": 120,
+       "fade_in": 0.01,
+       "fade_out": 0.12
+      }
+     ]
+    }
+   ]
+  },
+  "Camp": {
+   "category": "event",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.7,
+     "layers": [
+      {
+       "source": "oga-fire",
+       "file": "fire-1.wav",
+       "start": 0.3,
+       "dur": 1.7,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_in": 0.15,
+       "fade_out": 0.7
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/dropLeather.ogg",
+       "start": 0.0,
+       "dur": 0.41,
+       "at": 0.15,
+       "gain": -6
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/cloth1.ogg",
+       "start": 0.0,
+       "dur": 0.66,
+       "at": 0.35,
+       "gain": -10
+      }
+     ]
+    }
+   ]
+  },
+  "Loot": {
+   "category": "event",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/handleCoins.ogg",
+       "start": 0.0,
+       "dur": 0.85,
+       "at": 0.0,
+       "gain": 0.0
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/handleSmallLeather.ogg",
+       "start": 0.0,
+       "dur": 0.34,
+       "at": 0.0,
+       "gain": -7
+      }
+     ]
+    },
+    {
+     "length": 0.95,
+     "layers": [
+      {
+       "source": "oga-rpg",
+       "file": "x/RPG Sound Pack/inventory/coin2.wav",
+       "start": 0.0,
+       "dur": 0.95,
+       "at": 0.0,
+       "gain": 0.0,
+       "fade_out": 0.3
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/handleCoins2.ogg",
+       "start": 0.0,
+       "dur": 0.34,
+       "at": 0.08,
+       "gain": -5
+      },
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/beltHandle2.ogg",
+       "start": 0.0,
+       "dur": 0.48,
+       "at": 0.0,
+       "gain": -9
+      }
+     ]
+    }
+   ]
+  },
+  "Route": {
+   "category": "stinger",
+   "volume": 1.0,
+   "variations": [
+    {
+     "length": 1.3,
+     "layers": [
+      {
+       "source": "kenney-rpg",
+       "file": "x/Audio/bookFlip1.ogg",
+       "start": 0.0,
+       "dur": 0.77,
+       "at": 0.0,
+       "gain": -6
+      },
+      {
+       "source": "vsco",
+       "file": "Brass/F Horn/sus/MOHorn_sus_A#1_v2_1.wav",
+       "start": 0.02,
+       "dur": 1.1,
+       "at": 0.2,
+       "gain": 6,
+       "fade_in": 0.12,
+       "fade_out": 0.6
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
