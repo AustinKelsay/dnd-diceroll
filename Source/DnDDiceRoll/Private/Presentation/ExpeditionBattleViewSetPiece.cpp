@@ -4,7 +4,9 @@
 #include "Presentation/ExpeditionBattleView.h"
 #include "Presentation/WaystoneSetPiece.h"
 #include "Presentation/BoardMetric.h"
+#include "Presentation/DiceRollTheme.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 
 namespace
 {
@@ -44,7 +46,7 @@ void AExpeditionBattleView::BuildSetPiece(const FVector& Pedestal, bool bApse, c
         if (!bApse) { return; }
         for (const FSoftObjectPath& Path : SetPieceMeshOverride.IsEmpty() ? WaystoneSetPiece::ThemedMeshPaths() : SetPieceMeshOverride)
         {
-            UStaticMesh* Mesh = Cast<UStaticMesh>(Path.TryLoad());
+            UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *Path.ToString(), nullptr, LOAD_Quiet | LOAD_NoWarn);
             if (!Mesh) { UE_LOG(LogTemp, Log, TEXT("WaystoneSetPiece: %s does not load; the finale ends without the set piece"), *Path.ToString()); return; }
             Setup.Meshes.Add(Mesh);
         }

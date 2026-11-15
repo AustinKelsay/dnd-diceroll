@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+#include "UObject/SoftObjectPath.h"
 #include "WaystoneSetPiece.generated.h"
 
 class UInstancedStaticMeshComponent;

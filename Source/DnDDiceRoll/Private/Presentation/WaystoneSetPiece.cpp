@@ -40,9 +40,10 @@ constexpr float ChipLift = 3.5f;
 float FlareGain(float Seconds)
 {
     if (Seconds <= 0.0f) { return 1.0f; }
-    if (Seconds < ShatterSeconds) { const float A = Seconds / ShatterSeconds; return 1.0f + 2.5f * A * A; }
+    // Gentle on purpose: the apse is the brightest thing in the Vault already, and play adapts exposure more slowly than a capture does.
+    if (Seconds < ShatterSeconds) { const float A = Seconds / ShatterSeconds; return 1.0f + 0.9f * A * A; }
     const float U = Seconds - ShatterSeconds;
-    return 1.0f + (2.5f * FMath::Exp(-1.4f * U) + 5.0f * FMath::Exp(-9.0f * U)) * Fade(Seconds);
+    return 1.0f + (0.9f * FMath::Exp(-1.4f * U) + 1.6f * FMath::Exp(-9.0f * U)) * Fade(Seconds);
 }
 
 float SealGlow(float Seconds)
@@ -68,8 +69,9 @@ float ShotBlend(float Seconds) { return Smooth(LiftStartSeconds, LiftEndSeconds 
 
 void CuesBetween(float From, float To, TArray<EWaystoneCue>& Out)
 {
-    const TPair<float, EWaystoneCue> Moments[] = {{ShatterSeconds, EWaystoneCue::Shatter}, {LiftStartSeconds, EWaystoneCue::Lift}, {DurationSeconds, EWaystoneCue::Settled}};
-    for (const auto& Moment : Moments) { if (From < Moment.Key && Moment.Key <= To) { Out.Add(Moment.Value); } }
+    struct FMoment { float At; EWaystoneCue Cue; };
+    const FMoment Moments[] = {{ShatterSeconds, EWaystoneCue::Shatter}, {LiftStartSeconds, EWaystoneCue::Lift}, {DurationSeconds, EWaystoneCue::Settled}};
+    for (const FMoment& Moment : Moments) { if (From < Moment.At && Moment.At <= To) { Out.Add(Moment.Cue); } }
 }
 
 const TCHAR* CueName(EWaystoneCue Cue)
@@ -139,8 +141,27 @@ TArray<FFlight> Plan(const FSite& Site)
     };
     auto Resting = [&](const FRestSpot& Spot, float Lift, const FRotator& Turn)
     {
-        const FVector2D At(Spot.X * Spread, Spot.Y * Spread);
+        FVector2D At(Spot.X * Spread, Spot.Y * Spread);
+        // Around the legacy pedestal a piece lies on its top or well clear of its side, never against it.
+        const float Clear = Site.PedestalRadius + 22.0f;
+        if (Site.PedestalRadius > 0.0f && At.Size() > Site.PedestalRadius && At.Size() < Clear) { At = At.GetSafeNormal() * Clear; }
         return FTransform(Turn, FVector(At.X, At.Y, FloorAt(Site, At) + Lift));
+    };
+    // An arc that would pass through a step or the pedestal is raised until it clears it (deterministic: the same site gives the same plan).
+    auto Clearing = [&](FFlight& Flight)
+    {
+        for (int32 Raise = 0; Raise < 24; ++Raise)
+        {
+            bool bClear = true;
+            for (int32 Step = 1; Step < 40 && bClear; ++Step)
+            {
+                const float At = ShatterSeconds + Flight.Delay + Flight.Duration * Step / 40.0f;
+                const FVector Point = FlightAt(Flight, At).GetLocation();
+                bClear = Point.Z >= FloorAt(Site, FVector2D(Point)) + 4.0f;
+            }
+            if (bClear) { return; }
+            Flight.Apex += 15.0f;
+        }
     };
     for (int32 Shard = 0; Shard < Shards; ++Shard)
     {
@@ -164,6 +185,7 @@ TArray<FFlight> Plan(const FSite& Site)
             Flight.Slide = 10.0f;
             Flight.TumbleAxis = bUpper ? Tangent : FVector(Tangent.Y, -Tangent.X, 0.4);
             Flight.Turns = bUpper ? 1 + Shard % 2 : 1;
+            Clearing(Flight);
             Out.Add(Flight);
         }
     }
@@ -180,6 +202,7 @@ TArray<FFlight> Plan(const FSite& Site)
         Flight.Slide = 6.0f;
         Flight.TumbleAxis = FVector(Chip % 2 ? 1.0 : 0.3, Chip % 3 ? 0.6 : -0.8, 0.2);
         Flight.Turns = 2;
+        Clearing(Flight);
         Out.Add(Flight);
     }
     return Out;
@@ -190,18 +213,18 @@ FShots ShotsFor(const FSite& Site)
     FShots Shots;
     if (Site.bApse)
     {
-        // From over the back of the board: first the whole Waystone with the seal at its foot, then (the hold) lower and to one side, turned so the
-        // Waystone stands in the left third of the frame beside the ending panel.
-        Shots.EyeA = FVector(0.0, -1450.0, 470.0); Shots.FocusA = FVector(0.0, 70.0, 250.0);
-        Shots.EyeB = FVector(-180.0, -1600.0, 340.0); Shots.FocusB = FVector(0.0, 60.0, 300.0);
+        // From over the back of the board: first the whole Waystone with the seal at its foot, then (the hold) farther back and turned so the whole
+        // Waystone stands in the band the ending panel leaves free at the left of the frame (the panel covers the middle 69 % of a 16:9 screen).
+        Shots.EyeA = FVector(0.0, -1700.0, 500.0); Shots.FocusA = FVector(0.0, 70.0, 290.0);
+        Shots.EyeB = FVector(-250.0, -1900.0, 450.0); Shots.FocusB = FVector(0.0, 150.0, 300.0);
     }
     else
     {
         // The legacy pedestal in the board's far corner, seen from across the board.
-        Shots.EyeA = FVector(-420.0, -950.0, 520.0); Shots.FocusA = FVector(0.0, 0.0, 170.0);
-        Shots.EyeB = FVector(-480.0, -1050.0, 380.0); Shots.FocusB = FVector(0.0, 0.0, 200.0);
+        Shots.EyeA = FVector(-560.0, -1250.0, 560.0); Shots.FocusA = FVector(0.0, 0.0, 170.0);
+        Shots.EyeB = FVector(-650.0, -1100.0, 420.0); Shots.FocusB = FVector(0.0, 0.0, 170.0);
     }
-    Shots.HeldYawDegrees = 15.0f;
+    Shots.HeldYawDegrees = 15.5f;
     return Shots;
 }
 
@@ -284,8 +307,7 @@ bool UWaystoneSetPiece::Build(const FWaystoneSetPieceSetup& Setup)
             if (UMaterialInterface* Own = Mesh->GetMaterial(0))
             {
                 UMaterialInstanceDynamic* Look = UMaterialInstanceDynamic::Create(Own, this);
-                float Glow = 0.0f;
-                Look->GetScalarParameterValue(FName(TEXT("Glow")), Glow);
+                const float Glow = Look->K2_GetScalarParameterValue(TEXT("Glow"));
                 Set->SetMaterial(0, Look);
                 Looks.Add(Look);
                 BaseGlow.Add(Glow);

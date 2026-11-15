@@ -128,7 +128,7 @@ bool FWaystoneTimelineTest::RunTest(const FString& Parameters)
     // The timeline starts where the board is and ends exactly where the settled state is, so a played and a converged ending match.
     TestEqual(TEXT("Flare at rest before"), FlareGain(0.0f), 1.0f);
     TestEqual(TEXT("Flare at rest after"), FlareGain(DurationSeconds), 1.0f);
-    TestTrue(TEXT("The flare builds to the shatter"), FlareGain(ShatterSeconds - 0.01f) > 3.0f && FlareGain(ShatterSeconds) > FlareGain(ShatterSeconds - 0.01f));
+    TestTrue(TEXT("The flare builds to the shatter"), FlareGain(ShatterSeconds - 0.01f) > 1.5f && FlareGain(ShatterSeconds) > FlareGain(ShatterSeconds - 0.01f));
     TestEqual(TEXT("No lift before"), LiftAlpha(0.0f), 0.0f);
     TestEqual(TEXT("No lift at the shatter"), LiftAlpha(ShatterSeconds), 0.0f);
     TestEqual(TEXT("Lifted at the end"), LiftAlpha(DurationSeconds), 1.0f);
