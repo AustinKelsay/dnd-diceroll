@@ -453,16 +453,16 @@ bool FCompactEnemyTuningTest::RunTest(const FString& Parameters)
         }
         TestEqual(TEXT("Still revision 7"), Old.Progress().CatalogRevision, 7);
     }
-    // New runs are revision 10 (#218); a revision outside 7..10 is refused by name and changes nothing.
+    // New runs are revision 11 (#240); a revision outside 7..11 is refused by name and changes nothing.
     FExpeditionRun Run; Run.NewRun(42, Error, TEXT("tuning-fixture"));
-    TestEqual(TEXT("New runs use revision 10"), Run.Progress().CatalogRevision, 10);
+    TestEqual(TEXT("New runs use revision 11"), Run.Progress().CatalogRevision, 11);
     const FExpeditionSnapshot Before = Run.Snapshot();
-    for (const int32 Revision : {6, 11})
+    for (const int32 Revision : {6, 12})
     {
         FExpeditionSnapshot Unknown = Run.Snapshot(); Unknown.Progress.CatalogRevision = Revision;
         TestFalse(FString::Printf(TEXT("Revision %d refused"), Revision), Run.Restore(Unknown, Error));
         TestTrue(TEXT("The refusal names the revision and the supported ones: ") + Error,
-            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 10")));
+            Error.Contains(FString::Printf(TEXT("revision %d;"), Revision)) && Error.Contains(TEXT("revisions 7 to 11")));
         TestTrue(TEXT("Refusal leaves the run unchanged"), SameRun(Before, Run.Snapshot()));
     }
     return !HasAnyErrors();
