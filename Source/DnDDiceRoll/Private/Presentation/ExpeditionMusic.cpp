@@ -68,7 +68,7 @@ void FExpeditionMusicDirector::Reset()
 namespace
 {
 template <typename T>
-T* Resolve(const TSoftObjectPtr<T>& Reference)
+T* ResolveMusicPiece(const TSoftObjectPtr<T>& Reference)
 {
     if (Reference.IsNull()) { return nullptr; }
     if (T* Loaded = Reference.Get()) { return Loaded; }
@@ -76,11 +76,11 @@ T* Resolve(const TSoftObjectPtr<T>& Reference)
 }
 
 template <typename K>
-void LoadPieces(const TMap<K, FExpeditionMusicPiece>& From, TMap<K, TObjectPtr<USoundWave>>& Waves, TMap<K, float>& Volumes, TFunctionRef<FString(K)> Describe)
+void LoadMusicPieces(const TMap<K, FExpeditionMusicPiece>& From, TMap<K, TObjectPtr<USoundWave>>& Waves, TMap<K, float>& Volumes, TFunctionRef<FString(K)> Describe)
 {
     for (const TPair<K, FExpeditionMusicPiece>& Entry : From)
     {
-        USoundWave* Wave = Resolve(Entry.Value.Wave);
+        USoundWave* Wave = ResolveMusicPiece(Entry.Value.Wave);
         if (Wave && Wave->GetDuration() > 0.0f)
         {
             Waves.Add(Entry.Key, Wave);
@@ -106,9 +106,9 @@ void FExpeditionMusicBank::Load(const UExpeditionMusicSounds* Sounds)
     if (!Sounds) { return; }
     TMap<EExpeditionMusic, FExpeditionMusicPiece> Playable = Sounds->Tracks;
     Playable.Remove(EExpeditionMusic::None);
-    LoadPieces<EExpeditionMusic>(Playable, Tracks, TrackVolumes, [](EExpeditionMusic Key) { return ExpeditionMusic::Name(Key); });
-    LoadPieces<EExpeditionSting>(Sounds->Stings, Stings, StingVolumes, [](EExpeditionSting Key) { return ExpeditionMusic::StingName(Key) + TEXT(" sting"); });
-    MusicClass = Resolve(Sounds->MusicClass);
+    LoadMusicPieces<EExpeditionMusic>(Playable, Tracks, TrackVolumes, [](EExpeditionMusic Key) { return ExpeditionMusic::Name(Key); });
+    LoadMusicPieces<EExpeditionSting>(Sounds->Stings, Stings, StingVolumes, [](EExpeditionSting Key) { return ExpeditionMusic::StingName(Key) + TEXT(" sting"); });
+    MusicClass = ResolveMusicPiece(Sounds->MusicClass);
 }
 
 USoundWave* FExpeditionMusicBank::Track(EExpeditionMusic Key) const

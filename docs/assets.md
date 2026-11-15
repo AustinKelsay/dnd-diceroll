@@ -512,7 +512,7 @@ These are raw engine files, not `/Game/DnDDiceRoll` packages, so they have no `a
 | [Medieval: Victory Theme](https://opengameart.org/content/medieval-victory-theme) | RandomMind | CC0 1.0 Universal (OpenGameArt licence field, checked on the page); credit appreciated, not required | `victory.wav` → Victory |
 | [Medieval: Defeat Theme](https://opengameart.org/content/medieval-defeat-theme) | RandomMind | CC0 1.0 Universal (OpenGameArt licence field, checked on the page) | `defeat.wav` → Defeat |
 
-MUSIC_IMPORT_PLACEHOLDER
+- **Import (2026-11-15):** one headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2` run of `Content/Python/import_expedition_music.py`, exit 0, `MUSIC_IMPORT_COMPLETE 4 tracks, 2 stings`, no warnings. A SHA-256 snapshot of `Content/` and `Config/` before and after: **added exactly** the 6 `SW_Mus_*`, `SC_Music` and `DA_ExpeditionMusic`; nothing changed or removed. A rerun: exit 0, all 8 `MUSIC_ASSET kept`, no file changed. A wave whose WAV later changes is reported (`MUSIC_STALE`) and replaced only with `DND_MUSIC_REIMPORT=1`.
 
 ## Board overlay material (issue #142)
 
