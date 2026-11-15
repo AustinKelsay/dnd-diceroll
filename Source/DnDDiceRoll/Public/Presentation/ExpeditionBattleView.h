@@ -250,6 +250,8 @@ public:
     void ChooseRoute(int32 Index);
     /** Claims the reward for RecipientId with Card (#218); every rejection is logged by name and changes nothing. */
     void ClaimReward(int32 RecipientId, ERewardCard Card = ERewardCard::Gear);
+    /** Says that RecipientId has fallen and cannot be chosen for the reward, with the refusal cue a rejected claim plays (#231). Changes nothing. */
+    void RefuseRewardRecipient(int32 RecipientId);
     /** Logs the level the last victory's survivors reached (#218); nothing outside the Reward phase. */
     void RecordLevelGain();
     void Recover(bool bTake);
@@ -313,6 +315,8 @@ public:
      * unit when the turn changes.
      */
     void Pan(float Right, float Away);
+    /** Counts the pans that moved the player's pan offset, so a click held while the player pans is spent (#232); the focus easing on its own never counts. */
+    uint32 PlayerPans() const { return PlayerPanCount; }
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
     /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
@@ -589,6 +593,7 @@ private:
     /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
     FVector FocusTarget = FVector::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;
+    uint32 PlayerPanCount = 0;
     int32 LastFocusId = INDEX_NONE;
     /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
     TOptional<bool> StarterSunShadows;

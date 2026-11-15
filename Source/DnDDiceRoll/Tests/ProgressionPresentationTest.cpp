@@ -293,4 +293,77 @@ bool FHeroDetailsInCombatTest::RunTest(const FString& Parameters)
     Game.Player->ReleaseSimulatedPointer();
     return !HasAnyErrors();
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRewardRefusesFallenTest, "Project.Expedition.Presentation.RewardRefusesAFallenRecipient",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRewardRefusesFallenTest::RunTest(const FString& Parameters)
+{
+    using namespace ProgressionPresentationTest;
+    // #231: a Reward screen with a fallen hero and at least two survivors, so the kept selection (the last survivor) is not the first survivor the
+    // controller used to jump to. The scripted player claims Gear for the first survivor until one comes up.
+    auto Shaped = [](const FExpeditionRun& R)
+    {
+        int32 Up = 0, Down = 0;
+        for (const FCombatantState& U : R.Battle().Snapshot().Encounter.Combatants) { if (U.Side == ECombatSide::Party) { ++(U.Life == ECombatLife::Conscious ? Up : Down); } }
+        return Down > 0 && Up >= 2;
+    };
+    auto Reach = [&](FExpeditionRun& Run, int32 Seed)
+    {
+        FString Error;
+        if (!Run.NewRun(Seed, Party(), Error, FString::Printf(TEXT("reward-fallen-%d"), Seed), ERuleset::Compact)) { return false; }
+        for (int32 Guard = 0; Guard < 16; ++Guard)
+        {
+            if (Run.Progress().Phase == EExpeditionPhase::Recovery && !Run.Recover(true, Error)) { return false; }
+            if (Run.Progress().Phase == EExpeditionPhase::Route && (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run))) { return false; }
+            if (Run.Progress().Phase != EExpeditionPhase::Reward) { return false; }
+            if (Shaped(Run)) { return true; }
+            if (!Run.ClaimReward(FirstSurvivor(Run), Error)) { return false; }
+        }
+        return false;
+    };
+    const int32 Seed = FirstSeedWhere([&](int32 S) { FExpeditionRun Probe; return Reach(Probe, S); }, 42, 300);
+    FExpeditionRun Run;
+    if (!TestTrue(TEXT("A seed reaches a reward with a fallen hero and two survivors"), Seed != INDEX_NONE && Reach(Run, Seed))) { return false; }
+    int32 Fallen = INDEX_NONE, Kept = INDEX_NONE, KeptId = INDEX_NONE, Index = 0;
+    for (const FCombatantState& U : Run.Battle().Snapshot().Encounter.Combatants)
+    {
+        if (U.Side != ECombatSide::Party) { continue; }
+        if (U.Life == ECombatLife::Conscious) { Kept = Index; KeptId = U.Id; }
+        else if (Fallen == INDEX_NONE) { Fallen = Index; }
+        ++Index;
+    }
+    TestTrue(TEXT("The kept hero is not the first survivor"), KeptId != FirstSurvivor(Run));
+    const int32 Encounter = Run.Progress().EncountersCompleted;
+    const FExpeditionSaveData Data = Checkpoint(Run);
+    ExpeditionInputHarness::FHarness Game(*this, TEXT("RewardFallen"), &Data);
+    if (!Resume(*this, Game, TEXT("reward"))) { return false; }
+    Game.Frame(0.0f);
+    const FKey Numbers[] = {EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four};
+    Game.Press(Numbers[Kept]); Game.Frame(0.0f);
+    if (!TestEqual(TEXT("The survivor's number selects them"), Game.Player->Selection(), KeptId)) { return false; }
+    const TArray<uint8> Bytes = Game.CheckpointBytes();
+    // The fallen hero's number key: refused, said, and the selection stays on later frames too.
+    Game.Press(Numbers[Fallen]); Game.Frame(0.0f); Game.Frame(0.0f);
+    TestEqual(TEXT("The fallen hero's number keeps the selection"), Game.Player->Selection(), KeptId);
+    TestTrue(TEXT("and says why"), !Game.View->Messages().IsEmpty() && Game.View->Messages().Last().Contains(TEXT("has fallen and cannot receive a reward")));
+    // The fallen hero's party card, by a real pointer click.
+    const double Scale = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
+    const FVector2D Card = FVector2D(ExpeditionLayout::PartyCardX + ExpeditionLayout::PartyCardWidth * 0.5,
+        ExpeditionLayout::PartyCardTop + Fallen * ExpeditionLayout::PartyCardPitch + ExpeditionLayout::PartyCardHeight * 0.5) * Scale;
+    Game.Player->SimulatePointer(Card, FIntPoint(0, 0));
+    Game.Frame(0.0f);
+    FName Under;
+    TestTrue(TEXT("The pointer is on the fallen hero's party card"), Game.Hud->ButtonAt(Card, Under) && Under == FName(*FString::Printf(TEXT("Party%d"), Fallen)));
+    Game.Press(EKeys::LeftMouseButton);
+    Game.Player->ReleaseSimulatedPointer();
+    Game.Frame(0.0f);
+    TestEqual(TEXT("A click on the fallen hero's card keeps the selection"), Game.Player->Selection(), KeptId);
+    TestTrue(TEXT("Neither refusal claimed anything"), Game.View->Progress().Phase == EExpeditionPhase::Reward && Game.CheckpointBytes() == Bytes);
+    // Enter on Gear then claims for the hero the player chose.
+    Game.Press(EKeys::G); Game.Frame(0.0f);
+    Game.Press(EKeys::Enter); Game.Settle();
+    const FExpeditionProgress& P = Game.View->Progress();
+    TestTrue(TEXT("Enter claims for the kept hero"), P.History.IsValidIndex(Encounter - 1) && P.History[Encounter - 1].RewardRecipient == KeptId &&
+        P.History[Encounter - 1].RewardCard == ERewardCard::Gear && P.Phase != EExpeditionPhase::Reward);
+    return !HasAnyErrors();
+}
 #endif

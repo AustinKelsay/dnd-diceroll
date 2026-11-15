@@ -67,8 +67,11 @@ public:
     bool ModeTipActive() const { return bModeTip; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
-    /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
-    void SelectPartyIndex(int32 Index, bool bInspect = true);
+    /**
+     * Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. On the Reward screen a fallen hero
+     * is refused and the selection stays (#231). Returns whether the choice was taken.
+     */
+    bool SelectPartyIndex(int32 Index, bool bInspect = true);
     /** The hero whose full status the player asked for by choosing them again; cleared each turn. */
     int32 Inspected() const { return InspectedId; }
     void HandleButton(FName Id);
@@ -166,6 +169,10 @@ public:
      */
     bool PreviewedPointerCell(FIntPoint& Cell) const;
 private:
+    /** On the Reward screen, refuses a fallen hero as the reward's recipient, saying why when a selection is kept (#231). */
+    bool RefusesRecipient(const FCombatantState& Unit);
+    /** Selects an ally chosen on the board, unless RefusesRecipient refuses them. */
+    void ChooseAlly(const FCombatantState& Unit);
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
@@ -193,14 +200,17 @@ private:
     static constexpr float PoseSlopDegrees = 0.02f;
     /**
      * A board click is a press and a release that leave everything as they found it (#220): Click only arms it, from the cell the last frame previewed and the camera that
-     * preview was found with, and ClickReleased acts if the camera is still that camera, the pointer has not dragged past ClickSlop and the same cell is still previewed.
-     * A press the camera or the pointer moved under is spent (bPressVoided) and its release commits nothing.
+     * preview was found with, and ClickReleased acts if the player has not moved the camera (its yaw, its distance, a pan), the pointer has not dragged past ClickSlop and
+     * the same cell is still previewed. The focus easing on its own toward the acting unit does not count as moving it (#232). A press the player's camera or the pointer
+     * moved under is spent (bPressVoided) and its release commits nothing.
      */
     static constexpr float ClickSlop = 6.0f;
     bool bPressArmed = false, bPressVoided = false;
     FIntPoint PressCell = FIntPoint::ZeroValue;
     FVector2D PressPointer = FVector2D::ZeroVector;
-    FTransform PressPose;
+    /** The rendered yaw and distance and the view's PlayerPans at the press: the parts of the camera the player moves (#232). */
+    float PressYaw = 0.0f, PressDistance = 0.0f;
+    uint32 PressPans = 0;
     /** What the press was made in (PressContext): a change of it, however briefly, spends the press for good. */
     uint32 PressContextStamp = 0;
     /** Bumped by every mode change, so a mode that is changed and changed back mid-press still spends it. */

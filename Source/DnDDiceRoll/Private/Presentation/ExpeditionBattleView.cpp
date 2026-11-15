@@ -2198,6 +2198,7 @@ void AExpeditionBattleView::Pan(float Right, float Away)
     const FVector Base = BaseFocus();
     FVector2D Offset = PanOffset + Step;
     LimitPan(FVector2D(Base), Offset);
+    if (!Offset.Equals(PanOffset, 0.01)) { ++PlayerPanCount; }
     PanOffset = Offset;
 }
 
@@ -2356,6 +2357,13 @@ void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
         PlayCue(EExpeditionCue::Loot);
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
+void AExpeditionBattleView::RefuseRewardRecipient(int32 RecipientId)
+{
+    const FCombatantState* Unit = Rules().Find(RecipientId);
+    Record({false, FString::Printf(TEXT("%s has fallen and cannot receive a reward."), Unit ? *Unit->Name : TEXT("That hero"))});
+    PlayCue(EExpeditionCue::Click);
 }
 
 void AExpeditionBattleView::Recover(bool bTake)
