@@ -2290,7 +2290,9 @@ void AExpeditionBattleView::RecordLevelGain()
 
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
-    Show.Enqueue(Results, Rules().Snapshot());
+    // A battle won or lost ends the whole run only when the committed run phase says so: the finale (the fifth fight) won, or any defeat (#243).
+    const bool bEndsRun = HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat);
+    Show.Enqueue(Results, Rules().Snapshot(), bEndsRun);
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 

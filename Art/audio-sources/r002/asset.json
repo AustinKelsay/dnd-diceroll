@@ -1,0 +1,411 @@
+{
+  "schema_version": 1,
+  "asset_id": "audio-sources",
+  "revision": 2,
+  "unreal_package": "/Game/DnDDiceRoll/Audio/DA_ExpeditionCueSounds",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/243",
+  "provenance": {
+    "author": "Cut, layered and mixed by this project's agents from recordings by: AntumDeluge; Ben Jaszczak & Brian Nelson (Still North Media); Kenney (Kenney Vleugels, kenney.nl); Versilian Studios (recorded by Sam Gossner & Simon Dalzell; sample cutting by Elan Hickler/Soundemote); artisticdude",
+    "license": "Every source is CC0 1.0 Universal (per-source statements in recipe.json and docs/assets.md); the edits are released the same way",
+    "origin": "Impact Sounds (1.0) <https://kenney.nl/assets/impact-sounds>; RPG Audio (1.0) <https://kenney.nl/assets/rpg-audio>; Casino Audio (1.0) <https://kenney.nl/assets/casino-audio>; RPG Sound Pack <https://opengameart.org/content/rpg-sound-pack>; Medieval sound effects - Weapon Textures <https://opengameart.org/content/medieval-sound-effects-weapon-textures>; Medieval sound effects - Weapon impacts <https://opengameart.org/content/medieval-sound-effects-weapon-impacts>; Fire Crackling <https://opengameart.org/content/fire-crackling>; VS Chamber Orchestra: Community Edition (VSCO-2-CE) at commit 440300901dfe9275fd84e0b7763af1f8443ae62e <https://github.com/sgossner/VSCO-2-CE>"
+  },
+  "recipe": {
+    "method": "tools/audio_cues.py build --downloads .local/audio-downloads: per variation, an ffmpeg mix of the layers in recipe.json (trim, tape-style pitch, high/low-pass, fades, gain, placement) to 48 kHz mono, a look-ahead limiter of at most the category's limit_db (or the cue's own limit_db), one gain to the category's integrated loudness capped at -1 dBTP, then triangular dither to 16-bit PCM",
+    "approved_reference": "Ticket #243 on spec #239's tone brief (as #242): dark high fantasy; the spend cues are quiet leather, glass, liquid and a low growl under the action's own sound; protection is a ringing steel ward; a round is a bell and a drum; the finale a longer brass arpeggio and chord with gong and bell tree; the run's end a low bell tolled twice over a tuba drone",
+    "parameters": {
+      "categories": {
+        "impact": {
+          "lufs": -16.0,
+          "limit_db": 8.0
+        },
+        "weapon": {
+          "lufs": -19.0,
+          "limit_db": 8.0
+        },
+        "magic": {
+          "lufs": -19.0,
+          "limit_db": 3.0
+        },
+        "dice": {
+          "lufs": -20.0,
+          "limit_db": 6.0
+        },
+        "step": {
+          "lufs": -27.0,
+          "limit_db": 4.0
+        },
+        "ui": {
+          "lufs": -26.0,
+          "limit_db": 3.0
+        },
+        "stinger": {
+          "lufs": -21.0,
+          "limit_db": 6.0
+        },
+        "fanfare": {
+          "lufs": -17.0,
+          "limit_db": 2.0
+        },
+        "event": {
+          "lufs": -20.0,
+          "limit_db": 8.0
+        },
+        "spend": {
+          "lufs": -24.0,
+          "limit_db": 4.0
+        },
+        "ward": {
+          "lufs": -20.0,
+          "limit_db": 8.0
+        },
+        "roar": {
+          "lufs": -18.0,
+          "limit_db": 6.0
+        },
+        "grand": {
+          "lufs": -17.0,
+          "limit_db": 6.0
+        }
+      },
+      "true_peak_ceiling_dbtp": -1.0,
+      "sample_rate": 48000,
+      "variations": 60,
+      "cue_limit_db_overrides": {
+        "PartyTurn": 0,
+        "EnemyTurn": 0,
+        "Camp": 6
+      },
+      "previous_revision": "Art/audio-sources/r001 (#242: the first 20 cues, 45 variations); all 45 are byte-identical here. PartyTurn, EnemyTurn and Camp keep the limiter setting they were rendered with in r001 as cue overrides, so this recipe reproduces them exactly"
+    },
+    "model_revision": "not applicable (recorded sources, no generation)",
+    "raw_downloads": "not committed: each source file used is listed with its SHA-256 in recipe.json, and build refuses a mismatch"
+  },
+  "tools": {
+    "ffmpeg": "ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+    "audio_cues.py": "tools/audio_cues.py at this commit"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/audio-sources/r002/recipe.json",
+      "sha256": "70d72ec6300eb64668d1e9f11ef975684acb8a2a06e616fa44756414c3e01a82"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceRoll_01.wav",
+      "sha256": "0da005c32759f40f70055dd8685170e328f5d414e48b12e80c458fed280050be"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceRoll_02.wav",
+      "sha256": "ec125392b7d0d74e80e2d5adac89c2fe5d7dacad25308c91bc79fcc816eb9ad7"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceRoll_03.wav",
+      "sha256": "87d5ed70fb085b8ada86fbc4c108085750e79a7e4bdc625b805a34edd5d62e4f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceLand_01.wav",
+      "sha256": "349d88b9c2aba54f808aec5e9484af1da9628fa6d8e464cef5ba7e1ef0fb53bf"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceLand_02.wav",
+      "sha256": "0bd38ce426cccf9cf70eaecf4fbad528ee914e9a745bcdbf939ea700b835333c"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/DiceLand_03.wav",
+      "sha256": "63cfe4cc4bc148d9da078fe7989c014399c9f17190424809575c5a27a3f1a679"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Hit_01.wav",
+      "sha256": "f80c83ec433f05c3a4dc7837963546b2ede51e0f9e9d59221efa1f807d4764ac"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Hit_02.wav",
+      "sha256": "b2e06abd3496d72072e384d03a0c064780271f086665429215f8747ddd21cb77"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Hit_03.wav",
+      "sha256": "5937c0c3fcc07bb57430e12903e8e4ac3010d7a04ce8466d9ecda41283f926f2"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Hit_04.wav",
+      "sha256": "d8c6320ee93cf73fc84895fdae153c7e4e5eda92850fcc075d004b5277b69d43"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Critical_01.wav",
+      "sha256": "fb092c5d69719d68e9b528d584c2a7ab6e65b24a12e3e9fbc9790785c6de7c4c"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Critical_02.wav",
+      "sha256": "16500f98a0ccbba3e1274feb76f4483bc7ecbf7f801490945524f3c8c0e78631"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Miss_01.wav",
+      "sha256": "75d5ec66abf2efe9bc77b5af3ed39267c4d5bb7fd545da8f70e7f1a4d7762fc4"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Miss_02.wav",
+      "sha256": "8886b30ab218a90a7089aac721dedb554f498d7d26186690b914881c37642d8d"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Miss_03.wav",
+      "sha256": "0dcc5da945adf9e132d7f130b526e9f7ab8201eea8783425639f8b7bef3a1d74"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Heal_01.wav",
+      "sha256": "03657b2ea4c264d5710c94bc134907ffa8bda435e347c8bdcde01fef577b2a61"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Step_01.wav",
+      "sha256": "d6b144dd8231c32a3802e464ec529e293cafe6cfb6269e2c344ad6481eb7e31e"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Step_02.wav",
+      "sha256": "3bb7d325f665a9a7fcd04ed11fb1d4a687f4d5af9ffde6607b8c8622ceb986ec"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Step_03.wav",
+      "sha256": "d1d8fbdcfc4265ceffe015cfc8950f813ddf04db69753a55ceac467407df4dd6"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Step_04.wav",
+      "sha256": "5fb828b651a595b94447701f33dcfb51a26ba0ac17afa42448b27c8e9d5cca3f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Click_01.wav",
+      "sha256": "81f2ccf77a9f12c5b8fe8816ba4a9e41ff6256c816a26949085010d5801732dd"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Click_02.wav",
+      "sha256": "98b91f9cf7b362a0869843d58e5b767f865df5eb4e3c6e2ba316f0efd303da40"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Click_03.wav",
+      "sha256": "2750bb97e30d02738b5416607b1eb96a4b6c5f5e3cb3b74464e1fdc389c94c0d"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Downed_01.wav",
+      "sha256": "cd3480f1b9f3fe223249a21e1984ab2b9be37090e5f7043979fcc1c574114981"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Downed_02.wav",
+      "sha256": "5279fabc47ff2f2cdf89a8e81ab3c0c182957643cd6e16879053c76f260ea667"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Death_01.wav",
+      "sha256": "f501ff71ad5b52e24ee58ccbfe1aca2ab8f7c652e364b291afcc33f097a71c33"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Death_02.wav",
+      "sha256": "294b87ede16397ed6d31b46ca4170dc87e3c3298863252a566d99744f31d7119"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/PartyTurn_01.wav",
+      "sha256": "9ccf905ee470b7386430add3741a7813c309d839c952294a50ee219f745bcd63"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/EnemyTurn_01.wav",
+      "sha256": "d41b48c9f156ed0c1e6f7846eab3c29917080d56743b0f21a8c76064bc44ad8a"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Victory_01.wav",
+      "sha256": "c7859ed87e0d76a13bffd9d2abf5f4d8ba88a6eaf83ab0fdd39d053966515429"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Defeat_01.wav",
+      "sha256": "03512954fbd9e6ffa86407a5ea9b6b1bf7ebd6e6ba1bad297057a9891a7a43da"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Spell_01.wav",
+      "sha256": "3d52f94f6d925acdc7ceed91d13ff48ba7749522ed1c3d22c7d3b32f79b4e1ce"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Spell_02.wav",
+      "sha256": "880f321831f1045c025ac30ef2d6f6f4c48d359a01a6013f57623ff4bc29ce36"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Spell_03.wav",
+      "sha256": "fab1ac4a678a09a5dc450cb42870b96b07896de7f7345ae036406cb19a457a28"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Bow_01.wav",
+      "sha256": "319605abbbb54d3fbc833bb50dbe631ad3398a77dd82752a2c8a651dfc3d1e4f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Bow_02.wav",
+      "sha256": "d5967aea5273c705407785fefce7e795bb65ef2a096208325ccf13ed10e9fddb"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Bow_03.wav",
+      "sha256": "562e53a7b7a603d727cc4e57a41401929a5ed7ad35683b8e66a070fb9ad2210e"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Swing_01.wav",
+      "sha256": "91ae2b8767a629b1bbf340c422ec11e08a7cf7e2b82dcfaf768ca567661e5957"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Swing_02.wav",
+      "sha256": "74bd78c7260550df238fca6ff817c7819ff9ebb35296f82787e466cf76f66f88"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Swing_03.wav",
+      "sha256": "988c0df8ad55caf0703475eba62711cd8588a7285c1601f74c3ffa907b325901"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Swing_04.wav",
+      "sha256": "de8d7d03463fa0c048219c9fdb618faed58af5b6f18e269e666ea83f00d445b3"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Camp_01.wav",
+      "sha256": "2677c0e3905918835cabef9557d2adb45d87ac4a8f7b79b34a3bcd27bb7abe2a"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Loot_01.wav",
+      "sha256": "51090cec87840f5232e7b51510752ff1b2e87516d06fd149f69a8f5a6f3233b4"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Loot_02.wav",
+      "sha256": "9c203362bffc4cdfe39b41f28101164aa924e59c651b7e7e55a7827aa019d211"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Route_01.wav",
+      "sha256": "27940e3d95bd938de93f6bd0885f282b585f35e89c93aad22cac7bdbb7a507e4"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendKit_01.wav",
+      "sha256": "e95ca4037f592ccd248f838ef625ac0161ed3d2c1881a7e3b3f8b693df7b9df0"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendKit_02.wav",
+      "sha256": "48eccb801374be1c93d5bc5a30978b5fc4d1c6c7ec9898923faf13a4dcf38ca8"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendSlot_01.wav",
+      "sha256": "47dbb56c14fcda0b425d5f57ca214aefb70591c56241910d5a09ef9c7aa94139"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendSlot_02.wav",
+      "sha256": "4f9c3b181286c0881d10a257815fac3289e87f904ecd4a4d5a2c91aa1f300af0"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendPotion_01.wav",
+      "sha256": "fd5b730acd3c7c1a30c1327b47625f8e1377cf08c319dde2a7cee07e49fb95f9"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendPotion_02.wav",
+      "sha256": "5f33a50245b07b6bd878c86cf8231d1f2e26b7eaecad4c7a5cced017cc63df7b"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendRage_01.wav",
+      "sha256": "72fc1590557f2b419e164b31e33faa3de5c76409ff0102d3d447dc4a5ca5eaf3"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/SpendRage_02.wav",
+      "sha256": "3d867c0fd944db643452de6b6985429d5a3c617af75508bec65da5faff86115e"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Protection_01.wav",
+      "sha256": "9a6eea095aa84885b77cfa4bccd1ba8211bec266bf17c56220db341cca3afe0f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Protection_02.wav",
+      "sha256": "e9224433dbb8c534ab71d6b1f98b799bbeacec04cbca76a180e73037ff490fd9"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Protection_03.wav",
+      "sha256": "abdb777370127521b6c8d694da594a0ca6447c3a60583aee97c6babd78036f43"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/RoundStart_01.wav",
+      "sha256": "ea4328f8a57cf85d7e5b995dd65f6d5087dd7ced32fe1374792bce6969ab3cb7"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/RoundStart_02.wav",
+      "sha256": "3b84656320f03800494b85d19efb827497b0b579cff36c18d2de42a66ecd7a6a"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/Finale_01.wav",
+      "sha256": "eceea924131e11bbc80670792dc5ef51d7977314d84362dd4838ff030ffd8abc"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-sources/r002/cues/RunEnd_01.wav",
+      "sha256": "206ae27a3aaf3296acde1fd47d16ae2b9fa60cf54e19a2b114d5b59a595fbc27"
+    }
+  ],
+  "import_policy": {
+    "name": "expedition-cue-soundwave",
+    "version": 1,
+    "settings": {
+      "importer": "AssetImportTask (automated) from Content/Python/import_expedition_cues.py",
+      "destination": "/Game/DnDDiceRoll/Audio/Cues/SW_<Cue>_<NN>",
+      "sound_class": "/Game/DnDDiceRoll/Audio/SC_Effects",
+      "data_asset": "/Game/DnDDiceRoll/Audio/DA_ExpeditionCueSounds (UExpeditionCueSounds: cue -> variations in order, volume from recipe.json)",
+      "compression": "engine defaults",
+      "looping": false,
+      "rerun": "kept when DiceRollSourceSha256 matches; replaced only with DND_CUES_REIMPORT=1"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

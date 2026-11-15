@@ -305,6 +305,8 @@ public:
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
     void PlayCue(EExpeditionCue Cue);
+    /** How many times a cue has been requested since the view began, heard or not (the serial its variation hash reads, #243). Test and trace support. */
+    uint32 CueRequests(EExpeditionCue Cue) const { return CueSerials.IsValidIndex(static_cast<int32>(Cue)) ? CueSerials[static_cast<int32>(Cue)] : 0; }
 
     // Camera and board geometry.
     void Orbit(float Degrees);
