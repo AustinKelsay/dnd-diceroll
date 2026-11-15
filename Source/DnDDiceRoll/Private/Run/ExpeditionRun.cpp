@@ -112,13 +112,13 @@ const TCHAR* RoleWord(EFoeRole Role, bool bDangerous)
 }
 
 /** The fixed risk table (contract 11), verified against the measured cost by report 12. */
-const TCHAR* RiskWord(int32 Stage, bool bDangerous)
+ERouteRisk RiskLevel(int32 Stage, bool bDangerous)
 {
     switch (StageOf(Stage))
     {
-    case EEncounterStage::Approach: return bDangerous ? TEXT("high") : TEXT("low");
-    case EEncounterStage::Pressure: return bDangerous ? TEXT("severe") : TEXT("moderate");
-    default: return bDangerous ? TEXT("severe") : TEXT("high");
+    case EEncounterStage::Approach: return bDangerous ? ERouteRisk::High : ERouteRisk::Low;
+    case EEncounterStage::Pressure: return bDangerous ? ERouteRisk::Severe : ERouteRisk::Moderate;
+    default: return bDangerous ? ERouteRisk::Severe : ERouteRisk::High;
     }
 }
 
@@ -144,7 +144,7 @@ void DescribeRoute(FExpeditionRoute& Route, int32 Stage, int32 Choice, bool bSec
         const FString Rewards = bFinale ? FString(TEXT("Recover the artifact; no loot")) : FString::Printf(TEXT("%s, +%d potion%s%s"), bUpgradeCards ? TEXT("1 upgrade choice") : TEXT("+1 gear"),
             Route.RewardPotions, Route.RewardPotions == 1 ? TEXT("") : TEXT("s"), Choice == 0 && bSecuredSupplies ? TEXT(" (secured supplies)") : TEXT(""));
         Route.Preview = FString::Printf(TEXT("%s | %d foes: %s | %s: %s | Risk: %s | %s"), Choice == 0 ? TEXT("Guarded") : TEXT("Dangerous"),
-            Route.EnemyCount, *FString::Join(Words, TEXT(", ")), Recipe.Terrain, Recipe.Note, RiskWord(Stage, Route.bDangerous), *Rewards);
+            Route.EnemyCount, *FString::Join(Words, TEXT(", ")), Recipe.Terrain, Recipe.Note, FExpeditionRun::RiskWord(RiskLevel(Stage, Route.bDangerous)), *Rewards);
         return;
     }
     Route.Preview = FString::Printf(TEXT("%s | %d %s | %s | +1 gear (rank 3 cap) | +%d potions%s"),
@@ -417,11 +417,33 @@ bool FExpeditionRun::EncounterLayout(const FExpeditionRoute& Route, int32 Stage,
     return true;
 }
 
+EEncounterStage FExpeditionRun::StageKind(int32 Stage) { return StageOf(Stage); }
+
+EExpeditionWorld FExpeditionRun::WorldOf(EEncounterStage Stage, bool bDangerous)
+{
+    return Stage == EEncounterStage::Finale ? EExpeditionWorld::Vault : bDangerous ? EExpeditionWorld::Vigil : EExpeditionWorld::Root;
+}
+
+const TCHAR* FExpeditionRun::RiskWord(ERouteRisk Risk)
+{
+    switch (Risk)
+    {
+    case ERouteRisk::Low: return TEXT("low");
+    case ERouteRisk::Moderate: return TEXT("moderate");
+    case ERouteRisk::High: return TEXT("high");
+    case ERouteRisk::Severe: return TEXT("severe");
+    default: return TEXT("");
+    }
+}
+
 FEncounterIdentity FExpeditionRun::Encounter(const FExpeditionProgress& Progress, const FExpeditionRoute& Route)
 {
     FEncounterIdentity Identity;
-    Identity.Stage = StageOf(FMath::Clamp((Route.Id - 1) / 2, 0, EncounterCount - 1));
+    const int32 Stage = FMath::Clamp((Route.Id - 1) / 2, 0, EncounterCount - 1);
+    Identity.Stage = StageOf(Stage);
+    Identity.World = WorldOf(Identity.Stage, Route.bDangerous);
     const bool bIdentity = HasIdentity(Progress.Ruleset, Progress.CatalogRevision);
+    if (bIdentity) { Identity.Risk = RiskLevel(Stage, Route.bDangerous); }
     if (Route.Recipe < 0 || Route.Recipe >= (bIdentity ? static_cast<int32>(UE_ARRAY_COUNT(Recipes)) : DrawnRecipes)) { return Identity; }
     const FEncounterRecipe& Recipe = Recipes[Route.Recipe];
     Identity.ObstacleKind = Recipe.ObstacleKind;
