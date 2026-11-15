@@ -108,7 +108,7 @@ Each group writes `<out>/<group>/runs.csv`, `encounters.csv`, `heroes.csv` and `
 
 ## 7. Stalls, anomalies and outliers
 
-- **Stall:** a fight reaching round 60 without an outcome, or a party turn reaching 16 steps. The run stops and is reported as `Stall` with its party and seed. Target: zero.
+- **Stall:** a fight reaching round 60 without an outcome, or a party turn reaching 16 steps. The run stops and is reported as `Stall` with its party and seed. Target: zero. Since #188 a stall in which no conscious unit can ever reach an opponent is a **deadlock** (a soft lock in the real game) and fails the `Balance.Baseline.*` group; other stalls stay findings ([contract 11](11-encounter-identity-contract.md) section 6).
 - **Policy error:** a command the run rejected, or a proposal that was not in the legal lists. Gate: zero.
 - **Protection mismatch:** see section 5. Gate: zero.
 - **Passive end:** the policy ended a turn with its Action unspent while an Attack was legal, or while it had movement left and a legal move closer to an enemy by rule 9's distance (the same function decides both). Gate: zero (this is the "never stalls while a legal action exists" check).

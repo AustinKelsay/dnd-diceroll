@@ -32,13 +32,15 @@ FActionResourceCost ResourceCost(const FCombatantState& Unit, const FBuildDefini
     if (Resource == EActionResource::Potion) { Cost.Cap = PotionBottleCap; Cost.CampRecovery = 0; } // Camp never refills potions.
     else if (Build)
     {
+        // The hero's own cap (#218: Reserve included); the camp recovery amounts are the build's and never change.
+        const FResourceCaps Caps = FBuildCatalog::Caps(Unit);
         switch (Resource)
         {
-        case EActionResource::Kit: Cost.Cap = Build->KitCap; Cost.CampRecovery = Build->KitRecovery; break;
-        case EActionResource::Slot: Cost.Cap = Build->SlotCap; Cost.CampRecovery = Build->SlotRecovery; break;
-        case EActionResource::Wind: Cost.Cap = Build->WindCap; Cost.CampRecovery = Build->WindRecovery; break;
-        case EActionResource::Maneuver: Cost.Cap = Build->ManeuverCap; Cost.CampRecovery = Build->ManeuverRecovery; break;
-        case EActionResource::Rage: Cost.Cap = Build->RageCap; Cost.CampRecovery = Build->RageRecovery; break;
+        case EActionResource::Kit: Cost.Cap = Caps.Kit; Cost.CampRecovery = Build->KitRecovery; break;
+        case EActionResource::Slot: Cost.Cap = Caps.Slot; Cost.CampRecovery = Build->SlotRecovery; break;
+        case EActionResource::Wind: Cost.Cap = Caps.Wind; Cost.CampRecovery = Build->WindRecovery; break;
+        case EActionResource::Maneuver: Cost.Cap = Caps.Maneuver; Cost.CampRecovery = Build->ManeuverRecovery; break;
+        case EActionResource::Rage: Cost.Cap = Caps.Rage; Cost.CampRecovery = Build->RageRecovery; break;
         case EActionResource::None:
         case EActionResource::Potion: break;
         }

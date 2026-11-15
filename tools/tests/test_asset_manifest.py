@@ -87,12 +87,26 @@ class AssetManifestTests(unittest.TestCase):
         outside.write_text("outside")
         self.addCleanup(outside.unlink)
         link = self.root / "Art/link.txt"
-        link.symlink_to(outside)
-        for path in ["../outside", str(outside), "Art/../record.json", "Art/link.txt", "Saved/file", "Art\\bad"]:
-            candidate = copy.deepcopy(self.first)
-            candidate["files"][0]["path"] = path
-            with self.subTest(path=path), self.assertRaises(ValueError):
-                inspect_record(self.save(candidate), self.root)
+        # Windows without Developer Mode cannot create native symlinks. In that
+        # case model the resolver boundary; other hosts still exercise a real link.
+        from contextlib import nullcontext
+        from unittest.mock import patch
+        scope = nullcontext()
+        try:
+            link.symlink_to(outside)
+        except OSError as exc:
+            if getattr(exc, "winerror", None) != 1314:
+                raise
+            original = Path.resolve
+            def resolve(path, *args, **kwargs):
+                return outside if path == link else original(path, *args, **kwargs)
+            scope = patch.object(Path, "resolve", resolve)
+        with scope:
+            for path in ["../outside", str(outside), "Art/../record.json", "Art/link.txt", "Saved/file", "Art\\bad"]:
+                candidate = copy.deepcopy(self.first)
+                candidate["files"][0]["path"] = path
+                with self.subTest(path=path), self.assertRaises(ValueError):
+                    inspect_record(self.save(candidate), self.root)
 
     def test_refuses_malformed_contracts(self):
         candidates = []

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {"name": "reward-gear", "mode": "overview", "hero": 1, "card": "gear"},
+    {"name": "reward-reserve", "mode": "overview", "hero": 1, "card": "reserve"},
+    {"name": "reward-honed", "mode": "overview", "hero": 1, "card": "honed"},
+    {"name": "reward-reserve-life", "mode": "overview", "hero": 2, "card": "reserve"},
+    {"name": "reward-reserve-barbarian", "mode": "overview", "hero": 3, "card": "reserve"},
+    {"name": "reward-reserve-battle-master", "mode": "overview", "hero": 4, "card": "reserve"},
+    {"name": "reward-taken-reserve", "mode": "overview", "hero": 4, "card": "reserve"},
+    {"name": "reward-taken-honed", "mode": "overview", "hero": 4, "card": "honed"},
+    {"name": "overview", "mode": "overview"}
+  ]
+}

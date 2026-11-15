@@ -19,7 +19,12 @@ class FPlayGroupCommand : public IAutomationLatentCommand
 {
 public:
     FPlayGroupCommand(FAutomationTestBase& InTest, FString InGroup, TArray<BalanceHarness::FPartySpec> InParties)
-        : Test(InTest), Group(MoveTemp(InGroup)), Parties(MoveTemp(InParties)) {}
+        : Test(InTest), Group(MoveTemp(InGroup)), Parties(MoveTemp(InParties))
+    {
+        FString Error;
+        if (!BalanceHarness::RevisionFromEnvironment(Revision, Error) || !BalanceHarness::StrategyFromEnvironment(Strategy, Error) ||
+            !BalanceHarness::SeedBaseFromEnvironment(SeedBase, Error)) { Test.AddError(Error); Next = Parties.Num(); }
+    }
 
     virtual bool Update() override
     {
@@ -27,27 +32,30 @@ public:
         if (Next < Parties.Num())
         {
             const double Start = FPlatformTime::Seconds();
-            Runs.Append(PlayGroup({Parties[Next++]}));
+            Runs.Append(PlayGroup({Parties[Next++]}, SeedCount, Revision, Strategy, SeedBase));
             Seconds += FPlatformTime::Seconds() - Start;
             return false;
         }
-        int32 Errors = 0, Illegal = 0, Passive = 0, Mismatches = 0, Stalls = 0, Wins = 0;
+        int32 Errors = 0, Illegal = 0, Passive = 0, Mismatches = 0, Stalls = 0, Deadlocks = 0, Wins = 0;
         for (const auto& Run : Runs)
         {
             Errors += Run.PolicyErrors; Illegal += Run.IllegalProposals; Passive += Run.PassiveEnds; Mismatches += Run.ProtectionMismatches;
-            Stalls += Run.Outcome == TEXT("Stall") ? 1 : 0; Wins += Run.Outcome == TEXT("Victory") ? 1 : 0;
+            Stalls += Run.Outcome == TEXT("Stall") ? 1 : 0; Deadlocks += Run.bDeadlock ? 1 : 0; Wins += Run.Outcome == TEXT("Victory") ? 1 : 0;
         }
         FString Error;
         const FString Folder = GroupFolder(Group, Error);
-        const bool bWritten = WriteGroup(Folder, Group, Parties, Runs, Seconds, Error);
+        const bool bWritten = WriteGroup(Folder, Group, Parties, Runs, Seconds, Error, SeedBase);
         Test.TestTrue(TEXT("Group results written to ") + Folder + TEXT(" ") + Error, bWritten);
         Test.TestEqual(TEXT("Every party played every seed"), Runs.Num(), Parties.Num() * SeedCount);
         Test.TestEqual(TEXT("No command was rejected"), Errors, 0);
         Test.TestEqual(TEXT("No illegal proposal"), Illegal, 0);
         Test.TestEqual(TEXT("No passive end"), Passive, 0);
         Test.TestEqual(TEXT("Every committed prevention equals the protection query"), Mismatches, 0);
-        // Stalls are findings, reported by the summary, not test failures.
-        Test.AddInfo(FString::Printf(TEXT("Balance group %s: %d runs, %d victories, %d stalls, %.1f s -> %s"), *Group, Runs.Num(), Wins, Stalls, Seconds, *Folder));
+        // Since #188 a deadlocked stall fails the sweep: a fight in which no unit can ever reach an opponent is a soft lock in the real game. Other
+        // stalls (a policy loop, such as reviving a hero the last foe re-downs every round while a legal attack exists) stay findings, listed by the summary.
+        Test.TestEqual(TEXT("No run deadlocks"), Deadlocks, 0);
+        Test.AddInfo(FString::Printf(TEXT("Balance group %s (catalog revision %d, reward strategy %s, seeds from %d): %d runs, %d victories, %d stalls (%d deadlocks), %.1f s -> %s"),
+            *Group, Revision, BalanceHarness::StrategyName(Strategy), SeedBase, Runs.Num(), Wins, Stalls, Deadlocks, Seconds, *Folder));
         return true;
     }
 
@@ -58,6 +66,11 @@ private:
     TArray<BalanceHarness::FRunStats> Runs;
     int32 Next = 0;
     double Seconds = 0.0;
+    /** DND_BALANCE_REVISION (#188's before-run is revision 8), or the current revision. */
+    int32 Revision = FBuildCatalog::Revision;
+    /** DND_BALANCE_REWARD (#218), mixed by default; DND_BALANCE_SEED_BASE, the base batch or contract 13's extra batch. */
+    BalanceHarness::ERewardStrategy Strategy = BalanceHarness::ERewardStrategy::Mixed;
+    int32 SeedBase = BalanceHarness::BaseSeed;
 };
 
 bool RunGroup(FAutomationTestBase& Test, const FString& Group, const TArray<BalanceHarness::FPartySpec>& Parties)
@@ -93,7 +106,11 @@ bool FBalanceTrace::RunTest(const FString& Parameters)
     const FString Folder = BalanceHarness::GroupFolder(TEXT("trace"), Error);
     if (!TestTrue(TEXT("Trace folder inside .local/ ") + Error, BalanceHarness::EnsureFolder(Folder, Error))) { return false; }
     const FString Path = FPaths::Combine(Folder, FString::Printf(TEXT("%s-%s-%s.txt"), *Parts[0], *Parts[1], *Parts[2]));
-    TestTrue(TEXT("Trace written to ") + Path, FFileHelper::SaveStringToFile(BalanceHarness::TraceRun(*Party, FCString::Atoi(*Parts[1]), FCString::Atoi(*Parts[2])), *Path));
+    int32 Revision = FBuildCatalog::Revision;
+    BalanceHarness::ERewardStrategy Strategy = BalanceHarness::ERewardStrategy::Mixed;
+    if (!TestTrue(TEXT("DND_BALANCE_REVISION ") + Error, BalanceHarness::RevisionFromEnvironment(Revision, Error))) { return false; }
+    if (!TestTrue(TEXT("DND_BALANCE_REWARD ") + Error, BalanceHarness::StrategyFromEnvironment(Strategy, Error))) { return false; }
+    TestTrue(TEXT("Trace written to ") + Path, FFileHelper::SaveStringToFile(BalanceHarness::TraceRun(*Party, FCString::Atoi(*Parts[1]), FCString::Atoi(*Parts[2]), Revision, Strategy), *Path));
     return !HasAnyErrors();
 }
 #endif

@@ -2,6 +2,57 @@
 
 namespace
 {
+using namespace BuildRules;
+
+const TCHAR* TargetWord(EAbilityTarget Target)
+{
+    return Target == EAbilityTarget::Self ? TEXT("Self") : Target == EAbilityTarget::Friendly ? TEXT("Self or ally") : Target == EAbilityTarget::Ally ? TEXT("Other ally") : TEXT("Enemy");
+}
+
+/**
+ * Every catalog ability's description, generated from its facts so a honed ability's text is as true as its rules (#218). Bonus is the honed
+ * increase of a number the facts do not hold (FBuildCatalog::HonedBonus: Cure Wounds' and Magic Missile's modifiers, Rage's damage).
+ */
+FString Describe(const FAbilityFacts& A, int32 Bonus)
+{
+    if (A.bCureDice) { return FString::Printf(TEXT("Conscious self or ally range %d + sight; heal %dd%d+%d"), A.Range, CureDice, CureDie, HealingModifier + Bonus); }
+    if (A.Effect == EAbilityEffect::Missile) { return FString::Printf(TEXT("Enemy range %d + sight; guaranteed %dd%d+%d damage"), A.Range, MissileDarts, MissileDie, MissileDarts * DartBonus + Bonus); }
+    if (!A.bKitResource)
+    {
+        // The Barbarian paths: Rage, and a special that needs an active Rage.
+        switch (A.Effect)
+        {
+        case EAbilityEffect::Rage: return FString::Printf(TEXT("Self; +%d basic damage, reduce damage by 1 through next own turn"), RageBonus + Bonus);
+        case EAbilityEffect::Protect: return FString::Printf(TEXT("Other ally range %d; reduce damage by %d until its next turn or its fury ends"), A.Range, A.Amount);
+        case EAbilityEffect::Surge: return FString::Printf(TEXT("Enemy range %d; seeded outcome 1: %d damage or 2: %d damage"), A.Range, A.Amount, A.Amount * 2);
+        default: return FString::Printf(TEXT("Enemy range %d; guaranteed %d damage"), A.Range, A.Amount);
+        }
+    }
+    const TCHAR* EffectText = A.Effect == EAbilityEffect::Swap ? TEXT("exchange cells with ally") :
+        A.Effect == EAbilityEffect::Protect ? TEXT("protect target until next own turn; strongest reduction wins") :
+        A.Effect == EAbilityEffect::Healing ? TEXT("restore HP to conscious target") :
+        A.Effect == EAbilityEffect::Push ? TEXT("damage, then push one open cell away; blocked push stays put") :
+        A.Effect == EAbilityEffect::Surge ? TEXT("seeded damage: amount or twice amount") :
+        A.Effect == EAbilityEffect::Area ? TEXT("damage target and conscious enemies within 1 cell of target with sight") : TEXT("guaranteed damage");
+    return FString::Printf(TEXT("%s range %d + sight; %s (%d)"), TargetWord(A.Target), A.Range, EffectText, A.Amount);
+}
+
+/** Honed (#218): the effect's row of contract 13 section 3. Cure Wounds, Magic Missile and Rage hone a constant (HonedBonus) instead. */
+void Hone(FAbilityFacts& A)
+{
+    using namespace UpgradeRules;
+    switch (A.Effect)
+    {
+    case EAbilityEffect::Strike: case EAbilityEffect::Push: A.Amount += HonedStrike; break;
+    case EAbilityEffect::Area: A.Amount += HonedArea; break;
+    case EAbilityEffect::Surge: A.Amount += HonedSurge; break;
+    case EAbilityEffect::Healing: if (!A.bCureDice) { A.Amount += HonedKitHealing; } break;
+    case EAbilityEffect::Protect: A.Amount += HonedProtect; break;
+    case EAbilityEffect::Swap: A.Range += HonedSwapRange; break;
+    case EAbilityEffect::Rage: case EAbilityEffect::Missile: case EAbilityEffect::WeaponAttack: case EAbilityEffect::Mitigation: break;
+    }
+}
+
 const TArray<FBuildDefinition>& Definitions()
 {
     static const TArray<FBuildDefinition> Values = []
@@ -39,13 +90,16 @@ const TArray<FBuildDefinition>& Definitions()
             B.Id = B.Profile.BuildId = FString(TEXT("barbarian.")) + Path;
             B.RageCap = B.Profile.RageUses = 2; B.RageRecovery = 1;
             B.Specials = {ECombatCommandType::Special1, ECombatCommandType::Special2};
-            FAbilityFacts Rage; Rage.ResourceName = TEXT("Rage"); Rage.ResourceCost = 1; Rage.Name = TEXT("Rage"); Rage.Description = TEXT("Self; +2 basic damage, reduce damage by 1 through next own turn");
+            FAbilityFacts Rage; Rage.ResourceName = TEXT("Rage"); Rage.ResourceCost = 1; Rage.Name = TEXT("Rage"); Rage.Description = Describe(Rage, 0);
             B.Abilities.Add(Rage);
             FAbilityFacts A; A.Command = ECombatCommandType::Special2; A.Target = EAbilityTarget::Enemy;
-            if (FString(Path) == TEXT("berserker")) { A.Name = TEXT("Frenzy"); A.Range = 1; A.Amount = 4; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Enemy range 1; guaranteed 4 damage"); }
-            else if (FString(Path) == TEXT("totem-warrior")) { A.Name = TEXT("Shelter"); A.bBonus = false; A.Range = 3; A.Amount = 3; A.Target = EAbilityTarget::Ally; A.Effect = EAbilityEffect::Protect; A.Description = TEXT("Other ally range 3; reduce damage by 3 until next own turn"); }
-            else if (FString(Path) == TEXT("beast")) { A.Name = TEXT("Long Claw"); A.Range = 2; A.Amount = 6; A.bBonus = false; A.Effect = EAbilityEffect::Strike; A.Description = TEXT("Enemy range 2; guaranteed 6 damage"); }
-            else { A.Name = TEXT("Wild Bolt"); A.Amount = 4; A.Range = 3; A.bBonus = false; A.Effect = EAbilityEffect::Surge; A.Description = TEXT("Enemy range 3; seeded outcome 1: 4 damage or 2: 8 damage"); }
+            if (FString(Path) == TEXT("berserker")) { A.Name = TEXT("Frenzy"); A.Range = 1; A.Amount = 4; A.Effect = EAbilityEffect::Strike; }
+            else if (FString(Path) == TEXT("totem-warrior")) { A.Name = TEXT("Shelter"); A.bBonus = false; A.Range = 3; A.Amount = 3; A.Target = EAbilityTarget::Ally; A.Effect = EAbilityEffect::Protect; }
+            else if (FString(Path) == TEXT("beast")) { A.Name = TEXT("Long Claw"); A.Range = 2; A.Amount = 6; A.bBonus = false; A.Effect = EAbilityEffect::Strike; }
+            else { A.Name = TEXT("Wild Bolt"); A.Amount = 4; A.Range = 3; A.bBonus = false; A.Effect = EAbilityEffect::Surge; }
+            // Generated from the facts (#218), so a honed special's text follows its numbers. Shelter states its real lifetime: like every guard it ends
+            // when its Barbarian's next own turn starts (FCombatBattle::AdvanceTurn), and sooner when that Rage ends (EndTurn).
+            A.Description = Describe(A, 0);
             B.Abilities.Add(A); Result.Add(B);
         }
         // Compact original adaptations. A shared two-use pool belongs to each adventurer.
@@ -53,13 +107,7 @@ const TArray<FBuildDefinition>& Definitions()
         {
             FAbilityFacts A; A.Name = Name; A.Effect = Effect; A.Target = Target; A.Range = Range; A.Amount = Amount;
             A.bKitResource = true; A.bBonus = Bonus; A.ResourceCost = 1; A.ResourceName = TEXT("Kit");
-            const TCHAR* EffectText = Effect == EAbilityEffect::Swap ? TEXT("exchange cells with ally") :
-                Effect == EAbilityEffect::Protect ? TEXT("protect target until next own turn; strongest reduction wins") :
-                Effect == EAbilityEffect::Healing ? TEXT("restore HP to conscious target") :
-                Effect == EAbilityEffect::Push ? TEXT("damage, then push one open cell away; blocked push stays put") :
-                Effect == EAbilityEffect::Surge ? TEXT("seeded damage: amount or twice amount") :
-                Effect == EAbilityEffect::Area ? TEXT("damage target and conscious enemies within 1 cell of target with sight") : TEXT("guaranteed damage");
-            A.Description = FString::Printf(TEXT("%s range %d + sight; %s (%d)"), Target == EAbilityTarget::Self ? TEXT("Self") : Target == EAbilityTarget::Friendly ? TEXT("Self or ally") : Target == EAbilityTarget::Ally ? TEXT("Other ally") : TEXT("Enemy"), Range, EffectText, Amount);
+            A.Description = Describe(A, 0);
             return A;
         };
         auto Kit = [&](FBuildDefinition B, const TCHAR* Id, const TCHAR* Subclass, FAbilityFacts First, FAbilityFacts Second)
@@ -126,7 +174,7 @@ const TArray<FBuildDefinition>& Definitions()
                 auto& Missile = B.Abilities[0];
                 Missile.Command = B.Specials[0] = ECombatCommandType::MagicMissile;
                 Missile.ResourceName = TEXT("Kit + Slot");
-                Missile.Description = TEXT("Enemy range 6 + sight; guaranteed 3d4+3 damage");
+                Missile.Description = Describe(Missile, 0);
             }
         }
         Kit(Wizard,TEXT("wizard.illusion"),TEXT("illusion"),Ability(TEXT("Mirror Ward"),E::Protect,T::Self,0,4,true),Ability(TEXT("Illusory Exchange"),E::Swap,T::Ally,3,0,false));
@@ -156,7 +204,7 @@ const TArray<FBuildDefinition>& Definitions()
         Kit(Bard,TEXT("bard.valor"),TEXT("valor"),Ability(TEXT("Combat Inspiration"),E::Protect,T::Ally,1,4,true),Ability(TEXT("Valiant Strike"),E::Strike,T::Enemy,3,6,false));
         Kit(Bard,TEXT("bard.creation"),TEXT("creation"),Ability(TEXT("Dancing Exchange"),E::Swap,T::Ally,4,0,true),Ability(TEXT("Resonant Burst"),E::Area,T::Enemy,2,5,false));
         Kit(Bard,TEXT("bard.eloquence"),TEXT("eloquence"),Ability(TEXT("Reassuring Word"),E::Protect,T::Ally,4,2,false),Ability(TEXT("Unsettling Note"),E::Strike,T::Enemy,4,5,true));
-        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = TEXT("Conscious self or ally range 1 + sight; heal 2d8+3"); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
+        for (auto& B : Result) { if (B.Id == TEXT("cleric.life")) { B.Abilities[0].Command = B.Specials[0] = ECombatCommandType::CureWounds; B.Abilities[0].bCureDice = true; B.Abilities[0].ResourceName = TEXT("Kit + Slot"); B.Abilities[0].Description = Describe(B.Abilities[0], 0); } else if (B.Profile.ClassId == TEXT("cleric")) { B.SlotCap = B.SlotRecovery = B.Profile.SpellSlots = 0; } }
         auto Artificer = Add(TEXT(""),TEXT("artificer"),TEXT(""),TEXT("Artificer"),EAdventurerRole::Artificer,26,15,6,3,3,1);
         Kit(Artificer,TEXT("artificer.alchemist"),TEXT("alchemist"),Ability(TEXT("Restorative Elixir"),E::Healing,T::Ally,2,8,false),Ability(TEXT("Volatile Flask"),E::Area,T::Enemy,3,3,true));
         Kit(Artificer,TEXT("artificer.armorer"),TEXT("armorer"),Ability(TEXT("Defensive Field"),E::Protect,T::Self,0,4,true),Ability(TEXT("Thunder Gauntlet"),E::Push,T::Enemy,1,6,false));
@@ -189,7 +237,45 @@ int32 FBuildCatalog::BasicDamage(const FBuildDefinition& Build, int32 Level) { r
 bool FBuildCatalog::ValidResources(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId);
-    return B && ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) && Hero.KitUses >= 0 && Hero.KitUses <= B->KitCap && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= B->WindCap && Hero.SpellSlots >= 0 && Hero.SpellSlots <= B->SlotCap && Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= B->ManeuverCap && Hero.RageUses >= 0 && Hero.RageUses <= B->RageCap;
+    if (!B) { return false; }
+    const FResourceCaps Cap = Caps(Hero);
+    return ((B->MissileKitCost == 0 && !B->Abilities.ContainsByPredicate([](const auto& A) { return A.bCureDice; })) || Hero.SpellSlots >= Hero.KitUses) &&
+        Hero.KitUses >= 0 && Hero.KitUses <= Cap.Kit && Hero.SecondWindUses >= 0 && Hero.SecondWindUses <= Cap.Wind && Hero.SpellSlots >= 0 && Hero.SpellSlots <= Cap.Slot &&
+        Hero.ManeuverUses >= 0 && Hero.ManeuverUses <= Cap.Maneuver && Hero.RageUses >= 0 && Hero.RageUses <= Cap.Rage;
+}
+
+FResourceCaps FBuildCatalog::Caps(const FCombatantState& Hero)
+{
+    const auto* B = Find(Hero.BuildId);
+    // Build-less heroes are combat fixtures (and enemies): the limits validation always allowed them.
+    if (!B) { FResourceCaps Fixture; Fixture.Slot = Fixture.Wind = Fixture.Maneuver = 2; return Fixture; }
+    // Every pool a catalog build has is one its specials spend (Kit; Kit and Slot for Life and Evocation; Rage; Wind; Wind and Maneuver).
+    const int32 Extra = Hero.bReserve ? UpgradeRules::ReserveUses : 0;
+    auto Up = [Extra](int32 Cap) { return Cap > 0 ? Cap + Extra : 0; };
+    FResourceCaps Result;
+    Result.Kit = Up(B->KitCap); Result.Slot = Up(B->SlotCap); Result.Wind = Up(B->WindCap); Result.Maneuver = Up(B->ManeuverCap); Result.Rage = Up(B->RageCap);
+    return Result;
+}
+
+int32 FBuildCatalog::HonedBonus(const FCombatantState& Hero, ECombatCommandType Command)
+{
+    const auto* B = Find(Hero.BuildId);
+    if (!B || !Hero.bHoned) { return 0; }
+    using namespace UpgradeRules;
+    if (const FAbilityFacts* A = B->Abilities.FindByPredicate([Command](const FAbilityFacts& Ability) { return Ability.Command == Command; }))
+    { return A->bCureDice ? HonedCure : A->Effect == EAbilityEffect::Missile ? HonedMissile : A->Effect == EAbilityEffect::Rage ? HonedRage : 0; }
+    if (!B->Abilities.IsEmpty() || !B->Specials.Contains(Command)) { return 0; }
+    return Command == ECombatCommandType::SecondWind ? HonedWind : Command == ECombatCommandType::PrecisionStrike ? HonedPrecision : 0;
+}
+
+int32 FBuildCatalog::GuardAmount(const FCombatantState& Guard)
+{
+    if (Guard.GuardTargetId == INDEX_NONE) { return 0; }
+    // A Kit-paid Protect stores the (honed) amount it was cast with; it cannot change during the battle.
+    if (Guard.GuardAmount > 0) { return Guard.GuardAmount; }
+    // Shelter is paid by Rage and stores nothing: its amount is the guard's own fact, which a reward claim cannot change mid-battle.
+    for (const FAbilityFacts& A : Abilities(Guard)) { if (A.Effect == EAbilityEffect::Protect && !A.bKitResource) { return A.Amount; } }
+    return 0;
 }
 
 TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
@@ -200,7 +286,7 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
     {
         for (const auto Command : B->Specials)
         {
-            FAbilityFacts A; A.Command = Command; A.Description = FCombatBattle::DescribeAction(Command); A.ResourceCost = 1;
+            FAbilityFacts A; A.Command = Command; A.Description = FCombatBattle::DescribeAction(Command, HonedBonus(Hero, Command)); A.ResourceCost = 1;
             if (Command == ECombatCommandType::SecondWind) { A.Name = TEXT("Second Wind"); A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Wind"); A.bResourceAvailable = Hero.SecondWindUses > 0; }
             else if (Command == ECombatCommandType::PrecisionStrike) { A.Name = TEXT("Precision Strike"); A.Effect = EAbilityEffect::WeaponAttack; A.ResourceName = TEXT("Maneuver"); A.Target = EAbilityTarget::Enemy; A.Range = Hero.Range; A.bBonus = false; A.bResourceAvailable = Hero.ManeuverUses > 0; }
             else if (Command == ECombatCommandType::CureWounds) { A.Name = TEXT("Cure Wounds"); A.bSpell = true; A.Effect = EAbilityEffect::Healing; A.ResourceName = TEXT("Slot"); A.Target = EAbilityTarget::Ally; A.Range = BuildRules::TouchRange; A.bBonus = false; A.bResourceAvailable = Hero.SpellSlots > 0; }
@@ -209,7 +295,12 @@ TArray<FAbilityFacts> FBuildCatalog::Abilities(const FCombatantState& Hero)
         }
         return Result;
     }
-    for (auto& A : Result) { A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0; }
+    for (auto& A : Result)
+    {
+        A.bResourceAvailable = B->KitCap > 0 ? Hero.KitUses >= A.ResourceCost && (!(A.bCureDice || A.Effect == EAbilityEffect::Missile) || Hero.SpellSlots > 0) : A.Effect == EAbilityEffect::Rage ? Hero.RageUses > 0 && Hero.RageTurns == 0 : Hero.RageTurns > 0;
+        // Honed (#218): both specials take their effect's row, and the text is regenerated from the honed facts.
+        if (Hero.bHoned) { Hone(A); A.Description = Describe(A, HonedBonus(Hero, A.Command)); }
+    }
     return Result;
 }
 
@@ -225,18 +316,23 @@ FString FBuildCatalog::Status(const FCombatantState& Hero)
 {
     const auto* B = Find(Hero.BuildId); if (!B) { return FString(); }
     FString Text;
+    // Which pools the build has (a style test), not their live caps.
     if (B->KitCap) { Text += FString::Printf(TEXT("Kit %d / "), Hero.KitUses); }
     if (B->WindCap) { Text += FString::Printf(TEXT("Wind %d / "), Hero.SecondWindUses); }
     if (B->SlotCap) { Text += FString::Printf(TEXT("Slots %d / "), Hero.SpellSlots); }
     if (B->ManeuverCap) { Text += FString::Printf(TEXT("Maneuvers %d / "), Hero.ManeuverUses); }
     if (B->RageCap) { Text += FString::Printf(TEXT("Rage %d; %d own turn ends / "), Hero.RageUses, Hero.RageTurns); }
-    if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Protection -> %d (%d, until next own turn) / "), Hero.GuardTargetId, Hero.GuardAmount > 0 ? Hero.GuardAmount : 3); }
+    // Every guard lasts until the guard's next own turn; Shelter (paid by Rage, no GuardTurns) also ends when its Barbarian's Rage ends.
+    if (Hero.GuardTargetId != INDEX_NONE) { Text += FString::Printf(TEXT("Protection -> %d (%d, %s) / "), Hero.GuardTargetId, GuardAmount(Hero), Hero.GuardTurns > 0 ? TEXT("until next own turn") : TEXT("until next own turn or Rage ends")); }
     if (Hero.LastSurge) { Text += FString::Printf(TEXT("Last surge %d / "), Hero.LastSurge); }
     return Text;
 }
 int32 FBuildCatalog::AttackModifier(const FCombatantState& Hero)
 {
-    return Hero.DamageBonus + Hero.WeaponRank + (Hero.RageTurns > 0 ? 2 : 0);
+    if (Hero.RageTurns <= 0) { return Hero.DamageBonus + Hero.WeaponRank; }
+    const auto* B = Find(Hero.BuildId);
+    const FAbilityFacts* Rage = B ? B->Abilities.FindByPredicate([](const FAbilityFacts& A) { return A.Effect == EAbilityEffect::Rage; }) : nullptr;
+    return Hero.DamageBonus + Hero.WeaponRank + BuildRules::RageBonus + (Rage ? HonedBonus(Hero, Rage->Command) : 0);
 }
 
 int32 FBuildCatalog::SurgeCap(const FCombatantState& Hero)
@@ -245,7 +341,7 @@ int32 FBuildCatalog::SurgeCap(const FCombatantState& Hero)
     if (!B || Hero.Side != ECombatSide::Party || Hero.AdventurerRole != B->Profile.AdventurerRole) { return 0; }
     for (const auto& A : B->Abilities)
     {
-        if (A.Effect == EAbilityEffect::Surge && (A.bKitResource ? Hero.KitUses < B->KitCap : Hero.RageUses < B->RageCap)) { return 2; }
+        if (A.Effect == EAbilityEffect::Surge && (A.bKitResource ? Hero.KitUses < Caps(Hero).Kit : Hero.RageUses < Caps(Hero).Rage)) { return 2; }
     }
     return 0;
 }

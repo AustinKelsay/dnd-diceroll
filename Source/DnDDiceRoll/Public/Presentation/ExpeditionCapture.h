@@ -45,6 +45,10 @@ struct DNDDICEROLL_API FCaptureShot
     float Time = 0.0f;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
+    /** Overview shots only (#200): the 1-based party slot whose details panel the route screen shows, as when that hero's card is selected. Zero leaves the selection as it is. */
+    int32 Hero = 0;
+    /** Overview on the Reward screen (#218): the reward card to choose, 0 Gear, 1 Reserve, 2 Honed; -1 leaves Gear (the screen's start). */
+    int32 Card = -1;
 };
 
 struct DNDDICEROLL_API FCapturePoses

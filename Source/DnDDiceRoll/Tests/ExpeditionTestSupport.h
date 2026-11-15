@@ -114,13 +114,16 @@ inline bool FinishRunScripted(FExpeditionRun& Run)
 
 // Plays the scripted player to the start of the fifth fight (the finale, drawn with EBoardTheme::Vault) on the seeded run and chooses its
 // route: the first offer of every earlier route, FinishCombat, the reward to the first conscious survivor, the camp. False when the scripted
-// player loses on the way, when the finale's obstacle recipe is not `Recipe` (0 split stones, 1 ruined pillars, 2 broken wall; -1 any) or,
+// player loses on the way, when the finale's obstacle recipe is not `Recipe` (0 split stones, 1 ruined pillars, 2 broken wall, 6 vault sanctum; -1 any) or,
 // with bPartyFirst, when an enemy acts first. Party (when given) is the party the run starts with; bDangerous picks the dangerous road (raiders) instead of the plain one (scouts). Deterministic in Seed.
-inline bool ReachFinale(FExpeditionRun& Run, int32 Seed, int32 Recipe = -1, bool bPartyFirst = true, const TArray<FPartyBuildSelection>* Party = nullptr, bool bDangerous = false)
+// Revision is the catalog revision the run is created under: since revision 9 (#188) every finale is the vault sanctum (recipe 6, front to
+// back), so a caller that wants a finale on recipe 0, 1 or 2 asks for a revision 8 run, whose finale draws them as before.
+inline bool ReachFinale(FExpeditionRun& Run, int32 Seed, int32 Recipe = -1, bool bPartyFirst = true, const TArray<FPartyBuildSelection>* Party = nullptr, bool bDangerous = false,
+    int32 Revision = FBuildCatalog::Revision)
 {
     FString Error;
     const FString Identity = FString::Printf(TEXT("finale-%d"), Seed);
-    if (!(Party ? Run.NewRun(Seed, *Party, Error, Identity) : Run.NewRun(Seed, Error, Identity))) { return false; }
+    if (!(Party ? Run.NewRun(Seed, *Party, Error, Identity, ERuleset::Compact, Revision) : Run.NewRun(Seed, Error, Identity, EFighterSubclass::Champion, ERuleset::Compact, Revision))) { return false; }
     while (Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted < FExpeditionRun::EncounterCount - 1)
     {
         if (!Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !FinishCombat(Run) || Run.Progress().Phase != EExpeditionPhase::Reward) { return false; }

@@ -60,9 +60,15 @@ class Workspace:
         return read_ini(self.root / "Config/DefaultEngine.ini")["/Script/EngineSettings.GameMapsSettings"]["GameDefaultMap"]
 
 
-def project_argument(command, project):
+def project_argument(command, project, windows=False):
     """ps joins argv without quoting; require a complete path at argument boundaries."""
-    path = re.escape(str(Path(project).resolve()))
+    path = str(Path(project).resolve())
+    if windows:
+        command = command.replace("\\", "/")
+        path = path.replace("\\", "/")
+        # A quoted flag value (e.g. -abslog="project") is not a project argument.
+        return bool(re.search(r'(?:^|\s)["\']?' + re.escape(path) + r'["\']?(?=$|\s)', command, flags=re.IGNORECASE))
+    path = re.escape(path)
     return bool(re.search(r'(?:^|\s|[\"\'])' + path + r'(?=$|\s|[\"\'])', command))
 
 

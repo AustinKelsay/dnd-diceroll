@@ -257,8 +257,9 @@ bool FRollCardDetailPanelTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("The saved encounter resumes"), Game.View->HasRun() && Game.View->InCombat())) { return false; }
     Game.Settle();
     Game.PartyTurn();
-    // The tallest real panel is five lines (title, health, a Protect line, the resources over two); ask for six.
-    Game.Hud->PreviewDetailLines(6);
+    // The tallest real panel is seven lines (title, health, a Protect line, the resources over two, and since #218 the basic-damage breakdown and the
+    // upgrades); ask for eight.
+    Game.Hud->PreviewDetailLines(8);
     Game.View->PreviewRoll(MakeTray(TEXT("Arden attacks Raider 2"), 17, 1, 8));
     int32 Opened = 0;
     double Tallest = 0;

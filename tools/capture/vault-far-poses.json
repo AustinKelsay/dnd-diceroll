@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {
+      "name": "vault-far-yawm180",
+      "mode": "battle",
+      "yaw": -180,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm165",
+      "mode": "battle",
+      "yaw": -165,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm150",
+      "mode": "battle",
+      "yaw": -150,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm135",
+      "mode": "battle",
+      "yaw": -135,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm120",
+      "mode": "battle",
+      "yaw": -120,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm105",
+      "mode": "battle",
+      "yaw": -105,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm075",
+      "mode": "battle",
+      "yaw": -75,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm060",
+      "mode": "battle",
+      "yaw": -60,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm030",
+      "mode": "battle",
+      "yaw": -30,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yawm015",
+      "mode": "battle",
+      "yaw": -15,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw015",
+      "mode": "battle",
+      "yaw": 15,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw030",
+      "mode": "battle",
+      "yaw": 30,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw045",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw060",
+      "mode": "battle",
+      "yaw": 60,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw075",
+      "mode": "battle",
+      "yaw": 75,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw105",
+      "mode": "battle",
+      "yaw": 105,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw120",
+      "mode": "battle",
+      "yaw": 120,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw135",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw150",
+      "mode": "battle",
+      "yaw": 150,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-yaw165",
+      "mode": "battle",
+      "yaw": 165,
+      "distance": "far"
+    },
+    {
+      "name": "vault-far-pan-fwd-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yawm090",
+      "mode": "battle",
+      "yaw": -90,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-fwd-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yawm045",
+      "mode": "battle",
+      "yaw": -45,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-fwd-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yaw000",
+      "mode": "battle",
+      "yaw": 0,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-fwd-yaw045",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yaw045",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yaw045",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yaw045",
+      "mode": "battle",
+      "yaw": 45,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-fwd-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yaw090",
+      "mode": "battle",
+      "yaw": 90,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-fwd-yaw135",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": 99999
+      }
+    },
+    {
+      "name": "vault-far-pan-back-yaw135",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far",
+      "pan": {
+        "right": 0,
+        "away": -99999
+      }
+    },
+    {
+      "name": "vault-far-pan-left-yaw135",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far",
+      "pan": {
+        "right": -99999,
+        "away": 0
+      }
+    },
+    {
+      "name": "vault-far-pan-right-yaw135",
+      "mode": "battle",
+      "yaw": 135,
+      "distance": "far",
+      "pan": {
+        "right": 99999,
+        "away": 0
+      }
+    }
+  ]
+}

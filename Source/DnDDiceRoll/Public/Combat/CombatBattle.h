@@ -7,6 +7,10 @@
 UENUM()
 enum class ERuleset : uint8 { Compact = 0, SRD = 1 };
 
+/** The upgrade a hero takes with a victory reward (#218, contract 13). Gear is the only card before catalog revision 10 and in SRD. */
+UENUM()
+enum class ERewardCard : uint8 { Gear = 0, Reserve = 1, Honed = 2 };
+
 UENUM()
 enum class ECombatSide : uint8 { Party, Enemy };
 UENUM()
@@ -75,6 +79,10 @@ struct DNDDICEROLL_API FCombatantState
     UPROPERTY() bool bProne = false;
     /** SRD only: Id of the creature grappling this one, or INDEX_NONE. */
     UPROPERTY() int32 GrapplerId = INDEX_NONE;
+    /** Schema 6 (#218): copies of this hero's Reserve and Honed reward claims, which combat and the catalog read. The run's reward
+     * history is authoritative and restore checks these against it. Enemies, build-less fixtures and SRD heroes hold false. */
+    UPROPERTY() bool bReserve = false;
+    UPROPERTY() bool bHoned = false;
 };
 
 USTRUCT()
@@ -243,8 +251,9 @@ public:
     FCombatResult Submit(const FCombatCommand& Command);
     /** Completes at most one enemy turn (move, attack, end). Never drives party turns. */
     TArray<FCombatResult> PlayEnemyTurn();
-    /** Player-facing action facts share the tuning used by validation and resolution. */
-    static FString DescribeAction(ECombatCommandType Action);
+    /** Player-facing action facts share the tuning used by validation and resolution. HonedBonus is FBuildCatalog::HonedBonus of the
+     * actor for this command (Second Wind's and Cure Wounds' healing, Magic Missile's damage, Precision Strike's bonus); 0 unhoned. */
+    static FString DescribeAction(ECombatCommandType Action, int32 HonedBonus = 0);
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;

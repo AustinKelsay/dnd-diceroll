@@ -429,6 +429,7 @@ struct FTracker
     void PartyCommand(const FCombatCommand& Command, const FCombatSnapshot& Before, const FCombatSnapshot& After, EBattlePhase Phase)
     {
         FHeroStats* Actor = Hero(Command.ActorId);
+        const FCombatantState* ActorBefore = Before.Encounter.Combatants.FindByPredicate([&Command](const FCombatantState& U) { return U.Id == Command.ActorId; });
         ++Run.Commands;
         for (int32 I = 0; I < After.Encounter.Combatants.Num() && I < Before.Encounter.Combatants.Num(); ++I)
         {
@@ -438,6 +439,8 @@ struct FTracker
             {
                 const int32 Lost = FMath::Max(0, Was.HP - Now.HP);
                 Actor->Damage += Lost; Encounter().Damage += Lost; Run.Damage += Lost;
+                // Melee: the actor stood next to this enemy when the command began (a hit after moving in counts as the move's own step).
+                if (ActorBefore && Policy::Manhattan(ActorBefore->Cell, Was.Cell) <= 1) { Encounter().MeleeDamage += Lost; }
                 if (Was.Life != ECombatLife::Dead && Now.Life == ECombatLife::Dead) { ++Actor->Kills; }
             }
             else
@@ -586,11 +589,45 @@ FString Board(const FCombatSnapshot& S)
 }
 }
 
-FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal, FString* Trace)
+bool ChooseReward(const FExpeditionRun& Run, ERewardStrategy Strategy, int32& OutRecipient, ERewardCard& OutCard)
+{
+    // Version 1 (Gear): the lowest gear rank, then the lowest id. Version 2's card strategies: the fewest upgrades (gear rank + Reserve +
+    // Honed), then the lowest id. Under gear-only play the two are the same rule.
+    auto Upgrades = [Strategy](const FCombatantState& U) { return U.WeaponRank + (Strategy == ERewardStrategy::Gear ? 0 : (U.bReserve ? 1 : 0) + (U.bHoned ? 1 : 0)); };
+    const FCombatantState* Best = nullptr;
+    for (const auto& U : Run.Battle().Snapshot().Encounter.Combatants)
+    {
+        if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
+        if (!Best || Upgrades(U) < Upgrades(*Best) || (Upgrades(U) == Upgrades(*Best) && U.Id < Best->Id)) { Best = &U; }
+    }
+    if (!Best) { return false; }
+    OutRecipient = Best->Id;
+    OutCard = ERewardCard::Gear;
+    if (!FExpeditionRun::OffersUpgradeCards(Run.Progress().Ruleset, Run.Progress().CatalogRevision)) { return true; }
+    switch (Strategy)
+    {
+    case ERewardStrategy::Gear: break;
+    case ERewardStrategy::Reserve: if (!Best->bReserve) { OutCard = ERewardCard::Reserve; } break;
+    case ERewardStrategy::Honed: if (!Best->bHoned) { OutCard = ERewardCard::Honed; } break;
+    case ERewardStrategy::Mixed:
+    {
+        // The recipient's special pools are every pool its build has (FBuildCatalog::Caps). Reserve when each of them holds at most one use
+        // as the claim sees it (after the fight, before the camp); per pool, not summed (lead decision on #218, contract 13 section 6).
+        const FResourceCaps Caps = FBuildCatalog::Caps(*Best);
+        const bool bLow = (Caps.Kit == 0 || Best->KitUses <= 1) && (Caps.Slot == 0 || Best->SpellSlots <= 1) && (Caps.Wind == 0 || Best->SecondWindUses <= 1) &&
+            (Caps.Maneuver == 0 || Best->ManeuverUses <= 1) && (Caps.Rage == 0 || Best->RageUses <= 1);
+        OutCard = bLow && !Best->bReserve ? ERewardCard::Reserve : !Best->bHoned ? ERewardCard::Honed : ERewardCard::Gear;
+        break;
+    }
+    }
+    return true;
+}
+
+FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpeditionSnapshot* OutFinal, FString* Trace, int32 Revision, ERewardStrategy Strategy)
 {
     FRunStats Stats;
     Stats.PartyId = Party.Id; Stats.Archetype = Party.Archetype; Stats.Builds = Party.Builds;
-    Stats.Seed = Seed; Stats.RoutePattern = RoutePattern;
+    Stats.Seed = Seed; Stats.RoutePattern = RoutePattern; Stats.Revision = Revision; Stats.Strategy = Strategy;
     FTracker Tracker(Stats);
     TArray<FPartyBuildSelection> Selection;
     for (int32 I = 0; I < Party.Builds.Num(); ++I)
@@ -600,7 +637,7 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     }
     FExpeditionRun Run;
     FString Error;
-    if (!Run.NewRun(Seed, Selection, Error, FString::Printf(TEXT("balance-%s-%d"), *Party.Id, Seed), ERuleset::Compact))
+    if (!Run.NewRun(Seed, Selection, Error, FString::Printf(TEXT("balance-%s-%d"), *Party.Id, Seed), ERuleset::Compact, Revision))
     {
         Stats.Outcome = TEXT("Stall"); Stats.StallReason = TEXT("NewRun rejected: ") + Error; return Stats;
     }
@@ -609,8 +646,6 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
         const FBuildDefinition* Build = FBuildCatalog::Find(Selection[I].BuildId);
         FHeroStats Hero;
         Hero.Slot = I + 1; Hero.Build = Build->Id; Hero.Class = Build->Profile.ClassId;
-        Hero.KitCap = Build->KitCap; Hero.SlotCap = Build->SlotCap; Hero.WindCap = Build->WindCap;
-        Hero.ManeuverCap = Build->ManeuverCap; Hero.RageCap = Build->RageCap;
         for (const ECombatCommandType Command : Build->Specials) { FSpecialStats Special; Special.Command = Command; Hero.Specials.Add(Special); }
         Tracker.HeroIndex.Add(I + 1, Stats.Heroes.Add(Hero));
     }
@@ -664,13 +699,11 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
         }
         else if (Phase == EExpeditionPhase::Reward)
         {
-            const FCombatantState* Best = nullptr;
-            for (const auto& U : Run.Battle().Snapshot().Encounter.Combatants)
-            {
-                if (U.Side != ECombatSide::Party || U.Life != ECombatLife::Conscious) { continue; }
-                if (!Best || U.WeaponRank < Best->WeaponRank || (U.WeaponRank == Best->WeaponRank && U.Id < Best->Id)) { Best = &U; }
-            }
-            if (!Best || !Run.ClaimReward(Best->Id, Error)) { Stall = TEXT("reward rejected: ") + Error; break; }
+            int32 Recipient = INDEX_NONE;
+            ERewardCard Card = ERewardCard::Gear;
+            if (!ChooseReward(Run, Strategy, Recipient, Card) || !Run.ClaimReward(Recipient, Card, Error)) { Stall = TEXT("reward rejected: ") + Error; break; }
+            if (FHeroStats* Hero = Tracker.Hero(Recipient)) { Hero->RewardCards.Add(Card == ERewardCard::Reserve ? TEXT("R") : Card == ERewardCard::Honed ? TEXT("H") : TEXT("G")); }
+            if (Trace) { *Trace += FString::Printf(TEXT("== reward: hero %d takes %s\n"), Recipient, Card == ERewardCard::Reserve ? TEXT("Reserve") : Card == ERewardCard::Honed ? TEXT("Honed") : TEXT("Gear")); }
         }
         else if (Phase == EExpeditionPhase::Recovery)
         {
@@ -681,6 +714,8 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     if (Stall.IsEmpty() && End != EExpeditionPhase::Victory && End != EExpeditionPhase::Defeat) { Stall = TEXT("run did not finish"); }
     Stats.Outcome = !Stall.IsEmpty() ? TEXT("Stall") : End == EExpeditionPhase::Victory ? TEXT("Victory") : TEXT("Defeat");
     Stats.StallReason = Stall;
+    Stats.bDeadlock = !Stall.IsEmpty() && End == EExpeditionPhase::Combat && Deadlocked(Run.Battle().Snapshot());
+    if (Stats.bDeadlock) { Stats.StallReason += TEXT(" (deadlock: no unit can reach an opponent)"); }
     if (!Stall.IsEmpty() && !Stats.Encounters.IsEmpty() && Stats.Encounters.Last().Outcome.IsEmpty()) { Stats.Encounters.Last().Outcome = TEXT("Stall"); }
     for (auto& Hero : Stats.Heroes)
     {
@@ -689,6 +724,10 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
         Hero.Level = U->Level;
         Hero.KitLeft = U->KitUses; Hero.SlotLeft = U->SpellSlots; Hero.WindLeft = U->SecondWindUses;
         Hero.ManeuverLeft = U->ManeuverUses; Hero.RageLeft = U->RageUses; Hero.PotionsLeft = U->Potions;
+        // The caps the hero plays with at the end of the run (#218): Reserve included, so the exported caps agree with play.
+        const FResourceCaps Caps = FBuildCatalog::Caps(*U);
+        Hero.KitCap = Caps.Kit; Hero.SlotCap = Caps.Slot; Hero.WindCap = Caps.Wind; Hero.ManeuverCap = Caps.Maneuver; Hero.RageCap = Caps.Rage;
+        Hero.bReserve = U->bReserve; Hero.bHoned = U->bHoned;
         if (U->Life != ECombatLife::Dead) { ++Stats.Survivors; }
         // A defeat leaves the last heroes Downed-then-dead in the final snapshot; record anyone the tracker missed.
         if (U->Life == ECombatLife::Dead && Hero.bSurvived) { Hero.bSurvived = false; Hero.DeathStage = Stats.Encounters.Num(); Hero.DeathCause = TEXT("wipe"); ++Stats.Deaths; }
@@ -698,11 +737,92 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
     return Stats;
 }
 
-FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern)
+bool Deadlocked(const FCombatSnapshot& S)
+{
+    const FCombatEncounter& E = S.Encounter;
+    auto Blocked = [&E](FIntPoint C)
+    {
+        return C.X < 0 || C.Y < 0 || C.X >= E.Width || C.Y >= E.Height || E.BlockedCells.Contains(C) ||
+            E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C && U.Life != ECombatLife::Conscious; });
+    };
+    for (const FCombatantState& Unit : E.Combatants)
+    {
+        if (Unit.Life != ECombatLife::Conscious) { continue; }
+        TArray<FIntPoint> Queue = {Unit.Cell};
+        TSet<FIntPoint> Seen = {Unit.Cell};
+        for (int32 I = 0; I < Queue.Num(); ++I)
+        {
+            const FIntPoint Cell = Queue[I];
+            const bool bInRange = E.Combatants.ContainsByPredicate([&](const FCombatantState& Other)
+            { return Other.Side != Unit.Side && Other.Life == ECombatLife::Conscious && Policy::Manhattan(Cell, Other.Cell) <= Unit.Range; });
+            if (bInRange) { return false; }
+            for (const FIntPoint Offset : {FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1)})
+            {
+                const FIntPoint Next = Cell + Offset;
+                if (!Seen.Contains(Next) && !Blocked(Next)) { Seen.Add(Next); Queue.Add(Next); }
+            }
+        }
+    }
+    return true;
+}
+
+FString TraceRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, int32 Revision, ERewardStrategy Strategy)
 {
     FString Trace;
-    PlayRun(Party, Seed, RoutePattern, nullptr, &Trace);
+    PlayRun(Party, Seed, RoutePattern, nullptr, &Trace, Revision, Strategy);
     return Trace;
+}
+
+const TCHAR* StrategyName(ERewardStrategy Strategy)
+{
+    switch (Strategy)
+    {
+    case ERewardStrategy::Gear: return TEXT("gear");
+    case ERewardStrategy::Reserve: return TEXT("reserve");
+    case ERewardStrategy::Honed: return TEXT("honed");
+    case ERewardStrategy::Mixed: return TEXT("mixed");
+    }
+    return TEXT("unknown");
+}
+
+bool StrategyFromEnvironment(ERewardStrategy& OutStrategy, FString& Error)
+{
+    const FString Value = FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_REWARD"));
+    OutStrategy = ERewardStrategy::Mixed;
+    if (Value.IsEmpty()) { return true; }
+    for (const ERewardStrategy Strategy : {ERewardStrategy::Gear, ERewardStrategy::Reserve, ERewardStrategy::Honed, ERewardStrategy::Mixed})
+    { if (Value == StrategyName(Strategy)) { OutStrategy = Strategy; return true; } }
+    Error = FString::Printf(TEXT("DND_BALANCE_REWARD=%s is not a reward strategy (gear, reserve, honed or mixed)"), *Value);
+    return false;
+}
+
+bool SeedBaseFromEnvironment(int32& OutSeedBase, FString& Error)
+{
+    const FString Value = FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_SEED_BASE"));
+    OutSeedBase = BaseSeed;
+    if (Value.IsEmpty()) { return true; }
+    if (Value != FString::FromInt(BaseSeed) && Value != FString::FromInt(ExtraBatchSeed))
+    {
+        Error = FString::Printf(TEXT("DND_BALANCE_SEED_BASE=%s is neither the base batch (%d) nor the extra batch (%d)"), *Value, BaseSeed, ExtraBatchSeed);
+        return false;
+    }
+    OutSeedBase = FCString::Atoi(*Value);
+    return true;
+}
+
+bool RevisionFromEnvironment(int32& OutRevision, FString& Error)
+{
+    const FString Value = FPlatformMisc::GetEnvironmentVariable(TEXT("DND_BALANCE_REVISION"));
+    OutRevision = FBuildCatalog::Revision;
+    if (Value.IsEmpty()) { return true; }
+    const int32 Revision = FCString::Atoi(*Value);
+    if (!Value.IsNumeric() || Revision < FBuildCatalog::MinimumRevision || Revision > FBuildCatalog::Revision)
+    {
+        Error = FString::Printf(TEXT("DND_BALANCE_REVISION=%s is not a supported catalog revision (%d to %d)"), *Value, FBuildCatalog::MinimumRevision, FBuildCatalog::Revision);
+        return false;
+    }
+    OutRevision = Revision;
+    return true;
 }
 
 const FPartySpec* FindParty(const FString& Id)
@@ -716,12 +836,12 @@ const FPartySpec* FindParty(const FString& Id)
     return All.FindByPredicate([&Id](const FPartySpec& Party) { return Party.Id == Id; });
 }
 
-TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds)
+TArray<FRunStats> PlayGroup(const TArray<FPartySpec>& Parties, int32 Seeds, int32 Revision, ERewardStrategy Strategy, int32 SeedBase)
 {
     TArray<FRunStats> Runs;
     for (const auto& Party : Parties)
     {
-        for (int32 I = 0; I < Seeds; ++I) { Runs.Add(PlayRun(Party, BaseSeed + I, I)); }
+        for (int32 I = 0; I < Seeds; ++I) { Runs.Add(PlayRun(Party, SeedBase + I, I, nullptr, nullptr, Revision, Strategy)); }
     }
     return Runs;
 }
@@ -822,14 +942,14 @@ FString RunsCsv(const TArray<FRunStats>& Runs)
 
 FString EncountersCsv(const TArray<FRunStats>& Runs)
 {
-    FString Out = TEXT("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,damage_taken,healing,protection,downs,deaths,revives,specials_used\n");
+    FString Out = TEXT("party,seed,stage,route,recipe,width,height,enemies,outcome,rounds,conscious_start,hp_start,hp_low,hp_end,hp_max,damage,damage_taken,healing,protection,downs,deaths,revives,specials_used,melee_damage\n");
     for (const auto& R : Runs)
     {
         for (const auto& E : R.Encounters)
         {
-            Out += FString::Printf(TEXT("%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, R.Seed, E.Stage,
+            Out += FString::Printf(TEXT("%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), *R.PartyId, R.Seed, E.Stage,
                 E.bDangerous ? TEXT("dangerous") : TEXT("guarded"), E.Recipe, E.Width, E.Height, E.Enemies, *E.Outcome, E.Rounds, E.ConsciousStart,
-                E.HpStart, E.HpLow, E.HpEnd, E.HpMax, E.Damage, E.DamageTaken, E.Healing, E.Protection, E.Downs, E.Deaths, E.Revives, E.SpecialsUsed);
+                E.HpStart, E.HpLow, E.HpEnd, E.HpMax, E.Damage, E.DamageTaken, E.Healing, E.Protection, E.Downs, E.Deaths, E.Revives, E.SpecialsUsed, E.MeleeDamage);
         }
     }
     return Out;
@@ -839,7 +959,8 @@ FString HeroesCsv(const TArray<FRunStats>& Runs)
 {
     FString Out = TEXT("party,archetype,seed,outcome,slot,build,class,survived,death_stage,death_cause,level,turns,idle_turns,damage,kills,healing,protection,damage_taken,downs,revives,potions_used");
     for (int32 K = 1; K <= 2; ++K) { Out += FString::Printf(TEXT(",s%d_command,s%d_available_turns,s%d_uses,s%d_blockers"), K, K, K, K); }
-    Out += TEXT(",kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,maneuver_left,maneuver_cap,rage_left,rage_cap,potions_left\n");
+    // #218 appends reward_cards (claim order, G/R/H joined by ";"), reserve and honed; columns are only ever appended.
+    Out += TEXT(",kit_left,kit_cap,slot_left,slot_cap,wind_left,wind_cap,maneuver_left,maneuver_cap,rage_left,rage_cap,potions_left,reward_cards,reserve,honed\n");
     for (const auto& R : Runs)
     {
         for (const auto& H : R.Heroes)
@@ -856,8 +977,8 @@ FString HeroesCsv(const TArray<FRunStats>& Runs)
                 { if (Special.Blockers[B] > 0) { Counts.Add(FString::Printf(TEXT("%s:%d"), BlockerName(static_cast<EActionBlocker>(B)), Special.Blockers[B])); } }
                 Out += FString::Printf(TEXT(",%s,%d,%d,%s"), CommandName(Special.Command), Special.AvailableTurns, Special.Uses, *FString::Join(Counts, TEXT(";")));
             }
-            Out += FString::Printf(TEXT(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n"), H.KitLeft, H.KitCap, H.SlotLeft, H.SlotCap, H.WindLeft, H.WindCap,
-                H.ManeuverLeft, H.ManeuverCap, H.RageLeft, H.RageCap, H.PotionsLeft);
+            Out += FString::Printf(TEXT(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d\n"), H.KitLeft, H.KitCap, H.SlotLeft, H.SlotCap, H.WindLeft, H.WindCap,
+                H.ManeuverLeft, H.ManeuverCap, H.RageLeft, H.RageCap, H.PotionsLeft, *FString::Join(H.RewardCards, TEXT(";")), H.bReserve ? 1 : 0, H.bHoned ? 1 : 0);
         }
     }
     return Out;
@@ -950,15 +1071,18 @@ bool EnsureFolder(const FString& Folder, FString& Error)
     return InsideLocal(Folder, Error);
 }
 
-bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error)
+bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FPartySpec>& Parties, const TArray<FRunStats>& Runs, double Seconds, FString& Error, int32 SeedBase)
 {
     if (!EnsureFolder(Folder, Error)) { return false; }
     const TSharedRef<FJsonObject> Meta = MakeShared<FJsonObject>();
     Meta->SetStringField(TEXT("group"), Group);
     Meta->SetNumberField(TEXT("policy_version"), PolicyVersion);
     Meta->SetStringField(TEXT("ruleset"), TEXT("Compact"));
-    Meta->SetNumberField(TEXT("catalog_revision"), FBuildCatalog::Revision);
-    Meta->SetNumberField(TEXT("base_seed"), BaseSeed);
+    // The revision the runs were created under (all of a group's runs share it; DND_BALANCE_REVISION picks it).
+    Meta->SetNumberField(TEXT("catalog_revision"), Runs.IsEmpty() ? FBuildCatalog::Revision : Runs[0].Revision);
+    Meta->SetNumberField(TEXT("base_seed"), SeedBase);
+    // #218: the reward strategy the group's runs played (DND_BALANCE_REWARD); every run of a group shares it.
+    Meta->SetStringField(TEXT("reward_strategy"), StrategyName(Runs.IsEmpty() ? ERewardStrategy::Mixed : Runs[0].Strategy));
     Meta->SetNumberField(TEXT("seeds"), Parties.IsEmpty() ? 0 : Runs.Num() / Parties.Num());
     Meta->SetNumberField(TEXT("runs"), Runs.Num());
     Meta->SetNumberField(TEXT("max_rounds"), MaxRounds);

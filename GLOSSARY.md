@@ -35,6 +35,16 @@ _Avoid_: pawn when discussing game rules
 
 **Milestone level**: An adventurer's earned tier within the current expedition, retained until that expedition ends.
 
+**Reward card**: The upgrade a survivor takes with a victory reward, beside the route's potions: Gear, Reserve or Honed. Compact runs from catalog revision 10 offer all three; other runs offer Gear only.
+
+**Gear**: The reward card that adds one gear rank (+1 basic damage, cap 3); at rank 3 it gives the potions only.
+
+**Reserve**: The once-per-hero reward card that adds one cap and one use to each pool the hero's specials spend. It never refills.
+
+**Honed**: The once-per-hero reward card that improves both of a hero's specials by a fixed row per effect.
+
+**Progression facts**: What the game shows about level gains, basic damage, reward cards and the camp, derived from saved state by one read-only query that never rolls (`FProgressionQuery`).
+
 **Fighter subclass**: The Fighter's chosen combat specialization, fixed for an expedition.
 
 **Precision Strike**: A Battle Master attack that spends a limited maneuver use for improved accuracy and damage.
@@ -45,7 +55,9 @@ _Avoid_: pawn when discussing game rules
 
 **Next party**: Four ordered build selections edited at startup or after an ending, used only by explicit New Run. Resume retains the saved party.
 
-**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it.
+**Return to menu**: Putting an unfinished expedition away and showing the start screen (Backspace or the Menu button; it waits for the party's turn and finished playback, and mid-encounter it asks first). It writes nothing: the checkpoint stays as last committed, Resume continues from it, and New Run still refuses to replace it until the run ends or is abandoned.
+
+**Abandon run**: The start screen's way to give up an unfinished expedition ([#224](https://github.com/AustinKelsay/dnd-diceroll/issues/224)), offered only while one is saved. It asks first and defaults to keeping the run; Resume stays the focused choice. A confirmed abandon writes a small marker beside the checkpoint (never the checkpoint itself), after which Resume refuses that run and New Run replaces it as after an ending, keeping the records of finished runs. The abandoned run is not recorded, and a failed write changes nothing and says so.
 
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.
 

@@ -23,7 +23,7 @@ USTRUCT()
 struct DNDDICEROLL_API FExpeditionSaveData
 {
     GENERATED_BODY()
-    UPROPERTY() int32 Version = 5;
+    UPROPERTY() int32 Version = 6;
     UPROPERTY() FExpeditionSnapshot Current;
     UPROPERTY() TArray<FExpeditionEnding> Records;
 };
@@ -33,8 +33,9 @@ struct DNDDICEROLL_API FExpeditionSaveData
 class DNDDICEROLL_API FExpeditionSave
 {
 public:
-    // Version 5 persists ERuleset. Schema 4 loads as Compact; older than 4 remains unsupported.
-    static constexpr int32 Version = 5;
+    // Version 5 persists ERuleset; version 6 (#218) the reward card of each claim and each hero's Reserve and Honed. Older documents
+    // decode through explicit step migrations, 4 -> 5 (Compact) and 5 -> 6 (gear only); older than 4, and any unknown version, is refused.
+    static constexpr int32 Version = 6;
     static bool Encode(const FExpeditionSaveData& Data, FString& Json, FString& Error);
     static bool Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error);
     static bool Write(const FString& Path, const FExpeditionSaveData& Data, FString& Error);
@@ -60,6 +61,8 @@ public:
     bool NewRun(int32 Seed, FString& Error, const FString& Identity = FString(), FString* PreservedCheckpoint = nullptr, EFighterSubclass Subclass = EFighterSubclass::Champion);
     bool ChooseRoute(int32 Id, FString& Error);
     bool ClaimReward(int32 Id, FString& Error);
+    /** The run's card claim (#218), committed before it is installed: a failed write rejects it and leaves state, RNG and file unchanged. */
+    bool ClaimReward(int32 Id, ERewardCard Card, FString& Error);
     bool Recover(bool bTake, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();
@@ -69,11 +72,23 @@ public:
     /** Puts the live run away without writing anything. The checkpoint stays exactly as
      * last committed, so Resume continues the run and New Run still refuses to replace it. */
     void Close();
-    /** True when the checkpoint holds a readable, unfinished run, so New Run would refuse. Read-only. */
+    /** True when the checkpoint holds a readable, unfinished run that has not been abandoned, so New Run would refuse. Read-only. */
     bool HasUnfinishedCheckpoint() const;
+    /**
+     * Abandon the unfinished checkpoint from the start screen (#224): only with no live run and a readable, unfinished checkpoint. It writes one
+     * small marker beside the checkpoint naming that run, atomically; the checkpoint itself is never written, so on failure (or cancel) its bytes
+     * are unchanged. While the marker names the checkpoint's run, Resume refuses it, HasUnfinishedCheckpoint is false and New Run replaces it
+     * exactly as after an ending, keeping the records of finished runs. The abandoned run is not recorded: the records format can only hold
+     * victories and defeats, and the save schema does not change for this.
+     */
+    bool Abandon(FString& Error);
+    /** The marker's path: the checkpoint path plus ".abandoned". */
+    FString AbandonMarkerPath() const { return SavePath + TEXT(".abandoned"); }
 private:
     FString SavePath;
     FExpeditionRun Current;
     bool bHasRun = false;
     bool Commit(FExpeditionRun&& Candidate, FString& Error);
+    /** True when the abandon marker names RunId. */
+    bool IsAbandoned(const FString& RunId) const;
 };

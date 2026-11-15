@@ -239,6 +239,8 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     const FCombatBattle& Rules() const { return Session.Run().Battle(); }
     const FExpeditionProgress& Progress() const { return Session.Run().Progress(); }
+    /** The whole run, for const queries such as FProgressionQuery (#218). */
+    const FExpeditionRun& CurrentRun() const { return Session.Run(); }
     const TArray<FString>& Messages() const { return Feedback; }
     /**
      * Submits a party command and plays it. Returns whether the rules accepted it. A rejection is explained in the log by
@@ -246,7 +248,12 @@ public:
      */
     bool Execute(const FCombatCommand& Command);
     void ChooseRoute(int32 Index);
-    void ClaimReward(int32 RecipientId);
+    /** Claims the reward for RecipientId with Card (#218); every rejection is logged by name and changes nothing. */
+    void ClaimReward(int32 RecipientId, ERewardCard Card = ERewardCard::Gear);
+    /** Says that RecipientId has fallen and cannot be chosen for the reward, with the refusal cue a rejected claim plays (#231). Changes nothing. */
+    void RefuseRewardRecipient(int32 RecipientId);
+    /** Logs the level the last victory's survivors reached (#218); nothing outside the Reward phase. */
+    void RecordLevelGain();
     void Recover(bool bTake);
     void NewRun(const TArray<FPartyBuildSelection>& Party);
     void NewRun(EFighterSubclass Subclass = EFighterSubclass::Champion);
@@ -258,6 +265,10 @@ public:
     void ReturnToMenu();
     /** With no run in play: the checkpoint holds an unfinished run (checked at startup and on return). */
     bool HasUnfinishedCheckpoint() const { return bUnfinishedCheckpoint; }
+    /** The start screen may offer Abandon run (#224): no run in play and an unfinished checkpoint. */
+    bool CanAbandonRun() const { return !HasRun() && bUnfinishedCheckpoint; }
+    /** Abandons the unfinished checkpoint (FExpeditionSession::Abandon) and reports the result; a failure changes nothing and says so. */
+    void AbandonRun();
     /** A checkpoint write failed; enemy turns are held until the player saves or resumes. */
     bool CheckpointBlocked() const { return bCheckpointBlocked; }
     void ToggleRecords();
@@ -304,6 +315,8 @@ public:
      * unit when the turn changes.
      */
     void Pan(float Right, float Away);
+    /** Counts the pans that moved the player's pan offset, so a click held while the player pans is spent (#232); the focus easing on its own never counts. */
+    uint32 PlayerPans() const { return PlayerPanCount; }
     /** The camera focus the view settles on (view space, before the HUD offset), after the pan clamp. */
     FVector CameraFocus() const { return FocusTarget; }
     /** Whether the whole board is inside the safe rect from the pose the camera renders this frame (then nothing pans). */
@@ -403,6 +416,10 @@ public:
     /** Obstacle pieces placed on blocked cells (variants and arches) and arches among them, in the last build. */
     int32 PlacedObstacles() const { return ObstaclePieces; }
     int32 PlacedArches() const { return ArchPieces; }
+    /** The obstacle kind the last build drew (0 stones, 1 pillars, 2 walls), from FExpeditionRun::Encounter for the current route (#188). */
+    int32 DrawnObstacleKind() const { return DrawnKind; }
+    /** The board theme the last build chose: the Vault for the finale stage, otherwise by road. */
+    EBoardTheme DrawnBoardTheme() const { return BoardTheme; }
     /** Per blocked cell, the variant index its obstacle used (kit boards only; -1 for a cell under an arch). */
     const TMap<FIntPoint, int32>& ObstacleVariants() const { return VariantsByCell; }
     /** Where each kit obstacle piece stands in the view actor's space: per blocked cell, or the shared-edge midpoint for both cells of an arch. */
@@ -416,8 +433,18 @@ public:
     float OccluderOpacityAt(const FVector& WorldPoint) const;
     /** The same for the board part: the point covers the board when the camera's ray through it lands on the grown board rectangle. */
     float OccluderBoardOpacityAt(const FVector& WorldPoint) const;
-    /** What the shader is given: the board rectangle grown by OccluderFade::BoardMarginCells (world XY, min and max) and the board-top height. */
+    /** What the shader is given: the board rectangle grown by OccluderSideMargins (world XY, min and max) and the board-top height. */
     void OccluderBoard(FVector2D& Min, FVector2D& Max, float& PlaneZ) const;
+    /** How far past the grown board rectangle the board fade eases back to opaque, in cells (wider on the Vigil's and, at the default zoom, the Vault's walls, #209). */
+    float OccluderRampCells() const;
+    /** The opacity a faded piece dithers to: 0.15, and 0.04 on the Vigil (#209). The material's FadeMin and the CPU queries use it. */
+    float OccluderMinOpacity() const;
+    /** The board fade's margin on each side (low X, high X, low Y, high Y), in cells: OccluderMarginCells, and on the Vigil the side(s) the camera is on reach VigilNearMarginCells. */
+    void OccluderSideMargins(float (&Out)[4]) const;
+    /** How far past the board the board fade reaches, in cells, on the sides away from the camera: 0.5, and on the Vault 2.5 at the default zoom easing to 0.5 at the far pose (#209). */
+    float OccluderMarginCells() const;
+    /** 0 at the default zoom of the rendered yaw, 1 at its far pose, smooth between: the Vault's far grade and board fade follow it. */
+    float FarZoomFraction() const;
     /** World points the occluder protects: the camera, the camera focus and the active unit's chest. */
     void OccluderSight(FVector& Eye, FVector& FocusPoint, FVector& UnitPoint) const;
     /** Per-cell tile meshes on the board: zero on themed boards, which use the world's ground as the floor. */
@@ -515,6 +542,7 @@ private:
     float Clock = 0.0f;
     EPlaybackSpeed PlaybackSpeed = EPlaybackSpeed::Normal;
     EBoardTheme BoardTheme = EBoardTheme::Meadow;
+    int32 DrawnKind = 0;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
     /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
@@ -565,6 +593,7 @@ private:
     /** Where the focus settles: the board/unit focus plus the clamped pan. View space. */
     FVector FocusTarget = FVector::ZeroVector;
     FVector2D PanOffset = FVector2D::ZeroVector;
+    uint32 PlayerPanCount = 0;
     int32 LastFocusId = INDEX_NONE;
     /** Whether the map's sun cast shadows before the battle look took it over (the tabletop restores it). */
     TOptional<bool> StarterSunShadows;
@@ -702,8 +731,8 @@ private:
     void SetOverlayBars(const TArray<FTransform>& Bars, const TArray<float>& Data);
     int32 AddRingSlot(const FLinearColor& Color);
     void SetRing(int32 Slot, bool bVisible, const FVector& Centre, float Scale, const FLinearColor& Color);
-    void BuildScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
-    void BuildObstacle(FIntPoint Cell, int32 Recipe, FRandomStream& Random);
+    void BuildScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed);
+    void BuildObstacle(FIntPoint Cell, int32 ObstacleKind, FRandomStream& Random);
     void BuildDecor(const FCombatEncounter& Encounter, FRandomStream& Random);
     void BuildRig(const FCombatantState& Unit);
     UStaticMesh* ThemeMesh(const TSoftObjectPtr<UStaticMesh>& Entry) const;
@@ -714,9 +743,9 @@ private:
     void ShowPose(FExpeditionUnitRig& Rig, EUnitPose Pose, bool bSnap);
     void UpdateAnimation(FExpeditionUnitRig& Rig, const FUnitDisplay& Unit);
     bool WantsOverview() const;
-    bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed);
+    bool BuildThemedScenery(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed);
     /** The r002 obstacles of a world kit: three variants per recipe by seed and cell, arches over adjacent pairs when bArches (pillar and wall recipes of a world kit; see VigilKit::ArchesFor). Metric-authored, so placed unscaled. False when the theme has no variant to place. */
-    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 Recipe, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
+    bool BuildKitObstacles(const FCombatEncounter& Encounter, int32 ObstacleKind, int32 Seed, bool bArches, const FDiceRollWorldKit& Kit);
     /** Scatter, mist and light shafts outside the board (see VigilKit::PlanDressing; the Root kit uses the same plan). */
     void BuildKitDressing(const FCombatEncounter& Encounter, int32 Seed, const FDiceRollWorldKit& Kit, const TArray<FVector2D>& Braziers);
     /** A part from a mesh that keeps its own material (the occluder and the translucent cards), instanced for per-part parameters. */
@@ -755,6 +784,44 @@ private:
      * and otherwise re-pinned to the bound so a held key does not wind up past it.
      */
     FVector2D LimitPan(const FVector2D& Base, FVector2D& Offset) const;
+public:
+    /**
+     * The farthest zoom the wheel and the rendered pose reach at a yaw: the zoom maximum, and on the Vault the far pose or, where the
+     * viewport's ground would show more than the authored set from that yaw (the hall, its dressed ground and the far-hall ring, 27 m each way
+     * from the board centre), the nearest zoom at which it does not (but never nearer than the default). Per yaw, so a diagonal far pose is nearer
+     * than a square one. `UpdateCamera` clamps the rendered distance against the rendered yaw's cap every frame, as the pan bound clamps the
+     * rendered focus, so an orbit from a far zoom never renders past the cap of the yaw it is easing through (#209).
+     */
+    float MaxZoomFor(float ForYaw) const;
+private:
+    /** The last MaxZoomFor answer and what it was solved for. */
+    struct FZoomCap
+    {
+        bool bValid = false;
+        float Yaw = 0.0f;
+        int32 Width = 0, Height = 0;
+        float CellCm = 0.0f;
+        ExpeditionCameraRig::FSafeRect Rect;
+        float Value = 0.0f;
+    };
+    mutable FZoomCap ZoomCap;
+    bool bSetShowsPast = false;
+public:
+    /** Whether the camera is bounded by an authored set (the Vault's): the zoom is limited (never the focus moved) so the viewport's ground stays inside it. */
+    bool BoundsSet() const;
+    /**
+     * True only for a verified default-fit failure: the rendered pose is at (or nearer than) the default zoom, the viewport's ground around the focus
+     * (decided by the pan bound, the locked axes and the unit hold, and never moved to fit) still shows past the Vault's set, and the default zoom does not fit
+     * around that focus either, so the zoom has nothing left to give. A pose above the default that is a hair outside is a solver residual and is not
+     * reported. False outside the Vault.
+     */
+    bool ShowsPastSet() const { return bSetShowsPast; }
+    /** The rendered focus (view-space cm), after the lean, the pan bound, the locked axes and the unit hold. */
+    FVector2D RenderedFocus() const { return FVector2D(Focus.X, Focus.Y); }
+    /** The yaw and distance the camera renders this frame (the eased pose), not the targets. */
+    float RenderedYaw() const { return Yaw; }
+    float RenderedDistance() const { return Distance; }
+private:
     /** Moves a focus toward the followed unit only as far as brings the unit's tile and head inside the safe rect; a no-op while the whole board is in view. */
     FVector2D HoldUnit(const FVector2D& Wanted) const;
     /** Gives shadows to the two flame lights nearest the board centre and none to the rest. */

@@ -19,10 +19,41 @@ class DNDDICEROLL_API AExpeditionPlayerController : public APlayerController
     GENERATED_BODY()
 public:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    virtual void BeginDestroy() override;
     virtual void SetupInputComponent() override;
     virtual void PlayerTick(float DeltaTime) override;
+    /** Any other key or button pressed while the left button is down spends the press (#220); everything else is the engine's. */
+    virtual bool InputKey(const FInputKeyEventArgs& Params) override;
+    /**
+     * The viewport losing focus (UGameViewportClient::LostFocus) calls this to flush held keys, which queues a release for every one, and PlayerTick delivers those releases
+     * inside Super::PlayerTick. An armed left press is spent here, before that flush, so the synthetic release can never click (#220).
+     */
+    virtual void FlushPressedKeys() override;
+    /** Spends an armed left press for good: its release can never click, however the window comes back (#220). */
+    void NotifyWindowFocusLost() { bPressVoided = true; }
+    /**
+     * The application losing activation (Slate's OnApplicationActivationStateChanged(false), which on Linux follows the window losing keyboard focus to another client): the
+     * press is spent at that moment, not when the button is released. On that platform an input event after the loss re-activates the application, so a poll at release is too late (#220).
+     */
+    void OnApplicationActivation(bool bActive);
+    FDelegateHandle ActivationHandle;
+    void StopListeningForActivation();
+    /**
+     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) and no longer has it. While the left button is held the engine does NOT deactivate
+     * the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither Slate's activation event nor FApp::HasFocus
+     * reports it; this is the signal that does. Always false on other platforms, and before the window first had focus (a seat with no keyboard never gives it).
+     */
+    bool KeyboardFocusLost() const;
+    mutable bool bSawKeyboardFocus = false;
+    /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
+    bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
+    /** The reward card the Reward screen has chosen (#218): presentation state, never saved. Gear at the start of every Reward phase and after Resume. */
+    ERewardCard RewardCard() const { return SelectedCard; }
+    /** Chooses a reward card (Reward phase only; ignored under an overlay). */
+    void SelectRewardCard(ERewardCard Card);
     /** Who acts on the next command: the active adventurer in combat, else the selection. */
     int32 Actor() const;
     bool HoverCell(FIntPoint& Cell) const;
@@ -36,8 +67,11 @@ public:
     bool ModeTipActive() const { return bModeTip; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
-    /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
-    void SelectPartyIndex(int32 Index, bool bInspect = true);
+    /**
+     * Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. On the Reward screen a fallen hero
+     * is refused and the selection stays (#231). Returns whether the choice was taken.
+     */
+    bool SelectPartyIndex(int32 Index, bool bInspect = true);
     /** The hero whose full status the player asked for by choosing them again; cleared each turn. */
     int32 Inspected() const { return InspectedId; }
     void HandleButton(FName Id);
@@ -48,6 +82,8 @@ public:
     bool ShowingHelp() const { return bShowHelp; }
     /** True while the mid-encounter "Return to menu?" question is open. */
     bool ConfirmingReturn() const { return bConfirmReturn; }
+    /** The Abandon run question (#224) is open: it defaults to keeping the run and owns every click and key. */
+    bool ConfirmingAbandon() const { return bConfirmAbandon; }
     /** True while a requested return waits for the party's turn and playback to finish. */
     bool ReturnPending() const { return bReturnPending; }
     /**
@@ -133,6 +169,10 @@ public:
      */
     bool PreviewedPointerCell(FIntPoint& Cell) const;
 private:
+    /** On the Reward screen, refuses a fallen hero as the reward's recipient, saying why when a selection is kept (#231). */
+    bool RefusesRecipient(const FCombatantState& Unit);
+    /** Selects an ally chosen on the board, unless RefusesRecipient refuses them. */
+    void ChooseAlly(const FCombatantState& Unit);
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
@@ -156,7 +196,29 @@ private:
     bool bPreviewPoseValid = false;
     FTransform PreviewPose;
     /** Camera movement under this much (cm, degrees) moves nothing under the pointer by a pixel. */
-    static constexpr float PoseSlopCm = 0.5f, PoseSlopDegrees = 0.02f;
+    static constexpr float PoseSlopCm = 0.5f;
+    static constexpr float PoseSlopDegrees = 0.02f;
+    /**
+     * A board click is a press and a release that leave everything as they found it (#220): Click only arms it, from the cell the last frame previewed and the camera that
+     * preview was found with, and ClickReleased acts if the player has not moved the camera (its yaw, its distance, a pan), the pointer has not dragged past ClickSlop and
+     * the same cell is still previewed. The focus easing on its own toward the acting unit does not count as moving it (#232). A press the player's camera or the pointer
+     * moved under is spent (bPressVoided) and its release commits nothing.
+     */
+    static constexpr float ClickSlop = 6.0f;
+    bool bPressArmed = false, bPressVoided = false;
+    FIntPoint PressCell = FIntPoint::ZeroValue;
+    FVector2D PressPointer = FVector2D::ZeroVector;
+    /** The rendered yaw and distance and the view's PlayerPans at the press: the parts of the camera the player moves (#232). */
+    float PressYaw = 0.0f, PressDistance = 0.0f;
+    uint32 PressPans = 0;
+    /** What the press was made in (PressContext): a change of it, however briefly, spends the press for good. */
+    uint32 PressContextStamp = 0;
+    /** Bumped by every mode change, so a mode that is changed and changed back mid-press still spends it. */
+    uint32 ContextSerial = 0;
+    /** The targeting stamp (mode, actor, battle state, presentation revision) with the screen's ownership: overlays, the Menu, playback, the run and its phase. */
+    uint32 PressContext() const;
+    /** True while the press is armed and unspent: the camera is still the one the armed press was made with and the pointer is within the click slop of where it went down. */
+    bool PressHolds() const;
     /** The keyboard cursor's cell, as the last frame drew it with targeting visible, and the state it was drawn for (#171 review). */
     bool bKeyboardPreviewed = false;
     FIntPoint KeyboardPreview = FIntPoint::ZeroValue;
@@ -171,6 +233,14 @@ private:
     UPROPERTY() TObjectPtr<AExpeditionBattleView> BattleView;
     ECombatCommandType SelectedAction = ECombatCommandType::Attack;
     int32 SelectedId = INDEX_NONE;
+    ERewardCard SelectedCard = ERewardCard::Gear;
+    /** The Reward screen the card choice belongs to: a new reward, or a Resume, starts again on Gear. */
+    uint32 RewardScreen = 0;
+    void GearCard();
+    void ReserveCard();
+    void HonedCard();
+    bool OnRewardScreen() const;
+    void StepRewardCard(int32 Direction);
     int32 InspectedId = INDEX_NONE;
     int32 LastActiveId = INDEX_NONE;
     int32 LastRevision = INDEX_NONE;
@@ -205,6 +275,7 @@ private:
     bool bShowHelp = false;
     bool bShowMenu = false;
     bool bConfirmReturn = false;
+    bool bConfirmAbandon = false;
     bool bReturnPending = false;
     /** The phase a pending return was requested in; it is dropped if the phase changes. */
     EExpeditionPhase PendingPhase = EExpeditionPhase::Route;
@@ -238,6 +309,8 @@ private:
     void BattleMaster();
     void ManeuverMode();
     void Click();
+    /** The left button's release: acts on the cell Click armed, if nothing moved since the press (#220). */
+    void ClickReleased();
     void AttackMode();
     void RoleMode();
     void RescueMode();
@@ -257,6 +330,9 @@ private:
     void RequestReturnToMenu();
     void ResolvePendingReturn();
     void ConfirmReturn();
+    /** Opens the Abandon run question, only on the start screen with an unfinished checkpoint. */
+    void RequestAbandon();
+    void ConfirmAbandon();
     void LeaveExpedition();
     void History();
     void OlderRecords();

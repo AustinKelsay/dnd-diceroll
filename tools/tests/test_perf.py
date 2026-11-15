@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call as mock_call, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import dev as dev_module
@@ -104,6 +104,17 @@ class CaptureTests(unittest.TestCase):
         self.assertFalse(Dev.perf_startup_sigfpe(1, log, console))
         log.write_text("AUTOPLAY_BEGIN watchtower fresh\n")
         self.assertFalse(Dev.perf_startup_sigfpe(-8, log, console))
+
+    def test_csv_field_limit_falls_back_for_windows_c_long(self):
+        with patch.object(perf.csv, "field_size_limit", side_effect=[OverflowError, 0]) as limit:
+            frames = perf.parse_csv(HEADER + '\n,5,1,1,2,1\n')
+        self.assertEqual(len(frames), 1)
+        self.assertEqual(limit.call_args_list, [mock_call(sys.maxsize), mock_call((1 << 31) - 1)])
+
+    def test_csv_field_limit_keeps_native_maximum_when_supported(self):
+        with patch.object(perf.csv, "field_size_limit") as limit:
+            perf.parse_csv(HEADER + '\n,5,1,1,2,1\n')
+        limit.assert_called_once_with(sys.maxsize)
 
     def test_parse_csv_accepts_a_long_metadata_field(self):
         # A real capture ends with metadata rows whose command-line field exceeds csv's default 128 KiB limit.
@@ -397,7 +408,7 @@ class PerfCommandTests(unittest.TestCase):
         self.assertEqual([c["name"] for c in calls], ["warmup", "measured", "resume"])
         for call in calls:
             args = call["args"]
-            self.assertTrue(args[0].endswith("Binaries/Linux/CustomGame"))
+            self.assertTrue(Path(args[0]).as_posix().endswith("Binaries/Linux/CustomGame"))
             for needed in ("-windowed", "-ForceRes", "-ResX=1920", "-ResY=1080", "-csvGpuStats", "-novsync", "-corelimit=2", "-unattended"):
                 self.assertIn(needed, args)
             self.assertTrue(any(a.startswith("-csvCaptureFrames=200000") for a in args))

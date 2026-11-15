@@ -162,7 +162,21 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         if (!(*Entry)->TryGetStringField(TEXT("mode"), Mode)) { Error = Shot.Name + TEXT(" needs a \"mode\""); return false; }
         if (Mode == TEXT("battle")) { Shot.Mode = ECaptureMode::Battle; }
         else if (Mode == TEXT("targeting")) { Shot.Mode = ECaptureMode::Targeting; }
-        else if (Mode == TEXT("overview")) { Shot.Mode = ECaptureMode::Overview; }
+        else if (Mode == TEXT("overview"))
+        {
+            Shot.Mode = ECaptureMode::Overview;
+            double Hero = 0.0;
+            if ((*Entry)->HasField(TEXT("hero")) && ((*Entry)->TryGetField(TEXT("hero"))->Type != EJson::Number || !(*Entry)->TryGetNumberField(TEXT("hero"), Hero) || Hero < 1.0 || Hero > 4.0 || Hero != FMath::FloorToDouble(Hero)))
+            { Error = Shot.Name + TEXT(" needs a \"hero\" party slot from 1 to 4"); return false; }
+            Shot.Hero = static_cast<int32>(Hero);
+            FString Card;
+            if ((*Entry)->HasField(TEXT("card")))
+            {
+                if (!(*Entry)->TryGetStringField(TEXT("card"), Card) || (Card != TEXT("gear") && Card != TEXT("reserve") && Card != TEXT("honed")))
+                { Error = Shot.Name + TEXT(" needs a \"card\" of gear, reserve or honed"); return false; }
+                Shot.Card = Card == TEXT("reserve") ? 1 : Card == TEXT("honed") ? 2 : 0;
+            }
+        }
         else if (Mode == TEXT("start"))
         {
             Shot.Mode = ECaptureMode::Start;
@@ -606,7 +620,15 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         return true;
     }
     case ECaptureMode::Overview:
-        if (!Board->ShowingOverview()) { Skip = TEXT("the checkpoint is not at the route table"); return false; }
+        // The route table, or (#218) the reward and camp screens, which are drawn over the board of the fight just won.
+        if (!Board->ShowingOverview() && !(Board->HasRun() && (Board->Progress().Phase == EExpeditionPhase::Reward || Board->Progress().Phase == EExpeditionPhase::Recovery)))
+        { Skip = TEXT("the checkpoint is not at the route table, the reward or the camp"); return false; }
+        if (Shot.Hero > 0) { Player->SelectPartyIndex(Shot.Hero - 1, false); }
+        if (Shot.Card >= 0)
+        {
+            if (Board->Progress().Phase != EExpeditionPhase::Reward) { Skip = TEXT("a card needs a Reward-phase checkpoint"); return false; }
+            Player->SelectRewardCard(static_cast<ERewardCard>(Shot.Card));
+        }
         Board->SnapCameraToTargets();
         return true;
     case ECaptureMode::Start:
@@ -862,6 +884,7 @@ void FExpeditionCaptureDirector::WriteManifest() const
             Shot->SetArrayField(TEXT("units"), Units);
         }
         if (!Result.Shot.Build.IsEmpty()) { Shot->SetStringField(TEXT("build"), Result.Shot.Build); }
+        if (Result.Shot.Hero > 0) { Shot->SetNumberField(TEXT("hero"), Result.Shot.Hero); }
         Shot->SetStringField(TEXT("status"), Result.Status);
         if (Result.Status == TEXT("skipped")) { Shot->SetStringField(TEXT("reason"), Result.Reason); }
         else

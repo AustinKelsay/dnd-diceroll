@@ -18,6 +18,7 @@ namespace
 constexpr int32 MaxSaveCharacters = 4 * 1024 * 1024;
 constexpr int32 MaxRecords = 10000;
 constexpr int32 CompactSaveVersion = 4;
+constexpr int32 RulesetSaveVersion = 5;
 
 // Deliberately limited to the value types in this save contract. No permissive import,
 // missing-field defaults, text-to-number coercion, enum truncation or UObject hydration.
@@ -147,49 +148,96 @@ bool FExpeditionSave::Encode(const FExpeditionSaveData& Data, FString& Json, FSt
     Json = MoveTemp(Candidate); return true;
 }
 
+namespace
+{
+/** Schema 4 -> 5 (#60): the ruleset (Compact), the SRD encounter fields and the SRD combatant fields with their defaults. */
+void MigrateSchema4To5(FJsonObject& Object)
+{
+    Object.SetNumberField(TEXT("Version"), RulesetSaveVersion);
+    const TSharedPtr<FJsonObject>* Current = nullptr;
+    const TSharedPtr<FJsonObject>* Progress = nullptr;
+    const TSharedPtr<FJsonObject>* Battle = nullptr;
+    const TSharedPtr<FJsonObject>* Encounter = nullptr;
+    const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
+    if (!Object.TryGetObjectField(TEXT("Current"), Current)) { return; }
+    if ((*Current)->TryGetObjectField(TEXT("Progress"), Progress))
+    { (*Progress)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact)); }
+    if ((*Current)->TryGetObjectField(TEXT("Battle"), Battle) && (*Battle)->TryGetObjectField(TEXT("Encounter"), Encounter))
+    {
+        (*Encounter)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact));
+        (*Encounter)->SetBoolField(TEXT("bAmbush"), false);
+        (*Encounter)->SetArrayField(TEXT("AmbushStealthTotals"), {});
+        if ((*Encounter)->TryGetArrayField(TEXT("Combatants"), Combatants))
+        {
+            const FCombatantState Defaults;
+            const auto Fields = ExportStruct(FCombatantState::StaticStruct(), &Defaults);
+            const TCHAR* Added[] = {TEXT("bReactionAvailable"), TEXT("DeathSaveSuccesses"), TEXT("DeathSaveFailures"),
+                TEXT("TemporaryHP"), TEXT("bConcentrating"), TEXT("Size"), TEXT("bSurprised"),
+                TEXT("bDisengaged"), TEXT("bProne"), TEXT("GrapplerId")};
+            for (const auto& Value : *Combatants)
+            {
+                if (!Value || Value->Type != EJson::Object) { continue; }
+                for (const TCHAR* Field : Added) { Value->AsObject()->SetField(Field, Fields->Values.FindChecked(Field)); }
+            }
+        }
+    }
+}
+
+/**
+ * Schema 5 -> 6 (#218): exactly what a schema 5 run means. Every history record took Gear (RewardCard 0) and no hero holds Reserve or Honed.
+ * A schema 5 document that already has one of these fields is not schema 5: it is refused rather than overwritten.
+ */
+bool MigrateSchema5To6(FJsonObject& Object)
+{
+    Object.SetNumberField(TEXT("Version"), FExpeditionSave::Version);
+    const TSharedPtr<FJsonObject>* Current = nullptr;
+    const TSharedPtr<FJsonObject>* Progress = nullptr;
+    const TSharedPtr<FJsonObject>* Battle = nullptr;
+    const TSharedPtr<FJsonObject>* Encounter = nullptr;
+    const TArray<TSharedPtr<FJsonValue>>* History = nullptr;
+    const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
+    // A malformed document is left for strict import to refuse.
+    if (!Object.TryGetObjectField(TEXT("Current"), Current)) { return true; }
+    if ((*Current)->TryGetObjectField(TEXT("Progress"), Progress) && (*Progress)->TryGetArrayField(TEXT("History"), History))
+    {
+        for (const auto& Value : *History)
+        {
+            if (!Value || Value->Type != EJson::Object) { continue; }
+            if (Value->AsObject()->HasField(TEXT("RewardCard"))) { return false; }
+            Value->AsObject()->SetNumberField(TEXT("RewardCard"), static_cast<int32>(ERewardCard::Gear));
+        }
+    }
+    if ((*Current)->TryGetObjectField(TEXT("Battle"), Battle) && (*Battle)->TryGetObjectField(TEXT("Encounter"), Encounter) &&
+        (*Encounter)->TryGetArrayField(TEXT("Combatants"), Combatants))
+    {
+        for (const auto& Value : *Combatants)
+        {
+            if (!Value || Value->Type != EJson::Object) { continue; }
+            if (Value->AsObject()->HasField(TEXT("bReserve")) || Value->AsObject()->HasField(TEXT("bHoned"))) { return false; }
+            Value->AsObject()->SetBoolField(TEXT("bReserve"), false);
+            Value->AsObject()->SetBoolField(TEXT("bHoned"), false);
+        }
+    }
+    return true;
+}
+}
+
 bool FExpeditionSave::Decode(const FString& Json, FExpeditionSaveData& Data, FString& Error)
 {
     TSharedPtr<FJsonObject> Object;
     FExpeditionSaveData Candidate;
+    auto Unreadable = [&Error]() { Error = TEXT("The expedition save is incomplete or unreadable."); return false; };
     if (Json.IsEmpty() || Json.Len() > MaxSaveCharacters || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) || !Object.IsValid())
-    { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
-    // Upgrade only the known v4 contract; malformed documents still fail strict import.
+    { return Unreadable(); }
+    // The version must be an exact supported integer. Older known schemas upgrade one explicit step at a time; the current schema imports
+    // strictly with no field injection; an unknown or future version is refused by Validate (and the file stays where it is).
     const TSharedPtr<FJsonValue>* VersionField = Object->Values.Find(TEXT("Version"));
-    if (VersionField && (*VersionField)->Type == EJson::Number && (*VersionField)->AsNumber() == CompactSaveVersion)
-    {
-        Object->SetNumberField(TEXT("Version"), Version);
-        const TSharedPtr<FJsonObject>* Current = nullptr;
-        const TSharedPtr<FJsonObject>* Progress = nullptr;
-        const TSharedPtr<FJsonObject>* Battle = nullptr;
-        const TSharedPtr<FJsonObject>* Encounter = nullptr;
-        const TArray<TSharedPtr<FJsonValue>>* Combatants = nullptr;
-        if (Object->TryGetObjectField(TEXT("Current"), Current))
-        {
-            if ((*Current)->TryGetObjectField(TEXT("Progress"), Progress))
-            { (*Progress)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact)); }
-            if ((*Current)->TryGetObjectField(TEXT("Battle"), Battle) && (*Battle)->TryGetObjectField(TEXT("Encounter"), Encounter))
-            {
-                (*Encounter)->SetNumberField(TEXT("Ruleset"), static_cast<int32>(ERuleset::Compact));
-                (*Encounter)->SetBoolField(TEXT("bAmbush"), false);
-                (*Encounter)->SetArrayField(TEXT("AmbushStealthTotals"), {});
-                if ((*Encounter)->TryGetArrayField(TEXT("Combatants"), Combatants))
-                {
-                    const FCombatantState Defaults;
-                    const auto Fields = ExportStruct(FCombatantState::StaticStruct(), &Defaults);
-                    const TCHAR* Added[] = {TEXT("bReactionAvailable"), TEXT("DeathSaveSuccesses"), TEXT("DeathSaveFailures"),
-                        TEXT("TemporaryHP"), TEXT("bConcentrating"), TEXT("Size"), TEXT("bSurprised"),
-                        TEXT("bDisengaged"), TEXT("bProne"), TEXT("GrapplerId")};
-                    for (const auto& Value : *Combatants)
-                    {
-                        if (!Value || Value->Type != EJson::Object) { continue; }
-                        for (const TCHAR* Field : Added) { Value->AsObject()->SetField(Field, Fields->Values.FindChecked(Field)); }
-                    }
-                }
-            }
-        }
-    }
-    if (!ImportStruct(FExpeditionSaveData::StaticStruct(), Object, &Candidate))
-    { Error = TEXT("The expedition save is incomplete or unreadable."); return false; }
+    if (!VersionField || !*VersionField || (*VersionField)->Type != EJson::Number) { return Unreadable(); }
+    const double Number = (*VersionField)->AsNumber();
+    if (!FMath::IsFinite(Number) || Number != FMath::FloorToDouble(Number)) { return Unreadable(); }
+    if (Number == CompactSaveVersion) { MigrateSchema4To5(*Object); }
+    if (Object->GetNumberField(TEXT("Version")) == RulesetSaveVersion && !MigrateSchema5To6(*Object)) { return Unreadable(); }
+    if (!ImportStruct(FExpeditionSaveData::StaticStruct(), Object, &Candidate)) { return Unreadable(); }
     if (!Validate(Candidate, Error)) { return false; }
     Data = MoveTemp(Candidate); Error.Reset(); return true;
 }
@@ -297,7 +345,8 @@ bool FExpeditionSession::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& 
         FExpeditionSaveData Existing;
         if (FExpeditionSave::Read(SavePath, Existing, Error))
         {
-            if (!IsEnding(Existing.Current.Progress.Phase))
+            // An abandoned run (#224) is replaced exactly as an ended one; Commit keeps the records of finished runs.
+            if (!IsEnding(Existing.Current.Progress.Phase) && !IsAbandoned(Existing.Current.Progress.RunId))
             { Error = TEXT("A saved expedition is unfinished. Press O to resume it."); return false; }
         }
         else
@@ -308,7 +357,12 @@ bool FExpeditionSession::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& 
             if (PreservedCheckpoint) { *PreservedCheckpoint = Preserved; }
         }
     }
-    if (Commit(MoveTemp(Candidate), Error)) { return true; }
+    if (Commit(MoveTemp(Candidate), Error))
+    {
+        // The new run has its own id, so a marker left behind if this delete fails no longer names anything.
+        Files.DeleteFile(*AbandonMarkerPath());
+        return true;
+    }
     if (!Preserved.IsEmpty()) { Error += TEXT(" The unreadable original remains preserved beside the checkpoint."); }
     return false;
 }
@@ -317,10 +371,11 @@ bool FExpeditionSession::ChooseRoute(int32 Id, FString& Error)
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
     auto Candidate = Current; return Candidate.ChooseRoute(Id, Error) && Commit(MoveTemp(Candidate), Error);
 }
-bool FExpeditionSession::ClaimReward(int32 Id, FString& Error)
+bool FExpeditionSession::ClaimReward(int32 Id, FString& Error) { return ClaimReward(Id, ERewardCard::Gear, Error); }
+bool FExpeditionSession::ClaimReward(int32 Id, ERewardCard Card, FString& Error)
 {
     if (!bHasRun) { Error = TEXT("Start or resume an expedition first."); return false; }
-    auto Candidate = Current; return Candidate.ClaimReward(Id, Error) && Commit(MoveTemp(Candidate), Error);
+    auto Candidate = Current; return Candidate.ClaimReward(Id, Card, Error) && Commit(MoveTemp(Candidate), Error);
 }
 bool FExpeditionSession::Recover(bool bTake, FString& Error)
 {
@@ -352,6 +407,8 @@ bool FExpeditionSession::Resume(FString& Error)
 {
     FExpeditionSaveData Data; FExpeditionRun Candidate;
     if (!FExpeditionSave::Read(SavePath, Data, Error) || !Candidate.Restore(Data.Current, Error)) { return false; }
+    if (IsAbandoned(Data.Current.Progress.RunId) && Data.Current.Progress.Phase != EExpeditionPhase::Victory && Data.Current.Progress.Phase != EExpeditionPhase::Defeat)
+    { Error = TEXT("This expedition was abandoned. Begin a new expedition."); return false; }
     Current = MoveTemp(Candidate); bHasRun = true; return true;
 }
 void FExpeditionSession::Close()
@@ -364,7 +421,37 @@ bool FExpeditionSession::HasUnfinishedCheckpoint() const
     if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*SavePath)) { return false; }
     FExpeditionSaveData Data; FString Error;
     if (!FExpeditionSave::Read(SavePath, Data, Error)) { return false; }
-    return Data.Current.Progress.Phase != EExpeditionPhase::Victory && Data.Current.Progress.Phase != EExpeditionPhase::Defeat;
+    return Data.Current.Progress.Phase != EExpeditionPhase::Victory && Data.Current.Progress.Phase != EExpeditionPhase::Defeat && !IsAbandoned(Data.Current.Progress.RunId);
+}
+bool FExpeditionSession::IsAbandoned(const FString& RunId) const
+{
+    FString Marker;
+    return !RunId.IsEmpty() && FPlatformFileManager::Get().GetPlatformFile().FileSize(*AbandonMarkerPath()) <= 256 &&
+        FFileHelper::LoadFileToString(Marker, *AbandonMarkerPath()) && Marker.TrimStartAndEnd() == RunId;
+}
+bool FExpeditionSession::Abandon(FString& Error)
+{
+    if (bHasRun) { Error = TEXT("Return to the start screen to abandon a run."); return false; }
+    FExpeditionSaveData Data;
+    if (!FExpeditionSave::Read(SavePath, Data, Error)) { Error = TEXT("There is no readable unfinished expedition to abandon."); return false; }
+    const auto& Progress = Data.Current.Progress;
+    if (Progress.Phase == EExpeditionPhase::Victory || Progress.Phase == EExpeditionPhase::Defeat || IsAbandoned(Progress.RunId))
+    { Error = TEXT("There is no unfinished expedition to abandon."); return false; }
+    // One atomic marker: written beside it and renamed into place. The checkpoint is never written here.
+    auto& Files = FPlatformFileManager::Get().GetPlatformFile();
+    const FString Marker = AbandonMarkerPath(), Temporary = Marker + TEXT(".pending");
+    Files.DeleteFile(*Marker);
+    const bool bWritten = FFileHelper::SaveStringToFile(Progress.RunId, *Temporary, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Silent) &&
+        Files.MoveFile(*Marker, *Temporary);
+    if (!bWritten || !IsAbandoned(Progress.RunId))
+    {
+        Files.DeleteFile(*Temporary);
+        Files.DeleteFile(*Marker);
+        Error = TEXT("Could not abandon the run. The saved expedition is unchanged; you can still resume it.");
+        return false;
+    }
+    Error.Reset();
+    return true;
 }
 bool FExpeditionSession::ReadRecords(TArray<FExpeditionEnding>& Records, FString& Error) const
 {

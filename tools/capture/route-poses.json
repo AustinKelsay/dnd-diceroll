@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "settleFrames": 60,
+  "shots": [
+    {"name": "route-hero1", "mode": "overview", "hero": 1},
+    {"name": "route-hero2", "mode": "overview", "hero": 2},
+    {"name": "route-hero3", "mode": "overview", "hero": 3},
+    {"name": "route-hero4", "mode": "overview", "hero": 4}
+  ]
+}

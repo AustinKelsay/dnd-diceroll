@@ -60,7 +60,9 @@ inline Rect RouteCardRect(double W, double H, int Index)
 
 // The hero details that follow a hovered or selected party card (DrawPartyDetail): 320 wide, right of the card column, top level with the card, 14 plus 17 per wrapped
 // line high (never fewer than the HUD's MinDetailLines). PartyDetailMaxLines is the bound the tabletop overview's layout keeps clear of: the name and build (at most 2 wrapped
-// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed.
+// lines), HP or downed (1), a Protection line (2) and the resources (3) make 8, which the longest kit strings do not exceed. Outside combat no guard is up, and the
+// progression lines (#218: the basic-damage breakdown and the upgrades, one each) take the Protection line's two. In combat, where the panel only sits beside
+// its own card (and clear of the roll card), both can show at once: a real one reaches 7 or 8 lines there.
 constexpr double PartyDetailWidth = 320, PartyDetailGap = 8, PartyDetailPad = 14, PartyDetailLineHeight = 17;
 constexpr int PartyDetailMaxLines = 8;
 inline Rect PartyDetailRect(int Slot, int Lines)
@@ -116,6 +118,45 @@ inline bool Overlaps(const Rect& A, const Rect& B, double Gap = 0)
 {
     return A.Left < B.Right + Gap && A.Right + Gap > B.Left &&
         A.Top < B.Bottom + Gap && A.Bottom + Gap > B.Top;
+}
+
+// The panels the reward and camp screens centre (DrawReward, DrawCamp): 720 wide, 312 or 320 high, a little above the middle. They share these with the party
+// cards' hero details, which would otherwise be drawn under them (#200). #218 grew both (three reward cards; one camp line per survivor) to at most 328, the
+// tallest that still leaves the tallest details panel a free spot under or above them at the 720 design height.
+constexpr double RewardPanelWidth = 720, RewardPanelHeight = 312, CampPanelHeight = 320, PhasePanelLift = 30;
+inline Rect CentredPanelRect(double W, double H, double Height)
+{
+    const double Top = H * 0.5 - Height * 0.5 - PhasePanelLift;
+    return {W * 0.5 - RewardPanelWidth * 0.5, Top, W * 0.5 + RewardPanelWidth * 0.5, Top + Height};
+}
+inline Rect RewardPanelRect(double W, double H) { return CentredPanelRect(W, H, RewardPanelHeight); }
+inline Rect CampPanelRect(double W, double H) { return CentredPanelRect(W, H, CampPanelHeight); }
+
+// The route screen's banner and both cards as one block: what a hero's details must keep clear of (#200).
+inline Rect RouteBlockRect(double W, double H)
+{
+    const Rect Banner = RouteBannerRect(W, H), Left = RouteCardRect(W, H, 0), Right = RouteCardRect(W, H, 1);
+    return {std::min({Banner.Left, Left.Left}), Banner.Top, std::max({Banner.Right, Right.Right}), std::max(Left.Bottom, Right.Bottom)};
+}
+
+// Where a hero's details panel (Desired, at its tallest or as drawn) sits when the phase centres a panel of its own (Block: the route block, the reward or the camp
+// panel; #200). The panel keeps its usual place beside the party card when that is clear of the block; otherwise it takes the first free spot that fits the viewport:
+// under the block, centred on it (the free band above the feedback line, between the tabletop dioramas that flank the route cards), above it, or right of it. The same clamps as DrawPartyDetail apply (right edge,
+// and the foot above the action bar's margin), and with no free spot the usual place stays, so a test can see it. All in design units for a viewport divided by its scale.
+inline Rect PartyDetailClearOf(const Rect& Desired, const Rect& Block, double W, double H)
+{
+    constexpr double Edge = 8, Gap = 6, ActionBarMargin = 90, FeedbackBand = 70;
+    const double Width = Desired.Right - Desired.Left, Height = Desired.Bottom - Desired.Top;
+    auto At = [&](double X, double Y) { return Rect{X, Y, X + Width, Y + Height}; };
+    const Rect Usual = At(std::min(Desired.Left, W - Width - Edge), std::min(Desired.Top, H - Height - ActionBarMargin));
+    const double Centred = std::clamp((Block.Left + Block.Right - Width) * 0.5, Edge, std::max(Edge, W - Width - Edge));
+    const Rect Candidates[] = {Usual, At(Centred, Block.Bottom + Gap), At(Usual.Left, Block.Top - Gap - Height), At(Block.Right + Gap, Usual.Top)};
+    for (const Rect& Candidate : Candidates)
+    {
+        const bool bFits = Candidate.Left >= Edge && Candidate.Right <= W - Edge && Candidate.Top >= Edge && Candidate.Bottom <= H - FeedbackBand;
+        if (bFits && !Overlaps(Candidate, Block, Gap)) { return Candidate; }
+    }
+    return Usual;
 }
 
 // Keep the original target-to-panel line, but omit portions hidden by HUD or
