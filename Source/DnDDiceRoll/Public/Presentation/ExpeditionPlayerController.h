@@ -67,8 +67,11 @@ public:
     bool ModeTipActive() const { return bModeTip; }
     /** The acting adventurer's role ability, or Attack for the rogue (Sneak Attack is automatic). */
     ECombatCommandType RoleAction() const;
-    /** Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. */
-    void SelectPartyIndex(int32 Index, bool bInspect = true);
+    /**
+     * Selects the Nth party member; with bInspect, choosing the already selected hero toggles their full status. On the Reward screen a fallen hero
+     * is refused and the selection stays (#231). Returns whether the choice was taken.
+     */
+    bool SelectPartyIndex(int32 Index, bool bInspect = true);
     /** The hero whose full status the player asked for by choosing them again; cleared each turn. */
     int32 Inspected() const { return InspectedId; }
     void HandleButton(FName Id);
@@ -166,6 +169,10 @@ public:
      */
     bool PreviewedPointerCell(FIntPoint& Cell) const;
 private:
+    /** On the Reward screen, refuses a fallen hero as the reward's recipient, saying why when a selection is kept (#231). */
+    bool RefusesRecipient(const FCombatantState& Unit);
+    /** Selects an ally chosen on the board, unless RefusesRecipient refuses them. */
+    void ChooseAlly(const FCombatantState& Unit);
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;

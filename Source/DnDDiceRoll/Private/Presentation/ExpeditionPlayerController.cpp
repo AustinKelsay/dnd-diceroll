@@ -180,7 +180,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
         SelectedAction = ECombatCommandType::Attack;
         bModeTip = false;
     }
-    // Loot goes to a living survivor; keep the selection on one.
+    // Loot goes to a living survivor; keep the selection on one. A choice of a fallen hero is refused where it is made (RefusesRecipient, #231);
+    // this only starts a Reward screen entered or resumed with no conscious hero selected on the first survivor.
     if (BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward)
     {
         // Every Reward phase, and every Resume (a new presentation revision), starts on Gear (#218).
@@ -661,21 +662,39 @@ void AExpeditionPlayerController::ConfirmCell()
     ActAtCell(GridCursor);
 }
 
-void AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
+bool AExpeditionPlayerController::SelectPartyIndex(int32 Index, bool bInspect)
 {
-    if (!AllowsGameplayInput()) { return; }
-    if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return; }
+    if (!AllowsGameplayInput()) { return false; }
+    if (CanSelectSubclass()) { Slot = FMath::Clamp(Index, 0, 3); return true; }
     int32 PartyIndex = 0;
     for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
     {
         if (Unit.Side == ECombatSide::Party && PartyIndex++ == Index)
         {
+            if (RefusesRecipient(Unit)) { return false; }
             // Choosing the selected hero again toggles their full status (the acting hero is selected by default).
             if (bInspect) { InspectedId = SelectedId == Unit.Id && InspectedId != Unit.Id ? Unit.Id : INDEX_NONE; }
             SelectedId = Unit.Id;
-            return;
+            return true;
         }
     }
+    return false;
+}
+
+bool AExpeditionPlayerController::RefusesRecipient(const FCombatantState& Unit)
+{
+    // #231: on the Reward screen a fallen hero cannot be chosen, so Enter can never claim for a hero the player did not choose. The selection stays
+    // where it was; the refusal is said and cued only when there is a selection to keep (not for the reset to the first slot on a new presentation).
+    if (Unit.Life == ECombatLife::Conscious || !BattleView->HasRun() || BattleView->Progress().Phase != EExpeditionPhase::Reward) { return false; }
+    if (SelectedId != INDEX_NONE) { BattleView->RefuseRewardRecipient(Unit.Id); }
+    return true;
+}
+
+void AExpeditionPlayerController::ChooseAlly(const FCombatantState& Unit)
+{
+    if (RefusesRecipient(Unit)) { return; }
+    SelectedId = Unit.Id;
+    BattleView->PlayCue(EExpeditionCue::Click);
 }
 
 void AExpeditionPlayerController::Click()
@@ -719,7 +738,7 @@ void AExpeditionPlayerController::Click()
     if (SelectedAction == ECombatCommandType::Attack && HoverCell(Cell))
     {
         for (const FCombatantState& Unit : BattleView->Rules().Snapshot().Encounter.Combatants)
-        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); return; } }
+        { if (Unit.Cell == Cell && Unit.Side == ECombatSide::Party) { ChooseAlly(Unit); return; } }
     }
 }
 
@@ -844,7 +863,8 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     if (Name == TEXT("ClassNext")) { CycleClass(); return; }
     if (Name == TEXT("BuildNext")) { CycleBuild(); return; }
     if (Name == TEXT("Preset")) { Preset(); return; }
-    if (Name.StartsWith(TEXT("Party"))) { SelectPartyIndex(FCString::Atoi(*Name.RightChop(5))); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    // A refused choice (a fallen hero on the Reward screen, #231) has already sounded its refusal.
+    if (Name.StartsWith(TEXT("Party"))) { if (SelectPartyIndex(FCString::Atoi(*Name.RightChop(5)))) { BattleView->PlayCue(EExpeditionCue::Click); } return; }
     if (Name == TEXT("Champion")) { Champion(); }
     else if (Name == TEXT("BattleMaster")) { BattleMaster(); }
     else if (Name == TEXT("Maneuver")) { SetMode(SpecialAction(1)); }
@@ -892,7 +912,7 @@ bool AExpeditionPlayerController::ActAtCell(FIntPoint Cell)
     {
         if (Unit.Cell != Cell || (Unit.Side == ECombatSide::Enemy && Unit.Life == ECombatLife::Dead)) { continue; }
         // Clicking an ally in attack mode inspects them; their card stays highlighted.
-        if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { SelectedId = Unit.Id; BattleView->PlayCue(EExpeditionCue::Click); }
+        if (Unit.Side == ECombatSide::Party && SelectedAction == ECombatCommandType::Attack) { ChooseAlly(Unit); }
         else { bAccepted = BattleView->Execute({SelectedAction, ActorId, {}, Unit.Id}); Acted(bAccepted); }
         return bAccepted;
     }

@@ -2358,6 +2358,13 @@ void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
 }
 
+void AExpeditionBattleView::RefuseRewardRecipient(int32 RecipientId)
+{
+    const FCombatantState* Unit = Rules().Find(RecipientId);
+    Record({false, FString::Printf(TEXT("%s has fallen and cannot receive a reward."), Unit ? *Unit->Name : TEXT("That hero"))});
+    PlayCue(EExpeditionCue::Click);
+}
+
 void AExpeditionBattleView::Recover(bool bTake)
 {
     if (bShowRecords) { return; }
