@@ -60,24 +60,22 @@ Everything below is on `staging`. Items marked *(next release)* are not yet on `
   6. Tear down only your own pids.
 
   Resume by pointer, not `wtype o`, because a vanishing virtual keyboard triggers #230 (or keep one virtual keyboard held for the whole session). Run `hyprctl keyword misc:enable_anr_dialog false` on your instance: otherwise Hyprland's "Application Not Responding" dialog appears during load hitches and takes keyboard focus. The first virtual-pointer click after a launch is ignored, so send a harmless click first.
-- **Versions: save schema 6, catalog revision 10.** Revisions 7–9 keep their generation for the life of a run, and SRD keeps revision 7's. Schema and revision numbers belong to whichever PR merges first. The PR that merges second renumbers, adds one migration step, and adds a real fixture of the first PR's format. Check `staging` before claiming a number (#177's parked SRD branches used 6 and 7).
+- **Versions: save schema 6, catalog revision 11** (revision 11, #240: move-through, unreleased; #241 tunes balance inside it). Revisions 7–10 keep their generation and movement for the life of a run, and SRD keeps revision 7's. Schema and revision numbers belong to whichever PR merges first. The PR that merges second renumbers, adds one migration step, and adds a real fixture of the first PR's format. Check `staging` before claiming a number (#177's parked SRD branches used 6 and 7).
 - **Evidence.**
   - Report exact commands and counts. The gate is a zero-warning build, full `Project.` automation with zero warnings, helpers on Python 3.11 (`uv run --python 3.11 --no-project python -m unittest discover -s tools/tests`), and `python3 tools/contribute.py check`.
   - Bulk output goes in ignored `.local/`, `Saved/` or `Builds/`, never `/tmp`.
-  - `Balance.Baseline.*` runs outside the `Project.` gate. Under revision 10's `reserve` and `mixed` strategies, `Rotation5` fails on the accepted #217 stall.
+  - `Balance.Baseline.*` runs outside the `Project.` gate. Under revision 10's `reserve` and `mixed` strategies, `Rotation5` fails on the accepted #217 stall; revision 11 (move-through) has no stall.
 - **Look gates** (graphics overhaul). These are 1920x1080 on a packaged Development game.
   - Perf: p95 frame ≤ 4 ms, GPU ≤ 3.5 ms, game thread ≤ 1.5 ms, RSS ≤ 1.5 GiB. The helper itself checks looser numbers.
   - Contrast (`palette_report.py` on the palette sweep): mean ≥ 2.3, worst ≥ 1.4, each board's mean ≥ 2.0.
 
 ## Known limits
 
-- **A sealed-in hero** ([#217](https://github.com/AustinKelsay/dnd-diceroll/issues/217)). Bodies keep their cells, so bodies plus an obstacle or the board edge can seal in a hero that the last foe cannot reach, and that fight never ends. The way out is in game: Return to menu, then Abandon run (#224). A rules fix needs its own contract and balance baseline.
+- **A sealed-in hero** ([#217](https://github.com/AustinKelsay/dnd-diceroll/issues/217)), in runs created before catalog revision 11 only. There, bodies block, so bodies plus an obstacle or the board edge can seal in a hero that the last foe cannot reach, and that fight never ends; the way out is Return to menu, then Abandon run (#224). Revision 11 runs move through bodies (#240).
 - **Follow-ups, not blocking:**
   - [#228](https://github.com/AustinKelsay/dnd-diceroll/issues/228): no reward card is clearly best;
   - [#230](https://github.com/AustinKelsay/dnd-diceroll/issues/230): board clicks stop committing after the seat's only keyboard disappears;
-  - outcome banners (VICTORY, DEFEAT) are drawn only in combat, so the end of a fight goes straight to the Reward screen or the end panel;
-  - the Reward claim line still suggests the camp after it has been used;
-  - the first pointer click after start-up is ignored (#171 tracks the physical-mouse check).
+  - the first pointer click after start-up is ignored in the rig. #252 instrumented it: the press reaches the controller (`InputKey` and `Click` both fire) but `GetMousePosition` still reads (0,0), because the window has seen no pointer motion since launch, so the click lands on nothing. Hyprland's `follow_mouse` and giving the window keyboard focus first do not change it, and the game has no other source for the pointer position, so there is no game-side fix. #171 stays open for the physical-mouse check.
 - **Stability.** See the [stability records](stability/README.md).
   - Mac [#32](https://github.com/AustinKelsay/dnd-diceroll/issues/32) (a scene-culling assertion after Resume) is unresolved.
   - Mac [#35](https://github.com/AustinKelsay/dnd-diceroll/issues/35) (a packaged startup crash) has a likely, unvalidated explanation.

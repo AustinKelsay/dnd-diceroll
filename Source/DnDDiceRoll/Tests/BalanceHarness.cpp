@@ -35,7 +35,8 @@ bool IsDamage(EAbilityEffect E)
 }
 
 /** Walking distance from every cell to the nearest conscious enemy of Side (a heuristic; legality comes from LegalMoves).
- * With bUnits, cells holding any other unit (bodies included) are impassable except for Self's own cell. */
+ * With bUnits, cells holding any other unit (bodies included) are impassable except for Self's own cell; under move-through (#240, policy 3)
+ * only a conscious unit of the other side is, as for the rules' own path search. */
 struct FField
 {
     int32 Width = 0, Height = 0;
@@ -44,8 +45,9 @@ struct FField
     { return C.X >= 0 && C.Y >= 0 && C.X < Width && C.Y < Height ? Steps[C.Y * Width + C.X] : MAX_int32; }
 };
 
-/** Breadth-first walking distance from Sources over unblocked cells; with bUnits, cells holding a unit other than SelfId are impassable. */
-FField Spread(const FCombatSnapshot& S, const TArray<FIntPoint>& Sources, int32 SelfId, bool bUnits)
+/** Breadth-first walking distance from Sources over unblocked cells, for a walker of WalkerSide. With bUnits, cells holding a unit other than
+ * SelfId are impassable, or under move-through only those holding a conscious unit of the other side. */
+FField Spread(const FCombatSnapshot& S, const TArray<FIntPoint>& Sources, int32 SelfId, bool bUnits, ECombatSide WalkerSide)
 {
     FField Field;
     Field.Width = S.Encounter.Width; Field.Height = S.Encounter.Height;
@@ -61,7 +63,8 @@ FField Spread(const FCombatSnapshot& S, const TArray<FIntPoint>& Sources, int32 
         {
             const FIntPoint To = Cell + Offset;
             if (To.X < 0 || To.Y < 0 || To.X >= Field.Width || To.Y >= Field.Height || S.Encounter.BlockedCells.Contains(To) || Field.At(To) != MAX_int32) { continue; }
-            if (bUnits && S.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& U) { return U.Id != SelfId && U.Cell == To; })) { continue; }
+            if (bUnits && S.Encounter.Combatants.ContainsByPredicate([&](const FCombatantState& U)
+                { return U.Id != SelfId && U.Cell == To && (!S.Encounter.bMoveThrough || (U.Side != WalkerSide && Conscious(U))); })) { continue; }
             Field.Steps[To.Y * Field.Width + To.X] = Next;
             Queue.Add(To);
         }
@@ -73,7 +76,7 @@ FField EnemyField(const FCombatSnapshot& S, const FCombatantState& Self, bool bU
 {
     TArray<FIntPoint> Sources;
     for (const auto& U : S.Encounter.Combatants) { if (U.Side != Self.Side && Conscious(U)) { Sources.Add(U.Cell); } }
-    return Spread(S, Sources, Self.Id, bUnits);
+    return Spread(S, Sources, Self.Id, bUnits, Self.Side);
 }
 
 /** A legal destination's movement cost from the rules' own path query, memoized for one decision. */
@@ -220,7 +223,7 @@ FChoice Decide(const FExpeditionRun& Run, int32 Id)
             if (C.X >= 0 && C.Y >= 0 && C.X < S.Encounter.Width && C.Y < S.Encounter.Height && !S.Encounter.BlockedCells.Contains(C) &&
                 !S.Encounter.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C; })) { Beside.Add(C); }
         }
-        const FField ToAlly = Spread(S, Beside, INDEX_NONE, true);
+        const FField ToAlly = Spread(S, Beside, INDEX_NONE, true, Me.Side);
         auto DistanceOf = [&](const FCombatantState& U)
         {
             int32 Best = MAX_int32;
@@ -740,10 +743,11 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
 bool Deadlocked(const FCombatSnapshot& S)
 {
     const FCombatEncounter& E = S.Encounter;
+    // Under move-through (#240) bodies and Downed heroes are passable, so only terrain and the board edge wall a unit in.
     auto Blocked = [&E](FIntPoint C)
     {
         return C.X < 0 || C.Y < 0 || C.X >= E.Width || C.Y >= E.Height || E.BlockedCells.Contains(C) ||
-            E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C && U.Life != ECombatLife::Conscious; });
+            (!E.bMoveThrough && E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C && U.Life != ECombatLife::Conscious; }));
     };
     for (const FCombatantState& Unit : E.Combatants)
     {

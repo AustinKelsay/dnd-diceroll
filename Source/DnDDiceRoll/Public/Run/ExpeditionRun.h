@@ -135,6 +135,9 @@ public:
     bool ClaimReward(int32 RecipientId, ERewardCard Card, FString& Error);
     /** True when runs of Ruleset created under Revision offer Reserve and Honed: Compact runs from catalog revision 10. */
     static bool OffersUpgradeCards(ERuleset Ruleset, int32 Revision);
+    /** True when runs of Ruleset created under Revision move through allies, Downed and dead creatures (FCombatEncounter::bMoveThrough, #240):
+     * Compact runs from catalog revision 11. Revisions 7-10 and SRD keep the older rule, under which every unit blocks its cell. */
+    static bool MovesThroughUnits(ERuleset Ruleset, int32 Revision);
     bool Recover(bool bTakeRecovery, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();

@@ -187,7 +187,7 @@ bool FRewardCardsApplyOnceTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("A seed keeps hero 4 standing to reward 3"), Seed != INDEX_NONE)) { return false; }
     FExpeditionRun Run;
     if (!TestTrue(TEXT("Reach reward 1"), ReachReward(Run, Seed, Selection, 1, GearToFirst))) { return false; }
-    TestEqual(TEXT("A revision 10 Compact run"), Run.Progress().CatalogRevision, 10);
+    TestTrue(TEXT("A Compact run that offers the cards (revision 10 or later)"), FExpeditionRun::OffersUpgradeCards(Run.Progress().Ruleset, Run.Progress().CatalogRevision));
 
     // Reserve: +1 cap and +1 use on each pool its specials spend, never a refill; the potions as always; nothing else changes.
     const FCombatantState Before = *Run.Battle().Find(4);
