@@ -59,6 +59,8 @@ _Avoid_: pawn when discussing game rules
 
 **Abandon run**: The start screen's way to give up an unfinished expedition ([#224](https://github.com/AustinKelsay/dnd-diceroll/issues/224)), offered only while one is saved. It asks first and defaults to keeping the run; Resume stays the focused choice. A confirmed abandon writes a small marker beside the checkpoint (never the checkpoint itself), after which Resume refuses that run and New Run replaces it as after an ending, keeping the records of finished runs. The abandoned run is not recorded, and a failed write changes nothing and says so.
 
+**Move-through**: Compact's SRD 5.2.1 rule from catalog revision 11 (#240). A move may pass a cell held by an ally, a Downed creature or a body, never a conscious opponent's, and never ends on an occupied cell. Runs from revisions 7–10 and SRD runs keep the earlier rule, under which every unit blocks its cell.
+
 **Special slot**: One of at most two catalog abilities selected with F/M. Passive features do not create an active slot.
 
 **Action facts**: What an action costs, what it spends, which stance it needs, whom it can target and, in a battle, whether it is available and exactly why not. One read-only query (`FActionFactsQuery`) answers it; the HUD formats these facts and never decides them.

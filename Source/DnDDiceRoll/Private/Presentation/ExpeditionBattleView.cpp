@@ -2376,7 +2376,9 @@ void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
     {
         Show.Finish();
         const TCHAR* CardName = Card == ERewardCard::Reserve ? TEXT("Reserve") : Card == ERewardCard::Honed ? TEXT("Honed") : TEXT("Gear");
-        Record({true, FString::Printf(TEXT("%s takes %s. Continue at camp or choose the next route."), *Previous.Name, CardName)});
+        // The camp is offered once, after the first reward (Recovery); every later claim goes straight to the next route (#251).
+        Record({true, FString::Printf(TEXT("%s takes %s. %s"), *Previous.Name, CardName,
+            Progress().Phase == EExpeditionPhase::Recovery ? TEXT("Continue at camp or choose the next route.") : TEXT("Choose the next route."))});
         Show.Sync(Rules().Snapshot());
         if (const FCombatantState* After = Rules().Find(RecipientId))
         {

@@ -25,8 +25,9 @@ inline constexpr int32 MaxLookAheads = 16;
 /** Guard on harness loop iterations per run; only a harness bug could reach it. */
 inline constexpr int32 RunStepGuard = 100000;
 /** Bump when a policy rule changes, so result folders say which policy produced them. 2 (#218): version 1 plus the reward-card rule;
- * with the gear strategy it is version 1 exactly. */
-inline constexpr int32 PolicyVersion = 2;
+ * with the gear strategy it is version 1 exactly. 3 (#240): under move-through (revision 11) the units-block distances of rules 3 and 9
+ * pass allies, Downed heroes and bodies, as the rules' path search does; under revisions 7-10 it is version 2 exactly. */
+inline constexpr int32 PolicyVersion = 3;
 /** The extra fixed-seed batch of contract 13 section 6 (seeds 20261141 + i), chosen with DND_BALANCE_SEED_BASE. */
 inline constexpr int32 ExtraBatchSeed = 20261141;
 
@@ -127,7 +128,8 @@ bool ChooseReward(const FExpeditionRun& Run, ERewardStrategy Strategy, int32& Ou
 /**
  * True when no conscious unit of either side can ever bring an opponent within its range: from its cell it walks over open floor (bodies and
  * Downed heroes block, conscious units are treated as able to move aside) and no reachable cell lies within Range (Manhattan; sight ignored, so it
- * errs toward "not deadlocked") of a conscious opponent. A fight in this state can never end (#188, #217).
+ * errs toward "not deadlocked") of a conscious opponent. Under move-through (#240) bodies and Downed heroes do not block. A fight in this state
+ * can never end (#188, #217).
  */
 bool Deadlocked(const FCombatSnapshot& Snapshot);
 /** Text board and command log for one run, for reproducing a stall or outlier by seed. */
