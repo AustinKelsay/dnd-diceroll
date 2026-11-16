@@ -11,6 +11,7 @@
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "Presentation/WaystoneSetPiece.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -225,6 +226,8 @@ AExpeditionBattleView::AExpeditionBattleView()
     Grade->bUnbound = true;
     SceneryRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Scenery"));
     SceneryRoot->SetupAttachment(RootComponent);
+    SetPieceComponent = CreateDefaultSubobject<UWaystoneSetPiece>(TEXT("WaystoneSetPiece"));
+    SetPieceComponent->SetupAttachment(SceneryRoot);
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderAsset(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -723,6 +726,17 @@ void AExpeditionBattleView::BeginPlay()
     AttachSilhouette();
     // The theme owns the cell size and figure height; no theme means the same defaults.
     BoardMetric = Theme ? FBoardMetric(Theme->CellSize, Theme->FigureHeight) : FBoardMetric();
+    // Recorded cues (#242). -ExpeditionSynthAudio keeps the synthesized ones for comparison; a cue whose recordings are missing falls back alone.
+    CueSerials.Init(0, ExpeditionCueCount);
+    if (ExpeditionAudio::UseRecordedCues(FCommandLine::Get()))
+    {
+        CueBank.Load(LoadObject<UExpeditionCueSounds>(nullptr, ExpeditionAudio::CueSoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+        TArray<FString> Synthesized;
+        for (EExpeditionCue Cue : CueBank.SynthesizedCues()) { Synthesized.Add(ExpeditionAudio::CueName(Cue)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Recorded cues for %d of %d cues; synthesis for: %s"), ExpeditionCueCount - Synthesized.Num(), ExpeditionCueCount,
+            Synthesized.IsEmpty() ? TEXT("none") : *FString::Join(Synthesized, TEXT(", ")));
+    }
+    else { UE_LOG(LogExpeditionAudio, Log, TEXT("-ExpeditionSynthAudio: every cue plays its synthesis")); }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -755,6 +769,7 @@ void AExpeditionBattleView::ClearPresentation()
     Groups.Reset(); RingBank = nullptr; RingGroup = INDEX_NONE; OverlayBase = INDEX_NONE; RingStates.Reset();
     LogicalParts = 0; LogicalProps = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
+    if (SetPieceComponent) { SetPieceComponent->Clear(); }
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
@@ -1058,6 +1073,13 @@ void AExpeditionBattleView::ApplyTheme()
         // The journey map (#248) is read end to end: a lighter vignette and a little more exposure than the overview's candlelit corners.
         if (bOverview && bJourneyShown) { Settings.VignetteIntensity = 0.45f; Settings.AutoExposureBias = -0.25f; }
         Settings.BloomIntensity = 0.45f;
+    }
+    if (!bBattleLook)
+    {
+        // The battle look's fixed exposure band is for its biome's luminance (the Vault's is the darkest): the tabletop and the journey map (#248) adapt on their own,
+        // whichever board came before, so a route screen or an ending reached from a fight looks as one reached from Resume.
+        Settings.bOverride_AutoExposureMinBrightness = false;
+        Settings.bOverride_AutoExposureMaxBrightness = false;
     }
     if (bBattleLook)
     {
@@ -1580,8 +1602,11 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
         if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
+        WaystoneShardColour = FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f));
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), WaystoneShardColour, FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
+        // The finale's set piece (#250) around this pedestal: the seal, its flight plan and the shot (ExpeditionBattleViewSetPiece.cpp).
+        BuildSetPiece(Pedestal, bApse, Encounter);
     }
 }
 
@@ -1895,10 +1920,19 @@ void AExpeditionBattleView::UpdateEffects()
     if (WaystoneSlots.Num() == 2 && WaystoneLight)
     {
         const bool bClaimed = HasRun() && Progress().bArtifactRecovered;
-        const float Rise = bClaimed ? 60.0f + 20.0f * FMath::Sin(Clock * 1.5f) : 10.0f * FMath::Sin(Clock * 1.8f);
+        // With the finale's set piece (#250) the artifact rises when the set piece lifts it, and the flare drives the light and its glow; without
+        // it the artifact rises with the victory, as before.
+        const bool bSetPiece = SetPieceComponent && SetPieceComponent->IsBound();
+        const float Lift = bSetPiece ? SetPieceComponent->LiftAlpha() : bClaimed ? 1.0f : 0.0f;
+        const float Flare = bSetPiece ? SetPieceComponent->FlareGain() : 1.0f;
+        auto Between = [Lift](float Resting, float Lifted) { return Lift <= 0.0f ? Resting : Lift >= 1.0f ? Lifted : FMath::Lerp(Resting, Lifted, Lift); };
+        const float Rise = Between(10.0f * FMath::Sin(Clock * 1.8f), 60.0f + 20.0f * FMath::Sin(Clock * 1.5f));
+        const float Spin = Clock * 40.0f + (bSetPiece ? SetPieceComponent->ExtraSpin() : 0.0f);
         const FVector Base = WaystoneSlots[0].Location;
-        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Clock * 40.0f, 45), WaystoneSlots[1].Scale, WaystoneSlots[1].Colour);
-        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
+        // The flare scales the shard's own colour, never the colour last drawn (SetSlot stores what it draws), so it cannot compound.
+        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Spin, 45), WaystoneSlots[1].Scale,
+            Flare == 1.0f ? WaystoneShardColour : WaystoneShardColour * FMath::Sqrt(Flare));
+        WaystoneLight->SetIntensity(Between(200.0f, 320.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)) * Flare);
     }
 }
 
@@ -2159,10 +2193,13 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         }
     }
     const FShakedPose Shaken = PoseFor(ShakeScale);
-    const FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
-    Camera->SetWorldLocation(Eye);
+    FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
-    Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
+    FRotator Look = (-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation();
+    // The finale's set piece (#250) takes the camera to its shot while it plays and holds it once settled; a no-op otherwise.
+    if (!bOverview && SetPieceComponent) { SetPieceComponent->FrameCamera(Eye, Look); }
+    Camera->SetWorldLocation(Eye);
+    Camera->SetWorldRotation(Look);
     UpdateFarGrade();
 }
 
@@ -2293,17 +2330,19 @@ void AExpeditionBattleView::RecordLevelGain()
 
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
-    Show.Enqueue(Results, Rules().Snapshot());
+    // A battle won or lost ends the whole run only when the committed run phase says so: the finale (the fifth fight) won, or any defeat (#243).
+    const bool bEndsRun = HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat);
+    Show.Enqueue(Results, Rules().Snapshot(), bEndsRun);
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { Show.Finish(); }
+void AExpeditionBattleView::SkipPresentation() { Show.Finish(); SettleSetPiece(); }
 
 void AExpeditionBattleView::CycleSpeed()
 {
     PlaybackSpeed = PlaybackSpeed == EPlaybackSpeed::Normal ? EPlaybackSpeed::Fast : PlaybackSpeed == EPlaybackSpeed::Fast ? EPlaybackSpeed::Instant : EPlaybackSpeed::Normal;
     Show.Speed = PlaybackSpeed == EPlaybackSpeed::Fast ? 2.2f : 1.0f;
-    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
+    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); SettleSetPiece(); }
     PlayCue(EExpeditionCue::Click);
 }
 
@@ -2358,7 +2397,9 @@ void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
     {
         Show.Finish();
         const TCHAR* CardName = Card == ERewardCard::Reserve ? TEXT("Reserve") : Card == ERewardCard::Honed ? TEXT("Honed") : TEXT("Gear");
-        Record({true, FString::Printf(TEXT("%s takes %s. Continue at camp or choose the next route."), *Previous.Name, CardName)});
+        // The camp is offered once, after the first reward (Recovery); every later claim goes straight to the next route (#251).
+        Record({true, FString::Printf(TEXT("%s takes %s. %s"), *Previous.Name, CardName,
+            Progress().Phase == EExpeditionPhase::Recovery ? TEXT("Continue at camp or choose the next route.") : TEXT("Choose the next route."))});
         Show.Sync(Rules().Snapshot());
         if (const FCombatantState* After = Rules().Find(RecipientId))
         {
@@ -2516,24 +2557,38 @@ void AExpeditionBattleView::PageRecords(int32 Direction)
 
 void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
 {
+    // The serial counts every request, heard or not, so the variation a play gets never depends on the audio device.
+    const int32 Index = static_cast<int32>(Cue);
+    const uint32 Serial = CueSerials.IsValidIndex(Index) ? CueSerials[Index]++ : 0;
     UWorld* World = GetWorld();
     if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
-    const int32 Variation = SoundVariation++ % 4;
-    const int32 Key = static_cast<int32>(Cue) * 8 + Variation;
-    const TArray<int16>* Pcm = SoundCache.Find(Key);
-    if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Variation)); }
-    if (Pcm->IsEmpty()) { return; }
-    USoundWaveProcedural* Wave = NewObject<USoundWaveProcedural>(this);
-    Wave->SetSampleRate(ExpeditionAudio::SampleRate);
-    Wave->NumChannels = 1;
-    Wave->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
-    Wave->SoundGroup = SOUNDGROUP_Default;
-    Wave->bLooping = false;
-    Wave->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
-    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, ExpeditionAudio::Volume(Cue)))
+    const FExpeditionCuePlay Play = CueBank.Choose(Cue, Serial);
+    USoundWave* Wave = Play.Wave;
+    if (Wave)
+    {
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: %s"), *ExpeditionAudio::CueName(Cue), Serial, *Wave->GetPathName());
+    }
+    else
+    {
+        const int32 Key = Index * 8 + Play.Variation;
+        const TArray<int16>* Pcm = SoundCache.Find(Key);
+        if (!Pcm) { Pcm = &SoundCache.Add(Key, ExpeditionAudio::Synthesize(Cue, Play.Variation)); }
+        if (Pcm->IsEmpty()) { return; }
+        USoundWaveProcedural* Synth = NewObject<USoundWaveProcedural>(this);
+        Synth->SetSampleRate(ExpeditionAudio::SampleRate);
+        Synth->NumChannels = 1;
+        Synth->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
+        Synth->SoundGroup = SOUNDGROUP_Default;
+        Synth->SoundClassObject = CueBank.Class();
+        Synth->bLooping = false;
+        Synth->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
+        Wave = Synth;
+        UE_LOG(LogExpeditionAudio, Verbose, TEXT("Cue %s #%u: synthesis variation %d"), *ExpeditionAudio::CueName(Cue), Serial, Play.Variation);
+    }
+    if (UAudioComponent* Voice = UGameplayStatics::SpawnSound2D(this, Wave, Play.Volume))
     {
         Voices.Add(Voice);
-        VoiceEnds.Add(Clock + Wave->Duration + 0.15f);
+        VoiceEnds.Add(Clock + Wave->GetDuration() + 0.15f);
     }
 }
 
@@ -2553,7 +2608,10 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
+    UpdateSetPiece(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
+    // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
+    if (EndingView != EEndingView::Default && (!HasRun() || (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat))) { EndingView = EEndingView::Default; }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
@@ -2617,8 +2675,29 @@ bool AExpeditionBattleView::WantsOverview() const
     if (!OverviewTable) { return false; }
     if (!HasRun()) { return true; }
     const EExpeditionPhase Phase = Progress().Phase;
-    // With the journey set, a finished run shows the whole road on the war table (#248); today's overview never showed the ending.
-    return Phase == EExpeditionPhase::Route || (bJourneySet && (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat));
+    // With the journey set, a finished run can show the whole road on the war table (#248); today's overview never showed the ending.
+    return Phase == EExpeditionPhase::Route || (bJourneySet && EndingWantsJourney());
+}
+
+bool AExpeditionBattleView::EndingWantsJourney() const
+{
+    if (!HasRun()) { return false; }
+    const EExpeditionPhase Phase = Progress().Phase;
+    if (Phase != EExpeditionPhase::Victory && Phase != EExpeditionPhase::Defeat) { return false; }
+    // A victory keeps the Vault board by default: the Waystone set piece (#250) plays and settles there, and a resumed victory shows it settled.
+    return EndingView == EEndingView::Default ? Phase == EExpeditionPhase::Defeat : EndingView == EEndingView::Journey;
+}
+
+bool AExpeditionBattleView::CanToggleEndingJourney() const
+{
+    return bJourneySet && OverviewTable && HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat) && !IsPresenting();
+}
+
+void AExpeditionBattleView::ToggleEndingJourney()
+{
+    if (!CanToggleEndingJourney()) { return; }
+    EndingView = EndingWantsJourney() ? EEndingView::Board : EEndingView::Journey;
+    RebuildBoard();
 }
 
 EDiceRollKit AExpeditionBattleView::KitKindFor(EBoardTheme Theme)

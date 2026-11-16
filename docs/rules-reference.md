@@ -25,7 +25,7 @@ Healing caps at maximum HP. Cure Wounds and authored kit healing require a consc
 
 ## Downed, rescue and permanent loss
 
-An adventurer reduced to zero HP becomes **Downed**, cannot act and has three rescue ticks remaining. At each entry into that adventurer's scheduled initiative slot, decrement the countdown and skip the turn. The third tick makes the adventurer **Dead**. Ticks occur only on accepted turn progression, never elapsed time, frames, previews or rejected commands. A rescued adventurer can act at its next scheduled slot. Enemies at zero HP die immediately. Bodies block movement for the current encounter; enemies attack conscious opponents only.
+An adventurer reduced to zero HP becomes **Downed**, cannot act and has three rescue ticks remaining. At each entry into that adventurer's scheduled initiative slot, decrement the countdown and skip the turn. The third tick makes the adventurer **Dead**. Ticks occur only on accepted turn progression, never elapsed time, frames, previews or rejected commands. A rescued adventurer can act at its next scheduled slot. Enemies at zero HP die immediately. Bodies keep their cells for the current encounter; enemies attack conscious opponents only. In Compact runs created at catalog revision 11 any creature can move through a body, a Downed hero or an ally, but never ends a move on an occupied cell (below, #240); in older runs and in SRD, bodies block movement.
 
 If no conscious adventurer remains, the party loses immediately: every remaining downed adventurer dies because no rescuer can continue. If all enemies die while a conscious adventurer remains, the party wins; any unresolved downed adventurer dies at that point. Rescue **before** the finishing blow. The victory HUD explicitly states this policy. Dead members retain their identities and never receive turns, healing, loot or resurrection. Survivors can continue with a smaller party. A wipe cannot continue.
 
@@ -56,7 +56,8 @@ Every adventurer's identity, role, HP, life state, resources, gear and potions c
 - Spell and weapon ranges are shortened for the arena: use the displayed cell ranges. Cure Wounds uses adjacent/self touch; Magic Missile uses six cells and one target for all darts. Wizard Fire Bolt uses four cells. Spell components, damage types/resistances and multi-target dart assignment are omitted.
 - Rogue eligibility implements only the conscious-adjacent-ally condition, with the prebuilt ranged weapon qualifying. Advantage/disadvantage and other Sneak Attack eligibility paths are absent. The single attack Action enforces once per turn. Cleric's ranged attack is a fixed profile adaptation rather than an additional named SRD feature.
 - Deterministic rescue countdown, guaranteed Rescue and potion use with an Action cost, loss of unresolved downed allies at victory, immediate wipe when no rescuer remains, potion ownership and gear progression are game adaptations. SRD death saves, stabilization, massive damage, zero-HP damage and rest rules are not implemented.
-- Enemies perform finite path search, move toward a firing cell, attack a legal conscious opponent if possible, and end their turn. Rejected player input cannot delay enemy progression.
+- Enemies perform finite path search, move toward a firing cell they can stop on, attack a legal conscious opponent if possible, and end their turn. Rejected player input cannot delay enemy progression.
+- Occupied cells (catalog revision 11 Compact, #240): a move may pass a cell held by an ally, a Downed creature or a body, never one held by a conscious opponent, and never ends on any occupied cell. Each cell passed costs one movement. Push still needs an open landing cell. Older revisions and SRD keep the earlier rule, under which every unit blocks its cell.
 
 ## Play
 
@@ -333,4 +334,13 @@ Combat hints (#158, #112 slice 2; contract section 8 of [06-action-clarity-contr
 - **Honed** (once per hero): both specials improve by their effect's row: Strike and Push +3 damage, Area +2 per victim, Surge +2 base amount, Healing +3 HP, Protect +1 reduction (at most 5), Swap +2 range, Magic Missile 3d4+6, Cure Wounds 2d8+6, Second Wind d10+4, Precision Strike +4 to hit and damage, Rage +3 basic damage while raging. Potions, Rescue, touch and Magic Missile range, the Sneak Attack die and Rage's −1 incoming damage and duration never hone.
 
 No card heals, revives, refills or changes HP, and no claim can be undone. Offers draw no random numbers, so every revision 9 board, seed and roll is unchanged. SRD runs and runs created under revisions 7–9 take Gear only for life (`Gear only in this run`), and a second Reserve or Honed is refused (`Reserve taken`, `Already honed`); rejected claims and failed checkpoints change nothing. Totem Warrior's Shelter, like every guard, lasts until its Barbarian's next own turn, and ends sooner when that Rage ends. Save schema 6 records each claim's card and each hero's Reserve and Honed; schema 4 and 5 files upgrade in explicit steps (4 → 5 → 6) as gear-only runs, and restore checks gear rank, Reserve, Honed and pool caps against the reward history.
+
+## Issue #240: move-through (catalog revision 11)
+
+[M1 contract](runs/journey-checkpoint/M1-movement-contract.md), for spec [#239](https://github.com/AustinKelsay/dnd-diceroll/issues/239); fixes [#217](https://github.com/AustinKelsay/dnd-diceroll/issues/217). Every new Compact run is created at catalog revision 11 and follows SRD 5.2.1 for occupied cells:
+
+- A hero or an enemy may move through a cell held by an ally (conscious or Downed), a Downed hero or a body. A conscious opponent's cell still blocks, so front-liners hold chokepoints.
+- No move ends on an occupied cell. The move contour offers only open cells; the path ribbon may run through occupied ones, and the destination bracket is always on an open cell.
+- Each cell passed costs one movement. Compact has no opportunity attacks, so passing provokes nothing. Push still lands only on an open cell, and Swap is unchanged.
+- Generation, enemies and rewards are revision 10's exactly. Runs created under revisions 7–10, and every SRD run, keep the earlier rule for life, under which every unit blocks its cell. The rule is derived from the saved ruleset and revision; save schema 6 is unchanged.
 

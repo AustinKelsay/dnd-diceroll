@@ -74,6 +74,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Impact: return TEXT("impact");
     case ECaptureMode::Roll: return TEXT("roll");
     case ECaptureMode::Pose: return TEXT("pose");
+    case ECaptureMode::SetPiece: return TEXT("setpiece");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -188,7 +189,15 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
         else if (Mode == TEXT("impact")) { Shot.Mode = ECaptureMode::Impact; }
         else if (Mode == TEXT("roll")) { Shot.Mode = ECaptureMode::Roll; }
         else if (Mode == TEXT("pose")) { Shot.Mode = ECaptureMode::Pose; }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("setpiece"))
+        {
+            // The Waystone set piece held at a moment (#250): a burst of these, a few frames apart, shows its motion.
+            Shot.Mode = ECaptureMode::SetPiece;
+            double Seconds = 0.0;
+            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > 10.0) { Error = Shot.Name + TEXT(" needs \"time\" in seconds from 0 to 10"); return false; }
+            Shot.Time = static_cast<float>(Seconds);
+        }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose, setpiece)"), *Shot.Name, *Mode); return false; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
             // A hero of a class held in one clip at one time (#150): the clip name as in EUnitPose ("Melee"), any case.
@@ -365,7 +374,8 @@ TSharedPtr<FExpeditionCaptureDirector> FExpeditionCaptureDirector::Create(AExped
 bool FExpeditionCaptureDirector::Idle() const
 {
     const AExpeditionBattleView* Board = View.Get();
-    if (!Board || Board->IsPresenting()) { return false; }
+    // A held set piece (#250) is a capture pose, not playback still owed.
+    if (!Board || (Board->IsPresenting() && !Board->HoldsSetPiece())) { return false; }
     const FExpeditionPlayback& Show = Board->Playback();
     const bool bBanner = !Show.Banner().Title.IsEmpty() && Show.Banner().Age <= Show.Banner().Life;
     return !bBanner && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty();
@@ -455,8 +465,13 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     Board->ClearImpactPreview();
     Board->ClearRollPreview();
     Board->ClearPosePreview();
+    Board->ClearSetPiecePreview();
     switch (Shot.Mode)
     {
+    case ECaptureMode::SetPiece:
+        // The set piece at a moment of its timeline: the flare, the seal, the artifact and the camera all follow from that time alone.
+        if (!Board->PreviewSetPiece(Shot.Time)) { Skip = TEXT("the checkpoint is not a won finale with the set piece"); return false; }
+        return true;
     case ECaptureMode::Battle:
     case ECaptureMode::Targeting:
     case ECaptureMode::Tooltip:
@@ -620,6 +635,8 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
         return true;
     }
     case ECaptureMode::Overview:
+        // A finished run's overview shot is its journey map (#248): a victory opens on the Vault board, so the shot switches to the journey first.
+        if (!Board->ShowingOverview() && Board->CanToggleEndingJourney()) { Board->ToggleEndingJourney(); }
         // The route table, or (#218) the reward and camp screens, which are drawn over the board of the fight just won.
         if (!Board->ShowingOverview() && !(Board->HasRun() && (Board->Progress().Phase == EExpeditionPhase::Reward || Board->Progress().Phase == EExpeditionPhase::Recovery)))
         { Skip = TEXT("the checkpoint is not at the route table, the reward or the camp"); return false; }

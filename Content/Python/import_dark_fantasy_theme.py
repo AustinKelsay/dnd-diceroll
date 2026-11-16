@@ -33,7 +33,9 @@ Overview set r002 (issue #149, the last part) is a fourth kit through the same p
     four carry the tag; the view uses the set when it is complete and loadable and the r001 SM_Tabletop and dioramas otherwise.
   - world-vigil-occluders is replaceable too (theme_plan.ROSE_REPLACEABLE): DND_THEME_REIMPORT=world-vigil-occluders reimports the occluders and their two LODs
     and the atlas (4096 x 2048, with the stained-glass rose at full resolution) in place and tags the mesh vigil-kit-r002-rose.
-Journey map r001 (issue #248) is a fifth kit through the same path (theme_plan.JOURNEY_R001, 13 rows, all new packages under /Game/DnDDiceRoll/Theme/Journey, nothing
+Waystone set piece r001 (issue #250) is a fifth table through the same path (theme_plan.SETPIECE_R001, 3 rows, all new packages under Theme/SetPiece, nothing
+replaced): the seal halves and chip, tagged DiceRollAssetRevision=setpiece-r001. It writes no theme property and no flag; the view loads the meshes by path.
+Journey map r001 (issue #248) is a sixth kit through the same path (theme_plan.JOURNEY_R001, 13 rows, all new packages under /Game/DnDDiceRoll/Theme/Journey, nothing
 replaced): the journey table, map, stage token, three emblems, pennant, lost marker, walked and unwalked ink, fog card, Vault goal and diorama plinth, tagged
 DiceRollAssetRevision=journey-r001. UDiceRollTheme::bJourneyR001 is set only when all thirteen carry the tag; the view loads them as one set.
 Instanced presentation parts (#144): the master takes a per-instance tint (graph dice-theme-5), M_DiceRollEffect (new) takes a per-instance
@@ -421,6 +423,9 @@ KITS = [
      "sizes": theme_plan.VAULT_ARRAY_SIZES, "flag": "vault_metric_kit"},
     {"name": "overview", "tag": theme_plan.OVERVIEW_TAG, "rows": theme_plan.OVERVIEW_R002, "gate": theme_plan.OVERVIEW_METRIC_GATE,
      "sizes": theme_plan.OVERVIEW_ARRAY_SIZES, "flag": "overview_r002"},
+    # The Waystone set piece (#250): no theme property and no flag (the view loads the meshes by path), so a run writes nothing to the data asset for it.
+    {"name": "setpiece", "tag": theme_plan.SETPIECE_TAG, "rows": theme_plan.SETPIECE_R001, "gate": theme_plan.SETPIECE_METRIC_GATE,
+     "sizes": theme_plan.SETPIECE_ARRAY_SIZES, "flag": None},
     {"name": "journey", "tag": theme_plan.JOURNEY_TAG, "rows": theme_plan.JOURNEY_R001, "gate": theme_plan.JOURNEY_METRIC_GATE,
      "sizes": theme_plan.JOURNEY_ARRAY_SIZES, "flag": "journey_r001"},
 ]
@@ -1564,7 +1569,9 @@ def import_kit(kit, theme, parents, replacements):
             repair_lod_slots(mesh, name)
         apply_material(mesh, texture, asset_id, name, look, parents, kind=kind, revision=2, source=source, tint=theme_plan.INSTANCE_TINTS.get(asset_id))
         asset_line(asset_id, package, action, source, mesh, "lod_exports={}".format(len(theme_plan.lod_exports(asset_id, revision, name))))
-        if index is None:
+        if prop is None:
+            pass                     # loaded by path (the set piece): no theme property
+        elif index is None:
             set_if_different(theme, prop, mesh)
         else:
             slots[prop][index] = mesh
@@ -1572,7 +1579,7 @@ def import_kit(kit, theme, parents, replacements):
     for prop, items in slots.items():
         set_list(theme, prop, items)
     metric = all(kit_tagged(unreal.load_asset(theme_plan.package_path(row[3], row[2])), kit["tag"]) for row in kit["rows"] if row[0] in kit["gate"])
-    if bool(theme.get_editor_property(kit["flag"])) != metric:
+    if kit["flag"] is not None and bool(theme.get_editor_property(kit["flag"])) != metric:
         set_if_different(theme, kit["flag"], metric)
     return loaded, metric
 
@@ -1646,6 +1653,7 @@ def main():
     unreal.log("THEME_ROOT_COMPLETE root kit {}/{} meshes, root_metric_kit={}".format(kit_loaded["root"], len(theme_plan.ROOT_R002), kit_metric["root"]))
     unreal.log("THEME_VAULT_COMPLETE vault kit {}/{} meshes, vault_metric_kit={}".format(kit_loaded["vault"], len(theme_plan.VAULT_R002), kit_metric["vault"]))
     unreal.log("THEME_OVERVIEW_COMPLETE overview set {}/{} meshes, overview_r002={}".format(kit_loaded["overview"], len(theme_plan.OVERVIEW_R002), kit_metric["overview"]))
+    unreal.log("THEME_SETPIECE_COMPLETE set piece {}/{} meshes".format(kit_loaded["setpiece"], len(theme_plan.SETPIECE_R001)))
     unreal.log("THEME_JOURNEY_COMPLETE journey map {}/{} meshes, journey_r001={}".format(kit_loaded["journey"], len(theme_plan.JOURNEY_R001), kit_metric["journey"]))
     unreal.log("THEME_RIG_COMPLETE {}/{} characters, {} clips".format(rigged, len(RIG), len(CLIPS)))
 

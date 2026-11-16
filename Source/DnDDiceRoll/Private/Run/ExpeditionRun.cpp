@@ -53,6 +53,9 @@ constexpr int32 DrawnRecipes = 3, PressureRecipe = 3, FinaleRecipe = 6;
 constexpr int32 IdentityRevision = 9;
 /** Revision 10 (#218): Compact rewards offer Reserve and Honed beside Gear. Generation is revision 9's exactly. */
 constexpr int32 UpgradeRevision = 10;
+/** Revision 11 (#240, docs/runs/journey-checkpoint/M1-movement-contract.md): Compact moves pass through allies, Downed and dead creatures.
+ * Generation and rewards are revision 10's exactly. */
+constexpr int32 MoveThroughRevision = 11;
 
 /** The saved FCombatantState::Role values (#188). Revisions 7 and 8 only ever use Raider and Archer. */
 enum class EFoeRole : uint8 { Raider, Archer, Skirmisher, Brute, Warden };
@@ -268,6 +271,7 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
     Candidate.State.GenerationRandomState = Seed;
     auto Party = FCombatBattle::TutorialEncounter();
     Party.Ruleset = Ruleset;
+    Party.bMoveThrough = MovesThroughUnits(Ruleset, Revision);
     for (int32 I = 0; I < 4; ++I)
     {
         const auto Cell = Party.Combatants[I].Cell;
@@ -356,6 +360,7 @@ bool FExpeditionRun::EncounterLayout(const FExpeditionRoute& Route, int32 Stage,
 {
     FCombatEncounter Layout = FCombatBattle::TutorialEncounter();
     Layout.Ruleset = Ruleset;
+    Layout.bMoveThrough = MovesThroughUnits(Ruleset, Revision);
     Layout.Width = Route.Width;
     Layout.Height = Route.Height;
     Layout.Combatants.SetNum(4);
@@ -491,6 +496,7 @@ void FExpeditionRun::ResolveCombat()
 }
 
 bool FExpeditionRun::OffersUpgradeCards(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= UpgradeRevision; }
+bool FExpeditionRun::MovesThroughUnits(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= MoveThroughRevision; }
 
 bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error) { return ClaimReward(RecipientId, ERewardCard::Gear, Error); }
 
@@ -552,6 +558,8 @@ bool FExpeditionRun::Restore(const FExpeditionSnapshot& Snapshot, FString& Error
     }
     FExpeditionRun Candidate;
     if (!Candidate.Combat.Restore(Snapshot.Battle, Error)) { return false; }
+    // The movement rule is never saved (#240): it follows from the run's ruleset and revision, whatever the snapshot's in-memory flag says.
+    Candidate.Combat.State.Encounter.bMoveThrough = MovesThroughUnits(P.Ruleset, P.CatalogRevision);
     Candidate.State = P;
     Candidate.bStarted = true;
     const bool bRoute = P.Phase == EExpeditionPhase::Route;

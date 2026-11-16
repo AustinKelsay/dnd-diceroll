@@ -151,6 +151,18 @@ OVERVIEW_R002 = [
 OVERVIEW_METRIC_GATE = tuple(row[0] for row in OVERVIEW_R002)
 OVERVIEW_ARRAY_SIZES = {}
 
+# The Waystone set piece r001 (#250, rescoping #104): the rune seal around the artifact in the Vault apse, which shatters when the finale is won. Three new ids and
+# new packages under /Game/DnDDiceRoll/Theme/SetPiece; nothing replaces an existing package and no theme property is written (theme property None): the battle
+# view loads them by path (WaystoneSetPiece::ThemedMeshPaths) and falls back to today's ending when any is missing. Glow 0.45 is the seal's resting rune level;
+# the game raises it on the instances' own material while the Waystone flares.
+SETPIECE_LOOK = (0.85, 0.0, 0.05, 0.45, 0.0)
+SETPIECE_R001 = [
+    ("setpiece-vault-seal-upper", 1, "SM_SetPiece_Vault_SealUpper", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-seal-lower", 1, "SM_SetPiece_Vault_SealLower", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-chip", 1, "SM_SetPiece_Vault_Chip", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+]
+SETPIECE_METRIC_GATE = ()
+SETPIECE_ARRAY_SIZES = {}
 # The war-table journey map r001 (#248): thirteen new ids and new packages under /Game/DnDDiceRoll/Theme/Journey, nothing replaced. The route screen and the ending
 # draw them in place of the overview's table and side dioramas, beside the r002 dioramas raised on the plinth. The look follows the overview's (no rim, no fill, glow
 # on) with a self-lit share that keeps the chart and its markers legible in candlelight; the fog bank is a translucent card.
@@ -193,8 +205,9 @@ VIGIL_TAG = "vigil-kit-r002"
 ROOT_TAG = "root-kit-r002"
 VAULT_TAG = "vault-kit-r002"
 OVERVIEW_TAG = "overview-r002"
+SETPIECE_TAG = "setpiece-r001"
 JOURNEY_TAG = "journey-r001"
-KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG, JOURNEY_TAG)
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG, SETPIECE_TAG, JOURNEY_TAG)
 
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.

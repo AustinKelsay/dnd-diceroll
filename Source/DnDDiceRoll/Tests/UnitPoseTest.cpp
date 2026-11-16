@@ -695,6 +695,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         // Let one-shot clips play out (the longest, Recover, is 2.2 s), or skip them, then compare with the committed state.
         if (End == EEnd::SkipMid) { View->SkipPresentation(); View->Tick(0.001f); }
         else { for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); } for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); } }
+        // A defeat opens on the journey map (#248); the figures are checked on the battle board, where the ending's "Back to the battle" returns.
+        if (View->ShowingJourney()) { View->ToggleEndingJourney(); View->Tick(0.016f); }
         TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         if (End == EEnd::SkipMid) { TestTrue(*(Label + TEXT(": the skip was exercised")), Skips > 0); }
@@ -721,6 +723,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
                 Restored.Battle = Resumed->Rules().Snapshot();
                 TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
             }
+            // A resumed defeat opens on the journey map (#248); the figures are on the battle board behind it.
+            if (Resumed->ShowingJourney()) { Resumed->ToggleEndingJourney(); Resumed->Tick(0.016f); }
             int32 ExpectedRigs = 0;
             for (const FCombatantState& Unit : Resumed->Rules().Snapshot().Encounter.Combatants) { ExpectedRigs += ExpectsRig(Unit) ? 1 : 0; }
             const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
@@ -3337,6 +3341,8 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         }
         if (End == EEnd::SkipMid) { View->SkipPresentation(); View->Tick(0.001f); }
         else { for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); } for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); } }
+        // A defeat opens on the journey map (#248); the figures are checked on the battle board, where the ending's "Back to the battle" returns.
+        if (View->ShowingJourney()) { View->ToggleEndingJourney(); View->Tick(0.016f); }
         TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         View->Save();
@@ -3364,6 +3370,8 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
                 Restored.Battle = Resumed->Rules().Snapshot();
                 TestTrue(*(Label + TEXT(": the resumed snapshot equals the saved one")), ExpeditionTestSupport::SameRun(Original, Restored));
             }
+            // A resumed defeat opens on the journey map (#248); the figures are on the battle board behind it.
+            if (Resumed->ShowingJourney()) { Resumed->ToggleEndingJourney(); Resumed->Tick(0.016f); }
             const int32 Inspected = ExpectFiguresConverged(*this, *Resumed, Label + TEXT(" resumed"));
             TestEqual(*(Label + TEXT(": the resumed rig count matches the original view")), Inspected, OriginalRigs);
             if (bFoeFallen)

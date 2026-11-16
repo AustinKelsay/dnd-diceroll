@@ -264,6 +264,17 @@ bool FCombatBattle::IsOpen(FIntPoint Cell, int32 MovingId) const
         });
 }
 
+bool FCombatBattle::IsPassable(FIntPoint Cell, const FCombatantState& Mover) const
+{
+    if (!State.Encounter.bMoveThrough) { return IsOpen(Cell, Mover.Id); }
+    // SRD 5.2.1 (#240): allies, incapacitated (Downed) and dead creatures can be moved through; a conscious opponent blocks.
+    return IsInside(Cell) && !State.Encounter.BlockedCells.Contains(Cell) &&
+        !State.Encounter.Combatants.ContainsByPredicate([Cell, &Mover](const FCombatantState& Unit)
+        {
+            return Unit.Id != Mover.Id && Unit.Cell == Cell && Unit.Side != Mover.Side && Unit.Life == ECombatLife::Conscious;
+        });
+}
+
 TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPoint>* Parents) const
 {
     TMap<FIntPoint, int32> Result;
@@ -278,7 +289,7 @@ TMap<FIntPoint, int32> FCombatBattle::Distances(int32 Id, TMap<FIntPoint, FIntPo
         for (FIntPoint Offset : Neighbors)
         {
             const FIntPoint Next = Cell + Offset;
-            if (IsOpen(Next, Id) && !Result.Contains(Next))
+            if (!Result.Contains(Next) && IsPassable(Next, *Unit))
             {
                 Result.Add(Next, Cost);
                 if (Parents) { Parents->Add(Next, Cell); }
@@ -295,7 +306,8 @@ TArray<FIntPoint> FCombatBattle::LegalMoves(int32 Id) const
     if (!bStarted || State.Phase != EBattlePhase::Fighting || ActiveId() != Id) { return Result; }
     for (const auto& Entry : Distances(Id))
     {
-        if (Entry.Value > 0 && Entry.Value <= State.MovementLeft) { Result.Add(Entry.Key); }
+        // Distances may cross occupied cells (move-through); a move never ends on one.
+        if (Entry.Value > 0 && Entry.Value <= State.MovementLeft && IsOpen(Entry.Key, Id)) { Result.Add(Entry.Key); }
     }
     return Result;
 }
@@ -431,7 +443,7 @@ TArray<FIntPoint> FCombatBattle::PathTo(int32 Id, FIntPoint Destination) const
     TMap<FIntPoint, FIntPoint> Parents;
     const TMap<FIntPoint, int32> Costs = Distances(Id, &Parents);
     const int32* Cost = Costs.Find(Destination);
-    if (!Cost || *Cost <= 0 || *Cost > State.MovementLeft) { return Path; }
+    if (!Cost || *Cost <= 0 || *Cost > State.MovementLeft || !IsOpen(Destination, Id)) { return Path; }
     for (FIntPoint Cell = Destination; Cell != Unit->Cell; Cell = Parents[Cell]) { Path.Insert(Cell, 0); }
     return Path;
 }
@@ -1119,7 +1131,8 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
             {
                 const FIntPoint Cell(X, Y);
                 const int32* Cost = Costs.Find(Cell);
-                if (!Cost || *Cost >= BestCost) { continue; }
+                // A firing cell must be one the enemy can stop on (move-through may reach occupied cells).
+                if (!Cost || *Cost >= BestCost || !IsOpen(Cell, Id)) { continue; }
                 for (const FCombatantState& Target : State.Encounter.Combatants)
                 {
                     if (CanTargetFrom(*Enemy, Cell, Target))
@@ -1132,8 +1145,9 @@ TArray<FCombatResult> FCombatBattle::PlayEnemyTurn()
         if (Best.IsSet() && BestCost > 0)
         {
             FIntPoint Destination = Best.GetValue();
-            while (Costs[Destination] > State.MovementLeft) { Destination = Parents[Destination]; }
-            Results.Add(Submit({ECombatCommandType::Move, Id, Destination}));
+            // Back along the route to the farthest cell within movement that it can stop on; its own cell means no move this turn.
+            while (Costs[Destination] > State.MovementLeft || !IsOpen(Destination, Id)) { Destination = Parents[Destination]; }
+            if (Destination != Enemy->Cell) { Results.Add(Submit({ECombatCommandType::Move, Id, Destination})); }
         }
     }
     const TArray<int32> Targets = LegalTargets(Id);

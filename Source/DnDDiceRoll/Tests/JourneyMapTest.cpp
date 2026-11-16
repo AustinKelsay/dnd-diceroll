@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
 #include "Camera/CameraTypes.h"
+#include "Components/PostProcessComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "HAL/FileManager.h"
@@ -239,6 +240,22 @@ bool FJourneySceneTest::RunTest(const FString& Parameters)
         AExpeditionBattleView* View = Board(*this, World, FPaths::Combine(Directory, Fixture.Name, TEXT("current.json")), Fixture.Run);
         if (!View) { continue; }
         const FString Where = Fixture.Name;
+        const EExpeditionPhase Phase = Fixture.Run.Progress().Phase;
+        if (Phase == EExpeditionPhase::Victory || Phase == EExpeditionPhase::Defeat)
+        {
+            // A defeat opens on the journey; a victory keeps the Vault board, where the Waystone set piece (#250) settles. The ending's Journey button switches either way.
+            TestEqual(Where + TEXT(": the ending's default view"), View->ShowingJourney(), Phase == EExpeditionPhase::Defeat);
+            TestTrue(Where + TEXT(": the ending can switch"), View->CanToggleEndingJourney());
+            const UPostProcessComponent* Grade = View->FindComponentByClass<UPostProcessComponent>();
+            if (Phase == EExpeditionPhase::Victory && Grade) { TestTrue(Where + TEXT(": the Vault board holds its battle exposure band"), Grade->Settings.bOverride_AutoExposureMinBrightness); }
+            View->ToggleEndingJourney();
+            View->Tick(0.05f);
+            TestEqual(Where + TEXT(": the switch shows the other view"), View->ShowingJourney(), Phase == EExpeditionPhase::Victory);
+            // The journey reached from the dark Vault board adapts on its own, as one reached from Resume does (it was blown out under the Vault's band).
+            if (Phase == EExpeditionPhase::Victory && Grade)
+            { TestTrue(Where + TEXT(": the journey drops the battle exposure band"), !Grade->Settings.bOverride_AutoExposureMinBrightness && !Grade->Settings.bOverride_AutoExposureMaxBrightness); }
+            if (Phase == EExpeditionPhase::Defeat) { View->ToggleEndingJourney(); View->Tick(0.05f); }
+        }
         if (!TestTrue(Where + TEXT(": the journey map is shown (the route screen, or the ending)"), View->ShowingJourney())) { continue; }
         const FJourneyLook Expected = JourneyLayout::Look(FJourneyQuery::For(Fixture.Run));
         TestEqual(Where + TEXT(": the view shows the query's look"), Describe(View->JourneyShown()), Describe(Expected));

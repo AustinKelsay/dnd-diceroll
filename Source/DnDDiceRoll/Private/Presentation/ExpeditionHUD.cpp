@@ -267,6 +267,8 @@ void AExpeditionHUD::DrawHUD()
     DetailUnitIds.Reset();
     DetailRects.Reset();
     Drawn = FProgressionDrawn();
+    BannerShown.Reset();
+    bBannerRequested = false;
     Progression = FProgressionFacts();
     bLegendRequested = false;
     bDiceRequested = false;
@@ -323,9 +325,15 @@ void AExpeditionHUD::DrawHUD()
             default: break;
             }
         }
-        else { DrawDice(); }
+        else
+        {
+            DrawDice();
+            // The battle has ended but its result is still presenting (the banner hold, #251): the dock is gone with the fight, so the Skip button comes here, and a click dismisses the hold.
+            if (View->IsPresenting() && !View->ShowingRecords()) { DrawSkipButton(); }
+        }
     }
-    if (View->InCombat()) { DrawBanner(); }
+    // The result banner outlives the fight (#251): the playback is still presenting, which keeps the reward or ending screen back for its life.
+    if (View->InCombat() || (View->IsPresenting() && View->Playback().Banner().bResult)) { DrawBanner(); }
     DrawTargetChips(); // All foreground panel bounds are known now, including the hover forecast.
     DrawPathCost(); // Over every panel and chip: the number is the point of the path preview.
     if (!View->InCombat() && !Player->ShowingBuilder() && !View->Messages().IsEmpty())
@@ -1046,6 +1054,11 @@ void AExpeditionHUD::DrawActionTooltip(const FActionTooltipRequest& Request, FLi
     { Text(Lines[Index].Key, X + 12, Y + 7 + Index * LineHeight, Lines[Index].Value, Index == 0 ? 0.72f : TipScale, EAlign::Left, TipWidth - 24); }
 }
 
+void AExpeditionHUD::DrawSkipButton()
+{
+    Button(TEXT("Skip"), TEXT("Skip  >>"), TEXT("Tab"), W * 0.5f - 52, H - DockMargin - DockButtonHeight, 104, DockButtonHeight, true, false, Sky);
+}
+
 void AExpeditionHUD::DrawActionBar()
 {
     const FCombatBattle& Rules = View->Rules();
@@ -1055,7 +1068,7 @@ void AExpeditionHUD::DrawActionBar()
     const float DockY = H - DockMargin - DockHeight;
     if (View->IsPresenting())
     {
-        Button(TEXT("Skip"), TEXT("Skip  >>"), TEXT("Tab"), W * 0.5f - 52, H - DockMargin - DockButtonHeight, 104, DockButtonHeight, true, false, Sky);
+        DrawSkipButton();
         return;
     }
     if (!Active || Snapshot.Phase != EBattlePhase::Fighting) { return; }
@@ -1266,13 +1279,17 @@ void AExpeditionHUD::DrawBanner()
 {
     const FTurnBanner& Banner = View->Playback().Banner();
     if (Banner.Title.IsEmpty() || Banner.Age > Banner.Life) { return; }
+    BannerShown = Banner.Title;
     const float In = FMath::Clamp(Banner.Age / 0.2f, 0.0f, 1.0f);
     const float Out = FMath::Clamp((Banner.Life - Banner.Age) / 0.4f, 0.0f, 1.0f);
     const float Alpha = FMath::Min(In, Out);
     const float Slide = (1.0f - In) * -60.0f + (1.0f - Out) * 60.0f;
     const float Y = H * 0.24f;
-    ChipExclusions.Add(FBox2D(FVector2D(0, Y), FVector2D(W, Y + 82)));
-    Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), 0, Y, W, 82);
+    // The dimmed band is only as wide as the banner, and never reaches the party cards on the left edge (#252): it used to span the whole width and darkened them.
+    const float Half = FMath::Min(360.0f, W * 0.5f - (ExpeditionLayout::PartyCardX + ExpeditionLayout::PartyCardWidth + 8.0f));
+    ChipExclusions.Add(FBox2D(FVector2D(W * 0.5f - Half, Y), FVector2D(W * 0.5f + Half, Y + 82)));
+    Rect(FLinearColor(0, 0, 0, 0.55f * Alpha), W * 0.5f - Half, Y, Half * 2.0f, 82);
+    bBannerRequested = true; BannerBox = FBox2D(FVector2D(W * 0.5f - Half, Y) * S, FVector2D(W * 0.5f + Half, Y + 82) * S);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 + Slide, Y, 440, 2);
     Rect(WithAlpha(Banner.Color, 0.85f * Alpha), W * 0.5f - 220 - Slide, Y + 80, 440, 2);
     Text(Banner.Title, W * 0.5f + Slide, Y + 10, WithAlpha(Banner.Color, Alpha), 2.0f, EAlign::Center, W - 80);
@@ -1566,8 +1583,11 @@ void AExpeditionHUD::DrawJourneyEnding()
         ++Slot;
     }
     Text(TEXT("History is kept. The next expedition starts with fresh heroes."), X + 24, Y + 96, Muted, 0.64f);
-    Button(TEXT("Builder"), TEXT("Choose next party"), TEXT("Tab / Enter"), X + 24, Y + 116, Width * 0.5f - 36, 44, true, false, FLinearColor(0.85f, 0.7f, 0.4f), 0.8f);
-    Button(TEXT("Records"), TEXT("View records"), TEXT("H"), X + Width * 0.5f + 12, Y + 116, Width * 0.5f - 36, 44, true, false, FLinearColor(0.85f, 0.7f, 0.4f), 0.8f);
+    const float Third = (Width - 48 - 24) / 3.0f;
+    const TCHAR* Back = Run.Phase == EExpeditionPhase::Victory ? TEXT("Back to the Vault") : TEXT("Back to the battle");
+    Button(TEXT("Builder"), TEXT("Choose next party"), TEXT("Tab / Enter"), X + 24, Y + 116, Third, 44, true, false, FLinearColor(0.85f, 0.7f, 0.4f), 0.8f);
+    Button(TEXT("EndingJourney"), Back, TEXT("The last board"), X + 36 + Third, Y + 116, Third, 44, true, false, FLinearColor(0.85f, 0.7f, 0.4f), 0.8f);
+    Button(TEXT("Records"), TEXT("View records"), TEXT("H"), X + 48 + 2 * Third, Y + 116, Third, 44, true, false, FLinearColor(0.85f, 0.7f, 0.4f), 0.8f);
 }
 
 const FHeroProgressFacts* AExpeditionHUD::HeroProgress(int32 Id) const
@@ -1665,8 +1685,18 @@ void AExpeditionHUD::DrawEnding()
         Text(Unit.Name+TEXT(" / ")+FBuildCatalog::DisplayName(Unit)+ (Unit.Life==ECombatLife::Dead ? TEXT(" / Fallen") : TEXT(" / Survived")), X+32,Row,Unit.Life==ECombatLife::Dead ? Danger : Parchment,0.9f); Row+=36;
     }
     Text(TEXT("History is kept. The next expedition starts with fresh heroes."),X+32,Y+308,Muted,0.85f);
-    Button(TEXT("Builder"),TEXT("Choose next party"),TEXT("Tab / Enter"),X+32,Y+362,390,64);
-    Button(TEXT("Records"),TEXT("View records"),TEXT("H"),X+450,Y+362,398,64);
+    if (View->HasJourneySet())
+    {
+        // The journey map (#248) is one button away from the board (a victory keeps the Vault, where the Waystone set piece settles).
+        Button(TEXT("Builder"),TEXT("Choose next party"),TEXT("Tab / Enter"),X+32,Y+362,264,64);
+        Button(TEXT("EndingJourney"),TEXT("View the journey"),TEXT("The whole road"),X+308,Y+362,264,64);
+        Button(TEXT("Records"),TEXT("View records"),TEXT("H"),X+584,Y+362,264,64);
+    }
+    else
+    {
+        Button(TEXT("Builder"),TEXT("Choose next party"),TEXT("Tab / Enter"),X+32,Y+362,390,64);
+        Button(TEXT("Records"),TEXT("View records"),TEXT("H"),X+450,Y+362,398,64);
+    }
 }
 
 void AExpeditionHUD::DrawRecords()
