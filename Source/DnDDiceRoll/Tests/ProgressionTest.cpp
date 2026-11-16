@@ -447,19 +447,20 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReserveBeforeCampTest, "Project.Expedition.Run
 bool FReserveBeforeCampTest::RunTest(const FString& Parameters)
 {
     using namespace ProgressionTest;
+    // Revision 10's Reserve (+1 cap and +1 use, never a refill). Revision 11's refilling Reserve and Honed: Revision11CardsRefillPools (#241).
     FString Error;
     const TArray<FPartyBuildSelection> Selection = PoolParty();
     TestEqual(TEXT("The camp says each hero's own cap"), FExpeditionRun::RecoveryDescription(), FString(TEXT("Survivors: +10 HP, +1 Wind/slot/Rage/Kit up to each hero's own cap. No revival or potions.")));
     const int32 Seed = FirstSeedWhere([&](int32 S)
     {
         FExpeditionRun Probe;
-        if (!ReachReward(Probe, S, Selection, 1, GearToFirst)) { return false; }
+        if (!ReachReward(Probe, S, Selection, 1, GearToFirst, 10)) { return false; }
         for (int32 Id = 1; Id <= 4; ++Id) { if (!Conscious(Probe, Id)) { return false; } }
         return true;
     }, 42, 200);
     if (!TestTrue(TEXT("A seed keeps all four standing at reward 1"), Seed != INDEX_NONE)) { return false; }
     FExpeditionRun Base;
-    ReachReward(Base, Seed, Selection, 1, GearToFirst);
+    ReachReward(Base, Seed, Selection, 1, GearToFirst, 10);
     // Each build is its own run: the Reserve recipient spent every pool; the others hold full pools.
     for (int32 Recipient = 1; Recipient <= 4; ++Recipient)
     {

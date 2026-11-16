@@ -392,7 +392,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPersistLostSurvivorTest, "Project.Expedition.P
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FPersistLostSurvivorTest::RunTest(const FString& Parameters)
 {
-    FExpeditionRun Run, Restored; FString Error; Run.NewRun(42,Error,TEXT("lost-member-fixture"));Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
+    FExpeditionRun Run, Restored; FString Error;
+    // Revision 11's enemies no longer attack slot 1 first (#241): the seed whose fixture loses slot 1 and still wins is searched.
+    const int32 Seed = ExpeditionTestSupport::FirstLossSeed();
+    if (!TestTrue(TEXT("A seed loses slot 1 and still wins fight 1"), Seed != INDEX_NONE)) { return false; }
+    Run.NewRun(Seed,Error,TEXT("lost-member-fixture"));Run.ChooseRoute(Run.Progress().Offers[0].Id,Error);
     for(int32 Step=0;Step<120 && Run.Progress().Phase==EExpeditionPhase::Combat && Run.Battle().Find(1)->Life!=ECombatLife::Dead;++Step)
     {
         const auto& B=Run.Battle();const auto* A=B.Find(B.ActiveId());

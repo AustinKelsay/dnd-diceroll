@@ -134,7 +134,8 @@ void CheckTooltips(FAutomationTestBase& Test, ExpeditionInputHarness::FHarness& 
     {
         if (Tag.Command == EC::EndTurn) { continue; }
         const FString Where = Context + TEXT(", ") + Tag.ButtonId.ToString();
-        FString Effect = FCombatBattle::DescribeAction(Tag.Command);
+        // The battle's own rules text (#241: revision 11's Rescue states its amount); DescribeAction for every other command.
+        FString Effect = Rules.Describe(Tag.Command);
         for (const FAbilityFacts& Ability : Abilities) { if (Ability.Command == Tag.Command) { Effect = Ability.Description; } }
         const FActionTooltipRequest Expected = ExpectedTooltip(Rules, Tag.Command, Effect);
 
