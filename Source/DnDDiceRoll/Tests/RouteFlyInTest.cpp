@@ -439,3 +439,86 @@ bool FRouteFlyInConvergesTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 #endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRouteFlyInSoundTest, "Project.Expedition.Presentation.RouteFlyIn.SoundChangesOnceAndSettingsSettleIt",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRouteFlyInSoundTest::RunTest(const FString& Parameters)
+{
+    using namespace RouteFlyInTest;
+    FExpeditionSaveData Data;
+    int32 Offer = 0;
+    if (!TestTrue(TEXT("A route screen whose offer opens on the party's turn"), RouteScreen(Data, Offer))) { return false; }
+    // What today's cut ends on: the fight's bed (#244) and track (#245).
+    EExpeditionAmbience CutBed = EExpeditionAmbience::None;
+    EExpeditionMusic CutTrack = EExpeditionMusic::None;
+    {
+        TUniquePtr<FHarness> Game = Open(*this, Data);
+        if (!TestNotNull(TEXT("The route screen"), Game.Get())) { return false; }
+        Game->View->SetRouteFlyIn(false);
+        Game->Press(RouteKey(Offer));
+        Frames(*Game, 150);
+        CutBed = Game->View->AmbienceBed();
+        CutTrack = Game->View->MusicTrack();
+        TestTrue(TEXT("The cut ends on a world's bed and a fight's track"), CutBed != EExpeditionAmbience::None && CutBed != EExpeditionAmbience::WarTable && CutTrack != EExpeditionMusic::None && CutTrack != EExpeditionMusic::Table);
+    }
+    {
+        // The handover changes each bus once, by phase: the bed when the board is built at the cut (RebuildBoard selects it), the track when the fly-in stops presenting.
+        // Never more than two layers on a bus, and no layer started twice (a double trigger, or a bed restarted by the rebuild).
+        TUniquePtr<FHarness> Game = Open(*this, Data);
+        if (!TestNotNull(TEXT("The route screen"), Game.Get())) { return false; }
+        AExpeditionBattleView* View = Game->View;
+        Frames(*Game, 90);
+        TestEqual(TEXT("The route screen plays the war table's bed"), View->AmbienceBed(), EExpeditionAmbience::WarTable);
+        TestEqual(TEXT("and the table's theme"), View->MusicTrack(), EExpeditionMusic::Table);
+        TSet<uint32> BedLayers, TrackLayers;
+        int32 BedChanges = 0, TrackChanges = 0, MostBeds = 0, MostTracks = 0;
+        EExpeditionAmbience Bed = View->AmbienceBed();
+        EExpeditionMusic Track = View->MusicTrack();
+        bool bBedHeldThroughMove = true, bTrackHeldThroughFlyIn = true;
+        auto Observe = [&]()
+        {
+            for (const FAudioLayer& Layer : View->AmbienceFade().Layers()) { BedLayers.Add(Layer.Id); }
+            for (const FAudioLayer& Layer : View->MusicDirector().Fade().Layers()) { TrackLayers.Add(Layer.Id); }
+            MostBeds = FMath::Max(MostBeds, View->AmbienceFade().Layers().Num());
+            MostTracks = FMath::Max(MostTracks, View->MusicDirector().Fade().Layers().Num());
+            if (View->AmbienceBed() != Bed) { ++BedChanges; Bed = View->AmbienceBed(); }
+            if (View->MusicTrack() != Track) { ++TrackChanges; Track = View->MusicTrack(); }
+            if (View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving) { bBedHeldThroughMove &= Bed == EExpeditionAmbience::WarTable; }
+            if (View->FlyingIn()) { bTrackHeldThroughFlyIn &= Track == EExpeditionMusic::Table; }
+        };
+        Observe();
+        Game->Press(RouteKey(Offer));
+        Observe();
+        TestTrue(TEXT("The fly-in is under way"), View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving);
+        for (int32 Index = 0; Index < 400 && View->FlyingIn(); ++Index) { Game->Frame(); Observe(); }
+        for (int32 Index = 0; Index < 150; ++Index) { Game->Frame(); Observe(); }
+        TestTrue(TEXT("The war table's bed holds through the move (the journey is still drawn)"), bBedHeldThroughMove);
+        TestTrue(TEXT("The table's theme holds while the fly-in presents"), bTrackHeldThroughFlyIn);
+        TestEqual(TEXT("The bed changes once"), BedChanges, 1);
+        TestEqual(TEXT("The track changes once"), TrackChanges, 1);
+        TestEqual(TEXT("to the cut's bed"), View->AmbienceBed(), CutBed);
+        TestEqual(TEXT("and the cut's track"), View->MusicTrack(), CutTrack);
+        TestTrue(TEXT("Never more than two bed layers"), MostBeds <= FAudioCrossfade::MaxLayers);
+        TestTrue(TEXT("Never more than two music layers"), MostTracks <= FAudioCrossfade::MaxLayers);
+        TestEqual(TEXT("Two bed layers in all: the table's and the world's (none restarted)"), BedLayers.Num(), 2);
+        TestEqual(TEXT("Two music layers in all: the theme and the fight's track (none restarted)"), TrackLayers.Num(), 2);
+    }
+    {
+        // Settings (#246) holds playback and the set piece behind its panel. The fly-in hides the HUD, so it settles instead: a player's key or click only skips it, and
+        // the Settings button pressed while it plays (by code) settles it first, then opens over the fight.
+        TUniquePtr<FHarness> Game = Open(*this, Data);
+        if (!TestNotNull(TEXT("The route screen"), Game.Get())) { return false; }
+        Game->Press(RouteKey(Offer));
+        Frames(*Game, 10);
+        TestTrue(TEXT("Settings: the move is under way"), Game->View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving);
+        Game->Player->HandleButton(TEXT("Settings"));
+        TestFalse(TEXT("Settings settles the fly-in"), Game->View->FlyingIn());
+        TestFalse(TEXT("with the board up"), Game->View->ShowingOverview());
+        TestTrue(TEXT("and opens, holding the board"), Game->Player->OverlayOpen() && Game->View->HeldForSettings());
+        Frames(*Game, 5);
+        TestFalse(TEXT("No fly-in comes back behind the panel"), Game->View->FlyingIn());
+    }
+    return !HasAnyErrors();
+}
+#endif

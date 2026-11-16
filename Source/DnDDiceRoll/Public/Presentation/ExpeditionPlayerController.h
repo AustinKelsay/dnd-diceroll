@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Combat/CombatBattle.h"
 #include "Presentation/CombatHints.h"
+#include "Presentation/ExpeditionMix.h"
 #include "Run/ExpeditionRun.h"
 #include "Presentation/ExpeditionAutoplay.h"
 #include "GameFramework/PlayerController.h"
@@ -82,6 +83,11 @@ public:
     int32 BuilderSlot() const { return Slot; }
     ECombatCommandType SpecialAction(int32 Index) const;
     bool ShowingHelp() const { return bShowHelp; }
+    /**
+     * The Settings panel (#246): four volume sliders, opened from the start screen or the Menu. It owns input while open: Up/Down and Tab
+     * choose a slider, Left/Right move it by 5 %, a click on a bar sets it there, and Esc or Close returns the focus it opened from.
+     */
+    bool ShowingSettings() const { return bShowSettings; }
     /** True while the mid-encounter "Return to menu?" question is open. */
     bool ConfirmingReturn() const { return bConfirmReturn; }
     /** The Abandon run question (#224) is open: it defaults to keeping the run and owns every click and key. */
@@ -292,6 +298,12 @@ private:
     void SkipHints();
     void ReplayHints();
     bool bShowHelp = false;
+    bool bShowSettings = false;
+    void OpenSettings();
+    /** The bus a Settings control names ("Vol:Effects", "VolUp:Music"), or false. */
+    static bool SettingsBus(const FString& Id, EExpeditionBus& Bus);
+    /** Left/Right on the focused slider. */
+    bool NudgeFocusedSlider(int32 Steps);
     bool bShowMenu = false;
     bool bConfirmReturn = false;
     bool bConfirmAbandon = false;
@@ -311,6 +323,9 @@ private:
     struct FMenuFocus { FName Id; uint32 Screen = MAX_uint32; bool bTabChosen = false; };
     /** Saved while Help or Records covers the screen; restored only onto the same screen. */
     FMenuFocus Focus, SavedFocus;
+    /** Settings opened from the in-run Menu: closing it reopens the Menu on its Settings row, with the Menu's own saved focus (#128/#129). */
+    bool bSettingsFromMenu = false;
+    FMenuFocus SettingsMenuSaved;
     /** Identifies the visible menu screen: overlay, builder and expedition phase. */
     uint32 MenuScreenKey() const;
     void SaveOverlayFocus();

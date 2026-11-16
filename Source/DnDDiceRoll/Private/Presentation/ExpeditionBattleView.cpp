@@ -35,6 +35,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -739,7 +741,41 @@ void AExpeditionBattleView::BeginPlay()
             Synthesized.IsEmpty() ? TEXT("none") : *FString::Join(Synthesized, TEXT(", ")));
     }
     else { UE_LOG(LogExpeditionAudio, Log, TEXT("-ExpeditionSynthAudio: every cue plays its synthesis")); }
+    // Ambience beds (#244): a bed with no recording is silence, never synthesis.
+    AmbienceBank.Load(LoadObject<UExpeditionAmbienceSounds>(nullptr, ExpeditionAmbience::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        TArray<FString> Recorded;
+        for (EExpeditionAmbience Bed : AmbienceBank.RecordedBeds()) { Recorded.Add(ExpeditionAmbience::Name(Bed)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience beds recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionAmbienceCount - 1,
+            Recorded.IsEmpty() ? TEXT("none; every bed is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
+    // The score (#245): a track or sting with no recording is silence, never synthesis.
+    MusicBank.Load(LoadObject<UExpeditionMusicSounds>(nullptr, ExpeditionMusic::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        const USoundWave* Won = MusicBank.Sting(EExpeditionSting::Victory);
+        const USoundWave* Lost = MusicBank.Sting(EExpeditionSting::Defeat);
+        Music.SetStingLengths(Won ? Won->GetDuration() : 0.0f, Lost ? Lost->GetDuration() : 0.0f);
+        const TArray<FString> Recorded = MusicBank.RecordedPieces();
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionMusicCount - 1 + 2,
+            Recorded.IsEmpty() ? TEXT("none; the music is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
+    // The mix (#246): the bus classes, the player's volumes from the user settings file, one sound mix pushed for the whole session.
+    MasterClass = LoadObject<USoundClass>(nullptr, ExpeditionMix::MasterClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    EffectsClass = CueBank.Class() ? CueBank.Class() : LoadObject<USoundClass>(nullptr, ExpeditionMix::EffectsClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    if (!bSettingsConfigured)
+    {
+        SettingsPath = FExpeditionAudioSettings::DefaultPath(FCommandLine::Get());
+        if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    }
+    VolumeMix = NewObject<USoundMix>(this, TEXT("ExpeditionVolumes"), RF_Transient);
+    ApplyMix();
+    UGameplayStatics::PushSoundMixModifier(this, VolumeMix);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Volumes from %s: master %s, effects %s, ambience %s, music %s"), *SettingsPath,
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Master)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Effects)),
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Ambience)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Music)));
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
+    // The finale set piece's Flare and Shatter sound their own cues (#246).
+    OnSetPieceCue(nullptr);
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
@@ -802,6 +838,8 @@ void AExpeditionBattleView::RebuildBoard()
         // Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
         BoardTheme = Identity.World == EExpeditionWorld::Vault ? EBoardTheme::Vault : Identity.World == EExpeditionWorld::Vigil ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
+    // The themed build replaces this with the kit it actually drew (the Vault falls back to the Vigil when incomplete).
+    AmbienceKit = KitKindFor(BoardTheme);
     bOverview = WantsOverview();
     bJourneyShown = bOverview && bJourneySet && HasRun();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
@@ -827,6 +865,7 @@ void AExpeditionBattleView::RebuildBoard()
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f); UpdateOccluder(); FlushGroups();
+    SelectAmbience();
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -2583,6 +2622,8 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
     // The serial counts every request, heard or not, so the variation a play gets never depends on the audio device.
     const int32 Index = static_cast<int32>(Cue);
     const uint32 Serial = CueSerials.IsValidIndex(Index) ? CueSerials[Index]++ : 0;
+    // Combat cues duck the beds and the music briefly so they cut through (#246); counted with or without an audio device.
+    if (ExpeditionMix::Ducks(Cue)) { AmbienceDucker.Trigger(); MusicDucker.Trigger(); }
     UWorld* World = GetWorld();
     if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
     const FExpeditionCuePlay Play = CueBank.Choose(Cue, Serial);
@@ -2602,7 +2643,7 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
         Synth->NumChannels = 1;
         Synth->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
         Synth->SoundGroup = SOUNDGROUP_Default;
-        Synth->SoundClassObject = CueBank.Class();
+        Synth->SoundClassObject = EffectsClass;
         Synth->bLooping = false;
         Synth->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
         Wave = Synth;
@@ -2612,6 +2653,147 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
     {
         Voices.Add(Voice);
         VoiceEnds.Add(Clock + Wave->GetDuration() + 0.15f);
+    }
+}
+
+void AExpeditionBattleView::SelectAmbience()
+{
+    const EExpeditionAmbience Bed = ExpeditionAmbience::BedFor(HasRun(), bOverview, AmbienceKit);
+    const EExpeditionAmbience Previous = AmbienceBed();
+    if (!Ambience.Select(static_cast<uint8>(Bed), ExpeditionAmbience::CrossfadeSeconds)) { return; }
+    const USoundWave* Wave = AmbienceBank.Wave(Bed);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience %s -> %s: %s"), *ExpeditionAmbience::Name(Previous), *ExpeditionAmbience::Name(Bed),
+        Bed == EExpeditionAmbience::None ? TEXT("silence") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+}
+
+void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
+{
+    Ambience.Tick(DeltaSeconds);
+    // A voice whose layer has faded out (or was dropped to make room) stops; the director never keeps more than two layers.
+    for (auto It = AmbienceVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Ambience.Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    for (const FAudioLayer& Layer : Ambience.Layers())
+    {
+        const EExpeditionAmbience Bed = static_cast<EExpeditionAmbience>(Layer.Key);
+        USoundWave* Wave = AmbienceBank.Wave(Bed);
+        if (!Wave) { continue; }
+        const float Volume = AmbienceBank.Volume(Bed) * Layer.Amplitude() * AmbienceDucker.Gain();
+        TObjectPtr<UAudioComponent>& Voice = AmbienceVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { AmbienceVoices.Remove(Layer.Id); continue; }
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
+        }
+        Voice->SetVolumeMultiplier(Volume);
+    }
+}
+
+void AExpeditionBattleView::ConfigureSettings(const FString& Path)
+{
+    SettingsPath = Path;
+    bSettingsConfigured = true;
+    if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    ApplyMix();
+}
+
+bool AExpeditionBattleView::SetVolume(EExpeditionBus Bus, float Value)
+{
+    if (!VolumeSettings.Set(Bus, Value)) { return false; }
+    ApplyMix();
+    if (!FExpeditionAudioSettings::Save(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Warning, TEXT("Could not write the volume settings to %s"), *SettingsPath); }
+    PlayCue(EExpeditionCue::Click);
+    return true;
+}
+
+void AExpeditionBattleView::ApplyMix()
+{
+    // Master scales its children through the class hierarchy (SC_Master -> SC_Effects, SC_Ambience, SC_Music); each bus scales only itself.
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index) { AppliedClassVolumes[Index] = ExpeditionMix::Amplitude(VolumeSettings.Get(static_cast<EExpeditionBus>(Index))); }
+    if (!VolumeMix || !GetWorld()) { return; }
+    auto Apply = [this](USoundClass* Class, EExpeditionBus Bus, bool bChildren)
+    {
+        if (Class) { UGameplayStatics::SetSoundMixClassOverride(this, VolumeMix, Class, AppliedClassVolumes[static_cast<int32>(Bus)], 1.0f, 0.0f, bChildren); }
+    };
+    Apply(MasterClass, EExpeditionBus::Master, true);
+    Apply(EffectsClass, EExpeditionBus::Effects, false);
+    Apply(AmbienceBank.Class(), EExpeditionBus::Ambience, false);
+    Apply(MusicBank.Class(), EExpeditionBus::Music, false);
+}
+
+FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
+{
+    FExpeditionMusicMoment Now;
+    Now.bRunInPlay = HasRun();
+    if (!Now.bRunInPlay) { return Now; }
+    Now.Phase = Progress().Phase;
+    Now.Encounter = Progress().History.Num();
+    Now.bFinale = !Progress().History.IsEmpty() && FExpeditionRun::Encounter(Progress(), Progress().History.Last().Route).World == EExpeditionWorld::Vault;
+    // The finale set piece counts as presenting too: the victory sting follows it once the Waystone has settled (#246).
+    Now.bPresenting = IsPresenting() || SetPieceBusy();
+    return Now;
+}
+
+void AExpeditionBattleView::UpdateMusic(float DeltaSeconds)
+{
+    const EExpeditionMusic Before = Music.Current();
+    const TOptional<EExpeditionSting> Started = Music.Update(MusicMoment(), DeltaSeconds);
+    if (Music.Current() != Before)
+    {
+        const USoundWave* Wave = MusicBank.Track(Music.Current());
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music %s -> %s: %s"), *ExpeditionMusic::Name(Before), *ExpeditionMusic::Name(Music.Current()),
+            Music.Current() == EExpeditionMusic::None ? TEXT("silence under the sting") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    if (Started)
+    {
+        const USoundWave* Wave = MusicBank.Sting(*Started);
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Music sting %s: %s"), *ExpeditionMusic::StingName(*Started), Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+    }
+    // A voice whose layer has faded out stops; the crossfade remembers where that track was, so it picks up there next time.
+    for (auto It = MusicVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Music.Fade().Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    if (StingVoice && (!Music.Sting() || !IsValid(StingVoice))) { if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); } StingVoice = nullptr; }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    if (Started)
+    {
+        if (USoundWave* Wave = MusicBank.Sting(*Started))
+        {
+            if (IsValid(StingVoice)) { StingVoice->Stop(); StingVoice->DestroyComponent(); }
+            StingVoice = UGameplayStatics::CreateSound2D(this, Wave, MusicBank.StingVolume(*Started), 1.0f, 0.0f, nullptr, false, false);
+            if (StingVoice) { StingVoice->Play(); }
+        }
+    }
+    for (const FAudioLayer& Layer : Music.Fade().Layers())
+    {
+        const EExpeditionMusic Track = static_cast<EExpeditionMusic>(Layer.Key);
+        USoundWave* Wave = MusicBank.Track(Track);
+        if (!Wave) { continue; }
+        const float Volume = MusicBank.TrackVolume(Track) * Layer.Amplitude() * MusicDucker.Gain();
+        TObjectPtr<UAudioComponent>& Voice = MusicVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            const float Start = FMath::Fmod(Layer.Position(), FMath::Max(Wave->GetDuration(), 0.01f));
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { MusicVoices.Remove(Layer.Id); continue; }
+            Voice->Play(Start);
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Music voice %u plays %s from %.1f s"), Layer.Id, *Wave->GetPathName(), Start);
+        }
+        Voice->SetVolumeMultiplier(Volume);
     }
 }
 
@@ -2630,8 +2812,10 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
-    if (!bShowRecords) { Show.Tick(DeltaSeconds); }
-    UpdateSetPiece(DeltaSeconds);
+    if (!bShowRecords && !bSettingsHold) { Show.Tick(DeltaSeconds); }
+    // The set piece waits behind Settings as playback does (#246); it already waits behind Records.
+    if (!bSettingsHold) { UpdateSetPiece(DeltaSeconds); }
+    // The route fly-in (#249) is settled when Settings opens (it hides the HUD, so it never waits behind the panel).
     UpdateFlyIn(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
@@ -2640,7 +2824,11 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
-    if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
+    AmbienceDucker.Tick(DeltaSeconds);
+    MusicDucker.Tick(DeltaSeconds);
+    UpdateAmbience(DeltaSeconds);
+    UpdateMusic(DeltaSeconds);
+    if (!HasRun() || bShowRecords || bSettingsHold || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
     { EnemyDelay = 0; return; }
@@ -2754,6 +2942,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // Atomic: every Vault piece loads before anything is placed, or the whole finale draws the Vigil kit (a dangling or unloadable piece never leaves a half kit).
     if (Kit.Kind == EDiceRollKit::Vault && !(World && VaultPiecesLoad(Kit))) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
+    AmbienceKit = Kit.Kind;
     const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
     // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).

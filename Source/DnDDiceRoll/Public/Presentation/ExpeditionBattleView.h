@@ -6,7 +6,11 @@
 #include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
+#include "Presentation/AudioCrossfade.h"
+#include "Presentation/ExpeditionAmbience.h"
 #include "Presentation/ExpeditionCueSounds.h"
+#include "Presentation/ExpeditionMix.h"
+#include "Presentation/ExpeditionMusic.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
@@ -19,6 +23,8 @@
 
 class UAnimSequence;
 class UAudioComponent;
+class USoundClass;
+class USoundMix;
 class UCameraComponent;
 class UExponentialHeightFogComponent;
 class UInstancedStaticMeshComponent;
@@ -376,6 +382,33 @@ public:
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
     void PlayCue(EExpeditionCue Cue);
+    /** The ambience bed the board is heading to (#244): silence on the start screen, the war table on the overview, else the drawn world's bed. */
+    EExpeditionAmbience AmbienceBed() const { return static_cast<EExpeditionAmbience>(Ambience.Current()); }
+    /** The ambience crossfade: every live layer and its fade, whether or not an audio device plays it. */
+    const FAudioCrossfade& AmbienceFade() const { return Ambience; }
+    /** Ambience voices actually playing (zero without an audio device, or for a bed with no recording). */
+    int32 AmbienceVoiceCount() const { return AmbienceVoices.Num(); }
+    /** The music (#245): the track the director is heading to, its crossfade, and the run-end sting still sounding. */
+    EExpeditionMusic MusicTrack() const { return Music.Current(); }
+    const FExpeditionMusicDirector& MusicDirector() const { return Music; }
+    /** Music voices actually playing, the sting's included (zero without an audio device or a recording). */
+    int32 MusicVoiceCount() const { return MusicVoices.Num() + (StingVoice ? 1 : 0); }
+    /**
+     * The volume settings (#246), read from the user settings file at BeginPlay (never from or into the run checkpoint). SetVolume clamps
+     * and snaps a slider, applies the mix and writes the file; it returns whether the slider changed.
+     */
+    const FExpeditionAudioSettings& AudioSettings() const { return VolumeSettings; }
+    bool SetVolume(EExpeditionBus Bus, float Value);
+    bool NudgeVolume(EExpeditionBus Bus, int32 Steps) { return SetVolume(Bus, VolumeSettings.Get(Bus) + Steps * FExpeditionAudioSettings::Step); }
+    /** Selects the settings file (tests and isolated runs call it before BeginPlay): loads it and applies the mix. */
+    void ConfigureSettings(const FString& Path);
+    const FString& SettingsFile() const { return SettingsPath; }
+    /** What the mix applied: the amplitude a bus's sounds play at (Master times the bus) and each class's own adjuster (Master on SC_Master). */
+    float BusVolume(EExpeditionBus Bus) const { return ExpeditionMix::BusGain(VolumeSettings, Bus); }
+    float ClassVolume(EExpeditionBus Bus) const { return AppliedClassVolumes[static_cast<int32>(Bus)]; }
+    /** The duck combat cues put on the beds and the music (1 at rest). */
+    float AmbienceDuckGain() const { return AmbienceDucker.Gain(); }
+    float MusicDuckGain() const { return MusicDucker.Gain(); }
     /** How many times a cue has been requested since the view began, heard or not (the serial its variation hash reads, #243). Test and trace support. */
     uint32 CueRequests(EExpeditionCue Cue) const { return CueSerials.IsValidIndex(static_cast<int32>(Cue)) ? CueSerials[static_cast<int32>(Cue)] : 0; }
 
@@ -482,8 +515,13 @@ public:
      */
     const UWaystoneSetPiece* SetPiece() const;
     bool SetPieceBusy() const;
-    /** The set piece's sound and music hook (#243, #245): called once per cue as it plays (never on skip, Instant or Resume). Nothing is attached today. */
+    /**
+     * The set piece's moments, called once each as it plays (never on skip, Instant or Resume). The view itself sounds Flare and Shatter
+     * (#246) and holds the run's victory sting until the set piece has settled; a handler set here (tests) hears the same moments after it.
+     */
     void OnSetPieceCue(TFunction<void(EWaystoneCue)> Handler);
+    /** The cue a set-piece moment sounds (#246): Flare and Shatter have their own; Lift and Settled none (the Finale cue already played at the winning blow). */
+    static TOptional<EExpeditionCue> SetPieceSound(EWaystoneCue Cue);
     /** Capture support: holds the set piece at a time in its timeline (a time at or past its end shows the settled state); Clear lets it settle. */
     bool PreviewSetPiece(float Seconds);
     void ClearSetPiecePreview();
@@ -565,6 +603,9 @@ public:
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
     void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
+    /** The Settings panel (#246) holds the board as Records does: playback stops advancing and no enemy turn resolves until it closes. */
+    void HoldForSettings(bool bHold) { bSettingsHold = bHold; if (bHold) { EnemyDelay = 0; } }
+    bool HeldForSettings() const { return bSettingsHold; }
     /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
     void PrepareExposureForCapture();
     /** The one board metric: cell size, board top, pointer plane and figure height. Every cell-to-world conversion uses it. */
@@ -635,6 +676,7 @@ private:
     int32 DrawnKind = 0;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    bool bSettingsHold = false;
     /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
     int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */
@@ -797,6 +839,9 @@ private:
     UPROPERTY() TObjectPtr<UPointLightComponent> WaystoneLight;
     /** The finale's set piece (#250): a component of this actor under the scenery root, rebuilt with each board (ExpeditionBattleViewSetPiece.cpp). */
     UPROPERTY() TObjectPtr<UWaystoneSetPiece> SetPieceComponent;
+    /** Whoever else listens to the set piece's moments (tests); the view always sounds them first. */
+    TFunction<void(EWaystoneCue)> SetPieceListener;
+    void HandleSetPieceCue(EWaystoneCue Cue);
     TArray<FSoftObjectPath> SetPieceMeshOverride;
     /** Builds the set piece around the Waystone's pedestal (scenery-local, reference cm): the apse on a Vault-kit board, the legacy corner pedestal otherwise. */
     void BuildSetPiece(const FVector& Pedestal, bool bApse, const FCombatEncounter& Encounter);
@@ -831,6 +876,32 @@ private:
     UPROPERTY() FExpeditionCueBank CueBank;
     /** How many times each cue has sounded: the serial its presentation-only variation hash reads. */
     TArray<uint32> CueSerials;
+    /** The ambience beds (#244) and their crossfade; one looping voice per live layer, keyed by the layer's id. */
+    UPROPERTY() FExpeditionAmbienceBank AmbienceBank;
+    FAudioCrossfade Ambience;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> AmbienceVoices;
+    /** The world kit the current board was drawn with (after the Vault's fallback to the Vigil), which picks its bed. */
+    EDiceRollKit AmbienceKit{};
+    void SelectAmbience();
+    void UpdateAmbience(float DeltaSeconds);
+    /** The score (#245); one looping voice per crossfade layer (by layer id) and the sting's own voice. */
+    UPROPERTY() FExpeditionMusicBank MusicBank;
+    FExpeditionMusicDirector Music;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> MusicVoices;
+    UPROPERTY() TObjectPtr<UAudioComponent> StingVoice;
+    FExpeditionMusicMoment MusicMoment() const;
+    void UpdateMusic(float DeltaSeconds);
+    /** The mix (#246): the settings and their file, one sound mix holding the four class adjusters, the classes, and the ducks. */
+    FExpeditionAudioSettings VolumeSettings;
+    FString SettingsPath;
+    bool bSettingsConfigured = false;
+    float AppliedClassVolumes[ExpeditionBusCount] = {1.0f, 1.0f, 1.0f, 1.0f};
+    UPROPERTY() TObjectPtr<USoundMix> VolumeMix;
+    UPROPERTY() TObjectPtr<USoundClass> MasterClass;
+    UPROPERTY() TObjectPtr<USoundClass> EffectsClass;
+    FAudioDucker AmbienceDucker{ExpeditionMix::AmbienceDuck};
+    FAudioDucker MusicDucker{ExpeditionMix::MusicDuck};
+    void ApplyMix();
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);
