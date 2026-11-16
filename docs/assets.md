@@ -397,6 +397,22 @@ The war table and the route dioramas at the r002 standard, and the Vigil stained
 
 **Import run record (2026-11-11, headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2` under the machine lock, hash snapshot of `Content/` and `Config/` before and after, `DND_THEME_REIMPORT=world-vigil-occluders`):** exit 0, `THEME_FILES_CHANGED 15`: added exactly the four `SM_Overview_*`, their `T_*` and `MI_*` (12 files); changed exactly `SM_World_Vigil_Occluders`, `T_World_Vigil_Occluders` and `DA_DiceRollTheme`; `MI_World_Vigil_Occluders` and every other asset kept its exact bytes; no `Config/` change. The occluders come back with 3 LODs and Nanite off, tagged `vigil-kit-r002-rose`. After the diorama riser and heights were tuned the three diorama packages and the table (branch-only assets) were removed and imported again: exactly those 12 files added, nothing else changed, and a rerun changed nothing (`THEME_FILES_CHANGED 0`). Review of `8b8d161`: the table's props moved and the dioramas were placed beside the route cards, so the four overview packages (branch-only) were removed and imported again (the same 12 files added, nothing else changed), then the diorama self-lit went from 0.35 to 0.6, which changed exactly the three `MI_Overview_Diorama_*` and nothing else; the reruns changed nothing. The only warnings are Interchange's known staging-folder notes.
 
+## Waystone set piece r001 (issue #250, rescoping #104)
+
+The rune seal that guards the artifact in the Vault apse and shatters when the finale is won. It is original work authored by script in Blender 5.2.3 LTS, on the Vault kit's libraries, imported unchanged. The scripts, numbers and README are in `Art/dark-fantasy-sources/r003-setpiece/`. Provenance and licence: project-owned original work by agents (Claude Opus 5.5) for the repository owner. There is no third-party, kit, downloaded or AI-service content, so the import adds no licence.
+
+**Three new assets, nothing replaced** (`theme_plan.SETPIECE_R001`, tag `setpiece-r001`, folder `/Game/DnDDiceRoll/Theme/SetPiece`):
+- `SM_SetPiece_Vault_SealUpper` (120 triangles) and `SM_SetPiece_Vault_SealLower` (108): the two halves of a basalt rune shard, split on one shared jagged crack, with their pivot on the crack;
+- `SM_SetPiece_Vault_Chip` (42).
+
+Each has its `T_*` (256²) and `MI_*` of `M_DiceRollTheme` (roughness 0.85, Glow 0.45 on the real vertex-alpha mask). There are no LODs (under 1k triangles). Records: `Art/setpiece-vault-*/r001`, each `validation.state: pending` until the on-screen pass.
+
+**No theme property.** The table's rows have no `DA_DiceRollTheme` property and the kit has no flag (`import_kit` skips both when they are `None`). The battle view loads the three by path (`WaystoneSetPiece::ThemedMeshPaths`; `/Game/DnDDiceRoll/Theme` is always cooked). If any of them fails to load, the finale ends as it did before the set piece.
+
+**Import run record (2026-11-15, headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2` under the machine lock, SHA-256 of all of `Content/` and `Config/` before and after):**
+- Run 1: exit 0, `THEME_SETPIECE_COMPLETE set piece 3/3 meshes`, `THEME_FILES_CHANGED 9`. It **added exactly** `SetPiece/SM_SetPiece_Vault_{SealUpper,SealLower,Chip}`, `Materials/MI_SetPiece_Vault_*` and `Textures/T_SetPiece_Vault_*`. Nothing was changed or removed: `DA_DiceRollTheme`, every other asset and `Config/` kept their exact bytes. The only warning is Interchange's known staging-folder note.
+- Rerun: exit 0, `THEME_FILES_CHANGED 0`, hash diff empty.
+
 ## Character readability (issue #148)
 
 Material parameters only: **no mesh, texture, master graph or `Art/` change, and nothing is imported** (no new provenance or licence). `Rim` and `Fill` were already instance parameters of `M_DiceRollTheme` (graph revision `dice-theme-5` is unchanged), so the import script only writes new values.

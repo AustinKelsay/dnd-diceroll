@@ -151,6 +151,19 @@ OVERVIEW_R002 = [
 OVERVIEW_METRIC_GATE = tuple(row[0] for row in OVERVIEW_R002)
 OVERVIEW_ARRAY_SIZES = {}
 
+# The Waystone set piece r001 (#250, rescoping #104): the rune seal around the artifact in the Vault apse, which shatters when the finale is won. Three new ids and
+# new packages under /Game/DnDDiceRoll/Theme/SetPiece; nothing replaces an existing package and no theme property is written (theme property None): the battle
+# view loads them by path (WaystoneSetPiece::ThemedMeshPaths) and falls back to today's ending when any is missing. Glow 0.45 is the seal's resting rune level;
+# the game raises it on the instances' own material while the Waystone flares.
+SETPIECE_LOOK = (0.85, 0.0, 0.05, 0.45, 0.0)
+SETPIECE_R001 = [
+    ("setpiece-vault-seal-upper", 1, "SM_SetPiece_Vault_SealUpper", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-seal-lower", 1, "SM_SetPiece_Vault_SealLower", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-chip", 1, "SM_SetPiece_Vault_Chip", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+]
+SETPIECE_METRIC_GATE = ()
+SETPIECE_ARRAY_SIZES = {}
+
 # The Vigil occluders carry the stained-glass rose in a high-resolution atlas region (#149): world-vigil-occluders r002 replaces the r001 export
 # at the same package and texture, with its two LODs. The mesh is tagged ROSE_TAG afterwards, so a run can tell it from the first r002 import.
 ROSE_REPLACEABLE = {"world-vigil-occluders": "r002: the stained-glass rose at about 220 texels/m (was 14)"}
@@ -171,7 +184,8 @@ VIGIL_TAG = "vigil-kit-r002"
 ROOT_TAG = "root-kit-r002"
 VAULT_TAG = "vault-kit-r002"
 OVERVIEW_TAG = "overview-r002"
-KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG)
+SETPIECE_TAG = "setpiece-r001"
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG, SETPIECE_TAG)
 
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.
