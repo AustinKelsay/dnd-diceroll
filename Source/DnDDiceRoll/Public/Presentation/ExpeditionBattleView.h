@@ -370,6 +370,8 @@ public:
     bool PreviewFlyIn(int32 Offer, float Seconds);
     void ClearFlyInPreview();
     bool HoldsFlyIn() const { return bFlyInHeld; }
+    /** The largest camera clip (the theme material's CameraFade, #143) on the scenery drawn now; 0 once the fly-in has switched it off for its move. Test support. */
+    float SceneryCameraFade() const;
     EPlaybackSpeed Speed() const { return PlaybackSpeed; }
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
@@ -809,6 +811,11 @@ private:
     int32 FlyInRoute = INDEX_NONE;
     RouteFlyIn::FPath FlyInMove;
     bool bFlyInHeld = false;
+    /**
+     * The theme material clips scenery nearer the camera than CameraFade x its height (#143), which the move would trip as it nears the diorama (it ate the stage and
+     * holed the table in the burst). The journey's fixed camera never comes that near, so the move switches the clip off on the journey's parts; the journey is gone at the cut.
+     */
+    void StopSceneryCameraClip();
     /** Starts the move into the committed offer's diorama; false (the caller cuts to the board) when no fly-in applies. */
     bool StartFlyIn(int32 Offer);
     /** Once per tick: advances the fly-in at playback speed, builds the board at the cut and ends it after the fade-up. */

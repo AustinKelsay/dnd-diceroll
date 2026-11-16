@@ -3,6 +3,46 @@
 // is already committed when it starts, and nothing here reads back into rules, RNG or the checkpoint.
 #include "Presentation/ExpeditionBattleView.h"
 #include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
+namespace
+{
+const FName CameraFadeParameter(TEXT("CameraFade"));
+}
+
+void AExpeditionBattleView::StopSceneryCameraClip()
+{
+    // Once per move, on the journey's own parts (loose components with a material instance each): no per-frame cost.
+    for (FExpeditionPart& Part : Scenery)
+    {
+        if (!Part.Mesh) { continue; }
+        for (int32 Slot = 0; Slot < Part.Mesh->GetNumMaterials(); ++Slot)
+        {
+            UMaterialInterface* Look = Part.Mesh->GetMaterial(Slot);
+            float Fade = 0.0f;
+            if (!Look || !Look->GetScalarParameterValue(CameraFadeParameter, Fade) || Fade == 0.0f) { continue; }
+            UMaterialInstanceDynamic* Own = Cast<UMaterialInstanceDynamic>(Look);
+            if (!Own) { Own = Part.Mesh->CreateAndSetMaterialInstanceDynamic(Slot); }
+            if (Own) { Own->SetScalarParameterValue(CameraFadeParameter, 0.0f); }
+        }
+    }
+}
+
+float AExpeditionBattleView::SceneryCameraFade() const
+{
+    float Largest = 0.0f;
+    for (const FExpeditionPart& Part : Scenery)
+    {
+        if (!Part.Mesh) { continue; }
+        for (int32 Slot = 0; Slot < Part.Mesh->GetNumMaterials(); ++Slot)
+        {
+            float Fade = 0.0f;
+            if (const UMaterialInterface* Look = Part.Mesh->GetMaterial(Slot); Look && Look->GetScalarParameterValue(CameraFadeParameter, Fade)) { Largest = FMath::Max(Largest, Fade); }
+        }
+    }
+    return Largest;
+}
 
 bool AExpeditionBattleView::RaisedDioramaBounds(int32 Offer, FBox& OutWorld) const
 {
@@ -29,6 +69,7 @@ bool AExpeditionBattleView::StartFlyIn(int32 Offer)
     FlyInSeconds = 0.0f;
     bFlyInHeld = false;
     FlyIn = ERouteFlyInStage::Moving;
+    StopSceneryCameraClip();
     UpdateCamera(0.0f);
     return true;
 }
@@ -71,6 +112,7 @@ bool AExpeditionBattleView::PreviewFlyIn(int32 Offer, float Seconds)
         FlyInMove = RouteFlyIn::PathFor(JourneyCameraTransform(), Diorama, JourneyLayout::CameraFieldOfView);
         FlyInRoute = Offer;
         FlyIn = ERouteFlyInStage::Moving;
+        StopSceneryCameraClip();
     }
     else
     {

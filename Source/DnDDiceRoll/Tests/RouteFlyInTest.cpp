@@ -185,6 +185,7 @@ bool FRouteFlyInStartsTest::RunTest(const FString& Parameters)
         FBox Diorama;
         if (!TestTrue(Name + TEXT(": the offer has a raised diorama"), View->RaisedDioramaBounds(Offer, Diorama))) { return false; }
         const FTransform Journey = View->JourneyCameraTransform();
+        const float ClipBefore = View->SceneryCameraFade();
         if (Way == EWay::Key) { Game->Press(RouteKey(Offer)); }
         else
         {
@@ -212,6 +213,9 @@ bool FRouteFlyInStartsTest::RunTest(const FString& Parameters)
         if (!TestTrue(Name + TEXT(": the move is under way"), View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving)) { return false; }
         TestEqual(Name + TEXT(": into the chosen offer's diorama"), View->FlyInOffer(), Offer);
         TestTrue(Name + TEXT(": the journey is still drawn (the board waits for the cut)"), View->ShowingJourney());
+        // The theme's near-camera clip (#143) would eat the diorama and hole the table as the camera nears (seen in the burst); the move switches it off.
+        TestTrue(Name + TEXT(": the journey's scenery has the near-camera clip on the route screen"), ClipBefore > 0.0f);
+        TestEqual(Name + TEXT(": and the move switches it off"), View->SceneryCameraFade(), 0.0f);
         TestTrue(Name + TEXT(": it starts from the journey camera"), View->FlyInPath().StartEye.Equals(Journey.GetLocation(), 0.01));
         TestTrue(Name + TEXT(": the HUD draws no control while it plays"), Game->Hud->MenuButtons().IsEmpty());
         TestTrue(Name + TEXT(": and the view counts as presenting (enemies, the music and the next screen wait)"), View->IsPresenting());
