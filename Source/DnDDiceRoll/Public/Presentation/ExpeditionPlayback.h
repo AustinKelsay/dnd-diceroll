@@ -127,7 +127,11 @@ public:
     void Reset(const FCombatSnapshot& Snapshot);
     /** Moves units to the snapshot without clearing effects (rewards, camp). */
     void Sync(const FCombatSnapshot& Snapshot);
-    void Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After);
+    /**
+     * Queues the committed results and, once their causes have played, what the committed state means. bEndsRun is the run's own word that this
+     * battle's end is the run's end (the finale won, or any defeat): the closing cue is then Finale or RunEnd instead of Victory or Defeat (#243).
+     */
+    void Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After, bool bEndsRun = false);
     void Tick(float DeltaSeconds);
     /** Completes queued steps silently and converges on the committed snapshot. */
     void Finish();
@@ -194,6 +198,8 @@ private:
     FTurnBanner TurnBanner;
     int32 Focus = INDEX_NONE;
     bool bSkipping = false;
+    /** The round the playback has announced (or the committed state it was last shown). Presentation only: a later round than this is a round start (#243). */
+    int32 ShownRound = 1;
 
     void Add(float Duration, TFunction<void()> Begin, TFunction<void(float)> Update = nullptr);
     void Cue(EExpeditionCue Value) const;
@@ -204,6 +210,8 @@ private:
     void AddHealing(const FCombatResult& Result, const FCombatSnapshot& After);
     void AddImpact(const FCombatResult& Result, FVector2D Direction);
     void AddFalls(const FCombatResult& Result, const FCombatSnapshot& After);
+    /** The cue for the resource a committed result's command spends (#243), from the same facts the action bar shows; unset when it spends none. */
+    static TOptional<EExpeditionCue> SpendCue(const FCombatResult& Result, const FCombatSnapshot& After);
     /** Plays a clip on a figure. Repeating the clip already playing changes nothing. */
     static void SetPose(FUnitDisplay& Unit, EUnitPose Pose);
     /** Moves the pose to the one the committed life implies. A snap also finishes a clip still playing. */

@@ -32,7 +32,8 @@ bool FExpeditionCueEnumTest::RunTest(const FString& Parameters)
     // NumEnums counts the generated _MAX entry.
     TestEqual(TEXT("ExpeditionCueCount matches the reflected enum"), ExpeditionCueCount, static_cast<int32>(Enum->NumEnums() - 1));
     TestEqual(TEXT("Cue names come from the enum"), ExpeditionAudio::CueName(EExpeditionCue::DiceRoll), FString(TEXT("DiceRoll")));
-    TestEqual(TEXT("The last cue is named"), ExpeditionAudio::CueName(EExpeditionCue::Route), FString(TEXT("Route")));
+    TestEqual(TEXT("The last cue is named"), ExpeditionAudio::CueName(EExpeditionCue::RunEnd), FString(TEXT("RunEnd")));
+    TestEqual(TEXT("The first cue added in #243 follows Route, so saved cue sets keep their keys"), static_cast<int32>(EExpeditionCue::SpendKit), static_cast<int32>(EExpeditionCue::Route) + 1);
     return true;
 }
 

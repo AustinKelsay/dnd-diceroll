@@ -110,6 +110,8 @@ float Volume(EExpeditionCue Cue)
     case EExpeditionCue::DiceRoll: case EExpeditionCue::DiceLand: return 0.7f;
     case EExpeditionCue::Victory: case EExpeditionCue::Defeat: return 0.6f;
     case EExpeditionCue::PartyTurn: case EExpeditionCue::EnemyTurn: return 0.35f;
+    case EExpeditionCue::SpendKit: case EExpeditionCue::SpendSlot: case EExpeditionCue::SpendPotion: case EExpeditionCue::RoundStart: return 0.4f;
+    case EExpeditionCue::Finale: case EExpeditionCue::RunEnd: return 0.6f;
     default: return 0.55f;
     }
 }
@@ -276,6 +278,85 @@ TArray<int16> Synthesize(EExpeditionCue Cue, int32 Variation)
         FMix Mix(1.0f, Variation);
         Mix.Tone(0.0f, 0.9f, 196, 196, 0.25f, 0.08f, 0.2f);
         Mix.Tone(0.15f, 0.8f, 294, 294, 0.2f, 0.08f, 0.2f);
+        return Mix.Finish();
+    }
+    // The cues of #243: what the first twenty shared a cue for. Each is short and quiet beside the action it accompanies, except the two endings.
+    case EExpeditionCue::SpendKit:
+    {
+        // A buckle and a strap: a click, then a duller clack.
+        FMix Mix(0.2f, Variation);
+        Mix.Burst(0.0f, 0.02f, 0.5f, 0.9f);
+        Mix.Tone(0.0f, 0.06f, 1100 * Pitch, 900, 0.25f, 0.001f, 0.5f);
+        Mix.Burst(0.06f, 0.05f, 0.35f, 0.35f);
+        Mix.Tone(0.06f, 0.07f, 520 * Pitch, 440, 0.2f, 0.001f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::SpendSlot:
+    {
+        // A glass ping with a thin shimmer over it.
+        FMix Mix(0.5f, Variation);
+        Mix.Tone(0.0f, 0.45f, 1568 * Pitch, 1568 * Pitch, 0.25f, 0.002f);
+        Mix.Tone(0.0f, 0.3f, 2349 * Pitch, 2349 * Pitch, 0.1f, 0.002f);
+        Mix.Tone(0.04f, 0.3f, 3136 * Pitch, 3136 * Pitch, 0.05f, 0.002f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::SpendPotion:
+    {
+        // A cork pops and the liquid glugs twice.
+        FMix Mix(0.55f, Variation);
+        Mix.Tone(0.0f, 0.05f, 700 * Pitch, 1500, 0.4f, 0.001f);
+        Mix.Burst(0.0f, 0.02f, 0.3f, 0.8f);
+        Mix.Tone(0.1f, 0.12f, 300 * Pitch, 520, 0.3f, 0.01f);
+        Mix.Tone(0.24f, 0.14f, 340 * Pitch, 560, 0.3f, 0.01f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::SpendRage:
+    {
+        // A low growl: two detuned square-ish tones under rough noise.
+        FMix Mix(0.8f, Variation);
+        Mix.Tone(0.0f, 0.7f, 90 * Pitch, 70, 0.5f, 0.03f, 0.6f);
+        Mix.Tone(0.0f, 0.7f, 135 * Pitch, 105, 0.25f, 0.03f, 0.6f);
+        Mix.Burst(0.0f, 0.6f, 0.45f, 0.15f, 0.05f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::Protection:
+    {
+        // Steel meets a ward: a clang that rings.
+        FMix Mix(0.5f, Variation);
+        Mix.Burst(0.0f, 0.05f, 0.7f, 0.7f);
+        Mix.Tone(0.0f, 0.4f, 880 * Pitch, 860, 0.3f, 0.001f);
+        Mix.Tone(0.0f, 0.4f, 1320 * Pitch, 1300, 0.15f, 0.001f);
+        Mix.Tone(0.0f, 0.2f, 2100 * Pitch, 2000, 0.08f, 0.001f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::RoundStart:
+    {
+        // A bell with a soft thump under it.
+        FMix Mix(1.2f, Variation);
+        Mix.Burst(0.0f, 0.12f, 0.4f, 0.1f);
+        Mix.Tone(0.0f, 1.0f, 392 * Pitch, 392 * Pitch, 0.3f, 0.002f);
+        Mix.Tone(0.0f, 0.8f, 941 * Pitch, 941 * Pitch, 0.15f, 0.002f);
+        Mix.Tone(0.0f, 0.6f, 1176 * Pitch, 1176 * Pitch, 0.1f, 0.002f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::Finale:
+    {
+        // A rising horn arpeggio and a held chord with a low drum: the Victory cue's bigger sibling.
+        FMix Mix(3.0f, Variation);
+        const int32 Steps[] = {0, 4, 7, 12};
+        for (int32 Note = 0; Note < 4; ++Note) { Mix.Tone(Note * 0.16f, 0.4f, Semitone(262 * Pitch, Steps[Note]), Semitone(262 * Pitch, Steps[Note]), 0.22f, 0.006f, 0.3f); }
+        for (const int32 Step : {0, 4, 7, 12}) { Mix.Tone(0.8f, 2.0f, Semitone(262 * Pitch, Step), Semitone(262 * Pitch, Step), 0.18f, 0.01f, 0.3f); }
+        Mix.Tone(0.8f, 1.6f, 65, 62, 0.3f, 0.005f);
+        Mix.Burst(0.8f, 0.2f, 0.5f, 0.12f);
+        return Mix.Finish();
+    }
+    case EExpeditionCue::RunEnd:
+    {
+        // A low bell tolled twice over a drone.
+        FMix Mix(2.4f, Variation);
+        for (const float Start : {0.0f, 1.0f}) { Mix.Tone(Start, 1.3f, 131 * Pitch, 130, 0.3f, 0.003f); Mix.Tone(Start, 0.9f, 315 * Pitch, 315, 0.12f, 0.003f); }
+        Mix.Tone(0.0f, 2.2f, 65, 62, 0.15f, 0.2f, 0.2f);
+        Mix.Burst(0.0f, 0.15f, 0.3f, 0.08f);
         return Mix.Finish();
     }
     default:

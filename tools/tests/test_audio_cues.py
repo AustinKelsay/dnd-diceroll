@@ -96,6 +96,20 @@ class AudioCueRecipeTests(unittest.TestCase):
             for index in range(len(plan["variations"])):
                 self.assertTrue((folder / audio_cues.output_name(cue, index)).is_file(), (cue, index))
 
+    def test_new_cues_of_243_are_recipes_with_the_expected_shape(self):
+        for cue, count in {"SpendKit": 2, "SpendSlot": 2, "SpendPotion": 2, "SpendRage": 2, "Protection": 3, "RoundStart": 2, "Finale": 1, "RunEnd": 1}.items():
+            self.assertEqual(len(self.recipe["cues"][cue]["variations"]), count, cue)
+        # The two endings are longer than the other cues but stay under the four seconds the shipped-cues test allows.
+        for cue in ("Finale", "RunEnd"):
+            self.assertLess(self.recipe["cues"][cue]["variations"][0]["length"], 4.0)
+
+    def test_a_cue_may_override_its_categorys_limiter_but_not_with_nonsense(self):
+        # PartyTurn, EnemyTurn and Camp keep the limiter their #242 files were rendered with.
+        self.assertEqual({cue for cue, plan in self.recipe["cues"].items() if "limit_db" in plan}, {"PartyTurn", "EnemyTurn", "Camp"})
+        broken = copy.deepcopy(self.recipe)
+        broken["cues"]["Hit"]["limit_db"] = -3
+        self.assertIn("limit_db must be a number", "\n".join(audio_cues.validate_recipe(broken, declared_cues())))
+
     def test_validation_reports_problems(self):
         broken = copy.deepcopy(self.recipe)
         del broken["cues"]["Hit"]
