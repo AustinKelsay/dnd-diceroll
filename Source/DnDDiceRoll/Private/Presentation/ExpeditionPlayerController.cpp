@@ -12,6 +12,7 @@
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
+#include "Widgets/SViewport.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
@@ -23,6 +24,30 @@
 #if EXPEDITION_LINUX_FOCUS_POLL
 #include "Linux/LinuxApplication.h"
 #endif
+
+namespace
+{
+/**
+ * The game's input mode: what FInputModeGameOnly sets up (the viewport has the keyboard, the game gets every input, held keys are flushed when the viewport loses
+ * focus), but with the pointer visible and uncaptured from launch (#171 item 6). FInputModeGameOnly also takes a hidden high-precision mouse capture, which on
+ * Linux is SDL's relative mouse mode: the cursor is hidden, the viewport reads the pointer as (0,0), nothing is hovered, and the first press only releases it.
+ */
+struct FExpeditionInputMode final : FInputModeDataBase
+{
+protected:
+    virtual void ApplyInputMode(FReply& SlateOperations, UGameViewportClient& GameViewportClient) const override
+    {
+        const TSharedPtr<SViewport> Widget = GameViewportClient.GetGameViewportWidget();
+        if (!Widget.IsValid()) { return; }
+        SlateOperations.SetUserFocus(Widget.ToSharedRef());
+        SlateOperations.LockMouseToWidget(Widget.ToSharedRef());
+        SlateOperations.ReleaseMouseCapture();
+        GameViewportClient.SetIgnoreInput(false);
+        GameViewportClient.SetHideCursorDuringCapture(false);
+        GameViewportClient.SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
+    }
+};
+}
 
 void AExpeditionPlayerController::BeginPlay()
 {
@@ -52,9 +77,7 @@ void AExpeditionPlayerController::BeginPlay()
         Settings->bAltEnterTogglesFullscreen = false;
     }
     bShowMouseCursor = true;
-    FInputModeGameOnly Mode;
-    Mode.SetConsumeCaptureMouseDown(false);
-    SetInputMode(Mode);
+    SetInputMode(FExpeditionInputMode());
     if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport())
     {
         Viewport->SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
