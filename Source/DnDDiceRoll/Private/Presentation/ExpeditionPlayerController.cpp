@@ -159,7 +159,7 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
     // (Polled every tick, armed or not, so the keyboard-focus latch sees the window have focus before it can lose it.)
     const bool bFocusLost = !WindowHasFocus();
-    if (bPressArmed && bFocusLost) { NotifyWindowFocusLost(); }
+    if ((bPressArmed || DioramaPress != INDEX_NONE) && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
     if (!IsValid(BattleView)) { return; }
     const FCombatBattle& Rules = BattleView->Rules();
@@ -208,6 +208,8 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
     else { bPointerSeen = false; }
     // A press that the camera or the pointer has moved under is no click, even if they come back before the release (#220).
     if (bPressArmed && !bPressVoided && !PressHolds()) { bPressVoided = true; }
+    // A diorama press (#248) is spent the moment the pointer leaves its diorama or the screen around it changes, even if both come back before the release.
+    if (DioramaPress != INDEX_NONE && !bDioramaVoided && (!PointerOnDiorama(DioramaPress) || !DioramaLive(DioramaPress) || DioramaContext() != DioramaStamp)) { bDioramaVoided = true; }
     if (bDragging && bHasMouse)
     {
         BattleView->Orbit((MouseX - DragX) * 0.35f);
@@ -703,10 +705,24 @@ void AExpeditionPlayerController::Click()
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
     const bool bHasMouse = PointerPosition(MouseX, MouseY);
+    DioramaPress = INDEX_NONE; bDioramaVoided = false;
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
-        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button)) { HandleButton(Button); return; }
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button))
+        {
+            // An offered diorama (#248) is a press-and-release target, not a HUD button: its button only marks where it is. The Menu owns every click while it is open,
+            // even before the next frame takes the diorama's button away, so a press there closes it like any click beside it and chooses nothing.
+            const FString Name = Button.ToString();
+            if (Name.StartsWith(TEXT("Diorama")))
+            {
+                if (ShowingMenu()) { CloseMenu(); return; }
+                PressDiorama(FCString::Atoi(*Name.RightChop(7)));
+                return;
+            }
+            HandleButton(Button);
+            return;
+        }
         // A click beside the open Menu closes it and goes no further.
         if (ShowingMenu()) { CloseMenu(); return; }
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
@@ -798,11 +814,66 @@ bool AExpeditionPlayerController::WindowHasFocus() const
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
 {
     if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
+    if (DioramaPress != INDEX_NONE && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bDioramaVoided = true; }
     return Super::InputKey(Params);
+}
+
+bool AExpeditionPlayerController::DioramaLive(int32 Offer) const
+{
+    if (!IsValid(BattleView) || Offer < 0 || Offer > 1 || ShowingMenu() || OverlayOpen() || !WindowHasFocus() || !AllowsGameplayInput()) { return false; }
+    if (!BattleView->ShowingJourney() || !BattleView->HasRun() || BattleView->IsPresenting() || BattleView->Progress().Phase != EExpeditionPhase::Route) { return false; }
+    if (!BattleView->Progress().Offers.IsValidIndex(Offer)) { return false; }
+    return BattleView->JourneyShown().Raised.ContainsByPredicate([Offer](const JourneyLayout::FRaisedLook& Raised) { return Raised.Offer == Offer; });
+}
+
+uint32 AExpeditionPlayerController::DioramaContext() const
+{
+    uint32 Stamp = PressContext();
+    if (IsValid(BattleView))
+    {
+        Stamp = HashCombine(Stamp, GetTypeHash(BattleView->PresentationRevision()));
+        if (BattleView->HasRun())
+        {
+            Stamp = HashCombine(Stamp, GetTypeHash(BattleView->Progress().EncountersCompleted));
+            for (const FExpeditionRoute& Route : BattleView->Progress().Offers) { Stamp = HashCombine(Stamp, GetTypeHash(Route.Id)); }
+        }
+    }
+    return Stamp;
+}
+
+bool AExpeditionPlayerController::PointerOnDiorama(int32 Offer) const
+{
+    float MouseX = 0, MouseY = 0;
+    const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
+    FName Button;
+    return Hud && PointerPosition(MouseX, MouseY) && Hud->ButtonAt(FVector2D(MouseX, MouseY), Button) && Button == FName(*FString::Printf(TEXT("Diorama%d"), Offer));
+}
+
+void AExpeditionPlayerController::PressDiorama(int32 Offer)
+{
+    DioramaPress = INDEX_NONE; bDioramaVoided = false;
+    const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD());
+    // Only the offer the last frame showed hovered under the pointer: a press that reaches another diorama before a frame has previewed it chooses nothing.
+    if (!Hud || Hud->PreviewedDiorama() != Offer || !PointerOnDiorama(Offer) || !DioramaLive(Offer)) { return; }
+    DioramaPress = Offer;
+    DioramaStamp = DioramaContext();
 }
 
 void AExpeditionPlayerController::ClickReleased()
 {
+    if (DioramaPress != INDEX_NONE)
+    {
+        // The release over the same diorama, with every live condition still holding, commits that offer's route: the card's own command.
+        const int32 Offer = DioramaPress;
+        const bool bSpent = bDioramaVoided;
+        DioramaPress = INDEX_NONE; bDioramaVoided = false;
+        bPressArmed = false;
+        if (!bSpent && PointerOnDiorama(Offer) && DioramaLive(Offer) && DioramaContext() == DioramaStamp)
+        {
+            if (Offer == 0) { FirstRoute(); } else { SecondRoute(); }
+        }
+        return;
+    }
     const bool bWasArmed = bPressArmed;
     const bool bHeld = PressHolds();
     bPressArmed = false;
@@ -881,9 +952,9 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Help")) { ToggleHelp(); }
     else if (Name == TEXT("Skip")) { Skip(); }
     else if (Name == TEXT("New")) { NewRun(); }
-    // A click on an offered world's diorama on the journey map (#248) is the same route command as its card.
-    else if (Name == TEXT("Route0") || Name == TEXT("Diorama0")) { FirstRoute(); }
-    else if (Name == TEXT("Route1") || Name == TEXT("Diorama1")) { SecondRoute(); }
+    // A diorama on the journey map (#248) is never dispatched here: Click arms it and ClickReleased commits it (the same route command as these cards).
+    else if (Name == TEXT("Route0")) { FirstRoute(); }
+    else if (Name == TEXT("Route1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
     else if (Name == TEXT("CardGear")) { SelectRewardCard(ERewardCard::Gear); }
     else if (Name == TEXT("CardReserve")) { SelectRewardCard(ERewardCard::Reserve); }

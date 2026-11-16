@@ -562,13 +562,54 @@ bool FJourneyCameraTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+namespace JourneyMapTest
+{
+/** A route screen (the mid-run fork) resumed through the real controller and HUD, drawn once. */
+TUniquePtr<ExpeditionInputHarness::FHarness> RouteScreen(FAutomationTestBase& Test, const FExpeditionSaveData& Data)
+{
+    TUniquePtr<ExpeditionInputHarness::FHarness> Game = MakeUnique<ExpeditionInputHarness::FHarness>(Test, TEXT("JourneyClick"), &Data);
+    if (!Game->IsReady()) { return nullptr; }
+    Game->Frame();
+    Game->Press(EKeys::O);
+    Game->Settle();
+    if (!Game->View->ShowingJourney()) { return nullptr; }
+    return Game;
+}
+
+/** The viewport pixel at the middle of offer Offer's raised diorama, and one on the map in the gap between them. */
+FVector2D DioramaPixel(const ExpeditionInputHarness::FHarness& Game, int32 Offer)
+{
+    const double Scale = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
+    ExpeditionLayout::Rect Box{};
+    Game.View->RaisedScreenBox(Offer, Game.Target.Size.X / Scale, Game.Target.Size.Y / Scale, Box);
+    return FVector2D((Box.Left + Box.Right) * 0.5, (Box.Top + Box.Bottom) * 0.5) * Scale;
+}
+FVector2D OffDioramas(const ExpeditionInputHarness::FHarness& Game)
+{
+    const double Scale = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
+    return FVector2D(Game.Target.Size.X / Scale * 0.5, 300.0) * Scale;   // the map in the gap between the two raised dioramas
+}
+
+void JourneyPoint(ExpeditionInputHarness::FHarness& Game, FVector2D Pixel) { Game.Player->SimulatePointer(Pixel, FIntPoint(-1, -1)); }
+void JourneyDown(ExpeditionInputHarness::FHarness& Game) { Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.0f)); }
+void JourneyUp(ExpeditionInputHarness::FHarness& Game) { Game.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Released, 0.0f)); }
+
+/** Still choosing at the same fork, with the same checkpoint bytes: nothing was committed. */
+bool Unchosen(FAutomationTestBase& Test, const ExpeditionInputHarness::FHarness& Game, const TArray<uint8>& Before, const FString& Where)
+{
+    const bool bRoute = Test.TestTrue(Where + TEXT(": still at the route screen"), Game.View->HasRun() && Game.View->Progress().Phase == EExpeditionPhase::Route);
+    return Test.TestTrue(Where + TEXT(": the checkpoint is unchanged"), Game.CheckpointBytes() == Before) && bRoute;
+}
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJourneyDioramaClickTest, "Project.Expedition.Presentation.JourneyDioramaClickIsTheCardCommand",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FJourneyDioramaClickTest::RunTest(const FString& Parameters)
 {
     using namespace JourneyMapTest;
-    // Through the real HUD and controller: a click at the middle of an offered diorama hits that offer's diorama button and sets out exactly as a click on its card does:
-    // the same run state and the same checkpoint bytes. The diorama is never a Tab stop (the card already is), and with the Menu open it takes no click.
+    // A diorama is a press-and-release target (the board's rule, #220/#221/#236): through the real pointer, controller and HUD, a press arms only the offer the last frame
+    // drew hovered, and the release over the same diorama sets out exactly as a click on its card does (the same run and checkpoint bytes). Dragging off, a press on a
+    // diorama no frame has previewed, the Menu opened before the next frame, focus lost or another key while held: nothing is chosen. The diorama is never a Tab stop.
     const TArray<FFixture> All = Fixtures();
     const FFixture* Mid = All.FindByPredicate([](const FFixture& F) { return F.Name == TEXT("mid"); });
     if (!TestNotNull(TEXT("The mid-run fixture"), Mid)) { return false; }
@@ -578,45 +619,95 @@ bool FJourneyDioramaClickTest::RunTest(const FString& Parameters)
     {
         FExpeditionSnapshot After[2];
         TArray<uint8> Bytes[2];
-        for (int32 Way = 0; Way < 2; ++Way)   // 0: the card, 1: the diorama
+        for (int32 Way = 0; Way < 2; ++Way)   // 0: the card, 1: a real press and release on the diorama
         {
-            ExpeditionInputHarness::FHarness Game(*this, TEXT("JourneyClick"), &Data);
-            if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
-            Game.Frame();
-            Game.Press(EKeys::O);
-            Game.Settle();
-            if (!TestTrue(TEXT("The route screen shows the journey map"), Game.View->ShowingJourney())) { return false; }
+            TUniquePtr<ExpeditionInputHarness::FHarness> Game = RouteScreen(*this, Data);
+            if (!TestTrue(TEXT("The route screen shows the journey map"), Game.IsValid())) { return false; }
             const FName Card(*FString::Printf(TEXT("Route%d"), Offer)), Diorama(*FString::Printf(TEXT("Diorama%d"), Offer));
-            const TArray<FName> Tabs = Game.Hud->MenuButtons();
-            TestTrue(TEXT("The card is a Tab stop"), Tabs.Contains(Card));
-            TestFalse(TEXT("The diorama is not a Tab stop"), Tabs.Contains(Diorama));
-            ExpeditionLayout::Rect Box{};
-            if (!TestTrue(TEXT("The view reports the raised diorama's box"), Game.View->RaisedScreenBox(Offer, Game.Target.Size.X / ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y),
-                Game.Target.Size.Y / ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y), Box))) { return false; }
-            const double S = ExpeditionLayout::ViewScale(Game.Target.Size.X, Game.Target.Size.Y);
-            const FVector2D Centre((Box.Left + Box.Right) * 0.5 * S, (Box.Top + Box.Bottom) * 0.5 * S);
-            FName Hit;
-            if (!TestTrue(TEXT("A click at the diorama's middle hits its button"), Game.Hud->ButtonAt(Centre, Hit) && Hit == Diorama)) { return false; }
-            if (Way == 1 && Offer == 0)
+            TestTrue(TEXT("The card is a Tab stop"), Game->Hud->MenuButtons().Contains(Card));
+            TestFalse(TEXT("The diorama is not a Tab stop"), Game->Hud->MenuButtons().Contains(Diorama));
+            if (Way == 0) { Game->Player->HandleButton(Card); Game->Frame(); }
+            else
             {
-                // With the Menu open, the overlay owns every click: the diorama is not offered.
-                Game.Press(EKeys::I);   // the Menu key
-                FName Under;
-                TestTrue(TEXT("The Menu is open"), Game.Player->ShowingMenu());
-                TestFalse(TEXT("With the Menu open the diorama takes no click"), Game.Hud->ButtonAt(Centre, Under) && Under == Diorama);
-                Game.Press(EKeys::I);
-                TestFalse(TEXT("The Menu is closed again"), Game.Player->ShowingMenu());
-                Game.Hud->ButtonAt(Centre, Hit);
+                JourneyPoint(*Game, DioramaPixel(*Game, Offer));
+                Game->Frame();
+                TestEqual(TEXT("The hovered diorama is previewed"), Game->Hud->PreviewedDiorama(), Offer);
+                const TArray<uint8> Before = Game->CheckpointBytes();
+                JourneyDown(*Game);
+                Game->Frame();
+                TestEqual(TEXT("The press arms that offer"), Game->Player->ArmedDiorama(), Offer);
+                Unchosen(*this, *Game, Before, TEXT("Pressed, not released"));
+                JourneyUp(*Game);
+                Game->Frame();
             }
-            Game.Player->HandleButton(Way == 0 ? Card : Hit);
-            Game.Frame();
-            TestTrue(TEXT("Setting out starts the fight"), Game.View->InCombat());
-            After[Way] = Game.Live();
-            Bytes[Way] = Game.CheckpointBytes();
+            TestTrue(TEXT("Setting out starts the fight"), Game->View->InCombat());
+            After[Way] = Game->Live();
+            Bytes[Way] = Game->CheckpointBytes();
         }
-        TestTrue(FString::Printf(TEXT("Offer %d: the diorama click leaves the same run as the card (route, fight, both random streams)"), Offer), ExpeditionTestSupport::SameRun(After[0], After[1]));
+        TestTrue(FString::Printf(TEXT("Offer %d: the diorama's release leaves the same run as the card (route, fight, both random streams)"), Offer), ExpeditionTestSupport::SameRun(After[0], After[1]));
         TestTrue(FString::Printf(TEXT("Offer %d: the same checkpoint bytes"), Offer), Bytes[0] == Bytes[1] && !Bytes[0].IsEmpty());
         TestEqual(FString::Printf(TEXT("Offer %d: the route taken is that offer"), Offer), After[1].Progress.History.Last().Route.Id, Mid->Run.Progress().Offers[Offer].Id);
+    }
+
+    // Cancelled presses: each on a fresh route screen with diorama 0 previewed under the pointer.
+    struct FCase { const TCHAR* Name; TFunction<void(ExpeditionInputHarness::FHarness&)> Between; bool bPressAfter; };
+    const TArray<FCase> Cases = {
+        {TEXT("dragged off and back"), [](ExpeditionInputHarness::FHarness& G) { JourneyPoint(G, OffDioramas(G)); G.Frame(); JourneyPoint(G, DioramaPixel(G, 0)); G.Frame(); }, false},
+        {TEXT("the window lost focus while held"), [](ExpeditionInputHarness::FHarness& G) { G.Player->NotifyWindowFocusLost(); G.Frame(); }, false},
+        {TEXT("another key pressed while held"), [](ExpeditionInputHarness::FHarness& G) { G.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Q, IE_Pressed, 1.0f)); G.Frame(); G.Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::Q, IE_Released, 0.0f)); }, false},
+        {TEXT("the Menu opened while held"), [](ExpeditionInputHarness::FHarness& G) { G.Player->HandleButton(TEXT("MenuToggle")); G.Frame(); }, false},
+    };
+    for (const FCase& Case : Cases)
+    {
+        TUniquePtr<ExpeditionInputHarness::FHarness> Game = RouteScreen(*this, Data);
+        if (!TestTrue(FString(Case.Name) + TEXT(": the route screen"), Game.IsValid())) { continue; }
+        JourneyPoint(*Game, DioramaPixel(*Game, 0));
+        Game->Frame();
+        const TArray<uint8> Before = Game->CheckpointBytes();
+        JourneyDown(*Game);
+        Game->Frame();
+        TestEqual(FString(Case.Name) + TEXT(": the press armed"), Game->Player->ArmedDiorama(), 0);
+        Case.Between(*Game);
+        TestEqual(FString(Case.Name) + TEXT(": the press is spent"), Game->Player->ArmedDiorama(), int32(INDEX_NONE));
+        JourneyUp(*Game);
+        Game->Frame();
+        Unchosen(*this, *Game, Before, Case.Name);
+    }
+    // A press on the other diorama before any frame has previewed it: the pointer moves and the button goes down within one controller tick, with no HUD draw between.
+    if (TUniquePtr<ExpeditionInputHarness::FHarness> Game = RouteScreen(*this, Data))
+    {
+        JourneyPoint(*Game, DioramaPixel(*Game, 0));
+        Game->Frame();
+        const TArray<uint8> Before = Game->CheckpointBytes();
+        JourneyPoint(*Game, DioramaPixel(*Game, 1));
+        JourneyDown(*Game);
+        Game->Player->PlayerTick(0.05f);
+        TestEqual(TEXT("Unpreviewed: the press arms nothing"), Game->Player->ArmedDiorama(), int32(INDEX_NONE));
+        JourneyUp(*Game);
+        Game->Player->PlayerTick(0.05f);
+        Game->Frame();
+        Unchosen(*this, *Game, Before, TEXT("Unpreviewed diorama"));
+    }
+    // The Menu opened before the next HUD draw: the diorama's button is still registered from the last frame, but the Menu owns the press, which closes it and chooses nothing.
+    if (TUniquePtr<ExpeditionInputHarness::FHarness> Game = RouteScreen(*this, Data))
+    {
+        JourneyPoint(*Game, DioramaPixel(*Game, 0));
+        Game->Frame();
+        const TArray<uint8> Before = Game->CheckpointBytes();
+        Game->Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::I, IE_Pressed, 1.0f));
+        Game->Player->PlayerTick(0.05f);
+        Game->Player->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::I, IE_Released, 0.0f));
+        TestTrue(TEXT("Stale HUD: the Menu is open"), Game->Player->ShowingMenu());
+        FName Stale;
+        TestTrue(TEXT("Stale HUD: the last frame's diorama button is still under the pointer"), Game->Hud->ButtonAt(DioramaPixel(*Game, 0), Stale) && Stale == FName(TEXT("Diorama0")));
+        JourneyDown(*Game);
+        Game->Player->PlayerTick(0.05f);
+        TestEqual(TEXT("Stale HUD: the press arms nothing"), Game->Player->ArmedDiorama(), int32(INDEX_NONE));
+        TestFalse(TEXT("Stale HUD: the press closed the Menu"), Game->Player->ShowingMenu());
+        JourneyUp(*Game);
+        Game->Player->PlayerTick(0.05f);
+        Game->Frame();
+        Unchosen(*this, *Game, Before, TEXT("Menu opened before the next frame"));
     }
     return !HasAnyErrors();
 }

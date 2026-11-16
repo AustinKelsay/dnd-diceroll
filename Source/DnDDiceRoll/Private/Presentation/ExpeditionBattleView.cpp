@@ -707,6 +707,8 @@ void AExpeditionBattleView::BeginPlay()
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoPalettes"))) { bPalettes = false; }
     // -ExpeditionNoAccents keeps the subclass palettes but not the party-slot accents (the baseline the accent region is measured against).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoAccents"))) { bAccents = false; }
+    // -ExpeditionNoJourney draws today's overview instead of the journey map (#248): the like-for-like baseline for its cost on one package.
+    if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoJourney"))) { bJourneyAllowed = false; }
     // -ExpeditionLooseParts draws every themed part as its own component, as before #144 (for A/B profiling on one build).
     if (FParse::Param(FCommandLine::Get(), TEXT("ExpeditionLooseParts"))) { bLooseParts = true; }
     // -ExpeditionPrimitives keeps the engine-primitive presentation for comparison.
@@ -3066,7 +3068,7 @@ void AExpeditionBattleView::LoadOverviewSet()
     OverviewTable = Set.Table; OverviewRoot = Set.Root; OverviewVigil = Set.Vigil; OverviewVault = Set.Vault;
     bOverviewR002 = Set.bR002 && Set.Table;
     // The journey map (#248) raises the r002 dioramas, so it needs that set; without either, the route screen is today's overview.
-    JourneySet = Theme && bOverviewR002 ? Theme->LoadJourney() : FDiceRollJourney();
+    JourneySet = Theme && bOverviewR002 && bJourneyAllowed ? Theme->LoadJourney() : FDiceRollJourney();
     bJourneySet = JourneySet.IsComplete();
     if (!bJourneySet) { JourneySet = FDiceRollJourney(); }
     JourneyHold.Reset();
@@ -3236,9 +3238,30 @@ bool AExpeditionBattleView::RaisedDioramaTransform(int32 Offer, FTransform& OutW
 bool AExpeditionBattleView::RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const
 {
     if (!ShowingJourney() || !JourneyLook.Raised.IsValidIndex(RaisedIndex) || !JourneySet.Plinth) { return false; }
-    const JourneyLayout::FRaisedLook& Raised = JourneyLook.Raised[RaisedIndex];
-    const UStaticMesh* Diorama = Raised.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
-    return Diorama && JourneyLayout::RaisedScreenBox(Diorama->GetBoundingBox(), JourneySet.Plinth->GetBoundingBox(), Raised, W, H, Out);
+    // The camera is fixed, so the boxes change only with the build and the viewport: projected once per presentation revision and design size.
+    if (RaisedBoxRevision != Revision || RaisedBoxW != W || RaisedBoxH != H)
+    {
+        RaisedBoxRevision = Revision; RaisedBoxW = W; RaisedBoxH = H;
+        RaisedBoxes.Reset(); RaisedBoxValid.Reset();
+        for (const JourneyLayout::FRaisedLook& Raised : JourneyLook.Raised)
+        {
+            const UStaticMesh* Diorama = Raised.Kind == OverviewLayout::EDiorama::Vault ? OverviewVault.Get() : Raised.Kind == OverviewLayout::EDiorama::Vigil ? OverviewVigil.Get() : OverviewRoot.Get();
+            ExpeditionLayout::Rect Box{};
+            RaisedBoxValid.Add(Diorama && JourneyLayout::RaisedScreenBox(Diorama->GetBoundingBox(), JourneySet.Plinth->GetBoundingBox(), Raised, W, H, Box));
+            RaisedBoxes.Add(Box);
+        }
+    }
+    if (!RaisedBoxValid.IsValidIndex(RaisedIndex) || !RaisedBoxValid[RaisedIndex]) { return false; }
+    Out = RaisedBoxes[RaisedIndex];
+    return true;
+}
+
+void AExpeditionBattleView::SetJourneyAllowed(bool bAllowed)
+{
+    if (bJourneyAllowed == bAllowed) { return; }
+    bJourneyAllowed = bAllowed;
+    LoadOverviewSet();
+    RebuildBoard();
 }
 
 FTransform AExpeditionBattleView::JourneyCameraTransform() const

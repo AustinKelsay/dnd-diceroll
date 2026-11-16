@@ -666,6 +666,8 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("play-%d"), static_cast<int32>(End)), TEXT("current.json"));
         AExpeditionBattleView* View = MakeView(World, Path, EView::Rigged);
         if (!TestNotNull(TEXT("Battle view"), View)) { continue; }
+        // The rigs that played the last action must converge at rest: with the journey off, a defeat keeps this board instead of rebuilding into the journey map (#248).
+        View->SetJourneyAllowed(false);
         View->NewRun();
         View->ChooseRoute(0);
         if (End == EEnd::Fast) { View->CycleSpeed(); }
@@ -695,8 +697,6 @@ bool FRiggedFiguresTest::RunTest(const FString& Parameters)
         // Let one-shot clips play out (the longest, Recover, is 2.2 s), or skip them, then compare with the committed state.
         if (End == EEnd::SkipMid) { View->SkipPresentation(); View->Tick(0.001f); }
         else { for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); } for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); } }
-        // A defeat opens on the journey map (#248); the figures are checked on the battle board, where the ending's "Back to the battle" returns.
-        if (View->ShowingJourney()) { View->ToggleEndingJourney(); View->Tick(0.016f); }
         TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         if (End == EEnd::SkipMid) { TestTrue(*(Label + TEXT(": the skip was exercised")), Skips > 0); }
@@ -3313,6 +3313,8 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         const FString Path = FPaths::Combine(Directory, FString::Printf(TEXT("play-%d"), static_cast<int32>(End)), TEXT("current.json"));
         AExpeditionBattleView* View = MakeView(nullptr, Path, EView::Rigged);
         if (!TestNotNull(*(Label + TEXT(": battle view")), View)) { continue; }
+        // The rigs that played the last action must converge at rest: with the journey off, a defeat keeps this board instead of rebuilding into the journey map (#248).
+        View->SetJourneyAllowed(false);
         View->NewRun();
         View->ChooseRoute(1);
         if (End == EEnd::Fast) { View->CycleSpeed(); }
@@ -3341,8 +3343,6 @@ bool FFoeBatchFiguresTest::RunTest(const FString& Parameters)
         }
         if (End == EEnd::SkipMid) { View->SkipPresentation(); View->Tick(0.001f); }
         else { for (int32 Frame = 0; Frame < 4000 && View->IsPresenting(); ++Frame) { View->Tick(0.05f); } for (int32 Frame = 0; Frame < 100; ++Frame) { View->Tick(0.05f); } }
-        // A defeat opens on the journey map (#248); the figures are checked on the battle board, where the ending's "Back to the battle" returns.
-        if (View->ShowingJourney()) { View->ToggleEndingJourney(); View->Tick(0.016f); }
         TestTrue(*(Label + TEXT(": figures were rigged")), ExpectFiguresConverged(*this, *View, Label + TEXT(" at rest")) > 0);
         if (End == EEnd::Normal || End == EEnd::Fast) { TestTrue(*(Label + TEXT(": clips played while results showed")), Moving > 0); }
         View->Save();

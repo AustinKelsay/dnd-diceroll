@@ -297,6 +297,8 @@ public:
      */
     bool CanToggleEndingJourney() const;
     void ToggleEndingJourney();
+    /** -ExpeditionNoJourney, and tests that need today's overview or the battle board at the ending: the journey set is not loaded while this is off. Presentation only. */
+    void SetJourneyAllowed(bool bAllowed);
     /** What the journey map shows, as last built (empty off the journey): the pure look and each part placed, by role, mesh and stage. */
     const JourneyLayout::FJourneyLook& JourneyShown() const { return JourneyLook; }
     struct FJourneyPart
@@ -635,6 +637,12 @@ private:
     UPROPERTY() TArray<TObjectPtr<UStaticMesh>> JourneyHold;
     bool bJourneySet = false;
     bool bJourneyShown = false;
+    bool bJourneyAllowed = true;
+    /** RaisedScreenBox's projections, kept per presentation revision and design size. */
+    mutable TArray<ExpeditionLayout::Rect> RaisedBoxes;
+    mutable TArray<bool> RaisedBoxValid;
+    mutable int32 RaisedBoxRevision = -1;
+    mutable double RaisedBoxW = 0.0, RaisedBoxH = 0.0;
     enum class EEndingView : uint8 { Default, Journey, Board };
     EEndingView EndingView = EEndingView::Default;
     /** Whether a finished run shows the journey map now: the player's choice, else the default (defeat: the journey; victory: the board). */
