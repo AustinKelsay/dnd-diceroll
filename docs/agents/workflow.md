@@ -66,7 +66,7 @@ Run `python3 -m unittest discover -s tools/tests -v`. Stage only reviewed in-sco
 | Presentation, input, assets | Saved/reloaded assets as applicable, real interaction, and inspected rendered output. |
 | Engine pin, build/package configuration | Affected upgrade/package validation from development, with maintainer agreement. |
 
-If you are not on PlebDev Ultra (for example Windows or a Mac), do not offer `doctor` or engine runs as proof. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
+If you are not on PlebDev Ultra, do not offer `doctor` or engine runs as merge-gate proof. Windows on Amaterasu has a recorded advisory ladder ([validation](../validation.md)); other Windows machines and the Mac are not validated. Do the source and docs work, state your host in the PR, and the maintainer verifies the Unreal work on Ultra before merge.
 
 Use the explicit `Project.Expedition.` filter for game tests. The helper's default `Project.Starter.` and starter smoke only prove their fixture. Headless package startup alone does not prove rendering or input. Report tested commit/source state, host/engine, exact commands, counts, limitations, and accessible selected reports/captures. Bulk reports stay ignored in `.local/`, `Saved/`, or `Builds/`; local absolute paths alone are not reviewer evidence.
 
@@ -102,4 +102,4 @@ The reference is [mattpocock/skills at 2ab958093e83e0ec752e6c1c5932da465bf23e0c]
 
 Invoke the applicable Matt Pocock skills directly. This document supplies the repository's Unreal, collaboration, evidence, and staging-PR rules; no personal launcher mediates the pipeline. Agents without installed skills can follow this contract directly. Historical run records describe earlier execution choices and do not select the workflow for new or resumed work.
 
-No personal filesystem path (except Ultra's documented shared-lock convention), T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification counts only on the validated host (Ultra, Linux); Windows support is tracked in #51.
+No personal filesystem path (except Ultra's documented shared-lock convention), T3, specific model, paid review service, or skill installer is required to execute this document. Unreal verification for merges counts only on the validated host (Ultra, Linux). Windows on Amaterasu is recorded as an advisory host in `tools/versions.json` and [validation](../validation.md); it does not replace Ultra.
