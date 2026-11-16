@@ -410,4 +410,30 @@ bool FBalanceRevision10PinnedTest::RunTest(const FString& Parameters)
     }
     return !HasAnyErrors();
 }
+
+// #241: revisions 7-9 keep their rules for life too. Seeded gear-only runs (the only card they offer) hash to digests captured on #240's head
+// 50f5dfc2, before revision 11's balance pass existed: rows, final snapshot and RNG byte for byte.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBalanceOlderRevisionsPinnedTest, "Project.Balance.Revisions7To9RunsArePinned",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBalanceOlderRevisionsPinnedTest::RunTest(const FString& Parameters)
+{
+    using namespace BalanceHarness;
+    struct FPinned { const TCHAR* Party; int32 Seed; int32 Route; int32 Revision; const TCHAR* Digest; };
+    const FPinned Pins[] = {
+        {TEXT("familiar"), 20261114, 5, 9, TEXT("2d5800079ecd5ac92c8042698e41de3b")},
+        {TEXT("melee"), 20261130, 21, 9, TEXT("3f994faf5c87dec26951a9202267b1eb")},
+        {TEXT("rot2-03"), 20261119, 10, 8, TEXT("978443a5d4a949cb8c93595db9dc7ef0")},
+        {TEXT("dup-wizard"), 20261140, 31, 8, TEXT("16e3029c2dac28c1a985296009e1ec49")},
+        {TEXT("familiar"), 20261109, 0, 7, TEXT("784190ecc07a417eecd2f544ad1afd50")},
+        {TEXT("rot5-04"), 20261116, 7, 7, TEXT("bedccba15f7858244888a2b53190b9f5")},
+    };
+    for (const FPinned& Pin : Pins)
+    {
+        const FString Digest = BalanceHarnessTest::RunDigest(Pin.Party, Pin.Seed, Pin.Route, Pin.Revision, ERewardStrategy::Gear);
+        const FString Where = FString::Printf(TEXT("%s seed %d route %d revision %d"), Pin.Party, Pin.Seed, Pin.Route, Pin.Revision);
+        AddInfo(Where + TEXT(" digest ") + Digest);
+        TestEqual(Where + TEXT(": plays as before"), Digest, FString(Pin.Digest));
+    }
+    return !HasAnyErrors();
+}
 #endif

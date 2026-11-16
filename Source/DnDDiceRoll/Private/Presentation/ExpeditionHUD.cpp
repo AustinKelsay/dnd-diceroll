@@ -978,7 +978,7 @@ void AExpeditionHUD::RebuildDock(const FCombatBattle& Rules, const FCombatantSta
             Entry.Effect = FCombatBattle::DescribeAction(Command);
             Entry.bAttackMove = true;
         }
-        else if (Command == ECombatCommandType::Rescue) { Entry.ButtonId = TEXT("ModeRescue"); Entry.Key = TEXT("R"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
+        else if (Command == ECombatCommandType::Rescue) { Entry.ButtonId = TEXT("ModeRescue"); Entry.Key = TEXT("R"); Entry.Accent = Safe; Entry.Effect = Rules.Describe(Command); }
         else if (Command == ECombatCommandType::Potion) { Entry.ButtonId = TEXT("ModePotion"); Entry.Label = TEXT("Potion"); Entry.Key = TEXT("P"); Entry.Accent = Safe; Entry.Effect = FCombatBattle::DescribeAction(Command); }
         else if (Command != ECombatCommandType::EndTurn)
         {
@@ -1471,7 +1471,7 @@ void AExpeditionHUD::DrawReward()
         const TCHAR* Key = Card == ERewardCard::Reserve ? TEXT("R") : Card == ERewardCard::Honed ? TEXT("U") : TEXT("G");
         Text(ProgressionText::CardName(Card), CX + 10, CY + 8, bAvailable ? Gold : Muted, 0.92f);
         Text(Key, CX + CardWidth - 10, CY + 10, Muted, 0.6f, EAlign::Right);
-        Text(ProgressionText::CardRule(Card), CX + 10, CY + 32, CardInk, 0.6f, EAlign::Left, CardWidth - 20);
+        Text(ProgressionText::CardRule(Card, Progression.bCardsRefill), CX + 10, CY + 32, CardInk, 0.6f, EAlign::Left, CardWidth - 20);
         TArray<FString> Lines = Facts ? ProgressionText::CardLines(*Facts) : TArray<FString>();
         const FString Note = Facts ? ProgressionText::NoteText(Facts->Note) : FString();
         float LineY = CY + 54;
