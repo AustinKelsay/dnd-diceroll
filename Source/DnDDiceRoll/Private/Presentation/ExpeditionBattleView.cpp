@@ -3231,17 +3231,23 @@ void AExpeditionBattleView::BuildJourney()
         AddJourneyPart(TEXT("Diorama"), Diorama, Raised.Offer, FVector(Raised.Spot.X, Raised.Spot.Y, MapTop + PlinthHeight * Raised.Scale), Turn, FVector(Raised.Scale), FLinearColor::White);
     }
     const FVector Lift(0.0f, 0.0f, OverviewHeight);
-    auto Light = [&](const FVector& At, const FLinearColor& Color, float Strength, float Radius)
+    // Only the two candles flicker (their intensity is set every frame, UpdateEffects); the lamps over the chart and the plinths and the keep's light are steady,
+    // so they cost nothing per frame on the game thread.
+    auto Light = [&](const FVector& At, const FLinearColor& Color, float Strength, float Radius, bool bFlicker)
     {
-        Flames.Add(MakeLight(nullptr, Lift + At, Color, Strength, Radius));
-        FlameStrength.SetNum(Flames.Num());
-        FlameStrength.Last() = Strength;
+        UPointLightComponent* Made = MakeLight(nullptr, Lift + At, Color, Strength, Radius);
+        if (bFlicker)
+        {
+            Flames.Add(Made);
+            FlameStrength.SetNum(Flames.Num());
+            FlameStrength.Last() = Strength;
+        }
         OverviewDrawnLights.Add(At);
     };
-    for (const FVector& Candle : Candles()) { Light(Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 420.0f); }
-    Light(MapLamp(), FLinearColor(1.0f, 0.8f, 0.58f), 60.0f, 520.0f);
-    for (const FRaisedLook& Raised : JourneyLook.Raised) { Light(LampOver(Raised), FLinearColor(1.0f, 0.86f, 0.66f), 30.0f, 190.0f); }
-    Light(GoalPoint() + FVector(0.0f, -8.0f, 26.0f), FLinearColor(0.45f, 0.9f, 1.0f), JourneyLook.bGoalReached ? 6.0f : 3.0f, 80.0f);
+    for (const FVector& Candle : Candles()) { Light(Candle, FLinearColor(1.0f, 0.62f, 0.32f), 16.0f, 420.0f, true); }
+    Light(MapLamp(), FLinearColor(1.0f, 0.8f, 0.58f), 60.0f * 0.8f, 520.0f, false);
+    for (const FRaisedLook& Raised : JourneyLook.Raised) { Light(LampOver(Raised), FLinearColor(1.0f, 0.86f, 0.66f), 30.0f * 0.8f, 190.0f, false); }
+    Light(GoalPoint() + FVector(0.0f, -8.0f, 26.0f), FLinearColor(0.45f, 0.9f, 1.0f), (JourneyLook.bGoalReached ? 6.0f : 3.0f) * 0.8f, 80.0f, false);
 }
 
 bool AExpeditionBattleView::RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const
