@@ -6,6 +6,8 @@
 #include "Presentation/ExpeditionPalette.h"
 #include "Presentation/CameraRig.h"
 #include "Presentation/BoardOverlay.h"
+#include "Presentation/AudioCrossfade.h"
+#include "Presentation/ExpeditionAmbience.h"
 #include "Presentation/ExpeditionCueSounds.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
@@ -308,6 +310,12 @@ public:
     FString LocationName() const;
     void SetHighlights(const FBoardHighlights& Value) { Highlights = Value; }
     void PlayCue(EExpeditionCue Cue);
+    /** The ambience bed the board is heading to (#244): silence on the start screen, the war table on the overview, else the drawn world's bed. */
+    EExpeditionAmbience AmbienceBed() const { return static_cast<EExpeditionAmbience>(Ambience.Current()); }
+    /** The ambience crossfade: every live layer and its fade, whether or not an audio device plays it. */
+    const FAudioCrossfade& AmbienceFade() const { return Ambience; }
+    /** Ambience voices actually playing (zero without an audio device, or for a bed with no recording). */
+    int32 AmbienceVoiceCount() const { return AmbienceVoices.Num(); }
     /** How many times a cue has been requested since the view began, heard or not (the serial its variation hash reads, #243). Test and trace support. */
     uint32 CueRequests(EExpeditionCue Cue) const { return CueSerials.IsValidIndex(static_cast<int32>(Cue)) ? CueSerials[static_cast<int32>(Cue)] : 0; }
 
@@ -723,6 +731,14 @@ private:
     UPROPERTY() FExpeditionCueBank CueBank;
     /** How many times each cue has sounded: the serial its presentation-only variation hash reads. */
     TArray<uint32> CueSerials;
+    /** The ambience beds (#244) and their crossfade; one looping voice per live layer, keyed by the layer's id. */
+    UPROPERTY() FExpeditionAmbienceBank AmbienceBank;
+    FAudioCrossfade Ambience;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> AmbienceVoices;
+    /** The world kit the current board was drawn with (after the Vault's fallback to the Vigil), which picks its bed. */
+    EDiceRollKit AmbienceKit{};
+    void SelectAmbience();
+    void UpdateAmbience(float DeltaSeconds);
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);

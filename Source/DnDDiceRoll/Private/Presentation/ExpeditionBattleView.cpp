@@ -737,6 +737,14 @@ void AExpeditionBattleView::BeginPlay()
             Synthesized.IsEmpty() ? TEXT("none") : *FString::Join(Synthesized, TEXT(", ")));
     }
     else { UE_LOG(LogExpeditionAudio, Log, TEXT("-ExpeditionSynthAudio: every cue plays its synthesis")); }
+    // Ambience beds (#244): a bed with no recording is silence, never synthesis.
+    AmbienceBank.Load(LoadObject<UExpeditionAmbienceSounds>(nullptr, ExpeditionAmbience::SoundsPath, nullptr, LOAD_Quiet | LOAD_NoWarn));
+    {
+        TArray<FString> Recorded;
+        for (EExpeditionAmbience Bed : AmbienceBank.RecordedBeds()) { Recorded.Add(ExpeditionAmbience::Name(Bed)); }
+        UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience beds recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionAmbienceCount - 1,
+            Recorded.IsEmpty() ? TEXT("none; every bed is silent") : *FString::Join(Recorded, TEXT(", ")));
+    }
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
@@ -797,6 +805,8 @@ void AExpeditionBattleView::RebuildBoard()
         // Vault, otherwise the road (Dangerous: the drowned Vigil, Guarded: the forest).
         BoardTheme = Identity.World == EExpeditionWorld::Vault ? EBoardTheme::Vault : Identity.World == EExpeditionWorld::Vigil ? EBoardTheme::Ruins : EBoardTheme::Meadow;
     }
+    // The themed build replaces this with the kit it actually drew (the Vault falls back to the Vigil when incomplete).
+    AmbienceKit = KitKindFor(BoardTheme);
     bOverview = WantsOverview();
     SceneryRoot->SetRelativeScale3D(FVector(SceneScale()));
     ApplyTheme();
@@ -821,6 +831,7 @@ void AExpeditionBattleView::RebuildBoard()
     LastFocusId = INDEX_NONE;
     bCameraPlaced = false;
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateCamera(0.0f); UpdateOccluder(); FlushGroups();
+    SelectAmbience();
 }
 
 float AExpeditionBattleView::FramedDistance() const
@@ -2571,6 +2582,47 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
     }
 }
 
+void AExpeditionBattleView::SelectAmbience()
+{
+    const EExpeditionAmbience Bed = ExpeditionAmbience::BedFor(HasRun(), bOverview, AmbienceKit);
+    const EExpeditionAmbience Previous = AmbienceBed();
+    if (!Ambience.Select(static_cast<uint8>(Bed), ExpeditionAmbience::CrossfadeSeconds)) { return; }
+    const USoundWave* Wave = AmbienceBank.Wave(Bed);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience %s -> %s: %s"), *ExpeditionAmbience::Name(Previous), *ExpeditionAmbience::Name(Bed),
+        Bed == EExpeditionAmbience::None ? TEXT("silence") : Wave ? *Wave->GetPathName() : TEXT("no recording, silence"));
+}
+
+void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
+{
+    Ambience.Tick(DeltaSeconds);
+    // A voice whose layer has faded out (or was dropped to make room) stops; the director never keeps more than two layers.
+    for (auto It = AmbienceVoices.CreateIterator(); It; ++It)
+    {
+        const uint32 Id = It.Key();
+        if (Ambience.Layers().ContainsByPredicate([Id](const FAudioLayer& Layer) { return Layer.Id == Id; })) { continue; }
+        if (IsValid(It.Value())) { It.Value()->Stop(); It.Value()->DestroyComponent(); }
+        It.RemoveCurrent();
+    }
+    UWorld* World = GetWorld();
+    if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
+    for (const FAudioLayer& Layer : Ambience.Layers())
+    {
+        const EExpeditionAmbience Bed = static_cast<EExpeditionAmbience>(Layer.Key);
+        USoundWave* Wave = AmbienceBank.Wave(Bed);
+        if (!Wave) { continue; }
+        const float Volume = AmbienceBank.Volume(Bed) * Layer.Amplitude();
+        TObjectPtr<UAudioComponent>& Voice = AmbienceVoices.FindOrAdd(Layer.Id);
+        if (!IsValid(Voice))
+        {
+            Voice = UGameplayStatics::CreateSound2D(this, Wave, Volume, 1.0f, 0.0f, nullptr, false, false);
+            if (!Voice) { AmbienceVoices.Remove(Layer.Id); continue; }
+            Voice->Play();
+            UE_LOG(LogExpeditionAudio, Log, TEXT("Ambience voice %u plays %s"), Layer.Id, *Wave->GetPathName());
+        }
+        Voice->SetVolumeMultiplier(Volume);
+    }
+}
+
 void AExpeditionBattleView::ExpireVoices()
 {
     for (int32 Index = Voices.Num() - 1; Index >= 0; --Index)
@@ -2593,6 +2645,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
+    UpdateAmbience(DeltaSeconds);
     if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
@@ -2682,6 +2735,7 @@ bool AExpeditionBattleView::BuildThemedScenery(const FCombatEncounter& Encounter
     // Atomic: every Vault piece loads before anything is placed, or the whole finale draws the Vigil kit (a dangling or unloadable piece never leaves a half kit).
     if (Kit.Kind == EDiceRollKit::Vault && !(World && VaultPiecesLoad(Kit))) { Kit = Theme->KitFor(EDiceRollKit::Vigil); World = ThemeMesh(*Kit.World); }
     if (!World) { return false; }
+    AmbienceKit = Kit.Kind;
     const bool bForest = Kit.Kind == EDiceRollKit::Root;
     // No per-cell tiles (#142): the world's own flat ground is the playing surface, so it sits at board level and the
     // contextual grid draws on it. The theme's tile meshes are no longer placed (primitive boards keep their cube tiles).
