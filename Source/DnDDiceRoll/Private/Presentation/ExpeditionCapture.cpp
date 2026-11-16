@@ -75,6 +75,7 @@ const TCHAR* ExpeditionCapture::ModeName(ECaptureMode Mode)
     case ECaptureMode::Roll: return TEXT("roll");
     case ECaptureMode::Pose: return TEXT("pose");
     case ECaptureMode::SetPiece: return TEXT("setpiece");
+    case ECaptureMode::FlyIn: return TEXT("flyin");
     case ECaptureMode::Start: return TEXT("start");
     }
     return TEXT("start");
@@ -197,7 +198,23 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > 10.0) { Error = Shot.Name + TEXT(" needs \"time\" in seconds from 0 to 10"); return false; }
             Shot.Time = static_cast<float>(Seconds);
         }
-        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose, setpiece)"), *Shot.Name, *Mode); return false; }
+        else if (Mode == TEXT("flyin"))
+        {
+            // The route fly-in held at a moment (#249): a burst over a route fixture (the move) and its fight (the fade-up) shows its motion.
+            Shot.Mode = ECaptureMode::FlyIn;
+            double Seconds = 0.0;
+            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > RouteFlyIn::DurationSeconds)
+            { Error = FString::Printf(TEXT("%s needs \"time\" in seconds from 0 to %.2f"), *Shot.Name, RouteFlyIn::DurationSeconds); return false; }
+            Shot.Time = static_cast<float>(Seconds);
+            if ((*Entry)->HasField(TEXT("offer")))
+            {
+                double Offer = -1.0;
+                if ((*Entry)->TryGetField(TEXT("offer"))->Type != EJson::Number || !Number(*Entry, TEXT("offer"), Offer) || (Offer != 0.0 && Offer != 1.0))
+                { Error = Shot.Name + TEXT(" needs an \"offer\" of 0 or 1"); return false; }
+                Shot.Offer = static_cast<int32>(Offer);
+            }
+        }
+        else { Error = FString::Printf(TEXT("%s has unknown mode \"%s\" (battle, targeting, overview, start, tooltip, hint, impact, roll, pose, setpiece, flyin)"), *Shot.Name, *Mode); return false; }
         if (Shot.Mode == ECaptureMode::Pose)
         {
             // A hero of a class held in one clip at one time (#150): the clip name as in EUnitPose ("Melee"), any case.
@@ -466,8 +483,17 @@ bool FExpeditionCaptureDirector::Apply(const FCaptureShot& Shot, FString& Skip)
     Board->ClearRollPreview();
     Board->ClearPosePreview();
     Board->ClearSetPiecePreview();
+    Board->ClearFlyInPreview();
     switch (Shot.Mode)
     {
+    case ECaptureMode::FlyIn:
+        // The fly-in at a moment: the camera and the fade follow from that time alone (the move before the cut, the fight's opening framing after it).
+        if (!Board->PreviewFlyIn(Shot.Offer, Shot.Time))
+        {
+            Skip = Shot.Time < RouteFlyIn::CutSeconds ? TEXT("the move needs a journey route screen with that offer's diorama") : TEXT("the arrival needs a fight");
+            return false;
+        }
+        return true;
     case ECaptureMode::SetPiece:
         // The set piece at a moment of its timeline: the flare, the seal, the artifact and the camera all follow from that time alone.
         if (!Board->PreviewSetPiece(Shot.Time)) { Skip = TEXT("the checkpoint is not a won finale with the set piece"); return false; }
@@ -868,6 +894,16 @@ void FExpeditionCaptureDirector::WriteManifest() const
                 }
                 Shot->SetObjectField(TEXT("shooter"), Shooter);
             }
+        }
+        if (Result.Shot.Mode == ECaptureMode::FlyIn && Result.Status != TEXT("skipped"))
+        {
+            // The fly-in moment the shot held (#249): its time, the offer flown into and the black over the screen.
+            TSharedRef<FJsonObject> Held = MakeShared<FJsonObject>();
+            Held->SetNumberField(TEXT("time"), Result.Shot.Time);
+            Held->SetNumberField(TEXT("offer"), Result.Shot.Offer);
+            Held->SetNumberField(TEXT("fade"), RouteFlyIn::Fade(Result.Shot.Time));
+            Held->SetBoolField(TEXT("arrival"), Result.Shot.Time >= RouteFlyIn::CutSeconds);
+            Shot->SetObjectField(TEXT("flyin"), Held);
         }
         if (Result.Shot.Mode == ECaptureMode::Pose && Result.Status != TEXT("skipped"))
         {

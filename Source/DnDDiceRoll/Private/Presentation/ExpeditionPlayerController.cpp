@@ -34,6 +34,8 @@ void AExpeditionPlayerController::BeginPlay()
     Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
     // Autoplay plays real commands, so it never runs together with a capture (which only looks).
     if (!Capture.IsValid()) { Autoplay = FExpeditionAutoplayDirector::TryCreate(this, BattleView); }
+    // A player watches this view, so a committed route plays its fly-in (#249). A capture run only looks and holds moments itself.
+    BattleView->SetRouteFlyIn(!Capture.IsValid());
     if (Capture.IsValid())
     {
         bCapturing = true;
@@ -798,6 +800,25 @@ bool AExpeditionPlayerController::WindowHasFocus() const
 bool AExpeditionPlayerController::InputKey(const FInputKeyEventArgs& Params)
 {
     if (bPressArmed && Params.Event == IE_Pressed && Params.Key != EKeys::LeftMouseButton) { bPressVoided = true; }
+    // The route fly-in (#249): any key or button pressed while it plays skips it and does nothing else. The press never reaches the bindings, and neither do its repeats
+    // or its release, so a skip click cannot arm or commit a board click (#221, #236) and a skip key cannot act in the fight it reveals. The wheel only waits.
+    if (IsValid(BattleView) && BattleView->FlyingIn() && !BattleView->HoldsFlyIn())
+    {
+        const bool bWheel = Params.Key == EKeys::MouseScrollUp || Params.Key == EKeys::MouseScrollDown || Params.Key == EKeys::MouseWheelAxis;
+        if (Params.Event == IE_Pressed && !Params.Key.IsAxis1D() && !Params.Key.IsAxis2D() && !Params.Key.IsAxis3D())
+        {
+            if (!bWheel) { FlyInSwallowed.Add(Params.Key); BattleView->FinishFlyIn(); }
+            return true;
+        }
+        if (bWheel) { return true; }
+    }
+    if (FlyInSwallowed.Contains(Params.Key))
+    {
+        if (Params.Event == IE_Released) { FlyInSwallowed.Remove(Params.Key); return true; }
+        if (Params.Event == IE_Repeat) { return true; }
+        // A new press of a key whose release was never seen (focus loss): it is an ordinary press again.
+        if (Params.Event == IE_Pressed) { FlyInSwallowed.Remove(Params.Key); }
+    }
     return Super::InputKey(Params);
 }
 
@@ -829,6 +850,9 @@ void AExpeditionPlayerController::ClickReleased()
 void AExpeditionPlayerController::HandleButton(FName Id)
 {
     if (!IsValid(BattleView)) { return; }
+    // No control is drawn while the route fly-in plays (#249) and a real press only skips it (InputKey), so a button reaching here then is pressed by code (autoplay,
+    // tests): it finishes the move first and then acts, as an accepted command finishes playback.
+    if (BattleView->FlyingIn() && !BattleView->HoldsFlyIn()) { BattleView->FinishFlyIn(); }
     const FString Name = Id.ToString();
     // The confirmation owns every click and key: only its two choices act.
     if (bConfirmReturn)

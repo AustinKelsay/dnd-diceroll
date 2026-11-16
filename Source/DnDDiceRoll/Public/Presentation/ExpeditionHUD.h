@@ -254,6 +254,8 @@ private:
     void DrawBanner();
     void DrawTitle();
     void DrawRoutes();
+    /** The route fly-in (#249): its fade over the whole screen and, while the camera moves, the skip line. */
+    void DrawFlyIn();
     /** The journey map's HUD (#248): the stage and goal chips, each raised diorama's plaque and click target, the compact banner and the route cards in the bottom band. */
     void DrawJourneyMarks();
     void DrawJourneyRoutes();

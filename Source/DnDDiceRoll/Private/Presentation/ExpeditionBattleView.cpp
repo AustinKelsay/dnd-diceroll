@@ -779,6 +779,8 @@ void AExpeditionBattleView::ClearPresentation()
 void AExpeditionBattleView::RebuildBoard()
 {
     ++Revision;
+    // Any rebuild (the fly-in's own handover, a Resume, Return to menu, a new run) leaves no fly-in behind: a resumed fight never replays it (#249).
+    FlyIn = ERouteFlyInStage::None; bFlyInHeld = false; FlyInSeconds = 0.0f;
     ClearPresentation();
     // Themed boards draw their static parts, rings and effects from shared instanced groups (#144); the primitive look never does.
     bInstancedParts = Theme && !bLooseParts;
@@ -2023,6 +2025,15 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
 {
     const FCombatEncounter& Encounter = Rules().Snapshot().Encounter;
     Camera->FieldOfView = bOverview ? OverviewFieldOfView : ExpeditionCameraRig::FieldOfView;
+    // The route fly-in's move (#249) owns the camera until its cut: a pure function of its time, from the journey's pose into the chosen diorama.
+    if (FlyIn == ERouteFlyInStage::Moving)
+    {
+        const FTransform Pose = RouteFlyIn::At(FlyInMove, FlyInSeconds);
+        Camera->FieldOfView = JourneyLayout::CameraFieldOfView;
+        Camera->SetWorldLocationAndRotation(Pose.GetLocation(), Pose.GetRotation());
+        bCameraPlaced = true;
+        return;
+    }
     // The journey map (#248) is one fixed, composed view: the HUD's bands are laid out against exactly this camera (JourneyLayout).
     if (ShowingJourney())
     {
@@ -2336,19 +2347,21 @@ void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { Show.Finish(); SettleSetPiece(); }
+void AExpeditionBattleView::SkipPresentation() { FinishFlyIn(); Show.Finish(); SettleSetPiece(); }
 
 void AExpeditionBattleView::CycleSpeed()
 {
     PlaybackSpeed = PlaybackSpeed == EPlaybackSpeed::Normal ? EPlaybackSpeed::Fast : PlaybackSpeed == EPlaybackSpeed::Fast ? EPlaybackSpeed::Instant : EPlaybackSpeed::Normal;
     Show.Speed = PlaybackSpeed == EPlaybackSpeed::Fast ? 2.2f : 1.0f;
-    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); SettleSetPiece(); }
+    if (PlaybackSpeed == EPlaybackSpeed::Instant) { FinishFlyIn(); Show.Finish(); SettleSetPiece(); }
     PlayCue(EExpeditionCue::Click);
 }
 
 bool AExpeditionBattleView::Execute(const FCombatCommand& Command)
 {
     if (bShowRecords) { return false; }
+    // A command while the route fly-in plays (autoplay, tests: a player's keys and clicks only skip it) finishes the move first, so it acts on the board it names.
+    if (!bFlyInHeld) { FinishFlyIn(); }
     const FCombatantState* Unit = Rules().Find(Command.ActorId);
     if (!Unit || Unit->Side != ECombatSide::Party) { return false; }
     FCombatResult Result = Session.Submit(Command);
@@ -2378,13 +2391,21 @@ void AExpeditionBattleView::ChooseRoute(int32 Index)
     if (Session.ChooseRoute(Id, Error))
     {
         Record({true, TEXT("Route committed. Injuries, uses and permanent deaths carry; no automatic rest.")});
-        EnemyDelay = 0; RebuildBoard();
-        const FCombatantState* First = Rules().Find(Rules().ActiveId());
-        Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
-            First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
+        EnemyDelay = 0;
         PlayCue(EExpeditionCue::Route);
+        // The route is committed (run, random streams and checkpoint): the fly-in (#249) only presents it, and builds the board at its cut.
+        if (StartFlyIn(Index)) { return; }
+        RebuildBoard();
+        ShowRouteBanner();
     }
     else { Record({false, Error}); PlayCue(EExpeditionCue::Click); }
+}
+
+void AExpeditionBattleView::ShowRouteBanner()
+{
+    const FCombatantState* First = Rules().Find(Rules().ActiveId());
+    Show.ShowBanner(LocationName().ToUpper(), FString::Printf(TEXT("Encounter %d of %d  ·  %s acts first"), Progress().History.Num(), FExpeditionRun::EncounterCount,
+        First ? *First->Name : TEXT("")), BoardTheme == EBoardTheme::Vault ? FLinearColor(0.5f, 0.85f, 1.0f) : FLinearColor(1.0f, 0.82f, 0.45f), 2.4f);
 }
 
 void AExpeditionBattleView::ClaimReward(int32 RecipientId, ERewardCard Card)
@@ -2609,6 +2630,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     Clock += DeltaSeconds;
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
     UpdateSetPiece(DeltaSeconds);
+    UpdateFlyIn(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
     if (EndingView != EEndingView::Default && (!HasRun() || (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat))) { EndingView = EEndingView::Default; }

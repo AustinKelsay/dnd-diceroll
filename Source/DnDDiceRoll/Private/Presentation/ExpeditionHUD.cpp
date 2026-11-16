@@ -298,6 +298,8 @@ void AExpeditionHUD::DrawHUD()
     // A capture run ignores the physical pointer so hover never changes a shot (PointerPosition says so).
     Mouse = PointerPreview.X >= 0 ? PointerPreview / S : Player->PointerPosition(MouseX, MouseY) ? FVector2D(MouseX, MouseY) / S : FVector2D(-1, -1);
 
+    // The route fly-in (#249) owns the screen: no panel or control is drawn (so none takes a click), only its fade and how to skip it.
+    if (View->FlyingIn()) { DrawFlyIn(); Player->UpdateMenuFocus(); return; }
     // The tabletop overview has no board: unit bars and labels belong to battles only.
     if (View->HasRun() && !View->ShowingOverview()) { DrawWorldOverlays(); }
     DrawTopBar();
@@ -1411,6 +1413,19 @@ void AExpeditionHUD::DrawTitle()
     }
 }
 
+
+void AExpeditionHUD::DrawFlyIn()
+{
+    const float Fade = View->FlyInFade();
+    if (Fade > 0.0f) { Rect(FLinearColor(0.0f, 0.0f, 0.0f, Fade), 0.0f, 0.0f, W, H); }
+    // Text, not only motion, says the move is skippable (game-ui-ux); it goes with the dip to dark.
+    if (View->FlyInStage() == AExpeditionBattleView::ERouteFlyInStage::Moving)
+    {
+        const float Alpha = 1.0f - Fade;
+        Rect(FLinearColor(0.0f, 0.0f, 0.0f, 0.45f * Alpha), W * 0.5f - 170.0f, H - 44.0f, 340.0f, 26.0f);
+        Text(TEXT("Click or press any key to skip"), W * 0.5f, H - 41.0f, WithAlpha(Parchment, 0.9f * Alpha), 0.72f, EAlign::Center, 330.0f);
+    }
+}
 
 void AExpeditionHUD::DrawRoutes()
 {

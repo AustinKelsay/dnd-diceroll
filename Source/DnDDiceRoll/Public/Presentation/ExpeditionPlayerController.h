@@ -176,6 +176,8 @@ private:
     /** Pointer motion beyond this many viewport pixels hands the board back from the keyboard cursor to the pointer. */
     static constexpr float PointerMoveSlop = 3.0f;
     bool bCapturing = false;
+    /** Keys whose press skipped the route fly-in (#249): their repeats and release are swallowed too. */
+    TSet<FKey> FlyInSwallowed;
     bool bSimulatedPointer = false;
     bool bSimulatedCamera = false;
     FIntPoint SimulatedViewport = FIntPoint::ZeroValue;
