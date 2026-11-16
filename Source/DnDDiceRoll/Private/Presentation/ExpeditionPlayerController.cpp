@@ -880,8 +880,9 @@ void AExpeditionPlayerController::HandleButton(FName Id)
     else if (Name == TEXT("Help")) { ToggleHelp(); }
     else if (Name == TEXT("Skip")) { Skip(); }
     else if (Name == TEXT("New")) { NewRun(); }
-    else if (Name == TEXT("Route0")) { FirstRoute(); }
-    else if (Name == TEXT("Route1")) { SecondRoute(); }
+    // A click on an offered world's diorama on the journey map (#248) is the same route command as its card.
+    else if (Name == TEXT("Route0") || Name == TEXT("Diorama0")) { FirstRoute(); }
+    else if (Name == TEXT("Route1") || Name == TEXT("Diorama1")) { SecondRoute(); }
     else if (Name == TEXT("Claim")) { Loot(); }
     else if (Name == TEXT("CardGear")) { SelectRewardCard(ERewardCard::Gear); }
     else if (Name == TEXT("CardReserve")) { SelectRewardCard(ERewardCard::Reserve); }

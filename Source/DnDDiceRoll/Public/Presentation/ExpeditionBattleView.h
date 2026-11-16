@@ -9,6 +9,8 @@
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
+#include "Presentation/DiceRollTheme.h"
+#include "Presentation/JourneyLayout.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "ExpeditionBattleView.generated.h"
@@ -282,6 +284,31 @@ public:
     const TArray<FVector>& OverviewLights() const { return OverviewDrawnLights; }
     /** True when the overview was drawn from the r002 set (war table and Root, Vigil and Vault dioramas). */
     bool OverviewIsR002() const { return bOverview && bOverviewR002; }
+    /** True while the overview is the war-table journey map (#248): a run's route screen or its ending, with the journey set and the r002 overview loaded. */
+    bool ShowingJourney() const { return bOverview && bJourneyShown; }
+    /** True when the theme's journey set loaded whole (the route screen then draws the journey map instead of today's overview). */
+    bool HasJourneySet() const { return bJourneySet; }
+    /** What the journey map shows, as last built (empty off the journey): the pure look and each part placed, by role, mesh and stage. */
+    const JourneyLayout::FJourneyLook& JourneyShown() const { return JourneyLook; }
+    struct FJourneyPart
+    {
+        FName Role;
+        FName Mesh;
+        /** The stage the part marks (tokens, emblems, pennants, lost markers, fog, the ink into it); the offer for a plinth or diorama; INDEX_NONE otherwise. */
+        int32 Index = INDEX_NONE;
+        /** In table-top cm (the overview's table frame). */
+        FTransform Local;
+        FLinearColor Color = FLinearColor::White;
+    };
+    const TArray<FJourneyPart>& JourneyParts() const { return JourneyDrawn; }
+    /**
+     * The seam for the fly-in (#249): the world transform of the diorama raised for offer 0 or 1 (false when that offer has none, or off the journey), and the journey camera's
+     * world pose, which the fly-in starts from before it hands over to the battle camera's opening framing.
+     */
+    bool RaisedDioramaTransform(int32 Offer, FTransform& OutWorld) const;
+    /** The design-unit box (W x H design units) of the RaisedIndex-th raised diorama on its plinth (JourneyLayout::RaisedScreenBox), for the HUD's click target and plaque. */
+    bool RaisedScreenBox(int32 RaisedIndex, double W, double H, ExpeditionLayout::Rect& Out) const;
+    FTransform JourneyCameraTransform() const;
     const TArray<FExpeditionEnding>& Records() const { return EndingRecords; }
     static constexpr int32 RecordsPerPage = 4;
     int32 RecordOffset() const { return RecordsOffset; }
@@ -575,8 +602,18 @@ private:
     /** What the overview scene drew last: the table and each diorama by mesh name, and the candle lights. Read by tests; presentation only. */
     TArray<FName> OverviewDrawnMeshes;
     TArray<FVector> OverviewDrawnLights;
-    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above. */
+    /** The journey set (#248), loaded with the overview: every piece or none, and only beside the r002 overview. Held here so the raw pointers stay alive. */
+    FDiceRollJourney JourneySet;
+    UPROPERTY() TArray<TObjectPtr<UStaticMesh>> JourneyHold;
+    bool bJourneySet = false;
+    bool bJourneyShown = false;
+    JourneyLayout::FJourneyLook JourneyLook;
+    TArray<FJourneyPart> JourneyDrawn;
+    /** Loads the overview set from the theme (the r002 set or the r001 one, never a mix) into the members above, and the journey set beside the r002 one. */
     void LoadOverviewSet();
+    /** The war-table journey map (#248): the journey table and map, the five stages from FJourneyQuery, the Vault, and the offered (or the ending's) dioramas raised on plinths. */
+    void BuildJourney();
+    void AddJourneyPart(FName Role, UStaticMesh* Mesh, int32 Index, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color, bool bOwnMaterial = false);
     UPROPERTY() TArray<FExpeditionSway> Swaying;
     /** Parts are instanced (themed look, default on); off draws them loose for the before/after comparison. */
     bool bLooseParts = false;

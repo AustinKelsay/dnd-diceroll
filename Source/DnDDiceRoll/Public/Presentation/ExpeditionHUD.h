@@ -246,6 +246,12 @@ private:
     void DrawBanner();
     void DrawTitle();
     void DrawRoutes();
+    /** The journey map's HUD (#248): the stage and goal chips, each raised diorama's plaque and click target, the compact banner and the route cards in the bottom band. */
+    void DrawJourneyMarks();
+    void DrawJourneyRoutes();
+    void DrawJourneyEnding();
+    /** A raised diorama takes a click only while no overlay or Menu owns the screen. */
+    bool AllowsRouteClick() const;
     void DrawReward();
     void DrawCamp();
     void DrawEnding();

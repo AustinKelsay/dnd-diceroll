@@ -54,6 +54,26 @@ const TSoftObjectPtr<UStaticMesh> SphereMesh{FSoftObjectPath(TEXT("/Engine/Basic
 const TSoftObjectPtr<UStaticMesh> Dangling{FSoftObjectPath(TEXT("/Game/DnDDiceRoll/Theme/Overview/SM_Deleted_Overview_Piece.SM_Deleted_Overview_Piece"))};
 const TSoftObjectPtr<UStaticMesh> Unloadable{FSoftObjectPath(TEXT("/Engine/BasicShapes/Cube.NoSuchOverviewMesh"))};
 
+/**
+ * The overview's dioramas for a screen described by its roads (#248 moved OverviewLayout::Kinds onto FJourneyQuery): a journey whose current stage offers routes to the
+ * worlds the rules give those roads (FExpeditionRun::WorldOf: the finale's Vault, otherwise Dangerous the Vigil and Guarded the Root); no run is the title.
+ */
+TArray<EDiorama> KindsFor(bool bHasRun, bool bFinale, TConstArrayView<bool> Dangerous, bool bVaultDiorama)
+{
+    if (!bHasRun) { return OverviewLayout::Kinds(nullptr, bVaultDiorama); }
+    FJourney Journey;
+    Journey.Stages.SetNum(FExpeditionRun::EncounterCount);
+    Journey.CurrentIndex = bFinale ? FExpeditionRun::EncounterCount - 1 : 0;
+    for (const bool bDanger : Dangerous)
+    {
+        FJourneyRoute Route;
+        Route.bDangerous = bDanger;
+        Route.World = bFinale ? EExpeditionWorld::Vault : bDanger ? EExpeditionWorld::Vigil : EExpeditionWorld::Root;
+        Journey.Stages[Journey.CurrentIndex].Offers.Add(Route);
+    }
+    return OverviewLayout::Kinds(&Journey, bVaultDiorama);
+}
+
 /** A theme whose r001 entries are spheres and whose r002 entries are cubes, so which set loaded is visible from the pointers. */
 void FillOverview(UDiceRollTheme& Theme)
 {
@@ -96,6 +116,13 @@ AExpeditionBattleView* OverviewBoard(FAutomationTestBase& Test, UWorld* World, c
     if (!Test.TestNotNull(TEXT("Battle view"), View)) { return nullptr; }
     View->ConfigureStorage(Path);
     View->DispatchBeginPlay();
+    // These tests are about today's overview: since #248 a route screen with the journey set draws the journey map (JourneyMapTest), so it is switched off here.
+    if (const UDiceRollTheme* Shipped = OverviewShippedTheme())
+    {
+        UDiceRollTheme* Off = OverviewThemeCopy(Shipped);
+        Off->bJourneyR001 = false;
+        View->UseTheme(Off);
+    }
     View->Resume();
     View->Tick(0.016f);
     return View;
@@ -110,16 +137,16 @@ bool FOverviewLayoutTest::RunTest(const FString& Parameters)
     const bool Mixed[] = {false, true};
     const bool Only[] = {true};
     // The title shows the first two worlds whatever the flags say.
-    TestTrue(TEXT("The title shows the forest and the cathedral"), OverviewLayout::Kinds(false, false, {}, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
-    TestTrue(TEXT("The title does not change without a Vault diorama"), OverviewLayout::Kinds(false, false, {}, false) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
+    TestTrue(TEXT("The title shows the forest and the cathedral"), KindsFor(false, false, {}, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
+    TestTrue(TEXT("The title does not change without a Vault diorama"), KindsFor(false, false, {}, false) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
     // A route screen: guarded roads the forest, dangerous roads the cathedral, in the order offered.
-    TestTrue(TEXT("Two guarded roads are two forests"), OverviewLayout::Kinds(true, false, Guarded, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Root}));
-    TestTrue(TEXT("A guarded and a dangerous road"), OverviewLayout::Kinds(true, false, Mixed, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
-    TestTrue(TEXT("A single dangerous road"), OverviewLayout::Kinds(true, false, Only, false) == TArray<EDiorama>({EDiorama::Vigil}));
+    TestTrue(TEXT("Two guarded roads are two forests"), KindsFor(true, false, Guarded, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Root}));
+    TestTrue(TEXT("A guarded and a dangerous road"), KindsFor(true, false, Mixed, true) == TArray<EDiorama>({EDiorama::Root, EDiorama::Vigil}));
+    TestTrue(TEXT("A single dangerous road"), KindsFor(true, false, Only, false) == TArray<EDiorama>({EDiorama::Vigil}));
     // The finale leads to the Vault whatever its roads, or to the Vigil when the set has no Vault diorama.
-    TestTrue(TEXT("The finale draws the Vault for every road"), OverviewLayout::Kinds(true, true, Mixed, true) == TArray<EDiorama>({EDiorama::Vault, EDiorama::Vault}));
-    TestTrue(TEXT("Without a Vault diorama the finale draws the Vigil as before"), OverviewLayout::Kinds(true, true, Mixed, false) == TArray<EDiorama>({EDiorama::Vigil, EDiorama::Vigil}));
-    TestTrue(TEXT("No offers, no dioramas"), OverviewLayout::Kinds(true, false, {}, true).IsEmpty());
+    TestTrue(TEXT("The finale draws the Vault for every road"), KindsFor(true, true, Mixed, true) == TArray<EDiorama>({EDiorama::Vault, EDiorama::Vault}));
+    TestTrue(TEXT("Without a Vault diorama the finale draws the Vigil as before"), KindsFor(true, true, Mixed, false) == TArray<EDiorama>({EDiorama::Vigil, EDiorama::Vigil}));
+    TestTrue(TEXT("No offers, no dioramas"), KindsFor(true, false, {}, true).IsEmpty());
 
     // Placement on the title and on the r001 set: offer 0 screen-left (+X), offer 1 screen-right, a single road in the middle; the r002 row stands 8 cm further back on its deeper table.
     for (const bool bR002 : {false, true})
@@ -404,7 +431,7 @@ bool FOverviewHudClearTest::RunTest(const FString& Parameters)
         const double W = Resolution.X / Scale, H = Resolution.Y / Scale;
         for (const FScreen& Screen : Screens)
         {
-            const TArray<EDiorama> Kinds = OverviewLayout::Kinds(Screen.bHasRun, Screen.bFinale, Screen.Dangerous, true);
+            const TArray<EDiorama> Kinds = KindsFor(Screen.bHasRun, Screen.bFinale, Screen.Dangerous, true);
             const TArray<OverviewLayout::FPlacement> Spots = OverviewLayout::Layout(Kinds, true, Screen.bHasRun);
             const TArray<ExpeditionLayout::Rect> Hud = OverviewLayout::HudRects(Screen.bHasRun, W, H);
             TArray<ExpeditionLayout::Rect> Placed;
@@ -427,7 +454,7 @@ bool FOverviewHudClearTest::RunTest(const FString& Parameters)
     // On the route and finale screens the war map (centre 1.66 m toward the viewer, 1.05 x 0.63 m) lies between the two dioramas: they do not overlap its box on the table.
     for (const bool bFinale : {false, true})
     {
-        const TArray<EDiorama> Kinds = OverviewLayout::Kinds(true, bFinale, {false, true}, true);
+        const TArray<EDiorama> Kinds = KindsFor(true, bFinale, {false, true}, true);
         for (const OverviewLayout::FPlacement& Spot : OverviewLayout::Layout(Kinds, true, true))
         {
             const FBox Local = MeshOf(Spot.Kind)->GetBoundingBox();

@@ -713,6 +713,36 @@ bool FExpeditionCaptureFixtures::RunTest(const FString& Parameters)
         }
         TestTrue(TEXT("The reward-choice fixtures were found"), bFirst && bUpgraded && bCap && bFallen && bCamp);
     }
+    {
+        // The journey map (#248): journey-mid-route, a fork after two won fights (alternating roads: the forest, then the Vigil), and journey-defeat-mid, the same run
+        // lost on the third stage's dangerous road, so the map shows cleared, lost and unreached stages.
+        bool bMid = false, bLostMid = false;
+        for (int32 Seed = 42; Seed < 240 && !(bMid && bLostMid); ++Seed)
+        {
+            FExpeditionRun Run; FString E;
+            if (!Run.NewRun(Seed, E, FString::Printf(TEXT("capture-journey-%d"), Seed))) { continue; }
+            bool bOk = true;
+            for (int32 Guard = 0; Guard < 32 && bOk && !(Run.Progress().Phase == EExpeditionPhase::Route && Run.Progress().EncountersCompleted == 2); ++Guard)
+            {
+                switch (Run.Progress().Phase)
+                {
+                case EExpeditionPhase::Route: bOk = Run.ChooseRoute(Run.Progress().Offers[Run.Progress().EncountersCompleted % 2].Id, E); break;
+                case EExpeditionPhase::Combat: bOk = ExpeditionTestSupport::FinishCombat(Run) && Run.Progress().Phase == EExpeditionPhase::Reward; break;
+                case EExpeditionPhase::Reward: bOk = Run.ClaimReward(Survivor(Run), E); break;
+                case EExpeditionPhase::Recovery: bOk = Run.Recover(true, E); break;
+                default: bOk = false; break;
+                }
+            }
+            if (!bOk || Run.Progress().Phase != EExpeditionPhase::Route || Run.Progress().EncountersCompleted != 2) { continue; }
+            if (!bMid) { Write(TEXT("journey-mid-route"), Run); bMid = true; }
+            if (!bLostMid && Run.ChooseRoute(Run.Progress().Offers[1].Id, E))
+            {
+                ExpeditionTestSupport::FinishCombat(Run, false);
+                if (Run.Progress().Phase == EExpeditionPhase::Defeat) { Write(TEXT("journey-defeat-mid"), Run); bLostMid = true; }
+            }
+        }
+        TestTrue(TEXT("The journey fixtures were found"), bMid && bLostMid);
+    }
     FString Error;
     FExpeditionRun Lost;
     Lost.NewRun(3, Error, TEXT("capture-defeat"));

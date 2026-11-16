@@ -1,0 +1,8 @@
+{
+ "comment": "Game table-top cm (X screen-left, Y away from the camera, Z up). Mirrors Source/DnDDiceRoll/Public/Presentation/JourneyLayout.h; tools/tests/test_journey_layout.py keeps them equal.",
+ "stages_cm": [[102.8, -16.8], [56.0, -11.9], [8.3, -17.6], [-39.2, -11.9], [-86.1, -16.8]],
+ "trailhead_cm": [152.0, -22.0],
+ "goal_cm": [-130.0, -38.0],
+ "candles_cm": [[178.0, 22.0, 40.0], [-182.0, 18.0, 24.0]],
+ "map": {"x_cm": [165.0, -200.0], "y_cm": [32.0, -200.0], "texture_px": [1984, 1262]}
+}

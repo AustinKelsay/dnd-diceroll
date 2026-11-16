@@ -81,6 +81,33 @@ struct FDiceRollOverview
     bool bR002 = false;
 };
 
+/**
+ * The war-table journey map (#248, spec #239), loaded as one set: the clean journey table, the map, the stage token, the three world emblems, the victory
+ * pennant, the lost marker, the walked and unwalked ink, the fog bank, the Vault goal and the diorama plinth. Every one or none: a missing or unloadable
+ * piece leaves the set empty and the route screen draws today's overview instead. Raw pointers; the view keeps them alive.
+ */
+struct FDiceRollJourney
+{
+    UStaticMesh* Table = nullptr;
+    UStaticMesh* Map = nullptr;
+    UStaticMesh* Stage = nullptr;
+    UStaticMesh* EmblemRoot = nullptr;
+    UStaticMesh* EmblemVigil = nullptr;
+    UStaticMesh* EmblemVault = nullptr;
+    UStaticMesh* Pennant = nullptr;
+    UStaticMesh* Lost = nullptr;
+    UStaticMesh* Ink = nullptr;
+    UStaticMesh* InkDashed = nullptr;
+    UStaticMesh* Fog = nullptr;
+    UStaticMesh* Goal = nullptr;
+    UStaticMesh* Plinth = nullptr;
+    /** True when every piece loaded. */
+    bool IsComplete() const
+    {
+        return Table && Map && Stage && EmblemRoot && EmblemVigil && EmblemVault && Pennant && Lost && Ink && InkDashed && Fog && Goal && Plinth;
+    }
+};
+
 /** Which world kit a board draws with: the Drowned Vigil (Ruins), the Root of the World (Meadow) or the Vault (the finale). */
 enum class EDiceRollKit : uint8 { Vigil, Root, Vault };
 
@@ -200,6 +227,31 @@ public:
      * never a mix. Vault is null for the r001 set. Table is null when even the r001 table does not load (the overview is then not shown).
      */
     FDiceRollOverview LoadOverview() const;
+
+    /**
+     * The war-table journey map r001 (#248): new packages under /Game/DnDDiceRoll/Theme/Journey, drawn on the route screen and the ending in place of the
+     * overview's table and side dioramas, beside the r002 dioramas raised on plinths. The import script sets bJourneyR001 only when all of them carry the journey-r001 tag.
+     * Presentation only (ADR-0001): what the map shows comes from FJourneyQuery.
+     */
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") bool bJourneyR001 = false;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyTable;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyMap;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyStage;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyEmblemRoot;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyEmblemVigil;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyEmblemVault;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyPennant;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyLost;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyInk;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyInkDashed;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyFog;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyGoal;
+    UPROPERTY(EditDefaultsOnly, Category = "Journey") TSoftObjectPtr<UStaticMesh> JourneyPlinth;
+
+    /** True when the journey map is switched on and all thirteen entries are set and refer to packages that exist. */
+    bool JourneyComplete() const;
+    /** Loads the journey set as one: every piece, or (when the set is incomplete or any piece fails to load) an empty set. */
+    FDiceRollJourney LoadJourney() const;
 
     /**
      * The Drowned Vigil world kit r002 (#145). Everything in it is authored at the true 150 cm cell, unlike the r001 art
