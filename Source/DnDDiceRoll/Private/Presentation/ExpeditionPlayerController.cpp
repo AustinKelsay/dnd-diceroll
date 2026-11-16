@@ -551,11 +551,16 @@ bool AExpeditionPlayerController::NudgeFocusedSlider(int32 Steps)
 void AExpeditionPlayerController::OpenSettings()
 {
     if (!IsValid(BattleView) || bConfirmReturn || bConfirmAbandon || bShowSettings) { return; }
+    // From the Menu: keep what the Menu itself saved (the board's focus), so Esc can bring the Menu back as it was.
+    bSettingsFromMenu = ShowingMenu();
+    SettingsMenuSaved = SavedFocus;
     CloseMenu();
     // Settings over Help or Records replaces them and keeps the focus saved when they opened.
     if (bShowHelp || BattleView->ShowingRecords()) { bShowHelp = false; if (BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } }
     else { SaveOverlayFocus(); }
     bShowSettings = true;
+    // The board waits behind the panel: no playback step advances and no enemy turn resolves (as with Records).
+    BattleView->HoldForSettings(true);
     bDragging = false; bPanning = false;
     BattleView->PlayCue(EExpeditionCue::Click);
 }
@@ -1229,7 +1234,22 @@ void AExpeditionPlayerController::CloseOverlays()
     if (bShowMenu) { CloseMenu(); return; }
     if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
     if (bConfirmAbandon) { bConfirmAbandon = false; RestoreOverlayFocus(); BattleView->PlayCue(EExpeditionCue::Click); return; }
-    if (bShowSettings) { bShowSettings = false; RestoreOverlayFocus(); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    if (bShowSettings)
+    {
+        bShowSettings = false;
+        BattleView->HoldForSettings(false);
+        if (bSettingsFromMenu && MenuAvailable())
+        {
+            // Back to the Menu it was opened from, focused on its Settings row; closing the Menu then restores the board's focus.
+            bShowMenu = true;
+            SavedFocus = SettingsMenuSaved;
+            Focus = {FName(TEXT("Settings")), MenuScreenKey(), true};
+        }
+        else { RestoreOverlayFocus(); }
+        bSettingsFromMenu = false;
+        BattleView->PlayCue(EExpeditionCue::Click);
+        return;
+    }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
         if (bReturnPending) { bReturnPending = false; return; }

@@ -60,11 +60,29 @@ bool FExpeditionMixSettingsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Another version is refused"), FExpeditionAudioSettings::FromJson(TEXT("{\"version\": 2, \"master\": 0.1}"), Read));
     TestTrue(TEXT("A missing value keeps its default"), FExpeditionAudioSettings::FromJson(TEXT("{\"version\": 1, \"music\": 0.25}"), Read)
         && Read.Get(EExpeditionBus::Master) == 1.0f && FMath::IsNearlyEqual(Read.Get(EExpeditionBus::Music), 0.25f, 1e-4f));
+    // Out-of-range values are refused, not clamped: a hand-edited {"master": -1} must not mute the game for good (review of #263).
+    TestTrue(TEXT("A document with out-of-range values still reads"),
+        FExpeditionAudioSettings::FromJson(TEXT("{\"version\": 1, \"master\": -1, \"music\": 7, \"ambience\": 1.0001, \"effects\": 0.4}"), Read));
+    TestEqual(TEXT("A negative master keeps its default"), Read.Get(EExpeditionBus::Master), 1.0f);
+    TestEqual(TEXT("An excessive music keeps its default"), Read.Get(EExpeditionBus::Music), 1.0f);
+    TestEqual(TEXT("Just over full keeps its default"), Read.Get(EExpeditionBus::Ambience), 1.0f);
+    TestTrue(TEXT("A valid value beside them is taken"), FMath::IsNearlyEqual(Read.Get(EExpeditionBus::Effects), 0.4f, 1e-4f));
+    TestTrue(TEXT("The edges are valid"), FExpeditionAudioSettings::FromJson(TEXT("{\"version\": 1, \"master\": 0, \"music\": 1}"), Read)
+        && Read.Get(EExpeditionBus::Master) == 0.0f && Read.Get(EExpeditionBus::Music) == 1.0f);
     const FString Directory = ExpeditionMixTest::Folder(TEXT("MixSettings"));
     const FString Path = FPaths::Combine(Directory, TEXT("nested"), TEXT("audio.json"));
     TestTrue(TEXT("A missing file is the defaults"), FExpeditionAudioSettings::Load(Path, Read) && Read == FExpeditionAudioSettings());
     TestTrue(TEXT("Saving creates the folder"), FExpeditionAudioSettings::Save(Path, Volumes));
     TestTrue(TEXT("Loading reads what was saved"), FExpeditionAudioSettings::Load(Path, Read) && Read == Volumes);
+    TestFalse(TEXT("No temporary file is left behind"), IFileManager::Get().FileExists(*(Path + TEXT(".pending"))));
+    // The write is atomic: a failed write keeps the last good settings.
+    FExpeditionAudioSettings Other = Volumes;
+    Other.Set(EExpeditionBus::Master, 0.2f);
+    ExpeditionTestSupport::FailNextCheckpointWrite(*this, Path);
+    TestFalse(TEXT("A write that cannot finish is reported"), FExpeditionAudioSettings::Save(Path, Other));
+    ExpeditionTestSupport::AllowCheckpointWrites(Path);
+    TestTrue(TEXT("...and the last good settings are still on disk"), FExpeditionAudioSettings::Load(Path, Read) && Read == Volumes);
+    TestTrue(TEXT("A later write succeeds and replaces them"), FExpeditionAudioSettings::Save(Path, Other) && FExpeditionAudioSettings::Load(Path, Read) && Read == Other);
     FFileHelper::SaveStringToFile(TEXT("{ broken"), *Path);
     TestFalse(TEXT("An unreadable file is reported"), FExpeditionAudioSettings::Load(Path, Read));
     TestTrue(TEXT("...and plays the defaults"), Read == FExpeditionAudioSettings());
@@ -201,15 +219,22 @@ bool FExpeditionMixPanelTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("The run has a checkpoint"), Bytes.IsEmpty());
         Game.Press(EKeys::I);
         TestTrue(TEXT("The Menu lists Settings"), Game.Hud->MenuButtons().Contains(Settings));
-        Player->HandleButton(Settings);
-        Game.Frame();
-        if (!TestTrue(TEXT("The Menu opens Settings"), Player->ShowingSettings())) { return false; }
+        if (!TestTrue(TEXT("Tab reaches the Menu's Settings row"), TabTo(Game, Settings))) { return false; }
+        Game.Press(EKeys::Enter);
+        if (!TestTrue(TEXT("Enter on the row opens Settings"), Player->ShowingSettings())) { return false; }
+        TestFalse(TEXT("The Menu is put away under the panel"), Player->ShowingMenu());
         Game.Press(EKeys::Down); Game.Press(EKeys::Down);
         Game.Press(EKeys::Left);
         TestTrue(TEXT("Ambience moved from the run's Menu"), FMath::IsNearlyEqual(View->AudioSettings().Get(EExpeditionBus::Ambience), 0.95f, 1e-4f));
         TestTrue(TEXT("Changing volumes leaves the run checkpoint's bytes unchanged"), Game.CheckpointBytes() == Bytes);
         Game.Press(EKeys::Escape);
         TestFalse(TEXT("Esc closes it"), Player->ShowingSettings());
+        // Back where it was opened from: the Menu, on its Settings row (review of #263); a second Esc closes the Menu onto the route.
+        TestTrue(TEXT("Closing Settings brings the Menu back"), Player->ShowingMenu());
+        TestEqual(TEXT("...focused on its Settings row"), Player->MenuFocus(), Settings);
+        Game.Press(EKeys::Escape);
+        TestFalse(TEXT("A second Esc closes the Menu"), Player->ShowingMenu());
+        TestEqual(TEXT("...and the route screen has its own focus again"), Player->MenuFocus(), FName(TEXT("Route0")));
         TestTrue(TEXT("The run is still in play"), View->HasRun());
     }
     {
@@ -227,6 +252,77 @@ bool FExpeditionMixPanelTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExpeditionMixHoldTest, "Project.Expedition.Audio.Mix.SettingsHoldsTheBoard",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FExpeditionMixHoldTest::RunTest(const FString& Parameters)
+{
+    // Settings is modal for the board too (review of #263): while it is open no playback step advances and no enemy turn resolves.
+    using namespace ExpeditionMixTest;
+    FHarness Game(*this, TEXT("MixHold"));
+    if (!TestTrue(TEXT("Harness ready"), Game.IsReady())) { return false; }
+    AExpeditionBattleView* View = Game.View;
+    AExpeditionPlayerController* Player = Game.Player;
+    Game.Frame();
+    Game.Press(EKeys::N);
+    Game.Settle();
+    Game.Press(EKeys::Enter);
+    if (!TestTrue(TEXT("The first fight starts"), View->InCombat())) { return false; }
+    Game.PartyTurn();
+    // During playback: a committed move is showing.
+    const FCombatantState* Hero = View->Rules().Find(View->Rules().ActiveId());
+    if (!TestTrue(TEXT("The party has the turn"), Hero && Hero->Side == ECombatSide::Party)) { return false; }
+    const TArray<FIntPoint> Moves = View->Rules().LegalMoves(Hero->Id);
+    if (!TestFalse(TEXT("The hero can move"), Moves.IsEmpty())) { return false; }
+    TestTrue(TEXT("The move is accepted"), View->Execute({ECombatCommandType::Move, Hero->Id, Moves.Last()}));
+    Game.Frame();
+    if (!TestTrue(TEXT("Its playback is running"), View->IsPresenting())) { return false; }
+    // The Menu's Settings row by its handler, so the panel opens within a frame (the keyboard path is SettingsPanel's).
+    Game.Press(EKeys::I);
+    Player->HandleButton(Settings);
+    Game.Frame();
+    if (!TestTrue(TEXT("Settings opens over the playback"), Player->ShowingSettings() && View->HeldForSettings())) { return false; }
+    const int32 Shown = View->Playback().StepsShown();
+    const FExpeditionSnapshot During = Game.Live();
+    const TArray<uint8> Bytes = Game.CheckpointBytes();
+    for (int32 Step = 0; Step < 120; ++Step) { Game.Frame(); }
+    TestEqual(TEXT("No playback step advances behind Settings"), View->Playback().StepsShown(), Shown);
+    TestTrue(TEXT("The playback is still pending"), View->IsPresenting());
+    TestTrue(TEXT("Nothing is resolved behind Settings"), ExpeditionTestSupport::SameRun(During, Game.Live()) && Game.CheckpointBytes() == Bytes);
+    Game.Press(EKeys::Escape);
+    Game.Press(EKeys::Escape);
+    TestFalse(TEXT("Settings and the Menu are closed"), Player->ShowingSettings() || Player->ShowingMenu() || View->HeldForSettings());
+    Game.Settle();
+    TestFalse(TEXT("The committed playback finishes once Settings closes"), View->IsPresenting());
+    TestTrue(TEXT("...having advanced"), View->Playback().StepsShown() > Shown || !View->IsPresenting());
+
+    // During an enemy turn: an enemy is about to act (still thinking) when Settings opens.
+    for (int32 Turn = 0; Turn < 12 && View->InCombat(); ++Turn)
+    {
+        const FCombatantState* Active = View->Rules().Find(View->Rules().ActiveId());
+        if (Active && Active->Side == ECombatSide::Enemy) { break; }
+        Game.PartyTurn();
+        Game.Press(EKeys::SpaceBar);
+    }
+    const FCombatantState* Foe = View->Rules().Find(View->Rules().ActiveId());
+    if (!TestTrue(TEXT("An enemy has the turn"), View->InCombat() && Foe && Foe->Side == ECombatSide::Enemy)) { return false; }
+    // The Menu's Settings row by its handler, so the panel opens within a frame (the keyboard path is SettingsPanel's).
+    Game.Press(EKeys::I);
+    Player->HandleButton(Settings);
+    Game.Frame();
+    if (!TestTrue(TEXT("Settings opens on the enemy's turn"), Player->ShowingSettings())) { return false; }
+    const FExpeditionSnapshot Waiting = Game.Live();
+    const TArray<uint8> Before = Game.CheckpointBytes();
+    for (int32 Step = 0; Step < 120; ++Step) { Game.Frame(); }
+    TestTrue(TEXT("The enemy does not act behind Settings (6 s, ten times its think time)"), ExpeditionTestSupport::SameRun(Waiting, Game.Live()));
+    TestTrue(TEXT("...and nothing is checkpointed"), Game.CheckpointBytes() == Before);
+    Game.Press(EKeys::Escape);
+    Game.Press(EKeys::Escape);
+    for (int32 Step = 0; Step < 200 && ExpeditionTestSupport::SameRun(Waiting, Game.Live()); ++Step) { Game.Frame(); }
+    TestFalse(TEXT("Once Settings closes the enemy takes its turn"), ExpeditionTestSupport::SameRun(Waiting, Game.Live()));
+    TestTrue(TEXT("...and it is checkpointed"), Game.CheckpointBytes() != Before);
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExpeditionMixLayoutTest, "Project.Expedition.Audio.Mix.SettingsLayout",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FExpeditionMixLayoutTest::RunTest(const FString& Parameters)
@@ -236,7 +332,7 @@ bool FExpeditionMixLayoutTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Harness ready"), Game.IsReady())) { return false; }
     Game.Frame();
     Game.Player->HandleButton(Settings);
-    for (const FIntPoint Size : {FIntPoint(1024, 576), FIntPoint(1280, 720), FIntPoint(1920, 1080), FIntPoint(2560, 1080)})
+    for (const FIntPoint Size : {FIntPoint(1920, 1080), FIntPoint(1280, 720), FIntPoint(1600, 600), FIntPoint(2560, 1080), FIntPoint(1024, 576)})
     {
         Game.Target.Size = Size;
         Game.Frame();

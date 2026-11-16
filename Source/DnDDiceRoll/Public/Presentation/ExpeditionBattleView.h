@@ -509,6 +509,9 @@ public:
     USceneComponent* UnitRigRoot(int32 UnitId) const;
     /** Capture support: leave enemy turns unplayed so a look at a checkpoint never submits a command. */
     void HoldEnemyTurns(bool bHold) { bHoldEnemyTurns = bHold; }
+    /** The Settings panel (#246) holds the board as Records does: playback stops advancing and no enemy turn resolves until it closes. */
+    void HoldForSettings(bool bHold) { bSettingsHold = bHold; if (bHold) { EnemyDelay = 0; } }
+    bool HeldForSettings() const { return bSettingsHold; }
     /** Capture support: adapt exposure at once so a shot does not depend on the one before it. */
     void PrepareExposureForCapture();
     /** The one board metric: cell size, board top, pointer plane and figure height. Every cell-to-world conversion uses it. */
@@ -579,6 +582,7 @@ private:
     int32 DrawnKind = 0;
     bool bOverview = false;
     bool bHoldEnemyTurns = false;
+    bool bSettingsHold = false;
     /** Capture support (#189): the combatant whose flash is held at its peak, or INDEX_NONE. */
     int32 ImpactTargetId = INDEX_NONE;
     /** Rigged characters are used when the theme defines them; off for the static-figure comparison. */

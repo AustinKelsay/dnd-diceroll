@@ -304,6 +304,9 @@ private:
     struct FMenuFocus { FName Id; uint32 Screen = MAX_uint32; bool bTabChosen = false; };
     /** Saved while Help or Records covers the screen; restored only onto the same screen. */
     FMenuFocus Focus, SavedFocus;
+    /** Settings opened from the in-run Menu: closing it reopens the Menu on its Settings row, with the Menu's own saved focus (#128/#129). */
+    bool bSettingsFromMenu = false;
+    FMenuFocus SettingsMenuSaved;
     /** Identifies the visible menu screen: overlay, builder and expedition phase. */
     uint32 MenuScreenKey() const;
     void SaveOverlayFocus();

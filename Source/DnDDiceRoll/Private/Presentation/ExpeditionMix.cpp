@@ -65,7 +65,8 @@ bool FExpeditionAudioSettings::FromJson(const FString& Text, FExpeditionAudioSet
     for (int32 Index = 0; Index < ExpeditionBusCount; ++Index)
     {
         double Value = 0.0;
-        if (Root->TryGetNumberField(BusKeys[Index], Value) && FMath::IsFinite(Value)) { Out.Set(static_cast<EExpeditionBus>(Index), static_cast<float>(Value)); }
+        // Only a value the panel could have written is taken; anything else (negative, over 100 %, not a number) keeps the default.
+        if (Root->TryGetNumberField(BusKeys[Index], Value) && FMath::IsFinite(Value) && Value >= 0.0 && Value <= 1.0) { Out.Set(static_cast<EExpeditionBus>(Index), static_cast<float>(Value)); }
     }
     return true;
 }
@@ -90,8 +91,26 @@ bool FExpeditionAudioSettings::Load(const FString& Path, FExpeditionAudioSetting
 
 bool FExpeditionAudioSettings::Save(const FString& Path, const FExpeditionAudioSettings& Settings)
 {
-    IFileManager::Get().MakeDirectory(*FPaths::GetPath(Path), true);
-    return FFileHelper::SaveStringToFile(Settings.ToJson(), *Path, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+    // Write a sibling .pending file, read it back, then replace the destination with it (a same-directory rename), so a failed write
+    // leaves the last good settings in place.
+    IFileManager& Files = IFileManager::Get();
+    Files.MakeDirectory(*FPaths::GetPath(Path), true);
+    const FString Pending = Path + TEXT(".pending");
+    const FString Text = Settings.ToJson();
+    FString Written;
+    FExpeditionAudioSettings Check;
+    if (!FFileHelper::SaveStringToFile(Text, *Pending, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)
+        || !FFileHelper::LoadFileToString(Written, *Pending) || !FromJson(Written, Check) || !(Check == Settings))
+    {
+        if (Files.FileExists(*Pending)) { Files.Delete(*Pending, false, true, true); }
+        return false;
+    }
+    if (!Files.Move(*Path, *Pending, true, true, false, true))
+    {
+        Files.Delete(*Pending, false, true, true);
+        return false;
+    }
+    return true;
 }
 
 namespace ExpeditionMix

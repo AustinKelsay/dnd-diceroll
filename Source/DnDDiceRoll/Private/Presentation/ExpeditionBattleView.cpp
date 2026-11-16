@@ -2744,7 +2744,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
-    if (!bShowRecords) { Show.Tick(DeltaSeconds); }
+    if (!bShowRecords && !bSettingsHold) { Show.Tick(DeltaSeconds); }
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
@@ -2754,7 +2754,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     MusicDucker.Tick(DeltaSeconds);
     UpdateAmbience(DeltaSeconds);
     UpdateMusic(DeltaSeconds);
-    if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
+    if (!HasRun() || bShowRecords || bSettingsHold || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
     { EnemyDelay = 0; return; }
