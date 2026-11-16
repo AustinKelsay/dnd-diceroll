@@ -516,7 +516,7 @@ These are raw engine files, not `/Game/DnDDiceRoll` packages, so they have no `a
 
 **Mix buses (issue #246).** `/Game/DnDDiceRoll/Audio/SC_Master` (new, a plain SoundClass) is the parent of `SC_Effects` (#242), `SC_Ambience` (#244) and `SC_Music` (#245): `Content/Python/setup_expedition_mix.py` sets each child's parent and the master's child list, and changes nothing else (the cue, bed and music waves keep their classes). The volumes are a transient sound mix built at runtime, so no mix asset is stored. Original work by this project's agents; no third-party content.
 
-MIX_IMPORT_PLACEHOLDER
+- **Setup (2026-11-16):** one headless `UnrealEditor-Cmd -run=pythonscript -nullrhi -corelimit=2` run of `Content/Python/setup_expedition_mix.py`, exit 0, `MIX_SETUP_COMPLETE`, no warnings. A SHA-256 snapshot of `Content/` and `Config/` before and after: **added** `SC_Master`; **changed exactly** `SC_Effects`, `SC_Ambience` and `SC_Music` (their parent class); nothing else. A rerun: exit 0, everything `kept`, no file changed.
 
 ## Board overlay material (issue #142)
 
