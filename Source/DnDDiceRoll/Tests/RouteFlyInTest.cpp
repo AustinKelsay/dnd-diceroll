@@ -127,6 +127,18 @@ bool FRouteFlyInTimelineTest::RunTest(const FString& Parameters)
         FVector::Dist(End.GetLocation(), Diorama.GetCenter()) < 0.25 * FVector::Dist(Start.GetLocation(), Diorama.GetCenter()));
     TestTrue(TEXT("It ends on the side the camera looks from (the battle camera's home side, -Y)"), End.GetLocation().Y < Path.EndAim.Y);
     TestTrue(TEXT("It ends about the battle camera's pitch"), FMath::IsNearlyEqual(-End.Rotator().Pitch, EndPitchDegrees, 1.0));
+    // The burst showed an end below the diorama's top flying through its wooden base: the end eye clears the top, so the straight path never enters the diorama.
+    TestTrue(TEXT("The end eye is above the diorama's top"), Path.EndEye.Z >= Diorama.Max.Z + EndClearanceCm - 0.01);
+    bool bOutside = true;
+    for (float T = 0.0f; T <= CutSeconds; T += 0.01f) { bOutside &= !Diorama.IsInside(At(Path, T).GetLocation()); }
+    TestTrue(TEXT("The camera never enters the diorama on the way"), bOutside);
+    for (const FBox& Tall : {FBox(FVector(10.0, -125.0, 15.0), FVector(70.0, -75.0, 140.0)), FBox(FVector(-70.0, -130.0, 15.0), FVector(-10.0, -70.0, 30.0))})
+    {
+        const FPath Other = PathFor(Camera, Tall, JourneyLayout::CameraFieldOfView);
+        bool bClear = Other.EndEye.Z >= Tall.Max.Z + EndClearanceCm - 0.01;
+        for (float T = 0.0f; T <= CutSeconds; T += 0.01f) { bClear &= !Tall.IsInside(At(Other, T).GetLocation()); }
+        TestTrue(TEXT("A tall or a flat diorama is never entered either"), bClear);
+    }
     TestTrue(TEXT("The pose holds after the cut"), At(Path, DurationSeconds).GetLocation().Equals(End.GetLocation(), 0.01));
 
     // The capture mode: a burst of held moments, never a command.

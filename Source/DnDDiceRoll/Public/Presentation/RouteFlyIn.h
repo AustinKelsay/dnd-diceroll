@@ -21,10 +21,15 @@ constexpr float FadeInSeconds = 0.45f;
 constexpr float DurationSeconds = CutSeconds + FadeInSeconds;
 /** The longest frame the fly-in advances by: the cut frame builds the board (the load hitch), and the fade-up after it starts from dark instead of jumping. */
 constexpr float MaxStepSeconds = 1.0f / 30.0f;
-/** How the move ends: looking down at this pitch, at a point this far up the diorama, close enough that the diorama overfills the view by EndFill. */
-constexpr double EndPitchDegrees = 40.0;
-constexpr double AimHeight = 0.2;
-constexpr double EndFill = 0.7;
+/**
+ * How the move ends: looking down at this pitch (inside the battle camera's 35 to 60 degree ramp), at a point this far up the diorama (its little world stands on a
+ * wooden base), close enough that the diorama overfills the view by EndFill, but never lower than EndClearanceCm over the diorama's top, so the straight path from the
+ * journey camera stays outside the diorama and never flies through its base or its towers.
+ */
+constexpr double EndPitchDegrees = 50.0;
+constexpr double AimHeight = 0.35;
+constexpr double EndFill = 0.6;
+constexpr double EndClearanceCm = 4.0;
 /** The eye eases in and out, but is still moving at the cut (it would have stopped this much later), so the move plunges into the dark rather than parking. */
 constexpr double EyeOverrunSeconds = 0.35;
 /** The aim turns from the table toward the chosen diorama over the move's first part. */
@@ -79,7 +84,9 @@ inline FPath PathFor(const FTransform& Camera, const FBox& Diorama, double Field
     const double Pitch = FMath::DegreesToRadians(EndPitchDegrees);
     const FVector Direction = Flat * FMath::Cos(Pitch) - FVector::UpVector * FMath::Sin(Pitch);
     const double Half = FMath::Max(Extent.X, Extent.Y);
-    const double Reach = EndFill * Half / FMath::Tan(FMath::DegreesToRadians(FieldOfViewDegrees * 0.5));
+    const double Fill = EndFill * Half / FMath::Tan(FMath::DegreesToRadians(FieldOfViewDegrees * 0.5));
+    const double Above = (Diorama.Max.Z + EndClearanceCm - Path.EndAim.Z) / FMath::Sin(Pitch);
+    const double Reach = FMath::Max(Fill, Above);
     Path.EndEye = Path.EndAim - Direction * Reach;
     return Path;
 }
