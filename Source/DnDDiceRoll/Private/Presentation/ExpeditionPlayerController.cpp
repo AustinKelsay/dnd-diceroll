@@ -186,6 +186,10 @@ void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
     // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
     // (Polled every tick, so the keyboard-focus latch sees focus the window gains during a press before it can lose it.)
+    // What the keyboard focus was when the last frame's input was processed: a press dispatched in this frame (inside Super::PlayerTick) starts its latch from it,
+    // so a loss that came after the press was queued but before this frame still spends it (#269 review).
+    bKeyboardFocusBeforeFrame = bKeyboardFocusAtLastPoll;
+    bKeyboardFocusAtLastPoll = KeyboardFocusNow().Get(false);
     const bool bFocusLost = !WindowHasFocus();
     if ((bPressArmed || DioramaPress != INDEX_NONE) && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
@@ -766,9 +770,10 @@ void AExpeditionPlayerController::ChooseAlly(const FCombatantState& Unit)
 
 void AExpeditionPlayerController::Click()
 {
-    // Every left press starts the keyboard-focus latch afresh (#230): only a loss of focus the window had during this press spends it. A seat whose only keyboard
-    // went away (one that sleeps or disconnects) never reports focus again, and its clicks must still commit.
-    bSawKeyboardFocus = KeyboardFocusNow().Get(false);
+    // Every left press starts the keyboard-focus latch afresh (#230): only a loss of focus the window had during this press, or since the last processed frame
+    // (the press may have been queued before it), spends it. A seat whose only keyboard went away (one that sleeps or disconnects) never reports focus again,
+    // and its next fresh click must still commit.
+    bSawKeyboardFocus = KeyboardFocusNow().Get(false) || bKeyboardFocusBeforeFrame;
     bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;

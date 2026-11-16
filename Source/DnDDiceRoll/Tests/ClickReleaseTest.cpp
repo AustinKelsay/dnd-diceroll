@@ -536,7 +536,10 @@ bool FLeftClickAfterKeyboardGoneTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("A press whose focus loss came before the frame that dispatched it commits nothing"), Same(Was, Stamp(*Game)));
         // The keyboard stays gone and no window has it (as when the device disappears): the next fresh press commits (#230).
         Game->Player->PreviewMode(ECombatCommandType::Attack);
-        TestTrue(TEXT("With the keyboard still gone, the next fresh click commits"), PlainClick(*Game, Aim, Cell));
+        if (TestTrue(TEXT("The hero still has a cell to walk to (queued press)"), FreeMove(*Game, Cell)))
+        {
+            TestTrue(TEXT("With the keyboard still gone, the next fresh click commits"), PlainClick(*Game, Aim, Cell));
+        }
     }
     return !HasAnyErrors();
 }
