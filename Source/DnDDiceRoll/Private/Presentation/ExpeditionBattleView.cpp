@@ -30,6 +30,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/CommandLine.h"
@@ -819,6 +820,8 @@ void AExpeditionBattleView::RebuildBoard()
     ++Revision;
     // Any rebuild (the fly-in's own handover, a Resume, Return to menu, a new run) leaves no fly-in behind: a resumed fight never replays it (#249).
     FlyIn = ERouteFlyInStage::None; bFlyInHeld = false; FlyInSeconds = 0.0f;
+    // A rebuild is a hard cut to another scene (the dark battle board, the bright journey map): the exposure and temporal history start again from it, with no visible adaptation.
+    CutCamera();
     ClearPresentation();
     // Themed boards draw their static parts, rings and effects from shared instanced groups (#144); the primitive look never does.
     bInstancedParts = Theme && !bLooseParts;
@@ -2388,7 +2391,20 @@ void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { FinishFlyIn(); Show.Finish(); SettleSetPiece(); }
+void AExpeditionBattleView::SkipPresentation()
+{
+    FinishFlyIn(); Show.Finish(); SettleSetPiece();
+    // The last result's numbers on the board are presentation too: skipping them brings the journey (and the route cards) at once.
+    if (OverviewPending() && !PlaybackPresenting()) { RebuildBoard(); }
+}
+
+bool AExpeditionBattleView::OverviewPending() const { return Theme && HasRun() && !bOverview && WantsOverview(); }
+
+void AExpeditionBattleView::CutCamera()
+{
+    ++CameraCutCount;
+    if (APlayerController* Player = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr; Player && Player->PlayerCameraManager) { Player->PlayerCameraManager->SetGameCameraCutThisFrame(); }
+}
 
 void AExpeditionBattleView::CycleSpeed()
 {
@@ -2820,8 +2836,8 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // The ending's view choice belongs to one finished run: any other phase (a new run, a resume into a fight) starts from the default again.
     if (EndingView != EEndingView::Default && (!HasRun() || (Progress().Phase != EExpeditionPhase::Victory && Progress().Phase != EExpeditionPhase::Defeat))) { EndingView = EEndingView::Default; }
-    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
-    if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
+    // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles and the last result's numbers have gone (at once under Instant).
+    if (Theme && WantsOverview() != bOverview && !PlaybackPresenting() && ((Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) || PlaybackSpeed == EPlaybackSpeed::Instant)) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
     AmbienceDucker.Tick(DeltaSeconds);

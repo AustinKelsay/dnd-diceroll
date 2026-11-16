@@ -343,10 +343,19 @@ public:
     bool RollCardUp() const { return Show.Tray().bVisible && !Show.Tray().Dice.IsEmpty(); }
     void ClearRollPreview() { Show.ClearTrayPreview(); }
     /**
-     * Queued playback, the finale's set piece (#250) playing or about to play, or the route fly-in (#249) playing: the HUD holds the next screen, enemies wait, and
-     * Skip settles it. A capture's held fly-in is a pose, not presentation still owed.
+     * Queued playback, the finale's set piece (#250) playing or about to play, the route fly-in (#249) playing, or the board still showing the last result before the
+     * journey map takes over (OverviewPending): the HUD holds the next screen, enemies wait, and Skip settles it. A capture's held fly-in is a pose, not presentation still owed.
      */
-    bool IsPresenting() const { return Show.IsBusy() || SetPieceBusy() || (FlyIn != ERouteFlyInStage::None && !bFlyInHeld); }
+    bool IsPresenting() const { return PlaybackPresenting() || OverviewPending(); }
+    /**
+     * The run wants the tabletop (a route screen, a defeat's journey) but the board still shows the result that led there: the camp's or the reward's floating numbers
+     * and sparkles, which the tabletop waits for. The route cards wait with it, so they appear on the same frame as the journey, never over the dark board (#249 on-screen
+     * pass). Skip and Instant settle it at once.
+     */
+    bool OverviewPending() const;
+    /** How many times the board was rebuilt as a camera cut (every RebuildBoard): the frame snaps eye adaptation and temporal history, so a switch between the dark battle
+     * board and the bright journey map never flashes or eases (#249 on-screen pass). Test support. */
+    uint32 CameraCuts() const { return CameraCutCount; }
     void SkipPresentation();
     void CycleSpeed();
     /**
@@ -849,6 +858,11 @@ private:
     void UpdateSetPiece(float DeltaSeconds);
     /** Skip, Finish and Instant on a won finale: the set piece converges on its settled state. */
     void SettleSetPiece();
+    /** Playback, the set piece and the fly-in: what the tabletop itself waits for before it is built. */
+    bool PlaybackPresenting() const { return Show.IsBusy() || SetPieceBusy() || (FlyIn != ERouteFlyInStage::None && !bFlyInHeld); }
+    uint32 CameraCutCount = 0;
+    /** Marks this frame a camera cut on the local player's camera manager (eye adaptation jumps to its target, temporal history resets). */
+    void CutCamera();
     /** The route fly-in's state (#249): presentation only, never saved; a rebuild of the board for any other reason drops it. */
     bool bRouteFlyIn = false;
     ERouteFlyInStage FlyIn = ERouteFlyInStage::None;

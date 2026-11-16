@@ -522,3 +522,97 @@ bool FRouteFlyInSoundTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 #endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+namespace RouteFlyInTest
+{
+/** A run at its camp after the first won fight (the board of that fight is what the camp is drawn over). */
+bool AtCamp(FExpeditionSaveData& Data)
+{
+    for (int32 Seed = 20261030; Seed < 20261030 + 64; ++Seed)
+    {
+        FString Error;
+        FExpeditionRun Run;
+        if (!Run.NewRun(Seed, Error, TEXT("journey-switch")) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error) || !ExpeditionTestSupport::FinishCombat(Run) ||
+            Run.Progress().Phase != EExpeditionPhase::Reward) { continue; }
+        int32 Recipient = INDEX_NONE;
+        for (const FCombatantState& Unit : Run.Battle().Snapshot().Encounter.Combatants) { if (Unit.Side == ECombatSide::Party && Unit.Life == ECombatLife::Conscious) { Recipient = Unit.Id; break; } }
+        if (Recipient == INDEX_NONE || !Run.ClaimReward(Recipient, Error) || Run.Progress().Phase != EExpeditionPhase::Recovery) { continue; }
+        Data.Current = Run.Snapshot();
+        return true;
+    }
+    return false;
+}
+bool HasRouteCard(const FHarness& Game)
+{
+    const TArray<FName> Items = Game.Hud->MenuButtons();
+    return Items.Contains(FName(TEXT("Route0"))) || Items.Contains(FName(TEXT("Route1")));
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJourneySwitchTest, "Project.Expedition.Presentation.RouteFlyIn.JourneySwitchSnapsExposureAndCardsWait",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FJourneySwitchTest::RunTest(const FString& Parameters)
+{
+    using namespace RouteFlyInTest;
+    // The #249 on-screen pass: after camp the route cards stood over the dark battle board for about 2.2 s (the tabletop waits for the camp's numbers), then the journey
+    // appeared washed out and eased down over about 2.3 s (auto exposure adapting from the dark board). Now the cards wait for the journey and come on its frame, and every
+    // board switch is a camera cut, so the exposure snaps (the luma itself is measured on screen; this holds the cut and the order).
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("A run at its camp"), AtCamp(Data))) { return false; }
+    for (int32 Way = 0; Way < 2; ++Way)   // 0: wait for the camp's numbers, 1: skip them
+    {
+        const FString Name = Way == 0 ? TEXT("Waiting") : TEXT("Skipping");
+        FHarness Game(*this, TEXT("JourneySwitch"), &Data);
+        if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+        Game.Frame();
+        Game.Press(EKeys::O);
+        Game.Settle();
+        AExpeditionBattleView* View = Game.View;
+        if (!TestTrue(Name + TEXT(": the camp is drawn over the fight's board"), View->HasRun() && View->Progress().Phase == EExpeditionPhase::Recovery && !View->ShowingOverview())) { return false; }
+        const uint32 Cuts = View->CameraCuts();
+        Game.Press(EKeys::C);
+        if (!TestTrue(Name + TEXT(": camp leads to the route"), View->Progress().Phase == EExpeditionPhase::Route)) { return false; }
+        TestTrue(Name + TEXT(": the board still shows the camp's numbers"), View->OverviewPending() && !View->ShowingOverview());
+        TestTrue(Name + TEXT(": that is presenting (the route screen waits, Skip settles it)"), View->IsPresenting());
+        TestFalse(Name + TEXT(": no route card is drawn over the dark board"), HasRouteCard(Game));
+        TestEqual(Name + TEXT(": no rebuild yet"), View->CameraCuts(), Cuts);
+        if (Way == 1)
+        {
+            Game.Press(EKeys::Tab);
+            TestTrue(Name + TEXT(": Skip brings the journey at once"), View->ShowingJourney() && !View->OverviewPending());
+        }
+        bool bCardsOnlyWithJourney = true;
+        for (int32 Step = 0; Step < 400 && !View->ShowingOverview(); ++Step)
+        {
+            Game.Frame();
+            bCardsOnlyWithJourney &= View->ShowingOverview() || !HasRouteCard(Game);
+        }
+        TestTrue(Name + TEXT(": the cards never drew before the journey"), bCardsOnlyWithJourney);
+        TestTrue(Name + TEXT(": the journey shows"), View->ShowingJourney());
+        TestTrue(Name + TEXT(": with its cards on the same frame"), HasRouteCard(Game));
+        TestFalse(Name + TEXT(": nothing is presenting any more"), View->IsPresenting());
+        TestEqual(Name + TEXT(": the switch to the journey was one camera cut"), View->CameraCuts(), Cuts + 1);
+        if (Way == 0)
+        {
+            // The other way: the fly-in's handover to the board is a cut too (under its dark).
+            Game.Press(EKeys::Z);
+            for (int32 Step = 0; Step < 400 && View->FlyingIn(); ++Step) { Game.Frame(); }
+            TestFalse(TEXT("The fight's board is up"), View->ShowingOverview());
+            TestEqual(TEXT("The handover to the board was one camera cut"), View->CameraCuts(), Cuts + 2);
+        }
+    }
+    {
+        // Instant speed does not wait for the camp's numbers.
+        FHarness Game(*this, TEXT("JourneySwitchInstant"), &Data);
+        if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+        Game.Frame();
+        Game.Press(EKeys::O);
+        Game.Settle();
+        Game.View->CycleSpeed(); Game.View->CycleSpeed();
+        Game.Press(EKeys::C);
+        TestTrue(TEXT("Instant: the journey and its cards come at once"), Game.View->ShowingJourney() && HasRouteCard(Game));
+    }
+    return !HasAnyErrors();
+}
+#endif
