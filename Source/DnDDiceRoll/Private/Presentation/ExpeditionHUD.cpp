@@ -16,6 +16,9 @@
 
 namespace
 {
+/** The run the party builder's New Run starts (FExpeditionSession::NewRun, FExpeditionRun::NewRun's defaults): Compact, at the current revision. */
+constexpr ERuleset BuilderRuleset = ERuleset::Compact;
+constexpr int32 BuilderRevision = FBuildCatalog::Revision;
 // Dark-fantasy palette: warm near-black panels, parchment text and darkened gilt.
 const FLinearColor Ink(0.009f, 0.007f, 0.006f);
 const FLinearColor Parchment(0.93f, 0.86f, 0.72f);
@@ -276,6 +279,7 @@ void AExpeditionHUD::DrawHUD()
     ChipPanels.Reset();
     TagsRequested.Reset();
     PickerLines.Reset();
+    PickerStats.Reset();
     bTooltipRequested = false;
     bHintRequested = false;
     bCursorRequested = false;
@@ -1309,11 +1313,12 @@ void AExpeditionHUD::DrawTitle()
     for (int32 I = 0; I < Player->NextParty().Num(); ++I)
     {
         const auto& P = Player->NextParty()[I];
-        FCombatantState Hero; FBuildCatalog::Create(P.BuildId, P.Id, P.Name, Hero);
+        FCombatantState Hero; FExpeditionRun::CreateHero(P.BuildId, P.Id, P.Name, BuilderRuleset, BuilderRevision, Hero);
         Button(FName(*FString::Printf(TEXT("Party%d"), I)), FString::Printf(TEXT("%d  %s"), I + 1, *P.Name), FBuildCatalog::DisplayName(Hero), LeftX + 12, SlotY + I * 50, LeftWidth - 24, 44, true, Player->BuilderSlot() == I, Sky, 0.85f);
     }
     const auto& Choice = Player->NextParty()[Player->BuilderSlot()];
-    FCombatantState Hero; FBuildCatalog::Create(Choice.BuildId, Choice.Id, Choice.Name, Hero);
+    // The preview is the hero New Run will create (#241: revision 11 changes Monk and Paladin HP and AC).
+    FCombatantState Hero; FExpeditionRun::CreateHero(Choice.BuildId, Choice.Id, Choice.Name, BuilderRuleset, BuilderRevision, Hero);
     const float ClassLabelY = SlotY + 4 * 50 + 4;
     Text(TEXT("CLASS"), LeftX + 14, ClassLabelY, Gold, 0.8f);
     TArray<FString> Classes;
@@ -1363,7 +1368,8 @@ void AExpeditionHUD::DrawTitle()
     if (Build->CriticalThreshold == 19) { DetailsEnd += 20; }
     Panel(RightX, DrawerY, RightWidth, DetailsEnd - DrawerY + 6, Gold, 0.94f);
     Text(FBuildCatalog::DisplayName(Hero), InnerX, DrawerY + 12, Parchment, 1.0f, EAlign::Left, InnerWidth);
-    Text(FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range), InnerX, DrawerY + 38, Muted, 0.8f);
+    PickerStats = FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range);
+    Text(PickerStats, InnerX, DrawerY + 38, Muted, 0.8f);
     float Row = DrawerY + 66;
     for (const auto& Ability : FBuildCatalog::Abilities(Hero))
     {

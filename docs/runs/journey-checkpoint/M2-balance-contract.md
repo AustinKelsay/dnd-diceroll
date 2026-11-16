@@ -74,7 +74,7 @@ Each lever is gated on `FExpeditionRun::PlaysRevision11Balance` (Compact, revisi
 - **Revisions 7–10 and SRD:** unchanged for life (G2). The rules are derived from the saved ruleset and revision like M1's move-through (`ApplyRevisionRules` on the opening encounter, every layout and `Restore`), never saved.
 - **Save schema 6:** unchanged. Restore already regenerates and compares every enemy stat against the run's revision, so the stage scaling needs no new field; Rescue's HP, the target choice and Reserve's refill leave only state restore already accepts (pools within `Caps`, HP within max).
 - **Generation and RNG:** boards, rosters, encounter seeds and draws are revision 10's. Target choice draws nothing; the combat stream differs only because different attacks happen.
-- **Presentation reads the rules:** Rescue's action text comes from `FCombatBattle::Describe` and its forecast from `Forecast`, which equal the committed result. Reserve's card rule comes from `FProgressionFacts::bReserveRefills`, and its before → after pools from the claim rule applied to a copy, as today. No new screen, asset or input.
+- **Presentation reads the rules:** Rescue's action text comes from `FCombatBattle::Describe` and its forecast from `Forecast`, which equal the committed result. Reserve's and Honed's card rules come from `FProgressionFacts::bCardsRefill`, and their before → after pools from the claim rule applied to a copy, as today. The party builder previews each hero with `FExpeditionRun::CreateHero`, the seam `NewRun` creates heroes with, so Monk and Paladin HP and AC match the run. No new screen, asset or input.
 
 ## 5. Measurement
 

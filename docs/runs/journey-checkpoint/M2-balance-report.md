@@ -101,7 +101,7 @@ Kept step, 32 seeds; revision 10 and baseline from `50f5dfc2`.
   - `FPartyContinuity::Reward(…, bCardsRefill)`: Reserve refills each pool to its new cap; Honed refills the hero's pools to its caps.
   - `FProgressionQuery` passes the run's flag, so its after-values are the claim's.
   - `FProgressionFacts::bCardsRefill` selects the card rules "+1 cap on each special pool, all refilled" and "Both specials grow stronger; pools refilled". The Honed card also lists the pools it changes.
-- **Profiles:** `ApplyRevisionProfile` adjusts each Monk and Paladin hero at `NewRun` and the expected profile in `Restore`, so a revision 11 hero saved with revision 10's numbers is refused.
+- **Profiles:** `ApplyRevisionProfile` adjusts each Monk and Paladin hero. `NewRun` creates heroes through `FExpeditionRun::CreateHero`, and `Restore` applies the same adjustment to the profile it expects, so a revision 11 hero saved with revision 10's numbers is refused. The party builder previews with `CreateHero` for the run New Run starts (Compact, current revision), so its HP / AC line is the run's. *Review fix on PR #264: the builder first showed the catalog's numbers.*
 - **Foes:** `EnemyStats` scales revision 10's result by route and stage kind. Restore regenerates and compares every enemy stat as before.
 - **Harness:** `rescues.csv` per group (party, seed, stage, route, outcome, rounds, revives, redowns, quick_redowns). Policy unchanged (`PolicyVersion` 3).
 - **Existing tests whose revision 11 outcome changed** (intent kept):

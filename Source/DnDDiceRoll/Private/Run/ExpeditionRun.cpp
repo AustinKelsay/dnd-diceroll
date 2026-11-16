@@ -303,9 +303,8 @@ bool FExpeditionRun::NewRun(int32 Seed, const TArray<FPartyBuildSelection>& Sele
     {
         const auto Cell = Party.Combatants[I].Cell;
         const auto& Slot = Selection[I];
-        if (Slot.Id != I + 1 || !FBuildCatalog::Create(Slot.BuildId, Slot.Id, Slot.Name, Party.Combatants[I]))
+        if (Slot.Id != I + 1 || !CreateHero(Slot.BuildId, Slot.Id, Slot.Name, Ruleset, Revision, Party.Combatants[I]))
         { Error = TEXT("Choose a valid build and name for each independent slot 1–4."); return false; }
-        ApplyRevisionProfile(Party.Combatants[I], Ruleset, Revision);
         Party.Combatants[I].Cell = Cell;
     }
     Candidate.State.Party = Selection;
@@ -526,6 +525,13 @@ void FExpeditionRun::ResolveCombat()
 bool FExpeditionRun::OffersUpgradeCards(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= UpgradeRevision; }
 bool FExpeditionRun::MovesThroughUnits(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= MoveThroughRevision; }
 bool FExpeditionRun::PlaysRevision11Balance(ERuleset Ruleset, int32 Revision) { return Ruleset == ERuleset::Compact && Revision >= BalanceRevision; }
+
+bool FExpeditionRun::CreateHero(const FString& BuildId, int32 Id, const FString& Name, ERuleset Ruleset, int32 Revision, FCombatantState& Out)
+{
+    if (!FBuildCatalog::Create(BuildId, Id, Name, Out)) { return false; }
+    ApplyRevisionProfile(Out, Ruleset, Revision);
+    return true;
+}
 bool FExpeditionRun::CardsRefill(ERuleset Ruleset, int32 Revision) { return Revision11Rules::CardsRefill && PlaysRevision11Balance(Ruleset, Revision); }
 
 bool FExpeditionRun::ClaimReward(int32 RecipientId, FString& Error) { return ClaimReward(RecipientId, ERewardCard::Gear, Error); }

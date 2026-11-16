@@ -229,6 +229,36 @@ bool FRevision11ProfilesTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRevision11CreateHeroTest, "Project.Expedition.Run.CreateHeroIsTheHeroNewRunCreates",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FRevision11CreateHeroTest::RunTest(const FString& Parameters)
+{
+    // The builder previews FExpeditionRun::CreateHero (#241 review): for revision 11, revision 10 and SRD it is the hero NewRun starts with.
+    const TArray<FString> Builds = {TEXT("monk.open-hand"), TEXT("paladin.devotion"), TEXT("fighter.champion"), TEXT("wizard.evocation")};
+    TArray<FPartyBuildSelection> Party;
+    for (int32 I = 0; I < Builds.Num(); ++I) { FPartyBuildSelection Slot; Slot.Id = I + 1; Slot.Name = FString::Printf(TEXT("Hero %d"), I + 1); Slot.BuildId = Builds[I]; Party.Add(Slot); }
+    struct FCase { ERuleset Ruleset; int32 Revision; const TCHAR* Name; };
+    for (const FCase& Case : {FCase{ERuleset::Compact, 11, TEXT("Compact 11")}, FCase{ERuleset::Compact, 10, TEXT("Compact 10")}, FCase{ERuleset::SRD, 11, TEXT("SRD 11")}})
+    {
+        FExpeditionRun Run; FString Error;
+        if (!TestTrue(FString(Case.Name) + TEXT(": a run starts: ") + Error, Run.NewRun(42, Party, Error, TEXT("create-hero"), Case.Ruleset, Case.Revision))) { continue; }
+        for (int32 I = 0; I < Builds.Num(); ++I)
+        {
+            FCombatantState Preview;
+            const FString Where = FString::Printf(TEXT("%s, %s: "), Case.Name, *Builds[I]);
+            if (!TestTrue(Where + TEXT("the preview is created"), FExpeditionRun::CreateHero(Builds[I], I + 1, Party[I].Name, Case.Ruleset, Case.Revision, Preview))) { continue; }
+            const FCombatantState& Started = *Run.Battle().Find(I + 1);
+            TestTrue(Where + TEXT("max HP, HP, armour and reach are the started hero's"), Preview.MaxHP == Started.MaxHP && Preview.HP == Started.HP &&
+                Preview.ArmorClass == Started.ArmorClass && Preview.Range == Started.Range && Preview.AttackBonus == Started.AttackBonus &&
+                Preview.DamageDie == Started.DamageDie && Preview.DamageBonus == Started.DamageBonus && Preview.Speed == Started.Speed);
+            const FCombatantState& Catalog = FBuildCatalog::Find(Builds[I])->Profile;
+            if (Case.Ruleset != ERuleset::Compact || Case.Revision < 11)
+            { TestTrue(Where + TEXT("the catalog profile, unchanged"), Preview.MaxHP == Catalog.MaxHP && Preview.ArmorClass == Catalog.ArmorClass); }
+        }
+    }
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRevision11BalanceRevisionTest, "Project.Expedition.Run.Revision11BalanceFollowsTheRevision",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FRevision11BalanceRevisionTest::RunTest(const FString& Parameters)
@@ -238,8 +268,35 @@ bool FRevision11BalanceRevisionTest::RunTest(const FString& Parameters)
         TestEqual(FString::Printf(TEXT("Compact revision %d"), Revision), FExpeditionRun::PlaysRevision11Balance(ERuleset::Compact, Revision), Revision >= 11);
         TestFalse(FString::Printf(TEXT("SRD revision %d keeps the older rules"), Revision), FExpeditionRun::PlaysRevision11Balance(ERuleset::SRD, Revision));
     }
+    // Every route and stage, from the generator itself: revision 11's foes are revision 10's, scaled by that cell of the lever, and nothing else.
+    int32 Cells = 0;
+    for (int32 Stage = 0; Stage < FExpeditionRun::EncounterCount; ++Stage)
+    {
+        for (const bool bDangerous : {false, true})
+        {
+            FExpeditionRoute Route; Route.bDangerous = bDangerous; Route.Width = 16; Route.Height = 11;
+            Route.Recipe = Stage == FExpeditionRun::EncounterCount - 1 ? 6 : Stage >= 2 ? 3 : 0;
+            FCombatEncounter Old, New;
+            const FString Where = FString::Printf(TEXT("Stage %d %s: "), Stage + 1, bDangerous ? TEXT("Dangerous") : TEXT("Guarded"));
+            if (!TestTrue(Where + TEXT("both revisions generate it"), FExpeditionRun::EncounterLayout(Route, Stage, ERuleset::Compact, 10, Old) &&
+                FExpeditionRun::EncounterLayout(Route, Stage, ERuleset::Compact, 11, New)) || !TestEqual(Where + TEXT("the same roster"), New.Combatants.Num(), Old.Combatants.Num())) { continue; }
+            const int32 Kind = static_cast<int32>(FExpeditionRun::StageKind(Stage)), Way = bDangerous ? 1 : 0;
+            for (int32 U = 4; U < Old.Combatants.Num(); ++U)
+            {
+                const FCombatantState& A = Old.Combatants[U];
+                const FCombatantState& B = New.Combatants[U];
+                TestEqual(Where + B.Role + TEXT(" HP"), B.MaxHP, A.MaxHP * Revision11Rules::EnemyHpPercent[Way][Kind] / 100);
+                TestEqual(Where + B.Role + TEXT(" damage"), B.DamageBonus, A.DamageBonus + Revision11Rules::EnemyDamageDelta[Way][Kind]);
+                TestTrue(Where + B.Role + TEXT(" keeps every other number"), A.Role == B.Role && A.Cell == B.Cell && A.ArmorClass == B.ArmorClass &&
+                    A.AttackBonus == B.AttackBonus && A.DamageDie == B.DamageDie && A.Speed == B.Speed && A.Range == B.Range);
+            }
+            ++Cells;
+        }
+    }
+    TestEqual(TEXT("Every route of every stage was compared"), Cells, 2 * FExpeditionRun::EncounterCount);
     // The same seed under revisions 10 and 11 offers the same routes (generation is revision 10's); only the foes' numbers and the rules differ.
     FExpeditionRun Runs[2]; FString Error;
+    int32 Played = 0;
     for (int32 I = 0; I < 2; ++I)
     {
         TestTrue(TEXT("A run starts"), Runs[I].NewRun(42, Error, TEXT("balance-11"), EFighterSubclass::Champion, ERuleset::Compact, 10 + I));
@@ -252,6 +309,7 @@ bool FRevision11BalanceRevisionTest::RunTest(const FString& Parameters)
         const int32 Route = Fight % 2;
         if (!TestTrue(Where + TEXT("both runs choose a route"), Runs[0].ChooseRoute(Runs[0].Progress().Offers[Route].Id, Error) && Runs[1].ChooseRoute(Runs[1].Progress().Offers[Route].Id, Error)))
         { break; }
+        ++Played;
         const FCombatEncounter& Old = Runs[0].Battle().Snapshot().Encounter;
         const FCombatEncounter& New = Runs[1].Battle().Snapshot().Encounter;
         TestTrue(Where + TEXT("each fight carries its run's rules"), !Old.bNearestTarget && !Old.bSturdyRescue && New.bNearestTarget && New.bSturdyRescue);
@@ -291,6 +349,8 @@ bool FRevision11BalanceRevisionTest::RunTest(const FString& Parameters)
         }
         if (!bBoth) { break; }
     }
+    // The played runs must at least reach fight 2, past the save round trip of fight 1 (the stage table above covers every cell).
+    TestTrue(FString::Printf(TEXT("Both played runs reached fight 2 (%d played)"), Played), Played >= 2);
     FExpeditionRun Srd;
     TestTrue(TEXT("An SRD run starts"), Srd.NewRun(42, Error, TEXT("balance-11-srd"), EFighterSubclass::Champion, ERuleset::SRD));
     TestTrue(TEXT("It chooses a route"), Srd.ChooseRoute(Srd.Progress().Offers[0].Id, Error));
