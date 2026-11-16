@@ -446,6 +446,13 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/cast4-release-poses.json")), 13)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/palette-poses.json")), 18)
         self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/route-poses.json")), 4)
+        # The Waystone set piece burst (#250): one shot per tenth of a second of its timeline, then the settled state.
+        self.assertEqual(len(load_poses(Path(__file__).resolve().parents[1] / "capture/setpiece-poses.json")), 48)
+        self.assertEqual(len(load_poses(self.poses([{"name": "sp", "mode": "setpiece", "time": 1.3}]))), 1)
+        for wrong in ({"name": "sp", "mode": "setpiece"}, {"name": "sp", "mode": "setpiece", "time": 11}, {"name": "sp", "mode": "setpiece", "time": True},
+                      {"name": "sp", "mode": "setpiece", "time": 1, "role": "Rogue"}, {"name": "sp", "mode": "battle", "yaw": 0, "distance": 1300, "time": 1}):
+            with self.assertRaises(ValueError, msg=str(wrong)):
+                load_poses(self.poses([wrong]))
         self.assertEqual(len(load_poses(self.poses([{"name": "route-hero", "mode": "overview", "hero": 4}]))), 1)
         self.assertEqual(len(load_poses(self.poses([{"name": "hit", "mode": "impact", "yaw": 0, "distance": "default"},
                                                     {"name": "bolt", "mode": "impact", "effect": "spell", "frames": 6, "yaw": 90, "distance": 1300},
