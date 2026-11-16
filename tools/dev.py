@@ -97,7 +97,7 @@ CORE_COMMANDS = ("build", "test", "bootstrap", "verify-skills", "editor", "relau
 GALLERY_FIXTURES = ("default-seed-battle", "default-seed-enemy-turn", "board-16x11", "board-18x12", "board-vigil-pillars", "board-vigil-walls", "board-root-r002", "board-vault", "default-seed-route")
 GALLERY_RESOLUTIONS = ("1920x1080", "1280x720")
 GALLERY_POSES = Path("tools/capture/poses.json")
-CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", "roll", "impact", "pose")
+CAPTURE_MODES = ("battle", "targeting", "overview", "start", "tooltip", "hint", "roll", "impact", "pose", "setpiece")
 CAPTURE_CLIPS = ("idle", "walk", "melee", "ranged", "cast", "hit", "downed", "death", "recover", "brace")
 CAPTURE_ACTIONS = ("attack", "special1", "special2", "rescue", "potion")
 CAPTURE_HINTS = ("move", "resources", "rescue", "endturn")
@@ -197,8 +197,15 @@ def load_poses(path):
             seconds = shot.get("time", 0)
             if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 10:
                 raise ValueError(f"{name} needs \"time\" in seconds from 0 to 10")
+        elif shot["mode"] == "setpiece":
+            # The Waystone set piece held at a moment of its timeline (#250); it owns the camera, so no yaw or distance.
+            seconds = shot.get("time")
+            if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 10:
+                raise ValueError(f"{name} needs \"time\" in seconds from 0 to 10")
+            if "pose" in shot or "role" in shot:
+                raise ValueError(f"{name} may give only \"time\" on a setpiece shot")
         elif "pose" in shot or "time" in shot or ("role" in shot and shot["mode"] != "impact"):
-            raise ValueError(f"{name} may give \"role\", \"pose\" or \"time\" on a pose shot only (an impact shot of an arrow or bolt may name a \"role\")")
+            raise ValueError(f"{name} may give \"role\", \"pose\" or \"time\" on a pose or setpiece shot only (an impact shot of an arrow or bolt may name a \"role\")")
         if shot["mode"] in ("battle", "targeting", "tooltip", "hint", "roll", "impact", "pose"):
             yaw, distance = shot.get("yaw"), shot.get("distance")
             if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not -360 <= yaw <= 360:

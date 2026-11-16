@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "asset_id": "setpiece-vault-chip",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/SetPiece/SM_SetPiece_Vault_Chip",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/250",
+  "provenance": {
+    "author": "dnd-diceroll project agents (Claude Opus 5.5) for the repository owner",
+    "license": "Project-owned original work; same terms as this repository",
+    "origin": "Authored by script in Blender 5.2.3 LTS for the Vault finale set piece (#250): the rune seal around the Waystone artifact, in the Vault kit r002 look (blue-black basalt, one cold-blue glow accent); all textures and geometry procedural; no third-party, kit, AI-service or downloaded content"
+  },
+  "recipe": {
+    "method": "Authored in Blender by script (build_setpiece_vault.py): a faceted basalt chip about 12 cm across with a rune fleck, thrown when the seal shatters; vertex colour = ray-cast self ambient occlusion x height gradient; glow only via COLOR_0.a on the rune material",
+    "approved_reference": "The Vault kit r002 (#149, Art/dark-fantasy-sources/r002-vault); #250 scope (Austin, 2026-11-15)",
+    "parameters": {
+      "units": "metres at true scale (the Vault is authored at the 150 cm cell and placed unscaled)",
+      "axes": "+X forward, Z up",
+      "pivot": "centre of the chip",
+      "triangles": 42,
+      "size_m": [
+        0.1204,
+        0.0961,
+        0.0776
+      ],
+      "bbox_min_m": [
+        -0.055,
+        -0.0488,
+        -0.0386
+      ],
+      "bbox_max_m": [
+        0.0654,
+        0.0473,
+        0.039
+      ],
+      "atlas_px": 256,
+      "sampling": "Linear, 8 px wrapped padding per atlas region",
+      "glow_triangles": 3,
+      "lods": "none (exempt)",
+      "use": "finale only: six shards float around the artifact in the apse and fly onto the dais along pre-authored arcs when the finale is won (no physics)"
+    },
+    "model_revision": "not applicable (procedural Blender scripts)"
+  },
+  "tools": {
+    "blender": "5.2.3 LTS"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/tlib.py",
+      "sha256": "9094b3b6546282033dd9a877665d13ecd19981b44371db7abdeabcbf1055cf58"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r001/scripts/prims.py",
+      "sha256": "ddf0566dd329bf8ca73ae2f93283ea586cb409af3c5e1d9af2e2ae1bbc071c27"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/r002_lib.py",
+      "sha256": "43590eb592f64111ad275abd1dd13445a551069eabe02081e8c46c6f86b00e86"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r002-vault/scripts/vault_lib.py",
+      "sha256": "822d5e2a0977c5497c973c91dd2a325eafc07c71030a5af169a1687ddb223684"
+    },
+    {
+      "role": "source",
+      "path": "Art/dark-fantasy-sources/r003-setpiece/scripts/build_setpiece_vault.py",
+      "sha256": "0b756d822f9bb735b5183f41db6f8c212ab82923a701fdad764e7ab83e0a1e9c"
+    },
+    {
+      "role": "export",
+      "path": "Art/setpiece-vault-chip/r001/SM_SetPiece_Vault_Chip.glb",
+      "sha256": "c3dbe85c85fce5c3517ad50ec8327bee60289d6c2114ec6bfb204466753ead88"
+    }
+  ],
+  "import_policy": {
+    "name": "dnd-diceroll-dark-fantasy-theme",
+    "version": 2,
+    "settings": {
+      "importer": "Interchange glTF via Content/Python/import_dark_fantasy_theme.py (theme_plan.SETPIECE_R001; new packages only, nothing replaced, no data-asset entry)",
+      "material": "MI_* child of M_DiceRollTheme: texture x COLOR_0.rgb, glow from COLOR_0.a",
+      "texture_filter": "trilinear with anisotropic 8, mips generated, never nearest",
+      "texture_compression": "default (sRGB, mips); no nearest or editor-icon compression",
+      "nanite": "off, set explicitly on import",
+      "lods": "exempt: under ~1k triangles (no LOD exports)",
+      "collision": "none (presentation only; the set piece never blocks anything)",
+      "vertex_colour": "COLOR_0 VEC4 normalised uint16 (RGB light, A glow mask)",
+      "axes": "metres, +X forward, Z up (glTF Y-up export)"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}

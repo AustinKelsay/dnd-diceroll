@@ -11,6 +11,7 @@
 #include "Presentation/OccluderFade.h"
 #include "Presentation/ExpeditionHUD.h"
 #include "Presentation/ExpeditionPlayerController.h"
+#include "Presentation/WaystoneSetPiece.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
@@ -225,6 +226,8 @@ AExpeditionBattleView::AExpeditionBattleView()
     Grade->bUnbound = true;
     SceneryRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Scenery"));
     SceneryRoot->SetupAttachment(RootComponent);
+    SetPieceComponent = CreateDefaultSubobject<UWaystoneSetPiece>(TEXT("WaystoneSetPiece"));
+    SetPieceComponent->SetupAttachment(SceneryRoot);
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeAsset(TEXT("/Engine/BasicShapes/Cube.Cube"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderAsset(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -784,6 +787,7 @@ void AExpeditionBattleView::ClearPresentation()
     Groups.Reset(); RingBank = nullptr; RingGroup = INDEX_NONE; OverlayBase = INDEX_NONE; RingStates.Reset();
     LogicalParts = 0; LogicalProps = 0;
     CampLight = nullptr; WaystoneLight = nullptr;
+    if (SetPieceComponent) { SetPieceComponent->Clear(); }
     Swaying.Reset();
     Occluder = FExpeditionPart(); bOccluderBoardSent = false; Dressing.Reset(); BrazierCells.Reset(); VariantsByCell.Reset(); SpotsByCell.Reset();
     bVigilKit = false; bRootKit = false; bVaultKit = false; WorldProp = FExpeditionProp(); ObstaclePieces = 0; ArchPieces = 0;
@@ -1607,8 +1611,11 @@ void AExpeditionBattleView::BuildEffects(const FCombatEncounter& Encounter)
         WaystoneGain = bApse ? VaultWaystoneGain : 1.0f;
         WaystoneSlots.Add(MakeSlot(Cylinder, Pedestal + FVector(0, 0, 45), FVector(0.7f, 0.7f, 0.9f), FLinearColor(0.25f, 0.25f, 0.32f), FRotator::ZeroRotator, true));
         if (bApse) { SetSlot(WaystoneSlots.Last(), false, WaystoneSlots.Last().Location, WaystoneSlots.Last().Rotation, WaystoneSlots.Last().Scale, WaystoneSlots.Last().Colour); }
-        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f)), FRotator(45, 45, 0), true));
+        WaystoneShardColour = FLinearColor(0.3f, 0.9f, 1.0f) * (4.0f * (bApse ? VaultShardGlow : 1.0f));
+        WaystoneSlots.Add(MakeSlot(Cube, Pedestal + FVector(0, 0, 140), FVector(0.32f, 0.32f, 0.32f), WaystoneShardColour, FRotator(45, 45, 0), true));
         WaystoneLight = MakeLight(nullptr, Pedestal + FVector(0, 0, 160), FLinearColor(0.3f, 0.85f, 1.0f), 250.0f, 1300.0f);
+        // The finale's set piece (#250) around this pedestal: the seal, its flight plan and the shot (ExpeditionBattleViewSetPiece.cpp).
+        BuildSetPiece(Pedestal, bApse, Encounter);
     }
 }
 
@@ -1922,10 +1929,19 @@ void AExpeditionBattleView::UpdateEffects()
     if (WaystoneSlots.Num() == 2 && WaystoneLight)
     {
         const bool bClaimed = HasRun() && Progress().bArtifactRecovered;
-        const float Rise = bClaimed ? 60.0f + 20.0f * FMath::Sin(Clock * 1.5f) : 10.0f * FMath::Sin(Clock * 1.8f);
+        // With the finale's set piece (#250) the artifact rises when the set piece lifts it, and the flare drives the light and its glow; without
+        // it the artifact rises with the victory, as before.
+        const bool bSetPiece = SetPieceComponent && SetPieceComponent->IsBound();
+        const float Lift = bSetPiece ? SetPieceComponent->LiftAlpha() : bClaimed ? 1.0f : 0.0f;
+        const float Flare = bSetPiece ? SetPieceComponent->FlareGain() : 1.0f;
+        auto Between = [Lift](float Resting, float Lifted) { return Lift <= 0.0f ? Resting : Lift >= 1.0f ? Lifted : FMath::Lerp(Resting, Lifted, Lift); };
+        const float Rise = Between(10.0f * FMath::Sin(Clock * 1.8f), 60.0f + 20.0f * FMath::Sin(Clock * 1.5f));
+        const float Spin = Clock * 40.0f + (bSetPiece ? SetPieceComponent->ExtraSpin() : 0.0f);
         const FVector Base = WaystoneSlots[0].Location;
-        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Clock * 40.0f, 45), WaystoneSlots[1].Scale, WaystoneSlots[1].Colour);
-        WaystoneLight->SetIntensity((bClaimed ? 320.0f : 200.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)));
+        // The flare scales the shard's own colour, never the colour last drawn (SetSlot stores what it draws), so it cannot compound.
+        SetSlot(WaystoneSlots[1], true, Base + FVector(0, 0, 95 + Rise), FRotator(45, Spin, 45), WaystoneSlots[1].Scale,
+            Flare == 1.0f ? WaystoneShardColour : WaystoneShardColour * FMath::Sqrt(Flare));
+        WaystoneLight->SetIntensity(Between(200.0f, 320.0f) * WaystoneGain * (0.85f + 0.15f * FMath::Sin(Clock * 2.5f)) * Flare);
     }
 }
 
@@ -2177,10 +2193,13 @@ void AExpeditionBattleView::UpdateCamera(float DeltaSeconds)
         }
     }
     const FShakedPose Shaken = PoseFor(ShakeScale);
-    const FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
-    Camera->SetWorldLocation(Eye);
+    FVector Eye = GetActorTransform().TransformPosition(FVector(Shaken.FocusXY.X, Shaken.FocusXY.Y, Focus.Z)) + Offset + Framing + Shaken.Extra;
     // On the tabletop, aim below the dioramas so they sit above the centred menus and route cards.
-    Camera->SetWorldRotation((-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation());
+    FRotator Look = (-Offset - FVector(0.0f, 0.0f, bOverview ? Span * 0.32f : 0.0f)).Rotation();
+    // The finale's set piece (#250) takes the camera to its shot while it plays and holds it once settled; a no-op otherwise.
+    if (!bOverview && SetPieceComponent) { SetPieceComponent->FrameCamera(Eye, Look); }
+    Camera->SetWorldLocation(Eye);
+    Camera->SetWorldRotation(Look);
     UpdateFarGrade();
 }
 
@@ -2311,17 +2330,19 @@ void AExpeditionBattleView::RecordLevelGain()
 
 void AExpeditionBattleView::Present(const TArray<FCombatResult>& Results)
 {
-    Show.Enqueue(Results, Rules().Snapshot());
+    // A battle won or lost ends the whole run only when the committed run phase says so: the finale (the fifth fight) won, or any defeat (#243).
+    const bool bEndsRun = HasRun() && (Progress().Phase == EExpeditionPhase::Victory || Progress().Phase == EExpeditionPhase::Defeat);
+    Show.Enqueue(Results, Rules().Snapshot(), bEndsRun);
     if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
 }
 
-void AExpeditionBattleView::SkipPresentation() { Show.Finish(); }
+void AExpeditionBattleView::SkipPresentation() { Show.Finish(); SettleSetPiece(); }
 
 void AExpeditionBattleView::CycleSpeed()
 {
     PlaybackSpeed = PlaybackSpeed == EPlaybackSpeed::Normal ? EPlaybackSpeed::Fast : PlaybackSpeed == EPlaybackSpeed::Fast ? EPlaybackSpeed::Instant : EPlaybackSpeed::Normal;
     Show.Speed = PlaybackSpeed == EPlaybackSpeed::Fast ? 2.2f : 1.0f;
-    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); }
+    if (PlaybackSpeed == EPlaybackSpeed::Instant) { Show.Finish(); SettleSetPiece(); }
     PlayCue(EExpeditionCue::Click);
 }
 
@@ -2695,6 +2716,7 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
     if (!bShowRecords) { Show.Tick(DeltaSeconds); }
+    UpdateSetPiece(DeltaSeconds);
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
