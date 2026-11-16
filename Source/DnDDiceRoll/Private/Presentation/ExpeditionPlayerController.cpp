@@ -12,6 +12,7 @@
 #include "Presentation/ExpeditionHUD.h"
 #include "Components/InputComponent.h"
 #include "Engine/GameViewportClient.h"
+#include "Widgets/SViewport.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
 #include "Combat/ActionFacts.h"
@@ -23,6 +24,30 @@
 #if EXPEDITION_LINUX_FOCUS_POLL
 #include "Linux/LinuxApplication.h"
 #endif
+
+namespace
+{
+/**
+ * The game's input mode: what FInputModeGameOnly sets up (the viewport has the keyboard, the game gets every input, held keys are flushed when the viewport loses
+ * focus), but with the pointer visible and uncaptured from launch (#171 item 6). FInputModeGameOnly also takes a hidden high-precision mouse capture, which on
+ * Linux is SDL's relative mouse mode: the cursor is hidden, the viewport reads the pointer as (0,0), nothing is hovered, and the first press only releases it.
+ */
+struct FExpeditionInputMode final : FInputModeDataBase
+{
+protected:
+    virtual void ApplyInputMode(FReply& SlateOperations, UGameViewportClient& GameViewportClient) const override
+    {
+        const TSharedPtr<SViewport> Widget = GameViewportClient.GetGameViewportWidget();
+        if (!Widget.IsValid()) { return; }
+        SlateOperations.SetUserFocus(Widget.ToSharedRef());
+        SlateOperations.LockMouseToWidget(Widget.ToSharedRef());
+        SlateOperations.ReleaseMouseCapture();
+        GameViewportClient.SetIgnoreInput(false);
+        GameViewportClient.SetHideCursorDuringCapture(false);
+        GameViewportClient.SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
+    }
+};
+}
 
 void AExpeditionPlayerController::BeginPlay()
 {
@@ -52,9 +77,7 @@ void AExpeditionPlayerController::BeginPlay()
         Settings->bAltEnterTogglesFullscreen = false;
     }
     bShowMouseCursor = true;
-    FInputModeGameOnly Mode;
-    Mode.SetConsumeCaptureMouseDown(false);
-    SetInputMode(Mode);
+    SetInputMode(FExpeditionInputMode());
     if (UGameViewportClient* Viewport = GetWorld()->GetGameViewport())
     {
         Viewport->SetMouseCaptureMode(EMouseCaptureMode::CaptureDuringMouseDown);
@@ -162,7 +185,11 @@ void AExpeditionPlayerController::OnApplicationActivation(bool bActive)
 void AExpeditionPlayerController::PlayerTick(float DeltaTime)
 {
     // A window that has already lost focus spends the press before the superclass delivers any input, including a release it queued (#220).
-    // (Polled every tick, armed or not, so the keyboard-focus latch sees the window have focus before it can lose it.)
+    // (Polled every tick, so the keyboard-focus latch sees focus the window gains during a press before it can lose it.)
+    // What the keyboard focus was when the last frame's input was processed: a press dispatched in this frame (inside Super::PlayerTick) starts its latch from it,
+    // so a loss that came after the press was queued but before this frame still spends it (#269 review).
+    bKeyboardFocusBeforeFrame = bKeyboardFocusAtLastPoll;
+    bKeyboardFocusAtLastPoll = KeyboardFocusNow().Get(false);
     const bool bFocusLost = !WindowHasFocus();
     if ((bPressArmed || DioramaPress != INDEX_NONE) && bFocusLost) { NotifyWindowFocusLost(); }
     Super::PlayerTick(DeltaTime);
@@ -743,6 +770,10 @@ void AExpeditionPlayerController::ChooseAlly(const FCombatantState& Unit)
 
 void AExpeditionPlayerController::Click()
 {
+    // Every left press starts the keyboard-focus latch afresh (#230): only a loss of focus the window had during this press, or since the last processed frame
+    // (the press may have been queued before it), spends it. A seat whose only keyboard went away (one that sleeps or disconnects) never reports focus again,
+    // and its next fresh click must still commit.
+    bSawKeyboardFocus = KeyboardFocusNow().Get(false) || bKeyboardFocusBeforeFrame;
     bPressArmed = false;
     if (!IsValid(BattleView)) { return; }
     float MouseX = 0, MouseY = 0;
@@ -839,26 +870,34 @@ void AExpeditionPlayerController::FlushPressedKeys()
     Super::FlushPressedKeys();
 }
 
-bool AExpeditionPlayerController::KeyboardFocusLost() const
+TOptional<bool> AExpeditionPlayerController::KeyboardFocusNow() const
 {
+    if (SimulatedKeyboardFocus.IsSet()) { return SimulatedKeyboardFocus; }
 #if EXPEDITION_LINUX_FOCUS_POLL
     // Only a running game window has the Linux platform application; an automation world has no viewport.
     const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return false; }
+    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return {}; }
     const TSharedPtr<GenericApplication> Platform = FSlateApplication::Get().GetPlatformApplication();
-    if (!Platform.IsValid()) { return false; }
-    const TSharedPtr<FLinuxWindow> FocusWindow = static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow();
-    if (FocusWindow.IsValid()) { bSawKeyboardFocus = true; return false; }
-    return bSawKeyboardFocus;
+    if (!Platform.IsValid()) { return {}; }
+    return static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow().IsValid();
 #else
-    return false;
+    return {};
 #endif
+}
+
+bool AExpeditionPlayerController::KeyboardFocusLost() const
+{
+    const TOptional<bool> bFocused = KeyboardFocusNow();
+    if (!bFocused.IsSet()) { return false; }
+    if (*bFocused) { bSawKeyboardFocus = true; return false; }
+    return bSawKeyboardFocus;
 }
 
 bool AExpeditionPlayerController::WindowHasFocus() const
 {
-    // Only a loss TRANSITION counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no window ever has SDL
-    // keyboard focus), and ordinary clicks must still work there. KeyboardFocusLost() is false until the window has had keyboard focus once.
+    // Only a loss TRANSITION during the press counts, never an absolute "has focus" state: a seat with no keyboard device never reports focus (FApp::HasFocus stays false, no
+    // window ever has SDL keyboard focus), and ordinary clicks must still work there, including after its only keyboard went away (#230). KeyboardFocusLost() is false until
+    // the window has had keyboard focus since the press began.
     return !KeyboardFocusLost();
 }
 

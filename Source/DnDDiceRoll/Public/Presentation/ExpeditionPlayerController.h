@@ -43,13 +43,18 @@ public:
     FDelegateHandle ActivationHandle;
     void StopListeningForActivation();
     /**
-     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) and no longer has it. While the left button is held the engine does NOT deactivate
-     * the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither Slate's activation event nor FApp::HasFocus
-     * reports it; this is the signal that does. Always false on other platforms, and before the window first had focus (a seat with no keyboard never gives it).
+     * True once the window has had SDL keyboard focus (Linux: FLinuxApplication's focus window) since the current left press began and no longer has it. While the left button
+     * is held the engine does NOT deactivate the application on that loss (FLinuxApplication::CheckIfApplicatioNeedsDeactivation skips it with a drag-window button down), so neither
+     * Slate's activation event nor FApp::HasFocus reports it; this is the signal that does. Each press starts it afresh (Click), counting focus the window still had when the
+     * last frame's input was processed, so a loss before the frame that dispatches a queued press spends it, while a seat whose only keyboard went away keeps clicking (#230). Always false on other platforms, and while the window has not had focus during the press (a seat with no keyboard never gives it).
      */
     bool KeyboardFocusLost() const;
     mutable bool bSawKeyboardFocus = false;
-    /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
+    /** Whether the window holds the seat's keyboard focus now: the Linux game reads FLinuxApplication's focus window; unknown (unset) elsewhere. */
+    TOptional<bool> KeyboardFocusNow() const;
+    /** Test support: stands in for the platform's keyboard focus report (unset: the platform's again). */
+    void SimulateKeyboardFocus(TOptional<bool> bFocused) { SimulatedKeyboardFocus = bFocused; }
+    /** False once the window has lost keyboard focus it had during the current press (KeyboardFocusLost); true otherwise, including on a seat with no keyboard. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
     int32 Selection() const { return SelectedId; }
@@ -186,6 +191,10 @@ private:
     bool bCapturing = false;
     /** Keys whose press skipped the route fly-in (#249): their repeats and release are swallowed too. */
     TSet<FKey> FlyInSwallowed;
+    TOptional<bool> SimulatedKeyboardFocus;
+    /** Keyboard focus at this frame's poll and at the previous one (PlayerTick); a press dispatched this frame counts a loss since the previous one (#269 review). */
+    bool bKeyboardFocusAtLastPoll = false;
+    bool bKeyboardFocusBeforeFrame = false;
     bool bSimulatedPointer = false;
     bool bSimulatedCamera = false;
     FIntPoint SimulatedViewport = FIntPoint::ZeroValue;

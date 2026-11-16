@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
 #include "Presentation/TargetChipLayout.h"
+#include "GameFramework/InputSettings.h"
 
 /**
  * #171: pointer and keyboard share the board. These tests drive the real controller and HUD through the
@@ -764,4 +765,22 @@ bool FOverlayCloseClickTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("A click then moves there"), ActorCell(Game), Target);
     return !HasAnyErrors();
 }
+
+/**
+ * #171 item 6: the first click after launch was ignored, and nothing under the pointer was hovered before it. The engine's default input settings capture the mouse
+ * when the window first activates (bCaptureMouseOnLaunch) and whenever it is focused (a permanent capture mode). Taken before the controller shows its cursor, that
+ * capture is a hidden high-precision one, which on Linux puts SDL in relative mouse mode: the cursor is hidden, no pointer position reaches the viewport (it reads (0,0)),
+ * and the first press only releases the capture. The project's settings must keep the controller's own rule from launch: the mouse is captured only while a button is
+ * down. The SDL condition itself needs a real window; the on-screen check covers it.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNoLaunchMouseCaptureTest, "Project.Expedition.Presentation.NoMouseCaptureBeforeTheFirstClick",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FNoLaunchMouseCaptureTest::RunTest(const FString& Parameters)
+{
+    const UInputSettings* Settings = GetDefault<UInputSettings>();
+    TestFalse(TEXT("The viewport takes no mouse capture when the window first activates"), bool(Settings->bCaptureMouseOnLaunch));
+    TestEqual(TEXT("From launch the viewport captures the mouse only while a button is down"), int32(Settings->DefaultViewportMouseCaptureMode), int32(EMouseCaptureMode::CaptureDuringMouseDown));
+    return !HasAnyErrors();
+}
+
 #endif

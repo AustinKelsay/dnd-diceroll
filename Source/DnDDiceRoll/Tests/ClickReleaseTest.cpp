@@ -454,6 +454,96 @@ bool FLeftPressSpentByDeactivationTest::RunTest(const FString& Parameters)
     return !HasAnyErrors();
 }
 
+/**
+ * #230: on Linux the window's SDL keyboard focus is the signal that spends a held press when another client takes the keyboard (#220). A seat whose only keyboard goes
+ * away (a wireless keyboard that sleeps or disconnects, or the rig's `wtype`) never reports that focus again; the latch must not then spend every later click. The test
+ * stands in for the platform's focus report through the controller's seam (the editor has no Linux focus window) and drives real presses and releases.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftClickAfterKeyboardGoneTest, "Project.Expedition.Presentation.LeftClickCommitsAfterTheKeyboardGoes",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLeftClickAfterKeyboardGoneTest::RunTest(const FString& Parameters)
+{
+    using namespace ClickReleaseTest;
+    FExpeditionSaveData Data;
+    if (!TestTrue(TEXT("A fight checkpoint exists"), Fight(Data, -1, false))) { return false; }
+    // A held press, with the focus report changing frame by frame while the button is down.
+    auto HeldPress = [](FHarness& Game, FIntPoint Cell, TArrayView<const bool> FocusWhileHeld)
+    {
+        Point(Game, Aim, Cell);
+        Frames(Game, 3);
+        const FStamp Was = Stamp(Game);
+        Down(Game, EKeys::LeftMouseButton);
+        Game.Frame(1.0f / 30.0f);
+        for (const bool bFocused : FocusWhileHeld) { Game.Player->SimulateKeyboardFocus(bFocused); Game.Frame(1.0f / 30.0f); }
+        Up(Game, EKeys::LeftMouseButton);
+        Frames(Game, 3);
+        Game.Settle();
+        return !Same(Was, Stamp(Game));
+    };
+    {
+        // The keyboard was there, then went away for good: every later click commits.
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(TEXT("The party holds the turn"), Game.IsValid())) { return false; }
+        Game->Player->SimulateKeyboardFocus(true);
+        Frames(*Game, 3);
+        Game->Player->SimulateKeyboardFocus(false);
+        Frames(*Game, 3);
+        FIntPoint Cell;
+        if (!TestTrue(TEXT("The hero has a cell to walk to"), FreeMove(*Game, Cell))) { return false; }
+        TestTrue(TEXT("After the only keyboard went away, a click commits"), PlainClick(*Game, Aim, Cell));
+        Game->Player->PreviewMode(ECombatCommandType::Attack);
+        if (TestTrue(TEXT("The hero has another cell to walk to"), FreeMove(*Game, Cell)))
+        {
+            TestTrue(TEXT("... and so does the next one"), PlainClick(*Game, Aim, Cell));
+        }
+    }
+    {
+        // #220 still holds: the window had keyboard focus at the press and lost it while the button was down. Nothing commits; a fresh click with focus back does.
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(TEXT("The party holds the turn again"), Game.IsValid())) { return false; }
+        Game->Player->SimulateKeyboardFocus(true);
+        Frames(*Game, 3);
+        FIntPoint Cell;
+        if (!TestTrue(TEXT("The hero has a cell to walk to (#220 case)"), FreeMove(*Game, Cell))) { return false; }
+        const bool Lost[] = {false, false};
+        TestFalse(TEXT("A press that loses keyboard focus while held commits nothing"), HeldPress(*Game, Cell, Lost));
+        // Focus arriving after the press and then going while it is held spends it too.
+        Game->Player->SimulateKeyboardFocus(false);
+        Frames(*Game, 3);
+        const bool CameThenWent[] = {true, false};
+        TestFalse(TEXT("A press that gains and then loses keyboard focus while held commits nothing"), HeldPress(*Game, Cell, CameThenWent));
+        Game->Player->SimulateKeyboardFocus(true);
+        Frames(*Game, 3);
+        TestTrue(TEXT("A fresh click with focus back commits"), PlainClick(*Game, Aim, Cell));
+    }
+    {
+        // #269 review: the press is queued with focus, and another client takes the keyboard before the frame that dispatches it. The press starts its latch
+        // in that frame, after the loss; the loss must still spend it.
+        TUniquePtr<FHarness> Game = Resumed(*this, Data);
+        if (!TestTrue(TEXT("The party holds the turn (queued press)"), Game.IsValid())) { return false; }
+        Game->Player->SimulateKeyboardFocus(true);
+        FIntPoint Cell;
+        if (!TestTrue(TEXT("The hero has a cell to walk to (queued press)"), FreeMove(*Game, Cell))) { return false; }
+        Point(*Game, Aim, Cell);
+        Frames(*Game, 3);
+        const FStamp Was = Stamp(*Game);
+        Down(*Game, EKeys::LeftMouseButton);
+        Game->Player->SimulateKeyboardFocus(false);
+        Game->Frame(1.0f / 30.0f);
+        Up(*Game, EKeys::LeftMouseButton);
+        Frames(*Game, 3);
+        Game->Settle();
+        TestTrue(TEXT("A press whose focus loss came before the frame that dispatched it commits nothing"), Same(Was, Stamp(*Game)));
+        // The keyboard stays gone and no window has it (as when the device disappears): the next fresh press commits (#230).
+        Game->Player->PreviewMode(ECombatCommandType::Attack);
+        if (TestTrue(TEXT("The hero still has a cell to walk to (queued press)"), FreeMove(*Game, Cell)))
+        {
+            TestTrue(TEXT("With the keyboard still gone, the next fresh click commits"), PlainClick(*Game, Aim, Cell));
+        }
+    }
+    return !HasAnyErrors();
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLeftReleaseHudBoundaryTest, "Project.Expedition.Presentation.LeftReleaseAtAHudEdgeCommitsNothing",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FLeftReleaseHudBoundaryTest::RunTest(const FString& Parameters)
