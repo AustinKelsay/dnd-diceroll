@@ -61,8 +61,9 @@ class DNDDICEROLL_API FBuildCatalog
 {
 public:
     /** The revision new runs are created under. 8 (#184): Compact enemy tuning. 9 (#188): Compact encounter identity (stages,
-     * layouts, enemy roles and previews). 10 (#218): Compact reward cards (Reserve and Honed); generation is revision 9's. */
-    static constexpr int32 Revision = 10;
+     * layouts, enemy roles and previews). 10 (#218): Compact reward cards (Reserve and Honed); generation is revision 9's. 11 (#240): Compact
+     * SRD 5.2.1 move-through (allies, Downed and dead creatures); generation and rewards are revision 10's. */
+    static constexpr int32 Revision = 11;
     /** The oldest revision that still restores. A run keeps the revision it was created under for its whole lifetime
      * (revision 7 Compact runs keep revision 7 enemies, revision 8 runs revision 8 generation); any other revision is refused by name. */
     static constexpr int32 MinimumRevision = 7;
