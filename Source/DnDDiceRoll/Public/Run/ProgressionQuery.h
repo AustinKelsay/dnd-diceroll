@@ -53,7 +53,7 @@ struct DNDDICEROLL_API FRewardCardFacts
     ERewardCardNote Note = ERewardCardNote::None;
     FBasicDamageParts DamageBefore, DamageAfter;
     int32 GearBefore = 0, GearAfter = 0;
-    /** Every pool the hero has, before -> after (only Reserve changes them). */
+    /** Every pool the hero has, before -> after (Reserve changes them; from revision 11 Honed refills them too). */
     TArray<FPoolChange> Pools;
     /** Both specials, before -> after (only Honed changes them). */
     TArray<FSpecialChange> Specials;
@@ -93,6 +93,8 @@ struct DNDDICEROLL_API FProgressionFacts
     int32 Victories = 0;
     /** The run offers Reserve and Honed (Compact, catalog revision 10 or later). */
     bool bUpgradeCards = false;
+    /** Reserve and Honed refill the recipient's special pools to its caps (Compact, catalog revision 11, #241). */
+    bool bCardsRefill = false;
     /** Reward phase: the potions this reward gives, whatever the card. */
     int32 RewardPotions = 0;
     /** Reward phase: the level the last victory's survivors reached. */

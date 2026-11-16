@@ -98,6 +98,8 @@ public:
     int32 DockRebuilds() const { return DockRebuildCount; }
     /** The lines the build picker's details panel asked to draw for the shown build's abilities, from facts: name, then its cost and usage. */
     const TArray<FString>& BuildPickerLinesRequested() const { return PickerLines; }
+    /** The party builder's stat line for the selected hero ("HP 28 / AC 15 / reach 1"), as last drawn. */
+    const FString& BuildPickerStatsRequested() const { return PickerStats; }
     /** The hint callout the last DrawHUD asked to draw (#158), or null. Empty whenever an overlay, playback or enemy turn owns the screen. */
     const FHintRequest* HintRequested() const { return bHintRequested ? &HintDrawn : nullptr; }
     /** Test support: act as if the pointer were at this viewport position; a negative position returns to the physical pointer. */
@@ -171,6 +173,7 @@ private:
     void DrawPathCost();
     TArray<FActionTagRequest> TagsRequested;
     TArray<FString> PickerLines;
+    FString PickerStats;
     /** One dock button as the facts describe it, kept until the combat state changes. */
     struct FDockEntry
     {

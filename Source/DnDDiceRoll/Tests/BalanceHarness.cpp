@@ -405,6 +405,8 @@ struct FTracker
 {
     FRunStats& Run;
     TMap<int32, int32> HeroIndex;
+    /** This fight's revived heroes, and those of them that have not taken an own turn since (#241's rescue-loop counts). */
+    TSet<int32> Revived, AwaitingTurn;
 
     explicit FTracker(FRunStats& InRun) : Run(InRun) {}
     FHeroStats* Hero(int32 Id) { const int32* I = HeroIndex.Find(Id); return I ? &Run.Heroes[*I] : nullptr; }
@@ -419,7 +421,12 @@ struct FTracker
             const auto& Now = After.Encounter.Combatants[I];
             FHeroStats* H = Now.Side == ECombatSide::Party ? Hero(Now.Id) : nullptr;
             if (!H || Was.Life == Now.Life) { continue; }
-            if (Now.Life == ECombatLife::Downed) { ++H->Downs; ++Encounter().Downs; }
+            if (Now.Life == ECombatLife::Downed)
+            {
+                ++H->Downs; ++Encounter().Downs;
+                if (Revived.Contains(Now.Id)) { ++Encounter().Redowns; }
+                if (AwaitingTurn.Remove(Now.Id) > 0) { ++Encounter().QuickRedowns; }
+            }
             if (Now.Life == ECombatLife::Dead)
             {
                 H->bSurvived = false; H->DeathStage = Encounter().Stage;
@@ -450,7 +457,8 @@ struct FTracker
             {
                 const int32 Gained = FMath::Max(0, Now.HP - Was.HP);
                 Actor->Healing += Gained; Encounter().Healing += Gained; Run.Healing += Gained;
-                if (Was.Life == ECombatLife::Downed && Now.Life == ECombatLife::Conscious) { ++Actor->Revives; ++Encounter().Revives; }
+                if (Was.Life == ECombatLife::Downed && Now.Life == ECombatLife::Conscious)
+                { ++Actor->Revives; ++Encounter().Revives; Revived.Add(Now.Id); AwaitingTurn.Add(Now.Id); }
             }
         }
         if (Command.Type == ECmd::Potion) { ++Actor->PotionsUsed; ++Run.PotionsUsed; }
@@ -514,6 +522,7 @@ bool PartyTurn(FExpeditionRun& Run, FTracker& Tracker, int32 Id, FString& Stall,
     FHeroStats* Hero = Tracker.Hero(Id);
     if (!Hero) { Stall = TEXT("active hero unknown"); return false; }
     ++Hero->Turns;
+    Tracker.AwaitingTurn.Remove(Id);
     const int32 Specials = Hero->Specials.Num();
     TArray<bool> Available; Available.Init(false, Specials);
     TArray<int32> FirstBlocker; FirstBlocker.Init(INDEX_NONE, Specials);
@@ -672,6 +681,7 @@ FRunStats PlayRun(const FPartySpec& Party, int32 Seed, int32 RoutePattern, FExpe
             Encounter.HpStart = Encounter.HpLow = PartyHP(S, false); Encounter.HpMax = PartyHP(S, true);
             for (const auto& U : S.Encounter.Combatants) { if (U.Side == ECombatSide::Party && U.Life == ECombatLife::Conscious) { ++Encounter.ConsciousStart; } }
             Stats.Encounters.Add(Encounter);
+            Tracker.Revived.Reset(); Tracker.AwaitingTurn.Reset();
             if (Trace) { *Trace += FString::Printf(TEXT("== fight %d: %s, recipe %d\n"), Stage + 1, *Route.Name, Route.Recipe) + Board(S); }
         }
         else if (Phase == EExpeditionPhase::Combat)
@@ -959,6 +969,20 @@ FString EncountersCsv(const TArray<FRunStats>& Runs)
     return Out;
 }
 
+FString RescuesCsv(const TArray<FRunStats>& Runs)
+{
+    FString Out = TEXT("party,seed,stage,route,outcome,rounds,revives,redowns,quick_redowns\n");
+    for (const auto& R : Runs)
+    {
+        for (const auto& E : R.Encounters)
+        {
+            Out += FString::Printf(TEXT("%s,%d,%d,%s,%s,%d,%d,%d,%d\n"), *R.PartyId, R.Seed, E.Stage, E.bDangerous ? TEXT("dangerous") : TEXT("guarded"), *E.Outcome,
+                E.Rounds, E.Revives, E.Redowns, E.QuickRedowns);
+        }
+    }
+    return Out;
+}
+
 FString HeroesCsv(const TArray<FRunStats>& Runs)
 {
     FString Out = TEXT("party,archetype,seed,outcome,slot,build,class,survived,death_stage,death_cause,level,turns,idle_turns,damage,kills,healing,protection,damage_taken,downs,revives,potions_used");
@@ -1108,7 +1132,8 @@ bool WriteGroup(const FString& Folder, const FString& Group, const TArray<FParty
     const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Json);
     FJsonSerializer::Serialize(Meta, Writer);
     const TPair<const TCHAR*, FString> Files[] = {
-        {TEXT("runs.csv"), RunsCsv(Runs)}, {TEXT("encounters.csv"), EncountersCsv(Runs)}, {TEXT("heroes.csv"), HeroesCsv(Runs)}, {TEXT("group.json"), Json}};
+        {TEXT("runs.csv"), RunsCsv(Runs)}, {TEXT("encounters.csv"), EncountersCsv(Runs)}, {TEXT("heroes.csv"), HeroesCsv(Runs)}, {TEXT("rescues.csv"), RescuesCsv(Runs)},
+        {TEXT("group.json"), Json}};
     for (const auto& File : Files)
     {
         if (!FFileHelper::SaveStringToFile(File.Value, *FPaths::Combine(Folder, File.Key), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))

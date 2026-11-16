@@ -138,6 +138,16 @@ public:
     /** True when runs of Ruleset created under Revision move through allies, Downed and dead creatures (FCombatEncounter::bMoveThrough, #240):
      * Compact runs from catalog revision 11. Revisions 7-10 and SRD keep the older rule, under which every unit blocks its cell. */
     static bool MovesThroughUnits(ERuleset Ruleset, int32 Revision);
+    /** True when runs of Ruleset created under Revision play catalog revision 11's balance (#241, M2 contract): Compact runs from revision 11.
+     * It selects the revision 11 enemy numbers, the Monk and Paladin profiles, enemy target choice (FCombatEncounter::bNearestTarget), Rescue
+     * (bSturdyRescue) and the cards' refill (CardsRefill). */
+    static bool PlaysRevision11Balance(ERuleset Ruleset, int32 Revision);
+    /** The hero NewRun creates from BuildId for Ruleset and Revision: the catalog profile (FBuildCatalog::Create), with revision 11's Monk and
+     * Paladin adjustments in Compact (#241). The party builder previews with it, so its HP and AC are the ones the run starts with. */
+    static bool CreateHero(const FString& BuildId, int32 Id, const FString& Name, ERuleset Ruleset, int32 Revision, FCombatantState& Out);
+    /** True when this run's Reserve and Honed cards refill the recipient's special pools to its caps (Revision11Rules::CardsRefill): Compact
+     * from revision 11. Reserve then refills to its new cap instead of adding one use. */
+    static bool CardsRefill(ERuleset Ruleset, int32 Revision);
     bool Recover(bool bTakeRecovery, FString& Error);
     FCombatResult Submit(const FCombatCommand& Command);
     TArray<FCombatResult> PlayEnemyTurn();

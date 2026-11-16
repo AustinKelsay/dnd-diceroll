@@ -88,6 +88,9 @@ struct FEncounterStats
     int32 Damage = 0, DamageTaken = 0, Healing = 0, Protection = 0, Downs = 0, Deaths = 0, Revives = 0, SpecialsUsed = 0;
     /** Enemy HP removed by party commands whose actor stood next to (Manhattan 1) the enemy that lost it (#188, layout identity). */
     int32 MeleeDamage = 0;
+    /** The rescue loop (#241, #187 item 1): downs of a hero already revived in this fight, and of those the ones that came before the revived
+     * hero's next own turn. Exported only to rescues.csv, so runs.csv, encounters.csv and heroes.csv keep their bytes. */
+    int32 Redowns = 0, QuickRedowns = 0;
 };
 
 struct FRunStats
@@ -158,6 +161,8 @@ const TCHAR* BlockerName(EActionBlocker Blocker);
 FString RunsCsv(const TArray<FRunStats>& Runs);
 FString EncountersCsv(const TArray<FRunStats>& Runs);
 FString HeroesCsv(const TArray<FRunStats>& Runs);
+/** rescues.csv (#241): party, seed, stage, revives, redowns and quick_redowns per fight, written beside the group's other files. */
+FString RescuesCsv(const TArray<FRunStats>& Runs);
 
 /**
  * True when Path lies inside the checkout's .local/: lexically after collapsing "..", and on Unix also physically, with

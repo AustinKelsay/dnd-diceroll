@@ -26,12 +26,12 @@ FString CardName(ERewardCard Card)
     return TEXT("Gear");
 }
 
-FString CardRule(ERewardCard Card)
+FString CardRule(ERewardCard Card, bool bCardsRefill)
 {
     switch (Card)
     {
-    case ERewardCard::Reserve: return TEXT("+1 cap and +1 use on each special pool");
-    case ERewardCard::Honed: return TEXT("Both specials grow stronger");
+    case ERewardCard::Reserve: return bCardsRefill ? TEXT("+1 cap on each special pool, all refilled") : TEXT("+1 cap and +1 use on each special pool");
+    case ERewardCard::Honed: return bCardsRefill ? TEXT("Both specials grow stronger; pools refilled") : TEXT("Both specials grow stronger");
     case ERewardCard::Gear: break;
     }
     return TEXT("+1 gear rank: +1 basic damage");
@@ -87,8 +87,14 @@ TArray<FString> CardLines(const FRewardCardFacts& Card)
         break;
     }
     case ERewardCard::Honed:
+    {
         for (const FSpecialChange& Special : Card.Specials) { Lines.Add(SpecialChangeText(Special)); }
+        // Revision 11 (#241): Honed also refills the pools; list the ones it changes.
+        TArray<FString> Pools;
+        for (const FPoolChange& Pool : Card.Pools) { if (Pool.HeldAfter != Pool.HeldBefore) { Pools.Add(PoolChangeText(Pool)); } }
+        if (!Pools.IsEmpty()) { Lines.Add(FString::Join(Pools, TEXT("  ·  "))); }
         break;
+    }
     }
     Lines.Add(FString::Printf(TEXT("Potions %d %s %d"), Card.PotionsBefore, *Arrow(), Card.PotionsAfter));
     return Lines;

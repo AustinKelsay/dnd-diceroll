@@ -401,16 +401,31 @@ bool FightToTheEnd(AExpeditionBattleView& View, bool bFight)
     return !View.InCombat();
 }
 
-/** A checkpoint of the fight a run is in, with every foe at one hit point (a fight the scripted attacker wins) or every hero at one (a fight it loses). */
+/** A checkpoint of the fight a run is in: every foe at one hit point and every standing hero at full health (a fight the scripted attacker wins),
+ * or every hero at one (a fight it loses). Full health matters since catalog revision 11 (#241): the scripted run reaches the finale with
+ * its survivors worn down, against foes that hit harder, and attack misses alone could otherwise lose a "won" finale. */
 FExpeditionSaveData Fixture(FExpeditionRun& Run, bool bFoesNearlyDead)
 {
     FExpeditionSaveData Data;
     Data.Current = Run.Snapshot();
     for (FCombatantState& Unit : Data.Current.Battle.Encounter.Combatants)
     {
-        if (Unit.Life == ECombatLife::Conscious && (Unit.Side == ECombatSide::Enemy) == bFoesNearlyDead) { Unit.HP = 1; }
+        if (Unit.Life != ECombatLife::Conscious) { continue; }
+        if ((Unit.Side == ECombatSide::Enemy) == bFoesNearlyDead) { Unit.HP = 1; }
+        else if (bFoesNearlyDead) { Unit.HP = Unit.MaxHP; }
     }
     return Data;
+}
+
+/** The fixture's party, for the log: each hero's life and HP. */
+FString PartyLine(const FExpeditionRun& Run)
+{
+    TArray<FString> Parts;
+    for (const FCombatantState& U : Run.Battle().Snapshot().Encounter.Combatants)
+    {
+        if (U.Side == ECombatSide::Party) { Parts.Add(FString::Printf(TEXT("%s %d/%d%s"), *U.BuildId, U.HP, U.MaxHP, U.Life == ECombatLife::Conscious ? TEXT("") : U.Life == ECombatLife::Downed ? TEXT(" downed") : TEXT(" dead"))); }
+    }
+    return FString::Join(Parts, TEXT(", "));
 }
 }
 
@@ -423,6 +438,7 @@ bool FLiveRunEndingCueTest::RunTest(const FString& Parameters)
     FExpeditionRun Finale;
     const int32 Seed = ExpeditionTestSupport::FirstSeedWhere([&Finale](int32 Try) { Finale = FExpeditionRun(); return ExpeditionTestSupport::ReachFinale(Finale, Try); });
     if (!TestNotEqual(TEXT("A seed reaches the finale with the party to act"), Seed, static_cast<int32>(INDEX_NONE))) { return false; }
+    AddInfo(FString::Printf(TEXT("Finale fixture: seed %d, party %s"), Seed, *PartyLine(Finale)));
     FExpeditionRun FirstFight;
     FString Error;
     if (!TestTrue(TEXT("The first fight starts"), FirstFight.NewRun(Seed, Error, TEXT("cue-first")) && FirstFight.ChooseRoute(FirstFight.Progress().Offers[0].Id, Error))) { return false; }

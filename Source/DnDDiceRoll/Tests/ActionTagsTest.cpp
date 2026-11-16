@@ -134,7 +134,8 @@ void CheckTooltips(FAutomationTestBase& Test, ExpeditionInputHarness::FHarness& 
     {
         if (Tag.Command == EC::EndTurn) { continue; }
         const FString Where = Context + TEXT(", ") + Tag.ButtonId.ToString();
-        FString Effect = FCombatBattle::DescribeAction(Tag.Command);
+        // The battle's own rules text (#241: revision 11's Rescue states its amount); DescribeAction for every other command.
+        FString Effect = Rules.Describe(Tag.Command);
         for (const FAbilityFacts& Ability : Abilities) { if (Ability.Command == Tag.Command) { Effect = Ability.Description; } }
         const FActionTooltipRequest Expected = ExpectedTooltip(Rules, Tag.Command, Effect);
 
@@ -646,6 +647,36 @@ bool FBuildPickerFactsTest::RunTest(const FString& Parameters)
         if (TestTrue(TEXT("Evocation shows Magic Missile"), At != INDEX_NONE && Lines.IsValidIndex(At + 1)))
         { TestTrue(TEXT("Magic Missile costs an Action, a Kit and a Slot"), Lines[At + 1].Contains(TEXT("Action")) && Lines[At + 1].Contains(TEXT("1 Kit")) && Lines[At + 1].Contains(TEXT("1 Slot"))); }
     }
+    return !HasAnyErrors();
+}
+
+// #241 review: the builder's HP / AC line is the hero New Run creates (Compact, current revision), so revision 11's Monk and Paladin preview
+// their real numbers; every other kit previews its catalog profile.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBuildPickerProfileTest, "Project.Expedition.Presentation.BuildPickerShowsTheRunsProfile",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FBuildPickerProfileTest::RunTest(const FString& Parameters)
+{
+    using ExpeditionInputHarness::FHarness;
+    FHarness Game(*this, TEXT("BuildPickerProfile"));
+    if (!TestTrue(TEXT("Input, board and HUD are ready"), Game.IsReady())) { return false; }
+    Game.Frame();
+    int32 Adjusted = 0;
+    for (const FBuildDefinition& Build : FBuildCatalog::All())
+    {
+        if (!TestTrue(Build.Id + TEXT(" can be selected in the picker"), Game.Player->SelectBuild(Build.Id))) { continue; }
+        Game.Frame();
+        FCombatantState Hero;
+        if (!TestTrue(Build.Id + TEXT(": the run's hero is created"), FExpeditionRun::CreateHero(Build.Id, 1, TEXT("Preview"), ERuleset::Compact, FBuildCatalog::Revision, Hero))) { continue; }
+        TestEqual(Build.Id + TEXT(": the picker shows the run's HP, AC and reach"), Game.Hud->BuildPickerStatsRequested(),
+            FString::Printf(TEXT("HP %d / AC %d / reach %d"), Hero.MaxHP, Hero.ArmorClass, Hero.Range));
+        Adjusted += Hero.MaxHP != Build.Profile.MaxHP || Hero.ArmorClass != Build.Profile.ArmorClass ? 1 : 0;
+    }
+    // The two the review named: Open Hand Monk and Devotion Paladin, at revision 11's numbers.
+    if (Game.Player->SelectBuild(TEXT("monk.open-hand")))
+    { Game.Frame(); TestEqual(TEXT("Open Hand Monk previews 28 HP and AC 15"), Game.Hud->BuildPickerStatsRequested(), FString(TEXT("HP 28 / AC 15 / reach 1"))); }
+    if (Game.Player->SelectBuild(TEXT("paladin.devotion")))
+    { Game.Frame(); TestEqual(TEXT("Devotion Paladin previews 24 HP and AC 15"), Game.Hud->BuildPickerStatsRequested(), FString(TEXT("HP 24 / AC 15 / reach 1"))); }
+    TestEqual(TEXT("Exactly the Monk and Paladin kits preview adjusted numbers"), Adjusted, 10);
     return !HasAnyErrors();
 }
 
