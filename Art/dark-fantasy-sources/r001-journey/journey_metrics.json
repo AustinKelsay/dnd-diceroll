@@ -1,0 +1,535 @@
+{
+ "SM_Journey_Map": {
+  "triangles": 2340,
+  "vertices": 6279,
+  "bbox_min_m": [
+   -0.32,
+   -1.65,
+   -0.0014
+  ],
+  "bbox_max_m": [
+   2,
+   2,
+   0.043
+  ],
+  "size_m": [
+   2.32,
+   3.65,
+   0.0444
+  ],
+  "image_px": [
+   2048,
+   2048
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 1696584,
+  "extensions": [],
+  "asset_id": "journey-map",
+  "file": "Art/journey-map/r001/SM_Journey_Map.glb",
+  "atlas_px": 2048,
+  "glow_tris": 0
+ },
+ "SM_Journey_Table": {
+  "triangles": 7605,
+  "vertices": 8467,
+  "bbox_min_m": [
+   -0.6,
+   -3,
+   -0.29
+  ],
+  "bbox_max_m": [
+   2.15,
+   3,
+   0.462
+  ],
+  "size_m": [
+   2.75,
+   6,
+   0.752
+  ],
+  "image_px": [
+   1024,
+   1024
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 641232,
+  "extensions": [],
+  "asset_id": "journey-table",
+  "file": "Art/journey-table/r001/SM_Journey_Table.glb",
+  "atlas_px": 1024,
+  "glow_tris": 56
+ },
+ "SM_Journey_Stage": {
+  "triangles": 696,
+  "vertices": 1499,
+  "bbox_min_m": [
+   -0.09,
+   -0.09,
+   0
+  ],
+  "bbox_max_m": [
+   0.09,
+   0.09,
+   0.039
+  ],
+  "size_m": [
+   0.18,
+   0.18,
+   0.039
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 116284,
+  "extensions": [],
+  "asset_id": "journey-stage",
+  "file": "Art/journey-stage/r001/SM_Journey_Stage.glb",
+  "atlas_px": 512,
+  "glow_tris": 0
+ },
+ "SM_Journey_Emblem_Root": {
+  "triangles": 244,
+  "vertices": 350,
+  "bbox_min_m": [
+   -0.0375,
+   -0.054,
+   0
+  ],
+  "bbox_max_m": [
+   0.0334,
+   0.054,
+   0.131
+  ],
+  "size_m": [
+   0.071,
+   0.108,
+   0.131
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 38412,
+  "extensions": [],
+  "asset_id": "journey-emblem-root",
+  "file": "Art/journey-emblem-root/r001/SM_Journey_Emblem_Root.glb",
+  "atlas_px": 256,
+  "glow_tris": 0
+ },
+ "SM_Journey_Emblem_Vigil": {
+  "triangles": 244,
+  "vertices": 350,
+  "bbox_min_m": [
+   -0.0375,
+   -0.054,
+   0
+  ],
+  "bbox_max_m": [
+   0.0334,
+   0.054,
+   0.131
+  ],
+  "size_m": [
+   0.071,
+   0.108,
+   0.131
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 41172,
+  "extensions": [],
+  "asset_id": "journey-emblem-vigil",
+  "file": "Art/journey-emblem-vigil/r001/SM_Journey_Emblem_Vigil.glb",
+  "atlas_px": 256,
+  "glow_tris": 0
+ },
+ "SM_Journey_Emblem_Vault": {
+  "triangles": 244,
+  "vertices": 350,
+  "bbox_min_m": [
+   -0.0375,
+   -0.054,
+   0
+  ],
+  "bbox_max_m": [
+   0.0334,
+   0.054,
+   0.131
+  ],
+  "size_m": [
+   0.071,
+   0.108,
+   0.131
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 37112,
+  "extensions": [],
+  "asset_id": "journey-emblem-vault",
+  "file": "Art/journey-emblem-vault/r001/SM_Journey_Emblem_Vault.glb",
+  "atlas_px": 256,
+  "glow_tris": 9
+ },
+ "SM_Journey_Pennant": {
+  "triangles": 61,
+  "vertices": 122,
+  "bbox_min_m": [
+   -0.0402,
+   0.054,
+   0
+  ],
+  "bbox_max_m": [
+   -0.0298,
+   0.1451,
+   0.18
+  ],
+  "size_m": [
+   0.0104,
+   0.0911,
+   0.18
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 22316,
+  "extensions": [],
+  "asset_id": "journey-pennant",
+  "file": "Art/journey-pennant/r001/SM_Journey_Pennant.glb",
+  "atlas_px": 256,
+  "glow_tris": 0
+ },
+ "SM_Journey_Lost": {
+  "triangles": 83,
+  "vertices": 154,
+  "bbox_min_m": [
+   -0.0302,
+   -0.0556,
+   -0.0097
+  ],
+  "bbox_max_m": [
+   0.053,
+   0.0473,
+   0.1272
+  ],
+  "size_m": [
+   0.0832,
+   0.1029,
+   0.1369
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 25188,
+  "extensions": [],
+  "asset_id": "journey-lost",
+  "file": "Art/journey-lost/r001/SM_Journey_Lost.glb",
+  "atlas_px": 256,
+  "glow_tris": 0
+ },
+ "SM_Journey_Ink": {
+  "triangles": 80,
+  "vertices": 82,
+  "bbox_min_m": [
+   0,
+   -0.0148,
+   0.0008
+  ],
+  "bbox_max_m": [
+   1,
+   0.0148,
+   0.0008
+  ],
+  "size_m": [
+   1,
+   0.0297,
+   0.0
+  ],
+  "image_px": [
+   64,
+   64
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 5692,
+  "extensions": [],
+  "asset_id": "journey-ink",
+  "file": "Art/journey-ink/r001/SM_Journey_Ink.glb",
+  "atlas_px": 64,
+  "glow_tris": 0
+ },
+ "SM_Journey_InkDashed": {
+  "triangles": 60,
+  "vertices": 80,
+  "bbox_min_m": [
+   0,
+   -0.0091,
+   0.0008
+  ],
+  "bbox_max_m": [
+   0.975,
+   0.0091,
+   0.0008
+  ],
+  "size_m": [
+   0.975,
+   0.0182,
+   0.0
+  ],
+  "image_px": [
+   64,
+   64
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 5528,
+  "extensions": [],
+  "asset_id": "journey-ink-dashed",
+  "file": "Art/journey-ink-dashed/r001/SM_Journey_InkDashed.glb",
+  "atlas_px": 64,
+  "glow_tris": 0
+ },
+ "SM_Journey_Fog": {
+  "triangles": 2960,
+  "vertices": 8312,
+  "bbox_min_m": [
+   -0.2829,
+   -0.2464,
+   0
+  ],
+  "bbox_max_m": [
+   0.2829,
+   0.2,
+   0.14
+  ],
+  "size_m": [
+   0.5659,
+   0.4464,
+   0.14
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 369920,
+  "extensions": [],
+  "asset_id": "journey-fog",
+  "file": "Art/journey-fog/r001/SM_Journey_Fog.glb",
+  "atlas_px": 256,
+  "glow_tris": 0
+ },
+ "SM_Journey_Goal": {
+  "triangles": 348,
+  "vertices": 671,
+  "bbox_min_m": [
+   -0.102,
+   -0.102,
+   0
+  ],
+  "bbox_max_m": [
+   0.102,
+   0.102,
+   0.27
+  ],
+  "size_m": [
+   0.204,
+   0.204,
+   0.27
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 52232,
+  "extensions": [],
+  "asset_id": "journey-goal",
+  "file": "Art/journey-goal/r001/SM_Journey_Goal.glb",
+  "atlas_px": 256,
+  "glow_tris": 8
+ },
+ "SM_Journey_Plinth": {
+  "triangles": 204,
+  "vertices": 360,
+  "bbox_min_m": [
+   -0.38,
+   -0.39,
+   0
+  ],
+  "bbox_max_m": [
+   0.38,
+   0.39,
+   0.14
+  ],
+  "size_m": [
+   0.76,
+   0.78,
+   0.14
+  ],
+  "image_px": [
+   512,
+   512
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 67968,
+  "extensions": [],
+  "asset_id": "journey-plinth",
+  "file": "Art/journey-plinth/r001/SM_Journey_Plinth.glb",
+  "atlas_px": 512,
+  "glow_tris": 0
+ }
+}

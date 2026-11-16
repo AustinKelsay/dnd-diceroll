@@ -1,0 +1,139 @@
+{
+ "SM_SetPiece_Vault_SealUpper": {
+  "triangles": 120,
+  "vertices": 247,
+  "bbox_min_m": [
+   -0.0736,
+   -0.085,
+   -0.0171
+  ],
+  "bbox_max_m": [
+   0.0756,
+   0.085,
+   0.3
+  ],
+  "size_m": [
+   0.1492,
+   0.17,
+   0.3171
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 29104,
+  "extensions": [],
+  "asset_id": "setpiece-vault-seal-upper",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/SetPiece/SM_SetPiece_Vault_SealUpper",
+  "glow_tris": 8,
+  "atlas_px": 256,
+  "atlas_fill": 0.325,
+  "file": "Art/setpiece-vault-seal-upper/r001/SM_SetPiece_Vault_SealUpper.glb"
+ },
+ "SM_SetPiece_Vault_SealLower": {
+  "triangles": 108,
+  "vertices": 235,
+  "bbox_min_m": [
+   -0.0736,
+   -0.085,
+   -0.2
+  ],
+  "bbox_max_m": [
+   0.0756,
+   0.085,
+   0.0171
+  ],
+  "size_m": [
+   0.1492,
+   0.17,
+   0.2171
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 28552,
+  "extensions": [],
+  "asset_id": "setpiece-vault-seal-lower",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/SetPiece/SM_SetPiece_Vault_SealLower",
+  "glow_tris": 8,
+  "atlas_px": 256,
+  "atlas_fill": 0.325,
+  "file": "Art/setpiece-vault-seal-lower/r001/SM_SetPiece_Vault_SealLower.glb"
+ },
+ "SM_SetPiece_Vault_Chip": {
+  "triangles": 42,
+  "vertices": 116,
+  "bbox_min_m": [
+   -0.055,
+   -0.0488,
+   -0.0386
+  ],
+  "bbox_max_m": [
+   0.0654,
+   0.0473,
+   0.039
+  ],
+  "size_m": [
+   0.1204,
+   0.0961,
+   0.0776
+  ],
+  "image_px": [
+   256,
+   256
+  ],
+  "color0": [
+   "VEC4",
+   5123,
+   true
+  ],
+  "samplers": [
+   [
+    9729,
+    9987
+   ]
+  ],
+  "materials": 1,
+  "bytes": 23376,
+  "extensions": [],
+  "asset_id": "setpiece-vault-chip",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Theme/SetPiece/SM_SetPiece_Vault_Chip",
+  "glow_tris": 3,
+  "atlas_px": 256,
+  "atlas_fill": 0.325,
+  "file": "Art/setpiece-vault-chip/r001/SM_SetPiece_Vault_Chip.glb"
+ },
+ "crack": {
+  "mismatch_m": 0.0,
+  "upper_vertices": 7,
+  "lower_vertices": 7
+ }
+}

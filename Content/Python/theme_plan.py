@@ -151,6 +151,40 @@ OVERVIEW_R002 = [
 OVERVIEW_METRIC_GATE = tuple(row[0] for row in OVERVIEW_R002)
 OVERVIEW_ARRAY_SIZES = {}
 
+# The Waystone set piece r001 (#250, rescoping #104): the rune seal around the artifact in the Vault apse, which shatters when the finale is won. Three new ids and
+# new packages under /Game/DnDDiceRoll/Theme/SetPiece; nothing replaces an existing package and no theme property is written (theme property None): the battle
+# view loads them by path (WaystoneSetPiece::ThemedMeshPaths) and falls back to today's ending when any is missing. Glow 0.45 is the seal's resting rune level;
+# the game raises it on the instances' own material while the Waystone flares.
+SETPIECE_LOOK = (0.85, 0.0, 0.05, 0.45, 0.0)
+SETPIECE_R001 = [
+    ("setpiece-vault-seal-upper", 1, "SM_SetPiece_Vault_SealUpper", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-seal-lower", 1, "SM_SetPiece_Vault_SealLower", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+    ("setpiece-vault-chip", 1, "SM_SetPiece_Vault_Chip", "SetPiece", LIT, None, None, SETPIECE_LOOK),
+]
+SETPIECE_METRIC_GATE = ()
+SETPIECE_ARRAY_SIZES = {}
+# The war-table journey map r001 (#248): thirteen new ids and new packages under /Game/DnDDiceRoll/Theme/Journey, nothing replaced. The route screen and the ending
+# draw them in place of the overview's table and side dioramas, beside the r002 dioramas raised on the plinth. The look follows the overview's (no rim, no fill, glow
+# on) with a self-lit share that keeps the chart and its markers legible in candlelight; the fog bank is a translucent card.
+JOURNEY_R001 = [
+    ("journey-table", 1, "SM_Journey_Table", "Journey", LIT, "journey_table", None, (0.8, 0.0, 0.0, 1.0, 0.3)),
+    ("journey-map", 1, "SM_Journey_Map", "Journey", LIT, "journey_map", None, (0.95, 0.0, 0.0, 1.0, 0.6)),
+    ("journey-stage", 1, "SM_Journey_Stage", "Journey", LIT, "journey_stage", None, (0.5, 0.0, 0.0, 1.0, 0.6)),
+    ("journey-emblem-root", 1, "SM_Journey_Emblem_Root", "Journey", LIT, "journey_emblem_root", None, (0.5, 0.0, 0.0, 1.0, 0.8)),
+    ("journey-emblem-vigil", 1, "SM_Journey_Emblem_Vigil", "Journey", LIT, "journey_emblem_vigil", None, (0.5, 0.0, 0.0, 1.0, 0.8)),
+    ("journey-emblem-vault", 1, "SM_Journey_Emblem_Vault", "Journey", LIT, "journey_emblem_vault", None, (0.5, 0.0, 0.0, 1.0, 0.8)),
+    ("journey-pennant", 1, "SM_Journey_Pennant", "Journey", LIT, "journey_pennant", None, (0.9, 0.0, 0.0, 1.0, 0.7)),
+    ("journey-lost", 1, "SM_Journey_Lost", "Journey", LIT, "journey_lost", None, (0.6, 0.0, 0.0, 1.0, 0.45)),
+    ("journey-ink", 1, "SM_Journey_Ink", "Journey", LIT, "journey_ink", None, (0.95, 0.0, 0.0, 1.0, 0.5)),
+    ("journey-ink-dashed", 1, "SM_Journey_InkDashed", "Journey", LIT, "journey_ink_dashed", None, (0.95, 0.0, 0.0, 1.0, 0.5)),
+    ("journey-fog", 1, "SM_Journey_Fog", "Journey", CARD, "journey_fog", None, CARDLOOK),
+    ("journey-goal", 1, "SM_Journey_Goal", "Journey", LIT, "journey_goal", None, (0.8, 0.0, 0.0, 1.0, 0.45)),
+    ("journey-plinth", 1, "SM_Journey_Plinth", "Journey", LIT, "journey_plinth", None, (0.7, 0.0, 0.0, 1.0, 0.4)),
+]
+# The journey map is switched on (UDiceRollTheme::bJourneyR001) only when all thirteen carry the journey-r001 tag; the view then loads them as a set.
+JOURNEY_METRIC_GATE = tuple(row[0] for row in JOURNEY_R001)
+JOURNEY_ARRAY_SIZES = {}
+
 # The Vigil occluders carry the stained-glass rose in a high-resolution atlas region (#149): world-vigil-occluders r002 replaces the r001 export
 # at the same package and texture, with its two LODs. The mesh is tagged ROSE_TAG afterwards, so a run can tell it from the first r002 import.
 ROSE_REPLACEABLE = {"world-vigil-occluders": "r002: the stained-glass rose at about 220 texels/m (was 14)"}
@@ -171,7 +205,9 @@ VIGIL_TAG = "vigil-kit-r002"
 ROOT_TAG = "root-kit-r002"
 VAULT_TAG = "vault-kit-r002"
 OVERVIEW_TAG = "overview-r002"
-KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG)
+SETPIECE_TAG = "setpiece-r001"
+JOURNEY_TAG = "journey-r001"
+KIT_TAGS = (VIGIL_TAG, ROOT_TAG, VAULT_TAG, OVERVIEW_TAG, ROSE_TAG, SETPIECE_TAG, JOURNEY_TAG)
 
 # The only existing r001 packages a run may replace, each with the reason. They keep their package path (the asset
 # records say so: a rename is a separate coordinated migration), so the r002 mesh replaces the r001 mesh in place.

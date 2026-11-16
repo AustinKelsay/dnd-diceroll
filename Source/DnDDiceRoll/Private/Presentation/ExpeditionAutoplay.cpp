@@ -725,7 +725,8 @@ void FExpeditionAutoplayDirector::TickFresh()
         return;
     }
     case EStage::Choosing:
-        if (Board->InCombat() && !Board->ShowingOverview()) { ++ActFrames; } else { ActFrames = 0; }
+        // The route fly-in (#249) belongs to the route->battle transition: the window ends only once the board is up and the fly-in has ended.
+        if (Board->InCombat() && !Board->ShowingOverview() && !Board->FlyingIn()) { ++ActFrames; } else { ActFrames = 0; }
         if (ActFrames < Script.SettleFrames) { return; }
         EndTransition();
         if (!SameModuloIdentity(FExpeditionSnapshot{Board->Progress(), Board->Rules().Snapshot()}, Planned.Opening)) { Fail(TEXT("The live encounter differs from the plan's opening")); return; }

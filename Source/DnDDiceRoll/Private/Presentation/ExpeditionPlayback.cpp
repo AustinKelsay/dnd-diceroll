@@ -1,4 +1,5 @@
 #include "Presentation/ExpeditionPlayback.h"
+#include "Combat/ActionFacts.h"
 #include "Party/BuildCatalog.h"
 
 namespace
@@ -137,6 +138,7 @@ void FExpeditionPlayback::Reset(const FCombatSnapshot& Snapshot)
 
 void FExpeditionPlayback::Sync(const FCombatSnapshot& Snapshot)
 {
+    ShownRound = Snapshot.Round;
     TSet<int32> Present;
     for (const FCombatantState& Unit : Snapshot.Encounter.Combatants)
     {
@@ -194,9 +196,9 @@ void FExpeditionPlayback::Shake(float Amount) const
     if (!bSkipping && OnShake) { OnShake(Amount); }
 }
 
-void FExpeditionPlayback::ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life)
+void FExpeditionPlayback::ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life, bool bResult)
 {
-    TurnBanner = {Title, Subtitle, Color, 0.0f, Life};
+    TurnBanner = {Title, Subtitle, Color, 0.0f, Life, bResult};
 }
 
 void FExpeditionPlayback::ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale, float Life)
@@ -288,7 +290,7 @@ void FExpeditionPlayback::ReleaseImpact(int32 TargetId)
     if (FUnitDisplay* Target = Displays.Find(TargetId)) { Converge(*Target, false); }
 }
 
-void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After)
+void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FCombatSnapshot& After, bool bEndsRun)
 {
     if (!Results.ContainsByPredicate([](const auto& R) { return R.bAccepted; })) { return; }
     bool bTurnEnded = false;
@@ -299,16 +301,19 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
         bTurnEnded |= Result.Type == ECombatCommandType::EndTurn;
     }
     // Announce what the committed state means once its causes have played.
-    Add(0.0f, [this, After, bTurnEnded]()
+    Add(0.0f, [this, After, bTurnEnded, bEndsRun]()
     {
         Focus = INDEX_NONE;
+        // The round the committed state is in, against the last one announced: a turn that begins a later round sounds the round's own cue (#243).
+        const bool bNewRound = After.Round > ShownRound;
+        ShownRound = After.Round;
         if (After.Phase == EBattlePhase::Victory)
         {
-            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), PlaybackGold, 2.4f); Cue(EExpeditionCue::Victory);
+            ShowBanner(TEXT("VICTORY"), TEXT("The battle is won"), PlaybackGold, FTurnBanner::ResultSeconds, true); Cue(bEndsRun ? EExpeditionCue::Finale : EExpeditionCue::Victory);
         }
         else if (After.Phase == EBattlePhase::Defeat)
         {
-            ShowBanner(TEXT("DEFEAT"), TEXT("No adventurer can continue"), Blood, 2.8f); Cue(EExpeditionCue::Defeat);
+            ShowBanner(TEXT("DEFEAT"), TEXT("No adventurer can continue"), Blood, FTurnBanner::ResultSeconds, true); Cue(bEndsRun ? EExpeditionCue::RunEnd : EExpeditionCue::Defeat);
         }
         else if (bTurnEnded && After.TurnOrder.IsValidIndex(After.TurnIndex))
         {
@@ -317,15 +322,54 @@ void FExpeditionPlayback::Enqueue(const TArray<FCombatResult>& Results, const FC
                 const bool bParty = Next->Side == ECombatSide::Party;
                 ShowBanner(TurnTitle(*Next), FString::Printf(TEXT("%s  ·  Round %d"), bParty ? *Next->Role : TEXT("Enemy turn"), After.Round),
                     ExpeditionStyle::UnitColor(*Next), 1.2f);
-                Cue(bParty ? EExpeditionCue::PartyTurn : EExpeditionCue::EnemyTurn);
+                Cue(bNewRound ? EExpeditionCue::RoundStart : bParty ? EExpeditionCue::PartyTurn : EExpeditionCue::EnemyTurn);
             }
         }
     });
-    Add(0.0f, [this, After]() { Sync(After); });
+    // The battle has left Combat, so the HUD holds the reward or ending screen back while this is presenting: the result banner
+    // gets the frame to itself for its life, then the screen takes over without the two fighting for the same space (#251).
+    if (After.Phase == EBattlePhase::Victory || After.Phase == EBattlePhase::Defeat) { Add(FTurnBanner::ResultSeconds, nullptr); }
+    Add(0.0f, [this, After]()
+    {
+        Sync(After);
+        // The battle's floating texts (SLAIN, the last damage) belong to the fight: the reward or ending screen opens now, and none may linger on it (#252).
+        if (After.Phase != EBattlePhase::Fighting) { Floaters.Reset(); }
+    });
+}
+
+TOptional<EExpeditionCue> FExpeditionPlayback::SpendCue(const FCombatResult& Result, const FCombatSnapshot& After)
+{
+    const FCombatantState* Actor = ExpeditionStyle::FindUnit(After, Result.ActorId);
+    if (!Actor) { return {}; }
+    // What the command costs is the build's own fact (the action bar's), so the cue follows the committed command and never a guess from the log text.
+    // An action that spends several resources (Magic Missile: a Kit use and a slot) sounds one cue, the most specific: Rage, then a potion, then a slot, then a use.
+    TOptional<EExpeditionCue> Best;
+    int32 BestRank = -1;
+    for (const FActionResourceCost& Cost : FActionFactsQuery::ForBuild(*Actor, Result.Type).Resources)
+    {
+        EExpeditionCue Cue = EExpeditionCue::SpendKit;
+        int32 Rank = 0;
+        switch (Cost.Resource)
+        {
+        case EActionResource::Rage: Cue = EExpeditionCue::SpendRage; Rank = 3; break;
+        case EActionResource::Potion: Cue = EExpeditionCue::SpendPotion; Rank = 2; break;
+        case EActionResource::Slot: Cue = EExpeditionCue::SpendSlot; Rank = 1; break;
+        case EActionResource::Kit: case EActionResource::Wind: case EActionResource::Maneuver: break;
+        case EActionResource::None: continue;
+        }
+        if (Rank > BestRank) { Best = Cue; BestRank = Rank; }
+    }
+    return Best;
 }
 
 void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSnapshot& After)
 {
+    // The spend sounds as the order is given, before the action's own sounds. A Kit use, Second Wind use or maneuver is one kind; a slot, a potion and Rage each their own.
+    if (const TOptional<EExpeditionCue> Spent = SpendCue(Result, After))
+    {
+        const EExpeditionCue Sound = Spent.GetValue();
+        Add(0.0f, [this, Sound]() { Cue(Sound); });
+    }
     if (Result.Type == ECombatCommandType::Special1 || Result.Type == ECombatCommandType::Special2)
     {
         const FCombatantState* SpecialActor = ExpeditionStyle::FindUnit(After, Result.ActorId);
@@ -367,7 +411,7 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
                 {
                     Unit->Glow = 1.0f;
                     ShowText(CellOf(Effect.Cell), FString::Printf(TEXT("Rage: %d own turn ends"), Effect.Amount), PlaybackGold);
-                    Cue(EExpeditionCue::PartyTurn);
+                    // Rage sounds its own spend cue as the order is given (SpendCue), no longer the party-turn chime (#243).
                 }
                 else if (Effect.Effect == EAbilityEffect::Protect)
                 {
@@ -376,7 +420,10 @@ void FExpeditionPlayback::AddResult(const FCombatResult& Result, const FCombatSn
                     Cue(EExpeditionCue::Spell);
                 }
                 else if (Effect.Effect == EAbilityEffect::Mitigation)
-                { ShowText(CellOf(Effect.Cell),FString::Printf(TEXT("Prevented %d"),Effect.Amount),PlaybackGold); }
+                {
+                    ShowText(CellOf(Effect.Cell),FString::Printf(TEXT("Prevented %d"),Effect.Amount),PlaybackGold);
+                    if (Effect.Amount > 0) { Cue(EExpeditionCue::Protection); }
+                }
                 else if (Effect.Effect == EAbilityEffect::Swap || Effect.Effect == EAbilityEffect::Push)
                 { Unit->Position = CellOf(Effect.Cell); ShowText(CellOf(Effect.Cell), TEXT("Repositioned"), PlaybackGold); Cue(EExpeditionCue::Step); }
                 else if (Effect.Effect == EAbilityEffect::Healing)
@@ -568,6 +615,8 @@ void FExpeditionPlayback::AddImpact(const FCombatResult& Result, FVector2D Direc
             Result.bCritical ? PlaybackGold : Blood, Result.bCritical ? 1.6f : 1.25f);
         if (Result.bSneakAttack) { ShowText(Target->Position, TEXT("SNEAK ATTACK"), FLinearColor(0.4f, 1.0f, 0.6f), 0.75f); }
         Cue(Result.bCritical ? EExpeditionCue::Critical : EExpeditionCue::Hit);
+        // Protection that took damage off this hit sounds with it (#243).
+        if (Result.DamagePrevented > 0) { Cue(EExpeditionCue::Protection); }
         Shake(Result.bCritical ? 0.45f : 0.2f);
         if (!bMissile)
         {

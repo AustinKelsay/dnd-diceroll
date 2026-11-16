@@ -51,6 +51,42 @@ static_assert(HonedMissile >= 0 && HonedMissile <= 3 && HonedKitHealing >= 0 && 
 static_assert(HonedPrecision >= 0 && HonedPrecision <= 2 && HonedProtect >= 0 && HonedProtect <= 1 && HonedSwapRange >= 0 && HonedSwapRange <= 2 &&
     HonedRage >= 0 && HonedRage <= 1, "Honed bonus bounds (contract 13 section 3)");
 }
+/**
+ * Catalog revision 11's balance levers (#241, docs/runs/journey-checkpoint/M2-balance-contract.md section 3), each static_asserted within the
+ * contract's bound. They apply only to Compact runs created under revision 11 (FExpeditionRun::PlaysRevision11Balance); revisions 7-10 and SRD
+ * never read them.
+ */
+namespace Revision11Rules
+{
+/** Rescue restores max HP / RescueShare (at least 1) instead of 1 HP. */
+inline constexpr int32 RescueShare = 3;
+static_assert(RescueShare >= 2 && RescueShare <= 4, "Rescue restores between a quarter and a half of max HP (M2 contract section 3)");
+/** Reserve and Honed (rewards the player chooses in place of Gear) also refill each of the recipient's special pools to its cap: Reserve to
+ * its new cap instead of +1 use, Honed to the hero's own caps. Specials stay in play into the finale (#187 item 3); nothing refills without
+ * the claim. */
+inline constexpr bool CardsRefill = true;
+/** Enemy HP (percent of revision 10's) and damage bonus (added to revision 10's), by route ([0] Guarded, [1] Dangerous) and stage kind
+ * ([0] approach, fights 1-2; [1] pressure, 3-4; [2] finale, 5). */
+inline constexpr int32 EnemyHpPercent[2][3] = {{100, 100, 100}, {100, 110, 125}};
+inline constexpr int32 EnemyDamageDelta[2][3] = {{1, 2, 2}, {2, 2, 2}};
+constexpr bool EnemyLeversInBounds()
+{
+    for (int32 Route = 0; Route < 2; ++Route)
+    {
+        for (int32 Kind = 0; Kind < 3; ++Kind)
+        {
+            if (EnemyHpPercent[Route][Kind] < 90 || EnemyHpPercent[Route][Kind] > 130 || EnemyDamageDelta[Route][Kind] < 0 || EnemyDamageDelta[Route][Kind] > 2) { return false; }
+        }
+    }
+    return true;
+}
+static_assert(EnemyLeversInBounds(), "Enemy HP within 90-130% of revision 10's and damage at most +2 over it (M2 contract section 3)");
+/** Revision 11 profiles for the two outlying classes (#187 item 5): max HP and armour added to every Monk and Paladin build's catalog profile,
+ * applied when the run creates its heroes and checked on restore. */
+inline constexpr int32 MonkHpDelta = 4, MonkArmorDelta = 1, PaladinHpDelta = -4, PaladinArmorDelta = -1;
+static_assert(MonkHpDelta >= -4 && MonkHpDelta <= 4 && PaladinHpDelta >= -4 && PaladinHpDelta <= 4 && MonkArmorDelta >= -1 && MonkArmorDelta <= 1 &&
+    PaladinArmorDelta >= -1 && PaladinArmorDelta <= 1, "Monk and Paladin within 4 HP and 1 AC of their catalog profiles (M2 contract section 3)");
+}
 /** A hero's live pool caps: its build's caps, plus Reserve on each pool the build has. A hero without a catalog build (a combat fixture or
  * an enemy) has the fixture caps: 2 Wind, Slot and Maneuver, no Kit or Rage. */
 struct DNDDICEROLL_API FResourceCaps
@@ -61,8 +97,9 @@ class DNDDICEROLL_API FBuildCatalog
 {
 public:
     /** The revision new runs are created under. 8 (#184): Compact enemy tuning. 9 (#188): Compact encounter identity (stages,
-     * layouts, enemy roles and previews). 10 (#218): Compact reward cards (Reserve and Honed); generation is revision 9's. */
-    static constexpr int32 Revision = 10;
+     * layouts, enemy roles and previews). 10 (#218): Compact reward cards (Reserve and Honed); generation is revision 9's. 11 (#240): Compact
+     * SRD 5.2.1 move-through (allies, Downed and dead creatures); generation and rewards are revision 10's. */
+    static constexpr int32 Revision = 11;
     /** The oldest revision that still restores. A run keeps the revision it was created under for its whole lifetime
      * (revision 7 Compact runs keep revision 7 enemies, revision 8 runs revision 8 generation); any other revision is refused by name. */
     static constexpr int32 MinimumRevision = 7;

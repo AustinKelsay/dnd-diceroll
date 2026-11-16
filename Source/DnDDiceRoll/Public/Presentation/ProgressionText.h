@@ -16,7 +16,8 @@ DNDDICEROLL_API FString RewardTitle(const FProgressionFacts& Facts);
 DNDDICEROLL_API FString PotionLine(const FProgressionFacts& Facts);
 DNDDICEROLL_API FString CardName(ERewardCard Card);
 /** What the card does, in one line. */
-DNDDICEROLL_API FString CardRule(ERewardCard Card);
+/** The card's rule in one line; bCardsRefill is FProgressionFacts::bCardsRefill (revision 11's refilling Reserve and Honed, #241). */
+DNDDICEROLL_API FString CardRule(ERewardCard Card, bool bCardsRefill = false);
 /** Why the card cannot be taken, or (Gear at rank 3) what it gives instead; empty for ERewardCardNote::None. */
 DNDDICEROLL_API FString NoteText(ERewardCardNote Note);
 /** The card's before -> after lines ("Basic damage 6 -> 7", "Kit 1/2 -> 2/3", "Volley 4 -> 5 · Hunter's Finish 4 -> 6"), then the potions. */

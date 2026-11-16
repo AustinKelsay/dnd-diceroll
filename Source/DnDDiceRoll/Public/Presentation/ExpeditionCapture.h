@@ -6,8 +6,13 @@
 class AExpeditionBattleView;
 class AExpeditionPlayerController;
 
-/** What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact, Roll and Pose need an encounter; Overview needs the tabletop; Start leaves the run. */
-enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact, Pose };
+/**
+ * What a capture shot shows. Battle, Targeting, Tooltip, Hint, Impact, Roll and Pose need an encounter; Overview needs the tabletop; Start leaves the run;
+ * SetPiece (#250) needs a won finale and holds the Waystone set piece at a moment of its timeline (the set piece owns the camera).
+ * FlyIn (#249) holds the route fly-in at a moment: before its cut on a journey route screen (the move into an offer's diorama), from the cut on in a fight (its opening
+ * framing under the fade).
+ */
+enum class ECaptureMode : uint8 { Battle, Targeting, Overview, Start, Tooltip, Hint, Roll, Impact, Pose, SetPiece, FlyIn };
 
 /** Which contextual hint a Hint shot raises (#158): move, resources, rescue or endturn. */
 enum class ECaptureHint : uint8 { Move, Resources, Rescue, EndTurn };
@@ -42,7 +47,10 @@ struct DNDDICEROLL_API FCaptureShot
     /** Pose shots only (#150): a party hero of this class (the role's enum name, "Rogue") or a foe of this look (the FoeRigs key, "Brute"; ExpeditionFoe::RigKey) held in this clip at this time in seconds, with no command and no rules change. */
     FString Role;
     EUnitPose Pose = EUnitPose::Idle;
+    /** Pose shots: seconds into the clip. SetPiece shots (#250): seconds into the set piece's timeline (at or past its end: the settled state). FlyIn shots (#249): seconds into the fly-in. */
     float Time = 0.0f;
+    /** FlyIn shots only (#249): the offer (0 or 1) whose diorama the move flies into. */
+    int32 Offer = 0;
     /** Start shots only: a catalog build id to select for the first hero, so the build picker shows it. Empty leaves the party as it is. */
     FString Build;
     /** Overview shots only (#200): the 1-based party slot whose details panel the route screen shows, as when that hero's card is selected. Zero leaves the selection as it is. */

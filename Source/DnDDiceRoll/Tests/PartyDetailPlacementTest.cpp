@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "ExpeditionInputHarness.h"
 #include "Presentation/OverviewLayout.h"
+#include "Presentation/JourneyLayout.h"
 
 /**
  * #200: a hero's details panel (DrawPartyDetail) used to be drawn before the route banner, the route cards and the reward and camp panels, which then painted over
@@ -129,7 +130,19 @@ bool FPartyDetailPlacementHudTest::RunTest(const FString& Parameters)
                 Game.Target.Size = Size;
                 const double Scale = ExpeditionLayout::ViewScale(Size.X, Size.Y), W = Size.X / Scale, H = Size.Y / Scale;
                 TArray<FNamed> Others;
-                if (Case.Which == 0)
+                if (Case.Which == 0 && Game.View->ShowingJourney())
+                {
+                    // The journey map's route screen (#248): its own banner and cards, and the raised dioramas the details must not hide.
+                    Others.Add({TEXT("the journey banner"), JourneyLayout::BannerRect(W)});
+                    Others.Add({TEXT("journey card 1"), JourneyLayout::CardRect(W, 0)});
+                    Others.Add({TEXT("journey card 2"), JourneyLayout::CardRect(W, 1)});
+                    for (int32 Raised = 0; Raised < Game.View->JourneyShown().Raised.Num(); ++Raised)
+                    {
+                        FDesignRect Box{};
+                        if (Game.View->RaisedScreenBox(Raised, W, H, Box)) { Others.Add({FString::Printf(TEXT("raised diorama %d"), Raised + 1), Box}); }
+                    }
+                }
+                else if (Case.Which == 0)
                 {
                     Others.Add({TEXT("the route banner"), ExpeditionLayout::RouteBannerRect(W, H)});
                     Others.Add({TEXT("route card 1"), ExpeditionLayout::RouteCardRect(W, H, 0)});

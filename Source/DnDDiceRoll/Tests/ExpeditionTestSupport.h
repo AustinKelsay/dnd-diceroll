@@ -37,6 +37,34 @@ inline void AllowCheckpointWrites(const FString& SavePath)
 }
 inline int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
 
+/** A current-revision (move-through, #240) battle at its first party turn, with a dead enemy moved onto the cell in front of the acting hero
+ * (toward the enemy line) and the open cell beyond it reachable only through that body. The edit goes through Restore like any checkpoint
+ * (the same kind of edit as the downed-ally capture fixture). Body is the body's cell, Beyond the one past it. */
+inline bool BodyInFrontBattle(FExpeditionRun& Out, FIntPoint& Body, FIntPoint& Beyond, int32 FirstSeed = 20261030)
+{
+    for (int32 Seed = FirstSeed; Seed < FirstSeed + 200; ++Seed)
+    {
+        FExpeditionRun Run; FString Error;
+        if (!Run.NewRun(Seed, Error, FString::Printf(TEXT("move-through-%d"), Seed)) || !Run.ChooseRoute(Run.Progress().Offers[1].Id, Error)) { continue; }
+        const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+        if (!Active || Active->Side != ECombatSide::Party || Active->Speed < 2) { continue; }
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        FCombatEncounter& E = Snapshot.Battle.Encounter;
+        const FIntPoint Front = Active->Cell + FIntPoint(1, 0), Past = Active->Cell + FIntPoint(2, 0);
+        auto Free = [&E](FIntPoint C)
+        { return C.X < E.Width && !E.BlockedCells.Contains(C) && !E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C; }); };
+        if (!Free(Front) || !Free(Past)) { continue; }
+        FCombatantState* Foe = E.Combatants.FindByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Enemy && U.Life == ECombatLife::Conscious; });
+        if (!Foe) { continue; }
+        Foe->HP = 0; Foe->Life = ECombatLife::Dead; Foe->Cell = Front;
+        FExpeditionRun Edited;
+        if (!Edited.Restore(Snapshot, Error) || Edited.Battle().PathTo(Active->Id, Past) != TArray<FIntPoint>{Front, Past}) { continue; }
+        Out = MoveTemp(Edited); Body = Front; Beyond = Past;
+        return true;
+    }
+    return false;
+}
+
 // A bounded player policy using only commands, previews and snapshots. No stat overrides.
 // Commands, when given, receives every party command in order so it can be replayed elsewhere.
 inline bool FinishCombat(FExpeditionRun& Run, bool bFight = true, TArray<FCombatCommand>* Commands = nullptr)
@@ -150,5 +178,30 @@ inline int32 FirstSeedWhere(TFunctionRef<bool(int32)> Accept, int32 From = 42, i
 {
     for (int32 Seed = From; Seed < From + Tries; ++Seed) { if (Accept(Seed)) { return Seed; } }
     return INDEX_NONE;
+}
+
+/** The first-loss fixture: a default-party run on Seed, the first offered route, every hero ending its turn (enemies play) until slot 1 is dead.
+ * True when slot 1 died while the fight goes on. */
+inline bool PassUntilSlotOneDies(FExpeditionRun& Run, int32 Seed, const FString& Identity)
+{
+    FString Error;
+    if (!Run.NewRun(Seed, Error, Identity) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { return false; }
+    for (int32 Turn = 0; Turn < 120 && Run.Progress().Phase == EExpeditionPhase::Combat && Run.Battle().Find(1)->Life != ECombatLife::Dead; ++Turn)
+    {
+        const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+        if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); } else { Run.Submit({ECombatCommandType::EndTurn, Active->Id}); }
+    }
+    return Run.Battle().Find(1)->Life == ECombatLife::Dead && Run.Progress().Phase == EExpeditionPhase::Combat;
+}
+
+/** The first seed from 42 on whose fixture slot 1 dies in fight 1 and the three survivors (FinishCombat) still win it. Revision 11's enemies
+ * no longer attack slot 1 first (#241), so the seed is searched rather than fixed. INDEX_NONE when none of 64 seeds does. */
+inline int32 FirstLossSeed()
+{
+    return FirstSeedWhere([](int32 Seed)
+    {
+        FExpeditionRun Probe;
+        return PassUntilSlotOneDies(Probe, Seed, TEXT("first-loss-probe")) && FinishCombat(Probe) && Probe.Progress().Phase == EExpeditionPhase::Reward;
+    });
 }
 }
