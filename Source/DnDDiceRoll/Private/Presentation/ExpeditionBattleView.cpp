@@ -35,6 +35,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
 #include "Sound/SoundWaveProcedural.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -755,7 +757,23 @@ void AExpeditionBattleView::BeginPlay()
         UE_LOG(LogExpeditionAudio, Log, TEXT("Music recorded: %d of %d (%s)"), Recorded.Num(), ExpeditionMusicCount - 1 + 2,
             Recorded.IsEmpty() ? TEXT("none; the music is silent") : *FString::Join(Recorded, TEXT(", ")));
     }
+    // The mix (#246): the bus classes, the player's volumes from the user settings file, one sound mix pushed for the whole session.
+    MasterClass = LoadObject<USoundClass>(nullptr, ExpeditionMix::MasterClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    EffectsClass = CueBank.Class() ? CueBank.Class() : LoadObject<USoundClass>(nullptr, ExpeditionMix::EffectsClassPath, nullptr, LOAD_Quiet | LOAD_NoWarn);
+    if (!bSettingsConfigured)
+    {
+        SettingsPath = FExpeditionAudioSettings::DefaultPath(FCommandLine::Get());
+        if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    }
+    VolumeMix = NewObject<USoundMix>(this, TEXT("ExpeditionVolumes"), RF_Transient);
+    ApplyMix();
+    UGameplayStatics::PushSoundMixModifier(this, VolumeMix);
+    UE_LOG(LogExpeditionAudio, Log, TEXT("Volumes from %s: master %s, effects %s, ambience %s, music %s"), *SettingsPath,
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Master)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Effects)),
+        *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Ambience)), *FExpeditionAudioSettings::Percent(VolumeSettings.Get(EExpeditionBus::Music)));
     Show.OnCue = [this](EExpeditionCue Cue) { PlayCue(Cue); };
+    // The finale set piece's Flare and Shatter sound their own cues (#246).
+    OnSetPieceCue(nullptr);
     Show.OnShake = [this](float Amount) { Shake(Amount); };
     Feedback.Add(TEXT("Welcome. Start a new expedition or continue your saved one."));
     bUnfinishedCheckpoint = Session.HasUnfinishedCheckpoint();
@@ -2560,6 +2578,8 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
     // The serial counts every request, heard or not, so the variation a play gets never depends on the audio device.
     const int32 Index = static_cast<int32>(Cue);
     const uint32 Serial = CueSerials.IsValidIndex(Index) ? CueSerials[Index]++ : 0;
+    // Combat cues duck the beds and the music briefly so they cut through (#246); counted with or without an audio device.
+    if (ExpeditionMix::Ducks(Cue)) { AmbienceDucker.Trigger(); MusicDucker.Trigger(); }
     UWorld* World = GetWorld();
     if (!World || !World->bAllowAudioPlayback || !GEngine || !GEngine->UseSound()) { return; }
     const FExpeditionCuePlay Play = CueBank.Choose(Cue, Serial);
@@ -2579,7 +2599,7 @@ void AExpeditionBattleView::PlayCue(EExpeditionCue Cue)
         Synth->NumChannels = 1;
         Synth->Duration = Pcm->Num() / static_cast<float>(ExpeditionAudio::SampleRate);
         Synth->SoundGroup = SOUNDGROUP_Default;
-        Synth->SoundClassObject = CueBank.Class();
+        Synth->SoundClassObject = EffectsClass;
         Synth->bLooping = false;
         Synth->QueueAudio(reinterpret_cast<const uint8*>(Pcm->GetData()), Pcm->Num() * sizeof(int16));
         Wave = Synth;
@@ -2620,7 +2640,7 @@ void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
         const EExpeditionAmbience Bed = static_cast<EExpeditionAmbience>(Layer.Key);
         USoundWave* Wave = AmbienceBank.Wave(Bed);
         if (!Wave) { continue; }
-        const float Volume = AmbienceBank.Volume(Bed) * Layer.Amplitude();
+        const float Volume = AmbienceBank.Volume(Bed) * Layer.Amplitude() * AmbienceDucker.Gain();
         TObjectPtr<UAudioComponent>& Voice = AmbienceVoices.FindOrAdd(Layer.Id);
         if (!IsValid(Voice))
         {
@@ -2634,6 +2654,38 @@ void AExpeditionBattleView::UpdateAmbience(float DeltaSeconds)
     }
 }
 
+void AExpeditionBattleView::ConfigureSettings(const FString& Path)
+{
+    SettingsPath = Path;
+    bSettingsConfigured = true;
+    if (!FExpeditionAudioSettings::Load(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Display, TEXT("Volume settings %s could not be read; using the defaults"), *SettingsPath); }
+    ApplyMix();
+}
+
+bool AExpeditionBattleView::SetVolume(EExpeditionBus Bus, float Value)
+{
+    if (!VolumeSettings.Set(Bus, Value)) { return false; }
+    ApplyMix();
+    if (!FExpeditionAudioSettings::Save(SettingsPath, VolumeSettings)) { UE_LOG(LogExpeditionAudio, Warning, TEXT("Could not write the volume settings to %s"), *SettingsPath); }
+    PlayCue(EExpeditionCue::Click);
+    return true;
+}
+
+void AExpeditionBattleView::ApplyMix()
+{
+    // Master scales its children through the class hierarchy (SC_Master -> SC_Effects, SC_Ambience, SC_Music); each bus scales only itself.
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index) { AppliedClassVolumes[Index] = ExpeditionMix::Amplitude(VolumeSettings.Get(static_cast<EExpeditionBus>(Index))); }
+    if (!VolumeMix || !GetWorld()) { return; }
+    auto Apply = [this](USoundClass* Class, EExpeditionBus Bus, bool bChildren)
+    {
+        if (Class) { UGameplayStatics::SetSoundMixClassOverride(this, VolumeMix, Class, AppliedClassVolumes[static_cast<int32>(Bus)], 1.0f, 0.0f, bChildren); }
+    };
+    Apply(MasterClass, EExpeditionBus::Master, true);
+    Apply(EffectsClass, EExpeditionBus::Effects, false);
+    Apply(AmbienceBank.Class(), EExpeditionBus::Ambience, false);
+    Apply(MusicBank.Class(), EExpeditionBus::Music, false);
+}
+
 FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
 {
     FExpeditionMusicMoment Now;
@@ -2642,7 +2694,8 @@ FExpeditionMusicMoment AExpeditionBattleView::MusicMoment() const
     Now.Phase = Progress().Phase;
     Now.Encounter = Progress().History.Num();
     Now.bFinale = !Progress().History.IsEmpty() && FExpeditionRun::Encounter(Progress(), Progress().History.Last().Route).World == EExpeditionWorld::Vault;
-    Now.bPresenting = IsPresenting();
+    // The finale set piece counts as presenting too: the victory sting follows it once the Waystone has settled (#246).
+    Now.bPresenting = IsPresenting() || SetPieceBusy();
     return Now;
 }
 
@@ -2686,7 +2739,7 @@ void AExpeditionBattleView::UpdateMusic(float DeltaSeconds)
         const EExpeditionMusic Track = static_cast<EExpeditionMusic>(Layer.Key);
         USoundWave* Wave = MusicBank.Track(Track);
         if (!Wave) { continue; }
-        const float Volume = MusicBank.TrackVolume(Track) * Layer.Amplitude();
+        const float Volume = MusicBank.TrackVolume(Track) * Layer.Amplitude() * MusicDucker.Gain();
         TObjectPtr<UAudioComponent>& Voice = MusicVoices.FindOrAdd(Layer.Id);
         if (!IsValid(Voice))
         {
@@ -2715,16 +2768,19 @@ void AExpeditionBattleView::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     Clock += DeltaSeconds;
-    if (!bShowRecords) { Show.Tick(DeltaSeconds); }
-    UpdateSetPiece(DeltaSeconds);
+    if (!bShowRecords && !bSettingsHold) { Show.Tick(DeltaSeconds); }
+    // The set piece waits behind Settings as playback does (#246); it already waits behind Records.
+    if (!bSettingsHold) { UpdateSetPiece(DeltaSeconds); }
     if (ImpactTargetId != INDEX_NONE) { Show.HoldImpact(ImpactTargetId); }
     // Route choice (after loot, camp, a new run or a resume) moves to the tabletop once playback settles.
     if (Theme && WantsOverview() != bOverview && !IsPresenting() && Show.Texts().IsEmpty() && Show.Sparkles().IsEmpty()) { RebuildBoard(); }
     UpdateRigs(); UpdateTiles(); UpdateOverlay(); UpdateMarkers(); UpdateEffects(); UpdateSway(); UpdateCamera(DeltaSeconds); UpdateOccluder(); FlushGroups();
     ExpireVoices();
+    AmbienceDucker.Tick(DeltaSeconds);
+    MusicDucker.Tick(DeltaSeconds);
     UpdateAmbience(DeltaSeconds);
     UpdateMusic(DeltaSeconds);
-    if (!HasRun() || bShowRecords || bCheckpointBlocked || bHoldEnemyTurns) { return; }
+    if (!HasRun() || bShowRecords || bSettingsHold || bCheckpointBlocked || bHoldEnemyTurns) { return; }
     const FCombatantState* Active = Rules().Find(Rules().ActiveId());
     if (Progress().Phase != EExpeditionPhase::Combat || Rules().Snapshot().Phase != EBattlePhase::Fighting || !Active || Active->Side != ECombatSide::Enemy || IsPresenting())
     { EnemyDelay = 0; return; }

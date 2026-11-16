@@ -528,10 +528,42 @@ void AExpeditionPlayerController::MoveCursor(FIntPoint ScreenOffset)
     }
     UseKeyboardCursor();
 }
-void AExpeditionPlayerController::CursorUp() { if (ShowingMenu()) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
-void AExpeditionPlayerController::CursorDown() { if (ShowingMenu()) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
-void AExpeditionPlayerController::CursorLeft() { if (OnRewardScreen()) { StepRewardCard(-1); } else { MoveCursor({-1, 0}); } }
-void AExpeditionPlayerController::CursorRight() { if (OnRewardScreen()) { StepRewardCard(1); } else { MoveCursor({1, 0}); } }
+void AExpeditionPlayerController::CursorUp() { if (ShowingMenu() || bShowSettings) { CycleMenuFocus(-1); } else { MoveCursor({0, 1}); } }
+void AExpeditionPlayerController::CursorDown() { if (ShowingMenu() || bShowSettings) { CycleMenuFocus(1); } else { MoveCursor({0, -1}); } }
+void AExpeditionPlayerController::CursorLeft() { if (bShowSettings) { NudgeFocusedSlider(-1); } else if (OnRewardScreen()) { StepRewardCard(-1); } else { MoveCursor({-1, 0}); } }
+void AExpeditionPlayerController::CursorRight() { if (bShowSettings) { NudgeFocusedSlider(1); } else if (OnRewardScreen()) { StepRewardCard(1); } else { MoveCursor({1, 0}); } }
+bool AExpeditionPlayerController::SettingsBus(const FString& Id, EExpeditionBus& Bus)
+{
+    FString Prefix, Name;
+    if (!Id.Split(TEXT(":"), &Prefix, &Name) || (Prefix != TEXT("Vol") && Prefix != TEXT("VolUp") && Prefix != TEXT("VolDown"))) { return false; }
+    for (int32 Index = 0; Index < ExpeditionBusCount; ++Index)
+    {
+        if (Name == FExpeditionAudioSettings::BusName(static_cast<EExpeditionBus>(Index))) { Bus = static_cast<EExpeditionBus>(Index); return true; }
+    }
+    return false;
+}
+bool AExpeditionPlayerController::NudgeFocusedSlider(int32 Steps)
+{
+    EExpeditionBus Bus;
+    if (!bShowSettings || !IsValid(BattleView) || !Focus.Id.ToString().StartsWith(TEXT("Vol:")) || !SettingsBus(Focus.Id.ToString(), Bus)) { return false; }
+    return BattleView->NudgeVolume(Bus, Steps);
+}
+void AExpeditionPlayerController::OpenSettings()
+{
+    if (!IsValid(BattleView) || bConfirmReturn || bConfirmAbandon || bShowSettings) { return; }
+    // From the Menu: keep what the Menu itself saved (the board's focus), so Esc can bring the Menu back as it was.
+    bSettingsFromMenu = ShowingMenu();
+    SettingsMenuSaved = SavedFocus;
+    CloseMenu();
+    // Settings over Help or Records replaces them and keeps the focus saved when they opened.
+    if (bShowHelp || BattleView->ShowingRecords()) { bShowHelp = false; if (BattleView->ShowingRecords()) { BattleView->ToggleRecords(); } }
+    else { SaveOverlayFocus(); }
+    bShowSettings = true;
+    // The board waits behind the panel: no playback step advances and no enemy turn resolves (as with Records).
+    BattleView->HoldForSettings(true);
+    bDragging = false; bPanning = false;
+    BattleView->PlayCue(EExpeditionCue::Click);
+}
 bool AExpeditionPlayerController::OnRewardScreen() const
 {
     return AllowsGameplayInput() && !ShowingMenu() && BattleView->HasRun() && BattleView->Progress().Phase == EExpeditionPhase::Reward && !ShowingBuilder();
@@ -557,7 +589,8 @@ uint32 AExpeditionPlayerController::MenuScreenKey() const
 {
     // Phase is offset by one so that "no run yet" (0) differs from every phase.
     const uint32 Phase = BattleView->HasRun() ? uint32(BattleView->Progress().Phase) + 1 : 0;
-    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | uint32(bConfirmAbandon) << 5 | Phase << 6;
+    return uint32(bShowHelp) | uint32(BattleView->ShowingRecords()) << 1 | uint32(ShowingBuilder()) << 2 | uint32(bConfirmReturn) << 3 | uint32(ShowingMenu()) << 4 | uint32(bConfirmAbandon) << 5
+        | uint32(bShowSettings) << 6 | Phase << 7;
 }
 void AExpeditionPlayerController::SaveOverlayFocus() { SavedFocus = Focus; }
 bool AExpeditionPlayerController::MenuAvailable() const
@@ -623,6 +656,8 @@ void AExpeditionPlayerController::UpdateMenuFocus()
     if (bConfirmReturn) { Preferred = TEXT("ReturnConfirm"); }
     // Abandon run defaults to keeping the run (#224).
     else if (bConfirmAbandon) { Preferred = TEXT("AbandonCancel"); }
+    // Settings opens on its first slider.
+    else if (bShowSettings) { Preferred = TEXT("Vol:Master"); }
     else if (OverlayOpen()) { Preferred = TEXT("Close"); }
     else if (ShowingMenu()) { Preferred = TEXT("Save"); }
     // With an unfinished checkpoint New Run would be refused, so the start screen's primary choice is Resume.
@@ -706,7 +741,20 @@ void AExpeditionPlayerController::Click()
     if (const AExpeditionHUD* Hud = Cast<AExpeditionHUD>(GetHUD()); Hud && bHasMouse)
     {
         FName Button;
-        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button)) { HandleButton(Button); return; }
+        if (Hud->ButtonAt(FVector2D(MouseX, MouseY), Button))
+        {
+            // A click on a volume bar sets the slider where it landed and focuses that slider (#246).
+            EExpeditionBus Bus;
+            FBox2D Bar;
+            if (bShowSettings && Button.ToString().StartsWith(TEXT("Vol:")) && SettingsBus(Button.ToString(), Bus) && Hud->ButtonBox(Button, Bar) && Bar.GetSize().X > 0)
+            {
+                BattleView->SetVolume(Bus, (MouseX - Bar.Min.X) / Bar.GetSize().X);
+                Focus.Id = Button; Focus.Screen = MenuScreenKey(); Focus.bTabChosen = true;
+                return;
+            }
+            HandleButton(Button);
+            return;
+        }
         // A click beside the open Menu closes it and goes no further.
         if (ShowingMenu()) { CloseMenu(); return; }
         if (Hud->CoversBoard(FVector2D(MouseX, MouseY))) { return; }
@@ -843,6 +891,16 @@ void AExpeditionPlayerController::HandleButton(FName Id)
         else if (Name == TEXT("AbandonCancel")) { CloseOverlays(); }
         return;
     }
+    // Settings owns every click and key while open: its sliders, their steps and Close.
+    if (bShowSettings)
+    {
+        EExpeditionBus Bus;
+        if (Name == TEXT("Close")) { CloseOverlays(); }
+        else if (Name.StartsWith(TEXT("VolDown:")) && SettingsBus(Name, Bus)) { BattleView->NudgeVolume(Bus, -1); }
+        else if (Name.StartsWith(TEXT("VolUp:")) && SettingsBus(Name, Bus)) { BattleView->NudgeVolume(Bus, 1); }
+        return;
+    }
+    if (Name == TEXT("Settings")) { OpenSettings(); return; }
     if (Name == TEXT("ReplayTips")) { ReplayHints(); return; }
     if (!AllowsGameplayInput() && Name != TEXT("Close") && Name != TEXT("Help") && Name != TEXT("Records") && Name != TEXT("Older") && Name != TEXT("Newer")) { return; }
     // The hint's own buttons: they act on the hint and nothing else, and only while it is visible.
@@ -1003,7 +1061,7 @@ bool AExpeditionPlayerController::ShowsTargeting() const
 
 bool AExpeditionPlayerController::OverlayOpen() const
 {
-    return bShowHelp || bConfirmReturn || bConfirmAbandon || (IsValid(BattleView) && BattleView->ShowingRecords());
+    return bShowHelp || bShowSettings || bConfirmReturn || bConfirmAbandon || (IsValid(BattleView) && BattleView->ShowingRecords());
 }
 bool AExpeditionPlayerController::CanSelectSubclass() const
 {
@@ -1125,7 +1183,7 @@ void AExpeditionPlayerController::LeaveExpedition()
 }
 void AExpeditionPlayerController::History()
 {
-    if (!IsValid(BattleView) || bConfirmReturn) { return; }
+    if (!IsValid(BattleView) || bConfirmReturn || bShowSettings) { return; }
     CloseMenu();
     const bool bOpening = !BattleView->ShowingRecords();
     // Records over Help keeps the focus saved when Help opened.
@@ -1159,7 +1217,7 @@ void AExpeditionPlayerController::Skip()
 void AExpeditionPlayerController::Speed() { CloseMenu(); if (AllowsGameplayInput()) { BattleView->CycleSpeed(); } }
 void AExpeditionPlayerController::ToggleHelp()
 {
-    if (bConfirmReturn) { return; }
+    if (bConfirmReturn || bShowSettings) { return; }
     CloseMenu();
     if (!bShowHelp)
     {
@@ -1176,6 +1234,22 @@ void AExpeditionPlayerController::CloseOverlays()
     if (bShowMenu) { CloseMenu(); return; }
     if (bConfirmReturn) { bConfirmReturn = false; RestoreOverlayFocus(); return; }
     if (bConfirmAbandon) { bConfirmAbandon = false; RestoreOverlayFocus(); BattleView->PlayCue(EExpeditionCue::Click); return; }
+    if (bShowSettings)
+    {
+        bShowSettings = false;
+        BattleView->HoldForSettings(false);
+        if (bSettingsFromMenu && MenuAvailable())
+        {
+            // Back to the Menu it was opened from, focused on its Settings row; closing the Menu then restores the board's focus.
+            bShowMenu = true;
+            SavedFocus = SettingsMenuSaved;
+            Focus = {FName(TEXT("Settings")), MenuScreenKey(), true};
+        }
+        else { RestoreOverlayFocus(); }
+        bSettingsFromMenu = false;
+        BattleView->PlayCue(EExpeditionCue::Click);
+        return;
+    }
     if (!bShowHelp && IsValid(BattleView) && !BattleView->ShowingRecords())
     {
         if (bReturnPending) { bReturnPending = false; return; }

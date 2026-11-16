@@ -136,6 +136,8 @@ public:
     /** Completes queued steps silently and converges on the committed snapshot. */
     void Finish();
     bool IsBusy() const { return Current < Steps.Num(); }
+    /** How many queued steps have been shown so far (tests: whether playback advanced). */
+    int32 StepsShown() const { return Current; }
 
     void ShowBanner(const FString& Title, const FString& Subtitle, FLinearColor Color, float Life = 1.6f, bool bResult = false);
     void ShowText(FVector2D Cell, const FString& Text, FLinearColor Color, float Scale = 1.0f, float Life = 1.3f);
