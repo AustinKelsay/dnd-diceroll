@@ -9,6 +9,7 @@
 #include "Presentation/AudioCrossfade.h"
 #include "Presentation/ExpeditionAmbience.h"
 #include "Presentation/ExpeditionCueSounds.h"
+#include "Presentation/ExpeditionMusic.h"
 #include "Presentation/ExpeditionPlayback.h"
 #include "Presentation/FoeLook.h"
 #include "Presentation/VigilKit.h"
@@ -316,6 +317,11 @@ public:
     const FAudioCrossfade& AmbienceFade() const { return Ambience; }
     /** Ambience voices actually playing (zero without an audio device, or for a bed with no recording). */
     int32 AmbienceVoiceCount() const { return AmbienceVoices.Num(); }
+    /** The music (#245): the track the director is heading to, its crossfade, and the run-end sting still sounding. */
+    EExpeditionMusic MusicTrack() const { return Music.Current(); }
+    const FExpeditionMusicDirector& MusicDirector() const { return Music; }
+    /** Music voices actually playing, the sting's included (zero without an audio device or a recording). */
+    int32 MusicVoiceCount() const { return MusicVoices.Num() + (StingVoice ? 1 : 0); }
     /** How many times a cue has been requested since the view began, heard or not (the serial its variation hash reads, #243). Test and trace support. */
     uint32 CueRequests(EExpeditionCue Cue) const { return CueSerials.IsValidIndex(static_cast<int32>(Cue)) ? CueSerials[static_cast<int32>(Cue)] : 0; }
 
@@ -739,6 +745,13 @@ private:
     EDiceRollKit AmbienceKit{};
     void SelectAmbience();
     void UpdateAmbience(float DeltaSeconds);
+    /** The score (#245); one looping voice per crossfade layer (by layer id) and the sting's own voice. */
+    UPROPERTY() FExpeditionMusicBank MusicBank;
+    FExpeditionMusicDirector Music;
+    UPROPERTY() TMap<uint32, TObjectPtr<UAudioComponent>> MusicVoices;
+    UPROPERTY() TObjectPtr<UAudioComponent> StingVoice;
+    FExpeditionMusicMoment MusicMoment() const;
+    void UpdateMusic(float DeltaSeconds);
 
     FExpeditionPart MakePart(UStaticMesh* Mesh, USceneComponent* Parent, FVector Location, FVector Scale, FLinearColor Color, FRotator Rotation = FRotator::ZeroRotator);
     UPointLightComponent* MakeLight(USceneComponent* Parent, FVector Location, FLinearColor Color, float Intensity, float Radius);

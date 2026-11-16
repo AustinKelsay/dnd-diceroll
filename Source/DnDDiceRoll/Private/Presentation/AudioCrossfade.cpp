@@ -21,6 +21,7 @@ bool FAudioCrossfade::Select(uint8 Key, float FadeSeconds)
         {
             int32 Quietest = 0;
             for (int32 Index = 1; Index < Active.Num(); ++Index) { if (Active[Index].Level < Active[Quietest].Level) { Quietest = Index; } }
+            Remember(Active[Quietest]);
             Active.RemoveAt(Quietest);
         }
         FAudioLayer& Layer = Active.AddDefaulted_GetRef();
@@ -29,6 +30,7 @@ bool FAudioCrossfade::Select(uint8 Key, float FadeSeconds)
         Layer.Level = 0.0f;
         Layer.Target = 1.0f;
         Layer.FadeSeconds = Seconds;
+        Layer.Offset = Position(Key);
     }
     return true;
 }
@@ -39,14 +41,16 @@ void FAudioCrossfade::Tick(float DeltaSeconds)
     for (int32 Index = Active.Num() - 1; Index >= 0; --Index)
     {
         FAudioLayer& Layer = Active[Index];
+        Layer.Age += Delta;
         const float Step = Delta / FMath::Max(Layer.FadeSeconds, 0.01f);
         Layer.Level = Layer.Target > Layer.Level ? FMath::Min(Layer.Level + Step, Layer.Target) : FMath::Max(Layer.Level - Step, Layer.Target);
-        if (Layer.IsFadingOut() && Layer.Level <= 0.0f) { Active.RemoveAt(Index); }
+        if (Layer.IsFadingOut() && Layer.Level <= 0.0f) { Remember(Layer); Active.RemoveAt(Index); }
     }
 }
 
 void FAudioCrossfade::Reset()
 {
+    for (const FAudioLayer& Layer : Active) { Remember(Layer); }
     Active.Reset();
     CurrentKey = 0;
 }
