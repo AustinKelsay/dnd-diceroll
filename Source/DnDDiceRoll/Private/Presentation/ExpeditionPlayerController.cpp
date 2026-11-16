@@ -6,6 +6,7 @@
 #include "Presentation/ExpeditionAutoplay.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerInput.h"
 #include "Presentation/ExpeditionHUD.h"
@@ -34,8 +35,10 @@ void AExpeditionPlayerController::BeginPlay()
     Capture = FExpeditionCaptureDirector::TryCreate(this, BattleView);
     // Autoplay plays real commands, so it never runs together with a capture (which only looks).
     if (!Capture.IsValid()) { Autoplay = FExpeditionAutoplayDirector::TryCreate(this, BattleView); }
-    // A player watches this view, so a committed route plays its fly-in (#249). A capture run only looks and holds moments itself.
-    BattleView->SetRouteFlyIn(!Capture.IsValid());
+    // A player watches this view, so a committed route plays its fly-in (#249). A capture run only looks and holds moments itself. -ExpeditionNoFlyIn (or the
+    // EXPEDITION_NO_FLYIN environment variable, which reaches a perf pass) keeps today's cut on the same build: the before/after baseline for the transition's cost.
+    const bool bNoFlyIn = FParse::Param(FCommandLine::Get(), TEXT("ExpeditionNoFlyIn")) || !FPlatformMisc::GetEnvironmentVariable(TEXT("EXPEDITION_NO_FLYIN")).IsEmpty();
+    BattleView->SetRouteFlyIn(!Capture.IsValid() && !bNoFlyIn);
     if (Capture.IsValid())
     {
         bCapturing = true;

@@ -120,7 +120,9 @@ bool FRouteFlyInTimelineTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The move starts looking where the journey camera looks"), FMath::RadiansToDegrees(Start.GetRotation().AngularDistance(Camera.GetRotation())) < 0.01);
     TestTrue(TEXT("The move ends at its end eye"), End.GetLocation().Equals(Path.EndEye, 0.01));
     const FVector Look = End.GetRotation().GetForwardVector();
-    TestTrue(TEXT("It ends looking at the diorama"), FVector::DotProduct(Look, (Diorama.GetCenter() - End.GetLocation()).GetSafeNormal()) > 0.97);
+    TestTrue(TEXT("It ends looking at its aim point"), FVector::DotProduct(Look, (Path.EndAim - End.GetLocation()).GetSafeNormal()) > 0.9999);
+    TestTrue(TEXT("which is low in the diorama, over its middle"), Diorama.IsInside(Path.EndAim) && FMath::IsNearlyEqual(Path.EndAim.X, Diorama.GetCenter().X, 0.01) &&
+        Path.EndAim.Z < Diorama.GetCenter().Z);
     TestTrue(TEXT("It ends inside the diorama's footprint on screen, much nearer than it started"),
         FVector::Dist(End.GetLocation(), Diorama.GetCenter()) < 0.25 * FVector::Dist(Start.GetLocation(), Diorama.GetCenter()));
     TestTrue(TEXT("It ends on the side the camera looks from (the battle camera's home side, -Y)"), End.GetLocation().Y < Path.EndAim.Y);
@@ -159,7 +161,6 @@ bool FRouteFlyInStartsTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("The player's view plays the fly-in"), Game->View->PlaysRouteFlyIn());
         AExpeditionBattleView* Bare = Game->World->SpawnActor<AExpeditionBattleView>();
         TestTrue(TEXT("A bare view does not"), Bare && !Bare->PlaysRouteFlyIn());
-        if (Bare) { Bare->Destroy(); }
     }
     enum class EWay : uint8 { Key, Card, Diorama };
     for (const EWay Way : {EWay::Key, EWay::Card, EWay::Diorama})
@@ -182,7 +183,7 @@ bool FRouteFlyInStartsTest::RunTest(const FString& Parameters)
             if (Way == EWay::Diorama && !TestTrue(Name + TEXT(": the diorama's box"), View->RaisedScreenBox(Offer, W, H, Box))) { return false; }
             const FVector2D Pixel((Box.Left + Box.Right) * 0.5 * S, (Box.Top + Box.Bottom) * 0.5 * S);
             FName Hit;
-            const FName Wanted(*FString::Printf(Way == EWay::Card ? TEXT("Route%d") : TEXT("Diorama%d"), Offer));
+            const FName Wanted(*FString::Printf(TEXT("%s%d"), Way == EWay::Card ? TEXT("Route") : TEXT("Diorama"), Offer));
             Game->Player->SimulatePointer(Pixel, FIntPoint(0, 0));
             Game->Frame();
             if (!TestTrue(Name + TEXT(": the pointer is over its control"), Game->Hud->ButtonAt(Pixel, Hit) && Hit == Wanted)) { return false; }

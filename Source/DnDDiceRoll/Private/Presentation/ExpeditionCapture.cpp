@@ -203,7 +203,7 @@ bool ExpeditionCapture::ParsePoses(const FString& Json, FCapturePoses& Out, FStr
             // The route fly-in held at a moment (#249): a burst over a route fixture (the move) and its fight (the fade-up) shows its motion.
             Shot.Mode = ECaptureMode::FlyIn;
             double Seconds = 0.0;
-            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > RouteFlyIn::DurationSeconds)
+            if (!Number(*Entry, TEXT("time"), Seconds) || Seconds < 0.0 || Seconds > RouteFlyIn::DurationSeconds + 1e-4)
             { Error = FString::Printf(TEXT("%s needs \"time\" in seconds from 0 to %.2f"), *Shot.Name, RouteFlyIn::DurationSeconds); return false; }
             Shot.Time = static_cast<float>(Seconds);
             if ((*Entry)->HasField(TEXT("offer")))
