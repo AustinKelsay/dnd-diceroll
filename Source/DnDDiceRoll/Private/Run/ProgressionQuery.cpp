@@ -86,6 +86,7 @@ FProgressionFacts FProgressionQuery::For(const FExpeditionRun& Run)
     Facts.Phase = P.Phase;
     Facts.Victories = P.EncountersCompleted;
     Facts.bUpgradeCards = FExpeditionRun::OffersUpgradeCards(P.Ruleset, P.CatalogRevision);
+    Facts.bCardsRefill = FExpeditionRun::CardsRefill(P.Ruleset, P.CatalogRevision);
     const bool bReward = P.Phase == EExpeditionPhase::Reward && !P.History.IsEmpty();
     const bool bCamp = P.Phase == EExpeditionPhase::Recovery && !P.bCampResolved;
     // Victories 1-4 level their survivors; the gain is "the last" until the next fight starts.
@@ -122,7 +123,7 @@ FProgressionFacts FProgressionQuery::For(const FExpeditionRun& Run)
                 FString Refused;
                 if (Hero.Life != ECombatLife::Conscious) { C.Note = ERewardCardNote::Fallen; }
                 else if (Card != ERewardCard::Gear && !Facts.bUpgradeCards) { C.Note = ERewardCardNote::GearOnlyRun; }
-                else if (!FPartyContinuity::Reward(Claimed, Hero.Id, Facts.RewardPotions, Card, Refused)) { C.Note = Card == ERewardCard::Reserve ? ERewardCardNote::ReserveTaken : ERewardCardNote::AlreadyHoned; }
+                else if (!FPartyContinuity::Reward(Claimed, Hero.Id, Facts.RewardPotions, Card, Refused, Facts.bCardsRefill)) { C.Note = Card == ERewardCard::Reserve ? ERewardCardNote::ReserveTaken : ERewardCardNote::AlreadyHoned; }
                 else { C.bAvailable = true; C.Note = Card == ERewardCard::Gear && Hero.WeaponRank >= 3 ? ERewardCardNote::GearAtCap : ERewardCardNote::None; }
                 const FCombatantState& After = C.bAvailable ? *Claimed.Find(Hero.Id) : Hero;
                 C.DamageBefore = H.Damage; C.DamageAfter = BasicDamage(After);

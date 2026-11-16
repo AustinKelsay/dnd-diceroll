@@ -179,4 +179,29 @@ inline int32 FirstSeedWhere(TFunctionRef<bool(int32)> Accept, int32 From = 42, i
     for (int32 Seed = From; Seed < From + Tries; ++Seed) { if (Accept(Seed)) { return Seed; } }
     return INDEX_NONE;
 }
+
+/** The first-loss fixture: a default-party run on Seed, the first offered route, every hero ending its turn (enemies play) until slot 1 is dead.
+ * True when slot 1 died while the fight goes on. */
+inline bool PassUntilSlotOneDies(FExpeditionRun& Run, int32 Seed, const FString& Identity)
+{
+    FString Error;
+    if (!Run.NewRun(Seed, Error, Identity) || !Run.ChooseRoute(Run.Progress().Offers[0].Id, Error)) { return false; }
+    for (int32 Turn = 0; Turn < 120 && Run.Progress().Phase == EExpeditionPhase::Combat && Run.Battle().Find(1)->Life != ECombatLife::Dead; ++Turn)
+    {
+        const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+        if (Active->Side == ECombatSide::Enemy) { Run.PlayEnemyTurn(); } else { Run.Submit({ECombatCommandType::EndTurn, Active->Id}); }
+    }
+    return Run.Battle().Find(1)->Life == ECombatLife::Dead && Run.Progress().Phase == EExpeditionPhase::Combat;
+}
+
+/** The first seed from 42 on whose fixture slot 1 dies in fight 1 and the three survivors (FinishCombat) still win it. Revision 11's enemies
+ * no longer attack slot 1 first (#241), so the seed is searched rather than fixed. INDEX_NONE when none of 64 seeds does. */
+inline int32 FirstLossSeed()
+{
+    return FirstSeedWhere([](int32 Seed)
+    {
+        FExpeditionRun Probe;
+        return PassUntilSlotOneDies(Probe, Seed, TEXT("first-loss-probe")) && FinishCombat(Probe) && Probe.Progress().Phase == EExpeditionPhase::Reward;
+    });
+}
 }

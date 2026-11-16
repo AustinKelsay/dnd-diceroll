@@ -104,6 +104,13 @@ struct DNDDICEROLL_API FCombatEncounter
      * Deliberately not a UPROPERTY, so the save schema is unchanged: the run derives it from its saved ruleset and revision on every
      * layout it generates and on Restore. False keeps the older rule, under which every unit blocks its cell. */
     bool bMoveThrough = false;
+    /** Catalog revision 11 balance (#241, docs/runs/journey-checkpoint/M2-balance-contract.md), Compact only and, like bMoveThrough, never saved:
+     * the run derives both from its ruleset and revision (FExpeditionRun::PlaysRevision11Balance). With bNearestTarget an enemy goes for the
+     * hero it can attack soonest and attacks the nearest one in reach, the lower HP and then roster order breaking ties, instead of the first
+     * legal target in roster order. With bSturdyRescue, Rescue restores a share of the Downed hero's max HP (Revision11Rules::RescueShare) instead
+     * of 1. False keeps the older rules. */
+    bool bNearestTarget = false;
+    bool bSturdyRescue = false;
 };
 
 /** Value-only reflected state: no actors, pointers, or implicit global randomness. */
@@ -261,6 +268,10 @@ public:
     /** Player-facing action facts share the tuning used by validation and resolution. HonedBonus is FBuildCatalog::HonedBonus of the
      * actor for this command (Second Wind's and Cure Wounds' healing, Magic Missile's damage, Precision Strike's bonus); 0 unhoned. */
     static FString DescribeAction(ECombatCommandType Action, int32 HonedBonus = 0);
+    /** DescribeAction under this battle's own rules: Rescue states its revision 11 amount (bSturdyRescue). */
+    FString Describe(ECombatCommandType Action) const;
+    /** The HP a Rescue restores to Target: 1, or with bSturdyRescue max HP / Revision11Rules::RescueShare (at least 1). */
+    int32 RescueAmount(const FCombatantState& Target) const;
     static FCombatEncounter TutorialEncounter();
 private:
     friend class FPartyContinuity;
