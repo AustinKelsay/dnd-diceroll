@@ -49,6 +49,10 @@ public:
      */
     bool KeyboardFocusLost() const;
     mutable bool bSawKeyboardFocus = false;
+    /** Whether the window holds the seat's keyboard focus now: the Linux game reads FLinuxApplication's focus window; unknown (unset) elsewhere. */
+    TOptional<bool> KeyboardFocusNow() const;
+    /** Test support: stands in for the platform's keyboard focus report (unset: the platform's again). */
+    void SimulateKeyboardFocus(TOptional<bool> bFocused) { SimulatedKeyboardFocus = bFocused; }
     /** False once the window has lost keyboard focus it had (KeyboardFocusLost); true otherwise, including on a seat that never had one. */
     bool WindowHasFocus() const;
     AExpeditionBattleView* GetBattleView() const { return BattleView; }
@@ -186,6 +190,7 @@ private:
     bool bCapturing = false;
     /** Keys whose press skipped the route fly-in (#249): their repeats and release are swallowed too. */
     TSet<FKey> FlyInSwallowed;
+    TOptional<bool> SimulatedKeyboardFocus;
     bool bSimulatedPointer = false;
     bool bSimulatedCamera = false;
     FIntPoint SimulatedViewport = FIntPoint::ZeroValue;

@@ -839,20 +839,27 @@ void AExpeditionPlayerController::FlushPressedKeys()
     Super::FlushPressedKeys();
 }
 
-bool AExpeditionPlayerController::KeyboardFocusLost() const
+TOptional<bool> AExpeditionPlayerController::KeyboardFocusNow() const
 {
+    if (SimulatedKeyboardFocus.IsSet()) { return SimulatedKeyboardFocus; }
 #if EXPEDITION_LINUX_FOCUS_POLL
     // Only a running game window has the Linux platform application; an automation world has no viewport.
     const UGameViewportClient* Client = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
-    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return false; }
+    if (!Client || !Client->Viewport || !FSlateApplication::IsInitialized()) { return {}; }
     const TSharedPtr<GenericApplication> Platform = FSlateApplication::Get().GetPlatformApplication();
-    if (!Platform.IsValid()) { return false; }
-    const TSharedPtr<FLinuxWindow> FocusWindow = static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow();
-    if (FocusWindow.IsValid()) { bSawKeyboardFocus = true; return false; }
-    return bSawKeyboardFocus;
+    if (!Platform.IsValid()) { return {}; }
+    return static_cast<FLinuxApplication*>(Platform.Get())->GetCurrentFocusWindow().IsValid();
 #else
-    return false;
+    return {};
 #endif
+}
+
+bool AExpeditionPlayerController::KeyboardFocusLost() const
+{
+    const TOptional<bool> bFocused = KeyboardFocusNow();
+    if (!bFocused.IsSet()) { return false; }
+    if (*bFocused) { bSawKeyboardFocus = true; return false; }
+    return bSawKeyboardFocus;
 }
 
 bool AExpeditionPlayerController::WindowHasFocus() const
