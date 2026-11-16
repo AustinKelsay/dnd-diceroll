@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Build and measure the recorded expedition cues (#242).
 
-The recipe (Art/audio-sources/r001/recipe.json) lists every downloaded CC0 source file with its SHA-256 and, for each
+The recipe (Art/audio-sources/r002/recipe.json) lists every downloaded CC0 source file with its SHA-256 and, for each
 EExpeditionCue, the variations as layers cut from those files: trim, pitch, filters, fades, gain and placement. ``build``
 renders each variation with ffmpeg to a 48 kHz mono float mix, optionally shaves its loudest transients with a
 look-ahead limiter (at most the category's "limit_db", so a short hit can reach the loudness of a sustained cue), measures
-integrated loudness (EBU R128) and true peak, applies one gain that reaches the category target without passing the
-true-peak ceiling, and writes 16-bit WAVs under Art/audio-sources/r001/cues/. ``measure`` prints the loudness and peak table of WAV files.
+integrated loudness (EBU R128) and true peak (a cue may set its own "limit_db" in place of its category's), applies one gain that reaches the category target without passing the
+true-peak ceiling, and writes 16-bit WAVs under Art/audio-sources/r002/cues/. ``measure`` prints the loudness and peak table of WAV files.
 
 Downloaded files are untrusted data: this tool only hashes them and hands their paths to ffmpeg/ffprobe as arguments.
 It needs ffmpeg and ffprobe on PATH; the parsing and gain rules are plain functions with unit tests.
 
   python3 tools/audio_cues.py build --downloads .local/audio-downloads
-  python3 tools/audio_cues.py measure Art/audio-sources/r001/cues/*.wav
+  python3 tools/audio_cues.py measure Art/audio-sources/r002/cues/*.wav
 """
 import argparse
 import hashlib
@@ -26,7 +26,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RECIPE = ROOT / "Art" / "audio-sources" / "r001" / "recipe.json"
+RECIPE = ROOT / "Art" / "audio-sources" / "r002" / "recipe.json"
 LAYER_KEYS = {"source", "file", "start", "dur", "at", "gain", "rate", "lowpass", "highpass", "fade_in", "fade_out", "reverse"}
 SILENT = -70.0  # the EBU R128 absolute gate: anything at or below it measured nothing
 
@@ -72,6 +72,8 @@ def validate_recipe(recipe, cues):
         category = categories.get(plan.get("category"))
         if not isinstance(category, dict) or not isinstance(category.get("lufs"), (int, float)) or category.get("limit_db", 0) < 0:
             problems.append(f"{cue}: unknown category {plan.get('category')!r}")
+        if not isinstance(plan.get("limit_db", 0), (int, float)) or plan.get("limit_db", 0) < 0:
+            problems.append(f"{cue}: limit_db must be a number of dB, zero or more")
         variations = plan.get("variations", [])
         if not 1 <= len(variations) <= 4:
             problems.append(f"{cue}: {len(variations)} variations (1-4 allowed)")
@@ -206,7 +208,7 @@ def build(args):
             out_path = out_dir / output_name(cue, index)
             with tempfile.TemporaryDirectory() as workdir:
                 raw = render(variation, recipe, downloads, out_path, workdir)
-                limiter = limiter_filter(measure(raw)[1], category.get("limit_db", 0))
+                limiter = limiter_filter(measure(raw)[1], plan.get("limit_db", category.get("limit_db", 0)))
                 if limiter:
                     limited = Path(workdir) / "limited.wav"
                     subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-loglevel", "error", "-y", "-i", str(raw), "-af", limiter,
