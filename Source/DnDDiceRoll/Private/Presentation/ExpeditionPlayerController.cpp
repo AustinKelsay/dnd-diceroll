@@ -1124,8 +1124,8 @@ void AExpeditionPlayerController::ResolvePendingReturn()
     if (!bReturnPending || !AllowsGameplayInput()) { return; }
     if (!BattleView->CanReturnToMenu() || BattleView->Progress().Phase != PendingPhase) { bReturnPending = false; return; }
     // Everything committed is shown before leaving: the wait covers queued playback of committed
-    // actions (IsPresenting) and enemy turns. Decorative reward/camp sparkles, floating text and
-    // banners are not queued playback and never delay it. On the party's turn enemies cannot act,
+    // actions (IsPresenting, which includes the short hold behind a victory or defeat banner) and enemy turns. Decorative
+    // reward/camp sparkles, floating text and the other banners are not queued playback and never delay it. On the party's turn enemies cannot act,
     // so nothing resolves behind the question.
     if (BattleView->IsPresenting()) { return; }
     if (BattleView->InCombat())

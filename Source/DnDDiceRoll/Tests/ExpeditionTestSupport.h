@@ -37,6 +37,34 @@ inline void AllowCheckpointWrites(const FString& SavePath)
 }
 inline int32 Distance(FIntPoint A, FIntPoint B) { return FMath::Abs(A.X-B.X) + FMath::Abs(A.Y-B.Y); }
 
+/** A current-revision (move-through, #240) battle at its first party turn, with a dead enemy moved onto the cell in front of the acting hero
+ * (toward the enemy line) and the open cell beyond it reachable only through that body. The edit goes through Restore like any checkpoint
+ * (the same kind of edit as the downed-ally capture fixture). Body is the body's cell, Beyond the one past it. */
+inline bool BodyInFrontBattle(FExpeditionRun& Out, FIntPoint& Body, FIntPoint& Beyond, int32 FirstSeed = 20261030)
+{
+    for (int32 Seed = FirstSeed; Seed < FirstSeed + 200; ++Seed)
+    {
+        FExpeditionRun Run; FString Error;
+        if (!Run.NewRun(Seed, Error, FString::Printf(TEXT("move-through-%d"), Seed)) || !Run.ChooseRoute(Run.Progress().Offers[1].Id, Error)) { continue; }
+        const FCombatantState* Active = Run.Battle().Find(Run.Battle().ActiveId());
+        if (!Active || Active->Side != ECombatSide::Party || Active->Speed < 2) { continue; }
+        FExpeditionSnapshot Snapshot = Run.Snapshot();
+        FCombatEncounter& E = Snapshot.Battle.Encounter;
+        const FIntPoint Front = Active->Cell + FIntPoint(1, 0), Past = Active->Cell + FIntPoint(2, 0);
+        auto Free = [&E](FIntPoint C)
+        { return C.X < E.Width && !E.BlockedCells.Contains(C) && !E.Combatants.ContainsByPredicate([C](const FCombatantState& U) { return U.Cell == C; }); };
+        if (!Free(Front) || !Free(Past)) { continue; }
+        FCombatantState* Foe = E.Combatants.FindByPredicate([](const FCombatantState& U) { return U.Side == ECombatSide::Enemy && U.Life == ECombatLife::Conscious; });
+        if (!Foe) { continue; }
+        Foe->HP = 0; Foe->Life = ECombatLife::Dead; Foe->Cell = Front;
+        FExpeditionRun Edited;
+        if (!Edited.Restore(Snapshot, Error) || Edited.Battle().PathTo(Active->Id, Past) != TArray<FIntPoint>{Front, Past}) { continue; }
+        Out = MoveTemp(Edited); Body = Front; Beyond = Past;
+        return true;
+    }
+    return false;
+}
+
 // A bounded player policy using only commands, previews and snapshots. No stat overrides.
 // Commands, when given, receives every party command in order so it can be replayed elsewhere.
 inline bool FinishCombat(FExpeditionRun& Run, bool bFight = true, TArray<FCombatCommand>* Commands = nullptr)

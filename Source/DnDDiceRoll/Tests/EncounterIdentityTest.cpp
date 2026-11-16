@@ -216,7 +216,7 @@ bool FEncounterIdentityLayoutsTest::RunTest(const FString& Parameters)
             TestEqual(FString::Printf(TEXT("SRD revision 9 fight %d recipe %d keeps revision 7 generation"), Stage + 1, Recipe), FExpeditionRun::EncounterLayout(MakeRoute(Stage, false, Recipe, 16, 11), Stage, ERuleset::SRD, 9, Unused), Recipe >= 0 && Recipe <= 2);
         }
     }
-    for (const int32 Revision : {6, 11}) { TestFalse(FString::Printf(TEXT("Revision %d generates nothing"), Revision), FExpeditionRun::EncounterLayout(MakeRoute(0, false, 0, 16, 11), 0, ERuleset::Compact, Revision, Unused)); }
+    for (const int32 Revision : {6, 12}) { TestFalse(FString::Printf(TEXT("Revision %d generates nothing"), Revision), FExpeditionRun::EncounterLayout(MakeRoute(0, false, 0, 16, 11), 0, ERuleset::Compact, Revision, Unused)); }
     TestFalse(TEXT("Fight 6 does not exist"), FExpeditionRun::EncounterLayout(MakeRoute(5, false, 6, 16, 11), 5, ERuleset::Compact, 9, Unused));
     return !HasAnyErrors();
 }
@@ -453,13 +453,13 @@ bool FEncounterIdentityRevisionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("A current run"), Run.NewRun(42, Error, TEXT("revision-refusal")));
     TestTrue(TEXT("Finish it"), FinishRunScripted(Run) || Run.Progress().Phase == EExpeditionPhase::Defeat);
     const FExpeditionSnapshot Ended = Run.Snapshot();
-    for (const int32 Revision : {6, 11})
+    for (const int32 Revision : {6, 12})
     {
         TestFalse(FString::Printf(TEXT("NewRun refuses revision %d"), Revision), Run.NewRun(42, Error, TEXT("revision-refusal"), EFighterSubclass::Champion, ERuleset::Compact, Revision));
         TestTrue(TEXT("The refusal names the revision: ") + Error, Error.Contains(FString::Printf(TEXT("revision %d"), Revision)));
         TestTrue(TEXT("The refusal changes nothing"), SameRun(Ended, Run.Snapshot()));
     }
-    for (const int32 Revision : {7, 8, 9, 10})
+    for (const int32 Revision : {7, 8, 9, 10, 11})
     {
         FExpeditionRun Older;
         TestTrue(FString::Printf(TEXT("NewRun accepts revision %d"), Revision), Older.NewRun(42, Error, TEXT("revision-accepted"), EFighterSubclass::Champion, ERuleset::Compact, Revision));

@@ -36,6 +36,13 @@ TOptional<EExpeditionSting> FExpeditionMusicDirector::Update(const FExpeditionMu
 {
     StingLeft = FMath::Max(StingLeft - FMath::Max(DeltaSeconds, 0.0f), 0.0f);
     TOptional<EExpeditionSting> Started;
+    // Leaving the ending (a new run) cancels a sting still sounding at once, so the new run's music follows its phase with the normal crossfade.
+    if (bEnded && !ExpeditionMusic::StingFor(Now.bRunInPlay, Now.Phase))
+    {
+        bEnded = false;
+        StingLeft = 0.0f;
+        Playing.Reset();
+    }
     if (!Now.bRunInPlay || !Now.bPresenting)
     {
         const TOptional<EExpeditionSting> End = ExpeditionMusic::StingFor(Now.bRunInPlay, Now.Phase);
@@ -47,7 +54,6 @@ TOptional<EExpeditionSting> FExpeditionMusicDirector::Update(const FExpeditionMu
             Started = End;
             if (StingLeft > 0.0f) { Crossfade.Select(0, ExpeditionMusic::StingFadeSeconds); }
         }
-        if (!End) { bEnded = false; }
         if (StingLeft <= ExpeditionMusic::StingOverlapSeconds)
         {
             Crossfade.Select(static_cast<uint8>(ExpeditionMusic::TrackFor(Now.bRunInPlay, Now.Phase, Now.Encounter, Now.bFinale)), ExpeditionMusic::CrossfadeSeconds);

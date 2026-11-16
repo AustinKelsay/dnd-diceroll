@@ -9,6 +9,7 @@ The approved game is a single-player 3D tactical roguelike. One player controls 
 - Zero health means downed with a limited rescue opportunity. Actual death is permanent; survivors continue. A full party wipe ends the run. No replacement recruitment in V1.
 - A new run starts fresh. Records and player knowledge persist, but combat power does not.
 - Rotatable overhead camera, direct party selection, tactical grid, readable movement/target/action feedback.
+- Movement follows SRD 5.2.1 for occupied cells (Austin, 2026-11-15; #240, catalog revision 11): creatures move through allies, Downed and dead creatures, never through a living opponent, and never end a move on an occupied cell.
 - Generation uses world/run state and previous choices. V1 continuity is concrete encounter outcomes, routes, resources, and survivors, rather than a large narrative simulation.
 - Progression includes equipment, consumables and survivor milestone levels 1–5 (issue #28). Broad character leveling, character creation, multiplayer, broad lore systems, and full tabletop coverage are outside V1.
 - Save/resume must preserve the current expedition, including during combat, without restoring dead characters or rerolling previously resolved actions.

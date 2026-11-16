@@ -120,6 +120,23 @@ bool FExpeditionMusicTransitionsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("The defeat sting starts"), Watch.Stings.Num() == 2 && Watch.Stings[1] == EExpeditionSting::Defeat);
     TestEqual(TEXT("The table theme follows it"), Director.Current(), EExpeditionMusic::Table);
 
+    // A new run before the sting has finished: the sting stops at once and the new run's music follows its phase (review of #262).
+    for (const EExpeditionPhase End : {EExpeditionPhase::Defeat, EExpeditionPhase::Victory})
+    {
+        Watch.Run(Moment(true, EExpeditionPhase::Combat, 1), 3.0f);
+        Watch.Run(Moment(true, End, 1), 2.0f);
+        TestTrue(TEXT("The sting is sounding"), Director.Sting().IsSet() && Director.StingRemaining() > 4.0f);
+        Watch.Run(Moment(true, EExpeditionPhase::Route, 0), 0.05f);
+        TestFalse(TEXT("A new run stops the sting at once"), Director.Sting().IsSet());
+        TestEqual(TEXT("...and its route plays the table theme"), Director.Current(), EExpeditionMusic::Table);
+        Watch.Run(Moment(true, EExpeditionPhase::Combat, 1), 0.05f);
+        TestEqual(TEXT("A fight picked before the sting would have ended plays its track at once"), Director.Current(), EExpeditionMusic::CombatA);
+        Watch.Run(Moment(true, EExpeditionPhase::Combat, 1), 3.0f);
+        const FAudioLayer* Fight = Director.Fade().Find(static_cast<uint8>(EExpeditionMusic::CombatA));
+        TestTrue(TEXT("...fully faded in after the normal crossfade"), Fight && Fight->Level == 1.0f && Director.Fade().Layers().Num() == 1);
+    }
+    TestEqual(TEXT("Each sting started once"), Watch.Stings.Num(), 4);
+
     TestTrue(TEXT("Never more than two tracks at once"), Watch.MostLayers <= FAudioCrossfade::MaxLayers);
     TestTrue(FString::Printf(TEXT("No gap over 1 s (longest %.2f s)"), Watch.LongestSilence), Watch.LongestSilence <= 1.0f);
 

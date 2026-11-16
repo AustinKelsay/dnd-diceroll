@@ -74,7 +74,8 @@ struct FExpeditionMusicMoment
  * through any phase sequence). Each Update, unless playback is still showing the last committed results, it selects TrackFor the moment
  * through an FAudioCrossfade (2 s, equal power, at most two layers). When the run ends it starts the sting once: the track fades out under
  * it over 1 s and the table theme fades in for the sting's last second, so the music never stops for more than a fade. A track with no
- * recording is silence; a missing sting has no length, so the table theme follows at once. Selecting the current track changes nothing,
+ * recording is silence; a missing sting has no length, so the table theme follows at once. Leaving the ending for a new run cancels a
+ * sting that is still sounding (the view stops its voice) and the new phase's track crossfades in at once. Selecting the current track changes nothing,
  * so a Resume into the same track keeps playing it. Presentation only (ADR-0001).
  */
 class DNDDICEROLL_API FExpeditionMusicDirector
