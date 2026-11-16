@@ -46,8 +46,11 @@ struct FHarness
     FOffscreenTarget Target{FIntPoint(1280, 720)};
     FNoHitProxies HitProxies;
 
+    /** The volume settings file; a second harness given the first one's path sees what the first one saved (#246). */
+    FString SettingsPath;
     /** Saved writes a valid checkpoint first; RawCheckpoint writes these exact contents instead (for unreadable files). */
-    FHarness(FAutomationTestBase& InTest, const TCHAR* Name, const FExpeditionSaveData* Saved = nullptr, const TCHAR* RawCheckpoint = nullptr) : Test(InTest)
+    FHarness(FAutomationTestBase& InTest, const TCHAR* Name, const FExpeditionSaveData* Saved = nullptr, const TCHAR* RawCheckpoint = nullptr, const FString& InSettingsPath = FString())
+        : Test(InTest), SettingsPath(InSettingsPath)
     {
         Directory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), Name, FGuid::NewGuid().ToString());
         Path = FPaths::Combine(Directory, TEXT("current.json"));
@@ -64,6 +67,8 @@ struct FHarness
         View = Player->GetBattleView();
         if (!View) { return; }
         View->ConfigureStorage(Path);
+        // Volume settings live beside the checkpoint in the fixture folder, never in the developer's own settings file (#246).
+        View->ConfigureSettings(SettingsPath.IsEmpty() ? FPaths::Combine(Directory, TEXT("settings.json")) : SettingsPath);
         View->DispatchBeginPlay();
         FActorSpawnParameters Spawn;
         Spawn.Owner = Player;

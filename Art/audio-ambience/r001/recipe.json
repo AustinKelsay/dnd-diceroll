@@ -1,0 +1,452 @@
+{
+ "about": "Editable source of the ambience beds (#244). tools/audio_beds.py build renders every bed from these layers (times in seconds; start/dur cut the source, at places it in the bed (one time or a list), gain in dB, rate scales pitch and speed together, pan places a mono layer or balances a stereo one, mono folds a stereo source to the centre), folds the crossfade tail over the head so the loop is seamless, and normalises it to its category's integrated loudness (LUFS), capped at the true-peak ceiling (dBTP).",
+ "output": "beds",
+ "sample_rate": 48000,
+ "channels": 2,
+ "true_peak_ceiling": -1.0,
+ "categories": {
+  "ambience": {
+   "lufs": -30.0,
+   "about": "Under every effect category of #242 (the quietest, step, is -27) and under the music (#245)."
+  }
+ },
+ "order": [
+  "WarTable",
+  "Vigil",
+  "Root",
+  "Vault"
+ ],
+ "sources": {
+  "oga-dungeon": {
+   "folder": "oga-dungeon-ambience",
+   "title": "Loopable Dungeon Ambience",
+   "url": "https://opengameart.org/content/loopable-dungeon-ambience",
+   "author": "jaggedstone",
+   "license": "CC0 1.0 Universal (stated on the page)",
+   "archive": "dungeon_ambient_1_0.ogg (direct)",
+   "files": {
+    "dungeon_ambient_1_0.ogg": "df491823e4877371c34dbda4e9321cd83a4a14fa7573cee0ebca1ae423b70e6e"
+   }
+  },
+  "oga-drips": {
+   "folder": "oga-dripping-water",
+   "title": "Dripping water loop",
+   "url": "https://opengameart.org/content/dripping-water-loop",
+   "author": "qubodup",
+   "license": "CC0 1.0 Universal (stated on the page)",
+   "archive": "atmosbasement.mp3_.flac (direct)",
+   "files": {
+    "atmosbasement.mp3_.flac": "247c0ef181c8ba8d190a6194f6ea02d9defb23b70194c52c7f9187b5b7b1cc61"
+   }
+  },
+  "oga-park": {
+   "folder": "oga-park-ambiences",
+   "title": "Park ambiences",
+   "url": "https://opengameart.org/content/park-ambiences",
+   "author": "thimras",
+   "license": "CC0 1.0 Universal (stated on the page)",
+   "archive": "park_ambience_wind.wav and park_ambience_birds.wav (direct)",
+   "files": {
+    "park_ambience_wind.wav": "5c381856745b4706e7eba55eb9271a61a530e90c05df8126adb2db89ecfa6c5a",
+    "park_ambience_birds.wav": "dc1a5ac34b89cab7f8f261b53a23da7c1c5e3cc895aae4cb6fb4a1a04001b2af"
+   }
+  },
+  "oga-birds": {
+   "folder": "oga-ambient-birds",
+   "title": "Ambient Bird Sounds",
+   "url": "https://opengameart.org/content/ambient-bird-sounds",
+   "author": "isaiah658",
+   "license": "CC0 1.0 Universal (stated on the page; credit appreciated, not required)",
+   "archive": "birds-isaiah658_0.ogg (direct)",
+   "files": {
+    "birds-isaiah658_0.ogg": "359e4e3f9da9d75aac64cede511c7e3ef8b461f9d9f8c230f8f80e44c4b3e35f"
+   }
+  },
+  "oga-crickets": {
+   "folder": "oga-crickets",
+   "title": "Crickets Ambient Noise - loopable",
+   "url": "https://opengameart.org/content/crickets-ambient-noise-loopable",
+   "author": "Ted Kerr (wolfgang)",
+   "license": "CC0 1.0 Universal (stated on the page; attribution optional)",
+   "archive": "crickets_1.mp3 (direct)",
+   "files": {
+    "crickets_1.mp3": "5b5bd1f744087888c5623543c3ff80be9c2ce106093993e7c8a8492b0280b2c0"
+   }
+  },
+  "oga-fireplace": {
+   "folder": "oga-fireplace-loop",
+   "title": "Fireplace Sound Loop",
+   "url": "https://opengameart.org/content/fireplace-sound-loop",
+   "author": "pagdev",
+   "license": "CC0 1.0 Universal (stated on the page; credit appreciated, not required)",
+   "archive": "fire.wav (direct)",
+   "files": {
+    "fire.wav": "85ca0cc60d0c037fff8b185e31ad1fcdbda6ce45eee17c3ee1318d1b8f59e330"
+   }
+  },
+  "oga-fire": {
+   "folder": "oga-fire-crackling",
+   "title": "Fire Crackling",
+   "url": "https://opengameart.org/content/fire-crackling",
+   "author": "AntumDeluge",
+   "license": "CC0 1.0 Universal (stated on the page)",
+   "archive": "fire-1.wav (direct)",
+   "files": {
+    "fire-1.wav": "26702de8a195bcbafeae72034861d875a1b7917168a25106f4e1957ecdddf7e5"
+   }
+  },
+  "oga-shop": {
+   "folder": "oga-the-shop",
+   "title": "The Shop (free samples)",
+   "url": "https://opengameart.org/content/the-shop",
+   "author": "LEGIT Audio",
+   "license": "CC0 1.0 Universal for the files provided via OpenGameArt (stated on the page)",
+   "archive": "legit_audio_-_the_shop_free_sfx_wav.zip",
+   "files": {
+    "TheShopCollection_convenience_store_drinks_fridge_drone.wav": "222545244c0eed4bb924a3616d1103156d942776681634698f7fa3b11fe99b9d",
+    "TheShopCollection_convenience_store_drinks_fridge_drone_2.wav": "982a570343a772a9b82fd5a98df4edd3ea48785b23aebac2631617f1113a7709"
+   }
+  },
+  "oga-rumble": {
+   "folder": "oga-deep-rumble",
+   "title": "Underwater or space engine rumble",
+   "url": "https://opengameart.org/content/underwater-or-space-engine-rumble",
+   "author": "gmason",
+   "license": "CC0 1.0 Universal (stated on the page)",
+   "archive": "deep_rumble.ogg (direct)",
+   "files": {
+    "deep_rumble.ogg": "fd107cd69bb2204e07325a2505ef2be74d7ba2432b0f3a8763f46c0c1cee4e12"
+   }
+  },
+  "vsco": {
+   "folder": "vsco-2-ce",
+   "title": "VS Chamber Orchestra: Community Edition (VSCO-2-CE) at commit 440300901dfe9275fd84e0b7763af1f8443ae62e",
+   "url": "https://github.com/sgossner/VSCO-2-CE",
+   "author": "Versilian Studios (recorded by Sam Gossner & Simon Dalzell; sample cutting by Elan Hickler/Soundemote)",
+   "license": "CC0 1.0 Universal (the repository's LICENSE)",
+   "archive": "individual files from raw.githubusercontent.com at that commit",
+   "files": {
+    "Percussion/susCymb1-bow-1.wav": "181f906018e2cc53a82eb73f209894fa07a4b1fb8718aa5b38ad0e15610489d3",
+    "Percussion/susCymb1-bow-3.wav": "c0fc09c2a43f6a0a9d6b6616738b999beaf9290c2de5a111fe527f211f6890a2",
+    "Percussion/susCymb1-bow-4.wav": "0d5d565d14d615707f3f3f86b26c0a7f803f22d02c6cce6fb79e9724aa6026c8",
+    "Percussion/gongscrape_pp.wav": "0166526b453fa54a2d978796f2c4e696a213ac947c9cf2ec105f6af16667bd9e",
+    "Percussion/vibraring_v1_rr2.wav": "0b80f5a636adcb1acf5271cc95fadaeae59b24cc8ca7c68738e349c0391e3763"
+   }
+  }
+ },
+ "pieces": {
+  "WarTable": {
+   "category": "ambience",
+   "loop": true,
+   "length": 45.0,
+   "crossfade": 3.0,
+   "volume": 1.0,
+   "about": "The war table: a low hearth crackle softened toward candle flames, a few close snaps, and a lowpassed room tone.",
+   "layers": [
+    {
+     "source": "oga-fireplace",
+     "file": "fire.wav",
+     "start": 0.3,
+     "dur": 28.6,
+     "at": 0.0,
+     "gain": 0.0,
+     "highpass": 180,
+     "lowpass": 4200,
+     "fade_in": 0.05,
+     "fade_out": 2.0
+    },
+    {
+     "source": "oga-fireplace",
+     "file": "fire.wav",
+     "start": 6.0,
+     "dur": 21.0,
+     "at": 27.0,
+     "gain": 0.0,
+     "highpass": 180,
+     "lowpass": 4200,
+     "fade_in": 2.0,
+     "fade_out": 0.5
+    },
+    {
+     "source": "oga-fire",
+     "file": "fire-1.wav",
+     "start": 0.0,
+     "dur": 2.8,
+     "at": [
+      6.0,
+      17.5,
+      29.0,
+      39.0
+     ],
+     "gain": -12.0,
+     "highpass": 900,
+     "lowpass": 7000,
+     "pan": 0.35,
+     "fade_in": 0.02,
+     "fade_out": 0.3
+    },
+    {
+     "source": "oga-shop",
+     "file": "TheShopCollection_convenience_store_drinks_fridge_drone.wav",
+     "start": 0.3,
+     "dur": 10.8,
+     "at": [
+      0.0,
+      9.8,
+      19.6,
+      29.4,
+      39.2
+     ],
+     "gain": -38.0,
+     "highpass": 45,
+     "lowpass": 260,
+     "mono": true,
+     "fade_in": 1.0,
+     "fade_out": 1.0
+    }
+   ]
+  },
+  "Vigil": {
+   "category": "ambience",
+   "loop": true,
+   "length": 60.0,
+   "crossfade": 4.0,
+   "volume": 1.0,
+   "about": "The Drowned Vigil: a cave bed of low wind and drips, extra drips placed across the field, and distant gusts.",
+   "layers": [
+    {
+     "source": "oga-dungeon",
+     "file": "dungeon_ambient_1_0.ogg",
+     "start": 25.5,
+     "dur": 64.0,
+     "at": 0.0,
+     "gain": 0.0,
+     "fade_in": 0.05,
+     "fade_out": 0.05
+    },
+    {
+     "source": "oga-drips",
+     "file": "atmosbasement.mp3_.flac",
+     "start": 0.0,
+     "dur": 20.0,
+     "at": [
+      2.0,
+      22.5,
+      43.0
+     ],
+     "gain": -12.0,
+     "highpass": 350,
+     "lowpass": 9000,
+     "fade_in": 0.5,
+     "fade_out": 0.5
+    },
+    {
+     "source": "oga-park",
+     "file": "park_ambience_wind.wav",
+     "start": 110.0,
+     "dur": 16.0,
+     "at": 8.0,
+     "gain": -8.0,
+     "highpass": 90,
+     "lowpass": 650,
+     "fade_in": 4.0,
+     "fade_out": 5.0
+    },
+    {
+     "source": "oga-park",
+     "file": "park_ambience_wind.wav",
+     "start": 140.0,
+     "dur": 18.0,
+     "at": 36.0,
+     "gain": -9.0,
+     "highpass": 90,
+     "lowpass": 650,
+     "pan": -0.3,
+     "fade_in": 4.0,
+     "fade_out": 6.0
+    }
+   ]
+  },
+  "Root": {
+   "category": "ambience",
+   "loop": true,
+   "length": 60.0,
+   "crossfade": 4.0,
+   "volume": 1.0,
+   "about": "The Root of the World: a copse of birds before rain (traffic rumble cut), leaves stirring in the wind, crickets underneath and a few closer calls.",
+   "layers": [
+    {
+     "source": "oga-park",
+     "file": "park_ambience_birds.wav",
+     "start": 100.0,
+     "dur": 64.0,
+     "at": 0.0,
+     "gain": 0.0,
+     "highpass": 320,
+     "fade_in": 0.05,
+     "fade_out": 0.05
+    },
+    {
+     "source": "oga-park",
+     "file": "park_ambience_wind.wav",
+     "start": 195.0,
+     "dur": 44.0,
+     "at": 0.0,
+     "gain": 6.0,
+     "highpass": 300,
+     "lowpass": 6500,
+     "fade_in": 0.05,
+     "fade_out": 3.0
+    },
+    {
+     "source": "oga-park",
+     "file": "park_ambience_wind.wav",
+     "start": 150.0,
+     "dur": 24.0,
+     "at": 40.0,
+     "gain": -6.0,
+     "highpass": 300,
+     "lowpass": 6500,
+     "fade_in": 3.0,
+     "fade_out": 0.05
+    },
+    {
+     "source": "oga-crickets",
+     "file": "crickets_1.mp3",
+     "start": 0.2,
+     "dur": 11.0,
+     "at": [
+      0.0,
+      10.2,
+      20.4,
+      30.6,
+      40.8,
+      51.0,
+      61.2
+     ],
+     "gain": -14.0,
+     "highpass": 2200,
+     "fade_in": 0.8,
+     "fade_out": 0.8
+    },
+    {
+     "source": "oga-birds",
+     "file": "birds-isaiah658_0.ogg",
+     "start": 2.0,
+     "dur": 15.0,
+     "at": 21.0,
+     "gain": -14.0,
+     "highpass": 500,
+     "pan": 0.4,
+     "fade_in": 2.0,
+     "fade_out": 2.5
+    }
+   ]
+  },
+  "Vault": {
+   "category": "ambience",
+   "loop": true,
+   "length": 45.0,
+   "crossfade": 4.0,
+   "volume": 1.0,
+   "about": "The Vault: a deep rumble and a slowed hum, with the Waystone's resonance as bowed cymbal and gong, an octave down.",
+   "layers": [
+    {
+     "source": "oga-rumble",
+     "file": "deep_rumble.ogg",
+     "start": 10.0,
+     "dur": 49.0,
+     "at": 0.0,
+     "gain": -14.0,
+     "fade_in": 0.05,
+     "fade_out": 0.05
+    },
+    {
+     "source": "oga-shop",
+     "file": "TheShopCollection_convenience_store_drinks_fridge_drone_2.wav",
+     "start": 0.2,
+     "dur": 13.0,
+     "rate": 0.5,
+     "at": [
+      0.0,
+      24.0
+     ],
+     "gain": -18.0,
+     "highpass": 40,
+     "lowpass": 420,
+     "fade_in": 3.0,
+     "fade_out": 3.0
+    },
+    {
+     "source": "vsco",
+     "file": "Percussion/susCymb1-bow-1.wav",
+     "start": 0.0,
+     "dur": 16.0,
+     "rate": 0.5,
+     "at": 3.0,
+     "gain": 12.0,
+     "highpass": 120,
+     "pan": -0.35,
+     "fade_in": 0.5,
+     "fade_out": 6.0
+    },
+    {
+     "source": "vsco",
+     "file": "Percussion/susCymb1-bow-3.wav",
+     "start": 0.0,
+     "dur": 11.4,
+     "rate": 0.5,
+     "at": 21.0,
+     "gain": 18.0,
+     "highpass": 120,
+     "pan": 0.35,
+     "fade_in": 0.5,
+     "fade_out": 6.0
+    },
+    {
+     "source": "vsco",
+     "file": "Percussion/gongscrape_pp.wav",
+     "start": 0.0,
+     "dur": 5.3,
+     "rate": 0.6,
+     "at": [
+      14.0,
+      37.0
+     ],
+     "gain": 24.0,
+     "highpass": 80,
+     "fade_in": 0.3,
+     "fade_out": 3.0
+    },
+    {
+     "source": "vsco",
+     "file": "Percussion/susCymb1-bow-4.wav",
+     "start": 0.0,
+     "dur": 7.7,
+     "rate": 0.5,
+     "at": 41.5,
+     "gain": 12.0,
+     "highpass": 120,
+     "pan": 0.1,
+     "fade_in": 0.5,
+     "fade_out": 4.0
+    },
+    {
+     "source": "vsco",
+     "file": "Percussion/vibraring_v1_rr2.wav",
+     "start": 0.0,
+     "dur": 2.4,
+     "rate": 0.5,
+     "at": [
+      10.0,
+      30.5
+     ],
+     "gain": -8.0,
+     "pan": 0.2,
+     "fade_in": 0.01,
+     "fade_out": 1.5
+    }
+   ]
+  }
+ }
+}

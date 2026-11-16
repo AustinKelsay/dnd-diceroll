@@ -1,9 +1,9 @@
-"""Import the recorded expedition cues into /Game/DnDDiceRoll/Audio (issue #242).
+"""Import the recorded expedition cues into /Game/DnDDiceRoll/Audio (issues #242, #243).
 
 Run headless with the editor closed (under the Ultra machine lock):
   UnrealEditor-Cmd DnDDiceRoll.uproject -run=pythonscript -script=<repo>/Content/Python/import_expedition_cues.py -unattended -nullrhi -corelimit=2
 
-Reads Art/audio-sources/r001/recipe.json (cue order, variation counts and volumes) and the 16-bit 48 kHz WAVs that
+Reads Art/audio-sources/r002/recipe.json (cue order, variation counts and volumes) and the 16-bit 48 kHz WAVs that
 tools/audio_cues.py rendered beside it in cues/, then:
   - creates /Game/DnDDiceRoll/Audio/SC_Effects, a plain SoundClass every cue plays through (the stub #246 builds the mix on);
   - imports each <Cue>_<NN>.wav as /Game/DnDDiceRoll/Audio/Cues/SW_<Cue>_<NN>, tagged DiceRollSourceSha256 with the WAV's hash,
@@ -21,7 +21,7 @@ import re
 import unreal
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SOURCE_DIR = os.path.join(ROOT, "Art", "audio-sources", "r001")
+SOURCE_DIR = os.path.join(ROOT, "Art", "audio-sources", "r002")
 AUDIO = "/Game/DnDDiceRoll/Audio"
 CUES = AUDIO + "/Cues"
 SOUND_CLASS = AUDIO + "/SC_Effects"

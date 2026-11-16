@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "asset_id": "audio-music",
+  "revision": 1,
+  "unreal_package": "/Game/DnDDiceRoll/Audio/DA_ExpeditionMusic",
+  "issue": "https://github.com/AustinKelsay/dnd-diceroll/issues/245",
+  "provenance": {
+    "author": "Cut, layered and mixed by this project's agents from recordings by: MintoDog; RandomMind; vitalezzz",
+    "license": "Every source is CC0 1.0 Universal (per-source statements in recipe.json and docs/assets.md); the edits are released the same way",
+    "origin": "Fantasy: Lament for a Warrior's Soul <https://opengameart.org/content/fantasy-lament-for-a-warriors-soul>; Medieval: Battle <https://opengameart.org/content/medieval-battle>; Great Labyrinth (Orchestral dungeon music) <https://opengameart.org/content/great-labyrinthorchestral-dungeon-music>; The Ancient Legend <https://opengameart.org/content/the-ancient-legend>; Medieval: Victory Theme <https://opengameart.org/content/medieval-victory-theme>; Medieval: Defeat Theme <https://opengameart.org/content/medieval-defeat-theme>"
+  },
+  "recipe": {
+    "method": "tools/audio_beds.py build --recipe Art/audio-music/r001/recipe.json --downloads .local/music-downloads: per piece, an ffmpeg cut of the source in recipe.json to 48 kHz stereo float; a track is rendered crossfade seconds past its loop length and folded over its head with an equal-power crossfade at a loop point chosen where the audio after the start and after the end match (log-spectrum cosine similarity); a sting is cut at a phrase break and released; then one gain to the category loudness (music -27 LUFS, stings -23 LUFS) capped at -1 dBTP, then triangular dither to 16-bit PCM",
+    "approved_reference": "Ticket #245 and spec #239: a war-table/menu theme, combat loops alternating by stage, a Vault finale track, victory and defeat stings; dark high fantasy, sparse",
+    "parameters": {
+      "categories": {
+        "music": {
+          "lufs": -27.0
+        },
+        "sting": {
+          "lufs": -23.0
+        }
+      },
+      "true_peak_ceiling_dbtp": -1.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "pieces": {
+        "Table": {
+          "length_s": 105.56,
+          "loop": true,
+          "crossfade_s": 3.0
+        },
+        "CombatA": {
+          "length_s": 59.42,
+          "loop": true,
+          "crossfade_s": 2.0
+        },
+        "CombatB": {
+          "length_s": 132.75,
+          "loop": true,
+          "crossfade_s": 0.25
+        },
+        "Finale": {
+          "length_s": 98.26,
+          "loop": true,
+          "crossfade_s": 3.0
+        },
+        "Victory": {
+          "length_s": 6.9,
+          "loop": false,
+          "crossfade_s": 0
+        },
+        "Defeat": {
+          "length_s": 9.0,
+          "loop": false,
+          "crossfade_s": 0
+        }
+      }
+    },
+    "model_revision": "not applicable (recorded sources, no generation)",
+    "raw_downloads": "not committed: each source file used is listed with its SHA-256 in recipe.json, and build refuses a mismatch"
+  },
+  "tools": {
+    "ffmpeg": "ffmpeg version n9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+    "audio_beds.py": "tools/audio_beds.py at this commit"
+  },
+  "files": [
+    {
+      "role": "source",
+      "path": "Art/audio-music/r001/recipe.json",
+      "sha256": "ca021e046ee80dfd54ced14bd6817d16d8aacdaca9220b1b5ea9805e50be646f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/Table.wav",
+      "sha256": "49bfd606372c0acc91f57893369953afcfde53aaf28fe6b70ae63a354bd0524f"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/CombatA.wav",
+      "sha256": "d8fecf08252a9b9374bc96b7ffdfa967cb658da9244b913b24111b3f10231288"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/CombatB.wav",
+      "sha256": "e7e6f188ea312d4c1a0c4e2aead9c7030f62fee6959977391453ca82421e8965"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/Finale.wav",
+      "sha256": "bb8b77a2b0cca66f47c0880c3517722f44c83844b4c284a43d97373af76ab3c0"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/Victory.wav",
+      "sha256": "1acee549e1f438e51aeb4501dbcebc8878658709f38ff1453f84926982d8c7c2"
+    },
+    {
+      "role": "export",
+      "path": "Art/audio-music/r001/music/Defeat.wav",
+      "sha256": "a0a30d1863cbd279f9f47d044bb3a379793828ed9a1d569369701054eb474350"
+    }
+  ],
+  "import_policy": {
+    "name": "expedition-music-soundwave",
+    "version": 1,
+    "settings": {
+      "importer": "AssetImportTask (automated) from Content/Python/import_expedition_music.py",
+      "destination": "/Game/DnDDiceRoll/Audio/Music/SW_Mus_<Piece>",
+      "sound_class": "/Game/DnDDiceRoll/Audio/SC_Music",
+      "data_asset": "/Game/DnDDiceRoll/Audio/DA_ExpeditionMusic (UExpeditionMusicSounds: track and sting -> wave and volume from recipe.json, music class)",
+      "compression": "engine defaults",
+      "looping": "tracks loop (play when silent); stings play once",
+      "rerun": "kept when DiceRollSourceSha256 matches; replaced only with DND_MUSIC_REIMPORT=1"
+    }
+  },
+  "validation": {
+    "state": "pending",
+    "evidence": []
+  }
+}
